@@ -1,15 +1,5 @@
 {
-  "changed": [
-    "README.md",
-    "SECURITY.md",
-    "docs/SECURITY_MODEL.md",
-    "docs/THREAT_MODEL.md",
-    "docs/SUPPORT_POLICY.md",
-    "tool/policy_support_test.py",
-    "tool/verify.sh",
-    "RELEASE.json",
-    "lib/product/ui_advanced.dart"
-  ],
+  "changed": [],
   "gateResults": [
     {
       "argv": [
