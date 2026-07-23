@@ -197,22 +197,22 @@ def main() -> int:
             results,
         )
         case(
-            "Read-only Analyze executes in the sandbox",
+            "Read-only Analyze executes in the sandbox or fails closed when unavailable",
             lambda: _action_case(project, data_root, "analyze", "analysis-ok"),
             results,
         )
         case(
-            "Read-only Test executes in the sandbox",
+            "Read-only Test executes in the sandbox or fails closed when unavailable",
             lambda: _action_case(project, data_root, "test", "tests-ok"),
             results,
         )
         case(
-            "Build writes only to a retained snapshot",
+            "Build writes only to a retained snapshot or fails closed when unavailable",
             lambda: _build_case(project, data_root),
             results,
         )
         case(
-            "Artifact validation persists objective evidence",
+            "Artifact validation persists only after a successful sandboxed build",
             lambda: _artifact_case(project, data_root),
             results,
         )
@@ -227,7 +227,7 @@ def main() -> int:
             results,
         )
         case(
-            "Managed Run can be stopped with its process group",
+            "Managed Run terminates the sandbox tree or fails closed when unavailable",
             lambda: _run_stop_case(project, data_root),
             results,
         )
@@ -299,19 +299,63 @@ def _schema_case(data_root: Path) -> str:
         connection.close()
 
 
+def _sandbox_available() -> bool:
+    return bool(sandbox_worker.probe_backend().get("available"))
+
+
+def _expect_sandbox_blocked(
+    project: Path,
+    data_root: Path,
+    action: str,
+    *,
+    managed: bool = False,
+) -> str:
+    before = pm.tree_manifest(project)["sha256"]
+    try:
+        if managed:
+            pm.start_run(root=project, data_root=data_root, run_id=f"blocked-{action}")
+        else:
+            pm.execute_action(
+                root=project,
+                data_root=data_root,
+                action=action,
+                run_id=f"blocked-{action}",
+            )
+    except pm.ProjectManagerError as exc:
+        reasons = set(exc.details.get("reasons", []))
+        after = pm.tree_manifest(project)["sha256"]
+        return require(
+            exc.code == "project_action_blocked"
+            and "sandbox_unavailable" in reasons
+            and before == after,
+            f"{action} failed closed without mutating the project when the sandbox was unavailable",
+        )
+    raise AssertionError(f"{action} executed without an available sandbox")
+
 def _status_case(project: Path, data_root: Path) -> str:
     value = pm.snapshot(root=project, data_root=data_root)
     available = bool(value["sandbox"]["available"])
     expected = "ready" if available else "blocked"
-    return require(value["actions"]["analyze"]["state"] == expected, "status is derived from the probed worker")
+    package = value["actions"]["package"]
+    return require(
+        value["actions"]["analyze"]["state"] == expected
+        and package["state"] == "ready"
+        and package.get("backend") == "builtin_snapshot_packager"
+        and package.get("assurance") == "host_snapshot_no_project_code_execution",
+        "status derives project-command readiness from the live sandbox while built-in packaging remains independently ready",
+    )
 
 
 def _action_case(project: Path, data_root: Path, action: str, marker: str) -> str:
+    if not _sandbox_available():
+        return _expect_sandbox_blocked(project, data_root, action)
     value = pm.execute_action(root=project, data_root=data_root, action=action, run_id=f"run-{action}")
     return require(value["passed"] and marker in value["result"].get("stdout", ""), f"{action} completed in sandbox")
 
 
 def _build_case(project: Path, data_root: Path) -> str:
+    if not _sandbox_available():
+        return _expect_sandbox_blocked(project, data_root, "build")
     before = pm.tree_manifest(project)["sha256"]
     value = pm.execute_action(root=project, data_root=data_root, action="build", run_id="run-build")
     after = pm.tree_manifest(project)["sha256"]
@@ -323,6 +367,21 @@ def _build_case(project: Path, data_root: Path) -> str:
 
 
 def _artifact_case(project: Path, data_root: Path) -> str:
+    if not _sandbox_available():
+        _expect_sandbox_blocked(project, data_root, "build")
+        connection = pm.open_store(data_root)
+        try:
+            count = int(
+                connection.execute(
+                    "SELECT COUNT(*) FROM artifact_records WHERE producer_action='build'"
+                ).fetchone()[0]
+            )
+        finally:
+            connection.close()
+        return require(
+            count == 0,
+            "a blocked build persisted no fabricated artifact evidence",
+        )
     connection = pm.open_store(data_root)
     try:
         row = connection.execute("SELECT validation_state, relative_path, content_sha256 FROM artifact_records WHERE producer_action='build' ORDER BY created_at DESC LIMIT 1").fetchone()
@@ -354,6 +413,8 @@ def _authority_readiness_case(base: Path) -> str:
 
 
 def _run_stop_case(project: Path, data_root: Path) -> str:
+    if not _sandbox_available():
+        return _expect_sandbox_blocked(project, data_root, "run", managed=True)
     def wait_for_tree(started: dict[str, object]) -> list[dict[str, int | str]]:
         deadline = time.monotonic() + 12
         identities: list[dict[str, int | str]] = []

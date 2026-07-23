@@ -8,7 +8,7 @@ command -v python3 >/dev/null 2>&1 || { echo "ERROR: Python 3 is required for ge
 python3 tool/protocol_contract_test.py
 python3 tool/v1_trust_disablement_test.py
 flutter pub get
-dart format lib test tool/prune_stale_legacy.dart
+dart format --output=none --set-exit-if-changed lib test tool/prune_stale_legacy.dart
 flutter analyze --fatal-warnings --fatal-infos
 flutter test --reporter expanded
 if command -v python3 >/dev/null 2>&1; then

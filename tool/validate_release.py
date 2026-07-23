@@ -1303,6 +1303,7 @@ def check_project_manager_v2() -> None:
         "managed_project_processes",
         "artifact_records",
         "probe_backend",
+        "builtin_snapshot_packager",
         "launcherStartTimeTicks",
         "process_tree_termination_incomplete",
         "class ProjectManagerV2Service",
@@ -1321,7 +1322,7 @@ def check_project_manager_v2() -> None:
     add(
         "v1.6 Project Manager 2 operational layer",
         not failures,
-        "16/16 executable cases passed; strict profiles, live sandbox readiness, retained snapshots, PID-reuse-safe complete-tree Run/Stop, parent-death cleanup, artifacts, and packaging are integrated"
+        "16/16 capability-aware cases passed; real sandbox execution is exercised when available, unsupported platforms prove stable fail-closed behavior, and built-in deterministic packaging remains available without executing project code"
         if not failures
         else "; ".join(failures[:40]),
         started=started,

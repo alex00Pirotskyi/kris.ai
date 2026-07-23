@@ -39,7 +39,7 @@ jobs:
         run: python tool/generate_prompt_studio_fixtures.py --check
       - name: Prompt Studio 2 compiler gate
         run: python tool/prompt_studio_v2_test.py
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none --set-exit-if-changed lib test tool/prune_stale_legacy.dart
       - run: flutter analyze --no-fatal-infos
       - run: flutter test --reporter expanded
       - name: Architecture and security gate
