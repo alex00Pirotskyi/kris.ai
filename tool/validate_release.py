@@ -441,6 +441,7 @@ def check_required_files() -> None:
         "tool/generate_v190_contracts.py",
         "tool/interoperability_admin_v19.py",
         "tool/interoperability_admin_v19_test.py",
+        "tool/v1_trust_disablement_test.py",
         "tool/release_ops_v19.py",
         "tool/release_ops_v19_test.py",
     "tool/knowledge_memory_v2.py",
@@ -2234,6 +2235,7 @@ def main() -> int:
     check_execution_intelligence()
     check_knowledge_memory_v18()
     check_file_adapters_v18()
+    check_v1_trust_disablement()
     check_interoperability_v19()
     check_release_ops_v19()
     check_diagnostic_replay()
@@ -2314,6 +2316,82 @@ def check_knowledge_memory_v18() -> None:
         started=started,
     )
 
+
+
+def check_v1_trust_disablement() -> None:
+    """Execute the P0-002 fail-closed legacy trust regression gate."""
+    started = time.monotonic()
+    failures: list[str] = []
+    result_path = ROOT / "release" / "V1_TRUST_DISABLEMENT_RESULTS.json"
+    code, output = run(
+        [
+            sys.executable,
+            str(ROOT / "tool" / "v1_trust_disablement_test.py"),
+            "--json-output",
+            str(result_path),
+        ],
+        timeout=60,
+    )
+    if code != 0:
+        failures.append(f"v1 trust disablement gate exited {code}: {output[-1800:]}")
+    payload: dict[str, object] = {}
+    if result_path.is_file():
+        try:
+            decoded = json.loads(read(result_path))
+            payload = decoded if isinstance(decoded, dict) else {}
+        except json.JSONDecodeError as error:
+            failures.append(f"v1 trust disablement results are invalid JSON: {error}")
+    else:
+        failures.append("v1 trust disablement results file was not generated")
+    if (
+        payload.get("passed") is not True
+        or payload.get("passedCount") != 8
+        or payload.get("caseCount") != 8
+    ):
+        failures.append(
+            "v1 trust disablement expected 8/8 cases, got "
+            f"{payload.get('passedCount')}/{payload.get('caseCount')}"
+        )
+    trust_status = payload.get("trustStatus", {})
+    if not isinstance(trust_status, dict):
+        failures.append("v1 trust disablement did not return a trustStatus object")
+    elif (
+        trust_status.get("enabled") is not False
+        or trust_status.get("errorCode") != "v1_trust_disabled"
+        or trust_status.get("replacement") != "signed_manifest_v2"
+    ):
+        failures.append("v1 trust disablement status is not fail-closed")
+
+    helper = read(ROOT / "tool" / "interoperability_v19.py")
+    gate = read(ROOT / "tool" / "v1_trust_disablement_test.py")
+    required = (
+        "LEGACY_TRUST_ENABLED = False",
+        "LEGACY_TRUST_ERROR_CODE = 'v1_trust_disabled'",
+        "_raise_legacy_trust_disabled('generate_signing_keypair')",
+        "_raise_legacy_trust_disabled('sign_manifest')",
+        "_raise_legacy_trust_disabled('verify_signed_manifest')",
+        "Envelope-supplied HMAC forgery is rejected",
+    )
+    for marker in required:
+        if marker not in helper + gate:
+            failures.append(f"v1 trust disablement marker missing {marker}")
+    forbidden = (
+        "public_key.encode('utf-8')",
+        "hmac.compare_digest(expected, signature)",
+        "secret = secrets.token_hex(32)",
+    )
+    for marker in forbidden:
+        if marker in helper:
+            failures.append(f"legacy acceptance logic remains: {marker}")
+
+    add(
+        "P0-002 legacy v1 signed-manifest trust disablement",
+        not failures,
+        "8/8 executable cases passed; key generation, signing, and verification fail closed; the exact envelope-supplied HMAC forgery is rejected"
+        if not failures
+        else "; ".join(failures[:30]),
+        started=started,
+    )
 
 def check_interoperability_v19() -> None:
     """Execute the v1.9 interoperability, administration, and release-ops gate."""

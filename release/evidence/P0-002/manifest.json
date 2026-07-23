@@ -1,0 +1,125 @@
+{
+  "baseReviewedHead": "08e7d37",
+  "beforeAfterAttack": {
+    "patchedErrorCode": "v1_trust_disabled",
+    "patchedRejected": true,
+    "vulnerableBaseAccepted": true
+  },
+  "dependency": {
+    "formalStatus": "review",
+    "remainingRequirement": "Run strict complete-checkout source-manifest verification and commit the receipt before applying P0-002.",
+    "reviewResult": "pass_with_required_closure",
+    "task": "P0-001"
+  },
+  "evidenceFiles": [
+    {
+      "bytes": 2301,
+      "path": "release/evidence/P0-002/APPLY_AND_VERIFY.md",
+      "sha256": "7877875b0583e0a9a957940d859f52d0edfad4c2ee4012e33096adb1e1a08e9a"
+    },
+    {
+      "bytes": 1593,
+      "path": "release/evidence/P0-002/IMPLEMENTATION.md",
+      "sha256": "e907bce7fe233097f7105f751d1a5d37a96a165810f20b3543e19de0dabd4cd9"
+    },
+    {
+      "bytes": 2609,
+      "path": "release/evidence/P0-002/P0_001_REVIEW.md",
+      "sha256": "7dd0f170a0adc2a9393a4191be4ecbbae2e1365bc584dc0e3d1dcd938dbd3fac"
+    },
+    {
+      "bytes": 1682,
+      "path": "release/evidence/P0-002/SELF_REVIEW.md",
+      "sha256": "fe1915645d22b79337ddbc4ef3fe65f668468d1e1205b12648b1ba06ed09da0c"
+    },
+    {
+      "bytes": 1810,
+      "path": "release/evidence/P0-002/V1_TRUST_DISABLEMENT_RESULTS.json",
+      "sha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1"
+    },
+    {
+      "bytes": 328,
+      "path": "release/evidence/P0-002/ATTACK_REPRODUCTION.json",
+      "sha256": "fc6afc91ea637876e8642db15ab37e4e96f0f48204f9e91d2b0d6904e6edbabf"
+    },
+    {
+      "bytes": 61,
+      "path": "release/evidence/P0-002/SECRET_SCAN.json",
+      "sha256": "570cb3405ef4ad94f3a50784a89b5848d15f7d4422dfb7615c2d3c7f515737ed"
+    }
+  ],
+  "executableGate": {
+    "attackerForgeryRejected": true,
+    "caseCount": 8,
+    "failedCount": 0,
+    "passedCount": 8,
+    "path": "tool/v1_trust_disablement_test.py"
+  },
+  "implementation": {
+    "errorCode": "v1_trust_disabled",
+    "files": [
+      {
+        "bytes": 25646,
+        "path": "SOURCE_MANIFEST.sha256",
+        "sha256": "213a2ac8f91d9be9ffe13d2254c7f4350ac870f361fdccbf3bf65dfecd043b40"
+      },
+      {
+        "bytes": 2605,
+        "path": "docs/roadmap/STATUS.md",
+        "sha256": "e2c61a29779601e544b2b47759f61f197de355f26ff02fd581d9d6dd382b1c14"
+      },
+      {
+        "bytes": 4334,
+        "path": "tasks/active/P0-002.md",
+        "sha256": "67f147c0d6f2a230857d02106c7fae05a689cdc1363903289fc50e966d08e2d2"
+      },
+      {
+        "bytes": 4646,
+        "path": "tool/interoperability_v19.py",
+        "sha256": "89c5a7558c7289a659df6075f1469107d80b6a82596bc49e60c754dca9e88307"
+      },
+      {
+        "bytes": 7580,
+        "path": "tool/v1_trust_disablement_test.py",
+        "sha256": "50f89eee27c175ae19e5b5d72f447a0ae47b9addd207fe73014f001c0c3ace6e"
+      },
+      {
+        "bytes": 64344,
+        "path": "tool/system_test.py",
+        "sha256": "cd8fb7779887b5cb5260557344d6f35c5bdcaf61a67e96d52b020ab239b3810d"
+      },
+      {
+        "bytes": 118358,
+        "path": "tool/validate_release.py",
+        "sha256": "86be05c5a2c9e61c93a8185a24e0a3a4186b5400e6894191c067a4fd50c80041"
+      },
+      {
+        "bytes": 855,
+        "path": "tool/verify.sh",
+        "sha256": "ba2a28e03d229e7b87affbea002fef88159ac6bfde728f79f612de0b41732d24"
+      }
+    ],
+    "legacyTrustEnabled": false,
+    "publicOperationsDisabled": [
+      "generate_signing_keypair",
+      "sign_manifest",
+      "verify_signed_manifest"
+    ],
+    "replacement": "signed_manifest_v2"
+  },
+  "limitations": [
+    "The patch was prepared and tested against hash-exact copies of every modified source file, not pushed to GitHub.",
+    "The full Flutter/Dart suite was unavailable in the preparation environment.",
+    "P0-001 remains in review until strict complete-checkout verification is committed before P0-002 application.",
+    "Separate external-key v1.9 helpers remain compatibility-only pending Signed Manifest v2 migration."
+  ],
+  "milestone": "P0-002",
+  "preparedAt": "2026-07-23T00:00:00Z",
+  "schemaVersion": "1.0.0",
+  "secretScan": {
+    "findingCount": 0,
+    "passed": true
+  },
+  "status": "review",
+  "title": "Disable insecure v1 trust decisions"
+}

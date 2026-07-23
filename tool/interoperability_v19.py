@@ -1,23 +1,32 @@
 #!/usr/bin/env python3
-"""Deterministic manifest-signing helpers for v1.9 release operations.
+"""Compatibility types for the disabled v1.9 signed-manifest protocol.
 
-This module is intentionally standard-library only. It provides the minimal
-shared contracts needed by `release_ops_v19.py` for authenticated manifest,
-audit-checkpoint, and update-policy verification in source-only environments.
+The original v1 verifier authenticated an HMAC with ``signer.publicKey`` from
+the untrusted envelope. Because that value was also the HMAC secret, any sender
+could choose a secret, sign an arbitrary manifest, place the secret in the
+envelope, and pass verification. P0-002 therefore keeps only the legacy data
+shapes needed for migration and diagnostics. Every public trust operation fails
+closed until Signed Manifest v2 provides an external trust anchor.
 """
 from __future__ import annotations
 
 import dataclasses
 import datetime as dt
 import hashlib
-import hmac
 import json
-import secrets
-from typing import Any, Mapping
+from typing import Any, Mapping, NoReturn
 
 VERSION = '1.9.0+190'
 SCHEMA_VERSION = '1.0.0'
 SIGNATURE_ALGORITHM = 'hmac-sha256'
+LEGACY_TRUST_ENABLED = False
+LEGACY_TRUST_ERROR_CODE = 'v1_trust_disabled'
+LEGACY_TRUST_REPLACEMENT = 'signed_manifest_v2'
+LEGACY_TRUST_REASON = (
+    'Legacy v1 signed manifests cannot authorize capabilities, audit '
+    'checkpoints, plugins, agents, or updates because the protocol has no '
+    'independent trust anchor.'
+)
 
 
 class InteroperabilityError(RuntimeError):
@@ -45,6 +54,8 @@ def utc_now() -> str:
 
 @dataclasses.dataclass(frozen=True)
 class SigningKeyPair:
+    """Legacy shape retained only so stored v1 records remain readable."""
+
     key_id: str
     public_key: str
     private_key: str
@@ -53,6 +64,8 @@ class SigningKeyPair:
 
 @dataclasses.dataclass(frozen=True)
 class SignedManifestEnvelope:
+    """Legacy envelope shape retained for migration and diagnostic display."""
+
     manifest_type: str
     manifest: dict[str, Any]
     manifest_sha256: str
@@ -78,12 +91,38 @@ class SignedManifestEnvelope:
         }
 
 
+def legacy_trust_status() -> dict[str, Any]:
+    """Return the stable, machine-readable P0-002 disablement status."""
+
+    return {
+        'enabled': LEGACY_TRUST_ENABLED,
+        'errorCode': LEGACY_TRUST_ERROR_CODE,
+        'legacySchemaVersion': SCHEMA_VERSION,
+        'replacement': LEGACY_TRUST_REPLACEMENT,
+        'reason': LEGACY_TRUST_REASON,
+    }
+
+
+def _raise_legacy_trust_disabled(operation: str) -> NoReturn:
+    details = legacy_trust_status()
+    details['operation'] = operation
+    raise InteroperabilityError(
+        LEGACY_TRUST_ERROR_CODE,
+        LEGACY_TRUST_REASON,
+        details=details,
+    )
+
+
 def generate_signing_keypair(*, key_id: str) -> SigningKeyPair:
-    secret = secrets.token_hex(32)
-    return SigningKeyPair(key_id=str(key_id), public_key=secret, private_key=secret)
+    """Reject generation of credentials for the retired v1 protocol."""
+
+    del key_id
+    _raise_legacy_trust_disabled('generate_signing_keypair')
 
 
 def _signing_material(manifest_type: str, manifest_sha256: str, key_id: str, algorithm: str, signed_at: str) -> bytes:
+    """Retain the old canonical material only for migration diagnostics."""
+
     return canonical_json({
         'manifestType': manifest_type,
         'manifestSha256': manifest_sha256,
@@ -94,60 +133,14 @@ def _signing_material(manifest_type: str, manifest_sha256: str, key_id: str, alg
 
 
 def sign_manifest(manifest_type: str, manifest: Mapping[str, Any], key_pair: SigningKeyPair) -> SignedManifestEnvelope:
-    manifest_json = dict(manifest)
-    manifest_sha256 = sha256_json(manifest_json)
-    signed_at = utc_now()
-    signature = hmac.new(
-        key_pair.private_key.encode('utf-8'),
-        _signing_material(manifest_type, manifest_sha256, key_pair.key_id, key_pair.algorithm, signed_at),
-        hashlib.sha256,
-    ).hexdigest()
-    return SignedManifestEnvelope(
-        manifest_type=str(manifest_type),
-        manifest=manifest_json,
-        manifest_sha256=manifest_sha256,
-        signature=signature,
-        signer_key_id=key_pair.key_id,
-        signer_public_key=key_pair.public_key,
-        signed_at=signed_at,
-        algorithm=key_pair.algorithm,
-    )
+    """Reject creation of new v1 trust envelopes."""
+
+    del manifest_type, manifest, key_pair
+    _raise_legacy_trust_disabled('sign_manifest')
 
 
 def verify_signed_manifest(envelope: Mapping[str, Any] | SignedManifestEnvelope) -> dict[str, Any]:
-    if isinstance(envelope, SignedManifestEnvelope):
-        payload = envelope.to_json()
-    else:
-        payload = dict(envelope)
-    try:
-        manifest_type = str(payload['manifestType'])
-        manifest = dict(payload['manifest'])
-        manifest_sha256 = str(payload['manifestSha256'])
-        signature = str(payload['signature'])
-        signed_at = str(payload['signedAt'])
-        signer = dict(payload['signer'])
-        key_id = str(signer['keyId'])
-        algorithm = str(signer['algorithm'])
-        public_key = str(signer['publicKey'])
-    except Exception as exc:  # noqa: BLE001
-        raise InteroperabilityError('signed_manifest_invalid', 'Signed manifest envelope is malformed.') from exc
-    if algorithm != SIGNATURE_ALGORITHM:
-        raise InteroperabilityError('signature_algorithm_unsupported', f'Unsupported signature algorithm: {algorithm}')
-    actual_sha256 = sha256_json(manifest)
-    if actual_sha256 != manifest_sha256:
-        raise InteroperabilityError('manifest_payload_tampered', 'Manifest payload hash does not match the envelope.')
-    expected = hmac.new(
-        public_key.encode('utf-8'),
-        _signing_material(manifest_type, manifest_sha256, key_id, algorithm, signed_at),
-        hashlib.sha256,
-    ).hexdigest()
-    if not hmac.compare_digest(expected, signature):
-        raise InteroperabilityError('manifest_signature_invalid', 'Manifest signature verification failed.')
-    return {
-        'verified': True,
-        'manifestType': manifest_type,
-        'manifest': manifest,
-        'manifestSha256': manifest_sha256,
-        'signerKeyId': key_id,
-        'algorithm': algorithm,
-    }
+    """Reject every v1 envelope before reading attacker-controlled key data."""
+
+    del envelope
+    _raise_legacy_trust_disabled('verify_signed_manifest')

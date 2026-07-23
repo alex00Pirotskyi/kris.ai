@@ -1,0 +1,57 @@
+{
+  "caseCount": 8,
+  "failedCount": 0,
+  "milestone": "P0-002",
+  "passed": true,
+  "passedCount": 8,
+  "results": [
+    {
+      "detail": "enabled=false replacement=signed_manifest_v2",
+      "name": "Disablement status is explicit",
+      "passed": true
+    },
+    {
+      "detail": "code=v1_trust_disabled operation=generate_signing_keypair",
+      "name": "Legacy key generation is blocked",
+      "passed": true
+    },
+    {
+      "detail": "code=v1_trust_disabled operation=sign_manifest",
+      "name": "Legacy manifest signing is blocked",
+      "passed": true
+    },
+    {
+      "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+      "name": "Envelope-supplied HMAC forgery is rejected",
+      "passed": true
+    },
+    {
+      "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+      "name": "Typed legacy envelope is rejected",
+      "passed": true
+    },
+    {
+      "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+      "name": "Malformed legacy envelope is rejected fail-closed",
+      "passed": true
+    },
+    {
+      "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+      "name": "Algorithm substitution cannot bypass disablement",
+      "passed": true
+    },
+    {
+      "detail": "legacy verifier contains no acceptance or envelope-key verification path",
+      "name": "Legacy acceptance implementation is absent",
+      "passed": true
+    }
+  ],
+  "trustStatus": {
+    "enabled": false,
+    "errorCode": "v1_trust_disabled",
+    "legacySchemaVersion": "1.0.0",
+    "reason": "Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.",
+    "replacement": "signed_manifest_v2"
+  },
+  "version": "1.9.0+190"
+}

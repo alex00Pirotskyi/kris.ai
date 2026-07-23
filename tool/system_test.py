@@ -137,6 +137,7 @@ def main() -> int:
         "tool/generate_v190_contracts.py",
         "tool/interoperability_admin_v19.py",
         "tool/interoperability_admin_v19_test.py",
+        "tool/v1_trust_disablement_test.py",
         "lib/product/interoperability_v19.dart",
         "lib/product/release_operations_v19.dart",
         "lib/product/generated/v190_contracts.g.dart",
@@ -240,6 +241,7 @@ def main() -> int:
     interoperability_v19 = read(root, "tool/interoperability_admin_v19.py")
     interoperability_v19_gate = read(root, "tool/interoperability_admin_v19_test.py")
     interoperability_v19_helper = read(root, "tool/interoperability_v19.py")
+    v1_trust_disablement_gate = read(root, "tool/v1_trust_disablement_test.py")
     release_ops_v19 = read(root, "tool/release_ops_v19.py")
     release_ops_v19_gate = read(root, "tool/release_ops_v19_test.py")
     interoperability_v19_dart = read(root, "lib/product/interoperability_v19.dart")
@@ -1222,6 +1224,28 @@ def main() -> int:
             and "entry.objective" in execution_intelligence
             and "--execution-intelligence" in cli_source,
             "Role routing, durable circuit state, semantic progress, strategy escalation, objective verification, phase budgets, and context compaction are integrated.",
+        )
+    )
+
+    results.append(
+        Result(
+            "P0-002 legacy v1 trust disablement",
+            contains_all(
+                interoperability_v19_helper + v1_trust_disablement_gate,
+                (
+                    "LEGACY_TRUST_ENABLED = False",
+                    "LEGACY_TRUST_ERROR_CODE = 'v1_trust_disabled'",
+                    "_raise_legacy_trust_disabled('generate_signing_keypair')",
+                    "_raise_legacy_trust_disabled('sign_manifest')",
+                    "_raise_legacy_trust_disabled('verify_signed_manifest')",
+                    "Envelope-supplied HMAC forgery is rejected",
+                    "Legacy acceptance implementation is absent",
+                ),
+            )
+            and "public_key.encode('utf-8')" not in interoperability_v19_helper
+            and "hmac.compare_digest(expected, signature)" not in interoperability_v19_helper
+            and "'verified': True" not in interoperability_v19_helper,
+            "The self-authenticating v1 HMAC path cannot generate, sign, or verify trust; the exact attacker forgery is a required executable regression.",
         )
     )
 

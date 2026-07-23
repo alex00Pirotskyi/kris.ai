@@ -1,0 +1,13 @@
+{
+  "attack": "sender chooses HMAC material, signs arbitrary manifest, and carries the same material in signer.publicKey",
+  "milestone": "P0-002",
+  "patched": {
+    "accepted": false,
+    "errorCode": "v1_trust_disabled"
+  },
+  "regressionPassed": true,
+  "vulnerableBase": {
+    "accepted": true,
+    "errorCode": null
+  }
+}

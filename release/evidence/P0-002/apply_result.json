@@ -1,0 +1,168 @@
+{
+  "appliedAt": "2026-07-23T11:13:21.002220+00:00",
+  "backupPath": "C:\\dev\\flutter\\kris_studio_ai_2.p0-002-backups\\20260723T111320Z",
+  "commands": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "py_compile",
+        "tool/interoperability_v19.py",
+        "tool/v1_trust_disablement_test.py",
+        "tool/system_test.py",
+        "tool/validate_release.py"
+      ],
+      "exitCode": 0,
+      "finishedAt": "2026-07-23T11:13:20.836197+00:00",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": "",
+      "startedAt": "2026-07-23T11:13:20.749831+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py",
+        "--json-output",
+        "release/V1_TRUST_DISABLEMENT_RESULTS.json"
+      ],
+      "exitCode": 0,
+      "finishedAt": "2026-07-23T11:13:20.930040+00:00",
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1",
+      "outputTail": "{\n  \"caseCount\": 8,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-002\",\n  \"passed\": true,\n  \"passedCount\": 8,\n  \"results\": [\n    {\n      \"detail\": \"enabled=false replacement=signed_manifest_v2\",\n      \"name\": \"Disablement status is explicit\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=generate_signing_keypair\",\n      \"name\": \"Legacy key generation is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=sign_manifest\",\n      \"name\": \"Legacy manifest signing is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n",
+      "startedAt": "2026-07-23T11:13:20.836197+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "bash",
+        "-n",
+        "tool/verify.sh"
+      ],
+      "exitCode": 0,
+      "finishedAt": "2026-07-23T11:13:20.953672+00:00",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": "",
+      "startedAt": "2026-07-23T11:13:20.930040+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "finishedAt": "2026-07-23T11:13:21.001218+00:00",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": "",
+      "startedAt": "2026-07-23T11:13:20.954686+00:00",
+      "status": "passed"
+    }
+  ],
+  "failureCount": 0,
+  "fullSourceGatesRequested": false,
+  "gitBefore": {
+    "available": true,
+    "head": {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0,
+      "finishedAt": "2026-07-23T11:13:20.451495+00:00",
+      "outputSha256": "0fb1530026a46f413c72eba9f31ab11bca8057a76d7474ae8ff14a4c48092b6c",
+      "outputTail": "9fee685e966e0e709332e0be22cfbc726066af70\n",
+      "startedAt": "2026-07-23T11:13:20.424148+00:00",
+      "status": "passed"
+    },
+    "status": {
+      "argv": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "exitCode": 0,
+      "finishedAt": "2026-07-23T11:13:20.484511+00:00",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": "",
+      "startedAt": "2026-07-23T11:13:20.451495+00:00",
+      "status": "passed"
+    }
+  },
+  "milestone": "P0-002",
+  "p0_001Closure": {
+    "detail": "strict complete-checkout receipt verifies 255/255 source entries",
+    "emergencyExceptionUsed": false,
+    "passed": true
+  },
+  "passed": true,
+  "preflightState": "ready",
+  "schemaVersion": "1.0.0",
+  "securityRollbackPolicy": "The fail-closed helper remains installed even if a downstream gate fails.",
+  "sourceManifestIntegrity": {
+    "entryCount": 257,
+    "mismatched": [],
+    "missing": [],
+    "status": "passed",
+    "verifiedCount": 257
+  },
+  "trustRegression": {
+    "caseCount": 8,
+    "failedCount": 0,
+    "milestone": "P0-002",
+    "passed": true,
+    "passedCount": 8,
+    "results": [
+      {
+        "detail": "enabled=false replacement=signed_manifest_v2",
+        "name": "Disablement status is explicit",
+        "passed": true
+      },
+      {
+        "detail": "code=v1_trust_disabled operation=generate_signing_keypair",
+        "name": "Legacy key generation is blocked",
+        "passed": true
+      },
+      {
+        "detail": "code=v1_trust_disabled operation=sign_manifest",
+        "name": "Legacy manifest signing is blocked",
+        "passed": true
+      },
+      {
+        "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+        "name": "Envelope-supplied HMAC forgery is rejected",
+        "passed": true
+      },
+      {
+        "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+        "name": "Typed legacy envelope is rejected",
+        "passed": true
+      },
+      {
+        "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+        "name": "Malformed legacy envelope is rejected fail-closed",
+        "passed": true
+      },
+      {
+        "detail": "code=v1_trust_disabled operation=verify_signed_manifest",
+        "name": "Algorithm substitution cannot bypass disablement",
+        "passed": true
+      },
+      {
+        "detail": "legacy verifier contains no acceptance or envelope-key verification path",
+        "name": "Legacy acceptance implementation is absent",
+        "passed": true
+      }
+    ],
+    "trustStatus": {
+      "enabled": false,
+      "errorCode": "v1_trust_disabled",
+      "legacySchemaVersion": "1.0.0",
+      "reason": "Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.",
+      "replacement": "signed_manifest_v2"
+    },
+    "version": "1.9.0+190"
+  }
+}
