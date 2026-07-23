@@ -1,0 +1,55 @@
+{
+  "caseCount": 9,
+  "failedCount": 0,
+  "milestone": "P0-003",
+  "passed": true,
+  "passedCount": 9,
+  "results": [
+    {
+      "detail": "backslash, quote, dollar, newline, and Unicode line separators are encoded",
+      "name": "Shared Dart literal encoder",
+      "passed": true
+    },
+    {
+      "detail": "three generators share one reviewed Dart literal encoder",
+      "name": "Generators use the shared encoder",
+      "passed": true
+    },
+    {
+      "detail": "generated schemas contain 81 escaped dollar occurrences and no known unsafe token",
+      "name": "Generated Dart dollar safety",
+      "passed": true
+    },
+    {
+      "detail": "v170/v180/v190 generated files exactly match their generators",
+      "name": "Generated contract check mode",
+      "passed": true
+    },
+    {
+      "detail": "SQLite JSONPath remains literal at runtime without Dart interpolation",
+      "name": "Durable workflow JSONPath literal",
+      "passed": true
+    },
+    {
+      "detail": "module imports without POSIX resource support and sandbox execution remains unavailable",
+      "name": "POSIX resource import fails closed",
+      "passed": true
+    },
+    {
+      "detail": "dependency resolution precedes non-mutating format, analysis, and test gates",
+      "name": "SDK gate ordering and nonmutation",
+      "passed": true
+    },
+    {
+      "detail": "three-OS workflow reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates",
+      "name": "Three-OS CI contract",
+      "passed": true
+    },
+    {
+      "detail": "P0-002 forgery regression remains active",
+      "name": "P0-002 trust remains disabled",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

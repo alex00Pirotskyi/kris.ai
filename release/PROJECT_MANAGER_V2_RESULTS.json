@@ -1,0 +1,132 @@
+{
+  "caseCount": 16,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 16,
+  "results": [
+    {
+      "detail": "strict profile parsed with declared artifact validator",
+      "durationMs": 16,
+      "name": "Project Profile v2 parses strict commands",
+      "passed": true
+    },
+    {
+      "detail": "rejected with profile_unknown_authority",
+      "durationMs": 31,
+      "name": "Unknown profile authority fails closed",
+      "passed": true
+    },
+    {
+      "detail": "rejected with profile_path_outside_project",
+      "durationMs": 14,
+      "name": "Traversal working directory fails closed",
+      "passed": true
+    },
+    {
+      "detail": "rejected with profile_shell_rejected",
+      "durationMs": 15,
+      "name": "Shell command profiles are rejected",
+      "passed": true
+    },
+    {
+      "detail": "rejected with profile_unsandboxed_rejected",
+      "durationMs": 16,
+      "name": "Unsandboxed profiles are rejected",
+      "passed": true
+    },
+    {
+      "detail": "workspace symlink rejected",
+      "durationMs": 0,
+      "name": "Source manifest rejects symbolic links",
+      "passed": true
+    },
+    {
+      "detail": "schema v6 and all cumulative tables are present",
+      "durationMs": 30,
+      "name": "Workflow schema v6 contains Project Manager, intelligence, and interoperability tables",
+      "passed": true
+    },
+    {
+      "detail": "status derives project-command readiness from the live sandbox while built-in packaging remains independently ready",
+      "durationMs": 16,
+      "name": "Project status derives readiness from live sandbox capability",
+      "passed": true
+    },
+    {
+      "detail": "analyze failed closed without mutating the project when the sandbox was unavailable",
+      "durationMs": 46,
+      "name": "Read-only Analyze executes in the sandbox or fails closed when unavailable",
+      "passed": true
+    },
+    {
+      "detail": "test failed closed without mutating the project when the sandbox was unavailable",
+      "durationMs": 0,
+      "name": "Read-only Test executes in the sandbox or fails closed when unavailable",
+      "passed": true
+    },
+    {
+      "detail": "build failed closed without mutating the project when the sandbox was unavailable",
+      "durationMs": 15,
+      "name": "Build writes only to a retained snapshot or fails closed when unavailable",
+      "passed": true
+    },
+    {
+      "detail": "a blocked build persisted no fabricated artifact evidence",
+      "durationMs": 16,
+      "name": "Artifact validation persists only after a successful sandboxed build",
+      "passed": true
+    },
+    {
+      "detail": "two package operations produced byte-identical safe ZIPs",
+      "durationMs": 78,
+      "name": "Deterministic package output is byte-identical",
+      "passed": true
+    },
+    {
+      "detail": "unsupported authority is reported and never silently granted",
+      "durationMs": 30,
+      "name": "Network, secret, and preview-port claims are blocked",
+      "passed": true
+    },
+    {
+      "detail": "run failed closed without mutating the project when the sandbox was unavailable",
+      "durationMs": 0,
+      "name": "Managed Run terminates the sandbox tree or fails closed when unavailable",
+      "passed": true
+    },
+    {
+      "detail": "append-only trigger blocked route-decision mutation",
+      "durationMs": 16,
+      "name": "Append-only intelligence records reject mutation",
+      "passed": true
+    }
+  ],
+  "sandbox": {
+    "available": false,
+    "backend": "unavailable",
+    "commands": {
+      "chroot": "C:\\Program Files\\Git\\usr\\bin\\chroot.EXE",
+      "mount": "C:\\Program Files\\Git\\usr\\bin\\mount.EXE",
+      "unshare": null
+    },
+    "issues": [
+      "linux namespaces are unavailable on this platform",
+      "missing required helper: unshare"
+    ],
+    "platform": "win32",
+    "supports": {
+      "boundedFiniteCommand": false,
+      "directNetworkOff": false,
+      "killOnWorkerExit": false,
+      "mountNamespace": false,
+      "networkNamespace": false,
+      "oneUseSecretHandles": true,
+      "pidNamespace": false,
+      "publicHttpsBroker": true,
+      "readOnlyWorkspace": false,
+      "snapshotWritableWorkspace": false
+    },
+    "version": "1.9.0+190"
+  },
+  "version": "1.9.0+190"
+}

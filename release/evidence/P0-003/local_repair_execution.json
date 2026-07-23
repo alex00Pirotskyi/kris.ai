@@ -1,0 +1,261 @@
+{
+  "backupDirectory": "C:\\dev\\flutter\\kris_studio_ai_2.p0-003-repair-backup-20260723T162919Z",
+  "changedFiles": [
+    ".github/workflows/ci.yml",
+    "docs/roadmap/MASTER.md",
+    "docs/roadmap/STATUS.md",
+    "docs/roadmap/V3_1_RECONCILIATION.md",
+    "lib/product/durable_workflow.dart",
+    "release/evidence/P0-003/IMPLEMENTATION_PLAN.md",
+    "release/evidence/P0-003/REPAIR_PLAN.md",
+    "release/evidence/P0-003/ci_matrix.json",
+    "release/evidence/P0-004/STARTER.md",
+    "tasks/active/P0-003.md",
+    "tasks/active/P0-004.md",
+    "tool/capture_ci_environment.py",
+    "tool/dart_string_literal.py",
+    "tool/generate_v170_contracts.py",
+    "tool/generate_v180_contracts.py",
+    "tool/generate_v190_contracts.py",
+    "tool/p0_003_repair_test.py",
+    "tool/project_manager_v2.py",
+    "tool/project_manager_v2_test.py",
+    "tool/sandbox_worker.py",
+    "tool/system_test.py",
+    "tool/validate_release.py",
+    "tool/verify.sh"
+  ],
+  "completedAt": "2026-07-23T16:29:31.307437+00:00",
+  "failedGateCount": 1,
+  "gates": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "completedAt": "2026-07-23T16:29:19.353608+00:00",
+      "exitCode": 0,
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1",
+      "outputTail": "{\n  \"caseCount\": 8,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-002\",\n  \"passed\": true,\n  \"passedCount\": 8,\n  \"results\": [\n    {\n      \"detail\": \"enabled=false replacement=signed_manifest_v2\",\n      \"name\": \"Disablement status is explicit\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=generate_signing_keypair\",\n      \"name\": \"Legacy key generation is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=sign_manifest\",\n      \"name\": \"Legacy manifest signing is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:19.273003+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v170_contracts.py"
+      ],
+      "completedAt": "2026-07-23T16:29:20.391683+00:00",
+      "exitCode": 0,
+      "outputSha256": "174fb06f0eb99f7dd7601af9426d02a2ff3b8dd742528b82c0bd7b9e92099048",
+      "outputTail": "<PROJECT>\\lib\\product\\generated\\v170_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:19.691326+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v180_contracts.py"
+      ],
+      "completedAt": "2026-07-23T16:29:21.019013+00:00",
+      "exitCode": 0,
+      "outputSha256": "ae2c77e5fb30393dc5a6f8046361e8520a750aa375077662962559590ba9a8c8",
+      "outputTail": "<PROJECT>\\lib\\product\\generated\\v180_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:20.391683+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v190_contracts.py"
+      ],
+      "completedAt": "2026-07-23T16:29:21.699511+00:00",
+      "exitCode": 0,
+      "outputSha256": "383d044d022d7c4b3ddd727c05d5e3a74723c01af3c7dc440737473e513342e7",
+      "outputTail": "<PROJECT>\\lib\\product\\generated\\v190_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:21.019013+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "flutter",
+        "pub",
+        "get"
+      ],
+      "completedAt": "2026-07-23T16:29:23.257868+00:00",
+      "exitCode": 0,
+      "outputSha256": "8064f0508185b174f6df122cf6399aaff9bd153a65ea3a48a20bb6fb257cd5ad",
+      "outputTail": "Resolving dependencies...\nDownloading packages...\n  flutter_lints 5.0.0 (6.0.0 available)\n  lints 5.1.1 (6.1.0 available)\n  matcher 0.12.19 (0.12.20 available)\n  meta 1.18.0 (1.19.0 available)\n  sqlite3 2.9.4 (3.5.0 available)\n  sqlite3_flutter_libs 0.5.42 (0.6.0+eol available)\n  test_api 0.7.11 (0.7.13 available)\n  vector_math 2.2.0 (2.4.1 available)\nGot dependencies!\n8 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:21.699511+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "dart",
+        "format",
+        "lib",
+        "test",
+        "tool/prune_stale_legacy.dart"
+      ],
+      "completedAt": "2026-07-23T16:29:25.429657+00:00",
+      "exitCode": 0,
+      "outputSha256": "f39f307f6ce9da0d673f2fe3fb392538c6de1ba35bda4fb5193e301770f5a8dc",
+      "outputTail": "Formatted lib\\product\\agent_protocol.dart\nFormatted lib\\product\\api_server.dart\nFormatted lib\\product\\chat_studio.dart\nFormatted lib\\product\\crypto_utils.dart\nFormatted lib\\product\\deployment_support.dart\nFormatted lib\\product\\domain.dart\nFormatted lib\\product\\durable_workflow.dart\nFormatted lib\\product\\execution_intelligence.dart\nFormatted lib\\product\\extensions_index.dart\nFormatted lib\\product\\file_adapters.dart\nFormatted lib\\product\\generated\\prompt_studio_contracts.g.dart\nFormatted lib\\product\\generated\\protocol_contracts.g.dart\nFormatted lib\\product\\generated\\workflow_migrations.g.dart\nFormatted lib\\product\\interoperability_v19.dart\nFormatted lib\\product\\knowledge_memory_v2.dart\nFormatted lib\\product\\mcp.dart\nFormatted lib\\product\\models_research.dart\nFormatted lib\\product\\planning_runtime.dart\nFormatted lib\\product\\product_runtime.dart\nFormatted lib\\product\\project_diagnostics.dart\nFormatted lib\\product\\project_manager_v2.dart\nFormatted lib\\product\\prompt_planning.dart\nFormatted lib\\product\\prompt_studio_v2.dart\nFormatted lib\\product\\retry_policy.dart\nFormatted lib\\product\\storage_security.dart\nFormatted lib\\product\\tool_schema.dart\nFormatted lib\\product\\ui.dart\nFormatted lib\\product\\ui_advanced.dart\nFormatted lib\\product\\ui_components.dart\nFormatted lib\\product\\workspace_tools.dart\nFormatted test\\product\\budget_diagnostics_test.dart\nFormatted test\\product\\diagnostic_replay_test.dart\nFormatted test\\product\\durable_workflow_kernel_test.dart\nFormatted test\\product\\execution_reliability_test.dart\nFormatted test\\product\\file_adapters_test.dart\nFormatted test\\product\\knowledge_memory_test.dart\nFormatted test\\product\\knowledge_memory_v2_test.dart\nFormatted test\\product\\prompt_studio_v2_test.dart\nFormatted test\\product\\source_contract_test.dart\nFormatted test\\product\\typed_protocol_schema_test.dart\nFormatted test\\product\\v1_product_preview_test.dart\nFormatted test\\widget_test.dart\nFormatted tool/prune_stale_legacy.dart\nFormatted 53 files (43 changed) in 1.66 seconds.\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:23.257868+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "py_compile",
+        "tool/sandbox_worker.py",
+        "tool/dart_string_literal.py",
+        "tool/p0_003_repair_test.py",
+        "tool/capture_ci_environment.py",
+        "tool/generate_v170_contracts.py",
+        "tool/generate_v180_contracts.py",
+        "tool/generate_v190_contracts.py",
+        "tool/project_manager_v2.py",
+        "tool/project_manager_v2_test.py",
+        "tool/kristin_cli.py",
+        "tool/system_test.py",
+        "tool/validate_release.py"
+      ],
+      "completedAt": "2026-07-23T16:29:26.013155+00:00",
+      "exitCode": 0,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": "",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:25.903706+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "completedAt": "2026-07-23T16:29:26.086018+00:00",
+      "exitCode": 0,
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1",
+      "outputTail": "{\n  \"caseCount\": 8,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-002\",\n  \"passed\": true,\n  \"passedCount\": 8,\n  \"results\": [\n    {\n      \"detail\": \"enabled=false replacement=signed_manifest_v2\",\n      \"name\": \"Disablement status is explicit\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=generate_signing_keypair\",\n      \"name\": \"Legacy key generation is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=sign_manifest\",\n      \"name\": \"Legacy manifest signing is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:26.013155+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v170_contracts.py",
+        "--check"
+      ],
+      "completedAt": "2026-07-23T16:29:26.745124+00:00",
+      "exitCode": 0,
+      "outputSha256": "fec1a92f04af75bbc3e745638af1ee083e2f24d9983b5bde0c6c75b78e878171",
+      "outputTail": "PASS lib\\product\\generated\\v170_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:26.086018+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v180_contracts.py",
+        "--check"
+      ],
+      "completedAt": "2026-07-23T16:29:27.304102+00:00",
+      "exitCode": 0,
+      "outputSha256": "d97e28098655b591310eb2d0ded11807957049d9f2087606193b446cd82eb64b",
+      "outputTail": "PASS lib\\product\\generated\\v180_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:26.745124+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v190_contracts.py",
+        "--check"
+      ],
+      "completedAt": "2026-07-23T16:29:27.950446+00:00",
+      "exitCode": 0,
+      "outputSha256": "d1cfe482d9e50f9d09db4e92aa314e397812d45a0c694de29f19ab6115fe1ec2",
+      "outputTail": "PASS lib\\product\\generated\\v190_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:27.304102+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/p0_003_repair_test.py",
+        "--json-output",
+        "release/evidence/P0-003/repair_results.json"
+      ],
+      "completedAt": "2026-07-23T16:29:30.134348+00:00",
+      "exitCode": 0,
+      "outputSha256": "83b47299e167dc603b5f37d4725d3cb23f3d9834f294f3e870c2edbf1eddc902",
+      "outputTail": "{\n  \"caseCount\": 9,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-003\",\n  \"passed\": true,\n  \"passedCount\": 9,\n  \"results\": [\n    {\n      \"detail\": \"backslash, quote, dollar, newline, and Unicode line separators are encoded\",\n      \"name\": \"Shared Dart literal encoder\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"three generators share one reviewed Dart literal encoder\",\n      \"name\": \"Generators use the shared encoder\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"generated schemas contain 81 escaped dollar occurrences and no known unsafe token\",\n      \"name\": \"Generated Dart dollar safety\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"v170/v180/v190 generated files exactly match their generators\",\n      \"name\": \"Generated contract check mode\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"SQLite JSONPath remains literal at runtime without Dart interpolation\",\n      \"name\": \"Durable workflow JSONPath literal\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"module imports without POSIX resource support and sandbox execution remains unavailable\",\n      \"name\": \"POSIX resource import fails closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"dependency resolution precedes non-mutating format, analysis, and test gates\",\n      \"name\": \"SDK gate ordering and nonmutation\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"three-OS workflow reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates\",\n      \"name\": \"Three-OS CI contract\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P0-002 forgery regression remains active\",\n      \"name\": \"P0-002 trust remains disabled\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\"\n}\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:27.950446+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/project_manager_v2_test.py",
+        "--json-output",
+        "release/PROJECT_MANAGER_V2_RESULTS.json"
+      ],
+      "completedAt": "2026-07-23T16:29:30.605127+00:00",
+      "exitCode": 0,
+      "outputSha256": "c5504f9a8e9568853e27a1da88b40ca44c589fa86b68b89105104c6327c31473",
+      "outputTail": "PASS Project Profile v2 parses strict commands: strict profile parsed with declared artifact validator\nPASS Unknown profile authority fails closed: rejected with profile_unknown_authority\nPASS Traversal working directory fails closed: rejected with profile_path_outside_project\nPASS Shell command profiles are rejected: rejected with profile_shell_rejected\nPASS Unsandboxed profiles are rejected: rejected with profile_unsandboxed_rejected\nPASS Source manifest rejects symbolic links: workspace symlink rejected\nPASS Workflow schema v6 contains Project Manager, intelligence, and interoperability tables: schema v6 and all cumulative tables are present\nPASS Project status derives readiness from live sandbox capability: status derives project-command readiness from the live sandbox while built-in packaging remains independently ready\nPASS Read-only Analyze executes in the sandbox or fails closed when unavailable: analyze failed closed without mutating the project when the sandbox was unavailable\nPASS Read-only Test executes in the sandbox or fails closed when unavailable: test failed closed without mutating the project when the sandbox was unavailable\nPASS Build writes only to a retained snapshot or fails closed when unavailable: build failed closed without mutating the project when the sandbox was unavailable\nPASS Artifact validation persists only after a successful sandboxed build: a blocked build persisted no fabricated artifact evidence\nPASS Deterministic package output is byte-identical: two package operations produced byte-identical safe ZIPs\nPASS Network, secret, and preview-port claims are blocked: unsupported authority is reported and never silently granted\nPASS Managed Run terminates the sandbox tree or fails closed when unavailable: run failed closed without mutating the project when the sandbox was unavailable\nPASS Append-only intelligence records reject mutation: append-only trigger blocked route-decision mutation\n\n16/16 Project Manager 2 cases passed\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T16:29:30.134348+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/system_test.py",
+        "--project",
+        ".",
+        "--json"
+      ],
+      "completedAt": "2026-07-23T16:29:30.974026+00:00",
+      "exitCode": 1,
+      "outputSha256": "33fc1bea88ed4cf7d203f9dcc7c45a075699a14ab684506b971b4ba6ad4fb1ad",
+      "outputTail": "{\n  \"failed\": 1,\n  \"passed\": 37,\n  \"results\": [\n    {\n      \"detail\": \"All retained typed-protocol, durable-kernel, Linux sandbox, Prompt Studio 2, Project Manager 2, and execution-intelligence files are present.\",\n      \"name\": \"Required v1.9 cumulative files\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"In-project absolute paths are normalized and outside paths remain blocked with hashed audit provenance.\",\n      \"name\": \"Active-project absolute path compatibility\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Recognized workspace aliases and stale same-project paths are safely rebased, arbitrary external writes remain blocked, and diagnostics retain hashed recovery provenance.\",\n      \"name\": \"Bounded external path rebasing\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Bounded model correction is wired for path and tool-argument mistakes.\",\n      \"name\": \"Recoverable tool argument repair\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Nested model envelopes, safe aliases, consecutive repair streaks, redacted previews, bounded read-only fallback, and allowlist rejection are wired.\",\n      \"name\": \"Model protocol compatibility and safe fallback\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Structured prompt generation, validation, persistence, and runtime access are present.\",\n      \"name\": \"AI Prompt Studio model\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Task plans are bounded to 100 tasks and carry complexity, risk, confidence, and execution estimates.\",\n      \"name\": \"Adaptive 1-100 task planning\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Plan edits create new revisions and selected execution expands prerequisite dependencies exactly once.\",\n      \"name\": \"Immutable plan revisions and dependency compilation\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Prompt versions and task-plan revisions have dedicated local repositories.\",\n      \"name\": \"Persistent prompt and plan repositories\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Prompt generation, plan generation, selective execution, stop, and immutable-edit controls are visible in Prompt Studio.\",\n      \"name\": \"Prompt-to-Task user controls\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Authenticated loopback routes cover generation, versioning, editing, listing, and deterministic compilation.\",\n      \"name\": \"Prompt and task-plan API\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Flutter tests cover the reported path failure and core Prompt-to-Task behavior.\",\n      \"name\": \"Behavioral regression coverage\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Retries use fresh linked runs and plan-scaled budgets; loops are bounded and a redacted all-logs ZIP is available from UI, API, and CLI.\",\n      \"name\": \"Budget-aware retries and diagnostic export\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Duplicate static reads are cached, redirected to safe new evidence, and only the dedicated baseline item can complete deterministically.\",\n      \"name\": \"Repeated-tool loop recovery\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Flutter ephemeral binaries and caches are ignored consistently by source validation, secret scanning, and release packaging.\",\n      \"name\": \"Generated Flutter/native state exclusion\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"`test --system` and `test --release` parse as mutually exclusive test levels.\",\n      \"name\": \"CLI system and release modes\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"A custom Analyze/Test/Build/Run profile is detected and its bounded analysis, build, and run commands execute successfully.\",\n      \"name\": \"Project Manager CLI profile execution\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Flutter and Dart commands receive Windows Pub-cache, proxy, and certificate variables while ordinary project commands keep the narrower environment.\",\n      \"name\": \"SDK subprocess environment compatibility\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"The desktop, API, and CLI share one project profile, while artifact-producing tasks receive governed mutation capability and planning-only tasks remain read-only.\",\n      \"name\": \"Project Manager and capability-aligned execution\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Failed memory is explicit-only, the observed composite action recovers through an allowlisted task tool, generated plans align with local capabilities, and accidental self-target mutation is blocked.\",\n      \"name\": \"Diagnostic-derived memory, protocol, and capability recovery\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Literal source markers compile, analyzer infos are removed, source-only validation avoids duplicate SDK gates, and failures are visible.\",\n      \"name\": \"Windows compile and validator hotfix\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ProjectDiagnosticsService imports the module that defines ProductException, preventing the reported Windows analyzer failure.\",\n      \"name\": \"Project Manager ProductException linkage\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Cold Ollama loads are prewarmed, retried inside one model request, cancellable from Stop, observable in diagnostics, and unsupported human-study tasks are rewritten into local objective verification.\",\n      \"name\": \"Ollama cold-load resilience and capability-safe planning\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"The reported analyzer info is removed, progress-stage verification survives dart format, and local-only deployment instructions are tested semantically.\",\n      \"name\": \"Workstation analyzer and formatter-resilient contracts\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Cold-load and cancellation fixtures synchronize on explicit server events, while Kristin-owned Flutter suites run serially and preserve the failing test identity.\",\n      \"name\": \"Deterministic repeated Flutter release validation\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Both supplied failures are compact replay fixtures; wrapped paths, read-only loops, post-write verification, copied coordinator metadata, and doomed retries have deterministic controls.\",\n      \"name\": \"V1.1.7 golden replay and convergence controls\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Five typed decisions, four provider adapters, and all 23 governed tool contracts are generated and validated before dispatch and after result creation.\",\n      \"name\": \"Typed AgentDecision and generated tool-schema foundation\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Nested argument preservation, fail-closed writes, mutation-required artifact recovery, compact prompts, no-op convergence, product-specific validation, and process boundaries are covered by deterministic contracts.\",\n      \"name\": \"Execution convergence and product-specific artifact recovery\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"The cumulative source line now contains a real Linux namespace worker, HTTPS broker, one-use secret broker, sandbox-aware CLI routing, and honest metadata that the full cross-platform v1.4 milestone is still open.\",\n      \"name\": \"Linux sandbox backfill source integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Canonical specifications, plans, evaluation datasets, stable-ID/reference checks, capability checks, side-effect-free simulation, 1/10/50/100 scale fixtures, and sandbox fail-closed behavior are integrated without replacing the v1.3 durable kernel.\",\n      \"name\": \"Prompt Studio 2 deterministic plan compiler\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"The v1.9 head preserves the verified lineage and adds interoperability, administration, audit verification, and authenticated source-update foundations to the canonical source line.\",\n      \"name\": \"Structured transitive release lineage\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"SQLite authority, append-only events, transactional projections, idempotency, leases, checkpoints, compensation, migration rollback, and executable crash contracts are wired.\",\n      \"name\": \"Retained v1.3.0 durable workflow kernel\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Strict profiles, live sandbox readiness, retained snapshots, durable process records, bounded artifacts, and CLI integration are wired.\",\n      \"name\": \"V1.6 Project Manager 2 operational layer\",\n      \"passed\": false\n    },\n    {\n      \"detail\": \"Role routing, durable circuit state, semantic progress, strategy escalation, objective verification, phase budgets, and context compaction are integrated.\",\n      \"name\": \"V1.7 model router, verifier, and convergence engine\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"The self-authenticating v1 HMAC path cannot generate, sign, or verify trust; the exact attacker forgery is a required executable regression.\",\n      \"name\": \"P0-002 legacy v1 trust disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Typed MCP lifecycle manifests, bounded A2A delegation, signed manifests, audit verification, support lifecycle policy, and authenticated source-update policy are wired.\",\n      \"name\": \"V1.9 interoperability, administration, and release operations\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"One ProductRuntime composes the typed protocol, SQLite kernel, Linux sandbox, Prompt Studio 2, Project Manager 2, and execution-intelligence services.\",\n      \"name\": \"Cumulative v1.2-v1.9 runtime composition\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Runtime, package, CLI, schema-v6 persistence, Project Manager 2, execution intelligence, and v1.8 knowledge/file-adapter versions agree on the cumulative contract.\",\n      \"name\": \"V1.7 version identity\",\n      \"passed\": true\n    }\n  ]\n}\n",
+      "reason": "nonzero exit",
+      "startedAt": "2026-07-23T16:29:30.605127+00:00",
+      "status": "failed"
+    }
+  ],
+  "milestone": "P0-003",
+  "p0_003Closure": "requires_same_commit_green_ubuntu_windows_macos_ci",
+  "p0_004State": "blocked",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "project": "C:\\dev\\flutter\\kris_studio_ai_2",
+  "roadmapVersion": "3.1.2-p0-006-governance-integration",
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "available": true,
+    "entries": 268,
+    "sha256": "b34516a17f4c0ad688bec4cb4a3487cf3d347e797f27d40d7fa6010076e74280"
+  },
+  "sourceManifestVerification": {
+    "available": true,
+    "entries": 268,
+    "mismatched": [],
+    "passed": true
+  },
+  "status": "failed",
+  "unavailableGateCount": 0
+}
