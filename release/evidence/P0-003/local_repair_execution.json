@@ -1,0 +1,187 @@
+{
+  "backupDirectory": "C:\\dev\\flutter\\kris_studio_ai_2.p0-003-repair-backup-20260723T155221Z",
+  "changedFiles": [
+    ".github/workflows/ci.yml",
+    "docs/roadmap/MASTER.md",
+    "docs/roadmap/STATUS.md",
+    "docs/roadmap/V3_1_RECONCILIATION.md",
+    "lib/product/durable_workflow.dart",
+    "release/evidence/P0-003/IMPLEMENTATION_PLAN.md",
+    "release/evidence/P0-003/REPAIR_PLAN.md",
+    "release/evidence/P0-003/ci_matrix.json",
+    "release/evidence/P0-004/STARTER.md",
+    "tasks/active/P0-003.md",
+    "tasks/active/P0-004.md",
+    "tool/capture_ci_environment.py",
+    "tool/dart_string_literal.py",
+    "tool/generate_v170_contracts.py",
+    "tool/generate_v180_contracts.py",
+    "tool/generate_v190_contracts.py",
+    "tool/p0_003_repair_test.py",
+    "tool/project_manager_v2.py",
+    "tool/project_manager_v2_test.py",
+    "tool/sandbox_worker.py",
+    "tool/system_test.py",
+    "tool/validate_release.py",
+    "tool/verify.sh"
+  ],
+  "completedAt": "2026-07-23T15:52:29.166139+00:00",
+  "failedGateCount": 1,
+  "gates": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "completedAt": "2026-07-23T15:52:21.456220+00:00",
+      "exitCode": 0,
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1",
+      "outputTail": "{\n  \"caseCount\": 8,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-002\",\n  \"passed\": true,\n  \"passedCount\": 8,\n  \"results\": [\n    {\n      \"detail\": \"enabled=false replacement=signed_manifest_v2\",\n      \"name\": \"Disablement status is explicit\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=generate_signing_keypair\",\n      \"name\": \"Legacy key generation is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=sign_manifest\",\n      \"name\": \"Legacy manifest signing is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:21.357360+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v170_contracts.py"
+      ],
+      "completedAt": "2026-07-23T15:52:21.824063+00:00",
+      "exitCode": 0,
+      "outputSha256": "174fb06f0eb99f7dd7601af9426d02a2ff3b8dd742528b82c0bd7b9e92099048",
+      "outputTail": "<PROJECT>\\lib\\product\\generated\\v170_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:21.730667+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v180_contracts.py"
+      ],
+      "completedAt": "2026-07-23T15:52:21.915361+00:00",
+      "exitCode": 0,
+      "outputSha256": "ae2c77e5fb30393dc5a6f8046361e8520a750aa375077662962559590ba9a8c8",
+      "outputTail": "<PROJECT>\\lib\\product\\generated\\v180_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:21.824063+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v190_contracts.py"
+      ],
+      "completedAt": "2026-07-23T15:52:22.018410+00:00",
+      "exitCode": 0,
+      "outputSha256": "383d044d022d7c4b3ddd727c05d5e3a74723c01af3c7dc440737473e513342e7",
+      "outputTail": "<PROJECT>\\lib\\product\\generated\\v190_contracts.g.dart\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:21.915361+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "flutter",
+        "pub",
+        "get"
+      ],
+      "completedAt": "2026-07-23T15:52:26.994867+00:00",
+      "exitCode": 0,
+      "outputSha256": "8064f0508185b174f6df122cf6399aaff9bd153a65ea3a48a20bb6fb257cd5ad",
+      "outputTail": "Resolving dependencies...\nDownloading packages...\n  flutter_lints 5.0.0 (6.0.0 available)\n  lints 5.1.1 (6.1.0 available)\n  matcher 0.12.19 (0.12.20 available)\n  meta 1.18.0 (1.19.0 available)\n  sqlite3 2.9.4 (3.5.0 available)\n  sqlite3_flutter_libs 0.5.42 (0.6.0+eol available)\n  test_api 0.7.11 (0.7.13 available)\n  vector_math 2.2.0 (2.4.1 available)\nGot dependencies!\n8 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:22.018410+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "dart",
+        "format",
+        "lib",
+        "test",
+        "tool/prune_stale_legacy.dart"
+      ],
+      "completedAt": "2026-07-23T15:52:28.133624+00:00",
+      "exitCode": 0,
+      "outputSha256": "b8e1b07b98b908dec2bb767ad1edc981a4cba974803707b30e0750282f9851d9",
+      "outputTail": "Formatted lib\\product\\agent_protocol.dart\nFormatted lib\\product\\api_server.dart\nFormatted lib\\product\\chat_studio.dart\nFormatted lib\\product\\crypto_utils.dart\nFormatted lib\\product\\deployment_support.dart\nFormatted lib\\product\\domain.dart\nFormatted lib\\product\\durable_workflow.dart\nFormatted lib\\product\\execution_intelligence.dart\nFormatted lib\\product\\extensions_index.dart\nFormatted lib\\product\\file_adapters.dart\nFormatted lib\\product\\generated\\prompt_studio_contracts.g.dart\nFormatted lib\\product\\generated\\protocol_contracts.g.dart\nFormatted lib\\product\\generated\\v170_contracts.g.dart\nFormatted lib\\product\\generated\\v180_contracts.g.dart\nFormatted lib\\product\\generated\\v190_contracts.g.dart\nFormatted lib\\product\\generated\\workflow_migrations.g.dart\nFormatted lib\\product\\interoperability_v19.dart\nFormatted lib\\product\\knowledge_memory_v2.dart\nFormatted lib\\product\\mcp.dart\nFormatted lib\\product\\models_research.dart\nFormatted lib\\product\\planning_runtime.dart\nFormatted lib\\product\\product_runtime.dart\nFormatted lib\\product\\project_diagnostics.dart\nFormatted lib\\product\\project_manager_v2.dart\nFormatted lib\\product\\prompt_planning.dart\nFormatted lib\\product\\prompt_studio_v2.dart\nFormatted lib\\product\\retry_policy.dart\nFormatted lib\\product\\storage_security.dart\nFormatted lib\\product\\tool_schema.dart\nFormatted lib\\product\\ui.dart\nFormatted lib\\product\\ui_advanced.dart\nFormatted lib\\product\\ui_components.dart\nFormatted lib\\product\\workspace_tools.dart\nFormatted test\\product\\budget_diagnostics_test.dart\nFormatted test\\product\\diagnostic_replay_test.dart\nFormatted test\\product\\durable_workflow_kernel_test.dart\nFormatted test\\product\\execution_reliability_test.dart\nFormatted test\\product\\file_adapters_test.dart\nFormatted test\\product\\knowledge_memory_test.dart\nFormatted test\\product\\knowledge_memory_v2_test.dart\nFormatted test\\product\\prompt_studio_v2_test.dart\nFormatted test\\product\\source_contract_test.dart\nFormatted test\\product\\typed_protocol_schema_test.dart\nFormatted test\\product\\v1_product_preview_test.dart\nFormatted test\\widget_test.dart\nFormatted tool/prune_stale_legacy.dart\nFormatted 53 files (46 changed) in 0.57 seconds.\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:26.994867+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "py_compile",
+        "tool/sandbox_worker.py",
+        "tool/dart_string_literal.py",
+        "tool/p0_003_repair_test.py",
+        "tool/capture_ci_environment.py",
+        "tool/generate_v170_contracts.py",
+        "tool/generate_v180_contracts.py",
+        "tool/generate_v190_contracts.py",
+        "tool/project_manager_v2.py",
+        "tool/project_manager_v2_test.py",
+        "tool/kristin_cli.py",
+        "tool/system_test.py",
+        "tool/validate_release.py"
+      ],
+      "completedAt": "2026-07-23T15:52:28.677782+00:00",
+      "exitCode": 0,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": "",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:28.560110+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "completedAt": "2026-07-23T15:52:28.756343+00:00",
+      "exitCode": 0,
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1",
+      "outputTail": "{\n  \"caseCount\": 8,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-002\",\n  \"passed\": true,\n  \"passedCount\": 8,\n  \"results\": [\n    {\n      \"detail\": \"enabled=false replacement=signed_manifest_v2\",\n      \"name\": \"Disablement status is explicit\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=generate_signing_keypair\",\n      \"name\": \"Legacy key generation is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=sign_manifest\",\n      \"name\": \"Legacy manifest signing is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n",
+      "reason": "command completed",
+      "startedAt": "2026-07-23T15:52:28.677782+00:00",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/generate_v170_contracts.py",
+        "--check"
+      ],
+      "completedAt": "2026-07-23T15:52:28.822686+00:00",
+      "exitCode": 1,
+      "outputSha256": "bc9d208100accf91f4f796a919722fe23b59dc53100d5f33d12de1a066d98e13",
+      "outputTail": "FAIL lib\\product\\generated\\v170_contracts.g.dart\n",
+      "reason": "nonzero exit",
+      "startedAt": "2026-07-23T15:52:28.756343+00:00",
+      "status": "failed"
+    }
+  ],
+  "milestone": "P0-003",
+  "p0_003Closure": "requires_same_commit_green_ubuntu_windows_macos_ci",
+  "p0_004State": "blocked",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "project": "C:\\dev\\flutter\\kris_studio_ai_2",
+  "roadmapVersion": "3.1.1-p0-003-integration-repair",
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "available": true,
+    "entries": 271,
+    "sha256": "7443903f95d556253dc9b53a69fe912eb52e4ee9abad94b5c28ae7c360e50800"
+  },
+  "sourceManifestVerification": {
+    "available": true,
+    "entries": 271,
+    "mismatched": [],
+    "passed": true
+  },
+  "status": "failed",
+  "unavailableGateCount": 0
+}
