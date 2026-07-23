@@ -218,7 +218,9 @@ void main() {
       expect(large.maxWallTime, const Duration(hours: 12));
     });
 
-    test('tool budgets are checked only when another governed tool is dispatched', () {
+    test(
+        'tool budgets are checked only when another governed tool is dispatched',
+        () {
       final tools = ToolRegistry.standard();
 
       expect(tools.isMutatingTool('write_file'), isTrue);
@@ -228,8 +230,8 @@ void main() {
       expect(tools.isMutatingTool('verify_project'), isFalse);
     });
 
-
-    test('tool descriptors expose required arguments and canonical examples', () {
+    test('tool descriptors expose required arguments and canonical examples',
+        () {
       final tools = ToolRegistry.standard();
       final descriptor = tools.descriptors(
         allowlist: const <String>{'write_file'},
@@ -275,7 +277,8 @@ void main() {
   });
 
   group('v1.1.6 no-op mutation convergence', () {
-    test('identical writes do not create rollback mutations or backups', () async {
+    test('identical writes do not create rollback mutations or backups',
+        () async {
       final temporary = await Directory.systemTemp.createTemp(
         'kristin-noop-mutation-',
       );
@@ -320,7 +323,8 @@ void main() {
           '${Platform.pathSeparator}journal.jsonl',
         );
         expect(await journal.exists(), isFalse);
-        expect(await auditFile.readAsString(), contains('workspace.mutation_noop'));
+        expect(await auditFile.readAsString(),
+            contains('workspace.mutation_noop'));
       } finally {
         if (await temporary.exists()) {
           await temporary.delete(recursive: true);
@@ -328,7 +332,8 @@ void main() {
       }
     });
 
-    test('create-only recovery cannot replace an uninspected artifact', () async {
+    test('create-only recovery cannot replace an uninspected artifact',
+        () async {
       final temporary = await Directory.systemTemp.createTemp(
         'kristin-create-only-recovery-',
       );
@@ -498,7 +503,8 @@ void main() {
       }
     });
 
-    test('retry creates a linked run with fresh attempts and counters', () async {
+    test('retry creates a linked run with fresh attempts and counters',
+        () async {
       await expectLater(
         runtime.execute(failedRun.id),
         throwsA(
@@ -526,7 +532,9 @@ void main() {
       );
     });
 
-    test('all-logs bundle retains diagnostics while redacting source and secrets', () async {
+    test(
+        'all-logs bundle retains diagnostics while redacting source and secrets',
+        () async {
       await runtime.repositories.evidence.put(
         EvidenceRecord(
           id: 'evidence-diagnostic-fixture',
@@ -558,7 +566,8 @@ void main() {
         runId: failedRun.id,
         includeAllLogs: true,
       );
-      final text = utf8.decode(await bundle.readAsBytes(), allowMalformed: true);
+      final text =
+          utf8.decode(await bundle.readAsBytes(), allowMalformed: true);
 
       expect(await bundle.exists(), isTrue);
       expect(bundle.path, endsWith('.zip'));

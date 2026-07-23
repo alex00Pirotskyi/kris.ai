@@ -139,9 +139,10 @@ class WorkflowRetryTaxonomy {
       'managed_process_missing',
     }.contains(code)) {
       return RetryClassification(
-        failureClass: code.startsWith('model_load') || code.startsWith('provider_')
-            ? WorkflowFailureClass.providerTransient
-            : WorkflowFailureClass.resourceUnavailable,
+        failureClass:
+            code.startsWith('model_load') || code.startsWith('provider_')
+                ? WorkflowFailureClass.providerTransient
+                : WorkflowFailureClass.resourceUnavailable,
         disposition: RetryDisposition.awaitResource,
         retryability: 'resource',
       );

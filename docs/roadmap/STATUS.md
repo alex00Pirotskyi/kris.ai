@@ -1,7 +1,7 @@
 # Kristin production roadmap status
 
 Last updated: 2026-07-23
-Roadmap version: 1.0.0
+Roadmap version: 3.1.1-p0-003-integration-repair
 Current phase: P0 — Stabilize, contain, and establish truth
 Current baseline commit: `f230fff336d2c7921a987e624fac96ca7d0030bc`
 Current reviewed repository head: `08e7d37`
@@ -9,11 +9,11 @@ Current release classification: source preview / source release
 
 ## Ready
 
-- `P0-003` — Green the current three-OS CI, after P0-001 closure evidence and the P0-002 patch are applied and reviewed.
+- `P0-004` remains blocked until P0-003 has passing three-OS evidence.
 
 ## In progress
 
-- None.
+- `P0-003` — Green the current three-OS CI. The local correction slice is applied; Ubuntu, Windows, and macOS evidence remains required.
 
 ## Review
 
@@ -49,4 +49,5 @@ Current release classification: source preview / source release
 
 ## Next recommended AI session
 
-First rerun P0-001 from the current complete checkout in strict verify mode and commit its closure receipt. Then apply P0-002, run its executable gate, record the post-application review, and proceed to P0-003 without redesigning CI.
+Run the P0-003 targeted gates, format source explicitly, push a review branch, inspect every downstream Ubuntu/Windows/macOS failure, and keep P0-003 in REVIEW until all three jobs pass.
+

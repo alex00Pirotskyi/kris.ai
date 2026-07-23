@@ -152,7 +152,8 @@ class OllamaProvider implements LanguageModelProvider {
       final request = await client
           .getUrl(_endpoint('/api/tags'))
           .timeout(const Duration(seconds: 5));
-      final response = await request.close().timeout(const Duration(seconds: 10));
+      final response =
+          await request.close().timeout(const Duration(seconds: 10));
       final body = await _readBounded(
         response,
         2 * 1024 * 1024,
@@ -169,18 +170,22 @@ class OllamaProvider implements LanguageModelProvider {
       if (models is! List) {
         return <ModelIdentity>[];
       }
-      return models.whereType<Map>().map((raw) {
-        final item = mapValue(raw);
-        final details = mapValue(item['details']);
-        return ModelIdentity(
-          providerId: id,
-          name: item['name']?.toString() ?? item['model']?.toString() ?? '',
-          digest: item['digest']?.toString() ?? '',
-          parameterSize: details['parameter_size']?.toString() ?? '',
-          quantization: details['quantization_level']?.toString() ?? '',
-          discoveredAt: DateTime.now().toUtc(),
-        );
-      }).where((identity) => identity.name.isNotEmpty).toList();
+      return models
+          .whereType<Map>()
+          .map((raw) {
+            final item = mapValue(raw);
+            final details = mapValue(item['details']);
+            return ModelIdentity(
+              providerId: id,
+              name: item['name']?.toString() ?? item['model']?.toString() ?? '',
+              digest: item['digest']?.toString() ?? '',
+              parameterSize: details['parameter_size']?.toString() ?? '',
+              quantization: details['quantization_level']?.toString() ?? '',
+              discoveredAt: DateTime.now().toUtc(),
+            );
+          })
+          .where((identity) => identity.name.isNotEmpty)
+          .toList();
     } finally {
       client.close(force: true);
     }
@@ -196,9 +201,8 @@ class OllamaProvider implements LanguageModelProvider {
       );
     }
     final loadTimeout = request.loadTimeout ?? defaultLoadTimeout;
-    final loadRetries = (request.loadRetries ?? defaultLoadRetries)
-        .clamp(0, 2)
-        .toInt();
+    final loadRetries =
+        (request.loadRetries ?? defaultLoadRetries).clamp(0, 2).toInt();
     final discovered = await discover().timeout(loadTimeout);
     request.throwIfCancelled();
     final exact = discovered
@@ -230,7 +234,8 @@ class OllamaProvider implements LanguageModelProvider {
     final generationStarted = DateTime.now().toUtc();
     final firstTokenDeadline = generationStarted.add(request.firstTokenTimeout);
     final totalDeadline = generationStarted.add(request.totalTimeout);
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
     final cancellationBinding = _closeOnCancellation(client, request);
     try {
       _report(
@@ -353,10 +358,10 @@ class OllamaProvider implements LanguageModelProvider {
       try {
         while (!done) {
           final waitingForFirstToken = firstTokenAt == null;
-          final activeDeadline = waitingForFirstToken &&
-                  firstTokenDeadline.isBefore(totalDeadline)
-              ? firstTokenDeadline
-              : totalDeadline;
+          final activeDeadline =
+              waitingForFirstToken && firstTokenDeadline.isBefore(totalDeadline)
+                  ? firstTokenDeadline
+                  : totalDeadline;
           final hasLine = await moveNextUntil(
             activeDeadline,
             code: waitingForFirstToken
@@ -452,8 +457,7 @@ class OllamaProvider implements LanguageModelProvider {
             'providerLoadDurationNanoseconds':
                 warmup.providerLoadDurationNanoseconds,
           if (finalPayload['load_duration'] != null)
-            'generationLoadDurationNanoseconds':
-                finalPayload['load_duration'],
+            'generationLoadDurationNanoseconds': finalPayload['load_duration'],
           'keepAliveMinutes': keepAliveMinutes.clamp(1, 120).toInt(),
         },
       );
@@ -506,17 +510,18 @@ class OllamaProvider implements LanguageModelProvider {
         ..connectionTimeout = const Duration(seconds: 10);
       final cancellationBinding = _closeOnCancellation(client, request);
       try {
-        final httpRequest = await client.postUrl(_endpoint('/api/generate')).timeout(
-              _shorterDuration(
-                const Duration(seconds: 30),
-                _remainingUntil(
-                  attemptDeadline,
-                  code: 'model_load_timeout',
-                  message:
-                      'Ollama did not open the model-load request before the load deadline.',
-                ),
-              ),
-            );
+        final httpRequest =
+            await client.postUrl(_endpoint('/api/generate')).timeout(
+                  _shorterDuration(
+                    const Duration(seconds: 30),
+                    _remainingUntil(
+                      attemptDeadline,
+                      code: 'model_load_timeout',
+                      message:
+                          'Ollama did not open the model-load request before the load deadline.',
+                    ),
+                  ),
+                );
         request.throwIfCancelled();
         httpRequest.headers.contentType = ContentType.json;
         httpRequest.write(jsonEncode(<String, dynamic>{
@@ -669,7 +674,8 @@ class OllamaProvider implements LanguageModelProvider {
         request,
         ModelGenerationProgress(
           stage: 'load_retry_scheduled',
-          message: 'The model-load attempt failed transiently; Kristin will retry without consuming another agent turn.',
+          message:
+              'The model-load attempt failed transiently; Kristin will retry without consuming another agent turn.',
           attempt: attempt,
           maxAttempts: maxAttempts,
           elapsed: overall.elapsed,
@@ -782,40 +788,55 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
   @override
   String get id => 'openai-compatible';
 
-  Uri _endpoint(String path) => baseUri.replace(path: _joinPath(baseUri.path, path), query: null, fragment: null);
+  Uri _endpoint(String path) => baseUri.replace(
+      path: _joinPath(baseUri.path, path), query: null, fragment: null);
 
   Future<String> _key(String commandId) async {
     if (apiKeyReferenceId.trim().isEmpty) {
-      throw ProductException('model_secret_missing', 'No API key secret reference is configured.');
+      throw ProductException(
+          'model_secret_missing', 'No API key secret reference is configured.');
     }
     return vault.resolve(apiKeyReferenceId, commandId: commandId);
   }
 
   @override
   Future<List<ModelIdentity>> discover() async {
-    if (apiKeyReferenceId.trim().isEmpty || baseUri.host.isEmpty) { return <ModelIdentity>[]; }
+    if (apiKeyReferenceId.trim().isEmpty || baseUri.host.isEmpty) {
+      return <ModelIdentity>[];
+    }
     final key = await _key('model-discovery');
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
-      final request = await client.getUrl(_endpoint('/v1/models')).timeout(const Duration(seconds: 10));
+      final request = await client
+          .getUrl(_endpoint('/v1/models'))
+          .timeout(const Duration(seconds: 10));
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $key');
-      final response = await request.close().timeout(const Duration(seconds: 20));
-      final body = await _readBounded(response, 2 * 1024 * 1024, const Duration(seconds: 20));
+      final response =
+          await request.close().timeout(const Duration(seconds: 20));
+      final body = await _readBounded(
+          response, 2 * 1024 * 1024, const Duration(seconds: 20));
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw ProductException('model_discovery_failed', 'Provider returned HTTP ${response.statusCode}.');
+        throw ProductException('model_discovery_failed',
+            'Provider returned HTTP ${response.statusCode}.');
       }
       final decoded = jsonDecode(utf8.decode(body));
       final data = decoded is Map ? decoded['data'] : null;
-      if (data is! List) { return <ModelIdentity>[]; }
-      return data.whereType<Map>().map((raw) {
-        final name = raw['id']?.toString() ?? '';
-        return ModelIdentity(
-          providerId: id,
-          name: name,
-          digest: Sha256.text('$id/$name'),
-          discoveredAt: DateTime.now().toUtc(),
-        );
-      }).where((identity) => identity.name.isNotEmpty).toList();
+      if (data is! List) {
+        return <ModelIdentity>[];
+      }
+      return data
+          .whereType<Map>()
+          .map((raw) {
+            final name = raw['id']?.toString() ?? '';
+            return ModelIdentity(
+              providerId: id,
+              name: name,
+              digest: Sha256.text('$id/$name'),
+              discoveredAt: DateTime.now().toUtc(),
+            );
+          })
+          .where((identity) => identity.name.isNotEmpty)
+          .toList();
     } finally {
       client.close(force: true);
     }
@@ -835,7 +856,8 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
     final key = await _key(request.commandId);
     request.throwIfCancelled();
     final started = DateTime.now().toUtc();
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
     final cancellationBinding = _closeOnCancellation(client, request);
     try {
       final loadTimeout = request.loadTimeout ?? const Duration(minutes: 3);
@@ -862,9 +884,8 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
         'response_format': <String, String>{'type': 'json_object'},
         'stream': false,
       }));
-      final response = await httpRequest
-          .close()
-          .timeout(request.firstTokenTimeout);
+      final response =
+          await httpRequest.close().timeout(request.firstTokenTimeout);
       request.throwIfCancelled();
       final firstToken = DateTime.now().toUtc();
       final body = utf8.decode(
@@ -888,22 +909,18 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
       }
       final decoded = jsonDecode(body);
       final choices = decoded is Map ? decoded['choices'] : null;
-      final first = choices is List && choices.isNotEmpty
-          ? choices.first
-          : null;
+      final first =
+          choices is List && choices.isNotEmpty ? choices.first : null;
       final message = first is Map ? first['message'] : null;
-      final text = message is Map
-          ? message['content']?.toString() ?? ''
-          : '';
+      final text = message is Map ? message['content']?.toString() ?? '' : '';
       if (text.trim().isEmpty) {
         throw ProductException(
           'model_response_empty',
           'The model returned an empty response.',
         );
       }
-      final usage = decoded is Map
-          ? mapValue(decoded['usage'])
-          : <String, dynamic>{};
+      final usage =
+          decoded is Map ? mapValue(decoded['usage']) : <String, dynamic>{};
       return ModelGenerationResult(
         text: text,
         identity: request.identity,
@@ -939,7 +956,6 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
       client.close(force: true);
     }
   }
-
 }
 
 class ModelRegistry {
@@ -993,8 +1009,13 @@ class ModelRegistry {
   }
 
   LanguageModelProvider providerFor(ModelIdentity identity) {
-    final provider = providers().where((candidate) => candidate.id == identity.providerId).firstOrNull;
-    if (provider == null) { throw ProductException('model_provider_unavailable', 'Provider ${identity.providerId} is not configured.'); }
+    final provider = providers()
+        .where((candidate) => candidate.id == identity.providerId)
+        .firstOrNull;
+    if (provider == null) {
+      throw ProductException('model_provider_unavailable',
+          'Provider ${identity.providerId} is not configured.');
+    }
     return provider;
   }
 }
@@ -1036,16 +1057,20 @@ class ResearchService {
       for (var redirect = 0; redirect <= policy.maxRedirects; redirect++) {
         final request = await client.getUrl(current).timeout(policy.timeout);
         request.followRedirects = false;
-        request.headers.set(HttpHeaders.acceptHeader, 'text/html,text/plain,text/markdown,application/json;q=0.9,*/*;q=0.1');
-        request.headers.set(HttpHeaders.userAgentHeader, 'KristinLocalAgent/$kristinVersion research-client');
+        request.headers.set(HttpHeaders.acceptHeader,
+            'text/html,text/plain,text/markdown,application/json;q=0.9,*/*;q=0.1');
+        request.headers.set(HttpHeaders.userAgentHeader,
+            'KristinLocalAgent/$kristinVersion research-client');
         final response = await request.close().timeout(policy.timeout);
         if (_isRedirect(response.statusCode)) {
           if (redirect >= policy.maxRedirects) {
-            throw ProductException('research_redirect_limit', 'The research URL exceeded the redirect limit.');
+            throw ProductException('research_redirect_limit',
+                'The research URL exceeded the redirect limit.');
           }
           final location = response.headers.value(HttpHeaders.locationHeader);
           if (location == null || location.isEmpty) {
-            throw ProductException('research_redirect_invalid', 'A redirect response did not include a valid location.');
+            throw ProductException('research_redirect_invalid',
+                'A redirect response did not include a valid location.');
           }
           current = await validateUri(current.resolve(location));
           redirectChain.add(current.toString());
@@ -1054,23 +1079,34 @@ class ResearchService {
         }
         if (response.statusCode < 200 || response.statusCode >= 300) {
           await response.drain<void>().timeout(policy.timeout);
-          throw ProductException('research_http_error', 'Research target returned HTTP ${response.statusCode}.');
+          throw ProductException('research_http_error',
+              'Research target returned HTTP ${response.statusCode}.');
         }
         final declaredLength = response.contentLength;
         if (declaredLength > policy.maxBytes) {
           await response.drain<void>().timeout(policy.timeout);
-          throw ProductException('research_too_large', 'Research content exceeds the configured size limit.');
+          throw ProductException('research_too_large',
+              'Research content exceeds the configured size limit.');
         }
-        final contentType = response.headers.contentType?.mimeType.toLowerCase() ?? 'application/octet-stream';
+        final contentType =
+            response.headers.contentType?.mimeType.toLowerCase() ??
+                'application/octet-stream';
         if (!policy.allowedMimeTypes.contains(contentType)) {
           await response.drain<void>().timeout(policy.timeout);
-          throw ProductException('research_mime_rejected', 'MIME type $contentType is not allowed.');
+          throw ProductException('research_mime_rejected',
+              'MIME type $contentType is not allowed.');
         }
-        final bytes = await _readBounded(response, policy.maxBytes, policy.timeout);
+        final bytes =
+            await _readBounded(response, policy.maxBytes, policy.timeout);
         final raw = utf8.decode(bytes, allowMalformed: true);
-        final cleaned = contentType == 'text/html' ? _htmlToText(raw) : raw.replaceAll('\u0000', '');
-        final boundedText = cleaned.length > 1000000 ? cleaned.substring(0, 1000000) : cleaned;
-        final title = contentType == 'text/html' ? _htmlTitle(raw) : current.pathSegments.lastOrNull ?? current.host;
+        final cleaned = contentType == 'text/html'
+            ? _htmlToText(raw)
+            : raw.replaceAll('\u0000', '');
+        final boundedText =
+            cleaned.length > 1000000 ? cleaned.substring(0, 1000000) : cleaned;
+        final title = contentType == 'text/html'
+            ? _htmlTitle(raw)
+            : current.pathSegments.lastOrNull ?? current.host;
         final selectedHeaders = <String, String>{};
         for (final name in <String>[
           HttpHeaders.contentTypeHeader,
@@ -1099,9 +1135,11 @@ class ResearchService {
           requestedUrl: original,
         );
       }
-      throw ProductException('research_redirect_limit', 'The research URL exceeded the redirect limit.');
+      throw ProductException('research_redirect_limit',
+          'The research URL exceeded the redirect limit.');
     } on TimeoutException {
-      throw ProductException('research_timeout', 'The research request timed out.');
+      throw ProductException(
+          'research_timeout', 'The research request timed out.');
     } finally {
       client.close(force: true);
     }
@@ -1112,9 +1150,12 @@ class ResearchService {
     required String apiKey,
     int count = 10,
   }) async {
-    if (query.trim().isEmpty) { return <Map<String, String>>[]; }
+    if (query.trim().isEmpty) {
+      return <Map<String, String>>[];
+    }
     redactor.register(apiKey);
-    final uri = Uri.https('api.search.brave.com', '/res/v1/web/search', <String, String>{
+    final uri = Uri.https(
+        'api.search.brave.com', '/res/v1/web/search', <String, String>{
       'q': query.trim(),
       'count': count.clamp(1, 20).toString(),
       'safesearch': 'moderate',
@@ -1126,22 +1167,32 @@ class ResearchService {
       request.headers.set('X-Subscription-Token', apiKey);
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       final response = await request.close().timeout(policy.timeout);
-      final body = utf8.decode(await _readBounded(response, policy.maxBytes, policy.timeout), allowMalformed: true);
+      final body = utf8.decode(
+          await _readBounded(response, policy.maxBytes, policy.timeout),
+          allowMalformed: true);
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw ProductException('research_search_failed', 'Search provider returned HTTP ${response.statusCode}.');
+        throw ProductException('research_search_failed',
+            'Search provider returned HTTP ${response.statusCode}.');
       }
       final decoded = jsonDecode(body);
-      final web = decoded is Map ? mapValue(decoded['web']) : <String, dynamic>{};
+      final web =
+          decoded is Map ? mapValue(decoded['web']) : <String, dynamic>{};
       final results = web['results'];
-      if (results is! List) { return <Map<String, String>>[]; }
-      return results.whereType<Map>().map((raw) {
-        final item = mapValue(raw);
-        return <String, String>{
-          'title': item['title']?.toString() ?? '',
-          'url': item['url']?.toString() ?? '',
-          'description': item['description']?.toString() ?? '',
-        };
-      }).where((item) => Uri.tryParse(item['url'] ?? '')?.scheme == 'https').toList();
+      if (results is! List) {
+        return <Map<String, String>>[];
+      }
+      return results
+          .whereType<Map>()
+          .map((raw) {
+            final item = mapValue(raw);
+            return <String, String>{
+              'title': item['title']?.toString() ?? '',
+              'url': item['url']?.toString() ?? '',
+              'description': item['description']?.toString() ?? '',
+            };
+          })
+          .where((item) => Uri.tryParse(item['url'] ?? '')?.scheme == 'https')
+          .toList();
     } finally {
       client.close(force: true);
     }
@@ -1149,78 +1200,127 @@ class ResearchService {
 
   Future<Uri> validateUri(Uri uri) async {
     if (uri.scheme.toLowerCase() != 'https') {
-      throw ProductException('research_scheme_rejected', 'Research requests must use HTTPS.');
+      throw ProductException(
+          'research_scheme_rejected', 'Research requests must use HTTPS.');
     }
     if (uri.userInfo.isNotEmpty) {
-      throw ProductException('research_credentials_rejected', 'URLs containing embedded credentials are not allowed.');
+      throw ProductException('research_credentials_rejected',
+          'URLs containing embedded credentials are not allowed.');
     }
-    if (uri.host.isEmpty) { throw ProductException('research_host_missing', 'Research URL must include a host.'); }
+    if (uri.host.isEmpty) {
+      throw ProductException(
+          'research_host_missing', 'Research URL must include a host.');
+    }
     final normalized = uri.replace(fragment: '');
-    final addresses = await InternetAddress.lookup(uri.host).timeout(policy.timeout);
-    if (addresses.isEmpty) { throw ProductException('research_dns_empty', 'The host did not resolve.'); }
+    final addresses =
+        await InternetAddress.lookup(uri.host).timeout(policy.timeout);
+    if (addresses.isEmpty) {
+      throw ProductException('research_dns_empty', 'The host did not resolve.');
+    }
     for (final address in addresses) {
       if (_isForbiddenAddress(address)) {
-        throw ProductException('research_private_address', 'The host resolves to a non-public network address.');
+        throw ProductException('research_private_address',
+            'The host resolves to a non-public network address.');
       }
     }
     return normalized;
   }
 
   bool _isForbiddenAddress(InternetAddress address) {
-    if (address.isLoopback || address.isLinkLocal || address.isMulticast) { return true; }
+    if (address.isLoopback || address.isLinkLocal || address.isMulticast) {
+      return true;
+    }
     final bytes = address.rawAddress;
     if (address.type == InternetAddressType.IPv4 && bytes.length == 4) {
       final a = bytes[0];
       final b = bytes[1];
-      if (a == 0 || a == 10 || a == 127) { return true; }
-      if (a == 169 && b == 254) { return true; }
-      if (a == 172 && b >= 16 && b <= 31) { return true; }
-      if (a == 192 && b == 168) { return true; }
-      if (a == 100 && b >= 64 && b <= 127) { return true; }
-      if (a >= 224) { return true; }
+      if (a == 0 || a == 10 || a == 127) {
+        return true;
+      }
+      if (a == 169 && b == 254) {
+        return true;
+      }
+      if (a == 172 && b >= 16 && b <= 31) {
+        return true;
+      }
+      if (a == 192 && b == 168) {
+        return true;
+      }
+      if (a == 100 && b >= 64 && b <= 127) {
+        return true;
+      }
+      if (a >= 224) {
+        return true;
+      }
       return false;
     }
     if (address.type == InternetAddressType.IPv6 && bytes.length == 16) {
-      if (bytes.every((byte) => byte == 0)) { return true; }
-      if ((bytes[0] & 0xfe) == 0xfc) { return true; } // fc00::/7 unique-local
-      if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) { return true; } // fe80::/10 link-local
-      if (bytes.take(10).every((byte) => byte == 0) && bytes[10] == 0xff && bytes[11] == 0xff) {
-        final mapped = InternetAddress.fromRawAddress(bytes.sublist(12), type: InternetAddressType.IPv4);
+      if (bytes.every((byte) => byte == 0)) {
+        return true;
+      }
+      if ((bytes[0] & 0xfe) == 0xfc) {
+        return true;
+      } // fc00::/7 unique-local
+      if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) {
+        return true;
+      } // fe80::/10 link-local
+      if (bytes.take(10).every((byte) => byte == 0) &&
+          bytes[10] == 0xff &&
+          bytes[11] == 0xff) {
+        final mapped = InternetAddress.fromRawAddress(bytes.sublist(12),
+            type: InternetAddressType.IPv4);
         return _isForbiddenAddress(mapped);
       }
     }
     return false;
   }
 
-  bool _isRedirect(int status) => const <int>{301, 302, 303, 307, 308}.contains(status);
+  bool _isRedirect(int status) =>
+      const <int>{301, 302, 303, 307, 308}.contains(status);
 
   String _htmlTitle(String html) {
-    final match = RegExp(r'<title\b[^>]*>([\s\S]*?)</title>', caseSensitive: false).firstMatch(html);
-    return match == null ? '' : _decodeEntities(_stripTags(match.group(1) ?? ''));
+    final match =
+        RegExp(r'<title\b[^>]*>([\s\S]*?)</title>', caseSensitive: false)
+            .firstMatch(html);
+    return match == null
+        ? ''
+        : _decodeEntities(_stripTags(match.group(1) ?? ''));
   }
 
   String _htmlToText(String html) {
     var output = html
         .replaceAll(RegExp(r'<!--[\s\S]*?-->'), ' ')
-        .replaceAll(RegExp(r'<script\b[^>]*>[\s\S]*?</script>', caseSensitive: false), ' ')
-        .replaceAll(RegExp(r'<style\b[^>]*>[\s\S]*?</style>', caseSensitive: false), ' ')
-        .replaceAll(RegExp(r'<noscript\b[^>]*>[\s\S]*?</noscript>', caseSensitive: false), ' ')
-        .replaceAll(RegExp(r'<(?:br|p|div|li|h[1-6]|tr|section|article)\b[^>]*>', caseSensitive: false), '\n');
+        .replaceAll(
+            RegExp(r'<script\b[^>]*>[\s\S]*?</script>', caseSensitive: false),
+            ' ')
+        .replaceAll(
+            RegExp(r'<style\b[^>]*>[\s\S]*?</style>', caseSensitive: false),
+            ' ')
+        .replaceAll(
+            RegExp(r'<noscript\b[^>]*>[\s\S]*?</noscript>',
+                caseSensitive: false),
+            ' ')
+        .replaceAll(
+            RegExp(r'<(?:br|p|div|li|h[1-6]|tr|section|article)\b[^>]*>',
+                caseSensitive: false),
+            '\n');
     output = _decodeEntities(_stripTags(output));
-    output = output.replaceAll(RegExp(r'[ \t]+'), ' ').replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    output = output
+        .replaceAll(RegExp(r'[ \t]+'), ' ')
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n');
     return output.trim();
   }
 
   String _stripTags(String value) => value.replaceAll(RegExp(r'<[^>]+>'), ' ');
 
   String _decodeEntities(String value) => value
-      .replaceAll('&nbsp;', ' ')
-      .replaceAll('&amp;', '&')
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#39;', "'")
-      .replaceAllMapped(RegExp(r'&#(\d+);'), (match) {
+          .replaceAll('&nbsp;', ' ')
+          .replaceAll('&amp;', '&')
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>')
+          .replaceAll('&quot;', '"')
+          .replaceAll('&#39;', "'")
+          .replaceAllMapped(RegExp(r'&#(\d+);'), (match) {
         final code = int.tryParse(match.group(1) ?? '');
         return code == null ? match.group(0)! : String.fromCharCode(code);
       });
@@ -1468,7 +1568,8 @@ class KnowledgeService {
   Future<KnowledgeEntry> setEntryPinned(String id, bool pinned) async {
     final entry = await repository.get(id);
     if (entry == null) {
-      throw ProductException('knowledge_missing', 'Knowledge entry was not found.');
+      throw ProductException(
+          'knowledge_missing', 'Knowledge entry was not found.');
     }
     final updated = entry.copyWith(pinned: pinned);
     await repository.put(updated);
@@ -1546,7 +1647,8 @@ class KnowledgeService {
         .map((item) => '${item.item.title}: ${item.lastError ?? 'failed'}')
         .toList();
     final changed = <String>{};
-    for (final item in evidence.where((item) => item.kind == EvidenceKind.mutation)) {
+    for (final item
+        in evidence.where((item) => item.kind == EvidenceKind.mutation)) {
       _collectRelativePaths(item.payload, changed);
     }
     final verificationSummaries = evidence
@@ -1659,7 +1761,8 @@ class KnowledgeService {
       if (includeUnsuccessfulEpisodes || chunk.pinned) {
         return true;
       }
-      return chunk.episodeOutcome == RunState.succeeded.name && !chunk.diagnosticOnly;
+      return chunk.episodeOutcome == RunState.succeeded.name &&
+          !chunk.diagnosticOnly;
     }).toList();
     final queryVector = _semanticVector(query);
     final documentFrequency = <String, int>{};
@@ -1718,9 +1821,11 @@ class KnowledgeService {
         }
       }
       maximumLexical = max(maximumLexical, lexical);
-      final semantic = _cosine(queryVector, _semanticVector(
-        '${chunk.title}\n${chunk.tags.join(' ')}\n${chunk.text}',
-      ));
+      final semantic = _cosine(
+          queryVector,
+          _semanticVector(
+            '${chunk.title}\n${chunk.tags.join(' ')}\n${chunk.text}',
+          ));
       final ageDays = max<double>(
         0,
         DateTime.now().toUtc().difference(chunk.capturedAt).inHours / 24,
@@ -1825,7 +1930,9 @@ class KnowledgeService {
         capturedAt: chunk.capturedAt,
         chunkIndex: chunk.chunkIndex,
         freshness: freshnessPolicy.labelFor(chunk.capturedAt),
-        freshnessReason: chunk.trust == 'untrusted_external_data' ? 'External research requires an inspectable citation and capture date.' : 'Project-scoped knowledge is local evidence.',
+        freshnessReason: chunk.trust == 'untrusted_external_data'
+            ? 'External research requires an inspectable citation and capture date.'
+            : 'Project-scoped knowledge is local evidence.',
       ));
     }
     return KnowledgeRetrieval(
@@ -1950,10 +2057,11 @@ ${entry.content}
       ...episodes.map((episode) => episode.completedAt),
     ]..sort();
     final archivePaths = <String>{
-      for (final record in archives) ...<String>{
-        record.rawObjectPath,
-        record.textObjectPath,
-      }.where((path) => path.isNotEmpty),
+      for (final record in archives)
+        ...<String>{
+          record.rawObjectPath,
+          record.textObjectPath,
+        }.where((path) => path.isNotEmpty),
     };
     var archiveBytes = 0;
     for (final relative in archivePaths) {
@@ -2016,19 +2124,23 @@ ${entry.content}
     final zipEntries = <ZipEntryData>[
       ZipEntryData(
         'manifest.json',
-        utf8.encode('${const JsonEncoder.withIndent('  ').convert(manifest)}\n'),
+        utf8.encode(
+            '${const JsonEncoder.withIndent('  ').convert(manifest)}\n'),
       ),
       ZipEntryData(
         'knowledge.json',
-        utf8.encode('${const JsonEncoder.withIndent('  ').convert(entries.map((entry) => entry.toJson()).toList())}\n'),
+        utf8.encode(
+            '${const JsonEncoder.withIndent('  ').convert(entries.map((entry) => entry.toJson()).toList())}\n'),
       ),
       ZipEntryData(
         'research_archive.json',
-        utf8.encode('${const JsonEncoder.withIndent('  ').convert(archives.map((record) => record.toJson()).toList())}\n'),
+        utf8.encode(
+            '${const JsonEncoder.withIndent('  ').convert(archives.map((record) => record.toJson()).toList())}\n'),
       ),
       ZipEntryData(
         'memory_episodes.json',
-        utf8.encode('${const JsonEncoder.withIndent('  ').convert(episodes.map((episode) => episode.toJson()).toList())}\n'),
+        utf8.encode(
+            '${const JsonEncoder.withIndent('  ').convert(episodes.map((episode) => episode.toJson()).toList())}\n'),
       ),
     ];
     final copied = <String>{};
@@ -2328,9 +2440,8 @@ ${entry.content}
       // synthetic provenance record rather than silently dropping it.
       final archiveId = newId('archive');
       final contentHash = Sha256.text(entry.content);
-      final objectExtension = entry.kind == KnowledgeKind.researchSearch
-          ? 'json'
-          : 'txt';
+      final objectExtension =
+          entry.kind == KnowledgeKind.researchSearch ? 'json' : 'txt';
       final objectPath = await _storeObject(
         entry.projectId,
         contentHash,
@@ -2357,8 +2468,9 @@ ${entry.content}
         rawContentHash: contentHash,
         statusCode: 0,
         responseHeaders: const <String, String>{},
-        redirectChain:
-            entry.sourceUrl.isEmpty ? const <String>[] : <String>[entry.sourceUrl],
+        redirectChain: entry.sourceUrl.isEmpty
+            ? const <String>[]
+            : <String>[entry.sourceUrl],
         capturedAt: entry.updatedAt,
         rawObjectPath: objectPath,
         textObjectPath: objectPath,
@@ -2457,9 +2569,8 @@ ${entry.content}
             legacyHash.isNotEmpty &&
             candidate.contentHash == legacyHash)
         .firstOrNull;
-    final content = entry?.content.isNotEmpty == true
-        ? entry!.content
-        : source.content;
+    final content =
+        entry?.content.isNotEmpty == true ? entry!.content : source.content;
     final contentHash = Sha256.text(content);
     entry ??= entries
         .where((candidate) =>
@@ -2579,7 +2690,8 @@ ${entry.content}
             candidate.contentHash == legacyHash)
         .firstOrNull;
     final encoded = const JsonEncoder.withIndent('  ').convert(wrapper);
-    final content = entry?.content.isNotEmpty == true ? entry!.content : encoded;
+    final content =
+        entry?.content.isNotEmpty == true ? entry!.content : encoded;
     final contentHash = Sha256.text(content);
     entry ??= entries
         .where((candidate) =>
@@ -2679,7 +2791,11 @@ ${entry.content}
     if (objectStore != null) {
       final stored = await objectStore!.putBytes(
         bytes,
-        mediaType: extension == 'html' ? 'text/html' : extension == 'json' ? 'application/json' : 'application/octet-stream',
+        mediaType: extension == 'html'
+            ? 'text/html'
+            : extension == 'json'
+                ? 'application/json'
+                : 'application/octet-stream',
         extension: extension,
         labels: <String, String>{'projectId': projectId},
       );
@@ -2689,7 +2805,8 @@ ${entry.content}
       RegExp(r'[^A-Za-z0-9_.-]'),
       '_',
     );
-    final relative = '$safeProject/objects/${normalizedHash.substring(0, min(2, normalizedHash.length))}/$normalizedHash.$extension';
+    final relative =
+        '$safeProject/objects/${normalizedHash.substring(0, min(2, normalizedHash.length))}/$normalizedHash.$extension';
     final file = _archiveFile(relative);
     if (!await file.exists()) {
       await file.parent.create(recursive: true);
@@ -2902,7 +3019,8 @@ ${entry.content}
       lines.add('Lessons: ${lessonLines.join(' | ')}');
     }
     if (episode.completedItems.isNotEmpty) {
-      lines.add('Completed work: ${episode.completedItems.toSet().join(' | ')}');
+      lines
+          .add('Completed work: ${episode.completedItems.toSet().join(' | ')}');
     }
     if (episode.failedItems.isNotEmpty) {
       lines.add('Failed work: ${episode.failedItems.toSet().join(' | ')}');
@@ -2936,8 +3054,7 @@ ${entry.content}
   String _bounded(String value, int limit) =>
       value.length <= limit ? value : '${value.substring(0, limit - 1)}…';
 
-  double _round(double value) =>
-      (value * 10000).roundToDouble() / 10000;
+  double _round(double value) => (value * 10000).roundToDouble() / 10000;
 
   void _collectRelativePaths(Object? value, Set<String> output) {
     if (value is Map) {
@@ -3047,12 +3164,11 @@ class _KnowledgeIndexSnapshot {
         fingerprint: json['fingerprint']?.toString() ?? '',
         documentCount:
             int.tryParse(json['documentCount']?.toString() ?? '') ?? 0,
-        chunks: (json['chunks'] is List
-                ? json['chunks'] as List
-                : const <Object>[])
-            .whereType<Map>()
-            .map((item) => _IndexedKnowledgeChunk.fromJson(mapValue(item)))
-            .toList(),
+        chunks:
+            (json['chunks'] is List ? json['chunks'] as List : const <Object>[])
+                .whereType<Map>()
+                .map((item) => _IndexedKnowledgeChunk.fromJson(mapValue(item)))
+                .toList(),
       );
 }
 
@@ -3156,12 +3272,13 @@ class _ScoredChunk {
   final double score;
 }
 
-
-Future<List<int>> _readBounded(HttpClientResponse response, int maxBytes, Duration timeout) async {
+Future<List<int>> _readBounded(
+    HttpClientResponse response, int maxBytes, Duration timeout) async {
   final builder = BytesBuilder(copy: false);
   await for (final chunk in response.timeout(timeout)) {
     if (builder.length + chunk.length > maxBytes) {
-      throw ProductException('response_too_large', 'Response exceeded the configured size limit.');
+      throw ProductException(
+          'response_too_large', 'Response exceeded the configured size limit.');
     }
     builder.add(chunk);
   }
@@ -3177,9 +3294,13 @@ String _joinPath(String base, String child) {
 extension LastOrNullExtension<T> on Iterable<T> {
   T? get lastOrNull {
     final iterator = this.iterator;
-    if (!iterator.moveNext()) { return null; }
+    if (!iterator.moveNext()) {
+      return null;
+    }
     var value = iterator.current;
-    while (iterator.moveNext()) { value = iterator.current; }
+    while (iterator.moveNext()) {
+      value = iterator.current;
+    }
     return value;
   }
 }

@@ -123,5 +123,4 @@ void main() {
     expect(kristinVersion, '1.3.0+130');
     expect(kristinReleaseChannel, 'preview');
   });
-
 }

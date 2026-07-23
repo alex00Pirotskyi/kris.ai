@@ -3,7 +3,9 @@ import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/knowledge_memory_v2.dart';
 
 void main() {
-  test('memory admission policy quarantines unsuccessful runs without evidence expansion', () {
+  test(
+      'memory admission policy quarantines unsuccessful runs without evidence expansion',
+      () {
     const policy = MemoryAdmissionPolicy();
     final episode = MemoryEpisode(
       id: 'episode-1',
@@ -20,14 +22,17 @@ void main() {
       failedItems: const <String>['Run'],
       filesChanged: const <String>[],
       evidenceIds: const <String>['evidence-1'],
-      evidenceHashes: const <String>['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+      evidenceHashes: const <String>[
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+      ],
       startedAt: DateTime.utc(2026, 7, 22, 10),
       completedAt: DateTime.utc(2026, 7, 22, 10, 1),
       modelRequests: 1,
       toolCalls: 1,
       mutations: 0,
       repairs: 0,
-      contentHash: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      contentHash:
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       createdAt: DateTime.utc(2026, 7, 22, 10, 1),
     );
     final decision = policy.evaluateEpisode(episode);
@@ -44,9 +49,16 @@ void main() {
       title: 'Repair build pipeline',
       instructions: 'Use the retained snapshot and verify the package output.',
       triggers: const <String>{'repair', 'build'},
-      recommendedTools: const <String>{'read_file', 'write_file', 'verify_project'},
-      evidenceHashes: const <String>['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
-      candidateHash: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+      recommendedTools: const <String>{
+        'read_file',
+        'write_file',
+        'verify_project'
+      },
+      evidenceHashes: const <String>[
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+      ],
+      candidateHash:
+          'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
       createdAt: DateTime.utc(2026, 7, 22, 11),
     );
     final published = PublishedSkillRecord(
@@ -57,7 +69,8 @@ void main() {
       instructions: candidate.instructions,
       recommendedTools: candidate.recommendedTools,
       approvalNote: 'Reviewed and approved.',
-      manifestHash: 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+      manifestHash:
+          'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
       publishedAt: DateTime.utc(2026, 7, 22, 11, 5),
     );
     expect(published.approvalNote, isNotEmpty);
