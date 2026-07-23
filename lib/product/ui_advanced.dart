@@ -1376,7 +1376,7 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
       const StudioPageHeader(
         title: 'Developer & diagnostics',
         subtitle:
-            'Inspect the audit chain and save a redacted diagnostic ZIP. Source-like payloads are hashed and recognized secrets are redacted, but review the archive before sharing it.',
+            'Inspect the audit chain, release boundary, and support bundle rules. Source-like payloads are hashed and recognized secrets are redacted, but review the archive before sharing it.',
       ),
       if (widget.startupError != null)
         StudioPanel(
@@ -1443,7 +1443,7 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
         child: SelectableText(
           'Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}\n'
           'Data-root fingerprint: ${Sha256.text(runtime.directories.root.path)}\n'
-          'Product: Kristin Local Agent $kristinVersion\n'
+          'Product: Kristin Local Agent $kristinVersion\n' 'Classification: source-release preview\n' 'Owner Mode: roadmap target only in this source release\n' 'Workers: Linux reference worker when available; Windows/macOS native workers fail closed\n' 'Support boundary: reviewed source tree and source-only gates\n'
           'Active path: main.dart → ProductRuntime → PreparedCommandService → RunCoordinator → governed tools\n'
           'UI path: Simple Studio → friendly plan → grouped approval → governed runtime',
         ),
@@ -1539,7 +1539,7 @@ const List<_SettingsSection> _settingsSections = <_SettingsSection>[
   ),
   _SettingsSection(
     'Developer',
-    'Audit, logs, and support',
+    'Audit, release boundary, and support',
     Icons.developer_mode_outlined,
   ),
 ];

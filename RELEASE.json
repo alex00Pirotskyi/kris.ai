@@ -116,7 +116,6 @@
     "The 1-, 10-, 50-, and 100-task release fixtures prove schema validation, compilation, graph ordering, policy checks, and side-effect-free simulation; they do not execute 161 real project mutations.",
     "Prompt evaluation in this release is deterministic static evaluation against user-authored cases; it is not a semantic guarantee of downstream model or artifact quality.",
     "The canonical v2 specification and task-plan documents are compiled and exposed through the runtime, API, and CLI, but full visual Prompt Studio 2 editing surfaces remain a later UI integration step.",
-    "On Linux, standard CLI project commands execute inside the namespace sandbox worker when it is available; native Windows and macOS worker backends remain future work.",
     "Sandbox self-tests run in trusted host mode to avoid nested user-namespace false failures; ordinary project commands still go through the worker boundary.",
     "SQLite governs mutable product and run state, and this source head adds a Linux namespace worker plus brokers; Windows and macOS native worker backends remain future work.",
     "Cross-machine database replication and multi-device synchronization are not implemented.",
@@ -131,7 +130,10 @@
     "Paths that genuinely target another project remain blocked; register and select that directory before asking Kristin to modify it.",
     "Generated Flutter/native state is excluded from source validation and packaging, but native builds still require platform-specific verification.",
     "Native Flutter analysis, tests, and Windows execution remain authoritative on a configured Flutter workstation.",
-    "v1.9 adds typed interoperability, audit, and release-governance foundations, but native signed installers and platform update application are still unavailable in this source-only environment."
+    "Owner Mode is a roadmap target and is not implemented in this source release.",
+    "The Linux reference namespace worker, HTTPS network broker, and one-use secret broker are present in source, but Windows and macOS native worker backends remain not implemented and fail closed.",
+    "v1 signed-manifest trust is disabled and Signed Manifest v2 is not yet available.",
+    "No signed installer, platform notarization, or authenticated updater is included."
   ],
   "least_privilege_design_task_tools": true,
   "legacy_json_migration": true,
@@ -314,5 +316,17 @@
   "workflow_schema_version": 6,
   "workstation_analyzer_warning_hotfix": true,
   "workstation_validation_transcript_sha256": "f11139cff61ed1d7c0526e60454600de9831b330bbf2cdeb92e9adb7a4ce538b",
-  "write_content_required": true
+  "write_content_required": true,
+  "owner_mode_implemented": false,
+  "owner_mode_release_status": "roadmap_target_not_implemented",
+  "signed_manifest_v1_trust_enabled": false,
+  "signed_manifest_v2_implemented": false,
+  "support_policy_version": "P0-005",
+  "support_scope": "source_preview",
+  "platform_support_matrix": {
+    "linux_namespace_worker": "reference_worker_when_available",
+    "windows_native_worker": "not_implemented_fail_closed",
+    "macos_native_worker": "not_implemented_fail_closed",
+    "owner_mode": "roadmap_target_not_implemented"
+  }
 }

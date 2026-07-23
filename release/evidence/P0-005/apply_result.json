@@ -1,0 +1,34 @@
+{
+  "changed": [
+    "README.md",
+    "SECURITY.md",
+    "docs/SECURITY_MODEL.md",
+    "docs/THREAT_MODEL.md",
+    "docs/SUPPORT_POLICY.md",
+    "tool/policy_support_test.py",
+    "tool/verify.sh",
+    "RELEASE.json",
+    "lib/product/ui_advanced.dart"
+  ],
+  "gateResults": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/policy_support_test.py"
+      ],
+      "exitCode": 0,
+      "outputPreview": "{\n  \"caseCount\": 10,\n  \"milestone\": \"P0-005\",\n  \"passed\": true,\n  \"passedCount\": 10,\n  \"results\": [\n    {\n      \"detail\": \"README states source-preview classification and that Owner Mode is not implemented.\",\n      \"name\": \"README source-preview classification\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"README states Linux reference-worker truth, Windows/macOS fail-closed status, and manifest-trust freeze.\",\n      \"name\": \"README platform matrix truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"SECURITY.md targets v1.9.0+190 and documents the interop freeze.\",\n      \"name\": \"SECURITY supported line and freeze\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"SECURITY.md includes an explicit platform/authority table.\",\n      \"name\": \"SECURITY platform truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"docs/SECURITY_MODEL.md reflects the current SQLite workflow authority and removes stale JSON-authority wording.\",\n      \"name\": \"Security model uses SQLite truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"docs/THREAT_MODEL.md includes manifest/interop substitution threats and the current trust freeze.\",\n      \"name\": \"Threat model includes manifest and interop threats\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"docs/SUPPORT_POLICY.md defines the supported artifact and reporting boundary.\",\n      \"name\": \"Support policy exists\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"RELEASE.json exposes the same source-preview and interop-freeze truth.\",\n      \"name\": \"Release metadata agrees\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"RELEASE.json records Linux reference-worker support and Windows/macOS fail-closed status.\",\n      \"name\": \"Release metadata platform truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Advanced UI shows the same classification, Owner Mode status, and platform truth as the docs.\",\n      \"name\": \"UI developer page agrees with docs\",\n      \"passed\": true\n    }\n  ]\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "outputPreview": ""
+    }
+  ],
+  "milestone": "P0-005",
+  "roadmapVersion": "3.1.1-p0-005-policy-truth",
+  "status": "applied"
+}
