@@ -1,0 +1,252 @@
+{
+  "actor": {
+    "model": "GPT-5.6 Pro",
+    "provider": "OpenAI",
+    "type": "ai"
+  },
+  "artifacts": [
+    {
+      "bytes": 25457,
+      "path": "SOURCE_MANIFEST.sha256",
+      "sha256": "1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab"
+    },
+    {
+      "bytes": 106252,
+      "path": "docs/KRISTIN_GOLD_STANDARD_PRODUCTION_ROADMAP.md",
+      "sha256": "aea43672397235704ec35cb1b0e6228a458c7c36c8fc74a01c9b31ac01dc0c5c"
+    },
+    {
+      "bytes": 1819,
+      "path": "docs/roadmap/STATUS.md",
+      "sha256": "d6d5feda03d1b98afa0a4cb73f95fe08639e110d5e285343d05e3ee5ac3e9041"
+    },
+    {
+      "bytes": 2803,
+      "path": "tasks/active/P0-001.md",
+      "sha256": "31159c45e5f2c1fab5b5e00510a327d7905387d014cb90fee29e27b44128f1c1"
+    },
+    {
+      "bytes": 40258,
+      "path": "tool/capture_baseline.py",
+      "sha256": "e97fe5bf1efcd1c5a448084e161d5cb541417c288e62c2db9cfdb13ff8b14e26"
+    },
+    {
+      "bytes": 10299,
+      "path": "tool/capture_baseline_test.py",
+      "sha256": "28c6c5bacf8f055b0379a3c1bb1d537e8484cefebede707e3bb90e501b27c189"
+    },
+    {
+      "bytes": 5774,
+      "path": "release/evidence/baseline/observations.json",
+      "sha256": "8eb1dc1313cf32864b678f7f096fdae17649aa60981f7880b178444bb7f99ba4"
+    },
+    {
+      "bytes": 13324,
+      "path": "release/evidence/baseline/baseline.json",
+      "sha256": "24daa51f6fda9fdc598369204300ba9441f0c036914bbb43d2a5030ec69673d2"
+    },
+    {
+      "bytes": 3863,
+      "path": "release/evidence/baseline/BASELINE.md",
+      "sha256": "7ba9d55943a08d5bb61833fce7836916baf9ece68ecbffede09e8eee524b7e3c"
+    },
+    {
+      "bytes": 4522,
+      "path": "release/evidence/baseline/execution.json",
+      "sha256": "119db07b8158ea25b3f042d8b129cc84a3a2bd7e93564f628edbbcdc2e573bac"
+    },
+    {
+      "bytes": 1975,
+      "path": "release/evidence/baseline/EXECUTION.md",
+      "sha256": "f4dddbe01e0b1ce848466c897e3f38e768fcc5d9797455287e3bfb0558531379"
+    },
+    {
+      "bytes": 561,
+      "path": "release/evidence/baseline/capture_manifest.json",
+      "sha256": "6f26b7919eb63d8c6d7f512947ce7d6353a04af4e2b2925ce59bc5f209250d64"
+    },
+    {
+      "bytes": 2476,
+      "path": "release/evidence/P0-001/SELF_REVIEW.md",
+      "sha256": "c8afcbc61fcebf6c31364aa76061505dc6faa6c338d3d4ae0fb4482db1c2818a"
+    },
+    {
+      "bytes": 1372,
+      "path": "release/evidence/P0-001/APPLY_AND_VERIFY.md",
+      "sha256": "e4b2345dcd377d1e6c3ab8a23a577e3de4727ade40d16cd1c2b870f9fb114864"
+    }
+  ],
+  "baseCommit": "f230fff336d2c7921a987e624fac96ca7d0030bc",
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "py_compile",
+        "tool/capture_baseline.py",
+        "tool/capture_baseline_test.py"
+      ],
+      "exitCode": 0,
+      "name": "python_syntax",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/capture_baseline_test.py"
+      ],
+      "caseCount": 8,
+      "exitCode": 0,
+      "name": "behavioral_unit_tests",
+      "outputPath": "release/evidence/P0-001/unit_test_output.txt",
+      "outputSha256": "296e9d00d026ad057dfe4cc934bb320adedda8846c2a4864637c02ff47a6bcc6",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "python3",
+        "tool/capture_baseline.py",
+        "--project",
+        ".",
+        "--manifest-mode",
+        "snapshot"
+      ],
+      "exitCode": 0,
+      "name": "snapshot_capture",
+      "outputPath": "release/evidence/P0-001/capture_output.txt",
+      "outputSha256": "f899d5faf4b8afa78f2d3ba31d1c7e519289ef513664990fd9529f6a1ae3a238",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "capture-twice",
+        "and",
+        "cmp",
+        "baseline.json",
+        "BASELINE.md"
+      ],
+      "exitCode": 0,
+      "name": "deterministic_reproduction",
+      "outputPath": "release/evidence/P0-001/reproducibility_result.txt",
+      "outputSha256": "dc0e1aefc9e652c8b5e1805d143e8311e9df5879a5726d8b06c0bb08b7e9564b",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "python3",
+        "<inline-added-source-verifier>"
+      ],
+      "exitCode": 0,
+      "name": "added_source_manifest_verification",
+      "outputPath": "release/evidence/P0-001/added_source_verification.txt",
+      "outputSha256": "7117fdea37a6f304c400b5bf44c775e0a02f6ebf42536b345d3dc0054a4ce7e1",
+      "status": "passed",
+      "verifiedCount": 6
+    },
+    {
+      "argv": [
+        "python3",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "findingCount": 0,
+      "name": "project_secret_scanner_on_milestone_sources",
+      "outputPath": "release/evidence/P0-001/project_secret_scan.txt",
+      "outputSha256": "570cb3405ef4ad94f3a50784a89b5848d15f7d4422dfb7615c2d3c7f515737ed",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "python3",
+        "tool/capture_baseline.py",
+        "--manifest-mode",
+        "verify",
+        "--strict"
+      ],
+      "expectedExitCode": 1,
+      "expectedSourceStatus": "failed",
+      "name": "incomplete_checkout_fail_closed",
+      "observedExitCode": 1,
+      "outputPath": "release/evidence/P0-001/incomplete_checkout_negative_test.txt",
+      "outputSha256": "816043444213abe9c124479dcd9270841a464b1f4f6a2a4c8e9c25b7efdd7ce9",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "python3",
+        "<inline-json-parser>"
+      ],
+      "documentCount": 5,
+      "exitCode": 0,
+      "name": "json_validation",
+      "outputPath": "release/evidence/P0-001/json_validation.txt",
+      "outputSha256": "fcb5b22247566866bc06220a8fd3c82039d40642552402f515525934bf5e9bf1",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "name": "git_diff_check",
+      "outputPath": "release/evidence/P0-001/git_diff_check.txt",
+      "outputSha256": "3951b6b00b3a58d8a9cb6cc8452fd6ca27fb2e70140e5063f27833d770b34573",
+      "status": "passed"
+    }
+  ],
+  "completedAt": "2026-07-23T05:55:00Z",
+  "deterministicBaseline": {
+    "baselineJsonSha256": "24daa51f6fda9fdc598369204300ba9441f0c036914bbb43d2a5030ec69673d2",
+    "baselineMarkdownSha256": "7ba9d55943a08d5bb61833fce7836916baf9ece68ecbffede09e8eee524b7e3c",
+    "sourceManifestSha256": "1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab",
+    "stableFingerprintSha256": "6770c5d5190ea13c28c51e542b1e12113f3de189b0fecbe63b05ea81b2d2cdef"
+  },
+  "nextTaskAfterAcceptance": "P0-002",
+  "review": {
+    "requiredPromotion": "Set milestone to DONE only after complete-checkout verification passes and an independent reviewer records PASS.",
+    "selfReviewPath": "release/evidence/P0-001/SELF_REVIEW.md",
+    "status": "PENDING_INDEPENDENT_REVIEW"
+  },
+  "roadmapPath": "docs/KRISTIN_GOLD_STANDARD_PRODUCTION_ROADMAP.md",
+  "schemaVersion": "1.0.0",
+  "scope": {
+    "productBehaviorChanged": false,
+    "summary": "Added deterministic baseline capture, tests, roadmap/task state, and evidence only. No runtime product or trust behavior was modified."
+  },
+  "startedAt": "2026-07-23T05:32:17Z",
+  "status": {
+    "acceptanceBlocker": "Apply to a complete checkout and reproduce with manifest-mode verify; Dart/Flutter and full source gates were unavailable in this environment.",
+    "acceptanceComplete": false,
+    "implementation": "complete",
+    "independentReview": "pending",
+    "milestone": "review",
+    "selfReview": "pass"
+  },
+  "taskId": "P0-001",
+  "taskName": "Capture reproducible baseline",
+  "testsPassed": true,
+  "unavailable": [
+    {
+      "gate": "full_checkout_source_manifest_integrity",
+      "reason": "The patch workspace contains only changed files and the upstream manifest, not the complete repository."
+    },
+    {
+      "gate": "dart_format",
+      "reason": "Dart is not installed in the execution environment."
+    },
+    {
+      "gate": "flutter_analyze_test_build",
+      "reason": "Flutter is not installed in the execution environment."
+    },
+    {
+      "gate": "independent_review",
+      "reason": "A separate reviewer/session has not yet reviewed the applied repository change."
+    }
+  ]
+}

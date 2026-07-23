@@ -1,0 +1,171 @@
+{
+  "blockingFailures": [],
+  "captureStatus": "passed",
+  "capturedAt": "2026-07-23T00:00:00Z",
+  "gates": [
+    {
+      "argv": [
+        "/opt/pyvenv/bin/python3",
+        "tool/system_test.py",
+        "--project",
+        ".",
+        "--json"
+      ],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "offline_system_contracts",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "tool/system_test.py is not present in this checkout",
+      "status": "unavailable"
+    },
+    {
+      "argv": [
+        "/opt/pyvenv/bin/python3",
+        "tool/workflow_kernel_test.py",
+        "--project",
+        ".",
+        "--json"
+      ],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "durable_workflow_kernel",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "tool/workflow_kernel_test.py is not present in this checkout",
+      "status": "unavailable"
+    },
+    {
+      "argv": [
+        "/opt/pyvenv/bin/python3",
+        "tool/validate_release.py",
+        "--skip-sdk"
+      ],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "source_release_validation",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "tool/validate_release.py is not present in this checkout",
+      "status": "unavailable"
+    },
+    {
+      "argv": [],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "dart_format",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "dart is unavailable; gate was not executed",
+      "status": "unavailable"
+    },
+    {
+      "argv": [],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "flutter_dependency_resolution",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "flutter is unavailable; gate was not executed",
+      "status": "unavailable"
+    },
+    {
+      "argv": [],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "flutter_static_analysis",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "flutter is unavailable; gate was not executed",
+      "status": "unavailable"
+    },
+    {
+      "argv": [],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "flutter_tests",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "flutter is unavailable; gate was not executed",
+      "status": "unavailable"
+    },
+    {
+      "argv": [],
+      "duration_ms": 0,
+      "exit_code": null,
+      "name": "native_release_build",
+      "output_sha256": null,
+      "output_tail": "",
+      "reason": "flutter is unavailable; gate was not executed",
+      "status": "unavailable"
+    }
+  ],
+  "host": {
+    "machine": "x86_64",
+    "pythonImplementation": "CPython",
+    "release": "6.12.13",
+    "system": "Linux"
+  },
+  "localInspection": {
+    "ciWorkflow": {
+      "path": ".github/workflows/ci.yml",
+      "reason": ".github/workflows/ci.yml is not present in this checkout",
+      "status": "unavailable"
+    },
+    "pubspec": {
+      "path": "pubspec.yaml",
+      "reason": "pubspec.yaml is not present in this checkout",
+      "status": "unavailable"
+    },
+    "toolRegistry": {
+      "path": "schemas/tool_registry.v2.json",
+      "reason": "schemas/tool_registry.v2.json is not present in this checkout",
+      "status": "unavailable"
+    }
+  },
+  "manifestMode": "snapshot",
+  "milestoneId": "P0-001",
+  "note": "captureStatus describes this evidence capture, not product readiness. A missing or unrun gate is never promoted to passed.",
+  "projectGateStatus": "unavailable",
+  "projectRoot": "<PROJECT>",
+  "runSafeGates": false,
+  "schemaVersion": "1.0.0",
+  "sourceManifestIntegrity": {
+    "entryCount": 255,
+    "mismatched": [],
+    "missing": [],
+    "reason": "snapshot mode selected; the manifest was inventoried but checkout bytes were not asserted",
+    "status": "unavailable",
+    "verifiedCount": 0
+  },
+  "statusSummary": {
+    "unavailable": 12
+  },
+  "tools": {
+    "dart": {
+      "reason": "dart is not available on PATH",
+      "status": "unavailable",
+      "version": null
+    },
+    "flutter": {
+      "reason": "flutter is not available on PATH",
+      "status": "unavailable",
+      "version": null
+    },
+    "git": {
+      "reason": "available",
+      "status": "passed",
+      "version": "git version 2.47.3"
+    },
+    "node": {
+      "reason": "available",
+      "status": "passed",
+      "version": "v22.16.0"
+    },
+    "python3": {
+      "reason": "available",
+      "status": "passed",
+      "version": "3.13.5"
+    }
+  }
+}

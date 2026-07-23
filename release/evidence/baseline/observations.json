@@ -1,0 +1,162 @@
+{
+  "ci": {
+    "declaredActions": [
+      "actions/checkout@v4",
+      "subosito/flutter-action@v2"
+    ],
+    "declaredFlutterChannel": "stable",
+    "failFast": false,
+    "latestObservedRun": {
+      "branch": "main",
+      "commit": "f230fff336d2c7921a987e624fac96ca7d0030bc",
+      "conclusion": "failure",
+      "downstreamEvidenceUnavailable": [
+        "flutter analyze",
+        "flutter test",
+        "architecture and security gate",
+        "native release build"
+      ],
+      "durationSeconds": 135,
+      "event": "push",
+      "exitCode": 1,
+      "failedCommand": "dart format --output=none --set-exit-if-changed lib test",
+      "failedStep": "dart format",
+      "id": 29976661586,
+      "jobs": [
+        {
+          "conclusion": "failure",
+          "failedStep": "dart format",
+          "jobId": 89109769941,
+          "platform": "ubuntu-latest"
+        },
+        {
+          "conclusion": "failure",
+          "failedStep": "dart format",
+          "jobId": 89109769934,
+          "platform": "windows-latest"
+        },
+        {
+          "conclusion": "failure",
+          "failedStep": "dart format",
+          "jobId": 89109769950,
+          "platform": "macos-latest"
+        }
+      ],
+      "startedAt": "2026-07-23T03:18:00Z",
+      "startedAtResolution": "minute",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/29976661586",
+      "warnings": [
+        "actions/checkout@v4 currently uses the deprecated Node 20 action runtime",
+        "toolchain and Action references are moving rather than commit-pinned"
+      ]
+    },
+    "matrix": [
+      "ubuntu-latest",
+      "windows-latest",
+      "macos-latest"
+    ],
+    "workflowFile": ".github/workflows/ci.yml",
+    "workflowName": "product-gates"
+  },
+  "evidenceSources": [
+    {
+      "type": "repository",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/tree/f230fff336d2c7921a987e624fac96ca7d0030bc"
+    },
+    {
+      "type": "commit",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/commit/f230fff336d2c7921a987e624fac96ca7d0030bc"
+    },
+    {
+      "type": "ci-workflow",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/.github/workflows/ci.yml"
+    },
+    {
+      "type": "ci-run",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/29976661586"
+    },
+    {
+      "type": "release-metadata",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/RELEASE.json"
+    },
+    {
+      "type": "tool-registry",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/schemas/tool_registry.v2.json"
+    }
+  ],
+  "knownBlockers": [
+    {
+      "detail": "Ubuntu, Windows, and macOS all exit at the same dart format check, so downstream analyzer, tests, validator, and native-build claims do not have current CI evidence.",
+      "id": "BASELINE-CI-001",
+      "nextTask": "P0-003",
+      "severity": "high",
+      "title": "Three-platform CI stops at formatting"
+    },
+    {
+      "detail": "The roadmap records an envelope-supplied HMAC trust-anchor flaw in tool/interoperability_v19.py. P0-001 inventories it but intentionally does not change product behavior.",
+      "id": "BASELINE-TRUST-001",
+      "nextTask": "P0-002",
+      "severity": "critical",
+      "title": "v1 envelope trust path is frozen pending removal"
+    },
+    {
+      "detail": "The workflow selects Flutter channel stable and major-version Action tags, so repeated runs do not prove identical declared build inputs.",
+      "id": "BASELINE-SUPPLY-001",
+      "nextTask": "P0-004",
+      "severity": "high",
+      "title": "Toolchains and CI Actions are not immutable"
+    },
+    {
+      "detail": "Existing release metadata marks compiled_release_validated false and records SDK gates as unavailable.",
+      "id": "BASELINE-RELEASE-001",
+      "nextTask": "P0-003",
+      "severity": "high",
+      "title": "Current artifact is a source release, not a validated desktop release"
+    },
+    {
+      "detail": "The current source lineage begins with one root replacement commit, which limits external blame, regression, and review provenance.",
+      "id": "BASELINE-PROVENANCE-001",
+      "nextTask": "P0-006",
+      "severity": "medium",
+      "title": "Imported root commit limits historical review"
+    }
+  ],
+  "observedAt": "2026-07-23T05:32:17Z",
+  "release": {
+    "classification": "source-release",
+    "compiledReleaseValidated": false,
+    "dartSdkConstraint": ">=3.5.0 <4.0.0",
+    "executionIntelligenceCases": 40,
+    "projectManagerCases": 16,
+    "promptStudioCases": 30,
+    "releaseMetadataSdkGates": {
+      "dartFormat": "unavailable",
+      "flutterAnalyze": "unavailable",
+      "flutterPubGet": "unavailable",
+      "flutterTest": "unavailable"
+    },
+    "sourceGatePassed": true,
+    "version": "1.9.0+190",
+    "workflowKernelCases": 14,
+    "workflowMigrationDigest": "df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261",
+    "workflowSchemaVersion": 6
+  },
+  "repository": {
+    "additions": 111498,
+    "branch": "main",
+    "commit": "f230fff336d2c7921a987e624fac96ca7d0030bc",
+    "commitMessage": "Replace repository with new project",
+    "deletions": 0,
+    "filesChanged": 449,
+    "isRootCommit": true,
+    "parentCount": 0,
+    "url": "https://github.com/alex00Pirotskyi/kris.ai"
+  },
+  "schemaVersion": "1.0.0",
+  "toolRegistry": {
+    "canonicalToolContractCount": 23,
+    "compatibilityPolicyVersion": "1.0.0",
+    "inventoryPolicy": "The deterministic baseline records the committed registry hash, version, and contract count. execution.json expands every tool when a complete checkout is available.",
+    "registryVersion": "2.0.0"
+  }
+}

@@ -1,0 +1,331 @@
+{
+  "continuousIntegration": {
+    "declaredActions": [
+      "actions/checkout@v4",
+      "subosito/flutter-action@v2"
+    ],
+    "declaredFlutterChannel": "stable",
+    "failFast": false,
+    "fullLocalInspection": "execution.json#localInspection.ciWorkflow",
+    "latestObservedRun": {
+      "branch": "main",
+      "commit": "f230fff336d2c7921a987e624fac96ca7d0030bc",
+      "conclusion": "failure",
+      "downstreamEvidenceUnavailable": [
+        "flutter analyze",
+        "flutter test",
+        "architecture and security gate",
+        "native release build"
+      ],
+      "durationSeconds": 135,
+      "event": "push",
+      "exitCode": 1,
+      "failedCommand": "dart format --output=none --set-exit-if-changed lib test",
+      "failedStep": "dart format",
+      "id": 29976661586,
+      "jobs": [
+        {
+          "conclusion": "failure",
+          "failedStep": "dart format",
+          "jobId": 89109769941,
+          "platform": "ubuntu-latest"
+        },
+        {
+          "conclusion": "failure",
+          "failedStep": "dart format",
+          "jobId": 89109769934,
+          "platform": "windows-latest"
+        },
+        {
+          "conclusion": "failure",
+          "failedStep": "dart format",
+          "jobId": 89109769950,
+          "platform": "macos-latest"
+        }
+      ],
+      "startedAt": "2026-07-23T03:18:00Z",
+      "startedAtResolution": "minute",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/29976661586",
+      "warnings": [
+        "actions/checkout@v4 currently uses the deprecated Node 20 action runtime",
+        "toolchain and Action references are moving rather than commit-pinned"
+      ]
+    },
+    "matrix": [
+      "ubuntu-latest",
+      "windows-latest",
+      "macos-latest"
+    ],
+    "workflowFile": ".github/workflows/ci.yml",
+    "workflowName": "product-gates",
+    "workflowPath": ".github/workflows/ci.yml",
+    "workflowSourceSha256": "34d35567c6ed34bf1b88447d29b29ed2e82d62c4296790ad6043ede3480c5396"
+  },
+  "evidenceSources": [
+    {
+      "type": "repository",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/tree/f230fff336d2c7921a987e624fac96ca7d0030bc"
+    },
+    {
+      "type": "commit",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/commit/f230fff336d2c7921a987e624fac96ca7d0030bc"
+    },
+    {
+      "type": "ci-workflow",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/.github/workflows/ci.yml"
+    },
+    {
+      "type": "ci-run",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/29976661586"
+    },
+    {
+      "type": "release-metadata",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/RELEASE.json"
+    },
+    {
+      "type": "tool-registry",
+      "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/schemas/tool_registry.v2.json"
+    }
+  ],
+  "generatedAt": "2026-07-23T00:00:00Z",
+  "knownBlockers": [
+    {
+      "detail": "Ubuntu, Windows, and macOS all exit at the same dart format check, so downstream analyzer, tests, validator, and native-build claims do not have current CI evidence.",
+      "id": "BASELINE-CI-001",
+      "nextTask": "P0-003",
+      "severity": "high",
+      "title": "Three-platform CI stops at formatting"
+    },
+    {
+      "detail": "The roadmap records an envelope-supplied HMAC trust-anchor flaw in tool/interoperability_v19.py. P0-001 inventories it but intentionally does not change product behavior.",
+      "id": "BASELINE-TRUST-001",
+      "nextTask": "P0-002",
+      "severity": "critical",
+      "title": "v1 envelope trust path is frozen pending removal"
+    },
+    {
+      "detail": "The workflow selects Flutter channel stable and major-version Action tags, so repeated runs do not prove identical declared build inputs.",
+      "id": "BASELINE-SUPPLY-001",
+      "nextTask": "P0-004",
+      "severity": "high",
+      "title": "Toolchains and CI Actions are not immutable"
+    },
+    {
+      "detail": "Existing release metadata marks compiled_release_validated false and records SDK gates as unavailable.",
+      "id": "BASELINE-RELEASE-001",
+      "nextTask": "P0-003",
+      "severity": "high",
+      "title": "Current artifact is a source release, not a validated desktop release"
+    },
+    {
+      "detail": "The current source lineage begins with one root replacement commit, which limits external blame, regression, and review provenance.",
+      "id": "BASELINE-PROVENANCE-001",
+      "nextTask": "P0-006",
+      "severity": "medium",
+      "title": "Imported root commit limits historical review"
+    }
+  ],
+  "milestone": {
+    "acceptance": "A clean checkout reproduces the deterministic report and every unavailable machine gate is explicit in execution.json.",
+    "id": "P0-001",
+    "name": "Capture reproducible baseline",
+    "phase": "P0 — Stabilize, contain, and establish truth",
+    "roadmapPath": "docs/KRISTIN_GOLD_STANDARD_PRODUCTION_ROADMAP.md",
+    "scope": "Inventory and evidence only; no product behavior changes."
+  },
+  "release": {
+    "classification": "source-release",
+    "compiledReleaseValidated": false,
+    "dartSdkConstraint": ">=3.5.0 <4.0.0",
+    "executionIntelligenceCases": 40,
+    "projectManagerCases": 16,
+    "promptStudioCases": 30,
+    "releaseMetadataSdkGates": {
+      "dartFormat": "unavailable",
+      "flutterAnalyze": "unavailable",
+      "flutterPubGet": "unavailable",
+      "flutterTest": "unavailable"
+    },
+    "sourceGatePassed": true,
+    "version": "1.9.0+190",
+    "workflowKernelCases": 14,
+    "workflowMigrationDigest": "df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261",
+    "workflowSchemaVersion": 6
+  },
+  "repository": {
+    "additions": 111498,
+    "branch": "main",
+    "commit": "f230fff336d2c7921a987e624fac96ca7d0030bc",
+    "commitMessage": "Replace repository with new project",
+    "deletions": 0,
+    "filesChanged": 449,
+    "isRootCommit": true,
+    "parentCount": 0,
+    "url": "https://github.com/alex00Pirotskyi/kris.ai"
+  },
+  "reproduction": {
+    "deterministicCommand": "python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates",
+    "deterministicInputs": [
+      "SOURCE_MANIFEST.sha256",
+      "release/evidence/baseline/observations.json"
+    ],
+    "deterministicOutputs": [
+      "release/evidence/baseline/baseline.json",
+      "release/evidence/baseline/BASELINE.md"
+    ],
+    "machineSpecificOutputs": [
+      "release/evidence/baseline/execution.json",
+      "release/evidence/baseline/EXECUTION.md"
+    ],
+    "snapshotCommand": "python3 tool/capture_baseline.py --project . --manifest-mode snapshot"
+  },
+  "schemaVersion": "1.0.0",
+  "sourceTree": {
+    "ciWorkflowCount": 1,
+    "ciWorkflowPaths": [
+      ".github/workflows/ci.yml"
+    ],
+    "ciWorkflowSetSha256": "20bafaedc774ff20648b5df2ef6c626d662c6695096648ee334a0cf8f1e40a4d",
+    "documentationCount": 53,
+    "documentationSetSha256": "2b7072b0d89d7c8bc86f4de2e1c62a33003c9d1da795b8936d2256a21b3bb3d3",
+    "entryCount": 255,
+    "extensionCounts": {
+      ".bat": 1,
+      ".cmd": 8,
+      ".command": 1,
+      ".dart": 53,
+      ".json": 62,
+      ".md": 60,
+      ".ps1": 5,
+      ".py": 44,
+      ".sh": 7,
+      ".sql": 6,
+      ".yaml": 2,
+      ".yml": 1,
+      "<none>": 5
+    },
+    "manifestFileSha256": "1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab",
+    "manifestPath": "SOURCE_MANIFEST.sha256",
+    "migrationCount": 6,
+    "migrationSetSha256": "14885ebd1acb61cffb8828def6e045078a6024a208473cbbdf17c250d37ccf6d",
+    "normalizedManifestSha256": "1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab",
+    "schemaCount": 40,
+    "schemaPaths": [
+      "schemas/a2a_agent_manifest.v1.json",
+      "schemas/a2a_task_contract.v1.json",
+      "schemas/agent_decision.v1.json",
+      "schemas/audit_chain_entry.v1.json",
+      "schemas/audit_chain_report.v1.json",
+      "schemas/audit_checkpoint.v1.json",
+      "schemas/capability_manifest.v1.json",
+      "schemas/convergence_decision.v1.json",
+      "schemas/execution_progress.v1.json",
+      "schemas/file_adapter_registry.v1.json",
+      "schemas/fleet_configuration.v1.json",
+      "schemas/fleet_profile.v1.json",
+      "schemas/interoperability_manifest.v1.json",
+      "schemas/knowledge_object_manifest.v1.json",
+      "schemas/mcp_server_manifest.v1.json",
+      "schemas/mcp_server_profile.v1.json",
+      "schemas/mcp_session_contract.v1.json",
+      "schemas/memory_admission_policy.v1.json",
+      "schemas/model_routing_policy.v1.json",
+      "schemas/plan_capability_catalog.v1.json",
+      "schemas/plan_compilation_report.v1.json",
+      "schemas/plugin_manifest.v1.json",
+      "schemas/policy_profile.v1.json",
+      "schemas/product_specification.v2.json",
+      "schemas/project_manager_snapshot.v1.json",
+      "schemas/project_profile.v2.json",
+      "schemas/prompt_evaluation_dataset.v1.json",
+      "schemas/published_skill.v1.json",
+      "schemas/research_freshness_policy.v1.json",
+      "schemas/signed_capability_manifest.v1.json",
+      "schemas/signed_manifest.v1.json",
+      "schemas/signed_manifest_envelope.v1.json",
+      "schemas/skill_candidate.v1.json",
+      "schemas/support_compatibility_policy.v1.json",
+      "schemas/support_lifecycle_policy.v1.json",
+      "schemas/task_plan.v2.json",
+      "schemas/tool_registry.v2.json",
+      "schemas/update_channel_manifest.v1.json",
+      "schemas/update_manifest.v1.json",
+      "schemas/verification_report.v1.json"
+    ],
+    "schemaSetSha256": "0cca86e16397a31d9bf4efd3dbae82bbbabd4286392226f1c45453fc50eab067",
+    "testAndGateFileCount": 45,
+    "testAndGatePaths": [
+      "test/product/budget_diagnostics_test.dart",
+      "test/product/diagnostic_replay_test.dart",
+      "test/product/durable_workflow_kernel_test.dart",
+      "test/product/execution_reliability_test.dart",
+      "test/product/file_adapters_test.dart",
+      "test/product/fixtures/diagnostic_replay/v115_nested_write_content_loss.json",
+      "test/product/fixtures/diagnostic_replay/v116_markdown_path_repair_loop.json",
+      "test/product/fixtures/execution_intelligence/progress_mutation.json",
+      "test/product/fixtures/execution_intelligence/progress_noop.json",
+      "test/product/fixtures/execution_intelligence/routing_policy.json",
+      "test/product/fixtures/execution_intelligence/verifier_false_success.json",
+      "test/product/fixtures/execution_intelligence/verifier_pass.json",
+      "test/product/fixtures/interoperability_v19/mock_a2a_agent.py",
+      "test/product/fixtures/interoperability_v19/mock_mcp_server.py",
+      "test/product/fixtures/prompt_studio_v2/evaluation_dataset.json",
+      "test/product/fixtures/prompt_studio_v2/plan_001.json",
+      "test/product/fixtures/prompt_studio_v2/plan_010.json",
+      "test/product/fixtures/prompt_studio_v2/plan_050.json",
+      "test/product/fixtures/prompt_studio_v2/plan_100.json",
+      "test/product/fixtures/prompt_studio_v2/policy.local_only.json",
+      "test/product/fixtures/prompt_studio_v2/prompt.baseline.json",
+      "test/product/fixtures/prompt_studio_v2/prompt.candidate.json",
+      "test/product/fixtures/prompt_studio_v2/specification.json",
+      "test/product/interoperability_v19_test.dart",
+      "test/product/knowledge_memory_test.dart",
+      "test/product/knowledge_memory_v2_test.dart",
+      "test/product/prompt_studio_v2_test.dart",
+      "test/product/release_operations_v19_test.dart",
+      "test/product/source_contract_test.dart",
+      "test/product/typed_protocol_schema_test.dart",
+      "test/product/v1_product_preview_test.dart",
+      "test/widget_test.dart",
+      "tool/capture_baseline_test.py",
+      "tool/execution_intelligence_test.py",
+      "tool/file_adapter_test.py",
+      "tool/interoperability_admin_v19_test.py",
+      "tool/knowledge_memory_v2_test.py",
+      "tool/network_broker_test.py",
+      "tool/project_manager_v2_test.py",
+      "tool/prompt_studio_v2_test.py",
+      "tool/protocol_contract_test.py",
+      "tool/release_ops_v19_test.py",
+      "tool/sandbox_worker_test.py",
+      "tool/system_test.py",
+      "tool/workflow_kernel_test.py"
+    ],
+    "testAndGateSetSha256": "26ab8db4f22127a5eda5e20b2f06eb72e23961058a48ad325b7c711a0004cb72",
+    "toolSourceCount": 54,
+    "toolSourceSetSha256": "d6943c78c0b0e1b00d46a5c8fcac67a5c4563fd7d522732df122f8ae1c47f021",
+    "topLevelCounts": {
+      ".github": 1,
+      "<root>": 17,
+      "docs": 53,
+      "lib": 38,
+      "migrations": 6,
+      "release": 6,
+      "schemas": 40,
+      "scripts": 7,
+      "tasks": 1,
+      "test": 32,
+      "tool": 54
+    }
+  },
+  "stableFingerprintSha256": "6770c5d5190ea13c28c51e542b1e12113f3de189b0fecbe63b05ea81b2d2cdef",
+  "toolRegistry": {
+    "canonicalToolContractCount": 23,
+    "compatibilityPolicyVersion": "1.0.0",
+    "fullLocalInspection": "execution.json#localInspection.toolRegistry",
+    "inventoryPolicy": "The deterministic baseline records the committed registry hash, version, and contract count. execution.json expands every tool when a complete checkout is available.",
+    "path": "schemas/tool_registry.v2.json",
+    "registryVersion": "2.0.0",
+    "sourceSha256": "47f0716f1139655ccc195f5fb4f98969717f6eff905f0381ef0c46a17d3eb587"
+  }
+}

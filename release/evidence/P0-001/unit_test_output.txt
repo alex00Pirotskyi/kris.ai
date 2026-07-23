@@ -1,0 +1,13 @@
+test_cli_snapshot_capture_succeeds_without_checkout_files (tool.capture_baseline_test.BaselineCaptureTest.test_cli_snapshot_capture_succeeds_without_checkout_files) ... ok
+test_deterministic_outputs_are_byte_identical (tool.capture_baseline_test.BaselineCaptureTest.test_deterministic_outputs_are_byte_identical) ... ok
+test_inventory_counts_schemas_tests_tools_and_ci (tool.capture_baseline_test.BaselineCaptureTest.test_inventory_counts_schemas_tests_tools_and_ci) ... ok
+test_local_tool_registry_is_fully_inventoried (tool.capture_baseline_test.BaselineCaptureTest.test_local_tool_registry_is_fully_inventoried) ... ok
+test_manifest_parser_rejects_duplicate_and_traversal (tool.capture_baseline_test.BaselineCaptureTest.test_manifest_parser_rejects_duplicate_and_traversal) ... ok
+test_redaction_removes_credentials_and_project_path (tool.capture_baseline_test.BaselineCaptureTest.test_redaction_removes_credentials_and_project_path) ... ok
+test_snapshot_mode_is_explicitly_unavailable (tool.capture_baseline_test.BaselineCaptureTest.test_snapshot_mode_is_explicitly_unavailable) ... ok
+test_source_verification_reports_missing_and_mismatch (tool.capture_baseline_test.BaselineCaptureTest.test_source_verification_reports_missing_and_mismatch) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.634s
+
+OK
