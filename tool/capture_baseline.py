@@ -923,7 +923,8 @@ def render_execution_markdown(execution: Mapping[str, Any]) -> str:
     ]
     for name, result in execution.get("tools", {}).items():
         detail = result.get("version") or result.get("reason")
-        lines.append(f"| `{name}` | {result.get('status')} | {str(detail).replace('|', '\\|')} |")
+        escaped_detail = str(detail).replace("|", r"\|")
+        lines.append(f"| `{name}` | {result.get('status')} | {escaped_detail} |")
     source = execution.get("sourceManifestIntegrity", {})
     lines.extend(
         (
