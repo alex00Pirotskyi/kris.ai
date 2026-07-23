@@ -466,13 +466,28 @@ def resolve_executable(executable: str, project: Path) -> str | None:
     return shutil.which(executable)
 
 
-def action_readiness(profile: ProjectProfileV2, action: str, capabilities: Mapping[str, Any]) -> dict[str, Any]:
+def action_readiness(
+    profile: ProjectProfileV2,
+    action: str,
+    capabilities: Mapping[str, Any],
+) -> dict[str, Any]:
     command = profile.commands.get(action)
     if action == "package" and command is None:
-        # Packaging can operate on a retained snapshot without a project command.
-        return {"state": "ready" if capabilities.get("available") else "blocked", "reasons": [] if capabilities.get("available") else ["sandbox_unavailable"]}
+        # Built-in packaging only snapshots, hashes, archives, and records the
+        # selected project. It does not execute project code, so tying it to an
+        # OS sandbox would be a false dependency rather than a security control.
+        return {
+            "state": "ready",
+            "reasons": [],
+            "backend": "builtin_snapshot_packager",
+            "assurance": "host_snapshot_no_project_code_execution",
+        }
     if command is None:
-        return {"state": "not_configured", "reasons": ["command_not_configured"]}
+        return {
+            "state": "not_configured",
+            "reasons": ["command_not_configured"],
+            "backend": str(capabilities.get("backend", "unavailable")),
+        }
     reasons: list[str] = []
     if not capabilities.get("available"):
         reasons.append("sandbox_unavailable")
@@ -482,7 +497,12 @@ def action_readiness(profile: ProjectProfileV2, action: str, capabilities: Mappi
         reasons.append("secret_use_requires_explicit_approval")
     if command.ports:
         reasons.append("worker_to_host_port_bridge_unavailable")
-    return {"state": "blocked" if reasons else "ready", "reasons": reasons}
+    return {
+        "state": "blocked" if reasons else "ready",
+        "reasons": reasons,
+        "backend": str(capabilities.get("backend", "unavailable")),
+        "assurance": "os_sandbox" if capabilities.get("available") else "none",
+    }
 
 
 def persist_profile(connection: sqlite3.Connection, root: Path, profile: ProjectProfileV2) -> None:

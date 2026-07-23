@@ -113,8 +113,7 @@ class RecordedAgentProviderAdapter implements AgentProviderAdapter {
   }
 }
 
-const List<AgentProviderAdapter> _allProviderAdapters =
-    <AgentProviderAdapter>[
+const List<AgentProviderAdapter> _allProviderAdapters = <AgentProviderAdapter>[
   OllamaAgentProviderAdapter(),
   OpenAiCompatibleAgentProviderAdapter(),
   McpAgentProviderAdapter(),
@@ -128,9 +127,8 @@ Iterable<AgentProviderAdapter> providerAdapters(
         ? _allProviderAdapters
         : _allProviderAdapters.where((adapter) => adapter.protocol == provider);
 
-Map<String, dynamic> _providerMap(Object? value) => value is Map
-    ? Map<String, dynamic>.from(value)
-    : <String, dynamic>{};
+Map<String, dynamic> _providerMap(Object? value) =>
+    value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
 
 class AgentProtocolAdapter {
   const AgentProtocolAdapter({
@@ -141,8 +139,7 @@ class AgentProtocolAdapter {
   final ToolSchemaRegistry toolSchemas;
   final AgentDecisionCodec decisionCodec;
 
-  static const Map<String, List<String>> _toolAliases =
-      <String, List<String>>{
+  static const Map<String, List<String>> _toolAliases = <String, List<String>>{
     'browse_url': <String>['research_fetch'],
     'build_and_test': <String>['verify_project'],
     'create_file': <String>['write_file'],
@@ -624,7 +621,8 @@ class AgentProtocolAdapter {
       return 'list_directory';
     }
     if (item.allowedTools.contains('knowledge_search') &&
-        RegExp(r'^(?:gather|collect|research|review|analy[sz]e)').hasMatch(normalized)) {
+        RegExp(r'^(?:gather|collect|research|review|analy[sz]e)')
+            .hasMatch(normalized)) {
       return 'knowledge_search';
     }
     if (item.allowedTools.contains('list_directory') &&
@@ -667,7 +665,8 @@ class AgentProtocolAdapter {
       '_call',
     ]) {
       if (normalized.endsWith(suffix)) {
-        final stripped = normalized.substring(0, normalized.length - suffix.length);
+        final stripped =
+            normalized.substring(0, normalized.length - suffix.length);
         if (exact.containsKey(stripped)) {
           return exact[stripped];
         }
@@ -978,18 +977,16 @@ class AgentProtocolAdapter {
       return (tool: tool, arguments: arguments, reason: '');
     }
     final executable = arguments['executable']?.toString().trim() ?? '';
-    final basename = executable
-        .replaceAll('\\', '/')
-        .split('/')
-        .last
-        .toLowerCase();
+    final basename =
+        executable.replaceAll('\\', '/').split('/').last.toLowerCase();
     final commandArguments = stringList(arguments['args'])
         .map((value) => value.trim())
         .where((value) => value.isNotEmpty)
         .toList(growable: false);
     if (basename == 'git' || basename == 'git.exe') {
       final tokens = commandArguments.map(_token).toSet();
-      if (tokens.contains('status') && item.allowedTools.contains('git_status')) {
+      if (tokens.contains('status') &&
+          item.allowedTools.contains('git_status')) {
         return (
           tool: 'git_status',
           arguments: <String, dynamic>{},

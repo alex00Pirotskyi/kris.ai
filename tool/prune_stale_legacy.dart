@@ -104,9 +104,8 @@ void main() {
     'projectRootExcluded': true,
     'quarantinedCount': preserved.length,
     'quarantinedPaths': preserved,
-    'archiveDirectory': preserved.isEmpty
-        ? null
-        : _relativePath(root, archiveRoot),
+    'archiveDirectory':
+        preserved.isEmpty ? null : _relativePath(root, archiveRoot),
     'discardedPaths': 0,
   };
   final reportFile = File(
@@ -145,8 +144,7 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
   if (lib.existsSync()) {
     for (final entity in lib.listSync(followLinks: false)) {
       final name = _entityName(entity);
-      if (name == 'main.dart' ||
-          name == 'product' && entity is Directory) {
+      if (name == 'main.dart' || name == 'product' && entity is Directory) {
         continue;
       }
       candidates[_relativePath(root, entity)] = entity;
@@ -195,8 +193,7 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
   }
 
   for (final entity in root.listSync(recursive: true, followLinks: false)) {
-    if (entity is! File ||
-        !entity.path.toLowerCase().endsWith('.dart')) {
+    if (entity is! File || !entity.path.toLowerCase().endsWith('.dart')) {
       continue;
     }
     final relative = _relativePath(root, entity);
@@ -242,7 +239,6 @@ String _availableDestination(String requested) {
 void _moveEntity(FileSystemEntity source, String destination) {
   source.renameSync(destination);
 }
-
 
 String _entityName(FileSystemEntity entity) {
   final normalized = entity.path.replaceAll('\\', '/');

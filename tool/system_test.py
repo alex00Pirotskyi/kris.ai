@@ -586,14 +586,27 @@ def main() -> int:
                 encoding="utf-8",
             )
             profile = kristin_cli.detect_profile(fixture_root)
+            def host_fixture_command(
+                spec: kristin_cli.CommandSpec,
+            ) -> kristin_cli.CommandSpec:
+                # This executes only fixed code constructed by this offline test.
+                # It validates CLI/environment plumbing and is not a project sandbox.
+                return kristin_cli.CommandSpec(
+                    label=spec.label,
+                    argv=spec.argv,
+                    environment=spec.environment,
+                    environment_profile=spec.environment_profile,
+                    execution_mode="host",
+                )
+
             analysis_check = kristin_cli.run_bounded(
-                profile.analysis[0], fixture_root
+                host_fixture_command(profile.analysis[0]), fixture_root
             ) if profile.analysis else None
             build_check = kristin_cli.run_bounded(
-                profile.build, fixture_root
+                host_fixture_command(profile.build), fixture_root
             ) if profile.build is not None else None
             run_check = kristin_cli.run_bounded(
-                profile.run, fixture_root
+                host_fixture_command(profile.run), fixture_root
             ) if profile.run is not None else None
             profile_ok = (
                 profile.kind == "Project Manager fixture"
@@ -654,6 +667,7 @@ def main() -> int:
                         ),
                     ),
                     environment_profile="sdk",
+                execution_mode="host",
                 ),
                 root,
             )

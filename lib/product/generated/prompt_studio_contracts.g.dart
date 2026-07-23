@@ -1,7 +1,8 @@
 // GENERATED FILE. DO NOT EDIT.
 // Source: tool/generate_prompt_studio_contracts.py
 
-const promptStudioContractDigest = '4f65d0e57ee86b58b26223970c8fbfda243256a47689ce83568df88be042500a';
+const promptStudioContractDigest =
+    '4f65d0e57ee86b58b26223970c8fbfda243256a47689ce83568df88be042500a';
 const promptStudioSpecificationSchemaVersion = '2.0.0';
 const promptStudioTaskPlanSchemaVersion = '2.0.0';
 const promptStudioEvaluationSchemaVersion = '1.0.0';

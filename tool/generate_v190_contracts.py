@@ -7,6 +7,12 @@ import hashlib
 import json
 from pathlib import Path
 
+import shutil
+import subprocess
+import tempfile
+
+from dart_string_literal import dart_single_quoted_string
+
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMAS = (
     "capability_manifest.v1.json",
@@ -26,6 +32,28 @@ def canonical(value: object) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
+def dart_formatted_content(content: str) -> str:
+    dart = shutil.which("dart")
+    if dart is None:
+        raise RuntimeError("Dart SDK is required for canonical contract generation")
+    with tempfile.TemporaryDirectory(prefix="kristin-contract-format-") as temp:
+        candidate = Path(temp) / OUTPUT.name
+        candidate.write_text(content, encoding="utf-8")
+        completed = subprocess.run(
+            [dart, "format", str(candidate)],
+            cwd=temp,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            errors="replace",
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError("Dart formatting failed: " + (completed.stdout or "").strip())
+        return candidate.read_text(encoding="utf-8")
+
+
 def render() -> str:
     values = {name: json.loads((ROOT / "schemas" / name).read_text(encoding="utf-8")) for name in SCHEMAS}
     digest = hashlib.sha256(canonical(values).encode("utf-8")).hexdigest()
@@ -39,7 +67,7 @@ def render() -> str:
     ]
     for name in SCHEMAS:
         encoded = json.dumps(values[name], sort_keys=True, ensure_ascii=False)
-        escaped = encoded.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+        escaped = dart_single_quoted_string(encoded)
         lines.append(f"  '{name}': '{escaped}',")
     lines.extend(["};", ""])
     return "\n".join(lines)
@@ -49,7 +77,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    content = render()
+    content = dart_formatted_content(render())
     if args.check:
         if not OUTPUT.is_file() or OUTPUT.read_text(encoding="utf-8") != content:
             print(f"FAIL {OUTPUT.relative_to(ROOT)}")
