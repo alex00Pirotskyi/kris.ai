@@ -1,6 +1,6 @@
 # Kristin P0-001 reproducible baseline
 
-Generated from committed inputs at **2026-07-23T00:00:00Z**.
+Generated from committed inputs at **2026-07-23T05:32:17Z**.
 
 > This is a deterministic observation report, not a claim that the product passes all gates. Machine-specific availability and execution status are recorded in `execution.json`.
 
@@ -33,8 +33,8 @@ Generated from committed inputs at **2026-07-23T00:00:00Z**.
 - Tool sources: **54**
 - Documentation files: **53**
 - Workflow migrations: **6**
-- Source manifest SHA-256: `1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab`
-- Normalized source-set SHA-256: `1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab`
+- Source manifest SHA-256: `9ca8033d32fc208588b71d1dc89064ccb7b2fa82c7f420e8c8d8c998acd6aef2`
+- Normalized source-set SHA-256: `9ca8033d32fc208588b71d1dc89064ccb7b2fa82c7f420e8c8d8c998acd6aef2`
 
 ### Top-level source counts
 
@@ -91,4 +91,4 @@ python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-g
 
 The deterministic outputs are `baseline.json` and `BASELINE.md`. The execution outputs intentionally record host-specific availability.
 
-Stable fingerprint: `6770c5d5190ea13c28c51e542b1e12113f3de189b0fecbe63b05ea81b2d2cdef`
+Stable fingerprint: `d878f737e63bc6b095b974e8fa8062a5529fc93fbbb933bf5c9bf12e2de41893`

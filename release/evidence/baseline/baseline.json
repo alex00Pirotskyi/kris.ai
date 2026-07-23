@@ -87,7 +87,7 @@
       "url": "https://github.com/alex00Pirotskyi/kris.ai/blob/f230fff336d2c7921a987e624fac96ca7d0030bc/schemas/tool_registry.v2.json"
     }
   ],
-  "generatedAt": "2026-07-23T00:00:00Z",
+  "generatedAt": "2026-07-23T05:32:17Z",
   "knownBlockers": [
     {
       "detail": "Ubuntu, Windows, and macOS all exit at the same dart format check, so downstream analyzer, tests, validator, and native-build claims do not have current CI evidence.",
@@ -204,11 +204,11 @@
       ".yml": 1,
       "<none>": 5
     },
-    "manifestFileSha256": "1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab",
+    "manifestFileSha256": "9ca8033d32fc208588b71d1dc89064ccb7b2fa82c7f420e8c8d8c998acd6aef2",
     "manifestPath": "SOURCE_MANIFEST.sha256",
     "migrationCount": 6,
     "migrationSetSha256": "14885ebd1acb61cffb8828def6e045078a6024a208473cbbdf17c250d37ccf6d",
-    "normalizedManifestSha256": "1c7403c04bc06631e8dc2fc26c4d1826aac224636453d873ccc2418455f26eab",
+    "normalizedManifestSha256": "9ca8033d32fc208588b71d1dc89064ccb7b2fa82c7f420e8c8d8c998acd6aef2",
     "schemaCount": 40,
     "schemaPaths": [
       "schemas/a2a_agent_manifest.v1.json",
@@ -303,7 +303,7 @@
     ],
     "testAndGateSetSha256": "26ab8db4f22127a5eda5e20b2f06eb72e23961058a48ad325b7c711a0004cb72",
     "toolSourceCount": 54,
-    "toolSourceSetSha256": "d6943c78c0b0e1b00d46a5c8fcac67a5c4563fd7d522732df122f8ae1c47f021",
+    "toolSourceSetSha256": "2a39078540ef1ca42a39d2b00c3df931eb067a6c57bcc8d1f4fa2082eef59f8b",
     "topLevelCounts": {
       ".github": 1,
       "<root>": 17,
@@ -318,7 +318,7 @@
       "tool": 54
     }
   },
-  "stableFingerprintSha256": "6770c5d5190ea13c28c51e542b1e12113f3de189b0fecbe63b05ea81b2d2cdef",
+  "stableFingerprintSha256": "d878f737e63bc6b095b974e8fa8062a5529fc93fbbb933bf5c9bf12e2de41893",
   "toolRegistry": {
     "canonicalToolContractCount": 23,
     "compatibilityPolicyVersion": "1.0.0",

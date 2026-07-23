@@ -1,11 +1,11 @@
 {
   "blockingFailures": [],
   "captureStatus": "passed",
-  "capturedAt": "2026-07-23T00:00:00Z",
+  "capturedAt": "2026-07-23T11:13:19Z",
   "gates": [
     {
       "argv": [
-        "/opt/pyvenv/bin/python3",
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
         "tool/system_test.py",
         "--project",
         ".",
@@ -16,12 +16,12 @@
       "name": "offline_system_contracts",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "tool/system_test.py is not present in this checkout",
-      "status": "unavailable"
+      "reason": "--run-safe-gates was not selected",
+      "status": "not_run"
     },
     {
       "argv": [
-        "/opt/pyvenv/bin/python3",
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
         "tool/workflow_kernel_test.py",
         "--project",
         ".",
@@ -32,12 +32,12 @@
       "name": "durable_workflow_kernel",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "tool/workflow_kernel_test.py is not present in this checkout",
-      "status": "unavailable"
+      "reason": "--run-safe-gates was not selected",
+      "status": "not_run"
     },
     {
       "argv": [
-        "/opt/pyvenv/bin/python3",
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
         "tool/validate_release.py",
         "--skip-sdk"
       ],
@@ -46,8 +46,8 @@
       "name": "source_release_validation",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "tool/validate_release.py is not present in this checkout",
-      "status": "unavailable"
+      "reason": "--run-safe-gates was not selected",
+      "status": "not_run"
     },
     {
       "argv": [],
@@ -56,8 +56,8 @@
       "name": "dart_format",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "dart is unavailable; gate was not executed",
-      "status": "unavailable"
+      "reason": "P0-001 records SDK availability but does not mutate or build the product",
+      "status": "not_run"
     },
     {
       "argv": [],
@@ -66,8 +66,8 @@
       "name": "flutter_dependency_resolution",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "flutter is unavailable; gate was not executed",
-      "status": "unavailable"
+      "reason": "P0-001 records SDK availability but does not mutate or build the product",
+      "status": "not_run"
     },
     {
       "argv": [],
@@ -76,8 +76,8 @@
       "name": "flutter_static_analysis",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "flutter is unavailable; gate was not executed",
-      "status": "unavailable"
+      "reason": "P0-001 records SDK availability but does not mutate or build the product",
+      "status": "not_run"
     },
     {
       "argv": [],
@@ -86,8 +86,8 @@
       "name": "flutter_tests",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "flutter is unavailable; gate was not executed",
-      "status": "unavailable"
+      "reason": "P0-001 records SDK availability but does not mutate or build the product",
+      "status": "not_run"
     },
     {
       "argv": [],
@@ -96,34 +96,241 @@
       "name": "native_release_build",
       "output_sha256": null,
       "output_tail": "",
-      "reason": "flutter is unavailable; gate was not executed",
-      "status": "unavailable"
+      "reason": "P0-001 records SDK availability but does not mutate or build the product",
+      "status": "not_run"
     }
   ],
   "host": {
-    "machine": "x86_64",
+    "machine": "AMD64",
     "pythonImplementation": "CPython",
-    "release": "6.12.13",
-    "system": "Linux"
+    "release": "10",
+    "system": "Windows"
   },
   "localInspection": {
     "ciWorkflow": {
+      "actions": [
+        "actions/checkout@v4",
+        "subosito/flutter-action@v2"
+      ],
+      "flutterChannel": "stable",
+      "matrix": [
+        "ubuntu-latest",
+        "windows-latest",
+        "macos-latest"
+      ],
+      "movingReferences": [
+        "actions/checkout@v4",
+        "subosito/flutter-action@v2",
+        "flutter channel: stable"
+      ],
       "path": ".github/workflows/ci.yml",
-      "reason": ".github/workflows/ci.yml is not present in this checkout",
-      "status": "unavailable"
+      "reason": "workflow source hash matched",
+      "sha256": "34d35567c6ed34bf1b88447d29b29ed2e82d62c4296790ad6043ede3480c5396",
+      "status": "passed"
     },
     "pubspec": {
       "path": "pubspec.yaml",
-      "reason": "pubspec.yaml is not present in this checkout",
-      "status": "unavailable"
+      "reason": "pubspec version matched the observation snapshot",
+      "sdkConstraint": ">=3.5.0 <4.0.0",
+      "status": "passed",
+      "version": "1.9.0+190"
     },
     "toolRegistry": {
+      "compatibilityPolicyVersion": "1.0.0",
       "path": "schemas/tool_registry.v2.json",
-      "reason": "schemas/tool_registry.v2.json is not present in this checkout",
-      "status": "unavailable"
+      "reason": "file hash and JSON structure verified",
+      "registryVersion": "2.0.0",
+      "status": "passed",
+      "toolCount": 23,
+      "tools": [
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "list_directory",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "read_file",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "inspect_file",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "search_text",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "project_snapshot",
+          "name": "index_project",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "index_search",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "content_hash",
+          "name": "write_file",
+          "permission": "projectWrite",
+          "risk": "mutation",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "content_hash",
+          "name": "write_binary_file",
+          "permission": "projectWrite",
+          "risk": "mutation",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "content_hash",
+          "name": "replace_text",
+          "permission": "projectWrite",
+          "risk": "mutation",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "content_hash",
+          "name": "apply_patch",
+          "permission": "projectWrite",
+          "risk": "mutation",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "operation_key",
+          "name": "delete_file",
+          "permission": "projectDelete",
+          "risk": "destructive",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "run_command",
+          "permission": "executeFinite",
+          "risk": "process",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "operation_key",
+          "name": "start_process",
+          "permission": "executeManaged",
+          "risk": "process",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "process_status",
+          "permission": "executeManaged",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "operation_key",
+          "name": "stop_process",
+          "permission": "executeManaged",
+          "risk": "process",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "project_snapshot",
+          "name": "git_status",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "project_snapshot",
+          "name": "git_diff",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "normalized_arguments",
+          "name": "knowledge_search",
+          "permission": "projectRead",
+          "risk": "read",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "public-network",
+          "idempotency": "request_hash",
+          "name": "research_fetch",
+          "permission": "networkResearch",
+          "risk": "network",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "public-network",
+          "idempotency": "request_hash",
+          "name": "research_search",
+          "permission": "networkResearch",
+          "risk": "network",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "project_snapshot",
+          "name": "verify_project",
+          "permission": "executeFinite",
+          "risk": "process",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "project-local",
+          "idempotency": "project_snapshot",
+          "name": "package_deployment",
+          "permission": "deploymentPackage",
+          "risk": "mutation",
+          "version": "2.0.0"
+        },
+        {
+          "dataBoundary": "mcp-declared",
+          "idempotency": "operation_key",
+          "name": "mcp_call",
+          "permission": "mcpConnect",
+          "risk": "external",
+          "version": "2.0.0"
+        }
+      ]
     }
   },
-  "manifestMode": "snapshot",
+  "manifestMode": "verify",
   "milestoneId": "P0-001",
   "note": "captureStatus describes this evidence capture, not product readiness. A missing or unrun gate is never promoted to passed.",
   "projectGateStatus": "unavailable",
@@ -134,38 +341,39 @@
     "entryCount": 255,
     "mismatched": [],
     "missing": [],
-    "reason": "snapshot mode selected; the manifest was inventoried but checkout bytes were not asserted",
-    "status": "unavailable",
-    "verifiedCount": 0
+    "reason": "all manifest entries matched",
+    "status": "passed",
+    "verifiedCount": 255
   },
   "statusSummary": {
-    "unavailable": 12
+    "not_run": 8,
+    "passed": 4
   },
   "tools": {
     "dart": {
-      "reason": "dart is not available on PATH",
-      "status": "unavailable",
-      "version": null
+      "reason": "available",
+      "status": "passed",
+      "version": "Dart SDK version: 3.12.0 (stable) (Fri May 8 01:51:14 2026 -0700) on \"windows_x64\""
     },
     "flutter": {
-      "reason": "flutter is not available on PATH",
-      "status": "unavailable",
-      "version": null
+      "reason": "available",
+      "status": "passed",
+      "version": "Flutter 3.44.0 â€¢ channel stable â€¢ https://github.com/flutter/flutter.git\nFramework â€¢ revision 559ffa3f75 (10 weeks ago) â€¢ 2026-05-15 14:13:13 -0700\nEngine â€¢ hash fcf463a2242790d1fdcd9d044f533080f5022e18 (revision 4c525dac5e) (2 months ago) â€¢ 2026-05-15 19:00:04.000Z\nTools â€¢ Dart 3.12.0 â€¢ DevTools 2.57.0"
     },
     "git": {
       "reason": "available",
       "status": "passed",
-      "version": "git version 2.47.3"
+      "version": "git version 2.39.0.windows.2"
     },
     "node": {
-      "reason": "available",
-      "status": "passed",
-      "version": "v22.16.0"
+      "reason": "node is not available on PATH",
+      "status": "unavailable",
+      "version": null
     },
     "python3": {
-      "reason": "available",
-      "status": "passed",
-      "version": "3.13.5"
+      "reason": "python3 is not available on PATH",
+      "status": "unavailable",
+      "version": null
     }
   }
 }
