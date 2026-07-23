@@ -1,0 +1,21 @@
+{
+  "criteria": [
+    {
+      "id": "criterion-1",
+      "statement": "The required artifact is complete and validated.",
+      "requiredEvidenceKinds": ["artifact_validation"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "model-claim-1",
+      "kind": "model",
+      "ok": true,
+      "criterionIds": ["criterion-1"],
+      "summary": "The executor says the task is complete.",
+      "independent": false,
+      "stale": false
+    }
+  ],
+  "completionClaims": ["criterion-1"]
+}

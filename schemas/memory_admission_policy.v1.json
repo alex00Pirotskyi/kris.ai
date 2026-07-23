@@ -1,0 +1,36 @@
+{
+  "$id": "https://kristin.local/schemas/memory_admission_policy.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowPinnedOverride": {
+      "type": "boolean"
+    },
+    "maxFailedRetrievalWeight": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "promoteSuccessfulMutations": {
+      "type": "boolean"
+    },
+    "quarantineUnsuccessfulRuns": {
+      "type": "boolean"
+    },
+    "requireEvidenceHashes": {
+      "type": "boolean"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "maxFailedRetrievalWeight",
+    "requireEvidenceHashes",
+    "quarantineUnsuccessfulRuns",
+    "promoteSuccessfulMutations"
+  ],
+  "title": "Kristin Memory Admission Policy v1",
+  "type": "object"
+}

@@ -1,0 +1,78 @@
+{
+  "$id": "https://kristin.local/schemas/file_adapter_registry.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "adapters": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "capabilities": {
+            "items": {
+              "enum": [
+                "detect",
+                "inspect",
+                "extract",
+                "preview",
+                "create",
+                "transform",
+                "validate"
+              ]
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "extensions": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "mediaTypes": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "sandboxRequired": {
+            "type": "boolean"
+          },
+          "tier": {
+            "enum": [
+              "native",
+              "sandboxed_core",
+              "plugin"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "tier",
+          "capabilities",
+          "extensions"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "adapters"
+  ],
+  "title": "Kristin File Adapter Registry v1",
+  "type": "object"
+}

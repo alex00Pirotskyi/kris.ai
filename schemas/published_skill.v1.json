@@ -1,0 +1,66 @@
+{
+  "$id": "https://kristin.local/schemas/published_skill.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approvalNote": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "candidateId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "instructions": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "manifestHash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "publishedAt": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "recommendedTools": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "candidateId",
+    "version",
+    "title",
+    "instructions",
+    "recommendedTools",
+    "approvalNote",
+    "manifestHash",
+    "publishedAt"
+  ],
+  "title": "Kristin Published Skill v1",
+  "type": "object"
+}

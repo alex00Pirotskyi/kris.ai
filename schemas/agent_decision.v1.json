@@ -1,0 +1,211 @@
+{
+  "$defs": {
+    "askUserDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "ask_user"
+        },
+        "choices": {
+          "items": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "type": "array"
+        },
+        "protocolVersion": {
+          "const": "1.0.0",
+          "default": "1.0.0"
+        },
+        "question": {
+          "maxLength": 50000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 20000,
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "question"
+      ],
+      "type": "object"
+    },
+    "base": {
+      "additionalProperties": false,
+      "properties": {
+        "protocolVersion": {
+          "const": "1.0.0"
+        },
+        "reason": {
+          "maxLength": 20000,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "completeDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "complete"
+        },
+        "protocolVersion": {
+          "const": "1.0.0",
+          "default": "1.0.0"
+        },
+        "reason": {
+          "maxLength": 20000,
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 100000,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "delegateDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "delegate"
+        },
+        "delegateTo": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "additionalProperties": true,
+          "properties": {},
+          "type": "object"
+        },
+        "protocolVersion": {
+          "const": "1.0.0",
+          "default": "1.0.0"
+        },
+        "reason": {
+          "maxLength": 20000,
+          "type": "string"
+        },
+        "task": {
+          "maxLength": 100000,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "delegateTo",
+        "task"
+      ],
+      "type": "object"
+    },
+    "failDecision": {
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "summary"
+          ]
+        },
+        {
+          "required": [
+            "reason"
+          ]
+        }
+      ],
+      "properties": {
+        "action": {
+          "const": "fail"
+        },
+        "code": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "protocolVersion": {
+          "const": "1.0.0",
+          "default": "1.0.0"
+        },
+        "reason": {
+          "maxLength": 20000,
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "summary": {
+          "maxLength": 100000,
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "type": "object"
+    },
+    "toolDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "tool"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "properties": {},
+          "type": "object"
+        },
+        "protocolVersion": {
+          "const": "1.0.0",
+          "default": "1.0.0"
+        },
+        "reason": {
+          "maxLength": 20000,
+          "type": "string"
+        },
+        "tool": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "tool",
+        "arguments"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://kristin.local/schemas/agent-decision/1.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/toolDecision"
+    },
+    {
+      "$ref": "#/$defs/completeDecision"
+    },
+    {
+      "$ref": "#/$defs/failDecision"
+    },
+    {
+      "$ref": "#/$defs/askUserDecision"
+    },
+    {
+      "$ref": "#/$defs/delegateDecision"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "title": "Kristin AgentDecision"
+}

@@ -1,0 +1,88 @@
+{
+  "$id": "https://kristin.local/schemas/a2a_task_contract.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin A2A Task Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "contractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "remoteAgentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowedCapabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "inputArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "outputArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1024
+    },
+    "dataBoundary": {
+      "type": "string",
+      "enum": [
+        "local",
+        "private_remote",
+        "public_cloud"
+      ]
+    },
+    "approvalPolicy": {
+      "type": "string",
+      "enum": [
+        "none",
+        "reviewed",
+        "explicit",
+        "enterprise"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "objective",
+    "remoteAgentId",
+    "allowedCapabilities",
+    "inputArtifacts",
+    "outputArtifacts",
+    "maximumTurns",
+    "maximumBytes",
+    "dataBoundary",
+    "approvalPolicy"
+  ]
+}

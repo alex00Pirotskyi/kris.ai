@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/execution_progress.v1.json",
+  "title": "Kristin Semantic Progress Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["newArtifacts", "changedArtifactHashes", "newEvidence", "resolvedErrors", "newErrors", "criteriaSatisfied", "criteriaRegressed", "newExternalState", "semanticProgress", "repeatedAction", "repeatedResult"],
+  "properties": {
+    "newArtifacts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "changedArtifactHashes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "newEvidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "resolvedErrors": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "newErrors": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "criteriaSatisfied": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "criteriaRegressed": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "newExternalState": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "planRevised": {"type": "boolean"},
+    "semanticProgress": {"type": "boolean"},
+    "repeatedAction": {"type": "boolean"},
+    "repeatedResult": {"type": "boolean"},
+    "beforeHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "afterHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "deltaHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

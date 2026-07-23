@@ -1,0 +1,54 @@
+name: product-gates
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate native runner
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) platforms=linux ;;
+            Windows) platforms=windows ;;
+            macOS) platforms=macos ;;
+          esac
+          flutter create --project-name kristin_local_agent --org local.kristin --platforms="$platforms" .
+      - run: flutter pub get
+      - name: Generated protocol contracts
+        run: python tool/protocol_contract_test.py
+      - name: Generated workflow migrations
+        run: python tool/generate_workflow_migrations.py --check
+      - name: Durable workflow kernel
+        run: python tool/workflow_kernel_test.py --project .
+      - name: Prompt Studio 2 contracts
+        run: python tool/generate_prompt_studio_contracts.py --check
+      - name: Prompt Studio 2 fixtures
+        run: python tool/generate_prompt_studio_fixtures.py --check
+      - name: Prompt Studio 2 compiler gate
+        run: python tool/prompt_studio_v2_test.py
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test --reporter expanded
+      - name: Architecture and security gate
+        run: python tool/validate_release.py --skip-tests
+      - name: Native release build
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) flutter build linux --release ;;
+            Windows) flutter build windows --release ;;
+            macOS) flutter build macos --release ;;
+          esac

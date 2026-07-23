@@ -1,0 +1,13 @@
+{
+  "deploymentTarget": null,
+  "humanWorkflowAvailable": false,
+  "legacyUnsandboxedExecutionApproved": false,
+  "localOnly": true,
+  "maxTasks": 100,
+  "maxTotalModelTurns": 1200,
+  "maxTotalOutputBytes": 500000000,
+  "maxTotalToolCalls": 5000,
+  "networkAllowed": false,
+  "sandboxAvailable": false,
+  "selfModificationApproved": false
+}

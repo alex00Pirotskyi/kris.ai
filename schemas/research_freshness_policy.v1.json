@@ -1,0 +1,33 @@
+{
+  "$id": "https://kristin.local/schemas/research_freshness_policy.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "agingDays": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "citationRequired": {
+      "type": "boolean"
+    },
+    "freshDays": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "staleWarningRequired": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "freshDays",
+    "agingDays",
+    "staleWarningRequired",
+    "citationRequired"
+  ],
+  "title": "Kristin Research Freshness Policy v1",
+  "type": "object"
+}

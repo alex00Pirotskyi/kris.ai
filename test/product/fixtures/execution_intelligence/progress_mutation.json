@@ -1,0 +1,22 @@
+{
+  "before": {
+    "artifacts": {"docs/design/wireframes.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    "evidence": ["ev-inspect-1"],
+    "activeErrors": ["artifact_scope_incomplete"],
+    "satisfiedCriteria": [],
+    "externalState": [],
+    "planRevisionHash": "plan-a",
+    "actionFingerprint": "inspect:docs/design/wireframes.md",
+    "resultFingerprint": "empty-file"
+  },
+  "after": {
+    "artifacts": {"docs/design/wireframes.md": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    "evidence": ["ev-inspect-1", "ev-mutation-2", "ev-verify-3"],
+    "activeErrors": [],
+    "satisfiedCriteria": ["criterion-wireframe-scope"],
+    "externalState": [],
+    "planRevisionHash": "plan-a",
+    "actionFingerprint": "write:docs/design/wireframes.md:bbbb",
+    "resultFingerprint": "write-ok-bbbb"
+  }
+}

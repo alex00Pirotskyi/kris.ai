@@ -1,0 +1,45 @@
+{
+  "schema": "kristin.diagnostic-replay.v1",
+  "id": "v115_nested_write_content_loss",
+  "title": "Nested canonical write content was discarded before dispatch",
+  "source": {
+    "bundle": "kristin-diagnostics-1784651191615.zip",
+    "sha256": "a2c3570a9910cf99f3f5c26388b6638bf5639796c47009277cfcd64c90dd0f9b",
+    "productVersion": "1.1.5+115",
+    "projectId": "project_hklsoafwb8aOrZ1SMbJW61cRZW",
+    "runId": "run_hklsywuyo4NMJgt9ijIxWPhBDr"
+  },
+  "observed": {
+    "terminalFailure": "artifact_scope_mismatch",
+    "modelRequests": 9,
+    "toolCalls": 9,
+    "mutations": 1,
+    "repairs": 7,
+    "modelLatencyMs": 702821,
+    "mutationPath": "docs/design/wireframes.md",
+    "mutationAfterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "replayInput": {
+    "allowedTools": ["write_file", "inspect_file"],
+    "expectedArtifactPath": "docs/design/wireframes.md",
+    "modelEnvelope": {
+      "action": {
+        "type": "write_file",
+        "id": "task_001",
+        "filePath": "docs/design/wireframes.md",
+        "content": "# Interactive Web Application Wireframe and User Flows\nKeyboard, pointer, responsive, accessibility, and implementation handoff details."
+      }
+    }
+  },
+  "expected": {
+    "classifications": [
+      "nested_canonical_field_loss",
+      "empty_artifact_mutation",
+      "artifact_repair_non_convergence"
+    ],
+    "normalizedTool": "write_file",
+    "normalizedPath": "docs/design/wireframes.md",
+    "contentMustBePreserved": true,
+    "missingContentMustFailClosed": true
+  }
+}

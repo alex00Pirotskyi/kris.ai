@@ -1,0 +1,131 @@
+{
+  "$id": "https://kristin.local/schemas/mcp_server_profile.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowedPrompts": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "allowedResources": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "allowedTools": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "authorization": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalRequired": {
+          "type": "boolean"
+        },
+        "expiresAt": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approvalRequired",
+        "expiresAt"
+      ],
+      "type": "object"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "type": "string"
+    },
+    "label": {
+      "maxLength": 255,
+      "minLength": 1,
+      "type": "string"
+    },
+    "remoteTransportPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allowRemote": {
+          "type": "boolean"
+        },
+        "allowedHosts": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "allowRemote",
+        "allowedHosts"
+      ],
+      "type": "object"
+    },
+    "roots": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "sandbox": {
+      "additionalProperties": false,
+      "properties": {
+        "networkMode": {
+          "enum": [
+            "none",
+            "brokered_https"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "required",
+        "networkMode"
+      ],
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "transport": {
+      "enum": [
+        "local_stdio",
+        "remote_https"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "label",
+    "transport",
+    "sandbox",
+    "roots",
+    "allowedTools",
+    "allowedResources",
+    "allowedPrompts",
+    "authorization",
+    "remoteTransportPolicy"
+  ],
+  "title": "Kristin MCP Server Profile v1",
+  "type": "object"
+}

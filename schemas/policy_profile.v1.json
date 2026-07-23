@@ -1,0 +1,75 @@
+{
+  "$id": "https://kristin.local/schemas/policy_profile.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Policy Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "allowRemoteMcp": {
+      "type": "boolean"
+    },
+    "allowA2A": {
+      "type": "boolean"
+    },
+    "allowPublicCloudModels": {
+      "type": "boolean"
+    },
+    "allowSourceUpdates": {
+      "type": "boolean"
+    },
+    "requireManifestSignatures": {
+      "type": "boolean"
+    },
+    "requiredApproval": {
+      "type": "string",
+      "enum": [
+        "none",
+        "reviewed",
+        "explicit",
+        "enterprise"
+      ]
+    },
+    "allowedUpdateChannels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "trustedSigners": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "allowRemoteMcp",
+    "allowA2A",
+    "allowPublicCloudModels",
+    "allowSourceUpdates",
+    "requireManifestSignatures",
+    "requiredApproval",
+    "allowedUpdateChannels",
+    "trustedSigners"
+  ]
+}

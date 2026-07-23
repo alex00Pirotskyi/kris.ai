@@ -1,0 +1,48 @@
+{
+  "$id": "https://kristin.local/schemas/signed_manifest_envelope.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "algorithm": {
+      "const": "ed25519"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "payloadSha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "payloadType": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "signature": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "signedAt": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "signerId": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "payloadType",
+    "payload",
+    "payloadSha256",
+    "signerId",
+    "algorithm",
+    "signature",
+    "signedAt"
+  ],
+  "title": "Kristin Signed Manifest Envelope v1",
+  "type": "object"
+}

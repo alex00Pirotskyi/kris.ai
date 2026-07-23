@@ -1,0 +1,620 @@
+{
+  "acceptedCorrections": [
+    "Preserve canonical fields placed directly inside nested model action objects, including write_file content and project-relative path.",
+    "Reject write_file calls that omit content instead of silently creating or replacing a file with zero bytes.",
+    "Expose required, optional, and example arguments in machine-readable governed-tool descriptors.",
+    "Track empty or incomplete expected artifacts as mutation-required state and block repeated inspection until a material correction occurs.",
+    "Re-anchor invented external read-only paths to a bounded listing of the selected project root without broadening write permissions.",
+    "Allow deterministic completion when a correct pre-existing artifact already satisfies the requested desired state.",
+    "Compact repeated execution prompts, bound history payloads, use deterministic decoding, and reduce single-action output allocation.",
+    "Expand calculator artifact checks for symbolic operators, touchscreen input, editable results, history, undo, and redo.",
+    "Add regression tests using the exact nested write envelope and zero-byte convergence failure from the supplied v1.1.5 diagnostic bundle.",
+    "Normalize nested model action.command vectors into executable and args without losing the tool payload.",
+    "Replace model-generated git -C status and diff commands with the already allowlisted project-scoped git tools.",
+    "Treat missing executable and project-scope process mistakes as bounded repairable tool-input errors rather than immediate run termination.",
+    "Detect identical file writes before backup or journal creation so no-op rewrites do not consume mutation budget.",
+    "Redirect repeated no-op writes to one artifact inspection instead of recording duplicate mutations.",
+    "Carry bounded redacted evidence from prior work-item attempts into retries so the model does not restart from zero context.",
+    "Validate product-specific design artifacts after inspection and reject unrelated commerce wireframes for a calculator request.",
+    "Require bounded artifact tasks to inspect and validate the expected file before completion; a write result alone cannot satisfy product-specific evidence.",
+    "Complete bounded design evidence deterministically once the expected artifact is materially changed and satisfies the task scope.",
+    "Compile design, workspace-setup, usability, deployment, and client-only calculation tasks with least-privilege tool allowlists.",
+    "Rewrite system-install and sibling-directory setup tasks to initialize only the selected project workspace.",
+    "Rewrite unnecessary Express or REST backend work into client-side calculation logic when the approved prompt requires only session-local behavior.",
+    "Reject command working-directory and external absolute-path overrides while preserving project-relative process arguments.",
+    "Treat a selected folder that is not a Git repository as honest successful state evidence instead of a tool failure.",
+    "Add artifact-convergence details to saved diagnostic summaries and regression tests for every causal failure in the supplied bundle.",
+    "Preserve v1.1.4 deterministic release testing, model resilience, Project Manager behavior, governed permissions, and complete release lineage.",
+    "Require an explicit backend implementation action before replacing a backend task, preserving testing tasks that only mention backend references.",
+    "Canonicalize whole-scalar Markdown and quote wrappers around model-emitted project paths before alias normalization, policy checks, artifact matching, or execution.",
+    "Redirect repeated read-only discovery on an explicitly named bounded artifact to a deterministic task-specific write rather than another listing or inspection.",
+    "Automatically inspect the exact expected artifact after a material mutation and allow objective artifact validation to complete without another model turn.",
+    "Reserve at least four repair credits before starting another work-item attempt so retries are not doomed before protocol, input, and verification correction.",
+    "Project coordinator corrections into compact non-copyable history records and explicitly forbid models from emitting coordinator metadata as actions.",
+    "Maintain a compact redacted golden replay corpus for the v1.1.5 and v1.1.6 production failures, executable without Flutter through kristin test --replay-all.",
+    "Move provider-envelope compatibility out of RunCoordinator into dedicated provider adapters that emit one typed AgentDecision boundary.",
+    "Define ToolDecision, CompleteDecision, FailDecision, AskUserDecision, and DelegateDecision in a versioned AgentDecision schema.",
+    "Generate model-facing descriptors, runtime contracts, repair examples, and coverage metadata from one canonical JSON Schema tool registry.",
+    "Validate normalized tool input before permission checks or handlers so malformed mutation data cannot create side effects.",
+    "Validate every governed tool result against its versioned output schema and record normalized input and output hashes.",
+    "Reject undeclared authority-bearing fields rather than guessing their intent while retaining explicit legacy alias compatibility.",
+    "Run deterministic provider-envelope and missing-mutation-data fuzzing as a required source and release gate.",
+    "Validate representative runtime result envelopes against every governed tool output schema and reject incomplete mutation evidence.",
+    "Preserve canonical failure code, retryable status, summary, and reason across direct and recorded provider envelopes.",
+    "Move mutable product repositories and run state from whole-collection JSON files into one SQLite authority while retaining byte-exact legacy backups and idempotent import ledgers.",
+    "Append each run transition to immutable durable event history in the same SQLite transaction as the materialized run projection.",
+    "Derive stable side-effect idempotency keys from run, work item, attempt, logical operation, and canonical argument hash, and replay completed results after restart.",
+    "Journal file compensation records before effects, distinguish prepared/applied/committed/rolled-back states, and block ambiguous recovery instead of guessing.",
+    "Persist run leases, task attempts, checkpoints, and retry taxonomy so stale in-flight work can recover as succeeded or interrupted without duplicate mutation.",
+    "Back up existing SQLite state before schema or legacy import work, restore it on any startup failure, and delete partially created databases after failed first import.",
+    "Generate the migration registry from reviewed contiguous SQL files and reject migration checksum drift at startup and release validation.",
+    "Expose SQLite integrity, durable events, checkpoints, idempotency, compensation, and migration status through the CLI and diagnostic export.",
+    "Add forced-exit, append-only, concurrent-writer, projection-rebuild, migration-backup, legacy-import, and compensation tests to the source release gate.",
+    "Introduce canonical Product Specification v2, Task Plan v2, Prompt Evaluation Dataset v1, capability-catalog, and compilation-report contracts.",
+    "Compile 1\u2013100 task plans deterministically before execution, including stable-ID, graph, capability, policy, budget, artifact, validator, and evidence checks.",
+    "Provide side-effect-free plan simulation and deterministic prompt/plan revision impact measurement through runtime, authenticated loopback API, and standard-library CLI commands.",
+    "Preserve the verified v1.3 schema-4 durable workflow kernel and exact SQLite dependency pins without claiming the skipped v1.4 operating-system sandbox milestone.",
+    "Fail closed for sandbox-dependent work unless an explicit audited legacy unsandboxed dry-run compatibility policy is approved.",
+    "Gate the release with 30 compiler cases and canonical 1-, 10-, 50-, and 100-task fixtures without claiming real project side-effect execution.",
+    "Route ordinary Linux project commands through a namespace-isolated worker with explicit mounts, resource limits, network-off defaults, bounded output, cancellation, and fail-closed capability probing.",
+    "Broker approved HTTPS reads separately from worker processes with public-address DNS checks, connection pinning, redirect revalidation, response limits, and one-use credential handles.",
+    "Rebuild Project Manager 2 on the real cumulative source line with strict profiles, live sandbox-derived readiness, retained snapshots, durable managed processes, artifact validators, and deterministic packaging.",
+    "Persist model route decisions, circuit state, semantic progress, and independent verification reports in the SQLite workflow authority through migration 5.",
+    "Measure progress only from durable fact changes and escalate repeated non-progress through compaction, different action, verifier routing, plan split, user input, approval-gated fallback, or precise termination.",
+    "Require criterion-scoped current objective evidence; a mutation, inspection, test, or executor summary cannot be reused as universal proof for unrelated acceptance criteria.",
+    "Apply execution-phase model, tool, repair, output, context, and deadline budgets without widening the run permission boundary.",
+    "Terminate the complete managed sandbox descendant tree with PID-reuse-safe identities; ordinary Stop and abrupt launcher death must leave zero worker or command survivors."
+  ],
+  "canonicalHead": "1.9.0+190",
+  "canonicalPackageRoot": "Kristin_Local_Agent_v1.9.0_build190_interoperability_admin_release_ops",
+  "createdAt": "2026-07-22T00:00:00Z",
+  "durableWorkflowKernel": {
+    "appendOnlyModelRouteDecisions": true,
+    "appendOnlyRunEvents": true,
+    "appendOnlySemanticProgress": true,
+    "appendOnlyVerificationReports": true,
+    "byteExactLegacyBackups": true,
+    "checkpoints": true,
+    "compensationRecords": true,
+    "dartSdkConstraint": ">=3.5.0 <4.0.0",
+    "databaseRelativePath": "state/workflow.sqlite3",
+    "durableIdempotency": true,
+    "executableKernelCases": 14,
+    "flutterNativeLibraries": "sqlite3_flutter_libs 0.5.42",
+    "journalMode": "WAL",
+    "legacyJsonImport": true,
+    "migrationDigest": "df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261",
+    "migrationRegistry": "lib/product/generated/workflow_migrations.g.dart",
+    "migrationSources": "migrations/workflow",
+    "modelCircuitBreakers": true,
+    "projectManagerRecords": true,
+    "projectionRebuild": true,
+    "retryTaxonomy": true,
+    "runLeases": true,
+    "schemaVersion": 6,
+    "sqliteDartPackage": "sqlite3 2.9.4",
+    "startupRollback": true,
+    "synchronous": "FULL",
+    "taskAttempts": true,
+    "transactionalRunProjection": true
+  },
+  "executionIntelligence": {
+    "approvalGatedFallbackOutcome": true,
+    "behavioralGateCases": 40,
+    "circuitBreakers": true,
+    "cliIntegrated": true,
+    "contextCompaction": true,
+    "convergenceSchemaVersion": "1.0.0",
+    "criterionScopedObjectiveEvidence": true,
+    "executorProseRejectedAsEvidence": true,
+    "explicitAwaitingUserOutcome": true,
+    "explicitPlanSplitOutcome": true,
+    "generatedContractSha256": "40fffd675a4a680e1622bd6548badee59d92c3be4d3afd7eb21a63381e04a7a4",
+    "genericEvidenceFlagRejected": true,
+    "independentVerifier": true,
+    "modelRoleCount": 8,
+    "modelRoutingPolicySchemaVersion": "1.0.0",
+    "phaseBudgets": true,
+    "phaseBudgetsEnforcedByCoordinator": true,
+    "progressSchemaVersion": "1.0.0",
+    "roleBasedModelRouter": true,
+    "runtimeIntegrated": true,
+    "schema": "kristin.execution-intelligence.release.v1",
+    "semanticProgressLedger": true,
+    "sourceSha256": "bf6186b28246066336a91d2de4aefe0dade0b3f3489cfecaea99499c3e1e6812",
+    "strategyEscalation": true,
+    "strongerModelFallbackRequiresApproval": true,
+    "verificationSchemaVersion": "1.0.0"
+  },
+  "fileAdaptersV1": {
+    "behavioralGateCases": 14,
+    "nativeAdapterCount": 7,
+    "sandboxedCoreAdapterCount": 6,
+    "schema": "kristin.file-adapters.release.v1"
+  },
+  "interoperabilityAdminV19": {
+    "auditVerification": true,
+    "authenticatedSourceUpdates": true,
+    "boundedA2ADelegation": true,
+    "fleetConfigurationOptionality": true,
+    "mcpLifecycleAndSandboxing": true,
+    "policyProfiles": [
+      "strict_local",
+      "reviewed_remote",
+      "enterprise_fleet"
+    ],
+    "schemaVersion": "1.0.0",
+    "signedCapabilityManifests": true,
+    "supportCompatibilityPolicy": true,
+    "workflowSchemaVersion": 6,
+    "contractDigest": "ce10a03120fea3a021876689d9f28872d7720fcd98db61a27d6ff883f2e6612c"
+  },
+  "knowledgeMemoryV2": {
+    "behavioralGateCases": 12,
+    "failedMemoryQuarantine": true,
+    "freshnessAwareCitations": true,
+    "memoryAdmission": true,
+    "objectStore": true,
+    "schema": "kristin.knowledge-memory-v2.release.v1",
+    "skillPublicationApprovalRequired": true
+  },
+  "lineageContract": {
+    "preserveAcrossHeads": true,
+    "requiredAncestorVersions": [
+      "1.0.5+105",
+      "1.0.6+106",
+      "1.0.7+107",
+      "1.0.8+108",
+      "1.0.9+109",
+      "1.1.0+110",
+      "1.1.1+111",
+      "1.1.2+112",
+      "1.1.3+113",
+      "1.1.4+114",
+      "1.1.5+115",
+      "1.1.6+116",
+      "1.1.7+117",
+      "1.2.0+120",
+      "1.3.0+130"
+    ],
+    "schema": "kristin.release-lineage.v1"
+  },
+  "parentRelease": {
+    "archive": "Kristin_Local_Agent_v1.8.0_build180_knowledge_memory_skills_adapters.zip",
+    "sha256": "eac7469a776c859b9d14ad6133d06093c43327f8f4579633615aa3129cca9bcc",
+    "version": "1.8.0+180"
+  },
+  "priorLineage": {
+    "deterministicReleaseTestParent": {
+      "archive": "Kristin_Local_Agent_v1.1.4_build114_deterministic_release_tests_hotfix.zip",
+      "sha256": "989ccfc9abdda31537b10b4a6a15e958d12b8209ba923457d45759c3bb5d29b3",
+      "version": "1.1.4+114"
+    },
+    "diagnosticBundle": {
+      "archive": "kristin-diagnostics-1784482690475.zip",
+      "productVersion": "1.0.4+104",
+      "runId": "run_hkjnl5dagrldsloYB4qnRQTS3h",
+      "sha256": "47bb8141259ce002e51f4d3ea4857cce4836e29cc15c039d1f38e5443d6454d5"
+    },
+    "executionConvergenceDiagnostic": {
+      "archive": "kristin-diagnostics-1784621808311.zip",
+      "productVersion": "1.1.4+114",
+      "projectId": "project_hklfax9skh1ZWARiM4FkAXVfNL",
+      "runId": "run_hklfhuqkrwdoQ11swy34hvARke",
+      "sha256": "af691d08567a1cad8b9593b4e502aae2415f3ded486a4567178490ee4c7c1c75"
+    },
+    "executionReliabilityDiagnostic": {
+      "archive": "kristin-diagnostics-1784651191615.zip",
+      "productVersion": "1.1.5+115",
+      "projectId": "project_hklsoafwb8aOrZ1SMbJW61cRZW",
+      "runId": "run_hklsywuyo4NMJgt9ijIxWPhBDr",
+      "sha256": "a2c3570a9910cf99f3f5c26388b6638bf5639796c47009277cfcd64c90dd0f9b"
+    },
+    "executionReliabilityParent": {
+      "archive": "Kristin_Local_Agent_v1.1.5_build115_execution_convergence_hotfix.zip",
+      "sha256": "28be6ac8b5de2c7612a4c5e9456dfe09895cd0964681875861e2074b1760f2a8",
+      "version": "1.1.5+115"
+    },
+    "failedRunRecoveryParent": {
+      "archive": "Kristin_Local_Agent_v1.0.7_build107_failed_run_recovery_hotfix.zip",
+      "sha256": "1b10796ceef9132f8d39f74dab69b5c81bcbf91d9a351c45d5d806b8bcb45620",
+      "version": "1.0.7+107"
+    },
+    "latestDiagnosticBundle": {
+      "archive": "kristin-diagnostics-1784530208610.zip",
+      "productVersion": "1.0.9+109",
+      "runId": "run_hkk9czt4wzMPTp3bsaqLnpNOx2",
+      "sha256": "0f20bd38314290bfe4e2550c28521238c8dce0a78ba4ee00eac74000c2a82d12"
+    },
+    "mergedUserPatch": {
+      "archive": "Kristin_Local_Agent_v1.0.4_build104_workspace-boundary-patch.zip",
+      "sha256": "80e5044cf47e8f19ec2350a20f22e0b9fc3da464fac142bc67a5d6bc6231e3f3"
+    },
+    "modelResilienceDiagnostic": {
+      "archive": "kristin-diagnostics-1784553360140.zip",
+      "productVersion": "1.1.1+111",
+      "runId": "run_hkkkbh7q3rNkIqtjzJuPYvsiiy",
+      "sha256": "2e1215e5d3bee81e626add48162fc5da31254c2c6742c3f7d1abfa1b6158e8a4"
+    },
+    "pathHygieneParent": {
+      "archive": "Kristin_Local_Agent_v1.0.5_build105_path_hygiene_hotfix.zip",
+      "sha256": "81bc8384d545cd6586696ed3b58da315b596de042785ae9918ea4b2b427f18a2",
+      "version": "1.0.5+105"
+    },
+    "projectManagerCompileParent": {
+      "archive": "Kristin_Local_Agent_v1.1.1_build111_project_manager_compile_hotfix.zip",
+      "sha256": "830f59d1401eab6a97b99f2f96f27dace7902f4541dfbd108ea67f20266604ee",
+      "version": "1.1.1+111"
+    },
+    "projectManagerParent": {
+      "archive": "Kristin_Local_Agent_v1.1.0_build110_project_manager_preview.zip",
+      "sha256": "a96d1544e3a2ef41bd01c489b2733e74fcd7c242aedcbb47b14b745a6e11a70d",
+      "version": "1.1.0+110"
+    },
+    "stabilityReplayDiagnostic": {
+      "archive": "kristin-diagnostics-1784659751786.zip",
+      "productVersion": "1.1.6+116",
+      "projectId": "project_hklvm09rmlNoY85bjztlNERNGT",
+      "runId": "run_hklw4ohlv7ocm6ItzHe1N5AB0I",
+      "sha256": "69a6b4502607e35b9262d66de9e5be612f0fcc26a867a5242453fc9854d78895"
+    },
+    "stabilityReplayParent": {
+      "archive": "Kristin_Local_Agent_v1.1.6_build116_execution_reliability_redesign.zip",
+      "sha256": "d4c23f7b005d7067bda06c8761f10d1cc489337300f4358b561415ebe2a6c583",
+      "version": "1.1.6+116"
+    },
+    "workspaceBoundaryParent": {
+      "archive": "Kristin_Local_Agent_v1.0.6_build106_workspace_boundary_merge.zip",
+      "sha256": "9829aa2e658893279d66e96699e225aef739a791f4b1870cf749ac8349a4662d",
+      "version": "1.0.6+106"
+    },
+    "workstationValidationParent": {
+      "archive": "Kristin_Local_Agent_v1.1.3_build113_workstation_validation_hotfix.zip",
+      "sha256": "fa648c05fcae9e3e89fca0ab5dfb41356c85d97b436aa05dd5974388e7148895",
+      "version": "1.1.3+113"
+    },
+    "workstationValidationTranscript": {
+      "archive": "Pasted text(5).txt",
+      "observedAt": "2026-07-20",
+      "productVersion": "1.1.2+112",
+      "sha256": "f11139cff61ed1d7c0526e60454600de9831b330bbf2cdeb92e9adb7a4ce538b"
+    }
+  },
+  "projectManagerV2": {
+    "abruptParentDeathGate": true,
+    "behavioralGateCases": 16,
+    "boundedArtifactValidation": true,
+    "cliIntegrated": true,
+    "completeProcessTreeStop": true,
+    "durableManagedProcesses": true,
+    "liveSandboxReadiness": true,
+    "nativeMacOsWorker": false,
+    "nativeWindowsWorker": false,
+    "pidReuseSafeLauncherIdentity": true,
+    "profileSchemaVersion": "2.0.0",
+    "retainedSnapshots": true,
+    "runtimeIntegrated": true,
+    "schema": "kristin.project-manager-v2.release.v1",
+    "sourceSha256": "0773475e780e268f610fbecd0ee0f4e091d0031e3467072413ca7135827f50b3",
+    "workerToHostPortForwarding": false
+  },
+  "promptStudioV2": {
+    "apiIntegrated": true,
+    "behavioralGateCases": 30,
+    "cliIntegrated": true,
+    "compilerVersion": "1.0.0",
+    "contractDigest": "4f65d0e57ee86b58b26223970c8fbfda243256a47689ce83568df88be042500a",
+    "evaluationDatasetSchemaVersion": "1.0.0",
+    "fixtureTaskCounts": [
+      1,
+      10,
+      50,
+      100
+    ],
+    "legacyUnsandboxedDryRunRequiresExplicitApproval": true,
+    "parentReleaseSha256": "8da6f20dc3ccd9ee71406092df0a4e1fadd77a93916a553f0efc71b47153ff19",
+    "productSpecificationSchemaVersion": "2.0.0",
+    "roadmapSourceSha256": "6ae96908eca16a33c2e400ab31d2f8e41a9470f7fae823aa6719e45fbf233623",
+    "runtimeIntegrated": true,
+    "sandboxDependentTasksFailClosed": true,
+    "schema": "kristin.prompt-studio-v2.release.v1",
+    "sideEffectFreeDryRun": true,
+    "taskPlanSchemaVersion": "2.0.0",
+    "v14SandboxImplemented": false
+  },
+  "reportedDiagnosticFailure": {
+    "date": "2026-07-20",
+    "elapsedMilliseconds": 180138,
+    "failedWorkItem": "Create project-local wireframes and user flows",
+    "failure": "model_load_timeout",
+    "localOnly": true,
+    "model": "ollama/phi4-mini:latest",
+    "modelRequests": "1/80",
+    "mutations": "0/80",
+    "parameterSize": "3.8B",
+    "productVersion": "1.1.1+111",
+    "repairs": "0/14",
+    "runId": "run_hkkkbh7q3rNkIqtjzJuPYvsiiy",
+    "toolCalls": "0/160",
+    "workItemMaxAttempts": 1
+  },
+  "reportedExecutionConvergenceFailure": {
+    "date": "2026-07-21",
+    "failedWorkItem": "Create project-local wireframes and user flows",
+    "failure": "argument_required: Argument \"executable\" is required.",
+    "identicalNoOpRewrites": 3,
+    "materialMutations": 1,
+    "model": "ollama/phi4-mini:latest",
+    "modelRequests": "10/80",
+    "productVersion": "1.1.4+114",
+    "projectId": "project_hklfax9skh1ZWARiM4FkAXVfNL",
+    "repairs": "4/16",
+    "reportedMutations": "4/80",
+    "runId": "run_hklfhuqkrwdoQ11swy34hvARke",
+    "terminalModelAction": {
+      "command": [
+        "git",
+        "-C",
+        "/MathWebApp/project-directory",
+        "status"
+      ],
+      "type": "run_command"
+    },
+    "toolCalls": "7/160",
+    "unrelatedArtifactScope": "e-commerce product listing, product detail, shopping cart, and checkout wireframes were generated for a calculator request"
+  },
+  "reportedExecutionReliabilityFailure": {
+    "causalEnvelope": "nested action.type=write_file with direct filePath and content fields",
+    "createdArtifactBytes": 0,
+    "date": "2026-07-21",
+    "emptyArtifactSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "failedWorkItem": "Create project-local wireframes and user flows",
+    "failure": "artifact_scope_mismatch after repeated inspection of an empty artifact",
+    "model": "ollama/phi4-mini:latest (3.8B Q4_K_M)",
+    "modelLatencyMilliseconds": 702821,
+    "modelRequests": 9,
+    "mutations": 1,
+    "productVersion": "1.1.5+115",
+    "repairs": 7,
+    "runId": "run_hklsywuyo4NMJgt9ijIxWPhBDr",
+    "toolCalls": 9
+  },
+  "reportedReleaseGateFlake": {
+    "classification": "flaky local HTTP timing fixture under repeated Windows validation load",
+    "date": "2026-07-20",
+    "directFlutterAnalyze": "passed with no issues",
+    "directFlutterTests": "88 tests passed",
+    "failure": "model_load_timeout: Ollama could not finish loading tiny-model after 2 bounded attempts",
+    "fixtureFirstResponseDelayMilliseconds": 90,
+    "fixtureTimeoutMilliseconds": 40,
+    "productVersion": "1.1.3+113",
+    "releaseTest": "failed only at Flutter tests",
+    "systemTest": "9 passed, 1 optional parser skip, 0 failed"
+  },
+  "reportedStabilityReplayFailure": {
+    "date": "2026-07-21",
+    "failedWorkItem": "Create project-local wireframes and user flows",
+    "failure": "budget_repairs after repeated tool-loop prevention",
+    "literalMutationPath": "`docs/design/wireframes.md`",
+    "loopRedirects": 3,
+    "model": "ollama/phi4-mini:latest (3.8B Q4)",
+    "modelLatencyMilliseconds": 1491836,
+    "modelRequests": 21,
+    "mutations": 1,
+    "productVersion": "1.1.6+116",
+    "protocolRepairs": 5,
+    "repairs": 12,
+    "repairsBeforeRetry": 10,
+    "repeatedToolCallsBlocked": 5,
+    "runId": "run_hklw4ohlv7ocm6ItzHe1N5AB0I",
+    "toolCalls": 13
+  },
+  "reportedWorkstationCompileFailure": {
+    "dartFormat": "passed with zero remaining changes",
+    "date": "2026-07-20",
+    "file": "lib/product/project_diagnostics.dart",
+    "flutterAnalyze": "failed with one undefined_method issue",
+    "flutterPubGet": "passed",
+    "flutterTest": "failed to compile because the same symbol was unresolved",
+    "line": 303,
+    "releaseTest": "failed at Flutter analysis after all deterministic source gates passed",
+    "symbol": "ProductException",
+    "systemTest": "failed at Flutter analysis after all deterministic source gates passed",
+    "version": "1.1.0+110"
+  },
+  "reportedWorkstationValidationFailure": {
+    "analyzerIssue": "optional parameter 'subscription' was never supplied",
+    "date": "2026-07-20",
+    "flutterAnalyze": "one unused_element_parameter warning in models_research.dart",
+    "flutterTests": "two source/behavioral contract failures after 80 other tests passed",
+    "planningContractIssue": "expected the literal phrase Do not claim a public URL although the runtime instruction expressed the same prohibition as Do not deploy ... or claim a public URL",
+    "productVersion": "1.1.2+112",
+    "releaseTest": "failed at Flutter analysis because fatal infos are enforced",
+    "sourceContractIssue": "expected adjacent source text stage: 'load_started' although the implementation used a conditional expression",
+    "systemTest": "failed at Flutter analysis because fatal infos are enforced"
+  },
+  "roadmapInput": {
+    "file": "Kristin_Product_Grade_v2_Roadmap.md",
+    "interpretation": "Restore one canonical cumulative line through Project Manager 2, then implement the dependency-correct v1.7 model router, independent verifier, semantic progress ledger, convergence controller, circuit breakers, phase budgets, and context compaction.",
+    "sha256": "6ae96908eca16a33c2e400ab31d2f8e41a9470f7fae823aa6719e45fbf233623"
+  },
+  "rootCause": [
+    "The v1.1.5 protocol adapter recovered filePath from a nested action object but omitted the direct canonical content field, discarding valid model output.",
+    "write_file converted the missing content argument to an empty string and reported a successful zero-byte mutation.",
+    "Artifact correction did not encode mutation-required state, so the model could repeatedly inspect the already-proven empty artifact.",
+    "An oversized repeated contract, full-plan context, and expanding history consumed 702821 ms of model time for nine small action responses.",
+    "Invented external read paths were correctly blocked but recovery repeatedly delegated re-anchoring to the same model instead of inspecting the selected project root deterministically.",
+    "The model returned a nested action object whose command array was not merged into normalized run_command arguments, leaving executable absent.",
+    "The tool emitted argument_required, but the coordinator only classified argument_missing as repairable, so attempt two terminated immediately.",
+    "Three byte-identical write_file calls were journaled as real replacements, consuming mutation budget and creating unnecessary backups.",
+    "The design task had an over-broad tool allowlist and no deterministic scope validation, so an unrelated e-commerce wireframe could be treated as progress for a calculator request.",
+    "The loop detector could stop repeated inspection but could not deterministically accept a correct product artifact or redirect a no-op write to inspection.",
+    "Retry prompts did not carry forward bounded prior-attempt evidence, encouraging the model to restart with a stale absolute Git working-directory command.",
+    "The generated plan also requested system installation, a sibling project directory, and an Express backend that were unnecessary for the approved client-side calculator requirements.",
+    "The v1.1.6 path canonicalizer treated Markdown backticks surrounding a complete path scalar as literal filename characters.",
+    "The literal backtick path did not match the canonical expected artifact path, bypassing mutation-required convergence state and post-write validation.",
+    "Repeated read-only recovery and copied coordinator metadata consumed repair credits without changing durable artifact state.",
+    "A second attempt began with only two of twelve repair credits remaining and deterministically exhausted the repair budget."
+  ],
+  "sandboxBackfill": {
+    "abruptParentDeathCleanup": true,
+    "behavioralGateCases": 8,
+    "cliProjectCommandsSandboxed": true,
+    "fullCrossPlatformV14Claimed": false,
+    "httpsNetworkBroker": true,
+    "killOnWorkerExit": true,
+    "linuxNamespaceWorker": true,
+    "linuxReferenceBackendComplete": true,
+    "networkBrokerGateCases": 6,
+    "oneUseSecretBroker": true,
+    "pidReuseSafeProcessTreeTermination": true,
+    "schema": "kristin.sandbox-backfill.release.v1",
+    "trustedHostSelfTests": true
+  },
+  "schema": "kristin.version-control.v1",
+  "transitiveReleaseLineage": [
+    {
+      "archive": "Kristin_Local_Agent_v1.0.5_build105_path_hygiene_hotfix.zip",
+      "role": "path-hygiene-parent",
+      "sha256": "81bc8384d545cd6586696ed3b58da315b596de042785ae9918ea4b2b427f18a2",
+      "version": "1.0.5+105"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.0.6_build106_workspace_boundary_merge.zip",
+      "role": "workspace-boundary-parent",
+      "sha256": "9829aa2e658893279d66e96699e225aef739a791f4b1870cf749ac8349a4662d",
+      "version": "1.0.6+106"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.0.7_build107_failed_run_recovery_hotfix.zip",
+      "role": "failed-run-recovery-parent",
+      "sha256": "1b10796ceef9132f8d39f74dab69b5c81bcbf91d9a351c45d5d806b8bcb45620",
+      "version": "1.0.7+107"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.0.8_build108_sdk_environment_hotfix.zip",
+      "role": "sdk-environment-parent",
+      "sha256": "76bff50ca1fe0eb82b54c09cf7ecf8f35e6d2c2062490bd73d141785b4d21448",
+      "version": "1.0.8+108"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.0.9_build109_lineage_contract_hotfix.zip",
+      "role": "lineage-contract-parent",
+      "sha256": "4090bbb6fd680bde8e3862039fd503fce3cda93d982076dd3b6bf3d1524eca1c",
+      "version": "1.0.9+109"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.0_build110_project_manager_preview.zip",
+      "role": "project-manager-parent",
+      "sha256": "a96d1544e3a2ef41bd01c489b2733e74fcd7c242aedcbb47b14b745a6e11a70d",
+      "version": "1.1.0+110"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.1_build111_project_manager_compile_hotfix.zip",
+      "role": "project-manager-compile-parent",
+      "sha256": "830f59d1401eab6a97b99f2f96f27dace7902f4541dfbd108ea67f20266604ee",
+      "version": "1.1.1+111"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.2_build112_model_resilience_hotfix.zip",
+      "role": "model-resilience-parent",
+      "sha256": "4300bb3c228e3d4b3502819df1cf84549a5bb2d66672362cdfd9e6d730fe34a2",
+      "version": "1.1.2+112"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.3_build113_workstation_validation_hotfix.zip",
+      "role": "workstation-validation-parent",
+      "sha256": "fa648c05fcae9e3e89fca0ab5dfb41356c85d97b436aa05dd5974388e7148895",
+      "version": "1.1.3+113"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.4_build114_deterministic_release_tests_hotfix.zip",
+      "role": "deterministic-release-test-parent",
+      "sha256": "989ccfc9abdda31537b10b4a6a15e958d12b8209ba923457d45759c3bb5d29b3",
+      "version": "1.1.4+114"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.5_build115_execution_convergence_hotfix.zip",
+      "role": "execution-convergence-parent",
+      "sha256": "28be6ac8b5de2c7612a4c5e9456dfe09895cd0964681875861e2074b1760f2a8",
+      "version": "1.1.5+115"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.6_build116_execution_reliability_redesign.zip",
+      "role": "execution-reliability-parent",
+      "sha256": "d4c23f7b005d7067bda06c8761f10d1cc489337300f4358b561415ebe2a6c583",
+      "version": "1.1.6+116"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.1.7_build117_stability_replay_baseline.zip",
+      "role": "stability-replay-parent",
+      "sha256": "6b32cb8105dcdf6aee0aff9599eefd8552e469f0c813eb992720e84287d7e835",
+      "version": "1.1.7+117"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.2.0_build120_typed_protocol_foundation.zip",
+      "role": "typed-protocol-parent",
+      "sha256": "a4904b78523da79b8abd87866c7e4497231a3f0c924cfff4d20aec12194d59d3",
+      "version": "1.2.0+120"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.3.0_build130_durable_workflow_kernel.zip",
+      "role": "durable-workflow-parent",
+      "sha256": "8da6f20dc3ccd9ee71406092df0a4e1fadd77a93916a553f0efc71b47153ff19",
+      "version": "1.3.0+130"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.5.0_build150_prompt_studio_2.zip",
+      "role": "prompt-studio-v2-parent",
+      "sha256": "6d44ee9948ebf6a43782f2356d61c9c5b0acf3da1215b42afe345e11d74594ca",
+      "version": "1.5.0+150"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.5.1_build151_sandbox_backfill.zip",
+      "role": "canonical-source-parent",
+      "sha256": "124c0b6618993b04e4dd9a4b4d23b782999adee3c0a8d7de24e69f9d29fc0971",
+      "version": "1.5.1+151"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.8.0_build180_knowledge_memory_skills_file_adapters.zip",
+      "role": "canonical-head",
+      "sha256": "pending_release_sha256",
+      "version": "1.8.0+180"
+    },
+    {
+      "archive": "Kristin_Local_Agent_v1.9.0_build190_interoperability_admin_release_ops.zip",
+      "sha256": "<filled_at_package_time>",
+      "version": "1.9.0+190"
+    }
+  ],
+  "typedProtocolFoundation": {
+    "agentDecisionSchema": "schemas/agent_decision.v1.json",
+    "agentDecisionSchemaVersion": "1.0.0",
+    "canonicalFailureMetadataPreserved": true,
+    "decisionKinds": [
+      "tool",
+      "complete",
+      "fail",
+      "ask_user",
+      "delegate"
+    ],
+    "deterministicFuzzCases": 2000,
+    "generatedContractSha256": "c7a7dcb2380c007fda6b6c1be724b4dc9ec757c439f5051b235b2bb8622d2fa4",
+    "generatedDartContracts": "lib/product/generated/protocol_contracts.g.dart",
+    "governedToolCount": 23,
+    "invalidToolOutputBlocked": true,
+    "legacyCoordinatorBridge": true,
+    "postDispatchValidation": true,
+    "preDispatchValidation": true,
+    "providerCompatibility": [
+      "ollama",
+      "openai-compatible",
+      "mcp",
+      "recorded"
+    ],
+    "representativeOutputContractCases": 23,
+    "roadmapSha256": "6ae96908eca16a33c2e400ab31d2f8e41a9470f7fae823aa6719e45fbf233623",
+    "toolRegistrySchema": "schemas/tool_registry.v2.json",
+    "toolRegistryVersion": "2.0.0"
+  }
+}

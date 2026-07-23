@@ -1,0 +1,84 @@
+{
+  "$id": "https://kristin.local/schemas/plan_compilation_report.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "compiledTasks": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "compilerVersion": {
+      "type": "string"
+    },
+    "executable": {
+      "type": "boolean"
+    },
+    "executionBatches": {
+      "items": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "inputHash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "outputHash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "planId": {
+      "type": "string"
+    },
+    "quality": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "simulation": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "specificationId": {
+      "type": "string"
+    },
+    "topologicalOrder": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "planId",
+    "specificationId",
+    "inputHash",
+    "compilerVersion",
+    "executable",
+    "issues",
+    "topologicalOrder",
+    "executionBatches",
+    "compiledTasks",
+    "quality",
+    "simulation",
+    "outputHash"
+  ],
+  "title": "Kristin Plan Compilation Report v1",
+  "type": "object"
+}

@@ -1,0 +1,34 @@
+{
+  "$id": "https://kristin.local/schemas/update_channel_manifest.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Update Channel Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "releaseVersion": {"type": "string", "minLength": 1},
+    "channel": {"type": "string", "minLength": 1},
+    "packageRoot": {"type": "string", "minLength": 1},
+    "archiveName": {"type": "string", "minLength": 1},
+    "archiveSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "parentVersion": {"type": "string", "minLength": 1},
+    "rollbackVersion": {"type": "string", "minLength": 1},
+    "supportPolicy": {"$ref": "support_compatibility_policy.v1.json"},
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "signerId": {"type": "string", "minLength": 1},
+        "algorithm": {"const": "hmac-sha256"},
+        "signedAt": {"type": "string", "format": "date-time"},
+        "payloadSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "required": ["signerId", "algorithm", "signedAt", "payloadSha256", "signature"]
+    }
+  },
+  "required": [
+    "schemaVersion", "releaseVersion", "channel", "packageRoot", "archiveName", "archiveSha256",
+    "parentVersion", "rollbackVersion", "supportPolicy", "signature"
+  ]
+}

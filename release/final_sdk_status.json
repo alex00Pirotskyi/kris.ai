@@ -1,0 +1,11 @@
+{
+  "product": "Kristin Local Agent",
+  "version": "0.9.0+90",
+  "release_channel": "preview",
+  "classification": "source-release",
+  "dart_sdk_available_in_packaging_environment": false,
+  "flutter_sdk_available_in_packaging_environment": false,
+  "native_desktop_toolchain_validated": false,
+  "source_validation_available": true,
+  "reason": "Flutter and Dart are unavailable in the packaging environment. Run ./kristin test --full (or kristin.cmd test --full on Windows) on a Flutter workstation for authoritative dependency resolution, formatting, analyzer, Flutter test, and native build validation."
+}

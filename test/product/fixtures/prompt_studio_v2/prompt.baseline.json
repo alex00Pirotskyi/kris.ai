@@ -1,0 +1,21 @@
+{
+  "acceptanceCriteria": [
+    "The result looks good."
+  ],
+  "assumptions": [],
+  "clarifyingQuestions": [],
+  "evaluationCases": [],
+  "guardrails": [],
+  "mode": "build",
+  "outputExpectations": [
+    "Some files"
+  ],
+  "purpose": "Create some files for a project.",
+  "stopConditions": [],
+  "systemPrompt": "Help with the request and provide a useful result.",
+  "title": "Make project files",
+  "userPrompt": "Build {{thing}}.",
+  "variables": [
+    "thing"
+  ]
+}

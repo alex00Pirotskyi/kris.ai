@@ -1,0 +1,107 @@
+{
+  "cases": [
+    {
+      "expectedMode": "build",
+      "forbiddenTerms": [
+        "guaranteed public url",
+        "silently widen permissions"
+      ],
+      "id": "case_atomic_plan",
+      "input": "Compile one local artifact task.",
+      "requiredCriterionTerms": [
+        "validate",
+        "allowed tools",
+        "external-service"
+      ],
+      "requiredTerms": [
+        "local-only",
+        "deterministic",
+        "artifact",
+        "capability"
+      ],
+      "requiredVariables": [
+        "project_name",
+        "artifact_count"
+      ],
+      "tags": [
+        "local-only",
+        "compiler"
+      ],
+      "variables": {
+        "artifact_count": "10",
+        "project_name": "fixture"
+      },
+      "weight": 1.0
+    },
+    {
+      "expectedMode": "build",
+      "forbiddenTerms": [
+        "guaranteed public url",
+        "silently widen permissions"
+      ],
+      "id": "case_large_plan",
+      "input": "Compile one hundred local artifact tasks.",
+      "requiredCriterionTerms": [
+        "validate",
+        "allowed tools",
+        "external-service"
+      ],
+      "requiredTerms": [
+        "local-only",
+        "deterministic",
+        "artifact",
+        "capability"
+      ],
+      "requiredVariables": [
+        "project_name",
+        "artifact_count"
+      ],
+      "tags": [
+        "local-only",
+        "compiler"
+      ],
+      "variables": {
+        "artifact_count": "10",
+        "project_name": "fixture"
+      },
+      "weight": 1.0
+    },
+    {
+      "expectedMode": "build",
+      "forbiddenTerms": [
+        "guaranteed public url",
+        "silently widen permissions"
+      ],
+      "id": "case_policy_guard",
+      "input": "Reject external hosting in local-only mode.",
+      "requiredCriterionTerms": [
+        "validate",
+        "allowed tools",
+        "external-service"
+      ],
+      "requiredTerms": [
+        "local-only",
+        "deterministic",
+        "artifact",
+        "capability"
+      ],
+      "requiredVariables": [
+        "project_name",
+        "artifact_count"
+      ],
+      "tags": [
+        "local-only",
+        "compiler"
+      ],
+      "variables": {
+        "artifact_count": "10",
+        "project_name": "fixture"
+      },
+      "weight": 1.0
+    }
+  ],
+  "id": "eval_prompt_studio_v2",
+  "promptId": "prompt_studio_v2_fixture",
+  "schemaVersion": "1.0.0",
+  "title": "Prompt Studio 2 deterministic preflight dataset"
+}

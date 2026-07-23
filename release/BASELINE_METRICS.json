@@ -1,0 +1,103 @@
+{
+  "caseCount": 2,
+  "corpus": "test/product/fixtures/diagnostic_replay",
+  "durableWorkflow": {
+    "appendOnlyEvents": true,
+    "concurrentWriters": 16,
+    "crashRollback": true,
+    "durableResultReplay": true,
+    "failedCases": 0,
+    "migrationDigest": "220175c387f3e57e9b0fe3727ddf02c2284df4bc2d34fa8508801fe23d85691c",
+    "passedCases": 14,
+    "schemaVersion": 4,
+    "sqliteIntegrity": "ok",
+    "startupRollback": true
+  },
+  "failedCount": 0,
+  "generatedAt": "2026-07-22T00:00:00Z",
+  "historicalModelLatencyMinutes": 36.578,
+  "historicalModelLatencyMs": 2194657,
+  "offlineSystemContracts": 31,
+  "passed": true,
+  "passedCount": 2,
+  "releaseSourceChecks": 19,
+  "releaseVersion": "1.3.0+130",
+  "results": [
+    {
+      "classifications": [
+        "nested_canonical_field_loss",
+        "empty_artifact_mutation",
+        "artifact_repair_non_convergence"
+      ],
+      "errors": [],
+      "id": "v115_nested_write_content_loss",
+      "observed": {
+        "modelLatencyMs": 702821,
+        "modelRequests": 9,
+        "mutationAfterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "mutationPath": "docs/design/wireframes.md",
+        "mutations": 1,
+        "repairs": 7,
+        "terminalFailure": "artifact_scope_mismatch",
+        "toolCalls": 9
+      },
+      "passed": true,
+      "path": "test/product/fixtures/diagnostic_replay/v115_nested_write_content_loss.json",
+      "source": {
+        "bundle": "kristin-diagnostics-1784651191615.zip",
+        "productVersion": "1.1.5+115",
+        "projectId": "project_hklsoafwb8aOrZ1SMbJW61cRZW",
+        "runId": "run_hklsywuyo4NMJgt9ijIxWPhBDr",
+        "sha256": "a2c3570a9910cf99f3f5c26388b6638bf5639796c47009277cfcd64c90dd0f9b"
+      }
+    },
+    {
+      "classifications": [
+        "markdown_path_wrapper_not_canonicalized",
+        "artifact_scope_match_bypassed",
+        "read_only_recovery_loop",
+        "coordinator_metadata_copied_as_action",
+        "insufficient_retry_reserve"
+      ],
+      "errors": [],
+      "id": "v116_markdown_path_repair_loop",
+      "observed": {
+        "loopRecoveryRedirects": 3,
+        "maxRepairs": 12,
+        "modelLatencyMs": 1491836,
+        "modelRequests": 21,
+        "mutationPath": "`docs/design/wireframes.md`",
+        "mutations": 1,
+        "protocolRepairs": 5,
+        "repairs": 12,
+        "repairsBeforeRetry": 10,
+        "repeatedToolCallsBlocked": 5,
+        "terminalFailure": "budget_repairs",
+        "toolCalls": 13
+      },
+      "passed": true,
+      "path": "test/product/fixtures/diagnostic_replay/v116_markdown_path_repair_loop.json",
+      "source": {
+        "bundle": "kristin-diagnostics-1784659751786.zip",
+        "productVersion": "1.1.6+116",
+        "projectId": "project_hklvm09rmlNoY85bjztlNERNGT",
+        "runId": "run_hklw4ohlv7ocm6ItzHe1N5AB0I",
+        "sha256": "69a6b4502607e35b9262d66de9e5be612f0fcc26a867a5242453fc9854d78895"
+      }
+    }
+  ],
+  "schema": "kristin.diagnostic-replay-report.v1",
+  "typedProtocol": {
+    "agentDecisionSchemaVersion": "1.0.0",
+    "canonicalFailureMetadataPreserved": true,
+    "decisionKinds": 5,
+    "deterministicProviderFuzzCases": 2000,
+    "generatedContractSha256": "c7a7dcb2380c007fda6b6c1be724b4dc9ec757c439f5051b235b2bb8622d2fa4",
+    "governedTools": 23,
+    "invalidToolOutputBlocked": true,
+    "missingMutationDataBlocked": true,
+    "providerAdapters": 4,
+    "representativeOutputContracts": 23,
+    "toolRegistryVersion": "2.0.0"
+  }
+}

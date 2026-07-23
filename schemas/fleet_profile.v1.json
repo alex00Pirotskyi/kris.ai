@@ -1,0 +1,17 @@
+{
+  "$id": "https://kristin.local/schemas/fleet_profile.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Fleet Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "organization": {"type": "string", "minLength": 1},
+    "policyProfileId": {"type": "string", "minLength": 1},
+    "managedProjects": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "allowedModels": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "allowRemoteSupportBundle": {"type": "boolean"},
+    "updateChannel": {"type": "string", "minLength": 1}
+  },
+  "required": ["schemaVersion", "organization", "policyProfileId", "managedProjects", "allowedModels", "allowRemoteSupportBundle", "updateChannel"]
+}

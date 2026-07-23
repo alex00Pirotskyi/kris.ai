@@ -1,0 +1,43 @@
+{
+  "$id": "https://kristin.local/schemas/support_lifecycle_policy.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "currentVersion": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:\\+[0-9]+)?$",
+      "type": "string"
+    },
+    "minimumSupportedRollbackTo": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:\\+[0-9]+)?$",
+      "type": "string"
+    },
+    "minimumSupportedUpgradeFrom": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:\\+[0-9]+)?$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "supportedChannels": {
+      "items": {
+        "enum": [
+          "stable",
+          "candidate",
+          "nightly"
+        ]
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "currentVersion",
+    "minimumSupportedUpgradeFrom",
+    "minimumSupportedRollbackTo",
+    "supportedChannels"
+  ],
+  "title": "Kristin Support Lifecycle Policy v1",
+  "type": "object"
+}

@@ -1,0 +1,65 @@
+{
+  "schema": "kristin.diagnostic-replay.v1",
+  "id": "v116_markdown_path_repair_loop",
+  "title": "Markdown-wrapped path escaped artifact matching and repair converged on reads",
+  "source": {
+    "bundle": "kristin-diagnostics-1784659751786.zip",
+    "sha256": "69a6b4502607e35b9262d66de9e5be612f0fcc26a867a5242453fc9854d78895",
+    "productVersion": "1.1.6+116",
+    "projectId": "project_hklvm09rmlNoY85bjztlNERNGT",
+    "runId": "run_hklw4ohlv7ocm6ItzHe1N5AB0I"
+  },
+  "observed": {
+    "terminalFailure": "budget_repairs",
+    "modelRequests": 21,
+    "toolCalls": 13,
+    "mutations": 1,
+    "repairs": 12,
+    "maxRepairs": 12,
+    "repairsBeforeRetry": 10,
+    "modelLatencyMs": 1491836,
+    "repeatedToolCallsBlocked": 5,
+    "protocolRepairs": 5,
+    "loopRecoveryRedirects": 3,
+    "mutationPath": "`docs/design/wireframes.md`"
+  },
+  "replayInput": {
+    "request": "Build a calculator web app with mouse and keyboard input, real-time results, and calculation history.",
+    "allowedTools": [
+      "knowledge_search",
+      "list_directory",
+      "write_file",
+      "inspect_file"
+    ],
+    "expectedArtifactPath": "docs/design/wireframes.md",
+    "modelEnvelope": {
+      "turn": 6,
+      "tool": "write_file",
+      "arguments": {
+        "filePath": "`docs/design/wireframes.md`",
+        "content": "# Project-Wide Wireframe and User Flow Documentation\nCreate or update this file with the requested calculator screen hierarchy and user flows."
+      }
+    },
+    "copiedCoordinatorEnvelope": {
+      "action": {
+        "toolRepair": true,
+        "turn": 7
+      }
+    }
+  },
+  "expected": {
+    "classifications": [
+      "markdown_path_wrapper_not_canonicalized",
+      "artifact_scope_match_bypassed",
+      "read_only_recovery_loop",
+      "coordinator_metadata_copied_as_action",
+      "insufficient_retry_reserve"
+    ],
+    "normalizedTool": "write_file",
+    "normalizedPath": "docs/design/wireframes.md",
+    "repeatedDiscoveryStrategy": "bounded_artifact_mutation",
+    "postMutationStrategy": "automatic_artifact_inspection",
+    "retryAllowedAtObservedState": false,
+    "minimumRemainingRepairs": 4
+  }
+}

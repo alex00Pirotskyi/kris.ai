@@ -1,0 +1,44 @@
+{
+  "$id": "https://kristin.local/schemas/fleet_configuration.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "defaultPolicyProfileId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "projects": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "policyProfileId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "policyProfileId"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "defaultPolicyProfileId",
+    "projects"
+  ],
+  "title": "Kristin Fleet Configuration v1",
+  "type": "object"
+}

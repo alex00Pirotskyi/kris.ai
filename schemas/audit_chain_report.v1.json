@@ -1,0 +1,15 @@
+{
+  "$id": "https://kristin.local/schemas/audit_chain_report.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Audit Chain Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "verified": {"type": "boolean"},
+    "reason": {"type": "string", "minLength": 1},
+    "recordCount": {"type": "integer", "minimum": 0},
+    "headHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "required": ["schemaVersion", "verified", "reason", "recordCount", "headHash"]
+}

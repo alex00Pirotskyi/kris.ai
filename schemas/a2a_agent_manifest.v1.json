@@ -1,0 +1,58 @@
+{
+  "$id": "https://kristin.local/schemas/a2a_agent_manifest.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowedCapabilities": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "arguments": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "executable": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "label": {
+      "maxLength": 200,
+      "minLength": 1,
+      "type": "string"
+    },
+    "maxArtifacts": {
+      "maximum": 64,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "transport": {
+      "const": "sandboxed_finite_json"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "label",
+    "transport",
+    "executable",
+    "arguments",
+    "allowedCapabilities",
+    "maxArtifacts"
+  ],
+  "title": "Kristin A2A Agent Manifest v1",
+  "type": "object"
+}

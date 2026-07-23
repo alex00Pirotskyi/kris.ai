@@ -1,0 +1,126 @@
+{
+  "acceptanceCriteria": [
+    {
+      "evidenceValidatorIds": [
+        "val_report_exists",
+        "val_report_schema"
+      ],
+      "id": "criterion_report_valid",
+      "requirementIds": [
+        "req_validation",
+        "nfr_determinism"
+      ],
+      "statement": "The compilation report exists and validates against its versioned schema."
+    }
+  ],
+  "artifacts": [
+    {
+      "description": "Machine-readable compilation and dry-run report.",
+      "id": "artifact_compilation_report",
+      "path": "artifacts/plan-compilation-report.json",
+      "required": true,
+      "sensitivity": "internal",
+      "type": "test_report",
+      "validators": [
+        {
+          "config": {
+            "path": "artifacts/plan-compilation-report.json"
+          },
+          "deterministic": true,
+          "id": "val_report_exists",
+          "kind": "file_exists"
+        },
+        {
+          "config": {
+            "schema": "schemas/plan_compilation_report.v1.json"
+          },
+          "deterministic": true,
+          "id": "val_report_schema",
+          "kind": "json_schema"
+        }
+      ]
+    }
+  ],
+  "assumptions": [
+    "The governed project file tools are available.",
+    "The compilation run performs no side effects."
+  ],
+  "clarificationQuestions": [],
+  "dataPolicy": {
+    "allowNetworkResearch": false,
+    "allowSecretUse": false,
+    "allowedProviders": [
+      "local"
+    ],
+    "localOnly": true,
+    "retention": "project",
+    "sensitivity": "internal"
+  },
+  "deploymentBoundary": {
+    "approvalRequired": false,
+    "mode": "none",
+    "target": null
+  },
+  "excludedScope": [
+    "External deployment",
+    "Live web research",
+    "Unsandboxed command execution"
+  ],
+  "functionalRequirements": [
+    {
+      "id": "req_artifacts",
+      "priority": "must",
+      "source": "v1.5 release gate",
+      "statement": "The plan must produce the requested number of distinct project-local artifacts."
+    },
+    {
+      "id": "req_validation",
+      "priority": "must",
+      "source": "v1.5 release gate",
+      "statement": "Every required artifact must declare deterministic validation evidence."
+    },
+    {
+      "id": "req_local",
+      "priority": "must",
+      "source": "roadmap policy",
+      "statement": "The plan must remain local-only and make no unsupported external-service claims."
+    }
+  ],
+  "id": "spec_fixture_product",
+  "metadata": {
+    "fixture": true,
+    "milestone": "1.5.0"
+  },
+  "nonFunctionalRequirements": [
+    {
+      "id": "nfr_determinism",
+      "priority": "must",
+      "source": "release reproducibility",
+      "statement": "Compiling identical inputs must produce the same output hash."
+    },
+    {
+      "id": "nfr_scale",
+      "priority": "must",
+      "source": "v1.5 exit gate",
+      "statement": "The compiler must support plans containing from one through one hundred tasks."
+    }
+  ],
+  "problemStatement": "Create a bounded set of project-local Markdown artifacts so plan compilation, dependency ordering, capability checks, and validation declarations can be tested without external services.",
+  "riskClassification": "low",
+  "schemaVersion": "2.0.0",
+  "targetPlatforms": [
+    "Windows",
+    "macOS",
+    "Linux"
+  ],
+  "targetUsers": [
+    "Kristin release engineers",
+    "Prompt Studio maintainers"
+  ],
+  "testStrategy": [
+    "Compile and dry-run 1-, 10-, 50-, and 100-task plans.",
+    "Compile malformed plans and confirm deterministic fail-closed issue codes.",
+    "Compile identical inputs twice and compare output hashes."
+  ],
+  "title": "Deterministic local artifact fixture"
+}

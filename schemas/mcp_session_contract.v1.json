@@ -1,0 +1,82 @@
+{
+  "$id": "https://kristin.local/schemas/mcp_session_contract.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowedPrompts": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "allowedResources": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "allowedTools": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "authorizedUntil": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "profileId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "remoteHosts": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "roots": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "sandboxEnforced": {
+      "type": "boolean"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "sessionId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "transport": {
+      "enum": [
+        "local_stdio",
+        "remote_https"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "sessionId",
+    "profileId",
+    "transport",
+    "roots",
+    "allowedTools",
+    "allowedResources",
+    "allowedPrompts",
+    "sandboxEnforced",
+    "remoteHosts",
+    "authorizedUntil"
+  ],
+  "title": "Kristin MCP Session Contract v1",
+  "type": "object"
+}

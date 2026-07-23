@@ -1,0 +1,59 @@
+{
+  "request": {
+    "role": "executor",
+    "requiredContextTokens": 8192,
+    "maximumDataBoundary": "local",
+    "allowedProviders": ["ollama"],
+    "preferredModels": ["ollama/qwen2.5-coder:14b"],
+    "localOnly": true,
+    "requireToolSchemaReliability": true,
+    "fallbackApprovalGranted": false
+  },
+  "candidates": [
+    {
+      "provider": "ollama",
+      "model": "phi4-mini:latest",
+      "roles": ["router", "summarizer", "executor"],
+      "dataBoundary": "local",
+      "contextTokens": 16384,
+      "benchmarkScore": 0.58,
+      "latencyMsP50": 1800,
+      "costPerMillionTokens": 0,
+      "toolSchemaScore": 0.76,
+      "approved": true,
+      "enabled": true
+    },
+    {
+      "provider": "ollama",
+      "model": "qwen2.5-coder:14b",
+      "roles": ["planner", "executor", "verifier"],
+      "dataBoundary": "local",
+      "contextTokens": 32768,
+      "benchmarkScore": 0.86,
+      "latencyMsP50": 3100,
+      "costPerMillionTokens": 0,
+      "toolSchemaScore": 0.94,
+      "approved": true,
+      "enabled": true
+    },
+    {
+      "provider": "cloud-example",
+      "model": "strong-pro",
+      "roles": ["planner", "executor", "verifier"],
+      "dataBoundary": "public_cloud",
+      "contextTokens": 131072,
+      "benchmarkScore": 0.97,
+      "latencyMsP50": 900,
+      "costPerMillionTokens": 15,
+      "toolSchemaScore": 0.99,
+      "approved": true,
+      "requiresExplicitFallbackApproval": true,
+      "enabled": true
+    }
+  ],
+  "health": [],
+  "circuitPolicy": {
+    "failureThreshold": 3,
+    "cooldownSeconds": 120
+  }
+}

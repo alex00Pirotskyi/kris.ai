@@ -1,0 +1,108 @@
+{
+  "id": "plan_fixture_001",
+  "localOnly": true,
+  "metadata": {
+    "dryRunOnly": true,
+    "fixtureTaskCount": 1
+  },
+  "promptVersionId": "prompt_version_fixture_v2",
+  "rationale": "Exercise schema validation, hierarchy, dependency ordering, capability coverage, artifact declarations, and local-only policy at the requested plan size.",
+  "schemaVersion": "2.0.0",
+  "specificationId": "spec_fixture_product",
+  "tasks": [
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceValidatorIds": [
+            "val_task_001_exists",
+            "val_task_001_nonempty"
+          ],
+          "id": "criterion_task_001",
+          "requirementIds": [
+            "req_artifacts",
+            "req_validation"
+          ],
+          "statement": "Artifact artifacts/generated/task_001.md exists and contains non-empty deterministic content."
+        }
+      ],
+      "allowedTools": [
+        "inspect_file",
+        "read_file",
+        "write_file"
+      ],
+      "budgets": {
+        "modelTurns": 1,
+        "outputBytes": 4096,
+        "toolCalls": 3
+      },
+      "complexity": 1,
+      "dataBoundary": "project",
+      "dependencies": [],
+      "effortPoints": 1,
+      "enabled": true,
+      "estimateConfidence": 0.92,
+      "id": "task_001",
+      "inputArtifacts": [],
+      "instructions": "Inspect relevant project context, create artifacts/generated/task_001.md, and include the task identifier plus a concise completion summary. Do not use network services or run external commands.",
+      "manual": false,
+      "objective": "Produce deterministic project-local Markdown artifact task_001 with bounded content.",
+      "order": 1,
+      "outputArtifacts": [
+        {
+          "description": "Deterministic Markdown artifact produced by task_001.",
+          "id": "artifact_task_001",
+          "path": "artifacts/generated/task_001.md",
+          "required": true,
+          "sensitivity": "internal",
+          "type": "document",
+          "validators": [
+            {
+              "config": {
+                "path": "artifacts/generated/task_001.md"
+              },
+              "deterministic": true,
+              "id": "val_task_001_exists",
+              "kind": "file_exists"
+            },
+            {
+              "config": {
+                "minBytes": 20,
+                "path": "artifacts/generated/task_001.md"
+              },
+              "deterministic": true,
+              "id": "val_task_001_nonempty",
+              "kind": "non_empty"
+            }
+          ]
+        }
+      ],
+      "parentId": null,
+      "phase": "Phase 01",
+      "requiredCapabilities": [
+        "project.inspect",
+        "project.mutate"
+      ],
+      "retryPolicy": {
+        "maxAttempts": 2,
+        "retryableClasses": [
+          "provider_transient",
+          "schema_repair",
+          "tool_input_repair",
+          "project_state_conflict"
+        ]
+      },
+      "risk": "low",
+      "stopPolicy": {
+        "maxNonProgressTurns": 2,
+        "onAmbiguousSideEffect": "stop",
+        "onPolicyRejection": "stop"
+      },
+      "targetScope": "project",
+      "taskType": "implementation",
+      "title": "Create local artifact 1 of 1",
+      "uncertainty": "low",
+      "verification": []
+    }
+  ],
+  "title": "Deterministic 1-task compilation fixture"
+}

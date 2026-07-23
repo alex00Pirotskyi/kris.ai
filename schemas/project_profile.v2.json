@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/project_profile.v2.json",
+  "title": "Kristin Project Profile v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "projectType", "sandbox", "commands"],
+  "properties": {
+    "schemaVersion": {"const": "2.0.0"},
+    "projectType": {"type": "string", "minLength": 1, "maxLength": 128},
+    "sandbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required"],
+      "properties": {
+        "required": {"const": true},
+        "maxSnapshotFiles": {"type": "integer", "minimum": 1, "maximum": 100000},
+        "maxSnapshotBytes": {"type": "integer", "minimum": 1024, "maximum": 2147483648}
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "analyze": {"$ref": "#/$defs/readOnlyCommand"},
+        "test": {"$ref": "#/$defs/readOnlyCommand"},
+        "build": {"$ref": "#/$defs/snapshotCommand"},
+        "run": {"$ref": "#/$defs/snapshotCommand"},
+        "package": {"$ref": "#/$defs/snapshotCommand"}
+      }
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "logicalType": {"type": "string", "minLength": 1, "maxLength": 128},
+        "validator": {"enum": ["presence", "text", "json", "zip", "image", "directory"]},
+        "required": {"type": "boolean"},
+        "sensitivity": {"type": "string", "minLength": 1, "maxLength": 128}
+      }
+    },
+    "commandBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable", "arguments", "workspaceMode"],
+      "properties": {
+        "executable": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "arguments": {"type": "array", "maxItems": 256, "items": {"type": "string", "maxLength": 32768}},
+        "workingDirectory": {"type": "string", "maxLength": 4096},
+        "workspaceMode": {"enum": ["read_only", "snapshot_writable"]},
+        "networkMode": {"enum": ["none", "broker_https"]},
+        "writablePaths": {"type": "array", "maxItems": 128, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "timeoutSeconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "memoryLimitMb": {"type": "integer", "minimum": 128, "maximum": 32768},
+        "processLimit": {"type": "integer", "minimum": 8, "maximum": 1024},
+        "fileSizeLimitMb": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "expectedOutputs": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/artifact"}},
+        "ports": {"type": "array", "maxItems": 64, "items": {"type": "integer", "minimum": 1, "maximum": 65535}, "uniqueItems": true},
+        "healthChecks": {"type": "array", "maxItems": 64, "items": {"type": "string", "maxLength": 4096}},
+        "secretReferences": {"type": "array", "maxItems": 64, "items": {"type": "string", "minLength": 1, "maxLength": 256}, "uniqueItems": true}
+      }
+    },
+    "readOnlyCommand": {
+      "allOf": [
+        {"$ref": "#/$defs/commandBase"},
+        {"type": "object", "properties": {"workspaceMode": {"const": "read_only"}, "writablePaths": {"maxItems": 0}}}
+      ]
+    },
+    "snapshotCommand": {
+      "allOf": [
+        {"$ref": "#/$defs/commandBase"},
+        {"type": "object", "properties": {"workspaceMode": {"const": "snapshot_writable"}}}
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$id": "https://kristin.local/schemas/support_compatibility_policy.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Support Compatibility Policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "supportedUpgradeFrom": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+    "supportedRollbackTo": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+    "supportedChannels": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+    "supportPhase": {"type": "string", "enum": ["active", "maintenance", "eol"]}
+  },
+  "required": ["schemaVersion", "supportedUpgradeFrom", "supportedRollbackTo", "supportedChannels", "supportPhase"]
+}

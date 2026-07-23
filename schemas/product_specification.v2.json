@@ -1,0 +1,418 @@
+{
+  "$id": "https://kristin.local/schemas/product_specification.v2.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "acceptanceCriteria": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidenceValidatorIds": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_.-]{2,63}$",
+            "type": "string"
+          },
+          "requirementIds": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "statement": {
+            "maxLength": 4000,
+            "minLength": 8,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "evidenceValidatorIds"
+        ],
+        "type": "object"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "type": "array"
+    },
+    "artifacts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 2000,
+            "minLength": 4,
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_.-]{2,63}$",
+            "type": "string"
+          },
+          "path": {
+            "format": "project-relative-path",
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "sensitivity": {
+            "enum": [
+              "public",
+              "internal",
+              "confidential",
+              "secret"
+            ]
+          },
+          "type": {
+            "enum": [
+              "source",
+              "document",
+              "spreadsheet",
+              "presentation",
+              "image",
+              "archive",
+              "binary",
+              "api",
+              "website",
+              "configuration",
+              "test_report",
+              "package",
+              "other"
+            ]
+          },
+          "validators": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "config": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "description": {
+                  "maxLength": 2000,
+                  "type": "string"
+                },
+                "deterministic": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "pattern": "^[a-z][a-z0-9_.-]{2,63}$",
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "file_exists",
+                    "non_empty",
+                    "sha256_stable",
+                    "text_contains",
+                    "json_schema",
+                    "command_exit_zero",
+                    "test_passes",
+                    "archive_manifest",
+                    "reopen",
+                    "manual_review"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "deterministic",
+                "config"
+              ],
+              "type": "object"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "description",
+          "required",
+          "sensitivity",
+          "validators"
+        ],
+        "type": "object"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 3,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "type": "array"
+    },
+    "clarificationQuestions": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 3,
+        "type": "string"
+      },
+      "maxItems": 50,
+      "type": "array"
+    },
+    "dataPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allowNetworkResearch": {
+          "default": false,
+          "type": "boolean"
+        },
+        "allowSecretUse": {
+          "default": false,
+          "type": "boolean"
+        },
+        "allowedProviders": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "localOnly": {
+          "type": "boolean"
+        },
+        "retention": {
+          "enum": [
+            "session",
+            "project",
+            "user_managed",
+            "none"
+          ]
+        },
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "secret"
+          ]
+        }
+      },
+      "required": [
+        "localOnly",
+        "sensitivity",
+        "allowedProviders",
+        "retention"
+      ],
+      "type": "object"
+    },
+    "deploymentBoundary": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalRequired": {
+          "type": "boolean"
+        },
+        "mode": {
+          "enum": [
+            "none",
+            "local_preview",
+            "package_only",
+            "external_manual",
+            "external_automated"
+          ]
+        },
+        "target": {
+          "maxLength": 500,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "target",
+        "approvalRequired"
+      ],
+      "type": "object"
+    },
+    "excludedScope": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 3,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "type": "array"
+    },
+    "functionalRequirements": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_.-]{2,63}$",
+            "type": "string"
+          },
+          "priority": {
+            "enum": [
+              "must",
+              "should",
+              "could",
+              "wont"
+            ]
+          },
+          "source": {
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "statement": {
+            "maxLength": 4000,
+            "minLength": 8,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "priority"
+        ],
+        "type": "object"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "type": "array"
+    },
+    "id": {
+      "pattern": "^spec_[a-z0-9][a-z0-9_.-]{2,63}$",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "nonFunctionalRequirements": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_.-]{2,63}$",
+            "type": "string"
+          },
+          "priority": {
+            "enum": [
+              "must",
+              "should",
+              "could",
+              "wont"
+            ]
+          },
+          "source": {
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "statement": {
+            "maxLength": 4000,
+            "minLength": 8,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "priority"
+        ],
+        "type": "object"
+      },
+      "maxItems": 100,
+      "type": "array"
+    },
+    "problemStatement": {
+      "maxLength": 10000,
+      "minLength": 20,
+      "type": "string"
+    },
+    "riskClassification": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "targetPlatforms": {
+      "items": {
+        "maxLength": 200,
+        "minLength": 2,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "targetUsers": {
+      "items": {
+        "maxLength": 500,
+        "minLength": 2,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "testStrategy": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 4,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "type": "array"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 3,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "problemStatement",
+    "targetUsers",
+    "functionalRequirements",
+    "nonFunctionalRequirements",
+    "excludedScope",
+    "assumptions",
+    "clarificationQuestions",
+    "targetPlatforms",
+    "dataPolicy",
+    "artifacts",
+    "acceptanceCriteria",
+    "testStrategy",
+    "deploymentBoundary",
+    "riskClassification"
+  ],
+  "title": "Kristin Product Specification v2",
+  "type": "object"
+}

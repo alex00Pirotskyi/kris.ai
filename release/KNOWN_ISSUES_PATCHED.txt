@@ -1,0 +1,28 @@
+Kristin Local Agent v1.3.0+130 Durable Workflow Kernel and SQLite
+
+PATCHED
+- Mutable product and run state was spread across whole-collection JSON files without cross-record transactions.
+- Run events and run snapshots could be persisted separately, making crash recovery ambiguous.
+- Completed tool side effects had no durable idempotency result to replay after restart.
+- File mutations could occur before their recovery intent was durably recorded.
+- A process exit after workspace commit but before final run persistence could leave completed work labeled interrupted.
+- A second process could not prove durable ownership of a live run.
+- Task attempts, checkpoints, compensation state, and retry classification were not one transactional authority.
+- Legacy JSON migration lacked a source-hash ledger and full-startup rollback.
+- Applied migration SQL was not guarded against later checksum drift.
+- Diagnostics treated JSONL/JSON as primary even after a durable database was available.
+
+PRESERVED
+- The v1.1.7 production diagnostic replay corpus remains blocking.
+- The v1.2 typed AgentDecision and 23-tool JSON Schema contracts remain blocking.
+- Missing mutation content, unsafe external writes, path traversal, NUL paths, and symlink/reparse escapes remain blocked.
+- Existing correct artifacts may complete through objective verification without fake mutation.
+
+REMAINS ARCHITECTURAL OR ENVIRONMENT-DEPENDENT
+- Agent-controlled execution is not yet isolated by an OS sandbox, network broker, or secret broker.
+- Non-compensatable external effects are not automatically repeated after ambiguous failure; they stop for review.
+- Managed child-process handles are not fully reconciled across application or OS restart.
+- SQLite is local to one data root; distributed replication and multi-device synchronization are not implemented.
+- Small local models can remain insufficient for complex implementation tasks.
+- Ollama latency depends on model, quantization, storage, RAM, and hardware.
+- Native Flutter, Windows, macOS, Linux, migration, installer, and security qualification must run on configured systems.

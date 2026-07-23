@@ -1,0 +1,16 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - archive/**
+    - build/**
+    - .dart_tool/**
+  errors:
+    missing_required_param: error
+    missing_return: error
+
+linter:
+  rules:
+    close_sinks: true
+    avoid_print: true
+    use_build_context_synchronously: true

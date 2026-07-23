@@ -1,0 +1,21 @@
+name: kristin_local_agent
+description: Chat-first local AI agent with governed tools, project diagnostics, prompts, knowledge, and observable runs.
+publish_to: 'none'
+version: 1.9.0+190
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqlite3: 2.9.4
+  sqlite3_flutter_libs: 0.5.42
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

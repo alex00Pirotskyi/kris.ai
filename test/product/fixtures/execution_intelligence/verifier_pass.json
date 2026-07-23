@@ -1,0 +1,39 @@
+{
+  "criteria": [
+    {
+      "id": "criterion-1",
+      "statement": "The required artifact is complete and validated.",
+      "requiredEvidenceKinds": ["artifact_validation"]
+    },
+    {
+      "id": "criterion-2",
+      "statement": "The project verification suite passes.",
+      "requiredEvidenceKinds": ["test"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "artifact-check-1",
+      "kind": "artifact_validation",
+      "ok": true,
+      "criterionIds": ["criterion-1"],
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "validator": "markdown-scope-v2",
+      "independent": true,
+      "stale": false,
+      "sourceTaskId": "verifier-task"
+    },
+    {
+      "id": "test-check-1",
+      "kind": "test",
+      "ok": true,
+      "criterionIds": ["criterion-2"],
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "validator": "project-test-profile",
+      "independent": true,
+      "stale": false,
+      "sourceTaskId": "verifier-task"
+    }
+  ],
+  "completionClaims": ["criterion-1", "criterion-2"]
+}

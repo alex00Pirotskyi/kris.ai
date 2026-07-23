@@ -1,0 +1,181 @@
+{
+  "$id": "https://kristin.local/schemas/plan_capability_catalog.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "capabilities": [
+    {
+      "mutation": false,
+      "name": "project.inspect",
+      "network": false,
+      "requiresSandbox": false,
+      "tools": [
+        "list_directory",
+        "read_file",
+        "inspect_file",
+        "search_text",
+        "index_project",
+        "index_search"
+      ]
+    },
+    {
+      "mutation": true,
+      "name": "project.mutate",
+      "network": false,
+      "requiresSandbox": false,
+      "tools": [
+        "write_file",
+        "write_binary_file",
+        "replace_text",
+        "apply_patch",
+        "delete_file"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "project.verify",
+      "network": false,
+      "requiresSandbox": true,
+      "tools": [
+        "read_file",
+        "inspect_file",
+        "search_text",
+        "run_command",
+        "verify_project"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "process.execute",
+      "network": false,
+      "requiresSandbox": true,
+      "tools": [
+        "run_command"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "process.manage",
+      "network": false,
+      "requiresSandbox": true,
+      "tools": [
+        "start_process",
+        "process_status",
+        "stop_process"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "git.inspect",
+      "network": false,
+      "requiresSandbox": false,
+      "tools": [
+        "git_status",
+        "git_diff"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "knowledge.retrieve",
+      "network": false,
+      "requiresSandbox": false,
+      "tools": [
+        "knowledge_search"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "research.network",
+      "network": true,
+      "requiresSandbox": true,
+      "tools": [
+        "research_fetch",
+        "research_search"
+      ]
+    },
+    {
+      "mutation": true,
+      "name": "deployment.package",
+      "network": false,
+      "requiresSandbox": true,
+      "tools": [
+        "package_deployment"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "external.mcp",
+      "network": true,
+      "requiresSandbox": true,
+      "tools": [
+        "mcp_call"
+      ]
+    },
+    {
+      "mutation": false,
+      "name": "human.approval",
+      "network": false,
+      "requiresSandbox": false,
+      "tools": []
+    }
+  ],
+  "catalogVersion": "1.0.0",
+  "taskTypeDefaults": {
+    "analysis": [
+      "project.inspect"
+    ],
+    "approval": [
+      "human.approval"
+    ],
+    "build": [
+      "project.inspect",
+      "project.verify"
+    ],
+    "deployment": [
+      "deployment.package"
+    ],
+    "design": [
+      "project.inspect",
+      "project.mutate"
+    ],
+    "documentation": [
+      "project.inspect",
+      "project.mutate"
+    ],
+    "implementation": [
+      "project.inspect",
+      "project.mutate"
+    ],
+    "manual": [
+      "human.approval"
+    ],
+    "migration": [
+      "project.inspect",
+      "project.mutate"
+    ],
+    "research": [
+      "knowledge.retrieve"
+    ],
+    "run": [
+      "process.manage"
+    ],
+    "test": [
+      "project.inspect",
+      "project.verify"
+    ],
+    "verification": [
+      "project.inspect",
+      "project.verify"
+    ]
+  },
+  "validatorCapabilities": {
+    "archive_manifest": "project.inspect",
+    "command_exit_zero": "project.verify",
+    "file_exists": "project.inspect",
+    "json_schema": "project.inspect",
+    "manual_review": "human.approval",
+    "non_empty": "project.inspect",
+    "reopen": "project.inspect",
+    "sha256_stable": "project.inspect",
+    "test_passes": "project.verify",
+    "text_contains": "project.inspect"
+  }
+}

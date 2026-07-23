@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/convergence_decision.v1.json",
+  "title": "Kristin Convergence Decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "reason", "stalledTurns", "permissionsUnchanged", "terminal"],
+  "properties": {
+    "action": {"enum": ["continue", "compact_and_retry", "require_different_action", "route_to_verifier", "split_task", "ask_user", "offer_stronger_model", "fail_convergence"]},
+    "reason": {"type": "string", "minLength": 1},
+    "stalledTurns": {"type": "integer", "minimum": 0},
+    "permissionsUnchanged": {"const": true},
+    "terminal": {"type": "boolean"},
+    "requiresApproval": {"type": "boolean"}
+  }
+}

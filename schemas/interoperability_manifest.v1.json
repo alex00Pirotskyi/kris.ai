@@ -1,0 +1,50 @@
+{
+  "$id": "https://kristin.local/schemas/interoperability_manifest.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Interoperability Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "manifestKind",
+    "id",
+    "version",
+    "title",
+    "purpose",
+    "capabilities",
+    "allowedTools",
+    "dataBoundary",
+    "approvalPolicy",
+    "evaluationResults",
+    "provenance",
+    "compatibility",
+    "supportLifecycle",
+    "publishedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "manifestKind": {"enum": ["agent", "skill", "plugin", "mcp_server"]},
+    "id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "title": {"type": "string", "minLength": 1, "maxLength": 255},
+    "purpose": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "capabilities": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 128}, "uniqueItems": true},
+    "allowedTools": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 128}, "uniqueItems": true},
+    "dataBoundary": {"enum": ["local", "private_remote", "public_cloud"]},
+    "approvalPolicy": {"type": "object"},
+    "evaluationResults": {"type": "object"},
+    "provenance": {"type": "object"},
+    "compatibility": {"type": "object"},
+    "supportLifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["active", "maintenance", "deprecated", "unsupported"]},
+        "supportedUntil": {"type": ["string", "null"]},
+        "minimumKristinVersion": {"type": ["string", "null"]}
+      }
+    },
+    "publishedAt": {"type": "string", "minLength": 1}
+  }
+}

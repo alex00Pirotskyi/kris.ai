@@ -1,0 +1,29 @@
+{
+  "$id": "https://kristin.local/schemas/audit_chain_entry.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kristin Audit Chain Entry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "sequence",
+    "category",
+    "actor",
+    "previousEntrySha256",
+    "payloadSha256",
+    "entrySha256",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "sequence": {"type": "integer", "minimum": 1},
+    "category": {"type": "string", "minLength": 1, "maxLength": 128},
+    "actor": {"type": "string", "minLength": 1, "maxLength": 255},
+    "previousEntrySha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "payloadSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "entrySha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "createdAt": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "acceptanceCriteria": [
+    "Validate every required artifact with deterministic file-exists and non-empty evidence.",
+    "Validate that every executable task declares capabilities covered by allowed tools.",
+    "Validate that the plan contains no unsupported external-service or public-hosting claim."
+  ],
+  "assumptions": [
+    "Governed project file tools are available."
+  ],
+  "clarifyingQuestions": [
+    "Which project-relative output directory should contain the artifacts?"
+  ],
+  "evaluationCases": [
+    "One-task plan",
+    "Ten-task plan",
+    "Fifty-task plan",
+    "One-hundred-task plan"
+  ],
+  "guardrails": [
+    "Local-only data boundary",
+    "No secrets",
+    "No external deployment",
+    "No unsandboxed process execution"
+  ],
+  "mode": "build",
+  "outputExpectations": [
+    "Versioned product specification",
+    "Compiled task plan",
+    "Artifact validation declarations",
+    "Dry-run report"
+  ],
+  "purpose": "Create project-local artifacts through a deterministic, capability-checked plan without unsupported external claims.",
+  "stopConditions": [
+    "Stop on policy rejection",
+    "Stop when a capability lacks an authorized tool",
+    "Ask for review before any external action"
+  ],
+  "systemPrompt": "Act as a local-only implementation planner. Declare every artifact, deterministic validator, required capability, allowed tool, dependency, retry boundary, and stop condition. Never claim a public URL or external deployment.",
+  "title": "Compile a deterministic local-only artifact plan",
+  "userPrompt": "For {{project_name}}, produce {{artifact_count}} project-local artifacts and a machine-readable compilation report. Keep all work inside the selected project.",
+  "variables": [
+    "project_name",
+    "artifact_count"
+  ]
+}

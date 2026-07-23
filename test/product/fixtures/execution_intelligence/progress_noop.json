@@ -1,0 +1,22 @@
+{
+  "before": {
+    "artifacts": {"docs/design/wireframes.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    "evidence": ["ev-inspect-1"],
+    "activeErrors": ["artifact_scope_incomplete"],
+    "satisfiedCriteria": [],
+    "externalState": [],
+    "planRevisionHash": "plan-a",
+    "actionFingerprint": "inspect:docs/design/wireframes.md",
+    "resultFingerprint": "empty-file"
+  },
+  "after": {
+    "artifacts": {"docs/design/wireframes.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    "evidence": ["ev-inspect-1"],
+    "activeErrors": ["artifact_scope_incomplete"],
+    "satisfiedCriteria": [],
+    "externalState": [],
+    "planRevisionHash": "plan-a",
+    "actionFingerprint": "inspect:docs/design/wireframes.md",
+    "resultFingerprint": "empty-file"
+  }
+}

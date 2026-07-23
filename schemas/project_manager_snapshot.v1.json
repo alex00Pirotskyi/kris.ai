@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/project_manager_snapshot.v1.json",
+  "title": "Kristin Project Manager Snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "version", "project", "sandbox", "git", "actions", "profile", "recentWorkspaces", "artifacts", "processes", "limitations"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "version": {"type": "string"},
+    "project": {"type": "object"},
+    "sandbox": {"type": "object"},
+    "git": {"type": "object"},
+    "actions": {"type": "object"},
+    "profile": {"type": "object"},
+    "recentWorkspaces": {"type": "array"},
+    "artifacts": {"type": "array"},
+    "processes": {"type": "array"},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

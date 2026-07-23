@@ -1,0 +1,137 @@
+{
+  "$id": "https://kristin.local/schemas/prompt_evaluation_dataset.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedMode": {
+            "enum": [
+              "ask",
+              "analyze",
+              "plan",
+              "build",
+              "fix",
+              "review",
+              "run"
+            ]
+          },
+          "forbiddenTerms": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "id": {
+            "pattern": "^case_[a-z0-9][a-z0-9_.-]{2,63}$",
+            "type": "string"
+          },
+          "input": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "requiredCriterionTerms": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "requiredTerms": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "requiredVariables": {
+            "items": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "tags": {
+            "items": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "weight": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "input",
+          "variables",
+          "requiredTerms",
+          "forbiddenTerms",
+          "requiredVariables",
+          "requiredCriterionTerms",
+          "expectedMode",
+          "weight",
+          "tags"
+        ],
+        "type": "object"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "type": "array"
+    },
+    "id": {
+      "pattern": "^eval_[a-z0-9][a-z0-9_.-]{2,63}$",
+      "type": "string"
+    },
+    "promptId": {
+      "maxLength": 200,
+      "minLength": 1,
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "title": {
+      "maxLength": 240,
+      "minLength": 3,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "promptId",
+    "cases"
+  ],
+  "title": "Kristin Prompt Evaluation Dataset v1",
+  "type": "object"
+}

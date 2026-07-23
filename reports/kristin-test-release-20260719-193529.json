@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "command": "",
+      "detail": "Optional tree-sitter Dart parser is unavailable; Flutter analysis remains the authoritative compiler gate.",
+      "duration_ms": null,
+      "exit_code": null,
+      "name": "Dart grammar parse",
+      "output": "",
+      "status": "SKIP"
+    },
+    {
+      "command": "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m compileall -q tool scripts",
+      "detail": "Command completed successfully.",
+      "duration_ms": 57,
+      "exit_code": 0,
+      "name": "Python source compilation",
+      "output": "",
+      "status": "PASS"
+    },
+    {
+      "command": "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python313\\python.exe scripts/validate_architecture.py --skip-tests",
+      "detail": "Command exited with code 1: - release tree hygiene: windows\\flutter\\ephemeral\\flutter_windows.dll; windows\\flutter\\ephemeral\\flutter_windows.dll.pdb",
+      "duration_ms": 1275,
+      "exit_code": 1,
+      "name": "Governed source validation",
+      "output": "Kristin governed source validation failed:\r\n- release tree hygiene: windows\\flutter\\ephemeral\\flutter_windows.dll; windows\\flutter\\ephemeral\\flutter_windows.dll.pdb\r\nDetailed report: C:\\dev\\flutter\\kris_studio_ai_2\\release\\validation_report.json\r\n",
+      "status": "FAIL"
+    }
+  ],
+  "command": "test --release",
+  "generated_at": "2026-07-19T16:35:27.807721+00:00",
+  "profile": "Flutter",
+  "project": "C:\\dev\\flutter\\kris_studio_ai_2",
+  "version": "1.0.4+104"
+}

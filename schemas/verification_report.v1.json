@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/verification_report.v1.json",
+  "title": "Kristin Independent Verification Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["passed", "criteria", "unsupportedClaims", "evidenceHash", "reportHash"],
+  "properties": {
+    "passed": {"type": "boolean"},
+    "criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterionId", "status", "evidenceIds", "reason"],
+        "properties": {
+          "criterionId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed", "blocked", "unsupported"]},
+          "evidenceIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "reason": {"type": "string"}
+        }
+      }
+    },
+    "unsupportedClaims": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "evidenceHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "reportHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

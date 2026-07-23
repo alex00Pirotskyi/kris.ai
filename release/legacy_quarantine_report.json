@@ -1,0 +1,10 @@
+{
+  "version": "0.9.0+90",
+  "generatedAt": "2026-07-15T00:00:00Z",
+  "projectRootExcluded": true,
+  "quarantinedCount": 0,
+  "quarantinedPaths": [],
+  "archiveDirectory": null,
+  "discardedPaths": 0,
+  "note": "No stale analyzer-visible Dart tree is included. Historical v0.7 migration utilities remain as non-active compatibility assets, while obsolete overlay launchers are excluded from the clean v0.9 package."
+}
