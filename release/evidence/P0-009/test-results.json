@@ -1,0 +1,94 @@
+{
+  "caseCount": 17,
+  "gateId": "p0-009-initial-benchmark",
+  "passed": true,
+  "passedCount": 17,
+  "results": [
+    {
+      "detail": "all required files present",
+      "name": "Required P0-009 files",
+      "passed": true
+    },
+    {
+      "detail": "suite validated",
+      "name": "Benchmark suite contract",
+      "passed": true
+    },
+    {
+      "detail": "case counts: {'browser_absent': 2, 'research': 2, 'crash_recovery': 2, 'coding': 2, 'analysis': 2, 'path_safety': 2}",
+      "name": "Six required benchmark categories",
+      "passed": true
+    },
+    {
+      "detail": "fingerprint=9d70179e84c098e25440054d567e07c264beb83c919d8433b2c44ed1363b6322",
+      "name": "Versioned portable baseline",
+      "passed": true
+    },
+    {
+      "detail": "non-pass and source-only evidence cannot become product proof",
+      "name": "Benchmark claim boundaries",
+      "passed": true
+    },
+    {
+      "detail": "status=failed score=0.38461538461538464",
+      "name": "Path-safety result is measured",
+      "passed": true
+    },
+    {
+      "detail": "status=passed",
+      "name": "Crash-recovery case classification",
+      "passed": true
+    },
+    {
+      "detail": "status=passed",
+      "name": "Source analysis remains source-only",
+      "passed": true
+    },
+    {
+      "detail": "inventory=unsupported task=unsupported",
+      "name": "Browser absence is honest",
+      "passed": true
+    },
+    {
+      "detail": "model cases=4",
+      "name": "No fabricated model result",
+      "passed": true
+    },
+    {
+      "detail": "portable rerun matches committed baseline",
+      "name": "Byte-equivalent baseline rerun",
+      "passed": true
+    },
+    {
+      "detail": "benchmark unit, repository, and reproducibility gates are wired",
+      "name": "Verification integration",
+      "passed": true
+    },
+    {
+      "detail": "CI contains the P0-009 baseline step",
+      "name": "CI integration",
+      "passed": true
+    },
+    {
+      "detail": "suite and result claim invariants are encoded",
+      "name": "Benchmark JSON schemas",
+      "passed": true
+    },
+    {
+      "detail": "benchmark inputs and committed baseline are tracked",
+      "name": "Source-manifest integration",
+      "passed": true
+    },
+    {
+      "detail": "P0-009 does not re-enable legacy manifest trust",
+      "name": "P0-002 trust retirement preserved",
+      "passed": true
+    },
+    {
+      "detail": "P0-009 is REVIEW/DONE with baseline evidence under a supported cumulative roadmap version",
+      "name": "Roadmap-control integration when present",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

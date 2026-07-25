@@ -1,0 +1,70 @@
+{
+  "caseCount": 12,
+  "failedCount": 0,
+  "milestone": "P0-003",
+  "passed": true,
+  "passedCount": 12,
+  "results": [
+    {
+      "detail": "backslash, quote, dollar, newline, and Unicode line separators are encoded",
+      "name": "Shared Dart literal encoder",
+      "passed": true
+    },
+    {
+      "detail": "three generators share one reviewed Dart literal encoder",
+      "name": "Generators use the shared encoder",
+      "passed": true
+    },
+    {
+      "detail": "generated schemas contain 81 escaped dollar occurrences and no known unsafe token",
+      "name": "Generated Dart dollar safety",
+      "passed": true
+    },
+    {
+      "detail": "v170/v180/v190 generated files exactly match their generators",
+      "name": "Generated contract check mode",
+      "passed": true
+    },
+    {
+      "detail": "SQLite JSONPath remains literal at runtime without Dart interpolation",
+      "name": "Durable workflow JSONPath literal",
+      "passed": true
+    },
+    {
+      "detail": "module imports without POSIX resource support and sandbox execution remains unavailable",
+      "name": "POSIX resource import fails closed",
+      "passed": true
+    },
+    {
+      "detail": "dependency resolution precedes non-mutating format, analysis, and test gates",
+      "name": "SDK gate ordering and nonmutation",
+      "passed": true
+    },
+    {
+      "detail": "three-OS workflow reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates",
+      "name": "Three-OS CI contract",
+      "passed": true
+    },
+    {
+      "detail": "handwritten Dart is format-owned while generated contracts remain generator-owned",
+      "name": "Handwritten Dart formatting scope",
+      "passed": true
+    },
+    {
+      "detail": "Project Manager executable labels and cumulative source-contract aggregation agree",
+      "name": "Project Manager system-contract alignment",
+      "passed": true
+    },
+    {
+      "detail": "generated STATUS.md ends with exactly one LF and passes Git whitespace policy",
+      "name": "STATUS terminal newline",
+      "passed": true
+    },
+    {
+      "detail": "P0-002 forgery regression remains active",
+      "name": "P0-002 trust remains disabled",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

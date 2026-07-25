@@ -1,0 +1,58 @@
+{
+  "caseCount": 10,
+  "milestone": "P0-005",
+  "passed": true,
+  "passedCount": 10,
+  "results": [
+    {
+      "detail": "README states source-preview classification and that Owner Mode is not implemented.",
+      "name": "README source-preview classification",
+      "passed": true
+    },
+    {
+      "detail": "README states Linux reference-worker truth, Windows/macOS fail-closed status, and manifest-trust freeze.",
+      "name": "README platform matrix truth",
+      "passed": true
+    },
+    {
+      "detail": "SECURITY.md targets v1.9.0+190 and documents the interop freeze.",
+      "name": "SECURITY supported line and freeze",
+      "passed": true
+    },
+    {
+      "detail": "SECURITY.md includes an explicit platform/authority table.",
+      "name": "SECURITY platform truth",
+      "passed": true
+    },
+    {
+      "detail": "docs/SECURITY_MODEL.md reflects the current SQLite workflow authority and removes stale JSON-authority wording.",
+      "name": "Security model uses SQLite truth",
+      "passed": true
+    },
+    {
+      "detail": "docs/THREAT_MODEL.md includes manifest/interop substitution threats and the current trust freeze.",
+      "name": "Threat model includes manifest and interop threats",
+      "passed": true
+    },
+    {
+      "detail": "docs/SUPPORT_POLICY.md defines the supported artifact and reporting boundary.",
+      "name": "Support policy exists",
+      "passed": true
+    },
+    {
+      "detail": "RELEASE.json exposes the same source-preview and interop-freeze truth.",
+      "name": "Release metadata agrees",
+      "passed": true
+    },
+    {
+      "detail": "RELEASE.json records Linux reference-worker support and Windows/macOS fail-closed status.",
+      "name": "Release metadata platform truth",
+      "passed": true
+    },
+    {
+      "detail": "Advanced UI shows the same classification, Owner Mode status, and platform truth as the docs.",
+      "name": "UI developer page agrees with docs",
+      "passed": true
+    }
+  ]
+}

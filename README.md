@@ -15,6 +15,32 @@ Version **1.9.0+190** is the single canonical cumulative source line. It retains
 
 
 
+## Release classification, platform support, and security truth
+
+Kristin **v1.9.0+190** is currently a **`source-release` preview**, not a signed installer or a validated compiled desktop release. The canonical release metadata still marks `compiled_release_validated` as `false`, and native installer signing plus platform updater execution remain out of scope for this source-only environment.
+
+### Current support snapshot
+
+| Area | Current v1.9.0+190 source truth |
+|---|---|
+| Supported artifact | Reviewed source tree plus documented source-only validation gates |
+| Release channel | `preview` |
+| Linux execution boundary | Linux reference namespace worker, HTTPS broker, and one-use secret broker are present in source and may run ordinary CLI project commands when available |
+| Windows/macOS execution boundary | Native worker backends are **not** implemented; sandbox-dependent work must fail closed or remain unsupported |
+| Owner Mode | **Roadmap target only.** Unrestricted full-computer authority is **not** implemented in this source release |
+| Signed installers / updater | Not included |
+| Signed-manifest trust | v1 envelope-supplied trust is disabled; Signed Manifest v2 is not yet implemented or enabled for production trust |
+
+### Interoperability and update trust freeze
+
+- **Do not treat v1 signed manifests as trusted.** P0-002 disables the envelope-supplied v1 trust path.
+- **Do not treat Signed Manifest v2 as available yet.** It remains a later roadmap milestone.
+- **Do not treat plugin, skill, MCP, A2A, or source-update manifests as production trust anchors** unless a later reviewed release says otherwise.
+
+### Security and support documents
+
+Read [`SECURITY.md`](SECURITY.md), [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md), [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md), [`docs/PRIVACY.md`](docs/PRIVACY.md), and [`docs/SUPPORT_POLICY.md`](docs/SUPPORT_POLICY.md) before using Kristin with untrusted projects, third-party MCP servers, or sensitive data.
+
 ## v1.9 interoperability, administration, and release operations
 
 The governed runtime now adds typed MCP lifecycle manifests, bounded A2A task contracts, signed plugin/skill/agent manifests, deterministic policy profiles, append-only audit verification, authenticated source-update manifests, and support compatibility policies. The workflow schema advances to **v6** with audit, interoperability, and update records. Native installer signing and platform-specific updater execution remain explicitly out of scope for this source-only environment.
@@ -517,17 +543,20 @@ This is not universal conversion. Reliable PDF, DOCX, XLSX, PPTX, audio, video, 
 
 ## Security and production boundary
 
-This source preview does **not** complete every production-hardening item:
+This source preview does **not** complete every production-hardening item, and the currently supported security boundary is narrower than the long-term roadmap:
 
-- Agent-controlled processes, interpreters, MCP servers, and file workers are not isolated by an OS-enforced sandbox.
-- SQLite now provides transactional mutable state and durable run recovery, but it does not provide distributed replication or OS-level execution isolation.
+- Governed project tools remain the primary supported authority model. **Owner Mode is a roadmap target and is not implemented in v1.9.0+190.**
+- The Linux reference namespace worker, HTTPS broker, and one-use secret broker are present in source, but **Windows and macOS native worker backends still fail closed**.
+- Approved processes, interpreters, MCP servers, and file workers still run with the desktop user's operating-system privileges; this source line must not be described as hostile-code isolation.
+- SQLite provides transactional mutable state and durable run recovery, but it does not provide distributed replication or OS-level execution isolation.
 - File mutations are compensation-journaled and hash-reconciled; non-compensatable external effects still fail closed after ambiguous process failure rather than being automatically repeated.
 - Research host validation still needs connection-time address pinning to completely close DNS-rebinding risk.
 - The audit chain is tamper-evident, not externally signed or anchored.
 - Support and knowledge exports can contain project-confidential data and require review.
 - No signed installer, platform notarization, or authenticated updater is included.
+- **Signed-manifest v1 trust is disabled, and Signed Manifest v2 is not yet available.** Do not rely on signed plugin, skill, MCP, A2A, or source-update manifests as production trust anchors in this release.
 
-Read [`docs/V1.0.9_LINEAGE_CONTRACT_HOTFIX.md`](docs/V1.0.9_LINEAGE_CONTRACT_HOTFIX.md), [`docs/V1.0.8_SDK_ENVIRONMENT_HOTFIX.md`](docs/V1.0.8_SDK_ENVIRONMENT_HOTFIX.md), [`docs/V1.0.7_FAILED_RUN_RECOVERY_HOTFIX.md`](docs/V1.0.7_FAILED_RUN_RECOVERY_HOTFIX.md), [`docs/V1.0.6_WORKSPACE_BOUNDARY_CANONICALIZATION.md`](docs/V1.0.6_WORKSPACE_BOUNDARY_CANONICALIZATION.md), [`docs/V1.0.5_PATH_HYGIENE_HOTFIX.md`](docs/V1.0.5_PATH_HYGIENE_HOTFIX.md), [`docs/V1.0.4_WINDOWS_VALIDATION_HOTFIX.md`](docs/V1.0.4_WINDOWS_VALIDATION_HOTFIX.md), [`docs/V1.0.3_AGENT_LOOP_RECOVERY_HOTFIX.md`](docs/V1.0.3_AGENT_LOOP_RECOVERY_HOTFIX.md), [`docs/V1.0.2_BUDGET_DIAGNOSTICS_HOTFIX.md`](docs/V1.0.2_BUDGET_DIAGNOSTICS_HOTFIX.md), [`SECURITY.md`](SECURITY.md), [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md), [`docs/PRIVACY.md`](docs/PRIVACY.md), and [`docs/V1.0_PRODUCT_PREVIEW.md`](docs/V1.0_PRODUCT_PREVIEW.md) before using Kristin with untrusted projects or sensitive data.
+Read [`SECURITY.md`](SECURITY.md), [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md), [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md), [`docs/PRIVACY.md`](docs/PRIVACY.md), [`docs/SUPPORT_POLICY.md`](docs/SUPPORT_POLICY.md), and [`docs/V1.0_PRODUCT_PREVIEW.md`](docs/V1.0_PRODUCT_PREVIEW.md) before using Kristin with untrusted projects or sensitive data.
 
 ## Upgrade compatibility
 

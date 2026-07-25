@@ -26,3 +26,83 @@ release/*.exit
 release/CURRENT_STATUS.json
 release/*_console.log
 archive/
+
+# BEGIN KRISTIN GENERATED STATE POLICY v2
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Flutter, Dart, and native build state
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+coverage/
+.flutter
+.flutter_tool_state
+.flutter-plugins
+.flutter-plugins-dependencies
+**/.plugin_symlinks/
+**/flutter/ephemeral/
+android/.cxx/
+android/.gradle/
+ios/Pods/
+macos/Pods/
+
+# Node, browser automation, and Web Studio runtime state
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.playwright/
+playwright-report/
+test-results/
+browser-data/
+browser-profiles/
+browser-downloads/
+browser-traces/
+services/automation_host/dist/
+services/automation_host/.cache/
+
+# Dataset and generated evidence intermediates
+datasets/.build/
+release/evidence/generated/
+release/reports/generated/
+
+# Reproducible reports emitted by standard verification
+reports/kristin-test-*.json
+reports/kristin-test-*.md
+release/SECRET_SCAN.json
+release/SBOM.cdx.json
+release/VALIDATION_REPORT.md
+release/validation_report.json
+release/PROJECT_MANAGER_V2_RESULTS.json
+release/EXECUTION_INTELLIGENCE_RESULTS.json
+release/PROMPT_STUDIO_V2_RESULTS.json
+release/ARCHITECTURE_CONTRACT_RESULTS.json
+release/ARCHITECTURE_CONTRACT_RESULTS.md
+release/ASSURANCE_REPORT.json
+release/ASSURANCE_REPORT.md
+release/CURRENT_STATUS.json
+release/*.log
+release/*.exit
+release/*_console.log
+
+# IDE and operating-system state
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+Desktop.ini
+# END KRISTIN GENERATED STATE POLICY v2

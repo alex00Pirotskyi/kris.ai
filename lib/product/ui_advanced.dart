@@ -48,13 +48,11 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
       TextEditingController();
   final TextEditingController knowledgeContentController =
       TextEditingController();
-  final TextEditingController knowledgeTagsController =
-      TextEditingController();
+  final TextEditingController knowledgeTagsController = TextEditingController();
   final TextEditingController secretLabelController = TextEditingController();
   final TextEditingController secretEnvironmentController =
       TextEditingController();
-  final TextEditingController sessionSecretController =
-      TextEditingController();
+  final TextEditingController sessionSecretController = TextEditingController();
   final TextEditingController tokenLabelController =
       TextEditingController(text: 'Kristin integration');
   final TextEditingController tokenScopesController = TextEditingController(
@@ -72,8 +70,7 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
       TextEditingController();
   final TextEditingController compatibleController = TextEditingController();
   final TextEditingController mcpLabelController = TextEditingController();
-  final TextEditingController mcpExecutableController =
-      TextEditingController();
+  final TextEditingController mcpExecutableController = TextEditingController();
   final TextEditingController mcpArgumentsController = TextEditingController();
   final TextEditingController mcpToolsController = TextEditingController();
   final TextEditingController mcpProtocolController =
@@ -105,7 +102,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
     super.initState();
     selectedProjectId = widget.initialProjectId;
     selectedModelId = widget.initialModelId;
-    section = widget.initialSection.clamp(0, _settingsSections.length - 1).toInt();
+    section =
+        widget.initialSection.clamp(0, _settingsSections.length - 1).toInt();
     _seedSettings();
     unawaited(_load());
   }
@@ -118,13 +116,11 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
     ollamaLoadTimeoutController.text =
         settings.ollamaLoadTimeoutSeconds.toString();
     ollamaLoadRetriesController.text = settings.ollamaLoadRetries.toString();
-    ollamaKeepAliveController.text =
-        settings.ollamaKeepAliveMinutes.toString();
+    ollamaKeepAliveController.text = settings.ollamaKeepAliveMinutes.toString();
     compatibleController.text = settings.openAiCompatibleBaseUrl;
-    selectedOpenAiSecretReferenceId =
-        settings.openAiApiKeyReferenceId.isEmpty
-            ? null
-            : settings.openAiApiKeyReferenceId;
+    selectedOpenAiSecretReferenceId = settings.openAiApiKeyReferenceId.isEmpty
+        ? null
+        : settings.openAiApiKeyReferenceId;
     localOnly = settings.localOnly;
     allowPackageNetwork = settings.allowPackageNetwork;
     apiEnabled = settings.apiEnabled;
@@ -669,7 +665,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
               controller: compatibleController,
               decoration: const InputDecoration(
                 labelText: 'OpenAI-compatible base URL',
-                helperText: 'Optional. Use a named secret reference for its key.',
+                helperText:
+                    'Optional. Use a named secret reference for its key.',
               ),
             ),
             const SizedBox(height: 12),
@@ -934,8 +931,7 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                             final reference =
                                 await runtime.registerSecretReference(
                               label: secretLabelController.text,
-                              environmentKey:
-                                  secretEnvironmentController.text,
+                              environmentKey: secretEnvironmentController.text,
                             );
                             secretReferences =
                                 await runtime.listSecretReferences();
@@ -1274,7 +1270,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                     ? null
                     : () {
                         unawaited(
-                          _perform<void>('Trusting an exact MCP server', () async {
+                          _perform<void>('Trusting an exact MCP server',
+                              () async {
                             await runtime.trustMcp(
                               projectId: selectedProjectId!,
                               label: mcpLabelController.text,
@@ -1343,7 +1340,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
   }
 
   Future<bool> _confirmAllLogsExport() async {
-    if (!mounted) { return false; }
+    if (!mounted) {
+      return false;
+    }
     return await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -1376,7 +1375,7 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
       const StudioPageHeader(
         title: 'Developer & diagnostics',
         subtitle:
-            'Inspect the audit chain and save a redacted diagnostic ZIP. Source-like payloads are hashed and recognized secrets are redacted, but review the archive before sharing it.',
+            'Inspect the audit chain, release boundary, and support bundle rules. Source-like payloads are hashed and recognized secrets are redacted, but review the archive before sharing it.',
       ),
       if (widget.startupError != null)
         StudioPanel(
@@ -1407,7 +1406,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                       ? null
                       : () {
                           unawaited(
-                            _perform<void>('Verifying the audit chain', () async {
+                            _perform<void>('Verifying the audit chain',
+                                () async {
                               auditStatus = await runtime.verifyAudit();
                             }),
                           );
@@ -1421,13 +1421,16 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                       : () {
                           unawaited(
                             _perform<void>('Saving diagnostic logs', () async {
-                              if (!await _confirmAllLogsExport()) { return; }
+                              if (!await _confirmAllLogsExport()) {
+                                return;
+                              }
                               final file = await runtime.createSupportBundle(
                                 projectId: selectedProjectId,
                                 includeAllLogs: true,
                               );
                               final hash = Sha256.hex(await file.readAsBytes());
-                              status = 'Diagnostic logs: ${file.path} · SHA-256 $hash';
+                              status =
+                                  'Diagnostic logs: ${file.path} · SHA-256 $hash';
                             }),
                           );
                         },
@@ -1444,6 +1447,10 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           'Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}\n'
           'Data-root fingerprint: ${Sha256.text(runtime.directories.root.path)}\n'
           'Product: Kristin Local Agent $kristinVersion\n'
+          'Classification: source-release preview\n'
+          'Owner Mode: roadmap target only in this source release\n'
+          'Workers: Linux reference worker when available; Windows/macOS native workers fail closed\n'
+          'Support boundary: reviewed source tree and source-only gates\n'
           'Active path: main.dart → ProductRuntime → PreparedCommandService → RunCoordinator → governed tools\n'
           'UI path: Simple Studio → friendly plan → grouped approval → governed runtime',
         ),
@@ -1539,7 +1546,7 @@ const List<_SettingsSection> _settingsSections = <_SettingsSection>[
   ),
   _SettingsSection(
     'Developer',
-    'Audit, logs, and support',
+    'Audit, release boundary, and support',
     Icons.developer_mode_outlined,
   ),
 ];

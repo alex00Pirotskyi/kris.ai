@@ -44,14 +44,13 @@ class ProjectDiagnosticsService {
     ));
 
     final profile = await _detectProfile(root);
-    final profileWarning = profile.type == 'Unknown' ||
-        profile.type == 'Invalid custom profile';
+    final profileWarning =
+        profile.type == 'Unknown' || profile.type == 'Invalid custom profile';
     checks.add(DiagnosticCheck(
       id: 'project-type',
       title: 'Project type',
-      status: profileWarning
-          ? DiagnosticStatus.warning
-          : DiagnosticStatus.passed,
+      status:
+          profileWarning ? DiagnosticStatus.warning : DiagnosticStatus.passed,
       message: profile.type == 'Unknown'
           ? 'No supported project profile was detected. Add kristin.project.json or use an agent task to inspect it.'
           : profile.type == 'Invalid custom profile'
@@ -80,9 +79,7 @@ class ProjectDiagnosticsService {
     checks.add(DiagnosticCheck(
       id: 'model',
       title: 'AI model',
-      status: modelReady
-          ? DiagnosticStatus.passed
-          : DiagnosticStatus.warning,
+      status: modelReady ? DiagnosticStatus.passed : DiagnosticStatus.warning,
       message: modelReady
           ? 'At least one AI model is ready.'
           : 'No AI model is currently discovered. Doctor and project tests still work without a model.',
@@ -119,7 +116,8 @@ class ProjectDiagnosticsService {
         id: 'tests',
         title: 'Test command',
         status: DiagnosticStatus.passed,
-        message: '${profile.testCommands.length} safe test command(s) detected.',
+        message:
+            '${profile.testCommands.length} safe test command(s) detected.',
         command: profile.testCommands.map((item) => item.display).join(' && '),
       ));
     }
@@ -167,7 +165,8 @@ class ProjectDiagnosticsService {
         id: 'tests-unavailable',
         title: 'Quick tests',
         status: DiagnosticStatus.warning,
-        message: 'No safe quick-test profile is available for this project type.',
+        message:
+            'No safe quick-test profile is available for this project type.',
       ));
       return _report(project.id, profile, <DiagnosticCheck>[
         ...initial.checks.where((check) => check.id != 'tests'),
@@ -204,9 +203,7 @@ class ProjectDiagnosticsService {
         checks.add(DiagnosticCheck(
           id: 'quick-test-${index + 1}',
           title: command.label,
-          status: passed
-              ? DiagnosticStatus.passed
-              : DiagnosticStatus.failed,
+          status: passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
           message: passed
               ? 'Command completed successfully.'
               : 'Command exited with code ${result.exitCode}.',
@@ -215,13 +212,16 @@ class ProjectDiagnosticsService {
           exitCode: result.exitCode,
           durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
         ));
-        if (!passed) { break; }
+        if (!passed) {
+          break;
+        }
       } on TimeoutException {
         checks.add(DiagnosticCheck(
           id: 'quick-test-${index + 1}',
           title: command.label,
           status: DiagnosticStatus.failed,
-          message: 'Command exceeded the ${timeoutPerCommand.inMinutes}-minute limit.',
+          message:
+              'Command exceeded the ${timeoutPerCommand.inMinutes}-minute limit.',
           command: command.display,
           durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
         ));
@@ -285,8 +285,9 @@ class ProjectDiagnosticsService {
       root: root,
       profile: profile,
       initial: initial,
-      commands:
-          build == null ? const <ProjectCommandSpec>[] : <ProjectCommandSpec>[build],
+      commands: build == null
+          ? const <ProjectCommandSpec>[]
+          : <ProjectCommandSpec>[build],
       checkPrefix: 'build',
       unavailableTitle: 'Project build',
       unavailableMessage:
@@ -373,8 +374,7 @@ class ProjectDiagnosticsService {
         checks.add(DiagnosticCheck(
           id: '$checkPrefix-${index + 1}',
           title: command.label,
-          status:
-              passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
+          status: passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
           message: passed
               ? 'Command completed successfully.'
               : 'Command exited with code ${result.exitCode}.',
@@ -415,11 +415,14 @@ class ProjectDiagnosticsService {
     ]);
   }
 
-  Future<String?> pickFolder({String prompt = 'Choose a project folder'}) async {
+  Future<String?> pickFolder(
+      {String prompt = 'Choose a project folder'}) async {
     try {
       if (Platform.isWindows) {
         final executable = await _findExecutable('powershell');
-        if (executable == null) { return null; }
+        if (executable == null) {
+          return null;
+        }
         final escaped = prompt.replaceAll("'", "''");
         final script = '''
 Add-Type -AssemblyName System.Windows.Forms
@@ -466,7 +469,12 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       if (kdialog != null) {
         final result = await Process.run(
           kdialog,
-          <String>['--getexistingdirectory', Directory.current.path, '--title', prompt],
+          <String>[
+            '--getexistingdirectory',
+            Directory.current.path,
+            '--title',
+            prompt
+          ],
           runInShell: false,
         );
         return result.exitCode == 0
@@ -502,8 +510,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       return false;
     }
     final drive = value.codeUnitAt(0);
-    final isAsciiLetter = (drive >= 0x41 && drive <= 0x5a) ||
-        (drive >= 0x61 && drive <= 0x7a);
+    final isAsciiLetter =
+        (drive >= 0x41 && drive <= 0x5a) || (drive >= 0x61 && drive <= 0x7a);
     return isAsciiLetter;
   }
 
@@ -517,7 +525,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         projectType: profile.type,
         analyzeCommand:
             profile.analysisCommands.map((item) => item.display).join(' && '),
-        testCommand: profile.testCommands.map((item) => item.display).join(' && '),
+        testCommand:
+            profile.testCommands.map((item) => item.display).join(' && '),
         buildCommand: profile.buildCommand?.display ?? '',
         runCommand: profile.runCommand?.display ?? '',
         checks: List<DiagnosticCheck>.unmodifiable(checks),
@@ -530,7 +539,9 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         ).existsSync();
 
     final custom = await _customProfile(root);
-    if (custom != null) { return custom; }
+    if (custom != null) {
+      return custom;
+    }
 
     if (exists('pubspec.yaml')) {
       final pubspec = await File(
@@ -565,10 +576,12 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: 'Flutter',
         requiredExecutable: 'flutter',
         analysisCommands: const <ProjectCommandSpec>[
-          ProjectCommandSpec('Flutter analysis', 'flutter', <String>['analyze']),
+          ProjectCommandSpec(
+              'Flutter analysis', 'flutter', <String>['analyze']),
         ],
         testCommands: const <ProjectCommandSpec>[
-          ProjectCommandSpec('Flutter analysis', 'flutter', <String>['analyze']),
+          ProjectCommandSpec(
+              'Flutter analysis', 'flutter', <String>['analyze']),
           ProjectCommandSpec('Flutter tests', 'flutter', <String>['test']),
         ],
         buildCommand: ProjectCommandSpec(
@@ -639,10 +652,11 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       );
     }
 
-    if (exists('pyproject.toml') || exists('requirements.txt') || exists('setup.py')) {
-      final runFile = <String>['main.py', 'app.py', 'server.py']
-          .where(exists)
-          .firstOrNull;
+    if (exists('pyproject.toml') ||
+        exists('requirements.txt') ||
+        exists('setup.py')) {
+      final runFile =
+          <String>['main.py', 'app.py', 'server.py'].where(exists).firstOrNull;
       final pythonExecutable = Platform.isWindows ? 'python' : 'python3';
       return ProjectExecutionProfile(
         type: 'Python',
@@ -686,7 +700,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Go tests', 'go', <String>['test', './...']),
         ],
-        buildCommand: ProjectCommandSpec('Go build', 'go', <String>['build', './...']),
+        buildCommand:
+            ProjectCommandSpec('Go build', 'go', <String>['build', './...']),
         runCommand: ProjectCommandSpec('Go run', 'go', <String>['run', '.']),
       );
     }
@@ -701,17 +716,16 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Rust tests', 'cargo', <String>['test']),
         ],
-        buildCommand: ProjectCommandSpec('Rust build', 'cargo', <String>['build']),
+        buildCommand:
+            ProjectCommandSpec('Rust build', 'cargo', <String>['build']),
         runCommand: ProjectCommandSpec('Rust run', 'cargo', <String>['run']),
       );
     }
 
     var dotnetProject = false;
     try {
-      dotnetProject = root
-          .listSync(followLinks: false)
-          .whereType<File>()
-          .any((file) =>
+      dotnetProject = root.listSync(followLinks: false).whereType<File>().any(
+          (file) =>
               file.path.toLowerCase().endsWith('.sln') ||
               file.path.toLowerCase().endsWith('.csproj'));
     } on FileSystemException {
@@ -723,12 +737,15 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: '.NET',
         requiredExecutable: 'dotnet',
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec('.NET build analysis', 'dotnet', <String>['build', '--nologo']),
+          ProjectCommandSpec(
+              '.NET build analysis', 'dotnet', <String>['build', '--nologo']),
         ],
         testCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec('.NET tests', 'dotnet', <String>['test', '--nologo']),
+          ProjectCommandSpec(
+              '.NET tests', 'dotnet', <String>['test', '--nologo']),
         ],
-        buildCommand: ProjectCommandSpec('.NET build', 'dotnet', <String>['build', '--nologo']),
+        buildCommand: ProjectCommandSpec(
+            '.NET build', 'dotnet', <String>['build', '--nologo']),
         runCommand: ProjectCommandSpec('.NET run', 'dotnet', <String>['run']),
       );
     }
@@ -738,16 +755,21 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: 'Java / Maven',
         requiredExecutable: 'mvn',
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec('Maven compile analysis', 'mvn', <String>['-q', '-DskipTests', 'compile']),
+          ProjectCommandSpec('Maven compile analysis', 'mvn',
+              <String>['-q', '-DskipTests', 'compile']),
         ],
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Maven tests', 'mvn', <String>['test']),
         ],
-        buildCommand: ProjectCommandSpec('Maven package', 'mvn', <String>['package', '-DskipTests']),
+        buildCommand: ProjectCommandSpec(
+            'Maven package', 'mvn', <String>['package', '-DskipTests']),
       );
     }
 
-    if (exists('gradlew') || exists('gradlew.bat') || exists('build.gradle') || exists('build.gradle.kts')) {
+    if (exists('gradlew') ||
+        exists('gradlew.bat') ||
+        exists('build.gradle') ||
+        exists('build.gradle.kts')) {
       final wrapper = Platform.isWindows && exists('gradlew.bat')
           ? r'.\gradlew.bat'
           : exists('gradlew')
@@ -757,12 +779,14 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: 'Java / Gradle',
         requiredExecutable: wrapper,
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec('Gradle classes analysis', wrapper, const <String>['classes']),
+          ProjectCommandSpec(
+              'Gradle classes analysis', wrapper, const <String>['classes']),
         ],
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Gradle tests', wrapper, const <String>['test']),
         ],
-        buildCommand: ProjectCommandSpec('Gradle build', wrapper, const <String>['build']),
+        buildCommand: ProjectCommandSpec(
+            'Gradle build', wrapper, const <String>['build']),
       );
     }
 
@@ -819,18 +843,27 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
   }
 
   Future<ProjectExecutionProfile?> _customProfile(Directory root) async {
-    final file = File('${root.path}${Platform.pathSeparator}kristin.project.json');
-    if (!await file.exists()) { return null; }
+    final file =
+        File('${root.path}${Platform.pathSeparator}kristin.project.json');
+    if (!await file.exists()) {
+      return null;
+    }
     try {
       final decoded = jsonDecode(await file.readAsString());
-      if (decoded is! Map) { return null; }
+      if (decoded is! Map) {
+        return null;
+      }
       final json = mapValue(decoded);
       ProjectCommandSpec? command(String key, String label) {
         final value = json[key];
-        if (value is! Map) { return null; }
+        if (value is! Map) {
+          return null;
+        }
         final data = mapValue(value);
         final executable = data['executable']?.toString().trim() ?? '';
-        if (executable.isEmpty) { return null; }
+        if (executable.isEmpty) {
+          return null;
+        }
         return ProjectCommandSpec(
           label,
           executable,
@@ -855,8 +888,9 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         analysisCommands: analyze == null
             ? const <ProjectCommandSpec>[]
             : <ProjectCommandSpec>[analyze],
-        testCommands:
-            test == null ? const <ProjectCommandSpec>[] : <ProjectCommandSpec>[test],
+        testCommands: test == null
+            ? const <ProjectCommandSpec>[]
+            : <ProjectCommandSpec>[test],
         buildCommand: build,
         runCommand: run,
       );
@@ -873,7 +907,9 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     try {
       final file = File('${root.path}${Platform.pathSeparator}package.json');
       final decoded = jsonDecode(await file.readAsString());
-      if (decoded is! Map) { return <String>{}; }
+      if (decoded is! Map) {
+        return <String>{};
+      }
       return mapValue(decoded['scripts']).keys.toSet();
     } catch (_) {
       return <String>{};
@@ -884,7 +920,9 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     String executable, {
     String? workingDirectory,
   }) async {
-    if (executable.isEmpty) { return null; }
+    if (executable.isEmpty) {
+      return null;
+    }
     final hasPath = executable.startsWith('./') ||
         executable.startsWith('../') ||
         executable.contains('/') ||
@@ -895,7 +933,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
           : Directory(workingDirectory).absolute;
       final file = File(
         executable.startsWith('/') ||
-                (Platform.isWindows && RegExp(r'^[A-Za-z]:[\\/]').hasMatch(executable))
+                (Platform.isWindows &&
+                    RegExp(r'^[A-Za-z]:[\\/]').hasMatch(executable))
             ? executable
             : '${base.path}${Platform.pathSeparator}$executable',
       ).absolute;
@@ -903,15 +942,21 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     }
     final candidates = <String>[
       executable,
-      if (Platform.isWindows && !executable.toLowerCase().endsWith('.cmd')) '$executable.cmd',
-      if (Platform.isWindows && !executable.toLowerCase().endsWith('.exe')) '$executable.exe',
+      if (Platform.isWindows && !executable.toLowerCase().endsWith('.cmd'))
+        '$executable.cmd',
+      if (Platform.isWindows && !executable.toLowerCase().endsWith('.exe'))
+        '$executable.exe',
     ];
     final path = Platform.environment['PATH'] ?? '';
     for (final directory in path.split(Platform.isWindows ? ';' : ':')) {
-      if (directory.trim().isEmpty) { continue; }
+      if (directory.trim().isEmpty) {
+        continue;
+      }
       for (final candidate in candidates) {
         final file = File('$directory${Platform.pathSeparator}$candidate');
-        if (await file.exists()) { return file.path; }
+        if (await file.exists()) {
+          return file.path;
+        }
       }
     }
     return null;
@@ -936,9 +981,12 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
 
     Future<void> pump(Stream<List<int>> stream, String name) async {
       await for (final chunk in stream) {
-        if (bytes >= maxOutputBytes) { continue; }
+        if (bytes >= maxOutputBytes) {
+          continue;
+        }
         final remaining = maxOutputBytes - bytes;
-        final accepted = chunk.length > remaining ? chunk.sublist(0, remaining) : chunk;
+        final accepted =
+            chunk.length > remaining ? chunk.sublist(0, remaining) : chunk;
         bytes += accepted.length;
         output.write('[$name] ${utf8.decode(accepted, allowMalformed: true)}');
       }
@@ -1015,11 +1063,7 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       'XDG_CONFIG_HOME',
       'XDG_DATA_HOME',
     };
-    final leaf = executable
-        .replaceAll('\\', '/')
-        .split('/')
-        .last
-        .toLowerCase();
+    final leaf = executable.replaceAll('\\', '/').split('/').last.toLowerCase();
     final isSdkCommand = leaf == 'dart' ||
         leaf == 'dart.exe' ||
         leaf == 'flutter' ||

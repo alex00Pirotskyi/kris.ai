@@ -1,0 +1,92 @@
+{
+  "caseCount": 14,
+  "passed": true,
+  "passedCount": 14,
+  "results": [
+    {
+      "detail": "registry exposes native and sandboxed-core adapters",
+      "durationMs": 0,
+      "name": "Registry document is schema-shaped",
+      "passed": true
+    },
+    {
+      "detail": "UTF-8 text reopened successfully",
+      "durationMs": 0,
+      "name": "Text adapter detects and validates UTF-8 text",
+      "passed": true
+    },
+    {
+      "detail": "JSON parsed successfully",
+      "durationMs": 0,
+      "name": "JSON adapter reopens structured data",
+      "passed": true
+    },
+    {
+      "detail": "XML parsed successfully",
+      "durationMs": 0,
+      "name": "XML adapter reopens XML",
+      "passed": true
+    },
+    {
+      "detail": "CSV reopened as UTF-8 text",
+      "durationMs": 0,
+      "name": "CSV adapter reopens CSV",
+      "passed": true
+    },
+    {
+      "detail": "image signature recognized",
+      "durationMs": 0,
+      "name": "PNG image adapter detects dimensions",
+      "passed": true
+    },
+    {
+      "detail": "ZIP reopened successfully",
+      "durationMs": 31,
+      "name": "ZIP adapter reopens safe archive",
+      "passed": true
+    },
+    {
+      "detail": "PDF header and EOF marker detected",
+      "durationMs": 0,
+      "name": "PDF adapter validates signature and EOF",
+      "passed": true
+    },
+    {
+      "detail": "OOXML package reopened successfully",
+      "durationMs": 16,
+      "name": "OOXML adapter validates DOCX package",
+      "passed": true
+    },
+    {
+      "detail": "OpenDocument package reopened successfully",
+      "durationMs": 15,
+      "name": "OpenDocument adapter validates ODT package",
+      "passed": true
+    },
+    {
+      "detail": "RTF header recognized",
+      "durationMs": 14,
+      "name": "RTF adapter validates header",
+      "passed": true
+    },
+    {
+      "detail": "EPUB package reopened successfully",
+      "durationMs": 16,
+      "name": "EPUB adapter validates mimetype",
+      "passed": true
+    },
+    {
+      "detail": "RFC822 message parsed successfully",
+      "durationMs": 62,
+      "name": "Email adapter parses RFC822 headers",
+      "passed": true
+    },
+    {
+      "detail": "unknown extension falls back to plugin tier",
+      "durationMs": 0,
+      "name": "Unknown binary falls back to plugin tier",
+      "passed": true
+    }
+  ],
+  "version": "1.9.0+190"
+}

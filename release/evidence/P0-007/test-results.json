@@ -1,0 +1,76 @@
+{
+  "caseCount": 13,
+  "failedCount": 0,
+  "invariant": "source_and_mixed_checks_never_count_as_behavioral_proof",
+  "passed": true,
+  "passedCount": 13,
+  "results": [
+    {
+      "detail": "files=9",
+      "name": "Required P0-007 files",
+      "passed": true
+    },
+    {
+      "detail": "compiled=7",
+      "name": "Python compilation",
+      "passed": true
+    },
+    {
+      "detail": "source_contract=true behavioralProof=false",
+      "name": "system_test source-contract classification",
+      "passed": true
+    },
+    {
+      "detail": "categorized_check_model=true",
+      "name": "validate_release categorized checks",
+      "passed": true
+    },
+    {
+      "detail": "legacy_overclaim_absent=true",
+      "name": "Legacy overclaim removed",
+      "passed": true
+    },
+    {
+      "detail": "verification_ladder_integrated=true",
+      "name": "Verification ladder integration",
+      "passed": true
+    },
+    {
+      "detail": "ci_assurance_step=true",
+      "name": "CI assurance integration",
+      "passed": true
+    },
+    {
+      "detail": "schema_required_fields=true",
+      "name": "Assurance report schema",
+      "passed": true
+    },
+    {
+      "detail": "unitTests=13",
+      "name": "Assurance unit suite",
+      "passed": true
+    },
+    {
+      "detail": "honest_fixture=true",
+      "name": "Honest dashboard fixture",
+      "passed": true
+    },
+    {
+      "detail": "sourceOnlyBehavioralEvidence=false",
+      "name": "Source-only dashboard fixture",
+      "passed": true
+    },
+    {
+      "detail": "taxonomy_documented=true",
+      "name": "Assurance model documentation",
+      "passed": true
+    },
+    {
+      "detail": "status=REVIEW",
+      "name": "P0-007 task packet",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P0-007"
+}

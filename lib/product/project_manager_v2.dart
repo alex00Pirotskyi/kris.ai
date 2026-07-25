@@ -37,8 +37,14 @@ class ProjectManagerV2Service {
     return null;
   }
 
-  Future<Map<String, dynamic>> status(String projectRoot) =>
-      _invoke(<String>['status', '--project', projectRoot, '--data-root', dataRoot, '--json']);
+  Future<Map<String, dynamic>> status(String projectRoot) => _invoke(<String>[
+        'status',
+        '--project',
+        projectRoot,
+        '--data-root',
+        dataRoot,
+        '--json'
+      ]);
 
   Future<Map<String, dynamic>> execute(
     String projectRoot,
@@ -70,8 +76,8 @@ class ProjectManagerV2Service {
         '--json',
       ]);
 
-  Future<Map<String, dynamic>> processStatus(String processId) =>
-      _invoke(<String>['process-status', processId, '--data-root', dataRoot, '--json']);
+  Future<Map<String, dynamic>> processStatus(String processId) => _invoke(
+      <String>['process-status', processId, '--data-root', dataRoot, '--json']);
 
   Future<Map<String, dynamic>> stop(String processId) =>
       _invoke(<String>['stop', processId, '--data-root', dataRoot, '--json']);
@@ -103,12 +109,16 @@ class ProjectManagerV2Service {
       );
     }
     final response = decoded is Map
-        ? <String, dynamic>{for (final entry in decoded.entries) entry.key.toString(): entry.value}
+        ? <String, dynamic>{
+            for (final entry in decoded.entries)
+              entry.key.toString(): entry.value
+          }
         : <String, dynamic>{};
     if (result.exitCode != 0) {
       throw ProjectManagerV2Exception(
         response['errorCode']?.toString() ?? 'project_manager_failed',
-        response['message']?.toString() ?? 'The Project Manager operation failed.',
+        response['message']?.toString() ??
+            'The Project Manager operation failed.',
       );
     }
     return response;

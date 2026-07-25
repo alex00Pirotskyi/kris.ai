@@ -1,0 +1,438 @@
+{
+  "benchmarkInputsSha256": "82abe8862e89dbf3348eebb316e3faf5d8bdf679746d5291591cfa62bef593d0",
+  "cases": [
+    {
+      "assuranceLevel": "benchmark_task",
+      "category": "coding",
+      "evidenceSha256": "b6614542d1864806aa927cdc628dbdb443e35a376e225e9e9ec77ae1807185ca",
+      "id": "coding.python_bugfix_task",
+      "observations": {
+        "candidateInterface": {
+          "acceptanceCommand": [
+            "{python}",
+            "-m",
+            "unittest",
+            "-v",
+            "test_calculator.py"
+          ],
+          "mutablePaths": [
+            "calculator.py"
+          ],
+          "relativePath": "coding.python_bugfix_task",
+          "timeoutSeconds": 60
+        }
+      },
+      "proofKind": "model_evaluation",
+      "reason": "model_candidate_not_supplied",
+      "score": null,
+      "status": "not_run",
+      "title": "Repair a bounded Python arithmetic defect"
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "coding",
+      "evidenceSha256": "6041df3e9b345d68be886f995c452395674ea950cd3ca9992c13b64f3aa9cbd0",
+      "id": "coding.protocol_contract_gate",
+      "observations": {
+        "exitCode": 0
+      },
+      "proofKind": "executed_behavior",
+      "reason": "command_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
+      "title": "Current typed protocol contract gate"
+    },
+    {
+      "assuranceLevel": "benchmark_task",
+      "category": "analysis",
+      "evidenceSha256": "7b1f1cb557ad2cc2f838b9ab1c1d74796abab0abed0b6f72baf6f8f2132a8934",
+      "id": "analysis.architecture_review_task",
+      "observations": {
+        "candidateInterface": {
+          "expectContains": {
+            "$.citations": [
+              "runtime_boundaries.md",
+              "trust_status.md"
+            ],
+            "$.claims": [
+              "model_output_is_not_authority",
+              "source_checks_are_not_behavioral_proof",
+              "owner_mode_is_not_a_sandbox"
+            ]
+          },
+          "expectEquals": {
+            "$.summary.currentAuthority": "sqlite_workflow_kernel",
+            "$.summary.v1Trust": "disabled"
+          },
+          "relativePath": "analysis.architecture_review_task.json"
+        }
+      },
+      "proofKind": "model_evaluation",
+      "reason": "model_candidate_not_supplied",
+      "score": null,
+      "status": "not_run",
+      "title": "Analyze runtime authority and current trust boundaries"
+    },
+    {
+      "assuranceLevel": "source_contract",
+      "category": "analysis",
+      "evidenceSha256": "2ce298fdd62150259d3492f8b541756a0d468c96ee2365f6358ea64dba2f5b15",
+      "id": "analysis.offline_system_contract",
+      "observations": {
+        "exitCode": 0,
+        "selected": {
+          "$.failed": 0,
+          "$.passed": 38
+        }
+      },
+      "proofKind": "source_inspection",
+      "reason": "command_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
+      "title": "Offline cumulative source-contract analysis"
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "path_safety",
+      "evidenceSha256": "69cc95cc4da0029fdbd2dc28cb47ce4ef46ac2e3139711ea3e4af04984445205",
+      "id": "path_safety.generated_state_policy",
+      "observations": {
+        "correct": 5,
+        "mismatches": [
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": ".playwright/browser/chromium"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "playwright-report/index.html"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "test-results/run.json"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "browser-profiles/personal/Default/Cookies"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "browser-traces/run.zip"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "services/automation_host/.cache/state"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "datasets/.build/intermediate.jsonl"
+          },
+          {
+            "actualGenerated": false,
+            "expectedGenerated": true,
+            "matches": false,
+            "path": "release/evidence/generated/transient.json"
+          }
+        ],
+        "total": 13
+      },
+      "proofKind": "executed_behavior",
+      "reason": "path_policy_gaps_recorded",
+      "score": 0.38461538461538464,
+      "status": "failed",
+      "title": "Generated-state path policy coverage"
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "path_safety",
+      "evidenceSha256": "f3733f2d92df57093db5ce40ec3edbca343a5abbedbe0b42e223f665e1405031",
+      "id": "path_safety.flutter_workspace_behavior",
+      "observations": {
+        "requiredExecutable": "flutter"
+      },
+      "proofKind": "executed_behavior",
+      "reason": "portable_baseline_excludes_sdk",
+      "score": null,
+      "status": "unavailable",
+      "title": "Flutter workspace boundary behavior"
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "crash_recovery",
+      "evidenceSha256": "5e427c00e5748231d6daf0b7e232cd128cf8e1ddbee3da5efada01b3bca8f61c",
+      "id": "crash_recovery.sqlite_workflow_kernel",
+      "observations": {
+        "exitCode": 0,
+        "selected": {
+          "$.database.integrity": "ok",
+          "$.failed": 0,
+          "$.passed": 14,
+          "$.schemaVersion": 6
+        }
+      },
+      "proofKind": "executed_behavior",
+      "reason": "command_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
+      "title": "Executable SQLite crash and recovery kernel"
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "crash_recovery",
+      "evidenceSha256": "7cd6e8a0d4828a85c2ed581660f5cea61d7d3294dcc39cf604a0323fc38a781c",
+      "id": "crash_recovery.diagnostic_replay",
+      "observations": {
+        "exitCode": 0,
+        "selected": {
+          "$.caseCount": 2,
+          "$.passed": true,
+          "$.passedCount": 2
+        }
+      },
+      "proofKind": "executed_behavior",
+      "reason": "command_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
+      "title": "Historical production-failure replay corpus"
+    },
+    {
+      "assuranceLevel": "capability_inventory",
+      "category": "browser_absent",
+      "evidenceSha256": "286eda3555e243dddcb29266fc3da1166c26e86c83d81c8164a0dc91153aba35",
+      "id": "browser_absent.capability_inventory",
+      "observations": {
+        "behavioralEvidenceFiles": [
+          "release/evidence/P3-016/browser-fixture-results.json",
+          "release/evidence/P3-017/security-results.json"
+        ],
+        "checkedFileCount": 4,
+        "checkedToolPrefixes": [
+          "browser."
+        ],
+        "implementationSignals": [],
+        "presentBehavioralEvidenceFiles": [],
+        "supported": false
+      },
+      "proofKind": "capability_probe",
+      "reason": "browser_automation_not_implemented",
+      "score": 0.0,
+      "status": "unsupported",
+      "title": "Browser automation capability inventory"
+    },
+    {
+      "assuranceLevel": "benchmark_task",
+      "category": "browser_absent",
+      "evidenceSha256": "c21f96ec92bfc442dd08a8b4cfe9d3272b8ba7d0b97f4e8bfbf8756136a925f3",
+      "id": "browser_absent.form_completion_task",
+      "observations": {
+        "requiredCase": "browser_absent.capability_inventory"
+      },
+      "proofKind": "model_evaluation",
+      "reason": "required_capability_unsupported:browser_absent.capability_inventory",
+      "score": 0.0,
+      "status": "unsupported",
+      "title": "Complete and verify a local browser form"
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "research",
+      "evidenceSha256": "b7f5c7ac4834eb636db3b2e0575de94f39eeb406608dc3455fcbeb3323d0bd30",
+      "id": "research.knowledge_memory_gate",
+      "observations": {
+        "exitCode": 0,
+        "selected": {
+          "$.caseCount": 12,
+          "$.passed": true,
+          "$.passedCount": 12
+        }
+      },
+      "proofKind": "executed_behavior",
+      "reason": "command_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
+      "title": "Knowledge, memory, citation, and freshness gate"
+    },
+    {
+      "assuranceLevel": "benchmark_task",
+      "category": "research",
+      "evidenceSha256": "87c5d95475422c6f6b6c9d5aa74cc4eaaf16720e4b8029cfebd73419ac992dd0",
+      "id": "research.local_citation_task",
+      "observations": {
+        "candidateInterface": {
+          "expectContains": {
+            "$.citations": [
+              "official_release.md",
+              "changelog.md",
+              "secondary_report.md"
+            ]
+          },
+          "expectEquals": {
+            "$.answer.disagreementNoted": true,
+            "$.answer.officialReleaseDate": "2026-01-15"
+          },
+          "relativePath": "research.local_citation_task.json"
+        }
+      },
+      "proofKind": "model_evaluation",
+      "reason": "model_candidate_not_supplied",
+      "score": null,
+      "status": "not_run",
+      "title": "Resolve a conflicting release date from local evidence"
+    }
+  ],
+  "categories": [
+    {
+      "caseCount": 2,
+      "coverage": 0.5,
+      "id": "coding",
+      "measuredCaseCount": 1,
+      "name": "Coding",
+      "readiness": 0.5,
+      "score": 1.0,
+      "statusCounts": {
+        "error": 0,
+        "failed": 0,
+        "not_run": 1,
+        "passed": 1,
+        "unavailable": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "caseCount": 2,
+      "coverage": 0.5,
+      "id": "analysis",
+      "measuredCaseCount": 1,
+      "name": "Analysis",
+      "readiness": 0.5,
+      "score": 1.0,
+      "statusCounts": {
+        "error": 0,
+        "failed": 0,
+        "not_run": 1,
+        "passed": 1,
+        "unavailable": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "caseCount": 2,
+      "coverage": 0.5,
+      "id": "path_safety",
+      "measuredCaseCount": 1,
+      "name": "Path safety",
+      "readiness": 0.192308,
+      "score": 0.384615,
+      "statusCounts": {
+        "error": 0,
+        "failed": 1,
+        "not_run": 0,
+        "passed": 0,
+        "unavailable": 1,
+        "unsupported": 0
+      }
+    },
+    {
+      "caseCount": 2,
+      "coverage": 1.0,
+      "id": "crash_recovery",
+      "measuredCaseCount": 2,
+      "name": "Crash recovery",
+      "readiness": 1.0,
+      "score": 1.0,
+      "statusCounts": {
+        "error": 0,
+        "failed": 0,
+        "not_run": 0,
+        "passed": 2,
+        "unavailable": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "caseCount": 2,
+      "coverage": 0.0,
+      "id": "browser_absent",
+      "measuredCaseCount": 0,
+      "name": "Browser capability honesty",
+      "readiness": 0.0,
+      "score": 0.0,
+      "statusCounts": {
+        "error": 0,
+        "failed": 0,
+        "not_run": 0,
+        "passed": 0,
+        "unavailable": 0,
+        "unsupported": 2
+      }
+    },
+    {
+      "caseCount": 2,
+      "coverage": 0.5,
+      "id": "research",
+      "measuredCaseCount": 1,
+      "name": "Research and citations",
+      "readiness": 0.5,
+      "score": 1.0,
+      "statusCounts": {
+        "error": 0,
+        "failed": 0,
+        "not_run": 1,
+        "passed": 1,
+        "unavailable": 0,
+        "unsupported": 0
+      }
+    }
+  ],
+  "claims": {
+    "baselineRecordedMeansProductReady": false,
+    "notRunCountsAsPassed": false,
+    "sourceInspectionIsBehavioralProof": false,
+    "unavailableCountsAsPassed": false,
+    "unsupportedCountsAsPassed": false
+  },
+  "fixtureSha256": "13217296a140d2840adba6d7ff2facb6a13ad11b6907199347c47eb38d6768f7",
+  "generatedAt": "2026-07-24T00:00:00Z",
+  "mode": "portable",
+  "networkPolicy": "forbidden",
+  "resultFingerprint": "9d70179e84c098e25440054d567e07c264beb83c919d8433b2c44ed1363b6322",
+  "schemaVersion": "1.0.0",
+  "suiteId": "kristin.p0-009.initial",
+  "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
+  "suiteVersion": "1.0.0",
+  "summary": {
+    "behavioralCaseCount": 6,
+    "behavioralPassedCount": 4,
+    "benchmarkQualityPassed": false,
+    "caseCount": 12,
+    "coverage": 0.5,
+    "measuredCaseCount": 6,
+    "readiness": 0.448718,
+    "recordingStatus": "complete",
+    "score": 0.673077,
+    "sourceContractCaseCount": 1,
+    "sourceContractPassedCount": 1,
+    "statusCounts": {
+      "error": 0,
+      "failed": 1,
+      "not_run": 3,
+      "passed": 5,
+      "unavailable": 1,
+      "unsupported": 2
+    }
+  }
+}

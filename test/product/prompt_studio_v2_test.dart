@@ -101,7 +101,8 @@ void main() {
       });
     }
 
-    test('rejects duplicate task IDs and dangling specification references', () {
+    test('rejects duplicate task IDs and dangling specification references',
+        () {
       final duplicatePlan = deepCopy(fixture('plan_010.json'));
       final duplicateTasks = duplicatePlan['tasks'] as List;
       (duplicateTasks[1] as Map)['id'] = (duplicateTasks[0] as Map)['id'];
@@ -119,8 +120,10 @@ void main() {
 
       final invalidSpecification = deepCopy(fixture('specification.json'));
       final functional = invalidSpecification['functionalRequirements'] as List;
-      final nonFunctional = invalidSpecification['nonFunctionalRequirements'] as List;
-      nonFunctional.add(deepCopy(Map<String, dynamic>.from(functional.first as Map)));
+      final nonFunctional =
+          invalidSpecification['nonFunctionalRequirements'] as List;
+      nonFunctional
+          .add(deepCopy(Map<String, dynamic>.from(functional.first as Map)));
       final criteria = invalidSpecification['acceptanceCriteria'] as List;
       final firstCriterion = Map<String, dynamic>.from(criteria.first as Map);
       (firstCriterion['requirementIds'] as List).add('requirement_missing');
@@ -148,7 +151,8 @@ void main() {
       );
     });
 
-    test('blocks process execution while the v1.4 sandbox boundary is absent', () {
+    test('blocks process execution while the v1.4 sandbox boundary is absent',
+        () {
       final planValue = deepCopy(fixture('plan_001.json'));
       final task = (planValue['tasks'] as List).first as Map;
       task['taskType'] = 'build';
@@ -191,13 +195,13 @@ void main() {
           legacyUnsandboxedExecutionApproved: true,
         ),
       );
-      final simulation =
-          Map<String, dynamic>.from(report['simulation'] as Map);
+      final simulation = Map<String, dynamic>.from(report['simulation'] as Map);
 
       expect(report['executable'], isTrue);
       expect(simulation['dryRun'], isTrue);
       expect(simulation['sideEffectsPerformed'], isFalse);
-      expect(simulation['requiredApprovals'], contains('legacy_unsandboxed_execution'));
+      expect(simulation['requiredApprovals'],
+          contains('legacy_unsandboxed_execution'));
     });
   });
 

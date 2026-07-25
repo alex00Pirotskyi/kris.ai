@@ -1,0 +1,377 @@
+{
+  "authority": {
+    "human": "docs/roadmap/MASTER.md",
+    "machine": "docs/roadmap/roadmap.yaml",
+    "masterSha256": "0229c7474cdbf180128ed734807375ced3a82d0142143177112838bc67b7374a",
+    "scope": [
+      "P0",
+      "P1"
+    ]
+  },
+  "format": "yaml-1.2-json-subset",
+  "nextReady": [],
+  "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
+  "schemaVersion": "1.0.0",
+  "statusValues": [
+    "NOT_STARTED",
+    "READY",
+    "IN_PROGRESS",
+    "BLOCKED",
+    "REVIEW",
+    "DONE",
+    "DEFERRED"
+  ],
+  "taskGraphSha256": "dbef00a9e2fb2256b0c7f5a76d29aeccd0d482c4155d01ed2028aa67e4102fdc",
+  "taskOrder": [
+    "P0-001",
+    "P0-002",
+    "P0-003",
+    "P0-004",
+    "P0-005",
+    "P0-006",
+    "P0-007",
+    "P0-008",
+    "P0-009",
+    "P0-010",
+    "P1-001",
+    "P1-002",
+    "P1-003",
+    "P1-004",
+    "P1-005",
+    "P1-006",
+    "P1-007",
+    "P1-008",
+    "P1-009",
+    "P1-010",
+    "P1-011",
+    "P1-012"
+  ],
+  "tasks": [
+    {
+      "dependsOn": [],
+      "doneWhen": "A clean checkout can reproduce the baseline report and every unavailable gate is explicitly marked.",
+      "evidence": [
+        "release/evidence/baseline/execution.json",
+        "release/evidence/P0-001/manifest.json",
+        "release/evidence/baseline/BASELINE.md",
+        "tool/capture_baseline.py"
+      ],
+      "id": "P0-001",
+      "packet": "tasks/active/P0-001.md",
+      "phase": "P0",
+      "requiredOutput": "Inventory tree, schemas, tool registry, tests, CI, current failures, and hashes; write release/evidence/baseline/.",
+      "status": "DONE",
+      "title": "Capture reproducible baseline"
+    },
+    {
+      "dependsOn": [
+        "P0-001"
+      ],
+      "doneWhen": "Forgery test is rejected; no runtime path accepts v1 envelope trust.",
+      "evidence": [
+        "release/evidence/P0-002/manifest.json",
+        "release/evidence/P0-002/IMPLEMENTATION.md",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "id": "P0-002",
+      "packet": "tasks/active/P0-002.md",
+      "phase": "P0",
+      "requiredOutput": "Remove or hard-disable authorization and update decisions that use tool/interoperability_v19.py envelope-supplied HMAC material.",
+      "status": "DONE",
+      "title": "Disable insecure v1 trust decisions"
+    },
+    {
+      "dependsOn": [
+        "P0-001",
+        "P0-002"
+      ],
+      "doneWhen": "Ubuntu, Windows, and macOS reach every applicable workflow step and pass; platform-dependent unsupported states are asserted honestly; no blocking gate is skipped, excluded, or relabeled unavailable; the active branch contains reviewed P0-002.",
+      "evidence": [
+        "release/evidence/P0-003/ci_matrix.json",
+        "release/evidence/P0-003/IMPLEMENTATION_PLAN.md"
+      ],
+      "id": "P0-003",
+      "packet": "tasks/active/P0-003.md",
+      "phase": "P0",
+      "requiredOutput": "Commit canonical Dart formatting; run every downstream analyzer, behavioral, validator, and native-build gate; repair the current Windows Project Manager readiness, SDK-environment, and artifact-evidence test failures without claiming unavailable isolation; retain complete failure evidence on all OS lanes. Do not redesign or pin CI in this task.",
+      "status": "REVIEW",
+      "title": "Green the current three-OS CI"
+    },
+    {
+      "dependsOn": [
+        "P0-003"
+      ],
+      "doneWhen": "Two CI reruns use identical declared inputs.",
+      "evidence": [
+        "release/evidence/P0-004/STARTER.md"
+      ],
+      "id": "P0-004",
+      "packet": "tasks/active/P0-004.md",
+      "phase": "P0",
+      "requiredOutput": "Pin Flutter/Dart, Python, Actions by commit SHA, and cache keys; record versions in a toolchain manifest.",
+      "status": "NOT_STARTED",
+      "title": "Pin toolchains and GitHub Actions"
+    },
+    {
+      "dependsOn": [
+        "P0-001",
+        "P0-002"
+      ],
+      "doneWhen": "README, SECURITY, UI, and release classification agree.",
+      "evidence": [
+        "release/evidence/P0-005/IMPLEMENTATION.md",
+        "docs/SUPPORT_POLICY.md"
+      ],
+      "id": "P0-005",
+      "packet": "tasks/active/P0-005.md",
+      "phase": "P0",
+      "requiredOutput": "Update supported version, platform matrix, Owner Mode intent, sandbox truth, interop freeze, and disclosure procedure.",
+      "status": "REVIEW",
+      "title": "Rewrite security and support policy"
+    },
+    {
+      "dependsOn": [
+        "P0-003"
+      ],
+      "doneWhen": "Protected main cannot merge without required checks/review.",
+      "evidence": [],
+      "id": "P0-006",
+      "packet": "tasks/active/P0-006.md",
+      "phase": "P0",
+      "requiredOutput": "Add CODEOWNERS, branch protection requirements, PR template, security review labels, and merge policy.",
+      "status": "NOT_STARTED",
+      "title": "Protect repository governance"
+    },
+    {
+      "dependsOn": [
+        "P0-001"
+      ],
+      "doneWhen": "Dashboard never reports source-marker checks as behavioral proof.",
+      "evidence": [
+        "release/evidence/P0-007/manifest.json",
+        "release/evidence/P0-007/IMPLEMENTATION.md",
+        "docs/roadmap/ASSURANCE_MODEL.md"
+      ],
+      "id": "P0-007",
+      "packet": "tasks/active/P0-007.md",
+      "phase": "P0",
+      "requiredOutput": "Reclassify system_test.py and validator token checks; create separate report categories.",
+      "status": "REVIEW",
+      "title": "Split source lint from behavioral assurance"
+    },
+    {
+      "dependsOn": [
+        "P0-001"
+      ],
+      "doneWhen": "A new AI session can select the next ready task without oral context, and CI rejects duplicate IDs, missing dependencies, cycles, invalid statuses, or conflicting roadmap authority in the bootstrap scope.",
+      "evidence": [
+        "release/evidence/P0-008/manifest.json",
+        "release/evidence/P0-008/IMPLEMENTATION.md"
+      ],
+      "id": "P0-008",
+      "packet": "tasks/active/P0-008.md",
+      "phase": "P0",
+      "requiredOutput": "Add STATUS, ADR, risk, metric, prompt, evidence, handoff, docs/roadmap/roadmap.yaml, and a minimal dependency/cycle/status validator for active P0/P1 tasks. P24 later expands this into the complete all-task authority and traceability system.",
+      "status": "REVIEW",
+      "title": "Create roadmap control files and bootstrap manifest"
+    },
+    {
+      "dependsOn": [
+        "P0-001"
+      ],
+      "doneWhen": "Baseline is versioned and reproducible.",
+      "evidence": [
+        "evals/results/p0_009_baseline.json",
+        "evals/results/P0_009_BASELINE.md",
+        "release/evidence/P0-009/manifest.json",
+        "release/evidence/P0-009/IMPLEMENTATION.md"
+      ],
+      "id": "P0-009",
+      "packet": "tasks/active/P0-009.md",
+      "phase": "P0",
+      "requiredOutput": "Record current results for coding, analysis, path safety, crash recovery, browser-absent, and research tasks.",
+      "status": "REVIEW",
+      "title": "Establish initial benchmark corpus"
+    },
+    {
+      "dependsOn": [
+        "P0-001"
+      ],
+      "doneWhen": "Clean checkout stays clean after standard tests except declared reports.",
+      "evidence": [
+        "release/evidence/P0-010/IMPLEMENTATION.md",
+        "release/evidence/P0-010/removal_manifest.json",
+        "release/evidence/P0-010/audit.json",
+        "release/evidence/P0-010/manifest.json"
+      ],
+      "id": "P0-010",
+      "packet": "tasks/active/P0-010.md",
+      "phase": "P0",
+      "requiredOutput": "Apply source-tree policy, remove caches such as __pycache__, and update ignore rules.",
+      "status": "REVIEW",
+      "title": "Remove committed generated state"
+    },
+    {
+      "dependsOn": [
+        "P0-008"
+      ],
+      "doneWhen": "ADRs resolve ownership and do not leave implementation-critical ambiguity.",
+      "evidence": [],
+      "id": "P1-001",
+      "packet": "tasks/active/P1-001.md",
+      "phase": "P1",
+      "requiredOutput": "Define desktop, owner executor, automation host, research worker, sandbox worker, IPC, and storage boundaries.",
+      "status": "NOT_STARTED",
+      "title": "Approve runtime-boundary ADRs"
+    },
+    {
+      "dependsOn": [
+        "P1-001"
+      ],
+      "doneWhen": "Round-trip and invalid-policy tests pass in Dart and worker languages.",
+      "evidence": [],
+      "id": "P1-002",
+      "packet": "tasks/active/P1-002.md",
+      "phase": "P1",
+      "requiredOutput": "Create schema and domain model for chat, project, owner, owner_unattended, and isolated_untrusted modes.",
+      "status": "NOT_STARTED",
+      "title": "Define access profile v2"
+    },
+    {
+      "dependsOn": [
+        "P1-001",
+        "P1-002"
+      ],
+      "doneWhen": "Worker rejects modified, expired, replayed, and wrong-run grants.",
+      "evidence": [],
+      "id": "P1-003",
+      "packet": "tasks/active/P1-003.md",
+      "phase": "P1",
+      "requiredOutput": "Bind grants to run, task, actor, tool, paths, process, network, browser profile, secrets, budgets, expiry, and use count.",
+      "status": "NOT_STARTED",
+      "title": "Define capability grant v2"
+    },
+    {
+      "dependsOn": [
+        "P1-002",
+        "P1-003"
+      ],
+      "doneWhen": "Policy property tests prove deny-by-default and Owner Mode\u2019s intended authority.",
+      "evidence": [],
+      "id": "P1-004",
+      "packet": "tasks/active/P1-004.md",
+      "phase": "P1",
+      "requiredOutput": "Implement mode resolution, organization/project/user overlays, and explicit widening rules.",
+      "status": "NOT_STARTED",
+      "title": "Build deterministic policy engine"
+    },
+    {
+      "dependsOn": [
+        "P0-002",
+        "P1-001"
+      ],
+      "doneWhen": "Language-neutral spec and negative vectors approved.",
+      "evidence": [],
+      "id": "P1-005",
+      "packet": "tasks/active/P1-005.md",
+      "phase": "P1",
+      "requiredOutput": "Adopt Ed25519, RFC 8785 canonical JSON, external keyring, key IDs, intended use, expiry, trust domain, and revocation.",
+      "status": "NOT_STARTED",
+      "title": "Specify Signed Manifest v2"
+    },
+    {
+      "dependsOn": [
+        "P1-005"
+      ],
+      "doneWhen": "Both languages produce and verify identical vectors and reject mutations.",
+      "evidence": [],
+      "id": "P1-006",
+      "packet": "tasks/active/P1-006.md",
+      "phase": "P1",
+      "requiredOutput": "Implement Dart/Python signing and verification against shared golden vectors.",
+      "status": "NOT_STARTED",
+      "title": "Implement cross-language signing"
+    },
+    {
+      "dependsOn": [
+        "P1-006"
+      ],
+      "doneWhen": "Downgrade and mixed-format tests pass.",
+      "evidence": [],
+      "id": "P1-007",
+      "packet": "tasks/active/P1-007.md",
+      "phase": "P1",
+      "requiredOutput": "Add explicit compatibility policy; v1 never authorizes production trust.",
+      "status": "NOT_STARTED",
+      "title": "Migrate or reject v1 envelopes"
+    },
+    {
+      "dependsOn": [
+        "P1-005"
+      ],
+      "doneWhen": "ADR and key ceremony runbook approved.",
+      "evidence": [],
+      "id": "P1-008",
+      "packet": "tasks/active/P1-008.md",
+      "phase": "P1",
+      "requiredOutput": "Define offline root, targets, snapshot, timestamp, delegations, thresholds, rotation, and recovery.",
+      "status": "NOT_STARTED",
+      "title": "Design TUF update trust"
+    },
+    {
+      "dependsOn": [
+        "P1-005"
+      ],
+      "doneWhen": "No private key is stored in repository or unencrypted settings.",
+      "evidence": [],
+      "id": "P1-009",
+      "packet": "tasks/active/P1-009.md",
+      "phase": "P1",
+      "requiredOutput": "Use OS keychain or external protected store; separate signing, API, browser, and secret-broker keys.",
+      "status": "NOT_STARTED",
+      "title": "Implement key storage and revocation"
+    },
+    {
+      "dependsOn": [
+        "P1-006",
+        "P1-009"
+      ],
+      "doneWhen": "Tampering, truncation, reordering, and signer substitution are detected.",
+      "evidence": [],
+      "id": "P1-010",
+      "packet": "tasks/active/P1-010.md",
+      "phase": "P1",
+      "requiredOutput": "Anchor audit heads with trusted keys and export verification receipts.",
+      "status": "NOT_STARTED",
+      "title": "Create append-only signed audit checkpoints"
+    },
+    {
+      "dependsOn": [
+        "P1-001",
+        "P1-004"
+      ],
+      "doneWhen": "Every high-risk boundary has an owner and planned test.",
+      "evidence": [],
+      "id": "P1-011",
+      "packet": "tasks/active/P1-011.md",
+      "phase": "P1",
+      "requiredOutput": "Map trust boundaries and OWASP agentic risks across model, tools, web, memory, MCP/A2A, terminal, and updater.",
+      "status": "NOT_STARTED",
+      "title": "Create threat model v2"
+    },
+    {
+      "dependsOn": [
+        "P1-001",
+        "P1-003"
+      ],
+      "doneWhen": "Unprivileged unrelated local process cannot invoke a worker.",
+      "evidence": [],
+      "id": "P1-012",
+      "packet": "tasks/active/P1-012.md",
+      "phase": "P1",
+      "requiredOutput": "Use named pipes/Unix sockets or loopback with mutual authentication, peer identity, request IDs, limits, and versioning.",
+      "status": "NOT_STARTED",
+      "title": "Create local authenticated IPC"
+    }
+  ]
+}

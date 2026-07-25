@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/evidence_manifest.v1.json",
+  "title": "Kristin task evidence manifest v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "taskId", "roadmapVersion", "status", "changedFiles", "commands", "limitations"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "taskId": {"type": "string", "pattern": "^P[0-9]+-[0-9]{3}$"},
+    "roadmapVersion": {"type": "string", "minLength": 1},
+    "status": {"enum": ["REVIEW", "DONE", "BLOCKED"]},
+    "changedFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["argv", "exitCode", "outputSha256"],
+        "properties": {
+          "argv": {"type": "array", "items": {"type": "string"}},
+          "exitCode": {"type": "integer"},
+          "outputSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

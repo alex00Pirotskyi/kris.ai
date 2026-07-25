@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/generated_state_report.v1.json",
+  "title": "Kristin Generated State Audit Report v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "policyVersion",
+    "kind",
+    "passed",
+    "trackedGeneratedPresent",
+    "trackedGeneratedPendingDeletion",
+    "manifestGenerated",
+    "gitignoreCoverage",
+    "claims",
+    "fingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "policyVersion": {"type": "string", "minLength": 1},
+    "kind": {"const": "generated_state_audit"},
+    "passed": {"type": "boolean"},
+    "trackedAuthority": {"enum": ["git-index", "source-manifest"]},
+    "trackedGeneratedPresent": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "trackedGeneratedPendingDeletion": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "manifestGenerated": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "gitignoreCoverage": {
+      "type": "object",
+      "required": [
+        "exactManagedBlock",
+        "missingPatternCount",
+        "missingExampleCount"
+      ],
+      "properties": {
+        "exactManagedBlock": {"type": "boolean"},
+        "missingPatternCount": {"type": "integer", "minimum": 0},
+        "missingExampleCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": [
+        "generatedStateMayBeTracked",
+        "reviewedGeneratedDartIsDisposable",
+        "committedEvidenceIsDisposable"
+      ],
+      "properties": {
+        "generatedStateMayBeTracked": {"const": false},
+        "reviewedGeneratedDartIsDisposable": {"const": false},
+        "committedEvidenceIsDisposable": {"const": false}
+      }
+    },
+    "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "reason", "exists"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "exists": {"type": "boolean"}
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/assurance_report.v1.json",
+  "title": "Kristin Assurance Report v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "passed",
+    "assuranceSummary",
+    "checks",
+    "claims"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "product": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "assuranceSummary": {
+      "type": "object",
+      "required": [
+        "classificationComplete",
+        "noSourceMarkerOverclaim",
+        "behavioralAssurancePassed",
+        "sourceContractPassed",
+        "mixedChecksCountAsBehavioral",
+        "groups"
+      ],
+      "properties": {
+        "classificationComplete": {
+          "type": "boolean"
+        },
+        "noSourceMarkerOverclaim": {
+          "const": true
+        },
+        "behavioralAssurancePassed": {
+          "type": "boolean"
+        },
+        "sourceContractPassed": {
+          "type": "boolean"
+        },
+        "mixedChecksCountAsBehavioral": {
+          "const": false
+        },
+        "groups": {
+          "type": "object"
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "assurance_level",
+          "proof_kind",
+          "behavioral_proof"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "unavailable",
+              "not_run"
+            ]
+          },
+          "assurance_level": {
+            "enum": [
+              "architecture_lint",
+              "source_contract",
+              "behavioral",
+              "sdk_toolchain",
+              "platform",
+              "release",
+              "mixed",
+              "unclassified"
+            ]
+          },
+          "proof_kind": {
+            "enum": [
+              "source_inspection",
+              "executed_behavior",
+              "toolchain_execution",
+              "platform_execution",
+              "release_execution",
+              "mixed",
+              "unclassified"
+            ]
+          },
+          "behavioral_proof": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": [
+        "sourceContractEvidence",
+        "behavioralEvidence",
+        "platformEvidence",
+        "releaseEvidence",
+        "sourceMarkersProveBehavior"
+      ],
+      "properties": {
+        "sourceContractEvidence": {
+          "type": "boolean"
+        },
+        "behavioralEvidence": {
+          "type": "boolean"
+        },
+        "platformEvidence": {
+          "type": "boolean"
+        },
+        "releaseEvidence": {
+          "type": "boolean"
+        },
+        "sourceMarkersProveBehavior": {
+          "const": false
+        }
+      }
+    }
+  }
+}

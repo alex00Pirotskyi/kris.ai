@@ -1,0 +1,141 @@
+{
+  "caseCount": 22,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 22,
+  "results": [
+    {
+      "detail": "signed plugin/skill manifest identity is verifiable",
+      "durationMs": 0,
+      "name": "Signed capability manifest verifies deterministically",
+      "passed": true
+    },
+    {
+      "detail": "tampered manifest is detected",
+      "durationMs": 0,
+      "name": "Tampered signed manifest is rejected",
+      "passed": true
+    },
+    {
+      "detail": "unknown signer is rejected",
+      "durationMs": 0,
+      "name": "Unsupported signer is rejected",
+      "passed": true
+    },
+    {
+      "detail": "policy profiles encode strict, reviewed, and enterprise authority levels",
+      "durationMs": 0,
+      "name": "Policy profiles remain deterministic",
+      "passed": true
+    },
+    {
+      "detail": "fleet profile remains inside the base policy",
+      "durationMs": 0,
+      "name": "Fleet profile channel must fit policy",
+      "passed": true
+    },
+    {
+      "detail": "local MCP lifecycle is negotiated and sandbox-required",
+      "durationMs": 0,
+      "name": "Local MCP manifest requires sandboxed stdio server",
+      "passed": true
+    },
+    {
+      "detail": "blocked with remote MCP is blocked by policy",
+      "durationMs": 0,
+      "name": "Remote MCP is blocked by strict local policy",
+      "passed": true
+    },
+    {
+      "detail": "reviewed policy allows bounded remote MCP negotiation",
+      "durationMs": 0,
+      "name": "Reviewed policy allows remote MCP manifest negotiation",
+      "passed": true
+    },
+    {
+      "detail": "blocked with must remain distinct",
+      "durationMs": 0,
+      "name": "MCP namespaces must remain distinct",
+      "passed": true
+    },
+    {
+      "detail": "blocked with exceeds manifest allowlist",
+      "durationMs": 0,
+      "name": "MCP roots are bounded to allowlist",
+      "passed": true
+    },
+    {
+      "detail": "blocked with not allowlisted",
+      "durationMs": 0,
+      "name": "MCP unauthorized tool is rejected",
+      "passed": true
+    },
+    {
+      "detail": "A2A response remains inside the delegated contract",
+      "durationMs": 0,
+      "name": "A2A contract remains bounded",
+      "passed": true
+    },
+    {
+      "detail": "blocked with unrestricted project access",
+      "durationMs": 0,
+      "name": "A2A cannot grant unrestricted project access",
+      "passed": true
+    },
+    {
+      "detail": "blocked with undeclared artifacts",
+      "durationMs": 0,
+      "name": "A2A cannot exceed task contract",
+      "passed": true
+    },
+    {
+      "detail": "blocked with A2A is blocked by policy",
+      "durationMs": 0,
+      "name": "Strict local policy blocks A2A",
+      "passed": true
+    },
+    {
+      "detail": "audit chain verifies append-only integrity",
+      "durationMs": 0,
+      "name": "Audit chain verifies append-only integrity",
+      "passed": true
+    },
+    {
+      "detail": "audit-chain break is detected",
+      "durationMs": 0,
+      "name": "Audit chain break is detected",
+      "passed": true
+    },
+    {
+      "detail": "authenticated update manifest signature and rollback policy verify",
+      "durationMs": 0,
+      "name": "Update manifest signatures verify",
+      "passed": true
+    },
+    {
+      "detail": "blocked with supported upgrade set",
+      "durationMs": 0,
+      "name": "Unsupported upgrade path is blocked",
+      "passed": true
+    },
+    {
+      "detail": "blocked with supported rollback set",
+      "durationMs": 0,
+      "name": "Unsupported rollback target is blocked",
+      "passed": true
+    },
+    {
+      "detail": "blocked with source-only environment",
+      "durationMs": 0,
+      "name": "Installer absence fails closed",
+      "passed": true
+    },
+    {
+      "detail": "support policy encodes supported channels and compatibility",
+      "durationMs": 0,
+      "name": "Support policy encodes supported channels",
+      "passed": true
+    }
+  ],
+  "version": "1.9.0+190"
+}
