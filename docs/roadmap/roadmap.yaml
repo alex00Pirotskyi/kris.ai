@@ -2,7 +2,7 @@
   "authority": {
     "human": "docs/roadmap/MASTER.md",
     "machine": "docs/roadmap/roadmap.yaml",
-    "masterSha256": "0229c7474cdbf180128ed734807375ced3a82d0142143177112838bc67b7374a",
+    "masterSha256": "ccb14d19077ae12d34afa40a006dd4c5649081cc3627ab384e154eb246d6b3e4",
     "scope": [
       "P0",
       "P1"
