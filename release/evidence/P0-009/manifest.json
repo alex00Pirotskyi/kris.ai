@@ -7,8 +7,8 @@
     "qualityPassed": false,
     "readiness": 0.5
   },
-  "baselineFingerprint": "a4ce75776b19766ddf74379dd85f7350052cf66fd105f1adb091e3a3727c6653",
-  "benchmarkInputsSha256": "0fb1b14eccf619372c9bbc7ee4e697a6a96a9eaad4b4b18e7921f9aedd9cf931",
+  "baselineFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+  "benchmarkInputsSha256": "c32bec8b29536117d6d2f359a2857b1a9720ef6ceddc68b8b76ffd2ee69c3361",
   "claimBoundaries": {
     "baselineRecordedMeansProductReady": false,
     "notRunCountsAsPassed": false,
@@ -16,7 +16,7 @@
     "unavailableCountsAsPassed": false,
     "unsupportedCountsAsPassed": false
   },
-  "fixtureSha256": "13217296a140d2840adba6d7ff2facb6a13ad11b6907199347c47eb38d6768f7",
+  "fixtureSha256": "b43534d1c305d116c39ee9211e7c0fabad4d9744d09f9346c892c04141acb79f",
   "generatedAt": "2026-07-24T00:00:00Z",
   "review": {
     "required": true,

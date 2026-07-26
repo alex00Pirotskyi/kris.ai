@@ -139,9 +139,18 @@ def hash_tree(project: Path, root: Path) -> str:
     rows: list[str] = []
     if not root.exists():
         return sha256_text("")
-    for path in sorted(root.rglob("*")):
-        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
-            continue
+    # pathlib orders WindowsPath values case-insensitively but PosixPath
+    # values case-sensitively. Sort the portable POSIX-relative names
+    # explicitly so mixed-case fixtures (for example TASK.md) hash in the
+    # same order on Windows, Linux, and macOS.
+    paths = [
+        path
+        for path in root.rglob("*")
+        if path.is_file()
+        and "__pycache__" not in path.parts
+        and path.suffix != ".pyc"
+    ]
+    for path in sorted(paths, key=lambda item: item.relative_to(root).as_posix()):
         relative = path.relative_to(root).as_posix()
         rows.append(
             f"{sha256_bytes(canonical_project_file_bytes(project, path))}  {relative}"
@@ -1289,6 +1298,7 @@ def write_result(path: Path, report: dict[str, Any]) -> None:
     path.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 

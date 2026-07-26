@@ -187,6 +187,33 @@ class BenchmarkRunnerTest(unittest.TestCase):
         path.write_bytes(indexed.replace(b"\n", b"\r\n"))
         self.assertEqual(BR.canonical_project_file_bytes(self.project, path), indexed)
 
+    @unittest.skipUnless(shutil.which("git"), "Git is required")
+    def test_hash_tree_uses_portable_mixed_case_order(self) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=self.project, check=True)
+        fixture = self.project / "portable-order"
+        fixture.mkdir(parents=True, exist_ok=True)
+        (fixture / "TASK.md").write_text("task\n", encoding="utf-8", newline="\n")
+        (fixture / "index.html").write_text("index\n", encoding="utf-8", newline="\n")
+        subprocess.run(["git", "add", "."], cwd=self.project, check=True)
+
+        names = ["TASK.md", "index.html"]
+        portable_names = sorted(names)
+        windows_names = sorted(names, key=str.casefold)
+        self.assertNotEqual(portable_names, windows_names)
+
+        def expected(order: list[str]) -> str:
+            rows = []
+            for name in order:
+                relative = f"portable-order/{name}"
+                blob = BR.git_index_bytes(self.project, relative)
+                self.assertIsNotNone(blob)
+                rows.append(f"{BR.sha256_bytes(blob or b'')}  {name}")
+            return BR.sha256_text("\n".join(rows) + "\n")
+
+        actual = BR.hash_tree(self.project, fixture)
+        self.assertEqual(actual, expected(portable_names))
+        self.assertNotEqual(actual, expected(windows_names))
+
     def test_duplicate_case_id_is_rejected(self) -> None:
         suite = BR.load_json(self.suite_path)
         suite["cases"].append(dict(suite["cases"][0]))
@@ -376,6 +403,13 @@ class BenchmarkRunnerTest(unittest.TestCase):
         self.assertEqual(errors, [])
         categories = {item["id"] for item in suite["categories"]}
         self.assertEqual(categories, {"coding", "analysis", "path_safety", "crash_recovery", "browser_absent", "research"})
+
+    def test_write_result_uses_lf_on_every_platform(self) -> None:
+        output = self.project / "evals/results/portable-output.json"
+        BR.write_result(output, {"value": "a\nb"})
+        data = output.read_bytes()
+        self.assertTrue(data.endswith(b"\n"))
+        self.assertNotIn(b"\r\n", data)
 
 
 if __name__ == "__main__":
