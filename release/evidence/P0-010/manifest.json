@@ -1,16 +1,8 @@
 {
   "benchmarkDelta": {
-    "afterFingerprint": "4e91059b830db6c4834ab12aa2651fe1c7bb4067ce19be7c54a6e981ec0ea619",
-    "beforeFingerprint": "9d70179e84c098e25440054d567e07c264beb83c919d8433b2c44ed1363b6322",
-    "caseChanges": [
-      {
-        "afterScore": 1.0,
-        "afterStatus": "passed",
-        "beforeScore": 0.38461538461538464,
-        "beforeStatus": "failed",
-        "caseId": "path_safety.generated_state_policy"
-      }
-    ],
+    "afterFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+    "beforeFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+    "caseChanges": [],
     "pathPolicyPassed": true,
     "regressions": [],
     "schemaVersion": "1.0.0",
@@ -37,8 +29,8 @@
       ],
       "exitCode": 0,
       "name": "snapshot",
-      "outputSha256": "72e327202074082c7e1964355a1fef7995eba6edd829e04ade5cd84eda08936a",
-      "outputTail": "ract_test.py\",\n    \"tool/assurance_dashboard.py\",\n    \"tool/assurance_model.py\",\n    \"tool/assurance_model_test.py\",\n    \"tool/benchmark_runner.py\",\n    \"tool/benchmark_runner_test.py\",\n    \"tool/capture_ci_environment.py\",\n    \"tool/dart_format_scope.py\",\n    \"tool/dart_format_scope_test.py\",\n    \"tool/dart_string_literal.py\",\n    \"tool/generate_v170_contracts.py\",\n    \"tool/generate_v180_contracts.py\",\n    \"tool/generate_v190_contracts.py\",\n    \"tool/generated_state_guard.py\",\n    \"tool/generated_state_guard_test.py\",\n    \"tool/p0_003_repair_test.py\",\n    \"tool/p0_007_assurance_test.py\",\n    \"tool/p0_008_roadmap_test.py\",\n    \"tool/p0_009_benchmark_test.py\",\n    \"tool/p0_010_generated_state_test.py\",\n    \"tool/policy_support_test.py\",\n    \"tool/project_manager_v2.py\",\n    \"tool/project_manager_v2_test.py\",\n    \"tool/prune_stale_legacy.dart\",\n    \"tool/record_p0_003_ci.py\",\n    \"tool/roadmap_control.py\",\n    \"tool/roadmap_control_test.py\",\n    \"tool/sandbox_worker.py\",\n    \"tool/source_tree_policy.py\",\n    \"tool/source_tree_policy_test.py\",\n    \"tool/system_test.py\",\n    \"tool/validate_release.py\",\n    \"tool/verify.sh\"\n  ],\n  \"policyVersion\": \"2.0.0\",\n  \"schemaVersion\": \"1.0.0\"\n}\n"
+      "outputSha256": "d54fa7df6a937c071ab03557a2db5bfc6da574de1a3c695c32e23cbd6673e4d5",
+      "outputTail": "{\n  \"fingerprint\": \"2219d4a78fc1b0ef4d69e727046d9b42a5dc25fcaa1fc587793ea5bbd0a0bc12\",\n  \"kind\": \"generated_state_source_snapshot\",\n  \"nonGeneratedDirtyPaths\": [\n    \"SOURCE_MANIFEST.sha256\",\n    \"docs/roadmap/HANDOFF.md\",\n    \"docs/roadmap/MASTER.md\",\n    \"docs/roadmap/STATUS.md\",\n    \"docs/roadmap/roadmap.yaml\",\n    \"release/evidence/P0-003/ci_matrix.json\",\n    \"release/evidence/P0-003/downloaded/macos/ci-environment-macOS.json\",\n    \"release/evidence/P0-003/downloaded/ubuntu/ci-environment-Linux.json\",\n    \"release/evidence/P0-003/downloaded/windows/ci-environment-Windows.json\",\n    \"release/evidence/P0-008/manifest.json\",\n    \"release/evidence/P0-009/test-results.json\",\n    \"release/evidence/P0-010/benchmark_after.json\",\n    \"release/evidence/P0-010/benchmark_before.json\",\n    \"release/evidence/P0-010/benchmark_delta.json\",\n    \"release/evidence/P0-010/removal_manifest.json\"\n  ],\n  \"policyVersion\": \"2.0.0\",\n  \"schemaVersion\": \"1.0.0\"\n}\n"
     },
     {
       "argv": [
@@ -47,8 +39,8 @@
       ],
       "exitCode": 0,
       "name": "source_tree_policy_test",
-      "outputSha256": "4a9f759abfb52d0976b73a120ffd3e2eedea23507fd93d7d7411cd4ccfe15749",
-      "outputTail": "licy_version_is_explicit) ... ok\ntest_python_bytecode_suffixes_are_generated (__main__.SourceTreePolicyTest.test_python_bytecode_suffixes_are_generated) ... ok\ntest_release_gate_outputs_are_generated (__main__.SourceTreePolicyTest.test_release_gate_outputs_are_generated) ... ok\ntest_representative_generated_paths_are_generated (__main__.SourceTreePolicyTest.test_representative_generated_paths_are_generated) ... ok\ntest_representative_source_paths_are_not_generated (__main__.SourceTreePolicyTest.test_representative_source_paths_are_not_generated) ... ok\ntest_reviewed_generated_source_is_not_disposable (__main__.SourceTreePolicyTest.test_reviewed_generated_source_is_not_disposable) ... ok\ntest_timestamped_legacy_test_reports_are_generated (__main__.SourceTreePolicyTest.test_timestamped_legacy_test_reports_are_generated) ... ok\ntest_windows_separators_and_case_are_normalized (__main__.SourceTreePolicyTest.test_windows_separators_and_case_are_normalized) ... ok\ntest_yarn_source_and_cache_are_distinguished (__main__.SourceTreePolicyTest.test_yarn_source_and_cache_are_distinguished) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.003s\n\nOK\n"
+      "outputSha256": "8c75636efe701494e67da8dcb3320264649976ce352dfec0c75ec30ce90d5b14",
+      "outputTail": "licy_version_is_explicit) ... ok\ntest_python_bytecode_suffixes_are_generated (__main__.SourceTreePolicyTest.test_python_bytecode_suffixes_are_generated) ... ok\ntest_release_gate_outputs_are_generated (__main__.SourceTreePolicyTest.test_release_gate_outputs_are_generated) ... ok\ntest_representative_generated_paths_are_generated (__main__.SourceTreePolicyTest.test_representative_generated_paths_are_generated) ... ok\ntest_representative_source_paths_are_not_generated (__main__.SourceTreePolicyTest.test_representative_source_paths_are_not_generated) ... ok\ntest_reviewed_generated_source_is_not_disposable (__main__.SourceTreePolicyTest.test_reviewed_generated_source_is_not_disposable) ... ok\ntest_timestamped_legacy_test_reports_are_generated (__main__.SourceTreePolicyTest.test_timestamped_legacy_test_reports_are_generated) ... ok\ntest_windows_separators_and_case_are_normalized (__main__.SourceTreePolicyTest.test_windows_separators_and_case_are_normalized) ... ok\ntest_yarn_source_and_cache_are_distinguished (__main__.SourceTreePolicyTest.test_yarn_source_and_cache_are_distinguished) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.008s\n\nOK\n"
     },
     {
       "argv": [
@@ -57,8 +49,8 @@
       ],
       "exitCode": 0,
       "name": "generated_state_guard_test",
-      "outputSha256": "2a8c2bb4e3b50cdbbf77c63f67cec90790452ed1a437a7d753134668c613f08d",
-      "outputTail": "test_audit_detects_tracked_generated_state (__main__.GeneratedStateGuardTest.test_audit_detects_tracked_generated_state) ... ok\ntest_audit_fingerprint_is_stable (__main__.GeneratedStateGuardTest.test_audit_fingerprint_is_stable) ... ok\ntest_generated_outputs_are_ignored (__main__.GeneratedStateGuardTest.test_generated_outputs_are_ignored) ... ok\ntest_gitignore_managed_block_is_required (__main__.GeneratedStateGuardTest.test_gitignore_managed_block_is_required) ... ok\ntest_pending_deletions_are_accepted_after_manifest_cleanup (__main__.GeneratedStateGuardTest.test_pending_deletions_are_accepted_after_manifest_cleanup) ... ok\ntest_safe_relative_rejects_escape_and_absolute (__main__.GeneratedStateGuardTest.test_safe_relative_rejects_escape_and_absolute) ... ok\ntest_snapshot_ignores_generated_but_detects_source (__main__.GeneratedStateGuardTest.test_snapshot_ignores_generated_but_detects_source) ... ok\ntest_source_manifest_fallback (__main__.GeneratedStateGuardTest.test_source_manifest_fallback) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 3.325s\n\nOK\n"
+      "outputSha256": "c267d12b3d00c2876c387972bc46261cb654c654a4e00db01887cffd4309c760",
+      "outputTail": "test_audit_detects_tracked_generated_state (__main__.GeneratedStateGuardTest.test_audit_detects_tracked_generated_state) ... ok\ntest_audit_fingerprint_is_stable (__main__.GeneratedStateGuardTest.test_audit_fingerprint_is_stable) ... ok\ntest_generated_outputs_are_ignored (__main__.GeneratedStateGuardTest.test_generated_outputs_are_ignored) ... ok\ntest_gitignore_managed_block_is_required (__main__.GeneratedStateGuardTest.test_gitignore_managed_block_is_required) ... ok\ntest_pending_deletions_are_accepted_after_manifest_cleanup (__main__.GeneratedStateGuardTest.test_pending_deletions_are_accepted_after_manifest_cleanup) ... ok\ntest_safe_relative_rejects_escape_and_absolute (__main__.GeneratedStateGuardTest.test_safe_relative_rejects_escape_and_absolute) ... ok\ntest_snapshot_ignores_generated_but_detects_source (__main__.GeneratedStateGuardTest.test_snapshot_ignores_generated_but_detects_source) ... ok\ntest_source_manifest_fallback (__main__.GeneratedStateGuardTest.test_source_manifest_fallback) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 5.194s\n\nOK\n"
     },
     {
       "argv": [
@@ -69,8 +61,8 @@
       ],
       "exitCode": 0,
       "name": "p0_010_generated_state_test",
-      "outputSha256": "73f6f62f019bdd0b5d488ee29455e6f18f25a5b395fa449edcbe4360eebf53e6",
-      "outputTail": "tegration=true\",\n      \"name\": \"Verification ladder integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"workflowIntegrated=true\",\n      \"name\": \"CI integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"sourceTreePolicyUnitSuite=passed\",\n      \"name\": \"Source-tree policy unit suite\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"generatedStateGuardUnitSuite=passed\",\n      \"name\": \"Generated-state guard unit suite\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"schemaInvariant=true\",\n      \"name\": \"Generated-state report schema\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"benchmarkFingerprint=4e91059b830db6c4834ab12aa2651fe1c7bb4067ce19be7c54a6e981ec0ea619\",\n      \"name\": \"P0-009 benchmark baseline current\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"v1TrustDisabled=true\",\n      \"name\": \"P0-002 trust retirement preserved\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ledgerStatus=REVIEW\",\n      \"name\": \"P0-008 roadmap ledger current\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"policyVersion=2.0.0\",\n      \"name\": \"Policy version explicit\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P0-010\"\n}\n"
+      "outputSha256": "6545e292a0b7021d09134fae621b7d3129395b4ae25dfbb664ae534e3f952362",
+      "outputTail": "tegration=true\",\n      \"name\": \"Verification ladder integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"workflowIntegrated=true\",\n      \"name\": \"CI integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"sourceTreePolicyUnitSuite=passed\",\n      \"name\": \"Source-tree policy unit suite\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"generatedStateGuardUnitSuite=passed\",\n      \"name\": \"Generated-state guard unit suite\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"schemaInvariant=true\",\n      \"name\": \"Generated-state report schema\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"benchmarkFingerprint=b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8\",\n      \"name\": \"P0-009 benchmark baseline current\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"v1TrustDisabled=true\",\n      \"name\": \"P0-002 trust retirement preserved\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ledgerStatus=REVIEW\",\n      \"name\": \"P0-008 roadmap ledger current\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"policyVersion=2.0.0\",\n      \"name\": \"Policy version explicit\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P0-010\"\n}\n"
     },
     {
       "argv": [
@@ -83,8 +75,8 @@
       ],
       "exitCode": 0,
       "name": "strict_audit",
-      "outputSha256": "af8fc256547949510b94890fc52dbb01561f3a2706549f24bcd9d0e8b5569dbe",
-      "outputTail": "rn:timestamped-test-report\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"scripts/__pycache__/validate_architecture.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/generate_sbom.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/kristin_cli.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/release.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/secret_scan.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/source_tree_policy.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/system_test.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    },\n    {\n      \"exists\": false,\n      \"path\": \"tool/__pycache__/validate_release.cpython-313.pyc\",\n      \"reason\": \"directory:__pycache__\"\n    }\n  ],\n  \"trackedGeneratedPresent\": []\n}\n"
+      "outputSha256": "5e964a46f7ced631ad8a2050af9227f0a4d264374fa339497e7f41e86f4ab170",
+      "outputTail": "{\n  \"claims\": {\n    \"committedEvidenceIsDisposable\": false,\n    \"generatedStateMayBeTracked\": false,\n    \"reviewedGeneratedDartIsDisposable\": false\n  },\n  \"existingGeneratedRoots\": [\n    {\n      \"exists\": true,\n      \"path\": \".git\",\n      \"reason\": \"directory:.git\"\n    },\n    {\n      \"exists\": true,\n      \"path\": \"release/evidence/generated\",\n      \"reason\": \"prefix:release/evidence/generated\"\n    }\n  ],\n  \"fingerprint\": \"33a155b2c7c4759676b3a407a621f14726fe37a8d9ae4f563697a2e07afdea08\",\n  \"gitignoreCoverage\": {\n    \"exactManagedBlock\": true,\n    \"ignoredExampleCount\": 19,\n    \"missingExampleCount\": 0,\n    \"missingExamples\": [],\n    \"missingPatternCount\": 0,\n    \"missingPatterns\": []\n  },\n  \"kind\": \"generated_state_audit\",\n  \"manifestGenerated\": [],\n  \"passed\": true,\n  \"policyVersion\": \"2.0.0\",\n  \"project\": \"<PROJECT>\",\n  \"schemaVersion\": \"1.0.0\",\n  \"trackedAuthority\": \"git-index\",\n  \"trackedGeneratedPendingDeletion\": [],\n  \"trackedGeneratedPresent\": []\n}\n"
     },
     {
       "argv": [
@@ -96,8 +88,8 @@
       ],
       "exitCode": 0,
       "name": "p0_009_benchmark_check",
-      "outputSha256": "e8f7835372cda677392871598d2664457896049fad2797c01b6ca0f2c4edbcac",
-      "outputTail": "P0-009 baseline is reproducible: 4e91059b830db6c4834ab12aa2651fe1c7bb4067ce19be7c54a6e981ec0ea619\n"
+      "outputSha256": "8d863ecc7be607ebb32044884477ec0b40a2a5132bf088adcfb01f10090b9b60",
+      "outputTail": "P0-009 baseline is reproducible: b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8\n"
     },
     {
       "argv": [
@@ -110,8 +102,8 @@
       ],
       "exitCode": 0,
       "name": "roadmap_control",
-      "outputSha256": "603073d0c791cb44f82a2dd1b93e35454209e264aecd8891e14ceada04fe541d",
-      "outputTail": "Roadmap control: PASS\nTasks: 22  Ready: 0  Errors: 0  Warnings: 0\n"
+      "outputSha256": "bb95aabdad6da4264d2be3a23ff5f1ea5e2d106962a863d01188400983b83ef3",
+      "outputTail": "Roadmap control: PASS\nTasks: 22  Ready: 2  Errors: 0  Warnings: 0\nNext ready: P0-004, P0-006\n"
     },
     {
       "argv": [
@@ -131,16 +123,7 @@
       "exitCode": 0,
       "name": "secret_scan",
       "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "outputTail": "",
-      "recreatedTrackedOutputsRemoved": [
-        {
-          "kind": "file",
-          "path": "release/SECRET_SCAN.json",
-          "reason": "pattern:release-generated-report",
-          "sha256": "a67c159a31d5db6d06d5ba6a0c425b24f3caef2778669fe2574b946fe4726994",
-          "size": 66
-        }
-      ]
+      "outputTail": ""
     },
     {
       "argv": [
@@ -154,8 +137,8 @@
       ],
       "exitCode": 0,
       "name": "verify_clean",
-      "outputSha256": "58176dfbc13960b17c419584aa99d5449dca6cf6e329aa141b4646119daa169b",
-      "outputTail": "{\n  \"actualFingerprint\": \"99a2f11118b4420513f57a15b0e4d4125b21f75e51ae1529ce93dd0fa9c2d597\",\n  \"addedNonGeneratedDirtyPaths\": [],\n  \"expectedFingerprint\": \"99a2f11118b4420513f57a15b0e4d4125b21f75e51ae1529ce93dd0fa9c2d597\",\n  \"kind\": \"generated_state_source_snapshot_verification\",\n  \"passed\": true,\n  \"policyVersion\": \"2.0.0\",\n  \"removedNonGeneratedDirtyPaths\": [],\n  \"schemaVersion\": \"1.0.0\"\n}\n"
+      "outputSha256": "af4d0945841f994b4ccc6ef5b8656147f5f4dd6534a7d26f241564157ed1fef3",
+      "outputTail": "{\n  \"actualFingerprint\": \"2219d4a78fc1b0ef4d69e727046d9b42a5dc25fcaa1fc587793ea5bbd0a0bc12\",\n  \"addedNonGeneratedDirtyPaths\": [],\n  \"expectedFingerprint\": \"2219d4a78fc1b0ef4d69e727046d9b42a5dc25fcaa1fc587793ea5bbd0a0bc12\",\n  \"kind\": \"generated_state_source_snapshot_verification\",\n  \"passed\": true,\n  \"policyVersion\": \"2.0.0\",\n  \"removedNonGeneratedDirtyPaths\": [],\n  \"schemaVersion\": \"1.0.0\"\n}\n"
     },
     {
       "argv": [
@@ -172,83 +155,8 @@
   "externalBackupCreated": true,
   "externalBackupLocation": "sibling-directory",
   "policyVersion": "2.0.0",
-  "removalCount": 74,
-  "removedPaths": [
-    ".flutter",
-    ".flutter_tool_state",
-    "release/SBOM.cdx.json",
-    "release/SECRET_SCAN.json",
-    "release/VALIDATION_REPORT.md",
-    "release/validation_report.json",
-    "reports/kristin-test-release-20260716-163948.json",
-    "reports/kristin-test-release-20260716-163948.md",
-    "reports/kristin-test-release-20260717-153606.json",
-    "reports/kristin-test-release-20260717-153606.md",
-    "reports/kristin-test-release-20260719-155213.json",
-    "reports/kristin-test-release-20260719-155213.md",
-    "reports/kristin-test-release-20260719-182033.json",
-    "reports/kristin-test-release-20260719-182033.md",
-    "reports/kristin-test-release-20260719-193529.json",
-    "reports/kristin-test-release-20260719-193529.md",
-    "reports/kristin-test-release-20260720-064908.json",
-    "reports/kristin-test-release-20260720-064908.md",
-    "reports/kristin-test-release-20260720-080858.json",
-    "reports/kristin-test-release-20260720-080858.md",
-    "reports/kristin-test-release-20260720-084457.json",
-    "reports/kristin-test-release-20260720-084457.md",
-    "reports/kristin-test-release-20260720-151219.json",
-    "reports/kristin-test-release-20260720-151219.md",
-    "reports/kristin-test-release-20260720-155659.json",
-    "reports/kristin-test-release-20260720-155659.md",
-    "reports/kristin-test-release-20260720-191414.json",
-    "reports/kristin-test-release-20260720-191414.md",
-    "reports/kristin-test-release-20260720-200704.json",
-    "reports/kristin-test-release-20260720-200704.md",
-    "reports/kristin-test-release-20260720-201027.json",
-    "reports/kristin-test-release-20260720-201027.md",
-    "reports/kristin-test-release-20260721-100855.json",
-    "reports/kristin-test-release-20260721-100855.md",
-    "reports/kristin-test-release-20260721-182838.json",
-    "reports/kristin-test-release-20260721-182838.md",
-    "reports/kristin-test-system-20260716-163944.json",
-    "reports/kristin-test-system-20260716-163944.md",
-    "reports/kristin-test-system-20260717-153601.json",
-    "reports/kristin-test-system-20260717-153601.md",
-    "reports/kristin-test-system-20260719-155209.json",
-    "reports/kristin-test-system-20260719-155209.md",
-    "reports/kristin-test-system-20260719-182030.json",
-    "reports/kristin-test-system-20260719-182030.md",
-    "reports/kristin-test-system-20260719-193527.json",
-    "reports/kristin-test-system-20260719-193527.md",
-    "reports/kristin-test-system-20260720-064903.json",
-    "reports/kristin-test-system-20260720-064903.md",
-    "reports/kristin-test-system-20260720-080844.json",
-    "reports/kristin-test-system-20260720-080844.md",
-    "reports/kristin-test-system-20260720-084438.json",
-    "reports/kristin-test-system-20260720-084438.md",
-    "reports/kristin-test-system-20260720-151209.json",
-    "reports/kristin-test-system-20260720-151209.md",
-    "reports/kristin-test-system-20260720-155641.json",
-    "reports/kristin-test-system-20260720-155641.md",
-    "reports/kristin-test-system-20260720-191357.json",
-    "reports/kristin-test-system-20260720-191357.md",
-    "reports/kristin-test-system-20260720-200631.json",
-    "reports/kristin-test-system-20260720-200631.md",
-    "reports/kristin-test-system-20260720-200950.json",
-    "reports/kristin-test-system-20260720-200950.md",
-    "reports/kristin-test-system-20260721-100830.json",
-    "reports/kristin-test-system-20260721-100830.md",
-    "reports/kristin-test-system-20260721-182803.json",
-    "reports/kristin-test-system-20260721-182803.md",
-    "scripts/__pycache__/validate_architecture.cpython-313.pyc",
-    "tool/__pycache__/generate_sbom.cpython-313.pyc",
-    "tool/__pycache__/kristin_cli.cpython-313.pyc",
-    "tool/__pycache__/release.cpython-313.pyc",
-    "tool/__pycache__/secret_scan.cpython-313.pyc",
-    "tool/__pycache__/source_tree_policy.cpython-313.pyc",
-    "tool/__pycache__/system_test.cpython-313.pyc",
-    "tool/__pycache__/validate_release.cpython-313.pyc"
-  ],
+  "removalCount": 0,
+  "removedPaths": [],
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
   "schemaVersion": "1.0.0",
   "status": "REVIEW",

@@ -2,14 +2,17 @@
   "authority": {
     "human": "docs/roadmap/MASTER.md",
     "machine": "docs/roadmap/roadmap.yaml",
-    "masterSha256": "ccb14d19077ae12d34afa40a006dd4c5649081cc3627ab384e154eb246d6b3e4",
+    "masterSha256": "0229c7474cdbf180128ed734807375ced3a82d0142143177112838bc67b7374a",
     "scope": [
       "P0",
       "P1"
     ]
   },
   "format": "yaml-1.2-json-subset",
-  "nextReady": [],
+  "nextReady": [
+    "P0-004",
+    "P0-006"
+  ],
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
   "schemaVersion": "1.0.0",
   "statusValues": [
@@ -94,7 +97,7 @@
       "packet": "tasks/active/P0-003.md",
       "phase": "P0",
       "requiredOutput": "Commit canonical Dart formatting; run every downstream analyzer, behavioral, validator, and native-build gate; repair the current Windows Project Manager readiness, SDK-environment, and artifact-evidence test failures without claiming unavailable isolation; retain complete failure evidence on all OS lanes. Do not redesign or pin CI in this task.",
-      "status": "REVIEW",
+      "status": "DONE",
       "title": "Green the current three-OS CI"
     },
     {
@@ -109,7 +112,7 @@
       "packet": "tasks/active/P0-004.md",
       "phase": "P0",
       "requiredOutput": "Pin Flutter/Dart, Python, Actions by commit SHA, and cache keys; record versions in a toolchain manifest.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Pin toolchains and GitHub Actions"
     },
     {
@@ -139,7 +142,7 @@
       "packet": "tasks/active/P0-006.md",
       "phase": "P0",
       "requiredOutput": "Add CODEOWNERS, branch protection requirements, PR template, security review labels, and merge policy.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Protect repository governance"
     },
     {
@@ -199,10 +202,11 @@
       ],
       "doneWhen": "Clean checkout stays clean after standard tests except declared reports.",
       "evidence": [
+        "release/evidence/P0-010/manifest.json",
         "release/evidence/P0-010/IMPLEMENTATION.md",
+        "release/evidence/P0-010/EXECUTION.md",
         "release/evidence/P0-010/removal_manifest.json",
-        "release/evidence/P0-010/audit.json",
-        "release/evidence/P0-010/manifest.json"
+        "release/evidence/P0-010/audit.json"
       ],
       "id": "P0-010",
       "packet": "tasks/active/P0-010.md",

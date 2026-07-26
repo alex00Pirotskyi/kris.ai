@@ -13,7 +13,6 @@
 
 ## Current review work
 
-- `P0-003` — Green the current three-OS CI (`tasks/active/P0-003.md`)
 - `P0-005` — Rewrite security and support policy (`tasks/active/P0-005.md`)
 - `P0-007` — Split source lint from behavioral assurance (`tasks/active/P0-007.md`)
 - `P0-008` — Create roadmap control files and bootstrap manifest (`tasks/active/P0-008.md`)
@@ -22,7 +21,8 @@
 
 ## Next ready tasks
 
-- None.
+- `P0-004` — Pin toolchains and GitHub Actions (`tasks/active/P0-004.md`)
+- `P0-006` — Protect repository governance (`tasks/active/P0-006.md`)
 
 ## Non-negotiable handoff rules
 

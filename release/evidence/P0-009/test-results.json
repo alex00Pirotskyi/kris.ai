@@ -15,12 +15,12 @@
       "passed": true
     },
     {
-      "detail": "case counts: {'browser_absent': 2, 'research': 2, 'crash_recovery': 2, 'coding': 2, 'analysis': 2, 'path_safety': 2}",
+      "detail": "case counts: {'crash_recovery': 2, 'research': 2, 'coding': 2, 'path_safety': 2, 'analysis': 2, 'browser_absent': 2}",
       "name": "Six required benchmark categories",
       "passed": true
     },
     {
-      "detail": "fingerprint=9d70179e84c098e25440054d567e07c264beb83c919d8433b2c44ed1363b6322",
+      "detail": "fingerprint=b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
       "name": "Versioned portable baseline",
       "passed": true
     },
@@ -30,7 +30,7 @@
       "passed": true
     },
     {
-      "detail": "status=failed score=0.38461538461538464",
+      "detail": "status=passed score=1.0",
       "name": "Path-safety result is measured",
       "passed": true
     },

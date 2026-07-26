@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "82abe8862e89dbf3348eebb316e3faf5d8bdf679746d5291591cfa62bef593d0",
+  "benchmarkInputsSha256": "c32bec8b29536117d6d2f359a2857b1a9720ef6ceddc68b8b76ffd2ee69c3361",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -76,13 +76,16 @@
     {
       "assuranceLevel": "source_contract",
       "category": "analysis",
-      "evidenceSha256": "2ce298fdd62150259d3492f8b541756a0d468c96ee2365f6358ea64dba2f5b15",
+      "evidenceSha256": "1b88640258e29c393e37415884e750be0ba381a1108ef339bb180bbdf70307e7",
       "id": "analysis.offline_system_contract",
       "observations": {
         "exitCode": 0,
         "selected": {
           "$.failed": 0,
-          "$.passed": 38
+          "$.passed": {
+            "minimum": 1,
+            "satisfied": true
+          }
         }
       },
       "proofKind": "source_inspection",
@@ -94,66 +97,17 @@
     {
       "assuranceLevel": "behavioral",
       "category": "path_safety",
-      "evidenceSha256": "69cc95cc4da0029fdbd2dc28cb47ce4ef46ac2e3139711ea3e4af04984445205",
+      "evidenceSha256": "d5b44f58e74bd84a2d3c238fcfb142b6328637aeb4b8d6ee82c5b32b4eb91afa",
       "id": "path_safety.generated_state_policy",
       "observations": {
-        "correct": 5,
-        "mismatches": [
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": ".playwright/browser/chromium"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "playwright-report/index.html"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "test-results/run.json"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "browser-profiles/personal/Default/Cookies"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "browser-traces/run.zip"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "services/automation_host/.cache/state"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "datasets/.build/intermediate.jsonl"
-          },
-          {
-            "actualGenerated": false,
-            "expectedGenerated": true,
-            "matches": false,
-            "path": "release/evidence/generated/transient.json"
-          }
-        ],
+        "correct": 13,
+        "mismatches": [],
         "total": 13
       },
       "proofKind": "executed_behavior",
-      "reason": "path_policy_gaps_recorded",
-      "score": 0.38461538461538464,
-      "status": "failed",
+      "reason": "all_path_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
       "title": "Generated-state path policy coverage"
     },
     {
@@ -193,14 +147,20 @@
     {
       "assuranceLevel": "behavioral",
       "category": "crash_recovery",
-      "evidenceSha256": "7cd6e8a0d4828a85c2ed581660f5cea61d7d3294dcc39cf604a0323fc38a781c",
+      "evidenceSha256": "d52b61425f7a4d69ab7c4a9c71150a5b4641fbb8cb8c41532f87e1e03bdf15e7",
       "id": "crash_recovery.diagnostic_replay",
       "observations": {
         "exitCode": 0,
         "selected": {
-          "$.caseCount": 2,
+          "$.caseCount": {
+            "minimum": 2,
+            "satisfied": true
+          },
           "$.passed": true,
-          "$.passedCount": 2
+          "$.passedCount": {
+            "minimum": 2,
+            "satisfied": true
+          }
         }
       },
       "proofKind": "executed_behavior",
@@ -335,13 +295,13 @@
       "id": "path_safety",
       "measuredCaseCount": 1,
       "name": "Path safety",
-      "readiness": 0.192308,
-      "score": 0.384615,
+      "readiness": 0.5,
+      "score": 1.0,
       "statusCounts": {
         "error": 0,
-        "failed": 1,
+        "failed": 0,
         "not_run": 0,
-        "passed": 0,
+        "passed": 1,
         "unavailable": 1,
         "unsupported": 0
       }
@@ -405,32 +365,32 @@
     "unavailableCountsAsPassed": false,
     "unsupportedCountsAsPassed": false
   },
-  "fixtureSha256": "13217296a140d2840adba6d7ff2facb6a13ad11b6907199347c47eb38d6768f7",
+  "fixtureSha256": "b43534d1c305d116c39ee9211e7c0fabad4d9744d09f9346c892c04141acb79f",
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "9d70179e84c098e25440054d567e07c264beb83c919d8433b2c44ed1363b6322",
+  "resultFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
   "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
   "suiteVersion": "1.0.0",
   "summary": {
     "behavioralCaseCount": 6,
-    "behavioralPassedCount": 4,
+    "behavioralPassedCount": 5,
     "benchmarkQualityPassed": false,
     "caseCount": 12,
     "coverage": 0.5,
     "measuredCaseCount": 6,
-    "readiness": 0.448718,
+    "readiness": 0.5,
     "recordingStatus": "complete",
-    "score": 0.673077,
+    "score": 0.75,
     "sourceContractCaseCount": 1,
     "sourceContractPassedCount": 1,
     "statusCounts": {
       "error": 0,
-      "failed": 1,
+      "failed": 0,
       "not_run": 3,
-      "passed": 5,
+      "passed": 6,
       "unavailable": 1,
       "unsupported": 2
     }

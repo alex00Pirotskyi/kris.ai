@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "a9a3e3b7dbfe9e6586d3ad2a839da2a5b602382d5d67602c30e31de0cb75eabb",
+  "benchmarkInputsSha256": "c32bec8b29536117d6d2f359a2857b1a9720ef6ceddc68b8b76ffd2ee69c3361",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -76,13 +76,16 @@
     {
       "assuranceLevel": "source_contract",
       "category": "analysis",
-      "evidenceSha256": "2ce298fdd62150259d3492f8b541756a0d468c96ee2365f6358ea64dba2f5b15",
+      "evidenceSha256": "1b88640258e29c393e37415884e750be0ba381a1108ef339bb180bbdf70307e7",
       "id": "analysis.offline_system_contract",
       "observations": {
         "exitCode": 0,
         "selected": {
           "$.failed": 0,
-          "$.passed": 38
+          "$.passed": {
+            "minimum": 1,
+            "satisfied": true
+          }
         }
       },
       "proofKind": "source_inspection",
@@ -144,14 +147,20 @@
     {
       "assuranceLevel": "behavioral",
       "category": "crash_recovery",
-      "evidenceSha256": "7cd6e8a0d4828a85c2ed581660f5cea61d7d3294dcc39cf604a0323fc38a781c",
+      "evidenceSha256": "d52b61425f7a4d69ab7c4a9c71150a5b4641fbb8cb8c41532f87e1e03bdf15e7",
       "id": "crash_recovery.diagnostic_replay",
       "observations": {
         "exitCode": 0,
         "selected": {
-          "$.caseCount": 2,
+          "$.caseCount": {
+            "minimum": 2,
+            "satisfied": true
+          },
           "$.passed": true,
-          "$.passedCount": 2
+          "$.passedCount": {
+            "minimum": 2,
+            "satisfied": true
+          }
         }
       },
       "proofKind": "executed_behavior",
@@ -356,11 +365,11 @@
     "unavailableCountsAsPassed": false,
     "unsupportedCountsAsPassed": false
   },
-  "fixtureSha256": "13217296a140d2840adba6d7ff2facb6a13ad11b6907199347c47eb38d6768f7",
+  "fixtureSha256": "b43534d1c305d116c39ee9211e7c0fabad4d9744d09f9346c892c04141acb79f",
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "4e91059b830db6c4834ab12aa2651fe1c7bb4067ce19be7c54a6e981ec0ea619",
+  "resultFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
   "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",

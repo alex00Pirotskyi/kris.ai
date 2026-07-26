@@ -1,15 +1,7 @@
 {
-  "afterFingerprint": "4e91059b830db6c4834ab12aa2651fe1c7bb4067ce19be7c54a6e981ec0ea619",
-  "beforeFingerprint": "9d70179e84c098e25440054d567e07c264beb83c919d8433b2c44ed1363b6322",
-  "caseChanges": [
-    {
-      "afterScore": 1.0,
-      "afterStatus": "passed",
-      "beforeScore": 0.38461538461538464,
-      "beforeStatus": "failed",
-      "caseId": "path_safety.generated_state_policy"
-    }
-  ],
+  "afterFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+  "beforeFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+  "caseChanges": [],
   "pathPolicyPassed": true,
   "regressions": [],
   "schemaVersion": "1.0.0",

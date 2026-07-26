@@ -15,14 +15,14 @@
 |---|---|---|---|---|
 | P0-001 | DONE | none | `tasks/active/P0-001.md` | `release/evidence/baseline/execution.json`<br>`release/evidence/P0-001/manifest.json`<br>`release/evidence/baseline/BASELINE.md`<br>`tool/capture_baseline.py` |
 | P0-002 | DONE | `P0-001` | `tasks/active/P0-002.md` | `release/evidence/P0-002/manifest.json`<br>`release/evidence/P0-002/IMPLEMENTATION.md`<br>`tool/v1_trust_disablement_test.py` |
-| P0-003 | REVIEW | `P0-001`, `P0-002` | `tasks/active/P0-003.md` | `release/evidence/P0-003/ci_matrix.json`<br>`release/evidence/P0-003/IMPLEMENTATION_PLAN.md` |
-| P0-004 | NOT_STARTED | `P0-003` | `tasks/active/P0-004.md` | `release/evidence/P0-004/STARTER.md` |
+| P0-003 | DONE | `P0-001`, `P0-002` | `tasks/active/P0-003.md` | `release/evidence/P0-003/ci_matrix.json`<br>`release/evidence/P0-003/IMPLEMENTATION_PLAN.md` |
+| P0-004 | READY | `P0-003` | `tasks/active/P0-004.md` | `release/evidence/P0-004/STARTER.md` |
 | P0-005 | REVIEW | `P0-001`, `P0-002` | `tasks/active/P0-005.md` | `release/evidence/P0-005/IMPLEMENTATION.md`<br>`docs/SUPPORT_POLICY.md` |
-| P0-006 | NOT_STARTED | `P0-003` | `tasks/active/P0-006.md` | none |
+| P0-006 | READY | `P0-003` | `tasks/active/P0-006.md` | none |
 | P0-007 | REVIEW | `P0-001` | `tasks/active/P0-007.md` | `release/evidence/P0-007/manifest.json`<br>`release/evidence/P0-007/IMPLEMENTATION.md`<br>`docs/roadmap/ASSURANCE_MODEL.md` |
 | P0-008 | REVIEW | `P0-001` | `tasks/active/P0-008.md` | `release/evidence/P0-008/manifest.json`<br>`release/evidence/P0-008/IMPLEMENTATION.md` |
 | P0-009 | REVIEW | `P0-001` | `tasks/active/P0-009.md` | `evals/results/p0_009_baseline.json`<br>`evals/results/P0_009_BASELINE.md`<br>`release/evidence/P0-009/manifest.json`<br>`release/evidence/P0-009/IMPLEMENTATION.md` |
-| P0-010 | REVIEW | `P0-001` | `tasks/active/P0-010.md` | `release/evidence/P0-010/IMPLEMENTATION.md`<br>`release/evidence/P0-010/removal_manifest.json`<br>`release/evidence/P0-010/audit.json`<br>`release/evidence/P0-010/manifest.json` |
+| P0-010 | REVIEW | `P0-001` | `tasks/active/P0-010.md` | `release/evidence/P0-010/manifest.json`<br>`release/evidence/P0-010/IMPLEMENTATION.md`<br>`release/evidence/P0-010/EXECUTION.md`<br>`release/evidence/P0-010/removal_manifest.json`<br>`release/evidence/P0-010/audit.json` |
 | P1-001 | NOT_STARTED | `P0-008` | `tasks/active/P1-001.md` | none |
 | P1-002 | NOT_STARTED | `P1-001` | `tasks/active/P1-002.md` | none |
 | P1-003 | NOT_STARTED | `P1-001`, `P1-002` | `tasks/active/P1-003.md` | none |
@@ -40,12 +40,12 @@
 ## Next ready tasks
 
 <!-- ROADMAP_NEXT_READY_START -->
-- None. Resolve the blockers or complete the task currently in review.
+- `P0-004` — Pin toolchains and GitHub Actions (`tasks/active/P0-004.md`)
+- `P0-006` — Protect repository governance (`tasks/active/P0-006.md`)
 <!-- ROADMAP_NEXT_READY_END -->
 
 ## Review and blocked work
 
-- `P0-003` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-005` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-007` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-008` **REVIEW** — Complete the packet acceptance criteria and independent review.

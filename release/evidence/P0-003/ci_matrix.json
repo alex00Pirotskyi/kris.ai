@@ -1,31 +1,34 @@
 {
-  "closureRule": "All lanes must be passed for the same commit before P0-003 is DONE and P0-004 is unblocked.",
-  "commit": null,
+  "closureRule": "All three stable checks and native builds passed for this exact commit.",
+  "commit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
   "lanes": {
     "macos": {
       "checkName": "validate-macos",
-      "environmentEvidence": null,
-      "jobUrl": null,
-      "nativeBuild": "pending",
-      "status": "pending"
+      "environmentEvidence": "release/evidence/P0-003/downloaded/macos/ci-environment-macOS.json",
+      "environmentSha256": "fcd8530c6da5c586a6f27cce8611e7f7141be40cc43561c2bbf3436310f459f9",
+      "jobUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30197992227/job/89782870636",
+      "nativeBuild": "passed",
+      "status": "passed"
     },
     "ubuntu": {
       "checkName": "validate-ubuntu",
-      "environmentEvidence": null,
-      "jobUrl": null,
-      "nativeBuild": "pending",
-      "status": "pending"
+      "environmentEvidence": "release/evidence/P0-003/downloaded/ubuntu/ci-environment-Linux.json",
+      "environmentSha256": "6bde7a5dba186a2d0a8a25f7c9cfa9e0893f99ca74ae8f13cdddb3c4ce016976",
+      "jobUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30197992227/job/89782870621",
+      "nativeBuild": "passed",
+      "status": "passed"
     },
     "windows": {
       "checkName": "validate-windows",
-      "environmentEvidence": null,
-      "jobUrl": null,
-      "nativeBuild": "pending",
-      "status": "pending"
+      "environmentEvidence": "release/evidence/P0-003/downloaded/windows/ci-environment-Windows.json",
+      "environmentSha256": "c41043c1bd37c80eddc4ca54eaed7e00fe383dee0c1ce9e1bfb1fa15da6d56fc",
+      "jobUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30197992227/job/89782870622",
+      "nativeBuild": "passed",
+      "status": "passed"
     }
   },
   "milestone": "P0-003",
   "schemaVersion": "1.0.0",
-  "status": "pending",
-  "workflowRunUrl": null
+  "status": "passed",
+  "workflowRunUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30197992227"
 }

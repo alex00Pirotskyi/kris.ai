@@ -1,218 +1,26 @@
 {
-  "appliedAt": "2026-07-25T03:43:10.641566+00:00",
+  "appliedAt": "2026-07-26T15:06:29.555899+00:00",
   "backup": {
     "created": true,
-    "directoryName": "repo.p0-008-backup-20260725T034308Z",
+    "directoryName": "repo.p0-008-backup-20260726T150623Z",
     "location": "external_sibling_directory"
   },
   "changedFiles": [
     {
-      "path": ".github/workflows/ci.yml",
-      "sha256": "1afa754627c6d7315b807eeb9a5ffd1a075bf6adcd7fa8476c9c0296b44223b8"
-    },
-    {
-      "path": "docs/adr/ADR-0000-roadmap-control-plane.md",
-      "sha256": "dfcf449e06dae31e4853d849f6d2ce2c0948d360a252857791bac5486efe0d78"
-    },
-    {
-      "path": "docs/adr/ADR-0001-runtime-boundaries.md",
-      "sha256": "4f641bb5e204cf5e1c552e497d43d7e447cb33f0233fe1bc02104843c464b409"
-    },
-    {
-      "path": "docs/adr/ADR-0002-owner-mode.md",
-      "sha256": "1952686bc11a357564198781534cf780e36a824da20cbea20408227d76885810"
-    },
-    {
-      "path": "docs/adr/ADR-0003-signed-manifest-v2.md",
-      "sha256": "1a0e992bfb1a610f9ca67f424003959fb5cdff4a19b9e389dcadfd96b0bf2e23"
-    },
-    {
-      "path": "docs/adr/ADR-0004-automation-host.md",
-      "sha256": "54c088d2c12a49d3d7c3741fc0a8edc7bb3f137a6e06bdfc814aeac5c2ff99b9"
-    },
-    {
-      "path": "docs/adr/ADR-0005-browser-storage.md",
-      "sha256": "472f3128a60fd9145a0b93b1cd088114da4abc7d5f04c63808e46de8277e3c44"
-    },
-    {
-      "path": "docs/adr/ADR-0006-update-system.md",
-      "sha256": "ae478f6e1e9a29d020fda6c2d8614e73b735e0f1f611d3ba48f7b2d4e86666a0"
-    },
-    {
-      "path": "docs/roadmap/CONTROL_PLANE.md",
-      "sha256": "45f763645314b0cbba95d060c0a7450879bb8009f0a47d3c05754c93c72c0709"
-    },
-    {
-      "path": "docs/roadmap/DECISIONS.md",
-      "sha256": "1cefbe626fe137a262e8afa11f2d198adbb76b3f7e3577673cf1370f27fd67d9"
-    },
-    {
       "path": "docs/roadmap/HANDOFF.md",
-      "sha256": "0b4b5754940667343d77be4b1cc2c7442e46cb218d36d466f2bea291a5b434ab"
+      "sha256": "d8359c618be366774f792ebd161aa26c84ab6e8a7efe92513f9d21e0b6dedf12"
     },
     {
       "path": "docs/roadmap/MASTER.md",
       "sha256": "c0a24cc2a91a9f349cc569e2439eb77df57645a6507e89d33f1ddb79515c3e7f"
     },
     {
-      "path": "docs/roadmap/METRICS.md",
-      "sha256": "e9c38b5ab00e5c6f1c0a16859c00835970085315c3baa8e6ec629181b4cd1709"
-    },
-    {
-      "path": "docs/roadmap/RELEASE_GATES.md",
-      "sha256": "fefdb8684b65ffc6974f7a15a71c6d09e26119e56657780994ec405dde82ddf5"
-    },
-    {
-      "path": "docs/roadmap/RISKS.md",
-      "sha256": "247eeffaed9077f9ca0e00913533e596603e93f7f5335af7257d9a58ef96f96f"
-    },
-    {
       "path": "docs/roadmap/STATUS.md",
-      "sha256": "1d48edbd0017d871eecb6ab99fc345dad99fc7a375de3aa88a6a1f45ce7c6e5b"
-    },
-    {
-      "path": "docs/roadmap/prompts/failure-recovery.md",
-      "sha256": "5098650fc6fbbedbd18126a54b67084bc5b57bb1c390156265c6551d4d9cc8f2"
-    },
-    {
-      "path": "docs/roadmap/prompts/implement.md",
-      "sha256": "fafb2a8945ac6a5dbcec3fb2b38a1b94360e63b4aef1bb595863d279ba2367e6"
-    },
-    {
-      "path": "docs/roadmap/prompts/release-review.md",
-      "sha256": "d46ea7bac25041ff0f6c159c39763ec2b3bd21015d32deffb28a35b5fbefe5c8"
-    },
-    {
-      "path": "docs/roadmap/prompts/review.md",
-      "sha256": "d864a16a9f8bc4b400497ace15499e694557a05f8d51a3a89e75f2683a5f09e6"
-    },
-    {
-      "path": "docs/roadmap/prompts/security-review.md",
-      "sha256": "98b68ce6e2c9256c01d885ce7cf3b36c51aabfbf8c19e6522a3d3ca2d16f9c3b"
+      "sha256": "6f47fbc8fef066d99eb78a43603915786d4c6eb94799b3fc45bdcc63472b8a66"
     },
     {
       "path": "docs/roadmap/roadmap.yaml",
-      "sha256": "d3159c04bb7995350aadbe744c11fe7f9decdb283f15dab71f0181e8b4269db2"
-    },
-    {
-      "path": "evals/datasets/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "evals/fixtures/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "evals/results/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "release/attestations/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "release/evidence/P0-008/IMPLEMENTATION.md",
-      "sha256": "08b5cd8e98c9fd361fdc87c43043081ceca59e0b1bd3dd92a4c3503a0119db5b"
-    },
-    {
-      "path": "release/reports/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "schemas/evidence_manifest.v1.json",
-      "sha256": "b6f2295f4740eac4c83edacaad2e40a5f22cd8a69f6907e8ab2de68c013a30ed"
-    },
-    {
-      "path": "schemas/roadmap_bootstrap.v1.json",
-      "sha256": "c39c0ddd61126f24f6d0c8e63309489881480aa664a4792c6cac6b0491e3593c"
-    },
-    {
-      "path": "tasks/active/P0-006.md",
-      "sha256": "d34de3b58087b5760005772e7ee9c13b0c79ca02b9beb0e3b1b104d42bd63053"
-    },
-    {
-      "path": "tasks/active/P0-008.md",
-      "sha256": "e884ecefd7262399d1d9bf4742230bee4a9372d1553ccbde5b37da945f344160"
-    },
-    {
-      "path": "tasks/active/P0-009.md",
-      "sha256": "8471df2d95a222a6769bc6c129b67f5dfb59581f708c09e719f06532cc3f699e"
-    },
-    {
-      "path": "tasks/active/P0-010.md",
-      "sha256": "bbe3ff2ed4f267644f8dbb83ab689f72a5a5f2798ba1feefd76b1df04553db78"
-    },
-    {
-      "path": "tasks/active/P1-001.md",
-      "sha256": "76a03d21ff70c1535d56cba72693b088d120e80dd1a93eac1c7ef959111441ab"
-    },
-    {
-      "path": "tasks/active/P1-002.md",
-      "sha256": "6e586897a882a817c9f1dcce3ed2aaf53c295cb8c0460338cb95f654f5dd9b59"
-    },
-    {
-      "path": "tasks/active/P1-003.md",
-      "sha256": "12a20fdbcce457075880909030cc1ae51f42bddb47e23f975bb1e5993c99e578"
-    },
-    {
-      "path": "tasks/active/P1-004.md",
-      "sha256": "2840177df650df4a8b40f35859f57e7bb156b794654c79f468bad11e706c6870"
-    },
-    {
-      "path": "tasks/active/P1-005.md",
-      "sha256": "697aba32c6ed81096769f146d7321390faa03a9dfaf1a71399f539c2c39b9d59"
-    },
-    {
-      "path": "tasks/active/P1-006.md",
-      "sha256": "187a9639827f4c715dc17e0ddff302cbd2cc220d64e94b9d505542baafff14be"
-    },
-    {
-      "path": "tasks/active/P1-007.md",
-      "sha256": "5c55d343482d23ada7f266a86cb0dde60f9205071595c9e61531e3316affedc6"
-    },
-    {
-      "path": "tasks/active/P1-008.md",
-      "sha256": "2fa7683e93172a7db05d145169c7ffe53344473972c29e3f1055b6bdccaf9c4b"
-    },
-    {
-      "path": "tasks/active/P1-009.md",
-      "sha256": "e1a9bdda6c94691b227090569fd1d49cd5de376f5a69d9a8ad59cf47c1fd6b59"
-    },
-    {
-      "path": "tasks/active/P1-010.md",
-      "sha256": "ffcb0b24b90559956d67e71080421031b5cfb9b361aeccb3248dafe5afdf8b3f"
-    },
-    {
-      "path": "tasks/active/P1-011.md",
-      "sha256": "ef0717c2284e0e4176c38c09547dcbc4a8f91dd8b8db442f37a40d3a0ee90da0"
-    },
-    {
-      "path": "tasks/active/P1-012.md",
-      "sha256": "fe75a2836854c380db7a75527398342f7b9feacc5dbc46c8fc676fb2e641c340"
-    },
-    {
-      "path": "tasks/blocked/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "tasks/completed/.gitkeep",
-      "sha256": "3958a058e13969b51056202d7a6b439e8c249f4eb0ae58402712153d0941976f"
-    },
-    {
-      "path": "tool/p0_008_roadmap_test.py",
-      "sha256": "dcb2cf2bc214af1c78cc599669b98f5a1e34bf62c34bcd05725158e8391c72e3"
-    },
-    {
-      "path": "tool/roadmap_control.py",
-      "sha256": "5375fa631f26e141a5e0e21b662fe5aae0cd0d7915458752b32f868f13de51d7"
-    },
-    {
-      "path": "tool/roadmap_control_test.py",
-      "sha256": "30c7c3d4035b1d89539edd8f81f85e48c3baf258835a922511919a3deb6116a1"
-    },
-    {
-      "path": "tool/verify.sh",
-      "sha256": "1995db322e745f040ad1cbbebf295a79cf5f4b066e7f566d82563b688370cddd"
+      "sha256": "dcd6f9d3761ccc1c37e149b76a1fe19bf1a8fda61292a65de62b2640c805e453"
     }
   ],
   "claimInvariant": "a_fresh_ai_session_can_select_ready_work_without_oral_context",
@@ -223,7 +31,7 @@
         "tool/roadmap_control_test.py"
       ],
       "exitCode": 0,
-      "outputSha256": "63c40ecd41a21b22315ebceac0ab619435c57b5ec86f4ec5ac6e3c5240d7d27d"
+      "outputSha256": "7272fb887f2558f41b10362e886a4672b208d30576f8bdfe15b539c3a869cf82"
     },
     {
       "argv": [
@@ -245,7 +53,7 @@
         "--strict"
       ],
       "exitCode": 0,
-      "outputSha256": "c190ad320f1a8e892b8e223bc15c3120ec9412d049dfb4ed5fd29343cfdd2c12"
+      "outputSha256": "bb95aabdad6da4264d2be3a23ff5f1ea5e2d106962a863d01188400983b83ef3"
     },
     {
       "argv": [
@@ -275,8 +83,8 @@
   ],
   "roadmap": {
     "nextReady": [
-      "P0-009",
-      "P0-010"
+      "P0-004",
+      "P0-006"
     ],
     "taskCount": 22,
     "taskGraphSha256": "dbef00a9e2fb2256b0c7f5a76d29aeccd0d482c4155d01ed2028aa67e4102fdc"
@@ -284,7 +92,7 @@
   "roadmapVersion": "3.1.4-p0-008-roadmap-control-plane",
   "schemaVersion": "1.0.0",
   "sourceManifest": {
-    "checked": 340,
+    "checked": 539,
     "mismatched": 0
   },
   "status": "REVIEW",

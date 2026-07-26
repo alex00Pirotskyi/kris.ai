@@ -2,7 +2,7 @@
 
 - Status: `REVIEW`
 - Policy version: `2.0.0`
-- Removed tracked generated paths: **74**
+- Removed tracked generated paths: **0**
 - External sibling backup created: **yes**
 - Commands passed: **11**
 
