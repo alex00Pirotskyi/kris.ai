@@ -134,10 +134,12 @@ class RoleBasedModelRouter {
     for (final candidate in candidates) {
       final reasons = <String>[];
       if (!candidate.healthy) reasons.add('model_unhealthy');
-      if (candidate.circuit == ModelCircuitState.open)
+      if (candidate.circuit == ModelCircuitState.open) {
         reasons.add('circuit_open');
-      if (!candidate.roles.contains(request.role))
+      }
+      if (!candidate.roles.contains(request.role)) {
         reasons.add('role_unsupported');
+      }
       if (candidate.contextTokens < request.requiredContextTokens) {
         reasons.add('context_insufficient');
       }

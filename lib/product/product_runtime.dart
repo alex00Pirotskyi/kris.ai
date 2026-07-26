@@ -7,6 +7,7 @@ import 'deployment_support.dart';
 import 'domain.dart';
 import 'execution_intelligence.dart';
 import 'extensions_index.dart';
+import 'file_adapters.dart';
 import 'models_research.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';

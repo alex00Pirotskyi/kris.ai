@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/agent_protocol.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/planning_runtime.dart';
+import 'package:kristin_local_agent/product/storage_security.dart';
 import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 void main() {

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'crypto_utils.dart';
 import 'domain.dart';
 import 'generated/protocol_contracts.g.dart';
 import 'protocol_types.dart';
@@ -149,7 +150,8 @@ class ToolContract {
         }
         final aliasValue = arguments[alias];
         if (arguments.containsKey(target)) {
-          if (!_jsonEquivalent(arguments[target], aliasValue)) {
+          if (!_compatibilityAliasEquivalent(
+              target, arguments[target], aliasValue)) {
             throw ToolSchemaException(
               code: 'argument_alias_conflict',
               message:
@@ -838,6 +840,49 @@ Object? _cloneJson(Object? value) {
     return value.map(_cloneJson).toList(growable: false);
   }
   return value;
+}
+
+bool _compatibilityAliasEquivalent(
+  String target,
+  Object? left,
+  Object? right,
+) {
+  if (_jsonEquivalent(left, right)) {
+    return true;
+  }
+  final key = target.toLowerCase();
+  final pathLike = key.contains('path') || key.contains('directory');
+  if (!pathLike || left is! String || right is! String) {
+    return false;
+  }
+  return _normalizeCompatibilityPathScalar(left) ==
+      _normalizeCompatibilityPathScalar(right);
+}
+
+String _normalizeCompatibilityPathScalar(String value) {
+  var normalized = value.trim();
+  if (normalized.length >= 2 &&
+      normalized.startsWith('`') &&
+      normalized.endsWith('`') &&
+      !normalized.substring(1, normalized.length - 1).contains('`')) {
+    normalized = normalized.substring(1, normalized.length - 1).trim();
+  } else if (normalized.length >= 6 &&
+      normalized.startsWith('```') &&
+      normalized.endsWith('```')) {
+    normalized = normalized.substring(3, normalized.length - 3).trim();
+    final firstNewline = normalized.indexOf('\n');
+    if (firstNewline >= 0) {
+      final possibleLanguage = normalized.substring(0, firstNewline).trim();
+      if (RegExp(r'^[A-Za-z0-9_-]*$').hasMatch(possibleLanguage)) {
+        normalized = normalized.substring(firstNewline + 1).trim();
+      }
+    }
+  }
+  normalized = normalized.replaceAll('\\', '/');
+  while (normalized.startsWith('./')) {
+    normalized = normalized.substring(2);
+  }
+  return normalized;
 }
 
 bool _jsonEquivalent(Object? left, Object? right) {

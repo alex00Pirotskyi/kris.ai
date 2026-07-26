@@ -1353,6 +1353,9 @@ class KnowledgeService {
   final Directory archiveDirectory;
   final Directory indexDirectory;
   final Directory exportDirectory;
+  final ContentAddressedObjectStore? objectStore;
+  final ResearchFreshnessPolicy freshnessPolicy;
+  final MemoryAdmissionPolicy admissionPolicy;
 
   Future<void> initialize() async {
     await Future.wait(<Future<void>>[
@@ -1755,13 +1758,11 @@ class KnowledgeService {
       if (!includeEpisodes) {
         return false;
       }
-      if (chunk.episodeAdmission == 'admitted') {
-        return true;
-      }
       if (includeUnsuccessfulEpisodes || chunk.pinned) {
         return true;
       }
       return chunk.episodeOutcome == RunState.succeeded.name &&
+          chunk.episodeAdmission == 'admitted' &&
           !chunk.diagnosticOnly;
     }).toList();
     final queryVector = _semanticVector(query);
@@ -2234,6 +2235,8 @@ ${entry.content}
       required String knowledgeId,
       required String episodeId,
       required String episodeOutcome,
+      required String episodeAdmission,
+      required bool diagnosticOnly,
       required String archiveId,
       required String title,
       required String sourceUrl,

@@ -11,7 +11,6 @@ import 'extensions_index.dart';
 import 'deployment_support.dart';
 import 'models_research.dart';
 import 'mcp.dart';
-import 'protocol_types.dart';
 import 'retry_policy.dart';
 import 'storage_security.dart';
 import 'tool_schema.dart';
@@ -1477,6 +1476,8 @@ class ToolRegistry {
   }
 
   Set<String> get names => Set<String>.unmodifiable(_tools.keys);
+
+  ToolContract contractFor(String name) => schemas.require(name);
 
   bool isMutatingTool(String name) =>
       _tools[name]?.contract.isMutating ?? false;

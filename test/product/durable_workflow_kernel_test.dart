@@ -41,7 +41,7 @@ void main() {
         migrationBackupDirectory: backupDirectory,
       );
 
-      expect(store!.schemaVersion, generatedWorkflowSchemaVersionForTest);
+      expect(store!.schemaVersion, 6);
       final report = await store!.verifyIntegrity();
       expect(report.ok, isTrue);
       expect(report.integrityResult.toLowerCase(), 'ok');

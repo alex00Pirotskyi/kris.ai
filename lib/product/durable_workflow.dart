@@ -717,7 +717,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     );
     final backup = File(
       '${migrationBackupDirectory.path}${Platform.pathSeparator}'
-      '${safeName}.${sourceSha.substring(0, 16)}.bak',
+      '$safeName.${sourceSha.substring(0, 16)}.bak',
     );
     if (!await backup.exists()) {
       await file.copy(backup.path);

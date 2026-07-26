@@ -5,7 +5,9 @@ import 'dart:typed_data';
 
 import 'crypto_utils.dart';
 import 'domain.dart';
+import 'generated/prompt_studio_contracts.g.dart';
 import 'product_runtime.dart';
+import 'prompt_studio_v2.dart';
 import 'storage_security.dart';
 
 class GovernedApiServer {

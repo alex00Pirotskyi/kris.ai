@@ -6,3 +6,24 @@
 *.jpeg binary
 *.ico binary
 *.zip binary
+
+# BEGIN KRISTIN PORTABLE SOURCE EOL
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.jar binary
+*.zip binary
+*.gz binary
+*.pdf binary
+*.db binary
+*.sqlite binary
+*.dll binary
+*.exe binary
+*.so binary
+*.dylib binary
+# END KRISTIN PORTABLE SOURCE EOL

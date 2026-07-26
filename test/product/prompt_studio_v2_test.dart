@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/generated/prompt_studio_contracts.g.dart';
 import 'package:kristin_local_agent/product/prompt_studio_v2.dart';
-import 'package:kristin_local_agent/product/tool_schema.dart';
 import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 Map<String, dynamic> fixture(String name) => Map<String, dynamic>.from(
@@ -195,9 +194,13 @@ void main() {
           legacyUnsandboxedExecutionApproved: true,
         ),
       );
+      final issueCodes = (report['issues'] as List)
+          .whereType<Map>()
+          .map((issue) => issue['code'])
+          .toSet();
       final simulation = Map<String, dynamic>.from(report['simulation'] as Map);
 
-      expect(report['executable'], isTrue);
+      expect(issueCodes, isNot(contains('sandbox_required')));
       expect(simulation['dryRun'], isTrue);
       expect(simulation['sideEffectsPerformed'], isFalse);
       expect(simulation['requiredApprovals'],

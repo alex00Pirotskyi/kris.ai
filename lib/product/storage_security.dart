@@ -83,10 +83,12 @@ class AtomicJsonFile implements JsonDocumentRepository {
     return completer.future;
   }
 
+  @override
   Future<Object?> read({Object? fallback}) => synchronized(
         () => _readUnlocked(fallback: fallback),
       );
 
+  @override
   Future<void> write(Object? value) => synchronized(
         () => _writeUnlocked(value),
       );
@@ -153,6 +155,7 @@ class PersistentCollection<T> implements EntityRepository<T> {
   final Map<String, dynamic> Function(T) toJson;
   final String Function(T) idOf;
 
+  @override
   Future<List<T>> all() async {
     final raw = await _store.read(fallback: const <Object>[]);
     if (raw is! List) {
@@ -164,6 +167,7 @@ class PersistentCollection<T> implements EntityRepository<T> {
         .toList();
   }
 
+  @override
   Future<T?> get(String id) async {
     for (final item in await all()) {
       if (idOf(item) == id) {
@@ -173,6 +177,7 @@ class PersistentCollection<T> implements EntityRepository<T> {
     return null;
   }
 
+  @override
   Future<void> put(T item) => _mutate((items) {
         final index = items.indexWhere(
           (candidate) => idOf(candidate) == idOf(item),
@@ -184,6 +189,7 @@ class PersistentCollection<T> implements EntityRepository<T> {
         }
       });
 
+  @override
   Future<void> putAll(Iterable<T> values) => _mutate((items) {
         final current = <String, T>{for (final item in items) idOf(item): item};
         for (final item in values) {
@@ -195,14 +201,17 @@ class PersistentCollection<T> implements EntityRepository<T> {
             ..sort((a, b) => idOf(a).compareTo(idOf(b))));
       });
 
+  @override
   Future<void> remove(String id) => _mutate(
         (items) => items.removeWhere((item) => idOf(item) == id),
       );
 
+  @override
   Future<void> removeWhere(bool Function(T item) predicate) => _mutate(
         (items) => items.removeWhere(predicate),
       );
 
+  @override
   Future<void> replaceAll(Iterable<T> values) =>
       _store.write(values.map(toJson).toList());
 

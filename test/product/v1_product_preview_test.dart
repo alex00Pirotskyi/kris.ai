@@ -290,7 +290,25 @@ void main() {
     tearDown(() async {
       await events.close();
       if (await temporary.exists()) {
-        await temporary.delete(recursive: true);
+        if (await temporary.exists()) {
+          FileSystemException? lastError;
+          var deleted = false;
+          for (var attempt = 0; attempt < 20; attempt++) {
+            try {
+              await temporary.delete(recursive: true);
+              deleted = true;
+              break;
+            } on FileSystemException catch (error) {
+              lastError = error;
+              await Future<void>.delayed(
+                Duration(milliseconds: 25 * (attempt + 1)),
+              );
+            }
+          }
+          if (!deleted && !Platform.isWindows && lastError != null) {
+            throw lastError;
+          }
+        }
       }
     });
 
@@ -718,7 +736,25 @@ void main() {
 
     tearDown(() async {
       if (await temporary.exists()) {
-        await temporary.delete(recursive: true);
+        if (await temporary.exists()) {
+          FileSystemException? lastError;
+          var deleted = false;
+          for (var attempt = 0; attempt < 20; attempt++) {
+            try {
+              await temporary.delete(recursive: true);
+              deleted = true;
+              break;
+            } on FileSystemException catch (error) {
+              lastError = error;
+              await Future<void>.delayed(
+                Duration(milliseconds: 25 * (attempt + 1)),
+              );
+            }
+          }
+          if (!deleted && !Platform.isWindows && lastError != null) {
+            throw lastError;
+          }
+        }
       }
     });
 
