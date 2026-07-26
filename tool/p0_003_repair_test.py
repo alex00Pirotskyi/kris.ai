@@ -201,7 +201,35 @@ def test_ci_receipt_portability() -> str:
         pass
     else:
         raise AssertionError("non-HTTPS evidence URL was accepted")
-    return "Windows .bat tool capture and CR/LF URL evidence normalization are executable"
+    with tempfile.TemporaryDirectory(prefix="kristin-p0-003-manifest-") as directory:
+        project = Path(directory)
+        output = project / "release/evidence/P0-003/ci_matrix.json"
+        other = project / "docs/roadmap/STATUS.md"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        other.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text('{"status":"old"}\n', encoding="utf-8", newline="\n")
+        other.write_text("# Status\n", encoding="utf-8", newline="\n")
+        manifest = project / "SOURCE_MANIFEST.sha256"
+        manifest.write_text(
+            f"{record.sha256(other)}  docs/roadmap/STATUS.md\n"
+            f"{record.sha256(output)}  release/evidence/P0-003/ci_matrix.json\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        other_digest = record.sha256(other)
+        output.write_text('{"status":"passed"}\n', encoding="utf-8", newline="\n")
+        record.refresh_source_manifest_entry(project, output)
+        entries = {}
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            digest, relative = line.split("  ", 1)
+            entries[relative] = digest
+        require(entries["docs/roadmap/STATUS.md"] == other_digest, "manifest refresh changed an unrelated entry")
+        require(
+            entries["release/evidence/P0-003/ci_matrix.json"] == record.sha256(output),
+            "recorded P0-003 output hash was not refreshed",
+        )
+        require(b"\r" not in manifest.read_bytes(), "refreshed source manifest contains CR bytes")
+    return "Windows receipt portability, URL hygiene, and recorded source-manifest refresh are executable"
 
 
 def test_sdk_gate_order_and_nonmutation() -> str:

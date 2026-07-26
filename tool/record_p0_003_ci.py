@@ -66,6 +66,41 @@ def normalize_https_url(value: str, option: str) -> str:
     return normalized
 
 
+MANIFEST_LINE = re.compile(r"^([0-9a-fA-F]{64})\s{2,}(.+)$")
+
+
+def refresh_source_manifest_entry(project: Path, output: Path) -> None:
+    # Update the tracked output hash before downstream strict manifest gates.
+    manifest_path = project / "SOURCE_MANIFEST.sha256"
+    if not manifest_path.is_file():
+        raise EvidenceError(f"missing source manifest: {manifest_path}")
+    try:
+        relative = output.resolve().relative_to(project.resolve()).as_posix()
+    except ValueError as error:
+        raise EvidenceError(f"recorded output is outside the project: {output}") from error
+
+    entries: dict[str, str] = {}
+    for line in manifest_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        match = MANIFEST_LINE.fullmatch(line)
+        if match is None:
+            raise EvidenceError(f"invalid source manifest line: {line!r}")
+        digest, path = match.groups()
+        if path in entries:
+            raise EvidenceError(f"duplicate source manifest path: {path}")
+        entries[path] = digest.lower()
+
+    if relative not in entries:
+        raise EvidenceError(f"recorded output is absent from source manifest: {relative}")
+    entries[relative] = sha256(output)
+    manifest_path.write_text(
+        "".join(f"{entries[path]}  {path}\n" for path in sorted(entries)),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def validate_environment(path: Path, lane: str, commit: str) -> dict[str, Any]:
     payload = load_object(path)
     runner = payload.get("runner")
@@ -155,7 +190,12 @@ def main() -> int:
     if not output.is_absolute():
         output = project / output
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    refresh_source_manifest_entry(project, output)
     print(json.dumps({**payload, "output": str(output)}, indent=2, sort_keys=True))
     return 0
 
