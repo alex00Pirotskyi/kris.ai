@@ -8,16 +8,42 @@ import os
 from pathlib import Path
 import platform
 import subprocess
+import shutil
 import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def prepare_command(
+    argv: list[str],
+    *,
+    windows: bool | None = None,
+    resolver: Any = None,
+    command_processor: str | None = None,
+) -> list[str] | None:
+    """Resolve native executables and Windows .bat/.cmd launchers deterministically."""
+    if not argv:
+        raise ValueError("argv must not be empty")
+    which = shutil.which if resolver is None else resolver
+    executable = which(argv[0])
+    if not executable:
+        return None
+    resolved = [executable, *argv[1:]]
+    is_windows = os.name == "nt" if windows is None else windows
+    if is_windows and Path(executable).suffix.lower() in {".bat", ".cmd"}:
+        processor = command_processor or os.environ.get("COMSPEC") or which("cmd.exe") or "cmd.exe"
+        return [processor, "/d", "/s", "/c", subprocess.list2cmdline(resolved)]
+    return resolved
+
+
 def run(argv: list[str]) -> dict[str, Any]:
+    prepared = prepare_command(argv)
+    if prepared is None:
+        return {"available": False, "error": "FileNotFoundError"}
     try:
         completed = subprocess.run(
-            argv,
+            prepared,
             cwd=ROOT,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,

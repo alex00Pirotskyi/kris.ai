@@ -58,6 +58,14 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def normalize_https_url(value: str, option: str) -> str:
+    """Strip host newline translation while preserving an HTTPS evidence URL."""
+    normalized = value.strip()
+    if not normalized.startswith("https://"):
+        raise EvidenceError(f"{option} must be HTTPS")
+    return normalized
+
+
 def validate_environment(path: Path, lane: str, commit: str) -> dict[str, Any]:
     payload = load_object(path)
     runner = payload.get("runner")
@@ -107,17 +115,16 @@ def main() -> int:
     commit = args.commit.lower()
     if FULL_SHA.fullmatch(commit) is None:
         raise EvidenceError("--commit must be a full 40-character lowercase Git SHA")
-    if not args.workflow_run_url.startswith("https://"):
-        raise EvidenceError("--workflow-run-url must be HTTPS")
+    workflow_run_url = normalize_https_url(args.workflow_run_url, "--workflow-run-url")
     head = current_head(project)
     if head and head != commit and not args.allow_non_head:
         raise EvidenceError(f"recorded commit {commit} does not equal current HEAD {head}")
 
     lanes: dict[str, Any] = {}
     for lane, (check_name, _platform) in LANES.items():
-        job_url = getattr(args, f"{lane}_job_url")
-        if not job_url.startswith("https://"):
-            raise EvidenceError(f"--{lane}-job-url must be HTTPS")
+        job_url = normalize_https_url(
+            getattr(args, f"{lane}_job_url"), f"--{lane}-job-url"
+        )
         env_path = Path(getattr(args, f"{lane}_environment"))
         if not env_path.is_absolute():
             env_path = project / env_path
@@ -140,7 +147,7 @@ def main() -> int:
         "milestone": "P0-003",
         "status": "passed",
         "commit": commit,
-        "workflowRunUrl": args.workflow_run_url,
+        "workflowRunUrl": workflow_run_url,
         "lanes": lanes,
         "closureRule": "All three stable checks and native builds passed for this exact commit.",
     }

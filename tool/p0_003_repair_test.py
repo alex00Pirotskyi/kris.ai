@@ -168,6 +168,42 @@ else:
     return "module imports without POSIX resource support and sandbox execution remains unavailable"
 
 
+def test_ci_receipt_portability() -> str:
+    def load_module(relative: str, name: str):
+        spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+        require(spec is not None and spec.loader is not None, f"cannot load {relative}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    capture = load_module("tool/capture_ci_environment.py", "p0_003_capture_portability")
+    flutter_bat = r"C:\Program Files\Flutter\bin\flutter.bat"
+    command = capture.prepare_command(
+        ["flutter", "--version", "--machine"],
+        windows=True,
+        resolver=lambda _name: flutter_bat,
+        command_processor=r"C:\Windows\System32\cmd.exe",
+    )
+    require(command is not None, "Windows Flutter command was not resolved")
+    require(command[:4] == [r"C:\Windows\System32\cmd.exe", "/d", "/s", "/c"], "batch launcher does not use cmd.exe")
+    require("flutter.bat" in command[4] and "--machine" in command[4], "Flutter batch command lost arguments")
+    native = capture.prepare_command(
+        ["git", "--version"], windows=False, resolver=lambda _name: "/usr/bin/git"
+    )
+    require(native == ["/usr/bin/git", "--version"], "native executable resolution drifted")
+
+    record = load_module("tool/record_p0_003_ci.py", "p0_003_record_url_hygiene")
+    cleaned = record.normalize_https_url("https://example.invalid/run/123\r\n", "--workflow-run-url")
+    require(cleaned == "https://example.invalid/run/123", "URL CR/LF normalization failed")
+    try:
+        record.normalize_https_url("http://example.invalid", "--workflow-run-url")
+    except record.EvidenceError:
+        pass
+    else:
+        raise AssertionError("non-HTTPS evidence URL was accepted")
+    return "Windows .bat tool capture and CR/LF URL evidence normalization are executable"
+
+
 def test_sdk_gate_order_and_nonmutation() -> str:
     verify = read("tool/verify.sh")
     format_command = "tool/dart_format_scope.py --check"
@@ -322,6 +358,7 @@ def main() -> int:
         run_case("Generated contract check mode", test_generator_check_mode),
         run_case("Durable workflow JSONPath literal", test_durable_jsonpath_literal),
         run_case("POSIX resource import fails closed", test_resource_import_fails_closed),
+        run_case("CI receipt portability", test_ci_receipt_portability),
         run_case("SDK gate ordering and nonmutation", test_sdk_gate_order_and_nonmutation),
         run_case("Three-OS CI contract", test_ci_contract),
         run_case("Handwritten Dart formatting scope", test_handwritten_format_scope),
