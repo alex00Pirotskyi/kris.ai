@@ -20,7 +20,7 @@
     },
     {
       "path": "docs/roadmap/roadmap.yaml",
-      "sha256": "dcd6f9d3761ccc1c37e149b76a1fe19bf1a8fda61292a65de62b2640c805e453"
+      "sha256": "cb9e7c1656f11a7dc13076a84103a4b921683f465737dc203c652bb7d761173c"
     }
   ],
   "claimInvariant": "a_fresh_ai_session_can_select_ready_work_without_oral_context",
