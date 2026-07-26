@@ -1,0 +1,8 @@
+{
+  "kind": "comparison",
+  "milestone": "P0-004",
+  "note": "Replace this placeholder with reviewed GitHub Actions evidence, then rebuild SOURCE_MANIFEST.sha256.",
+  "schemaVersion": "1.0.0",
+  "sourceCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
+  "status": "pending"
+}

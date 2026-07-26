@@ -1,76 +1,11 @@
 {
-  "appliedAt": "2026-07-25T03:43:08.265547+00:00",
+  "appliedAt": "2026-07-26T19:26:29.747700+00:00",
   "backup": {
-    "created": true,
-    "directoryName": "repo.p0-007-backup-20260725T034306Z",
+    "created": false,
+    "directoryName": null,
     "location": "external_sibling_directory"
   },
-  "changedFiles": [
-    {
-      "path": ".github/workflows/ci.yml",
-      "sha256": "0ec74f967fd16141e7cbd2f4c459b5c3acb510c1a214d3da254bacc078fbdf99"
-    },
-    {
-      "path": "docs/roadmap/ASSURANCE_MODEL.md",
-      "sha256": "e3a9a9e2398d35d6668b90bc19ca4ab5f9a63aeb18557bab9fa90ebc2b548dd2"
-    },
-    {
-      "path": "docs/roadmap/MASTER.md",
-      "sha256": "6ee470fba476c13a9ff28e78947d83fab673cbe9fa815d9a50c53ae4e77c3c79"
-    },
-    {
-      "path": "docs/roadmap/STATUS.md",
-      "sha256": "2241be58517aaa62b21eb408b04b7edfdeba390c8bbd15307253d368db802e75"
-    },
-    {
-      "path": "docs/roadmap/V3_1_3_ASSURANCE_RECONCILIATION.md",
-      "sha256": "734718cbdb2d8c1eca4c6ab840fdbbe91bece101093bc8cbf57ed21cdcf13b40"
-    },
-    {
-      "path": "release/evidence/P0-007/IMPLEMENTATION.md",
-      "sha256": "f5ba3e72ec87fe282260a1cf8436cc41edd67406ff73e6977b0b1434537dc8f7"
-    },
-    {
-      "path": "schemas/assurance_report.v1.json",
-      "sha256": "f714a1a938f622f56ff9a4fd2ad97acd4679008a929bb58c7b5e278cc0f52e02"
-    },
-    {
-      "path": "tasks/active/P0-007.md",
-      "sha256": "59991759bd860948b312a967d7269e936e516f5ae8e4302494df4e9f09997c9d"
-    },
-    {
-      "path": "tool/architecture_contract_test.py",
-      "sha256": "4cdb5596db467dbc78442a679171e6a0a0cfcec9d96bec9cafbb6b20c20b7a16"
-    },
-    {
-      "path": "tool/assurance_dashboard.py",
-      "sha256": "3852d95a81bcafb9e2c7627e91baa43d839faba88d863dbb34cffcf0aac0c2ca"
-    },
-    {
-      "path": "tool/assurance_model.py",
-      "sha256": "ef0e5b91974b36e31942cce069a182a5041c38558ab70311814feb43259eadbd"
-    },
-    {
-      "path": "tool/assurance_model_test.py",
-      "sha256": "a45300cb836866d19ad07036ea9945738f6ba80ab09096a81859c5ce1bd5b91c"
-    },
-    {
-      "path": "tool/p0_007_assurance_test.py",
-      "sha256": "df12d4a0da274579b8360b4638f35b3085e2706349464f752cd86e9fa2b545e7"
-    },
-    {
-      "path": "tool/system_test.py",
-      "sha256": "a3a70e3905c5d3a43ae4b35602d7905799b50da851c72c9ff3d13cd83d516810"
-    },
-    {
-      "path": "tool/validate_release.py",
-      "sha256": "f789a0659614cac42231a3ae6df4103f5abf7d83336bd9595199cbc750b8c3a6"
-    },
-    {
-      "path": "tool/verify.sh",
-      "sha256": "e393e22083a5f919553ada663ba7de9000bd1d3ecc18b2ca1fd2d3e7799f00d1"
-    }
-  ],
+  "changedFiles": [],
   "claimInvariant": "source_and_mixed_checks_never_count_as_behavioral_proof",
   "commands": [
     {
@@ -79,7 +14,7 @@
         "tool/assurance_model_test.py"
       ],
       "exitCode": 0,
-      "outputSha256": "a5d56b3dfe1f1fd8672870eb53e1cc6be3c884061171f4cb4d863bc1f2c6a4d5"
+      "outputSha256": "2ce4df26813b77f9cfb79f67e16e1d4a8beb82df9685b382dab9043cdad8cbe6"
     },
     {
       "argv": [
@@ -92,6 +27,36 @@
       ],
       "exitCode": 0,
       "outputSha256": "ccf9e0797352bc42e9c63d573cfba6c94102e9b3f91736a1d413306f98b401f8"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/architecture_contract_test.py",
+        "--project",
+        "."
+      ],
+      "exitCode": 0,
+      "outputSha256": "c440b8cb1f60e764d0bca5e3e6b96abd3c217168931e17570212f26f0ad0c561"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/validate_release.py",
+        "--skip-sdk"
+      ],
+      "exitCode": 0,
+      "outputSha256": "a84843ff011f91ac1160601fef93792e041f43cad1d342ab07d70bf016427233"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/assurance_dashboard.py",
+        "--project",
+        ".",
+        "--strict"
+      ],
+      "exitCode": 0,
+      "outputSha256": "fff4a04f43564bdede6cb4550a7f3b6c382e84a00c6a79dd5b0154cb52179662"
     }
   ],
   "limitations": [
@@ -102,7 +67,7 @@
   "prerequisites": {
     "cumulativeP0_003Present": true,
     "cumulativeP0_005Present": true,
-    "cumulativeP0_006Present": false,
+    "cumulativeP0_006Present": true,
     "p0_001BaselineToolPresent": true,
     "p0_002TrustDisablementPresent": true
   },

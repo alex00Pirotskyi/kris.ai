@@ -15,7 +15,7 @@
       "passed": true
     },
     {
-      "detail": "case counts: {'crash_recovery': 2, 'research': 2, 'coding': 2, 'path_safety': 2, 'analysis': 2, 'browser_absent': 2}",
+      "detail": "case counts: {'browser_absent': 2, 'path_safety': 2, 'analysis': 2, 'crash_recovery': 2, 'research': 2, 'coding': 2}",
       "name": "Six required benchmark categories",
       "passed": true
     },

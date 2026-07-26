@@ -1,0 +1,129 @@
+{
+  "actions": {
+    "actions/checkout": {
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "release": "v7.0.1"
+    },
+    "actions/setup-python": {
+      "commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+      "release": "v7.0.0"
+    },
+    "actions/upload-artifact": {
+      "commit": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+      "release": "v7.0.1"
+    },
+    "subosito/flutter-action": {
+      "commit": "1a449444c387b1966244ae4d4f8c696479add0b2",
+      "release": "v2.23.0"
+    }
+  },
+  "backupDirectory": "C:\\dev\\flutter\\.kristin-v12-worktree.QNiERh\\repo.p0-004-backup-20260726T192518Z",
+  "changeCount": 14,
+  "changedFiles": [
+    ".github/workflows/ci.yml",
+    "config/toolchains.lock.json",
+    "docs/roadmap/STATUS.md",
+    "release/evidence/P0-004/IMPLEMENTATION.md",
+    "release/evidence/P0-004/comparison.json",
+    "release/evidence/P0-004/first-run.json",
+    "release/evidence/P0-004/inputs.json",
+    "release/evidence/P0-004/second-run.json",
+    "tasks/active/P0-003.md",
+    "tasks/active/P0-004.md",
+    "tool/compare_toolchain_runs.py",
+    "tool/toolchain_lock_test.py",
+    "tool/validate_release.py",
+    "tool/verify.sh"
+  ],
+  "changes": [
+    ".github/workflows/ci.yml",
+    "config/toolchains.lock.json",
+    "docs/roadmap/STATUS.md",
+    "release/evidence/P0-004/IMPLEMENTATION.md",
+    "release/evidence/P0-004/comparison.json",
+    "release/evidence/P0-004/first-run.json",
+    "release/evidence/P0-004/inputs.json",
+    "release/evidence/P0-004/second-run.json",
+    "tasks/active/P0-003.md",
+    "tasks/active/P0-004.md",
+    "tool/compare_toolchain_runs.py",
+    "tool/toolchain_lock_test.py",
+    "tool/validate_release.py",
+    "tool/verify.sh"
+  ],
+  "closure": "requires_two_same_source_three_lane_reruns",
+  "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+  "dependencyCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
+  "gates": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "py_compile",
+        "tool/toolchain_lock_test.py",
+        "tool/compare_toolchain_runs.py",
+        "tool/validate_release.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/toolchain_lock_test.py",
+        "--source-only",
+        "--json-output",
+        "release/evidence/P0-004/source-lock-test.json"
+      ],
+      "exitCode": 0,
+      "outputTail": "{\n  \"caseCount\": 3,\n  \"declaredInputFingerprint\": \"532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818\",\n  \"failedCount\": 0,\n  \"manifestSha256\": \"b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26\",\n  \"milestone\": \"P0-004\",\n  \"passed\": true,\n  \"passedCount\": 3,\n  \"platform\": {\n    \"machine\": \"AMD64\",\n    \"release\": \"10\",\n    \"system\": \"Windows\"\n  },\n  \"resolved\": null,\n  \"results\": [\n    {\n      \"detail\": \"python=3.12.10 flutter=3.44.8 dart=3.12.2 actions=4\",\n      \"name\": \"Toolchain manifest shape\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"verified 1 lockfile(s)\",\n      \"name\": \"Declared lockfile hashes\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"validated 5 immutable action reference(s) and explicit runner labels\",\n      \"name\": \"Immutable workflow inputs\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"sourceOnly\": true\n}\n",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "outputTail": "",
+      "status": "passed"
+    }
+  ],
+  "milestone": "P0-004",
+  "next": "push and run the pinned workflow twice; compare all three lane receipts",
+  "roadmapVersion": "3.1.2-p0-006-governance-integration",
+  "runners": {
+    "macos": "macos-15",
+    "ubuntu": "ubuntu-24.04",
+    "windows": "windows-2025"
+  },
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "available": true,
+    "entries": 548,
+    "sha256": "41f8c3aa67aeee4bfbf14f12f17f5200e04cfcdaeefd3cdb3f113fe6f8b05ead"
+  },
+  "sourceManifestVerification": {
+    "available": true,
+    "entries": 548,
+    "mismatched": [],
+    "passed": true
+  },
+  "status": "review",
+  "toolchains": {
+    "dart": "3.12.2",
+    "flutter": "3.44.8",
+    "python": "3.12.10"
+  }
+}

@@ -16,9 +16,9 @@
 | P0-001 | DONE | none | `tasks/active/P0-001.md` | `release/evidence/baseline/execution.json`<br>`release/evidence/P0-001/manifest.json`<br>`release/evidence/baseline/BASELINE.md`<br>`tool/capture_baseline.py` |
 | P0-002 | DONE | `P0-001` | `tasks/active/P0-002.md` | `release/evidence/P0-002/manifest.json`<br>`release/evidence/P0-002/IMPLEMENTATION.md`<br>`tool/v1_trust_disablement_test.py` |
 | P0-003 | DONE | `P0-001`, `P0-002` | `tasks/active/P0-003.md` | `release/evidence/P0-003/ci_matrix.json`<br>`release/evidence/P0-003/IMPLEMENTATION_PLAN.md` |
-| P0-004 | READY | `P0-003` | `tasks/active/P0-004.md` | `release/evidence/P0-004/STARTER.md` |
+| P0-004 | REVIEW | `P0-003` | `tasks/active/P0-004.md` | `release/evidence/P0-004/comparison.json`<br>`release/evidence/P0-004/STARTER.md`<br>`config/toolchains.lock.json`<br>`release/evidence/P0-004/IMPLEMENTATION.md` |
 | P0-005 | REVIEW | `P0-001`, `P0-002` | `tasks/active/P0-005.md` | `release/evidence/P0-005/IMPLEMENTATION.md`<br>`docs/SUPPORT_POLICY.md` |
-| P0-006 | READY | `P0-003` | `tasks/active/P0-006.md` | none |
+| P0-006 | REVIEW | `P0-003` | `tasks/active/P0-006.md` | `release/evidence/P0-006/IMPLEMENTATION_PLAN.md`<br>`config/repository_governance.json` |
 | P0-007 | REVIEW | `P0-001` | `tasks/active/P0-007.md` | `release/evidence/P0-007/manifest.json`<br>`release/evidence/P0-007/IMPLEMENTATION.md`<br>`docs/roadmap/ASSURANCE_MODEL.md` |
 | P0-008 | REVIEW | `P0-001` | `tasks/active/P0-008.md` | `release/evidence/P0-008/manifest.json`<br>`release/evidence/P0-008/IMPLEMENTATION.md` |
 | P0-009 | REVIEW | `P0-001` | `tasks/active/P0-009.md` | `evals/results/p0_009_baseline.json`<br>`evals/results/P0_009_BASELINE.md`<br>`release/evidence/P0-009/manifest.json`<br>`release/evidence/P0-009/IMPLEMENTATION.md` |
@@ -40,13 +40,14 @@
 ## Next ready tasks
 
 <!-- ROADMAP_NEXT_READY_START -->
-- `P0-004` — Pin toolchains and GitHub Actions (`tasks/active/P0-004.md`)
-- `P0-006` — Protect repository governance (`tasks/active/P0-006.md`)
+- None. Resolve the blockers or complete the task currently in review.
 <!-- ROADMAP_NEXT_READY_END -->
 
 ## Review and blocked work
 
+- `P0-004` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-005` **REVIEW** — Complete the packet acceptance criteria and independent review.
+- `P0-006` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-007` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-008` **REVIEW** — Complete the packet acceptance criteria and independent review.
 - `P0-009` **REVIEW** — Complete the packet acceptance criteria and independent review.

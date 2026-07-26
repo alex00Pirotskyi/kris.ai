@@ -1,0 +1,123 @@
+{
+  "backupDirectory": "C:\\dev\\flutter\\.kristin-v12-worktree.QNiERh\\repo.p0-006-backup-20260726T192535Z",
+  "changedFiles": [
+    ".github/CODEOWNERS",
+    ".github/ISSUE_TEMPLATE/bug_report.yml",
+    ".github/ISSUE_TEMPLATE/config.yml",
+    ".github/ISSUE_TEMPLATE/engineering_task.yml",
+    ".github/pull_request_template.md",
+    ".github/workflows/ci.yml",
+    "config/repository_governance.json",
+    "docs/roadmap/REPOSITORY_GOVERNANCE.md",
+    "docs/roadmap/STATUS.md",
+    "release/evidence/P0-006/IMPLEMENTATION_PLAN.md",
+    "tasks/active/P0-006.md",
+    "tool/github_governance.py",
+    "tool/github_governance_client_test.py",
+    "tool/repository_governance_test.py",
+    "tool/validate_release.py",
+    "tool/verify.sh"
+  ],
+  "files": [
+    ".github/CODEOWNERS",
+    ".github/ISSUE_TEMPLATE/bug_report.yml",
+    ".github/ISSUE_TEMPLATE/config.yml",
+    ".github/ISSUE_TEMPLATE/engineering_task.yml",
+    ".github/pull_request_template.md",
+    "config/repository_governance.json",
+    "docs/roadmap/REPOSITORY_GOVERNANCE.md",
+    "release/evidence/P0-006/IMPLEMENTATION_PLAN.md",
+    "tasks/active/P0-006.md",
+    "tool/github_governance.py",
+    "tool/github_governance_client_test.py",
+    "tool/repository_governance_test.py"
+  ],
+  "gates": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "py_compile",
+        "tool/github_governance.py",
+        "tool/github_governance_client_test.py",
+        "tool/repository_governance_test.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/github_governance_client_test.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "test_apply_requires_solo_maintainer_confirmation (tool.github_governance_client_test.GovernanceClientTest.test_apply_requires_solo_maintainer_confirmation) ... ok\ntest_apply_verify_and_repeat_are_idempotent_and_redacted (tool.github_governance_client_test.GovernanceClientTest.test_apply_verify_and_repeat_are_idempotent_and_redacted) ... ok\ntest_plan_requires_no_token_and_discloses_no_secret (tool.github_governance_client_test.GovernanceClientTest.test_plan_requires_no_token_and_discloses_no_secret) ... ok\ntest_verify_detects_remote_governance_drift (tool.github_governance_client_test.GovernanceClientTest.test_verify_detects_remote_governance_drift) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 9.207s\n\nOK\n",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/repository_governance_test.py",
+        "--json-output",
+        "release/evidence/P0-006/local_governance_results.json"
+      ],
+      "exitCode": 0,
+      "outputTail": "{\n  \"caseCount\": 10,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-006\",\n  \"passed\": true,\n  \"passedCount\": 10,\n  \"results\": [\n    {\n      \"detail\": \"all present\",\n      \"name\": \"Required governance files\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ruleset desired state is explicit and fail-closed\",\n      \"name\": \"Governance desired-state schema\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"covered markers=11\",\n      \"name\": \"CODEOWNERS coverage\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"PR template requires task, platform, authority, evidence, and review data\",\n      \"name\": \"Pull-request template\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"private security and bounded engineering intake are configured\",\n      \"name\": \"Issue and security intake\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"CI exposes stable tri-OS check names and governance/policy gates\",\n      \"name\": \"Stable CI and local gates\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"verification preserves P0-002/P0-003/P0-005/P0-006 gates\",\n      \"name\": \"Merged verification ladder\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"same-commit tri-OS evidence commit=53a7d661cda1f714bbe3ff83c8e06d99cb433a20\",\n      \"name\": \"P0-003 dependency evidence\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"remote applicator is explicit, versioned, and avoids token persistence\",\n      \"name\": \"Guarded GitHub client\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"task and operator docs keep remote enforcement as a completion requirement\",\n      \"name\": \"Task and operator truth\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\"\n}\n",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "{\n  \"caseCount\": 8,\n  \"failedCount\": 0,\n  \"milestone\": \"P0-002\",\n  \"passed\": true,\n  \"passedCount\": 8,\n  \"results\": [\n    {\n      \"detail\": \"enabled=false replacement=signed_manifest_v2\",\n      \"name\": \"Disablement status is explicit\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=generate_signing_keypair\",\n      \"name\": \"Legacy key generation is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=sign_manifest\",\n      \"name\": \"Legacy manifest signing is blocked\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/policy_support_test.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "{\n  \"caseCount\": 10,\n  \"milestone\": \"P0-005\",\n  \"passed\": true,\n  \"passedCount\": 10,\n  \"results\": [\n    {\n      \"detail\": \"README states source-preview classification and that Owner Mode is not implemented.\",\n      \"name\": \"README source-preview classification\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"README states Linux reference-worker truth, Windows/macOS fail-closed status, and manifest-trust freeze.\",\n      \"name\": \"README platform matrix truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"SECURITY.md targets v1.9.0+190 and documents the interop freeze.\",\n      \"name\": \"SECURITY supported line and freeze\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"SECURITY.md includes an explicit platform/authority table.\",\n      \"name\": \"SECURITY platform truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"docs/SECURITY_MODEL.md reflects the current SQLite workflow authority and removes stale JSON-authority wording.\",\n      \"name\": \"Security model uses SQLite truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"docs/THREAT_MODEL.md includes manifest/interop substitution threats and the current trust freeze.\",\n      \"name\": \"Threat model includes manifest and interop threats\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"docs/SUPPORT_POLICY.md defines the supported artifact and reporting boundary.\",\n      \"name\": \"Support policy exists\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"RELEASE.json exposes the same source-preview and interop-freeze truth.\",\n      \"name\": \"Release metadata agrees\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"RELEASE.json records Linux reference-worker support and Windows/macOS fail-closed status.\",\n      \"name\": \"Release metadata platform truth\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Advanced UI shows the same classification, Owner Mode status, and platform truth as the docs.\",\n      \"name\": \"UI developer page agrees with docs\",\n      \"passed\": true\n    }\n  ]\n}\n",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "outputTail": "",
+      "status": "passed"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "outputTail": "",
+      "status": "passed"
+    }
+  ],
+  "milestone": "P0-006",
+  "next": "commit/push, activate and verify GitHub governance, then record blocked and successful demonstration PRs",
+  "p0_003Commit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
+  "remoteChanges": "none; activate separately with tool/github_governance.py",
+  "roadmapVersion": "3.1.2-p0-006-governance-integration",
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "entries": 561,
+    "mismatched": [],
+    "passed": true,
+    "sha256": "60a7398de515fe8194193f251b54da863aa936907d6761c07cfe82bebd5e4699"
+  },
+  "status": "review"
+}

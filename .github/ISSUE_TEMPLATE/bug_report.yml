@@ -1,0 +1,52 @@
+name: Product or CI defect
+about: Report a reproducible defect without exposing credentials or private project content.
+title: "[BUG] "
+labels: []
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Exact commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Windows, macOS, Linux, Multiple platforms, Source-only gate]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Redact tokens, secrets, usernames, private paths, and customer data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result and evidence hash/path
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: I removed credentials and private data.
+          required: true
+        - label: This is not an undisclosed security vulnerability; private vulnerabilities use Security Advisories.
+          required: true

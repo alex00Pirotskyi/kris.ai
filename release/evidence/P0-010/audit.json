@@ -7,8 +7,58 @@
   "existingGeneratedRoots": [
     {
       "exists": true,
+      "path": ".flutter",
+      "reason": "file:.flutter"
+    },
+    {
+      "exists": true,
+      "path": ".flutter_tool_state",
+      "reason": "file:.flutter_tool_state"
+    },
+    {
+      "exists": true,
       "path": ".git",
       "reason": "directory:.git"
+    },
+    {
+      "exists": true,
+      "path": "release/ARCHITECTURE_CONTRACT_RESULTS.json",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/ARCHITECTURE_CONTRACT_RESULTS.md",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/ASSURANCE_REPORT.json",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/ASSURANCE_REPORT.md",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/EXECUTION_INTELLIGENCE_RESULTS.json",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/PROJECT_MANAGER_V2_RESULTS.json",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/PROMPT_STUDIO_V2_RESULTS.json",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/SBOM.cdx.json",
+      "reason": "pattern:release-generated-report"
     },
     {
       "exists": true,
@@ -17,11 +67,21 @@
     },
     {
       "exists": true,
+      "path": "release/VALIDATION_REPORT.md",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
+      "path": "release/validation_report.json",
+      "reason": "pattern:release-generated-report"
+    },
+    {
+      "exists": true,
       "path": "release/evidence/generated",
       "reason": "prefix:release/evidence/generated"
     }
   ],
-  "fingerprint": "d47d0a2adf37ec422d056a26acef685beae19c933a7d3858a7fdef3469ecf8fa",
+  "fingerprint": "74ad53c43f32714a50624b160543278784f14b85281915fe01ecb995053e60bb",
   "gitignoreCoverage": {
     "exactManagedBlock": true,
     "ignoredExampleCount": 19,

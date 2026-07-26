@@ -14,25 +14,29 @@ jobs:
       matrix:
         include:
           - lane: ubuntu
-            os: ubuntu-latest
+            os: ubuntu-24.04
           - lane: windows
-            os: windows-latest
+            os: windows-2025
           - lane: macos
-            os: macos-latest
+            os: macos-15
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Pin Python toolchain
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          python-version: "3.12.10"
-
-      - uses: subosito/flutter-action@v2
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
+          python-version: '3.12.10'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
           channel: stable
           cache: true
-
+          pub-cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          pub-cache-key: 'flutter-pub-:os:-:channel:-:version:-:arch:-:hash:'
       - name: Install Linux desktop build dependencies
         if: runner.os == 'Linux'
         shell: bash
@@ -60,14 +64,24 @@ jobs:
       - name: Capture CI environment
         run: python tool/capture_ci_environment.py --output "release/evidence/P0-003/ci-environment-${{ runner.os }}.json" --print
 
+
+      - name: Validate locked toolchain
+        run: python tool/toolchain_lock_test.py --json-output "release/evidence/P0-004/toolchain-${{ runner.os }}.json"
+
+      - name: Upload P0-004 toolchain receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p0-004-toolchain-${{ matrix.lane }}
+          path: release/evidence/P0-004/toolchain-${{ runner.os }}.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload P0-003 CI environment
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: p0-003-ci-environment-${{ matrix.lane }}
           path: release/evidence/P0-003/ci-environment-${{ runner.os }}.json
           if-no-files-found: error
           retention-days: 30
-
       - name: P0-002 trust retirement
         run: python tool/v1_trust_disablement_test.py
 
@@ -76,6 +90,12 @@ jobs:
 
       - name: P0-005 policy and support truth
         run: python tool/policy_support_test.py
+
+      - name: P0-006 repository governance contract
+        run: python tool/repository_governance_test.py --json-output release/evidence/P0-006/local_governance_results.json
+
+      - name: P0-006 GitHub governance client fixtures
+        run: python -m unittest -v tool/github_governance_client_test.py
 
       - name: V1.7 generated contracts
         run: python tool/generate_v170_contracts.py --check

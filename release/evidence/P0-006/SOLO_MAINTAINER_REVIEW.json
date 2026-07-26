@@ -1,0 +1,52 @@
+{
+  "baseStageASha": "b59107232e032a649d1e0ef3ede787888a36c6a0",
+  "changedPathCountAtAttestation": 19,
+  "changedPathsAtAttestation": [
+    ".github/workflows/ci.yml",
+    "SOURCE_MANIFEST.sha256",
+    "docs/roadmap/HANDOFF.md",
+    "docs/roadmap/MASTER.md",
+    "docs/roadmap/STATUS.md",
+    "docs/roadmap/roadmap.yaml",
+    "release/FILE_ADAPTER_RESULTS.json",
+    "release/KNOWLEDGE_MEMORY_V2_RESULTS.json",
+    "release/evidence/P0-007/manifest.json",
+    "release/evidence/P0-008/manifest.json",
+    "release/evidence/P0-009/test-results.json",
+    "release/evidence/P0-010/EXECUTION.md",
+    "release/evidence/P0-010/audit.json",
+    "release/evidence/P0-010/manifest.json",
+    "tasks/active/P0-003.md",
+    "tasks/active/P0-004.md",
+    "tasks/active/P0-006.md",
+    "tool/validate_release.py",
+    "tool/verify.sh"
+  ],
+  "maintainer": "alex00Pirotskyi",
+  "milestone": "P0-006",
+  "reviewMode": "solo_maintainer",
+  "reviewedAreas": [
+    "P0-004 immutable toolchain and CI action pins",
+    "P0-006 repository governance and credential handling",
+    "P0-007 assurance reconciliation",
+    "P0-008 roadmap authority reconciliation",
+    "P0-009 portable benchmark reconciliation",
+    "P0-010 generated-state reconciliation"
+  ],
+  "reviewedAt": "2026-07-26T19:28:13.981193+00:00",
+  "safetyControls": [
+    "mandatory validate-ubuntu, validate-windows, and validate-macos checks",
+    "no ruleset bypass actors",
+    "pull-request-only default-branch changes",
+    "force-push and deletion protection",
+    "durable exact-diff self-review evidence"
+  ],
+  "schemaVersion": "1.0.0",
+  "statement": "I am the sole maintainer. I reviewed the exact Stage B diff separately from implementation and did not fabricate an independent reviewer or approval.",
+  "status": "attested",
+  "toolchain": {
+    "dart": "3.12.2",
+    "flutter": "3.44.8",
+    "python": "3.12.10"
+  }
+}

@@ -437,7 +437,9 @@ def check_required_files() -> None:
         "tool/validate_release.py", "tool/kristin_cli.py", "tool/system_test.py",
         "tool/dart_string_literal.py", "tool/dart_format_scope.py",
         "tool/dart_format_scope_test.py", "tool/p0_003_repair_test.py",
-        "tool/capture_ci_environment.py", "kristin", "kristin.cmd",
+        "tool/capture_ci_environment.py", "tool/toolchain_lock_test.py",
+        "tool/compare_toolchain_runs.py", "config/toolchains.lock.json",
+        "kristin", "kristin.cmd",
         "RUN_WINDOWS.bat", "RUN_MAC.command", "RUN_LINUX.sh",
         "tool/prune_stale_legacy.dart", "tool/prune_stale_legacy.cmd",
         "README.md", "SECURITY.md",
@@ -529,6 +531,14 @@ def check_required_files() -> None:
         'tool/record_p0_003_ci.py',
         'docs/SUPPORT_POLICY.md',
         'tasks/active/P0-005.md',
+    'tool/repository_governance_test.py',
+    'tool/github_governance.py',
+    'tool/github_governance_client_test.py',
+    'config/repository_governance.json',
+    '.github/CODEOWNERS',
+    '.github/pull_request_template.md',
+    'docs/roadmap/REPOSITORY_GOVERNANCE.md',
+    'tasks/active/P0-006.md',
     ]
     missing = [x for x in required if not (ROOT / x).is_file()]
     add("required product files", not missing, "all required files present" if not missing else "missing: " + ", ".join(missing))

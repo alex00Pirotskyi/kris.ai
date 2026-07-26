@@ -24,7 +24,10 @@ python3 tool/generate_v170_contracts.py --check
 python3 tool/generate_v180_contracts.py --check
 python3 tool/generate_v190_contracts.py --check
 python3 tool/p0_003_repair_test.py
+python3 tool/toolchain_lock_test.py
 python3 tool/policy_support_test.py
+python3 tool/repository_governance_test.py --json-output release/evidence/P0-006/local_governance_results.json
+python3 -m unittest -v tool/github_governance_client_test.py
 python3 tool/v1_trust_disablement_test.py
 flutter pub get
 python3 tool/dart_format_scope.py --check

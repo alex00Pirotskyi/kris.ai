@@ -1,14 +1,14 @@
 {
-  "appliedAt": "2026-07-26T15:06:29.555899+00:00",
+  "appliedAt": "2026-07-26T19:26:33.948465+00:00",
   "backup": {
     "created": true,
-    "directoryName": "repo.p0-008-backup-20260726T150623Z",
+    "directoryName": "repo.p0-008-backup-20260726T192630Z",
     "location": "external_sibling_directory"
   },
   "changedFiles": [
     {
       "path": "docs/roadmap/HANDOFF.md",
-      "sha256": "d8359c618be366774f792ebd161aa26c84ab6e8a7efe92513f9d21e0b6dedf12"
+      "sha256": "65c6ebc0bb411c75207875829bdfebde622bbd170993f6412099f6e586ac560c"
     },
     {
       "path": "docs/roadmap/MASTER.md",
@@ -16,11 +16,11 @@
     },
     {
       "path": "docs/roadmap/STATUS.md",
-      "sha256": "6f47fbc8fef066d99eb78a43603915786d4c6eb94799b3fc45bdcc63472b8a66"
+      "sha256": "56e3a2d3b351419da3e900889256558dc823bd2a20bd8b2fc3b449b21c97b3da"
     },
     {
       "path": "docs/roadmap/roadmap.yaml",
-      "sha256": "cb9e7c1656f11a7dc13076a84103a4b921683f465737dc203c652bb7d761173c"
+      "sha256": "49dcd9b229242090ad7c31851231ec8ae140578519a03bfd3125afc8a707a5cb"
     }
   ],
   "claimInvariant": "a_fresh_ai_session_can_select_ready_work_without_oral_context",
@@ -31,7 +31,7 @@
         "tool/roadmap_control_test.py"
       ],
       "exitCode": 0,
-      "outputSha256": "7272fb887f2558f41b10362e886a4672b208d30576f8bdfe15b539c3a869cf82"
+      "outputSha256": "43a2166b477796cc3efbee633101052f58d028c6a63fa54ccc7c664128b6767a"
     },
     {
       "argv": [
@@ -41,7 +41,7 @@
         "."
       ],
       "exitCode": 0,
-      "outputSha256": "2f35e75aaa8b2482ba2c2b4b9fec315ef32044c0090176140b367fc7f30149ce"
+      "outputSha256": "ae4d57645c89b5c75bafdd32303c03c355cfa89840f8bb4458c7bff3ac4b3700"
     },
     {
       "argv": [
@@ -53,7 +53,7 @@
         "--strict"
       ],
       "exitCode": 0,
-      "outputSha256": "bb95aabdad6da4264d2be3a23ff5f1ea5e2d106962a863d01188400983b83ef3"
+      "outputSha256": "603073d0c791cb44f82a2dd1b93e35454209e264aecd8891e14ceada04fe541d"
     },
     {
       "argv": [
@@ -74,6 +74,23 @@
       ],
       "exitCode": 0,
       "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   ],
   "limitations": [
@@ -82,18 +99,15 @@
     "P0-008 remains REVIEW until complete-checkout validation and independent review pass."
   ],
   "roadmap": {
-    "nextReady": [
-      "P0-004",
-      "P0-006"
-    ],
+    "nextReady": [],
     "taskCount": 22,
     "taskGraphSha256": "dbef00a9e2fb2256b0c7f5a76d29aeccd0d482c4155d01ed2028aa67e4102fdc"
   },
   "roadmapVersion": "3.1.4-p0-008-roadmap-control-plane",
   "schemaVersion": "1.0.0",
   "sourceManifest": {
-    "checked": 539,
-    "mismatched": 0
+    "checked": 566,
+    "mismatched": 5
   },
   "status": "REVIEW",
   "taskId": "P0-008"

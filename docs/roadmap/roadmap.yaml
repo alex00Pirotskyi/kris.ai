@@ -9,10 +9,7 @@
     ]
   },
   "format": "yaml-1.2-json-subset",
-  "nextReady": [
-    "P0-004",
-    "P0-006"
-  ],
+  "nextReady": [],
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
   "schemaVersion": "1.0.0",
   "statusValues": [
@@ -106,13 +103,16 @@
       ],
       "doneWhen": "Two CI reruns use identical declared inputs.",
       "evidence": [
-        "release/evidence/P0-004/STARTER.md"
+        "release/evidence/P0-004/comparison.json",
+        "release/evidence/P0-004/STARTER.md",
+        "config/toolchains.lock.json",
+        "release/evidence/P0-004/IMPLEMENTATION.md"
       ],
       "id": "P0-004",
       "packet": "tasks/active/P0-004.md",
       "phase": "P0",
       "requiredOutput": "Pin Flutter/Dart, Python, Actions by commit SHA, and cache keys; record versions in a toolchain manifest.",
-      "status": "READY",
+      "status": "REVIEW",
       "title": "Pin toolchains and GitHub Actions"
     },
     {
@@ -137,12 +137,15 @@
         "P0-003"
       ],
       "doneWhen": "Protected main cannot merge without required checks/review.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P0-006/IMPLEMENTATION_PLAN.md",
+        "config/repository_governance.json"
+      ],
       "id": "P0-006",
       "packet": "tasks/active/P0-006.md",
       "phase": "P0",
       "requiredOutput": "Add CODEOWNERS, branch protection requirements, PR template, security review labels, and merge policy.",
-      "status": "READY",
+      "status": "REVIEW",
       "title": "Protect repository governance"
     },
     {
