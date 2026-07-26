@@ -165,6 +165,28 @@ class BenchmarkRunnerTest(unittest.TestCase):
         self.assertEqual(case["proofKind"], "source_inspection")
         self.assertFalse(report["claims"]["sourceInspectionIsBehavioralProof"])
 
+    def test_minimum_selected_values_record_contract_not_host_count(self) -> None:
+        report = self.run_report()
+        case = next(
+            item
+            for item in report["cases"]
+            if item["id"] == "analysis.offline_system_contract"
+        )
+        self.assertEqual(
+            case["observations"]["selected"]["$.passed"],
+            {"minimum": 1, "satisfied": True},
+        )
+
+    @unittest.skipUnless(shutil.which("git"), "Git is required")
+    def test_git_index_bytes_ignore_checkout_line_endings(self) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=self.project, check=True)
+        path = self.project / "evals/fixtures/p0_009/coding/python_bugfix/TASK.md"
+        indexed = path.read_bytes().replace(b"\r\n", b"\n")
+        path.write_bytes(indexed)
+        subprocess.run(["git", "add", "."], cwd=self.project, check=True)
+        path.write_bytes(indexed.replace(b"\n", b"\r\n"))
+        self.assertEqual(BR.canonical_project_file_bytes(self.project, path), indexed)
+
     def test_duplicate_case_id_is_rejected(self) -> None:
         suite = BR.load_json(self.suite_path)
         suite["cases"].append(dict(suite["cases"][0]))

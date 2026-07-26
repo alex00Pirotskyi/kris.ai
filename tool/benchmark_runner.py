@@ -100,6 +100,34 @@ def sha256_text(value: str) -> str:
     return sha256_bytes(value.encode("utf-8"))
 
 
+def git_index_bytes(project: Path, relative: str) -> bytes | None:
+    """Return the staged Git blob so checkout EOL policy cannot change evidence."""
+    if not safe_relative(relative):
+        return None
+    try:
+        completed = subprocess.run(
+            ["git", "show", f":{relative}"],
+            cwd=project,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError:
+        return None
+    return completed.stdout if completed.returncode == 0 else None
+
+
+def canonical_project_file_bytes(project: Path, path: Path) -> bytes:
+    """Hash tracked source from the Git index and untracked fixtures from disk."""
+    try:
+        relative = path.relative_to(project).as_posix()
+    except ValueError:
+        return path.read_bytes()
+    indexed = git_index_bytes(project, relative)
+    return indexed if indexed is not None else path.read_bytes()
+
+
 def safe_relative(value: str) -> bool:
     if not value or "\\" in value:
         return False
@@ -107,7 +135,7 @@ def safe_relative(value: str) -> bool:
     return not path.is_absolute() and ".." not in path.parts and path.as_posix() == value
 
 
-def hash_tree(root: Path) -> str:
+def hash_tree(project: Path, root: Path) -> str:
     rows: list[str] = []
     if not root.exists():
         return sha256_text("")
@@ -115,7 +143,9 @@ def hash_tree(root: Path) -> str:
         if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
             continue
         relative = path.relative_to(root).as_posix()
-        rows.append(f"{sha256_bytes(path.read_bytes())}  {relative}")
+        rows.append(
+            f"{sha256_bytes(canonical_project_file_bytes(project, path))}  {relative}"
+        )
     return sha256_text("\n".join(rows) + ("\n" if rows else ""))
 
 
@@ -135,7 +165,16 @@ def json_path(value: Any, path: str) -> Any:
 
 
 def redact_output(text: str, project: Path) -> str:
-    normalized = text.replace(str(project), "<ROOT>")
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    roots = {
+        str(project),
+        project.as_posix(),
+        str(project).replace("\\", "/"),
+        str(project).replace("/", "\\"),
+    }
+    for root in sorted(roots, key=len, reverse=True):
+        if root:
+            normalized = normalized.replace(root, "<ROOT>")
     normalized = re.sub(
         r"(?i)\b(https?|socks5h?)://[^/\s:@]+:[^@\s/]+@",
         r"\1://<redacted>@",
@@ -359,7 +398,9 @@ def benchmark_inputs_sha256(
         if not path.is_file():
             rows.append(f"MISSING  {relative}")
         else:
-            rows.append(f"{sha256_bytes(path.read_bytes())}  {relative}")
+            rows.append(
+                f"{sha256_bytes(canonical_project_file_bytes(project, path))}  {relative}"
+            )
     return sha256_text("\n".join(rows) + "\n")
 
 
@@ -559,7 +600,21 @@ def command_case(
                             "error": str(error),
                         },
                     )
-            observations["selected"] = selected
+            minimums = case.get("expectMin") or {}
+            equals = case.get("expectEquals") or {}
+            observations["selected"] = {
+                path: (
+                    {
+                        "minimum": minimums[path],
+                        "satisfied": isinstance(value, (int, float))
+                        and not isinstance(value, bool)
+                        and value >= minimums[path],
+                    }
+                    if path in minimums and path not in equals
+                    else value
+                )
+                for path, value in selected.items()
+            }
 
         failures: list[str] = []
         if exit_code != expected_exit:
@@ -1037,8 +1092,8 @@ def build_result(
     results: list[CaseResult],
     mode: str,
 ) -> dict[str, Any]:
-    suite_sha = sha256_bytes(suite_path.read_bytes())
-    fixture_sha = hash_tree(project / "evals/fixtures/p0_009")
+    suite_sha = sha256_bytes(canonical_project_file_bytes(project, suite_path))
+    fixture_sha = hash_tree(project, project / "evals/fixtures/p0_009")
     categories = aggregate_categories(suite, results)
     status_counts = {
         status: sum(1 for item in results if item.status == status)

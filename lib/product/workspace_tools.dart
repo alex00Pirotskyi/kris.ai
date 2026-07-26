@@ -470,7 +470,26 @@ class WorkspaceBoundary {
   }
 
   static String _normalizeAbsolute(String path) {
-    var normalized = File(path).absolute.path.replaceAll('\\', '/');
+    var absolute = File(path).absolute.path;
+    // Resolve existing files, directories, and reparse-point links before
+    // comparing them with the canonical project root. Windows runners can
+    // expose the same temporary directory through long-name, short-name, or
+    // reparse aliases; lexical comparison alone can reject a valid path.
+    try {
+      final type = FileSystemEntity.typeSync(absolute, followLinks: false);
+      if (type == FileSystemEntityType.directory) {
+        absolute = Directory(absolute).resolveSymbolicLinksSync();
+      } else if (type == FileSystemEntityType.file) {
+        absolute = File(absolute).resolveSymbolicLinksSync();
+      } else if (type == FileSystemEntityType.link) {
+        absolute = Link(absolute).resolveSymbolicLinksSync();
+      }
+    } on FileSystemException {
+      // Missing mutation targets remain lexical and are still checked against
+      // the already-canonical project root by _assertWithin.
+    }
+
+    var normalized = absolute.replaceAll('\\', '/');
     // Windows canonicalization can return an extended-length path such as
     // \\?\C:\project or \\?\UNC\server\share. Model and filesystem
     // tool paths normally use the equivalent plain form. Normalize both

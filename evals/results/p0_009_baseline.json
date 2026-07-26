@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "bc45d5a961d6feb47bcb11d4713e7ab940dcff3d8ecb17b9e11ac3d11028d5ba",
+  "benchmarkInputsSha256": "0fb1b14eccf619372c9bbc7ee4e697a6a96a9eaad4b4b18e7921f9aedd9cf931",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -76,13 +76,16 @@
     {
       "assuranceLevel": "source_contract",
       "category": "analysis",
-      "evidenceSha256": "2ce298fdd62150259d3492f8b541756a0d468c96ee2365f6358ea64dba2f5b15",
+      "evidenceSha256": "1b88640258e29c393e37415884e750be0ba381a1108ef339bb180bbdf70307e7",
       "id": "analysis.offline_system_contract",
       "observations": {
         "exitCode": 0,
         "selected": {
           "$.failed": 0,
-          "$.passed": 38
+          "$.passed": {
+            "minimum": 1,
+            "satisfied": true
+          }
         }
       },
       "proofKind": "source_inspection",
@@ -144,14 +147,20 @@
     {
       "assuranceLevel": "behavioral",
       "category": "crash_recovery",
-      "evidenceSha256": "7cd6e8a0d4828a85c2ed581660f5cea61d7d3294dcc39cf604a0323fc38a781c",
+      "evidenceSha256": "d52b61425f7a4d69ab7c4a9c71150a5b4641fbb8cb8c41532f87e1e03bdf15e7",
       "id": "crash_recovery.diagnostic_replay",
       "observations": {
         "exitCode": 0,
         "selected": {
-          "$.caseCount": 2,
+          "$.caseCount": {
+            "minimum": 2,
+            "satisfied": true
+          },
           "$.passed": true,
-          "$.passedCount": 2
+          "$.passedCount": {
+            "minimum": 2,
+            "satisfied": true
+          }
         }
       },
       "proofKind": "executed_behavior",
@@ -360,7 +369,7 @@
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "9f756bc255610dd9b89e7ac2abbb8123356646a5aab3a7fb3a0c3ce23da0765a",
+  "resultFingerprint": "a4ce75776b19766ddf74379dd85f7350052cf66fd105f1adb091e3a3727c6653",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
   "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
