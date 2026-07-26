@@ -226,6 +226,9 @@ def test_sdk_gate_order_and_nonmutation() -> str:
 
 def test_ci_contract() -> str:
     workflow = read(".github/workflows/ci.yml")
+    require(workflow.count("uses: actions/setup-python@v5") == 1, "CI must pin Python through setup-python exactly once")
+    require('python-version: "3.12.10"' in workflow, "CI exact Python patch version drifted")
+    require(workflow.index("Pin Python toolchain") < workflow.index("Capture CI environment"), "Python is pinned after environment capture")
     malformed_steps = [
         line
         for line in workflow.splitlines()
