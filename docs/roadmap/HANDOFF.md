@@ -13,17 +13,11 @@
 
 ## Current review work
 
-- `P0-004` — Pin toolchains and GitHub Actions (`tasks/active/P0-004.md`)
-- `P0-005` — Rewrite security and support policy (`tasks/active/P0-005.md`)
-- `P0-006` — Protect repository governance (`tasks/active/P0-006.md`)
-- `P0-007` — Split source lint from behavioral assurance (`tasks/active/P0-007.md`)
-- `P0-008` — Create roadmap control files and bootstrap manifest (`tasks/active/P0-008.md`)
-- `P0-009` — Establish initial benchmark corpus (`tasks/active/P0-009.md`)
-- `P0-010` — Remove committed generated state (`tasks/active/P0-010.md`)
+- None.
 
 ## Next ready tasks
 
-- None.
+- `P1-001` — Approve runtime-boundary ADRs (`tasks/active/P1-001.md`)
 
 ## Non-negotiable handoff rules
 

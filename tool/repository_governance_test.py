@@ -198,15 +198,44 @@ def check_remote_client(root: Path) -> str:
     return "remote applicator is explicit, versioned, and avoids token persistence"
 
 
+def resolve_p0_006_task(root: Path) -> tuple[str, str]:
+    candidates = (
+        "tasks/active/P0-006.md",
+        "tasks/completed/P0-006.md",
+        "tasks/blocked/P0-006.md",
+    )
+    present = [relative for relative in candidates if (root / relative).is_file()]
+    require(len(present) == 1, f"expected exactly one P0-006 task packet, found: {present}")
+    relative = present[0]
+    return relative, read(root, relative)
+
+
 def check_task_docs(root: Path) -> str:
-    task = read(root, "tasks/active/P0-006.md")
+    task_path, task = resolve_p0_006_task(root)
     policy = read(root, "docs/roadmap/REPOSITORY_GOVERNANCE.md")
     plan = read(root, "release/evidence/P0-006/IMPLEMENTATION_PLAN.md")
-    require("REVIEW" in task, "task must remain REVIEW until remote evidence")
     require("same-commit" in task.lower(), "task lacks P0-003 dependency condition")
     require("does not satisfy P0-006" in plan, "plan must reject source-only completion")
     require("test pull request" in policy.lower(), "blocked/allowed merge demonstration missing")
-    return "task and operator docs keep remote enforcement as a completion requirement"
+    if task_path == "tasks/active/P0-006.md":
+        require("REVIEW" in task, "active task must remain REVIEW until remote evidence")
+        state = "review"
+    elif task_path == "tasks/completed/P0-006.md":
+        require("DONE" in task, "completed task packet must be DONE")
+        require(
+            re.search(r"release/evidence/P0/P0_EXIT_GATE_V[0-9]+[.]json", task) is not None,
+            "completed task packet lacks P0 exit evidence",
+        )
+        for relative in (
+            "release/evidence/P0-006/github_governance_receipt.json",
+            "release/evidence/P0-006/github_governance_verification.json",
+        ):
+            payload = load_json(root, relative)
+            require(payload.get("status") == "passed", f"governance closure evidence is not passed: {relative}")
+        state = "done"
+    else:
+        raise AssertionError(f"P0-006 cannot close from blocked packet: {task_path}")
+    return f"task packet={task_path} state={state}; remote enforcement remains evidenced"
 
 
 def main() -> int:
@@ -224,7 +253,6 @@ def main() -> int:
         ".github/ISSUE_TEMPLATE/engineering_task.yml",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         "docs/roadmap/REPOSITORY_GOVERNANCE.md",
-        "tasks/active/P0-006.md",
         "release/evidence/P0-006/IMPLEMENTATION_PLAN.md",
         "tool/github_governance.py",
         "tool/github_governance_client_test.py",
@@ -234,6 +262,14 @@ def main() -> int:
     )
     results: list[Result] = []
     missing = [item for item in required_files if not (root / item).is_file()]
+    task_candidates = (
+        "tasks/active/P0-006.md",
+        "tasks/completed/P0-006.md",
+        "tasks/blocked/P0-006.md",
+    )
+    task_present = [item for item in task_candidates if (root / item).is_file()]
+    if len(task_present) != 1:
+        missing.append(f"P0-006 task packet lifecycle ambiguity: {task_present}")
     results.append(Result("Required governance files", not missing, "all present" if not missing else f"missing: {missing}"))
     if not missing:
         results.extend(

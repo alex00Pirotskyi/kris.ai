@@ -12,7 +12,7 @@ import tempfile
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT = ROOT / "tool" / "github_governance.py"
@@ -99,7 +99,12 @@ class MockHandler(BaseHTTPRequestHandler):
             self._json(200, self.state.repository)
             return
         if path == "/repos/owner/repo/labels":
-            self._json(200, list(self.state.labels.values()))
+            query = parse_qs(parsed.query)
+            page = int(query.get("page", ["1"])[0])
+            per_page = int(query.get("per_page", ["100"])[0])
+            values = list(self.state.labels.values())
+            start = (page - 1) * per_page
+            self._json(200, values[start:start + per_page])
             return
         self._json(404, {"message": f"unknown GET {path}"})
 
@@ -315,6 +320,34 @@ class GovernanceClientTest(unittest.TestCase):
             self.assertTrue(server.state.requests)
             self.assertTrue(all(item["authorizationPresent"] for item in server.state.requests))
             self.assertTrue(all(item["apiVersion"] == "2026-03-10" for item in server.state.requests))
+
+
+    def test_label_payload_limits_casefold_and_pagination(self) -> None:
+        config = json.loads((self.project / "config/repository_governance.json").read_text(encoding="utf-8"))
+        self.assertTrue(all(len(str(item.get("description") or "")) <= 100 for item in config["labels"]))
+        with MockServer() as server:
+            for index in range(105):
+                name = f"fixture-{index:03d}"
+                server.state.labels[name] = {"id": index + 1, "name": name, "color": "ededed", "description": "fixture"}
+            server.state.labels["AI-Generated-Change"] = {
+                "id": 1000,
+                "name": "AI-Generated-Change",
+                "color": "ffffff",
+                "description": "stale",
+            }
+            result = self.run_client(
+                "--apply",
+                "--confirm-solo-maintainer",
+                "--api-base",
+                server.base_url,
+                token=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("ai-generated-change", server.state.labels)
+            self.assertNotIn("AI-Generated-Change", server.state.labels)
+            desired = server.state.labels["ai-generated-change"]
+            self.assertLessEqual(len(str(desired.get("description") or "")), 100)
+
 
 
 if __name__ == "__main__":

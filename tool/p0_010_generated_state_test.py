@@ -87,7 +87,7 @@ def main() -> int:
             "tool/p0_010_generated_state_test.py",
             "schemas/generated_state_report.v1.json",
             "docs/roadmap/GENERATED_STATE.md",
-            "tasks/active/P0-010.md",
+            "tasks/completed/P0-010.md",
             "release/evidence/P0-010/IMPLEMENTATION.md",
         )
         missing = [path for path in required if not (project / path).is_file()]

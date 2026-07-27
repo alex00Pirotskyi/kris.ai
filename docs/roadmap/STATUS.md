@@ -13,17 +13,17 @@
 <!-- ROADMAP_STATUS_TABLE_START -->
 | Task | Status | Dependencies | Packet | Evidence |
 |---|---|---|---|---|
-| P0-001 | DONE | none | `tasks/active/P0-001.md` | `release/evidence/baseline/execution.json`<br>`release/evidence/P0-001/manifest.json`<br>`release/evidence/baseline/BASELINE.md`<br>`tool/capture_baseline.py` |
-| P0-002 | DONE | `P0-001` | `tasks/active/P0-002.md` | `release/evidence/P0-002/manifest.json`<br>`release/evidence/P0-002/IMPLEMENTATION.md`<br>`tool/v1_trust_disablement_test.py` |
-| P0-003 | DONE | `P0-001`, `P0-002` | `tasks/active/P0-003.md` | `release/evidence/P0-003/ci_matrix.json`<br>`release/evidence/P0-003/IMPLEMENTATION_PLAN.md` |
-| P0-004 | REVIEW | `P0-003` | `tasks/active/P0-004.md` | `release/evidence/P0-004/comparison.json`<br>`release/evidence/P0-004/STARTER.md`<br>`config/toolchains.lock.json`<br>`release/evidence/P0-004/IMPLEMENTATION.md` |
-| P0-005 | REVIEW | `P0-001`, `P0-002` | `tasks/active/P0-005.md` | `release/evidence/P0-005/IMPLEMENTATION.md`<br>`docs/SUPPORT_POLICY.md` |
-| P0-006 | REVIEW | `P0-003` | `tasks/active/P0-006.md` | `release/evidence/P0-006/IMPLEMENTATION_PLAN.md`<br>`config/repository_governance.json` |
-| P0-007 | REVIEW | `P0-001` | `tasks/active/P0-007.md` | `release/evidence/P0-007/manifest.json`<br>`release/evidence/P0-007/IMPLEMENTATION.md`<br>`docs/roadmap/ASSURANCE_MODEL.md` |
-| P0-008 | REVIEW | `P0-001` | `tasks/active/P0-008.md` | `release/evidence/P0-008/manifest.json`<br>`release/evidence/P0-008/IMPLEMENTATION.md` |
-| P0-009 | REVIEW | `P0-001` | `tasks/active/P0-009.md` | `evals/results/p0_009_baseline.json`<br>`evals/results/P0_009_BASELINE.md`<br>`release/evidence/P0-009/manifest.json`<br>`release/evidence/P0-009/IMPLEMENTATION.md` |
-| P0-010 | REVIEW | `P0-001` | `tasks/active/P0-010.md` | `release/evidence/P0-010/manifest.json`<br>`release/evidence/P0-010/IMPLEMENTATION.md`<br>`release/evidence/P0-010/EXECUTION.md`<br>`release/evidence/P0-010/removal_manifest.json`<br>`release/evidence/P0-010/audit.json` |
-| P1-001 | NOT_STARTED | `P0-008` | `tasks/active/P1-001.md` | none |
+| P0-001 | DONE | none | `tasks/completed/P0-001.md` | `release/evidence/baseline/execution.json`<br>`release/evidence/P0-001/manifest.json`<br>`release/evidence/baseline/BASELINE.md`<br>`tool/capture_baseline.py`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-002 | DONE | `P0-001` | `tasks/completed/P0-002.md` | `release/evidence/P0-002/manifest.json`<br>`release/evidence/P0-002/IMPLEMENTATION.md`<br>`tool/v1_trust_disablement_test.py`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-003 | DONE | `P0-001`, `P0-002` | `tasks/completed/P0-003.md` | `release/evidence/P0-003/ci_matrix.json`<br>`release/evidence/P0-003/IMPLEMENTATION_PLAN.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-004 | DONE | `P0-003` | `tasks/completed/P0-004.md` | `release/evidence/P0-004/comparison.json`<br>`release/evidence/P0-004/STARTER.md`<br>`config/toolchains.lock.json`<br>`release/evidence/P0-004/IMPLEMENTATION.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json`<br>`release/evidence/P0-004/first-run.json`<br>`release/evidence/P0-004/second-run.json` |
+| P0-005 | DONE | `P0-001`, `P0-002` | `tasks/completed/P0-005.md` | `release/evidence/P0-005/IMPLEMENTATION.md`<br>`docs/SUPPORT_POLICY.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-006 | DONE | `P0-003` | `tasks/completed/P0-006.md` | `release/evidence/P0-006/IMPLEMENTATION_PLAN.md`<br>`config/repository_governance.json`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json`<br>`release/evidence/P0-006/github_governance_receipt.json`<br>`release/evidence/P0-006/github_governance_verification.json` |
+| P0-007 | DONE | `P0-001` | `tasks/completed/P0-007.md` | `release/evidence/P0-007/manifest.json`<br>`release/evidence/P0-007/IMPLEMENTATION.md`<br>`docs/roadmap/ASSURANCE_MODEL.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-008 | DONE | `P0-001` | `tasks/completed/P0-008.md` | `release/evidence/P0-008/manifest.json`<br>`release/evidence/P0-008/IMPLEMENTATION.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-009 | DONE | `P0-001` | `tasks/completed/P0-009.md` | `evals/results/p0_009_baseline.json`<br>`evals/results/P0_009_BASELINE.md`<br>`release/evidence/P0-009/manifest.json`<br>`release/evidence/P0-009/IMPLEMENTATION.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P0-010 | DONE | `P0-001` | `tasks/completed/P0-010.md` | `release/evidence/P0-010/manifest.json`<br>`release/evidence/P0-010/IMPLEMENTATION.md`<br>`release/evidence/P0-010/EXECUTION.md`<br>`release/evidence/P0-010/removal_manifest.json`<br>`release/evidence/P0-010/audit.json`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
+| P1-001 | READY | `P0-008` | `tasks/active/P1-001.md` | none |
 | P1-002 | NOT_STARTED | `P1-001` | `tasks/active/P1-002.md` | none |
 | P1-003 | NOT_STARTED | `P1-001`, `P1-002` | `tasks/active/P1-003.md` | none |
 | P1-004 | NOT_STARTED | `P1-002`, `P1-003` | `tasks/active/P1-004.md` | none |
@@ -40,18 +40,12 @@
 ## Next ready tasks
 
 <!-- ROADMAP_NEXT_READY_START -->
-- None. Resolve the blockers or complete the task currently in review.
+- `P1-001` — Approve runtime-boundary ADRs (`tasks/active/P1-001.md`)
 <!-- ROADMAP_NEXT_READY_END -->
 
 ## Review and blocked work
 
-- `P0-004` **REVIEW** — Complete the packet acceptance criteria and independent review.
-- `P0-005` **REVIEW** — Complete the packet acceptance criteria and independent review.
-- `P0-006` **REVIEW** — Complete the packet acceptance criteria and independent review.
-- `P0-007` **REVIEW** — Complete the packet acceptance criteria and independent review.
-- `P0-008` **REVIEW** — Complete the packet acceptance criteria and independent review.
-- `P0-009` **REVIEW** — Complete the packet acceptance criteria and independent review.
-- `P0-010` **REVIEW** — Complete the packet acceptance criteria and independent review.
+- None.
 
 ## Fresh-session command
 

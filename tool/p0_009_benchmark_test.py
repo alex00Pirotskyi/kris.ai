@@ -77,7 +77,7 @@ def main() -> int:
         "schemas/benchmark_suite.v1.json",
         "schemas/benchmark_result.v1.json",
         "docs/roadmap/BENCHMARKS.md",
-        "tasks/active/P0-009.md",
+        "tasks/completed/P0-009.md",
         "release/evidence/P0-009/IMPLEMENTATION.md",
         "release/evidence/P0-009/manifest.json",
     ]

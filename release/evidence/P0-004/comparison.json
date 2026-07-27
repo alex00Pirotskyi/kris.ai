@@ -1,8 +1,30 @@
 {
-  "kind": "comparison",
+  "comparisons": {
+    "Linux": {
+      "firstFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "firstManifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+      "passed": true,
+      "secondFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "secondManifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26"
+    },
+    "Windows": {
+      "firstFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "firstManifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+      "passed": true,
+      "secondFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "secondManifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26"
+    },
+    "macOS": {
+      "firstFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "firstManifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+      "passed": true,
+      "secondFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "secondManifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26"
+    }
+  },
+  "firstRunUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30237113806/attempts/4",
   "milestone": "P0-004",
-  "note": "Replace this placeholder with reviewed GitHub Actions evidence, then rebuild SOURCE_MANIFEST.sha256.",
+  "passed": true,
   "schemaVersion": "1.0.0",
-  "sourceCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
-  "status": "pending"
+  "secondRunUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30237113806/attempts/5"
 }

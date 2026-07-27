@@ -11,9 +11,14 @@
     "pubKeyTemplate": "flutter-pub-:os:-:channel:-:version:-:arch:-:hash:"
   },
   "closure": {
+    "comparison": "release/evidence/P0-004/comparison.json",
     "comparisonTool": "tool/compare_toolchain_runs.py",
+    "firstAttempt": 4,
+    "firstRunId": "30237113806",
     "requiredReruns": 2,
-    "status": "pending_reruns"
+    "secondAttempt": 5,
+    "secondRunId": "30237113806",
+    "status": "passed"
   },
   "dart": {
     "pinnedBy": "flutter-sdk",

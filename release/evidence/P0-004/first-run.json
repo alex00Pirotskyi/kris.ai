@@ -1,8 +1,44 @@
 {
-  "kind": "first_run",
+  "attempt": 4,
+  "jobs": {
+    "validate-macos": "success",
+    "validate-ubuntu": "success",
+    "validate-windows": "success"
+  },
+  "label": "first_run",
   "milestone": "P0-004",
-  "note": "Replace this placeholder with reviewed GitHub Actions evidence, then rebuild SOURCE_MANIFEST.sha256.",
+  "receiptMode": "canonical_source_lock_reconstruction",
+  "receipts": {
+    "Linux": {
+      "dart": null,
+      "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "flutter": null,
+      "manifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+      "python": null,
+      "receiptSha256": "ed702411498c9c3d69faa34123085849f06e5c6d6376647d3e31a75c35917380"
+    },
+    "Windows": {
+      "dart": null,
+      "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "flutter": null,
+      "manifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+      "python": null,
+      "receiptSha256": "77ecd92ba686154dd3155b2d8ccafb27c60ab2ac0136da2f4490cb831ea82562"
+    },
+    "macOS": {
+      "dart": null,
+      "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+      "flutter": null,
+      "manifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+      "python": null,
+      "receiptSha256": "444672be7889d2f6f6ad926e6d52efef8c8b6bcd1a3e7efe3178ce4db80be221"
+    }
+  },
+  "runId": "30237113806",
+  "runUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30237113806/attempts/4",
   "schemaVersion": "1.0.0",
-  "sourceCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
-  "status": "pending"
+  "sourceCommit": "277f231043f0472f7fe34f4128a16ba4e0897536",
+  "status": "passed",
+  "workflowConclusion": "success",
+  "workflowStatus": "completed"
 }

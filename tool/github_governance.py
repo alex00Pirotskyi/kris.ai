@@ -306,25 +306,64 @@ def apply_repository_settings(client: GitHubClient, owner: str, repo: str, patch
 
 
 def list_labels(client: GitHubClient, owner: str, repo: str) -> dict[str, dict[str, Any]]:
-    _status, value = client.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/labels?per_page=100")
-    if not isinstance(value, list):
-        raise GovernanceError("labels response was not an array")
-    return {str(item.get("name")): item for item in value if isinstance(item, dict) and item.get("name")}
+    result: dict[str, dict[str, Any]] = {}
+    for page in range(1, 101):
+        query = urlencode({"per_page": 100, "page": page})
+        _status, value = client.request("GET", f"/repos/{quote(owner)}/{quote(repo)}/labels?{query}")
+        if not isinstance(value, list):
+            raise GovernanceError("labels response was not an array")
+        for item in value:
+            if not isinstance(item, dict) or not item.get("name"):
+                continue
+            name = str(item["name"])
+            key = name.casefold()
+            if key in result and str(result[key].get("name")) != name:
+                raise GovernanceError(f"multiple labels differ only by case: {result[key].get('name')!r}, {name!r}")
+            result[key] = item
+        if len(value) < 100:
+            return result
+    raise GovernanceError("label pagination exceeded 100 pages")
+
+
+def validate_labels(labels: list[dict[str, Any]]) -> None:
+    seen: set[str] = set()
+    for index, label in enumerate(labels):
+        if not isinstance(label, dict):
+            raise GovernanceError(f"label {index} must be an object")
+        name = str(label.get("name") or "").strip()
+        if not name:
+            raise GovernanceError(f"label {index} has an empty name")
+        key = name.casefold()
+        if key in seen:
+            raise GovernanceError(f"duplicate label name ignoring case: {name!r}")
+        seen.add(key)
+        color = str(label.get("color") or "ededed").lstrip("#")
+        if re.fullmatch(r"[0-9A-Fa-f]{6}", color) is None:
+            raise GovernanceError(f"label {name!r} has invalid color {color!r}")
+        description = str(label.get("description") or "")
+        if len(description) > 100:
+            raise GovernanceError(
+                f"label {name!r} description is {len(description)} characters; GitHub allows at most 100"
+            )
 
 
 def apply_labels(client: GitHubClient, owner: str, repo: str, labels: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    validate_labels(labels)
     existing = list_labels(client, owner, repo)
     results: list[dict[str, Any]] = []
     for label in labels:
         name = str(label.get("name") or "")
+        key = name.casefold()
         update_body = {
             "new_name": name,
             "color": str(label.get("color") or "ededed").lstrip("#"),
             "description": str(label.get("description") or ""),
         }
-        if name in existing:
+        actual = existing.get(key)
+        if actual is not None:
+            actual_name = str(actual.get("name") or name)
             _status, value = client.request(
-                "PATCH", f"/repos/{quote(owner)}/{quote(repo)}/labels/{quote(name, safe='')}", update_body
+                "PATCH", f"/repos/{quote(owner)}/{quote(repo)}/labels/{quote(actual_name, safe='')}", update_body
             )
             action = "updated"
         else:
@@ -333,11 +372,25 @@ def apply_labels(client: GitHubClient, owner: str, repo: str, labels: list[dict[
                 "color": update_body["color"],
                 "description": update_body["description"],
             }
-            _status, value = client.request("POST", f"/repos/{quote(owner)}/{quote(repo)}/labels", create_body)
-            action = "created"
+            try:
+                _status, value = client.request("POST", f"/repos/{quote(owner)}/{quote(repo)}/labels", create_body)
+                action = "created"
+            except GovernanceError as error:
+                if "HTTP 422" not in str(error):
+                    raise
+                refreshed = list_labels(client, owner, repo)
+                actual = refreshed.get(key)
+                if actual is None:
+                    raise
+                actual_name = str(actual.get("name") or name)
+                _status, value = client.request(
+                    "PATCH", f"/repos/{quote(owner)}/{quote(repo)}/labels/{quote(actual_name, safe='')}", update_body
+                )
+                action = "updated_after_conflict"
+        if isinstance(value, dict):
+            existing[key] = value
         results.append({"name": name, "action": action, "id": value.get("id") if isinstance(value, dict) else None})
     return results
-
 
 def normalize_rule_types(value: dict[str, Any]) -> dict[str, Any]:
     rules = value.get("rules") if isinstance(value, dict) else None
@@ -440,7 +493,7 @@ def verify_remote(
         if not isinstance(item, dict):
             continue
         name = str(item.get("name"))
-        actual = labels.get(name)
+        actual = labels.get(name.casefold())
         if actual is None:
             missing_labels.append(name)
             continue
@@ -509,6 +562,7 @@ def main() -> int:
     labels = config.get("labels")
     if not isinstance(labels, list):
         raise GovernanceError("labels must be an array")
+    validate_labels(labels)
 
     plan = {
         "schemaVersion": "1.0.0",

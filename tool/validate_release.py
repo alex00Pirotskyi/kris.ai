@@ -432,7 +432,7 @@ def check_required_files() -> None:
         "schemas/assurance_report.v1.json",
         "docs/roadmap/ASSURANCE_MODEL.md",
         "docs/roadmap/V3_1_3_ASSURANCE_RECONCILIATION.md",
-        "tasks/active/P0-007.md",
+        "tasks/completed/P0-007.md",
         "release/evidence/P0-007/IMPLEMENTATION.md",
         "tool/validate_release.py", "tool/kristin_cli.py", "tool/system_test.py",
         "tool/dart_string_literal.py", "tool/dart_format_scope.py",
@@ -530,7 +530,7 @@ def check_required_files() -> None:
         'tool/policy_support_test.py',
         'tool/record_p0_003_ci.py',
         'docs/SUPPORT_POLICY.md',
-        'tasks/active/P0-005.md',
+        'tasks/completed/P0-005.md',
     'tool/repository_governance_test.py',
     'tool/github_governance.py',
     'tool/github_governance_client_test.py',
@@ -538,7 +538,7 @@ def check_required_files() -> None:
     '.github/CODEOWNERS',
     '.github/pull_request_template.md',
     'docs/roadmap/REPOSITORY_GOVERNANCE.md',
-    'tasks/active/P0-006.md',
+    'tasks/completed/P0-006.md',
     ]
     missing = [x for x in required if not (ROOT / x).is_file()]
     add("required product files", not missing, "all required files present" if not missing else "missing: " + ", ".join(missing))

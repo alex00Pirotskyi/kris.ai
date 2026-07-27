@@ -79,7 +79,7 @@ def main() -> int:
         "tool/roadmap_control.py",
         "tool/roadmap_control_test.py",
         "tool/p0_008_roadmap_test.py",
-        "tasks/active/P0-008.md",
+        "tasks/completed/P0-008.md",
         "release/evidence/P0-008/IMPLEMENTATION.md",
     )
     prompts = (
@@ -112,7 +112,7 @@ def main() -> int:
         require(manifest.get("statusValues") == list(rc.ALLOWED_STATUSES), "status vocabulary drift")
         require(manifest.get("authority", {}).get("scope") == ["P0", "P1"], "scope drift")
         tasks = rc.task_map(manifest)
-        require(tasks["P0-008"]["status"] == "REVIEW", "P0-008 must remain REVIEW")
+        require(tasks["P0-008"]["status"] == "DONE", "P0-008 must be DONE after formal P0 closure")
         require(tasks["P0-008"]["dependsOn"] == ["P0-001"], "P0-008 dependency drift")
         return f"graph={manifest['taskGraphSha256']}"
 

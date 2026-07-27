@@ -51,7 +51,7 @@
     },
     {
       "color": "1D76DB",
-      "description": "Implementation materially produced by an AI session; requires documented solo-maintainer review and green mandatory CI.",
+      "description": "AI-assisted change; requires documented solo-maintainer review and mandatory green CI.",
       "name": "ai-generated-change"
     }
   ],

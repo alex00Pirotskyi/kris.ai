@@ -43,7 +43,7 @@ def test_required_files(root: Path) -> str:
         "tool/p0_007_assurance_test.py",
         "schemas/assurance_report.v1.json",
         "docs/roadmap/ASSURANCE_MODEL.md",
-        "tasks/active/P0-007.md",
+        "tasks/completed/P0-007.md",
         "release/evidence/P0-007/IMPLEMENTATION.md",
     )
     missing = [item for item in required if not (root / item).is_file()]
@@ -320,12 +320,14 @@ def test_docs(root: Path) -> str:
 
 
 def test_task_packet(root: Path) -> str:
-    text = require(root / "tasks/active/P0-007.md")
-    if "## Status\nREVIEW" not in text:
-        raise AssertionError("P0-007 must remain REVIEW until real-checkout execution and review")
+    text = require(root / "tasks/completed/P0-007.md")
+    if re.search(r"## Status\s+DONE\b", text) is None:
+        raise AssertionError("P0-007 completed packet must be DONE after formal P0 closure")
     if "Dashboard never reports source-marker checks as behavioral proof" not in text:
         raise AssertionError("P0-007 acceptance criterion missing")
-    return "status=REVIEW"
+    if re.search(r"release/evidence/P0/P0_EXIT_GATE_V[0-9]+[.]json", text) is None:
+        raise AssertionError("P0-007 completed packet lacks P0 exit evidence")
+    return "status=DONE"
 
 
 def main() -> int:
