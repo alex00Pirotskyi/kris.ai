@@ -1,0 +1,100 @@
+{
+  "caseCount": 18,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 18,
+  "results": [
+    {
+      "detail": "all present",
+      "name": "Required P1-001 files",
+      "passed": true
+    },
+    {
+      "detail": "schemaVersion=1.0.0",
+      "name": "Contract parses",
+      "passed": true
+    },
+    {
+      "detail": "['windows', 'macos', 'linux']",
+      "name": "Mandatory synchronized platforms",
+      "passed": true
+    },
+    {
+      "detail": "processes=['automation_host', 'desktop_host', 'owner_executor', 'research_worker', 'sandbox_worker']",
+      "name": "Five process boundaries",
+      "passed": true
+    },
+    {
+      "detail": "issuers=['desktop_host']",
+      "name": "Single grant issuer",
+      "passed": true
+    },
+    {
+      "detail": "violations=[]",
+      "name": "Workers cannot open core database",
+      "passed": true
+    },
+    {
+      "detail": "{'mayIssueCapabilityGrants': False, 'mayReadCoreDatabase': False, 'mayUseRawCredentials': False, 'owns': ['filesystem_effects', 'process_effects', 'service_effects', 'package_effects', 'application_effects'], 'requiresGrantForEffects': True, 'sandboxed': False, 'trustClass': 'high_authority_executor'}",
+      "name": "Owner Mode is explicit non-sandbox authority",
+      "passed": true
+    },
+    {
+      "detail": "untrusted",
+      "name": "Research content remains untrusted",
+      "passed": true
+    },
+    {
+      "detail": "{'credentialAccess': 'none', 'mayIssueCapabilityGrants': False, 'mayReadCoreDatabase': False, 'mayUseRawCredentials': False, 'owns': ['isolated_execution', 'ephemeral_scratch', 'bounded_outputs'], 'requiresGrantForEffects': True, 'sandboxed': True, 'trustClass': 'isolated_untrusted_worker'}",
+      "name": "Sandbox has no credentials",
+      "passed": true
+    },
+    {
+      "detail": "{'credentialAuthority': 'os_credential_broker', 'evidenceAuthority': 'desktop_host:evidence_committer', 'grantIssuer': 'desktop_host:deterministic_policy', 'modelMayGrantAuthority': False, 'policyAuthority': 'desktop_host:deterministic_policy', 'storageAuthority': 'desktop_host:durable_store', 'workerMayGrantAuthority': False}",
+      "name": "Model and workers cannot grant authority",
+      "passed": true
+    },
+    {
+      "detail": "{'cancellationIdentityRequired': True, 'commandLineMayCarryReusableSecrets': False, 'deadlinesRequired': True, 'environmentMayGrantAuthority': False, 'mutualAuthenticationRequired': True, 'payloadLimitsRequired': True, 'peerIdentityRequired': True, 'requestIdRequired': True, 'runTaskGrantBindingRequired': True, 'transports': {'compatibility': ['authenticated_loopback_mutual_auth'], 'linux': ['unix_domain_socket'], 'macos': ['unix_domain_socket'], 'windows': ['named_pipe']}, 'versionedEnvelopeRequired': True}",
+      "name": "Authenticated typed IPC contract",
+      "passed": true
+    },
+    {
+      "detail": "{'browserProfiles': 'separate_protected_profile_store', 'candidateReceipts': 'bounded_staging_then_control_plane_validation', 'coreImplementationCurrent': 'sqlite', 'coreMutableAuthority': 'desktop_host_owned_durable_workflow_store', 'credentials': 'os_native_or_external_protected_store', 'immutableArtifacts': 'content_addressed_object_store', 'projectFiles': 'user_owned_granted_transactions', 'workerDirectCoreDatabaseAccess': False, 'workerScratch': 'ephemeral_per_worker'}",
+      "name": "Storage ownership contract",
+      "passed": true
+    },
+    {
+      "detail": "all present",
+      "name": "Accepted ADR anchors",
+      "passed": true
+    },
+    {
+      "detail": "ADR-0001/0002/0004 accepted",
+      "name": "Decision ledger accepted states",
+      "passed": true
+    },
+    {
+      "detail": "P1-001=DONE ready=['P1-002', 'P1-005']",
+      "name": "Roadmap state",
+      "passed": true
+    },
+    {
+      "detail": "workflow step present",
+      "name": "CI integration",
+      "passed": true
+    },
+    {
+      "detail": "verify step present",
+      "name": "Verification integration",
+      "passed": true
+    },
+    {
+      "detail": "required files include P1 gate",
+      "name": "Release validation integration",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-001"
+}

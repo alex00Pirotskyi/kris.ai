@@ -139,6 +139,8 @@ jobs:
       - run: python tool/dart_format_scope.py --check
       - run: flutter analyze --no-pub --fatal-warnings --fatal-infos
       - run: flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: P1-001 runtime boundary contract
+        run: python tool/p1_001_runtime_boundary_test.py --project .
       - name: Architecture and security gate
         run: python tool/validate_release.py --skip-tests
       - name: Native release build

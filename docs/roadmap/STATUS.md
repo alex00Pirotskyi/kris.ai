@@ -23,11 +23,11 @@
 | P0-008 | DONE | `P0-001` | `tasks/completed/P0-008.md` | `release/evidence/P0-008/manifest.json`<br>`release/evidence/P0-008/IMPLEMENTATION.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
 | P0-009 | DONE | `P0-001` | `tasks/completed/P0-009.md` | `evals/results/p0_009_baseline.json`<br>`evals/results/P0_009_BASELINE.md`<br>`release/evidence/P0-009/manifest.json`<br>`release/evidence/P0-009/IMPLEMENTATION.md`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
 | P0-010 | DONE | `P0-001` | `tasks/completed/P0-010.md` | `release/evidence/P0-010/manifest.json`<br>`release/evidence/P0-010/IMPLEMENTATION.md`<br>`release/evidence/P0-010/EXECUTION.md`<br>`release/evidence/P0-010/removal_manifest.json`<br>`release/evidence/P0-010/audit.json`<br>`release/evidence/P0/P0_EXIT_GATE_V44.json` |
-| P1-001 | READY | `P0-008` | `tasks/active/P1-001.md` | none |
-| P1-002 | NOT_STARTED | `P1-001` | `tasks/active/P1-002.md` | none |
+| P1-001 | DONE | `P0-008` | `tasks/completed/P1-001.md` | `release/evidence/P1-001/manifest.json`<br>`release/evidence/P1-001/test-results.json`<br>`release/evidence/P1-001/OWNER_APPROVAL.md` |
+| P1-002 | READY | `P1-001` | `tasks/active/P1-002.md` | none |
 | P1-003 | NOT_STARTED | `P1-001`, `P1-002` | `tasks/active/P1-003.md` | none |
 | P1-004 | NOT_STARTED | `P1-002`, `P1-003` | `tasks/active/P1-004.md` | none |
-| P1-005 | NOT_STARTED | `P0-002`, `P1-001` | `tasks/active/P1-005.md` | none |
+| P1-005 | READY | `P0-002`, `P1-001` | `tasks/active/P1-005.md` | none |
 | P1-006 | NOT_STARTED | `P1-005` | `tasks/active/P1-006.md` | none |
 | P1-007 | NOT_STARTED | `P1-006` | `tasks/active/P1-007.md` | none |
 | P1-008 | NOT_STARTED | `P1-005` | `tasks/active/P1-008.md` | none |
@@ -40,7 +40,8 @@
 ## Next ready tasks
 
 <!-- ROADMAP_NEXT_READY_START -->
-- `P1-001` — Approve runtime-boundary ADRs (`tasks/active/P1-001.md`)
+- `P1-002` — Define access profile v2 (`tasks/active/P1-002.md`)
+- `P1-005` — Specify Signed Manifest v2 (`tasks/active/P1-005.md`)
 <!-- ROADMAP_NEXT_READY_END -->
 
 ## Review and blocked work

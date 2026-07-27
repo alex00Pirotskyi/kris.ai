@@ -40,3 +40,6 @@ else
 fi
 
 python3 tool/assurance_dashboard.py --project . --strict
+
+# P1-001 runtime-boundary architecture gate
+"${PYTHON:-python}" tool/p1_001_runtime_boundary_test.py --project .

@@ -10,7 +10,8 @@
   },
   "format": "yaml-1.2-json-subset",
   "nextReady": [
-    "P1-001"
+    "P1-002",
+    "P1-005"
   ],
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
   "schemaVersion": "1.0.0",
@@ -239,12 +240,16 @@
         "P0-008"
       ],
       "doneWhen": "ADRs resolve ownership and do not leave implementation-critical ambiguity.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-001/manifest.json",
+        "release/evidence/P1-001/test-results.json",
+        "release/evidence/P1-001/OWNER_APPROVAL.md"
+      ],
       "id": "P1-001",
-      "packet": "tasks/active/P1-001.md",
+      "packet": "tasks/completed/P1-001.md",
       "phase": "P1",
       "requiredOutput": "Define desktop, owner executor, automation host, research worker, sandbox worker, IPC, and storage boundaries.",
-      "status": "READY",
+      "status": "DONE",
       "title": "Approve runtime-boundary ADRs"
     },
     {
@@ -257,7 +262,7 @@
       "packet": "tasks/active/P1-002.md",
       "phase": "P1",
       "requiredOutput": "Create schema and domain model for chat, project, owner, owner_unattended, and isolated_untrusted modes.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Define access profile v2"
     },
     {
@@ -279,7 +284,7 @@
         "P1-002",
         "P1-003"
       ],
-      "doneWhen": "Policy property tests prove deny-by-default and Owner Mode\u2019s intended authority.",
+      "doneWhen": "Policy property tests prove deny-by-default and Owner Mode’s intended authority.",
       "evidence": [],
       "id": "P1-004",
       "packet": "tasks/active/P1-004.md",
@@ -299,7 +304,7 @@
       "packet": "tasks/active/P1-005.md",
       "phase": "P1",
       "requiredOutput": "Adopt Ed25519, RFC 8785 canonical JSON, external keyring, key IDs, intended use, expiry, trust domain, and revocation.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Specify Signed Manifest v2"
     },
     {
