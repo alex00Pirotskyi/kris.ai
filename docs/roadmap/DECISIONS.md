@@ -30,3 +30,12 @@ A proposed ADR may guide investigation but may not authorize a production implem
 - Worker model: `tool/access_profile_v2.py`.
 - Shared invalid vectors: `evals/fixtures/p1_002_access_profiles/invalid_cases.json`.
 - Profiles are ceilings, not grants; overlays may only narrow until P1-004.
+
+## P1-003 Capability Grant v2 — 2026-07-27
+
+- Canonical schema: `schemas/capability_grant_v2.schema.json`.
+- Runtime policy: `config/capability_grant.v2.json`.
+- Dart envelope model: `lib/product/capability_grant_v2.dart`.
+- Worker verifier: `tool/capability_grant_v2.py`.
+- Shared adversarial vectors: `evals/fixtures/p1_003_capability_grants/vectors.json`.
+- Issuer key material remains outside the envelope.

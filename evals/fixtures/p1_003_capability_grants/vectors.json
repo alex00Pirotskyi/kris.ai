@@ -1,0 +1,522 @@
+{
+  "cases": [
+    {
+      "expectedError": "grant_integrity_mismatch",
+      "grant": {
+        "auth": {
+          "algorithm": "hmac-sha256",
+          "keyId": "fixture-key-1",
+          "mac": "b83090effd92c56dff91807e9317f7465addaac3dbf56d84af04f0d7c2b98b93"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "process.start"
+        },
+        "budgets": {
+          "maxCostMicros": 0,
+          "maxMutations": 10,
+          "maxNetworkBytes": 4194304,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 30000
+        },
+        "grantId": "grant-p1-003-001",
+        "issuer": {
+          "actorId": "desktop_host",
+          "authority": "desktop_host:deterministic_policy"
+        },
+        "nonce": "nonce-grant-p1-003-001",
+        "schemaVersion": "2.0.0",
+        "scope": {
+          "browser": {
+            "allowDownloads": false,
+            "allowUploads": false,
+            "origins": [],
+            "profileIds": []
+          },
+          "network": {
+            "destinations": [
+              "github.com:443"
+            ],
+            "listen": false,
+            "protocols": [
+              "https"
+            ]
+          },
+          "paths": {
+            "deny": [
+              "**/.ssh/**"
+            ],
+            "readRoots": [
+              "C:/dev"
+            ],
+            "writeRoots": [
+              "C:/dev/project"
+            ]
+          },
+          "process": {
+            "allowElevation": false,
+            "cwdRoots": [
+              "C:/dev/project"
+            ],
+            "executables": [
+              "git"
+            ],
+            "maxChildren": 2
+          },
+          "secrets": {
+            "leaseIds": [
+              "lease-github"
+            ],
+            "operations": [
+              "git.push"
+            ],
+            "rawReveal": false
+          }
+        },
+        "validity": {
+          "expiresAt": "2026-07-27T20:00:00Z",
+          "issuedAt": "2026-07-27T18:00:00Z",
+          "maxUses": 2,
+          "notBefore": "2026-07-27T18:00:00Z"
+        }
+      },
+      "kind": "envelope",
+      "name": "modified_body"
+    },
+    {
+      "expectedError": "grant_expired",
+      "grant": {
+        "auth": {
+          "algorithm": "hmac-sha256",
+          "keyId": "fixture-key-1",
+          "mac": "aa196c0e9f0d72b0eb9f626363c97d548844d0870e1415d64d9bb59f47d9dd82"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "filesystem.write"
+        },
+        "budgets": {
+          "maxCostMicros": 0,
+          "maxMutations": 10,
+          "maxNetworkBytes": 4194304,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 30000
+        },
+        "grantId": "grant-expired",
+        "issuer": {
+          "actorId": "desktop_host",
+          "authority": "desktop_host:deterministic_policy"
+        },
+        "nonce": "nonce-grant-expired",
+        "schemaVersion": "2.0.0",
+        "scope": {
+          "browser": {
+            "allowDownloads": false,
+            "allowUploads": false,
+            "origins": [],
+            "profileIds": []
+          },
+          "network": {
+            "destinations": [
+              "github.com:443"
+            ],
+            "listen": false,
+            "protocols": [
+              "https"
+            ]
+          },
+          "paths": {
+            "deny": [
+              "**/.ssh/**"
+            ],
+            "readRoots": [
+              "C:/dev"
+            ],
+            "writeRoots": [
+              "C:/dev/project"
+            ]
+          },
+          "process": {
+            "allowElevation": false,
+            "cwdRoots": [
+              "C:/dev/project"
+            ],
+            "executables": [
+              "git"
+            ],
+            "maxChildren": 2
+          },
+          "secrets": {
+            "leaseIds": [
+              "lease-github"
+            ],
+            "operations": [
+              "git.push"
+            ],
+            "rawReveal": false
+          }
+        },
+        "validity": {
+          "expiresAt": "2026-07-27T18:10:00Z",
+          "issuedAt": "2026-07-27T18:00:00Z",
+          "maxUses": 2,
+          "notBefore": "2026-07-27T18:00:00Z"
+        }
+      },
+      "kind": "envelope",
+      "name": "expired"
+    },
+    {
+      "expectedError": "wrong_run",
+      "expectedRunId": "run-other",
+      "grant": {
+        "auth": {
+          "algorithm": "hmac-sha256",
+          "keyId": "fixture-key-1",
+          "mac": "b83090effd92c56dff91807e9317f7465addaac3dbf56d84af04f0d7c2b98b93"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "filesystem.write"
+        },
+        "budgets": {
+          "maxCostMicros": 0,
+          "maxMutations": 10,
+          "maxNetworkBytes": 4194304,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 30000
+        },
+        "grantId": "grant-p1-003-001",
+        "issuer": {
+          "actorId": "desktop_host",
+          "authority": "desktop_host:deterministic_policy"
+        },
+        "nonce": "nonce-grant-p1-003-001",
+        "schemaVersion": "2.0.0",
+        "scope": {
+          "browser": {
+            "allowDownloads": false,
+            "allowUploads": false,
+            "origins": [],
+            "profileIds": []
+          },
+          "network": {
+            "destinations": [
+              "github.com:443"
+            ],
+            "listen": false,
+            "protocols": [
+              "https"
+            ]
+          },
+          "paths": {
+            "deny": [
+              "**/.ssh/**"
+            ],
+            "readRoots": [
+              "C:/dev"
+            ],
+            "writeRoots": [
+              "C:/dev/project"
+            ]
+          },
+          "process": {
+            "allowElevation": false,
+            "cwdRoots": [
+              "C:/dev/project"
+            ],
+            "executables": [
+              "git"
+            ],
+            "maxChildren": 2
+          },
+          "secrets": {
+            "leaseIds": [
+              "lease-github"
+            ],
+            "operations": [
+              "git.push"
+            ],
+            "rawReveal": false
+          }
+        },
+        "validity": {
+          "expiresAt": "2026-07-27T20:00:00Z",
+          "issuedAt": "2026-07-27T18:00:00Z",
+          "maxUses": 2,
+          "notBefore": "2026-07-27T18:00:00Z"
+        }
+      },
+      "kind": "context",
+      "name": "wrong_run"
+    },
+    {
+      "expectedError": "grant_replayed",
+      "grant": {
+        "auth": {
+          "algorithm": "hmac-sha256",
+          "keyId": "fixture-key-1",
+          "mac": "b83090effd92c56dff91807e9317f7465addaac3dbf56d84af04f0d7c2b98b93"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "filesystem.write"
+        },
+        "budgets": {
+          "maxCostMicros": 0,
+          "maxMutations": 10,
+          "maxNetworkBytes": 4194304,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 30000
+        },
+        "grantId": "grant-p1-003-001",
+        "issuer": {
+          "actorId": "desktop_host",
+          "authority": "desktop_host:deterministic_policy"
+        },
+        "nonce": "nonce-grant-p1-003-001",
+        "schemaVersion": "2.0.0",
+        "scope": {
+          "browser": {
+            "allowDownloads": false,
+            "allowUploads": false,
+            "origins": [],
+            "profileIds": []
+          },
+          "network": {
+            "destinations": [
+              "github.com:443"
+            ],
+            "listen": false,
+            "protocols": [
+              "https"
+            ]
+          },
+          "paths": {
+            "deny": [
+              "**/.ssh/**"
+            ],
+            "readRoots": [
+              "C:/dev"
+            ],
+            "writeRoots": [
+              "C:/dev/project"
+            ]
+          },
+          "process": {
+            "allowElevation": false,
+            "cwdRoots": [
+              "C:/dev/project"
+            ],
+            "executables": [
+              "git"
+            ],
+            "maxChildren": 2
+          },
+          "secrets": {
+            "leaseIds": [
+              "lease-github"
+            ],
+            "operations": [
+              "git.push"
+            ],
+            "rawReveal": false
+          }
+        },
+        "validity": {
+          "expiresAt": "2026-07-27T20:00:00Z",
+          "issuedAt": "2026-07-27T18:00:00Z",
+          "maxUses": 2,
+          "notBefore": "2026-07-27T18:00:00Z"
+        }
+      },
+      "invocationId": "replay-1",
+      "kind": "replay",
+      "name": "replayed_invocation"
+    },
+    {
+      "expectedError": "grant_exhausted",
+      "firstInvocationId": "use-1",
+      "grant": {
+        "auth": {
+          "algorithm": "hmac-sha256",
+          "keyId": "fixture-key-1",
+          "mac": "5d70fcfafd13b67251de039ad09b130f766fa744a04dd71dfe452f39383db9e7"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "filesystem.write"
+        },
+        "budgets": {
+          "maxCostMicros": 0,
+          "maxMutations": 10,
+          "maxNetworkBytes": 4194304,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 30000
+        },
+        "grantId": "grant-one-use",
+        "issuer": {
+          "actorId": "desktop_host",
+          "authority": "desktop_host:deterministic_policy"
+        },
+        "nonce": "nonce-grant-one-use",
+        "schemaVersion": "2.0.0",
+        "scope": {
+          "browser": {
+            "allowDownloads": false,
+            "allowUploads": false,
+            "origins": [],
+            "profileIds": []
+          },
+          "network": {
+            "destinations": [
+              "github.com:443"
+            ],
+            "listen": false,
+            "protocols": [
+              "https"
+            ]
+          },
+          "paths": {
+            "deny": [
+              "**/.ssh/**"
+            ],
+            "readRoots": [
+              "C:/dev"
+            ],
+            "writeRoots": [
+              "C:/dev/project"
+            ]
+          },
+          "process": {
+            "allowElevation": false,
+            "cwdRoots": [
+              "C:/dev/project"
+            ],
+            "executables": [
+              "git"
+            ],
+            "maxChildren": 2
+          },
+          "secrets": {
+            "leaseIds": [
+              "lease-github"
+            ],
+            "operations": [
+              "git.push"
+            ],
+            "rawReveal": false
+          }
+        },
+        "validity": {
+          "expiresAt": "2026-07-27T20:00:00Z",
+          "issuedAt": "2026-07-27T18:00:00Z",
+          "maxUses": 1,
+          "notBefore": "2026-07-27T18:00:00Z"
+        }
+      },
+      "kind": "exhaust",
+      "name": "use_count_exhausted",
+      "secondInvocationId": "use-2"
+    }
+  ],
+  "fixedNow": "2026-07-27T18:20:00Z",
+  "schemaVersion": "1.0.0",
+  "testKeyId": "fixture-key-1",
+  "validGrant": {
+    "auth": {
+      "algorithm": "hmac-sha256",
+      "keyId": "fixture-key-1",
+      "mac": "b83090effd92c56dff91807e9317f7465addaac3dbf56d84af04f0d7c2b98b93"
+    },
+    "binding": {
+      "accessProfileId": "owner",
+      "actorId": "owner_executor",
+      "runId": "run-001",
+      "taskId": "task-001",
+      "toolId": "filesystem.write"
+    },
+    "budgets": {
+      "maxCostMicros": 0,
+      "maxMutations": 10,
+      "maxNetworkBytes": 4194304,
+      "maxOutputBytes": 1048576,
+      "wallClockMs": 30000
+    },
+    "grantId": "grant-p1-003-001",
+    "issuer": {
+      "actorId": "desktop_host",
+      "authority": "desktop_host:deterministic_policy"
+    },
+    "nonce": "nonce-grant-p1-003-001",
+    "schemaVersion": "2.0.0",
+    "scope": {
+      "browser": {
+        "allowDownloads": false,
+        "allowUploads": false,
+        "origins": [],
+        "profileIds": []
+      },
+      "network": {
+        "destinations": [
+          "github.com:443"
+        ],
+        "listen": false,
+        "protocols": [
+          "https"
+        ]
+      },
+      "paths": {
+        "deny": [
+          "**/.ssh/**"
+        ],
+        "readRoots": [
+          "C:/dev"
+        ],
+        "writeRoots": [
+          "C:/dev/project"
+        ]
+      },
+      "process": {
+        "allowElevation": false,
+        "cwdRoots": [
+          "C:/dev/project"
+        ],
+        "executables": [
+          "git"
+        ],
+        "maxChildren": 2
+      },
+      "secrets": {
+        "leaseIds": [
+          "lease-github"
+        ],
+        "operations": [
+          "git.push"
+        ],
+        "rawReveal": false
+      }
+    },
+    "validity": {
+      "expiresAt": "2026-07-27T20:00:00Z",
+      "issuedAt": "2026-07-27T18:00:00Z",
+      "maxUses": 2,
+      "notBefore": "2026-07-27T18:00:00Z"
+    }
+  }
+}

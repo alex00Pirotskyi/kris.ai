@@ -92,6 +92,8 @@ EXPECTED_DART_FILES = {
     "tool/prune_stale_legacy.dart",
     'lib/product/access_profile_v2.dart',
     'test/product/access_profile_v2_test.dart',
+    'lib/product/capability_grant_v2.dart',
+    'test/product/capability_grant_v2_test.dart',
 }
 EXCLUDED_DART_TOP_LEVEL = {
     ".dart_tool", ".git", "archive", "build", "coverage", "dist",
@@ -561,6 +563,17 @@ def check_required_files() -> None:
     'evals/fixtures/p1_002_access_profiles/invalid_cases.json',
     'tasks/completed/P1-002.md',
     'release/evidence/P1-002/manifest.json',
+    'schemas/capability_grant_v2.schema.json',
+    'config/capability_grant.v2.json',
+    'docs/architecture/CAPABILITY_GRANT_V2.md',
+    'lib/product/capability_grant_v2.dart',
+    'test/product/capability_grant_v2_test.dart',
+    'tool/capability_grant_v2.py',
+    'tool/capability_grant_v2_test.py',
+    'tool/p1_003_capability_grant_test.py',
+    'evals/fixtures/p1_003_capability_grants/vectors.json',
+    'tasks/completed/P1-003.md',
+    'release/evidence/P1-003/manifest.json',
     ]
     missing = [x for x in required if not (ROOT / x).is_file()]
     add("required product files", not missing, "all required files present" if not missing else "missing: " + ", ".join(missing))

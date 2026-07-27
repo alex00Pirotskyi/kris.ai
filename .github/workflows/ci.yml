@@ -143,6 +143,10 @@ jobs:
         run: |
           python tool/access_profile_v2_test.py
           python tool/p1_002_access_profile_test.py --project .
+      - name: P1-003 capability grant v2
+        run: |
+          python tool/capability_grant_v2_test.py
+          python tool/p1_003_capability_grant_test.py --project .
       - name: P1-001 runtime boundary contract
         run: python tool/p1_001_runtime_boundary_test.py --project .
       - name: Architecture and security gate

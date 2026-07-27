@@ -1,0 +1,191 @@
+{
+  "$id": "https://kristin.local/schemas/capability_grant_v2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "auth": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "hmac-sha256"
+        },
+        "keyId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mac": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "keyId",
+        "mac"
+      ],
+      "type": "object"
+    },
+    "binding": {
+      "additionalProperties": false,
+      "properties": {
+        "accessProfileId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "actorId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "runId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "taskId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "toolId": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "runId",
+        "taskId",
+        "actorId",
+        "toolId",
+        "accessProfileId"
+      ],
+      "type": "object"
+    },
+    "budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "maxCostMicros": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxMutations": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxNetworkBytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxOutputBytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "wallClockMs": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "wallClockMs",
+        "maxOutputBytes",
+        "maxNetworkBytes",
+        "maxCostMicros",
+        "maxMutations"
+      ],
+      "type": "object"
+    },
+    "grantId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "issuer": {
+      "additionalProperties": false,
+      "properties": {
+        "actorId": {
+          "const": "desktop_host"
+        },
+        "authority": {
+          "const": "desktop_host:deterministic_policy"
+        }
+      },
+      "required": [
+        "actorId",
+        "authority"
+      ],
+      "type": "object"
+    },
+    "nonce": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "scope": {
+      "additionalProperties": false,
+      "properties": {
+        "browser": {
+          "type": "object"
+        },
+        "network": {
+          "type": "object"
+        },
+        "paths": {
+          "type": "object"
+        },
+        "process": {
+          "type": "object"
+        },
+        "secrets": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "paths",
+        "process",
+        "network",
+        "browser",
+        "secrets"
+      ],
+      "type": "object"
+    },
+    "validity": {
+      "additionalProperties": false,
+      "properties": {
+        "expiresAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "issuedAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "maxUses": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "notBefore": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "issuedAt",
+        "notBefore",
+        "expiresAt",
+        "maxUses"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "grantId",
+    "issuer",
+    "binding",
+    "scope",
+    "budgets",
+    "validity",
+    "nonce",
+    "auth"
+  ],
+  "title": "Kristin Capability Grant v2",
+  "type": "object"
+}

@@ -1,0 +1,54 @@
+{
+  "authentication": {
+    "algorithm": "hmac-sha256",
+    "domainSeparator": "kristin.capability-grant.v2\\u0000",
+    "keyMaterialInEnvelope": false,
+    "keySource": "external_ephemeral_runtime_keyring"
+  },
+  "bindings": [
+    "runId",
+    "taskId",
+    "actorId",
+    "toolId",
+    "accessProfileId"
+  ],
+  "budgetFields": [
+    "wallClockMs",
+    "maxOutputBytes",
+    "maxNetworkBytes",
+    "maxCostMicros",
+    "maxMutations"
+  ],
+  "failureCodes": [
+    "grant_invalid",
+    "unknown_grant_key",
+    "grant_integrity_mismatch",
+    "wrong_run",
+    "wrong_task",
+    "wrong_actor",
+    "wrong_tool",
+    "wrong_access_profile",
+    "grant_not_yet_valid",
+    "grant_expired",
+    "grant_replayed",
+    "grant_exhausted"
+  ],
+  "futureTrustBoundary": "P1-005/P1-006 own durable Ed25519 manifests; this runtime grant MAC does not replace them",
+  "grantType": "kristin.capability_grant",
+  "issuerActor": "desktop_host",
+  "issuerAuthority": "desktop_host:deterministic_policy",
+  "replayFields": [
+    "grantId",
+    "nonce",
+    "invocationId",
+    "maxUses"
+  ],
+  "schemaVersion": "2.0.0",
+  "scopeDomains": [
+    "paths",
+    "process",
+    "network",
+    "browser",
+    "secrets"
+  ]
+}

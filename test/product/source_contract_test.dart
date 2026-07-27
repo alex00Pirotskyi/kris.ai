@@ -166,6 +166,7 @@ void main() {
         'lib/product/ui_components.dart',
         'lib/product/workspace_tools.dart',
         'lib/product/access_profile_v2.dart',
+        'lib/product/capability_grant_v2.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))
