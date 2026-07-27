@@ -10,7 +10,7 @@
   },
   "format": "yaml-1.2-json-subset",
   "nextReady": [
-    "P1-002",
+    "P1-003",
     "P1-005"
   ],
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
@@ -257,12 +257,16 @@
         "P1-001"
       ],
       "doneWhen": "Round-trip and invalid-policy tests pass in Dart and worker languages.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-002/manifest.json",
+        "release/evidence/P1-002/test-results.json",
+        "release/evidence/P1-002/OWNER_APPROVAL.md"
+      ],
       "id": "P1-002",
-      "packet": "tasks/active/P1-002.md",
+      "packet": "tasks/completed/P1-002.md",
       "phase": "P1",
       "requiredOutput": "Create schema and domain model for chat, project, owner, owner_unattended, and isolated_untrusted modes.",
-      "status": "READY",
+      "status": "DONE",
       "title": "Define access profile v2"
     },
     {
@@ -276,7 +280,7 @@
       "packet": "tasks/active/P1-003.md",
       "phase": "P1",
       "requiredOutput": "Bind grants to run, task, actor, tool, paths, process, network, browser profile, secrets, budgets, expiry, and use count.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Define capability grant v2"
     },
     {

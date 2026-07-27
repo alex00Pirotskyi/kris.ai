@@ -43,3 +43,7 @@ python3 tool/assurance_dashboard.py --project . --strict
 
 # P1-001 runtime-boundary architecture gate
 "${PYTHON:-python}" tool/p1_001_runtime_boundary_test.py --project .
+
+# P1-002 Access Profile v2 gates
+"${PYTHON:-python}" tool/access_profile_v2_test.py
+"${PYTHON:-python}" tool/p1_002_access_profile_test.py --project .

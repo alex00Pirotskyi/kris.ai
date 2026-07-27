@@ -1,0 +1,80 @@
+{
+  "caseCount": 14,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 14,
+  "results": [
+    {
+      "detail": "all present",
+      "name": "Required P1-002 files",
+      "passed": true
+    },
+    {
+      "detail": "profiles=chat,isolated_untrusted,owner,owner_unattended,project",
+      "name": "Python catalog validation",
+      "passed": true
+    },
+    {
+      "detail": "['chat', 'isolated_untrusted', 'owner', 'owner_unattended', 'project']",
+      "name": "Five canonical profiles",
+      "passed": true
+    },
+    {
+      "detail": "all canonical profiles stable",
+      "name": "Python round-trip",
+      "passed": true
+    },
+    {
+      "detail": "current_account_full",
+      "name": "Owner is unrestricted non-sandbox ceiling",
+      "passed": true
+    },
+    {
+      "detail": "{'mode': 'brokered_leases', 'rawReveal': 'never', 'unattendedUse': True}",
+      "name": "Owner unattended secret boundary",
+      "passed": true
+    },
+    {
+      "detail": "isolated_untrusted",
+      "name": "Isolated profile has no host credentials",
+      "passed": true
+    },
+    {
+      "detail": "['owner_cannot_be_sandboxed', 'owner_unattended_cannot_reveal_raw_secret', 'isolated_worker_has_no_credentials', 'project_requires_project_root', 'chat_cannot_write_files', 'content_never_becomes_authority']",
+      "name": "Shared invalid vectors rejected by Python",
+      "passed": true
+    },
+    {
+      "detail": "shared vectors and typed model wired",
+      "name": "Dart round-trip and invalid-policy suite",
+      "passed": true
+    },
+    {
+      "detail": "releaseInventory=True libraryInventory=True testExcludedFromLibraryInventory=True forbiddenPathsAbsent=True",
+      "name": "Governed Dart source inventory",
+      "passed": true
+    },
+    {
+      "detail": "P1-002=DONE ready=['P1-003', 'P1-005']",
+      "name": "Roadmap state",
+      "passed": true
+    },
+    {
+      "detail": "workflow step present",
+      "name": "CI integration",
+      "passed": true
+    },
+    {
+      "detail": "local gates present",
+      "name": "Verification integration",
+      "passed": true
+    },
+    {
+      "detail": "required files and exact Dart inventory present",
+      "name": "Release validation integration",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-002"
+}

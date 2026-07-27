@@ -29,3 +29,9 @@ The deterministic policy authority issues bounded, auditable grants to the Owner
 ## Consequences
 
 P1-002 owns the profile schema, P1-003 owns grant binding, P1-004 owns deterministic resolution, and P2 owns concrete filesystem/terminal/OS adapters. This ADR does not claim those implementations already exist.
+
+## Access Profile v2 resolution (P1-002)
+
+The authority boundary accepted by P1-001 is now represented by the five canonical profiles `chat`, `project`, `owner`, `owner_unattended`, and `isolated_untrusted`. The machine authority is `config/access_profiles.v2.json`; `docs/architecture/ACCESS_PROFILE_V2.md` defines operator-facing semantics.
+
+A profile is a maximum authority ceiling, never a capability grant. Project/organization/user overlays may only narrow it until P1-004 implements an explicit deterministic widening transition. `owner` and `owner_unattended` are non-sandbox profiles. The unattended variant forbids raw secret reveal, interactive elevation and substitution for MFA, CAPTCHA, payment confirmation or consent.
