@@ -1,0 +1,60 @@
+{
+  "caseCount": 10,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 10,
+  "results": [
+    {
+      "detail": "all present",
+      "name": "Required P1-003 files",
+      "passed": true
+    },
+    {
+      "detail": "external keyring verifies canonical envelope",
+      "name": "Valid authenticated grant",
+      "passed": true
+    },
+    {
+      "detail": "{'modified_body': 'grant_integrity_mismatch', 'expired': 'grant_expired', 'wrong_run': 'wrong_run', 'replayed_invocation': 'grant_replayed', 'use_count_exhausted': 'grant_exhausted'}",
+      "name": "Modified expired replayed wrong-run grants rejected",
+      "passed": true
+    },
+    {
+      "detail": "no key material in envelope",
+      "name": "External issuer key boundary",
+      "passed": true
+    },
+    {
+      "detail": "binding=['accessProfileId', 'actorId', 'runId', 'taskId', 'toolId'] scope=['browser', 'network', 'paths', 'process', 'secrets']",
+      "name": "Complete binding and scope",
+      "passed": true
+    },
+    {
+      "detail": "Dart model requires worker authentication",
+      "name": "Dart structural contract",
+      "passed": true
+    },
+    {
+      "detail": "release and lib-only inventories remain distinct",
+      "name": "Governed Dart inventories",
+      "passed": true
+    },
+    {
+      "detail": "P1-003=DONE ready=['P1-004', 'P1-005', 'P1-012']",
+      "name": "Roadmap state",
+      "passed": true
+    },
+    {
+      "detail": "gates wired",
+      "name": "CI and local verification",
+      "passed": true
+    },
+    {
+      "detail": "required files wired",
+      "name": "Release validation integration",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-003"
+}

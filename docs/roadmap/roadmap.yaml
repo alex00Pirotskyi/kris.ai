@@ -10,8 +10,9 @@
   },
   "format": "yaml-1.2-json-subset",
   "nextReady": [
-    "P1-003",
-    "P1-005"
+    "P1-004",
+    "P1-005",
+    "P1-012"
   ],
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
   "schemaVersion": "1.0.0",
@@ -275,12 +276,16 @@
         "P1-002"
       ],
       "doneWhen": "Worker rejects modified, expired, replayed, and wrong-run grants.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-003/manifest.json",
+        "release/evidence/P1-003/test-results.json",
+        "release/evidence/P1-003/OWNER_APPROVAL.md"
+      ],
       "id": "P1-003",
-      "packet": "tasks/active/P1-003.md",
+      "packet": "tasks/completed/P1-003.md",
       "phase": "P1",
       "requiredOutput": "Bind grants to run, task, actor, tool, paths, process, network, browser profile, secrets, budgets, expiry, and use count.",
-      "status": "READY",
+      "status": "DONE",
       "title": "Define capability grant v2"
     },
     {
@@ -294,7 +299,7 @@
       "packet": "tasks/active/P1-004.md",
       "phase": "P1",
       "requiredOutput": "Implement mode resolution, organization/project/user overlays, and explicit widening rules.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Build deterministic policy engine"
     },
     {
@@ -402,7 +407,7 @@
       "packet": "tasks/active/P1-012.md",
       "phase": "P1",
       "requiredOutput": "Use named pipes/Unix sockets or loopback with mutual authentication, peer identity, request IDs, limits, and versioning.",
-      "status": "NOT_STARTED",
+      "status": "READY",
       "title": "Create local authenticated IPC"
     }
   ]

@@ -84,8 +84,16 @@ def main() -> int:
     roadmap = json.loads((root / "docs/roadmap/roadmap.yaml").read_text(encoding="utf-8"))
     tasks = {item["id"]: item for item in roadmap["tasks"]}
     ready = sorted(task_id for task_id, item in tasks.items() if item.get("status") == "READY")
-    state_ok = tasks.get("P1-001", {}).get("status") == "DONE" and tasks.get("P1-002", {}).get("status") == "DONE" and "P1-003" in ready and "P1-005" in ready
-    add(results, "Roadmap state", state_ok, f"P1-002={tasks.get('P1-002', {}).get('status')} ready={ready}")
+    p1_003_status = tasks.get("P1-003", {}).get("status")
+    state_ok = (
+        tasks.get("P1-001", {}).get("status") == "DONE"
+        and tasks.get("P1-002", {}).get("status") == "DONE"
+        and p1_003_status in {"READY", "DONE"}
+        and tasks.get("P1-005", {}).get("status") in {"READY", "DONE"}
+        and (p1_003_status != "DONE" or tasks.get("P1-004", {}).get("status") in {"READY", "DONE"})
+        and (p1_003_status != "DONE" or tasks.get("P1-012", {}).get("status") in {"READY", "DONE"})
+    )
+    add(results, "Roadmap state", state_ok, f"P1-002={tasks.get('P1-002', {}).get('status')} P1-003={p1_003_status} ready={ready}")
     ci = (root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     add(results, "CI integration", "P1-002 access profile v2" in ci, "workflow step present")
     verify = (root / "tool/verify.sh").read_text(encoding="utf-8")

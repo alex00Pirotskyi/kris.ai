@@ -47,3 +47,7 @@ python3 tool/assurance_dashboard.py --project . --strict
 # P1-002 Access Profile v2 gates
 "${PYTHON:-python}" tool/access_profile_v2_test.py
 "${PYTHON:-python}" tool/p1_002_access_profile_test.py --project .
+
+# P1-003 Capability Grant v2 gates
+"${PYTHON:-python}" tool/capability_grant_v2_test.py
+"${PYTHON:-python}" tool/p1_003_capability_grant_test.py --project .
