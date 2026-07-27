@@ -51,8 +51,17 @@ def main():
  except Exception as e: tasks={}; add(results,"Roadmap state",False,str(e))
  else:
   ready=sorted(tid for tid,t in tasks.items() if t.get("status")=="READY")
-  good=tasks.get("P1-001",{}).get("status")=="DONE" and "P1-002" in ready and "P1-005" in ready
-  add(results,"Roadmap state",good,f"P1-001={tasks.get('P1-001',{}).get('status')} ready={ready}")
+  p1_001_status=tasks.get("P1-001",{}).get("status")
+  p1_002_status=tasks.get("P1-002",{}).get("status")
+  p1_003_status=tasks.get("P1-003",{}).get("status")
+  p1_005_status=tasks.get("P1-005",{}).get("status")
+  good=(
+   p1_001_status=="DONE"
+   and p1_002_status in {"READY","DONE"}
+   and p1_005_status in {"READY","DONE"}
+   and (p1_002_status!="DONE" or p1_003_status in {"READY","DONE"})
+  )
+  add(results,"Roadmap state",good,f"P1-001={p1_001_status} P1-002={p1_002_status} P1-003={p1_003_status} P1-005={p1_005_status} ready={ready}")
  ci=(root/".github/workflows/ci.yml").read_text(encoding="utf-8")
  add(results,"CI integration","P1-001 runtime boundary contract" in ci,"workflow step present")
  verify=(root/"tool/verify.sh").read_text(encoding="utf-8")

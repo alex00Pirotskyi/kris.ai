@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "baseProfile": "owner",
+      "errorContains": "owner must be explicit non-sandbox authority",
+      "name": "owner_cannot_be_sandboxed",
+      "patch": {
+        "sandboxed": true
+      }
+    },
+    {
+      "baseProfile": "owner_unattended",
+      "errorContains": "unattended raw secret reveal is forbidden",
+      "name": "owner_unattended_cannot_reveal_raw_secret",
+      "patch": {
+        "credentials.rawReveal": "interactive_break_glass"
+      }
+    },
+    {
+      "baseProfile": "isolated_untrusted",
+      "errorContains": "isolated_untrusted credentials must be none",
+      "name": "isolated_worker_has_no_credentials",
+      "patch": {
+        "credentials.mode": "brokered_leases"
+      }
+    },
+    {
+      "baseProfile": "project",
+      "errorContains": "project profile requires project roots",
+      "name": "project_requires_project_root",
+      "patch": {
+        "filesystem.roots": []
+      }
+    },
+    {
+      "baseProfile": "chat",
+      "errorContains": "chat profile cannot authorize effects",
+      "name": "chat_cannot_write_files",
+      "patch": {
+        "filesystem.write": true
+      }
+    },
+    {
+      "baseProfile": "project",
+      "errorContains": "content cannot become authority",
+      "name": "content_never_becomes_authority",
+      "patch": {
+        "dataBoundary.contentMayBecomeAuthority": true
+      }
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

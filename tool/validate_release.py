@@ -90,6 +90,8 @@ EXPECTED_DART_FILES = {
     "test/product/budget_diagnostics_test.dart",
     "test/widget_test.dart",
     "tool/prune_stale_legacy.dart",
+    'lib/product/access_profile_v2.dart',
+    'test/product/access_profile_v2_test.dart',
 }
 EXCLUDED_DART_TOP_LEVEL = {
     ".dart_tool", ".git", "archive", "build", "coverage", "dist",
@@ -548,6 +550,17 @@ def check_required_files() -> None:
     'tool/p1_001_runtime_boundary_test.py',
     'tasks/completed/P1-001.md',
     'release/evidence/P1-001/manifest.json',
+    'schemas/access_profile_v2.schema.json',
+    'config/access_profiles.v2.json',
+    'docs/architecture/ACCESS_PROFILE_V2.md',
+    'lib/product/access_profile_v2.dart',
+    'test/product/access_profile_v2_test.dart',
+    'tool/access_profile_v2.py',
+    'tool/access_profile_v2_test.py',
+    'tool/p1_002_access_profile_test.py',
+    'evals/fixtures/p1_002_access_profiles/invalid_cases.json',
+    'tasks/completed/P1-002.md',
+    'release/evidence/P1-002/manifest.json',
     ]
     missing = [x for x in required if not (ROOT / x).is_file()]
     add("required product files", not missing, "all required files present" if not missing else "missing: " + ", ".join(missing))

@@ -1,0 +1,315 @@
+{
+  "$defs": {
+    "browser": {
+      "additionalProperties": false,
+      "properties": {
+        "authenticatedProfiles": {
+          "type": "boolean"
+        },
+        "downloads": {
+          "type": "boolean"
+        },
+        "scope": {
+          "enum": [
+            "none",
+            "isolated",
+            "user_selected",
+            "unrestricted"
+          ]
+        },
+        "uploads": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scope",
+        "authenticatedProfiles",
+        "uploads",
+        "downloads"
+      ],
+      "type": "object"
+    },
+    "credentials": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "brokered_leases"
+          ]
+        },
+        "rawReveal": {
+          "enum": [
+            "never",
+            "interactive_break_glass"
+          ]
+        },
+        "unattendedUse": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mode",
+        "rawReveal",
+        "unattendedUse"
+      ],
+      "type": "object"
+    },
+    "dataBoundary": {
+      "additionalProperties": false,
+      "properties": {
+        "contentMayBecomeAuthority": {
+          "const": false
+        },
+        "modelEgress": {
+          "enum": [
+            "none",
+            "project_labeled",
+            "owner_selected"
+          ]
+        }
+      },
+      "required": [
+        "modelEgress",
+        "contentMayBecomeAuthority"
+      ],
+      "type": "object"
+    },
+    "filesystem": {
+      "additionalProperties": false,
+      "properties": {
+        "absolutePaths": {
+          "type": "boolean"
+        },
+        "delete": {
+          "type": "boolean"
+        },
+        "read": {
+          "type": "boolean"
+        },
+        "roots": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "scope": {
+          "enum": [
+            "none",
+            "project",
+            "current_account",
+            "sandbox"
+          ]
+        },
+        "write": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scope",
+        "roots",
+        "absolutePaths",
+        "read",
+        "write",
+        "delete"
+      ],
+      "type": "object"
+    },
+    "network": {
+      "additionalProperties": false,
+      "properties": {
+        "destinations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "listen": {
+          "type": "boolean"
+        },
+        "privateAddresses": {
+          "type": "boolean"
+        },
+        "scope": {
+          "enum": [
+            "none",
+            "allowlist",
+            "unrestricted"
+          ]
+        }
+      },
+      "required": [
+        "scope",
+        "destinations",
+        "privateAddresses",
+        "listen"
+      ],
+      "type": "object"
+    },
+    "process": {
+      "additionalProperties": false,
+      "properties": {
+        "elevation": {
+          "enum": [
+            "none",
+            "interactive_only"
+          ]
+        },
+        "finiteCommands": {
+          "type": "boolean"
+        },
+        "interactivePty": {
+          "type": "boolean"
+        },
+        "packages": {
+          "type": "boolean"
+        },
+        "scope": {
+          "enum": [
+            "none",
+            "project",
+            "current_account",
+            "sandbox"
+          ]
+        },
+        "services": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scope",
+        "finiteCommands",
+        "interactivePty",
+        "packages",
+        "services",
+        "elevation"
+      ],
+      "type": "object"
+    },
+    "profile": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalPolicy": {
+          "enum": [
+            "always",
+            "high_risk_only",
+            "never"
+          ]
+        },
+        "authorityClass": {
+          "enum": [
+            "conversation_only",
+            "project_scoped",
+            "current_account_full",
+            "current_account_full_unattended",
+            "isolated_untrusted"
+          ]
+        },
+        "browser": {
+          "$ref": "#/$defs/browser"
+        },
+        "credentials": {
+          "$ref": "#/$defs/credentials"
+        },
+        "dataBoundary": {
+          "$ref": "#/$defs/dataBoundary"
+        },
+        "displayName": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "filesystem": {
+          "$ref": "#/$defs/filesystem"
+        },
+        "interactive": {
+          "type": "boolean"
+        },
+        "network": {
+          "$ref": "#/$defs/network"
+        },
+        "process": {
+          "$ref": "#/$defs/process"
+        },
+        "profileId": {
+          "enum": [
+            "chat",
+            "project",
+            "owner",
+            "owner_unattended",
+            "isolated_untrusted"
+          ]
+        },
+        "profileRevision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sandboxed": {
+          "type": "boolean"
+        },
+        "schemaVersion": {
+          "const": "2.0.0"
+        },
+        "unattendedAllowed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "profileRevision",
+        "profileId",
+        "displayName",
+        "authorityClass",
+        "sandboxed",
+        "interactive",
+        "unattendedAllowed",
+        "approvalPolicy",
+        "filesystem",
+        "process",
+        "network",
+        "browser",
+        "credentials",
+        "dataBoundary"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://kristin.local/schemas/access_profile_v2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authoritySemantics": {
+      "const": "maximum_ceiling_not_capability_grant"
+    },
+    "catalogId": {
+      "const": "kristin.access_profiles"
+    },
+    "defaultProfile": {
+      "const": "chat"
+    },
+    "overlaysMayOnlyNarrow": {
+      "const": true
+    },
+    "profiles": {
+      "items": {
+        "$ref": "#/$defs/profile"
+      },
+      "maxItems": 5,
+      "minItems": 5,
+      "type": "array"
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "catalogId",
+    "defaultProfile",
+    "authoritySemantics",
+    "overlaysMayOnlyNarrow",
+    "profiles"
+  ],
+  "title": "Kristin Access Profile v2 catalog",
+  "type": "object"
+}

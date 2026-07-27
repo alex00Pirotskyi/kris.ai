@@ -17,7 +17,7 @@
 
 ## Next ready tasks
 
-- `P1-002` — Define access profile v2 (`tasks/active/P1-002.md`)
+- `P1-003` — Define capability grant v2 (`tasks/active/P1-003.md`)
 - `P1-005` — Specify Signed Manifest v2 (`tasks/active/P1-005.md`)
 
 ## Non-negotiable handoff rules

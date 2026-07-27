@@ -1,0 +1,265 @@
+{
+  "authoritySemantics": "maximum_ceiling_not_capability_grant",
+  "catalogId": "kristin.access_profiles",
+  "defaultProfile": "chat",
+  "overlaysMayOnlyNarrow": true,
+  "profiles": [
+    {
+      "approvalPolicy": "always",
+      "authorityClass": "conversation_only",
+      "browser": {
+        "authenticatedProfiles": false,
+        "downloads": false,
+        "scope": "none",
+        "uploads": false
+      },
+      "credentials": {
+        "mode": "none",
+        "rawReveal": "never",
+        "unattendedUse": false
+      },
+      "dataBoundary": {
+        "contentMayBecomeAuthority": false,
+        "modelEgress": "none"
+      },
+      "displayName": "Chat",
+      "filesystem": {
+        "absolutePaths": false,
+        "delete": false,
+        "read": false,
+        "roots": [],
+        "scope": "none",
+        "write": false
+      },
+      "interactive": true,
+      "network": {
+        "destinations": [],
+        "listen": false,
+        "privateAddresses": false,
+        "scope": "none"
+      },
+      "process": {
+        "elevation": "none",
+        "finiteCommands": false,
+        "interactivePty": false,
+        "packages": false,
+        "scope": "none",
+        "services": false
+      },
+      "profileId": "chat",
+      "profileRevision": 1,
+      "sandboxed": false,
+      "schemaVersion": "2.0.0",
+      "unattendedAllowed": false
+    },
+    {
+      "approvalPolicy": "high_risk_only",
+      "authorityClass": "project_scoped",
+      "browser": {
+        "authenticatedProfiles": false,
+        "downloads": true,
+        "scope": "user_selected",
+        "uploads": true
+      },
+      "credentials": {
+        "mode": "brokered_leases",
+        "rawReveal": "never",
+        "unattendedUse": false
+      },
+      "dataBoundary": {
+        "contentMayBecomeAuthority": false,
+        "modelEgress": "project_labeled"
+      },
+      "displayName": "Project",
+      "filesystem": {
+        "absolutePaths": false,
+        "delete": true,
+        "read": true,
+        "roots": [
+          "$PROJECT_ROOT"
+        ],
+        "scope": "project",
+        "write": true
+      },
+      "interactive": true,
+      "network": {
+        "destinations": [
+          "$PROJECT_CONFIGURED_DESTINATIONS"
+        ],
+        "listen": false,
+        "privateAddresses": false,
+        "scope": "allowlist"
+      },
+      "process": {
+        "elevation": "none",
+        "finiteCommands": true,
+        "interactivePty": true,
+        "packages": false,
+        "scope": "project",
+        "services": false
+      },
+      "profileId": "project",
+      "profileRevision": 1,
+      "sandboxed": false,
+      "schemaVersion": "2.0.0",
+      "unattendedAllowed": false
+    },
+    {
+      "approvalPolicy": "high_risk_only",
+      "authorityClass": "current_account_full",
+      "browser": {
+        "authenticatedProfiles": true,
+        "downloads": true,
+        "scope": "unrestricted",
+        "uploads": true
+      },
+      "credentials": {
+        "mode": "brokered_leases",
+        "rawReveal": "interactive_break_glass",
+        "unattendedUse": false
+      },
+      "dataBoundary": {
+        "contentMayBecomeAuthority": false,
+        "modelEgress": "owner_selected"
+      },
+      "displayName": "Owner",
+      "filesystem": {
+        "absolutePaths": true,
+        "delete": true,
+        "read": true,
+        "roots": [
+          "$CURRENT_ACCOUNT_ACCESSIBLE_ROOTS"
+        ],
+        "scope": "current_account",
+        "write": true
+      },
+      "interactive": true,
+      "network": {
+        "destinations": [
+          "*"
+        ],
+        "listen": true,
+        "privateAddresses": true,
+        "scope": "unrestricted"
+      },
+      "process": {
+        "elevation": "interactive_only",
+        "finiteCommands": true,
+        "interactivePty": true,
+        "packages": true,
+        "scope": "current_account",
+        "services": true
+      },
+      "profileId": "owner",
+      "profileRevision": 1,
+      "sandboxed": false,
+      "schemaVersion": "2.0.0",
+      "unattendedAllowed": false
+    },
+    {
+      "approvalPolicy": "never",
+      "authorityClass": "current_account_full_unattended",
+      "browser": {
+        "authenticatedProfiles": true,
+        "downloads": true,
+        "scope": "unrestricted",
+        "uploads": true
+      },
+      "credentials": {
+        "mode": "brokered_leases",
+        "rawReveal": "never",
+        "unattendedUse": true
+      },
+      "dataBoundary": {
+        "contentMayBecomeAuthority": false,
+        "modelEgress": "owner_selected"
+      },
+      "displayName": "Owner unattended",
+      "filesystem": {
+        "absolutePaths": true,
+        "delete": true,
+        "read": true,
+        "roots": [
+          "$CURRENT_ACCOUNT_ACCESSIBLE_ROOTS"
+        ],
+        "scope": "current_account",
+        "write": true
+      },
+      "interactive": false,
+      "network": {
+        "destinations": [
+          "*"
+        ],
+        "listen": true,
+        "privateAddresses": true,
+        "scope": "unrestricted"
+      },
+      "process": {
+        "elevation": "none",
+        "finiteCommands": true,
+        "interactivePty": false,
+        "packages": true,
+        "scope": "current_account",
+        "services": true
+      },
+      "profileId": "owner_unattended",
+      "profileRevision": 1,
+      "sandboxed": false,
+      "schemaVersion": "2.0.0",
+      "unattendedAllowed": true
+    },
+    {
+      "approvalPolicy": "always",
+      "authorityClass": "isolated_untrusted",
+      "browser": {
+        "authenticatedProfiles": false,
+        "downloads": true,
+        "scope": "isolated",
+        "uploads": false
+      },
+      "credentials": {
+        "mode": "none",
+        "rawReveal": "never",
+        "unattendedUse": false
+      },
+      "dataBoundary": {
+        "contentMayBecomeAuthority": false,
+        "modelEgress": "none"
+      },
+      "displayName": "Isolated untrusted",
+      "filesystem": {
+        "absolutePaths": false,
+        "delete": true,
+        "read": true,
+        "roots": [
+          "$EPHEMERAL_SANDBOX_ROOT"
+        ],
+        "scope": "sandbox",
+        "write": true
+      },
+      "interactive": false,
+      "network": {
+        "destinations": [
+          "$GRANT_DESTINATIONS"
+        ],
+        "listen": false,
+        "privateAddresses": false,
+        "scope": "allowlist"
+      },
+      "process": {
+        "elevation": "none",
+        "finiteCommands": true,
+        "interactivePty": false,
+        "packages": false,
+        "scope": "sandbox",
+        "services": false
+      },
+      "profileId": "isolated_untrusted",
+      "profileRevision": 1,
+      "sandboxed": true,
+      "schemaVersion": "2.0.0",
+      "unattendedAllowed": true
+    }
+  ],
+  "schemaVersion": "2.0.0"
+}
