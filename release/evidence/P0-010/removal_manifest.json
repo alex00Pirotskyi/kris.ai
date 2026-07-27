@@ -1,0 +1,10 @@
+{
+  "externalBackupCreated": true,
+  "externalBackupLocation": "sibling-directory",
+  "policyVersion": "2.0.0",
+  "removalCount": 0,
+  "removed": [],
+  "schemaVersion": "1.0.0",
+  "taskId": "P0-010",
+  "trackedAuthority": "git-index"
+}

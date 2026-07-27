@@ -1,0 +1,34 @@
+{
+  "caseCount": 3,
+  "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+  "failedCount": 0,
+  "manifestSha256": "b91240e6b559d2d1e5b750f0de0a2f7dbe163f155d4d3067184c1a9c6a5edb26",
+  "milestone": "P0-004",
+  "passed": true,
+  "passedCount": 3,
+  "platform": {
+    "machine": "AMD64",
+    "release": "10",
+    "system": "Windows"
+  },
+  "resolved": null,
+  "results": [
+    {
+      "detail": "python=3.12.10 flutter=3.44.8 dart=3.12.2 actions=4",
+      "name": "Toolchain manifest shape",
+      "passed": true
+    },
+    {
+      "detail": "verified 1 lockfile(s)",
+      "name": "Declared lockfile hashes",
+      "passed": true
+    },
+    {
+      "detail": "validated 5 immutable action reference(s) and explicit runner labels",
+      "name": "Immutable workflow inputs",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "sourceOnly": true
+}

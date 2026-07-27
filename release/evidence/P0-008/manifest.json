@@ -1,0 +1,114 @@
+{
+  "appliedAt": "2026-07-26T19:26:33.948465+00:00",
+  "backup": {
+    "created": true,
+    "directoryName": "repo.p0-008-backup-20260726T192630Z",
+    "location": "external_sibling_directory"
+  },
+  "changedFiles": [
+    {
+      "path": "docs/roadmap/HANDOFF.md",
+      "sha256": "65c6ebc0bb411c75207875829bdfebde622bbd170993f6412099f6e586ac560c"
+    },
+    {
+      "path": "docs/roadmap/MASTER.md",
+      "sha256": "c0a24cc2a91a9f349cc569e2439eb77df57645a6507e89d33f1ddb79515c3e7f"
+    },
+    {
+      "path": "docs/roadmap/STATUS.md",
+      "sha256": "56e3a2d3b351419da3e900889256558dc823bd2a20bd8b2fc3b449b21c97b3da"
+    },
+    {
+      "path": "docs/roadmap/roadmap.yaml",
+      "sha256": "49dcd9b229242090ad7c31851231ec8ae140578519a03bfd3125afc8a707a5cb"
+    }
+  ],
+  "claimInvariant": "a_fresh_ai_session_can_select_ready_work_without_oral_context",
+  "commands": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/roadmap_control_test.py"
+      ],
+      "exitCode": 0,
+      "outputSha256": "43a2166b477796cc3efbee633101052f58d028c6a63fa54ccc7c664128b6767a"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/p0_008_roadmap_test.py",
+        "--project",
+        "."
+      ],
+      "exitCode": 0,
+      "outputSha256": "ae4d57645c89b5c75bafdd32303c03c355cfa89840f8bb4458c7bff3ac4b3700"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/roadmap_control.py",
+        "validate",
+        "--project",
+        ".",
+        "--strict"
+      ],
+      "exitCode": 0,
+      "outputSha256": "603073d0c791cb44f82a2dd1b93e35454209e264aecd8891e14ceada04fe541d"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/roadmap_control.py",
+        "render",
+        "--project",
+        ".",
+        "--check"
+      ],
+      "exitCode": 0,
+      "outputSha256": "11665e961e0521af2e6d9e0fb5f44c04517d5b93987d612ef3cfbf3270a9c05a"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "exitCode": 0,
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limitations": [
+    "P0-008 covers only P0/P1; P24 owns the complete all-task traceability system.",
+    "Proposed ADR stubs are not implementation approval.",
+    "P0-008 remains REVIEW until complete-checkout validation and independent review pass."
+  ],
+  "roadmap": {
+    "nextReady": [],
+    "taskCount": 22,
+    "taskGraphSha256": "dbef00a9e2fb2256b0c7f5a76d29aeccd0d482c4155d01ed2028aa67e4102fdc"
+  },
+  "roadmapVersion": "3.1.4-p0-008-roadmap-control-plane",
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "checked": 566,
+    "mismatched": 5
+  },
+  "status": "REVIEW",
+  "taskId": "P0-008"
+}

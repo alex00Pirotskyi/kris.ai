@@ -1,0 +1,109 @@
+{
+  "apiBase": "https://api.github.com",
+  "apiVersion": "2026-03-10",
+  "applyResult": {
+    "labels": [
+      {
+        "action": "updated",
+        "id": 11642950417,
+        "name": "security-review:required"
+      },
+      {
+        "action": "updated",
+        "id": 11642950482,
+        "name": "security-review:passed"
+      },
+      {
+        "action": "updated",
+        "id": 11642950540,
+        "name": "security-review:blocked"
+      },
+      {
+        "action": "updated",
+        "id": 11642950631,
+        "name": "release:blocker"
+      },
+      {
+        "action": "updated",
+        "id": 11642950665,
+        "name": "risk:critical"
+      },
+      {
+        "action": "updated",
+        "id": 11642950747,
+        "name": "risk:high"
+      },
+      {
+        "action": "updated",
+        "id": 11642950835,
+        "name": "roadmap:p0"
+      },
+      {
+        "action": "updated",
+        "id": 11643083109,
+        "name": "ai-generated-change"
+      }
+    ],
+    "repositorySettings": {
+      "allowAutoMerge": true,
+      "allowMergeCommit": false,
+      "allowRebaseMerge": true,
+      "allowSquashMerge": true,
+      "defaultBranch": "main",
+      "deleteBranchOnMerge": true
+    },
+    "ruleset": {
+      "action": "updated",
+      "enforcement": "active",
+      "id": 19811663,
+      "name": "Kristin main protection"
+    }
+  },
+  "completedAt": "2026-07-27T11:48:00.535152+00:00",
+  "currentHead": "277f231043f0472f7fe34f4128a16ba4e0897536",
+  "milestone": "P0-006",
+  "mode": "apply",
+  "p0_003Commit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
+  "repository": "alex00Pirotskyi/kris.ai",
+  "schemaVersion": "1.0.0",
+  "status": "passed",
+  "tokenPersisted": false,
+  "tokenSource": "environment:GITHUB_TOKEN",
+  "verified": {
+    "labels": [
+      "ai-generated-change",
+      "release:blocker",
+      "risk:critical",
+      "risk:high",
+      "roadmap:p0",
+      "security-review:blocked",
+      "security-review:passed",
+      "security-review:required"
+    ],
+    "repositorySettings": {
+      "allow_auto_merge": true,
+      "allow_merge_commit": false,
+      "allow_rebase_merge": true,
+      "allow_squash_merge": true,
+      "defaultBranch": "main",
+      "delete_branch_on_merge": true
+    },
+    "ruleset": {
+      "enforcement": "active",
+      "id": 19811663,
+      "name": "Kristin main protection",
+      "requiredChecks": [
+        "validate-ubuntu",
+        "validate-windows",
+        "validate-macos"
+      ],
+      "ruleTypes": [
+        "deletion",
+        "non_fast_forward",
+        "pull_request",
+        "required_linear_history",
+        "required_status_checks"
+      ]
+    }
+  }
+}

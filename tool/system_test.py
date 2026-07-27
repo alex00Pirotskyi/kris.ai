@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic offline system-contract checks for Kristin v1.9.0.
+"""Deterministic offline architecture and source-contract checks for Kristin v1.9.0.
 
 These checks complement Flutter behavioral tests. They are intentionally bounded,
 network-free, and available before a Flutter SDK is installed.
@@ -13,6 +13,11 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+
+ASSURANCE_LEVEL = "source_contract"
+PROOF_KIND = "source_inspection"
+BEHAVIORAL_PROOF = False
+CLAIM_SCOPE = "source_and_wiring_only"
 
 
 @dataclass(frozen=True)
@@ -586,14 +591,27 @@ def main() -> int:
                 encoding="utf-8",
             )
             profile = kristin_cli.detect_profile(fixture_root)
+            def host_fixture_command(
+                spec: kristin_cli.CommandSpec,
+            ) -> kristin_cli.CommandSpec:
+                # This executes only fixed code constructed by this offline test.
+                # It validates CLI/environment plumbing and is not a project sandbox.
+                return kristin_cli.CommandSpec(
+                    label=spec.label,
+                    argv=spec.argv,
+                    environment=spec.environment,
+                    environment_profile=spec.environment_profile,
+                    execution_mode="host",
+                )
+
             analysis_check = kristin_cli.run_bounded(
-                profile.analysis[0], fixture_root
+                host_fixture_command(profile.analysis[0]), fixture_root
             ) if profile.analysis else None
             build_check = kristin_cli.run_bounded(
-                profile.build, fixture_root
+                host_fixture_command(profile.build), fixture_root
             ) if profile.build is not None else None
             run_check = kristin_cli.run_bounded(
-                profile.run, fixture_root
+                host_fixture_command(profile.run), fixture_root
             ) if profile.run is not None else None
             profile_ok = (
                 profile.kind == "Project Manager fixture"
@@ -654,6 +672,7 @@ def main() -> int:
                         ),
                     ),
                     environment_profile="sdk",
+                execution_mode="host",
                 ),
                 root,
             )
@@ -1188,7 +1207,13 @@ def main() -> int:
                     "project_manager_snapshot",
                 ),
             )
-            and "Managed Run can be stopped with its process group" in project_manager_gate
+            and (
+                "Managed Run can be stopped with its process group" in project_manager_gate
+                or (
+                    "Managed Run terminates the sandbox tree or fails closed when unavailable"
+                    in project_manager_gate
+                )
+            )
             and "Append-only intelligence records reject mutation" in project_manager_gate
             and "--project-manager" in cli_source,
             "Strict profiles, live sandbox readiness, retained snapshots, durable process records, bounded artifacts, and CLI integration are wired.",
@@ -1313,6 +1338,16 @@ def _finish(results: list[Result], json_output: bool) -> int:
         print(
             json.dumps(
                 {
+                    "schemaVersion": "1.0.0",
+                    "gateId": "architecture-source-contract",
+                    "assuranceLevel": ASSURANCE_LEVEL,
+                    "proofKind": PROOF_KIND,
+                    "behavioralProof": BEHAVIORAL_PROOF,
+                    "claimScope": CLAIM_SCOPE,
+                    "limitations": [
+                        "Source inspection only; this is not runtime behavioral proof.",
+                        "Passing markers do not prove sandbox, cryptographic, browser, terminal, updater, or platform behavior.",
+                    ],
                     "passed": len(results) - len(failed),
                     "failed": len(failed),
                     "results": [asdict(result) for result in results],
@@ -1322,6 +1357,8 @@ def _finish(results: list[Result], json_output: bool) -> int:
             )
         )
     else:
+        print("Assurance: source_contract / source_inspection. "
+              "Source inspection only; this is not runtime behavioral proof.")
         for result in results:
             print(f"{'PASS' if result.passed else 'FAIL':<5} {result.name}: {result.detail}")
         print(f"\nResult: {len(results) - len(failed)} passed, {len(failed)} failed")

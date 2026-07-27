@@ -14,7 +14,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import resource
+try:
+    import resource
+except ImportError:  # Windows: resource is POSIX-only.
+    resource = None  # type: ignore[assignment]
 import shutil
 import signal
 import subprocess
@@ -296,9 +299,15 @@ def _digest_directory(root: Path) -> str:
 def probe_backend() -> dict[str, Any]:
     issues: list[str] = []
     commands = {name: shutil.which(name) for name in ("unshare", "mount", "chroot")}
-    available = all(commands.values()) and sys.platform.startswith("linux")
+    available = (
+        all(commands.values())
+        and sys.platform.startswith("linux")
+        and resource is not None
+    )
     if not sys.platform.startswith("linux"):
         issues.append("linux namespaces are unavailable on this platform")
+    if sys.platform.startswith("linux") and resource is None:
+        issues.append("Python POSIX resource-limit support is unavailable")
     for name, path in commands.items():
         if not path:
             issues.append(f"missing required helper: {name}")
@@ -544,6 +553,10 @@ def run_finite(
 
 
 def _apply_limits(request: dict[str, Any]) -> None:
+    if resource is None:
+        raise SandboxUnavailableError(
+            "POSIX resource limits are unavailable; the Linux sandbox is disabled"
+        )
     memory_limit = int(request.get("memoryLimitMb", 1024)) * 1024 * 1024
     process_limit = int(request.get("processLimit", 64))
     file_size_limit = int(request.get("fileSizeLimitMb", 128)) * 1024 * 1024

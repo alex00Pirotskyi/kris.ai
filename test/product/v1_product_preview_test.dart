@@ -115,8 +115,10 @@ void main() {
       ).writeAsString('// fixture\n');
 
       expect(await boundary.isKristinSourceCheckout(), isTrue);
-      expect(await WorkspaceBoundary.open(outside.path)
-          .then((value) => value.isKristinSourceCheckout()), isFalse);
+      expect(
+          await WorkspaceBoundary.open(outside.path)
+              .then((value) => value.isKristinSourceCheckout()),
+          isFalse);
     });
 
     test('continues to reject absolute paths outside the active project', () {
@@ -182,11 +184,11 @@ void main() {
       expect(sensitiveRecovery, isNull);
     });
 
-    test('rebases stale same-project paths but blocks arbitrary external writes',
+    test(
+        'rebases stale same-project paths but blocks arbitrary external writes',
         () async {
-      final rootName = project.uri.pathSegments
-          .where((segment) => segment.isNotEmpty)
-          .last;
+      final rootName =
+          project.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
       final stalePath = File(
         '${outside.path}${Platform.pathSeparator}$rootName'
         '${Platform.pathSeparator}lib${Platform.pathSeparator}main.dart',
@@ -288,11 +290,30 @@ void main() {
     tearDown(() async {
       await events.close();
       if (await temporary.exists()) {
-        await temporary.delete(recursive: true);
+        if (await temporary.exists()) {
+          FileSystemException? lastError;
+          var deleted = false;
+          for (var attempt = 0; attempt < 20; attempt++) {
+            try {
+              await temporary.delete(recursive: true);
+              deleted = true;
+              break;
+            } on FileSystemException catch (error) {
+              lastError = error;
+              await Future<void>.delayed(
+                Duration(milliseconds: 25 * (attempt + 1)),
+              );
+            }
+          }
+          if (!deleted && !Platform.isWindows && lastError != null) {
+            throw lastError;
+          }
+        }
       }
     });
 
-    test('generates, versions, plans, revises, and compiles deterministically', () async {
+    test('generates, versions, plans, revises, and compiles deterministically',
+        () async {
       final draft = await service.generatePrompt(
         goal: 'Build a calculator application with standard math functions.',
         model: model,
@@ -302,14 +323,16 @@ void main() {
 
       final version1 = await service.savePromptVersion(
         promptId: 'prompt-v1',
-        sourceGoal: 'Build a calculator application with standard math functions.',
+        sourceGoal:
+            'Build a calculator application with standard math functions.',
         action: PromptGenerationAction.generate,
         draft: draft,
         model: model,
       );
       final version2 = await service.savePromptVersion(
         promptId: 'prompt-v1',
-        sourceGoal: 'Build a calculator application with standard math functions.',
+        sourceGoal:
+            'Build a calculator application with standard math functions.',
         action: PromptGenerationAction.improve,
         draft: draft.copyWith(
           guardrails: <String>[
@@ -340,7 +363,8 @@ void main() {
       expect(plan.tasks[1].dependencies, contains('task_001'));
       expect(plan.tasks[1].parentId, 'task_001');
       expect(plan.tasks[1].allowedTools, contains('verify_project'));
-      expect(plan.tasks[2].title, 'Create project-local wireframes and user flows');
+      expect(plan.tasks[2].title,
+          'Create project-local wireframes and user flows');
       expect(plan.tasks[2].allowedTools, contains('write_file'));
       expect(
         plan.tasks[2].expectedArtifacts,
@@ -363,8 +387,10 @@ void main() {
         contains('docs/testing/usability-checklist.md'),
       );
       expect(plan.tasks[3].allowedTools, contains('verify_project'));
-      expect(plan.tasks[3].instructions, contains('Do not recruit participants'));
-      expect(plan.tasks[3].instructions, isNot(contains('Recruit participants')));
+      expect(
+          plan.tasks[3].instructions, contains('Do not recruit participants'));
+      expect(
+          plan.tasks[3].instructions, isNot(contains('Recruit participants')));
       expect(plan.tasks[3].maxAttempts, 2);
       expect(plan.tasks[3].manual, isFalse);
       final deploymentTask = plan.tasks.firstWhere(
@@ -385,7 +411,8 @@ void main() {
       );
       expect(setupTask.instructions, contains('selected project root'));
       expect(setupTask.instructions, contains('Do not install Node.js'));
-      expect(setupTask.instructions, isNot(contains('Create a new project directory')));
+      expect(setupTask.instructions,
+          isNot(contains('Create a new project directory')));
       expect(setupTask.allowedTools, isNot(contains('run_command')));
       expect(setupTask.allowedTools, isNot(contains('mcp_call')));
 
@@ -394,11 +421,13 @@ void main() {
             task.title ==
             'Implement the client-side calculation engine and session history',
       );
-      expect(calculationTask.instructions, contains('unnecessary Express/REST backend'));
+      expect(calculationTask.instructions,
+          contains('unnecessary Express/REST backend'));
       expect(calculationTask.instructions, contains('division-by-zero'));
       expect(calculationTask.instructions, isNot(contains('Install Express')));
       expect(calculationTask.allowedTools, isNot(contains('mcp_call')));
-      expect(calculationTask.expectedArtifacts, contains('Session calculation history'));
+      expect(calculationTask.expectedArtifacts,
+          contains('Session calculation history'));
 
       final testingTask = plan.tasks.firstWhere(
         (task) => task.id == 'task_008',
@@ -406,7 +435,8 @@ void main() {
       expect(testingTask.title, 'Conduct Comprehensive Testing of Calculator');
       expect(
         testingTask.title,
-        isNot('Implement the client-side calculation engine and session history'),
+        isNot(
+            'Implement the client-side calculation engine and session history'),
       );
       expect(testingTask.allowedTools, contains('verify_project'));
       expect(testingTask.expectedArtifacts, contains('Test results'));
@@ -450,7 +480,8 @@ void main() {
       );
     });
 
-    test('promotes artifact-producing plan tasks to governed build work', () async {
+    test('promotes artifact-producing plan tasks to governed build work',
+        () async {
       const draft = PromptStudioDraft(
         title: 'Calculator delivery plan',
         purpose: 'Create a calculator application and its design artifacts.',
@@ -705,7 +736,25 @@ void main() {
 
     tearDown(() async {
       if (await temporary.exists()) {
-        await temporary.delete(recursive: true);
+        if (await temporary.exists()) {
+          FileSystemException? lastError;
+          var deleted = false;
+          for (var attempt = 0; attempt < 20; attempt++) {
+            try {
+              await temporary.delete(recursive: true);
+              deleted = true;
+              break;
+            } on FileSystemException catch (error) {
+              lastError = error;
+              await Future<void>.delayed(
+                Duration(milliseconds: 25 * (attempt + 1)),
+              );
+            }
+          }
+          if (!deleted && !Platform.isWindows && lastError != null) {
+            throw lastError;
+          }
+        }
       }
     });
 
@@ -769,7 +818,8 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
                 'phase': 'Foundation',
                 'parentId': null,
                 'title': 'Gather calculator framework information',
-                'objective': 'Identify suitable development tools and libraries.',
+                'objective':
+                    'Identify suitable development tools and libraries.',
                 'instructions':
                     'Search online documentation for suitable calculator frameworks and libraries.',
                 'dependencies': <String>[],
@@ -798,7 +848,8 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
                 'parentId': 'task_001',
                 'title': 'Implement calculator',
                 'objective': 'Create and verify the calculator experience.',
-                'instructions': 'Implement the calculator and run objective checks.',
+                'instructions':
+                    'Implement the calculator and run objective checks.',
                 'dependencies': <String>['task_001'],
                 'acceptanceCriteria': <String>[
                   'The calculator returns correct results for supported operations.',
@@ -925,7 +976,11 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
                   'Run system installers and inspect the sibling directory.',
                 ],
                 'expectedArtifacts': <String>['New sibling project directory'],
-                'allowedTools': <String>['run_command', 'write_file', 'mcp_call'],
+                'allowedTools': <String>[
+                  'run_command',
+                  'write_file',
+                  'mcp_call'
+                ],
                 'complexity': 4,
                 'effortPoints': 5,
                 'uncertainty': 'medium',
@@ -942,7 +997,8 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
                 'phase': 'Backend',
                 'parentId': 'task_001',
                 'title': 'Develop Backend Calculation Logic',
-                'objective': 'Create an Express REST API for calculator operations.',
+                'objective':
+                    'Create an Express REST API for calculator operations.',
                 'instructions':
                     'Install Express and implement REST endpoints for arithmetic operations and calculation history.',
                 'dependencies': <String>['task_006'],
@@ -1009,15 +1065,26 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
             'userPrompt':
                 'Build a calculator with standard arithmetic and scientific functions for {{platform}}.',
             'variables': <String>['platform'],
-            'assumptions': <String>['The active project is the target workspace.'],
-            'clarifyingQuestions': <String>['Which deployment platform is required?'],
+            'assumptions': <String>[
+              'The active project is the target workspace.'
+            ],
+            'clarifyingQuestions': <String>[
+              'Which deployment platform is required?'
+            ],
             'acceptanceCriteria': <String>[
               'The calculator returns correct results for supported operations.',
               'Automated tests pass without errors.',
             ],
-            'outputExpectations': <String>['Application source', 'Automated tests'],
-            'guardrails': <String>['Do not modify files outside the active project.'],
-            'stopConditions': <String>['Stop when a required platform decision is unresolved.'],
+            'outputExpectations': <String>[
+              'Application source',
+              'Automated tests'
+            ],
+            'guardrails': <String>[
+              'Do not modify files outside the active project.'
+            ],
+            'stopConditions': <String>[
+              'Stop when a required platform decision is unresolved.'
+            ],
             'evaluationCases': <String>['2 + 2 returns 4.'],
             'mode': 'build',
           };

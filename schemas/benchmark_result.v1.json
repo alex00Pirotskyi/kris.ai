@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/benchmark_result.v1.json",
+  "title": "Kristin benchmark result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "suiteId",
+    "suiteVersion",
+    "suiteSha256",
+    "fixtureSha256",
+    "benchmarkInputsSha256",
+    "mode",
+    "generatedAt",
+    "networkPolicy",
+    "cases",
+    "categories",
+    "summary",
+    "claims",
+    "resultFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "suiteId": {"type": "string", "minLength": 1},
+    "suiteVersion": {"type": "string", "minLength": 1},
+    "suiteSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "fixtureSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "benchmarkInputsSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "mode": {"enum": ["portable", "machine"]},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "networkPolicy": {"const": "forbidden"},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "category",
+          "title",
+          "status",
+          "score",
+          "assuranceLevel",
+          "proofKind",
+          "reason",
+          "observations",
+          "evidenceSha256"
+        ],
+        "properties": {
+          "id": {"type": "string"},
+          "category": {"type": "string"},
+          "title": {"type": "string"},
+          "status": {"enum": ["passed", "failed", "unavailable", "unsupported", "not_run", "error"]},
+          "score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "assuranceLevel": {"enum": ["behavioral", "source_contract", "capability_inventory", "benchmark_task"]},
+          "proofKind": {"enum": ["executed_behavior", "source_inspection", "capability_probe", "model_evaluation"]},
+          "reason": {"type": "string"},
+          "observations": {"type": "object"},
+          "evidenceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "categories": {"type": "array"},
+    "summary": {
+      "type": "object",
+      "required": ["recordingStatus", "caseCount", "coverage", "readiness", "statusCounts", "benchmarkQualityPassed"],
+      "properties": {
+        "recordingStatus": {"const": "complete"},
+        "caseCount": {"type": "integer", "minimum": 1},
+        "coverage": {"type": "number", "minimum": 0, "maximum": 1},
+        "readiness": {"type": "number", "minimum": 0, "maximum": 1},
+        "benchmarkQualityPassed": {"type": "boolean"}
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceInspectionIsBehavioralProof",
+        "unsupportedCountsAsPassed",
+        "unavailableCountsAsPassed",
+        "notRunCountsAsPassed",
+        "baselineRecordedMeansProductReady"
+      ],
+      "properties": {
+        "sourceInspectionIsBehavioralProof": {"const": false},
+        "unsupportedCountsAsPassed": {"const": false},
+        "unavailableCountsAsPassed": {"const": false},
+        "notRunCountsAsPassed": {"const": false},
+        "baselineRecordedMeansProductReady": {"const": false}
+      }
+    },
+    "resultFingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

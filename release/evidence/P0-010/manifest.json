@@ -1,0 +1,188 @@
+{
+  "benchmarkDelta": {
+    "afterFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+    "beforeFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+    "caseChanges": [],
+    "pathPolicyPassed": true,
+    "regressions": [],
+    "schemaVersion": "1.0.0",
+    "taskId": "P0-010",
+    "unexpectedChanges": []
+  },
+  "claims": {
+    "generatedFilesMayRemainTracked": false,
+    "gitHistoryRewritten": false,
+    "milestoneEvidenceRemoved": false,
+    "reviewedGeneratedDartRemoved": false,
+    "workingTreeMustContainNoGeneratedFiles": false
+  },
+  "commands": [
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/generated_state_guard.py",
+        "snapshot",
+        "--project",
+        ".",
+        "--output",
+        "release/evidence/generated/p0-010-before-tests.json"
+      ],
+      "exitCode": 0,
+      "name": "snapshot",
+      "outputSha256": "1dc28e81553b7bc99a1b9a3723730b1971b065c49465a30d8b5cc71a10a06bd2",
+      "outputTail": "oadmap/roadmap.yaml\",\n    \"release/FILE_ADAPTER_RESULTS.json\",\n    \"release/evidence/P0-004/IMPLEMENTATION.md\",\n    \"release/evidence/P0-004/comparison.json\",\n    \"release/evidence/P0-004/first-run.json\",\n    \"release/evidence/P0-004/inputs.json\",\n    \"release/evidence/P0-004/local_apply_result.json\",\n    \"release/evidence/P0-004/second-run.json\",\n    \"release/evidence/P0-004/source-lock-test.json\",\n    \"release/evidence/P0-006/IMPLEMENTATION_PLAN.md\",\n    \"release/evidence/P0-006/local_apply_result.json\",\n    \"release/evidence/P0-006/local_governance_results.json\",\n    \"release/evidence/P0-007/manifest.json\",\n    \"release/evidence/P0-008/manifest.json\",\n    \"release/evidence/P0-009/EXECUTION.md\",\n    \"release/evidence/P0-009/execution.json\",\n    \"release/evidence/P0-009/test-results.json\",\n    \"tasks/active/P0-003.md\",\n    \"tasks/active/P0-004.md\",\n    \"tasks/active/P0-006.md\",\n    \"tool/compare_toolchain_runs.py\",\n    \"tool/github_governance.py\",\n    \"tool/github_governance_client_test.py\",\n    \"tool/repository_governance_test.py\",\n    \"tool/toolchain_lock_test.py\",\n    \"tool/validate_release.py\",\n    \"tool/verify.sh\"\n  ],\n  \"policyVersion\": \"2.0.0\",\n  \"schemaVersion\": \"1.0.0\"\n}\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/source_tree_policy_test.py"
+      ],
+      "exitCode": 0,
+      "name": "source_tree_policy_test",
+      "outputSha256": "8c75636efe701494e67da8dcb3320264649976ce352dfec0c75ec30ce90d5b14",
+      "outputTail": "licy_version_is_explicit) ... ok\ntest_python_bytecode_suffixes_are_generated (__main__.SourceTreePolicyTest.test_python_bytecode_suffixes_are_generated) ... ok\ntest_release_gate_outputs_are_generated (__main__.SourceTreePolicyTest.test_release_gate_outputs_are_generated) ... ok\ntest_representative_generated_paths_are_generated (__main__.SourceTreePolicyTest.test_representative_generated_paths_are_generated) ... ok\ntest_representative_source_paths_are_not_generated (__main__.SourceTreePolicyTest.test_representative_source_paths_are_not_generated) ... ok\ntest_reviewed_generated_source_is_not_disposable (__main__.SourceTreePolicyTest.test_reviewed_generated_source_is_not_disposable) ... ok\ntest_timestamped_legacy_test_reports_are_generated (__main__.SourceTreePolicyTest.test_timestamped_legacy_test_reports_are_generated) ... ok\ntest_windows_separators_and_case_are_normalized (__main__.SourceTreePolicyTest.test_windows_separators_and_case_are_normalized) ... ok\ntest_yarn_source_and_cache_are_distinguished (__main__.SourceTreePolicyTest.test_yarn_source_and_cache_are_distinguished) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.008s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/generated_state_guard_test.py"
+      ],
+      "exitCode": 0,
+      "name": "generated_state_guard_test",
+      "outputSha256": "09ac3e8344b99ac715ccee8719e838cd1b6ee0e2cdffb8befc97b38ea7b8c8ce",
+      "outputTail": "test_audit_detects_tracked_generated_state (__main__.GeneratedStateGuardTest.test_audit_detects_tracked_generated_state) ... ok\ntest_audit_fingerprint_is_stable (__main__.GeneratedStateGuardTest.test_audit_fingerprint_is_stable) ... ok\ntest_generated_outputs_are_ignored (__main__.GeneratedStateGuardTest.test_generated_outputs_are_ignored) ... ok\ntest_gitignore_managed_block_is_required (__main__.GeneratedStateGuardTest.test_gitignore_managed_block_is_required) ... ok\ntest_pending_deletions_are_accepted_after_manifest_cleanup (__main__.GeneratedStateGuardTest.test_pending_deletions_are_accepted_after_manifest_cleanup) ... ok\ntest_safe_relative_rejects_escape_and_absolute (__main__.GeneratedStateGuardTest.test_safe_relative_rejects_escape_and_absolute) ... ok\ntest_snapshot_ignores_generated_but_detects_source (__main__.GeneratedStateGuardTest.test_snapshot_ignores_generated_but_detects_source) ... ok\ntest_source_manifest_fallback (__main__.GeneratedStateGuardTest.test_source_manifest_fallback) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 4.814s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/p0_010_generated_state_test.py",
+        "--project",
+        "."
+      ],
+      "exitCode": 0,
+      "name": "p0_010_generated_state_test",
+      "outputSha256": "528cf63db8900795d165eea0cfc46b5d2f6e0d808c9cdcd4c940921598c604e3",
+      "outputTail": "tegration=true\",\n      \"name\": \"Verification ladder integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"workflowIntegrated=true\",\n      \"name\": \"CI integration\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"sourceTreePolicyUnitSuite=passed\",\n      \"name\": \"Source-tree policy unit suite\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"generatedStateGuardUnitSuite=passed\",\n      \"name\": \"Generated-state guard unit suite\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"schemaInvariant=true\",\n      \"name\": \"Generated-state report schema\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"benchmarkFingerprint=b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8\",\n      \"name\": \"P0-009 benchmark baseline current\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"v1TrustDisabled=true\",\n      \"name\": \"P0-002 trust retirement preserved\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ledgerStatus=REVIEW\",\n      \"name\": \"P0-008 roadmap ledger current\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"policyVersion=2.0.0\",\n      \"name\": \"Policy version explicit\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P0-010\"\n}\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/generated_state_guard.py",
+        "audit",
+        "--project",
+        ".",
+        "--strict"
+      ],
+      "exitCode": 0,
+      "name": "strict_audit",
+      "outputSha256": "45184338d2ef8f3ea88857215402ba638e0eb1dcd91186e19e37951eaa5b4aee",
+      "outputTail": "sts\": true,\n      \"path\": \"release/SBOM.cdx.json\",\n      \"reason\": \"pattern:release-generated-report\"\n    },\n    {\n      \"exists\": true,\n      \"path\": \"release/SECRET_SCAN.json\",\n      \"reason\": \"pattern:release-generated-report\"\n    },\n    {\n      \"exists\": true,\n      \"path\": \"release/VALIDATION_REPORT.md\",\n      \"reason\": \"pattern:release-generated-report\"\n    },\n    {\n      \"exists\": true,\n      \"path\": \"release/validation_report.json\",\n      \"reason\": \"pattern:release-generated-report\"\n    },\n    {\n      \"exists\": true,\n      \"path\": \"release/evidence/generated\",\n      \"reason\": \"prefix:release/evidence/generated\"\n    }\n  ],\n  \"fingerprint\": \"74ad53c43f32714a50624b160543278784f14b85281915fe01ecb995053e60bb\",\n  \"gitignoreCoverage\": {\n    \"exactManagedBlock\": true,\n    \"ignoredExampleCount\": 19,\n    \"missingExampleCount\": 0,\n    \"missingExamples\": [],\n    \"missingPatternCount\": 0,\n    \"missingPatterns\": []\n  },\n  \"kind\": \"generated_state_audit\",\n  \"manifestGenerated\": [],\n  \"passed\": true,\n  \"policyVersion\": \"2.0.0\",\n  \"project\": \"<PROJECT>\",\n  \"schemaVersion\": \"1.0.0\",\n  \"trackedAuthority\": \"git-index\",\n  \"trackedGeneratedPendingDeletion\": [],\n  \"trackedGeneratedPresent\": []\n}\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/benchmark_runner.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "exitCode": 0,
+      "name": "p0_009_benchmark_check",
+      "outputSha256": "8d863ecc7be607ebb32044884477ec0b40a2a5132bf088adcfb01f10090b9b60",
+      "outputTail": "P0-009 baseline is reproducible: b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/roadmap_control.py",
+        "validate",
+        "--project",
+        ".",
+        "--strict"
+      ],
+      "exitCode": 0,
+      "name": "roadmap_control",
+      "outputSha256": "603073d0c791cb44f82a2dd1b93e35454209e264aecd8891e14ceada04fe541d",
+      "outputTail": "Roadmap control: PASS\nTasks: 22  Ready: 0  Errors: 0  Warnings: 0\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/v1_trust_disablement_test.py"
+      ],
+      "exitCode": 0,
+      "name": "v1_trust_disablement",
+      "outputSha256": "c58489fe9865eb579e5b7657d75e8d85f7dad61ad6791dbd7a81dd717959cca1",
+      "outputTail": "ust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Envelope-supplied HMAC forgery is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Typed legacy envelope is rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Malformed legacy envelope is rejected fail-closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"code=v1_trust_disabled operation=verify_signed_manifest\",\n      \"name\": \"Algorithm substitution cannot bypass disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"legacy verifier contains no acceptance or envelope-key verification path\",\n      \"name\": \"Legacy acceptance implementation is absent\",\n      \"passed\": true\n    }\n  ],\n  \"trustStatus\": {\n    \"enabled\": false,\n    \"errorCode\": \"v1_trust_disabled\",\n    \"legacySchemaVersion\": \"1.0.0\",\n    \"reason\": \"Legacy v1 signed manifests cannot authorize capabilities, audit checkpoints, plugins, agents, or updates because the protocol has no independent trust anchor.\",\n    \"replacement\": \"signed_manifest_v2\"\n  },\n  \"version\": \"1.9.0+190\"\n}\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/secret_scan.py"
+      ],
+      "exitCode": 0,
+      "name": "secret_scan",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": ""
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/generated_state_guard.py",
+        "verify-clean",
+        "--project",
+        ".",
+        "--baseline",
+        "release/evidence/generated/p0-010-before-tests.json"
+      ],
+      "exitCode": 0,
+      "name": "verify_clean",
+      "outputSha256": "4fb4da0e3d7f731b5b39d23332f769f5ab3a106ad6a8b242bd31d04514178f2b",
+      "outputTail": "{\n  \"actualFingerprint\": \"7980fee2e942cfb80f68b3d773c0af144cd9d51aaa71d9cfcaee3108acd7801b\",\n  \"addedNonGeneratedDirtyPaths\": [],\n  \"expectedFingerprint\": \"7980fee2e942cfb80f68b3d773c0af144cd9d51aaa71d9cfcaee3108acd7801b\",\n  \"kind\": \"generated_state_source_snapshot_verification\",\n  \"passed\": true,\n  \"policyVersion\": \"2.0.0\",\n  \"removedNonGeneratedDirtyPaths\": [],\n  \"schemaVersion\": \"1.0.0\"\n}\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/system_test.py",
+        "--project",
+        ".",
+        "--json"
+      ],
+      "exitCode": 0,
+      "name": "system_test",
+      "outputSha256": "3b7b65fe05bce297f67890ace554dba27410229663a7336c35538db7a85d02c8",
+      "outputTail": "d.\",\n      \"name\": \"V1.7 model router, verifier, and convergence engine\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"The self-authenticating v1 HMAC path cannot generate, sign, or verify trust; the exact attacker forgery is a required executable regression.\",\n      \"name\": \"P0-002 legacy v1 trust disablement\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Typed MCP lifecycle manifests, bounded A2A delegation, signed manifests, audit verification, support lifecycle policy, and authenticated source-update policy are wired.\",\n      \"name\": \"V1.9 interoperability, administration, and release operations\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"One ProductRuntime composes the typed protocol, SQLite kernel, Linux sandbox, Prompt Studio 2, Project Manager 2, and execution-intelligence services.\",\n      \"name\": \"Cumulative v1.2-v1.9 runtime composition\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Runtime, package, CLI, schema-v6 persistence, Project Manager 2, execution intelligence, and v1.8 knowledge/file-adapter versions agree on the cumulative contract.\",\n      \"name\": \"V1.7 version identity\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\"\n}\n"
+    },
+    {
+      "argv": [
+        "<PYTHON>",
+        "tool/validate_release.py",
+        "--skip-sdk"
+      ],
+      "exitCode": 0,
+      "name": "validate_release",
+      "outputSha256": "a84843ff011f91ac1160601fef93792e041f43cad1d342ab07d70bf016427233",
+      "outputTail": "Kristin categorized validation passed. Source, behavioral, SDK, platform, and release evidence remain separate.\n"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "name": "git_diff_check",
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputTail": ""
+    }
+  ],
+  "externalBackupCreated": true,
+  "externalBackupLocation": "sibling-directory",
+  "policyVersion": "2.0.0",
+  "removalCount": 0,
+  "removedPaths": [],
+  "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
+  "schemaVersion": "1.0.0",
+  "status": "REVIEW",
+  "taskId": "P0-010"
+}

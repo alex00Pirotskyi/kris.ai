@@ -1,0 +1,80 @@
+{
+  "caseCount": 12,
+  "passed": true,
+  "passedCount": 12,
+  "results": [
+    {
+      "detail": "object stored at sha256/d3/a5/d3a539b57b3fd80ae49c098386559e97238da89cd3b837c2c5a41218307332f6.txt",
+      "durationMs": 15,
+      "name": "Object store writes deterministic sha256 paths",
+      "passed": true
+    },
+    {
+      "detail": "successful mutation episode is admitted and reusable",
+      "durationMs": 0,
+      "name": "Successful governed episode is admitted",
+      "passed": true
+    },
+    {
+      "detail": "failed run is diagnostic-only",
+      "durationMs": 0,
+      "name": "Failed run is quarantined",
+      "passed": true
+    },
+    {
+      "detail": "conversational request does not enter semantic memory",
+      "durationMs": 0,
+      "name": "Conversational turn is rejected",
+      "passed": true
+    },
+    {
+      "detail": "pinned memory remains retrievable",
+      "durationMs": 0,
+      "name": "Pinned diagnostic memory bypasses quarantine",
+      "passed": true
+    },
+    {
+      "detail": "freshness tiers are stable",
+      "durationMs": 0,
+      "name": "Freshness policy distinguishes fresh aging and stale",
+      "passed": true
+    },
+    {
+      "detail": "candidate extracted with tools and evidence",
+      "durationMs": 0,
+      "name": "Skill candidate extraction requires admitted reusable work",
+      "passed": true
+    },
+    {
+      "detail": "unknown tool blocks publication",
+      "durationMs": 0,
+      "name": "Skill publication blocks permission expansion",
+      "passed": true
+    },
+    {
+      "detail": "publish creates stable manifest hash",
+      "durationMs": 0,
+      "name": "Skill publication requires replay pass",
+      "passed": true
+    },
+    {
+      "detail": "identical content deduplicates",
+      "durationMs": 15,
+      "name": "Object store manifest is stable",
+      "passed": true
+    },
+    {
+      "detail": "evidence hashes are required",
+      "durationMs": 0,
+      "name": "Evidence hashes are required for admission",
+      "passed": true
+    },
+    {
+      "detail": "candidate remains approval-gated",
+      "durationMs": 0,
+      "name": "Skill approval remains explicit",
+      "passed": true
+    }
+  ],
+  "version": "1.9.0+190"
+}

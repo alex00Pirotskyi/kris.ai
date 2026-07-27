@@ -170,9 +170,8 @@ class DurableWorkflowStore {
     await databaseFile.parent.create(recursive: true);
     await migrationBackupDirectory.create(recursive: true);
     final databaseExistedBeforeOpen = await databaseFile.exists();
-    final databaseLengthBeforeOpen = databaseExistedBeforeOpen
-        ? await databaseFile.length()
-        : 0;
+    final databaseLengthBeforeOpen =
+        databaseExistedBeforeOpen ? await databaseFile.length() : 0;
     var legacySourcePresent = false;
     for (final source in <File?>[
       ...legacyCollections.values,
@@ -252,10 +251,12 @@ class DurableWorkflowStore {
       return null;
     }
     final userTableCount = _asInt(
-      _database.select(
-        "SELECT COUNT(*) AS value FROM sqlite_master "
-        "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
-      ).first['value'],
+      _database
+          .select(
+            "SELECT COUNT(*) AS value FROM sqlite_master "
+            "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+          )
+          .first['value'],
     );
     if (currentVersion == 0 && userTableCount == 0 && !force) {
       return null;
@@ -521,7 +522,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
           sourceSha256: sourceSha,
           backupPath: backup.path,
           importedRecords: imported,
-          details: <String, dynamic>{'kind': 'collection', 'collection': collection},
+          details: <String, dynamic>{
+            'kind': 'collection',
+            'collection': collection
+          },
         );
       });
     });
@@ -690,7 +694,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
           sourceSha256: sourceSha,
           backupPath: backup.path,
           importedRecords: imported,
-          details: <String, dynamic>{'kind': 'runs', 'parsedRecords': runs.length},
+          details: <String, dynamic>{
+            'kind': 'runs',
+            'parsedRecords': runs.length
+          },
         );
       });
     });
@@ -710,7 +717,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     );
     final backup = File(
       '${migrationBackupDirectory.path}${Platform.pathSeparator}'
-      '${safeName}.${sourceSha.substring(0, 16)}.bak',
+      '$safeName.${sourceSha.substring(0, 16)}.bak',
     );
     if (!await backup.exists()) {
       await file.copy(backup.path);
@@ -815,7 +822,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     );
     if (existing.isNotEmpty) {
       if (preserveExisting ||
-          constantTimeEquals(existing.first['record_sha256']?.toString() ?? '', sha)) {
+          constantTimeEquals(
+              existing.first['record_sha256']?.toString() ?? '', sha)) {
         return;
       }
     }
@@ -884,8 +892,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         }
       });
 
-  Future<void> writeDocument(String key, Object? value) =>
-      _serialize<void>(() {
+  Future<void> writeDocument(String key, Object? value) => _serialize<void>(() {
         _transaction<void>(() {
           _writeDocumentUnlocked(key, value);
         });
@@ -904,7 +911,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     );
     if (existing.isNotEmpty) {
       if (preserveExisting ||
-          constantTimeEquals(existing.first['document_sha256']?.toString() ?? '', sha)) {
+          constantTimeEquals(
+              existing.first['document_sha256']?.toString() ?? '', sha)) {
         return;
       }
     }
@@ -971,12 +979,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         )) {
       return;
     }
-    final priorState = existing.isEmpty
-        ? null
-        : existing.first['state']?.toString();
-    final stateVersion = existing.isEmpty
-        ? 1
-        : _asInt(existing.first['state_version']) + 1;
+    final priorState =
+        existing.isEmpty ? null : existing.first['state']?.toString();
+    final stateVersion =
+        existing.isEmpty ? 1 : _asInt(existing.first['state_version']) + 1;
     _database.execute(
       '''INSERT INTO runs(
            id, project_id, command_id, source_run_id, state, state_version,
@@ -1045,7 +1051,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             stateVersion: version,
           );
           _database.execute('DELETE FROM runs WHERE id = ?', <Object?>[id]);
-          _database.execute('DELETE FROM run_leases WHERE run_id = ?', <Object?>[id]);
+          _database.execute(
+              'DELETE FROM run_leases WHERE run_id = ?', <Object?>[id]);
         });
       });
 
@@ -1213,9 +1220,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         data: _decodeMap(row['payload_json']),
         causationId: row['causation_id']?.toString(),
         idempotencyKey: row['idempotency_key']?.toString(),
-        stateVersion: row['state_version'] == null
-            ? null
-            : _asInt(row['state_version']),
+        stateVersion:
+            row['state_version'] == null ? null : _asInt(row['state_version']),
       );
 
   Future<WorkflowCheckpoint> createCheckpoint({
@@ -1386,7 +1392,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             );
           }
           final row = rows.first;
-          final storedHash = row['normalized_arguments_sha256']?.toString() ?? '';
+          final storedHash =
+              row['normalized_arguments_sha256']?.toString() ?? '';
           if (!constantTimeEquals(storedHash, normalizedArgumentsSha256)) {
             throw WorkflowStorageException(
               'idempotency_key_collision',
@@ -2077,7 +2084,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         var projectionMismatches = 0;
         for (final row in _database.select(
           '''SELECT r.id, r.snapshot_sha256,
-                    (SELECT json_extract(e.payload_json, '$.snapshotSha256')
+                    (SELECT json_extract(e.payload_json, '\$.snapshotSha256')
                      FROM run_events e
                      WHERE e.run_id = r.id
                        AND e.type IN ('run.snapshot', 'legacy.run_imported',

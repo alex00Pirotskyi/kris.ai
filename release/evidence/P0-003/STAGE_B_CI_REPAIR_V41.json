@@ -1,0 +1,189 @@
+{
+  "baseStageBSha": "a8a299b665fa2536e35cb757c966105a452a77c3",
+  "changedPathsBeforeEvidence": [
+    "tool/p0_003_repair_test.py",
+    "tool/toolchain_lock_test.py"
+  ],
+  "claimBoundary": "This repair closes the cumulative P0-001 through P0-010 CI line. It does not implement or complete the future P1 architecture phase.",
+  "failedRunId": "30216928276",
+  "failedRunUrl": "https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30216928276",
+  "failedSteps": {
+    "validate-macos": [
+      "P0-003 integration repair"
+    ],
+    "validate-ubuntu": [
+      "P0-003 integration repair"
+    ],
+    "validate-windows": [
+      "Validate locked toolchain"
+    ]
+  },
+  "platform": {
+    "python": "3.11.4",
+    "release": "10",
+    "system": "Windows"
+  },
+  "postRepairP0003": {
+    "caseCount": 13,
+    "failedCount": 0,
+    "milestone": "P0-003",
+    "passed": true,
+    "passedCount": 13,
+    "results": [
+      {
+        "detail": "backslash, quote, dollar, newline, and Unicode line separators are encoded",
+        "name": "Shared Dart literal encoder",
+        "passed": true
+      },
+      {
+        "detail": "three generators share one reviewed Dart literal encoder",
+        "name": "Generators use the shared encoder",
+        "passed": true
+      },
+      {
+        "detail": "generated schemas contain 81 escaped dollar occurrences and no known unsafe token",
+        "name": "Generated Dart dollar safety",
+        "passed": true
+      },
+      {
+        "detail": "v170/v180/v190 generated files exactly match their generators",
+        "name": "Generated contract check mode",
+        "passed": true
+      },
+      {
+        "detail": "SQLite JSONPath remains literal at runtime without Dart interpolation",
+        "name": "Durable workflow JSONPath literal",
+        "passed": true
+      },
+      {
+        "detail": "module imports without POSIX resource support and sandbox execution remains unavailable",
+        "name": "POSIX resource import fails closed",
+        "passed": true
+      },
+      {
+        "detail": "Windows receipt portability, URL hygiene, and recorded source-manifest refresh are executable",
+        "name": "CI receipt portability",
+        "passed": true
+      },
+      {
+        "detail": "dependency resolution precedes non-mutating format, analysis, and test gates",
+        "name": "SDK gate ordering and nonmutation",
+        "passed": true
+      },
+      {
+        "detail": "three-OS workflow keeps every step inside its job and reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates",
+        "name": "Three-OS CI contract",
+        "passed": true
+      },
+      {
+        "detail": "handwritten Dart is format-owned while generated contracts remain generator-owned",
+        "name": "Handwritten Dart formatting scope",
+        "passed": true
+      },
+      {
+        "detail": "Project Manager executable labels and cumulative source-contract aggregation agree",
+        "name": "Project Manager system-contract alignment",
+        "passed": true
+      },
+      {
+        "detail": "generated STATUS.md ends with exactly one LF and passes Git whitespace policy",
+        "name": "STATUS terminal newline",
+        "passed": true
+      },
+      {
+        "detail": "P0-002 forgery regression remains active",
+        "name": "P0-002 trust remains disabled",
+        "passed": true
+      }
+    ],
+    "schemaVersion": "1.0.0"
+  },
+  "preRepairP0003": {
+    "caseCount": 13,
+    "failedCount": 1,
+    "milestone": "P0-003",
+    "passed": false,
+    "passedCount": 12,
+    "results": [
+      {
+        "detail": "backslash, quote, dollar, newline, and Unicode line separators are encoded",
+        "name": "Shared Dart literal encoder",
+        "passed": true
+      },
+      {
+        "detail": "three generators share one reviewed Dart literal encoder",
+        "name": "Generators use the shared encoder",
+        "passed": true
+      },
+      {
+        "detail": "generated schemas contain 81 escaped dollar occurrences and no known unsafe token",
+        "name": "Generated Dart dollar safety",
+        "passed": true
+      },
+      {
+        "detail": "v170/v180/v190 generated files exactly match their generators",
+        "name": "Generated contract check mode",
+        "passed": true
+      },
+      {
+        "detail": "SQLite JSONPath remains literal at runtime without Dart interpolation",
+        "name": "Durable workflow JSONPath literal",
+        "passed": true
+      },
+      {
+        "detail": "module imports without POSIX resource support and sandbox execution remains unavailable",
+        "name": "POSIX resource import fails closed",
+        "passed": true
+      },
+      {
+        "detail": "Windows receipt portability, URL hygiene, and recorded source-manifest refresh are executable",
+        "name": "CI receipt portability",
+        "passed": true
+      },
+      {
+        "detail": "dependency resolution precedes non-mutating format, analysis, and test gates",
+        "name": "SDK gate ordering and nonmutation",
+        "passed": true
+      },
+      {
+        "detail": "AssertionError: CI must pin Python through setup-python exactly once",
+        "name": "Three-OS CI contract",
+        "passed": false
+      },
+      {
+        "detail": "handwritten Dart is format-owned while generated contracts remain generator-owned",
+        "name": "Handwritten Dart formatting scope",
+        "passed": true
+      },
+      {
+        "detail": "Project Manager executable labels and cumulative source-contract aggregation agree",
+        "name": "Project Manager system-contract alignment",
+        "passed": true
+      },
+      {
+        "detail": "generated STATUS.md ends with exactly one LF and passes Git whitespace policy",
+        "name": "STATUS terminal newline",
+        "passed": true
+      },
+      {
+        "detail": "P0-002 forgery regression remains active",
+        "name": "P0-002 trust remains disabled",
+        "passed": true
+      }
+    ],
+    "schemaVersion": "1.0.0"
+  },
+  "recordedAt": "2026-07-27T04:25:55.547494+00:00",
+  "repairId": "V41",
+  "repairs": [
+    "Resolve runtime tools and route only Windows .bat/.cmd launchers through COMSPEC; native executables remain direct.",
+    "Validate workflow step containment by indentation stack while retaining required command, ordering, strictness, and stable tri-OS job checks.",
+    "Normalize docs/roadmap/STATUS.md to exactly one terminal LF."
+  ],
+  "rootCauses": [
+    "Windows resolves Flutter to a batch launcher that requires COMSPEC when invoked from Python subprocess without shell expansion.",
+    "The P0-003 workflow validator encoded one YAML indentation shape instead of validating membership in the active steps block."
+  ],
+  "schemaVersion": "1.0.0",
+  "scope": "P0-001-through-P0-010-CI-closure"
+}

@@ -1,0 +1,104 @@
+{
+  "criticalPaths": [
+    ".github/",
+    "tool/",
+    "schemas/",
+    "migrations/",
+    "lib/product/",
+    "release/",
+    "docs/roadmap/",
+    "SECURITY.md",
+    "RELEASE.json",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "defaultBranch": "main",
+  "githubApiVersion": "2026-03-10",
+  "labels": [
+    {
+      "color": "B60205",
+      "description": "A separate security review is required before merge.",
+      "name": "security-review:required"
+    },
+    {
+      "color": "0E8A16",
+      "description": "The required independent security review passed.",
+      "name": "security-review:passed"
+    },
+    {
+      "color": "D93F0B",
+      "description": "Security review found a merge-blocking issue.",
+      "name": "security-review:blocked"
+    },
+    {
+      "color": "B60205",
+      "description": "Blocks release promotion.",
+      "name": "release:blocker"
+    },
+    {
+      "color": "8B0000",
+      "description": "Critical product or security risk.",
+      "name": "risk:critical"
+    },
+    {
+      "color": "D93F0B",
+      "description": "High product or security risk.",
+      "name": "risk:high"
+    },
+    {
+      "color": "5319E7",
+      "description": "Phase P0 stabilization work.",
+      "name": "roadmap:p0"
+    },
+    {
+      "color": "1D76DB",
+      "description": "AI-assisted change; requires documented solo-maintainer review and mandatory green CI.",
+      "name": "ai-generated-change"
+    }
+  ],
+  "milestone": "P0-006",
+  "repository": "alex00Pirotskyi/kris.ai",
+  "repositorySettings": {
+    "allowAutoMerge": true,
+    "allowMergeCommit": false,
+    "allowRebaseMerge": true,
+    "allowSquashMerge": true,
+    "deleteBranchOnMerge": true
+  },
+  "reviewerReadiness": {
+    "codeOwnerReviewMayBeEnabledAfterSecondMaintainerIsAvailable": true,
+    "distinctReviewerRequired": false,
+    "selfReviewAttestationRequired": true,
+    "soloMaintainerMode": true
+  },
+  "ruleset": {
+    "allowedMergeMethods": [
+      "squash",
+      "rebase"
+    ],
+    "blockDeletions": true,
+    "blockForcePushes": true,
+    "bypassActors": [],
+    "dismissStaleReviewsOnPush": true,
+    "enforcement": "active",
+    "exclude": [],
+    "include": [
+      "~DEFAULT_BRANCH"
+    ],
+    "name": "Kristin main protection",
+    "requireCodeOwnerReview": false,
+    "requireLastPushApproval": false,
+    "requireLinearHistory": true,
+    "requirePullRequest": true,
+    "requireSignedCommits": false,
+    "requiredApprovingReviewCount": 0,
+    "requiredReviewThreadResolution": true,
+    "requiredStatusChecks": [
+      "validate-ubuntu",
+      "validate-windows",
+      "validate-macos"
+    ],
+    "strictRequiredStatusChecks": true,
+    "target": "branch"
+  },
+  "schemaVersion": "1.0.0"
+}

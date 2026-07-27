@@ -1,0 +1,60 @@
+{
+  "caseCount": 10,
+  "failedCount": 0,
+  "milestone": "P0-006",
+  "passed": true,
+  "passedCount": 10,
+  "results": [
+    {
+      "detail": "all present",
+      "name": "Required governance files",
+      "passed": true
+    },
+    {
+      "detail": "ruleset desired state is explicit and fail-closed",
+      "name": "Governance desired-state schema",
+      "passed": true
+    },
+    {
+      "detail": "covered markers=11",
+      "name": "CODEOWNERS coverage",
+      "passed": true
+    },
+    {
+      "detail": "PR template requires task, platform, authority, evidence, and review data",
+      "name": "Pull-request template",
+      "passed": true
+    },
+    {
+      "detail": "private security and bounded engineering intake are configured",
+      "name": "Issue and security intake",
+      "passed": true
+    },
+    {
+      "detail": "CI exposes stable tri-OS check names and governance/policy gates",
+      "name": "Stable CI and local gates",
+      "passed": true
+    },
+    {
+      "detail": "verification preserves P0-002/P0-003/P0-005/P0-006 gates",
+      "name": "Merged verification ladder",
+      "passed": true
+    },
+    {
+      "detail": "same-commit tri-OS evidence commit=53a7d661cda1f714bbe3ff83c8e06d99cb433a20",
+      "name": "P0-003 dependency evidence",
+      "passed": true
+    },
+    {
+      "detail": "remote applicator is explicit, versioned, and avoids token persistence",
+      "name": "Guarded GitHub client",
+      "passed": true
+    },
+    {
+      "detail": "task and operator docs keep remote enforcement as a completion requirement",
+      "name": "Task and operator truth",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

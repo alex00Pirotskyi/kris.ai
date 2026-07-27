@@ -1,0 +1,68 @@
+{
+  "caseCount": 10,
+  "passed": true,
+  "passedCount": 10,
+  "results": [
+    {
+      "detail": "policy overlay is deterministic and additive for allowlists",
+      "durationMs": 0,
+      "name": "Policy overlay merges update channels and allowlists",
+      "passed": true
+    },
+    {
+      "detail": "fleet configuration resolves project policy or default",
+      "durationMs": 0,
+      "name": "Fleet configuration resolves project-specific policy",
+      "passed": true
+    },
+    {
+      "detail": "audit chain verifies and counts records",
+      "durationMs": 0,
+      "name": "Audit chain verifies end-to-end",
+      "passed": true
+    },
+    {
+      "detail": "audit tampering is detected",
+      "durationMs": 0,
+      "name": "Audit tampering is detected",
+      "passed": true
+    },
+    {
+      "detail": "signed audit checkpoint verifies the chain head",
+      "durationMs": 0,
+      "name": "Signed audit checkpoint verifies current chain",
+      "passed": true
+    },
+    {
+      "detail": "signed update manifest verifies against lifecycle policy",
+      "durationMs": 0,
+      "name": "Signed update manifest verifies",
+      "passed": true
+    },
+    {
+      "detail": "tampered update manifest is rejected",
+      "durationMs": 0,
+      "name": "Tampered update manifest is rejected",
+      "passed": true
+    },
+    {
+      "detail": "rollback planner chooses the newest supported installed version",
+      "durationMs": 0,
+      "name": "Rollback planner chooses supported installed version",
+      "passed": true
+    },
+    {
+      "detail": "rollback is blocked when installed versions are outside support policy",
+      "durationMs": 0,
+      "name": "Unsupported rollback target is blocked",
+      "passed": true
+    },
+    {
+      "detail": "support lifecycle enforces minimum upgrade version",
+      "durationMs": 0,
+      "name": "Support lifecycle rejects too-old upgrades",
+      "passed": true
+    }
+  ],
+  "version": "1.9.0+190"
+}

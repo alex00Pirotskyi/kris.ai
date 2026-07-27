@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/benchmark_suite.v1.json",
+  "title": "Kristin benchmark suite",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "suiteId",
+    "suiteVersion",
+    "title",
+    "baselineTimestamp",
+    "networkPolicy",
+    "categories",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "suiteId": {"type": "string", "minLength": 1},
+    "suiteVersion": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "baselineTimestamp": {"type": "string", "format": "date-time"},
+    "networkPolicy": {"const": "forbidden"},
+    "credentialsPolicy": {"enum": ["forbidden", "fixture_only"]},
+    "categories": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+          "name": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "title",
+          "kind",
+          "assuranceLevel",
+          "proofKind",
+          "weight"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$"},
+          "category": {"type": "string"},
+          "title": {"type": "string", "minLength": 1},
+          "kind": {
+            "enum": [
+              "command_exit",
+              "command_json_stdout",
+              "command_json_file",
+              "path_policy",
+              "capability_probe",
+              "model_workspace",
+              "model_json"
+            ]
+          },
+          "assuranceLevel": {
+            "enum": ["behavioral", "source_contract", "capability_inventory", "benchmark_task"]
+          },
+          "proofKind": {
+            "enum": ["executed_behavior", "source_inspection", "capability_probe", "model_evaluation"]
+          },
+          "weight": {"type": "number", "exclusiveMinimum": 0},
+          "fixture": {"type": "string"},
+          "requiredFiles": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "requiresCase": {"type": "string"},
+          "command": {"type": "object"},
+          "candidate": {"type": "object"},
+          "paths": {"type": "array"},
+          "probe": {"type": "object"}
+        }
+      }
+    }
+  }
+}

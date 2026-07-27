@@ -1,0 +1,19 @@
+# Kristin repository ownership.
+#
+# GitHub will request review from this owner. This repository is intentionally
+# operated by one maintainer, so P0-006 uses a durable solo-maintainer review
+# attestation plus mandatory tri-OS checks instead of a fabricated approval.
+
+* @alex00Pirotskyi
+
+# Trust, execution, release, and governance boundaries.
+/.github/ @alex00Pirotskyi
+/tool/ @alex00Pirotskyi
+/schemas/ @alex00Pirotskyi
+/migrations/ @alex00Pirotskyi
+/lib/product/ @alex00Pirotskyi
+/release/ @alex00Pirotskyi
+/docs/roadmap/ @alex00Pirotskyi
+/SECURITY.md @alex00Pirotskyi
+/RELEASE.json @alex00Pirotskyi
+/SOURCE_MANIFEST.sha256 @alex00Pirotskyi

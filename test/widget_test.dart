@@ -120,8 +120,7 @@ void main() {
   });
 
   test('v1.1 Project Manager version constants are available', () {
-    expect(kristinVersion, '1.3.0+130');
+    expect(kristinVersion, '1.9.0+190');
     expect(kristinReleaseChannel, 'preview');
   });
-
 }

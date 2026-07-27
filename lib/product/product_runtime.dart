@@ -7,6 +7,7 @@ import 'deployment_support.dart';
 import 'domain.dart';
 import 'execution_intelligence.dart';
 import 'extensions_index.dart';
+import 'file_adapters.dart';
 import 'models_research.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';
@@ -132,17 +133,21 @@ class ProductRuntime {
       ),
       redactor: redactor,
     );
-    final models = ModelRegistry(settings: settings, vault: secrets, redactor: redactor);
+    final models =
+        ModelRegistry(settings: settings, vault: secrets, redactor: redactor);
     final deployment = DeploymentService(
-      outputDirectory: Directory('${directories.root.path}${Platform.pathSeparator}deployments'),
+      outputDirectory: Directory(
+          '${directories.root.path}${Platform.pathSeparator}deployments'),
       redactor: redactor,
     );
     final managedProcesses = ManagedProcessService(
-      logDirectory: Directory('${directories.logs.path}${Platform.pathSeparator}managed-processes'),
+      logDirectory: Directory(
+          '${directories.logs.path}${Platform.pathSeparator}managed-processes'),
       redactor: redactor,
     );
     final sourceIndex = SourceIndexService(
-      Directory('${directories.cache.path}${Platform.pathSeparator}source-index'),
+      Directory(
+          '${directories.cache.path}${Platform.pathSeparator}source-index'),
     );
     final mcp = McpTrustService(
       workflow: repositories.workflow,
@@ -249,7 +254,8 @@ class ProductRuntime {
     await managedProcesses.stopAll();
     await mcp.closeAll();
     secrets.clearSession();
-    await audit.append('application.stopped', 'application', <String, dynamic>{'version': kristinVersion});
+    await audit.append('application.stopped', 'application',
+        <String, dynamic>{'version': kristinVersion});
     await events.close();
     await repositories.workflow.close();
   }
@@ -262,20 +268,30 @@ class ProductRuntime {
 
   Future<ProjectRecord?> getProject(String id) => repositories.projects.get(id);
 
-  Future<ProjectRecord> addProject({required String name, required String rootPath}) async {
+  Future<ProjectRecord> addProject(
+      {required String name, required String rootPath}) async {
     final root = Directory(rootPath.trim()).absolute;
-    if (!await root.exists()) { throw ProductException('project_missing', 'The selected project directory does not exist.'); }
+    if (!await root.exists()) {
+      throw ProductException(
+          'project_missing', 'The selected project directory does not exist.');
+    }
     final canonical = await root.resolveSymbolicLinks();
     final normalized = Platform.isWindows ? canonical.toLowerCase() : canonical;
     final existing = (await repositories.projects.all()).where((project) {
-      final path = Platform.isWindows ? project.rootPath.toLowerCase() : project.rootPath;
+      final path = Platform.isWindows
+          ? project.rootPath.toLowerCase()
+          : project.rootPath;
       return path == normalized;
     }).firstOrNull;
-    if (existing != null) { return existing; }
+    if (existing != null) {
+      return existing;
+    }
     final now = DateTime.now().toUtc();
     final project = ProjectRecord(
       id: newId('project'),
-      name: name.trim().isEmpty ? root.uri.pathSegments.where((item) => item.isNotEmpty).last : name.trim(),
+      name: name.trim().isEmpty
+          ? root.uri.pathSegments.where((item) => item.isNotEmpty).last
+          : name.trim(),
       rootPath: canonical,
       createdAt: now,
       updatedAt: now,
@@ -286,7 +302,8 @@ class ProductRuntime {
       'name': project.name,
       'rootPathHash': Sha256.text(project.rootPath),
     });
-    await events.publish('project.added', project.id, <String, dynamic>{'project': project.toJson()});
+    await events.publish('project.added', project.id,
+        <String, dynamic>{'project': project.toJson()});
     return project;
   }
 
@@ -344,10 +361,13 @@ class ProductRuntime {
 
   Future<void> removeProject(String id) async {
     final project = await repositories.projects.get(id);
-    if (project == null) { return; }
+    if (project == null) {
+      return;
+    }
     final active = (await repositories.runs.all()).where((run) =>
         run.command.contract.projectId == id &&
-        const <RunState>{RunState.running, RunState.paused, RunState.cancelling}.contains(run.state));
+        const <RunState>{RunState.running, RunState.paused, RunState.cancelling}
+            .contains(run.state));
     final managed = await projectProcessStatus(id);
     if (active.isNotEmpty || managed?.running == true) {
       throw ProductException(
@@ -357,13 +377,16 @@ class ProductRuntime {
     }
     await repositories.projects.remove(id);
     _projectProcessIds.remove(id);
-    await audit.append('project.removed', id, <String, dynamic>{'projectId': id, 'name': project.name});
-    await events.publish('project.removed', id, <String, dynamic>{'projectId': id});
+    await audit.append('project.removed', id,
+        <String, dynamic>{'projectId': id, 'name': project.name});
+    await events
+        .publish('project.removed', id, <String, dynamic>{'projectId': id});
   }
 
   Future<void> updateSettings(ProductSettings value) async {
     if (value.apiPort < 1024 || value.apiPort > 65535) {
-      throw ProductException('api_port_invalid', 'API port must be between 1024 and 65535.');
+      throw ProductException(
+          'api_port_invalid', 'API port must be between 1024 and 65535.');
     }
     if (value.ollamaLoadTimeoutSeconds < 60 ||
         value.ollamaLoadTimeoutSeconds > 3600) {
@@ -387,10 +410,17 @@ class ProductRuntime {
     }
     for (final origin in value.allowedOrigins) {
       final uri = Uri.tryParse(origin);
-      if (uri == null || !const <String>{'http', 'https'}.contains(uri.scheme) || uri.host.isEmpty || uri.pathSegments.isNotEmpty) {
-        throw ProductException('origin_invalid', 'Allowed browser origins must be origin-only HTTP(S) URLs.');
+      if (uri == null ||
+          !const <String>{'http', 'https'}.contains(uri.scheme) ||
+          uri.host.isEmpty ||
+          uri.pathSegments.isNotEmpty) {
+        throw ProductException('origin_invalid',
+            'Allowed browser origins must be origin-only HTTP(S) URLs.');
       }
-      if (origin.contains('*')) { throw ProductException('origin_wildcard_rejected', 'Wildcard CORS origins are not allowed.'); }
+      if (origin.contains('*')) {
+        throw ProductException('origin_wildcard_rejected',
+            'Wildcard CORS origins are not allowed.');
+      }
     }
     _settings = value;
     models.settings = value;
@@ -411,7 +441,8 @@ class ProductRuntime {
       'ollamaKeepAliveMinutes': value.ollamaKeepAliveMinutes,
       'hasOpenAiSecretReference': value.openAiApiKeyReferenceId.isNotEmpty,
     });
-    await events.publish('settings.updated', 'settings', <String, dynamic>{'settings': value.toJson()});
+    await events.publish('settings.updated', 'settings',
+        <String, dynamic>{'settings': value.toJson()});
   }
 
   Future<List<ModelIdentity>> discoverModels() => models.discover();
@@ -437,13 +468,20 @@ class ProductRuntime {
     required ModelIdentity model,
   }) async {
     final project = await repositories.projects.get(projectId);
-    if (project == null) { throw ProductException('project_missing', 'Select a valid active project.'); }
-    return commandService.prepare(project: project, mode: mode, request: request, model: model);
+    if (project == null) {
+      throw ProductException(
+          'project_missing', 'Select a valid active project.');
+    }
+    return commandService.prepare(
+        project: project, mode: mode, request: request, model: model);
   }
 
-  Future<RunRecord> createRun(String commandId, {AutonomyBudget? budget}) async {
+  Future<RunRecord> createRun(String commandId,
+      {AutonomyBudget? budget}) async {
     final command = await repositories.commands.get(commandId);
-    if (command == null) { throw ProductException('command_missing', 'Unknown prepared command.'); }
+    if (command == null) {
+      throw ProductException('command_missing', 'Unknown prepared command.');
+    }
     return runs.createRun(
       command,
       budget: budget ?? AutonomyBudget.forPlan(command.plan),
@@ -458,7 +496,9 @@ class ProductRuntime {
     Duration validity = const Duration(hours: 2),
   }) async {
     final run = await repositories.runs.get(runId);
-    if (run == null) { throw ProductException('run_missing', 'Unknown run.'); }
+    if (run == null) {
+      throw ProductException('run_missing', 'Unknown run.');
+    }
     final required = run.command.contract.requiredPermissions;
     if (!scopes.containsAll(required)) {
       throw ProductException(
@@ -500,7 +540,11 @@ class ProductRuntime {
 
   Future<List<RunRecord>> listRuns({String? projectId, int limit = 100}) async {
     var runs = await repositories.runs.all();
-    if (projectId != null) { runs = runs.where((run) => run.command.contract.projectId == projectId).toList(); }
+    if (projectId != null) {
+      runs = runs
+          .where((run) => run.command.contract.projectId == projectId)
+          .toList();
+    }
     runs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return runs.take(limit).toList();
   }
@@ -508,7 +552,9 @@ class ProductRuntime {
   Future<RunRecord?> getRun(String id) => repositories.runs.get(id);
 
   Future<List<EvidenceRecord>> evidenceForRun(String runId) async {
-    final evidence = (await repositories.evidence.all()).where((item) => item.runId == runId).toList();
+    final evidence = (await repositories.evidence.all())
+        .where((item) => item.runId == runId)
+        .toList();
     evidence.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return evidence;
   }
@@ -522,7 +568,8 @@ class ProductRuntime {
     required String content,
     Set<String> tags = const <String>{},
   }) =>
-      knowledge.addNote(projectId: projectId, title: title, content: content, tags: tags);
+      knowledge.addNote(
+          projectId: projectId, title: title, content: content, tags: tags);
 
   Future<void> deleteKnowledge(String id) => knowledge.deleteEntry(id);
 
@@ -533,7 +580,8 @@ class ProductRuntime {
       'projectId': entry.projectId,
       'pinned': entry.pinned,
     });
-    await events.publish('knowledge.pin_changed', entry.projectId, <String, dynamic>{
+    await events
+        .publish('knowledge.pin_changed', entry.projectId, <String, dynamic>{
       'knowledgeId': entry.id,
       'projectId': entry.projectId,
       'pinned': entry.pinned,
@@ -548,7 +596,8 @@ class ProductRuntime {
       'projectId': episode.projectId,
       'pinned': episode.pinned,
     });
-    await events.publish('memory.pin_changed', episode.projectId, <String, dynamic>{
+    await events
+        .publish('memory.pin_changed', episode.projectId, <String, dynamic>{
       'episodeId': episode.id,
       'projectId': episode.projectId,
       'pinned': episode.pinned,
@@ -586,7 +635,8 @@ class ProductRuntime {
       'projectId': projectId,
       'chunks': count,
     });
-    await events.publish('knowledge.index_rebuilt', projectId, <String, dynamic>{
+    await events
+        .publish('knowledge.index_rebuilt', projectId, <String, dynamic>{
       'projectId': projectId,
       'chunks': count,
     });
@@ -781,7 +831,8 @@ class ProductRuntime {
       await repositories.taskPlans.remove(plan.id);
     }
     await audit.append('prompt.deleted', id, <String, dynamic>{'promptId': id});
-    await events.publish('prompt.deleted', id, <String, dynamic>{'promptId': id});
+    await events
+        .publish('prompt.deleted', id, <String, dynamic>{'promptId': id});
   }
 
   Future<ProjectDiagnosticReport> inspectProject(
@@ -828,7 +879,8 @@ class ProductRuntime {
 
   Future<ProjectDiagnosticReport> analyzeProject(String projectId) async {
     final project = await _requireProject(projectId);
-    await events.publish('project.analysis_started', project.id, <String, dynamic>{
+    await events
+        .publish('project.analysis_started', project.id, <String, dynamic>{
       'projectId': project.id,
     });
     final report = await diagnostics.runAnalysis(project);
@@ -841,7 +893,8 @@ class ProductRuntime {
       'analyzeCommand': report.analyzeCommand,
     };
     await audit.append('project.analysis_completed', project.id, details);
-    await events.publish('project.analysis_completed', project.id, <String, dynamic>{
+    await events
+        .publish('project.analysis_completed', project.id, <String, dynamic>{
       ...details,
       'report': report.toJson(),
     });
@@ -863,7 +916,8 @@ class ProductRuntime {
       'buildCommand': report.buildCommand,
     };
     await audit.append('project.build_completed', project.id, details);
-    await events.publish('project.build_completed', project.id, <String, dynamic>{
+    await events
+        .publish('project.build_completed', project.id, <String, dynamic>{
       ...details,
       'report': report.toJson(),
     });
@@ -884,7 +938,8 @@ class ProductRuntime {
         'No managed run command was detected. Add a run entry to kristin.project.json.',
       );
     }
-    final executable = await diagnostics.resolveCommandExecutable(project, command);
+    final executable =
+        await diagnostics.resolveCommandExecutable(project, command);
     if (executable == null) {
       throw ProductException(
         'project_run_tool_missing',
@@ -1024,9 +1079,13 @@ class ProductRuntime {
     required String environmentKey,
     String description = '',
   }) =>
-      secrets.registerReference(label: label, environmentKey: environmentKey, description: description);
+      secrets.registerReference(
+          label: label,
+          environmentKey: environmentKey,
+          description: description);
 
-  Future<List<SecretReference>> listSecretReferences() => repositories.secretReferences.all();
+  Future<List<SecretReference>> listSecretReferences() =>
+      repositories.secretReferences.all();
 
   Future<McpTrustRecord> trustMcp({
     required String projectId,
@@ -1036,7 +1095,8 @@ class ProductRuntime {
     required Set<String> allowedTools,
     String protocolVersion = '2024-11-05',
     Duration validity = const Duration(days: 30),
-  }) => mcp.trust(
+  }) =>
+      mcp.trust(
         projectId: projectId,
         label: label,
         executablePath: executablePath,
@@ -1055,7 +1115,11 @@ class ProductRuntime {
     String? projectId,
     Duration validity = const Duration(days: 30),
   }) =>
-      tokens.issue(label: label, scopes: scopes, projectId: projectId, validity: validity);
+      tokens.issue(
+          label: label,
+          scopes: scopes,
+          projectId: projectId,
+          validity: validity);
 
   Future<List<ApiTokenRecord>> listApiTokens() => repositories.tokens.all();
   Future<void> revokeApiToken(String id) => tokens.revoke(id);
@@ -1080,8 +1144,10 @@ class ProductRuntime {
       'bytes': await file.length(),
       'sha256': Sha256.hex(await file.readAsBytes()),
     };
-    await audit.append('diagnostics.exported', runId ?? projectId ?? 'support', details);
-    await events.publish('diagnostics.exported', runId ?? projectId ?? 'support', details);
+    await audit.append(
+        'diagnostics.exported', runId ?? projectId ?? 'support', details);
+    await events.publish(
+        'diagnostics.exported', runId ?? projectId ?? 'support', details);
     return file;
   }
 }

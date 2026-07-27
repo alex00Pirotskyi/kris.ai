@@ -1,0 +1,10 @@
+{
+  "afterFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+  "beforeFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+  "caseChanges": [],
+  "pathPolicyPassed": true,
+  "regressions": [],
+  "schemaVersion": "1.0.0",
+  "taskId": "P0-010",
+  "unexpectedChanges": []
+}

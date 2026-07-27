@@ -1,0 +1,68 @@
+{
+  "cache": {
+    "flutterKeyTemplate": "flutter-:os:-:channel:-:version:-:arch:-:hash:",
+    "identityDimensions": [
+      "os",
+      "channel",
+      "version",
+      "architecture",
+      "lockfile-hash"
+    ],
+    "pubKeyTemplate": "flutter-pub-:os:-:channel:-:version:-:arch:-:hash:"
+  },
+  "closure": {
+    "comparison": "release/evidence/P0-004/comparison.json",
+    "comparisonTool": "tool/compare_toolchain_runs.py",
+    "firstAttempt": 4,
+    "firstRunId": "30237113806",
+    "requiredReruns": 2,
+    "secondAttempt": 5,
+    "secondRunId": "30237113806",
+    "status": "passed"
+  },
+  "dart": {
+    "pinnedBy": "flutter-sdk",
+    "version": "3.12.2"
+  },
+  "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+  "flutter": {
+    "channel": "stable",
+    "version": "3.44.8"
+  },
+  "githubActions": {
+    "actions/checkout": {
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "release": "v7.0.1"
+    },
+    "actions/setup-python": {
+      "commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+      "release": "v7.0.0"
+    },
+    "actions/upload-artifact": {
+      "commit": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+      "release": "v7.0.1"
+    },
+    "subosito/flutter-action": {
+      "commit": "1a449444c387b1966244ae4d4f8c696479add0b2",
+      "release": "v2.23.0"
+    }
+  },
+  "lockfiles": [
+    {
+      "path": "pubspec.lock",
+      "sha256": "ea864e60d585440d3bb37671d440f10344aa2903b9faea9874d6a83127a8b96e"
+    }
+  ],
+  "milestone": "P0-004",
+  "python": {
+    "version": "3.12.10"
+  },
+  "roadmapVersion": "3.1.2-p0-006-governance-integration",
+  "runners": {
+    "macos": "macos-15",
+    "ubuntu": "ubuntu-24.04",
+    "windows": "windows-2025"
+  },
+  "schemaVersion": "1.0.0",
+  "sourceCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20"
+}

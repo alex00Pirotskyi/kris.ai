@@ -1,0 +1,53 @@
+name: Engineering work packet
+about: Propose a bounded roadmap implementation task with measurable evidence.
+title: "[TASK] "
+labels: ["ai-generated-change"]
+body:
+  - type: input
+    id: task_id
+    attributes:
+      label: Roadmap task ID
+      placeholder: P0-006
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Observable objective
+      description: State one user-visible or externally testable outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and current evidence
+    validations:
+      required: true
+  - type: textarea
+    id: platform_impact
+    attributes:
+      label: Windows, macOS, and Linux impact
+      description: Do not hide a failing platform by removing it from scope.
+    validations:
+      required: true
+  - type: textarea
+    id: authority
+    attributes:
+      label: Authority, credentials, privacy, and external effects
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria and commands
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Submission checks
+      options:
+        - label: I reviewed the current roadmap status and did not skip an unfinished dependency.
+          required: true
+        - label: I will provide behavioral and negative evidence rather than source-token assertions alone.
+          required: true

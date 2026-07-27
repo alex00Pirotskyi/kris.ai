@@ -1,0 +1,42 @@
+{
+  "closedAt": "2026-07-27T11:48:02.932629+00:00",
+  "closedTasks": [
+    "P0-001",
+    "P0-002",
+    "P0-003",
+    "P0-004",
+    "P0-005",
+    "P0-006",
+    "P0-007",
+    "P0-008",
+    "P0-009",
+    "P0-010"
+  ],
+  "closureId": "V44",
+  "nextReady": [
+    "P1-001"
+  ],
+  "p0_003ExactTriOsRun": {
+    "attempt": 5,
+    "runId": "30237113806",
+    "sourceCommit": "277f231043f0472f7fe34f4128a16ba4e0897536",
+    "status": "passed"
+  },
+  "p0_004": {
+    "comparison": "release/evidence/P0-004/comparison.json",
+    "firstRun": "release/evidence/P0-004/first-run.json",
+    "secondRun": "release/evidence/P0-004/second-run.json",
+    "status": "passed"
+  },
+  "p0_006": {
+    "applyReceipt": "release/evidence/P0-006/github_governance_receipt.json",
+    "status": "passed",
+    "verificationReceipt": "release/evidence/P0-006/github_governance_verification.json"
+  },
+  "phase": "P0",
+  "schemaVersion": "1.0.0",
+  "sourceBranch": "integration/p0-001-p0-010-complete-v3.1.6-v12",
+  "sourceCommit": "277f231043f0472f7fe34f4128a16ba4e0897536",
+  "statement": "P0 exit gates are evidenced; P1-001 is activated without claiming any P1 implementation.",
+  "status": "passed"
+}

@@ -66,7 +66,8 @@ void main() {
 
     test('aliases are promoted without losing canonical field values', () {
       const schemas = ToolSchemaRegistry();
-      const content = '# Exact content\n\nKeep `\${value}` and all whitespace.\n';
+      const content =
+          '# Exact content\n\nKeep `\${value}` and all whitespace.\n';
       final normalized = schemas.normalizeAndValidate(
         'write_file',
         <String, dynamic>{
@@ -206,7 +207,8 @@ void main() {
       );
     });
 
-    test('canonical failure metadata survives direct and recorded envelopes', () {
+    test('canonical failure metadata survives direct and recorded envelopes',
+        () {
       const adapter = AgentProtocolAdapter();
       final payload = <String, dynamic>{
         'action': 'fail',
@@ -375,9 +377,8 @@ void main() {
       for (var index = 0; index < 300; index++) {
         final content = 'case-$index-${random.nextInt(1 << 30)}\n'
             "${List<String>.filled(random.nextInt(80), 'x').join()}";
-        final path = index.isEven
-            ? '`docs/fuzz-$index.md`'
-            : 'docs/fuzz-$index.md';
+        final path =
+            index.isEven ? '`docs/fuzz-$index.md`' : 'docs/fuzz-$index.md';
         final payload = <String, dynamic>{
           'action': 'tool_call',
           'tool': index % 5 == 0 ? 'write' : 'write_file',

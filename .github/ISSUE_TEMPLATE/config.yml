@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security report
+    url: https://github.com/alex00Pirotskyi/kris.ai/security/advisories/new
+    about: Report a suspected vulnerability privately. Do not publish credentials or exploit details in a public issue.
+  - name: Production roadmap
+    url: https://github.com/alex00Pirotskyi/kris.ai/blob/main/docs/roadmap/MASTER.md
+    about: Review task dependencies, gates, and evidence requirements before proposing implementation work.

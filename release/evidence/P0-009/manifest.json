@@ -1,0 +1,32 @@
+{
+  "baseline": {
+    "caseCount": 12,
+    "coverage": 0.5,
+    "json": "evals/results/p0_009_baseline.json",
+    "markdown": "evals/results/P0_009_BASELINE.md",
+    "qualityPassed": false,
+    "readiness": 0.5
+  },
+  "baselineFingerprint": "b13796f9c5ece24377b75c20ab5f082b60e8326b4bd617e3240ab60b211ff5f8",
+  "benchmarkInputsSha256": "c32bec8b29536117d6d2f359a2857b1a9720ef6ceddc68b8b76ffd2ee69c3361",
+  "claimBoundaries": {
+    "baselineRecordedMeansProductReady": false,
+    "notRunCountsAsPassed": false,
+    "sourceInspectionIsBehavioralProof": false,
+    "unavailableCountsAsPassed": false,
+    "unsupportedCountsAsPassed": false
+  },
+  "fixtureSha256": "b43534d1c305d116c39ee9211e7c0fabad4d9744d09f9346c892c04141acb79f",
+  "generatedAt": "2026-07-24T00:00:00Z",
+  "review": {
+    "required": true,
+    "status": "pending"
+  },
+  "roadmapVersion": "3.1.5-p0-009-initial-benchmark",
+  "schemaVersion": "1.0.0",
+  "status": "REVIEW",
+  "suiteId": "kristin.p0-009.initial",
+  "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
+  "suiteVersion": "1.0.0",
+  "taskId": "P0-009"
+}

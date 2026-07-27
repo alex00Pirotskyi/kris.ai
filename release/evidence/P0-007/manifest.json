@@ -1,0 +1,78 @@
+{
+  "appliedAt": "2026-07-26T19:26:29.747700+00:00",
+  "backup": {
+    "created": false,
+    "directoryName": null,
+    "location": "external_sibling_directory"
+  },
+  "changedFiles": [],
+  "claimInvariant": "source_and_mixed_checks_never_count_as_behavioral_proof",
+  "commands": [
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/assurance_model_test.py"
+      ],
+      "exitCode": 0,
+      "outputSha256": "2ce4df26813b77f9cfb79f67e16e1d4a8beb82df9685b382dab9043cdad8cbe6"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/p0_007_assurance_test.py",
+        "--project",
+        ".",
+        "--json-output",
+        "release/evidence/P0-007/test-results.json"
+      ],
+      "exitCode": 0,
+      "outputSha256": "ccf9e0797352bc42e9c63d573cfba6c94102e9b3f91736a1d413306f98b401f8"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/architecture_contract_test.py",
+        "--project",
+        "."
+      ],
+      "exitCode": 0,
+      "outputSha256": "c440b8cb1f60e764d0bca5e3e6b96abd3c217168931e17570212f26f0ad0c561"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/validate_release.py",
+        "--skip-sdk"
+      ],
+      "exitCode": 0,
+      "outputSha256": "a84843ff011f91ac1160601fef93792e041f43cad1d342ab07d70bf016427233"
+    },
+    {
+      "argv": [
+        "C:\\Users\\alex.p\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "tool/assurance_dashboard.py",
+        "--project",
+        ".",
+        "--strict"
+      ],
+      "exitCode": 0,
+      "outputSha256": "fff4a04f43564bdede6cb4550a7f3b6c382e84a00c6a79dd5b0154cb52179662"
+    }
+  ],
+  "limitations": [
+    "Complete Flutter and native platform gates must run in the real checkout.",
+    "P0-007 does not itself complete P8-001's full assurance hierarchy.",
+    "Independent review remains required before DONE."
+  ],
+  "prerequisites": {
+    "cumulativeP0_003Present": true,
+    "cumulativeP0_005Present": true,
+    "cumulativeP0_006Present": true,
+    "p0_001BaselineToolPresent": true,
+    "p0_002TrustDisablementPresent": true
+  },
+  "roadmapVersion": "3.1.3-p0-007-assurance-split",
+  "schemaVersion": "1.0.0",
+  "status": "REVIEW",
+  "taskId": "P0-007"
+}

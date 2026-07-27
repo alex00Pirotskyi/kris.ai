@@ -1,0 +1,406 @@
+{
+  "baselineTimestamp": "2026-07-24T00:00:00Z",
+  "cases": [
+    {
+      "assuranceLevel": "benchmark_task",
+      "candidate": {
+        "acceptanceCommand": [
+          "{python}",
+          "-m",
+          "unittest",
+          "-v",
+          "test_calculator.py"
+        ],
+        "mutablePaths": [
+          "calculator.py"
+        ],
+        "relativePath": "coding.python_bugfix_task",
+        "timeoutSeconds": 60
+      },
+      "category": "coding",
+      "fixture": "evals/fixtures/p0_009/coding/python_bugfix",
+      "id": "coding.python_bugfix_task",
+      "kind": "model_workspace",
+      "notes": "Portable baseline records not_run until an agent candidate is supplied.",
+      "proofKind": "model_evaluation",
+      "title": "Repair a bounded Python arithmetic defect",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "coding",
+      "command": {
+        "argv": [
+          "{python}",
+          "tool/protocol_contract_test.py"
+        ],
+        "expectedExitCode": 0,
+        "timeoutSeconds": 120
+      },
+      "id": "coding.protocol_contract_gate",
+      "kind": "command_exit",
+      "proofKind": "executed_behavior",
+      "requiredFiles": [
+        "tool/protocol_contract_test.py"
+      ],
+      "title": "Current typed protocol contract gate",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "benchmark_task",
+      "candidate": {
+        "expectContains": {
+          "$.citations": [
+            "runtime_boundaries.md",
+            "trust_status.md"
+          ],
+          "$.claims": [
+            "model_output_is_not_authority",
+            "source_checks_are_not_behavioral_proof",
+            "owner_mode_is_not_a_sandbox"
+          ]
+        },
+        "expectEquals": {
+          "$.summary.currentAuthority": "sqlite_workflow_kernel",
+          "$.summary.v1Trust": "disabled"
+        },
+        "relativePath": "analysis.architecture_review_task.json"
+      },
+      "category": "analysis",
+      "fixture": "evals/fixtures/p0_009/analysis/architecture_review",
+      "id": "analysis.architecture_review_task",
+      "kind": "model_json",
+      "proofKind": "model_evaluation",
+      "title": "Analyze runtime authority and current trust boundaries",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "source_contract",
+      "category": "analysis",
+      "command": {
+        "argv": [
+          "{python}",
+          "tool/system_test.py",
+          "--project",
+          "{project}",
+          "--json"
+        ],
+        "expectedExitCode": 0,
+        "timeoutSeconds": 600
+      },
+      "expectEquals": {
+        "$.failed": 0
+      },
+      "expectMin": {
+        "$.passed": 1
+      },
+      "id": "analysis.offline_system_contract",
+      "kind": "command_json_stdout",
+      "proofKind": "source_inspection",
+      "requiredFiles": [
+        "tool/system_test.py"
+      ],
+      "select": [
+        "$.passed",
+        "$.failed"
+      ],
+      "title": "Offline cumulative source-contract analysis",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "path_safety",
+      "id": "path_safety.generated_state_policy",
+      "kind": "path_policy",
+      "paths": [
+        {
+          "expectedGenerated": true,
+          "path": ".dart_tool/package_config.json"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "windows/flutter/ephemeral/flutter_windows.dll"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "node_modules/pkg/index.js"
+        },
+        {
+          "expectedGenerated": true,
+          "path": ".playwright/browser/chromium"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "playwright-report/index.html"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "test-results/run.json"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "browser-profiles/personal/Default/Cookies"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "browser-traces/run.zip"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "services/automation_host/.cache/state"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "datasets/.build/intermediate.jsonl"
+        },
+        {
+          "expectedGenerated": true,
+          "path": "release/evidence/generated/transient.json"
+        },
+        {
+          "expectedGenerated": false,
+          "path": "lib/product/browser_session.dart"
+        },
+        {
+          "expectedGenerated": false,
+          "path": "docs/browser-design.md"
+        }
+      ],
+      "proofKind": "executed_behavior",
+      "requiredFiles": [
+        "tool/source_tree_policy.py"
+      ],
+      "title": "Generated-state path policy coverage",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "path_safety",
+      "command": {
+        "argv": [
+          "flutter",
+          "test",
+          "--no-pub",
+          "--concurrency=1",
+          "test/product/v1_product_preview_test.dart"
+        ],
+        "expectedExitCode": 0,
+        "timeoutSeconds": 1200
+      },
+      "id": "path_safety.flutter_workspace_behavior",
+      "kind": "command_exit",
+      "proofKind": "executed_behavior",
+      "requiredFiles": [
+        "test/product/v1_product_preview_test.dart"
+      ],
+      "title": "Flutter workspace boundary behavior",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "crash_recovery",
+      "command": {
+        "argv": [
+          "{python}",
+          "tool/workflow_kernel_test.py",
+          "--project",
+          "{project}",
+          "--json"
+        ],
+        "expectedExitCode": 0,
+        "timeoutSeconds": 300
+      },
+      "expectEquals": {
+        "$.database.integrity": "ok",
+        "$.failed": 0,
+        "$.passed": 14,
+        "$.schemaVersion": 6
+      },
+      "id": "crash_recovery.sqlite_workflow_kernel",
+      "kind": "command_json_stdout",
+      "proofKind": "executed_behavior",
+      "requiredFiles": [
+        "tool/workflow_kernel_test.py"
+      ],
+      "select": [
+        "$.passed",
+        "$.failed",
+        "$.schemaVersion",
+        "$.database.integrity"
+      ],
+      "title": "Executable SQLite crash and recovery kernel",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "crash_recovery",
+      "command": {
+        "argv": [
+          "{python}",
+          "tool/replay_diagnostics.py",
+          "--json"
+        ],
+        "expectedExitCode": 0,
+        "timeoutSeconds": 120
+      },
+      "expectEquals": {
+        "$.passed": true
+      },
+      "expectMin": {
+        "$.caseCount": 2,
+        "$.passedCount": 2
+      },
+      "id": "crash_recovery.diagnostic_replay",
+      "kind": "command_json_stdout",
+      "proofKind": "executed_behavior",
+      "requiredFiles": [
+        "tool/replay_diagnostics.py"
+      ],
+      "select": [
+        "$.passed",
+        "$.caseCount",
+        "$.passedCount"
+      ],
+      "title": "Historical production-failure replay corpus",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "capability_inventory",
+      "category": "browser_absent",
+      "id": "browser_absent.capability_inventory",
+      "kind": "capability_probe",
+      "probe": {
+        "anyFiles": [
+          "services/automation_host/package.json",
+          "tool/browser_session_test.py",
+          "lib/product/browser_session.dart",
+          "schemas/browser_action.v1.json"
+        ],
+        "behavioralEvidenceFiles": [
+          "release/evidence/P3-016/browser-fixture-results.json",
+          "release/evidence/P3-017/security-results.json"
+        ],
+        "toolPrefixes": [
+          "browser."
+        ],
+        "unsupportedReason": "browser_automation_not_implemented"
+      },
+      "proofKind": "capability_probe",
+      "title": "Browser automation capability inventory",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "benchmark_task",
+      "candidate": {
+        "expectContains": {
+          "$.evidence": [
+            "before_observation",
+            "after_observation"
+          ]
+        },
+        "expectEquals": {
+          "$.receipt": "KRISTIN-FIXTURE-OK",
+          "$.submitted": true
+        },
+        "relativePath": "browser_absent.form_completion_task.json"
+      },
+      "category": "browser_absent",
+      "fixture": "evals/fixtures/p0_009/browser/form_task",
+      "id": "browser_absent.form_completion_task",
+      "kind": "model_json",
+      "proofKind": "model_evaluation",
+      "requiresCase": "browser_absent.capability_inventory",
+      "title": "Complete and verify a local browser form",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "behavioral",
+      "category": "research",
+      "command": {
+        "argv": [
+          "{python}",
+          "tool/knowledge_memory_v2_test.py",
+          "--json-output",
+          "{result}"
+        ],
+        "expectedExitCode": 0,
+        "timeoutSeconds": 300
+      },
+      "expectEquals": {
+        "$.caseCount": 12,
+        "$.passed": true,
+        "$.passedCount": 12
+      },
+      "id": "research.knowledge_memory_gate",
+      "kind": "command_json_file",
+      "proofKind": "executed_behavior",
+      "requiredFiles": [
+        "tool/knowledge_memory_v2_test.py"
+      ],
+      "select": [
+        "$.passed",
+        "$.passedCount",
+        "$.caseCount"
+      ],
+      "title": "Knowledge, memory, citation, and freshness gate",
+      "weight": 1
+    },
+    {
+      "assuranceLevel": "benchmark_task",
+      "candidate": {
+        "expectContains": {
+          "$.citations": [
+            "official_release.md",
+            "changelog.md",
+            "secondary_report.md"
+          ]
+        },
+        "expectEquals": {
+          "$.answer.disagreementNoted": true,
+          "$.answer.officialReleaseDate": "2026-01-15"
+        },
+        "relativePath": "research.local_citation_task.json"
+      },
+      "category": "research",
+      "fixture": "evals/fixtures/p0_009/research/release_date",
+      "id": "research.local_citation_task",
+      "kind": "model_json",
+      "proofKind": "model_evaluation",
+      "title": "Resolve a conflicting release date from local evidence",
+      "weight": 1
+    }
+  ],
+  "categories": [
+    {
+      "id": "coding",
+      "name": "Coding"
+    },
+    {
+      "id": "analysis",
+      "name": "Analysis"
+    },
+    {
+      "id": "path_safety",
+      "name": "Path safety"
+    },
+    {
+      "id": "crash_recovery",
+      "name": "Crash recovery"
+    },
+    {
+      "id": "browser_absent",
+      "name": "Browser capability honesty"
+    },
+    {
+      "id": "research",
+      "name": "Research and citations"
+    }
+  ],
+  "credentialsPolicy": "forbidden",
+  "networkPolicy": "forbidden",
+  "schemaVersion": "1.0.0",
+  "sourceDateEpoch": 1784851200,
+  "suiteId": "kristin.p0-009.initial",
+  "suiteVersion": "1.0.0",
+  "title": "Kristin initial coding, analysis, safety, recovery, browser, and research baseline"
+}

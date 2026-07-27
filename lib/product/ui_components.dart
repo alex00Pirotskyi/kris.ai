@@ -87,7 +87,8 @@ const List<StudioTemplate> studioTemplates = <StudioTemplate>[
   StudioTemplate(
     id: 'telegram_bot',
     title: 'Create a Telegram bot',
-    description: 'Build a safe bot with commands, storage, tests, and Docker support.',
+    description:
+        'Build a safe bot with commands, storage, tests, and Docker support.',
     prompt:
         'Create a production-ready Telegram bot with clear commands, configuration through named secrets, conversation storage, automated tests, and a Docker deployment package. Use current official documentation when network research is approved.',
     icon: Icons.smart_toy_outlined,
@@ -97,7 +98,8 @@ const List<StudioTemplate> studioTemplates = <StudioTemplate>[
   StudioTemplate(
     id: 'application',
     title: 'Create an application',
-    description: 'Turn an idea into a tested desktop, mobile, or local application.',
+    description:
+        'Turn an idea into a tested desktop, mobile, or local application.',
     prompt:
         'Create a complete application from this project. Choose the most suitable existing stack, implement the core user journey, add tests and error handling, and provide simple run and build instructions.',
     icon: Icons.apps_outlined,
@@ -117,7 +119,8 @@ const List<StudioTemplate> studioTemplates = <StudioTemplate>[
   StudioTemplate(
     id: 'improve_project',
     title: 'Improve my project',
-    description: 'Review usability, reliability, structure, and release readiness.',
+    description:
+        'Review usability, reliability, structure, and release readiness.',
     prompt:
         'Review this project for user experience, reliability, maintainability, security, and release readiness. Implement the highest-value improvements that can be verified safely.',
     icon: Icons.trending_up_outlined,
@@ -147,17 +150,25 @@ CommandMode inferCommandMode(String request) {
 
   bool hasAny(Iterable<String> values) => values.any(lower.contains);
 
-  if (hasAny(<String>['fix ', 'repair ', 'debug ', 'broken', 'error', 'failing'])) {
+  if (hasAny(
+      <String>['fix ', 'repair ', 'debug ', 'broken', 'error', 'failing'])) {
     return CommandMode.fix;
   }
-  if (hasAny(<String>['review ', 'audit ', 'assess ', 'inspect ', 'critique '])) {
+  if (hasAny(
+      <String>['review ', 'audit ', 'assess ', 'inspect ', 'critique '])) {
     return CommandMode.review;
   }
   if (hasAny(<String>['run ', 'launch ', 'start the ', 'execute ']) &&
       !hasAny(<String>['build ', 'create ', 'implement ', 'make '])) {
     return CommandMode.run;
   }
-  if (hasAny(<String>['analyze ', 'analyse ', 'investigate ', 'compare ', 'examine '])) {
+  if (hasAny(<String>[
+    'analyze ',
+    'analyse ',
+    'investigate ',
+    'compare ',
+    'examine '
+  ])) {
     return CommandMode.analyze;
   }
   if (hasAny(<String>['plan ', 'roadmap', 'architecture', 'design a plan']) &&
@@ -165,8 +176,23 @@ CommandMode inferCommandMode(String request) {
     return CommandMode.plan;
   }
   if ((lower.endsWith('?') ||
-          hasAny(<String>['what ', 'why ', 'how ', 'explain ', 'tell me ', 'where ', 'when '])) &&
-      !hasAny(<String>['build ', 'create ', 'implement ', 'make ', 'change ', 'add '])) {
+          hasAny(<String>[
+            'what ',
+            'why ',
+            'how ',
+            'explain ',
+            'tell me ',
+            'where ',
+            'when '
+          ])) &&
+      !hasAny(<String>[
+        'build ',
+        'create ',
+        'implement ',
+        'make ',
+        'change ',
+        'add '
+      ])) {
     return CommandMode.ask;
   }
   return CommandMode.build;
@@ -280,7 +306,8 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
   if (scopes.contains(PermissionScope.networkResearch)) {
     groups.add(const AccessGroup(
       title: 'Read approved documentation',
-      description: 'Fetch public HTTPS documentation through size, redirect, and private-network protections.',
+      description:
+          'Fetch public HTTPS documentation through size, redirect, and private-network protections.',
       icon: Icons.public_outlined,
       scopes: <PermissionScope>{PermissionScope.networkResearch},
     ));
@@ -288,7 +315,8 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
   if (scopes.contains(PermissionScope.networkPackages)) {
     groups.add(const AccessGroup(
       title: 'Install project packages',
-      description: 'Download approved dependencies for this project when package networking is enabled.',
+      description:
+          'Download approved dependencies for this project when package networking is enabled.',
       icon: Icons.inventory_2_outlined,
       scopes: <PermissionScope>{PermissionScope.networkPackages},
     ));
@@ -315,7 +343,8 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
   if (scopes.contains(PermissionScope.secretUse)) {
     groups.add(const AccessGroup(
       title: 'Use a named secret',
-      description: 'Resolve only an approved named secret reference. The value is never shown or saved in source.',
+      description:
+          'Resolve only an approved named secret reference. The value is never shown or saved in source.',
       icon: Icons.key_outlined,
       scopes: <PermissionScope>{PermissionScope.secretUse},
       highRisk: true,
@@ -324,7 +353,8 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
   if (scopes.contains(PermissionScope.deploymentPackage)) {
     groups.add(const AccessGroup(
       title: 'Prepare an export package',
-      description: 'Create a scanned deployment archive with a manifest and dependency inventory.',
+      description:
+          'Create a scanned deployment archive with a manifest and dependency inventory.',
       icon: Icons.archive_outlined,
       scopes: <PermissionScope>{PermissionScope.deploymentPackage},
     ));
@@ -332,7 +362,8 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
   if (scopes.contains(PermissionScope.mcpConnect)) {
     groups.add(const AccessGroup(
       title: 'Use a trusted integration',
-      description: 'Connect only to a separately approved project-bound MCP server and its exact tool list.',
+      description:
+          'Connect only to a separately approved project-bound MCP server and its exact tool list.',
       icon: Icons.hub_outlined,
       scopes: <PermissionScope>{PermissionScope.mcpConnect},
       highRisk: true,
@@ -367,7 +398,8 @@ String humanEventText(EventEnvelope event, {RunRecord? run}) {
     'run.failed' => 'I found a problem and stopped safely.',
     'work_item.started' => 'Working on ${workTitle()}.',
     'work_item.succeeded' => 'Finished ${workTitle()}.',
-    'work_item.attempt_failed' => 'A check failed, so I am reviewing ${workTitle()}.',
+    'work_item.attempt_failed' =>
+      'A check failed, so I am reviewing ${workTitle()}.',
     'evidence.recorded' => 'Saved a verification record for this step.',
     'project.added' => 'Project added and ready to use.',
     'settings.updated' => 'Settings saved.',
@@ -395,7 +427,8 @@ int runPhaseIndex({PreparedCommand? prepared, RunRecord? run}) {
     if (run.items.isEmpty) {
       return 2;
     }
-    final succeeded = run.items.where((item) => item.state == WorkItemState.succeeded).length;
+    final succeeded =
+        run.items.where((item) => item.state == WorkItemState.succeeded).length;
     final verificationStarted = run.items.any((item) {
       final lower = item.item.title.toLowerCase();
       return (lower.contains('verify') || lower.contains('test')) &&
@@ -558,7 +591,8 @@ class StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: emphasis ? colors.primaryContainer : colors.surfaceContainerHighest,
+        color:
+            emphasis ? colors.primaryContainer : colors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -567,7 +601,8 @@ class StatusPill extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: emphasis ? colors.onPrimaryContainer : colors.onSurfaceVariant,
+            color:
+                emphasis ? colors.onPrimaryContainer : colors.onSurfaceVariant,
           ),
           const SizedBox(width: 7),
           Text(
@@ -672,7 +707,8 @@ class FivePhaseProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = runPhaseIndex(prepared: prepared, run: run);
-    final failed = run?.state == RunState.failed || run?.state == RunState.cancelled;
+    final failed =
+        run?.state == RunState.failed || run?.state == RunState.cancelled;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 620;
@@ -708,7 +744,8 @@ class FivePhaseProgress extends StatelessWidget {
 
   Widget _phaseChip(BuildContext context, int index, int active, bool failed) {
     final colors = Theme.of(context).colorScheme;
-    final done = index < active || index == 4 && run?.state == RunState.succeeded;
+    final done =
+        index < active || index == 4 && run?.state == RunState.succeeded;
     final current = index == active && !done;
     final error = failed && current;
     final background = error
@@ -847,4 +884,3 @@ class FlowNode extends StatelessWidget {
     );
   }
 }
-

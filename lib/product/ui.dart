@@ -77,8 +77,7 @@ ThemeData _studioTheme(Brightness brightness) {
     scaffoldBackgroundColor:
         dark ? const Color(0xff111217) : const Color(0xfff8f7f4),
     appBarTheme: AppBarTheme(
-      backgroundColor:
-          dark ? const Color(0xff111217) : const Color(0xfff8f7f4),
+      backgroundColor: dark ? const Color(0xff111217) : const Color(0xfff8f7f4),
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -94,9 +93,8 @@ ThemeData _studioTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark
-          ? scheme.surfaceContainerHighest
-          : scheme.surfaceContainerLow,
+      fillColor:
+          dark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: scheme.outlineVariant),
@@ -199,13 +197,11 @@ class _SimpleStudioState extends State<SimpleStudio> {
 
   ProductRuntime get runtime => widget.runtime;
 
-  ProjectRecord? get selectedProject => projects
-      .where((project) => project.id == selectedProjectId)
-      .firstOrNull;
+  ProjectRecord? get selectedProject =>
+      projects.where((project) => project.id == selectedProjectId).firstOrNull;
 
-  ModelIdentity? get selectedModel => models
-      .where((model) => model.exactId == selectedModelId)
-      .firstOrNull;
+  ModelIdentity? get selectedModel =>
+      models.where((model) => model.exactId == selectedModelId).firstOrNull;
 
   @override
   void initState() {
@@ -518,7 +514,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
     if (run == null) {
       return;
     }
-    final retried = await _perform<RunRecord>('Trying the task again as a fresh run', () async {
+    final retried = await _perform<RunRecord>(
+        'Trying the task again as a fresh run', () async {
       final fresh = await runtime.retryRun(run.id);
       final required = fresh.command.contract.requiredPermissions;
       await runtime.approve(
@@ -542,11 +539,12 @@ class _SimpleStudioState extends State<SimpleStudio> {
     if (run == null) {
       return;
     }
-    await _perform<void>(switch (action) {
-      'pause' => 'Pausing safely',
-      'resume' => 'Continuing your task',
-      _ => 'Stopping safely',
-    }, () async {
+    await _perform<void>(
+        switch (action) {
+          'pause' => 'Pausing safely',
+          'resume' => 'Continuing your task',
+          _ => 'Stopping safely',
+        }, () async {
       if (action == 'pause') {
         await runtime.pause(run.id);
       } else if (action == 'resume') {
@@ -753,7 +751,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 _HelpStep(
                   number: '1',
                   title: 'Choose a project',
-                  message: 'Kristin can work only inside the folder you choose.',
+                  message:
+                      'Kristin can work only inside the folder you choose.',
                 ),
                 _HelpStep(
                   number: '2',
@@ -1313,8 +1312,7 @@ class _SimpleStudioState extends State<SimpleStudio> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 child: Icon(
                   Icons.route_outlined,
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -1335,9 +1333,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                     Text(
                       'A checkpoint will be created before any project change.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -1373,9 +1370,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                     child: Text(
                       '${entry.key + 1}',
                       style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSecondaryContainer,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -1515,9 +1511,7 @@ class _SimpleStudioState extends State<SimpleStudio> {
                   });
                 },
                 icon: Icon(
-                  showAdvancedPlan
-                      ? Icons.expand_less
-                      : Icons.expand_more,
+                  showAdvancedPlan ? Icons.expand_less : Icons.expand_more,
                 ),
                 label: const Text('Advanced details'),
               ),
@@ -2648,7 +2642,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
                                           unawaited(_selectProject(project.id));
                                         },
                                   child: Text(
-                                    selected ? 'Using this project' : 'Use project',
+                                    selected
+                                        ? 'Using this project'
+                                        : 'Use project',
                                   ),
                                 ),
                                 IconButton(
@@ -2766,9 +2762,11 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               SizedBox(height: 10),
-              Text('1. Kristin fills the request with a strong starting point.'),
+              Text(
+                  '1. Kristin fills the request with a strong starting point.'),
               Text('2. You change any words you want.'),
-              Text('3. Kristin creates a friendly plan and shows required access.'),
+              Text(
+                  '3. Kristin creates a friendly plan and shows required access.'),
               Text('4. Work starts only after you approve that exact plan.'),
             ],
           ),
@@ -2848,8 +2846,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
             lower.contains('target') ||
             lower.contains('artifact');
         final looksLikePath = value.contains('/') || value.contains('\\');
-        final looksLikeUrl = value.startsWith('http://') ||
-            value.startsWith('https://');
+        final looksLikeUrl =
+            value.startsWith('http://') || value.startsWith('https://');
         if (pathKey && looksLikePath && !looksLikeUrl && value.length < 500) {
           paths.add(value);
         }

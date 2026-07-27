@@ -26,7 +26,10 @@ class ContractPlanner {
     required ModelIdentity model,
   }) {
     final normalized = request.trim();
-    if (normalized.length < 3 && !isConversationalRequest(normalized)) { throw ProductException('request_too_short', 'Describe the outcome you want to achieve.'); }
+    if (normalized.length < 3 && !isConversationalRequest(normalized)) {
+      throw ProductException(
+          'request_too_short', 'Describe the outcome you want to achieve.');
+    }
     final permissions = _permissions(mode, normalized);
     final criteria = _criteria(mode, normalized);
     final questions = _researchQuestions(normalized);
@@ -54,10 +57,13 @@ class ContractPlanner {
     if (contractErrors.isNotEmpty) {
       throw ProductException('contract_invalid', contractErrors.join(' '));
     }
-    final complexity = _complexity(mode, normalized, criteria.length, questions.length);
+    final complexity =
+        _complexity(mode, normalized, criteria.length, questions.length);
     final plan = _plan(contract, complexity);
     final planErrors = plan.validate();
-    if (planErrors.isNotEmpty) { throw ProductException('plan_invalid', planErrors.join(' ')); }
+    if (planErrors.isNotEmpty) {
+      throw ProductException('plan_invalid', planErrors.join(' '));
+    }
     final requestKey = Sha256.text(canonicalJson(<String, dynamic>{
       'projectId': project.id,
       'mode': mode.name,
@@ -81,42 +87,66 @@ class ContractPlanner {
     if (mode != CommandMode.ask || !isConversationalRequest(request)) {
       permissions.add(PermissionScope.projectRead);
     }
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}.contains(mode)) {
+    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
+        .contains(mode)) {
       permissions.addAll(<PermissionScope>{
         PermissionScope.projectWrite,
         PermissionScope.projectDelete,
         PermissionScope.executeFinite,
       });
     }
-    if (const <CommandMode>{CommandMode.analyze, CommandMode.review, CommandMode.run}.contains(mode)) {
+    if (const <CommandMode>{
+      CommandMode.analyze,
+      CommandMode.review,
+      CommandMode.run
+    }.contains(mode)) {
       permissions.add(PermissionScope.executeFinite);
     }
-    if (mode == CommandMode.run) { permissions.add(PermissionScope.executeManaged); }
-    if (RegExp(r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online|url|https)\b').hasMatch(lower)) {
+    if (mode == CommandMode.run) {
+      permissions.add(PermissionScope.executeManaged);
+    }
+    if (RegExp(
+            r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online|url|https)\b')
+        .hasMatch(lower)) {
       permissions.add(PermissionScope.networkResearch);
     }
-    if (RegExp(r'\b(install|dependency|dependencies|package|npm|pnpm|yarn|pip|cargo|clone|pull)\b').hasMatch(lower)) {
-      permissions.addAll(<PermissionScope>{PermissionScope.executeFinite, PermissionScope.networkPackages});
+    if (RegExp(
+            r'\b(install|dependency|dependencies|package|npm|pnpm|yarn|pip|cargo|clone|pull)\b')
+        .hasMatch(lower)) {
+      permissions.addAll(<PermissionScope>{
+        PermissionScope.executeFinite,
+        PermissionScope.networkPackages
+      });
     }
-    if (RegExp(r'\b(secret|token|api key|credential|telegram|botfather|deploy|production)\b').hasMatch(lower)) {
+    if (RegExp(
+            r'\b(secret|token|api key|credential|telegram|botfather|deploy|production)\b')
+        .hasMatch(lower)) {
       permissions.add(PermissionScope.secretUse);
     }
-    if (RegExp(r'\b(deploy|deployment|release|docker|container|publish|hosting|vercel|cloudflare)\b').hasMatch(lower)) {
+    if (RegExp(
+            r'\b(deploy|deployment|release|docker|container|publish|hosting|vercel|cloudflare)\b')
+        .hasMatch(lower)) {
       permissions.add(PermissionScope.deploymentPackage);
     }
-    if (RegExp(r'\b(mcp|model context protocol)\b').hasMatch(lower)) { permissions.add(PermissionScope.mcpConnect); }
+    if (RegExp(r'\b(mcp|model context protocol)\b').hasMatch(lower)) {
+      permissions.add(PermissionScope.mcpConnect);
+    }
     return permissions;
   }
 
   List<AcceptanceCriterion> _criteria(CommandMode mode, String request) {
     final requested = _extractRequestedCriteria(request);
-    if (requested.isNotEmpty) { return requested; }
+    if (requested.isNotEmpty) {
+      return requested;
+    }
     if (mode == CommandMode.ask && isConversationalRequest(request)) {
       return <AcceptanceCriterion>[
         AcceptanceCriterion(
           id: newId('criterion'),
-          statement: 'The response is natural, helpful, and directly addresses the conversational message.',
-          verification: 'Verify that the response does not invent project facts or claim that tools were used.',
+          statement:
+              'The response is natural, helpful, and directly addresses the conversational message.',
+          verification:
+              'Verify that the response does not invent project facts or claim that tools were used.',
         ),
       ];
     }
@@ -125,8 +155,10 @@ class ContractPlanner {
         return <AcceptanceCriterion>[
           AcceptanceCriterion(
             id: newId('criterion'),
-            statement: 'The response directly answers the request and uses project evidence only when it is relevant.',
-            verification: 'Verify that project-dependent claims cite inspected files or retrieved project knowledge, while general conversation remains concise.',
+            statement:
+                'The response directly answers the request and uses project evidence only when it is relevant.',
+            verification:
+                'Verify that project-dependent claims cite inspected files or retrieved project knowledge, while general conversation remains concise.',
           ),
         ];
       case CommandMode.analyze:
@@ -134,16 +166,20 @@ class ContractPlanner {
         return <AcceptanceCriterion>[
           AcceptanceCriterion(
             id: newId('criterion'),
-            statement: 'The analysis identifies material findings, evidence, impact, and actionable remediation.',
-            verification: 'Verify every material finding against a file, command result, or research source and include its evidence hash.',
+            statement:
+                'The analysis identifies material findings, evidence, impact, and actionable remediation.',
+            verification:
+                'Verify every material finding against a file, command result, or research source and include its evidence hash.',
           ),
         ];
       case CommandMode.plan:
         return <AcceptanceCriterion>[
           AcceptanceCriterion(
             id: newId('criterion'),
-            statement: 'The plan covers the requested outcome with ordered, dependency-valid, atomic work items.',
-            verification: 'Verify unique IDs, valid dependencies, no cycles, measurable criteria, and explicit risks before completion.',
+            statement:
+                'The plan covers the requested outcome with ordered, dependency-valid, atomic work items.',
+            verification:
+                'Verify unique IDs, valid dependencies, no cycles, measurable criteria, and explicit risks before completion.',
           ),
         ];
       case CommandMode.build:
@@ -151,21 +187,27 @@ class ContractPlanner {
         return <AcceptanceCriterion>[
           AcceptanceCriterion(
             id: newId('criterion'),
-            statement: 'The requested implementation is present in the active project without escaping its boundary.',
-            verification: 'Verify changed files by SHA-256, inspect the final diff, and pass the detected build and test profile.',
+            statement:
+                'The requested implementation is present in the active project without escaping its boundary.',
+            verification:
+                'Verify changed files by SHA-256, inspect the final diff, and pass the detected build and test profile.',
           ),
           AcceptanceCriterion(
             id: newId('criterion'),
-            statement: 'No plaintext secret is introduced and all external effects use approved granular permissions.',
-            verification: 'Run secret-pattern and permission evidence checks; verify no committed source contains supplied secret values.',
+            statement:
+                'No plaintext secret is introduced and all external effects use approved granular permissions.',
+            verification:
+                'Run secret-pattern and permission evidence checks; verify no committed source contains supplied secret values.',
           ),
         ];
       case CommandMode.run:
         return <AcceptanceCriterion>[
           AcceptanceCriterion(
             id: newId('criterion'),
-            statement: 'The requested application command starts from the active project and reports a bounded observable result.',
-            verification: 'Verify process start, working directory, exit or managed-process identity, and redacted output without shell execution.',
+            statement:
+                'The requested application command starts from the active project and reports a bounded observable result.',
+            verification:
+                'Verify process start, working directory, exit or managed-process identity, and redacted output without shell execution.',
           ),
         ];
     }
@@ -175,16 +217,28 @@ class ContractPlanner {
     final lines = const LineSplitter().convert(request);
     final result = <AcceptanceCriterion>[];
     for (final line in lines) {
-      final match = RegExp(r'^\s*(?:[-*]|\d+[.)])\s*(?:acceptance\s*:)?\s*(.+)$', caseSensitive: false).firstMatch(line);
-      if (match == null) { continue; }
+      final match = RegExp(
+              r'^\s*(?:[-*]|\d+[.)])\s*(?:acceptance\s*:)?\s*(.+)$',
+              caseSensitive: false)
+          .firstMatch(line);
+      if (match == null) {
+        continue;
+      }
       final statement = match.group(1)?.trim() ?? '';
-      if (statement.length < 12) { continue; }
+      if (statement.length < 12) {
+        continue;
+      }
       final lower = statement.toLowerCase();
-      if (!RegExp(r'\b(must|should|passes|returns|renders|creates|supports|does not|without|within)\b').hasMatch(lower)) { continue; }
+      if (!RegExp(
+              r'\b(must|should|passes|returns|renders|creates|supports|does not|without|within)\b')
+          .hasMatch(lower)) {
+        continue;
+      }
       result.add(AcceptanceCriterion(
         id: newId('criterion'),
         statement: statement,
-        verification: 'Verify this criterion with the most direct available test, command, file inspection, or response assertion.',
+        verification:
+            'Verify this criterion with the most direct available test, command, file inspection, or response assertion.',
       ));
     }
     return result.take(12).toList();
@@ -192,7 +246,9 @@ class ContractPlanner {
 
   List<String> _researchQuestions(String request) {
     final lower = request.toLowerCase();
-    if (!RegExp(r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online)\b').hasMatch(lower)) {
+    if (!RegExp(
+            r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online)\b')
+        .hasMatch(lower)) {
       return <String>[];
     }
     return <String>[
@@ -201,7 +257,8 @@ class ContractPlanner {
     ];
   }
 
-  int _complexity(CommandMode mode, String request, int criteria, int questions) {
+  int _complexity(
+      CommandMode mode, String request, int criteria, int questions) {
     var score = switch (mode) {
       CommandMode.ask => 1,
       CommandMode.analyze => 2,
@@ -215,13 +272,18 @@ class ContractPlanner {
     score += min(3, request.length ~/ 700);
     score += min(2, max(0, criteria - 1));
     score += questions == 0 ? 0 : 1;
-    if (RegExp(r'\b(full[- ]stack|production|deployment|database|authentication|telegram|mobile|desktop|migration|security|multi[- ]tenant)\b').hasMatch(lower)) { score += 2; }
+    if (RegExp(
+            r'\b(full[- ]stack|production|deployment|database|authentication|telegram|mobile|desktop|migration|security|multi[- ]tenant)\b')
+        .hasMatch(lower)) {
+      score += 2;
+    }
     return score.clamp(1, 10).toInt();
   }
 
   ExecutionPlan _plan(TaskContract contract, int complexity) {
     final items = <WorkItem>[];
-    WorkItem item(String title, String description, Set<String> dependencies, Set<String> tools, List<String> criteria) {
+    WorkItem item(String title, String description, Set<String> dependencies,
+        Set<String> tools, List<String> criteria) {
       return WorkItem(
         id: newId('work'),
         title: title,
@@ -255,7 +317,9 @@ class ContractPlanner {
         }
       }
       items.add(item(
-        conversational ? 'Respond conversationally' : 'Answer from grounded context',
+        conversational
+            ? 'Respond conversationally'
+            : 'Answer from grounded context',
         conversational
             ? 'Reply directly without manufacturing project evidence or requesting unnecessary tools.'
             : 'Answer the request directly. Inspect project files or retrieve saved knowledge only when the answer depends on them.',
@@ -281,8 +345,20 @@ class ContractPlanner {
       'Inspect project and establish evidence baseline',
       'Inspect relevant files, symbols, project type, Git state, and existing constraints before proposing or mutating anything.',
       <String>{},
-      <String>{'list_directory', 'read_file', 'inspect_file', 'search_text', 'index_project', 'index_search', 'git_status', 'git_diff', 'knowledge_search'},
-      <String>['Relevant existing behavior and files are identified with hashes.'],
+      <String>{
+        'list_directory',
+        'read_file',
+        'inspect_file',
+        'search_text',
+        'index_project',
+        'index_search',
+        'git_status',
+        'git_diff',
+        'knowledge_search'
+      },
+      <String>[
+        'Relevant existing behavior and files are identified with hashes.'
+      ],
     );
     items.add(inspect);
 
@@ -293,7 +369,9 @@ class ContractPlanner {
         'Search approved sources when configured, fetch only selected public HTTPS documents, record provenance, and index them as untrusted project knowledge.',
         <String>{dependency},
         <String>{'knowledge_search', 'research_search', 'research_fetch'},
-        <String>['Material external claims have source URLs, fetch timestamps, and content hashes.'],
+        <String>[
+          'Material external claims have source URLs, fetch timestamps, and content hashes.'
+        ],
       );
       items.add(research);
       dependency = research.id;
@@ -308,29 +386,70 @@ class ContractPlanner {
           'Analyze and verify findings',
           'Investigate the request, reproduce material issues when safe, rank findings by impact, and prepare actionable evidence-backed conclusions.',
           <String>{dependency},
-          <String>{'list_directory', 'read_file', 'inspect_file', 'search_text', 'index_project', 'index_search', 'git_status', 'git_diff', 'run_command', 'verify_project', 'knowledge_search'},
-          contract.acceptanceCriteria.map((criterion) => criterion.statement).toList(),
+          <String>{
+            'list_directory',
+            'read_file',
+            'inspect_file',
+            'search_text',
+            'index_project',
+            'index_search',
+            'git_status',
+            'git_diff',
+            'run_command',
+            'verify_project',
+            'knowledge_search'
+          },
+          contract.acceptanceCriteria
+              .map((criterion) => criterion.statement)
+              .toList(),
         ));
       case CommandMode.plan:
         items.add(item(
           'Produce an implementation-ready plan',
           'Turn the request and project evidence into atomic work items, dependencies, risks, permissions, and objective release gates.',
           <String>{dependency},
-          <String>{'list_directory', 'read_file', 'inspect_file', 'search_text', 'index_project', 'index_search', 'knowledge_search'},
-          contract.acceptanceCriteria.map((criterion) => criterion.statement).toList(),
+          <String>{
+            'list_directory',
+            'read_file',
+            'inspect_file',
+            'search_text',
+            'index_project',
+            'index_search',
+            'knowledge_search'
+          },
+          contract.acceptanceCriteria
+              .map((criterion) => criterion.statement)
+              .toList(),
         ));
       case CommandMode.build:
       case CommandMode.fix:
         final implement = item(
-          contract.mode == CommandMode.build ? 'Implement requested product behavior' : 'Implement and repair the diagnosed behavior',
+          contract.mode == CommandMode.build
+              ? 'Implement requested product behavior'
+              : 'Implement and repair the diagnosed behavior',
           'Make the smallest coherent implementation that fully satisfies the contract. Read before modifying, use stale-safe hashes, and keep every mutation inside the transaction.',
           <String>{dependency},
           <String>{
-            'list_directory', 'read_file', 'inspect_file', 'search_text', 'index_project', 'index_search', 'write_file', 'write_binary_file', 'replace_text',
-            'apply_patch', 'delete_file', 'run_command', 'mcp_call', 'git_status', 'git_diff',
+            'list_directory',
+            'read_file',
+            'inspect_file',
+            'search_text',
+            'index_project',
+            'index_search',
+            'write_file',
+            'write_binary_file',
+            'replace_text',
+            'apply_patch',
+            'delete_file',
+            'run_command',
+            'mcp_call',
+            'git_status',
+            'git_diff',
             'knowledge_search',
           },
-          contract.acceptanceCriteria.map((criterion) => criterion.statement).toList(),
+          contract.acceptanceCriteria
+              .map((criterion) => criterion.statement)
+              .toList(),
         );
         items.add(implement);
         final verify = item(
@@ -338,19 +457,43 @@ class ContractPlanner {
           'Run the detected analyzer, tests, and build checks; inspect the final diff; repair failures within budget; do not declare success on missing tooling.',
           <String>{implement.id},
           <String>{
-            'list_directory', 'read_file', 'inspect_file', 'search_text', 'index_project', 'index_search', 'write_file', 'write_binary_file', 'replace_text',
-            'apply_patch', 'delete_file', 'run_command', 'mcp_call', 'verify_project', 'git_status', 'git_diff',
+            'list_directory',
+            'read_file',
+            'inspect_file',
+            'search_text',
+            'index_project',
+            'index_search',
+            'write_file',
+            'write_binary_file',
+            'replace_text',
+            'apply_patch',
+            'delete_file',
+            'run_command',
+            'mcp_call',
+            'verify_project',
+            'git_status',
+            'git_diff',
           },
-          <String>['All measurable acceptance criteria have objective passing evidence.'],
+          <String>[
+            'All measurable acceptance criteria have objective passing evidence.'
+          ],
         );
         items.add(verify);
-        if (contract.requiredPermissions.contains(PermissionScope.deploymentPackage)) {
+        if (contract.requiredPermissions
+            .contains(PermissionScope.deploymentPackage)) {
           items.add(item(
             'Create governed deployment package',
             'Package reviewed source deterministically, reject plaintext secrets, produce an SBOM and deployment manifest, and report the artifact SHA-256.',
             <String>{verify.id},
-            <String>{'read_file', 'git_status', 'git_diff', 'package_deployment'},
-            <String>['A deterministic deployment archive is created after a passing secret scan and includes its checksum and SBOM.'],
+            <String>{
+              'read_file',
+              'git_status',
+              'git_diff',
+              'package_deployment'
+            },
+            <String>[
+              'A deterministic deployment archive is created after a passing secret scan and includes its checksum and SBOM.'
+            ],
           ));
         }
       case CommandMode.run:
@@ -358,8 +501,22 @@ class ContractPlanner {
           'Validate and execute the requested project command',
           'Inspect the project, select a finite non-shell command, execute it with redacted output, and report the observed result.',
           <String>{dependency},
-          <String>{'list_directory', 'read_file', 'inspect_file', 'search_text', 'index_project', 'index_search', 'run_command', 'start_process', 'process_status', 'stop_process', 'verify_project'},
-          contract.acceptanceCriteria.map((criterion) => criterion.statement).toList(),
+          <String>{
+            'list_directory',
+            'read_file',
+            'inspect_file',
+            'search_text',
+            'index_project',
+            'index_search',
+            'run_command',
+            'start_process',
+            'process_status',
+            'stop_process',
+            'verify_project'
+          },
+          contract.acceptanceCriteria
+              .map((criterion) => criterion.statement)
+              .toList(),
         ));
     }
 
@@ -367,7 +524,8 @@ class ContractPlanner {
       id: newId('plan'),
       contractId: contract.id,
       complexity: complexity,
-      rationale: 'Deterministic conservative plan derived from mode, requested outcome, research need, and measurable release evidence.',
+      rationale:
+          'Deterministic conservative plan derived from mode, requested outcome, research need, and measurable release evidence.',
       items: items,
       createdAt: DateTime.now().toUtc(),
     );
@@ -375,7 +533,8 @@ class ContractPlanner {
 }
 
 class PreparedCommandService {
-  PreparedCommandService(this.repositories, this.planner, this.audit, this.events);
+  PreparedCommandService(
+      this.repositories, this.planner, this.audit, this.events);
 
   final ProductRepositories repositories;
   final ContractPlanner planner;
@@ -391,12 +550,15 @@ class PreparedCommandService {
   }) {
     final completer = Completer<PreparedCommand>();
     _tail = _tail.then((_) async {
-      final candidate = planner.prepare(project: project, mode: mode, request: request, model: model);
+      final candidate = planner.prepare(
+          project: project, mode: mode, request: request, model: model);
       final existing = (await repositories.commands.all())
           .where((command) => command.requestKey == candidate.requestKey)
           .firstOrNull;
       final prepared = existing ?? candidate;
-      if (existing == null) { await repositories.commands.put(prepared); }
+      if (existing == null) {
+        await repositories.commands.put(prepared);
+      }
       await audit.append('command.prepared', prepared.id, prepared.toJson());
       await events.publish('command.prepared', prepared.id, <String, dynamic>{
         'commandId': prepared.id,
@@ -407,7 +569,9 @@ class PreparedCommandService {
       });
       completer.complete(prepared);
     }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) { completer.completeError(error, stackTrace); }
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
     });
     return completer.future;
   }
@@ -433,14 +597,13 @@ class ProjectResourceLocks {
       }
     });
     _tails[projectId] = next.whenComplete(() {
-      if (identical(_tails[projectId], next)) { _tails.remove(projectId); }
+      if (identical(_tails[projectId], next)) {
+        _tails.remove(projectId);
+      }
     });
     return completer.future;
   }
 }
-
-
-
 
 enum AgentLoopRecoveryKind { none, redirect, complete }
 
@@ -593,7 +756,8 @@ class AgentLoopRecoveryPolicy {
         !item.allowedTools.every(_readOnlyEvidenceTools.contains)) {
       return const AgentLoopRecoveryDecision(
         kind: AgentLoopRecoveryKind.none,
-        reason: 'Only a bounded read-only evidence-baseline item can auto-complete.',
+        reason:
+            'Only a bounded read-only evidence-baseline item can auto-complete.',
       );
     }
 
@@ -608,10 +772,7 @@ class AgentLoopRecoveryPolicy {
           .contains(observation.tool)) {
         return false;
       }
-      return observation.result.data['sha256']
-              ?.toString()
-              .trim()
-              .isNotEmpty ==
+      return observation.result.data['sha256']?.toString().trim().isNotEmpty ==
           true;
     }).toList(growable: false);
     final structural = successful.where((observation) {
@@ -632,7 +793,8 @@ class AgentLoopRecoveryPolicy {
     final entries = listing.result.data['entries'];
     final entryCount = entries is List ? entries.length : 0;
     final fileDetails = hashedFiles.take(3).map((observation) {
-      final path = observation.result.data['path']?.toString() ?? 'project file';
+      final path =
+          observation.result.data['path']?.toString() ?? 'project file';
       final hash = observation.result.data['sha256']?.toString() ?? '';
       return '`$path` (SHA-256 `$hash`)';
     }).join(', ');
@@ -761,9 +923,8 @@ class AgentLoopRecoveryPolicy {
       return null;
     }
     final inspectedPaths = observations
-        .where((observation) =>
-            const <String>{'read_file', 'inspect_file'}
-                .contains(observation.tool))
+        .where((observation) => const <String>{'read_file', 'inspect_file'}
+            .contains(observation.tool))
         .map((observation) =>
             observation.arguments['path']?.toString().replaceAll('\\', '/'))
         .whereType<String>()
@@ -897,8 +1058,9 @@ class ArtifactEvidencePolicy {
       );
     }
     final label = '${item.title}\n${item.description}'.toLowerCase();
-    final wireframeTask = RegExp(r'\b(?:wireframes?|user flows?|screen flows?)\b')
-        .hasMatch(label);
+    final wireframeTask =
+        RegExp(r'\b(?:wireframes?|user flows?|screen flows?)\b')
+            .hasMatch(label);
     final usabilityChecklistTask =
         label.contains('docs/testing/usability-checklist.md');
     if (!wireframeTask && !usabilityChecklistTask) {
@@ -1071,11 +1233,16 @@ class ArtifactEvidencePolicy {
     }
     if (usabilityChecklistTask) {
       requireAny('keyboard scenarios', const <String>['keyboard', 'shortcut']);
-      requireAny('pointer scenarios', const <String>['pointer', 'mouse', 'click']);
-      requireAny('responsive scenarios', const <String>['responsive', 'mobile']);
-      requireAny('accessibility scenarios', const <String>['accessibility', 'aria']);
-      requireAny('error-state scenarios', const <String>['error state', 'invalid input']);
-      requireAny('manual review labels', const <String>['manual review', 'manual check']);
+      requireAny(
+          'pointer scenarios', const <String>['pointer', 'mouse', 'click']);
+      requireAny(
+          'responsive scenarios', const <String>['responsive', 'mobile']);
+      requireAny(
+          'accessibility scenarios', const <String>['accessibility', 'aria']);
+      requireAny('error-state scenarios',
+          const <String>['error state', 'invalid input']);
+      requireAny('manual review labels',
+          const <String>['manual review', 'manual check']);
     }
 
     if (missing.isNotEmpty) {
@@ -1091,7 +1258,8 @@ class ArtifactEvidencePolicy {
     final provenance = mutatedInRun
         ? 'The expected project artifact was changed in this run and has task-specific inspected coverage.'
         : 'The expected project artifact already satisfied the requested state and has task-specific inspected coverage; no unnecessary rewrite was required.';
-    final action = mutatedInRun ? 'Created or updated and inspected' : 'Validated';
+    final action =
+        mutatedInRun ? 'Created or updated and inspected' : 'Validated';
     return ArtifactEvidenceAssessment(
       state: ArtifactEvidenceState.complete,
       path: observedPath,
@@ -1122,7 +1290,8 @@ class ArtifactEvidencePolicy {
     return paths;
   }
 
-  bool _looksProjectFile(String path) => path.isNotEmpty &&
+  bool _looksProjectFile(String path) =>
+      path.isNotEmpty &&
       path != '.' &&
       !path.startsWith('/') &&
       !RegExp(r'^[A-Za-z]:/').hasMatch(path) &&
@@ -1453,7 +1622,9 @@ class RunCoordinator {
               }.contains(run.state),
         )
         .firstOrNull;
-    if (duplicate != null) { return duplicate; }
+    if (duplicate != null) {
+      return duplicate;
+    }
     return _createFreshRun(command, budget: budget);
   }
 
@@ -1540,16 +1711,22 @@ class RunCoordinator {
 
   Future<RunRecord> execute(String runId) async {
     final active = _active[runId];
-    if (active != null) { return active; }
+    if (active != null) {
+      return active;
+    }
     var run = await repositories.runs.get(runId);
-    if (run == null) { throw ProductException('run_missing', 'Unknown run: $runId'); }
-    if (const <RunState>{RunState.running, RunState.cancelling}.contains(run.state)) {
+    if (run == null) {
+      throw ProductException('run_missing', 'Unknown run: $runId');
+    }
+    if (const <RunState>{RunState.running, RunState.cancelling}
+        .contains(run.state)) {
       await repositories.workflow.recoverInFlightRuns();
       run = await repositories.runs.get(runId);
       if (run == null) {
         throw ProductException('run_missing', 'Unknown run: $runId');
       }
-      if (const <RunState>{RunState.running, RunState.cancelling}.contains(run.state)) {
+      if (const <RunState>{RunState.running, RunState.cancelling}
+          .contains(run.state)) {
         throw ProductException(
           'run_claimed',
           'This run is owned by another live Kristin workflow-kernel lease.',
@@ -1637,11 +1814,16 @@ class RunCoordinator {
 
   Future<void> pause(String runId) async {
     final control = _controls[runId];
-    if (control == null) { throw ProductException('run_not_active', 'Run is not active.'); }
+    if (control == null) {
+      throw ProductException('run_not_active', 'Run is not active.');
+    }
     control.paused = true;
     final run = await repositories.runs.get(runId);
-    if (run != null) { await _save(run.copyWith(state: RunState.paused)); }
-    await events.publish('run.paused', runId, <String, dynamic>{'runId': runId});
+    if (run != null) {
+      await _save(run.copyWith(state: RunState.paused));
+    }
+    await events
+        .publish('run.paused', runId, <String, dynamic>{'runId': runId});
   }
 
   Future<void> resume(String runId) async {
@@ -1649,8 +1831,11 @@ class RunCoordinator {
     if (control != null) {
       control.paused = false;
       final run = await repositories.runs.get(runId);
-      if (run != null) { await _save(run.copyWith(state: RunState.running)); }
-      await events.publish('run.resumed', runId, <String, dynamic>{'runId': runId});
+      if (run != null) {
+        await _save(run.copyWith(state: RunState.running));
+      }
+      await events
+          .publish('run.resumed', runId, <String, dynamic>{'runId': runId});
       return;
     }
     unawaited(execute(runId));
@@ -1660,10 +1845,16 @@ class RunCoordinator {
     final control = _controls[runId];
     control?.cancellation.cancel();
     final run = await repositories.runs.get(runId);
-    if (run != null && !const <RunState>{RunState.cancelled, RunState.succeeded, RunState.failed}.contains(run.state)) {
+    if (run != null &&
+        !const <RunState>{
+          RunState.cancelled,
+          RunState.succeeded,
+          RunState.failed
+        }.contains(run.state)) {
       await _save(run.copyWith(state: RunState.cancelling));
     }
-    await events.publish('run.cancelling', runId, <String, dynamic>{'runId': runId});
+    await events
+        .publish('run.cancelling', runId, <String, dynamic>{'runId': runId});
   }
 
   Future<RunRecord> _executeLocked(
@@ -1677,12 +1868,16 @@ class RunCoordinator {
       clearFailure: true,
     );
     await _save(run);
-    await audit.append('run.started', run.id, <String, dynamic>{'runId': run.id});
-    await events.publish('run.started', run.id, <String, dynamic>{'runId': run.id});
+    await audit
+        .append('run.started', run.id, <String, dynamic>{'runId': run.id});
+    await events
+        .publish('run.started', run.id, <String, dynamic>{'runId': run.id});
 
-    final project = await repositories.projects.get(run.command.contract.projectId);
+    final project =
+        await repositories.projects.get(run.command.contract.projectId);
     if (project == null) {
-      return _failBeforeTransaction(run, 'The active project no longer exists.');
+      return _failBeforeTransaction(
+          run, 'The active project no longer exists.');
     }
     final boundary = await WorkspaceBoundary.open(project.rootPath);
     final mutatingRun = run.command.contract.requiredPermissions.any(
@@ -1713,7 +1908,8 @@ class RunCoordinator {
         "self_project_target_rejected: The selected project is Kristin's own source checkout. Create or select a separate project folder for the application, then prepare a fresh run.",
       );
     }
-    final checkpointRoot = Directory('${directories.state.path}${Platform.pathSeparator}checkpoints');
+    final checkpointRoot = Directory(
+        '${directories.state.path}${Platform.pathSeparator}checkpoints');
     await checkpointRoot.create(recursive: true);
     final transaction = await WorkspaceTransaction.begin(
       runId: run.id,
@@ -1774,7 +1970,9 @@ class RunCoordinator {
       final routingPolicy = ModelRoutePolicy(
         localOnly: settingsProvider().localOnly,
         approvedProviders: <String>{selectedModel.providerId},
-        approvedModels: <String>{'${selectedModel.providerId}/${selectedModel.name}'},
+        approvedModels: <String>{
+          '${selectedModel.providerId}/${selectedModel.name}'
+        },
         fallbackApproved: false,
         maximumDataBoundary: settingsProvider().localOnly
             ? ModelDataBoundary.local
@@ -1818,34 +2016,52 @@ class RunCoordinator {
         );
       }
       final provider = modelRegistry.providerFor(selectedModel);
-      final installed = await provider.discover().timeout(const Duration(minutes: 3));
-      final exact = installed.where((identity) =>
-          identity.name == run.command.model.name &&
-          (run.command.model.digest.isEmpty || identity.digest.isEmpty || identity.digest == run.command.model.digest)).firstOrNull;
-      if (exact == null) { throw ProductException('model_not_installed', 'The exact selected model is not available.'); }
+      final installed =
+          await provider.discover().timeout(const Duration(minutes: 3));
+      final exact = installed
+          .where((identity) =>
+              identity.name == run.command.model.name &&
+              (run.command.model.digest.isEmpty ||
+                  identity.digest.isEmpty ||
+                  identity.digest == run.command.model.digest))
+          .firstOrNull;
+      if (exact == null) {
+        throw ProductException('model_not_installed',
+            'The exact selected model is not available.');
+      }
 
       for (var itemIndex = 0; itemIndex < run.items.length; itemIndex++) {
         await _awaitControl(control, run.budget, started);
         run = (await repositories.runs.get(run.id)) ?? run;
         final progress = run.items[itemIndex];
-        if (progress.state == WorkItemState.succeeded) { continue; }
-        final dependenciesPassed = progress.item.dependencies.every((dependency) =>
-            run.items.where((candidate) => candidate.item.id == dependency).firstOrNull?.state == WorkItemState.succeeded);
+        if (progress.state == WorkItemState.succeeded) {
+          continue;
+        }
+        final dependenciesPassed = progress.item.dependencies.every(
+            (dependency) =>
+                run.items
+                    .where((candidate) => candidate.item.id == dependency)
+                    .firstOrNull
+                    ?.state ==
+                WorkItemState.succeeded);
         if (!dependenciesPassed) {
           final updatedItems = List<WorkItemProgress>.from(run.items);
-          updatedItems[itemIndex] = progress.copyWith(state: WorkItemState.blocked, lastError: 'A dependency did not succeed.');
+          updatedItems[itemIndex] = progress.copyWith(
+              state: WorkItemState.blocked,
+              lastError: 'A dependency did not succeed.');
           run = run.copyWith(items: updatedItems);
           await _save(run);
-          throw ProductException('dependency_failed', 'A work item dependency did not succeed.');
+          throw ProductException(
+              'dependency_failed', 'A work item dependency did not succeed.');
         }
 
         var succeeded = false;
         String? lastError;
         String? lastErrorCode;
-        final firstAttempt = progress.state == WorkItemState.running &&
-                progress.attempts > 0
-            ? progress.attempts
-            : progress.attempts + 1;
+        final firstAttempt =
+            progress.state == WorkItemState.running && progress.attempts > 0
+                ? progress.attempts
+                : progress.attempts + 1;
         for (var attempt = firstAttempt;
             attempt <= progress.item.maxAttempts;
             attempt++) {
@@ -1899,10 +2115,13 @@ class RunCoordinator {
               completedAt: DateTime.now().toUtc(),
               clearError: true,
             );
-            run = run.copyWith(items: items, summary: outcome.summary.isEmpty ? run.summary : outcome.summary);
+            run = run.copyWith(
+                items: items,
+                summary:
+                    outcome.summary.isEmpty ? run.summary : outcome.summary);
             await _save(run);
-            final completedAt = items[itemIndex].completedAt ??
-                DateTime.now().toUtc();
+            final completedAt =
+                items[itemIndex].completedAt ?? DateTime.now().toUtc();
             await repositories.workflow.recordTaskAttempt(
               runId: run.id,
               workItemId: progress.item.id,
@@ -1922,7 +2141,8 @@ class RunCoordinator {
                 'summaryHash': Sha256.text(outcome.summary),
               },
             );
-            await events.publish('work_item.succeeded', run.id, <String, dynamic>{
+            await events
+                .publish('work_item.succeeded', run.id, <String, dynamic>{
               'runId': run.id,
               'workItemId': progress.item.id,
               'attempt': attempt,
@@ -2011,7 +2231,9 @@ class RunCoordinator {
               run.id,
               diagnostic,
             );
-            if (!retry.retry) { break; }
+            if (!retry.retry) {
+              break;
+            }
           }
         }
         if (!succeeded) {
@@ -2053,7 +2275,8 @@ class RunCoordinator {
       }
 
       control.cancellation.throwIfCancelled();
-      if (const <CommandMode>{CommandMode.build, CommandMode.fix}.contains(run.command.contract.mode)) {
+      if (const <CommandMode>{CommandMode.build, CommandMode.fix}
+          .contains(run.command.contract.mode)) {
         final verification = await _deterministicVerification(
           run: run,
           project: project,
@@ -2063,7 +2286,10 @@ class RunCoordinator {
           leaseOwner: leaseOwner,
         );
         run = verification.run;
-        if (!verification.passed) { throw ProductException('verification_failed', 'Deterministic project verification failed.'); }
+        if (!verification.passed) {
+          throw ProductException('verification_failed',
+              'Deterministic project verification failed.');
+        }
       }
       await transaction.commit();
       run = run.copyWith(
@@ -2108,7 +2334,8 @@ class RunCoordinator {
       }
       return run;
     } catch (error, stackTrace) {
-      final cancelled = control.cancellation.isCancelled || (error is ProductException && error.code == 'cancelled');
+      final cancelled = control.cancellation.isCancelled ||
+          (error is ProductException && error.code == 'cancelled');
       String? rollbackError;
       if (!transaction.isCommitted) {
         try {
@@ -2151,9 +2378,7 @@ class RunCoordinator {
         'sourceRunId': run.sourceRunId,
         'error': failure,
         'errorCode': _errorCode(error),
-        ...const WorkflowRetryTaxonomy()
-            .classify(_errorCode(error))
-            .toJson(),
+        ...const WorkflowRetryTaxonomy().classify(_errorCode(error)).toJson(),
         'committedWorkspace': transaction.isCommitted,
         'errorDetails': error is ProductException
             ? redactor.redactJson(error.details)
@@ -2187,14 +2412,16 @@ class RunCoordinator {
     }
   }
 
-  Future<RunRecord> _failBeforeTransaction(RunRecord run, String message) async {
+  Future<RunRecord> _failBeforeTransaction(
+      RunRecord run, String message) async {
     final failed = run.copyWith(
       state: RunState.failed,
       completedAt: DateTime.now().toUtc(),
       failure: message,
     );
     await _save(failed);
-    await events.publish('run.failed', run.id, <String, dynamic>{'runId': run.id, 'error': message});
+    await events.publish('run.failed', run.id,
+        <String, dynamic>{'runId': run.id, 'error': message});
     await _recordEpisode(failed);
     return failed;
   }
@@ -2351,9 +2578,8 @@ class RunCoordinator {
       }
     }
     bool evidenceSucceeded(EvidenceRecord item) => item.payload['ok'] != false;
-    final priorMutationEvidence = priorEvidence
-        .where(isMaterialMutationEvidence)
-        .toList(growable: false);
+    final priorMutationEvidence =
+        priorEvidence.where(isMaterialMutationEvidence).toList(growable: false);
     final priorVerificationEvidence = priorEvidence
         .where((item) =>
             item.kind == EvidenceKind.verification && evidenceSucceeded(item))
@@ -2368,22 +2594,20 @@ class RunCoordinator {
               EvidenceKind.test,
             }.contains(item.kind))
         .toList(growable: false);
-    final priorArtifactInspectionEvidence = priorEvidence
-        .where((item) {
-          if (item.kind != EvidenceKind.command || !evidenceSucceeded(item)) {
-            return false;
-          }
-          final data = mapValue(item.payload['data']);
-          final path = canonicalModelPathToken(
-            (data['path'] ?? data['relativePath'])?.toString() ?? '',
-          )
-              .replaceAll('\\', '/')
-              .replaceFirst(RegExp(r'^\./+'), '')
-              .replaceAll(RegExp(r'/+'), '/');
-          return item.payload['automaticVerification'] == true ||
-              (path.isNotEmpty && expectedArtifactPaths.contains(path));
-        })
-        .toList(growable: false);
+    final priorArtifactInspectionEvidence = priorEvidence.where((item) {
+      if (item.kind != EvidenceKind.command || !evidenceSucceeded(item)) {
+        return false;
+      }
+      final data = mapValue(item.payload['data']);
+      final path = canonicalModelPathToken(
+        (data['path'] ?? data['relativePath'])?.toString() ?? '',
+      )
+          .replaceAll('\\', '/')
+          .replaceFirst(RegExp(r'^\./+'), '')
+          .replaceAll(RegExp(r'/+'), '/');
+      return item.payload['automaticVerification'] == true ||
+          (path.isNotEmpty && expectedArtifactPaths.contains(path));
+    }).toList(growable: false);
 
     String priorObjectiveHash(EvidenceRecord item) {
       final data = mapValue(item.payload['data']);
@@ -2414,9 +2638,10 @@ class RunCoordinator {
         priorVerificationEvidence.lastOrNull == null
             ? null
             : priorObjectiveHash(priorVerificationEvidence.last);
-    String? lastObservationEvidenceHash = priorObservationEvidence.lastOrNull == null
-        ? null
-        : priorObjectiveHash(priorObservationEvidence.last);
+    String? lastObservationEvidenceHash =
+        priorObservationEvidence.lastOrNull == null
+            ? null
+            : priorObjectiveHash(priorObservationEvidence.last);
     String? lastArtifactInspectionEvidenceHash =
         priorArtifactInspectionEvidence.lastOrNull == null
             ? null
@@ -2543,8 +2768,7 @@ class RunCoordinator {
                   'message': modelProgress.message,
                   'modelLoadAttempt': modelProgress.attempt,
                   'modelLoadMaxAttempts': modelProgress.maxAttempts,
-                  'elapsedMilliseconds':
-                      modelProgress.elapsed.inMilliseconds,
+                  'elapsedMilliseconds': modelProgress.elapsed.inMilliseconds,
                 },
               ),
             );
@@ -2622,8 +2846,8 @@ class RunCoordinator {
         if (!_isAgentProtocolError(protocolError)) {
           rethrow;
         }
-        final canRequestRepair = protocolRepairAttempts < 2 &&
-            current.repairs < phaseRepairCeiling;
+        final canRequestRepair =
+            protocolRepairAttempts < 2 && current.repairs < phaseRepairCeiling;
         if (canRequestRepair) {
           protocolRepairAttempts++;
           current = current.copyWith(repairs: current.repairs + 1);
@@ -2648,7 +2872,8 @@ class RunCoordinator {
               'For action=complete or action=fail, summary must be non-empty.',
             ],
             'allowedToolNames': allowedToolNames,
-            'example': protocolError.details['repairExample'] ?? protocolExample,
+            'example':
+                protocolError.details['repairExample'] ?? protocolExample,
             'antiCopyRule':
                 'Do not copy a work-item title, task ID, cited [K#] text, or prior-run action into the action field.',
           });
@@ -2786,10 +3011,9 @@ class RunCoordinator {
             'The implementation item attempted to complete without creating or updating its required project artifact.',
             details: <String, dynamic>{
               'workItemId': progress.item.id,
-              'allowedMutationTools': progress.item.allowedTools
-                  .where(_isMutationToolName)
-                  .toList()
-                ..sort(),
+              'allowedMutationTools':
+                  progress.item.allowedTools.where(_isMutationToolName).toList()
+                    ..sort(),
             },
           );
         }
@@ -3028,9 +3252,8 @@ class RunCoordinator {
           current = current.copyWith(repairs: current.repairs + 1);
           await _save(current);
           final orderedArtifactPaths = expectedArtifactPaths.toList()..sort();
-          final recoveryArtifactPath = orderedArtifactPaths.isEmpty
-              ? ''
-              : orderedArtifactPaths.first;
+          final recoveryArtifactPath =
+              orderedArtifactPaths.isEmpty ? '' : orderedArtifactPaths.first;
           final artifactRecovery = _requiresProjectMutation(progress.item) &&
                   (itemMutations == 0 ||
                       artifactPathsNeedingMutation.isNotEmpty)
@@ -3330,17 +3553,14 @@ class RunCoordinator {
           'governedEvidenceHash': governedEvidenceHash,
         },
       );
-      final objectiveResultHash = result.data['afterSha256']
-                  ?.toString()
-                  .trim()
-                  .isNotEmpty ==
-              true
-          ? result.data['afterSha256'].toString().trim()
-          : result.data['afterHash']?.toString().trim().isNotEmpty == true
-              ? result.data['afterHash'].toString().trim()
-              : result.data['sha256']?.toString().trim().isNotEmpty == true
-                  ? result.data['sha256'].toString().trim()
-                  : governedEvidenceHash;
+      final objectiveResultHash =
+          result.data['afterSha256']?.toString().trim().isNotEmpty == true
+              ? result.data['afterSha256'].toString().trim()
+              : result.data['afterHash']?.toString().trim().isNotEmpty == true
+                  ? result.data['afterHash'].toString().trim()
+                  : result.data['sha256']?.toString().trim().isNotEmpty == true
+                      ? result.data['sha256'].toString().trim()
+                      : governedEvidenceHash;
       if (result.ok &&
           const <String>{
             'list_directory',
@@ -3357,8 +3577,7 @@ class RunCoordinator {
           }.contains(action.tool)) {
         lastObservationEvidenceHash = objectiveResultHash;
       }
-      if (result.mutated &&
-          result.data['operation']?.toString() != 'noop') {
+      if (result.mutated && result.data['operation']?.toString() != 'noop') {
         lastMutationEvidenceHash = objectiveResultHash;
       }
       if (action.tool == 'verify_project' && result.ok) {
@@ -3483,8 +3702,7 @@ class RunCoordinator {
             'correction':
                 'Stop repeating implementation actions. Use objective verification evidence or fail explicitly.',
           });
-        } else if (convergenceDecision.action ==
-            ConvergenceAction.splitTask) {
+        } else if (convergenceDecision.action == ConvergenceAction.splitTask) {
           await _bestEffortEvent(
             'work_item.plan_split_required',
             current.id,
@@ -3506,8 +3724,7 @@ class RunCoordinator {
               'permissionsUnchanged': true,
             },
           );
-        } else if (convergenceDecision.action ==
-            ConvergenceAction.askUser) {
+        } else if (convergenceDecision.action == ConvergenceAction.askUser) {
           await _bestEffortEvent(
             'work_item.awaiting_user',
             current.id,
@@ -3647,13 +3864,11 @@ class RunCoordinator {
             },
           );
           if (inspectionResult.ok) {
-            final inspectedArtifactHash = inspectionResult.data['sha256']
-                        ?.toString()
-                        .trim()
-                        .isNotEmpty ==
-                    true
-                ? inspectionResult.data['sha256'].toString().trim()
-                : automaticInspectionEvidenceHash;
+            final inspectedArtifactHash =
+                inspectionResult.data['sha256']?.toString().trim().isNotEmpty ==
+                        true
+                    ? inspectionResult.data['sha256'].toString().trim()
+                    : automaticInspectionEvidenceHash;
             lastObservationEvidenceHash = inspectedArtifactHash;
             lastArtifactInspectionEvidenceHash = inspectedArtifactHash;
           }
@@ -3714,10 +3929,8 @@ class RunCoordinator {
       if (artifactAssessment.state == ArtifactEvidenceState.incomplete) {
         if (artifactAssessment.path.isNotEmpty) {
           artifactPathsNeedingMutation.add(artifactAssessment.path);
-          final hash = artifactAssessmentResult.data['sha256']
-                  ?.toString()
-                  .trim() ??
-              '';
+          final hash =
+              artifactAssessmentResult.data['sha256']?.toString().trim() ?? '';
           if (hash.isNotEmpty) {
             artifactObservedHashes[artifactAssessment.path] = hash;
           }
@@ -3811,8 +4024,7 @@ class RunCoordinator {
           actionFingerprint: actionFingerprint,
           outcomeFingerprint: outcomeFingerprint,
           mutationEpoch: current.mutations,
-          repetitions:
-              staticObservations[actionFingerprint]?.repetitions ?? 1,
+          repetitions: staticObservations[actionFingerprint]?.repetitions ?? 1,
         );
         final completion = loopRecoveryPolicy.completionFor(
           item: progress.item,
@@ -3875,10 +4087,9 @@ class RunCoordinator {
         'attempt': progress.attempts,
         'itemMutations': itemMutations,
         'requiresProjectMutation': mutationStillRequired,
-        'allowedMutationTools': progress.item.allowedTools
-            .where(_isMutationToolName)
-            .toList()
-          ..sort(),
+        'allowedMutationTools':
+            progress.item.allowedTools.where(_isMutationToolName).toList()
+              ..sort(),
         'budget': _budgetSnapshot(current),
       },
     );
@@ -3921,10 +4132,13 @@ class RunCoordinator {
     final item = WorkItem(
       id: 'verification_final',
       title: 'Deterministic final release gate',
-      description: 'Run the detected analyzer and tests after all model work is complete.',
+      description:
+          'Run the detected analyzer and tests after all model work is complete.',
       dependencies: const <String>{},
       allowedTools: const <String>{'verify_project', 'git_diff', 'git_status'},
-      acceptanceCriteria: const <String>['Detected build and test checks pass.'],
+      acceptanceCriteria: const <String>[
+        'Detected build and test checks pass.'
+      ],
       maxAttempts: 1,
     );
     final context = ToolContext(
@@ -3950,7 +4164,8 @@ class RunCoordinator {
       sourceIndex: sourceIndex,
       mcp: mcp,
     );
-    final result = await tools.execute('verify_project', const <String, dynamic>{}, context);
+    final result = await tools.execute(
+        'verify_project', const <String, dynamic>{}, context);
     var updated = run.copyWith(toolCalls: run.toolCalls + 1);
     await _save(updated);
     await _evidence(
@@ -3976,7 +4191,8 @@ class RunCoordinator {
     WorkItem item,
     List<Map<String, dynamic>> descriptors,
     String skillContext,
-  ) => '''
+  ) =>
+      '''
 You are the governed execution model inside Kristin Local Agent $kristinVersion.
 You may reason and propose, but only the coordinator can perform external effects.
 Return exactly one JSON object and no Markdown.
@@ -4062,9 +4278,9 @@ $skillContext
           entry['correction'],
           entry['reason'],
           entry['error'],
-        ]
-            .map((value) => value?.toString().trim() ?? '')
-            .firstWhere((value) => value.isNotEmpty, orElse: () => 'Choose a different schema-valid action.');
+        ].map((value) => value?.toString().trim() ?? '').firstWhere(
+            (value) => value.isNotEmpty,
+            orElse: () => 'Choose a different schema-valid action.');
         final requiredDecision =
             entry['requiredActionExample'] ?? entry['example'];
         return <String, dynamic>{
@@ -4299,7 +4515,8 @@ Choose the single safest next action. Return one JSON object only.
     if (fallback == null) {
       return null;
     }
-    if (inspectionEvidence && _requiresInspectionEvidence(item) &&
+    if (inspectionEvidence &&
+        _requiresInspectionEvidence(item) &&
         fallback.tool == 'list_directory') {
       return null;
     }
@@ -4571,7 +4788,6 @@ Choose the single safest next action. Return one JSON object only.
     return paths;
   }
 
-
   Future<void> _evidence(
     RunRecord run,
     String workItemId,
@@ -4604,7 +4820,6 @@ Choose the single safest next action. Return one JSON object only.
       'hash': evidence.hash,
     });
   }
-
 
   Future<void> _recordEpisode(
     RunRecord run, {
@@ -4689,7 +4904,8 @@ Choose the single safest next action. Return one JSON object only.
       model: identity.name,
     );
     final failures =
-        (int.tryParse(current?['consecutive_failures']?.toString() ?? '') ?? 0) +
+        (int.tryParse(current?['consecutive_failures']?.toString() ?? '') ??
+                0) +
             1;
     final code = _errorCode(error).toLowerCase();
     final timeout = code.contains('timeout');
@@ -4705,7 +4921,8 @@ Choose the single safest next action. Return one JSON object only.
           (int.tryParse(current?['timeout_failures']?.toString() ?? '') ?? 0) +
               (timeout ? 1 : 0),
       malformedFailures:
-          (int.tryParse(current?['malformed_failures']?.toString() ?? '') ?? 0) +
+          (int.tryParse(current?['malformed_failures']?.toString() ?? '') ??
+                  0) +
               (malformed ? 1 : 0),
       cooldownSeconds:
           int.tryParse(current?['cooldown_seconds']?.toString() ?? '') ?? 120,
@@ -4746,12 +4963,12 @@ Choose the single safest next action. Return one JSON object only.
     RunRecord run, {
     required bool conversational,
   }) {
-    final remaining =
-        max(0, run.budget.maxModelRequests - run.modelRequests);
-    if (remaining == 0) { return 0; }
-    final unfinished = run.items
-        .where((item) => item.state != WorkItemState.succeeded)
-        .length;
+    final remaining = max(0, run.budget.maxModelRequests - run.modelRequests);
+    if (remaining == 0) {
+      return 0;
+    }
+    final unfinished =
+        run.items.where((item) => item.state != WorkItemState.succeeded).length;
     final fairShare = max(1, remaining ~/ max(1, unfinished));
     final configured = conversational
         ? min(4, run.budget.maxAgentTurnsPerAttempt)
@@ -4790,10 +5007,7 @@ Choose the single safest next action. Return one JSON object only.
       'apply_patch',
       'delete_file',
     }.contains(tool);
-    if (!rootScoped &&
-        !existingRead &&
-        !createOrReplace &&
-        !existingMutation) {
+    if (!rootScoped && !existingRead && !createOrReplace && !existingMutation) {
       return null;
     }
 
@@ -4954,8 +5168,7 @@ Choose the single safest next action. Return one JSON object only.
       case 'knowledge_search':
         normalized['query'] = normalized['query']?.toString().trim() ?? '';
         normalized['limit'] = boundedInt('limit', 8, 1, 20);
-        normalized['includeEpisodes'] =
-            normalized['includeEpisodes'] != false;
+        normalized['includeEpisodes'] = normalized['includeEpisodes'] != false;
         normalized['includeUnsuccessfulEpisodes'] =
             normalized['includeUnsuccessfulEpisodes'] == true;
         break;
@@ -4995,8 +5208,7 @@ Choose the single safest next action. Return one JSON object only.
         '${classification.failureClass.name}:${classification.disposition.name}',
       );
     }
-    final remaining =
-        max(0, run.budget.maxModelRequests - run.modelRequests);
+    final remaining = max(0, run.budget.maxModelRequests - run.modelRequests);
     if (attempt >= maxAttempts) {
       return const _RetryDecision(false, 'maximum_attempts_reached');
     }
@@ -5062,11 +5274,13 @@ Choose the single safest next action. Return one JSON object only.
     return const _RetryDecision(true, 'bounded_retry_allowed');
   }
 
-  Future<void> _awaitControl(RunControl control, AutonomyBudget budget, DateTime started) async {
+  Future<void> _awaitControl(
+      RunControl control, AutonomyBudget budget, DateTime started) async {
     control.cancellation.throwIfCancelled();
     while (control.paused) {
       if (DateTime.now().toUtc().difference(started) > budget.maxWallTime) {
-        throw ProductException('budget_wall_time', 'The run exceeded its wall-time budget while paused.');
+        throw ProductException('budget_wall_time',
+            'The run exceeded its wall-time budget while paused.');
       }
       await Future<void>.delayed(const Duration(milliseconds: 250));
       control.cancellation.throwIfCancelled();
@@ -5075,7 +5289,8 @@ Choose the single safest next action. Return one JSON object only.
 
   void _enforceBudget(RunRecord run, DateTime started) {
     if (DateTime.now().toUtc().difference(started) > run.budget.maxWallTime) {
-      throw ProductException('budget_wall_time', 'The run exceeded its wall-time budget.');
+      throw ProductException(
+          'budget_wall_time', 'The run exceeded its wall-time budget.');
     }
     if (run.modelRequests >= run.budget.maxModelRequests) {
       throw ProductException(

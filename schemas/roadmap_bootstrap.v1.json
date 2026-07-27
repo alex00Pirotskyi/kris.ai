@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/roadmap_bootstrap.v1.json",
+  "title": "Kristin bootstrap roadmap manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "format",
+    "roadmapVersion",
+    "authority",
+    "statusValues",
+    "taskOrder",
+    "tasks",
+    "nextReady",
+    "taskGraphSha256"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "format": {"const": "yaml-1.2-json-subset"},
+    "roadmapVersion": {"type": "string", "minLength": 1},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["human", "machine", "scope", "masterSha256"],
+      "properties": {
+        "human": {"const": "docs/roadmap/MASTER.md"},
+        "machine": {"const": "docs/roadmap/roadmap.yaml"},
+        "scope": {"const": ["P0", "P1"]},
+        "masterSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "statusValues": {
+      "const": ["NOT_STARTED", "READY", "IN_PROGRESS", "BLOCKED", "REVIEW", "DONE", "DEFERRED"]
+    },
+    "taskOrder": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^P[01]-[0-9]{3}$"},
+      "uniqueItems": true
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "phase", "title", "status", "dependsOn", "requiredOutput", "doneWhen", "packet", "evidence"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^P[01]-[0-9]{3}$"},
+          "phase": {"enum": ["P0", "P1"]},
+          "title": {"type": "string", "minLength": 1},
+          "status": {"enum": ["NOT_STARTED", "READY", "IN_PROGRESS", "BLOCKED", "REVIEW", "DONE", "DEFERRED"]},
+          "dependsOn": {"type": "array", "items": {"type": "string", "pattern": "^P[01]-[0-9]{3}$"}, "uniqueItems": true},
+          "requiredOutput": {"type": "string", "minLength": 1},
+          "doneWhen": {"type": "string", "minLength": 1},
+          "packet": {"type": "string", "minLength": 1},
+          "evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+          "blocker": {"type": "string"},
+          "deferredReason": {"type": "string"}
+        }
+      }
+    },
+    "nextReady": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^P[01]-[0-9]{3}$"},
+      "uniqueItems": true
+    },
+    "taskGraphSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
