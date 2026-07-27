@@ -539,6 +539,15 @@ def check_required_files() -> None:
     '.github/pull_request_template.md',
     'docs/roadmap/REPOSITORY_GOVERNANCE.md',
     'tasks/completed/P0-006.md',
+    'docs/adr/ADR-0001-runtime-boundaries.md',
+    'docs/adr/ADR-0002-owner-mode.md',
+    'docs/adr/ADR-0004-automation-host.md',
+    'docs/architecture/RUNTIME_BOUNDARY_MATRIX.md',
+    'config/runtime_boundaries.v1.json',
+    'schemas/runtime_boundary_contract.v1.json',
+    'tool/p1_001_runtime_boundary_test.py',
+    'tasks/completed/P1-001.md',
+    'release/evidence/P1-001/manifest.json',
     ]
     missing = [x for x in required if not (ROOT / x).is_file()]
     add("required product files", not missing, "all required files present" if not missing else "missing: " + ", ".join(missing))

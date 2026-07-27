@@ -17,7 +17,8 @@
 
 ## Next ready tasks
 
-- `P1-001` — Approve runtime-boundary ADRs (`tasks/active/P1-001.md`)
+- `P1-002` — Define access profile v2 (`tasks/active/P1-002.md`)
+- `P1-005` — Specify Signed Manifest v2 (`tasks/active/P1-005.md`)
 
 ## Non-negotiable handoff rules
 

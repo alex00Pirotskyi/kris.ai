@@ -158,12 +158,31 @@ def main() -> int:
     def adr_states() -> str:
         found = sorted((root / "docs/adr").glob("ADR-*.md"))
         require(len(found) >= 7, f"expected at least 7 ADRs, got {len(found)}")
-        accepted = (root / "docs/adr/ADR-0000-roadmap-control-plane.md").read_text(encoding="utf-8")
-        require("**Status:** ACCEPTED" in accepted, "ADR-0000 not accepted")
-        proposed = [path for path in found if path.name.startswith(tuple(f"ADR-{index:04d}" for index in range(1, 7)))]
-        require(len(proposed) == 6, f"expected six proposed ADRs, got {len(proposed)}")
-        require(all("**Status:** PROPOSED" in path.read_text(encoding="utf-8") for path in proposed), "a future ADR was prematurely accepted")
-        return "accepted=1 proposed=6"
+        roadmap = rc.load_json_yaml(root / "docs/roadmap/roadmap.yaml")
+        tasks = rc.task_map(roadmap)
+        owner_task = {
+            1: "P1-001",
+            2: "P1-001",  # authority boundary accepted; profile schema remains P1-002
+            3: "P1-005",
+            4: "P1-001",  # supervision boundary accepted; technology remains P2-004
+            6: "P1-008",
+        }
+        accepted_count = 0
+        proposed_count = 0
+        for index in range(7):
+            matches = [path for path in found if path.name.startswith(f"ADR-{index:04d}-")]
+            require(len(matches) == 1, f"ADR-{index:04d} file count={len(matches)}")
+            text = matches[0].read_text(encoding="utf-8")
+            should_accept = index == 0 or (
+                index in owner_task and tasks.get(owner_task[index], {}).get("status") == "DONE"
+            )
+            if should_accept:
+                require("**Status:** ACCEPTED" in text, f"ADR-{index:04d} must be accepted")
+                accepted_count += 1
+            else:
+                require("**Status:** PROPOSED" in text, f"ADR-{index:04d} was accepted before its owner task completed")
+                proposed_count += 1
+        return f"accepted={accepted_count} proposed={proposed_count}"
 
     def every_task_has_packet() -> str:
         manifest = rc.load_json_yaml(root / "docs/roadmap/roadmap.yaml")

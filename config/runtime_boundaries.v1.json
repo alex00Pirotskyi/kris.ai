@@ -1,0 +1,147 @@
+{
+  "acceptedAt": "2026-07-27",
+  "acceptedBy": "alex00Pirotskyi",
+  "authority": {
+    "credentialAuthority": "os_credential_broker",
+    "evidenceAuthority": "desktop_host:evidence_committer",
+    "grantIssuer": "desktop_host:deterministic_policy",
+    "modelMayGrantAuthority": false,
+    "policyAuthority": "desktop_host:deterministic_policy",
+    "storageAuthority": "desktop_host:durable_store",
+    "workerMayGrantAuthority": false
+  },
+  "contractVersion": "1.0.0",
+  "invariants": [
+    "model_output_is_never_authority",
+    "worker_output_is_untrusted_until_validated",
+    "owner_mode_is_not_a_sandbox",
+    "workers_never_open_the_core_database",
+    "raw_secrets_are_not_normal_prompt_or_log_content",
+    "unknown_effects_are_reconciled_before_retry",
+    "process_tree_cleanup_is_mandatory",
+    "windows_macos_linux_preserve_equivalent_semantics"
+  ],
+  "ipc": {
+    "cancellationIdentityRequired": true,
+    "commandLineMayCarryReusableSecrets": false,
+    "deadlinesRequired": true,
+    "environmentMayGrantAuthority": false,
+    "mutualAuthenticationRequired": true,
+    "payloadLimitsRequired": true,
+    "peerIdentityRequired": true,
+    "requestIdRequired": true,
+    "runTaskGrantBindingRequired": true,
+    "transports": {
+      "compatibility": [
+        "authenticated_loopback_mutual_auth"
+      ],
+      "linux": [
+        "unix_domain_socket"
+      ],
+      "macos": [
+        "unix_domain_socket"
+      ],
+      "windows": [
+        "named_pipe"
+      ]
+    },
+    "versionedEnvelopeRequired": true
+  },
+  "mandatoryPlatforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "processes": {
+    "automation_host": {
+      "mayIssueCapabilityGrants": false,
+      "mayReadCoreDatabase": false,
+      "mayUseRawCredentials": false,
+      "owns": [
+        "worker_lifecycle",
+        "stream_multiplexing",
+        "deadlines",
+        "cancellation",
+        "process_tree_cleanup"
+      ],
+      "requiresGrantForEffects": true,
+      "sandboxed": false,
+      "trustClass": "worker_supervisor"
+    },
+    "desktop_host": {
+      "mayIssueCapabilityGrants": true,
+      "mayReadCoreDatabase": true,
+      "mayUseRawCredentials": false,
+      "owns": [
+        "ui",
+        "orchestration",
+        "policy_invocation",
+        "durable_run_state",
+        "evidence_commit"
+      ],
+      "requiresGrantForEffects": true,
+      "sandboxed": false,
+      "trustClass": "control_plane"
+    },
+    "owner_executor": {
+      "mayIssueCapabilityGrants": false,
+      "mayReadCoreDatabase": false,
+      "mayUseRawCredentials": false,
+      "owns": [
+        "filesystem_effects",
+        "process_effects",
+        "service_effects",
+        "package_effects",
+        "application_effects"
+      ],
+      "requiresGrantForEffects": true,
+      "sandboxed": false,
+      "trustClass": "high_authority_executor"
+    },
+    "research_worker": {
+      "contentTrust": "untrusted",
+      "mayIssueCapabilityGrants": false,
+      "mayReadCoreDatabase": false,
+      "mayUseRawCredentials": false,
+      "owns": [
+        "fetch",
+        "render",
+        "extract",
+        "crawl",
+        "citation_candidates"
+      ],
+      "requiresGrantForEffects": true,
+      "sandboxed": true,
+      "trustClass": "untrusted_content_worker"
+    },
+    "sandbox_worker": {
+      "credentialAccess": "none",
+      "mayIssueCapabilityGrants": false,
+      "mayReadCoreDatabase": false,
+      "mayUseRawCredentials": false,
+      "owns": [
+        "isolated_execution",
+        "ephemeral_scratch",
+        "bounded_outputs"
+      ],
+      "requiresGrantForEffects": true,
+      "sandboxed": true,
+      "trustClass": "isolated_untrusted_worker"
+    }
+  },
+  "schemaVersion": "1.0.0",
+  "status": "accepted",
+  "storage": {
+    "browserProfiles": "separate_protected_profile_store",
+    "candidateReceipts": "bounded_staging_then_control_plane_validation",
+    "coreImplementationCurrent": "sqlite",
+    "coreMutableAuthority": "desktop_host_owned_durable_workflow_store",
+    "credentials": "os_native_or_external_protected_store",
+    "immutableArtifacts": "content_addressed_object_store",
+    "projectFiles": "user_owned_granted_transactions",
+    "workerDirectCoreDatabaseAccess": false,
+    "workerScratch": "ephemeral_per_worker"
+  },
+  "supersessionPolicy": "A boundary change requires a new accepted ADR, contract version, migration plan and executable gate.",
+  "taskId": "P1-001"
+}
