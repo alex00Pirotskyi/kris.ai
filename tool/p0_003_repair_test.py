@@ -254,28 +254,56 @@ def test_sdk_gate_order_and_nonmutation() -> str:
 
 def test_ci_contract() -> str:
     workflow = read(".github/workflows/ci.yml")
-    require(workflow.count("uses: actions/setup-python@v5") == 1, "CI must pin Python through setup-python exactly once")
-    require('python-version: "3.12.10"' in workflow, "CI exact Python patch version drifted")
-    require(workflow.index("Pin Python toolchain") < workflow.index("Capture CI environment"), "Python is pinned after environment capture")
-    malformed_steps = [
-        line
-        for line in workflow.splitlines()
-        if re.match(r"^(?:  |    )- (?:name|run|uses):", line)
-    ]
+    lines = workflow.splitlines()
+    active_steps_indents: list[int] = []
+    malformed_steps: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        while active_steps_indents and indent <= active_steps_indents[-1]:
+            active_steps_indents.pop()
+        if re.fullmatch(r"steps:\s*(?:#.*)?", stripped):
+            active_steps_indents.append(indent)
+            continue
+        if re.match(r"^-\s+(?:name|run|uses):", stripped):
+            if not active_steps_indents or indent <= active_steps_indents[-1]:
+                malformed_steps.append(line)
     require(not malformed_steps, f"CI steps escaped the job steps list: {malformed_steps[:3]}")
-    require(workflow.index("flutter pub get") < workflow.index("tool/dart_format_scope.py --check"), "CI formats before pub get")
-    require("python tool/dart_format_scope.py --check" in workflow, "CI does not use the non-mutating handwritten scope")
-    require("flutter analyze --no-pub --fatal-warnings --fatal-infos" in workflow, "CI analyzer is not strict")
-    require("flutter test --no-pub --concurrency=1 --reporter expanded" in workflow, "CI tests are not deterministic")
-    for command in (
-        "python tool/v1_trust_disablement_test.py",
-        "python tool/p0_003_repair_test.py",
-        "python tool/generate_v170_contracts.py --check",
-        "python tool/generate_v180_contracts.py --check",
-        "python tool/generate_v190_contracts.py --check",
+
+    def position(*tokens: str) -> int:
+        for index, line in enumerate(lines):
+            compact = " ".join(line.strip().split())
+            if all(token in compact for token in tokens):
+                return index
+        raise AssertionError("CI is missing command tokens: " + " ".join(tokens))
+
+    pub_get = position("flutter", "pub", "get")
+    format_check = position("tool/dart_format_scope.py", "--check")
+    require(pub_get < format_check, "CI formats before pub get")
+    position("flutter", "analyze", "--no-pub", "--fatal-warnings", "--fatal-infos")
+    position("flutter", "test", "--no-pub", "--concurrency=1", "--reporter", "expanded")
+    for command_tokens in (
+        ("python", "tool/v1_trust_disablement_test.py"),
+        ("python", "tool/p0_003_repair_test.py"),
+        ("python", "tool/generate_v170_contracts.py", "--check"),
+        ("python", "tool/generate_v180_contracts.py", "--check"),
+        ("python", "tool/generate_v190_contracts.py", "--check"),
     ):
-        require(command in workflow, f"CI is missing {command}")
-    return "three-OS workflow reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates"
+        position(*command_tokens)
+    explicit_jobs = all(
+        re.search(rf"(?m)^\s*{re.escape(job_name)}:\s*(?:#.*)?$", workflow) is not None
+        for job_name in ("validate-ubuntu", "validate-windows", "validate-macos")
+    )
+    matrix_jobs = (
+        "validate-${{ matrix.lane }}" in workflow
+        and all(re.search(rf"(?m)^\s*-\s+lane:\s*{lane}\s*(?:#.*)?$", workflow) is not None
+                for lane in ("ubuntu", "windows", "macos"))
+    )
+    require(explicit_jobs or matrix_jobs, "CI does not expose stable Ubuntu, Windows, and macOS validation job names")
+    return "three-OS workflow keeps every step inside its job and reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates"
+
 
 
 def test_handwritten_format_scope() -> str:

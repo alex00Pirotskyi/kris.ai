@@ -11,9 +11,11 @@ import argparse
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 import re
+import shutil
 import subprocess
 import sys
 from typing import Any, Callable
@@ -215,9 +217,20 @@ def test_workflow_pins() -> str:
     return f"validated {len(uses_lines)} immutable action reference(s) and explicit runner labels"
 
 
+def _command_for_platform(argv: list[str]) -> list[str]:
+    require(bool(argv), "runtime command cannot be empty")
+    resolved = shutil.which(argv[0]) or argv[0]
+    command = [resolved, *argv[1:]]
+    if os.name == "nt" and Path(resolved).suffix.lower() in {".bat", ".cmd"}:
+        comspec = os.environ.get("COMSPEC") or shutil.which("cmd.exe")
+        require(bool(comspec), "COMSPEC/cmd.exe is required to execute Windows batch tools")
+        return [str(comspec), "/d", "/s", "/c", subprocess.list2cmdline(command)]
+    return command
+
+
 def _run(argv: list[str]) -> tuple[int, str]:
     completed = subprocess.run(
-        argv,
+        _command_for_platform(argv),
         cwd=ROOT,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
@@ -228,6 +241,7 @@ def _run(argv: list[str]) -> tuple[int, str]:
         check=False,
     )
     return completed.returncode, (completed.stdout or "")[-20000:]
+
 
 
 def _first_semver(text: str) -> str | None:
