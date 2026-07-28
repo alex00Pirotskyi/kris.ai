@@ -1,0 +1,35 @@
+{
+  "privateMaterialPersistence": "provider_only",
+  "providers": {
+    "external": "external_hsm",
+    "linux": "linux_secret_service",
+    "macos": "macos_keychain",
+    "windows": "windows_credential_manager"
+  },
+  "purposes": [
+    "manifest_signing",
+    "audit_signing",
+    "update_root",
+    "api_credential",
+    "browser_profile",
+    "secret_broker"
+  ],
+  "revocation": "fail_closed",
+  "schemaVersion": "2.0.0",
+  "settingsMayContain": [
+    "keyId",
+    "provider",
+    "opaqueReference",
+    "publicKey",
+    "purpose",
+    "trustDomain",
+    "status"
+  ],
+  "settingsMayNotContain": [
+    "privateKey",
+    "seed",
+    "secret",
+    "rawSecret",
+    "keyMaterial"
+  ]
+}

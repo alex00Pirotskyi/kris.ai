@@ -1,0 +1,40 @@
+{
+  "caseCount": 6,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 6,
+  "results": [
+    {
+      "detail": "all present",
+      "name": "Required P1-005 files",
+      "passed": true
+    },
+    {
+      "detail": "algorithm and canonicalization fixed",
+      "name": "Ed25519 and canonical JSON specification",
+      "passed": true
+    },
+    {
+      "detail": "envelope cannot carry trust root",
+      "name": "External trust roots",
+      "passed": true
+    },
+    {
+      "detail": "['expiresAt', 'intendedUse', 'issuedAt', 'keyId', 'payload', 'schemaVersion', 'signature', 'trustDomain']",
+      "name": "Purpose, domain and expiry binding",
+      "passed": true
+    },
+    {
+      "detail": "['expired', 'payload_modified', 'revoked_key', 'v1_downgrade', 'wrong_domain', 'wrong_use']",
+      "name": "Negative vector specification",
+      "passed": true
+    },
+    {
+      "detail": "P1-005=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-005"
+}

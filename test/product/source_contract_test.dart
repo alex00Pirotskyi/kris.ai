@@ -167,6 +167,12 @@ void main() {
         'lib/product/workspace_tools.dart',
         'lib/product/access_profile_v2.dart',
         'lib/product/capability_grant_v2.dart',
+        'lib/product/deterministic_policy_engine.dart',
+        'lib/product/signed_manifest_v2.dart',
+        'lib/product/manifest_compatibility_v2.dart',
+        'lib/product/key_registry_v2.dart',
+        'lib/product/signed_audit_checkpoint_v1.dart',
+        'lib/product/local_authenticated_ipc_v1.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))

@@ -1,0 +1,55 @@
+{
+  "$id": "https://kristin.local/schemas/signed_manifest_v2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "expiresAt": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "intendedUse": {
+      "enum": [
+        "extension_manifest",
+        "worker_descriptor",
+        "agent_descriptor",
+        "release_metadata",
+        "audit_checkpoint",
+        "update_target"
+      ]
+    },
+    "issuedAt": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "keyId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "signature": {
+      "pattern": "^[0-9a-f]{128}$",
+      "type": "string"
+    },
+    "trustDomain": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "keyId",
+    "intendedUse",
+    "trustDomain",
+    "issuedAt",
+    "expiresAt",
+    "payload",
+    "signature"
+  ],
+  "title": "Kristin Signed Manifest v2",
+  "type": "object"
+}

@@ -39,3 +39,7 @@ A profile is a maximum authority ceiling, never a capability grant. Project/orga
 ## Capability Grant v2 resolution (P1-003)
 
 Every concrete effect now requires a worker-authenticated Capability Grant v2 bound to run, task, actor, tool and Access Profile v2. The grant carries explicit paths, process, network, browser, secret-lease, budget, expiry, nonce and use-count scope. The envelope never carries issuer key material. Local runtime grants use an external ephemeral keyring; durable Signed Manifest v2 remains owned by P1-005/P1-006.
+
+## Deterministic policy resolution (P1-004)
+
+Access Profile v2 is now resolved by a deterministic deny-by-default policy engine. Organization, project and user overlays have a fixed order, can narrow scopes and budgets, and cannot silently widen authority. Explicit widening requires trusted owner or organization-policy approval and may not exceed the selected profile ceiling. Only an allow decision may become a Capability Grant v2 draft.

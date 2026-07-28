@@ -1,0 +1,60 @@
+{
+  "caseCount": 10,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 10,
+  "results": [
+    {
+      "detail": "all present",
+      "name": "Required P1-004 files",
+      "passed": true
+    },
+    {
+      "detail": "cases=15",
+      "name": "Shared policy corpus",
+      "passed": true
+    },
+    {
+      "detail": "decisionId=policy-5f339ba0fef60c578b7993273b8cbae2",
+      "name": "Deterministic overlay ordering",
+      "passed": true
+    },
+    {
+      "detail": "denied=['model_cannot_approve', 'organization_deny_wins', 'unknown_capability_denied', 'widening_above_ceiling_denied']",
+      "name": "Deny-by-default and trusted-authority boundary",
+      "passed": true
+    },
+    {
+      "detail": "approved current-account effect emits bounded grant draft",
+      "name": "Owner Mode intended authority",
+      "passed": true
+    },
+    {
+      "detail": "Dart engine mirrors shared deterministic invariants",
+      "name": "Dart policy and property contract",
+      "passed": true
+    },
+    {
+      "detail": "release and library-only inventories remain distinct",
+      "name": "Governed Dart inventories",
+      "passed": true
+    },
+    {
+      "detail": "P1-004=DONE ready=[]",
+      "name": "Roadmap state",
+      "passed": true
+    },
+    {
+      "detail": "gates wired",
+      "name": "CI and local verification",
+      "passed": true
+    },
+    {
+      "detail": "required files wired",
+      "name": "Release validation integration",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-004"
+}

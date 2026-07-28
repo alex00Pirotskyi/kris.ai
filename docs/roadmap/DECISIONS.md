@@ -39,3 +39,18 @@ A proposed ADR may guide investigation but may not authorize a production implem
 - Worker verifier: `tool/capability_grant_v2.py`.
 - Shared adversarial vectors: `evals/fixtures/p1_003_capability_grants/vectors.json`.
 - Issuer key material remains outside the envelope.
+
+## P1-004 deterministic policy engine — 2026-07-28
+
+- Policy configuration: `config/policy_engine.v2.json`.
+- Request schema: `schemas/deterministic_policy_v2.schema.json`.
+- Python reference engine: `tool/deterministic_policy_engine.py`.
+- Dart engine: `lib/product/deterministic_policy_engine.dart`.
+- Property corpus: `evals/fixtures/p1_004_policy_engine/property_cases.json`.
+- Deny, scope intersection and budget minimums are monotonic; only trusted explicit widening may restore scope within the Access Profile ceiling.
+
+## P1 full trust-stack closure — 2026-07-28
+
+P1-004 through P1-012 are delivered in one dependency-ordered integration train. Each task retains a completed packet, individual evidence manifest, executable gate and acceptance criteria. Signed Manifest v2 uses Ed25519 and external trust roots; v1 remains rejected; TUF trust, protected key references, signed audit checkpoints, threat ownership and authenticated IPC are approved.
+
+The program now uses twelve governed integration trains. This changes merge cadence only and does not collapse task-level truth or assurance.

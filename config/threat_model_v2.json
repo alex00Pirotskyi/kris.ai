@@ -1,0 +1,71 @@
+{
+  "boundaries": [
+    {
+      "id": "model_to_policy",
+      "owner": "desktop_host:deterministic_policy",
+      "risk": "model attempts to grant authority",
+      "test": "tool/p1_004_policy_engine_test.py"
+    },
+    {
+      "id": "policy_to_worker",
+      "owner": "desktop_host:grant_issuer",
+      "risk": "grant widening or wrong binding",
+      "test": "tool/p1_003_capability_grant_test.py"
+    },
+    {
+      "id": "worker_ipc",
+      "owner": "automation_host",
+      "risk": "unrelated local process invokes worker",
+      "test": "tool/p1_012_local_ipc_test.py"
+    },
+    {
+      "id": "manifest_trust",
+      "owner": "external_keyring",
+      "risk": "signer substitution, expiry, downgrade",
+      "test": "tool/p1_006_cross_language_signing_test.py"
+    },
+    {
+      "id": "key_storage",
+      "owner": "os_credential_broker",
+      "risk": "private key leaks into settings",
+      "test": "tool/p1_009_key_registry_test.py"
+    },
+    {
+      "id": "audit_chain",
+      "owner": "desktop_host:evidence_committer",
+      "risk": "tamper, truncate, reorder",
+      "test": "tool/p1_010_signed_audit_test.py"
+    },
+    {
+      "id": "web_content",
+      "owner": "research_worker",
+      "risk": "prompt injection becomes policy",
+      "test": "tool/p1_011_threat_model_test.py"
+    },
+    {
+      "id": "owner_executor",
+      "owner": "owner_executor",
+      "risk": "high authority effects escape grant",
+      "test": "tool/p1_004_policy_engine_test.py"
+    },
+    {
+      "id": "updater",
+      "owner": "update_controller",
+      "risk": "rollback/freeze/mix-and-match",
+      "test": "tool/p1_008_tuf_trust_test.py"
+    },
+    {
+      "id": "mcp_a2a",
+      "owner": "interop_registry",
+      "risk": "confused deputy/delegation widening",
+      "test": "tool/p1_011_threat_model_test.py"
+    }
+  ],
+  "frameworks": [
+    "OWASP Agentic Top 10",
+    "NIST AI RMF",
+    "TUF threat model"
+  ],
+  "highRiskRequiresOwnerAndTest": true,
+  "schemaVersion": "2.0.0"
+}

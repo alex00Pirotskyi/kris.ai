@@ -9,11 +9,21 @@
     ]
   },
   "format": "yaml-1.2-json-subset",
-  "nextReady": [
-    "P1-004",
-    "P1-005",
-    "P1-012"
-  ],
+  "integrationPackaging": {
+    "canonicalTaskGraphPreserved": true,
+    "completedTrain": "TRAIN-01",
+    "manifest": "docs/roadmap/integration_trains.json",
+    "nextTrain": "TRAIN-02",
+    "strategy": "twelve_governed_integration_trains"
+  },
+  "nextReady": [],
+  "phaseGates": {
+    "P1": {
+      "evidence": "release/evidence/P1/manifest.json",
+      "nextIntegrationTrain": "TRAIN-02",
+      "status": "DONE"
+    }
+  },
   "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
   "schemaVersion": "1.0.0",
   "statusValues": [
@@ -294,12 +304,16 @@
         "P1-003"
       ],
       "doneWhen": "Policy property tests prove deny-by-default and Owner Mode’s intended authority.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-004/manifest.json",
+        "release/evidence/P1-004/test-results.json",
+        "release/evidence/P1-004/OWNER_APPROVAL.md"
+      ],
       "id": "P1-004",
-      "packet": "tasks/active/P1-004.md",
+      "packet": "tasks/completed/P1-004.md",
       "phase": "P1",
       "requiredOutput": "Implement mode resolution, organization/project/user overlays, and explicit widening rules.",
-      "status": "READY",
+      "status": "DONE",
       "title": "Build deterministic policy engine"
     },
     {
@@ -308,12 +322,16 @@
         "P1-001"
       ],
       "doneWhen": "Language-neutral spec and negative vectors approved.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-005/manifest.json",
+        "release/evidence/P1-005/test-results.json",
+        "release/evidence/P1-005/OWNER_APPROVAL.md"
+      ],
       "id": "P1-005",
-      "packet": "tasks/active/P1-005.md",
+      "packet": "tasks/completed/P1-005.md",
       "phase": "P1",
       "requiredOutput": "Adopt Ed25519, RFC 8785 canonical JSON, external keyring, key IDs, intended use, expiry, trust domain, and revocation.",
-      "status": "READY",
+      "status": "DONE",
       "title": "Specify Signed Manifest v2"
     },
     {
@@ -321,12 +339,16 @@
         "P1-005"
       ],
       "doneWhen": "Both languages produce and verify identical vectors and reject mutations.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-006/manifest.json",
+        "release/evidence/P1-006/test-results.json",
+        "release/evidence/P1-006/OWNER_APPROVAL.md"
+      ],
       "id": "P1-006",
-      "packet": "tasks/active/P1-006.md",
+      "packet": "tasks/completed/P1-006.md",
       "phase": "P1",
       "requiredOutput": "Implement Dart/Python signing and verification against shared golden vectors.",
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "title": "Implement cross-language signing"
     },
     {
@@ -334,12 +356,16 @@
         "P1-006"
       ],
       "doneWhen": "Downgrade and mixed-format tests pass.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-007/manifest.json",
+        "release/evidence/P1-007/test-results.json",
+        "release/evidence/P1-007/OWNER_APPROVAL.md"
+      ],
       "id": "P1-007",
-      "packet": "tasks/active/P1-007.md",
+      "packet": "tasks/completed/P1-007.md",
       "phase": "P1",
       "requiredOutput": "Add explicit compatibility policy; v1 never authorizes production trust.",
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "title": "Migrate or reject v1 envelopes"
     },
     {
@@ -347,12 +373,16 @@
         "P1-005"
       ],
       "doneWhen": "ADR and key ceremony runbook approved.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-008/manifest.json",
+        "release/evidence/P1-008/test-results.json",
+        "release/evidence/P1-008/OWNER_APPROVAL.md"
+      ],
       "id": "P1-008",
-      "packet": "tasks/active/P1-008.md",
+      "packet": "tasks/completed/P1-008.md",
       "phase": "P1",
       "requiredOutput": "Define offline root, targets, snapshot, timestamp, delegations, thresholds, rotation, and recovery.",
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "title": "Design TUF update trust"
     },
     {
@@ -360,12 +390,16 @@
         "P1-005"
       ],
       "doneWhen": "No private key is stored in repository or unencrypted settings.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-009/manifest.json",
+        "release/evidence/P1-009/test-results.json",
+        "release/evidence/P1-009/OWNER_APPROVAL.md"
+      ],
       "id": "P1-009",
-      "packet": "tasks/active/P1-009.md",
+      "packet": "tasks/completed/P1-009.md",
       "phase": "P1",
       "requiredOutput": "Use OS keychain or external protected store; separate signing, API, browser, and secret-broker keys.",
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "title": "Implement key storage and revocation"
     },
     {
@@ -374,12 +408,16 @@
         "P1-009"
       ],
       "doneWhen": "Tampering, truncation, reordering, and signer substitution are detected.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-010/manifest.json",
+        "release/evidence/P1-010/test-results.json",
+        "release/evidence/P1-010/OWNER_APPROVAL.md"
+      ],
       "id": "P1-010",
-      "packet": "tasks/active/P1-010.md",
+      "packet": "tasks/completed/P1-010.md",
       "phase": "P1",
       "requiredOutput": "Anchor audit heads with trusted keys and export verification receipts.",
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "title": "Create append-only signed audit checkpoints"
     },
     {
@@ -388,12 +426,16 @@
         "P1-004"
       ],
       "doneWhen": "Every high-risk boundary has an owner and planned test.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-011/manifest.json",
+        "release/evidence/P1-011/test-results.json",
+        "release/evidence/P1-011/OWNER_APPROVAL.md"
+      ],
       "id": "P1-011",
-      "packet": "tasks/active/P1-011.md",
+      "packet": "tasks/completed/P1-011.md",
       "phase": "P1",
       "requiredOutput": "Map trust boundaries and OWASP agentic risks across model, tools, web, memory, MCP/A2A, terminal, and updater.",
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "title": "Create threat model v2"
     },
     {
@@ -402,12 +444,16 @@
         "P1-003"
       ],
       "doneWhen": "Unprivileged unrelated local process cannot invoke a worker.",
-      "evidence": [],
+      "evidence": [
+        "release/evidence/P1-012/manifest.json",
+        "release/evidence/P1-012/test-results.json",
+        "release/evidence/P1-012/OWNER_APPROVAL.md"
+      ],
       "id": "P1-012",
-      "packet": "tasks/active/P1-012.md",
+      "packet": "tasks/completed/P1-012.md",
       "phase": "P1",
       "requiredOutput": "Use named pipes/Unix sockets or loopback with mutual authentication, peer identity, request IDs, limits, and versioning.",
-      "status": "READY",
+      "status": "DONE",
       "title": "Create local authenticated IPC"
     }
   ]

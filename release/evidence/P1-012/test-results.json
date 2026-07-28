@@ -1,0 +1,35 @@
+{
+  "caseCount": 5,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 5,
+  "results": [
+    {
+      "detail": "{'body': {'accepted': True}, 'mac': '27289b849202968ce3e9688b1af290368d4020106d77533f4cb9726a57362e8b', 'peerId': 'worker', 'requestId': 'req-1', 'schemaVersion': '1.0.0', 'serverNonce': 'b9da1f030c1082a994856afa2d20d496'}",
+      "name": "Mutually authenticated loopback request",
+      "passed": true
+    },
+    {
+      "detail": "invalid peer proof failed",
+      "name": "Unrelated local process rejected",
+      "passed": true
+    },
+    {
+      "detail": "request id consumed once",
+      "name": "Replay rejected",
+      "passed": true
+    },
+    {
+      "detail": "{'linux': ['unix_domain_socket', 'authenticated_loopback_mutual_auth'], 'macos': ['unix_domain_socket', 'authenticated_loopback_mutual_auth'], 'windows': ['named_pipe', 'authenticated_loopback_mutual_auth']}",
+      "name": "Tri-platform transport contract",
+      "passed": true
+    },
+    {
+      "detail": "P1-012=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-012"
+}

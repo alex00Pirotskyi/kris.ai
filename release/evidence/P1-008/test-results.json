@@ -1,0 +1,35 @@
+{
+  "caseCount": 5,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 5,
+  "results": [
+    {
+      "detail": "['root', 'snapshot', 'targets', 'timestamp']",
+      "name": "Four TUF top-level roles",
+      "passed": true
+    },
+    {
+      "detail": "{'expiresDays': 365, 'keyCount': 3, 'offline': True, 'threshold': 2}",
+      "name": "Offline threshold root",
+      "passed": true
+    },
+    {
+      "detail": "['rollback', 'freeze', 'mix_and_match', 'fast_forward', 'consistent_snapshot']",
+      "name": "Rollback freeze and mix-and-match defenses",
+      "passed": true
+    },
+    {
+      "detail": "runbooks approved",
+      "name": "Rotation and recovery runbooks",
+      "passed": true
+    },
+    {
+      "detail": "P1-008=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-008"
+}
