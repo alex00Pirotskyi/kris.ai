@@ -1,0 +1,35 @@
+{
+  "caseCount": 5,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 5,
+  "results": [
+    {
+      "detail": "[]",
+      "name": "Every boundary has an owner",
+      "passed": true
+    },
+    {
+      "detail": "[]",
+      "name": "Every high-risk boundary has a planned executable test",
+      "passed": true
+    },
+    {
+      "detail": "['audit_chain', 'key_storage', 'manifest_trust', 'mcp_a2a', 'model_to_policy', 'owner_executor', 'policy_to_worker', 'updater', 'web_content', 'worker_ipc']",
+      "name": "Required agentic boundaries covered",
+      "passed": true
+    },
+    {
+      "detail": "threat model complete",
+      "name": "Prompt injection and confused deputy documented",
+      "passed": true
+    },
+    {
+      "detail": "P1-011=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-011"
+}

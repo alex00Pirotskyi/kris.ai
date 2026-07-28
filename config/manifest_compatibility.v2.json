@@ -1,0 +1,15 @@
+{
+  "accepted": [
+    "2.0.0"
+  ],
+  "legacyError": "v1_trust_disabled",
+  "mixedFormat": "reject",
+  "productionAuthorizationRequires": "signed_manifest_v2",
+  "rejected": [
+    "1",
+    "1.0",
+    "1.0.0",
+    "v1"
+  ],
+  "schemaVersion": "2.0.0"
+}

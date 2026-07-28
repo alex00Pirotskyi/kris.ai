@@ -1,0 +1,97 @@
+{
+  "$id": "https://kristin.local/schemas/deterministic_policy_v2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approval": {
+      "type": "object"
+    },
+    "binding": {
+      "additionalProperties": false,
+      "properties": {
+        "accessProfileId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "actorId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "capabilityId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "runId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "taskId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "toolId": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "runId",
+        "taskId",
+        "actorId",
+        "toolId",
+        "accessProfileId",
+        "capabilityId"
+      ],
+      "type": "object"
+    },
+    "context": {
+      "type": "object"
+    },
+    "effect": {
+      "additionalProperties": true,
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "target": {}
+      },
+      "required": [
+        "domain",
+        "action",
+        "target"
+      ],
+      "type": "object"
+    },
+    "explicitWidening": {
+      "type": "object"
+    },
+    "overlays": {
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "requestId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "requestedBudgets": {
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "binding",
+    "effect",
+    "context"
+  ],
+  "title": "Kristin deterministic policy engine v2",
+  "type": "object"
+}

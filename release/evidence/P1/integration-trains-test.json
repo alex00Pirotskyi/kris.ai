@@ -1,0 +1,35 @@
+{
+  "caseCount": 5,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 5,
+  "results": [
+    {
+      "detail": "count=12",
+      "name": "Exactly twelve integration trains",
+      "passed": true
+    },
+    {
+      "detail": "['TRAIN-01', 'TRAIN-02', 'TRAIN-03', 'TRAIN-04', 'TRAIN-05', 'TRAIN-06', 'TRAIN-07', 'TRAIN-08', 'TRAIN-09', 'TRAIN-10', 'TRAIN-11', 'TRAIN-12']",
+      "name": "Unique sequential train ids",
+      "passed": true
+    },
+    {
+      "detail": "['P1-004', 'P1-005', 'P1-006', 'P1-007', 'P1-008', 'P1-009', 'P1-010', 'P1-011', 'P1-012']",
+      "name": "P1 closure train contains every remaining P1 task",
+      "passed": true
+    },
+    {
+      "detail": "bundling changes PR cadence, not acceptance criteria",
+      "name": "Canonical task graph preserved",
+      "passed": true
+    },
+    {
+      "detail": "TRAIN-02 ready",
+      "name": "Next train ready",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "testId": "integration-trains"
+}

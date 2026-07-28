@@ -17,9 +17,7 @@
 
 ## Next ready tasks
 
-- `P1-004` — Build deterministic policy engine (`tasks/active/P1-004.md`)
-- `P1-005` — Specify Signed Manifest v2 (`tasks/active/P1-005.md`)
-- `P1-012` — Create local authenticated IPC (`tasks/active/P1-012.md`)
+- None.
 
 ## Non-negotiable handoff rules
 

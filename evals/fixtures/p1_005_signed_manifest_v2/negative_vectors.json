@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "expectedError": "signature_invalid",
+      "mutation": {
+        "payload.artifactId": "plugin.tampered"
+      },
+      "name": "payload_modified"
+    },
+    {
+      "expectedError": "manifest_expired",
+      "mutation": {
+        "expiresAt": "2026-07-27T23:59:59Z"
+      },
+      "name": "expired"
+    },
+    {
+      "expectedError": "wrong_intended_use",
+      "expectedUse": "release_metadata",
+      "name": "wrong_use"
+    },
+    {
+      "expectedDomain": "other.domain",
+      "expectedError": "wrong_trust_domain",
+      "name": "wrong_domain"
+    },
+    {
+      "expectedError": "key_revoked",
+      "name": "revoked_key",
+      "revoked": true
+    },
+    {
+      "expectedError": "unsupported_version",
+      "name": "v1_downgrade",
+      "schemaVersion": "1.0.0"
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

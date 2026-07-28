@@ -1,0 +1,48 @@
+{
+  "delegations": [
+    "nightly",
+    "alpha",
+    "beta",
+    "stable",
+    "emergency"
+  ],
+  "protections": [
+    "rollback",
+    "freeze",
+    "mix_and_match",
+    "fast_forward",
+    "consistent_snapshot"
+  ],
+  "recovery": {
+    "emergencyRollback": "delegated emergency targets",
+    "onlineCompromise": "revoke rotate republish",
+    "rootRotation": "offline threshold ceremony"
+  },
+  "roles": {
+    "root": {
+      "expiresDays": 365,
+      "keyCount": 3,
+      "offline": true,
+      "threshold": 2
+    },
+    "snapshot": {
+      "expiresDays": 7,
+      "keyCount": 2,
+      "offline": false,
+      "threshold": 1
+    },
+    "targets": {
+      "expiresDays": 30,
+      "keyCount": 2,
+      "offline": false,
+      "threshold": 1
+    },
+    "timestamp": {
+      "expiresHours": 24,
+      "keyCount": 2,
+      "offline": false,
+      "threshold": 1
+    }
+  },
+  "schemaVersion": "1.0.0"
+}

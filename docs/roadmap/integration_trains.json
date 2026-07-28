@@ -1,0 +1,119 @@
+{
+  "canonicalTaskGraphPreserved": true,
+  "schemaVersion": "1.0.0",
+  "strategy": "twelve_governed_integration_trains",
+  "trains": [
+    {
+      "gate": "P1 exit gate",
+      "id": "TRAIN-01",
+      "status": "DONE",
+      "tasks": [
+        "P1-004",
+        "P1-005",
+        "P1-006",
+        "P1-007",
+        "P1-008",
+        "P1-009",
+        "P1-010",
+        "P1-011",
+        "P1-012"
+      ],
+      "title": "P1 trust and policy closure"
+    },
+    {
+      "id": "TRAIN-02",
+      "phases": [
+        "P2"
+      ],
+      "status": "READY",
+      "title": "P2 Owner Mode, filesystem and terminal"
+    },
+    {
+      "id": "TRAIN-03",
+      "phases": [
+        "P3"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P3 browser and Web Studio"
+    },
+    {
+      "id": "TRAIN-04",
+      "phases": [
+        "P4"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P4 research, citations and data"
+    },
+    {
+      "id": "TRAIN-05",
+      "phases": [
+        "P5"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P5 UX and UI redesign"
+    },
+    {
+      "id": "TRAIN-06",
+      "phases": [
+        "P6"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P6 agent intelligence and model layer"
+    },
+    {
+      "id": "TRAIN-07",
+      "phases": [
+        "P7"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P7 MCP, A2A and extension ecosystem"
+    },
+    {
+      "id": "TRAIN-08",
+      "phases": [
+        "P8"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P8 reliability, security and evaluation"
+    },
+    {
+      "id": "TRAIN-09",
+      "phases": [
+        "P9"
+      ],
+      "status": "NOT_STARTED",
+      "title": "P9 release engineering, installers and updates"
+    },
+    {
+      "id": "TRAIN-10",
+      "status": "NOT_STARTED",
+      "tasks": [
+        "P10-001"
+      ],
+      "title": "P10 tri-platform internal alpha"
+    },
+    {
+      "id": "TRAIN-11",
+      "status": "NOT_STARTED",
+      "tasks": [
+        "P10-002",
+        "P10-003",
+        "P10-004",
+        "P10-005",
+        "P10-006"
+      ],
+      "title": "P10 private beta, audit and RC soak"
+    },
+    {
+      "id": "TRAIN-12",
+      "status": "NOT_STARTED",
+      "tasks": [
+        "P10-007",
+        "P10-008",
+        "P10-009",
+        "P10-010"
+      ],
+      "title": "P10 go/no-go, rollout and operations"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "commandLineMayCarryReusableSecrets": false,
+  "deadline": true,
+  "environmentMayGrantAuthority": false,
+  "mutualAuthentication": true,
+  "payloadLimitBytes": 65536,
+  "peerIdentity": true,
+  "replayProtection": true,
+  "requestId": true,
+  "schemaVersion": "1.0.0",
+  "transports": {
+    "linux": [
+      "unix_domain_socket",
+      "authenticated_loopback_mutual_auth"
+    ],
+    "macos": [
+      "unix_domain_socket",
+      "authenticated_loopback_mutual_auth"
+    ],
+    "windows": [
+      "named_pipe",
+      "authenticated_loopback_mutual_auth"
+    ]
+  },
+  "versionedEnvelope": true
+}

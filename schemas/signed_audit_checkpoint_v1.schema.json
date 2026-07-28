@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "auditHeadHash": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "eventCount": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "keyId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "previousCheckpointHash": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "sequence": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "signature": {
+      "pattern": "^[0-9a-f]{128}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "sequence",
+    "eventCount",
+    "previousCheckpointHash",
+    "auditHeadHash",
+    "keyId",
+    "signature"
+  ],
+  "title": "Signed audit checkpoint v1",
+  "type": "object"
+}

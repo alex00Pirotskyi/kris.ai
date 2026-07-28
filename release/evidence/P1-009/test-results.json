@@ -1,0 +1,35 @@
+{
+  "caseCount": 5,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 5,
+  "results": [
+    {
+      "detail": "[{\"keyid\": \"k1\", \"purpose\": \"manifest_signing\", \"provider\": \"ephemeral_test\", \"reference\": \"vault://test/k1\", \"publickeyhex\": \"aa\", \"trustdomain\": \"kristin.test\", \"status\": \"active\"}]",
+      "name": "No private material in registry export",
+      "passed": true
+    },
+    {
+      "detail": "resolved exact handle",
+      "name": "Purpose and trust-domain binding",
+      "passed": true
+    },
+    {
+      "detail": "revoked key rejected",
+      "name": "Revocation fails closed",
+      "passed": true
+    },
+    {
+      "detail": "{'external': 'external_hsm', 'linux': 'linux_secret_service', 'macos': 'macos_keychain', 'windows': 'windows_credential_manager'}",
+      "name": "OS protected providers declared",
+      "passed": true
+    },
+    {
+      "detail": "P1-009=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-009"
+}

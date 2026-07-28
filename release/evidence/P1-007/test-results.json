@@ -1,0 +1,30 @@
+{
+  "caseCount": 4,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 4,
+  "results": [
+    {
+      "detail": "{'v1': 'v1_trust_disabled', 'mixed': 'mixed_format_rejected', 'unknown': 'unsupported_manifest_version'}",
+      "name": "Downgrade and mixed-format rejection",
+      "passed": true
+    },
+    {
+      "detail": "v2 accepted",
+      "name": "Clean v2 accepted",
+      "passed": true
+    },
+    {
+      "detail": "P0-002 invariant preserved",
+      "name": "Legacy production trust remains disabled",
+      "passed": true
+    },
+    {
+      "detail": "P1-007=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-007"
+}

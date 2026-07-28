@@ -1,0 +1,40 @@
+{
+  "caseCount": 6,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 6,
+  "results": [
+    {
+      "detail": "known vector exact",
+      "name": "Python RFC 8032 vector",
+      "passed": true
+    },
+    {
+      "detail": "canonical bytes and signature exact",
+      "name": "Python manifest golden vector",
+      "passed": true
+    },
+    {
+      "detail": "external keyring accepted",
+      "name": "Python verification",
+      "passed": true
+    },
+    {
+      "detail": "modified payload rejected",
+      "name": "Mutation rejection",
+      "passed": true
+    },
+    {
+      "detail": "Dart signs and verifies same vectors",
+      "name": "Dart cross-language implementation",
+      "passed": true
+    },
+    {
+      "detail": "P1-006=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-006"
+}

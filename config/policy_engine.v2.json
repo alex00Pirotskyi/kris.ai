@@ -1,0 +1,172 @@
+{
+  "capabilityRegistry": {
+    "browser.session.use": {
+      "actor": "automation_host",
+      "domain": "browser",
+      "risk": "high",
+      "tools": [
+        "browser_session"
+      ]
+    },
+    "filesystem.delete": {
+      "actor": "owner_executor",
+      "domain": "filesystem",
+      "risk": "high",
+      "tools": [
+        "delete_file"
+      ]
+    },
+    "filesystem.read": {
+      "actor": "owner_executor",
+      "domain": "filesystem",
+      "risk": "low",
+      "tools": [
+        "read_file",
+        "inspect_file"
+      ]
+    },
+    "filesystem.write": {
+      "actor": "owner_executor",
+      "domain": "filesystem",
+      "risk": "low",
+      "tools": [
+        "write_file",
+        "replace_text"
+      ]
+    },
+    "network.connect": {
+      "actor": "research_worker",
+      "domain": "network",
+      "risk": "low",
+      "tools": [
+        "research_fetch",
+        "web_fetch"
+      ]
+    },
+    "package.manage": {
+      "actor": "owner_executor",
+      "domain": "process",
+      "risk": "high",
+      "tools": [
+        "package_install"
+      ]
+    },
+    "process.execute": {
+      "actor": "automation_host",
+      "domain": "process",
+      "risk": "high",
+      "tools": [
+        "run_command"
+      ]
+    },
+    "process.interactive": {
+      "actor": "automation_host",
+      "domain": "process",
+      "risk": "high",
+      "tools": [
+        "terminal_open"
+      ]
+    },
+    "sandbox.execute": {
+      "actor": "sandbox_worker",
+      "domain": "sandbox",
+      "risk": "high",
+      "tools": [
+        "sandbox_run"
+      ]
+    },
+    "secret.lease.use": {
+      "actor": "owner_executor",
+      "domain": "secret",
+      "risk": "high",
+      "tools": [
+        "use_secret"
+      ]
+    }
+  },
+  "defaultDisposition": "deny",
+  "explicitWidening": {
+    "mayNotExceedAccessProfileCeiling": true,
+    "neverOverridesForceDeny": true,
+    "requiresTrustedApproval": true,
+    "trustedSources": [
+      "owner",
+      "organization_policy"
+    ]
+  },
+  "overlayOrder": [
+    "organization",
+    "project",
+    "user"
+  ],
+  "overlaysMayOnlyNarrow": true,
+  "policyId": "kristin.deterministic_policy",
+  "policyRevision": 1,
+  "profileBudgets": {
+    "chat": {
+      "maxCostMicros": 0,
+      "maxMutations": 0,
+      "maxNetworkBytes": 0,
+      "maxOutputBytes": 0,
+      "wallClockMs": 0
+    },
+    "isolated_untrusted": {
+      "maxCostMicros": 10000000,
+      "maxMutations": 10000,
+      "maxNetworkBytes": 268435456,
+      "maxOutputBytes": 67108864,
+      "wallClockMs": 1800000
+    },
+    "owner": {
+      "maxCostMicros": 1000000000,
+      "maxMutations": 1000000,
+      "maxNetworkBytes": 10737418240,
+      "maxOutputBytes": 1073741824,
+      "wallClockMs": 86400000
+    },
+    "owner_unattended": {
+      "maxCostMicros": 1000000000,
+      "maxMutations": 1000000,
+      "maxNetworkBytes": 10737418240,
+      "maxOutputBytes": 1073741824,
+      "wallClockMs": 86400000
+    },
+    "project": {
+      "maxCostMicros": 50000000,
+      "maxMutations": 10000,
+      "maxNetworkBytes": 268435456,
+      "maxOutputBytes": 67108864,
+      "wallClockMs": 3600000
+    }
+  },
+  "reasonCodes": [
+    "unknown_capability",
+    "tool_not_registered_for_capability",
+    "capability_effect_mismatch",
+    "wrong_actor",
+    "capability_denied_by_overlay",
+    "tool_denied_by_overlay",
+    "force_deny",
+    "untrusted_authority_source",
+    "approval_identity_missing",
+    "approval_required",
+    "explicit_widening_not_approved",
+    "widening_exceeds_profile_ceiling",
+    "filesystem_action_denied",
+    "path_outside_effective_scope",
+    "process_action_denied",
+    "elevation_denied",
+    "network_destination_denied",
+    "private_network_denied",
+    "network_listen_denied",
+    "browser_profile_denied",
+    "authenticated_browser_denied",
+    "secret_lease_denied",
+    "raw_secret_reveal_denied",
+    "sandbox_profile_required",
+    "unknown_effect_domain",
+    "invalid_budget",
+    "invalid_overlay_budget"
+  ],
+  "schemaVersion": "2.0.0"
+}

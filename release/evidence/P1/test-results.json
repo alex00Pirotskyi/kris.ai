@@ -1,0 +1,70 @@
+{
+  "caseCount": 12,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 12,
+  "phase": "P1",
+  "results": [
+    {
+      "detail": "{'P1-001': 'DONE', 'P1-002': 'DONE', 'P1-003': 'DONE', 'P1-004': 'DONE', 'P1-005': 'DONE', 'P1-006': 'DONE', 'P1-007': 'DONE', 'P1-008': 'DONE', 'P1-009': 'DONE', 'P1-010': 'DONE', 'P1-011': 'DONE', 'P1-012': 'DONE'}",
+      "name": "P1-001 through P1-012 complete",
+      "passed": true
+    },
+    {
+      "detail": "all present",
+      "name": "P1 closure evidence present",
+      "passed": true
+    },
+    {
+      "detail": "ssuedAt', 'keyId', 'payload', 'schemaVersion', 'signature', 'trustDomain']\",\n      \"name\": \"Purpose, domain and expiry binding\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"['expired', 'payload_modified', 'revoked_key', 'v1_downgrade', 'wrong_domain', 'wrong_use']\",\n      \"name\": \"Negative vector specification\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-005=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-005\"\n}\n",
+      "name": "p1_005_signed_manifest_spec_test.py",
+      "passed": true
+    },
+    {
+      "detail": "xternal keyring accepted\",\n      \"name\": \"Python verification\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"modified payload rejected\",\n      \"name\": \"Mutation rejection\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Dart signs and verifies same vectors\",\n      \"name\": \"Dart cross-language implementation\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-006=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-006\"\n}\n",
+      "name": "p1_006_cross_language_signing_test.py",
+      "passed": true
+    },
+    {
+      "detail": "pported_manifest_version'}\",\n      \"name\": \"Downgrade and mixed-format rejection\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"v2 accepted\",\n      \"name\": \"Clean v2 accepted\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P0-002 invariant preserved\",\n      \"name\": \"Legacy production trust remains disabled\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-007=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-007\"\n}\n",
+      "name": "p1_007_manifest_compatibility_test.py",
+      "passed": true
+    },
+    {
+      "detail": "ld root\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"['rollback', 'freeze', 'mix_and_match', 'fast_forward', 'consistent_snapshot']\",\n      \"name\": \"Rollback freeze and mix-and-match defenses\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"runbooks approved\",\n      \"name\": \"Rotation and recovery runbooks\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-008=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-008\"\n}\n",
+      "name": "p1_008_tuf_trust_test.py",
+      "passed": true
+    },
+    {
+      "detail": ",\n    {\n      \"detail\": \"revoked key rejected\",\n      \"name\": \"Revocation fails closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"{'external': 'external_hsm', 'linux': 'linux_secret_service', 'macos': 'macos_keychain', 'windows': 'windows_credential_manager'}\",\n      \"name\": \"OS protected providers declared\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-009=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-009\"\n}\n",
+      "name": "p1_009_key_registry_test.py",
+      "passed": true
+    },
+    {
+      "detail": "bbbbbbbbbbbbbb'}\",\n      \"name\": \"Valid signed checkpoint chain\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"{'tamper': 'checkpoint_tampered', 'truncate': 'audit_head_mismatch', 'reorder': 'checkpoint_reordered', 'signer': 'unknown_signer'}\",\n      \"name\": \"Tamper truncate reorder signer substitution rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-010=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-010\"\n}\n",
+      "name": "p1_010_signed_audit_test.py",
+      "passed": true
+    },
+    {
+      "detail": "'manifest_trust', 'mcp_a2a', 'model_to_policy', 'owner_executor', 'policy_to_worker', 'updater', 'web_content', 'worker_ipc']\",\n      \"name\": \"Required agentic boundaries covered\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"threat model complete\",\n      \"name\": \"Prompt injection and confused deputy documented\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-011=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-011\"\n}\n",
+      "name": "p1_011_threat_model_test.py",
+      "passed": true
+    },
+    {
+      "detail": "rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"{'linux': ['unix_domain_socket', 'authenticated_loopback_mutual_auth'], 'macos': ['unix_domain_socket', 'authenticated_loopback_mutual_auth'], 'windows': ['named_pipe', 'authenticated_loopback_mutual_auth']}\",\n      \"name\": \"Tri-platform transport contract\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-012=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-012\"\n}\n",
+      "name": "p1_012_local_ipc_test.py",
+      "passed": true
+    },
+    {
+      "detail": "'P1-005', 'P1-006', 'P1-007', 'P1-008', 'P1-009', 'P1-010', 'P1-011', 'P1-012']\",\n      \"name\": \"P1 closure train contains every remaining P1 task\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"bundling changes PR cadence, not acceptance criteria\",\n      \"name\": \"Canonical task graph preserved\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"TRAIN-02 ready\",\n      \"name\": \"Next train ready\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"testId\": \"integration-trains\"\n}\n",
+      "name": "integration_train_test.py",
+      "passed": true
+    },
+    {
+      "detail": "all exit claims true",
+      "name": "P1 exit-gate claims",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

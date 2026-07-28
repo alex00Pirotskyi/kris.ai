@@ -51,3 +51,11 @@ python3 tool/assurance_dashboard.py --project . --strict
 # P1-003 Capability Grant v2 gates
 "${PYTHON:-python}" tool/capability_grant_v2_test.py
 "${PYTHON:-python}" tool/p1_003_capability_grant_test.py --project .
+
+# P1-004 deterministic policy engine gates
+"${PYTHON:-python}" tool/deterministic_policy_engine_test.py
+"${PYTHON:-python}" tool/p1_004_policy_engine_test.py --project .
+
+# P1 full trust-stack closure gates
+"${PYTHON:-python}" tool/integration_train_test.py --project .
+"${PYTHON:-python}" tool/p1_exit_gate_test.py --project .

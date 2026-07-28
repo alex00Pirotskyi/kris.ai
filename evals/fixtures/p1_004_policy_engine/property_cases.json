@@ -1,0 +1,1031 @@
+{
+  "cases": [
+    {
+      "expectedReasons": [],
+      "expectedStatus": "allow",
+      "name": "project_write_inside_root",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/output.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "unknown_capability"
+      ],
+      "expectedStatus": "deny",
+      "name": "unknown_capability_denied",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "unknown.capability",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/output.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "filesystem_action_denied"
+      ],
+      "expectedStatus": "deny",
+      "name": "chat_write_denied",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "chat",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/output.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "path_outside_effective_scope"
+      ],
+      "expectedStatus": "deny",
+      "name": "project_path_escape_denied",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/etc/passwd"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "approval_required"
+      ],
+      "expectedStatus": "approval_required",
+      "name": "owner_delete_requires_approval",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.delete",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "delete_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "delete",
+          "domain": "filesystem",
+          "target": "/home/alex/old.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [],
+      "expectedStatus": "allow",
+      "name": "owner_delete_approved",
+      "request": {
+        "approval": {
+          "approvalId": "approval-owner-delete",
+          "approved": true,
+          "source": "owner"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.delete",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "delete_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "delete",
+          "domain": "filesystem",
+          "target": "/home/alex/old.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "untrusted_authority_source"
+      ],
+      "expectedStatus": "deny",
+      "name": "model_cannot_approve",
+      "request": {
+        "approval": {
+          "approvalId": "forged",
+          "approved": true,
+          "source": "model"
+        },
+        "binding": {
+          "accessProfileId": "owner",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.delete",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "delete_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "delete",
+          "domain": "filesystem",
+          "target": "/home/alex/old.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "capability_denied_by_overlay"
+      ],
+      "expectedStatus": "deny",
+      "name": "organization_deny_wins",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/output.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [
+          {
+            "denyCapabilities": [
+              "filesystem.write"
+            ],
+            "layer": "organization",
+            "overlayId": "org-deny"
+          }
+        ],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "path_outside_effective_scope"
+      ],
+      "expectedStatus": "deny",
+      "name": "narrowed_path_denied",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/other/output.txt"
+        },
+        "explicitWidening": {},
+        "overlays": [
+          {
+            "layer": "organization",
+            "overlayId": "org-path",
+            "pathPrefixes": [
+              "/work/project/sub"
+            ]
+          }
+        ],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "explicit_widening_not_approved"
+      ],
+      "expectedStatus": "deny",
+      "name": "widening_requires_approval",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/other/output.txt"
+        },
+        "explicitWidening": {
+          "approved": false,
+          "restorePaths": [
+            "/work/project/other"
+          ]
+        },
+        "overlays": [
+          {
+            "layer": "organization",
+            "overlayId": "org-path",
+            "pathPrefixes": [
+              "/work/project/sub"
+            ]
+          }
+        ],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [],
+      "expectedStatus": "allow",
+      "name": "approved_widening_within_ceiling",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/other/output.txt"
+        },
+        "explicitWidening": {
+          "approvalId": "widen-1",
+          "approved": true,
+          "restorePaths": [
+            "/work/project/other"
+          ],
+          "source": "owner"
+        },
+        "overlays": [
+          {
+            "layer": "organization",
+            "overlayId": "org-path",
+            "pathPrefixes": [
+              "/work/project/sub"
+            ]
+          }
+        ],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "widening_exceeds_profile_ceiling"
+      ],
+      "expectedStatus": "deny",
+      "name": "widening_above_ceiling_denied",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "owner_executor",
+          "capabilityId": "filesystem.write",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "write_file"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "write",
+          "domain": "filesystem",
+          "target": "/work/project/other/output.txt"
+        },
+        "explicitWidening": {
+          "approvalId": "widen-2",
+          "approved": true,
+          "restorePaths": [
+            "/etc"
+          ],
+          "source": "owner"
+        },
+        "overlays": [
+          {
+            "layer": "organization",
+            "overlayId": "org-path",
+            "pathPrefixes": [
+              "/work/project/sub"
+            ]
+          }
+        ],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "secret_lease_denied"
+      ],
+      "expectedStatus": "deny",
+      "name": "isolated_secret_denied",
+      "request": {
+        "approval": {
+          "approvalId": "isolated-secret",
+          "approved": true,
+          "source": "owner"
+        },
+        "binding": {
+          "accessProfileId": "isolated_untrusted",
+          "actorId": "owner_executor",
+          "capabilityId": "secret.lease.use",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "use_secret"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "use",
+          "domain": "secret",
+          "target": "lease-1"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [
+        "process_action_denied"
+      ],
+      "expectedStatus": "deny",
+      "name": "unattended_interactive_pty_denied",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "owner_unattended",
+          "actorId": "automation_host",
+          "capabilityId": "process.interactive",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "terminal_open"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "interactive_pty",
+          "domain": "process",
+          "target": "shell"
+        },
+        "explicitWidening": {},
+        "overlays": [],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    },
+    {
+      "expectedReasons": [],
+      "expectedStatus": "allow",
+      "name": "overlay_order_reference",
+      "request": {
+        "approval": {},
+        "binding": {
+          "accessProfileId": "project",
+          "actorId": "research_worker",
+          "capabilityId": "network.connect",
+          "runId": "run-001",
+          "taskId": "task-001",
+          "toolId": "research_fetch"
+        },
+        "context": {
+          "authenticatedBrowser": false,
+          "availableBrowserProfiles": [
+            "work",
+            "personal"
+          ],
+          "availableSecretLeaseIds": [
+            "lease-1"
+          ],
+          "currentAccountRoots": [
+            "/home/alex",
+            "c:/users/alex"
+          ],
+          "grantDestinations": [
+            "docs.example.com"
+          ],
+          "privateNetwork": false,
+          "projectDestinations": [
+            "api.example.com",
+            "docs.example.com"
+          ],
+          "projectRoot": "/work/project",
+          "rawReveal": false,
+          "sandboxRoot": "/tmp/kristin-sandbox",
+          "userSelectedBrowserProfiles": [
+            "work"
+          ]
+        },
+        "effect": {
+          "action": "connect",
+          "domain": "network",
+          "target": "api.example.com"
+        },
+        "explicitWidening": {},
+        "overlays": [
+          {
+            "layer": "user",
+            "networkDestinations": [
+              "api.example.com"
+            ],
+            "overlayId": "z"
+          },
+          {
+            "layer": "organization",
+            "maxBudgets": {
+              "maxNetworkBytes": 5000
+            },
+            "overlayId": "a"
+          }
+        ],
+        "requestId": "policy-request-001",
+        "requestedBudgets": {
+          "maxCostMicros": 100000,
+          "maxMutations": 10,
+          "maxNetworkBytes": 1048576,
+          "maxOutputBytes": 1048576,
+          "wallClockMs": 60000
+        },
+        "schemaVersion": "2.0.0"
+      }
+    }
+  ],
+  "dartCaseNames": [
+    "project_write_inside_root",
+    "unknown_capability_denied",
+    "chat_write_denied",
+    "project_path_escape_denied",
+    "owner_delete_requires_approval",
+    "owner_delete_approved",
+    "model_cannot_approve",
+    "organization_deny_wins",
+    "narrowed_path_denied",
+    "widening_requires_approval",
+    "approved_widening_within_ceiling",
+    "widening_above_ceiling_denied",
+    "isolated_secret_denied",
+    "unattended_interactive_pty_denied",
+    "overlay_order_reference"
+  ],
+  "propertySeed": 104729,
+  "schemaVersion": "1.0.0"
+}

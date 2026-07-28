@@ -26,23 +26,21 @@
 | P1-001 | DONE | `P0-008` | `tasks/completed/P1-001.md` | `release/evidence/P1-001/manifest.json`<br>`release/evidence/P1-001/test-results.json`<br>`release/evidence/P1-001/OWNER_APPROVAL.md` |
 | P1-002 | DONE | `P1-001` | `tasks/completed/P1-002.md` | `release/evidence/P1-002/manifest.json`<br>`release/evidence/P1-002/test-results.json`<br>`release/evidence/P1-002/OWNER_APPROVAL.md` |
 | P1-003 | DONE | `P1-001`, `P1-002` | `tasks/completed/P1-003.md` | `release/evidence/P1-003/manifest.json`<br>`release/evidence/P1-003/test-results.json`<br>`release/evidence/P1-003/OWNER_APPROVAL.md` |
-| P1-004 | READY | `P1-002`, `P1-003` | `tasks/active/P1-004.md` | none |
-| P1-005 | READY | `P0-002`, `P1-001` | `tasks/active/P1-005.md` | none |
-| P1-006 | NOT_STARTED | `P1-005` | `tasks/active/P1-006.md` | none |
-| P1-007 | NOT_STARTED | `P1-006` | `tasks/active/P1-007.md` | none |
-| P1-008 | NOT_STARTED | `P1-005` | `tasks/active/P1-008.md` | none |
-| P1-009 | NOT_STARTED | `P1-005` | `tasks/active/P1-009.md` | none |
-| P1-010 | NOT_STARTED | `P1-006`, `P1-009` | `tasks/active/P1-010.md` | none |
-| P1-011 | NOT_STARTED | `P1-001`, `P1-004` | `tasks/active/P1-011.md` | none |
-| P1-012 | READY | `P1-001`, `P1-003` | `tasks/active/P1-012.md` | none |
+| P1-004 | DONE | `P1-002`, `P1-003` | `tasks/completed/P1-004.md` | `release/evidence/P1-004/manifest.json`<br>`release/evidence/P1-004/test-results.json`<br>`release/evidence/P1-004/OWNER_APPROVAL.md` |
+| P1-005 | DONE | `P0-002`, `P1-001` | `tasks/completed/P1-005.md` | `release/evidence/P1-005/manifest.json`<br>`release/evidence/P1-005/test-results.json`<br>`release/evidence/P1-005/OWNER_APPROVAL.md` |
+| P1-006 | DONE | `P1-005` | `tasks/completed/P1-006.md` | `release/evidence/P1-006/manifest.json`<br>`release/evidence/P1-006/test-results.json`<br>`release/evidence/P1-006/OWNER_APPROVAL.md` |
+| P1-007 | DONE | `P1-006` | `tasks/completed/P1-007.md` | `release/evidence/P1-007/manifest.json`<br>`release/evidence/P1-007/test-results.json`<br>`release/evidence/P1-007/OWNER_APPROVAL.md` |
+| P1-008 | DONE | `P1-005` | `tasks/completed/P1-008.md` | `release/evidence/P1-008/manifest.json`<br>`release/evidence/P1-008/test-results.json`<br>`release/evidence/P1-008/OWNER_APPROVAL.md` |
+| P1-009 | DONE | `P1-005` | `tasks/completed/P1-009.md` | `release/evidence/P1-009/manifest.json`<br>`release/evidence/P1-009/test-results.json`<br>`release/evidence/P1-009/OWNER_APPROVAL.md` |
+| P1-010 | DONE | `P1-006`, `P1-009` | `tasks/completed/P1-010.md` | `release/evidence/P1-010/manifest.json`<br>`release/evidence/P1-010/test-results.json`<br>`release/evidence/P1-010/OWNER_APPROVAL.md` |
+| P1-011 | DONE | `P1-001`, `P1-004` | `tasks/completed/P1-011.md` | `release/evidence/P1-011/manifest.json`<br>`release/evidence/P1-011/test-results.json`<br>`release/evidence/P1-011/OWNER_APPROVAL.md` |
+| P1-012 | DONE | `P1-001`, `P1-003` | `tasks/completed/P1-012.md` | `release/evidence/P1-012/manifest.json`<br>`release/evidence/P1-012/test-results.json`<br>`release/evidence/P1-012/OWNER_APPROVAL.md` |
 <!-- ROADMAP_STATUS_TABLE_END -->
 
 ## Next ready tasks
 
 <!-- ROADMAP_NEXT_READY_START -->
-- `P1-004` — Build deterministic policy engine (`tasks/active/P1-004.md`)
-- `P1-005` — Specify Signed Manifest v2 (`tasks/active/P1-005.md`)
-- `P1-012` — Create local authenticated IPC (`tasks/active/P1-012.md`)
+- None. Resolve the blockers or complete the task currently in review.
 <!-- ROADMAP_NEXT_READY_END -->
 
 ## Review and blocked work

@@ -143,6 +143,14 @@ jobs:
         run: |
           python tool/access_profile_v2_test.py
           python tool/p1_002_access_profile_test.py --project .
+      - name: P1 full trust closure
+        run: |
+          python tool/integration_train_test.py --project .
+          python tool/p1_exit_gate_test.py --project .
+      - name: P1-004 deterministic policy engine
+        run: |
+          python tool/deterministic_policy_engine_test.py
+          python tool/p1_004_policy_engine_test.py --project .
       - name: P1-003 capability grant v2
         run: |
           python tool/capability_grant_v2_test.py

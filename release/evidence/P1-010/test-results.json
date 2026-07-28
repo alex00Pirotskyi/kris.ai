@@ -1,0 +1,25 @@
+{
+  "caseCount": 3,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 3,
+  "results": [
+    {
+      "detail": "{'checkpointCount': 2, 'finalCheckpointHash': 'ce6a214f9a6df85a2c7ec3866ad2eac3fc54868885cdc80da487d95955017448', 'finalAuditHeadHash': 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'}",
+      "name": "Valid signed checkpoint chain",
+      "passed": true
+    },
+    {
+      "detail": "{'tamper': 'checkpoint_tampered', 'truncate': 'audit_head_mismatch', 'reorder': 'checkpoint_reordered', 'signer': 'unknown_signer'}",
+      "name": "Tamper truncate reorder signer substitution rejected",
+      "passed": true
+    },
+    {
+      "detail": "P1-010=DONE",
+      "name": "Roadmap state",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P1-010"
+}

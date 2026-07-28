@@ -1,0 +1,26 @@
+{
+  "algorithm": "Ed25519",
+  "canonicalization": "RFC8785-restricted-integer-domain",
+  "expiryRequired": true,
+  "forbiddenEnvelopeFields": [
+    "privateKey",
+    "seed",
+    "keyMaterial",
+    "hmacSecret",
+    "rawSecret"
+  ],
+  "intendedUseRequired": true,
+  "keyIdRequired": true,
+  "revocationRequired": true,
+  "schemaVersion": "2.0.0",
+  "supportedUses": [
+    "extension_manifest",
+    "worker_descriptor",
+    "agent_descriptor",
+    "release_metadata",
+    "audit_checkpoint",
+    "update_target"
+  ],
+  "trustDomainRequired": true,
+  "trustRoots": "external_keyring_only"
+}
