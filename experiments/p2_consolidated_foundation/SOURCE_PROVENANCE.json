@@ -1,0 +1,19 @@
+{
+  "classification": "source_provenance_only",
+  "completionClaim": false,
+  "excludedAuthorityTrain": "KRISTIN_P1_AUTHORITY_SERVICE_AMENDMENT_V62",
+  "knownP1Base": "e9cd72c7fbc77744aac9749776fa90dc9fc07e16",
+  "latestReferencePackage": "KRISTIN_P2_FULL_INTEGRATION_V62",
+  "latestReferencePackageSha256": "25bcfa8e75becc2c81fa3cbd49eba8ddf4621dd601bc5fc90d0eb98b4eb4fa59",
+  "reasonForExclusion": "P1A remains security-critical and incomplete; this P2 consolidation is delegation/reference-only.",
+  "schemaVersion": "1.0.0",
+  "sourceReviews": [
+    "KRISTIN_P2_FULL_INTEGRATION_V56_REVIEW.md",
+    "KRISTIN_P2_FULL_INTEGRATION_V57_REVIEW.md",
+    "KRISTIN_P2_FULL_INTEGRATION_V58_REVIEW.md",
+    "KRISTIN_P2_FULL_INTEGRATION_V59_REVIEW.md",
+    "KRISTIN_P2_FULL_INTEGRATION_V60_REVIEW.md",
+    "KRISTIN_P2_FULL_INTEGRATION_V61_REVIEW.md",
+    "KRISTIN_P1A_P2_SPLIT_TRAIN_V62_REVIEW.md"
+  ]
+}
