@@ -1,0 +1,313 @@
+{
+  "classification": "QUARANTINED_CONSOLIDATED_SOURCE_FOUNDATION",
+  "completionClaim": false,
+  "knownP1MainShaAtCreation": "e9cd72c7fbc77744aac9749776fa90dc9fc07e16",
+  "knownP1MergedMainCiAtCreation": "30322816485",
+  "package": "KRISTIN_P2_CONSOLIDATED_SOURCE_FOUNDATION_V1",
+  "remainingWorkstreamCount": 5,
+  "remainingWorkstreams": [
+    {
+      "completionEvidence": [
+        "P1A merged-main evidence",
+        "production worker-denial receipts",
+        "exact P1 grant/policy/use/audit validation"
+      ],
+      "goal": "Build/merge the real tri-platform P1A service, concrete connectors/installers, non-exportable keys, and launch P2 under a distinct OS-enforced worker principal.",
+      "id": "W1",
+      "name": "P1A authority service and restricted worker principal",
+      "tasks": [
+        "P2-002",
+        "P2-003",
+        "P2-005",
+        "P2-006",
+        "P2-011",
+        "P2-013"
+      ]
+    },
+    {
+      "completionEvidence": [
+        "real native helpers",
+        "real target-host postconditions",
+        "three-candidate technology measurements"
+      ],
+      "goal": "Finish PTY/process lifecycle and real package, service, clipboard, screen, snapshot and watchdog operations on Windows, macOS and Linux.",
+      "id": "W2",
+      "name": "Tri-platform runtime and host operations",
+      "tasks": [
+        "P2-004",
+        "P2-005",
+        "P2-006",
+        "P2-007",
+        "P2-008",
+        "P2-009",
+        "P2-010",
+        "P2-011"
+      ]
+    },
+    {
+      "completionEvidence": [
+        "pinned Flutter format/analyze/test",
+        "application-start E2E",
+        "keyboard/accessibility onboarding test"
+      ],
+      "goal": "Port the consolidated sources into the exact live application composition, navigation, terminal workspace, restart reconciliation and operator guide.",
+      "id": "W3",
+      "name": "Shipped ProductRuntime and Owner Mode UX integration",
+      "tasks": [
+        "P2-001",
+        "P2-010",
+        "P2-012",
+        "P2-014"
+      ]
+    },
+    {
+      "completionEvidence": [
+        "signed runner packets",
+        "post-run cleanup receipts",
+        "exact Windows/macOS/Linux task artifacts"
+      ],
+      "goal": "Provision trusted interactive runners, signed exact-run attestations, post-run cleanup, immutable artifacts, and task-specific receipts.",
+      "id": "W4",
+      "name": "Controlled runners and machine-observed evidence",
+      "tasks": [
+        "P2-001",
+        "P2-002",
+        "P2-003",
+        "P2-004",
+        "P2-005",
+        "P2-006",
+        "P2-007",
+        "P2-008",
+        "P2-009",
+        "P2-010",
+        "P2-011",
+        "P2-012",
+        "P2-013",
+        "P2-014"
+      ]
+    },
+    {
+      "completionEvidence": [
+        "independent approval",
+        "owner approval",
+        "protected-main exact tri-OS CI",
+        "merged tree equals reviewed tree"
+      ],
+      "goal": "Bind independent review and owner approval to the exact source/tree/evidence graph, then pass branch, PR test-merge and merged-main workflows.",
+      "id": "W5",
+      "name": "Independent security review and governed closure",
+      "tasks": [
+        "P2-001",
+        "P2-002",
+        "P2-003",
+        "P2-004",
+        "P2-005",
+        "P2-006",
+        "P2-007",
+        "P2-008",
+        "P2-009",
+        "P2-010",
+        "P2-011",
+        "P2-012",
+        "P2-013",
+        "P2-014"
+      ]
+    }
+  ],
+  "roadmapTaskCount": 14,
+  "roadmapTasksDone": 0,
+  "schemaVersion": "1.0.0",
+  "sourceBaselineCompleteCount": 10,
+  "sourceBaselinePartialCount": 4,
+  "tasks": [
+    {
+      "alreadyAvailable": "Owner profile/config models, app shell/workspace source, tests and operator documentation are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-001",
+      "name": "Owner Mode onboarding/settings",
+      "remainingWorkstreams": [
+        "W3",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Exact live ProductRuntime/UI integration and tri-platform Flutter evidence."
+    },
+    {
+      "alreadyAvailable": "Filesystem service, effect boundary, receipts and tests are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-002",
+      "name": "Full filesystem service",
+      "remainingWorkstreams": [
+        "W1",
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Merged P1A authorization path, full-host behavior and real platform receipts."
+    },
+    {
+      "alreadyAvailable": "Finite command service, authorization boundary, journaling and tests are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-003",
+      "name": "Owner finite command execution",
+      "remainingWorkstreams": [
+        "W1",
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Restricted worker launch, authenticated P1A effect permits and real OS execution receipts."
+    },
+    {
+      "alreadyAvailable": "Candidate protocol, receipt templates and supplementary native probes are reusable.",
+      "foundationStatus": "source_baseline_partial",
+      "id": "P2-004",
+      "name": "Automation-host technology spike",
+      "remainingWorkstreams": [
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Three independent tri-platform candidates with genuine detach/reconnect and descendant-kill measurements."
+    },
+    {
+      "alreadyAvailable": "PTY service, terminal model, Node host and native probe sources are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-005",
+      "name": "Interactive PTY",
+      "remainingWorkstreams": [
+        "W1",
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Production restricted-principal worker, exact native helper wiring and real tri-OS PTY receipts."
+    },
+    {
+      "alreadyAvailable": "Process-tree contracts, native supervisors, identity checks and tests are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-006",
+      "name": "Process-tree lifecycle",
+      "remainingWorkstreams": [
+        "W1",
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Zero-survivor descendant termination on all platforms through the production path."
+    },
+    {
+      "alreadyAvailable": "Operation contracts, controlled-resource design and local-package fixtures are reusable.",
+      "foundationStatus": "source_baseline_partial",
+      "id": "P2-007",
+      "name": "Package/SDK operations",
+      "remainingWorkstreams": [
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Real reversible package-manager operations on controlled target images."
+    },
+    {
+      "alreadyAvailable": "Operation contracts and application-process paths are reusable.",
+      "foundationStatus": "source_baseline_partial",
+      "id": "P2-008",
+      "name": "Service/application control",
+      "remainingWorkstreams": [
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Real Windows user task/service, macOS LaunchAgent and Linux user-service lifecycle evidence."
+    },
+    {
+      "alreadyAvailable": "Interactive desktop adapter contracts and evidence requirements are reusable.",
+      "foundationStatus": "source_baseline_partial",
+      "id": "P2-009",
+      "name": "Clipboard/screen/active window",
+      "remainingWorkstreams": [
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Trusted logged-in interactive runners with permission-bound clipboard/screen/window evidence."
+    },
+    {
+      "alreadyAvailable": "Snapshot/undo models, journals, receipts and tests are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-010",
+      "name": "Snapshots/undo",
+      "remainingWorkstreams": [
+        "W2",
+        "W3",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Production restore executor through the shipped application and failure-injection receipts."
+    },
+    {
+      "alreadyAvailable": "External watchdog, controller, heartbeat and native source are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-011",
+      "name": "Emergency pause/kill watchdog",
+      "remainingWorkstreams": [
+        "W1",
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Actual frozen-application kill through isolated P1A/restricted worker composition on all platforms."
+    },
+    {
+      "alreadyAvailable": "Owner workspace, terminal model and UI tests are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-012",
+      "name": "Terminal UX",
+      "remainingWorkstreams": [
+        "W3",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Exact live navigation integration, keyboard accessibility and high-volume transcript behavior."
+    },
+    {
+      "alreadyAvailable": "Security tests, malformed/replay fixtures and evidence no-promotion guards are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-013",
+      "name": "Owner Mode adversarial suite",
+      "remainingWorkstreams": [
+        "W1",
+        "W2",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Run against production P1A, real restricted worker and controlled tri-platform environments."
+    },
+    {
+      "alreadyAvailable": "Operator guide and documentation consistency checks are reusable.",
+      "foundationStatus": "source_baseline_complete",
+      "id": "P2-014",
+      "name": "Owner Mode operator guide",
+      "remainingWorkstreams": [
+        "W3",
+        "W4",
+        "W5"
+      ],
+      "roadmapStatus": "NOT_DONE",
+      "stillRequired": "Update to final behavior and pass scripted onboarding after all platform behavior is final."
+    }
+  ]
+}
