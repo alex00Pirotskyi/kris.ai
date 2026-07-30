@@ -1,0 +1,71 @@
+{
+  "$id": "https://kristin.local/schemas/p1a_platform_behavioral_v3.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "artifactSha256": {
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "completionEligible": {
+      "const": true
+    },
+    "packageSha256": {
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "phase": {
+      "const": "P1A"
+    },
+    "platform": {
+      "enum": [
+        "windows",
+        "macos",
+        "linux"
+      ]
+    },
+    "receiptType": {
+      "const": "p1a-platform-behavioral-v3"
+    },
+    "schemaVersion": {
+      "const": "3.0.0"
+    },
+    "sourceCommit": {
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sourceOnly": {
+      "const": false
+    },
+    "sourceTree": {
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "status": {
+      "const": "passed"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "receiptType",
+    "phase",
+    "platform",
+    "sourceCommit",
+    "sourceTree",
+    "packageSha256",
+    "status",
+    "sourceOnly",
+    "completionEligible",
+    "exactBinding",
+    "exactRunBindingSha256",
+    "artifactRoot",
+    "artifactDigestAlgorithm",
+    "artifactSha256",
+    "runnerAttestation",
+    "buildProvenance",
+    "installerReceipt",
+    "keyProviderReceipt",
+    "workerDenialReceipt",
+    "serviceBehaviorReceipt",
+    "cleanupReceipt",
+    "githubApiVerification",
+    "signature"
+  ],
+  "type": "object"
+}

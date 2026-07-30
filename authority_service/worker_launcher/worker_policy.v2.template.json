@@ -1,0 +1,39 @@
+{
+  "allowedEnvironmentKeys": [
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP",
+    "LANG",
+    "LC_ALL",
+    "TERM"
+  ],
+  "authorityAddress": "REQUIRED_INSTALLED_P1A_ENDPOINT",
+  "hostScript": "REQUIRED_ABSOLUTE_STAGED_PATH",
+  "hostScriptSha256": "REQUIRED_SHA256",
+  "launcherPath": "REQUIRED_ABSOLUTE_INSTALLED_P1A_LAUNCHER_PATH",
+  "launcherSha256": "REQUIRED_SHA256",
+  "linux": {
+    "principalConfig": "ROOT_OWNED_/opt/kristin/p1a/config/worker-principal.json",
+    "unshareIpc": true,
+    "unshareMount": true,
+    "unshareUts": true
+  },
+  "macos": {
+    "authorityClientEntitlement": false,
+    "expectedRequirement": "REQUIRED_SIGNED_HELPER_REQUIREMENT",
+    "sandboxProfile": "REQUIRED_SIGNED_SANDBOX_PROFILE_NAME"
+  },
+  "nodeExecutable": "REQUIRED_ABSOLUTE_STAGED_PATH",
+  "nodeSha256": "REQUIRED_SHA256",
+  "packageSha256": "REQUIRED_SHA256",
+  "platform": "REQUIRED: windows|macos|linux",
+  "schemaVersion": "2.0.0",
+  "sourceCommit": "REQUIRED_40_HEX",
+  "sourceTree": "REQUIRED_40_HEX",
+  "windows": {
+    "appContainerName": "Kristin.Agent.Worker",
+    "capabilitySids": []
+  },
+  "workingDirectory": "REQUIRED_ABSOLUTE_STAGED_PATH"
+}

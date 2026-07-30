@@ -1,0 +1,34 @@
+{
+  "arbitraryMessageSigningApi": false,
+  "completionEligible": false,
+  "privateKeyFileAccepted": false,
+  "requiredInternalValidation": [
+    "deterministic-policy-v2",
+    "capability-grant-v2",
+    "durable-use-consumption",
+    "revocation-epoch",
+    "signed-audit-chain"
+  ],
+  "requiredKeyProviders": {
+    "linux": [
+      "pkcs11",
+      "tpm2"
+    ],
+    "macos": [
+      "secure-enclave"
+    ],
+    "windows": [
+      "cng-platform-ksp"
+    ]
+  },
+  "schemaVersion": "2.0.0",
+  "templateOnly": true,
+  "typedOperations": [
+    "authorize-effect-v2",
+    "record-effect-outcome-v2",
+    "describe-authority-v2",
+    "record-owner-approval-v2",
+    "begin-behavior-session-v2",
+    "finalize-behavior-session-v2"
+  ]
+}

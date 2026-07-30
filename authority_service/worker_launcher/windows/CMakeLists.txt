@@ -1,0 +1,9 @@
+
+cmake_minimum_required(VERSION 3.20)
+project(kristin_p2_worker_launcher_windows LANGUAGES CXX)
+add_executable(kristin_p2_worker_launcher restricted_worker_launcher_windows.cpp)
+target_compile_features(kristin_p2_worker_launcher PRIVATE cxx_std_20)
+target_include_directories(kristin_p2_worker_launcher PRIVATE ../../native/common)
+target_compile_definitions(kristin_p2_worker_launcher PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(kristin_p2_worker_launcher PRIVATE /W4 /WX /permissive-)
+target_link_libraries(kristin_p2_worker_launcher PRIVATE advapi32 userenv)

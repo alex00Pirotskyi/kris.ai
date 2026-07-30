@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>Label</key><string>com.kristin.p1authority</string><key>ProgramArguments</key><array><string>@SERVICE_BIN@</string><string>@CONFIG_PATH@</string></array><key>MachServices</key><dict><key>com.kristin.p1authority</key><true/></dict><key>RunAtLoad</key><true/><key>KeepAlive</key><true/><key>UserName</key><string>_kristinauthority</string></dict></plist>

@@ -1,0 +1,55 @@
+{
+  "completionEligible": false,
+  "forbiddenOperations": [
+    "sign",
+    "hmac-sha256",
+    "ed25519-sign",
+    "ecdsa-sign",
+    "raw-key",
+    "export-key",
+    "worker-bootstrap-with-secret"
+  ],
+  "platforms": {
+    "linux": {
+      "credentialProvider": "systemd LoadCredentialEncrypted",
+      "permitKeyProvider": "pkcs11: or tpm2: OpenSSL 3 provider URI",
+      "serviceIdentity": "kristin-authority",
+      "transport": "linux-af-unix",
+      "workerIsolation": "dedicated kristin-worker UID"
+    },
+    "macos": {
+      "credentialProvider": "Keychain service-only ACL",
+      "permitKeyProvider": "Secure Enclave P-256 service-only key",
+      "serviceIdentity": "com.kristin.p1.authority",
+      "transport": "macos-xpc",
+      "workerIsolation": "signed App Sandbox helper"
+    },
+    "windows": {
+      "credentialProvider": "LSA private data service-only",
+      "permitKeyProvider": "CNG Platform KSP non-exportable machine key",
+      "serviceIdentity": "NT SERVICE\\KristinP1Authority",
+      "transport": "windows-named-pipe",
+      "workerIsolation": "AppContainer/restricted token"
+    }
+  },
+  "requiredEvidence": [
+    "signed-exact-run-provenance",
+    "exact-installer-binary-source-build-digests",
+    "nonexportable-key-provider-attestation",
+    "internal-policy-grant-use-revocation-audit",
+    "exact-production-worker-principal-denial",
+    "restart-replay",
+    "post-run-uninstall-cleanup",
+    "live-github-job-verification"
+  ],
+  "schemaVersion": "2.0.0",
+  "serviceType": "p1-isolated-authority-service-v2",
+  "typedOperations": [
+    "describe-authority-v2",
+    "record-owner-approval-v2",
+    "authorize-effect-v2",
+    "record-effect-outcome-v2",
+    "begin-behavior-session-v2",
+    "finalize-behavior-session-v2"
+  ]
+}

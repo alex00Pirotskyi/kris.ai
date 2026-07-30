@@ -18,6 +18,8 @@ import 'project_diagnostics.dart';
 import 'project_manager_v2.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
+import 'p1_authority_service_contract_v1.dart';
+import 'p1_authority_service_product_runtime_v1.dart';
 
 class ProductRuntime {
   ProductRuntime._({
@@ -76,6 +78,9 @@ class ProductRuntime {
   final ExecutionIntelligenceService executionIntelligence;
   final ProjectManagerV2Service projectManagerV2;
   final RunCoordinator runs;
+  P1AuthorityServiceProductRuntimeV1? _p1AuthorityServiceRuntime;
+  P1AuthorityServiceHandleV1? get p1AuthorityService =>
+      _p1AuthorityServiceRuntime?.handle;
   final Map<String, String> _projectProcessIds = <String, String>{};
   ProductSettings _settings;
 
@@ -240,6 +245,8 @@ class ProductRuntime {
       runs: coordinator,
       settings: settings,
     );
+    runtime._p1AuthorityServiceRuntime =
+        await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
     await coordinator.reconcileInterruptedRuns();
     await coordinator.reconcileMemoryEpisodes();
     await audit.append('application.started', 'application', <String, dynamic>{
@@ -251,6 +258,7 @@ class ProductRuntime {
   }
 
   Future<void> close() async {
+    await _p1AuthorityServiceRuntime?.close();
     await managedProcesses.stopAll();
     await mcp.closeAll();
     secrets.clearSession();

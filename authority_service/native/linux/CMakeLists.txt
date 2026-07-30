@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(kristin_p1_authority_service_linux LANGUAGES CXX)
+find_package(OpenSSL 3 REQUIRED COMPONENTS Crypto)
+add_executable(kristin_p1_authority_service authority_service_linux.cpp)
+target_compile_features(kristin_p1_authority_service PRIVATE cxx_std_20)
+target_include_directories(kristin_p1_authority_service PRIVATE ../common)
+target_compile_options(kristin_p1_authority_service PRIVATE -Wall -Wextra -Werror -pedantic)
+target_link_libraries(kristin_p1_authority_service PRIVATE OpenSSL::Crypto dl pthread)

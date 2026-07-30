@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(kristin_p1_authority_service_macos LANGUAGES CXX OBJCXX)
+add_executable(kristin_p1_authority_service_macos authority_service_macos.mm)
+target_compile_features(kristin_p1_authority_service_macos PRIVATE cxx_std_20)
+target_include_directories(kristin_p1_authority_service_macos PRIVATE ../common)
+target_compile_options(kristin_p1_authority_service_macos PRIVATE -Wall -Wextra -Werror -Wpedantic -fobjc-arc -fblocks)
+target_link_libraries(kristin_p1_authority_service_macos PRIVATE "-framework Foundation" "-framework Security" "-framework ServiceManagement")

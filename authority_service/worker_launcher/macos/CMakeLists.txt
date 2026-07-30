@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(kristin_p2_worker_launcher_macos LANGUAGES CXX OBJCXX)
+add_executable(kristin_p2_worker_launcher restricted_worker_launcher_macos.mm)
+target_compile_features(kristin_p2_worker_launcher PRIVATE cxx_std_20)
+target_include_directories(kristin_p2_worker_launcher PRIVATE ../../native/common)
+target_compile_options(kristin_p2_worker_launcher PRIVATE -Wall -Wextra -Werror -Wpedantic -fobjc-arc -fblocks)
+target_link_libraries(kristin_p2_worker_launcher PRIVATE "-framework Foundation" "-framework Security" sandbox)

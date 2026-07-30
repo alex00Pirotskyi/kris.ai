@@ -106,7 +106,12 @@ EXPECTED_DART_FILES = {
                           'test/product/signed_audit_checkpoint_v1_test.dart',
                           'lib/product/local_authenticated_ipc_v1.dart',
                           'test/product/local_authenticated_ipc_v1_test.dart',
-                      }
+                                                'lib/product/p1_authority_service_contract_v1.dart',
+                          'lib/product/p1_authority_service_native_connector_v2.dart',
+                          'lib/product/p1_authority_service_product_runtime_v1.dart',
+                          'test/product/p1_authority_service_contract_v1_test.dart',
+                          'test/product/p1_authority_service_product_runtime_v1_test.dart',
+}
 EXCLUDED_DART_TOP_LEVEL = {
     ".dart_tool", ".git", "archive", "build", "coverage", "dist",
     "node_modules",

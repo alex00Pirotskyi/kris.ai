@@ -1,0 +1,55 @@
+{
+  "completionEligible": false,
+  "keys": [
+    {
+      "algorithm": "ed25519",
+      "keyId": "replace-runner-provisioning-key",
+      "platforms": [
+        "windows",
+        "macos",
+        "linux"
+      ],
+      "publicKeyBase64": "REPLACE_WITH_32_BYTE_BASE64_PUBLIC_KEY",
+      "purposes": [
+        "p1a-runner-attestation-receipt",
+        "p1a-build-provenance",
+        "p1a-installer-receipt",
+        "p1a-key-provider-receipt",
+        "p1a-worker-denial-receipt",
+        "p1a-cleanup-receipt",
+        "p1a-github-api-verification",
+        "p1a-platform-receipt"
+      ]
+    },
+    {
+      "algorithm": "ed25519",
+      "keyId": "replace-reviewer-key",
+      "platforms": [
+        "aggregate"
+      ],
+      "publicKeyBase64": "REPLACE_WITH_32_BYTE_BASE64_PUBLIC_KEY",
+      "purposes": [
+        "p1a-independent-security-review"
+      ]
+    },
+    {
+      "algorithm": "ed25519",
+      "keyId": "replace-owner-key",
+      "platforms": [
+        "aggregate"
+      ],
+      "publicKeyBase64": "REPLACE_WITH_32_BYTE_BASE64_PUBLIC_KEY",
+      "purposes": [
+        "p1a-owner-approval"
+      ]
+    }
+  ],
+  "protectedRepositoryBinding": {
+    "description": "The exact SHA-256 of this completed trust file must be stored as a protected repository variable before behavioral evidence or finalization.",
+    "repository": "alex00Pirotskyi/kris.ai",
+    "required": true,
+    "variableName": "KRISTIN_P1A_V66_EVIDENCE_TRUST_SHA256"
+  },
+  "schemaVersion": "1.0.0",
+  "trustType": "p1a-evidence-trust-v1"
+}

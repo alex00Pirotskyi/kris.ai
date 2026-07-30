@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(kristin_p1_authority_service_windows LANGUAGES CXX)
+add_executable(kristin_p1_authority_service_windows authority_service_windows.cpp)
+target_compile_features(kristin_p1_authority_service_windows PRIVATE cxx_std_20)
+target_include_directories(kristin_p1_authority_service_windows PRIVATE ../common)
+target_compile_definitions(kristin_p1_authority_service_windows PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX SECURITY_WIN32)
+target_compile_options(kristin_p1_authority_service_windows PRIVATE /W4 /WX /permissive-)
+target_link_libraries(kristin_p1_authority_service_windows PRIVATE advapi32 bcrypt crypt32 ncrypt secur32 wintrust)

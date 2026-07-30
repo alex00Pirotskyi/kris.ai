@@ -1,0 +1,12 @@
+{
+  "completionClaim": false,
+  "field": "ProductRuntime.p1AuthorityService",
+  "historicalP1EvidenceModified": false,
+  "p2CodeIntroduced": false,
+  "productRuntime": {
+    "afterSha256": "96879fbe880e01ad59b4cd948d741e3cfac7981e217b066de50fade66020b936",
+    "beforeSha256": "09e1c2b4dbffde675c712ba5343a585489ec0741b4995c62f540eca627d41f9d"
+  },
+  "resultType": "p1a-product-runtime-patch-v1",
+  "schemaVersion": "1.0.0"
+}
