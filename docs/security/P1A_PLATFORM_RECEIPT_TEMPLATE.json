@@ -1,0 +1,78 @@
+{
+  "artifactDigestAlgorithm": "canonical-unpacked-v1",
+  "artifactRoot": "artifacts",
+  "artifactSha256": "REPLACE_64_HEX",
+  "buildProvenance": {
+    "path": "artifacts/buildProvenance.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "cleanupReceipt": {
+    "path": "artifacts/cleanupReceipt.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "completionEligible": false,
+  "exactBinding": {
+    "ephemeralSessionId": "REPLACE",
+    "gitRef": "REPLACE",
+    "githubJobId": 0,
+    "jobName": "p1a-behavioral-REPLACE",
+    "platform": "REPLACE",
+    "repository": "OWNER/REPO",
+    "repositoryId": 0,
+    "runAttempt": 0,
+    "runnerGroup": "kristin-p1a-controlled",
+    "runnerGroupId": 0,
+    "runnerId": 0,
+    "runnerLabels": [],
+    "runnerName": "REPLACE",
+    "schemaVersion": "1.0.0",
+    "sourceCommit": "REPLACE_40_HEX",
+    "sourceTree": "REPLACE_40_HEX",
+    "workflowName": "P1 Authority Service Amendment",
+    "workflowPath": ".github/workflows/p1-authority-amendment.yml",
+    "workflowRef": "REPLACE",
+    "workflowRunId": "REPLACE"
+  },
+  "exactRunBindingSha256": "REPLACE_64_HEX",
+  "githubApiVerification": {
+    "path": "artifacts/githubApiVerification.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "installerReceipt": {
+    "path": "artifacts/installerReceipt.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "keyProviderReceipt": {
+    "path": "artifacts/keyProviderReceipt.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "packageSha256": "REPLACE_64_HEX",
+  "phase": "P1A",
+  "platform": "REPLACE_windows_macos_linux",
+  "receiptType": "p1a-platform-behavioral-v3",
+  "runnerAttestation": {
+    "path": "artifacts/runnerAttestation.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "schemaVersion": "3.0.0",
+  "serviceBehaviorReceipt": {
+    "path": "artifacts/serviceBehaviorReceipt.json",
+    "sha256": "REPLACE_64_HEX"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "keyId": "REPLACE",
+    "purpose": "p1a-platform-receipt",
+    "signatureBase64": "REPLACE",
+    "signedSha256": "REPLACE_64_HEX"
+  },
+  "sourceCommit": "REPLACE_40_HEX",
+  "sourceOnly": false,
+  "sourceTree": "REPLACE_40_HEX",
+  "status": "blocked",
+  "syntheticContractFixture": false,
+  "workerDenialReceipt": {
+    "path": "artifacts/workerDenialReceipt.json",
+    "sha256": "REPLACE_64_HEX"
+  }
+}

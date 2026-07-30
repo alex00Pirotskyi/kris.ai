@@ -54,3 +54,7 @@ A proposed ADR may guide investigation but may not authorize a production implem
 P1-004 through P1-012 are delivered in one dependency-ordered integration train. Each task retains a completed packet, individual evidence manifest, executable gate and acceptance criteria. Signed Manifest v2 uses Ed25519 and external trust roots; v1 remains rejected; TUF trust, protected key references, signed audit checkpoints, threat ownership and authenticated IPC are approved.
 
 The program now uses twelve governed integration trains. This changes merge cadence only and does not collapse task-level truth or assurance.
+
+## P1 authority-service amendment V65
+
+P1A-001 is a separately governed security amendment. It introduces an OS-isolated, typed P1 authority service owned outside the full-current-account automation worker boundary. Historical P1 evidence and the bootstrap P0/P1 roadmap remain immutable. P1A state is carried only by its dedicated task packet and signed evidence graph. Source landing on protected main is explicitly non-completing; only a later evidence-only closure can satisfy the P2 dependency.

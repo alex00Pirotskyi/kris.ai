@@ -1,0 +1,13 @@
+{
+  "completionEligible": false,
+  "note": "Exact controlled-runner service installation, key provider, connector, restricted-worker denial, restart/replay, cleanup and signed provenance are required.",
+  "passed": false,
+  "platforms": {
+    "linux": "source_only",
+    "macos": "not_tested",
+    "windows": "not_tested"
+  },
+  "schemaVersion": "3.0.0",
+  "status": "source_only",
+  "taskId": "P1A-001"
+}

@@ -173,6 +173,9 @@ void main() {
         'lib/product/key_registry_v2.dart',
         'lib/product/signed_audit_checkpoint_v1.dart',
         'lib/product/local_authenticated_ipc_v1.dart',
+        'lib/product/p1_authority_service_contract_v1.dart',
+        'lib/product/p1_authority_service_native_connector_v2.dart',
+        'lib/product/p1_authority_service_product_runtime_v1.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))

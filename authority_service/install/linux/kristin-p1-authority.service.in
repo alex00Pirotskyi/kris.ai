@@ -1,0 +1,38 @@
+
+[Unit]
+Description=Kristin isolated P1 authority service
+After=local-fs.target
+Before=graphical.target
+
+[Service]
+Type=simple
+User=kristin-authority
+Group=kristin-authority
+RuntimeDirectory=kristin-p1a
+RuntimeDirectoryMode=0750
+StateDirectory=kristin-p1a
+StateDirectoryMode=0700
+ExecStart=@INSTALL_ROOT@/bin/kristin_p1_authority_service --socket /run/kristin-p1a/authority.sock --config /etc/kristin/p1a/authority-policy.json --state /var/lib/kristin-p1a/state.log --audit /var/lib/kristin-p1a/audit.jsonl --revocations /etc/kristin/p1a/revocations.json --approvals /etc/kristin/p1a/approvals.json --permit-key-uri @PERMIT_KEY_URI@ --grant-hmac-credential ${CREDENTIALS_DIRECTORY}/grant-hmac --owner-hmac-credential ${CREDENTIALS_DIRECTORY}/owner-hmac --desktop-uid @DESKTOP_UID@ --worker-uid @WORKER_UID@ --worker-gid @WORKER_GID@ --service-uid @SERVICE_UID@ --service-gid @SERVICE_GID@ --desktop-exe-sha256 @DESKTOP_EXE_SHA256@
+LoadCredentialEncrypted=grant-hmac:/etc/kristin/p1a/credentials/grant-hmac.cred
+LoadCredentialEncrypted=owner-hmac:/etc/kristin/p1a/credentials/owner-hmac.cred
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+ReadWritePaths=/run/kristin-p1a /var/lib/kristin-p1a
+UMask=0077
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

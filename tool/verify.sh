@@ -59,3 +59,17 @@ python3 tool/assurance_dashboard.py --project . --strict
 # P1 full trust-stack closure gates
 "${PYTHON:-python}" tool/integration_train_test.py --project .
 "${PYTHON:-python}" tool/p1_exit_gate_test.py --project .
+
+# P1 AUTHORITY SERVICE AMENDMENT V65
+python tool/p1a_source_inventory_test.py --project .
+python tool/p1a_authority_contract_test.py --project .
+python tool/p1a_installer_secret_contract_test.py --project .
+python tool/p1a_build_authority_snapshot_test.py --project .
+python tool/p1a_toolchain_extension_test.py --project .
+python tool/p1a_patch_product_runtime_test.py --project .
+python tool/p1a_finalizer_contract_test.py --project .
+if [[ -f release/evidence/P1A/manifest.json ]] && grep -q '"status": "passed"' release/evidence/P1A/manifest.json; then
+  python tool/p1a_exit_gate_test.py --project .
+else
+  python tool/p1a_exit_gate_test.py --project . --source-only
+fi

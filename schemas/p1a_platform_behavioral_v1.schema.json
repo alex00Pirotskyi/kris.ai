@@ -1,0 +1,44 @@
+{
+  "$id": "https://kristin.local/schemas/p1a_platform_behavioral_v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "completionEligible": {
+      "const": true
+    },
+    "platform": {
+      "enum": [
+        "windows",
+        "macos",
+        "linux"
+      ]
+    },
+    "receiptType": {
+      "const": "p1a-platform-behavioral-v1"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "sourceOnly": {
+      "const": false
+    },
+    "status": {
+      "const": "passed"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "receiptType",
+    "platform",
+    "sourceCommit",
+    "sourceTree",
+    "status",
+    "sourceOnly",
+    "completionEligible",
+    "artifactRoot",
+    "artifactSha256",
+    "authorityService"
+  ],
+  "title": "P1A exact platform behavioral receipt",
+  "type": "object"
+}
