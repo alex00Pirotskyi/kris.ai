@@ -1,0 +1,9 @@
+{
+  "completionClaim": false,
+  "p2DependencySatisfied": false,
+  "phase": "P1A",
+  "reason": "V63 source candidate requires exact signed Windows/macOS/Linux production behavioral evidence, independent review, and owner approval.",
+  "schemaVersion": "3.0.0",
+  "status": "BLOCKED",
+  "taskId": null
+}

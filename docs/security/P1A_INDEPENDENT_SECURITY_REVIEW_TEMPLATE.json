@@ -1,0 +1,22 @@
+{
+  "conditions": [],
+  "criticalHighFindingsRemaining": [
+    "UNREVIEWED"
+  ],
+  "decision": "reject",
+  "independent": false,
+  "packageSha256": "",
+  "platformReceiptSha256": {
+    "linux": "",
+    "macos": "",
+    "windows": ""
+  },
+  "reviewArtifactPath": "",
+  "reviewArtifactSha256": "",
+  "reviewType": "p1a-independent-security-review-v2",
+  "reviewedCommit": "",
+  "reviewedTree": "",
+  "reviewer": "",
+  "satisfiedConditions": [],
+  "schemaVersion": "2.0.0"
+}

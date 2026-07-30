@@ -1,0 +1,12 @@
+
+cmake_minimum_required(VERSION 3.20)
+project(kristin_p1a_connector_macos LANGUAGES CXX OBJCXX)
+add_library(kristin_p1a_connector SHARED p1a_connector_macos.mm)
+target_compile_features(kristin_p1a_connector PRIVATE cxx_std_20)
+target_include_directories(kristin_p1a_connector PRIVATE ../common ../../native/common)
+target_compile_options(kristin_p1a_connector PRIVATE -Wall -Wextra -Werror -Wpedantic -fobjc-arc -fblocks)
+target_link_libraries(kristin_p1a_connector PRIVATE "-framework Foundation")
+add_executable(kristin_p1a_connector_cli ../common/p1a_connector_cli.cpp)
+target_include_directories(kristin_p1a_connector_cli PRIVATE ../common)
+target_link_libraries(kristin_p1a_connector_cli PRIVATE kristin_p1a_connector)
+target_compile_options(kristin_p1a_connector_cli PRIVATE -Wall -Wextra -Werror -Wpedantic)

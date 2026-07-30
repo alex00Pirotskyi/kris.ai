@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "accessProfileId": {
+      "type": "string"
+    },
+    "actorId": {
+      "type": "string"
+    },
+    "authenticatedChannelId": {
+      "type": "string"
+    },
+    "behaviorSessionId": {
+      "type": "string"
+    },
+    "budgets": {
+      "type": "object"
+    },
+    "capabilityId": {
+      "type": "string"
+    },
+    "deadlineUnixSeconds": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "effectPermitId": {
+      "type": "string"
+    },
+    "exactRunBindingSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "expectedRevocationEpoch": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "operation": {
+      "enum": [
+        "authorize-effect-v2",
+        "record-effect-outcome-v2",
+        "describe-authority-v2",
+        "record-owner-approval-v2",
+        "begin-behavior-session-v2",
+        "finalize-behavior-session-v2"
+      ]
+    },
+    "outcome": {
+      "type": "object"
+    },
+    "ownerApproval": {
+      "type": "object"
+    },
+    "policyEffect": {
+      "type": "object"
+    },
+    "requestId": {
+      "maxLength": 192,
+      "minLength": 1,
+      "type": "string"
+    },
+    "requestNonce": {
+      "maxLength": 192,
+      "minLength": 1,
+      "type": "string"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "taskId": {
+      "type": "string"
+    },
+    "toolId": {
+      "type": "string"
+    },
+    "workerIdentity": {
+      "type": "object"
+    },
+    "workerSessionId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "operation",
+    "requestId",
+    "requestNonce"
+  ],
+  "title": "P1A typed authority request V2",
+  "type": "object"
+}

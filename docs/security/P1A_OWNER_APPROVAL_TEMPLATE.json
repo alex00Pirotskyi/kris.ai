@@ -1,0 +1,19 @@
+{
+  "acknowledgesAuthorityServiceTCB": false,
+  "acknowledgesP2DependencyImpact": false,
+  "acknowledgesPlatformInstallation": false,
+  "acknowledgesSeparateOsIdentity": false,
+  "approvalType": "p1a-owner-approval-v2",
+  "approved": false,
+  "approvedAt": "",
+  "owner": "",
+  "packageSha256": "",
+  "platformReceiptSha256": {
+    "linux": "",
+    "macos": "",
+    "windows": ""
+  },
+  "reviewedCommit": "",
+  "reviewedTree": "",
+  "schemaVersion": "2.0.0"
+}
