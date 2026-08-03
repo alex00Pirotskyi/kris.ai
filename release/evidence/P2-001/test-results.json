@@ -1,0 +1,39 @@
+{
+  "note": "Local helper and source checks are diagnostics only and are always source_only. Exact shipped-product Windows/macOS/Linux receipts plus independent review are required.",
+  "platform": "win32",
+  "schemaVersion": "1.0.0",
+  "status": "source_only",
+  "taskId": "P2-001",
+  "tests": [
+    {
+      "classification": "source_contract",
+      "detail": "Windows Job Object smoke runs in platform CI",
+      "name": "timeout and process-tree termination",
+      "status": "source_only"
+    },
+    {
+      "classification": "source_contract",
+      "detail": "Windows native Job Object smoke runs in platform CI",
+      "name": "external watchdog kills target while UI absent",
+      "status": "source_only"
+    },
+    {
+      "classification": "source_contract",
+      "detail": "[]",
+      "name": "P2 implementation artifact inventory",
+      "status": "passed"
+    },
+    {
+      "classification": "source_contract",
+      "detail": "",
+      "name": "operator guide labels Owner Mode as non-sandbox",
+      "status": "passed"
+    },
+    {
+      "classification": "source_contract",
+      "detail": "",
+      "name": "independent reviewer sign-off remains unclaimed",
+      "status": "passed"
+    }
+  ]
+}

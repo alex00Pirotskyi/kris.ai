@@ -1,0 +1,51 @@
+{
+  "$id": "https://kristin.local/schemas/p2_post_run_cleanup_v2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "assertions": {
+      "required": [
+        "managedProcessTreesTerminated",
+        "zeroSurvivingDescendants",
+        "controlledUserServicesStoppedAndRemoved",
+        "controlledPackagesRemoved",
+        "clipboardTestDataCleared",
+        "screenArtifactsRemoved",
+        "authorityEvidenceArtifactsCleared",
+        "workspacesRemoved",
+        "noTestSecretsRemaining",
+        "noConcurrentUntrustedWorkload"
+      ],
+      "type": "object"
+    },
+    "cleanupType": {
+      "const": "p2-post-run-cleanup-receipt-v2"
+    },
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "status": {
+      "const": "passed"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "cleanupType",
+    "repository",
+    "workflowRunId",
+    "runAttempt",
+    "jobName",
+    "githubJobId",
+    "sourceCommit",
+    "runnerId",
+    "runnerEphemeralSessionId",
+    "attestationReceiptSha256",
+    "provisionalReceiptSha256",
+    "assertions",
+    "status",
+    "publicKeyHex",
+    "signatureHex"
+  ],
+  "title": "Kristin P2 exact post-run cleanup receipt V2",
+  "type": "object"
+}

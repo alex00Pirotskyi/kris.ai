@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-001",
+  "name": "Owner Mode onboarding and settings",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P1-002",
+    "P1-004"
+  ],
+  "artifacts": [
+    "lib/product/p2_owner_mode.dart",
+    "config/p2_owner_mode.v1.json",
+    "lib/product/p2_owner_workspace.dart",
+    "test/product/p2_owner_mode_test.dart",
+    "test/product/p2_owner_workspace_test.dart"
+  ],
+  "testResults": "release/evidence/P2-001/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

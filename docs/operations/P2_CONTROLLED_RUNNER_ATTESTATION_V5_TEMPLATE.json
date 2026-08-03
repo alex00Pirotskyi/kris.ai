@@ -1,0 +1,133 @@
+{
+  "attestationType": "p2-controlled-runner-attestation-v5",
+  "configurationReceiptPath": "/external/path/configuration.json",
+  "configurationSha256": "REPLACE_64_HEX",
+  "controlledOperations": {
+    "packageManager": "npm-local-controlled",
+    "packageName": "REPLACE",
+    "serviceId": "REPLACE",
+    "serviceProvider": "systemd-user"
+  },
+  "controlledResources": {
+    "applicationRuntimeRoot": {
+      "kind": "directory",
+      "path": "/controlled/e2e/runtime/p2"
+    },
+    "controlledPackageArchive": {
+      "kind": "file",
+      "path": "/controlled/package/package.tgz",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "controlledPackageRoot": {
+      "kind": "directory",
+      "path": "/controlled/package"
+    },
+    "controlledServiceDefinition": {
+      "kind": "file",
+      "path": "/controlled/service/service.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "controlledServiceRoot": {
+      "kind": "directory",
+      "path": "/controlled/service"
+    },
+    "e2eWorkspaceRoot": {
+      "kind": "directory",
+      "path": "/controlled/e2e"
+    },
+    "p1AuthorityServiceConnectorConfig": {
+      "kind": "file",
+      "path": "/installed/p1a/connector-v2.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "p1AuthorityServiceEvidenceRoot": {
+      "kind": "directory",
+      "path": "/external/p1a"
+    },
+    "p1AuthorityServiceEvidenceTrust": {
+      "kind": "file",
+      "path": "/external/p1a/evidence-trust.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "p1AuthorityServiceMergedManifest": {
+      "kind": "file",
+      "path": "/external/p1a/manifest.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "p1AuthorityServicePlatformReceipt": {
+      "kind": "file",
+      "path": "/external/p1a/platform/receipt.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "p1AuthorityServiceWorkerLauncher": {
+      "kind": "file",
+      "path": "/installed/p1a/bin/kristin_p2_worker_launcher",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "technologyDartReceipt": {
+      "kind": "file",
+      "path": "/external/technology/dart.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "technologyNativeReceipt": {
+      "kind": "file",
+      "path": "/external/technology/native.json",
+      "sha256": "REPLACE_64_HEX"
+    },
+    "technologyNodeReceipt": {
+      "kind": "file",
+      "path": "/external/technology/node.json",
+      "sha256": "REPLACE_64_HEX"
+    }
+  },
+  "githubJobId": 1,
+  "githubJobIdentitySha256": "REPLACE_64_HEX",
+  "hostImageSha256": "REPLACE_64_HEX",
+  "hostPlatform": "linux",
+  "interactiveSession": {
+    "identity": "REPLACE",
+    "loggedIn": true,
+    "sessionId": "REPLACE"
+  },
+  "jobName": "p2-behavioral-linux",
+  "labels": [
+    "self-hosted",
+    "kristin-p2",
+    "linux",
+    "interactive-desktop",
+    "ubuntu-24.04"
+  ],
+  "noConcurrentUntrustedWorkload": true,
+  "p2ReceivesAuthoritySecrets": false,
+  "permissions": {
+    "accessibility": true,
+    "activeWindow": true,
+    "clipboard": true,
+    "screenCapture": true
+  },
+  "platform": "linux",
+  "policySha256": "REPLACE_64_HEX",
+  "providerSha256": "REPLACE_64_HEX",
+  "publicKeyHex": "REPLACE_64_HEX",
+  "repository": "owner/repository",
+  "repositoryId": 1,
+  "requestNonce": "REPLACE_64_HEX",
+  "requestedAt": "REPLACE_UTC",
+  "runAttempt": 1,
+  "runnerEphemeralSessionId": "REPLACE_UNIQUE_SESSION",
+  "runnerGroup": "kristin-p2-controlled",
+  "runnerGroupId": 1,
+  "runnerId": 1,
+  "runnerName": "REPLACE",
+  "schemaVersion": "5.0.0",
+  "signatureHex": "REPLACE_128_HEX",
+  "sourceCommit": "REPLACE_40_HEX",
+  "validFrom": "REPLACE_UTC",
+  "validUntil": "REPLACE_UTC",
+  "workerCannotAccessAuthorityService": true,
+  "workflowFileSha256": "REPLACE_64_HEX",
+  "workflowName": "P2 Owner Mode",
+  "workflowPath": ".github/workflows/p2-owner-mode.yml",
+  "workflowRef": "owner/repository/.github/workflows/p2-owner-mode.yml@refs/heads/integration/p2-full-train-v63",
+  "workflowRunId": "REPLACE"
+}

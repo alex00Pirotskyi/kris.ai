@@ -8,6 +8,7 @@ import 'api_server.dart';
 import 'chat_studio.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
+import 'p2_app_shell.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
@@ -55,10 +56,13 @@ class _KristinAppState extends State<KristinApp> {
       theme: _studioTheme(Brightness.light),
       darkTheme: _studioTheme(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: ChatStudio(
-        runtime: widget.runtime,
-        api: api,
-        startupError: startupError,
+      home: P2KristinShell(
+        ownerMode: widget.runtime.p2OwnerMode,
+        chat: ChatStudio(
+          runtime: widget.runtime,
+          api: api,
+          startupError: startupError,
+        ),
       ),
     );
   }

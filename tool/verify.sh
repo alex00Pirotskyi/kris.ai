@@ -73,3 +73,17 @@ if [[ -f release/evidence/P1A/manifest.json ]] && grep -q '"status": "passed"' r
 else
   python tool/p1a_exit_gate_test.py --project . --source-only
 fi
+
+# P2 OWNER MODE TRAIN V65
+python tool/toolchain_lock_test.py --source-only
+python tool/p2_toolchain_extension_test.py --project .
+python tool/p2_source_inventory_test.py --project .
+python tool/p2_patch_application_composition_test.py --project .
+python tool/p2_evidence_contract_test.py --project .
+python tool/p2_strict_finalizer_contract_test.py --project .
+python tool/p2_task_assertion_cli_test.py --project .
+python tool/p2_behavioral_gate.py --project .
+python tool/p2_exit_gate_test.py --project . --source-only
+if [[ -f release/evidence/P2/manifest.json ]] && grep -q '"status": "passed"' release/evidence/P2/manifest.json; then
+  python tool/p2_exit_gate_test.py --project .
+fi

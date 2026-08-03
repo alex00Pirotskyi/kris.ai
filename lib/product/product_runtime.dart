@@ -18,6 +18,7 @@ import 'project_diagnostics.dart';
 import 'project_manager_v2.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
+import 'p2_product_runtime_bootstrap.dart';
 import 'p1_authority_service_contract_v1.dart';
 import 'p1_authority_service_product_runtime_v1.dart';
 
@@ -78,6 +79,11 @@ class ProductRuntime {
   final ExecutionIntelligenceService executionIntelligence;
   final ProjectManagerV2Service projectManagerV2;
   final RunCoordinator runs;
+  P2ProductRuntimeOwnerModeHandle? _p2OwnerModeRuntime;
+  P2ProductRuntimeOwnerModeHandle get p2OwnerMode =>
+      _p2OwnerModeRuntime ??
+      P2ProductRuntimeOwnerModeHandle.blocked(
+          'product_runtime_p2_not_initialized');
   P1AuthorityServiceProductRuntimeV1? _p1AuthorityServiceRuntime;
   P1AuthorityServiceHandleV1? get p1AuthorityService =>
       _p1AuthorityServiceRuntime?.handle;
@@ -247,6 +253,9 @@ class ProductRuntime {
     );
     runtime._p1AuthorityServiceRuntime =
         await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
+    runtime._p2OwnerModeRuntime = await P2ProductRuntimeBootstrap.start(
+        dataRoot: directories.root,
+        p1AuthorityService: runtime.p1AuthorityService);
     await coordinator.reconcileInterruptedRuns();
     await coordinator.reconcileMemoryEpisodes();
     await audit.append('application.started', 'application', <String, dynamic>{
@@ -258,6 +267,7 @@ class ProductRuntime {
   }
 
   Future<void> close() async {
+    await _p2OwnerModeRuntime?.close();
     await _p1AuthorityServiceRuntime?.close();
     await managedProcesses.stopAll();
     await mcp.closeAll();

@@ -438,9 +438,22 @@ final class P1AuthorityServiceHandleV1 {
   const P1AuthorityServiceHandleV1(this.service);
   final P1AuthorityServiceClientV1 service;
 
-  void validateForP2() {
+  void validateForP2({bool allowQaPreview = false}) {
     service.endpoint.validate();
     final provenance = service.provenance;
+    final qaPreviewAccepted = allowQaPreview &&
+        provenance['qaPreview'] == true &&
+        provenance['qaPreviewVersion'] == '1.0.0' &&
+        provenance['qaPreviewFormalCompletion'] == false &&
+        provenance['privateAuthorityMaterialPresent'] == false &&
+        provenance['arbitraryMessageSigningApi'] == false &&
+        service.endpoint.osEnforcedIsolation &&
+        service.endpoint.workerPrincipalSeparated &&
+        service.endpoint.typedOperationsOnly &&
+        service.endpoint.nonExportableKeys;
+    if (qaPreviewAccepted) {
+      return;
+    }
     if (!service.completionEligible ||
         provenance['authorityType'] != 'p1-isolated-authority-service-v2' ||
         provenance['p1AmendmentMerged'] != true ||

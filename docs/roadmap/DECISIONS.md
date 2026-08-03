@@ -58,3 +58,7 @@ The program now uses twelve governed integration trains. This changes merge cade
 ## P1 authority-service amendment V65
 
 P1A-001 is a separately governed security amendment. It introduces an OS-isolated, typed P1 authority service owned outside the full-current-account automation worker boundary. Historical P1 evidence and the bootstrap P0/P1 roadmap remain immutable. P1A state is carried only by its dedicated task packet and signed evidence graph. Source landing on protected main is explicitly non-completing; only a later evidence-only closure can satisfy the P2 dependency.
+
+## P2 automation host — V65
+
+P2 is a delegation-only Owner Mode consumer of the separately completed P1A authority service. Source landing on protected main remains incomplete and cannot unlock P3. P2 task state is carried by dedicated task/evidence packets and the signed aggregate exit graph; the historical P0/P1 bootstrap roadmap and generated views remain untouched.

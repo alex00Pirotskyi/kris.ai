@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-012",
+  "name": "Terminal UX",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-005",
+    "P2-006"
+  ],
+  "artifacts": [
+    "lib/product/p2_terminal_model.dart",
+    "lib/product/p2_owner_workspace.dart",
+    "test/product/p2_owner_workspace_test.dart",
+    "test/product/p2_process_terminal_contract_test.dart"
+  ],
+  "testResults": "release/evidence/P2-012/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

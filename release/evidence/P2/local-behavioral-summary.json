@@ -1,0 +1,27 @@
+{
+  "claims": {
+    "independentSecurityReview": false,
+    "linuxBehavioralProof": false,
+    "macosBehavioralProof": false,
+    "windowsBehavioralProof": false
+  },
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "platform": "win32",
+  "schemaVersion": "1.0.0",
+  "tasks": {
+    "P2-001": "source_only",
+    "P2-002": "source_only",
+    "P2-003": "source_only",
+    "P2-004": "source_only",
+    "P2-005": "source_only",
+    "P2-006": "source_only",
+    "P2-007": "source_only",
+    "P2-008": "source_only",
+    "P2-009": "source_only",
+    "P2-010": "source_only",
+    "P2-011": "source_only",
+    "P2-012": "source_only",
+    "P2-013": "source_only",
+    "P2-014": "source_only"
+  }
+}

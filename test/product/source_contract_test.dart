@@ -176,6 +176,32 @@ void main() {
         'lib/product/p1_authority_service_contract_v1.dart',
         'lib/product/p1_authority_service_native_connector_v2.dart',
         'lib/product/p1_authority_service_product_runtime_v1.dart',
+        'lib/product/p2_app_shell.dart',
+        'lib/product/p2_automation_command_service.dart',
+        'lib/product/p2_automation_host.dart',
+        'lib/product/p2_automation_host_operations.dart',
+        'lib/product/p2_automation_host_process_client.dart',
+        'lib/product/p2_desktop_effect_authorizers.dart',
+        'lib/product/p2_effect_boundary.dart',
+        'lib/product/p2_effect_journal.dart',
+        'lib/product/p2_emergency_watchdog.dart',
+        'lib/product/p2_filesystem_service.dart',
+        'lib/product/p2_finite_command_service.dart',
+        'lib/product/p2_host_operations.dart',
+        'lib/product/p2_managed_authorization_registry.dart',
+        'lib/product/p2_owner_mode.dart',
+        'lib/product/p2_owner_workspace.dart',
+        'lib/product/p2_p1_authority_adapter.dart',
+        'lib/product/p2_process_tree.dart',
+        'lib/product/p2_product_binding_context.dart',
+        'lib/product/p2_product_evidence.dart',
+        'lib/product/p2_product_runtime_bootstrap.dart',
+        'lib/product/p2_product_runtime_integration.dart',
+        'lib/product/p2_pty_service.dart',
+        'lib/product/p2_runtime_composition.dart',
+        'lib/product/p2_runtime_resource_resolver.dart',
+        'lib/product/p2_snapshot_undo.dart',
+        'lib/product/p2_terminal_model.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))
@@ -304,7 +330,11 @@ void main() {
     test('the application opens in the chat-first workspace', () {
       final ui = source('lib/product/ui.dart');
       final chat = source('lib/product/chat_studio.dart');
-      expect(ui, contains('home: ChatStudio('));
+      final p2Shell = source('lib/product/p2_app_shell.dart');
+      expect(ui, contains('home: P2KristinShell('));
+      expect(ui, contains('chat: ChatStudio('));
+      expect(p2Shell, contains('var _index = 0;'));
+      expect(p2Shell, contains('widget.chat,'));
       expect(chat, contains("label: 'Chats'"));
       expect(chat, contains("label: 'Project Manager'"));
       expect(chat, contains("'BUILD & DEBUG'"));
