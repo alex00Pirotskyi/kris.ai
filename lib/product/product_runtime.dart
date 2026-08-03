@@ -83,7 +83,8 @@ class ProductRuntime {
   P2ProductRuntimeOwnerModeHandle get p2OwnerMode =>
       _p2OwnerModeRuntime ??
       P2ProductRuntimeOwnerModeHandle.blocked(
-          'product_runtime_p2_not_initialized');
+        'product_runtime_p2_not_initialized',
+      );
   P1AuthorityServiceProductRuntimeV1? _p1AuthorityServiceRuntime;
   P1AuthorityServiceHandleV1? get p1AuthorityService =>
       _p1AuthorityServiceRuntime?.handle;
@@ -144,21 +145,27 @@ class ProductRuntime {
       ),
       redactor: redactor,
     );
-    final models =
-        ModelRegistry(settings: settings, vault: secrets, redactor: redactor);
+    final models = ModelRegistry(
+      settings: settings,
+      vault: secrets,
+      redactor: redactor,
+    );
     final deployment = DeploymentService(
       outputDirectory: Directory(
-          '${directories.root.path}${Platform.pathSeparator}deployments'),
+        '${directories.root.path}${Platform.pathSeparator}deployments',
+      ),
       redactor: redactor,
     );
     final managedProcesses = ManagedProcessService(
       logDirectory: Directory(
-          '${directories.logs.path}${Platform.pathSeparator}managed-processes'),
+        '${directories.logs.path}${Platform.pathSeparator}managed-processes',
+      ),
       redactor: redactor,
     );
     final sourceIndex = SourceIndexService(
       Directory(
-          '${directories.cache.path}${Platform.pathSeparator}source-index'),
+        '${directories.cache.path}${Platform.pathSeparator}source-index',
+      ),
     );
     final mcp = McpTrustService(
       workflow: repositories.workflow,
@@ -254,8 +261,9 @@ class ProductRuntime {
     runtime._p1AuthorityServiceRuntime =
         await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
     runtime._p2OwnerModeRuntime = await P2ProductRuntimeBootstrap.start(
-        dataRoot: directories.root,
-        p1AuthorityService: runtime.p1AuthorityService);
+      dataRoot: directories.root,
+      p1AuthorityService: runtime.p1AuthorityService,
+    );
     await coordinator.reconcileInterruptedRuns();
     await coordinator.reconcileMemoryEpisodes();
     await audit.append('application.started', 'application', <String, dynamic>{
@@ -272,8 +280,9 @@ class ProductRuntime {
     await managedProcesses.stopAll();
     await mcp.closeAll();
     secrets.clearSession();
-    await audit.append('application.stopped', 'application',
-        <String, dynamic>{'version': kristinVersion});
+    await audit.append('application.stopped', 'application', <String, dynamic>{
+      'version': kristinVersion,
+    });
     await events.close();
     await repositories.workflow.close();
   }
@@ -286,12 +295,16 @@ class ProductRuntime {
 
   Future<ProjectRecord?> getProject(String id) => repositories.projects.get(id);
 
-  Future<ProjectRecord> addProject(
-      {required String name, required String rootPath}) async {
+  Future<ProjectRecord> addProject({
+    required String name,
+    required String rootPath,
+  }) async {
     final root = Directory(rootPath.trim()).absolute;
     if (!await root.exists()) {
       throw ProductException(
-          'project_missing', 'The selected project directory does not exist.');
+        'project_missing',
+        'The selected project directory does not exist.',
+      );
     }
     final canonical = await root.resolveSymbolicLinks();
     final normalized = Platform.isWindows ? canonical.toLowerCase() : canonical;
@@ -320,8 +333,9 @@ class ProductRuntime {
       'name': project.name,
       'rootPathHash': Sha256.text(project.rootPath),
     });
-    await events.publish('project.added', project.id,
-        <String, dynamic>{'project': project.toJson()});
+    await events.publish('project.added', project.id, <String, dynamic>{
+      'project': project.toJson(),
+    });
     return project;
   }
 
@@ -348,9 +362,7 @@ class ProductRuntime {
         'The selected parent folder does not exist.',
       );
     }
-    final root = Directory(
-      '${parent.path}${Platform.pathSeparator}$safeName',
-    );
+    final root = Directory('${parent.path}${Platform.pathSeparator}$safeName');
     if (await root.exists()) {
       final entities = await root.list(followLinks: false).take(1).toList();
       if (entities.isNotEmpty) {
@@ -374,18 +386,22 @@ class ProductRuntime {
 
   Future<String?> pickProjectFolder({
     String prompt = 'Choose a project folder',
-  }) =>
-      diagnostics.pickFolder(prompt: prompt);
+  }) => diagnostics.pickFolder(prompt: prompt);
 
   Future<void> removeProject(String id) async {
     final project = await repositories.projects.get(id);
     if (project == null) {
       return;
     }
-    final active = (await repositories.runs.all()).where((run) =>
-        run.command.contract.projectId == id &&
-        const <RunState>{RunState.running, RunState.paused, RunState.cancelling}
-            .contains(run.state));
+    final active = (await repositories.runs.all()).where(
+      (run) =>
+          run.command.contract.projectId == id &&
+          const <RunState>{
+            RunState.running,
+            RunState.paused,
+            RunState.cancelling,
+          }.contains(run.state),
+    );
     final managed = await projectProcessStatus(id);
     if (active.isNotEmpty || managed?.running == true) {
       throw ProductException(
@@ -395,16 +411,21 @@ class ProductRuntime {
     }
     await repositories.projects.remove(id);
     _projectProcessIds.remove(id);
-    await audit.append('project.removed', id,
-        <String, dynamic>{'projectId': id, 'name': project.name});
-    await events
-        .publish('project.removed', id, <String, dynamic>{'projectId': id});
+    await audit.append('project.removed', id, <String, dynamic>{
+      'projectId': id,
+      'name': project.name,
+    });
+    await events.publish('project.removed', id, <String, dynamic>{
+      'projectId': id,
+    });
   }
 
   Future<void> updateSettings(ProductSettings value) async {
     if (value.apiPort < 1024 || value.apiPort > 65535) {
       throw ProductException(
-          'api_port_invalid', 'API port must be between 1024 and 65535.');
+        'api_port_invalid',
+        'API port must be between 1024 and 65535.',
+      );
     }
     if (value.ollamaLoadTimeoutSeconds < 60 ||
         value.ollamaLoadTimeoutSeconds > 3600) {
@@ -432,12 +453,16 @@ class ProductRuntime {
           !const <String>{'http', 'https'}.contains(uri.scheme) ||
           uri.host.isEmpty ||
           uri.pathSegments.isNotEmpty) {
-        throw ProductException('origin_invalid',
-            'Allowed browser origins must be origin-only HTTP(S) URLs.');
+        throw ProductException(
+          'origin_invalid',
+          'Allowed browser origins must be origin-only HTTP(S) URLs.',
+        );
       }
       if (origin.contains('*')) {
-        throw ProductException('origin_wildcard_rejected',
-            'Wildcard CORS origins are not allowed.');
+        throw ProductException(
+          'origin_wildcard_rejected',
+          'Wildcard CORS origins are not allowed.',
+        );
       }
     }
     _settings = value;
@@ -459,8 +484,9 @@ class ProductRuntime {
       'ollamaKeepAliveMinutes': value.ollamaKeepAliveMinutes,
       'hasOpenAiSecretReference': value.openAiApiKeyReferenceId.isNotEmpty,
     });
-    await events.publish('settings.updated', 'settings',
-        <String, dynamic>{'settings': value.toJson()});
+    await events.publish('settings.updated', 'settings', <String, dynamic>{
+      'settings': value.toJson(),
+    });
   }
 
   Future<List<ModelIdentity>> discoverModels() => models.discover();
@@ -488,14 +514,22 @@ class ProductRuntime {
     final project = await repositories.projects.get(projectId);
     if (project == null) {
       throw ProductException(
-          'project_missing', 'Select a valid active project.');
+        'project_missing',
+        'Select a valid active project.',
+      );
     }
     return commandService.prepare(
-        project: project, mode: mode, request: request, model: model);
+      project: project,
+      mode: mode,
+      request: request,
+      model: model,
+    );
   }
 
-  Future<RunRecord> createRun(String commandId,
-      {AutonomyBudget? budget}) async {
+  Future<RunRecord> createRun(
+    String commandId, {
+    AutonomyBudget? budget,
+  }) async {
     final command = await repositories.commands.get(commandId);
     if (command == null) {
       throw ProductException('command_missing', 'Unknown prepared command.');
@@ -585,9 +619,12 @@ class ProductRuntime {
     required String title,
     required String content,
     Set<String> tags = const <String>{},
-  }) =>
-      knowledge.addNote(
-          projectId: projectId, title: title, content: content, tags: tags);
+  }) => knowledge.addNote(
+    projectId: projectId,
+    title: title,
+    content: content,
+    tags: tags,
+  );
 
   Future<void> deleteKnowledge(String id) => knowledge.deleteEntry(id);
 
@@ -598,12 +635,15 @@ class ProductRuntime {
       'projectId': entry.projectId,
       'pinned': entry.pinned,
     });
-    await events
-        .publish('knowledge.pin_changed', entry.projectId, <String, dynamic>{
-      'knowledgeId': entry.id,
-      'projectId': entry.projectId,
-      'pinned': entry.pinned,
-    });
+    await events.publish(
+      'knowledge.pin_changed',
+      entry.projectId,
+      <String, dynamic>{
+        'knowledgeId': entry.id,
+        'projectId': entry.projectId,
+        'pinned': entry.pinned,
+      },
+    );
     return entry;
   }
 
@@ -616,10 +656,10 @@ class ProductRuntime {
     });
     await events
         .publish('memory.pin_changed', episode.projectId, <String, dynamic>{
-      'episodeId': episode.id,
-      'projectId': episode.projectId,
-      'pinned': episode.pinned,
-    });
+          'episodeId': episode.id,
+          'projectId': episode.projectId,
+          'pinned': episode.pinned,
+        });
     return episode;
   }
 
@@ -635,14 +675,13 @@ class ProductRuntime {
     int limit = 12,
     bool includeEpisodes = true,
     bool includeUnsuccessfulEpisodes = false,
-  }) =>
-      knowledge.retrieve(
-        projectId,
-        query,
-        limit: limit,
-        includeEpisodes: includeEpisodes,
-        includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
-      );
+  }) => knowledge.retrieve(
+    projectId,
+    query,
+    limit: limit,
+    includeEpisodes: includeEpisodes,
+    includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
+  );
 
   Future<KnowledgeStats> knowledgeStats(String projectId) =>
       knowledge.stats(projectId);
@@ -653,11 +692,11 @@ class ProductRuntime {
       'projectId': projectId,
       'chunks': count,
     });
-    await events
-        .publish('knowledge.index_rebuilt', projectId, <String, dynamic>{
-      'projectId': projectId,
-      'chunks': count,
-    });
+    await events.publish(
+      'knowledge.index_rebuilt',
+      projectId,
+      <String, dynamic>{'projectId': projectId, 'chunks': count},
+    );
     return count;
   }
 
@@ -706,12 +745,13 @@ class ProductRuntime {
       description: description.trim(),
       systemPrompt: systemPrompt.trim(),
       userPrompt: userPrompt.trim(),
-      variables: variables
-          .map((value) => value.trim())
-          .where((value) => value.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort(),
+      variables:
+          variables
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort(),
       tags: tags
           .map((value) => value.trim().toLowerCase())
           .where((value) => value.isNotEmpty)
@@ -740,16 +780,15 @@ class ProductRuntime {
     required ModelIdentity model,
     PromptGenerationAction action = PromptGenerationAction.generate,
     PromptStudioDraft? current,
-  }) =>
-      promptPlanning.generatePrompt(
-        goal: goal,
-        model: model,
-        action: action,
-        current: current,
-      );
+  }) => promptPlanning.generatePrompt(
+    goal: goal,
+    model: model,
+    action: action,
+    current: current,
+  );
 
   Future<({PromptTemplateRecord prompt, PromptVersionRecord version})>
-      saveGeneratedPrompt({
+  saveGeneratedPrompt({
     String? id,
     required String goal,
     required PromptStudioDraft draft,
@@ -787,36 +826,30 @@ class ProductRuntime {
     required ModelIdentity model,
     PlanningDepth depth = PlanningDepth.auto,
     int maxLeafTasks = 25,
-  }) =>
-      promptPlanning.generateTaskPlan(
-        promptVersion: promptVersion,
-        projectId: projectId,
-        model: model,
-        depth: depth,
-        maxLeafTasks: maxLeafTasks,
-      );
+  }) => promptPlanning.generateTaskPlan(
+    promptVersion: promptVersion,
+    projectId: projectId,
+    model: model,
+    depth: depth,
+    maxLeafTasks: maxLeafTasks,
+  );
 
   Future<List<TaskPlanRecord>> listTaskPlans({
     String? promptId,
     String? projectId,
-  }) =>
-      promptPlanning.listTaskPlans(
-        promptId: promptId,
-        projectId: projectId,
-      );
+  }) => promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
 
   Future<TaskPlanRecord> updateTaskPlan(
     TaskPlanRecord plan, {
     required List<PlanTaskRecord> tasks,
     String? title,
     String? rationale,
-  }) =>
-      promptPlanning.updateTaskPlan(
-        plan,
-        tasks: tasks,
-        title: title,
-        rationale: rationale,
-      );
+  }) => promptPlanning.updateTaskPlan(
+    plan,
+    tasks: tasks,
+    title: title,
+    rationale: rationale,
+  );
 
   Future<PreparedCommand> prepareTaskPlan({
     required TaskPlanRecord plan,
@@ -840,17 +873,20 @@ class ProductRuntime {
 
   Future<void> deletePrompt(String id) async {
     await repositories.prompts.remove(id);
-    for (final version in (await repositories.promptVersions.all())
-        .where((item) => item.promptId == id)) {
+    for (final version in (await repositories.promptVersions.all()).where(
+      (item) => item.promptId == id,
+    )) {
       await repositories.promptVersions.remove(version.id);
     }
-    for (final plan in (await repositories.taskPlans.all())
-        .where((item) => item.promptId == id)) {
+    for (final plan in (await repositories.taskPlans.all()).where(
+      (item) => item.promptId == id,
+    )) {
       await repositories.taskPlans.remove(plan.id);
     }
     await audit.append('prompt.deleted', id, <String, dynamic>{'promptId': id});
-    await events
-        .publish('prompt.deleted', id, <String, dynamic>{'promptId': id});
+    await events.publish('prompt.deleted', id, <String, dynamic>{
+      'promptId': id,
+    });
   }
 
   Future<ProjectDiagnosticReport> inspectProject(
@@ -897,10 +933,11 @@ class ProductRuntime {
 
   Future<ProjectDiagnosticReport> analyzeProject(String projectId) async {
     final project = await _requireProject(projectId);
-    await events
-        .publish('project.analysis_started', project.id, <String, dynamic>{
-      'projectId': project.id,
-    });
+    await events.publish(
+      'project.analysis_started',
+      project.id,
+      <String, dynamic>{'projectId': project.id},
+    );
     final report = await diagnostics.runAnalysis(project);
     final details = <String, dynamic>{
       'projectId': project.id,
@@ -911,11 +948,11 @@ class ProductRuntime {
       'analyzeCommand': report.analyzeCommand,
     };
     await audit.append('project.analysis_completed', project.id, details);
-    await events
-        .publish('project.analysis_completed', project.id, <String, dynamic>{
-      ...details,
-      'report': report.toJson(),
-    });
+    await events.publish(
+      'project.analysis_completed',
+      project.id,
+      <String, dynamic>{...details, 'report': report.toJson()},
+    );
     return report;
   }
 
@@ -934,11 +971,11 @@ class ProductRuntime {
       'buildCommand': report.buildCommand,
     };
     await audit.append('project.build_completed', project.id, details);
-    await events
-        .publish('project.build_completed', project.id, <String, dynamic>{
-      ...details,
-      'report': report.toJson(),
-    });
+    await events.publish(
+      'project.build_completed',
+      project.id,
+      <String, dynamic>{...details, 'report': report.toJson()},
+    );
     return report;
   }
 
@@ -956,8 +993,10 @@ class ProductRuntime {
         'No managed run command was detected. Add a run entry to kristin.project.json.',
       );
     }
-    final executable =
-        await diagnostics.resolveCommandExecutable(project, command);
+    final executable = await diagnostics.resolveCommandExecutable(
+      project,
+      command,
+    );
     if (executable == null) {
       throw ProductException(
         'project_run_tool_missing',
@@ -1096,11 +1135,11 @@ class ProductRuntime {
     required String label,
     required String environmentKey,
     String description = '',
-  }) =>
-      secrets.registerReference(
-          label: label,
-          environmentKey: environmentKey,
-          description: description);
+  }) => secrets.registerReference(
+    label: label,
+    environmentKey: environmentKey,
+    description: description,
+  );
 
   Future<List<SecretReference>> listSecretReferences() =>
       repositories.secretReferences.all();
@@ -1113,16 +1152,15 @@ class ProductRuntime {
     required Set<String> allowedTools,
     String protocolVersion = '2024-11-05',
     Duration validity = const Duration(days: 30),
-  }) =>
-      mcp.trust(
-        projectId: projectId,
-        label: label,
-        executablePath: executablePath,
-        arguments: arguments,
-        allowedTools: allowedTools,
-        protocolVersion: protocolVersion,
-        validity: validity,
-      );
+  }) => mcp.trust(
+    projectId: projectId,
+    label: label,
+    executablePath: executablePath,
+    arguments: arguments,
+    allowedTools: allowedTools,
+    protocolVersion: protocolVersion,
+    validity: validity,
+  );
 
   Future<List<McpTrustRecord>> listMcpTrust() => mcp.repository.all();
   Future<void> revokeMcpTrust(String id) => mcp.revoke(id);
@@ -1132,12 +1170,12 @@ class ProductRuntime {
     required Set<String> scopes,
     String? projectId,
     Duration validity = const Duration(days: 30),
-  }) =>
-      tokens.issue(
-          label: label,
-          scopes: scopes,
-          projectId: projectId,
-          validity: validity);
+  }) => tokens.issue(
+    label: label,
+    scopes: scopes,
+    projectId: projectId,
+    validity: validity,
+  );
 
   Future<List<ApiTokenRecord>> listApiTokens() => repositories.tokens.all();
   Future<void> revokeApiToken(String id) => tokens.revoke(id);
@@ -1163,9 +1201,15 @@ class ProductRuntime {
       'sha256': Sha256.hex(await file.readAsBytes()),
     };
     await audit.append(
-        'diagnostics.exported', runId ?? projectId ?? 'support', details);
+      'diagnostics.exported',
+      runId ?? projectId ?? 'support',
+      details,
+    );
     await events.publish(
-        'diagnostics.exported', runId ?? projectId ?? 'support', details);
+      'diagnostics.exported',
+      runId ?? projectId ?? 'support',
+      details,
+    );
     return file;
   }
 }

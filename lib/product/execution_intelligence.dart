@@ -108,17 +108,17 @@ class ModelRouteDecision {
   final String decisionHash;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'selected': selected == null
-            ? null
-            : <String, dynamic>{
-                'provider': selected!.provider,
-                'model': selected!.model,
-                'identity': selected!.identity,
-              },
-        'rejected': rejected,
-        'approvalRequired': approvalRequired,
-        'decisionHash': decisionHash,
-      };
+    'selected': selected == null
+        ? null
+        : <String, dynamic>{
+            'provider': selected!.provider,
+            'model': selected!.model,
+            'identity': selected!.identity,
+          },
+    'rejected': rejected,
+    'approvalRequired': approvalRequired,
+    'decisionHash': decisionHash,
+  };
 }
 
 class RoleBasedModelRouter {
@@ -172,11 +172,13 @@ class RoleBasedModelRouter {
       }
     }
     eligible.sort((left, right) {
-      final reliability =
-          right.reliabilityScore.compareTo(left.reliabilityScore);
+      final reliability = right.reliabilityScore.compareTo(
+        left.reliabilityScore,
+      );
       if (reliability != 0) return reliability;
-      final latency =
-          left.estimatedLatencyMs.compareTo(right.estimatedLatencyMs);
+      final latency = left.estimatedLatencyMs.compareTo(
+        right.estimatedLatencyMs,
+      );
       if (latency != 0) return latency;
       final cost = left.estimatedCostUsd.compareTo(right.estimatedCostUsd);
       if (cost != 0) return cost;
@@ -225,16 +227,18 @@ class SemanticProgressSnapshot {
   final String? actionHash;
   final String? resultHash;
 
-  String get hash => Sha256.text(canonicalJson(<String, dynamic>{
-        'artifacts': artifacts,
-        'evidenceIds': evidenceIds.toList()..sort(),
-        'errorCodes': errorCodes.toList()..sort(),
-        'satisfiedCriteria': satisfiedCriteria.toList()..sort(),
-        'externalState': externalState.toList()..sort(),
-        'planHash': planHash,
-        'actionHash': actionHash,
-        'resultHash': resultHash,
-      }));
+  String get hash => Sha256.text(
+    canonicalJson(<String, dynamic>{
+      'artifacts': artifacts,
+      'evidenceIds': evidenceIds.toList()..sort(),
+      'errorCodes': errorCodes.toList()..sort(),
+      'satisfiedCriteria': satisfiedCriteria.toList()..sort(),
+      'externalState': externalState.toList()..sort(),
+      'planHash': planHash,
+      'actionHash': actionHash,
+      'resultHash': resultHash,
+    }),
+  );
 }
 
 class SemanticProgressDelta {
@@ -278,21 +282,21 @@ class SemanticProgressDelta {
       planRevised;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'newArtifacts': newArtifacts,
-        'changedArtifactHashes': changedArtifactHashes,
-        'newEvidence': newEvidence,
-        'resolvedErrors': resolvedErrors,
-        'newErrors': newErrors,
-        'criteriaSatisfied': criteriaSatisfied,
-        'criteriaRegressed': criteriaRegressed,
-        'newExternalState': newExternalState,
-        'planRevised': planRevised,
-        'semanticProgress': semanticProgress,
-        'repeatedAction': repeatedAction,
-        'repeatedResult': repeatedResult,
-        'beforeHash': beforeHash,
-        'afterHash': afterHash,
-      };
+    'newArtifacts': newArtifacts,
+    'changedArtifactHashes': changedArtifactHashes,
+    'newEvidence': newEvidence,
+    'resolvedErrors': resolvedErrors,
+    'newErrors': newErrors,
+    'criteriaSatisfied': criteriaSatisfied,
+    'criteriaRegressed': criteriaRegressed,
+    'newExternalState': newExternalState,
+    'planRevised': planRevised,
+    'semanticProgress': semanticProgress,
+    'repeatedAction': repeatedAction,
+    'repeatedResult': repeatedResult,
+    'beforeHash': beforeHash,
+    'afterHash': afterHash,
+  };
 }
 
 class SemanticProgressEngine {
@@ -302,16 +306,20 @@ class SemanticProgressEngine {
     SemanticProgressSnapshot before,
     SemanticProgressSnapshot after,
   ) {
-    final newArtifacts = after.artifacts.keys
-        .where((path) => !before.artifacts.containsKey(path))
-        .toList()
-      ..sort();
-    final changed = after.artifacts.keys
-        .where((path) =>
-            before.artifacts.containsKey(path) &&
-            before.artifacts[path] != after.artifacts[path])
-        .toList()
-      ..sort();
+    final newArtifacts =
+        after.artifacts.keys
+            .where((path) => !before.artifacts.containsKey(path))
+            .toList()
+          ..sort();
+    final changed =
+        after.artifacts.keys
+            .where(
+              (path) =>
+                  before.artifacts.containsKey(path) &&
+                  before.artifacts[path] != after.artifacts[path],
+            )
+            .toList()
+          ..sort();
     List<String> added(Set<String> oldValues, Set<String> newValues) =>
         (newValues.difference(oldValues).toList()..sort());
     return SemanticProgressDelta(
@@ -320,12 +328,17 @@ class SemanticProgressEngine {
       newEvidence: added(before.evidenceIds, after.evidenceIds),
       resolvedErrors: added(after.errorCodes, before.errorCodes),
       newErrors: added(before.errorCodes, after.errorCodes),
-      criteriaSatisfied:
-          added(before.satisfiedCriteria, after.satisfiedCriteria),
-      criteriaRegressed:
-          added(after.satisfiedCriteria, before.satisfiedCriteria),
+      criteriaSatisfied: added(
+        before.satisfiedCriteria,
+        after.satisfiedCriteria,
+      ),
+      criteriaRegressed: added(
+        after.satisfiedCriteria,
+        before.satisfiedCriteria,
+      ),
       newExternalState: added(before.externalState, after.externalState),
-      planRevised: before.planHash != null &&
+      planRevised:
+          before.planHash != null &&
           after.planHash != null &&
           before.planHash != after.planHash,
       repeatedAction:
@@ -372,34 +385,39 @@ class ConvergenceController {
     }
     if (stalledTurns <= 1) {
       return ConvergenceDecision(
-          action: ConvergenceAction.compactAndRetry,
-          reason: 'First no-progress state: compact duplicate context.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.compactAndRetry,
+        reason: 'First no-progress state: compact duplicate context.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 2) {
       return ConvergenceDecision(
-          action: ConvergenceAction.requireDifferentAction,
-          reason: 'Repeated action or result is not progress.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.requireDifferentAction,
+        reason: 'Repeated action or result is not progress.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 3) {
       return ConvergenceDecision(
-          action: ConvergenceAction.routeToVerifier,
-          reason: 'Use independent verification to resolve the state.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.routeToVerifier,
+        reason: 'Use independent verification to resolve the state.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 4) {
       return ConvergenceDecision(
-          action: ConvergenceAction.splitTask,
-          reason:
-              'Split the blocked objective into independently verifiable work.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.splitTask,
+        reason:
+            'Split the blocked objective into independently verifiable work.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 5) {
       return ConvergenceDecision(
-          action: ConvergenceAction.askUser,
-          reason: 'One bounded user decision is required.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.askUser,
+        reason: 'One bounded user decision is required.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 6 && strongerModelAvailable) {
       return ConvergenceDecision(
@@ -412,10 +430,11 @@ class ConvergenceController {
       );
     }
     return ConvergenceDecision(
-        action: ConvergenceAction.failConvergence,
-        reason:
-            'Bounded convergence strategies were exhausted without semantic progress.',
-        stalledTurns: stalledTurns);
+      action: ConvergenceAction.failConvergence,
+      reason:
+          'Bounded convergence strategies were exhausted without semantic progress.',
+      stalledTurns: stalledTurns,
+    );
   }
 }
 
@@ -448,15 +467,15 @@ class VerificationEvidence {
       (sha256.trim().isNotEmpty || validator.trim().isNotEmpty);
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'kind': kind,
-        'passed': passed,
-        'stale': stale,
-        'independent': independent,
-        'sha256': sha256,
-        'validator': validator,
-        'criterionIds': criterionIds.toList()..sort(),
-      };
+    'id': id,
+    'kind': kind,
+    'passed': passed,
+    'stale': stale,
+    'independent': independent,
+    'sha256': sha256,
+    'validator': validator,
+    'criterionIds': criterionIds.toList()..sort(),
+  };
 }
 
 class IndependentVerificationReport {
@@ -489,8 +508,9 @@ class IndependentVerifier {
     final criteria = <Map<String, dynamic>>[];
     for (var index = 0; index < item.acceptanceCriteria.length; index++) {
       final id = '${item.id}:criterion:${index + 1}';
-      final matches =
-          usable.where((entry) => entry.criterionIds.contains(id)).toList();
+      final matches = usable
+          .where((entry) => entry.criterionIds.contains(id))
+          .toList();
       criteria.add(<String, dynamic>{
         'criterionId': id,
         'status': matches.isEmpty ? 'unsupported' : 'passed',
@@ -622,14 +642,14 @@ class PhaseBudget {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'phase': phase,
-        'maxModelRequests': maxModelRequests,
-        'maxToolCalls': maxToolCalls,
-        'maxRepairs': maxRepairs,
-        'maxOutputTokens': maxOutputTokens,
-        'maxContextCharacters': maxContextCharacters,
-        'deadlineSeconds': deadlineSeconds,
-      };
+    'phase': phase,
+    'maxModelRequests': maxModelRequests,
+    'maxToolCalls': maxToolCalls,
+    'maxRepairs': maxRepairs,
+    'maxOutputTokens': maxOutputTokens,
+    'maxContextCharacters': maxContextCharacters,
+    'deadlineSeconds': deadlineSeconds,
+  };
 }
 
 class ContextCompactor {
@@ -647,7 +667,7 @@ class ContextCompactor {
             'turn',
             'toolRepair',
             'protocolRepair',
-            'coordinatorCorrection'
+            'coordinatorCorrection',
           }.contains(entry.key))
             entry.key: entry.value,
       };
@@ -676,37 +696,35 @@ class ExecutionIntelligenceService {
     required int turn,
     required SemanticProgressDelta delta,
     required ConvergenceDecision decision,
-  }) =>
-      workflow.appendSemanticProgress(
-        runId: runId,
-        workItemId: workItemId,
-        attempt: attempt,
-        turn: turn,
-        beforeSha256: delta.beforeHash,
-        afterSha256: delta.afterHash,
-        delta: delta.toJson(),
-        semanticProgress: delta.semanticProgress,
-        strategyAction: decision.action.name,
-      );
+  }) => workflow.appendSemanticProgress(
+    runId: runId,
+    workItemId: workItemId,
+    attempt: attempt,
+    turn: turn,
+    beforeSha256: delta.beforeHash,
+    afterSha256: delta.afterHash,
+    delta: delta.toJson(),
+    semanticProgress: delta.semanticProgress,
+    strategyAction: decision.action.name,
+  );
 
   Future<void> recordVerification({
     required String runId,
     required String workItemId,
     required int attempt,
     required IndependentVerificationReport report,
-  }) =>
-      workflow.appendVerificationReport(
-        runId: runId,
-        workItemId: workItemId,
-        attempt: attempt,
-        evidenceSha256: report.evidenceHash,
-        report: <String, dynamic>{
-          'passed': report.passed,
-          'criteria': report.criteria,
-          'unsupportedClaims': report.unsupportedClaims,
-          'evidenceHash': report.evidenceHash,
-          'reportHash': report.reportHash,
-        },
-        passed: report.passed,
-      );
+  }) => workflow.appendVerificationReport(
+    runId: runId,
+    workItemId: workItemId,
+    attempt: attempt,
+    evidenceSha256: report.evidenceHash,
+    report: <String, dynamic>{
+      'passed': report.passed,
+      'criteria': report.criteria,
+      'unsupportedClaims': report.unsupportedClaims,
+      'evidenceHash': report.evidenceHash,
+      'reportHash': report.reportHash,
+    },
+    passed: report.passed,
+  );
 }

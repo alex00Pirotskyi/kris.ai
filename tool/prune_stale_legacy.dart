@@ -104,8 +104,9 @@ void main() {
     'projectRootExcluded': true,
     'quarantinedCount': preserved.length,
     'quarantinedPaths': preserved,
-    'archiveDirectory':
-        preserved.isEmpty ? null : _relativePath(root, archiveRoot),
+    'archiveDirectory': preserved.isEmpty
+        ? null
+        : _relativePath(root, archiveRoot),
     'discardedPaths': 0,
   };
   final reportFile = File(
@@ -226,10 +227,7 @@ String _availableDestination(String requested) {
     return requested;
   }
   var suffix = 1;
-  while (FileSystemEntity.typeSync(
-        '$requested.$suffix',
-        followLinks: false,
-      ) !=
+  while (FileSystemEntity.typeSync('$requested.$suffix', followLinks: false) !=
       FileSystemEntityType.notFound) {
     suffix += 1;
   }

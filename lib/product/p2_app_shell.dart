@@ -60,7 +60,7 @@ class _P2KristinShellState extends State<P2KristinShell> {
     );
     if (!qaPreview) return shell;
     return Banner(
-      message: 'QA PREVIEW — NOT RELEASE COMPLETE',
+      message: 'OWNER-RISK QA — SECURITY EVIDENCE WAIVED',
       location: BannerLocation.topEnd,
       color: Colors.deepOrange,
       child: shell,

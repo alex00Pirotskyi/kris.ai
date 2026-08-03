@@ -9,6 +9,7 @@ import 'p2_automation_host_process_client.dart';
 import 'p2_effect_journal.dart';
 import 'p2_managed_authorization_registry.dart';
 import 'p2_owner_workspace.dart';
+import 'p2_owner_risk_authority.dart';
 import 'p2_p1_authority_adapter.dart';
 import 'p2_product_binding_context.dart';
 import 'p2_product_runtime_integration.dart';
@@ -16,8 +17,10 @@ import 'p2_runtime_resource_resolver.dart';
 import 'p2_terminal_model.dart';
 
 final class P2ProductRuntimeOwnerModeHandle {
-  P2ProductRuntimeOwnerModeHandle._(
-      {required this.runtime, required this.failureCode});
+  P2ProductRuntimeOwnerModeHandle._({
+    required this.runtime,
+    required this.failureCode,
+  });
   final P2ProductRuntimeOwnerMode? runtime;
   final String? failureCode;
   bool get available => runtime != null;
@@ -34,27 +37,31 @@ final class P2ProductRuntimeOwnerModeHandle {
       key: key,
       appBar: AppBar(title: const Text('Owner Mode')),
       body: Center(
-          child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: Padding(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 const Icon(Icons.security_outlined, size: 48),
                 const SizedBox(height: 16),
-                const Text('Owner Mode is unavailable',
-                    style:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                const Text(
+                  'Owner Mode is unavailable',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 12),
                 const Text(
-                    'Kristin failed closed because the isolated P1 authority service or the application-owned P2 runtime bundle was unavailable. No host authority was granted.',
-                    textAlign: TextAlign.center),
+                  'Kristin failed closed because the isolated P1 authority service or the application-owned P2 runtime bundle was unavailable. No host authority was granted.',
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 12),
                 SelectableText('Status: ${failureCode ?? 'unknown'}'),
               ],
-            )),
-      )),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -84,8 +91,8 @@ final class P2ProductRuntimeOwnerModeHandle {
       };
   Future<void> close() async => runtime?.close();
   static P2ProductRuntimeOwnerModeHandle active(
-          P2ProductRuntimeOwnerMode runtime) =>
-      P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
+    P2ProductRuntimeOwnerMode runtime,
+  ) => P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
   static P2ProductRuntimeOwnerModeHandle blocked(String code) =>
       P2ProductRuntimeOwnerModeHandle._(runtime: null, failureCode: code);
 }
@@ -105,34 +112,51 @@ final class P2ProductRuntimeBootstrap {
     bool interactiveDesktopAttested = false,
   }) async {
     try {
-      if (p1AuthorityService == null) {
-        throw StateError('merged_p1a_service_unavailable');
-      }
+      const ownerRiskQa = bool.fromEnvironment(
+        'KRISTIN_OWNER_RISK_QA',
+        defaultValue: false,
+      );
       const qaPreviewBuild = bool.fromEnvironment(
         'KRISTIN_QA_PREVIEW',
         defaultValue: false,
       );
-      final qaPreview = qaPreviewBuild &&
-          p1AuthorityService.service.provenance['qaPreview'] == true;
-      p1AuthorityService.validateForP2(allowQaPreview: qaPreview);
-      final resolver = resourceResolver ??
+      final qaPreview =
+          ownerRiskQa ||
+          (qaPreviewBuild &&
+              p1AuthorityService?.service.provenance['qaPreview'] == true);
+      if (!ownerRiskQa) {
+        if (p1AuthorityService == null) {
+          throw StateError('merged_p1a_service_unavailable');
+        }
+        p1AuthorityService.validateForP2(allowQaPreview: qaPreview);
+      }
+      final resolver =
+          resourceResolver ??
           P2ApplicationOwnedRuntimeResourceResolver(
-              applicationDataRoot: dataRoot);
+            applicationDataRoot: dataRoot,
+          );
       final resources = runtimeResources ?? await resolver.resolve();
-      final authority = P2IsolatedP1AuthorityAdapter(
-        p1AuthorityService,
-        qaPreview: qaPreview,
+      final P2RuntimeAuthority authority = ownerRiskQa
+          ? P2OwnerRiskQaAuthority()
+          : P2IsolatedP1AuthorityAdapter(
+              p1AuthorityService!,
+              qaPreview: qaPreview,
+            );
+      final authorityDirectory = Directory(
+        '${dataRoot.path}${Platform.pathSeparator}p2-authority',
       );
-      final authorityDirectory =
-          Directory('${dataRoot.path}${Platform.pathSeparator}p2-authority');
       await authorityDirectory.create(recursive: true);
-      final journal = P2JsonlEffectJournal(File(
-          '${dataRoot.path}${Platform.pathSeparator}logs${Platform.pathSeparator}p2-effects.jsonl'));
+      final journal = P2JsonlEffectJournal(
+        File(
+          '${dataRoot.path}${Platform.pathSeparator}logs${Platform.pathSeparator}p2-effects.jsonl',
+        ),
+      );
       final bindings = P2ProductBindingContext();
       final authorizations = P2ManagedAuthorizationRegistry();
       final runtime = await P2ProductRuntimeOwnerMode.start(
         stateDirectory: Directory(
-            '${authorityDirectory.path}${Platform.pathSeparator}watchdogs'),
+          '${authorityDirectory.path}${Platform.pathSeparator}watchdogs',
+        ),
         authority: authority,
         journal: journal,
         launchConfig: P2AutomationHostLaunchConfig(
@@ -151,8 +175,12 @@ final class P2ProductRuntimeBootstrap {
           posixWatchdog: resources.posixWatchdog,
           interactiveDesktopAdapter: resources.interactiveDesktopAdapter,
           interactiveDesktopAttested: interactiveDesktopAttested,
-          additionalEnvironment: _validatedProvisionedEnvironment(
-              explicitlyProvisionedEnvironment),
+          additionalEnvironment: <String, String>{
+            ..._validatedProvisionedEnvironment(
+              explicitlyProvisionedEnvironment,
+            ),
+            if (ownerRiskQa) 'KRISTIN_OWNER_RISK_QA': '1',
+          },
         ),
         hostBindingProvider: bindings,
         processAuthorizationFor: authorizations.processForPid,
@@ -165,7 +193,9 @@ final class P2ProductRuntimeBootstrap {
             operation: operation,
           );
           return P2TerminalAuthorization(
-              binding: binding, grantDigest: tab.grantId);
+            binding: binding,
+            grantDigest: tab.grantId,
+          );
         },
         selectionBytes: (_) async => const <int>[],
         transcriptBytes: (_) async => const <int>[],
@@ -173,18 +203,21 @@ final class P2ProductRuntimeBootstrap {
             Clipboard.setData(ClipboardData(text: text)),
         writeTranscriptFile: (P2TerminalTab tab, List<int> bytes) async {
           final file = File(
-              '${dataRoot.path}${Platform.pathSeparator}exports${Platform.pathSeparator}terminal-${tab.id}.log');
+            '${dataRoot.path}${Platform.pathSeparator}exports${Platform.pathSeparator}terminal-${tab.id}.log',
+          );
           await file.parent.create(recursive: true);
           await file.writeAsBytes(bytes, flush: true);
         },
         persistOwnerSettings: (value) async {
           final file = File(
-              '${authorityDirectory.path}${Platform.pathSeparator}owner-mode.v1.json');
+            '${authorityDirectory.path}${Platform.pathSeparator}owner-mode.v1.json',
+          );
           await file.writeAsString('${jsonEncode(value)}\n', flush: true);
         },
         clearOwnerSettings: () async {
           final file = File(
-              '${authorityDirectory.path}${Platform.pathSeparator}owner-mode.v1.json');
+            '${authorityDirectory.path}${Platform.pathSeparator}owner-mode.v1.json',
+          );
           if (await file.exists()) {
             await file.delete();
           }
@@ -200,7 +233,8 @@ final class P2ProductRuntimeBootstrap {
   }
 
   static Map<String, String> _validatedProvisionedEnvironment(
-      Map<String, String> input) {
+    Map<String, String> input,
+  ) {
     final allowed = <String>{
       'KRISTIN_P2_NATIVE_SERVICE_ID',
       'KRISTIN_P2_NATIVE_SERVICE_PROVIDER',
@@ -243,6 +277,7 @@ final class P2ProductRuntimeBootstrap {
       'GITHUB_RUN_ATTEMPT',
       'GITHUB_JOB',
       'RUNNER_NAME',
+      'KRISTIN_OWNER_RISK_QA',
     };
     final result = <String, String>{};
     for (final entry in input.entries) {
@@ -251,9 +286,10 @@ final class P2ProductRuntimeBootstrap {
           entry.value.contains('\u0000')) {
         throw StateError('unapproved_runtime_environment:${entry.key}');
       }
-      if (RegExp(r'(secret|token|password|credential|api.?key|private.?key)',
-              caseSensitive: false)
-          .hasMatch(entry.key)) {
+      if (RegExp(
+        r'(secret|token|password|credential|api.?key|private.?key)',
+        caseSensitive: false,
+      ).hasMatch(entry.key)) {
         throw StateError('secret_runtime_environment_forbidden');
       }
       result[entry.key] = entry.value;

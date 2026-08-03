@@ -7,7 +7,8 @@ Object? _canonicalValue(Object? value) {
   }
   if (value is double) {
     throw const FormatException(
-        'RFC 8785 subset forbids floating-point values');
+      'RFC 8785 subset forbids floating-point values',
+    );
   }
   if (value is List) {
     return value.map<Object?>(_canonicalValue).toList(growable: false);
@@ -18,14 +19,14 @@ Object? _canonicalValue(Object? value) {
         throw const FormatException('manifest object keys must be strings');
       }
       return key;
-    }).toList()
-      ..sort();
+    }).toList()..sort();
     return <String, Object?>{
       for (final key in keys) key: _canonicalValue(value[key]),
     };
   }
   throw FormatException(
-      'unsupported canonical JSON type: ${value.runtimeType}');
+    'unsupported canonical JSON type: ${value.runtimeType}',
+  );
 }
 
 String canonicalJsonV2(Object? value) => jsonEncode(_canonicalValue(value));
@@ -124,7 +125,7 @@ final class _Sha512 {
     BigInt.parse('4cc5d4becb3e42b6', radix: 16),
     BigInt.parse('597f299cfc657e2a', radix: 16),
     BigInt.parse('5fcb6fab3ad6faec', radix: 16),
-    BigInt.parse('6c44198c4a475817', radix: 16)
+    BigInt.parse('6c44198c4a475817', radix: 16),
   ];
 
   static BigInt _rotr(BigInt value, int shift) =>
@@ -189,13 +190,15 @@ final class _Sha512 {
       var h = hash[7];
 
       for (var index = 0; index < 80; index++) {
-        final sum1 =
-            (_rotr(e, 14) ^ _rotr(e, 18) ^ _rotr(e, 41)).toUnsigned(64);
+        final sum1 = (_rotr(e, 14) ^ _rotr(e, 18) ^ _rotr(e, 41)).toUnsigned(
+          64,
+        );
         final choice = ((e & f) ^ ((~e) & g)).toUnsigned(64);
-        final temp1 =
-            (h + sum1 + choice + _k[index] + schedule[index]).toUnsigned(64);
-        final sum0 =
-            (_rotr(a, 28) ^ _rotr(a, 34) ^ _rotr(a, 39)).toUnsigned(64);
+        final temp1 = (h + sum1 + choice + _k[index] + schedule[index])
+            .toUnsigned(64);
+        final sum0 = (_rotr(a, 28) ^ _rotr(a, 34) ^ _rotr(a, 39)).toUnsigned(
+          64,
+        );
         final majority = ((a & b) ^ (a & c) ^ (b & c)).toUnsigned(64);
         final temp2 = (sum0 + majority).toUnsigned(64);
 
@@ -248,17 +251,24 @@ final class _ExtendedPoint {
 
 final class Ed25519Reference {
   static final BigInt _q = (BigInt.one << 255) - BigInt.from(19);
-  static final BigInt _l = (BigInt.one << 252) +
+  static final BigInt _l =
+      (BigInt.one << 252) +
       BigInt.parse('27742317777372353535851937790883648493');
   static final BigInt _d =
       (-BigInt.from(121665) * _inv(BigInt.from(121666))) % _q;
   static final BigInt _twoD = (BigInt.from(2) * _d) % _q;
   static final BigInt _i = BigInt.from(2).modPow((_q - BigInt.one) >> 2, _q);
   static final BigInt _baseY = BigInt.from(4) * _inv(BigInt.from(5)) % _q;
-  static final _ExtendedPoint _base =
-      _ExtendedPoint.fromAffine(_recoverX(_baseY), _baseY);
-  static final _ExtendedPoint _identity =
-      _ExtendedPoint(BigInt.zero, BigInt.one, BigInt.one, BigInt.zero);
+  static final _ExtendedPoint _base = _ExtendedPoint.fromAffine(
+    _recoverX(_baseY),
+    _baseY,
+  );
+  static final _ExtendedPoint _identity = _ExtendedPoint(
+    BigInt.zero,
+    BigInt.one,
+    BigInt.one,
+    BigInt.zero,
+  );
 
   static BigInt _mod(BigInt value) => value % _q;
 
@@ -277,10 +287,7 @@ final class Ed25519Reference {
     return x;
   }
 
-  static _ExtendedPoint _add(
-    _ExtendedPoint first,
-    _ExtendedPoint second,
-  ) {
+  static _ExtendedPoint _add(_ExtendedPoint first, _ExtendedPoint second) {
     final a = _mod((first.y - first.x) * (second.y - second.x));
     final b = _mod((first.y + first.x) * (second.y + second.x));
     final c = _mod(_twoD * first.t * second.t);
@@ -289,12 +296,7 @@ final class Ed25519Reference {
     final f = _mod(dValue - c);
     final g = _mod(dValue + c);
     final h = _mod(b + a);
-    return _ExtendedPoint(
-      _mod(e * f),
-      _mod(g * h),
-      _mod(f * g),
-      _mod(e * h),
-    );
+    return _ExtendedPoint(_mod(e * f), _mod(g * h), _mod(f * g), _mod(e * h));
   }
 
   static _ExtendedPoint _double(_ExtendedPoint point) {
@@ -306,12 +308,7 @@ final class Ed25519Reference {
     final g = _mod(dValue + b);
     final f = _mod(g - c);
     final h = _mod(dValue - b);
-    return _ExtendedPoint(
-      _mod(e * f),
-      _mod(g * h),
-      _mod(f * g),
-      _mod(e * h),
-    );
+    return _ExtendedPoint(_mod(e * f), _mod(g * h), _mod(f * g), _mod(e * h));
   }
 
   static _ExtendedPoint _multiply(_ExtendedPoint point, BigInt scalar) {
@@ -399,12 +396,12 @@ final class Ed25519Reference {
     final scalar = pair['scalar']! as BigInt;
     final prefix = pair['prefix']! as Uint8List;
     final public = publicKey(seed);
-    final r = _littleEndianToBigInt(
-          _Sha512.digest(<int>[...prefix, ...message]),
-        ) %
+    final r =
+        _littleEndianToBigInt(_Sha512.digest(<int>[...prefix, ...message])) %
         _l;
     final encodedR = _encodePoint(_multiply(_base, r));
-    final challenge = _littleEndianToBigInt(
+    final challenge =
+        _littleEndianToBigInt(
           _Sha512.digest(<int>[...encodedR, ...public, ...message]),
         ) %
         _l;
@@ -431,7 +428,8 @@ final class Ed25519Reference {
       }
       final r = _decodePoint(encodedR);
       final a = _decodePoint(publicKey);
-      final challenge = _littleEndianToBigInt(
+      final challenge =
+          _littleEndianToBigInt(
             _Sha512.digest(<int>[...encodedR, ...publicKey, ...message]),
           ) %
           _l;
@@ -445,10 +443,7 @@ final class Ed25519Reference {
 }
 
 final class SignedManifestV2 {
-  SignedManifestV2({
-    required this.body,
-    required this.signatureHex,
-  });
+  SignedManifestV2({required this.body, required this.signatureHex});
 
   factory SignedManifestV2.fromJson(Map<String, Object?> json) {
     final signature = json['signature'];
@@ -466,13 +461,13 @@ final class SignedManifestV2 {
       Uint8List.fromList(utf8.encode(canonicalJsonV2(body)));
 
   bool verifyWithPublicKeyHex(String publicKeyHex) => Ed25519Reference.verify(
-        hexToBytesV2(publicKeyHex),
-        canonicalPayload(),
-        hexToBytesV2(signatureHex),
-      );
+    hexToBytesV2(publicKeyHex),
+    canonicalPayload(),
+    hexToBytesV2(signatureHex),
+  );
 
   Map<String, Object?> toJson() => <String, Object?>{
-        ...body,
-        'signature': signatureHex,
-      };
+    ...body,
+    'signature': signatureHex,
+  };
 }

@@ -88,8 +88,10 @@ void main() {
             expect(enabled.enabled, true);
             expect(enabled.accessProfileId, 'owner');
             expect(enabled.persistentIndicator.contains('OWNER MODE'), true);
-            expect(enabled.safetyLabel.toLowerCase().contains('not a sandbox'),
-                true);
+            expect(
+              enabled.safetyLabel.toLowerCase().contains('not a sandbox'),
+              true,
+            );
             expect(await settingsFile.exists(), true);
             await owner.controller.disableAndReset();
             expect(owner.controller.current.enabled, false);
@@ -106,8 +108,9 @@ void main() {
                 'operation': 'host.supportMatrix',
               },
             );
-            final authorityResponse =
-                await composition.client.invoke(authorityEnvelope);
+            final authorityResponse = await composition.client.invoke(
+              authorityEnvelope,
+            );
             expect(authorityResponse['status'], 'ok');
             productionAdapter =
                 'ProductRuntime/P2ProductRuntimeOwnerMode/P2OwnerModeController';
@@ -182,7 +185,8 @@ void main() {
               'stdoutBytes': result.stdout.length,
               'stderrBytes': result.stderr.length,
             };
-            receipt = composition.commandService.lastReceipt?.toJson() ??
+            receipt =
+                composition.commandService.lastReceipt?.toJson() ??
                 <String, Object?>{'status': 'missing'};
             status = 'passed';
             break;
@@ -196,20 +200,20 @@ void main() {
               final marker = Completer<void>();
               final subscription = composition.ptyBackend
                   .output(
-                pty.session.sessionId,
-                0,
-                binding: pty.binding,
-                grantDigest: pty.grantDigest,
-              )
+                    pty.session.sessionId,
+                    0,
+                    binding: pty.binding,
+                    grantDigest: pty.grantDigest,
+                  )
                   .listen((bytes) {
-                observed.addAll(bytes);
-                if (!marker.isCompleted &&
-                    utf8
-                        .decode(observed, allowMalformed: true)
-                        .contains('KRISTIN_PTY_UNICODE_λ')) {
-                  marker.complete();
-                }
-              });
+                    observed.addAll(bytes);
+                    if (!marker.isCompleted &&
+                        utf8
+                            .decode(observed, allowMalformed: true)
+                            .contains('KRISTIN_PTY_UNICODE_λ')) {
+                      marker.complete();
+                    }
+                  });
               final command = Platform.isWindows
                   ? 'echo KRISTIN_PTY_UNICODE_λ\r\n'
                   : "printf 'KRISTIN_PTY_UNICODE_λ\\n'\n";
@@ -290,7 +294,8 @@ void main() {
                 'backlogReplayExact': true,
                 'noDuplicationOrLoss': true,
               };
-              receipt = composition.ptyBackend
+              receipt =
+                  composition.ptyBackend
                       .receiptFor(pty.session.sessionId)
                       ?.toJson() ??
                   <String, Object?>{'status': 'missing'};
@@ -300,24 +305,24 @@ void main() {
               final descendantBytes = <int>[];
               final descendantSubscription = composition.ptyBackend
                   .output(
-                pty.session.sessionId,
-                0,
-                binding: pty.binding,
-                grantDigest: pty.grantDigest,
-              )
+                    pty.session.sessionId,
+                    0,
+                    binding: pty.binding,
+                    grantDigest: pty.grantDigest,
+                  )
                   .listen((bytes) {
-                descendantBytes.addAll(bytes);
-                if (!descendantReady.isCompleted &&
-                    utf8
-                        .decode(descendantBytes, allowMalformed: true)
-                        .contains('KRISTIN_DESCENDANT_READY')) {
-                  descendantReady.complete();
-                }
-              });
+                    descendantBytes.addAll(bytes);
+                    if (!descendantReady.isCompleted &&
+                        utf8
+                            .decode(descendantBytes, allowMalformed: true)
+                            .contains('KRISTIN_DESCENDANT_READY')) {
+                      descendantReady.complete();
+                    }
+                  });
               final descendantCommand = Platform.isWindows
                   ? 'start "" /b powershell.exe -NoLogo -NoProfile '
-                      '-NonInteractive -Command "Start-Sleep -Seconds 30" '
-                      '& echo KRISTIN_DESCENDANT_READY\r\n'
+                        '-NonInteractive -Command "Start-Sleep -Seconds 30" '
+                        '& echo KRISTIN_DESCENDANT_READY\r\n'
                   : "sleep 30 & printf 'KRISTIN_DESCENDANT_READY\\n'\n";
               await composition.ptyBackend.input(
                 pty.session.sessionId,
@@ -327,8 +332,9 @@ void main() {
               );
               await descendantReady.future.timeout(const Duration(seconds: 20));
               await descendantSubscription.cancel();
-              final manager =
-                  P2ProcessTreeManager(composition.processTreeAdapter);
+              final manager = P2ProcessTreeManager(
+                composition.processTreeAdapter,
+              );
               expect(
                 await manager.reconcile(pty.session.processIdentity),
                 P2ProcessLifecycle.running,
@@ -342,8 +348,10 @@ void main() {
               );
               final descendants = termination['descendantProcessIdentities'];
               expect(termination['identityVerified'], true);
-              expect(termination['activeProcessesBeforeKill'],
-                  greaterThanOrEqualTo(2));
+              expect(
+                termination['activeProcessesBeforeKill'],
+                greaterThanOrEqualTo(2),
+              );
               expect(descendants, isA<List>());
               expect((descendants! as List).isNotEmpty, true);
               expect(termination['activeProcesses'], 0);
@@ -362,10 +370,10 @@ void main() {
                 'identityVerified': true,
                 'descendantProcessCreated':
                     (termination['activeProcessesBeforeKill'] as int? ?? 0) >=
-                            2 &&
-                        (termination['descendantProcessIdentities'] as List? ??
-                                const <Object?>[])
-                            .isNotEmpty,
+                        2 &&
+                    (termination['descendantProcessIdentities'] as List? ??
+                            const <Object?>[])
+                        .isNotEmpty,
                 'activeProcesses': termination['activeProcesses'],
                 'zeroSurvivingDescendants': termination['activeProcesses'] == 0,
               };
@@ -376,24 +384,24 @@ void main() {
               final descendantOutput = <int>[];
               final descendantSubscription = composition.ptyBackend
                   .output(
-                pty.session.sessionId,
-                0,
-                binding: pty.binding,
-                grantDigest: pty.grantDigest,
-              )
+                    pty.session.sessionId,
+                    0,
+                    binding: pty.binding,
+                    grantDigest: pty.grantDigest,
+                  )
                   .listen((bytes) {
-                descendantOutput.addAll(bytes);
-                if (!descendantReady.isCompleted &&
-                    utf8
-                        .decode(descendantOutput, allowMalformed: true)
-                        .contains('KRISTIN_WATCHDOG_DESCENDANT_READY')) {
-                  descendantReady.complete();
-                }
-              });
+                    descendantOutput.addAll(bytes);
+                    if (!descendantReady.isCompleted &&
+                        utf8
+                            .decode(descendantOutput, allowMalformed: true)
+                            .contains('KRISTIN_WATCHDOG_DESCENDANT_READY')) {
+                      descendantReady.complete();
+                    }
+                  });
               final descendantCommand = Platform.isWindows
                   ? 'start "" /b powershell.exe -NoLogo -NoProfile '
-                      '-NonInteractive -Command "Start-Sleep -Seconds 30" '
-                      '& echo KRISTIN_WATCHDOG_DESCENDANT_READY\r\n'
+                        '-NonInteractive -Command "Start-Sleep -Seconds 30" '
+                        '& echo KRISTIN_WATCHDOG_DESCENDANT_READY\r\n'
                   : "sleep 30 & printf 'KRISTIN_WATCHDOG_DESCENDANT_READY\n'\n";
               await composition.ptyBackend.input(
                 pty.session.sessionId,
@@ -405,9 +413,11 @@ void main() {
               await descendantSubscription.cancel();
               final killed = composition.watchdogTransport
                   .events(watchdogId)
-                  .firstWhere((event) =>
-                      event['type'] == 'watchdog.receipt' &&
-                      event['receipt'] is Map);
+                  .firstWhere(
+                    (event) =>
+                        event['type'] == 'watchdog.receipt' &&
+                        event['receipt'] is Map,
+                  );
               await owner.freezeHeartbeatForAdversarialTest(watchdogId);
               // This blocks the shipped desktop isolate. The independently
               // supervised watchdog remains armed and must kill the exact tree.
@@ -506,8 +516,9 @@ void main() {
             status = 'passed';
             break;
           case 'P2-008':
-            final serviceId =
-                _requiredEnvironment('KRISTIN_P2_NATIVE_SERVICE_ID');
+            final serviceId = _requiredEnvironment(
+              'KRISTIN_P2_NATIVE_SERVICE_ID',
+            );
             final initial = await composition.hostOperations.serviceStatus(
               serviceId,
               binding('service.status'),
@@ -543,23 +554,25 @@ void main() {
             expect(running.output['state'], 'running');
             expect(stopped.output['state'], 'stopped');
             expect(finalState.output['state'], 'stopped');
-            final application =
-                await composition.hostOperations.applicationOpenExecutable(
-              _requiredEnvironment('KRISTIN_NODE_EXECUTABLE'),
-              const <String>['-e', 'setInterval(() => {}, 1000)'],
-              binding('application.open'),
-              cwd: temporary.path,
-            );
+            final application = await composition.hostOperations
+                .applicationOpenExecutable(
+                  _requiredEnvironment('KRISTIN_NODE_EXECUTABLE'),
+                  const <String>['-e', 'setInterval(() => {}, 1000)'],
+                  binding('application.open'),
+                  cwd: temporary.path,
+                );
             final applicationIdentity =
                 '${application.output['identity'] ?? ''}';
             expect(applicationIdentity, isNotEmpty);
-            final applicationClosed =
-                await composition.hostOperations.applicationClose(
-              applicationIdentity,
-              binding('application.close'),
+            final applicationClosed = await composition.hostOperations
+                .applicationClose(
+                  applicationIdentity,
+                  binding('application.close'),
+                );
+            expect(
+              applicationClosed.status.name,
+              anyOf('succeeded', 'rolledBack'),
             );
-            expect(applicationClosed.status.name,
-                anyOf('succeeded', 'rolledBack'));
             productionAdapter =
                 'ProductRuntime/P2AutomationHostOperations/controlled-user-service-and-application';
             osEffect = <String, Object?>{
@@ -580,7 +593,7 @@ void main() {
               'applicationOpenObserved': applicationIdentity.isNotEmpty,
               'applicationCloseObserved':
                   applicationClosed.status.name == 'succeeded' ||
-                      applicationClosed.status.name == 'rolledBack',
+                  applicationClosed.status.name == 'rolledBack',
               'elevationExercised': false,
             };
             receipt = applicationClosed.receipt.toJson();
@@ -602,10 +615,8 @@ void main() {
             final screen = await composition.hostOperations.captureScreen(
               binding('screen.capture'),
             );
-            final window =
-                await composition.hostOperations.activeWindowMetadata(
-              binding('screen.activeWindowMetadata'),
-            );
+            final window = await composition.hostOperations
+                .activeWindowMetadata(binding('screen.activeWindowMetadata'));
             expect(clipboard, marker);
             expect(screen, isNotEmpty);
             expect(window, isNotEmpty);
@@ -622,7 +633,8 @@ void main() {
               'activeWindowObserved': true,
               'ordinaryLogContentAbsent': true,
             };
-            receipt = composition.hostOperations
+            receipt =
+                composition.hostOperations
                     .receiptFor('screen.activeWindowMetadata')
                     ?.toJson() ??
                 <String, Object?>{'status': 'missing'};
@@ -633,7 +645,8 @@ void main() {
               temporary,
               composition.snapshotUndoService(
                 Directory(
-                    '${temporary.path}${Platform.pathSeparator}snapshots'),
+                  '${temporary.path}${Platform.pathSeparator}snapshots',
+                ),
               ),
               binding('snapshot.restore'),
             );
@@ -682,7 +695,8 @@ void main() {
               'interruptObserved': true,
               'terminateTreeObserved': true,
             };
-            receipt = owner.composition.ptyBackend
+            receipt =
+                owner.composition.ptyBackend
                     .receiptFor(pty.session.sessionId)
                     ?.toJson() ??
                 <String, Object?>{'status': 'missing'};
@@ -704,17 +718,20 @@ void main() {
             await product.close();
             product = null;
             owner = null;
-            product =
-                await ProductRuntime.initialize(dataRoot: attestedRoot.path);
+            product = await ProductRuntime.initialize(
+              dataRoot: attestedRoot.path,
+            );
             final restarted = product.p2OwnerMode;
             if (!restarted.available || !restarted.completionEligible) {
               throw StateError(
-                  'restarted_production_owner_runtime_unavailable');
+                'restarted_production_owner_runtime_unavailable',
+              );
             }
             restarted.activateEffectContext(runId: runId, taskId: taskId);
             owner = restarted.runtime!;
-            final replay =
-                await owner.composition.client.invoke(replayEnvelope);
+            final replay = await owner.composition.client.invoke(
+              replayEnvelope,
+            );
             expect(replay['status'], 'error');
             productionAdapter =
                 'ProductRuntime/P2IsolatedP1AuthorityAdapter/durable-restart-reconciliation';
@@ -727,14 +744,14 @@ void main() {
               'firstDispatchSucceeded': true,
               'durableConsumptionRecorded':
                   (authorityObservation['durableConsumptionUseNumber']
-                              as int? ??
-                          0) >
-                      0,
+                          as int? ??
+                      0) >
+                  0,
               'durableStateVersionRecorded':
                   (authorityObservation['durableConsumptionStateVersion']
-                              as int? ??
-                          0) >
-                      0,
+                          as int? ??
+                      0) >
+                  0,
               'productRuntimeRestarted': true,
               'replayRejectedAfterRestart': true,
               'reconciliationObserved': true,
@@ -759,7 +776,8 @@ void main() {
               );
         runtimeComposition = <String, Object?>{
           ...owner.runtimeProvenance,
-          'watchdogAutomaticallyArmed': taskId == 'P2-011' ||
+          'watchdogAutomaticallyArmed':
+              taskId == 'P2-011' ||
               owner.supervisionSnapshot()['automaticallyArmed'] == true,
         };
       } catch (error) {
@@ -782,7 +800,8 @@ void main() {
         final nativeManifestSha = _requiredEnvironment(
           'KRISTIN_P2_NATIVE_RUNTIME_MANIFEST_SHA256',
         );
-        final completionEligible = status == 'passed' &&
+        final completionEligible =
+            status == 'passed' &&
             authorityObservation['completionEligible'] == true &&
             runtimeComposition['fixtureAuthorityEligible'] == false;
         final evidenceReceipt = <String, Object?>{
@@ -851,16 +870,16 @@ Future<_PtyObservation> _openProductPty(
   final shell = Platform.isWindows
       ? (Platform.environment['ComSpec'] ?? r'C:\Windows\System32\cmd.exe')
       : '/bin/sh';
-  final session =
-      await P2InteractivePtyService(owner.composition.ptyBackend).open(
-    P2PtyOpenRequest(
-      shell: shell,
-      cwd: temporary.path,
-      transcriptBudgetBytes: 256 * 1024,
-    ),
-    binding,
-    grantDigest,
-  );
+  final session = await P2InteractivePtyService(owner.composition.ptyBackend)
+      .open(
+        P2PtyOpenRequest(
+          shell: shell,
+          cwd: temporary.path,
+          transcriptBudgetBytes: 256 * 1024,
+        ),
+        binding,
+        grantDigest,
+      );
   return _PtyObservation(session, binding, grantDigest);
 }
 
@@ -891,11 +910,7 @@ Future<_Observation> _exerciseFilesystem(
     maxBytes: 64 * 1024,
   );
   final listed = await service
-      .enumerate(
-        temporary.path,
-        binding: binding('enumerate'),
-        maxEntries: 100,
-      )
+      .enumerate(temporary.path, binding: binding('enumerate'), maxEntries: 100)
       .toList();
   expect(read, orderedEquals(payload));
   expect(listed.any((entity) => entity.path == target.path), true);
@@ -1030,8 +1045,9 @@ Future<Map<String, Object?>> _runnerProvenance(String commitSha) async {
 }
 
 Future<String> _applicationCompositionSha256(String commitSha) async {
-  final value =
-      _requiredEnvironment('KRISTIN_P2_APPLICATION_COMPOSITION_EVIDENCE');
+  final value = _requiredEnvironment(
+    'KRISTIN_P2_APPLICATION_COMPOSITION_EVIDENCE',
+  );
   final file = File(value);
   if (!_isAbsolutePath(value) || !await file.exists()) {
     throw StateError('application_composition_evidence_missing');

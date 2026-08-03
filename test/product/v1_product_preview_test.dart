@@ -19,8 +19,9 @@ void main() {
     setUp(() async {
       project = await Directory.systemTemp.createTemp('kristin-v1-project-');
       outside = await Directory.systemTemp.createTemp('kristin-v1-outside-');
-      await Directory('${project.path}${Platform.pathSeparator}lib')
-          .create(recursive: true);
+      await Directory(
+        '${project.path}${Platform.pathSeparator}lib',
+      ).create(recursive: true);
       await File(
         '${project.path}${Platform.pathSeparator}lib'
         '${Platform.pathSeparator}main.dart',
@@ -53,47 +54,41 @@ void main() {
       );
     });
 
-    test(
-      'accepts an in-project absolute path when the project root sits '
-      'behind a reparse point',
-      () async {
-        if (!Platform.isWindows) {
-          return;
-        }
-        final real = await Directory.systemTemp.createTemp('kristin-v1-real-');
-        final linked = Link(
-          '${outside.path}${Platform.pathSeparator}linked-project',
-        );
-        try {
-          await Directory(
-            '${real.path}${Platform.pathSeparator}lib',
-          ).create(recursive: true);
-          await File(
-            '${real.path}${Platform.pathSeparator}lib'
-            '${Platform.pathSeparator}main.dart',
-          ).writeAsString('void main() {}\n');
-          await linked.create(real.path);
+    test('accepts an in-project absolute path when the project root sits '
+        'behind a reparse point', () async {
+      if (!Platform.isWindows) {
+        return;
+      }
+      final real = await Directory.systemTemp.createTemp('kristin-v1-real-');
+      final linked = Link(
+        '${outside.path}${Platform.pathSeparator}linked-project',
+      );
+      try {
+        await Directory(
+          '${real.path}${Platform.pathSeparator}lib',
+        ).create(recursive: true);
+        await File(
+          '${real.path}${Platform.pathSeparator}lib'
+          '${Platform.pathSeparator}main.dart',
+        ).writeAsString('void main() {}\n');
+        await linked.create(real.path);
 
-          final linkedBoundary = await WorkspaceBoundary.open(linked.path);
-          final realAbsolute = File(
-            '${real.path}${Platform.pathSeparator}lib'
-            '${Platform.pathSeparator}main.dart',
-          ).absolute.path;
+        final linkedBoundary = await WorkspaceBoundary.open(linked.path);
+        final realAbsolute = File(
+          '${real.path}${Platform.pathSeparator}lib'
+          '${Platform.pathSeparator}main.dart',
+        ).absolute.path;
 
-          expect(
-            linkedBoundary.normalizeToolPath(realAbsolute),
-            'lib/main.dart',
-          );
-        } finally {
-          if (await linked.exists()) {
-            await linked.delete();
-          }
-          if (await real.exists()) {
-            await real.delete(recursive: true);
-          }
+        expect(linkedBoundary.normalizeToolPath(realAbsolute), 'lib/main.dart');
+      } finally {
+        if (await linked.exists()) {
+          await linked.delete();
         }
-      },
-    );
+        if (await real.exists()) {
+          await real.delete(recursive: true);
+        }
+      }
+    });
 
     test('detects Kristin source checkouts before mutating runs', () async {
       await File(
@@ -116,9 +111,11 @@ void main() {
 
       expect(await boundary.isKristinSourceCheckout(), isTrue);
       expect(
-          await WorkspaceBoundary.open(outside.path)
-              .then((value) => value.isKristinSourceCheckout()),
-          isFalse);
+        await WorkspaceBoundary.open(
+          outside.path,
+        ).then((value) => value.isKristinSourceCheckout()),
+        isFalse,
+      );
     });
 
     test('continues to reject absolute paths outside the active project', () {
@@ -148,88 +145,94 @@ void main() {
       );
     });
 
-    test('rebases recognized virtual workspace paths into the selected project',
-        () async {
-      String virtualPath(String relative) {
-        if (Platform.isWindows) {
-          return 'C:\\workspace\\project\\${relative.replaceAll('/', '\\')}';
+    test(
+      'rebases recognized virtual workspace paths into the selected project',
+      () async {
+        String virtualPath(String relative) {
+          if (Platform.isWindows) {
+            return 'C:\\workspace\\project\\${relative.replaceAll('/', '\\')}';
+          }
+          return '/workspace/project/$relative';
         }
-        return '/workspace/project/$relative';
-      }
 
-      final readRecovery = await boundary.recoverExternalToolPath(
-        virtualPath('lib/main.dart'),
-        allowMissing: false,
-        allowRootFallback: false,
-        allowUnanchoredExistingSuffix: true,
-      );
-      expect(readRecovery?.path, 'lib/main.dart');
-      expect(readRecovery?.strategy, 'virtual_workspace_alias');
+        final readRecovery = await boundary.recoverExternalToolPath(
+          virtualPath('lib/main.dart'),
+          allowMissing: false,
+          allowRootFallback: false,
+          allowUnanchoredExistingSuffix: true,
+        );
+        expect(readRecovery?.path, 'lib/main.dart');
+        expect(readRecovery?.strategy, 'virtual_workspace_alias');
 
-      final writeRecovery = await boundary.recoverExternalToolPath(
-        virtualPath('generated/result.txt'),
-        allowMissing: true,
-        allowRootFallback: false,
-        allowUnanchoredExistingSuffix: false,
-      );
-      expect(writeRecovery?.path, 'generated/result.txt');
-      expect(writeRecovery?.strategy, 'virtual_workspace_alias');
+        final writeRecovery = await boundary.recoverExternalToolPath(
+          virtualPath('generated/result.txt'),
+          allowMissing: true,
+          allowRootFallback: false,
+          allowUnanchoredExistingSuffix: false,
+        );
+        expect(writeRecovery?.path, 'generated/result.txt');
+        expect(writeRecovery?.strategy, 'virtual_workspace_alias');
 
-      final sensitiveRecovery = await boundary.recoverExternalToolPath(
-        virtualPath('.env'),
-        allowMissing: true,
-        allowRootFallback: false,
-        allowUnanchoredExistingSuffix: false,
-      );
-      expect(sensitiveRecovery, isNull);
-    });
+        final sensitiveRecovery = await boundary.recoverExternalToolPath(
+          virtualPath('.env'),
+          allowMissing: true,
+          allowRootFallback: false,
+          allowUnanchoredExistingSuffix: false,
+        );
+        expect(sensitiveRecovery, isNull);
+      },
+    );
 
     test(
-        'rebases stale same-project paths but blocks arbitrary external writes',
-        () async {
-      final rootName =
-          project.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
-      final stalePath = File(
-        '${outside.path}${Platform.pathSeparator}$rootName'
-        '${Platform.pathSeparator}lib${Platform.pathSeparator}main.dart',
-      ).absolute.path;
-      final staleRecovery = await boundary.recoverExternalToolPath(
-        stalePath,
-        allowMissing: false,
-        allowRootFallback: false,
-        allowUnanchoredExistingSuffix: true,
-      );
-      expect(staleRecovery?.path, 'lib/main.dart');
-      expect(staleRecovery?.strategy, 'project_name_anchor');
+      'rebases stale same-project paths but blocks arbitrary external writes',
+      () async {
+        final rootName = project.uri.pathSegments
+            .where((segment) => segment.isNotEmpty)
+            .last;
+        final stalePath = File(
+          '${outside.path}${Platform.pathSeparator}$rootName'
+          '${Platform.pathSeparator}lib${Platform.pathSeparator}main.dart',
+        ).absolute.path;
+        final staleRecovery = await boundary.recoverExternalToolPath(
+          stalePath,
+          allowMissing: false,
+          allowRootFallback: false,
+          allowUnanchoredExistingSuffix: true,
+        );
+        expect(staleRecovery?.path, 'lib/main.dart');
+        expect(staleRecovery?.strategy, 'project_name_anchor');
 
-      final arbitraryWrite = File(
-        '${outside.path}${Platform.pathSeparator}new-project'
-        '${Platform.pathSeparator}lib${Platform.pathSeparator}main.dart',
-      ).absolute.path;
-      final blocked = await boundary.recoverExternalToolPath(
-        arbitraryWrite,
-        allowMissing: true,
-        allowRootFallback: false,
-        allowUnanchoredExistingSuffix: false,
-      );
-      expect(blocked, isNull);
-    });
+        final arbitraryWrite = File(
+          '${outside.path}${Platform.pathSeparator}new-project'
+          '${Platform.pathSeparator}lib${Platform.pathSeparator}main.dart',
+        ).absolute.path;
+        final blocked = await boundary.recoverExternalToolPath(
+          arbitraryWrite,
+          allowMissing: true,
+          allowRootFallback: false,
+          allowUnanchoredExistingSuffix: false,
+        );
+        expect(blocked, isNull);
+      },
+    );
 
-    test('root-scoped read recovery falls back to the active project root',
-        () async {
-      final arbitraryOutside = File(
-        '${outside.path}${Platform.pathSeparator}unrelated'
-        '${Platform.pathSeparator}missing',
-      ).absolute.path;
-      final recovery = await boundary.recoverExternalToolPath(
-        arbitraryOutside,
-        allowMissing: false,
-        allowRootFallback: true,
-        allowUnanchoredExistingSuffix: true,
-      );
-      expect(recovery?.path, '.');
-      expect(recovery?.strategy, 'active_project_root');
-    });
+    test(
+      'root-scoped read recovery falls back to the active project root',
+      () async {
+        final arbitraryOutside = File(
+          '${outside.path}${Platform.pathSeparator}unrelated'
+          '${Platform.pathSeparator}missing',
+        ).absolute.path;
+        final recovery = await boundary.recoverExternalToolPath(
+          arbitraryOutside,
+          allowMissing: false,
+          allowRootFallback: true,
+          allowUnanchoredExistingSuffix: true,
+        );
+        expect(recovery?.path, '.');
+        expect(recovery?.strategy, 'active_project_root');
+      },
+    );
   });
 
   group('v1 Prompt Studio and adaptive task plans', () {
@@ -253,11 +256,7 @@ void main() {
       await events.open();
       audit = AuditChain(repositories.auditFile, redactor);
       await audit.open();
-      final vault = SecretVault(
-        repositories.secretReferences,
-        redactor,
-        audit,
-      );
+      final vault = SecretVault(repositories.secretReferences, redactor, audit);
       model = ModelIdentity(
         providerId: 'fixture',
         name: 'deterministic-v1',
@@ -312,176 +311,222 @@ void main() {
       }
     });
 
-    test('generates, versions, plans, revises, and compiles deterministically',
-        () async {
-      final draft = await service.generatePrompt(
-        goal: 'Build a calculator application with standard math functions.',
-        model: model,
-      );
-      expect(draft.title, 'Modern calculator');
-      expect(draft.validate(), isEmpty);
+    test(
+      'generates, versions, plans, revises, and compiles deterministically',
+      () async {
+        final draft = await service.generatePrompt(
+          goal: 'Build a calculator application with standard math functions.',
+          model: model,
+        );
+        expect(draft.title, 'Modern calculator');
+        expect(draft.validate(), isEmpty);
 
-      final version1 = await service.savePromptVersion(
-        promptId: 'prompt-v1',
-        sourceGoal:
-            'Build a calculator application with standard math functions.',
-        action: PromptGenerationAction.generate,
-        draft: draft,
-        model: model,
-      );
-      final version2 = await service.savePromptVersion(
-        promptId: 'prompt-v1',
-        sourceGoal:
-            'Build a calculator application with standard math functions.',
-        action: PromptGenerationAction.improve,
-        draft: draft.copyWith(
-          guardrails: <String>[
-            ...draft.guardrails,
-            'Never silently discard invalid input.',
-          ],
-        ),
-        model: model,
-      );
-      expect(version1.versionNumber, 1);
-      expect(version2.versionNumber, 2);
-      expect(await service.listPromptVersions('prompt-v1'), hasLength(2));
+        final version1 = await service.savePromptVersion(
+          promptId: 'prompt-v1',
+          sourceGoal:
+              'Build a calculator application with standard math functions.',
+          action: PromptGenerationAction.generate,
+          draft: draft,
+          model: model,
+        );
+        final version2 = await service.savePromptVersion(
+          promptId: 'prompt-v1',
+          sourceGoal:
+              'Build a calculator application with standard math functions.',
+          action: PromptGenerationAction.improve,
+          draft: draft.copyWith(
+            guardrails: <String>[
+              ...draft.guardrails,
+              'Never silently discard invalid input.',
+            ],
+          ),
+          model: model,
+        );
+        expect(version1.versionNumber, 1);
+        expect(version2.versionNumber, 2);
+        expect(await service.listPromptVersions('prompt-v1'), hasLength(2));
 
-      final plan = await service.generateTaskPlan(
-        promptVersion: version2,
-        projectId: project.id,
-        model: model,
-        depth: PlanningDepth.auto,
-        maxLeafTasks: 100,
-      );
-      expect(plan.revision, 1);
-      expect(plan.tasks, hasLength(8));
-      expect(plan.validate(), isEmpty);
-      expect(plan.tasks.first.allowedTools, contains('knowledge_search'));
-      expect(plan.tasks.first.allowedTools, isNot(contains('research_search')));
-      expect(plan.tasks.first.allowedTools, isNot(contains('research_fetch')));
-      expect(plan.tasks.first.instructions, contains('Local-only constraint'));
-      expect(plan.tasks[1].dependencies, contains('task_001'));
-      expect(plan.tasks[1].parentId, 'task_001');
-      expect(plan.tasks[1].allowedTools, contains('verify_project'));
-      expect(plan.tasks[2].title,
-          'Create project-local wireframes and user flows');
-      expect(plan.tasks[2].allowedTools, contains('write_file'));
-      expect(
-        plan.tasks[2].expectedArtifacts,
-        contains('Project-local responsive design prototype'),
-      );
-      expect(plan.tasks[2].instructions, contains('Do not claim use of Figma'));
-      expect(plan.tasks[2].instructions, contains('Approved product context'));
-      expect(plan.tasks[2].instructions.toLowerCase(), contains('calculator'));
-      expect(plan.tasks[2].instructions, isNot(contains('Use Figma to')));
-      expect(plan.tasks[2].allowedTools, isNot(contains('run_command')));
-      expect(plan.tasks[2].allowedTools, isNot(contains('write_binary_file')));
-      expect(plan.tasks[2].allowedTools, isNot(contains('git_status')));
-      expect(plan.tasks[2].allowedTools, isNot(contains('mcp_call')));
-      expect(
-        plan.tasks[3].title,
-        'Run local usability and interaction verification',
-      );
-      expect(
-        plan.tasks[3].expectedArtifacts,
-        contains('docs/testing/usability-checklist.md'),
-      );
-      expect(plan.tasks[3].allowedTools, contains('verify_project'));
-      expect(
-          plan.tasks[3].instructions, contains('Do not recruit participants'));
-      expect(
-          plan.tasks[3].instructions, isNot(contains('Recruit participants')));
-      expect(plan.tasks[3].maxAttempts, 2);
-      expect(plan.tasks[3].manual, isFalse);
-      final deploymentTask = plan.tasks.firstWhere(
-        (task) => task.title == 'Prepare local preview and deployment package',
-      );
-      expect(deploymentTask.allowedTools, contains('package_deployment'));
-      expect(deploymentTask.allowedTools, contains('start_process'));
-      final deploymentInstructions = deploymentTask.instructions.toLowerCase();
-      expect(
-        deploymentInstructions,
-        contains('do not deploy to an external service'),
-      );
-      expect(deploymentInstructions, isNot(contains('deploy the calculator')));
-      expect(deploymentInstructions, contains('do not claim a public url'));
+        final plan = await service.generateTaskPlan(
+          promptVersion: version2,
+          projectId: project.id,
+          model: model,
+          depth: PlanningDepth.auto,
+          maxLeafTasks: 100,
+        );
+        expect(plan.revision, 1);
+        expect(plan.tasks, hasLength(8));
+        expect(plan.validate(), isEmpty);
+        expect(plan.tasks.first.allowedTools, contains('knowledge_search'));
+        expect(
+          plan.tasks.first.allowedTools,
+          isNot(contains('research_search')),
+        );
+        expect(
+          plan.tasks.first.allowedTools,
+          isNot(contains('research_fetch')),
+        );
+        expect(
+          plan.tasks.first.instructions,
+          contains('Local-only constraint'),
+        );
+        expect(plan.tasks[1].dependencies, contains('task_001'));
+        expect(plan.tasks[1].parentId, 'task_001');
+        expect(plan.tasks[1].allowedTools, contains('verify_project'));
+        expect(
+          plan.tasks[2].title,
+          'Create project-local wireframes and user flows',
+        );
+        expect(plan.tasks[2].allowedTools, contains('write_file'));
+        expect(
+          plan.tasks[2].expectedArtifacts,
+          contains('Project-local responsive design prototype'),
+        );
+        expect(
+          plan.tasks[2].instructions,
+          contains('Do not claim use of Figma'),
+        );
+        expect(
+          plan.tasks[2].instructions,
+          contains('Approved product context'),
+        );
+        expect(
+          plan.tasks[2].instructions.toLowerCase(),
+          contains('calculator'),
+        );
+        expect(plan.tasks[2].instructions, isNot(contains('Use Figma to')));
+        expect(plan.tasks[2].allowedTools, isNot(contains('run_command')));
+        expect(
+          plan.tasks[2].allowedTools,
+          isNot(contains('write_binary_file')),
+        );
+        expect(plan.tasks[2].allowedTools, isNot(contains('git_status')));
+        expect(plan.tasks[2].allowedTools, isNot(contains('mcp_call')));
+        expect(
+          plan.tasks[3].title,
+          'Run local usability and interaction verification',
+        );
+        expect(
+          plan.tasks[3].expectedArtifacts,
+          contains('docs/testing/usability-checklist.md'),
+        );
+        expect(plan.tasks[3].allowedTools, contains('verify_project'));
+        expect(
+          plan.tasks[3].instructions,
+          contains('Do not recruit participants'),
+        );
+        expect(
+          plan.tasks[3].instructions,
+          isNot(contains('Recruit participants')),
+        );
+        expect(plan.tasks[3].maxAttempts, 2);
+        expect(plan.tasks[3].manual, isFalse);
+        final deploymentTask = plan.tasks.firstWhere(
+          (task) =>
+              task.title == 'Prepare local preview and deployment package',
+        );
+        expect(deploymentTask.allowedTools, contains('package_deployment'));
+        expect(deploymentTask.allowedTools, contains('start_process'));
+        final deploymentInstructions = deploymentTask.instructions
+            .toLowerCase();
+        expect(
+          deploymentInstructions,
+          contains('do not deploy to an external service'),
+        );
+        expect(
+          deploymentInstructions,
+          isNot(contains('deploy the calculator')),
+        );
+        expect(deploymentInstructions, contains('do not claim a public url'));
 
-      final setupTask = plan.tasks.firstWhere(
-        (task) => task.title == 'Initialize the selected project workspace',
-      );
-      expect(setupTask.instructions, contains('selected project root'));
-      expect(setupTask.instructions, contains('Do not install Node.js'));
-      expect(setupTask.instructions,
-          isNot(contains('Create a new project directory')));
-      expect(setupTask.allowedTools, isNot(contains('run_command')));
-      expect(setupTask.allowedTools, isNot(contains('mcp_call')));
+        final setupTask = plan.tasks.firstWhere(
+          (task) => task.title == 'Initialize the selected project workspace',
+        );
+        expect(setupTask.instructions, contains('selected project root'));
+        expect(setupTask.instructions, contains('Do not install Node.js'));
+        expect(
+          setupTask.instructions,
+          isNot(contains('Create a new project directory')),
+        );
+        expect(setupTask.allowedTools, isNot(contains('run_command')));
+        expect(setupTask.allowedTools, isNot(contains('mcp_call')));
 
-      final calculationTask = plan.tasks.firstWhere(
-        (task) =>
-            task.title ==
+        final calculationTask = plan.tasks.firstWhere(
+          (task) =>
+              task.title ==
+              'Implement the client-side calculation engine and session history',
+        );
+        expect(
+          calculationTask.instructions,
+          contains('unnecessary Express/REST backend'),
+        );
+        expect(calculationTask.instructions, contains('division-by-zero'));
+        expect(
+          calculationTask.instructions,
+          isNot(contains('Install Express')),
+        );
+        expect(calculationTask.allowedTools, isNot(contains('mcp_call')));
+        expect(
+          calculationTask.expectedArtifacts,
+          contains('Session calculation history'),
+        );
+
+        final testingTask = plan.tasks.firstWhere(
+          (task) => task.id == 'task_008',
+        );
+        expect(
+          testingTask.title,
+          'Conduct Comprehensive Testing of Calculator',
+        );
+        expect(
+          testingTask.title,
+          isNot(
             'Implement the client-side calculation engine and session history',
-      );
-      expect(calculationTask.instructions,
-          contains('unnecessary Express/REST backend'));
-      expect(calculationTask.instructions, contains('division-by-zero'));
-      expect(calculationTask.instructions, isNot(contains('Install Express')));
-      expect(calculationTask.allowedTools, isNot(contains('mcp_call')));
-      expect(calculationTask.expectedArtifacts,
-          contains('Session calculation history'));
+          ),
+        );
+        expect(testingTask.allowedTools, contains('verify_project'));
+        expect(testingTask.expectedArtifacts, contains('Test results'));
 
-      final testingTask = plan.tasks.firstWhere(
-        (task) => task.id == 'task_008',
-      );
-      expect(testingTask.title, 'Conduct Comprehensive Testing of Calculator');
-      expect(
-        testingTask.title,
-        isNot(
-            'Implement the client-side calculation engine and session history'),
-      );
-      expect(testingTask.allowedTools, contains('verify_project'));
-      expect(testingTask.expectedArtifacts, contains('Test results'));
+        final editedTasks = plan.tasks
+            .map(
+              (task) => task.id == 'task_002'
+                  ? task.copyWith(title: 'Implement and verify calculator UI')
+                  : task,
+            )
+            .toList(growable: false);
+        final revision = await service.updateTaskPlan(plan, tasks: editedTasks);
+        expect(revision.id, isNot(plan.id));
+        expect(revision.revision, 2);
+        expect(revision.previousPlanId, plan.id);
+        expect(
+          await service.listTaskPlans(projectId: project.id),
+          hasLength(2),
+        );
 
-      final editedTasks = plan.tasks
-          .map(
-            (task) => task.id == 'task_002'
-                ? task.copyWith(title: 'Implement and verify calculator UI')
-                : task,
-          )
-          .toList(growable: false);
-      final revision = await service.updateTaskPlan(
-        plan,
-        tasks: editedTasks,
-      );
-      expect(revision.id, isNot(plan.id));
-      expect(revision.revision, 2);
-      expect(revision.previousPlanId, plan.id);
-      expect(await service.listTaskPlans(projectId: project.id), hasLength(2));
+        final prepared = await service.compilePlan(
+          plan: revision,
+          promptVersion: version2,
+          project: project,
+          model: model,
+          selectedTaskIds: const <String>{'task_002'},
+        );
+        expect(
+          prepared.plan.items.map((item) => item.id),
+          <String>['task_001', 'task_002'],
+          reason: 'selected execution must include transitive dependencies',
+        );
+        expect(prepared.contract.revision, 3);
+        expect(
+          prepared.contract.requiredPermissions,
+          containsAll(<PermissionScope>{
+            PermissionScope.projectRead,
+            PermissionScope.projectWrite,
+            PermissionScope.executeFinite,
+          }),
+        );
+      },
+    );
 
-      final prepared = await service.compilePlan(
-        plan: revision,
-        promptVersion: version2,
-        project: project,
-        model: model,
-        selectedTaskIds: const <String>{'task_002'},
-      );
-      expect(
-        prepared.plan.items.map((item) => item.id),
-        <String>['task_001', 'task_002'],
-        reason: 'selected execution must include transitive dependencies',
-      );
-      expect(prepared.contract.revision, 3);
-      expect(
-        prepared.contract.requiredPermissions,
-        containsAll(<PermissionScope>{
-          PermissionScope.projectRead,
-          PermissionScope.projectWrite,
-          PermissionScope.executeFinite,
-        }),
-      );
-    });
-
-    test('promotes artifact-producing plan tasks to governed build work',
-        () async {
+    test('promotes artifact-producing plan tasks to governed build work', () async {
       const draft = PromptStudioDraft(
         title: 'Calculator delivery plan',
         purpose: 'Create a calculator application and its design artifacts.',
@@ -664,9 +709,7 @@ void main() {
           id,
           dependencies: index == 0
               ? const <String>{}
-              : <String>{
-                  'task_${index.toString().padLeft(3, '0')}',
-                },
+              : <String>{'task_${index.toString().padLeft(3, '0')}'},
         );
       });
       final plan = TaskPlanRecord(
@@ -701,9 +744,7 @@ void main() {
       );
 
       final missingParent = plan.copyWith(
-        tasks: <PlanTaskRecord>[
-          _task('child').copyWith(parentId: 'missing'),
-        ],
+        tasks: <PlanTaskRecord>[_task('child').copyWith(parentId: 'missing')],
         maxLeafTasks: 1,
       );
       expect(
@@ -789,9 +830,7 @@ void main() {
         createdAt: DateTime.utc(2026, 7, 20),
         updatedAt: DateTime.utc(2026, 7, 20),
       );
-      final service = ProjectDiagnosticsService(
-        redactor: SecretRedactor(),
-      );
+      final service = ProjectDiagnosticsService(redactor: SecretRedactor());
 
       final report = await service.inspect(project, modelReady: true);
 
@@ -979,7 +1018,7 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
                 'allowedTools': <String>[
                   'run_command',
                   'write_file',
-                  'mcp_call'
+                  'mcp_call',
                 ],
                 'complexity': 4,
                 'effortPoints': 5,
@@ -1066,10 +1105,10 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
                 'Build a calculator with standard arithmetic and scientific functions for {{platform}}.',
             'variables': <String>['platform'],
             'assumptions': <String>[
-              'The active project is the target workspace.'
+              'The active project is the target workspace.',
             ],
             'clarifyingQuestions': <String>[
-              'Which deployment platform is required?'
+              'Which deployment platform is required?',
             ],
             'acceptanceCriteria': <String>[
               'The calculator returns correct results for supported operations.',
@@ -1077,13 +1116,13 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
             ],
             'outputExpectations': <String>[
               'Application source',
-              'Automated tests'
+              'Automated tests',
             ],
             'guardrails': <String>[
-              'Do not modify files outside the active project.'
+              'Do not modify files outside the active project.',
             ],
             'stopConditions': <String>[
-              'Stop when a required platform decision is unresolved.'
+              'Stop when a required platform decision is unresolved.',
             ],
             'evaluationCases': <String>['2 + 2 returns 4.'],
             'mode': 'build',
@@ -1100,10 +1139,7 @@ ModelGenerationDelegate _fixtureGenerator(ModelIdentity model) {
   };
 }
 
-PlanTaskRecord _task(
-  String id, {
-  Set<String> dependencies = const <String>{},
-}) {
+PlanTaskRecord _task(String id, {Set<String> dependencies = const <String>{}}) {
   return PlanTaskRecord(
     id: id,
     phase: 'Implementation',

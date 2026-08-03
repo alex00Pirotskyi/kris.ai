@@ -8,8 +8,9 @@ import 'package:kristin_local_agent/product/p2_owner_workspace.dart';
 import 'package:kristin_local_agent/product/p2_terminal_model.dart';
 
 void main() {
-  testWidgets('Owner onboarding never calls full access a sandbox',
-      (tester) async {
+  testWidgets('Owner onboarding never calls full access a sandbox', (
+    tester,
+  ) async {
     final controller = P2OwnerModeController((_) async {}, () async {});
     await tester.pumpWidget(
       MaterialApp(
@@ -67,57 +68,59 @@ void main() {
     expect(actions.terminateCount, 1);
   });
 
-  test('service actions invoke PTY, clipboard, transcript, and watchdog',
-      () async {
-    final pty = _PtyBackend();
-    final transport = _WatchdogTransport();
-    final clipboard = <String>[];
-    final saved = <List<int>>[];
-    const tab = P2TerminalTab(
-      id: 'session',
-      title: 'Terminal',
-      shell: 'shell',
-      cwd: '/',
-      runId: 'run',
-      taskId: 'task',
-      grantId: 'grant',
-      attached: true,
-      accessibilityLabel: 'terminal session',
-    );
-    final actions = P2OwnerWorkspaceServiceActions(
-      ptyBackend: pty,
-      emergencyController: P2EmergencyController(transport),
-      watchdogId: 'watchdog',
-      authorizationFor: (_, operation) => P2TerminalAuthorization(
-        binding: P2EffectBinding(
-          runId: 'run',
-          taskId: 'task',
-          actorId: 'actor',
-          toolId: 'pty',
-          accessProfileId: 'owner',
-          capabilityId: 'terminal',
-          operation: operation,
+  test(
+    'service actions invoke PTY, clipboard, transcript, and watchdog',
+    () async {
+      final pty = _PtyBackend();
+      final transport = _WatchdogTransport();
+      final clipboard = <String>[];
+      final saved = <List<int>>[];
+      const tab = P2TerminalTab(
+        id: 'session',
+        title: 'Terminal',
+        shell: 'shell',
+        cwd: '/',
+        runId: 'run',
+        taskId: 'task',
+        grantId: 'grant',
+        attached: true,
+        accessibilityLabel: 'terminal session',
+      );
+      final actions = P2OwnerWorkspaceServiceActions(
+        ptyBackend: pty,
+        emergencyController: P2EmergencyController(transport),
+        watchdogId: 'watchdog',
+        authorizationFor: (_, operation) => P2TerminalAuthorization(
+          binding: P2EffectBinding(
+            runId: 'run',
+            taskId: 'task',
+            actorId: 'actor',
+            toolId: 'pty',
+            accessProfileId: 'owner',
+            capabilityId: 'terminal',
+            operation: operation,
+          ),
+          grantDigest: 'grant',
         ),
-        grantDigest: 'grant',
-      ),
-      selectionBytes: (_) async => <int>[104, 105],
-      transcriptBytes: (_) async => <int>[1, 2, 3],
-      writeClipboardText: (text) async => clipboard.add(text),
-      writeTranscriptFile: (_, bytes) async => saved.add(bytes),
-    );
-    await actions.copySelection(tab);
-    await actions.saveTranscript(tab);
-    await actions.interrupt(tab);
-    await actions.terminateTree(tab);
-    await actions.emergencyPauseAndKill();
-    expect(clipboard, <String>['hi']);
-    expect(saved, <List<int>>[
-      <int>[1, 2, 3]
-    ]);
-    expect(pty.interruptCount, 1);
-    expect(pty.terminateCount, 1);
-    expect(transport.killCount, 1);
-  });
+        selectionBytes: (_) async => <int>[104, 105],
+        transcriptBytes: (_) async => <int>[1, 2, 3],
+        writeClipboardText: (text) async => clipboard.add(text),
+        writeTranscriptFile: (_, bytes) async => saved.add(bytes),
+      );
+      await actions.copySelection(tab);
+      await actions.saveTranscript(tab);
+      await actions.interrupt(tab);
+      await actions.terminateTree(tab);
+      await actions.emergencyPauseAndKill();
+      expect(clipboard, <String>['hi']);
+      expect(saved, <List<int>>[
+        <int>[1, 2, 3],
+      ]);
+      expect(pty.interruptCount, 1);
+      expect(pty.terminateCount, 1);
+      expect(transport.killCount, 1);
+    },
+  );
 }
 
 class _Actions implements P2OwnerWorkspaceActions {
@@ -150,16 +153,14 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> detach(
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> input(
@@ -167,8 +168,7 @@ class _PtyBackend implements P2PtyBackend {
     List<int> bytes, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> interrupt(
@@ -184,8 +184,7 @@ class _PtyBackend implements P2PtyBackend {
     P2PtyOpenRequest request,
     P2EffectBinding binding,
     String grantDigest,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Stream<List<int>> output(
@@ -193,8 +192,7 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      const Stream<List<int>>.empty();
+  }) => const Stream<List<int>>.empty();
 
   @override
   Future<void> resize(
@@ -203,8 +201,7 @@ class _PtyBackend implements P2PtyBackend {
     int rows, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> terminate(

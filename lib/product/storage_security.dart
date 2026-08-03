@@ -9,8 +9,11 @@ import 'durable_workflow.dart';
 import 'repository.dart';
 
 class ProductException implements Exception {
-  ProductException(this.code, this.message,
-      {this.details = const <String, dynamic>{}});
+  ProductException(
+    this.code,
+    this.message, {
+    this.details = const <String, dynamic>{},
+  });
 
   final String code;
   final String message;
@@ -22,10 +25,10 @@ class ProductException implements Exception {
 
 class AppDirectories {
   AppDirectories._(this.root)
-      : state = Directory('${root.path}${Platform.pathSeparator}state'),
-        logs = Directory('${root.path}${Platform.pathSeparator}logs'),
-        cache = Directory('${root.path}${Platform.pathSeparator}cache'),
-        support = Directory('${root.path}${Platform.pathSeparator}support');
+    : state = Directory('${root.path}${Platform.pathSeparator}state'),
+      logs = Directory('${root.path}${Platform.pathSeparator}logs'),
+      cache = Directory('${root.path}${Platform.pathSeparator}cache'),
+      support = Directory('${root.path}${Platform.pathSeparator}support');
 
   final Directory root;
   final Directory state;
@@ -38,7 +41,8 @@ class AppDirectories {
     if (overrideRoot != null && overrideRoot.trim().isNotEmpty) {
       base = overrideRoot;
     } else if (Platform.isWindows) {
-      base = Platform.environment['APPDATA'] ??
+      base =
+          Platform.environment['APPDATA'] ??
           Platform.environment['LOCALAPPDATA'] ??
           Directory.current.path;
       base = '$base${Platform.pathSeparator}KristinLocalAgent';
@@ -84,24 +88,21 @@ class AtomicJsonFile implements JsonDocumentRepository {
   }
 
   @override
-  Future<Object?> read({Object? fallback}) => synchronized(
-        () => _readUnlocked(fallback: fallback),
-      );
+  Future<Object?> read({Object? fallback}) =>
+      synchronized(() => _readUnlocked(fallback: fallback));
 
   @override
-  Future<void> write(Object? value) => synchronized(
-        () => _writeUnlocked(value),
-      );
+  Future<void> write(Object? value) =>
+      synchronized(() => _writeUnlocked(value));
 
   Future<void> updateList(
     List<Object?> Function(List<Object?> current) update,
-  ) =>
-      synchronized(() async {
-        final raw = await _readUnlocked(fallback: const <Object>[]);
-        final current = raw is List ? List<Object?>.from(raw) : <Object?>[];
-        final next = update(current);
-        await _writeUnlocked(next);
-      });
+  ) => synchronized(() async {
+    final raw = await _readUnlocked(fallback: const <Object>[]);
+    final current = raw is List ? List<Object?>.from(raw) : <Object?>[];
+    final next = update(current);
+    await _writeUnlocked(next);
+  });
 
   Future<Object?> _readUnlocked({Object? fallback}) async {
     if (!await file.exists()) {
@@ -179,37 +180,36 @@ class PersistentCollection<T> implements EntityRepository<T> {
 
   @override
   Future<void> put(T item) => _mutate((items) {
-        final index = items.indexWhere(
-          (candidate) => idOf(candidate) == idOf(item),
-        );
-        if (index < 0) {
-          items.add(item);
-        } else {
-          items[index] = item;
-        }
-      });
+    final index = items.indexWhere(
+      (candidate) => idOf(candidate) == idOf(item),
+    );
+    if (index < 0) {
+      items.add(item);
+    } else {
+      items[index] = item;
+    }
+  });
 
   @override
   Future<void> putAll(Iterable<T> values) => _mutate((items) {
-        final current = <String, T>{for (final item in items) idOf(item): item};
-        for (final item in values) {
-          current[idOf(item)] = item;
-        }
-        items
-          ..clear()
-          ..addAll(current.values.toList()
-            ..sort((a, b) => idOf(a).compareTo(idOf(b))));
-      });
+    final current = <String, T>{for (final item in items) idOf(item): item};
+    for (final item in values) {
+      current[idOf(item)] = item;
+    }
+    items
+      ..clear()
+      ..addAll(
+        current.values.toList()..sort((a, b) => idOf(a).compareTo(idOf(b))),
+      );
+  });
 
   @override
-  Future<void> remove(String id) => _mutate(
-        (items) => items.removeWhere((item) => idOf(item) == id),
-      );
+  Future<void> remove(String id) =>
+      _mutate((items) => items.removeWhere((item) => idOf(item) == id));
 
   @override
-  Future<void> removeWhere(bool Function(T item) predicate) => _mutate(
-        (items) => items.removeWhere(predicate),
-      );
+  Future<void> removeWhere(bool Function(T item) predicate) =>
+      _mutate((items) => items.removeWhere(predicate));
 
   @override
   Future<void> replaceAll(Iterable<T> values) =>
@@ -232,7 +232,7 @@ class ProductSettings {
     this.apiPort = 47831,
     this.allowedOrigins = const <String>{
       'http://127.0.0.1',
-      'http://localhost'
+      'http://localhost',
     },
     this.ollamaBaseUrl = 'http://127.0.0.1:11434',
     this.ollamaLoadTimeoutSeconds = 480,
@@ -277,83 +277,79 @@ class ProductSettings {
     int? maxResearchBytes,
     int? maxResearchRedirects,
     int? researchTimeoutSeconds,
-  }) =>
-      ProductSettings(
-        apiEnabled: apiEnabled ?? this.apiEnabled,
-        apiPort: apiPort ?? this.apiPort,
-        allowedOrigins: allowedOrigins ?? this.allowedOrigins,
-        ollamaBaseUrl: ollamaBaseUrl ?? this.ollamaBaseUrl,
-        ollamaLoadTimeoutSeconds:
-            ollamaLoadTimeoutSeconds ?? this.ollamaLoadTimeoutSeconds,
-        ollamaLoadRetries: ollamaLoadRetries ?? this.ollamaLoadRetries,
-        ollamaKeepAliveMinutes:
-            ollamaKeepAliveMinutes ?? this.ollamaKeepAliveMinutes,
-        openAiCompatibleBaseUrl:
-            openAiCompatibleBaseUrl ?? this.openAiCompatibleBaseUrl,
-        openAiApiKeyReferenceId:
-            openAiApiKeyReferenceId ?? this.openAiApiKeyReferenceId,
-        localOnly: localOnly ?? this.localOnly,
-        allowPackageNetwork: allowPackageNetwork ?? this.allowPackageNetwork,
-        maxResearchBytes: maxResearchBytes ?? this.maxResearchBytes,
-        maxResearchRedirects: maxResearchRedirects ?? this.maxResearchRedirects,
-        researchTimeoutSeconds:
-            researchTimeoutSeconds ?? this.researchTimeoutSeconds,
-      );
+  }) => ProductSettings(
+    apiEnabled: apiEnabled ?? this.apiEnabled,
+    apiPort: apiPort ?? this.apiPort,
+    allowedOrigins: allowedOrigins ?? this.allowedOrigins,
+    ollamaBaseUrl: ollamaBaseUrl ?? this.ollamaBaseUrl,
+    ollamaLoadTimeoutSeconds:
+        ollamaLoadTimeoutSeconds ?? this.ollamaLoadTimeoutSeconds,
+    ollamaLoadRetries: ollamaLoadRetries ?? this.ollamaLoadRetries,
+    ollamaKeepAliveMinutes:
+        ollamaKeepAliveMinutes ?? this.ollamaKeepAliveMinutes,
+    openAiCompatibleBaseUrl:
+        openAiCompatibleBaseUrl ?? this.openAiCompatibleBaseUrl,
+    openAiApiKeyReferenceId:
+        openAiApiKeyReferenceId ?? this.openAiApiKeyReferenceId,
+    localOnly: localOnly ?? this.localOnly,
+    allowPackageNetwork: allowPackageNetwork ?? this.allowPackageNetwork,
+    maxResearchBytes: maxResearchBytes ?? this.maxResearchBytes,
+    maxResearchRedirects: maxResearchRedirects ?? this.maxResearchRedirects,
+    researchTimeoutSeconds:
+        researchTimeoutSeconds ?? this.researchTimeoutSeconds,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'apiEnabled': apiEnabled,
-        'apiPort': apiPort,
-        'allowedOrigins': allowedOrigins.toList()..sort(),
-        'ollamaBaseUrl': ollamaBaseUrl,
-        'ollamaLoadTimeoutSeconds': ollamaLoadTimeoutSeconds,
-        'ollamaLoadRetries': ollamaLoadRetries,
-        'ollamaKeepAliveMinutes': ollamaKeepAliveMinutes,
-        'openAiCompatibleBaseUrl': openAiCompatibleBaseUrl,
-        'openAiApiKeyReferenceId': openAiApiKeyReferenceId,
-        'localOnly': localOnly,
-        'allowPackageNetwork': allowPackageNetwork,
-        'maxResearchBytes': maxResearchBytes,
-        'maxResearchRedirects': maxResearchRedirects,
-        'researchTimeoutSeconds': researchTimeoutSeconds,
-      };
+    'apiEnabled': apiEnabled,
+    'apiPort': apiPort,
+    'allowedOrigins': allowedOrigins.toList()..sort(),
+    'ollamaBaseUrl': ollamaBaseUrl,
+    'ollamaLoadTimeoutSeconds': ollamaLoadTimeoutSeconds,
+    'ollamaLoadRetries': ollamaLoadRetries,
+    'ollamaKeepAliveMinutes': ollamaKeepAliveMinutes,
+    'openAiCompatibleBaseUrl': openAiCompatibleBaseUrl,
+    'openAiApiKeyReferenceId': openAiApiKeyReferenceId,
+    'localOnly': localOnly,
+    'allowPackageNetwork': allowPackageNetwork,
+    'maxResearchBytes': maxResearchBytes,
+    'maxResearchRedirects': maxResearchRedirects,
+    'researchTimeoutSeconds': researchTimeoutSeconds,
+  };
 
-  factory ProductSettings.fromJson(Map<String, dynamic> json) =>
-      ProductSettings(
-        apiEnabled: json['apiEnabled'] == true,
-        apiPort: int.tryParse(json['apiPort']?.toString() ?? '') ?? 47831,
-        allowedOrigins: stringList(json['allowedOrigins']).toSet().isEmpty
-            ? const <String>{'http://127.0.0.1', 'http://localhost'}
-            : stringList(json['allowedOrigins']).toSet(),
-        ollamaBaseUrl:
-            json['ollamaBaseUrl']?.toString() ?? 'http://127.0.0.1:11434',
-        ollamaLoadTimeoutSeconds:
-            (int.tryParse(json['ollamaLoadTimeoutSeconds']?.toString() ?? '') ??
-                    480)
-                .clamp(60, 3600)
-                .toInt(),
-        ollamaLoadRetries:
-            (int.tryParse(json['ollamaLoadRetries']?.toString() ?? '') ?? 1)
-                .clamp(0, 2)
-                .toInt(),
-        ollamaKeepAliveMinutes:
-            (int.tryParse(json['ollamaKeepAliveMinutes']?.toString() ?? '') ??
-                    15)
-                .clamp(1, 120)
-                .toInt(),
-        openAiCompatibleBaseUrl:
-            json['openAiCompatibleBaseUrl']?.toString() ?? '',
-        openAiApiKeyReferenceId:
-            json['openAiApiKeyReferenceId']?.toString() ?? '',
-        localOnly: json['localOnly'] != false,
-        allowPackageNetwork: json['allowPackageNetwork'] == true,
-        maxResearchBytes:
-            int.tryParse(json['maxResearchBytes']?.toString() ?? '') ?? 2097152,
-        maxResearchRedirects:
-            int.tryParse(json['maxResearchRedirects']?.toString() ?? '') ?? 3,
-        researchTimeoutSeconds:
-            int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ??
-                20,
-      );
+  factory ProductSettings.fromJson(
+    Map<String, dynamic> json,
+  ) => ProductSettings(
+    apiEnabled: json['apiEnabled'] == true,
+    apiPort: int.tryParse(json['apiPort']?.toString() ?? '') ?? 47831,
+    allowedOrigins: stringList(json['allowedOrigins']).toSet().isEmpty
+        ? const <String>{'http://127.0.0.1', 'http://localhost'}
+        : stringList(json['allowedOrigins']).toSet(),
+    ollamaBaseUrl:
+        json['ollamaBaseUrl']?.toString() ?? 'http://127.0.0.1:11434',
+    ollamaLoadTimeoutSeconds:
+        (int.tryParse(json['ollamaLoadTimeoutSeconds']?.toString() ?? '') ??
+                480)
+            .clamp(60, 3600)
+            .toInt(),
+    ollamaLoadRetries:
+        (int.tryParse(json['ollamaLoadRetries']?.toString() ?? '') ?? 1)
+            .clamp(0, 2)
+            .toInt(),
+    ollamaKeepAliveMinutes:
+        (int.tryParse(json['ollamaKeepAliveMinutes']?.toString() ?? '') ?? 15)
+            .clamp(1, 120)
+            .toInt(),
+    openAiCompatibleBaseUrl: json['openAiCompatibleBaseUrl']?.toString() ?? '',
+    openAiApiKeyReferenceId: json['openAiApiKeyReferenceId']?.toString() ?? '',
+    localOnly: json['localOnly'] != false,
+    allowPackageNetwork: json['allowPackageNetwork'] == true,
+    maxResearchBytes:
+        int.tryParse(json['maxResearchBytes']?.toString() ?? '') ?? 2097152,
+    maxResearchRedirects:
+        int.tryParse(json['maxResearchRedirects']?.toString() ?? '') ?? 3,
+    researchTimeoutSeconds:
+        int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ?? 20,
+  );
 }
 
 class ProductRepositories {
@@ -400,9 +396,8 @@ class ProductRepositories {
   final File auditFile;
 
   static Future<ProductRepositories> open(AppDirectories directories) async {
-    File legacy(String name) => File(
-          '${directories.state.path}${Platform.pathSeparator}$name.json',
-        );
+    File legacy(String name) =>
+        File('${directories.state.path}${Platform.pathSeparator}$name.json');
     final eventFile = File(
       '${directories.logs.path}${Platform.pathSeparator}events.jsonl',
     );
@@ -440,14 +435,13 @@ class ProductRepositories {
       required T Function(Map<String, dynamic>) fromJson,
       required Map<String, dynamic> Function(T value) toJson,
       required String Function(T value) idOf,
-    }) =>
-        SqliteEntityRepository<T>(
-          store: workflow,
-          collection: name,
-          fromJson: fromJson,
-          toJson: toJson,
-          idOf: idOf,
-        );
+    }) => SqliteEntityRepository<T>(
+      store: workflow,
+      collection: name,
+      fromJson: fromJson,
+      toJson: toJson,
+      idOf: idOf,
+    );
 
     return ProductRepositories._(
       workflow: workflow,
@@ -554,11 +548,7 @@ class ProductRepositories {
 }
 
 class EventJournal {
-  EventJournal(
-    this.file, {
-    this.workflow,
-    this.maxRetained = 5000,
-  });
+  EventJournal(this.file, {this.workflow, this.maxRetained = 5000});
 
   final File file;
   final DurableWorkflowStore? workflow;
@@ -603,67 +593,67 @@ class EventJournal {
     Map<String, dynamic> data,
   ) {
     final completer = Completer<EventEnvelope>();
-    _tail = _tail.then((_) async {
-      final id = newId('event');
-      final timestamp = DateTime.now().toUtc();
-      final durable = workflow;
-      late EventEnvelope event;
-      if (durable != null) {
-        final stored = await durable.appendEvent(
-          id: id,
-          type: type,
-          correlationId: correlationId,
-          timestamp: timestamp,
-          data: data,
-        );
-        _sequence = stored.sequence;
-        event = stored.toEnvelope();
-      } else {
-        event = EventEnvelope(
-          sequence: ++_sequence,
-          id: id,
-          type: type,
-          correlationId: correlationId,
-          timestamp: timestamp,
-          data: data,
-        );
-      }
-      // JSONL remains a bounded compatibility mirror for existing support
-      // tooling. SQLite is the authoritative append-only event history, so a
-      // mirror failure must not make callers retry an event that is already
-      // durable and thereby create a duplicate logical transition.
-      try {
-        await file.writeAsString(
-          '${jsonEncode(event.toJson())}\n',
-          mode: FileMode.append,
-          flush: true,
-        );
-        if (_sequence % 250 == 0) {
-          await _compactMirror();
-        }
-      } catch (_) {
-        // Support export can rebuild the mirror from SQLite. The authoritative
-        // event has already committed and remains safe to acknowledge.
-      }
-      _controller.add(event);
-      completer.complete(event);
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) {
-        completer.completeError(error, stackTrace);
-      }
-    });
+    _tail = _tail
+        .then((_) async {
+          final id = newId('event');
+          final timestamp = DateTime.now().toUtc();
+          final durable = workflow;
+          late EventEnvelope event;
+          if (durable != null) {
+            final stored = await durable.appendEvent(
+              id: id,
+              type: type,
+              correlationId: correlationId,
+              timestamp: timestamp,
+              data: data,
+            );
+            _sequence = stored.sequence;
+            event = stored.toEnvelope();
+          } else {
+            event = EventEnvelope(
+              sequence: ++_sequence,
+              id: id,
+              type: type,
+              correlationId: correlationId,
+              timestamp: timestamp,
+              data: data,
+            );
+          }
+          // JSONL remains a bounded compatibility mirror for existing support
+          // tooling. SQLite is the authoritative append-only event history, so a
+          // mirror failure must not make callers retry an event that is already
+          // durable and thereby create a duplicate logical transition.
+          try {
+            await file.writeAsString(
+              '${jsonEncode(event.toJson())}\n',
+              mode: FileMode.append,
+              flush: true,
+            );
+            if (_sequence % 250 == 0) {
+              await _compactMirror();
+            }
+          } catch (_) {
+            // Support export can rebuild the mirror from SQLite. The authoritative
+            // event has already committed and remains safe to acknowledge.
+          }
+          _controller.add(event);
+          completer.complete(event);
+        })
+        .catchError((Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        });
     return completer.future;
   }
 
-  Future<List<EventEnvelope>> after(
-    int sequence, {
-    int limit = 500,
-  }) async {
+  Future<List<EventEnvelope>> after(int sequence, {int limit = 500}) async {
     final durable = workflow;
     if (durable != null) {
-      return (await durable.eventsAfter(sequence, limit: limit))
-          .map((event) => event.toEnvelope())
-          .toList(growable: false);
+      return (await durable.eventsAfter(
+        sequence,
+        limit: limit,
+      )).map((event) => event.toEnvelope()).toList(growable: false);
     }
     if (!await file.exists()) {
       return <EventEnvelope>[];
@@ -746,28 +736,36 @@ class AuditChain {
   }
 
   Future<void> append(
-      String action, String correlationId, Map<String, dynamic> data) {
+    String action,
+    String correlationId,
+    Map<String, dynamic> data,
+  ) {
     final completer = Completer<void>();
-    _tail = _tail.then((_) async {
-      final payload = <String, dynamic>{
-        'id': newId('audit'),
-        'timestamp': DateTime.now().toUtc().toIso8601String(),
-        'action': action,
-        'correlationId': correlationId,
-        'data': redactor.redactJson(data),
-        'previousHash': _lastHash,
-      };
-      final hash = Sha256.text(canonicalJson(payload));
-      final record = <String, dynamic>{...payload, 'hash': hash};
-      await file.writeAsString('${jsonEncode(record)}\n',
-          mode: FileMode.append, flush: true);
-      _lastHash = hash;
-      completer.complete();
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) {
-        completer.completeError(error, stackTrace);
-      }
-    });
+    _tail = _tail
+        .then((_) async {
+          final payload = <String, dynamic>{
+            'id': newId('audit'),
+            'timestamp': DateTime.now().toUtc().toIso8601String(),
+            'action': action,
+            'correlationId': correlationId,
+            'data': redactor.redactJson(data),
+            'previousHash': _lastHash,
+          };
+          final hash = Sha256.text(canonicalJson(payload));
+          final record = <String, dynamic>{...payload, 'hash': hash};
+          await file.writeAsString(
+            '${jsonEncode(record)}\n',
+            mode: FileMode.append,
+            flush: true,
+          );
+          _lastHash = hash;
+          completer.complete();
+        })
+        .catchError((Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        });
     return completer.future;
   }
 
@@ -786,7 +784,7 @@ class AuditChain {
         return <String, dynamic>{
           'valid': false,
           'records': records,
-          'error': 'non_object_record'
+          'error': 'non_object_record',
         };
       }
       final record = mapValue(decoded);
@@ -795,7 +793,7 @@ class AuditChain {
         return <String, dynamic>{
           'valid': false,
           'records': records,
-          'error': 'previous_hash_mismatch'
+          'error': 'previous_hash_mismatch',
         };
       }
       final expected = Sha256.text(canonicalJson(record));
@@ -803,7 +801,7 @@ class AuditChain {
         return <String, dynamic>{
           'valid': false,
           'records': records,
-          'error': 'hash_mismatch'
+          'error': 'hash_mismatch',
         };
       }
       previous = hash;
@@ -812,7 +810,7 @@ class AuditChain {
     return <String, dynamic>{
       'valid': true,
       'records': records,
-      'lastHash': previous
+      'lastHash': previous,
     };
   }
 }
@@ -853,19 +851,23 @@ class PermissionService {
     required PermissionScope scope,
   }) async {
     final grants = await repository.all();
-    final candidates = grants.where((grant) =>
-        grant.projectId == projectId &&
-        grant.commandId == commandId &&
-        grant.allows(scope));
+    final candidates = grants.where(
+      (grant) =>
+          grant.projectId == projectId &&
+          grant.commandId == commandId &&
+          grant.allows(scope),
+    );
     final grant = candidates.firstOrNull;
     if (grant == null) {
       throw ProductException(
-          'permission_required', 'Permission ${scope.name} is required.',
-          details: <String, dynamic>{
-            'projectId': projectId,
-            'commandId': commandId,
-            'scope': scope.name,
-          });
+        'permission_required',
+        'Permission ${scope.name} is required.',
+        details: <String, dynamic>{
+          'projectId': projectId,
+          'commandId': commandId,
+          'scope': scope.name,
+        },
+      );
     }
     await repository.put(grant.consume());
     await audit.append('permission.consumed', commandId, <String, dynamic>{
@@ -877,8 +879,9 @@ class PermissionService {
 
   Future<void> revokeForCommand(String commandId) async {
     await repository.removeWhere((grant) => grant.commandId == commandId);
-    await audit.append('permission.revoked', commandId,
-        <String, dynamic>{'commandId': commandId});
+    await audit.append('permission.revoked', commandId, <String, dynamic>{
+      'commandId': commandId,
+    });
   }
 }
 
@@ -897,7 +900,9 @@ class SecretVault {
   }) async {
     if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(environmentKey)) {
       throw ProductException(
-          'secret_reference_invalid', 'Environment key is invalid.');
+        'secret_reference_invalid',
+        'Environment key is invalid.',
+      );
     }
     final reference = SecretReference(
       id: newId('secret'),
@@ -908,7 +913,10 @@ class SecretVault {
     );
     await repository.put(reference);
     await audit.append(
-        'secret.reference_registered', reference.id, reference.toJson());
+      'secret.reference_registered',
+      reference.id,
+      reference.toJson(),
+    );
     return reference;
   }
 
@@ -920,18 +928,25 @@ class SecretVault {
     redactor.register(value);
   }
 
-  Future<String> resolve(String referenceId,
-      {required String commandId}) async {
+  Future<String> resolve(
+    String referenceId, {
+    required String commandId,
+  }) async {
     final reference = await repository.get(referenceId);
     if (reference == null) {
       throw ProductException(
-          'secret_reference_missing', 'Unknown secret reference.');
+        'secret_reference_missing',
+        'Unknown secret reference.',
+      );
     }
-    final value = _sessionValues[referenceId] ??
+    final value =
+        _sessionValues[referenceId] ??
         Platform.environment[reference.environmentKey];
     if (value == null || value.isEmpty) {
-      throw ProductException('secret_unavailable',
-          'Secret "${reference.label}" is not available in this session or environment.');
+      throw ProductException(
+        'secret_unavailable',
+        'Secret "${reference.label}" is not available in this session or environment.',
+      );
     }
     redactor.register(value);
     await audit.append('secret.resolved', commandId, <String, dynamic>{
@@ -986,8 +1001,11 @@ class ApiTokenService {
     return IssuedToken(record, plaintext);
   }
 
-  Future<ApiTokenRecord?> authenticate(String plaintext,
-      {String? requiredScope, String? projectId}) async {
+  Future<ApiTokenRecord?> authenticate(
+    String plaintext, {
+    String? requiredScope,
+    String? projectId,
+  }) async {
     if (plaintext.isEmpty) {
       return null;
     }
@@ -1019,16 +1037,18 @@ class ApiTokenService {
     if (record == null) {
       return;
     }
-    await repository.put(ApiTokenRecord(
-      id: record.id,
-      label: record.label,
-      hash: record.hash,
-      scopes: record.scopes,
-      projectId: record.projectId,
-      createdAt: record.createdAt,
-      expiresAt: record.expiresAt,
-      revokedAt: DateTime.now().toUtc(),
-    ));
+    await repository.put(
+      ApiTokenRecord(
+        id: record.id,
+        label: record.label,
+        hash: record.hash,
+        scopes: record.scopes,
+        projectId: record.projectId,
+        createdAt: record.createdAt,
+        expiresAt: record.expiresAt,
+        revokedAt: DateTime.now().toUtc(),
+      ),
+    );
     await audit.append('api_token.revoked', id, <String, dynamic>{'id': id});
   }
 }
@@ -1042,8 +1062,10 @@ class RateLimiter {
 
   bool allow(String key, {int cost = 1}) {
     final now = DateTime.now().toUtc();
-    final bucket =
-        _buckets.putIfAbsent(key, () => _RateBucket(capacity.toDouble(), now));
+    final bucket = _buckets.putIfAbsent(
+      key,
+      () => _RateBucket(capacity.toDouble(), now),
+    );
     final elapsed = now.difference(bucket.updatedAt).inMilliseconds / 60000.0;
     bucket.tokens = (bucket.tokens + elapsed * refillPerMinute)
         .clamp(0, capacity)
@@ -1054,8 +1076,10 @@ class RateLimiter {
     }
     bucket.tokens -= cost;
     if (_buckets.length > 10000) {
-      _buckets.removeWhere((_, value) =>
-          now.difference(value.updatedAt) > const Duration(hours: 1));
+      _buckets.removeWhere(
+        (_, value) =>
+            now.difference(value.updatedAt) > const Duration(hours: 1),
+      );
     }
     return true;
   }

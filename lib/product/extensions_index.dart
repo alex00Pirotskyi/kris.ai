@@ -28,15 +28,15 @@ class SourceIndexEntry {
   final String text;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'path': path,
-        'sha256': sha256,
-        'bytes': bytes,
-        'modifiedAt': modifiedAt.toUtc().toIso8601String(),
-        'language': language,
-        'symbols': symbols,
-        'dependencies': dependencies,
-        'text': text,
-      };
+    'path': path,
+    'sha256': sha256,
+    'bytes': bytes,
+    'modifiedAt': modifiedAt.toUtc().toIso8601String(),
+    'language': language,
+    'symbols': symbols,
+    'dependencies': dependencies,
+    'text': text,
+  };
 
   factory SourceIndexEntry.fromJson(Map<String, dynamic> json) =>
       SourceIndexEntry(
@@ -69,13 +69,13 @@ class SourceIndexReport {
   final DateTime generatedAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'scanned': scanned,
-        'changed': changed,
-        'removed': removed,
-        'skipped': skipped,
-        'total': total,
-        'generatedAt': generatedAt.toUtc().toIso8601String(),
-      };
+    'scanned': scanned,
+    'changed': changed,
+    'removed': removed,
+    'skipped': skipped,
+    'total': total,
+    'generatedAt': generatedAt.toUtc().toIso8601String(),
+  };
 }
 
 class SourceIndexService {
@@ -84,20 +84,26 @@ class SourceIndexService {
   final Directory indexDirectory;
 
   AtomicJsonFile _file(String projectId) => AtomicJsonFile(
-      File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'));
+    File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'),
+  );
 
   Future<SourceIndexReport> update(ProjectRecord project) async {
     await indexDirectory.create(recursive: true);
     final root = Directory(project.rootPath).absolute;
     if (!await root.exists()) {
       throw ProductException(
-          'project_missing', 'Project root no longer exists.');
+        'project_missing',
+        'Project root no longer exists.',
+      );
     }
-    final canonicalRoot =
-        (await root.resolveSymbolicLinks()).replaceAll('\\', '/');
+    final canonicalRoot = (await root.resolveSymbolicLinks()).replaceAll(
+      '\\',
+      '/',
+    );
     final store = _file(project.id);
-    final raw =
-        await store.read(fallback: <String, dynamic>{'entries': <Object>[]});
+    final raw = await store.read(
+      fallback: <String, dynamic>{'entries': <Object>[]},
+    );
     final prior = <String, SourceIndexEntry>{};
     final oldEntries = mapValue(raw)['entries'];
     if (oldEntries is List) {
@@ -115,15 +121,21 @@ class SourceIndexService {
         continue;
       }
       if (++scanned > 25000) {
-        throw ProductException('index_file_limit',
-            'Project contains more than 25,000 indexable files.');
+        throw ProductException(
+          'index_file_limit',
+          'Project contains more than 25,000 indexable files.',
+        );
       }
-      final canonical =
-          (await entity.resolveSymbolicLinks()).replaceAll('\\', '/');
+      final canonical = (await entity.resolveSymbolicLinks()).replaceAll(
+        '\\',
+        '/',
+      );
       if (!(canonical == canonicalRoot ||
           canonical.startsWith('$canonicalRoot/'))) {
-        throw ProductException('index_symlink_escape',
-            'A project file resolves outside the project root.');
+        throw ProductException(
+          'index_symlink_escape',
+          'A project file resolves outside the project root.',
+        );
       }
       final relative = canonical
           .substring(canonicalRoot.length)
@@ -185,18 +197,21 @@ class SourceIndexService {
     );
   }
 
-  Future<List<Map<String, dynamic>>> search(String projectId, String query,
-      {int limit = 20}) async {
-    final raw = await _file(projectId)
-        .read(fallback: <String, dynamic>{'entries': <Object>[]});
+  Future<List<Map<String, dynamic>>> search(
+    String projectId,
+    String query, {
+    int limit = 20,
+  }) async {
+    final raw = await _file(
+      projectId,
+    ).read(fallback: <String, dynamic>{'entries': <Object>[]});
     final entriesRaw = mapValue(raw)['entries'];
     if (entriesRaw is! List) {
       return <Map<String, dynamic>>[];
     }
-    final terms = RegExp(r'[A-Za-z0-9_\-]{2,}')
-        .allMatches(query.toLowerCase())
-        .map((match) => match.group(0)!)
-        .toSet();
+    final terms = RegExp(
+      r'[A-Za-z0-9_\-]{2,}',
+    ).allMatches(query.toLowerCase()).map((match) => match.group(0)!).toSet();
     if (terms.isEmpty) {
       return <Map<String, dynamic>>[];
     }
@@ -211,22 +226,24 @@ class SourceIndexService {
         if (lowerPath.contains(term)) {
           score += 8;
         }
-        if (entry.symbols
-            .any((symbol) => symbol.toLowerCase().contains(term))) {
+        if (entry.symbols.any(
+          (symbol) => symbol.toLowerCase().contains(term),
+        )) {
           score += 6;
         }
-        if (entry.dependencies
-            .any((dependency) => dependency.toLowerCase().contains(term))) {
+        if (entry.dependencies.any(
+          (dependency) => dependency.toLowerCase().contains(term),
+        )) {
           score += 4;
         }
         final offset = lowerText.indexOf(term);
         if (offset >= 0) {
-          score += 1 +
+          score +=
+              1 +
               min(
-                      10,
-                      RegExp(RegExp.escape(term))
-                          .allMatches(lowerText)
-                          .length) *
+                    10,
+                    RegExp(RegExp.escape(term)).allMatches(lowerText).length,
+                  ) *
                   0.4;
           if (firstOffset < 0 || offset < firstOffset) {
             firstOffset = offset;
@@ -241,7 +258,7 @@ class SourceIndexService {
       scored.add((
         entry: entry,
         score: score,
-        snippet: entry.text.substring(start, end)
+        snippet: entry.text.substring(start, end),
       ));
     }
     scored.sort((a, b) {
@@ -250,39 +267,46 @@ class SourceIndexService {
     });
     return scored
         .take(limit.clamp(1, 100).toInt())
-        .map((result) => <String, dynamic>{
-              'path': result.entry.path,
-              'sha256': result.entry.sha256,
-              'language': result.entry.language,
-              'symbols': result.entry.symbols,
-              'dependencies': result.entry.dependencies,
-              'score': result.score,
-              'snippet': result.snippet,
-            })
+        .map(
+          (result) => <String, dynamic>{
+            'path': result.entry.path,
+            'sha256': result.entry.sha256,
+            'language': result.entry.language,
+            'symbols': result.entry.symbols,
+            'dependencies': result.entry.dependencies,
+            'score': result.score,
+            'snippet': result.snippet,
+          },
+        )
         .toList();
   }
 
-  bool _ignored(String path) =>
-      path.replaceAll('\\', '/').split('/').any(const <String>{
-            '.git',
-            '.dart_tool',
-            'build',
-            'node_modules',
-            '.venv',
-            'venv',
-            '__pycache__',
-            '.pytest_cache',
-            '.idea',
-            '.vscode',
-            '.kristin',
-            'coverage',
-            'dist',
-            'target',
-          }.contains);
+  bool _ignored(String path) => path
+      .replaceAll('\\', '/')
+      .split('/')
+      .any(
+        const <String>{
+          '.git',
+          '.dart_tool',
+          'build',
+          'node_modules',
+          '.venv',
+          'venv',
+          '__pycache__',
+          '.pytest_cache',
+          '.idea',
+          '.vscode',
+          '.kristin',
+          'coverage',
+          'dist',
+          'target',
+        }.contains,
+      );
 
   String _language(String path) {
-    final extension =
-        path.contains('.') ? path.split('.').last.toLowerCase() : '';
+    final extension = path.contains('.')
+        ? path.split('.').last.toLowerCase()
+        : '';
     return const <String, String>{
           'dart': 'dart',
           'py': 'python',
@@ -323,10 +347,12 @@ class SourceIndexService {
   List<String> _symbols(String language, String text) {
     final patterns = <RegExp>[
       RegExp(
-          r'\b(?:class|enum|mixin|extension|interface|struct|trait)\s+([A-Za-z_][A-Za-z0-9_]*)'),
+        r'\b(?:class|enum|mixin|extension|interface|struct|trait)\s+([A-Za-z_][A-Za-z0-9_]*)',
+      ),
       RegExp(r'\b(?:def|function|func|fn)\s+([A-Za-z_][A-Za-z0-9_]*)'),
       RegExp(
-          r'\b(?:Future<[^>]+>|Future|void|int|double|String|bool|Widget|dynamic)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\('),
+        r'\b(?:Future<[^>]+>|Future|void|int|double|String|bool|Widget|dynamic)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(',
+      ),
       RegExp(r'\b(?:const|let|var|final)\s+([A-Za-z_][A-Za-z0-9_]*)\s*='),
     ];
     final symbols = <String>{};
@@ -390,11 +416,11 @@ class SkillPackage {
   final Set<String> recommendedTools;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'title': title,
-        'recommendedTools': recommendedTools.toList()..sort(),
-        'instructions': instructions,
-      };
+    'id': id,
+    'title': title,
+    'recommendedTools': recommendedTools.toList()..sort(),
+    'instructions': instructions,
+  };
 }
 
 class SkillRegistry {
@@ -423,12 +449,17 @@ class SkillRegistry {
     if (skills.isEmpty) {
       return 'No specialized built-in skill package matched this request.';
     }
-    return skills.map((skill) => '''
+    return skills
+        .map(
+          (skill) =>
+              '''
 SKILL ${skill.id} — ${skill.title}
 These are product-authored advisory instructions. They never expand tools, permissions, paths, or budgets.
 ${skill.instructions}
 Recommended tools: ${skill.recommendedTools.join(', ')}
-''').join('\n');
+''',
+        )
+        .join('\n');
   }
 }
 
@@ -444,7 +475,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'inspect_file',
       'write_file',
       'apply_patch',
-      'verify_project'
+      'verify_project',
     },
   ),
   SkillPackage(
@@ -457,7 +488,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'express',
       'fastify',
       'react',
-      'next.js'
+      'next.js',
     },
     instructions:
         'Pin dependencies through a lockfile, validate all external input, separate configuration from code, use environment secret references, include health and shutdown behavior, and add automated tests before packaging.',
@@ -466,7 +497,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'inspect_file',
       'write_file',
       'run_command',
-      'verify_project'
+      'verify_project',
     },
   ),
   SkillPackage(
@@ -480,7 +511,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'inspect_file',
       'write_file',
       'run_command',
-      'verify_project'
+      'verify_project',
     },
   ),
   SkillPackage(
@@ -492,7 +523,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'chat bot',
       'botfather',
       'aiogram',
-      'telegraf'
+      'telegraf',
     },
     instructions:
         'Keep the BotFather token exclusively in a named runtime secret. Validate updates, restrict administrator actions by numeric user ID, rate-limit handlers, avoid logging message secrets, mock Telegram in tests, support graceful polling shutdown, and provide webhook deployment only with HTTPS and secret-path validation.',
@@ -502,7 +533,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'inspect_file',
       'write_file',
       'run_command',
-      'package_deployment'
+      'package_deployment',
     },
   ),
   SkillPackage(
@@ -513,7 +544,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'dart',
       'android app',
       'ios app',
-      'desktop app'
+      'desktop app',
     },
     instructions:
         'Keep state and side effects separated, use responsive Material semantics, avoid blocking the UI isolate, provide deterministic initialization and disposal, test domain behavior and key widgets, and require flutter analyze plus flutter test before release.',
@@ -522,7 +553,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'inspect_file',
       'write_file',
       'apply_patch',
-      'verify_project'
+      'verify_project',
     },
   ),
   SkillPackage(
@@ -534,7 +565,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'deploy',
       'deployment',
       'production',
-      'compose'
+      'compose',
     },
     instructions:
         'Use a non-root runtime user, a minimal pinned base image, multi-stage builds, read-only configuration, health checks, graceful shutdown, no embedded secrets, explicit exposed ports, and a rollback-ready artifact manifest.',
@@ -543,7 +574,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'inspect_file',
       'write_file',
       'verify_project',
-      'package_deployment'
+      'package_deployment',
     },
   ),
   SkillPackage(
@@ -555,7 +586,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'authentication',
       'authorization',
       'secret',
-      'vulnerability'
+      'vulnerability',
     },
     instructions:
         'Map trust boundaries, reject default-allow authorization, validate canonical paths and URLs, apply least privilege, bound resources, avoid sensitive logs, verify cryptographic uses, and rank findings by exploitability and impact with concrete evidence.',
@@ -563,7 +594,7 @@ const List<SkillPackage> _builtins = <SkillPackage>[
       'search_text',
       'read_file',
       'run_command',
-      'git_diff'
+      'git_diff',
     },
   ),
 ];

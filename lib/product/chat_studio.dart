@@ -272,8 +272,9 @@ class _ChatStudioState extends State<ChatStudio> {
           projectId,
           modelReady: models.isNotEmpty,
         );
-        projectProcessStatusValue =
-            await runtime.projectProcessStatus(projectId);
+        projectProcessStatusValue = await runtime.projectProcessStatus(
+          projectId,
+        );
       }
     });
     if (mounted) {
@@ -625,11 +626,13 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     if (!approvedScopes.containsAll(command.contract.requiredPermissions)) {
       _showError(
-          'Re-enable every required access group or change the request.');
+        'Re-enable every required access group or change the request.',
+      );
       return;
     }
-    final confirmed =
-        await _confirmAccess(command.contract.requiredPermissions);
+    final confirmed = await _confirmAccess(
+      command.contract.requiredPermissions,
+    );
     if (!confirmed || !mounted) {
       return;
     }
@@ -660,9 +663,9 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<bool> _confirmAccess(Set<PermissionScope> scopes) async {
-    final highRisk = groupPermissions(scopes)
-        .where((group) => group.highRisk)
-        .toList(growable: false);
+    final highRisk = groupPermissions(
+      scopes,
+    ).where((group) => group.highRisk).toList(growable: false);
     if (highRisk.isEmpty) {
       return true;
     }
@@ -718,8 +721,8 @@ class _ChatStudioState extends State<ChatStudio> {
       action == 'pause'
           ? 'Pausing the run'
           : action == 'resume'
-              ? 'Resuming the run'
-              : 'Stopping the run',
+          ? 'Resuming the run'
+          : 'Stopping the run',
       () async {
         if (action == 'pause') {
           await runtime.pause(run.id);
@@ -740,19 +743,21 @@ class _ChatStudioState extends State<ChatStudio> {
     if (run == null) {
       return;
     }
-    final retried =
-        await _perform<RunRecord>('Retrying as a fresh run', () async {
-      final fresh = await runtime.retryRun(run.id);
-      await runtime.approve(
-        runId: fresh.id,
-        scopes: Set<PermissionScope>.from(
-          fresh.command.contract.requiredPermissions,
-        ),
-      );
-      unawaited(runtime.execute(fresh.id));
-      await Future<void>.delayed(const Duration(milliseconds: 180));
-      return await runtime.getRun(fresh.id) ?? fresh;
-    });
+    final retried = await _perform<RunRecord>(
+      'Retrying as a fresh run',
+      () async {
+        final fresh = await runtime.retryRun(run.id);
+        await runtime.approve(
+          runId: fresh.id,
+          scopes: Set<PermissionScope>.from(
+            fresh.command.contract.requiredPermissions,
+          ),
+        );
+        unawaited(runtime.execute(fresh.id));
+        await Future<void>.delayed(const Duration(milliseconds: 180));
+        return await runtime.getRun(fresh.id) ?? fresh;
+      },
+    );
     if (retried != null && mounted) {
       setState(() {
         currentRun = retried;
@@ -829,11 +834,7 @@ class _ChatStudioState extends State<ChatStudio> {
             )
           : null,
       drawer: compact
-          ? Drawer(
-              child: SafeArea(
-                child: _navigation(compact: true),
-              ),
-            )
+          ? Drawer(child: SafeArea(child: _navigation(compact: true)))
           : null,
       body: Row(
         children: <Widget>[
@@ -934,18 +935,20 @@ class _ChatStudioState extends State<ChatStudio> {
                 });
               },
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
                 child: Row(
                   children: <Widget>[
                     Expanded(
                       child: Text(
                         'BUILD & DEBUG',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.7,
-                              color: colors.onSurfaceVariant,
-                            ),
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.7,
+                          color: colors.onSurfaceVariant,
+                        ),
                       ),
                     ),
                     Icon(
@@ -965,10 +968,10 @@ class _ChatStudioState extends State<ChatStudio> {
                 child: Text(
                   'RECENT',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.7,
-                        color: colors.onSurfaceVariant,
-                      ),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.7,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ),
               ...runs
@@ -993,8 +996,10 @@ class _ChatStudioState extends State<ChatStudio> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          const Text('Project',
-                              style: TextStyle(fontSize: 10.5)),
+                          const Text(
+                            'Project',
+                            style: TextStyle(fontSize: 10.5),
+                          ),
                           Text(
                             selectedProject!.name,
                             maxLines: 1,
@@ -1044,7 +1049,8 @@ class _ChatStudioState extends State<ChatStudio> {
           item.label,
           style: TextStyle(fontWeight: selected ? FontWeight.w700 : null),
         ),
-        trailing: item.area == _StudioArea.runs &&
+        trailing:
+            item.area == _StudioArea.runs &&
                 visibleRuns.any((run) => run.state == RunState.running)
             ? const SizedBox.square(
                 dimension: 12,
@@ -1105,7 +1111,8 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Widget _statusStrip() {
     final startup = widget.startupError;
-    final active = currentRun != null &&
+    final active =
+        currentRun != null &&
         const <RunState>{
           RunState.running,
           RunState.paused,
@@ -1154,15 +1161,15 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _content() => switch (area) {
-        _StudioArea.chat => _chatPage(),
-        _StudioArea.chats => _chatsPage(),
-        _StudioArea.projects => _projectsPage(),
-        _StudioArea.runs => _runsPage(),
-        _StudioArea.promptStudio => _promptStudioPage(),
-        _StudioArea.knowledge => _knowledgePage(),
-        _StudioArea.skills => _skillsPage(),
-        _StudioArea.logs => _logsPage(),
-      };
+    _StudioArea.chat => _chatPage(),
+    _StudioArea.chats => _chatsPage(),
+    _StudioArea.projects => _projectsPage(),
+    _StudioArea.runs => _runsPage(),
+    _StudioArea.promptStudio => _promptStudioPage(),
+    _StudioArea.knowledge => _knowledgePage(),
+    _StudioArea.skills => _skillsPage(),
+    _StudioArea.logs => _logsPage(),
+  };
 
   Widget _chatPage() {
     return Column(
@@ -1283,8 +1290,10 @@ class _ChatStudioState extends State<ChatStudio> {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style:
-                  const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1300,10 +1309,7 @@ class _ChatStudioState extends State<ChatStudio> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _messageBubble(
-          assistant: false,
-          child: Text(command.contract.request),
-        ),
+        _messageBubble(assistant: false, child: Text(command.contract.request)),
         const SizedBox(height: 18),
         if (currentRun == null)
           _planMessage(command)
@@ -1314,7 +1320,7 @@ class _ChatStudioState extends State<ChatStudio> {
             const <RunState>{
               RunState.succeeded,
               RunState.failed,
-              RunState.cancelled
+              RunState.cancelled,
             }.contains(currentRun!.state))
           _resultMessage(currentRun!),
       ],
@@ -1346,9 +1352,9 @@ class _ChatStudioState extends State<ChatStudio> {
                 ? 'Start with a project'
                 : 'What are we building?',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 9),
           ConstrainedBox(
@@ -1358,9 +1364,9 @@ class _ChatStudioState extends State<ChatStudio> {
                   ? 'Add an existing folder or create a new project. Then ask in plain language.'
                   : 'Ask a question, create something, fix an error, or open Project Manager with /manager. Use /analyze, /test, /build, /run, and /stop for direct project actions.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: colors.onSurfaceVariant),
             ),
           ),
           const SizedBox(height: 28),
@@ -1399,8 +1405,9 @@ class _ChatStudioState extends State<ChatStudio> {
     final colors = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment:
-          assistant ? MainAxisAlignment.start : MainAxisAlignment.end,
+      mainAxisAlignment: assistant
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.end,
       children: <Widget>[
         if (assistant) ...<Widget>[
           CircleAvatar(
@@ -1428,8 +1435,9 @@ class _ChatStudioState extends State<ChatStudio> {
                 bottomLeft: Radius.circular(assistant ? 5 : 18),
                 bottomRight: Radius.circular(assistant ? 18 : 5),
               ),
-              border:
-                  assistant ? Border.all(color: colors.outlineVariant) : null,
+              border: assistant
+                  ? Border.all(color: colors.outlineVariant)
+                  : null,
             ),
             child: child,
           ),
@@ -1451,8 +1459,8 @@ class _ChatStudioState extends State<ChatStudio> {
                 child: Text(
                   'Here is the plan',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               _statusPill(
@@ -1563,8 +1571,9 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _runMessage(RunRecord run) {
-    final completed =
-        run.items.where((item) => item.state == WorkItemState.succeeded).length;
+    final completed = run.items
+        .where((item) => item.state == WorkItemState.succeeded)
+        .length;
     final total = run.items.isEmpty ? 1 : run.items.length;
     final progress = completed / total;
     return _messageBubble(
@@ -1580,8 +1589,8 @@ class _ChatStudioState extends State<ChatStudio> {
                 child: Text(
                   friendlyRunState(run.state),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               Text('$completed / ${run.items.length}'),
@@ -1681,17 +1690,19 @@ class _ChatStudioState extends State<ChatStudio> {
     final summary = run.summary.trim().isNotEmpty
         ? run.summary.trim()
         : run.failure?.trim().isNotEmpty == true
-            ? run.failure!.trim()
-            : successful
-                ? 'The run completed. Open the run view to inspect evidence and artifacts.'
-                : 'The run stopped before all work completed.';
+        ? run.failure!.trim()
+        : successful
+        ? 'The run completed. Open the run view to inspect evidence and artifacts.'
+        : 'The run stopped before all work completed.';
     final artifacts = evidence
-        .where((item) => <EvidenceKind>{
-              EvidenceKind.mutation,
-              EvidenceKind.deployment,
-              EvidenceKind.test,
-              EvidenceKind.verification,
-            }.contains(item.kind))
+        .where(
+          (item) => <EvidenceKind>{
+            EvidenceKind.mutation,
+            EvidenceKind.deployment,
+            EvidenceKind.test,
+            EvidenceKind.verification,
+          }.contains(item.kind),
+        )
         .take(8)
         .toList();
     final citations = _runKnowledgeCitations();
@@ -1710,8 +1721,8 @@ class _ChatStudioState extends State<ChatStudio> {
                 child: Text(
                   successful ? 'Task completed' : 'Task needs attention',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -1738,48 +1749,48 @@ class _ChatStudioState extends State<ChatStudio> {
               ],
             ),
             const SizedBox(height: 4),
-            ...citations.map(
-              (hit) {
-                final label = hit.citation;
-                return ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: Text(
-                      label,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+            ...citations.map((hit) {
+              final label = hit.citation;
+              return ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                title: Text(hit.title),
+                subtitle: Text(
+                  '${_knowledgeKindLabel(hit.kind)} · relevance ${(hit.score * 100).round()}%${hit.sourceUrl.isEmpty ? '' : '\n${hit.sourceUrl}'}',
+                ),
+                trailing: IconButton(
+                  tooltip: 'Copy citation',
+                  onPressed: () => Clipboard.setData(
+                    ClipboardData(
+                      text:
+                          '[$label] ${hit.title}\n${hit.sourceUrl}\n${hit.snippet}',
                     ),
                   ),
-                  title: Text(hit.title),
-                  subtitle: Text(
-                    '${_knowledgeKindLabel(hit.kind)} · relevance ${(hit.score * 100).round()}%${hit.sourceUrl.isEmpty ? '' : '\n${hit.sourceUrl}'}',
-                  ),
-                  trailing: IconButton(
-                    tooltip: 'Copy citation',
-                    onPressed: () => Clipboard.setData(
-                      ClipboardData(
-                        text:
-                            '[$label] ${hit.title}\n${hit.sourceUrl}\n${hit.snippet}',
-                      ),
-                    ),
-                    icon: const Icon(Icons.copy_outlined),
-                  ),
-                );
-              },
-            ),
+                  icon: const Icon(Icons.copy_outlined),
+                ),
+              );
+            }),
           ],
           if (artifacts.isNotEmpty) ...<Widget>[
             const SizedBox(height: 14),
-            const Text('Evidence',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Evidence',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 6),
             ...artifacts.map(
               (item) => ListTile(
@@ -1856,8 +1867,10 @@ class _ChatStudioState extends State<ChatStudio> {
                   children: <Widget>[
                     Shortcuts(
                       shortcuts: const <ShortcutActivator, Intent>{
-                        SingleActivator(LogicalKeyboardKey.enter,
-                            control: true): ActivateIntent(),
+                        SingleActivator(
+                          LogicalKeyboardKey.enter,
+                          control: true,
+                        ): ActivateIntent(),
                         SingleActivator(LogicalKeyboardKey.enter, meta: true):
                             ActivateIntent(),
                       },
@@ -1933,12 +1946,8 @@ class _ChatStudioState extends State<ChatStudio> {
                               padding: const EdgeInsets.only(right: 8),
                               child: Text(
                                 'Ctrl/⌘ + Enter',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: colors.onSurfaceVariant,
-                                    ),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(color: colors.onSurfaceVariant),
                               ),
                             ),
                           IconButton.filled(
@@ -1947,13 +1956,14 @@ class _ChatStudioState extends State<ChatStudio> {
                                 : 'Send request',
                             onPressed:
                                 busy || composerController.text.trim().isEmpty
-                                    ? null
-                                    : _submitComposer,
+                                ? null
+                                : _submitComposer,
                             icon: busy
                                 ? const SizedBox.square(
                                     dimension: 17,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2),
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : const Icon(Icons.arrow_upward),
                           ),
@@ -1983,9 +1993,9 @@ class _ChatStudioState extends State<ChatStudio> {
             children: <Widget>[
               Text(
                 'Project context',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -2025,17 +2035,21 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Widget _chatsPage() {
     final query = chatSearchController.text.trim().toLowerCase();
-    final items = runs.where((run) {
-      if (query.isEmpty) {
-        return true;
-      }
-      final project = projects
-          .where((candidate) => candidate.id == run.command.contract.projectId)
-          .firstOrNull;
-      return run.command.contract.request.toLowerCase().contains(query) ||
-          run.summary.toLowerCase().contains(query) ||
-          (project?.name.toLowerCase().contains(query) ?? false);
-    }).toList(growable: false);
+    final items = runs
+        .where((run) {
+          if (query.isEmpty) {
+            return true;
+          }
+          final project = projects
+              .where(
+                (candidate) => candidate.id == run.command.contract.projectId,
+              )
+              .firstOrNull;
+          return run.command.contract.request.toLowerCase().contains(query) ||
+              run.summary.toLowerCase().contains(query) ||
+              (project?.name.toLowerCase().contains(query) ?? false);
+        })
+        .toList(growable: false);
     return _page(
       maxWidth: 1120,
       children: <Widget>[
@@ -2119,8 +2133,8 @@ class _ChatStudioState extends State<ChatStudio> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 7),
                     Wrap(
@@ -2236,8 +2250,8 @@ class _ChatStudioState extends State<ChatStudio> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 if (active) _statusPill('Active', Icons.check_circle_outline),
@@ -2264,7 +2278,8 @@ class _ChatStudioState extends State<ChatStudio> {
                   tooltip: 'Copy path',
                   onPressed: () async {
                     await Clipboard.setData(
-                        ClipboardData(text: project.rootPath));
+                      ClipboardData(text: project.rootPath),
+                    );
                     if (mounted) {
                       setState(() => status = 'Project path copied');
                     }
@@ -2285,8 +2300,9 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _projectControlCenter(ProjectRecord project) {
-    final report =
-        diagnosticReport?.projectId == project.id ? diagnosticReport : null;
+    final report = diagnosticReport?.projectId == project.id
+        ? diagnosticReport
+        : null;
     final process = projectProcessStatusValue?.projectId == project.id
         ? projectProcessStatusValue
         : null;
@@ -2326,9 +2342,7 @@ class _ChatStudioState extends State<ChatStudio> {
                         children: <Widget>[
                           Text(
                             project.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 4),
@@ -2346,7 +2360,7 @@ class _ChatStudioState extends State<ChatStudio> {
                         process.exitCode == 0
                             ? 'Last run finished'
                             : 'Last run exited ${process.exitCode ?? ''}'
-                                .trim(),
+                                  .trim(),
                         process.exitCode == 0
                             ? Icons.check_circle_outline
                             : Icons.stop_circle_outlined,
@@ -2358,10 +2372,9 @@ class _ChatStudioState extends State<ChatStudio> {
                 const SizedBox(height: 18),
                 Text(
                   'Project actions',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -2444,9 +2457,7 @@ class _ChatStudioState extends State<ChatStudio> {
                         children: <Widget>[
                           Text(
                             'Detected project profile',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 4),
@@ -2462,8 +2473,8 @@ class _ChatStudioState extends State<ChatStudio> {
                       onPressed: busy
                           ? null
                           : () => unawaited(
-                                _refreshProjectManager(silent: false),
-                              ),
+                              _refreshProjectManager(silent: false),
+                            ),
                       icon: const Icon(Icons.refresh),
                     ),
                     if (report != null) _diagnosticSummaryPill(report),
@@ -2478,24 +2489,15 @@ class _ChatStudioState extends State<ChatStudio> {
                     spacing: 8,
                     runSpacing: 8,
                     children: <Widget>[
-                      _statusPill(
-                        report.projectType,
-                        Icons.category_outlined,
-                      ),
+                      _statusPill(report.projectType, Icons.category_outlined),
                       if (report.analyzeCommand.isNotEmpty)
-                        _statusPill(
-                          'Analyze ready',
-                          Icons.analytics_outlined,
-                        ),
+                        _statusPill('Analyze ready', Icons.analytics_outlined),
                       if (report.testCommand.isNotEmpty)
                         _statusPill('Test ready', Icons.fact_check_outlined),
                       if (report.buildCommand.isNotEmpty)
                         _statusPill('Build ready', Icons.build_outlined),
                       if (report.runCommand.isNotEmpty)
-                        _statusPill(
-                          'Run ready',
-                          Icons.play_circle_outline,
-                        ),
+                        _statusPill('Run ready', Icons.play_circle_outline),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -2526,10 +2528,9 @@ class _ChatStudioState extends State<ChatStudio> {
                     Expanded(
                       child: Text(
                         'Recent agent runs',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w800),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     TextButton.icon(
@@ -2617,9 +2618,7 @@ class _ChatStudioState extends State<ChatStudio> {
                         running
                             ? 'Project process is running'
                             : 'Project process finished',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
+                        style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       Text(
@@ -2650,17 +2649,16 @@ class _ChatStudioState extends State<ChatStudio> {
             const SizedBox(height: 10),
             Text(
               'Live output',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 7),
             _codeBox(
               process.outputTail.trim().isEmpty
                   ? running
-                      ? 'Process started. Waiting for output…'
-                      : 'No output was captured.'
+                        ? 'Process started. Waiting for output…'
+                        : 'No output was captured.'
                   : process.outputTail,
               maxLines: 16,
             ),
@@ -2684,13 +2682,13 @@ class _ChatStudioState extends State<ChatStudio> {
       failed
           ? '${report.failed} failed'
           : warning
-              ? '${report.warnings} warnings'
-              : '${report.passed} passed',
+          ? '${report.warnings} warnings'
+          : '${report.passed} passed',
       failed
           ? Icons.error_outline
           : warning
-              ? Icons.warning_amber_outlined
-              : Icons.check_circle_outline,
+          ? Icons.warning_amber_outlined
+          : Icons.check_circle_outline,
     );
   }
 
@@ -2710,9 +2708,7 @@ class _ChatStudioState extends State<ChatStudio> {
       trailing: check.output.isEmpty ? null : const Icon(Icons.expand_more),
       children: check.output.isEmpty
           ? const <Widget>[]
-          : <Widget>[
-              _codeBox(check.output),
-            ],
+          : <Widget>[_codeBox(check.output)],
     );
   }
 
@@ -2752,10 +2748,7 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     final report = await _perform<ProjectDiagnosticReport>(
       'Checking project health',
-      () => runtime.inspectProject(
-        project.id,
-        modelReady: models.isNotEmpty,
-      ),
+      () => runtime.inspectProject(project.id, modelReady: models.isNotEmpty),
     );
     if (report != null && mounted) {
       setState(() {
@@ -2777,10 +2770,7 @@ class _ChatStudioState extends State<ChatStudio> {
     if (inspected == null || inspected.projectId != project.id) {
       inspected = await _perform<ProjectDiagnosticReport>(
         'Inspecting the project test profile',
-        () => runtime.inspectProject(
-          project.id,
-          modelReady: models.isNotEmpty,
-        ),
+        () => runtime.inspectProject(project.id, modelReady: models.isNotEmpty),
       );
     }
     if (inspected == null || !mounted) {
@@ -2797,7 +2787,8 @@ class _ChatStudioState extends State<ChatStudio> {
       return;
     }
     final testCommand = inspected.testCommand;
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             icon: const Icon(Icons.fact_check_outlined),
@@ -2857,10 +2848,7 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     return _perform<ProjectDiagnosticReport>(
       'Detecting project commands',
-      () => runtime.inspectProject(
-        project.id,
-        modelReady: models.isNotEmpty,
-      ),
+      () => runtime.inspectProject(project.id, modelReady: models.isNotEmpty),
     );
   }
 
@@ -3180,9 +3168,7 @@ class _ChatStudioState extends State<ChatStudio> {
               const SizedBox(height: 12),
               TextField(
                 controller: parentController,
-                decoration: const InputDecoration(
-                  labelText: 'Parent folder',
-                ),
+                decoration: const InputDecoration(labelText: 'Parent folder'),
               ),
             ],
           ),
@@ -3209,10 +3195,7 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     final project = await _perform<ProjectRecord>(
       'Creating the project',
-      () => runtime.createProject(
-        name: values.name,
-        parentPath: values.parent,
-      ),
+      () => runtime.createProject(name: values.name, parentPath: values.parent),
     );
     if (project != null && mounted) {
       projects = await runtime.listProjects();
@@ -3226,7 +3209,8 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<void> _removeProject(ProjectRecord project) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Remove project registration?'),
@@ -3322,12 +3306,8 @@ class _ChatStudioState extends State<ChatStudio> {
                           Expanded(
                             child: Text(
                               'Runs',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
                             ),
                           ),
                           IconButton(
@@ -3410,10 +3390,7 @@ class _ChatStudioState extends State<ChatStudio> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text(
-            'No runs for this project.',
-            textAlign: TextAlign.center,
-          ),
+          child: Text('No runs for this project.', textAlign: TextAlign.center),
         ),
       );
     }
@@ -3427,8 +3404,9 @@ class _ChatStudioState extends State<ChatStudio> {
         return ListTile(
           selected: selected,
           selectedTileColor: Theme.of(context).colorScheme.secondaryContainer,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           leading: _runStateIcon(run.state, size: 20),
           title: Text(
             run.command.contract.request,
@@ -3450,13 +3428,15 @@ class _ChatStudioState extends State<ChatStudio> {
     final project = projects
         .where((candidate) => candidate.id == run.command.contract.projectId)
         .firstOrNull;
-    final done =
-        run.items.where((item) => item.state == WorkItemState.succeeded).length;
+    final done = run.items
+        .where((item) => item.state == WorkItemState.succeeded)
+        .length;
     final total = run.items.isEmpty ? 1 : run.items.length;
     final duration = run.startedAt == null
         ? null
-        : (run.completedAt ?? DateTime.now().toUtc())
-            .difference(run.startedAt!);
+        : (run.completedAt ?? DateTime.now().toUtc()).difference(
+            run.startedAt!,
+          );
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -3476,8 +3456,8 @@ class _ChatStudioState extends State<ChatStudio> {
                       Text(
                         run.command.contract.request,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 7),
                       Wrap(
@@ -3604,10 +3584,8 @@ class _ChatStudioState extends State<ChatStudio> {
                     children: <Widget>[
                       Text(
                         'Execution flow',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const Text(
                         'Pan and zoom. Select a node to inspect its inputs, tools, evidence, attempts, and logs.',
@@ -3639,7 +3617,8 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _workItemInspector(RunRecord run) {
-    final selected = run.items
+    final selected =
+        run.items
             .where((item) => item.item.id == selectedWorkItemId)
             .firstOrNull ??
         run.items.firstOrNull;
@@ -3651,7 +3630,8 @@ class _ChatStudioState extends State<ChatStudio> {
         .toList(growable: false);
     final itemEvents = _eventsForRun(run)
         .where(
-            (event) => event.data['workItemId']?.toString() == selected.item.id)
+          (event) => event.data['workItemId']?.toString() == selected.item.id,
+        )
         .toList(growable: false);
     return Card(
       margin: EdgeInsets.zero,
@@ -3671,8 +3651,8 @@ class _ChatStudioState extends State<ChatStudio> {
                       Text(
                         selected.item.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       Text(friendlyWorkState(selected.state)),
                     ],
@@ -3694,8 +3674,10 @@ class _ChatStudioState extends State<ChatStudio> {
               ),
             ],
             const SizedBox(height: 14),
-            const Text('Allowed tools',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Allowed tools',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 7),
             Wrap(
               spacing: 7,
@@ -3754,8 +3736,9 @@ class _ChatStudioState extends State<ChatStudio> {
                   childrenPadding: const EdgeInsets.only(bottom: 10),
                   leading: Icon(_evidenceIcon(item.kind)),
                   title: Text(item.summary),
-                  subtitle:
-                      Text('${item.kind.name} · ${_timeLabel(item.createdAt)}'),
+                  subtitle: Text(
+                    '${item.kind.name} · ${_timeLabel(item.createdAt)}',
+                  ),
                   children: <Widget>[
                     _codeBox(
                       const JsonEncoder.withIndent('  ').convert(item.payload),
@@ -3773,7 +3756,9 @@ class _ChatStudioState extends State<ChatStudio> {
             if (itemEvents.isEmpty)
               const Text('No correlated events for this step yet.')
             else
-              ...itemEvents.reversed.take(20).map(
+              ...itemEvents.reversed
+                  .take(20)
+                  .map(
                     (event) => ListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
@@ -3790,9 +3775,7 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  Future<void> _generateStudioPrompt(
-    PromptGenerationAction action,
-  ) async {
+  Future<void> _generateStudioPrompt(PromptGenerationAction action) async {
     var model = selectedModel;
     if (model == null) {
       await _openSettings(initialSection: 1);
@@ -3860,20 +3843,22 @@ class _ChatStudioState extends State<ChatStudio> {
       _showError('Generate a prompt and select a model first.');
       return null;
     }
-    final saved = await _perform<
-        ({PromptTemplateRecord prompt, PromptVersionRecord version})>(
-      'Saving immutable prompt version',
-      () => runtime.saveGeneratedPrompt(
-        id: generatedPromptRecord?.id,
-        goal: promptGoalController.text.trim(),
-        draft: draft,
-        model: model,
-        action: generatedPromptRecord == null
-            ? PromptGenerationAction.generate
-            : PromptGenerationAction.improve,
-        createdBy: 'user-reviewed-model',
-      ),
-    );
+    final saved =
+        await _perform<
+          ({PromptTemplateRecord prompt, PromptVersionRecord version})
+        >(
+          'Saving immutable prompt version',
+          () => runtime.saveGeneratedPrompt(
+            id: generatedPromptRecord?.id,
+            goal: promptGoalController.text.trim(),
+            draft: draft,
+            model: model,
+            action: generatedPromptRecord == null
+                ? PromptGenerationAction.generate
+                : PromptGenerationAction.improve,
+            createdBy: 'user-reviewed-model',
+          ),
+        );
     if (saved == null || !mounted) {
       return null;
     }
@@ -4042,8 +4027,8 @@ class _ChatStudioState extends State<ChatStudio> {
                       Text(
                         'Generate a prompt from your idea',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       const Text(
@@ -4130,15 +4115,16 @@ class _ChatStudioState extends State<ChatStudio> {
                   onPressed: busy
                       ? null
                       : () => _generateStudioPrompt(
-                            PromptGenerationAction.generate,
-                          ),
+                          PromptGenerationAction.generate,
+                        ),
                   icon: const Icon(Icons.auto_awesome),
                   label: const Text('Generate prompt'),
                 ),
                 if (model == null)
                   OutlinedButton.icon(
-                    onPressed:
-                        busy ? null : () => _openSettings(initialSection: 1),
+                    onPressed: busy
+                        ? null
+                        : () => _openSettings(initialSection: 1),
                     icon: const Icon(Icons.settings_outlined),
                     label: const Text('Connect model'),
                   ),
@@ -4167,8 +4153,8 @@ class _ChatStudioState extends State<ChatStudio> {
                   child: Text(
                     draft.title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 _statusPill(modeLabel(draft.mode), Icons.tune_outlined),
@@ -4189,12 +4175,14 @@ class _ChatStudioState extends State<ChatStudio> {
               const SizedBox(height: 14),
               Text(
                 'Clarifying questions',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 5),
-              ...draft.clarifyingQuestions.take(5).map(
+              ...draft.clarifyingQuestions
+                  .take(5)
+                  .map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text('• $item'),
@@ -4204,12 +4192,14 @@ class _ChatStudioState extends State<ChatStudio> {
             const SizedBox(height: 14),
             Text(
               'Acceptance criteria',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 5),
-            ...draft.acceptanceCriteria.take(8).map(
+            ...draft.acceptanceCriteria
+                .take(8)
+                .map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text('✓ $item'),
@@ -4229,8 +4219,8 @@ class _ChatStudioState extends State<ChatStudio> {
                   onPressed: busy
                       ? null
                       : () => _generateStudioPrompt(
-                            PromptGenerationAction.improve,
-                          ),
+                          PromptGenerationAction.improve,
+                        ),
                   icon: const Icon(Icons.auto_fix_high_outlined),
                   label: const Text('Improve with AI'),
                 ),
@@ -4238,8 +4228,8 @@ class _ChatStudioState extends State<ChatStudio> {
                   onPressed: busy
                       ? null
                       : () => _generateStudioPrompt(
-                            PromptGenerationAction.simplify,
-                          ),
+                          PromptGenerationAction.simplify,
+                        ),
                   icon: const Icon(Icons.compress_outlined),
                   label: const Text('Simplify'),
                 ),
@@ -4247,8 +4237,8 @@ class _ChatStudioState extends State<ChatStudio> {
                   onPressed: busy
                       ? null
                       : () => _generateStudioPrompt(
-                            PromptGenerationAction.addDetail,
-                          ),
+                          PromptGenerationAction.addDetail,
+                        ),
                   icon: const Icon(Icons.add_box_outlined),
                   label: const Text('Add detail'),
                 ),
@@ -4284,7 +4274,8 @@ class _ChatStudioState extends State<ChatStudio> {
     for (final task in plan.tasks) {
       phases.putIfAbsent(task.phase, () => <PlanTaskRecord>[]).add(task);
     }
-    final active = currentRun != null &&
+    final active =
+        currentRun != null &&
         const <RunState>{
           RunState.running,
           RunState.paused,
@@ -4308,8 +4299,8 @@ class _ChatStudioState extends State<ChatStudio> {
                       Text(
                         plan.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(plan.rationale),
@@ -4409,9 +4400,9 @@ class _ChatStudioState extends State<ChatStudio> {
                               onPressed: busy || active || !task.enabled
                                   ? null
                                   : () => _prepareStudioTaskPlan(
-                                        selectedTaskIds: <String>{task.id},
-                                        start: true,
-                                      ),
+                                      selectedTaskIds: <String>{task.id},
+                                      start: true,
+                                    ),
                               icon: const Icon(Icons.play_circle_outline),
                             ),
                           ),
@@ -4468,9 +4459,9 @@ class _ChatStudioState extends State<ChatStudio> {
         ]),
         Text(
           'Your prompts',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         if (prompts.isEmpty)
           _emptyPanel(
@@ -4492,10 +4483,8 @@ class _ChatStudioState extends State<ChatStudio> {
                 runSpacing: 12,
                 children: prompts
                     .map(
-                      (prompt) => SizedBox(
-                        width: width,
-                        child: _promptCard(prompt),
-                      ),
+                      (prompt) =>
+                          SizedBox(width: width, child: _promptCard(prompt)),
                     )
                     .toList(),
               );
@@ -4504,17 +4493,17 @@ class _ChatStudioState extends State<ChatStudio> {
         const SizedBox(height: 6),
         Text(
           'Starter templates',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth >= 960
                 ? (constraints.maxWidth - 24) / 3
                 : constraints.maxWidth >= 620
-                    ? (constraints.maxWidth - 12) / 2
-                    : constraints.maxWidth;
+                ? (constraints.maxWidth - 12) / 2
+                : constraints.maxWidth;
             return Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -4595,8 +4584,8 @@ class _ChatStudioState extends State<ChatStudio> {
                 Text(
                   'Agent configuration roadmap',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -4628,8 +4617,8 @@ class _ChatStudioState extends State<ChatStudio> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 _statusPill('v${prompt.version}', Icons.history),
@@ -4648,7 +4637,9 @@ class _ChatStudioState extends State<ChatStudio> {
                   itemBuilder: (context) => const <PopupMenuEntry<String>>[
                     PopupMenuItem(value: 'edit', child: Text('Edit')),
                     PopupMenuItem(
-                        value: 'copy', child: Text('Copy rendered prompt')),
+                      value: 'copy',
+                      child: Text('Copy rendered prompt'),
+                    ),
                     PopupMenuDivider(),
                     PopupMenuItem(value: 'delete', child: Text('Delete')),
                   ],
@@ -4721,10 +4712,8 @@ class _ChatStudioState extends State<ChatStudio> {
     final result = await showDialog<_PromptDraft>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _PromptEditorDialog(
-        prompt: prompt,
-        template: template,
-      ),
+      builder: (context) =>
+          _PromptEditorDialog(prompt: prompt, template: template),
     );
     if (result == null) {
       return;
@@ -4748,12 +4737,14 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<void> _deletePrompt(PromptTemplateRecord prompt) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Delete prompt?'),
-            content:
-                Text('Delete “${prompt.title}” and its saved configuration?'),
+            content: Text(
+              'Delete “${prompt.title}” and its saved configuration?',
+            ),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -4783,8 +4774,9 @@ class _ChatStudioState extends State<ChatStudio> {
     final notes = knowledge
         .where((entry) => entry.kind == KnowledgeKind.note)
         .toList(growable: false);
-    final pinnedEntries =
-        knowledge.where((entry) => entry.pinned).toList(growable: false);
+    final pinnedEntries = knowledge
+        .where((entry) => entry.pinned)
+        .toList(growable: false);
     final pinnedEpisodes = memoryEpisodes
         .where((episode) => episode.pinned)
         .toList(growable: false);
@@ -4953,7 +4945,9 @@ class _ChatStudioState extends State<ChatStudio> {
             if (pinnedEntries.isNotEmpty ||
                 pinnedEpisodes.isNotEmpty) ...<Widget>[
               _sectionTitle(
-                  'Pinned context', Icons.center_focus_strong_outlined),
+                'Pinned context',
+                Icons.center_focus_strong_outlined,
+              ),
               ...pinnedEntries.take(4).map(_knowledgeCard),
               ...pinnedEpisodes.take(4).map(_memoryEpisodeCard),
             ],
@@ -5019,20 +5013,20 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _sectionTitle(String title, IconData icon) => Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Row(
-          children: <Widget>[
-            Icon(icon, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-          ],
+    padding: const EdgeInsets.only(top: 4),
+    child: Row(
+      children: <Widget>[
+        Icon(icon, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _knowledgeSearchResults(KnowledgeRetrieval retrieval) {
     return Card(
@@ -5157,8 +5151,8 @@ class _ChatStudioState extends State<ChatStudio> {
             children: <Widget>[
               Chip(label: Text('lexical ${(hit.lexicalScore * 100).round()}%')),
               Chip(
-                  label:
-                      Text('semantic ${(hit.semanticScore * 100).round()}%')),
+                label: Text('semantic ${(hit.semanticScore * 100).round()}%'),
+              ),
               Chip(label: Text('recency ${(hit.recencyScore * 100).round()}%')),
               if (hit.trust.isNotEmpty) Chip(label: Text(hit.trust)),
             ],
@@ -5213,13 +5207,13 @@ class _ChatStudioState extends State<ChatStudio> {
             const PopupMenuItem(value: 'copy', child: Text('Copy content')),
             if (entry.sourceUrl.isNotEmpty)
               const PopupMenuItem(
-                  value: 'source', child: Text('Copy source URL')),
+                value: 'source',
+                child: Text('Copy source URL'),
+              ),
             const PopupMenuDivider(),
             PopupMenuItem(
               value: 'delete',
-              child: Text(
-                archived ? 'Remove from retrieval' : 'Delete note',
-              ),
+              child: Text(archived ? 'Remove from retrieval' : 'Delete note'),
             ),
           ],
         ),
@@ -5278,14 +5272,13 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Widget _researchArchiveCard(ResearchArchiveRecord record) {
     final isSearch = record.kind == ResearchArchiveKind.search;
-    final destination =
-        record.finalUrl.isNotEmpty ? record.finalUrl : record.requestedUrl;
+    final destination = record.finalUrl.isNotEmpty
+        ? record.finalUrl
+        : record.requestedUrl;
     return Card(
       margin: EdgeInsets.zero,
       child: ExpansionTile(
-        leading: Icon(
-          isSearch ? Icons.search : Icons.language_outlined,
-        ),
+        leading: Icon(isSearch ? Icons.search : Icons.language_outlined),
         title: Text(
           record.title.isEmpty
               ? (isSearch ? 'Search snapshot' : destination)
@@ -5368,8 +5361,9 @@ class _ChatStudioState extends State<ChatStudio> {
               });
               composerFocus.requestFocus();
             } else if (value == 'run') {
-              final match =
-                  runs.where((run) => run.id == episode.runId).firstOrNull;
+              final match = runs
+                  .where((run) => run.id == episode.runId)
+                  .firstOrNull;
               if (match != null) {
                 _selectRun(match);
                 setState(() => area = _StudioArea.runs);
@@ -5384,7 +5378,9 @@ class _ChatStudioState extends State<ChatStudio> {
             const PopupMenuItem(value: 'chat', child: Text('Continue in chat')),
             const PopupMenuItem(value: 'copy', child: Text('Copy lessons')),
             const PopupMenuItem(
-                value: 'run', child: Text('Inspect original run')),
+              value: 'run',
+              child: Text('Inspect original run'),
+            ),
           ],
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -5412,9 +5408,9 @@ class _ChatStudioState extends State<ChatStudio> {
             alignment: Alignment.centerLeft,
             child: Text(
               'Lessons',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(height: 5),
@@ -5431,7 +5427,9 @@ class _ChatStudioState extends State<ChatStudio> {
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-            ...episode.filesChanged.take(30).map(
+            ...episode.filesChanged
+                .take(30)
+                .map(
                   (path) => Align(
                     alignment: Alignment.centerLeft,
                     child: SelectableText(path),
@@ -5557,32 +5555,32 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   IconData _knowledgeViewIcon(_KnowledgeView view) => switch (view) {
-        _KnowledgeView.overview => Icons.dashboard_outlined,
-        _KnowledgeView.sources => Icons.language_outlined,
-        _KnowledgeView.notes => Icons.note_alt_outlined,
-        _KnowledgeView.memory => Icons.history_outlined,
-      };
+    _KnowledgeView.overview => Icons.dashboard_outlined,
+    _KnowledgeView.sources => Icons.language_outlined,
+    _KnowledgeView.notes => Icons.note_alt_outlined,
+    _KnowledgeView.memory => Icons.history_outlined,
+  };
 
   String _knowledgeViewLabel(_KnowledgeView view) => switch (view) {
-        _KnowledgeView.overview => 'Overview',
-        _KnowledgeView.sources => 'Sources',
-        _KnowledgeView.notes => 'Notes',
-        _KnowledgeView.memory => 'Run memory',
-      };
+    _KnowledgeView.overview => 'Overview',
+    _KnowledgeView.sources => 'Sources',
+    _KnowledgeView.notes => 'Notes',
+    _KnowledgeView.memory => 'Run memory',
+  };
 
   IconData _knowledgeKindIcon(KnowledgeKind kind) => switch (kind) {
-        KnowledgeKind.note => Icons.note_alt_outlined,
-        KnowledgeKind.researchSource => Icons.language_outlined,
-        KnowledgeKind.researchSearch => Icons.search,
-        KnowledgeKind.episode => Icons.history_outlined,
-      };
+    KnowledgeKind.note => Icons.note_alt_outlined,
+    KnowledgeKind.researchSource => Icons.language_outlined,
+    KnowledgeKind.researchSearch => Icons.search,
+    KnowledgeKind.episode => Icons.history_outlined,
+  };
 
   String _knowledgeKindLabel(KnowledgeKind kind) => switch (kind) {
-        KnowledgeKind.note => 'Project note',
-        KnowledgeKind.researchSource => 'Archived source',
-        KnowledgeKind.researchSearch => 'Search snapshot',
-        KnowledgeKind.episode => 'Prior run memory',
-      };
+    KnowledgeKind.note => 'Project note',
+    KnowledgeKind.researchSource => 'Archived source',
+    KnowledgeKind.researchSearch => 'Search snapshot',
+    KnowledgeKind.episode => 'Prior run memory',
+  };
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) {
@@ -5607,61 +5605,61 @@ class _ChatStudioState extends State<ChatStudio> {
     final tagsController = TextEditingController();
     final result =
         await showDialog<({String title, String content, Set<String> tags})>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        icon: const Icon(Icons.note_add_outlined),
-        title: const Text('Add project knowledge'),
-        content: SizedBox(
-          width: 620,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: titleController,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Title'),
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            icon: const Icon(Icons.note_add_outlined),
+            title: const Text('Add project knowledge'),
+            content: SizedBox(
+              width: 620,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: titleController,
+                    autofocus: true,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: contentController,
+                    minLines: 5,
+                    maxLines: 12,
+                    decoration: const InputDecoration(
+                      labelText: 'Content',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: tagsController,
+                    decoration: const InputDecoration(
+                      labelText: 'Tags',
+                      hintText: 'architecture, customer, decision',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: contentController,
-                minLines: 5,
-                maxLines: 12,
-                decoration: const InputDecoration(
-                  labelText: 'Content',
-                  alignLabelWithHint: true,
-                ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: tagsController,
-                decoration: const InputDecoration(
-                  labelText: 'Tags',
-                  hintText: 'architecture, customer, decision',
-                ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop((
+                  title: titleController.text.trim(),
+                  content: contentController.text.trim(),
+                  tags: tagsController.text
+                      .split(',')
+                      .map((tag) => tag.trim().toLowerCase())
+                      .where((tag) => tag.isNotEmpty)
+                      .toSet(),
+                )),
+                child: const Text('Save note'),
               ),
             ],
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop((
-              title: titleController.text.trim(),
-              content: contentController.text.trim(),
-              tags: tagsController.text
-                  .split(',')
-                  .map((tag) => tag.trim().toLowerCase())
-                  .where((tag) => tag.isNotEmpty)
-                  .toSet(),
-            )),
-            child: const Text('Save note'),
-          ),
-        ],
-      ),
-    );
+        );
     titleController.dispose();
     contentController.dispose();
     tagsController.dispose();
@@ -5683,12 +5681,14 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<void> _deleteKnowledge(KnowledgeEntry entry) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Delete knowledge entry?'),
-            content:
-                Text('Delete “${entry.title}” from this project’s knowledge?'),
+            content: Text(
+              'Delete “${entry.title}” from this project’s knowledge?',
+            ),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -5818,20 +5818,22 @@ class _ChatStudioState extends State<ChatStudio> {
   Widget _logsPage() {
     final query = logSearchController.text.trim().toLowerCase();
     final runId = selectedRunId;
-    final filtered = events.where((event) {
-      if (runId != null &&
-          event.correlationId != runId &&
-          event.data['runId']?.toString() != runId) {
-        return false;
-      }
-      if (query.isEmpty) {
-        return true;
-      }
-      return event.type.toLowerCase().contains(query) ||
-          event.correlationId.toLowerCase().contains(query) ||
-          jsonEncode(event.data).toLowerCase().contains(query) ||
-          _humanEvent(event).toLowerCase().contains(query);
-    }).toList(growable: false);
+    final filtered = events
+        .where((event) {
+          if (runId != null &&
+              event.correlationId != runId &&
+              event.data['runId']?.toString() != runId) {
+            return false;
+          }
+          if (query.isEmpty) {
+            return true;
+          }
+          return event.type.toLowerCase().contains(query) ||
+              event.correlationId.toLowerCase().contains(query) ||
+              jsonEncode(event.data).toLowerCase().contains(query) ||
+              _humanEvent(event).toLowerCase().contains(query);
+        })
+        .toList(growable: false);
     return _page(
       maxWidth: 1240,
       children: <Widget>[
@@ -5898,8 +5900,10 @@ class _ChatStudioState extends State<ChatStudio> {
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
-                const Text('Detail:',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const Text(
+                  'Detail:',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
                 ..._LogView.values.map(
                   (view) => ChoiceChip(
                     selected: logView == view,
@@ -6026,7 +6030,8 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<void> _createSupportBundle() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             icon: const Icon(Icons.archive_outlined),
@@ -6069,10 +6074,7 @@ class _ChatStudioState extends State<ChatStudio> {
     }
   }
 
-  Widget _page({
-    required double maxWidth,
-    required List<Widget> children,
-  }) {
+  Widget _page({required double maxWidth, required List<Widget> children}) {
     return ListView(
       padding: const EdgeInsets.all(22),
       children: <Widget>[
@@ -6107,16 +6109,16 @@ class _ChatStudioState extends State<ChatStudio> {
           children: <Widget>[
             Text(
               title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 5),
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         );
@@ -6163,9 +6165,9 @@ class _ChatStudioState extends State<ChatStudio> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 7),
             ConstrainedBox(
@@ -6187,7 +6189,7 @@ class _ChatStudioState extends State<ChatStudio> {
       builder: (context, constraints) {
         final width = constraints.maxWidth >= 760
             ? (constraints.maxWidth - (metrics.length - 1) * 10) /
-                metrics.length
+                  metrics.length
             : constraints.maxWidth;
         return Wrap(
           spacing: 10,
@@ -6210,9 +6212,7 @@ class _ChatStudioState extends State<ChatStudio> {
                               children: <Widget>[
                                 Text(
                                   metric.value,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
+                                  style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.w800),
                                 ),
                                 Text(metric.label),
@@ -6251,8 +6251,10 @@ class _ChatStudioState extends State<ChatStudio> {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style:
-                  const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -6278,10 +6280,12 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  List<EventEnvelope> _eventsForRun(RunRecord run) => events.where((event) {
+  List<EventEnvelope> _eventsForRun(RunRecord run) => events
+      .where((event) {
         return event.correlationId == run.id ||
             event.data['runId']?.toString() == run.id;
-      }).toList(growable: false);
+      })
+      .toList(growable: false);
 
   String _humanEvent(EventEnvelope event) {
     final type = event.type;
@@ -6343,15 +6347,15 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   String _areaTitle(_StudioArea value) => switch (value) {
-        _StudioArea.chat => 'New chat',
-        _StudioArea.chats => 'Chats',
-        _StudioArea.projects => 'Project Manager',
-        _StudioArea.runs => 'Runs',
-        _StudioArea.promptStudio => 'Prompt Studio',
-        _StudioArea.knowledge => 'Knowledge',
-        _StudioArea.skills => 'Skills',
-        _StudioArea.logs => 'Logs',
-      };
+    _StudioArea.chat => 'New chat',
+    _StudioArea.chats => 'Chats',
+    _StudioArea.projects => 'Project Manager',
+    _StudioArea.runs => 'Runs',
+    _StudioArea.promptStudio => 'Prompt Studio',
+    _StudioArea.knowledge => 'Knowledge',
+    _StudioArea.skills => 'Skills',
+    _StudioArea.logs => 'Logs',
+  };
 
   String _timeLabel(DateTime value) {
     final local = value.toLocal();
@@ -6401,17 +6405,17 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   IconData _runStateIconData(RunState state) => switch (state) {
-        RunState.prepared => Icons.description_outlined,
-        RunState.awaitingApproval => Icons.lock_clock_outlined,
-        RunState.queued => Icons.schedule,
-        RunState.running => Icons.autorenew,
-        RunState.paused => Icons.pause_circle_outline,
-        RunState.cancelling => Icons.stop_circle_outlined,
-        RunState.cancelled => Icons.cancel_outlined,
-        RunState.succeeded => Icons.check_circle_outline,
-        RunState.failed => Icons.error_outline,
-        RunState.interrupted => Icons.restart_alt,
-      };
+    RunState.prepared => Icons.description_outlined,
+    RunState.awaitingApproval => Icons.lock_clock_outlined,
+    RunState.queued => Icons.schedule,
+    RunState.running => Icons.autorenew,
+    RunState.paused => Icons.pause_circle_outline,
+    RunState.cancelling => Icons.stop_circle_outlined,
+    RunState.cancelled => Icons.cancel_outlined,
+    RunState.succeeded => Icons.check_circle_outline,
+    RunState.failed => Icons.error_outline,
+    RunState.interrupted => Icons.restart_alt,
+  };
 
   Widget _workStateIcon(WorkItemState state, {double size = 20}) {
     final icon = switch (state) {
@@ -6467,16 +6471,16 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   IconData _evidenceIcon(EvidenceKind kind) => switch (kind) {
-        EvidenceKind.model => Icons.memory_outlined,
-        EvidenceKind.knowledge => Icons.search,
-        EvidenceKind.research => Icons.language_outlined,
-        EvidenceKind.mutation => Icons.difference_outlined,
-        EvidenceKind.command => Icons.terminal_outlined,
-        EvidenceKind.test => Icons.fact_check_outlined,
-        EvidenceKind.verification => Icons.verified_outlined,
-        EvidenceKind.deployment => Icons.inventory_2_outlined,
-        EvidenceKind.audit => Icons.verified_user_outlined,
-      };
+    EvidenceKind.model => Icons.memory_outlined,
+    EvidenceKind.knowledge => Icons.search,
+    EvidenceKind.research => Icons.language_outlined,
+    EvidenceKind.mutation => Icons.difference_outlined,
+    EvidenceKind.command => Icons.terminal_outlined,
+    EvidenceKind.test => Icons.fact_check_outlined,
+    EvidenceKind.verification => Icons.verified_outlined,
+    EvidenceKind.deployment => Icons.inventory_2_outlined,
+    EvidenceKind.audit => Icons.verified_user_outlined,
+  };
 }
 
 class _MetricData {
@@ -6592,8 +6596,9 @@ class _PlanTaskEditorDialogState extends State<_PlanTaskEditorDialog> {
     final title = titleController.text.trim();
     final instructions = instructionsController.text.trim();
     final dependencies = _csv(dependenciesController.text);
-    final invalidDependencies =
-        dependencies.difference(widget.availableTaskIds);
+    final invalidDependencies = dependencies.difference(
+      widget.availableTaskIds,
+    );
     if (title.isEmpty || instructions.isEmpty) {
       setState(() => error = 'A task needs a title and instructions.');
       return;
@@ -6645,10 +6650,29 @@ class _PlanTaskEditorDialogState extends State<_PlanTaskEditorDialog> {
   Widget build(BuildContext context) {
     final effortChoices = <int>{1, 2, 3, 5, 8, 13, effortPoints}.toList()
       ..sort();
-    final modelTurnChoices =
-        <int>{1, 2, 3, 4, 5, 8, 12, 20, modelTurns}.toList()..sort();
-    final toolCallChoices =
-        <int>{0, 1, 2, 4, 8, 12, 20, 40, 80, toolCalls}.toList()..sort();
+    final modelTurnChoices = <int>{
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      12,
+      20,
+      modelTurns,
+    }.toList()..sort();
+    final toolCallChoices = <int>{
+      0,
+      1,
+      2,
+      4,
+      8,
+      12,
+      20,
+      40,
+      80,
+      toolCalls,
+    }.toList()..sort();
     return AlertDialog(
       icon: const Icon(Icons.task_alt_outlined),
       title: Text('Edit ${widget.task.id}'),
@@ -6676,8 +6700,9 @@ class _PlanTaskEditorDialogState extends State<_PlanTaskEditorDialog> {
                     child: TextField(
                       controller: titleController,
                       autofocus: true,
-                      decoration:
-                          const InputDecoration(labelText: 'Task title'),
+                      decoration: const InputDecoration(
+                        labelText: 'Task title',
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -6998,11 +7023,7 @@ class _PromptDraft {
 }
 
 class _PromptEditorDialog extends StatefulWidget {
-  const _PromptEditorDialog({
-    this.prompt,
-    this.template,
-    this.generatedDraft,
-  });
+  const _PromptEditorDialog({this.prompt, this.template, this.generatedDraft});
 
   final PromptTemplateRecord? prompt;
   final StudioTemplate? template;
@@ -7032,13 +7053,15 @@ class _PromptEditorDialogState extends State<_PromptEditorDialog> {
       text: generated?.title ?? prompt?.title ?? template?.title ?? '',
     );
     descriptionController = TextEditingController(
-      text: generated?.purpose ??
+      text:
+          generated?.purpose ??
           prompt?.description ??
           template?.description ??
           '',
     );
     systemController = TextEditingController(
-      text: generated?.systemPrompt ??
+      text:
+          generated?.systemPrompt ??
           prompt?.systemPrompt ??
           'Work carefully inside the selected project. Use tools only when permitted. Verify important results and explain failures clearly.',
     );
@@ -7053,7 +7076,8 @@ class _PromptEditorDialogState extends State<_PromptEditorDialog> {
     tagsController = TextEditingController(
       text: prompt?.tags.join(', ') ?? template?.tags.join(', ') ?? '',
     );
-    mode = generated?.mode ??
+    mode =
+        generated?.mode ??
         prompt?.mode ??
         template?.suggestedMode ??
         CommandMode.build;
@@ -7084,8 +7108,8 @@ class _PromptEditorDialogState extends State<_PromptEditorDialog> {
         widget.generatedDraft != null
             ? 'Adjust generated prompt'
             : widget.prompt == null
-                ? 'Create prompt'
-                : 'Edit prompt',
+            ? 'Create prompt'
+            : 'Edit prompt',
       ),
       content: SizedBox(
         width: 780,
@@ -7134,9 +7158,7 @@ class _PromptEditorDialogState extends State<_PromptEditorDialog> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Description'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<CommandMode>(
@@ -7208,7 +7230,8 @@ class _PromptEditorDialogState extends State<_PromptEditorDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton.icon(
-          onPressed: titleController.text.trim().isEmpty ||
+          onPressed:
+              titleController.text.trim().isEmpty ||
                   userController.text.trim().isEmpty
               ? null
               : () {
@@ -7238,8 +7261,8 @@ class _PromptEditorDialogState extends State<_PromptEditorDialog> {
             widget.generatedDraft != null
                 ? 'Apply changes'
                 : widget.prompt == null
-                    ? 'Save prompt'
-                    : 'Save new version',
+                ? 'Save prompt'
+                : 'Save new version',
           ),
         ),
       ],
@@ -7291,7 +7314,8 @@ class _RunGraphState extends State<_RunGraph> {
         top + row * 150,
       );
     }
-    final canvasWidth = left * 2 +
+    final canvasWidth =
+        left * 2 +
         items.length * nodeWidth +
         (items.length - 1) * horizontalGap;
     const canvasHeight = 390.0;
@@ -7519,12 +7543,10 @@ class _RunConnectionPainter extends CustomPainter {
           startPosition.dx + nodeWidth,
           startPosition.dy + nodeHeight / 2,
         );
-        final end = Offset(
-          endPosition.dx,
-          endPosition.dy + nodeHeight / 2,
-        );
+        final end = Offset(endPosition.dx, endPosition.dy + nodeHeight / 2);
         final dependency = byId[dependencyId];
-        final active = dependency?.state == WorkItemState.succeeded ||
+        final active =
+            dependency?.state == WorkItemState.succeeded ||
             dependency?.state == WorkItemState.running;
         final paint = Paint()
           ..color = active ? activeColor : lineColor

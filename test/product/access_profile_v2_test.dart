@@ -19,9 +19,13 @@ void _patch(Map<String, dynamic> target, String dotted, Object? value) {
 
 void main() {
   final root = Directory.current;
-  final catalog = jsonDecode(
-    File('${root.path}/config/access_profiles.v2.json').readAsStringSync(),
-  ) as Map<String, dynamic>;
+  final catalog =
+      jsonDecode(
+            File(
+              '${root.path}/config/access_profiles.v2.json',
+            ).readAsStringSync(),
+          )
+          as Map<String, dynamic>;
   final rawProfiles = (catalog['profiles'] as List).cast<Map>();
   final byId = <String, Map<String, dynamic>>{
     for (final raw in rawProfiles)
@@ -39,16 +43,22 @@ void main() {
     for (final raw in byId.values) {
       final first = AccessProfileV2.fromJson(_copy(raw));
       final second = AccessProfileV2.fromJson(first.toJson());
-      expect(second.toJson(), first.toJson(),
-          reason: raw['profileId'] as String);
+      expect(
+        second.toJson(),
+        first.toJson(),
+        reason: raw['profileId'] as String,
+      );
     }
   });
 
   test('shared invalid policy vectors fail in Dart', () {
-    final fixture = jsonDecode(
-      File('${root.path}/evals/fixtures/p1_002_access_profiles/invalid_cases.json')
-          .readAsStringSync(),
-    ) as Map<String, dynamic>;
+    final fixture =
+        jsonDecode(
+              File(
+                '${root.path}/evals/fixtures/p1_002_access_profiles/invalid_cases.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
     for (final rawCase in fixture['cases'] as List) {
       final testCase = (rawCase as Map).cast<String, dynamic>();
       final value = _copy(byId[testCase['baseProfile']]!);
@@ -71,8 +81,9 @@ void main() {
 
   test('Owner and Owner unattended remain explicit non-sandbox modes', () {
     final owner = AccessProfileV2.fromJson(_copy(byId['owner']!));
-    final unattended =
-        AccessProfileV2.fromJson(_copy(byId['owner_unattended']!));
+    final unattended = AccessProfileV2.fromJson(
+      _copy(byId['owner_unattended']!),
+    );
     expect(owner.sandboxed, isFalse);
     expect(owner.credentials['rawReveal'], 'interactive_break_glass');
     expect(unattended.sandboxed, isFalse);

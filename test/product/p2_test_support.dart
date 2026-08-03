@@ -22,19 +22,18 @@ Map<String, Object?> testReceipt(
   String status = 'succeeded',
   String reversibility = 'reversible',
   Map<String, Object?> details = const <String, Object?>{},
-}) =>
-    <String, Object?>{
-      'schemaVersion': '1.0.0',
-      'effectId': '$operation-effect',
-      'runId': binding.runId,
-      'taskId': binding.taskId,
-      'operation': operation,
-      'status': status,
-      'reversibility': reversibility,
-      'startedAt': DateTime.now().toUtc().toIso8601String(),
-      'completedAt': DateTime.now().toUtc().toIso8601String(),
-      'details': details,
-    };
+}) => <String, Object?>{
+  'schemaVersion': '1.0.0',
+  'effectId': '$operation-effect',
+  'runId': binding.runId,
+  'taskId': binding.taskId,
+  'operation': operation,
+  'status': status,
+  'reversibility': reversibility,
+  'startedAt': DateTime.now().toUtc().toIso8601String(),
+  'completedAt': DateTime.now().toUtc().toIso8601String(),
+  'details': details,
+};
 
 final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
   int _requests = 0;
@@ -72,10 +71,7 @@ final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
       'process': <String, Object?>{'operation': operation},
       'network': <String, Object?>{'destinations': <String>[]},
       'browser': <String, Object?>{'profiles': <String>[]},
-      'secrets': <String, Object?>{
-        'leaseIds': <String>[],
-        'rawReveal': false,
-      },
+      'secrets': <String, Object?>{'leaseIds': <String>[], 'rawReveal': false},
     };
     final grant = <String, Object?>{
       'schemaVersion': '2.0.0',
@@ -239,8 +235,9 @@ final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
       policyDecisionId: 'decision-$_requests',
       policyDecisionDigest: proof.policyDecisionDigest,
       scopeDigest: proof.scopeDigest,
-      consumptionReceiptSha256:
-          Sha256.text(p2CanonicalJson(consumption.toJson())),
+      consumptionReceiptSha256: Sha256.text(
+        p2CanonicalJson(consumption.toJson()),
+      ),
       useNumber: useNumber,
       maxUses: maxUses,
       revocationEpoch: 1,
@@ -273,8 +270,8 @@ final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
   }
 }
 
-typedef TestResponseBuilder = Map<String, Object?> Function(
-    P2AutomationEnvelope envelope);
+typedef TestResponseBuilder =
+    Map<String, Object?> Function(P2AutomationEnvelope envelope);
 
 final class TestAutomationHostClient implements P2AutomationHostClient {
   TestAutomationHostClient(this.builder);
@@ -292,10 +289,11 @@ final class TestAutomationHostClient implements P2AutomationHostClient {
   }
 
   @override
-  Stream<Map<String, Object?>> stream(String requestId,
-          {required P2EffectBinding binding,
-          required P2WorkerGrantProof grantProof}) =>
-      controller.stream.where((event) => event['requestId'] == requestId);
+  Stream<Map<String, Object?>> stream(
+    String requestId, {
+    required P2EffectBinding binding,
+    required P2WorkerGrantProof grantProof,
+  }) => controller.stream.where((event) => event['requestId'] == requestId);
   @override
   Future<Map<String, Object?>> cancel(P2AutomationEnvelope envelope) =>
       invoke(envelope);

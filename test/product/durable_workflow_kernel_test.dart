@@ -34,21 +34,23 @@ void main() {
       }
     });
 
-    test('opens the generated schema and passes integrity verification',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
+    test(
+      'opens the generated schema and passes integrity verification',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
 
-      expect(store!.schemaVersion, 6);
-      final report = await store!.verifyIntegrity();
-      expect(report.ok, isTrue);
-      expect(report.integrityResult.toLowerCase(), 'ok');
-      expect(report.invalidRunHashes, 0);
-      expect(report.invalidEventHashes, 0);
-      expect(report.projectionMismatches, 0);
-    });
+        expect(store!.schemaVersion, 6);
+        final report = await store!.verifyIntegrity();
+        expect(report.ok, isTrue);
+        expect(report.integrityResult.toLowerCase(), 'ok');
+        expect(report.invalidRunHashes, 0);
+        expect(report.invalidEventHashes, 0);
+        expect(report.projectionMismatches, 0);
+      },
+    );
 
     test('persists entity and document repositories transactionally', () async {
       store = await DurableWorkflowStore.open(
@@ -73,53 +75,60 @@ void main() {
 
       await projects.put(project);
       expect((await projects.get(project.id))?.name, project.name);
-      await SqliteJsonDocument(store!, 'settings').write(
-        <String, dynamic>{'localOnly': true, 'revision': 1},
-      );
-      expect(
-        await store!.readDocument('settings'),
-        <String, dynamic>{'localOnly': true, 'revision': 1},
-      );
+      await SqliteJsonDocument(
+        store!,
+        'settings',
+      ).write(<String, dynamic>{'localOnly': true, 'revision': 1});
+      expect(await store!.readDocument('settings'), <String, dynamic>{
+        'localOnly': true,
+        'revision': 1,
+      });
       await projects.remove(project.id);
       expect(await projects.get(project.id), isNull);
     });
 
-    test('stores each run snapshot with append-only projection evidence',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      final running = _run(
-        id: 'run-snapshot',
-        state: RunState.running,
-        itemState: WorkItemState.running,
-      );
-      final succeeded = running.copyWith(
-        state: RunState.succeeded,
-        items: <WorkItemProgress>[
-          running.items.single.copyWith(
-            state: WorkItemState.succeeded,
-            completedAt: DateTime.utc(2026, 7, 22, 0, 2),
-          ),
-        ],
-        completedAt: DateTime.utc(2026, 7, 22, 0, 2),
-        summary: 'done',
-      );
+    test(
+      'stores each run snapshot with append-only projection evidence',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        final running = _run(
+          id: 'run-snapshot',
+          state: RunState.running,
+          itemState: WorkItemState.running,
+        );
+        final succeeded = running.copyWith(
+          state: RunState.succeeded,
+          items: <WorkItemProgress>[
+            running.items.single.copyWith(
+              state: WorkItemState.succeeded,
+              completedAt: DateTime.utc(2026, 7, 22, 0, 2),
+            ),
+          ],
+          completedAt: DateTime.utc(2026, 7, 22, 0, 2),
+          summary: 'done',
+        );
 
-      await store!.saveRun(running);
-      await store!.saveRun(succeeded);
+        await store!.saveRun(running);
+        await store!.saveRun(succeeded);
 
-      final loaded = await store!.getRun(running.id);
-      expect(loaded?.state, RunState.succeeded);
-      final events = await store!.eventsForRun(running.id);
-      expect(events.map((event) => event.type),
-          containsAllInOrder(<String>['run.snapshot', 'run.snapshot']));
-      expect(events.last.stateVersion, 2);
-      expect(events.last.data['snapshotSha256'],
-          Sha256.text(canonicalJson(succeeded.toJson())));
-      expect((await store!.verifyIntegrity()).ok, isTrue);
-    });
+        final loaded = await store!.getRun(running.id);
+        expect(loaded?.state, RunState.succeeded);
+        final events = await store!.eventsForRun(running.id);
+        expect(
+          events.map((event) => event.type),
+          containsAllInOrder(<String>['run.snapshot', 'run.snapshot']),
+        );
+        expect(events.last.stateVersion, 2);
+        expect(
+          events.last.data['snapshotSha256'],
+          Sha256.text(canonicalJson(succeeded.toJson())),
+        );
+        expect((await store!.verifyIntegrity()).ok, isTrue);
+      },
+    );
 
     test('replays a completed operation and rejects key collisions', () async {
       store = await DurableWorkflowStore.open(
@@ -193,102 +202,111 @@ void main() {
       );
     });
 
-    test('recovers a recorded file effect only after its lease expires',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      const key = 'effect-key';
-      await store!.claimOperation(
-        key: key,
-        runId: 'run-effect',
-        workItemId: 'task-effect',
-        attempt: 1,
-        operation: 'tool:write_file',
-        normalizedArgumentsSha256: List<String>.filled(64, 'c').join(),
-        ownerId: 'owner-a',
-        lease: Duration.zero,
-      );
-      final effect = <String, dynamic>{
-        'id': 'mutation-1',
-        'operation': 'create',
-        'relativePath': 'docs/result.md',
-        'existed': false,
-        'beforeHash': '',
-        'afterHash': List<String>.filled(64, 'd').join(),
-        'backupPath': '',
-        'timestamp': '2026-07-22T00:00:00.000Z',
-        'status': 'applied',
-        'idempotencyKey': key,
-        'workItemId': 'task-effect',
-      };
-      await store!.recordCompensation(
-        runId: 'run-effect',
-        mutationId: 'mutation-1',
-        operation: 'create',
-        relativePath: 'docs/result.md',
-        status: 'applied',
-        record: effect,
-        workItemId: 'task-effect',
-        idempotencyKey: key,
-        afterSha256: List<String>.filled(64, 'd').join(),
-      );
+    test(
+      'recovers a recorded file effect only after its lease expires',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        const key = 'effect-key';
+        await store!.claimOperation(
+          key: key,
+          runId: 'run-effect',
+          workItemId: 'task-effect',
+          attempt: 1,
+          operation: 'tool:write_file',
+          normalizedArgumentsSha256: List<String>.filled(64, 'c').join(),
+          ownerId: 'owner-a',
+          lease: Duration.zero,
+        );
+        final effect = <String, dynamic>{
+          'id': 'mutation-1',
+          'operation': 'create',
+          'relativePath': 'docs/result.md',
+          'existed': false,
+          'beforeHash': '',
+          'afterHash': List<String>.filled(64, 'd').join(),
+          'backupPath': '',
+          'timestamp': '2026-07-22T00:00:00.000Z',
+          'status': 'applied',
+          'idempotencyKey': key,
+          'workItemId': 'task-effect',
+        };
+        await store!.recordCompensation(
+          runId: 'run-effect',
+          mutationId: 'mutation-1',
+          operation: 'create',
+          relativePath: 'docs/result.md',
+          status: 'applied',
+          record: effect,
+          workItemId: 'task-effect',
+          idempotencyKey: key,
+          afterSha256: List<String>.filled(64, 'd').join(),
+        );
 
-      final recovered = await store!.claimOperation(
-        key: key,
-        runId: 'run-effect',
-        workItemId: 'task-effect',
-        attempt: 1,
-        operation: 'tool:write_file',
-        normalizedArgumentsSha256: List<String>.filled(64, 'c').join(),
-        ownerId: 'owner-b',
-      );
-      expect(recovered.kind, IdempotencyClaimKind.effectRecorded);
-      expect(
-          recovered.effect?['afterHash'], List<String>.filled(64, 'd').join());
-      expect(recovered.recoveredLease, isTrue);
-    });
+        final recovered = await store!.claimOperation(
+          key: key,
+          runId: 'run-effect',
+          workItemId: 'task-effect',
+          attempt: 1,
+          operation: 'tool:write_file',
+          normalizedArgumentsSha256: List<String>.filled(64, 'c').join(),
+          ownerId: 'owner-b',
+        );
+        expect(recovered.kind, IdempotencyClaimKind.effectRecorded);
+        expect(
+          recovered.effect?['afterHash'],
+          List<String>.filled(64, 'd').join(),
+        );
+        expect(recovered.recoveredLease, isTrue);
+      },
+    );
 
-    test('recovers committed runs and interrupts incomplete stale runs',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      final committed = _run(
-        id: 'run-committed',
-        state: RunState.running,
-        itemState: WorkItemState.succeeded,
-      );
-      final incomplete = _run(
-        id: 'run-incomplete',
-        state: RunState.running,
-        itemState: WorkItemState.running,
-      );
-      await store!.saveRun(committed);
-      await store!.saveRun(incomplete);
-      await store!.createCheckpoint(
-        runId: committed.id,
-        kind: 'workspace_committed',
-        state: <String, dynamic>{'mutations': 1},
-      );
-      await store!.acquireRunLease(
-        runId: committed.id,
-        ownerId: 'dead-a',
-        lease: Duration.zero,
-      );
-      await store!.acquireRunLease(
-        runId: incomplete.id,
-        ownerId: 'dead-b',
-        lease: Duration.zero,
-      );
+    test(
+      'recovers committed runs and interrupts incomplete stale runs',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        final committed = _run(
+          id: 'run-committed',
+          state: RunState.running,
+          itemState: WorkItemState.succeeded,
+        );
+        final incomplete = _run(
+          id: 'run-incomplete',
+          state: RunState.running,
+          itemState: WorkItemState.running,
+        );
+        await store!.saveRun(committed);
+        await store!.saveRun(incomplete);
+        await store!.createCheckpoint(
+          runId: committed.id,
+          kind: 'workspace_committed',
+          state: <String, dynamic>{'mutations': 1},
+        );
+        await store!.acquireRunLease(
+          runId: committed.id,
+          ownerId: 'dead-a',
+          lease: Duration.zero,
+        );
+        await store!.acquireRunLease(
+          runId: incomplete.id,
+          ownerId: 'dead-b',
+          lease: Duration.zero,
+        );
 
-      final recovered = await store!.recoverInFlightRuns();
-      expect(recovered, hasLength(2));
-      expect((await store!.getRun(committed.id))?.state, RunState.succeeded);
-      expect((await store!.getRun(incomplete.id))?.state, RunState.interrupted);
-    });
+        final recovered = await store!.recoverInFlightRuns();
+        expect(recovered, hasLength(2));
+        expect((await store!.getRun(committed.id))?.state, RunState.succeeded);
+        expect(
+          (await store!.getRun(incomplete.id))?.state,
+          RunState.interrupted,
+        );
+      },
+    );
 
     test('migrates legacy JSON with byte-exact backups', () async {
       final legacyProjects = File(
@@ -300,14 +318,8 @@ void main() {
       final timestamp = DateTime.utc(2026, 7, 22).toIso8601String();
       await legacyProjects.writeAsString(
         '${const JsonEncoder.withIndent('  ').convert(<Map<String, dynamic>>[
-              <String, dynamic>{
-                'id': 'legacy-project',
-                'name': 'Legacy project',
-                'rootPath': root.path,
-                'createdAt': timestamp,
-                'updatedAt': timestamp,
-              },
-            ])}\n',
+          <String, dynamic>{'id': 'legacy-project', 'name': 'Legacy project', 'rootPath': root.path, 'createdAt': timestamp, 'updatedAt': timestamp},
+        ])}\n',
         flush: true,
       );
       await legacySettings.writeAsString(
@@ -328,8 +340,9 @@ void main() {
         (await store!.getEntity('projects', 'legacy-project'))?['name'],
         'Legacy project',
       );
-      expect(await store!.readDocument('settings'),
-          <String, dynamic>{'localOnly': true});
+      expect(await store!.readDocument('settings'), <String, dynamic>{
+        'localOnly': true,
+      });
       final backups = await backupDirectory
           .list()
           .where((entity) => entity is File)
@@ -346,11 +359,10 @@ void main() {
         databaseFile: databaseFile,
         migrationBackupDirectory: backupDirectory,
       );
-      await store!.putEntity(
-        'projects',
-        'sentinel',
-        <String, dynamic>{'id': 'sentinel', 'name': 'Before import'},
-      );
+      await store!.putEntity('projects', 'sentinel', <String, dynamic>{
+        'id': 'sentinel',
+        'name': 'Before import',
+      });
       await store!.close();
       store = null;
       final validProjects = File(
@@ -361,8 +373,8 @@ void main() {
       );
       await validProjects.writeAsString(
         '${jsonEncode(<Map<String, dynamic>>[
-              <String, dynamic>{'id': 'partial', 'name': 'Must not survive'},
-            ])}\n',
+          <String, dynamic>{'id': 'partial', 'name': 'Must not survive'},
+        ])}\n',
         flush: true,
       );
       await corruptSettings.writeAsString('{not-json', flush: true);
@@ -394,8 +406,10 @@ void main() {
         databaseFile: databaseFile,
         migrationBackupDirectory: backupDirectory,
       );
-      expect((await store!.getEntity('projects', 'sentinel'))?['name'],
-          'Before import');
+      expect(
+        (await store!.getEntity('projects', 'sentinel'))?['name'],
+        'Before import',
+      );
       expect(await store!.getEntity('projects', 'partial'), isNull);
     });
 
@@ -424,62 +438,63 @@ void main() {
       expect(await File('${databaseFile.path}-shm').exists(), isFalse);
     });
 
-    test('journals a mutation before effect and supports explicit rollback',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      final project = Directory(
-        '${root.path}${Platform.pathSeparator}project',
-      );
-      final checkpoints = Directory(
-        '${root.path}${Platform.pathSeparator}checkpoints',
-      );
-      await project.create(recursive: true);
-      final target = File(
-        '${project.path}${Platform.pathSeparator}result.txt',
-      );
-      await target.writeAsString('before\n', flush: true);
-      final redactor = SecretRedactor();
-      final audit = AuditChain(
-        File('${root.path}${Platform.pathSeparator}audit.jsonl'),
-        redactor,
-      );
-      await audit.open();
-      final boundary = await WorkspaceBoundary.open(project.path);
-      final transaction = await WorkspaceTransaction.begin(
-        runId: 'run-transaction',
-        boundary: boundary,
-        checkpointRoot: checkpoints,
-        audit: audit,
-        workflow: store,
-      );
-      final beforeHash = Sha256.hex(await target.readAsBytes());
-      final record = await transaction.runOperation<MutationRecord>(
-        idempotencyKey: 'transaction-operation-key',
-        workItemId: 'task-1',
-        action: () => transaction.writeText(
-          relativePath: 'result.txt',
-          content: 'after\n',
-          expectedHash: beforeHash,
-          expectedExists: true,
-        ),
-      );
-      expect(record.status, 'applied');
-      expect(await target.readAsString(), 'after\n');
+    test(
+      'journals a mutation before effect and supports explicit rollback',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        final project = Directory(
+          '${root.path}${Platform.pathSeparator}project',
+        );
+        final checkpoints = Directory(
+          '${root.path}${Platform.pathSeparator}checkpoints',
+        );
+        await project.create(recursive: true);
+        final target = File(
+          '${project.path}${Platform.pathSeparator}result.txt',
+        );
+        await target.writeAsString('before\n', flush: true);
+        final redactor = SecretRedactor();
+        final audit = AuditChain(
+          File('${root.path}${Platform.pathSeparator}audit.jsonl'),
+          redactor,
+        );
+        await audit.open();
+        final boundary = await WorkspaceBoundary.open(project.path);
+        final transaction = await WorkspaceTransaction.begin(
+          runId: 'run-transaction',
+          boundary: boundary,
+          checkpointRoot: checkpoints,
+          audit: audit,
+          workflow: store,
+        );
+        final beforeHash = Sha256.hex(await target.readAsBytes());
+        final record = await transaction.runOperation<MutationRecord>(
+          idempotencyKey: 'transaction-operation-key',
+          workItemId: 'task-1',
+          action: () => transaction.writeText(
+            relativePath: 'result.txt',
+            content: 'after\n',
+            expectedHash: beforeHash,
+            expectedExists: true,
+          ),
+        );
+        expect(record.status, 'applied');
+        expect(await target.readAsString(), 'after\n');
 
-      await transaction.rollback();
-      expect(await target.readAsString(), 'before\n');
-      expect(
-        (await store!.latestCheckpoint(
-          'run-transaction',
-          kind: 'workspace_rolled_back',
-        ))
-            ?.kind,
-        'workspace_rolled_back',
-      );
-    });
+        await transaction.rollback();
+        expect(await target.readAsString(), 'before\n');
+        expect(
+          (await store!.latestCheckpoint(
+            'run-transaction',
+            kind: 'workspace_rolled_back',
+          ))?.kind,
+          'workspace_rolled_back',
+        );
+      },
+    );
   });
 }
 
@@ -517,9 +532,7 @@ RunRecord _run({
     ],
     constraints: const <String>[],
     researchQuestions: const <String>[],
-    requiredPermissions: const <PermissionScope>{
-      PermissionScope.projectWrite,
-    },
+    requiredPermissions: const <PermissionScope>{PermissionScope.projectWrite},
     createdAt: created,
   );
   final plan = ExecutionPlan(

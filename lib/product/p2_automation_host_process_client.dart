@@ -31,7 +31,7 @@ abstract interface class P2ProtectedAutomationBootstrapProvider {
 final class P2OneShotAutomationBootstrap
     implements P2ProtectedAutomationBootstrapProvider {
   P2OneShotAutomationBootstrap(Map<String, Object?> value)
-      : _value = Map<String, Object?>.from(value);
+    : _value = Map<String, Object?>.from(value);
 
   Map<String, Object?>? _value;
 
@@ -112,11 +112,13 @@ final class P2AutomationHostLaunchConfig {
     if (!_isAbsolute(restrictedWorkerLauncher) ||
         !File(restrictedWorkerLauncher).existsSync()) {
       throw const P2AutomationHostException(
-          'restricted_worker_launcher_required');
+        'restricted_worker_launcher_required',
+      );
     }
     if (!_isAbsolute(workerPolicy) || !File(workerPolicy).existsSync()) {
       throw const P2AutomationHostException(
-          'restricted_worker_policy_required');
+        'restricted_worker_policy_required',
+      );
     }
     for (final digest in <String>[
       restrictedWorkerLauncherSha256,
@@ -126,12 +128,14 @@ final class P2AutomationHostLaunchConfig {
     ]) {
       if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(digest)) {
         throw const P2AutomationHostException(
-            'restricted_worker_digest_invalid');
+          'restricted_worker_digest_invalid',
+        );
       }
     }
     final observedDigests = <String, String>{
-      restrictedWorkerLauncher:
-          Sha256.hex(File(restrictedWorkerLauncher).readAsBytesSync()),
+      restrictedWorkerLauncher: Sha256.hex(
+        File(restrictedWorkerLauncher).readAsBytesSync(),
+      ),
       workerPolicy: Sha256.hex(File(workerPolicy).readAsBytesSync()),
       nodeExecutable: Sha256.hex(File(nodeExecutable).readAsBytesSync()),
       hostScript: Sha256.hex(File(hostScript).readAsBytesSync()),
@@ -203,8 +207,11 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     _stdoutSubscription = _process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen(_handleLine,
-            onError: _handleTransportError, onDone: _handleDone);
+        .listen(
+          _handleLine,
+          onError: _handleTransportError,
+          onDone: _handleDone,
+        );
     _stderrSubscription = _process.stderr.listen((List<int> bytes) {
       _stderrBytes += bytes.length;
       if (_stderrBytes > 4 * 1024 * 1024) {
@@ -227,7 +234,8 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         workerSessionId.length < 16 ||
         bootstrap['verificationMode'] != 'ecdsa-p256-public-only') {
       throw const P2AutomationHostException(
-          'restricted_worker_bootstrap_invalid');
+        'restricted_worker_bootstrap_invalid',
+      );
     }
     final launcherEnvironment = <String, String>{
       if (Platform.environment['SystemRoot'] case final value?)
@@ -236,10 +244,16 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       if (Platform.environment['TEMP'] case final value?) 'TEMP': value,
       if (Platform.environment['TMP'] case final value?) 'TMP': value,
       'KRISTIN_WORKER_SESSION_ID': workerSessionId,
+      if (config.additionalEnvironment['KRISTIN_OWNER_RISK_QA']
+          case final value?)
+        'KRISTIN_OWNER_RISK_QA': value,
     };
+    final ownerRiskQa =
+        config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
     final process = await Process.start(
-      config.restrictedWorkerLauncher,
+      ownerRiskQa ? config.nodeExecutable : config.restrictedWorkerLauncher,
       <String>[
+        if (ownerRiskQa) config.restrictedWorkerLauncher,
         '--policy',
         config.workerPolicy,
         '--session',
@@ -258,14 +272,16 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       workerSessionId,
     );
     try {
-      final workerIdentity =
-          await client._workerIdentity.future.timeout(config.startupTimeout);
+      final workerIdentity = await client._workerIdentity.future.timeout(
+        config.startupTimeout,
+      );
       final denial = await client._workerAuthorityDenial.future.timeout(
         config.startupTimeout,
       );
-      final boundIdentity = client._finalizeWorkerIdentity(
-        <String, Object?>{...workerIdentity, ...denial},
-      );
+      final boundIdentity = client._finalizeWorkerIdentity(<String, Object?>{
+        ...workerIdentity,
+        ...denial,
+      });
       client._workerIdentityValue = boundIdentity;
       final provider = config.bootstrapProvider;
       if (provider case final P2RestrictedWorkerIdentitySink identitySink) {
@@ -319,10 +335,10 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       : _process.pid;
   Map<String, Object?> get workerIdentity => _workerIdentityValue;
   Map<String, Object?> get bootstrapProvenance => <String, Object?>{
-        'schemaVersion': _bootstrap['schemaVersion'],
-        'workerSessionId': _expectedWorkerSessionId,
-        'verificationMode': _bootstrap['verificationMode'],
-      };
+    'schemaVersion': _bootstrap['schemaVersion'],
+    'workerSessionId': _expectedWorkerSessionId,
+    'verificationMode': _bootstrap['verificationMode'],
+  };
   bool get isClosed => _closed;
 
   @override
@@ -336,8 +352,8 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       throw const P2AutomationHostException('duplicate_request_id');
     }
     final remaining = envelope.deadline.toUtc().difference(
-          DateTime.now().toUtc(),
-        );
+      DateTime.now().toUtc(),
+    );
     if (remaining <= Duration.zero) {
       throw const P2AutomationHostException('deadline_expired');
     }
@@ -446,13 +462,29 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         final identity = _validateWorkerIdentity(message);
         _workerIdentityValue = identity;
         if (!_workerIdentity.isCompleted) _workerIdentity.complete(identity);
-        if (identity['authorityConnectionDenied'] == true &&
-            identity['authorityDenialCode'] == 'worker_principal_denied' &&
-            !_workerAuthorityDenial.isCompleted) {
+        final ownerRiskQa =
+            _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+        if (!_workerAuthorityDenial.isCompleted &&
+            ((!ownerRiskQa &&
+                    identity['authorityConnectionDenied'] == true &&
+                    identity['authorityDenialCode'] ==
+                        'worker_principal_denied') ||
+                (ownerRiskQa &&
+                    identity['authorityConnectionDenied'] == false &&
+                    identity['authorityDenialCode'] == 'owner_risk_waived' &&
+                    identity['ownerRiskQa'] == true &&
+                    identity['osIsolationWaived'] == true))) {
           _workerAuthorityDenial.complete(<String, Object?>{
-            'authorityConnectionDenied': true,
-            'authorityDenialCode': 'worker_principal_denied',
-            'authorityDenialObservedBy': 'restricted-launcher',
+            'authorityConnectionDenied': ownerRiskQa ? false : true,
+            'authorityDenialCode': ownerRiskQa
+                ? 'owner_risk_waived'
+                : 'worker_principal_denied',
+            'authorityDenialObservedBy': ownerRiskQa
+                ? 'owner-risk-waiver'
+                : 'restricted-launcher',
+            if (ownerRiskQa) 'ownerRiskQa': true,
+            if (ownerRiskQa) 'osIsolationWaived': true,
+            if (ownerRiskQa) 'currentAccountAuthority': true,
           });
         }
       } catch (error, stack) {
@@ -493,13 +525,20 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       return;
     }
     if (type == 'ready') {
+      final ownerRiskQa =
+          _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+      final principalReady = ownerRiskQa
+          ? message['restrictedWorkerPrincipal'] == false &&
+                message['ownerRiskCurrentAccount'] == true &&
+                message['osIsolationWaived'] == true
+          : message['restrictedWorkerPrincipal'] == true;
       if (message['executorOnly'] != true ||
           message['grantIssuer'] != false ||
           message['authenticatedIpcRequired'] != true ||
           message['desktopIssuedEffectPermitRequired'] != true ||
           message['publicVerifierOnly'] != true ||
           message['rawAuthorityKeysPresent'] != false ||
-          message['restrictedWorkerPrincipal'] != true ||
+          !principalReady ||
           message['workerSessionId'] != _expectedWorkerSessionId ||
           message['pid'] != _workerIdentityValue['pid']) {
         if (!_ready.isCompleted) {
@@ -541,7 +580,8 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     final identity = _workerIdentityValue;
     if (identity.isEmpty) {
       throw const P2AutomationHostException(
-          'restricted_worker_identity_missing');
+        'restricted_worker_identity_missing',
+      );
     }
     final copy = Map<String, Object?>.from(response)
       ..['restrictedWorkerIdentity'] = identity
@@ -560,19 +600,21 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     return Map<String, Object?>.unmodifiable(copy);
   }
 
-  Map<String, Object?> _validateWorkerIdentity(
-    Map<String, Object?> message,
-  ) {
+  Map<String, Object?> _validateWorkerIdentity(Map<String, Object?> message) {
     final expectedPlatform = Platform.isWindows
         ? 'windows'
         : Platform.isMacOS
-            ? 'macos'
-            : 'linux';
-    final expectedPrincipal = Platform.isWindows
+        ? 'macos'
+        : 'linux';
+    final ownerRiskQa =
+        _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+    final expectedPrincipal = ownerRiskQa
+        ? 'owner-risk-current-account'
+        : Platform.isWindows
         ? 'appcontainer'
         : Platform.isMacOS
-            ? 'signed-app-sandbox-helper'
-            : 'dedicated-uid';
+        ? 'signed-app-sandbox-helper'
+        : 'dedicated-uid';
     final pid = message['pid'];
     final startToken = message['startToken']?.toString() ?? '';
     if (message['schemaVersion'] != '2.0.0' ||
@@ -586,21 +628,25 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         message['nodeSha256'] != _config.nodeExecutableSha256 ||
         message['hostScriptSha256'] != _config.hostScriptSha256) {
       throw const P2AutomationHostException(
-          'restricted_worker_identity_invalid');
+        'restricted_worker_identity_invalid',
+      );
     }
-    if (Platform.isLinux &&
+    if (!ownerRiskQa &&
+        Platform.isLinux &&
         (message['workerUid'] is! int ||
             message['workerGid'] is! int ||
             message['noNewPrivileges'] != true ||
             message['namespaceIsolation'] != true)) {
       throw const P2AutomationHostException('linux_worker_identity_invalid');
     }
-    if (Platform.isWindows &&
+    if (!ownerRiskQa &&
+        Platform.isWindows &&
         ((message['workerSid']?.toString().isEmpty ?? true) ||
             message['jobObjectBound'] != true)) {
       throw const P2AutomationHostException('windows_worker_identity_invalid');
     }
-    if (Platform.isMacOS &&
+    if (!ownerRiskQa &&
+        Platform.isMacOS &&
         ((message['codeDirectoryHash']?.toString().isEmpty ?? true) ||
             message['appSandbox'] != true ||
             message['authorityClientEntitlement'] != false)) {
@@ -608,7 +654,17 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     }
     final denial = message['authorityConnectionDenied'];
     final denialCode = message['authorityDenialCode'];
-    if (denial != null &&
+    if (ownerRiskQa) {
+      if (message['ownerRiskQa'] != true ||
+          message['osIsolationWaived'] != true ||
+          message['currentAccountAuthority'] != true ||
+          denial != false ||
+          denialCode != 'owner_risk_waived') {
+        throw const P2AutomationHostException(
+          'owner_risk_worker_waiver_invalid',
+        );
+      }
+    } else if (denial != null &&
         (denial != true || denialCode != 'worker_principal_denied')) {
       throw const P2AutomationHostException(
         'restricted_worker_authority_denial_invalid',
@@ -631,10 +687,21 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     });
   }
 
-  Map<String, Object?> _finalizeWorkerIdentity(
-    Map<String, Object?> merged,
-  ) {
-    if (merged['authorityConnectionDenied'] != true ||
+  Map<String, Object?> _finalizeWorkerIdentity(Map<String, Object?> merged) {
+    final ownerRiskQa =
+        _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+    if (ownerRiskQa) {
+      if (merged['authorityConnectionDenied'] != false ||
+          merged['authorityDenialCode'] != 'owner_risk_waived' ||
+          merged['authorityDenialObservedBy'] != 'owner-risk-waiver' ||
+          merged['ownerRiskQa'] != true ||
+          merged['osIsolationWaived'] != true ||
+          merged['currentAccountAuthority'] != true) {
+        throw const P2AutomationHostException(
+          'owner_risk_worker_waiver_unproved',
+        );
+      }
+    } else if (merged['authorityConnectionDenied'] != true ||
         merged['authorityDenialCode'] != 'worker_principal_denied') {
       throw const P2AutomationHostException(
         'restricted_worker_authority_denial_unproved',

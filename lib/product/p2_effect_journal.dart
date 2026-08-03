@@ -40,8 +40,9 @@ class P2EffectReceipt {
   final Map<String, Object?> details;
 
   factory P2EffectReceipt.fromJson(Map<String, Object?> value) {
-    final startedAt =
-        DateTime.tryParse(value['startedAt']?.toString() ?? '')?.toUtc();
+    final startedAt = DateTime.tryParse(
+      value['startedAt']?.toString() ?? '',
+    )?.toUtc();
     final completedAtValue = value['completedAt'];
     final completedAt = completedAtValue == null
         ? null
@@ -77,17 +78,17 @@ class P2EffectReceipt {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '1.0.0',
-        'effectId': effectId,
-        'runId': runId,
-        'taskId': taskId,
-        'operation': operation,
-        'status': status.name,
-        'reversibility': reversibility.name,
-        'startedAt': startedAt.toUtc().toIso8601String(),
-        'completedAt': completedAt?.toUtc().toIso8601String(),
-        'details': P2Redactor.redact(details),
-      };
+    'schemaVersion': '1.0.0',
+    'effectId': effectId,
+    'runId': runId,
+    'taskId': taskId,
+    'operation': operation,
+    'status': status.name,
+    'reversibility': reversibility.name,
+    'startedAt': startedAt.toUtc().toIso8601String(),
+    'completedAt': completedAt?.toUtc().toIso8601String(),
+    'details': P2Redactor.redact(details),
+  };
 }
 
 class P2Redactor {

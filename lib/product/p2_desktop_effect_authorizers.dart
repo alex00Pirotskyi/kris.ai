@@ -69,10 +69,7 @@ final class P2DesktopHostOperationAuthorizer
     final envelope = await authority.issue(
       binding: binding,
       operation: operation,
-      payload: <String, Object?>{
-        'operation': operation,
-        'scope': scope,
-      },
+      payload: <String, Object?>{'operation': operation, 'scope': scope},
     );
     envelope.validate();
   }

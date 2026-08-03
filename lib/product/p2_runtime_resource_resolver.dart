@@ -49,27 +49,27 @@ final class P2RuntimeResourceSet {
   final Map<String, String> provisionedEnvironment;
 
   Map<String, Object?> get provenance => <String, Object?>{
-        'resolver': 'P2ApplicationOwnedRuntimeResourceResolver',
-        'applicationOwned': true,
-        'sourceWorkingDirectoryIndependent': true,
-        'manifestSha256': manifestSha256,
-        'sourceCommit': sourceCommit,
-        'sourceTree': sourceTree,
-        'runtimeBuildSha256': runtimeBuildSha256,
-        'p1AuthorityServiceContractSha256': p1AuthorityServiceContractSha256,
-        'rootPathSha256': Sha256.text(root.absolute.path),
-        'nodePathSha256': Sha256.text(nodeExecutable),
-        'hostScriptPathSha256': Sha256.text(hostScript),
-        'restrictedWorkerLauncherPathSha256':
-            Sha256.text(restrictedWorkerLauncher),
-        'workerPolicyPathSha256': Sha256.text(workerPolicy),
-        'provisionedEnvironmentKeys': provisionedEnvironment.keys.toList()
-          ..sort(),
-        'provisionedEnvironmentSha256': Sha256.text(jsonEncode(<String, String>{
-          for (final key in (provisionedEnvironment.keys.toList()..sort()))
-            key: provisionedEnvironment[key]!
-        })),
-      };
+    'resolver': 'P2ApplicationOwnedRuntimeResourceResolver',
+    'applicationOwned': true,
+    'sourceWorkingDirectoryIndependent': true,
+    'manifestSha256': manifestSha256,
+    'sourceCommit': sourceCommit,
+    'sourceTree': sourceTree,
+    'runtimeBuildSha256': runtimeBuildSha256,
+    'p1AuthorityServiceContractSha256': p1AuthorityServiceContractSha256,
+    'rootPathSha256': Sha256.text(root.absolute.path),
+    'nodePathSha256': Sha256.text(nodeExecutable),
+    'hostScriptPathSha256': Sha256.text(hostScript),
+    'restrictedWorkerLauncherPathSha256': Sha256.text(restrictedWorkerLauncher),
+    'workerPolicyPathSha256': Sha256.text(workerPolicy),
+    'provisionedEnvironmentKeys': provisionedEnvironment.keys.toList()..sort(),
+    'provisionedEnvironmentSha256': Sha256.text(
+      jsonEncode(<String, String>{
+        for (final key in (provisionedEnvironment.keys.toList()..sort()))
+          key: provisionedEnvironment[key]!,
+      }),
+    ),
+  };
 }
 
 final class P2ApplicationOwnedRuntimeResourceResolver {
@@ -120,6 +120,10 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
       throw StateError('runtime_manifest_missing_or_symlink');
     }
     final decoded = jsonDecode(await manifest.readAsString());
+    const ownerRiskQa = bool.fromEnvironment(
+      'KRISTIN_OWNER_RISK_QA',
+      defaultValue: false,
+    );
     if (decoded is! Map ||
         decoded['schemaVersion'] != '3.0.0' ||
         decoded['bundleType'] != 'kristin-p2-application-runtime-v3' ||
@@ -127,21 +131,30 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
         decoded['identity'] is! Map ||
         decoded['workingDirectoryIndependent'] != true ||
         decoded['currentWorkingDirectoryUsed'] != false ||
-        decoded['authorityServiceExternal'] != true ||
         decoded['authorityServiceExecutableStaged'] != false ||
         decoded['authorityBrokerStaged'] != false ||
         decoded['rawAuthoritySecretsIncluded'] != false ||
         decoded['p2DelegationOnly'] != true ||
-        decoded['restrictedWorkerLauncherExternal'] != true ||
-        decoded['restrictedWorkerLauncherOsEnforced'] != true) {
+        (!ownerRiskQa && decoded['authorityServiceExternal'] != true) ||
+        (ownerRiskQa && decoded['authorityServiceExternal'] != false) ||
+        (!ownerRiskQa && decoded['restrictedWorkerLauncherExternal'] != true) ||
+        (ownerRiskQa && decoded['restrictedWorkerLauncherExternal'] != false) ||
+        (!ownerRiskQa &&
+            decoded['restrictedWorkerLauncherOsEnforced'] != true) ||
+        (ownerRiskQa &&
+            decoded['restrictedWorkerLauncherOsEnforced'] != false) ||
+        (ownerRiskQa && decoded['ownerRiskQa'] != true)) {
       throw StateError('runtime_manifest_identity_invalid');
     }
     final identity = Map<String, Object?>.from(decoded['identity']! as Map);
     final sourceCommit = _hex(identity, 'sourceCommit', 40);
     final sourceTree = _hex(identity, 'sourceTree', 40);
     final runtimeBuildSha256 = _hex(identity, 'runtimeBuildSha256', 64);
-    final p1AuthorityServiceContractSha256 =
-        _hex(identity, 'p1AuthorityServiceContractSha256', 64);
+    final p1AuthorityServiceContractSha256 = _hex(
+      identity,
+      'p1AuthorityServiceContractSha256',
+      64,
+    );
     final resources = Map<dynamic, dynamic>.from(decoded['resources']! as Map);
 
     final node = await _fileResource(root, resources, 'nodeExecutable', true);
@@ -160,13 +173,22 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
       true,
       allowExternal: true,
     );
-    final workerPolicy =
-        await _fileResource(root, resources, 'restrictedWorkerPolicy', true);
+    final workerPolicy = await _fileResource(
+      root,
+      resources,
+      'restrictedWorkerPolicy',
+      true,
+    );
 
-    final provisioningPath =
-        await _fileResource(root, resources, 'runtimeProvisioning', true);
-    final provisionedEnvironment =
-        await _readProvisionedEnvironment(File(provisioningPath!));
+    final provisioningPath = await _fileResource(
+      root,
+      resources,
+      'runtimeProvisioning',
+      true,
+    );
+    final provisionedEnvironment = await _readProvisionedEnvironment(
+      File(provisioningPath!),
+    );
     return P2RuntimeResourceSet(
       root: root,
       manifestPath: manifest.absolute.path,
@@ -179,16 +201,26 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
       hostScript: host!,
       workingDirectory: working!,
       restrictedWorkerLauncher: restrictedWorkerLauncher!,
-      restrictedWorkerLauncherSha256:
-          _resourceSha256(resources, 'restrictedWorkerLauncher'),
+      restrictedWorkerLauncherSha256: _resourceSha256(
+        resources,
+        'restrictedWorkerLauncher',
+      ),
       workerPolicy: workerPolicy!,
       workerPolicySha256: _resourceSha256(resources, 'restrictedWorkerPolicy'),
       nodeExecutableSha256: _resourceSha256(resources, 'nodeExecutable'),
       hostScriptSha256: _resourceSha256(resources, 'automationHost'),
-      windowsJobHelper:
-          await _fileResource(root, resources, 'windowsJobHelper', false),
-      posixWatchdog:
-          await _fileResource(root, resources, 'posixWatchdog', false),
+      windowsJobHelper: await _fileResource(
+        root,
+        resources,
+        'windowsJobHelper',
+        false,
+      ),
+      posixWatchdog: await _fileResource(
+        root,
+        resources,
+        'posixWatchdog',
+        false,
+      ),
       interactiveDesktopAdapter: await _fileResource(
         root,
         resources,
@@ -254,6 +286,7 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
       'GITHUB_RUN_ATTEMPT',
       'GITHUB_JOB',
       'RUNNER_NAME',
+      'KRISTIN_OWNER_RISK_QA',
     };
     final raw = Map<dynamic, dynamic>.from(decoded['environment']! as Map);
     final result = <String, String>{};
@@ -346,10 +379,7 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
     return path.path;
   }
 
-  static String _resourceSha256(
-    Map<dynamic, dynamic> resources,
-    String key,
-  ) {
+  static String _resourceSha256(Map<dynamic, dynamic> resources, String key) {
     final raw = resources[key];
     if (raw is! Map) throw StateError('runtime_resource_$key');
     final digest = raw['sha256']?.toString().toLowerCase() ?? '';
@@ -370,12 +400,10 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
     return Map<String, Object?>.from(raw);
   }
 
-  static String _externalPath(
-    Map<String, Object?> row,
-    String key,
-  ) {
+  static String _externalPath(Map<String, Object?> row, String key) {
     final value = row['path']?.toString() ?? '';
-    final absolute = value.startsWith('/') ||
+    final absolute =
+        value.startsWith('/') ||
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value) ||
         value.startsWith(r'\\');
     if (!absolute ||
@@ -425,8 +453,10 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
 
   static Future<String> _directoryDigest(Directory directory) async {
     final rows = <String>[];
-    await for (final entity
-        in directory.list(recursive: true, followLinks: false)) {
+    await for (final entity in directory.list(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (await FileSystemEntity.isLink(entity.path)) {
         throw StateError('runtime_directory_symlink_rejected');
       }

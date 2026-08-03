@@ -684,7 +684,7 @@ function emitLine(value) {
   process.stdout.write(`${JSON.stringify(redact(value))}\n`);
 }
 
-async function runCli() {
+export async function runCli() {
   let runtime = null;
   let challenge = null;
 
@@ -721,7 +721,12 @@ async function runCli() {
           publicVerifierOnly: true,
           rawAuthorityKeysPresent: false,
           bootstrapTransport: 'private-parent-child-stdio',
-          restrictedWorkerPrincipal: process.env.KRISTIN_RESTRICTED_WORKER === '1',
+          restrictedWorkerPrincipal:
+            process.env.KRISTIN_OWNER_RISK_QA === '1'
+              ? false
+              : process.env.KRISTIN_RESTRICTED_WORKER === '1',
+          ownerRiskCurrentAccount: process.env.KRISTIN_OWNER_RISK_QA === '1',
+          osIsolationWaived: process.env.KRISTIN_OWNER_RISK_QA === '1',
           workerSessionId: process.env.KRISTIN_WORKER_SESSION_ID ?? '',
           pid: process.pid,
         });

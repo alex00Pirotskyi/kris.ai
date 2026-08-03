@@ -11,7 +11,9 @@ void main() {
     );
     expect(settings.accessProfileId, 'owner');
     expect(
-        settings.persistentIndicator, contains('full current-account access'));
+      settings.persistentIndicator,
+      contains('full current-account access'),
+    );
     expect(settings.safetyLabel.toLowerCase(), contains('not a sandbox'));
   });
 }

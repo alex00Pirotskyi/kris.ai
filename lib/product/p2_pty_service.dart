@@ -138,11 +138,10 @@ class P2InteractivePtyService {
     int cursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      backend.attach(
-        sessionId,
-        cursor,
-        binding: binding,
-        grantDigest: grantDigest,
-      );
+  }) => backend.attach(
+    sessionId,
+    cursor,
+    binding: binding,
+    grantDigest: grantDigest,
+  );
 }

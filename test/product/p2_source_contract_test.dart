@@ -22,23 +22,22 @@ void main() {
     final value = jsonDecode(inventoryFile.readAsStringSync());
     expect(value, isA<Map<String, Object?>>());
     final inventory = Map<String, Object?>.from(value as Map);
-    final production = (inventory['productionDart'] as List<Object?>)
-        .map((item) => item.toString().replaceAll('\\', '/'))
-        .toList()
-      ..sort();
-    final tests = (inventory['testDart'] as List<Object?>)
-        .map((item) => item.toString().replaceAll('\\', '/'))
-        .toList()
-      ..sort();
+    final production =
+        (inventory['productionDart'] as List<Object?>)
+            .map((item) => item.toString().replaceAll('\\', '/'))
+            .toList()
+          ..sort();
+    final tests =
+        (inventory['testDart'] as List<Object?>)
+            .map((item) => item.toString().replaceAll('\\', '/'))
+            .toList()
+          ..sort();
 
     final discoveredProduction = _discover(
       'lib/product',
       RegExp(r'^p2_.*\.dart$'),
     );
-    final discoveredTests = _discover(
-      'test/product',
-      RegExp(r'^p2_.*\.dart$'),
-    );
+    final discoveredTests = _discover('test/product', RegExp(r'^p2_.*\.dart$'));
 
     expect(discoveredProduction, production);
     expect(discoveredTests, tests);

@@ -69,10 +69,7 @@ abstract interface class P2ServiceApplicationAdapter {
     String id,
     P2EffectBinding binding,
   );
-  Future<P2HostOperationResult> serviceStop(
-    String id,
-    P2EffectBinding binding,
-  );
+  Future<P2HostOperationResult> serviceStop(String id, P2EffectBinding binding);
   Future<P2HostOperationResult> applicationOpen(
     String target,
     P2EffectBinding binding,
@@ -92,9 +89,7 @@ abstract interface class P2ClipboardScreenAdapter {
     P2EffectBinding binding, {
     List<Map<String, int>> redactionZones = const <Map<String, int>>[],
   });
-  Future<Map<String, Object?>> activeWindowMetadata(
-    P2EffectBinding binding,
-  );
+  Future<Map<String, Object?>> activeWindowMetadata(P2EffectBinding binding);
 }
 
 /// Production implementations must cross the authenticated automation-host

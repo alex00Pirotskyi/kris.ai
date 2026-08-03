@@ -31,11 +31,7 @@ class P2UndoResult {
 }
 
 class P2SnapshotUndoService {
-  P2SnapshotUndoService(
-    this.root, {
-    this.authorizer,
-    this.journal,
-  });
+  P2SnapshotUndoService(this.root, {this.authorizer, this.journal});
 
   final Directory root;
   final P2HostOperationAuthorizer? authorizer;
@@ -61,19 +57,22 @@ class P2SnapshotUndoService {
     if (!repository.isAbsolute || effectId.trim().isEmpty) {
       throw StateError('git_checkpoint_request_invalid');
     }
-    final git = await Process.run(
-      'git',
-      <String>['-C', repository.path, 'rev-parse', '--show-toplevel'],
-      runInShell: false,
-    );
+    final git = await Process.run('git', <String>[
+      '-C',
+      repository.path,
+      'rev-parse',
+      '--show-toplevel',
+    ], runInShell: false);
     if (git.exitCode != 0) {
       return null;
     }
-    final tree = await Process.run(
-      'git',
-      <String>['-C', repository.path, 'stash', 'create', 'kristin-$effectId'],
-      runInShell: false,
-    );
+    final tree = await Process.run('git', <String>[
+      '-C',
+      repository.path,
+      'stash',
+      'create',
+      'kristin-$effectId',
+    ], runInShell: false);
     final value = tree.exitCode == 0 ? '${tree.stdout}'.trim() : '';
     return RegExp(r'^[0-9a-fA-F]{40,64}$').hasMatch(value) ? value : null;
   }
@@ -120,10 +119,7 @@ class P2SnapshotUndoService {
 
   /// Executes the recorded inverse through the product service. Direct fixture
   /// file copies are not accepted as P2-010 evidence.
-  Future<P2UndoResult> restore(
-    P2UndoPlan plan,
-    P2EffectBinding binding,
-  ) async {
+  Future<P2UndoResult> restore(P2UndoPlan plan, P2EffectBinding binding) async {
     final effectAuthorizer = authorizer;
     final effectJournal = journal;
     if (effectAuthorizer == null || effectJournal == null) {
@@ -242,8 +238,9 @@ class P2SnapshotUndoService {
     final nonce =
         '${effectId.hashCode}-$index-${DateTime.now().microsecondsSinceEpoch}';
     final staged = File('${target.parent.path}/.kristin-restore-$nonce.tmp');
-    final displaced =
-        File('${target.parent.path}/.kristin-restore-$nonce.previous');
+    final displaced = File(
+      '${target.parent.path}/.kristin-restore-$nonce.previous',
+    );
     await backup.copy(staged.path);
     var displacedExisting = false;
     try {
@@ -278,19 +275,23 @@ class P2SnapshotUndoService {
         !RegExp(r'^[0-9a-fA-F]{40,64}$').hasMatch(checkpoint)) {
       throw StateError('restore_git_step_invalid');
     }
-    final verify = await Process.run(
-      'git',
-      <String>['-C', repository, 'cat-file', '-e', '$checkpoint^{tree}'],
-      runInShell: false,
-    );
+    final verify = await Process.run('git', <String>[
+      '-C',
+      repository,
+      'cat-file',
+      '-e',
+      '$checkpoint^{tree}',
+    ], runInShell: false);
     if (verify.exitCode != 0) {
       throw StateError('git_checkpoint_missing');
     }
-    final restore = await Process.run(
-      'git',
-      <String>['-C', repository, 'reset', '--hard', checkpoint],
-      runInShell: false,
-    );
+    final restore = await Process.run('git', <String>[
+      '-C',
+      repository,
+      'reset',
+      '--hard',
+      checkpoint,
+    ], runInShell: false);
     if (restore.exitCode != 0) {
       throw StateError('git_checkpoint_restore_failed');
     }
@@ -298,8 +299,9 @@ class P2SnapshotUndoService {
 
   bool _inside(String candidate, String parent) {
     final separator = Platform.pathSeparator;
-    final normalizedParent =
-        parent.endsWith(separator) ? parent : '$parent$separator';
+    final normalizedParent = parent.endsWith(separator)
+        ? parent
+        : '$parent$separator';
     return candidate == parent || candidate.startsWith(normalizedParent);
   }
 }

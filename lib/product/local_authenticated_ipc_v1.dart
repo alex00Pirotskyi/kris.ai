@@ -37,13 +37,13 @@ final class LocalIpcEnvelopeV1 {
   final String mac;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': schemaVersion,
-        'peerId': peerId,
-        'requestId': requestId,
-        'deadline': deadline.toUtc().toIso8601String(),
-        'body': body,
-        'mac': mac,
-      };
+    'schemaVersion': schemaVersion,
+    'peerId': peerId,
+    'requestId': requestId,
+    'deadline': deadline.toUtc().toIso8601String(),
+    'body': body,
+    'mac': mac,
+  };
 }
 
 final class LocalIpcTransportPolicyV1 {
@@ -53,11 +53,11 @@ final class LocalIpcTransportPolicyV1 {
     'windows': <String>['named_pipe', 'authenticated_loopback_mutual_auth'],
     'macos': <String>[
       'unix_domain_socket',
-      'authenticated_loopback_mutual_auth'
+      'authenticated_loopback_mutual_auth',
     ],
     'linux': <String>[
       'unix_domain_socket',
-      'authenticated_loopback_mutual_auth'
+      'authenticated_loopback_mutual_auth',
     ],
   };
 

@@ -78,8 +78,9 @@ class DeterministicZipWriter {
       ..add(_u32(offset))
       ..add(_u16(0));
     await output.parent.create(recursive: true);
-    final temporary =
-        File('${output.path}.tmp-${DateTime.now().microsecondsSinceEpoch}');
+    final temporary = File(
+      '${output.path}.tmp-${DateTime.now().microsecondsSinceEpoch}',
+    );
     await temporary.writeAsBytes(archive.takeBytes(), flush: true);
     if (Platform.isWindows && await output.exists()) {
       await output.delete();
@@ -89,25 +90,29 @@ class DeterministicZipWriter {
   }
 
   String _safeName(String input) {
-    final normalized =
-        input.replaceAll('\\', '/').replaceFirst(RegExp(r'^/+'), '');
+    final normalized = input
+        .replaceAll('\\', '/')
+        .replaceFirst(RegExp(r'^/+'), '');
     if (normalized.isEmpty ||
-        normalized.split('/').any((segment) =>
-            segment.isEmpty || segment == '.' || segment == '..')) {
+        normalized
+            .split('/')
+            .any(
+              (segment) => segment.isEmpty || segment == '.' || segment == '..',
+            )) {
       throw ProductException(
-          'zip_entry_invalid', 'Invalid ZIP entry name: $input');
+        'zip_entry_invalid',
+        'Invalid ZIP entry name: $input',
+      );
     }
     return normalized;
   }
 
-  Uint8List _u16(int value) =>
-      (ByteData(2)..setUint16(0, value & 0xffff, Endian.little))
-          .buffer
-          .asUint8List();
-  Uint8List _u32(int value) =>
-      (ByteData(4)..setUint32(0, value & 0xffffffff, Endian.little))
-          .buffer
-          .asUint8List();
+  Uint8List _u16(int value) => (ByteData(
+    2,
+  )..setUint16(0, value & 0xffff, Endian.little)).buffer.asUint8List();
+  Uint8List _u32(int value) => (ByteData(
+    4,
+  )..setUint32(0, value & 0xffffffff, Endian.little)).buffer.asUint8List();
 }
 
 class DeploymentPackage {
@@ -130,14 +135,14 @@ class DeploymentPackage {
   final List<Map<String, dynamic>> secretScanFindings;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'archivePath': archivePath,
-        'sha256': sha256,
-        'profile': profile,
-        'fileCount': fileCount,
-        'totalBytes': totalBytes,
-        'sbom': sbom,
-        'secretScanFindings': secretScanFindings,
-      };
+    'archivePath': archivePath,
+    'sha256': sha256,
+    'profile': profile,
+    'fileCount': fileCount,
+    'totalBytes': totalBytes,
+    'sbom': sbom,
+    'secretScanFindings': secretScanFindings,
+  };
 }
 
 class DeploymentService {
@@ -155,10 +160,14 @@ class DeploymentService {
     final root = Directory(project.rootPath).absolute;
     if (!await root.exists()) {
       throw ProductException(
-          'project_missing', 'Project root no longer exists.');
+        'project_missing',
+        'Project root no longer exists.',
+      );
     }
-    final canonicalRoot =
-        (await root.resolveSymbolicLinks()).replaceAll('\\', '/');
+    final canonicalRoot = (await root.resolveSymbolicLinks()).replaceAll(
+      '\\',
+      '/',
+    );
     final detected = profile == 'auto' ? await _detectProfile(root) : profile;
     final entries = <ZipEntryData>[];
     final findings = <Map<String, dynamic>>[];
@@ -169,12 +178,16 @@ class DeploymentService {
       if (entity is! File) {
         continue;
       }
-      final canonical =
-          (await entity.resolveSymbolicLinks()).replaceAll('\\', '/');
+      final canonical = (await entity.resolveSymbolicLinks()).replaceAll(
+        '\\',
+        '/',
+      );
       if (!(canonical == canonicalRoot ||
           canonical.startsWith('$canonicalRoot/'))) {
-        throw ProductException('deployment_symlink_escape',
-            'A file resolves outside the project boundary.');
+        throw ProductException(
+          'deployment_symlink_escape',
+          'A file resolves outside the project boundary.',
+        );
       }
       final relative = canonical
           .substring(canonicalRoot.length)
@@ -184,15 +197,19 @@ class DeploymentService {
       }
       final stat = await entity.stat();
       if (stat.size > 32 * 1024 * 1024) {
-        throw ProductException('deployment_file_too_large',
-            '$relative exceeds the 32 MiB source-package limit.');
+        throw ProductException(
+          'deployment_file_too_large',
+          '$relative exceeds the 32 MiB source-package limit.',
+        );
       }
       final bytes = await entity.readAsBytes();
       totalBytes += bytes.length;
       filesScanned++;
       if (totalBytes > 256 * 1024 * 1024 || filesScanned > 25000) {
-        throw ProductException('deployment_package_too_large',
-            'Deployment package exceeds configured source limits.');
+        throw ProductException(
+          'deployment_package_too_large',
+          'Deployment package exceeds configured source limits.',
+        );
       }
       if (!_looksBinary(bytes)) {
         final text = utf8.decode(bytes, allowMalformed: true);
@@ -202,9 +219,11 @@ class DeploymentService {
       entries.add(ZipEntryData(relative, bytes));
     }
     if (findings.isNotEmpty) {
-      throw ProductException('deployment_secret_scan_failed',
-          'Potential plaintext secrets were detected. Resolve them before packaging.',
-          details: <String, dynamic>{'findings': findings.take(50).toList()});
+      throw ProductException(
+        'deployment_secret_scan_failed',
+        'Potential plaintext secrets were detected. Resolve them before packaging.',
+        details: <String, dynamic>{'findings': findings.take(50).toList()},
+      );
     }
     final now = DateTime.now().toUtc();
     final manifest = <String, dynamic>{
@@ -222,26 +241,36 @@ class DeploymentService {
       'secretsPolicy':
           'Runtime secrets must be supplied through environment variables or a platform secret manager; no values are included.',
     };
-    entries.add(ZipEntryData(
+    entries.add(
+      ZipEntryData(
         'KRISTIN_DEPLOYMENT_MANIFEST.json',
         utf8.encode(
-            '${const JsonEncoder.withIndent('  ').convert(manifest)}\n')));
-    entries.add(ZipEntryData(
+          '${const JsonEncoder.withIndent('  ').convert(manifest)}\n',
+        ),
+      ),
+    );
+    entries.add(
+      ZipEntryData(
         'KRISTIN_SBOM.json',
         utf8.encode(
-            '${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-              'format': 'Kristin-SBOM-1',
-              'components': sbom,
-            })}\n')));
-    entries.add(ZipEntryData(
-        'DEPLOYMENT_README.md', utf8.encode(_readme(detected, project.name))));
+          '${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{'format': 'Kristin-SBOM-1', 'components': sbom})}\n',
+        ),
+      ),
+    );
+    entries.add(
+      ZipEntryData(
+        'DEPLOYMENT_README.md',
+        utf8.encode(_readme(detected, project.name)),
+      ),
+    );
     await outputDirectory.create(recursive: true);
     final safeName = project.name
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9._-]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
     final archive = File(
-        '${outputDirectory.path}${Platform.pathSeparator}${safeName.isEmpty ? 'project' : safeName}-$runId-deployment.zip');
+      '${outputDirectory.path}${Platform.pathSeparator}${safeName.isEmpty ? 'project' : safeName}-$runId-deployment.zip',
+    );
     final hash = await zipWriter.write(archive, entries);
     return DeploymentPackage(
       archivePath: archive.path,
@@ -256,15 +285,15 @@ class DeploymentService {
 
   Future<String> _detectProfile(Directory root) async {
     Future<bool> file(String path) => File(
-            '${root.path}${Platform.pathSeparator}${path.replaceAll('/', Platform.pathSeparator)}')
-        .exists();
+      '${root.path}${Platform.pathSeparator}${path.replaceAll('/', Platform.pathSeparator)}',
+    ).exists();
     if (await file('pubspec.yaml')) {
       return 'flutter';
     }
     if (await file('package.json')) {
-      final text =
-          await File('${root.path}${Platform.pathSeparator}package.json')
-              .readAsString();
+      final text = await File(
+        '${root.path}${Platform.pathSeparator}package.json',
+      ).readAsString();
       if (text.toLowerCase().contains('telegraf') ||
           text.toLowerCase().contains('telegram')) {
         return 'telegram-node';
@@ -276,11 +305,11 @@ class DeploymentService {
         File('${root.path}${Platform.pathSeparator}pyproject.toml'),
         File('${root.path}${Platform.pathSeparator}requirements.txt'),
       ];
-      final text = (await Future.wait(candidates
-              .where((item) => item.existsSync())
-              .map((item) => item.readAsString())))
-          .join('\n')
-          .toLowerCase();
+      final text = (await Future.wait(
+        candidates
+            .where((item) => item.existsSync())
+            .map((item) => item.readAsString()),
+      )).join('\n').toLowerCase();
       if (text.contains('python-telegram-bot') ||
           text.contains('aiogram') ||
           text.contains('telebot')) {
@@ -300,22 +329,24 @@ class DeploymentService {
   bool _excluded(String relative) {
     final normalized = relative.replaceAll('\\', '/');
     final parts = normalized.split('/');
-    if (parts.any(const <String>{
-      '.git',
-      '.dart_tool',
-      'build',
-      'node_modules',
-      '.venv',
-      'venv',
-      '__pycache__',
-      '.pytest_cache',
-      '.idea',
-      '.vscode',
-      '.kristin',
-      'coverage',
-      'dist',
-      'target',
-    }.contains)) {
+    if (parts.any(
+      const <String>{
+        '.git',
+        '.dart_tool',
+        'build',
+        'node_modules',
+        '.venv',
+        'venv',
+        '__pycache__',
+        '.pytest_cache',
+        '.idea',
+        '.vscode',
+        '.kristin',
+        'coverage',
+        'dist',
+        'target',
+      }.contains,
+    )) {
       return true;
     }
     final name = parts.last.toLowerCase();
@@ -352,8 +383,11 @@ class DeploymentService {
     for (final entry in patterns.entries) {
       for (final match in entry.value.allMatches(text)) {
         final line = '\n'.allMatches(text.substring(0, match.start)).length + 1;
-        findings.add(
-            <String, dynamic>{'path': path, 'line': line, 'rule': entry.key});
+        findings.add(<String, dynamic>{
+          'path': path,
+          'line': line,
+          'rule': entry.key,
+        });
         if (findings.length >= 20) {
           return findings;
         }
@@ -363,21 +397,24 @@ class DeploymentService {
   }
 
   void _collectDependencies(
-      String path, String text, List<Map<String, String>> output) {
+    String path,
+    String text,
+    List<Map<String, String>> output,
+  ) {
     if (path.endsWith('requirements.txt')) {
       for (final raw in const LineSplitter().convert(text)) {
         final line = raw.split('#').first.trim();
         if (line.isEmpty || line.startsWith('-')) {
           continue;
         }
-        final match =
-            RegExp(r'^([A-Za-z0-9_.-]+)\s*(?:==|~=|>=|<=|>|<)?\s*([^;\s]+)?')
-                .firstMatch(line);
+        final match = RegExp(
+          r'^([A-Za-z0-9_.-]+)\s*(?:==|~=|>=|<=|>|<)?\s*([^;\s]+)?',
+        ).firstMatch(line);
         if (match != null) {
           output.add(<String, String>{
             'ecosystem': 'pypi',
             'name': match.group(1)!,
-            'version': match.group(2) ?? 'unspecified'
+            'version': match.group(2) ?? 'unspecified',
           });
         }
       }
@@ -387,17 +424,20 @@ class DeploymentService {
         if (RegExp(r'^[A-Za-z_][A-Za-z0-9_]*:\s*$').hasMatch(raw)) {
           section = raw.trim().replaceAll(':', '');
         }
-        final match =
-            RegExp(r'^  ([A-Za-z0-9_.-]+):\s*([^#\s]+)?').firstMatch(raw);
+        final match = RegExp(
+          r'^  ([A-Za-z0-9_.-]+):\s*([^#\s]+)?',
+        ).firstMatch(raw);
         if (match != null &&
-            const <String>{'dependencies', 'dev_dependencies'}
-                .contains(section)) {
+            const <String>{
+              'dependencies',
+              'dev_dependencies',
+            }.contains(section)) {
           final name = match.group(1)!;
           if (name != 'flutter') {
             output.add(<String, String>{
               'ecosystem': 'pub',
               'name': name,
-              'version': match.group(2) ?? 'unspecified'
+              'version': match.group(2) ?? 'unspecified',
             });
           }
         }
@@ -411,13 +451,14 @@ class DeploymentService {
             if (key.toString().isEmpty || value is! Map) {
               return;
             }
-            final name = value['name']?.toString() ??
+            final name =
+                value['name']?.toString() ??
                 key.toString().split('node_modules/').last;
             final version = value['version']?.toString() ?? 'unspecified';
             output.add(<String, String>{
               'ecosystem': 'npm',
               'name': name,
-              'version': version
+              'version': version,
             });
           });
         }
@@ -433,11 +474,15 @@ class DeploymentService {
     output
       ..clear()
       ..addAll(unique.values);
-    output.sort((a, b) => '${a['ecosystem']}/${a['name']}'
-        .compareTo('${b['ecosystem']}/${b['name']}'));
+    output.sort(
+      (a, b) => '${a['ecosystem']}/${a['name']}'.compareTo(
+        '${b['ecosystem']}/${b['name']}',
+      ),
+    );
   }
 
-  String _readme(String profile, String projectName) => '''
+  String _readme(String profile, String projectName) =>
+      '''
 # $projectName — governed deployment package
 
 This source package was created by Kristin Local Agent $kristinVersion after a bounded secret scan.
@@ -484,15 +529,17 @@ class SupportBundleService {
     final auditStatus = await audit.verify();
     final evidence = await repositories.evidence.all();
     evidence.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final focusedRuns = allRuns.where((run) {
-      if (runId != null && runId.trim().isNotEmpty) {
-        return run.id == runId;
-      }
-      if (projectId != null && projectId.trim().isNotEmpty) {
-        return run.command.contract.projectId == projectId;
-      }
-      return true;
-    }).toList(growable: false);
+    final focusedRuns = allRuns
+        .where((run) {
+          if (runId != null && runId.trim().isNotEmpty) {
+            return run.id == runId;
+          }
+          if (projectId != null && projectId.trim().isNotEmpty) {
+            return run.command.contract.projectId == projectId;
+          }
+          return true;
+        })
+        .toList(growable: false);
     final includedRunIds = (includeAllLogs ? allRuns : focusedRuns.take(200))
         .map((run) => run.id)
         .toSet();
@@ -545,22 +592,27 @@ class SupportBundleService {
         'ollamaLoadTimeoutSeconds': settings.ollamaLoadTimeoutSeconds,
         'ollamaLoadRetries': settings.ollamaLoadRetries,
         'ollamaKeepAliveMinutes': settings.ollamaKeepAliveMinutes,
-        'openAiCompatibleBaseUrl':
-            _originOnly(settings.openAiCompatibleBaseUrl),
+        'openAiCompatibleBaseUrl': _originOnly(
+          settings.openAiCompatibleBaseUrl,
+        ),
         'hasOpenAiSecretReference': settings.openAiApiKeyReferenceId.isNotEmpty,
         'localOnly': settings.localOnly,
         'allowPackageNetwork': settings.allowPackageNetwork,
       },
       'projects': projects
-          .map((project) => <String, dynamic>{
-                'id': project.id,
-                'name': project.name,
-                'pathFingerprint': Sha256.text(project.rootPath),
-                'pathLeaf':
-                    project.rootPath.replaceAll('\\', '/').split('/').last,
-                'createdAt': project.createdAt.toIso8601String(),
-                'updatedAt': project.updatedAt.toIso8601String(),
-              })
+          .map(
+            (project) => <String, dynamic>{
+              'id': project.id,
+              'name': project.name,
+              'pathFingerprint': Sha256.text(project.rootPath),
+              'pathLeaf': project.rootPath
+                  .replaceAll('\\', '/')
+                  .split('/')
+                  .last,
+              'createdAt': project.createdAt.toIso8601String(),
+              'updatedAt': project.updatedAt.toIso8601String(),
+            },
+          )
           .toList(),
       'runCounts': <String, int>{
         for (final state in RunState.values)
@@ -570,11 +622,13 @@ class SupportBundleService {
         'apiTokenRecords': tokens.length,
         'activeApiTokens': tokens.where((token) => token.isActive).length,
         'secretReferences': references
-            .map((reference) => <String, dynamic>{
-                  'id': reference.id,
-                  'label': reference.label,
-                  'environmentKey': reference.environmentKey,
-                })
+            .map(
+              (reference) => <String, dynamic>{
+                'id': reference.id,
+                'label': reference.label,
+                'environmentKey': reference.environmentKey,
+              },
+            )
             .toList(),
         'audit': auditStatus,
       },
@@ -635,11 +689,7 @@ class SupportBundleService {
     }
 
     await _addManagedProcessLogs(
-      (name, bytes, truncated) => addEntry(
-        name,
-        bytes,
-        truncated: truncated,
-      ),
+      (name, bytes, truncated) => addEntry(name, bytes, truncated: truncated),
       includeAllLogs: includeAllLogs,
     );
 
@@ -738,8 +788,10 @@ All retained logs requested: $includeAllLogs
     }
 
     for (final run in runs) {
-      final remainingModelRequests =
-          max(0, run.budget.maxModelRequests - run.modelRequests);
+      final remainingModelRequests = max(
+        0,
+        run.budget.maxModelRequests - run.modelRequests,
+      );
       output
         ..writeln('## Run `${run.id}`')
         ..writeln()
@@ -748,11 +800,13 @@ All retained logs requested: $includeAllLogs
         ..writeln('- Project: `${run.command.contract.projectId}`')
         ..writeln('- Mode: `${run.command.contract.mode.name}`')
         ..writeln(
-            '- Model: `${compact(run.command.model.toJson(), limit: 500)}`')
+          '- Model: `${compact(run.command.model.toJson(), limit: 500)}`',
+        )
         ..writeln('- Created: `${run.createdAt.toIso8601String()}`')
         ..writeln('- Updated: `${run.updatedAt.toIso8601String()}`')
         ..writeln(
-            '- Request: ${compact(run.command.contract.request, limit: 2000)}')
+          '- Request: ${compact(run.command.contract.request, limit: 2000)}',
+        )
         ..writeln('- Summary: ${compact(run.summary, limit: 2000)}')
         ..writeln('- Failure: ${compact(run.failure ?? '', limit: 2000)}')
         ..writeln(
@@ -763,7 +817,8 @@ All retained logs requested: $includeAllLogs
         ..writeln('- Mutations: `${run.mutations}/${run.budget.maxMutations}`')
         ..writeln('- Repairs: `${run.repairs}/${run.budget.maxRepairs}`')
         ..writeln(
-            '- Agent turns per attempt: `${run.budget.maxAgentTurnsPerAttempt}`')
+          '- Agent turns per attempt: `${run.budget.maxAgentTurnsPerAttempt}`',
+        )
         ..writeln();
 
       output.writeln('### Work items');
@@ -775,7 +830,8 @@ All retained logs requested: $includeAllLogs
         );
         if ((item.lastError ?? '').trim().isNotEmpty) {
           output.writeln(
-              '  - Last error: ${compact(item.lastError, limit: 1000)}');
+            '  - Last error: ${compact(item.lastError, limit: 1000)}',
+          );
         }
       }
       output.writeln();
@@ -802,13 +858,16 @@ All retained logs requested: $includeAllLogs
           .take(500)
           .toList(growable: false);
       final memoryPolicyTimeline = runTimeline
-          .where((event) =>
-              event['type']?.toString() == 'knowledge.context_policy_applied')
+          .where(
+            (event) =>
+                event['type']?.toString() == 'knowledge.context_policy_applied',
+          )
           .toList(growable: false);
       output.writeln('### Automatic memory policy');
       if (memoryPolicyTimeline.isEmpty) {
         output.writeln(
-            '- No automatic-memory policy event was retained for this run.');
+          '- No automatic-memory policy event was retained for this run.',
+        );
       } else {
         for (final event in memoryPolicyTimeline) {
           output.writeln(
@@ -819,16 +878,19 @@ All retained logs requested: $includeAllLogs
       output.writeln();
 
       final protocolTimeline = runTimeline
-          .where((event) => const <String>{
-                'model.protocol_repair_requested',
-                'model.protocol_fallback_applied',
-                'model.protocol_exhausted',
-              }.contains(event['type']?.toString()))
+          .where(
+            (event) => const <String>{
+              'model.protocol_repair_requested',
+              'model.protocol_fallback_applied',
+              'model.protocol_exhausted',
+            }.contains(event['type']?.toString()),
+          )
           .toList(growable: false);
       output.writeln('### Model protocol recovery');
       if (protocolTimeline.isEmpty) {
         output.writeln(
-            '- No model-protocol recovery event was retained for this run.');
+          '- No model-protocol recovery event was retained for this run.',
+        );
       } else {
         for (final event in protocolTimeline) {
           output.writeln(
@@ -840,19 +902,22 @@ All retained logs requested: $includeAllLogs
       output.writeln();
 
       final modelAvailabilityTimeline = runTimeline
-          .where((event) => const <String>{
-                'model.load_started',
-                'model.load_retry_started',
-                'model.load_retry_scheduled',
-                'model.load_completed',
-                'model.generation_started',
-                'model.request_failed',
-              }.contains(event['type']?.toString()))
+          .where(
+            (event) => const <String>{
+              'model.load_started',
+              'model.load_retry_started',
+              'model.load_retry_scheduled',
+              'model.load_completed',
+              'model.generation_started',
+              'model.request_failed',
+            }.contains(event['type']?.toString()),
+          )
           .toList(growable: false);
       output.writeln('### Model availability and cold-load recovery');
       if (modelAvailabilityTimeline.isEmpty) {
         output.writeln(
-            '- No model-load recovery event was retained for this run.');
+          '- No model-load recovery event was retained for this run.',
+        );
       } else {
         for (final event in modelAvailabilityTimeline) {
           output.writeln(
@@ -864,17 +929,20 @@ All retained logs requested: $includeAllLogs
       output.writeln();
 
       final loopTimeline = runTimeline
-          .where((event) => const <String>{
-                'agent.repeated_tool_call_blocked',
-                'agent.loop_recovery_redirected',
-                'agent.loop_recovery_completed',
-                'agent.stalled_repeated_tool_outcome',
-              }.contains(event['type']?.toString()))
+          .where(
+            (event) => const <String>{
+              'agent.repeated_tool_call_blocked',
+              'agent.loop_recovery_redirected',
+              'agent.loop_recovery_completed',
+              'agent.stalled_repeated_tool_outcome',
+            }.contains(event['type']?.toString()),
+          )
           .toList(growable: false);
       output.writeln('### Agent loop recovery');
       if (loopTimeline.isEmpty) {
         output.writeln(
-            '- No repeated-tool loop event was retained for this run.');
+          '- No repeated-tool loop event was retained for this run.',
+        );
       } else {
         for (final event in loopTimeline) {
           final eventTimestamp = event['timestamp']?.toString() ?? '';
@@ -888,15 +956,18 @@ All retained logs requested: $includeAllLogs
       output.writeln();
 
       final artifactTimeline = runTimeline
-          .where((event) => const <String>{
-                'work_item.artifact_scope_correction',
-                'work_item.artifact_evidence_completed',
-              }.contains(event['type']?.toString()))
+          .where(
+            (event) => const <String>{
+              'work_item.artifact_scope_correction',
+              'work_item.artifact_evidence_completed',
+            }.contains(event['type']?.toString()),
+          )
           .toList(growable: false);
       output.writeln('### Artifact scope and convergence');
       if (artifactTimeline.isEmpty) {
         output.writeln(
-            '- No product-artifact scope correction was retained for this run.');
+          '- No product-artifact scope correction was retained for this run.',
+        );
       } else {
         for (final event in artifactTimeline) {
           final eventTimestamp = event['timestamp']?.toString() ?? '';
@@ -909,10 +980,12 @@ All retained logs requested: $includeAllLogs
       output.writeln();
 
       final pathTimeline = runTimeline
-          .where((event) => const <String>{
-                'tool.path_rebased_to_active_project',
-                'tool.path_recovery_rejected',
-              }.contains(event['type']?.toString()))
+          .where(
+            (event) => const <String>{
+              'tool.path_rebased_to_active_project',
+              'tool.path_recovery_rejected',
+            }.contains(event['type']?.toString()),
+          )
           .toList(growable: false);
       output.writeln('### Project path recovery');
       if (pathTimeline.isEmpty) {
@@ -971,11 +1044,13 @@ All retained logs requested: $includeAllLogs
       try {
         output.writeln(jsonEncode(_sanitize(jsonDecode(line))));
       } catch (_) {
-        output.writeln(jsonEncode(<String, dynamic>{
-          'omittedMalformedRecord': true,
-          'sha256': Sha256.text(line),
-          'characters': line.length,
-        }));
+        output.writeln(
+          jsonEncode(<String, dynamic>{
+            'omittedMalformedRecord': true,
+            'sha256': Sha256.text(line),
+            'characters': line.length,
+          }),
+        );
       }
     }
     return _BundleFileResult(utf8.encode(output.toString()), truncated);
@@ -1002,8 +1077,9 @@ All retained logs requested: $includeAllLogs
     for (final file in files.take(fileLimit)) {
       final bytes = await file.readAsBytes();
       final truncated = bytes.length > perFileLimit;
-      final selected =
-          truncated ? bytes.sublist(bytes.length - perFileLimit) : bytes;
+      final selected = truncated
+          ? bytes.sublist(bytes.length - perFileLimit)
+          : bytes;
       final relative = file.path
           .substring(directory.path.length)
           .replaceAll('\\', '/')
@@ -1012,14 +1088,8 @@ All retained logs requested: $includeAllLogs
       if (relative.isEmpty || relative.split('/').contains('..')) {
         continue;
       }
-      final text = redactor.redact(
-        utf8.decode(selected, allowMalformed: true),
-      );
-      addEntry(
-        'managed-processes/$relative',
-        utf8.encode(text),
-        truncated,
-      );
+      final text = redactor.redact(utf8.decode(selected, allowMalformed: true));
+      addEntry('managed-processes/$relative', utf8.encode(text), truncated);
     }
   }
 

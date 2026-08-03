@@ -76,8 +76,9 @@ class P2FilesystemService {
     if (value.isEmpty) {
       throw const P2FilesystemException('path_empty');
     }
-    final windows =
-        RegExp(r'^(?:[A-Za-z]:[\\/]|\\\\|\\\\\?\\)').hasMatch(value);
+    final windows = RegExp(
+      r'^(?:[A-Za-z]:[\\/]|\\\\|\\\\\?\\)',
+    ).hasMatch(value);
     if (!windows && !value.startsWith('/')) {
       throw const P2FilesystemException('absolute_path_required');
     }
@@ -177,12 +178,8 @@ class P2FilesystemService {
     }
 
     final transactionId = startedAt.microsecondsSinceEpoch;
-    final temporary = File(
-      '${target.parent.path}/.kristin-tmp-$transactionId',
-    );
-    final displaced = File(
-      '${target.parent.path}/.kristin-old-$transactionId',
-    );
+    final temporary = File('${target.parent.path}/.kristin-tmp-$transactionId');
+    final displaced = File('${target.parent.path}/.kristin-old-$transactionId');
     var displacedExistingTarget = false;
     var committedTarget = false;
     try {
@@ -281,10 +278,9 @@ class P2FilesystemService {
       throw const P2FilesystemException('root_not_directory');
     }
     var count = 0;
-    await for (final entity in Directory(absolute).list(
-      recursive: true,
-      followLinks: followLinks,
-    )) {
+    await for (final entity in Directory(
+      absolute,
+    ).list(recursive: true, followLinks: followLinks)) {
       if (++count > maxEntries) {
         throw const P2FilesystemException('traversal_budget_exceeded');
       }
@@ -322,9 +318,7 @@ class P2FilesystemService {
         await _copyDirectory(Directory(absolute), Directory(quarantine));
         await Directory(absolute).delete(recursive: true);
       } else {
-        throw const P2FilesystemException(
-          'quarantine_unsupported_entity_type',
-        );
+        throw const P2FilesystemException('quarantine_unsupported_entity_type');
       }
     }
 
@@ -364,8 +358,9 @@ class P2FilesystemService {
   Future<void> _copyDirectory(Directory source, Directory target) async {
     await target.create(recursive: true);
     await for (final entity in source.list(followLinks: false)) {
-      final name =
-          entity.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
+      final name = entity.uri.pathSegments
+          .where((segment) => segment.isNotEmpty)
+          .last;
       final destination = '${target.path}${Platform.pathSeparator}$name';
       if (entity is File) {
         await entity.copy(destination);

@@ -6,10 +6,7 @@ import 'p2_effect_journal.dart';
 import 'p2_finite_command_service.dart';
 import 'p2_process_tree.dart';
 
-P2EffectBinding _commandBinding(
-  P2EffectBinding source,
-  String operation,
-) =>
+P2EffectBinding _commandBinding(P2EffectBinding source, String operation) =>
     P2EffectBinding(
       runId: source.runId,
       taskId: source.taskId,

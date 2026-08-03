@@ -73,34 +73,38 @@ void main() {
 
   group('failed-memory intent policy', () {
     test(
-        'does not treat application error handling or history as a failed-run investigation',
-        () {
-      expect(
-        isFailureInvestigationRequest(
-          'Build a calculator with calculation history, input validation, error handling, and responsive tests.',
-        ),
-        isFalse,
-      );
-      expect(
-        isFailureInvestigationRequest(
-          'What went wrong with calculator error handling and input validation?',
-        ),
-        isFalse,
-      );
-      expect(
-        isFailureInvestigationRequest('What went wrong in the previous run?'),
-        isTrue,
-      );
-      expect(
-        isFailureInvestigationRequest('Why did the previous Kristin run fail?'),
-        isTrue,
-      );
-      expect(
-        isFailureInvestigationRequest(
-            'Retry the failed task from the last run.'),
-        isTrue,
-      );
-    });
+      'does not treat application error handling or history as a failed-run investigation',
+      () {
+        expect(
+          isFailureInvestigationRequest(
+            'Build a calculator with calculation history, input validation, error handling, and responsive tests.',
+          ),
+          isFalse,
+        );
+        expect(
+          isFailureInvestigationRequest(
+            'What went wrong with calculator error handling and input validation?',
+          ),
+          isFalse,
+        );
+        expect(
+          isFailureInvestigationRequest('What went wrong in the previous run?'),
+          isTrue,
+        );
+        expect(
+          isFailureInvestigationRequest(
+            'Why did the previous Kristin run fail?',
+          ),
+          isTrue,
+        );
+        expect(
+          isFailureInvestigationRequest(
+            'Retry the failed task from the last run.',
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 
   group('model action compatibility', () {
@@ -149,18 +153,20 @@ void main() {
     final subscription = server.listen((request) async {
       if (request.uri.path == '/api/tags') {
         request.response.headers.contentType = ContentType.json;
-        request.response.write(jsonEncode(<String, dynamic>{
-          'models': <Map<String, dynamic>>[
-            <String, dynamic>{
-              'name': 'tiny-model',
-              'digest': 'sha256:tiny',
-              'details': <String, dynamic>{
-                'parameter_size': '1B',
-                'quantization_level': 'Q4',
+        request.response.write(
+          jsonEncode(<String, dynamic>{
+            'models': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'name': 'tiny-model',
+                'digest': 'sha256:tiny',
+                'details': <String, dynamic>{
+                  'parameter_size': '1B',
+                  'quantization_level': 'Q4',
+                },
               },
-            },
-          ],
-        }));
+            ],
+          }),
+        );
         await request.response.close();
         return;
       }
@@ -171,10 +177,9 @@ void main() {
         if (!streaming) {
           warmupRequested = true;
           request.response.headers.contentType = ContentType.json;
-          request.response.write(jsonEncode(<String, dynamic>{
-            'done': true,
-            'load_duration': 1000,
-          }));
+          request.response.write(
+            jsonEncode(<String, dynamic>{'done': true, 'load_duration': 1000}),
+          );
           await request.response.close();
           return;
         }
@@ -184,21 +189,27 @@ void main() {
           'x-ndjson',
           charset: 'utf-8',
         );
-        request.response.writeln(jsonEncode(<String, dynamic>{
-          'response': '{"action":"complete",',
-          'done': false,
-        }));
+        request.response.writeln(
+          jsonEncode(<String, dynamic>{
+            'response': '{"action":"complete",',
+            'done': false,
+          }),
+        );
         await request.response.flush();
-        request.response.writeln(jsonEncode(<String, dynamic>{
-          'response': '"summary":"Hello."}',
-          'done': false,
-        }));
-        request.response.writeln(jsonEncode(<String, dynamic>{
-          'response': '',
-          'done': true,
-          'prompt_eval_count': 12,
-          'eval_count': 8,
-        }));
+        request.response.writeln(
+          jsonEncode(<String, dynamic>{
+            'response': '"summary":"Hello."}',
+            'done': false,
+          }),
+        );
+        request.response.writeln(
+          jsonEncode(<String, dynamic>{
+            'response': '',
+            'done': true,
+            'prompt_eval_count': 12,
+            'eval_count': 8,
+          }),
+        );
         await request.response.close();
         return;
       }
@@ -217,23 +228,22 @@ void main() {
         digest: 'sha256:tiny',
         discoveredAt: DateTime.now().toUtc(),
       );
-      final result = await provider.generate(ModelGenerationRequest(
-        identity: identity,
-        systemPrompt: 'Return JSON.',
-        userPrompt: 'Say hello.',
-        commandId: 'command-test',
-        loadTimeout: const Duration(seconds: 2),
-        loadRetries: 0,
-        firstTokenTimeout: const Duration(seconds: 2),
-        totalTimeout: const Duration(seconds: 5),
-      ));
+      final result = await provider.generate(
+        ModelGenerationRequest(
+          identity: identity,
+          systemPrompt: 'Return JSON.',
+          userPrompt: 'Say hello.',
+          commandId: 'command-test',
+          loadTimeout: const Duration(seconds: 2),
+          loadRetries: 0,
+          firstTokenTimeout: const Duration(seconds: 2),
+          totalTimeout: const Duration(seconds: 5),
+        ),
+      );
 
       expect(warmupRequested, isTrue);
       expect(streamingRequested, isTrue);
-      expect(
-        result.text,
-        '{"action":"complete","summary":"Hello."}',
-      );
+      expect(result.text, '{"action":"complete","summary":"Hello."}');
       expect(result.inputTokens, 12);
       expect(result.outputTokens, 8);
     } finally {
@@ -242,149 +252,161 @@ void main() {
     }
   });
 
-  test('Ollama retries a transient cold-load timeout inside one model turn',
-      () async {
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    final firstWarmupStarted = Completer<void>();
-    final secondWarmupStarted = Completer<void>();
-    final firstWarmupFinished = Completer<void>();
-    var warmupAttempts = 0;
-    var generationRequests = 0;
-    final progressStages = <String>[];
-    final subscription = server.listen((request) async {
-      if (request.uri.path == '/api/tags') {
-        request.response.headers.contentType = ContentType.json;
-        request.response.write(jsonEncode(<String, dynamic>{
-          'models': <Map<String, dynamic>>[
-            <String, dynamic>{
-              'name': 'tiny-model',
-              'digest': 'sha256:tiny',
-              'details': <String, dynamic>{
-                'parameter_size': '1B',
-                'quantization_level': 'Q4',
-              },
-            },
-          ],
-        }));
-        await request.response.close();
-        return;
-      }
-      if (request.uri.path == '/api/generate') {
-        final body = await utf8.decoder.bind(request).join();
-        final decoded = jsonDecode(body);
-        final streaming = decoded is Map && decoded['stream'] == true;
-        if (!streaming) {
-          warmupAttempts++;
-          if (warmupAttempts == 1) {
-            if (!firstWarmupStarted.isCompleted) {
-              firstWarmupStarted.complete();
-            }
-            try {
-              // Keep the first response open. The provider must hit its bounded
-              // deadline and issue a second request before this fixture releases it.
-              await secondWarmupStarted.future.timeout(
-                const Duration(seconds: 8),
-              );
-              request.response.headers.contentType = ContentType.json;
-              request.response.write(jsonEncode(<String, dynamic>{
-                'done': true,
-                'load_duration': 9000000000,
-              }));
-              await request.response.close();
-            } catch (_) {
-              // The first client is expected to close when the deadline fires.
-            } finally {
-              if (!firstWarmupFinished.isCompleted) {
-                firstWarmupFinished.complete();
+  test(
+    'Ollama retries a transient cold-load timeout inside one model turn',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final firstWarmupStarted = Completer<void>();
+      final secondWarmupStarted = Completer<void>();
+      final firstWarmupFinished = Completer<void>();
+      var warmupAttempts = 0;
+      var generationRequests = 0;
+      final progressStages = <String>[];
+      final subscription = server.listen((request) async {
+        if (request.uri.path == '/api/tags') {
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode(<String, dynamic>{
+              'models': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'name': 'tiny-model',
+                  'digest': 'sha256:tiny',
+                  'details': <String, dynamic>{
+                    'parameter_size': '1B',
+                    'quantization_level': 'Q4',
+                  },
+                },
+              ],
+            }),
+          );
+          await request.response.close();
+          return;
+        }
+        if (request.uri.path == '/api/generate') {
+          final body = await utf8.decoder.bind(request).join();
+          final decoded = jsonDecode(body);
+          final streaming = decoded is Map && decoded['stream'] == true;
+          if (!streaming) {
+            warmupAttempts++;
+            if (warmupAttempts == 1) {
+              if (!firstWarmupStarted.isCompleted) {
+                firstWarmupStarted.complete();
               }
+              try {
+                // Keep the first response open. The provider must hit its bounded
+                // deadline and issue a second request before this fixture releases it.
+                await secondWarmupStarted.future.timeout(
+                  const Duration(seconds: 8),
+                );
+                request.response.headers.contentType = ContentType.json;
+                request.response.write(
+                  jsonEncode(<String, dynamic>{
+                    'done': true,
+                    'load_duration': 9000000000,
+                  }),
+                );
+                await request.response.close();
+              } catch (_) {
+                // The first client is expected to close when the deadline fires.
+              } finally {
+                if (!firstWarmupFinished.isCompleted) {
+                  firstWarmupFinished.complete();
+                }
+              }
+              return;
+            }
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(
+              jsonEncode(<String, dynamic>{
+                'done': true,
+                'load_duration': 2000,
+              }),
+            );
+            await request.response.close();
+            if (!secondWarmupStarted.isCompleted) {
+              secondWarmupStarted.complete();
             }
             return;
           }
-          request.response.headers.contentType = ContentType.json;
-          request.response.write(jsonEncode(<String, dynamic>{
-            'done': true,
-            'load_duration': 2000,
-          }));
+          generationRequests++;
+          request.response.headers.contentType = ContentType(
+            'application',
+            'x-ndjson',
+            charset: 'utf-8',
+          );
+          request.response.writeln(
+            jsonEncode(<String, dynamic>{
+              'response': '{"action":"complete","summary":"Recovered."}',
+              'done': false,
+            }),
+          );
+          request.response.writeln(
+            jsonEncode(<String, dynamic>{'response': '', 'done': true}),
+          );
           await request.response.close();
-          if (!secondWarmupStarted.isCompleted) {
-            secondWarmupStarted.complete();
-          }
           return;
         }
-        generationRequests++;
-        request.response.headers.contentType = ContentType(
-          'application',
-          'x-ndjson',
-          charset: 'utf-8',
-        );
-        request.response.writeln(jsonEncode(<String, dynamic>{
-          'response': '{"action":"complete","summary":"Recovered."}',
-          'done': false,
-        }));
-        request.response.writeln(jsonEncode(<String, dynamic>{
-          'response': '',
-          'done': true,
-        }));
+        request.response.statusCode = HttpStatus.notFound;
         await request.response.close();
-        return;
-      }
-      request.response.statusCode = HttpStatus.notFound;
-      await request.response.close();
-    });
+      });
 
-    try {
-      final provider = OllamaProvider(
-        baseUri: Uri.parse('http://127.0.0.1:${server.port}'),
-        redactor: SecretRedactor(),
-        defaultLoadTimeout: const Duration(seconds: 2),
-        defaultLoadRetries: 1,
-      );
-      final identity = ModelIdentity(
-        providerId: 'ollama',
-        name: 'tiny-model',
-        digest: 'sha256:tiny',
-        discoveredAt: DateTime.now().toUtc(),
-      );
-      final result = await provider.generate(ModelGenerationRequest(
-        identity: identity,
-        systemPrompt: 'Return JSON.',
-        userPrompt: 'Recover after a cold-load timeout.',
-        commandId: 'command-retry-test',
-        loadRetryDelay: Duration.zero,
-        firstTokenTimeout: const Duration(seconds: 2),
-        totalTimeout: const Duration(seconds: 5),
-        onProgress: (progress) => progressStages.add(progress.stage),
-      ));
-
-      expect(firstWarmupStarted.isCompleted, isTrue);
-      expect(result.text, contains('Recovered.'));
-      expect(warmupAttempts, 2);
-      expect(generationRequests, 1);
-      expect(
-        progressStages,
-        containsAllInOrder(<String>[
-          'load_started',
-          'load_retry_scheduled',
-          'load_retry_started',
-          'load_completed',
-          'generation_started',
-        ]),
-      );
-      expect(result.providerDetails['warmupAttempts'], 2);
-    } finally {
-      if (!secondWarmupStarted.isCompleted) {
-        secondWarmupStarted.complete();
-      }
-      if (firstWarmupStarted.isCompleted && !firstWarmupFinished.isCompleted) {
-        await firstWarmupFinished.future.timeout(
-          const Duration(seconds: 2),
-          onTimeout: () {},
+      try {
+        final provider = OllamaProvider(
+          baseUri: Uri.parse('http://127.0.0.1:${server.port}'),
+          redactor: SecretRedactor(),
+          defaultLoadTimeout: const Duration(seconds: 2),
+          defaultLoadRetries: 1,
         );
+        final identity = ModelIdentity(
+          providerId: 'ollama',
+          name: 'tiny-model',
+          digest: 'sha256:tiny',
+          discoveredAt: DateTime.now().toUtc(),
+        );
+        final result = await provider.generate(
+          ModelGenerationRequest(
+            identity: identity,
+            systemPrompt: 'Return JSON.',
+            userPrompt: 'Recover after a cold-load timeout.',
+            commandId: 'command-retry-test',
+            loadRetryDelay: Duration.zero,
+            firstTokenTimeout: const Duration(seconds: 2),
+            totalTimeout: const Duration(seconds: 5),
+            onProgress: (progress) => progressStages.add(progress.stage),
+          ),
+        );
+
+        expect(firstWarmupStarted.isCompleted, isTrue);
+        expect(result.text, contains('Recovered.'));
+        expect(warmupAttempts, 2);
+        expect(generationRequests, 1);
+        expect(
+          progressStages,
+          containsAllInOrder(<String>[
+            'load_started',
+            'load_retry_scheduled',
+            'load_retry_started',
+            'load_completed',
+            'generation_started',
+          ]),
+        );
+        expect(result.providerDetails['warmupAttempts'], 2);
+      } finally {
+        if (!secondWarmupStarted.isCompleted) {
+          secondWarmupStarted.complete();
+        }
+        if (firstWarmupStarted.isCompleted &&
+            !firstWarmupFinished.isCompleted) {
+          await firstWarmupFinished.future.timeout(
+            const Duration(seconds: 2),
+            onTimeout: () {},
+          );
+        }
+        await subscription.cancel();
+        await server.close(force: true);
       }
-      await subscription.cancel();
-      await server.close(force: true);
-    }
-  });
+    },
+  );
 
   test('cancelling a run closes an in-flight Ollama cold load', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -394,15 +416,17 @@ void main() {
     final subscription = server.listen((request) async {
       if (request.uri.path == '/api/tags') {
         request.response.headers.contentType = ContentType.json;
-        request.response.write(jsonEncode(<String, dynamic>{
-          'models': <Map<String, dynamic>>[
-            <String, dynamic>{
-              'name': 'tiny-model',
-              'digest': 'sha256:tiny',
-              'details': <String, dynamic>{},
-            },
-          ],
-        }));
+        request.response.write(
+          jsonEncode(<String, dynamic>{
+            'models': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'name': 'tiny-model',
+                'digest': 'sha256:tiny',
+                'details': <String, dynamic>{},
+              },
+            ],
+          }),
+        );
         await request.response.close();
         return;
       }
@@ -445,13 +469,15 @@ void main() {
         digest: 'sha256:tiny',
         discoveredAt: DateTime.now().toUtc(),
       );
-      final future = provider.generate(ModelGenerationRequest(
-        identity: identity,
-        systemPrompt: 'Return JSON.',
-        userPrompt: 'This request will be cancelled.',
-        commandId: 'command-cancel-test',
-        cancellation: cancellation.future,
-      ));
+      final future = provider.generate(
+        ModelGenerationRequest(
+          identity: identity,
+          systemPrompt: 'Return JSON.',
+          userPrompt: 'This request will be cancelled.',
+          commandId: 'command-cancel-test',
+          cancellation: cancellation.future,
+        ),
+      );
       await warmupRequestStarted.future.timeout(const Duration(seconds: 5));
       cancellation.complete();
 
@@ -488,11 +514,7 @@ void main() {
       title: 'Inspect project and establish evidence baseline',
       description: 'Collect bounded evidence before implementation.',
       dependencies: <String>{},
-      allowedTools: <String>{
-        'list_directory',
-        'read_file',
-        'search_text',
-      },
+      allowedTools: <String>{'list_directory', 'read_file', 'search_text'},
       acceptanceCriteria: <String>['Project evidence is recorded.'],
     );
 
@@ -525,57 +547,60 @@ void main() {
       expect(action.arguments['path'], '.');
     });
 
-    test('preserves canonical path nested directly inside an action object',
-        () {
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'action': <String, dynamic>{
-            'type': 'read_file',
-            'path': 'README.md',
-          },
-        }),
-        item: item,
-        allowPlainCompletion: false,
-      );
+    test(
+      'preserves canonical path nested directly inside an action object',
+      () {
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'action': <String, dynamic>{
+              'type': 'read_file',
+              'path': 'README.md',
+            },
+          }),
+          item: item,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'tool');
-      expect(action.tool, 'read_file');
-      expect(action.arguments['path'], 'README.md');
-    });
+        expect(action.kind, 'tool');
+        expect(action.tool, 'read_file');
+        expect(action.arguments['path'], 'README.md');
+      },
+    );
 
     test(
-        'preserves direct nested write content from the observed failure envelope',
-        () {
-      const writeItem = WorkItem(
-        id: 'wireframe-write-item',
-        title: 'Create project-local calculator wireframes',
-        description: 'Write `docs/design/wireframes.md`.',
-        dependencies: <String>{},
-        allowedTools: <String>{'write_file', 'inspect_file'},
-        acceptanceCriteria: <String>['The wireframe artifact is written.'],
-      );
-      const content = '# Calculator wireframes\nKeyboard and touch flows.';
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'action': <String, dynamic>{
-            'type': 'write_file',
-            'id': 'task_001',
-            'filePath': 'docs/design/wireframes.md',
-            'content': content,
-            'complexity': 1,
-            'effort': 2,
-            'risk': 'medium',
-          },
-        }),
-        item: writeItem,
-        allowPlainCompletion: false,
-      );
+      'preserves direct nested write content from the observed failure envelope',
+      () {
+        const writeItem = WorkItem(
+          id: 'wireframe-write-item',
+          title: 'Create project-local calculator wireframes',
+          description: 'Write `docs/design/wireframes.md`.',
+          dependencies: <String>{},
+          allowedTools: <String>{'write_file', 'inspect_file'},
+          acceptanceCriteria: <String>['The wireframe artifact is written.'],
+        );
+        const content = '# Calculator wireframes\nKeyboard and touch flows.';
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'action': <String, dynamic>{
+              'type': 'write_file',
+              'id': 'task_001',
+              'filePath': 'docs/design/wireframes.md',
+              'content': content,
+              'complexity': 1,
+              'effort': 2,
+              'risk': 'medium',
+            },
+          }),
+          item: writeItem,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'tool');
-      expect(action.tool, 'write_file');
-      expect(action.arguments['path'], 'docs/design/wireframes.md');
-      expect(action.arguments['content'], content);
-    });
+        expect(action.kind, 'tool');
+        expect(action.tool, 'write_file');
+        expect(action.arguments['path'], 'docs/design/wireframes.md');
+        expect(action.arguments['content'], content);
+      },
+    );
 
     test('unwraps double-encoded response objects', () {
       final action = adapter.parse(
@@ -602,9 +627,7 @@ void main() {
                 'content': jsonEncode(<String, dynamic>{
                   'action': 'tool_call',
                   'tool_name': 'read_file',
-                  'tool_input': <String, dynamic>{
-                    'file_path': 'README.md',
-                  },
+                  'tool_input': <String, dynamic>{'file_path': 'README.md'},
                 }),
               },
             },
@@ -619,25 +642,27 @@ void main() {
       expect(action.arguments['path'], 'README.md');
     });
 
-    test('unwraps message envelopes instead of treating them as completion',
-        () {
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'type': 'message',
-          'content': jsonEncode(<String, dynamic>{
-            'action': 'tool',
-            'tool': 'read_file',
-            'arguments': <String, dynamic>{'path': 'README.md'},
+    test(
+      'unwraps message envelopes instead of treating them as completion',
+      () {
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'type': 'message',
+            'content': jsonEncode(<String, dynamic>{
+              'action': 'tool',
+              'tool': 'read_file',
+              'arguments': <String, dynamic>{'path': 'README.md'},
+            }),
           }),
-        }),
-        item: item,
-        allowPlainCompletion: false,
-      );
+          item: item,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'tool');
-      expect(action.tool, 'read_file');
-      expect(action.arguments['path'], 'README.md');
-    });
+        expect(action.kind, 'tool');
+        expect(action.tool, 'read_file');
+        expect(action.arguments['path'], 'README.md');
+      },
+    );
 
     test('accepts bounded ReAct-style action output', () {
       final action = adapter.parse(
@@ -653,37 +678,39 @@ void main() {
       expect(action.arguments['path'], 'README.md');
     });
 
-    test('uses an explicit allowed tool even with a nonstandard action verb',
-        () {
-      final action = adapter.parse(
-        '{"action":"continue","tool":"read_file",'
-        '"parameters":{"file":"README.md"}}',
-        item: item,
-        allowPlainCompletion: false,
-      );
+    test(
+      'uses an explicit allowed tool even with a nonstandard action verb',
+      () {
+        final action = adapter.parse(
+          '{"action":"continue","tool":"read_file",'
+          '"parameters":{"file":"README.md"}}',
+          item: item,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'tool');
-      expect(action.tool, 'read_file');
-      expect(action.arguments['path'], 'README.md');
-    });
+        expect(action.kind, 'tool');
+        expect(action.tool, 'read_file');
+        expect(action.arguments['path'], 'README.md');
+      },
+    );
 
-    test('accepts nested completion payloads and boolean completion signals',
-        () {
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'action': 'conclusion',
-          'done': true,
-          'result': <String, dynamic>{
-            'summary': 'Inspection is complete.',
-          },
-        }),
-        item: item,
-        allowPlainCompletion: false,
-      );
+    test(
+      'accepts nested completion payloads and boolean completion signals',
+      () {
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'action': 'conclusion',
+            'done': true,
+            'result': <String, dynamic>{'summary': 'Inspection is complete.'},
+          }),
+          item: item,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'complete');
-      expect(action.summary, 'Inspection is complete.');
-    });
+        expect(action.kind, 'complete');
+        expect(action.summary, 'Inspection is complete.');
+      },
+    );
 
     test('prefers a direct canonical decision over nested content', () {
       final action = adapter.parse(
@@ -705,37 +732,38 @@ void main() {
     });
 
     test(
-        'normalizes the observed composite planning action without failed-memory opt-in',
-        () {
-      const informationItem = WorkItem(
-        id: 'information-item',
-        title: 'Gather Development Tools and Libraries Information',
-        description:
-            'Review locally archived documentation and information about suitable frameworks and libraries.',
-        dependencies: <String>{},
-        allowedTools: <String>{
-          'knowledge_search',
-          'list_directory',
-          'read_file',
-        },
-        acceptanceCriteria: <String>['Relevant information is grounded.'],
-      );
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'action': 'inspect_project_and_establish_evidence_baseline',
-          'task_id': '[K8]',
-          'description': 'Review existing project documentation.',
-        }),
-        item: informationItem,
-        allowPlainCompletion: false,
-      );
+      'normalizes the observed composite planning action without failed-memory opt-in',
+      () {
+        const informationItem = WorkItem(
+          id: 'information-item',
+          title: 'Gather Development Tools and Libraries Information',
+          description:
+              'Review locally archived documentation and information about suitable frameworks and libraries.',
+          dependencies: <String>{},
+          allowedTools: <String>{
+            'knowledge_search',
+            'list_directory',
+            'read_file',
+          },
+          acceptanceCriteria: <String>['Relevant information is grounded.'],
+        );
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'action': 'inspect_project_and_establish_evidence_baseline',
+            'task_id': '[K8]',
+            'description': 'Review existing project documentation.',
+          }),
+          item: informationItem,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'tool');
-      expect(action.tool, 'knowledge_search');
-      expect(action.arguments['query'], contains('Development Tools'));
-      expect(action.arguments['includeUnsuccessfulEpisodes'], isFalse);
-      expect(action.reason, contains('Compatibility normalization'));
-    });
+        expect(action.kind, 'tool');
+        expect(action.tool, 'knowledge_search');
+        expect(action.arguments['query'], contains('Development Tools'));
+        expect(action.arguments['includeUnsuccessfulEpisodes'], isFalse);
+        expect(action.reason, contains('Compatibility normalization'));
+      },
+    );
 
     test('preserves nested command arrays in the domain action model', () {
       final action = AgentAction.fromJson(<String, dynamic>{
@@ -746,70 +774,75 @@ void main() {
       });
 
       expect(action.kind, 'run_command');
-      expect(
-        action.arguments['command'],
-        <String>['git', '-C', '/outside/project', 'status'],
-      );
+      expect(action.arguments['command'], <String>[
+        'git',
+        '-C',
+        '/outside/project',
+        'status',
+      ]);
     });
 
     test(
-        'normalizes the observed nested command vector to project-scoped Git status',
-        () {
-      const commandItem = WorkItem(
-        id: 'command-item',
-        title: 'Inspect project state',
-        description: 'Collect bounded project status evidence.',
-        dependencies: <String>{},
-        allowedTools: <String>{'run_command', 'git_status'},
-        acceptanceCriteria: <String>['Project state is recorded.'],
-      );
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'action': <String, dynamic>{
-            'type': 'run_command',
-            'command': <String>[
-              'git',
-              '-C',
-              '/MathWebApp/project-directory',
-              'status',
-            ],
-          },
-        }),
-        item: commandItem,
-        allowPlainCompletion: false,
-      );
+      'normalizes the observed nested command vector to project-scoped Git status',
+      () {
+        const commandItem = WorkItem(
+          id: 'command-item',
+          title: 'Inspect project state',
+          description: 'Collect bounded project status evidence.',
+          dependencies: <String>{},
+          allowedTools: <String>{'run_command', 'git_status'},
+          acceptanceCriteria: <String>['Project state is recorded.'],
+        );
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'action': <String, dynamic>{
+              'type': 'run_command',
+              'command': <String>[
+                'git',
+                '-C',
+                '/MathWebApp/project-directory',
+                'status',
+              ],
+            },
+          }),
+          item: commandItem,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.kind, 'tool');
-      expect(action.tool, 'git_status');
-      expect(action.arguments, isEmpty);
-      expect(action.reason, contains('project-scoped git_status'));
-    });
+        expect(action.kind, 'tool');
+        expect(action.tool, 'git_status');
+        expect(action.arguments, isEmpty);
+        expect(action.reason, contains('project-scoped git_status'));
+      },
+    );
 
-    test('preserves a generic nested command vector as executable and args',
-        () {
-      const commandItem = WorkItem(
-        id: 'generic-command-item',
-        title: 'Run a project check',
-        description: 'Execute a bounded existing project command.',
-        dependencies: <String>{},
-        allowedTools: <String>{'run_command'},
-        acceptanceCriteria: <String>['The command result is recorded.'],
-      );
-      final action = adapter.parse(
-        jsonEncode(<String, dynamic>{
-          'action': <String, dynamic>{
-            'type': 'run_command',
-            'command': <String>['node', 'tool/check.js', '--json'],
-          },
-        }),
-        item: commandItem,
-        allowPlainCompletion: false,
-      );
+    test(
+      'preserves a generic nested command vector as executable and args',
+      () {
+        const commandItem = WorkItem(
+          id: 'generic-command-item',
+          title: 'Run a project check',
+          description: 'Execute a bounded existing project command.',
+          dependencies: <String>{},
+          allowedTools: <String>{'run_command'},
+          acceptanceCriteria: <String>['The command result is recorded.'],
+        );
+        final action = adapter.parse(
+          jsonEncode(<String, dynamic>{
+            'action': <String, dynamic>{
+              'type': 'run_command',
+              'command': <String>['node', 'tool/check.js', '--json'],
+            },
+          }),
+          item: commandItem,
+          allowPlainCompletion: false,
+        );
 
-      expect(action.tool, 'run_command');
-      expect(action.arguments['executable'], 'node');
-      expect(action.arguments['args'], <String>['tool/check.js', '--json']);
-    });
+        expect(action.tool, 'run_command');
+        expect(action.arguments['executable'], 'node');
+        expect(action.arguments['args'], <String>['tool/check.js', '--json']);
+      },
+    );
 
     test('does not normalize a tool outside the work-item allowlist', () {
       expect(
@@ -862,8 +895,7 @@ void main() {
       expect(policy.requiresValidatedArtifact(reviewItem), isFalse);
     });
 
-    test('rejects an unrelated commerce wireframe even when the file exists',
-        () {
+    test('rejects an unrelated commerce wireframe even when the file exists', () {
       final assessment = policy.assess(
         item: item,
         request:
@@ -1050,42 +1082,43 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
     });
 
     test(
-        'bounded recovery changes repeated discovery into a validated mutation',
-        () {
-      final recovery = const BoundedArtifactRecoveryPolicy().actionFor(
-        item: item,
-        request: request,
-      );
+      'bounded recovery changes repeated discovery into a validated mutation',
+      () {
+        final recovery = const BoundedArtifactRecoveryPolicy().actionFor(
+          item: item,
+          request: request,
+        );
 
-      expect(recovery, isNotNull);
-      final action = recovery!;
-      expect(action.tool, 'write_file');
-      expect(action.arguments['path'], 'docs/design/wireframes.md');
-      expect(action.arguments['expectedExists'], isFalse);
-      final content = action.arguments['content'] as String;
-      expect(content, contains('Calculator Web Application'));
-      expect(content, contains('real-time result'));
-      expect(content, contains('calculation history'));
+        expect(recovery, isNotNull);
+        final action = recovery!;
+        expect(action.tool, 'write_file');
+        expect(action.arguments['path'], 'docs/design/wireframes.md');
+        expect(action.arguments['expectedExists'], isFalse);
+        final content = action.arguments['content'] as String;
+        expect(content, contains('Calculator Web Application'));
+        expect(content, contains('real-time result'));
+        expect(content, contains('calculation history'));
 
-      final assessment = const ArtifactEvidencePolicy().assess(
-        item: item,
-        request: request,
-        tool: 'inspect_file',
-        result: ToolResult(
-          ok: true,
-          summary: 'Inspected the recovered artifact.',
-          data: <String, dynamic>{
-            'path': '`docs/design/wireframes.md`',
-            'sha256': 'recovered-hash',
-            'textPreview': content,
-          },
-        ),
-        mutatedPaths: const <String>{'`docs/design/wireframes.md`'},
-      );
+        final assessment = const ArtifactEvidencePolicy().assess(
+          item: item,
+          request: request,
+          tool: 'inspect_file',
+          result: ToolResult(
+            ok: true,
+            summary: 'Inspected the recovered artifact.',
+            data: <String, dynamic>{
+              'path': '`docs/design/wireframes.md`',
+              'sha256': 'recovered-hash',
+              'textPreview': content,
+            },
+          ),
+          mutatedPaths: const <String>{'`docs/design/wireframes.md`'},
+        );
 
-      expect(assessment.state, ArtifactEvidenceState.complete);
-      expect(assessment.path, 'docs/design/wireframes.md');
-    });
+        expect(assessment.state, ArtifactEvidenceState.complete);
+        expect(assessment.path, 'docs/design/wireframes.md');
+      },
+    );
 
     test('hash-guards deterministic replacement of an inspected artifact', () {
       final recovery = const BoundedArtifactRecoveryPolicy().actionFor(
@@ -1096,17 +1129,11 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
 
       expect(recovery, isNotNull);
       expect(recovery!.arguments['expectedExists'], isTrue);
-      expect(
-        recovery.arguments['expectedSha256'],
-        'known-artifact-hash',
-      );
+      expect(recovery.arguments['expectedSha256'], 'known-artifact-hash');
     });
 
     test('strips only exact supported whole-scalar backtick wrappers', () {
-      expect(
-        canonicalModelPathToken('docs/`draft`.md'),
-        'docs/`draft`.md',
-      );
+      expect(canonicalModelPathToken('docs/`draft`.md'), 'docs/`draft`.md');
       expect(
         canonicalModelPathToken('```docs/design/wireframes.md``'),
         '```docs/design/wireframes.md``',
@@ -1117,24 +1144,26 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
       );
     });
 
-    test('automatically inspects the exact expected artifact after mutation',
-        () {
-      final target =
-          const AutomaticArtifactVerificationPolicy().inspectionTarget(
-        item: item,
-        mutationResult: const ToolResult(
-          ok: true,
-          summary: 'Created artifact.',
-          data: <String, dynamic>{
-            'relativePath': '`docs/design/wireframes.md`',
-          },
-          mutated: true,
-        ),
-        mutationPaths: const <String>{'`docs/design/wireframes.md`'},
-      );
+    test(
+      'automatically inspects the exact expected artifact after mutation',
+      () {
+        final target = const AutomaticArtifactVerificationPolicy()
+            .inspectionTarget(
+              item: item,
+              mutationResult: const ToolResult(
+                ok: true,
+                summary: 'Created artifact.',
+                data: <String, dynamic>{
+                  'relativePath': '`docs/design/wireframes.md`',
+                },
+                mutated: true,
+              ),
+              mutationPaths: const <String>{'`docs/design/wireframes.md`'},
+            );
 
-      expect(target, 'docs/design/wireframes.md');
-    });
+        expect(target, 'docs/design/wireframes.md');
+      },
+    );
 
     test('does not start a retry without a meaningful repair reserve', () {
       const policy = RunRetryBudgetPolicy();
@@ -1142,10 +1171,7 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
         policy.canStartAnotherAttempt(repairs: 10, maxRepairs: 12),
         isFalse,
       );
-      expect(
-        policy.canStartAnotherAttempt(repairs: 8, maxRepairs: 12),
-        isTrue,
-      );
+      expect(policy.canStartAnotherAttempt(repairs: 8, maxRepairs: 12), isTrue);
       expect(policy.remaining(repairs: 10, maxRepairs: 12), 2);
     });
   });

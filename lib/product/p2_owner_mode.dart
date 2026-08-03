@@ -26,10 +26,10 @@ class P2OwnerModeSettings {
   bool get unattended => state == P2OwnerModeState.enabledUnattended;
 
   String get accessProfileId => switch (state) {
-        P2OwnerModeState.enabledUnattended => 'owner_unattended',
-        P2OwnerModeState.enabledInteractive => 'owner',
-        P2OwnerModeState.disabled => 'chat',
-      };
+    P2OwnerModeState.enabledUnattended => 'owner_unattended',
+    P2OwnerModeState.enabledInteractive => 'owner',
+    P2OwnerModeState.disabled => 'chat',
+  };
 
   String get persistentIndicator =>
       enabled ? 'OWNER MODE — full current-account access' : 'Owner Mode off';
@@ -39,20 +39,20 @@ class P2OwnerModeSettings {
       : 'No Owner Mode host authority.';
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '1.0.0',
-        'state': state.name,
-        'approvalPolicy': approvalPolicy.name,
-        'enabledAt': enabledAt?.toUtc().toIso8601String(),
-        'sessionExpiresAt': sessionExpiresAt?.toUtc().toIso8601String(),
-        'dataBoundaryAcknowledged': dataBoundaryAcknowledged,
-      };
+    'schemaVersion': '1.0.0',
+    'state': state.name,
+    'approvalPolicy': approvalPolicy.name,
+    'enabledAt': enabledAt?.toUtc().toIso8601String(),
+    'sessionExpiresAt': sessionExpiresAt?.toUtc().toIso8601String(),
+    'dataBoundaryAcknowledged': dataBoundaryAcknowledged,
+  };
 
   factory P2OwnerModeSettings.disabled() => const P2OwnerModeSettings(
-        state: P2OwnerModeState.disabled,
-        approvalPolicy: P2OwnerApprovalPolicy.everyHighRiskEffect,
-        enabledAt: null,
-        dataBoundaryAcknowledged: false,
-      );
+    state: P2OwnerModeState.disabled,
+    approvalPolicy: P2OwnerApprovalPolicy.everyHighRiskEffect,
+    enabledAt: null,
+    dataBoundaryAcknowledged: false,
+  );
 
   P2OwnerModeSettings reset() => P2OwnerModeSettings.disabled();
 }

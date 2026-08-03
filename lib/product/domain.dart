@@ -7,8 +7,10 @@ const String kristinReleaseChannel = 'preview';
 enum CommandMode { ask, analyze, plan, build, fix, review, run }
 
 bool isConversationalRequest(String request) {
-  final normalized =
-      request.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  final normalized = request.trim().toLowerCase().replaceAll(
+    RegExp(r'\s+'),
+    ' ',
+  );
   if (normalized.isEmpty) {
     return false;
   }
@@ -23,8 +25,10 @@ bool isConversationalRequest(String request) {
 }
 
 bool isFailureInvestigationRequest(String request) {
-  final normalized =
-      request.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  final normalized = request.trim().toLowerCase().replaceAll(
+    RegExp(r'\s+'),
+    ' ',
+  );
   if (normalized.isEmpty) {
     return false;
   }
@@ -155,20 +159,20 @@ class ProjectRecord {
   final DateTime updatedAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'rootPath': rootPath,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'rootPath': rootPath,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
 
   factory ProjectRecord.fromJson(Map<String, dynamic> json) => ProjectRecord(
-        id: json['id']?.toString() ?? newId('project'),
-        name: json['name']?.toString() ?? 'Project',
-        rootPath: json['rootPath']?.toString() ?? '',
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-        updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
-      );
+    id: json['id']?.toString() ?? newId('project'),
+    name: json['name']?.toString() ?? 'Project',
+    rootPath: json['rootPath']?.toString() ?? '',
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+    updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
+  );
 }
 
 class SecretReference {
@@ -187,12 +191,12 @@ class SecretReference {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'label': label,
-        'environmentKey': environmentKey,
-        'description': description,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'label': label,
+    'environmentKey': environmentKey,
+    'description': description,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory SecretReference.fromJson(Map<String, dynamic> json) =>
       SecretReference(
@@ -228,24 +232,24 @@ class PermissionGrant {
       !isExpired && remainingUses > 0 && scopes.contains(scope);
 
   PermissionGrant consume() => PermissionGrant(
-        id: id,
-        projectId: projectId,
-        commandId: commandId,
-        scopes: scopes,
-        createdAt: createdAt,
-        expiresAt: expiresAt,
-        remainingUses: remainingUses <= 0 ? 0 : remainingUses - 1,
-      );
+    id: id,
+    projectId: projectId,
+    commandId: commandId,
+    scopes: scopes,
+    createdAt: createdAt,
+    expiresAt: expiresAt,
+    remainingUses: remainingUses <= 0 ? 0 : remainingUses - 1,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'projectId': projectId,
-        'commandId': commandId,
-        'scopes': scopes.map((scope) => scope.name).toList()..sort(),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'remainingUses': remainingUses,
-      };
+    'id': id,
+    'projectId': projectId,
+    'commandId': commandId,
+    'scopes': scopes.map((scope) => scope.name).toList()..sort(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'remainingUses': remainingUses,
+  };
 
   factory PermissionGrant.fromJson(Map<String, dynamic> json) =>
       PermissionGrant(
@@ -253,9 +257,11 @@ class PermissionGrant {
         projectId: json['projectId']?.toString() ?? '',
         commandId: json['commandId']?.toString() ?? '',
         scopes: stringList(json['scopes'])
-            .map((name) => PermissionScope.values
-                .where((scope) => scope.name == name)
-                .firstOrNull)
+            .map(
+              (name) => PermissionScope.values
+                  .where((scope) => scope.name == name)
+                  .firstOrNull,
+            )
             .whereType<PermissionScope>()
             .toSet(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
@@ -290,27 +296,26 @@ class ApiTokenRecord {
       revokedAt == null && expiresAt.isAfter(DateTime.now().toUtc());
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'label': label,
-        'hash': hash,
-        'scopes': scopes.toList()..sort(),
-        'projectId': projectId,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'revokedAt': revokedAt?.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'label': label,
+    'hash': hash,
+    'scopes': scopes.toList()..sort(),
+    'projectId': projectId,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'revokedAt': revokedAt?.toUtc().toIso8601String(),
+  };
 
   factory ApiTokenRecord.fromJson(Map<String, dynamic> json) => ApiTokenRecord(
-        id: json['id']?.toString() ?? newId('token'),
-        label: json['label']?.toString() ?? 'API token',
-        hash: json['hash']?.toString() ?? '',
-        scopes: stringList(json['scopes']).toSet(),
-        projectId: json['projectId']?.toString(),
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-        expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
-        revokedAt:
-            json['revokedAt'] == null ? null : parseUtc(json['revokedAt']),
-      );
+    id: json['id']?.toString() ?? newId('token'),
+    label: json['label']?.toString() ?? 'API token',
+    hash: json['hash']?.toString() ?? '',
+    scopes: stringList(json['scopes']).toSet(),
+    projectId: json['projectId']?.toString(),
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+    expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
+    revokedAt: json['revokedAt'] == null ? null : parseUtc(json['revokedAt']),
+  );
 }
 
 class ModelIdentity {
@@ -334,22 +339,22 @@ class ModelIdentity {
       digest.isEmpty ? '$providerId/$name' : '$providerId/$name@$digest';
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'providerId': providerId,
-        'name': name,
-        'digest': digest,
-        'parameterSize': parameterSize,
-        'quantization': quantization,
-        'discoveredAt': discoveredAt.toUtc().toIso8601String(),
-      };
+    'providerId': providerId,
+    'name': name,
+    'digest': digest,
+    'parameterSize': parameterSize,
+    'quantization': quantization,
+    'discoveredAt': discoveredAt.toUtc().toIso8601String(),
+  };
 
   factory ModelIdentity.fromJson(Map<String, dynamic> json) => ModelIdentity(
-        providerId: json['providerId']?.toString() ?? '',
-        name: json['name']?.toString() ?? '',
-        digest: json['digest']?.toString() ?? '',
-        parameterSize: json['parameterSize']?.toString() ?? '',
-        quantization: json['quantization']?.toString() ?? '',
-        discoveredAt: parseUtc(json['discoveredAt'], fallback: DateTime.now()),
-      );
+    providerId: json['providerId']?.toString() ?? '',
+    name: json['name']?.toString() ?? '',
+    digest: json['digest']?.toString() ?? '',
+    parameterSize: json['parameterSize']?.toString() ?? '',
+    quantization: json['quantization']?.toString() ?? '',
+    discoveredAt: parseUtc(json['discoveredAt'], fallback: DateTime.now()),
+  );
 }
 
 class AcceptanceCriterion {
@@ -387,10 +392,10 @@ class AcceptanceCriterion {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'statement': statement,
-        'verification': verification,
-      };
+    'id': id,
+    'statement': statement,
+    'verification': verification,
+  };
 
   factory AcceptanceCriterion.fromJson(Map<String, dynamic> json) =>
       AcceptanceCriterion(
@@ -445,45 +450,50 @@ class TaskContract {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'revision': revision,
-        'projectId': projectId,
-        'mode': mode.name,
-        'request': request,
-        'acceptanceCriteria':
-            acceptanceCriteria.map((item) => item.toJson()).toList(),
-        'constraints': constraints,
-        'researchQuestions': researchQuestions,
-        'requiredPermissions':
-            requiredPermissions.map((scope) => scope.name).toList()..sort(),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'revision': revision,
+    'projectId': projectId,
+    'mode': mode.name,
+    'request': request,
+    'acceptanceCriteria': acceptanceCriteria
+        .map((item) => item.toJson())
+        .toList(),
+    'constraints': constraints,
+    'researchQuestions': researchQuestions,
+    'requiredPermissions':
+        requiredPermissions.map((scope) => scope.name).toList()..sort(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory TaskContract.fromJson(Map<String, dynamic> json) => TaskContract(
-        id: json['id']?.toString() ?? newId('contract'),
-        revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
-        projectId: json['projectId']?.toString() ?? '',
-        mode: CommandMode.values
-                .where((mode) => mode.name == json['mode'])
-                .firstOrNull ??
-            CommandMode.ask,
-        request: json['request']?.toString() ?? '',
-        acceptanceCriteria: (json['acceptanceCriteria'] is List
+    id: json['id']?.toString() ?? newId('contract'),
+    revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
+    projectId: json['projectId']?.toString() ?? '',
+    mode:
+        CommandMode.values
+            .where((mode) => mode.name == json['mode'])
+            .firstOrNull ??
+        CommandMode.ask,
+    request: json['request']?.toString() ?? '',
+    acceptanceCriteria:
+        (json['acceptanceCriteria'] is List
                 ? json['acceptanceCriteria'] as List
                 : const <Object>[])
             .whereType<Map>()
             .map((item) => AcceptanceCriterion.fromJson(mapValue(item)))
             .toList(),
-        constraints: stringList(json['constraints']),
-        researchQuestions: stringList(json['researchQuestions']),
-        requiredPermissions: stringList(json['requiredPermissions'])
-            .map((name) => PermissionScope.values
-                .where((scope) => scope.name == name)
-                .firstOrNull)
-            .whereType<PermissionScope>()
-            .toSet(),
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-      );
+    constraints: stringList(json['constraints']),
+    researchQuestions: stringList(json['researchQuestions']),
+    requiredPermissions: stringList(json['requiredPermissions'])
+        .map(
+          (name) => PermissionScope.values
+              .where((scope) => scope.name == name)
+              .firstOrNull,
+        )
+        .whereType<PermissionScope>()
+        .toSet(),
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+  );
 }
 
 class WorkItem {
@@ -506,24 +516,24 @@ class WorkItem {
   final int maxAttempts;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'title': title,
-        'description': description,
-        'dependencies': dependencies.toList()..sort(),
-        'allowedTools': allowedTools.toList()..sort(),
-        'acceptanceCriteria': acceptanceCriteria,
-        'maxAttempts': maxAttempts,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'dependencies': dependencies.toList()..sort(),
+    'allowedTools': allowedTools.toList()..sort(),
+    'acceptanceCriteria': acceptanceCriteria,
+    'maxAttempts': maxAttempts,
+  };
 
   factory WorkItem.fromJson(Map<String, dynamic> json) => WorkItem(
-        id: json['id']?.toString() ?? newId('work'),
-        title: json['title']?.toString() ?? 'Work item',
-        description: json['description']?.toString() ?? '',
-        dependencies: stringList(json['dependencies']).toSet(),
-        allowedTools: stringList(json['allowedTools']).toSet(),
-        acceptanceCriteria: stringList(json['acceptanceCriteria']),
-        maxAttempts: int.tryParse(json['maxAttempts']?.toString() ?? '') ?? 2,
-      );
+    id: json['id']?.toString() ?? newId('work'),
+    title: json['title']?.toString() ?? 'Work item',
+    description: json['description']?.toString() ?? '',
+    dependencies: stringList(json['dependencies']).toSet(),
+    allowedTools: stringList(json['allowedTools']).toSet(),
+    acceptanceCriteria: stringList(json['acceptanceCriteria']),
+    maxAttempts: int.tryParse(json['maxAttempts']?.toString() ?? '') ?? 2,
+  );
 }
 
 class ExecutionPlan {
@@ -590,26 +600,25 @@ class ExecutionPlan {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'contractId': contractId,
-        'complexity': complexity,
-        'rationale': rationale,
-        'items': items.map((item) => item.toJson()).toList(),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'contractId': contractId,
+    'complexity': complexity,
+    'rationale': rationale,
+    'items': items.map((item) => item.toJson()).toList(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory ExecutionPlan.fromJson(Map<String, dynamic> json) => ExecutionPlan(
-        id: json['id']?.toString() ?? newId('plan'),
-        contractId: json['contractId']?.toString() ?? '',
-        complexity: int.tryParse(json['complexity']?.toString() ?? '') ?? 1,
-        rationale: json['rationale']?.toString() ?? '',
-        items:
-            (json['items'] is List ? json['items'] as List : const <Object>[])
-                .whereType<Map>()
-                .map((item) => WorkItem.fromJson(mapValue(item)))
-                .toList(),
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-      );
+    id: json['id']?.toString() ?? newId('plan'),
+    contractId: json['contractId']?.toString() ?? '',
+    complexity: int.tryParse(json['complexity']?.toString() ?? '') ?? 1,
+    rationale: json['rationale']?.toString() ?? '',
+    items: (json['items'] is List ? json['items'] as List : const <Object>[])
+        .whereType<Map>()
+        .map((item) => WorkItem.fromJson(mapValue(item)))
+        .toList(),
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+  );
 }
 
 class PreparedCommand {
@@ -630,13 +639,13 @@ class PreparedCommand {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'requestKey': requestKey,
-        'contract': contract.toJson(),
-        'plan': plan.toJson(),
-        'model': model.toJson(),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'requestKey': requestKey,
+    'contract': contract.toJson(),
+    'plan': plan.toJson(),
+    'model': model.toJson(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory PreparedCommand.fromJson(Map<String, dynamic> json) =>
       PreparedCommand(
@@ -671,29 +680,30 @@ class EvidenceRecord {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'runId': runId,
-        'workItemId': workItemId,
-        'kind': kind.name,
-        'summary': summary,
-        'payload': payload,
-        'hash': hash,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'runId': runId,
+    'workItemId': workItemId,
+    'kind': kind.name,
+    'summary': summary,
+    'payload': payload,
+    'hash': hash,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory EvidenceRecord.fromJson(Map<String, dynamic> json) => EvidenceRecord(
-        id: json['id']?.toString() ?? newId('evidence'),
-        runId: json['runId']?.toString() ?? '',
-        workItemId: json['workItemId']?.toString() ?? '',
-        kind: EvidenceKind.values
-                .where((kind) => kind.name == json['kind'])
-                .firstOrNull ??
-            EvidenceKind.audit,
-        summary: json['summary']?.toString() ?? '',
-        payload: mapValue(json['payload']),
-        hash: json['hash']?.toString() ?? '',
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-      );
+    id: json['id']?.toString() ?? newId('evidence'),
+    runId: json['runId']?.toString() ?? '',
+    workItemId: json['workItemId']?.toString() ?? '',
+    kind:
+        EvidenceKind.values
+            .where((kind) => kind.name == json['kind'])
+            .firstOrNull ??
+        EvidenceKind.audit,
+    summary: json['summary']?.toString() ?? '',
+    payload: mapValue(json['payload']),
+    hash: json['hash']?.toString() ?? '',
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+  );
 }
 
 class WorkItemProgress {
@@ -720,38 +730,40 @@ class WorkItemProgress {
     bool clearError = false,
     DateTime? startedAt,
     DateTime? completedAt,
-  }) =>
-      WorkItemProgress(
-        item: item,
-        state: state ?? this.state,
-        attempts: attempts ?? this.attempts,
-        lastError: clearError ? null : (lastError ?? this.lastError),
-        startedAt: startedAt ?? this.startedAt,
-        completedAt: completedAt ?? this.completedAt,
-      );
+  }) => WorkItemProgress(
+    item: item,
+    state: state ?? this.state,
+    attempts: attempts ?? this.attempts,
+    lastError: clearError ? null : (lastError ?? this.lastError),
+    startedAt: startedAt ?? this.startedAt,
+    completedAt: completedAt ?? this.completedAt,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'item': item.toJson(),
-        'state': state.name,
-        'attempts': attempts,
-        'lastError': lastError,
-        'startedAt': startedAt?.toUtc().toIso8601String(),
-        'completedAt': completedAt?.toUtc().toIso8601String(),
-      };
+    'item': item.toJson(),
+    'state': state.name,
+    'attempts': attempts,
+    'lastError': lastError,
+    'startedAt': startedAt?.toUtc().toIso8601String(),
+    'completedAt': completedAt?.toUtc().toIso8601String(),
+  };
 
   factory WorkItemProgress.fromJson(Map<String, dynamic> json) =>
       WorkItemProgress(
         item: WorkItem.fromJson(mapValue(json['item'])),
-        state: WorkItemState.values
+        state:
+            WorkItemState.values
                 .where((state) => state.name == json['state'])
                 .firstOrNull ??
             WorkItemState.queued,
         attempts: int.tryParse(json['attempts']?.toString() ?? '') ?? 0,
         lastError: json['lastError']?.toString(),
-        startedAt:
-            json['startedAt'] == null ? null : parseUtc(json['startedAt']),
-        completedAt:
-            json['completedAt'] == null ? null : parseUtc(json['completedAt']),
+        startedAt: json['startedAt'] == null
+            ? null
+            : parseUtc(json['startedAt']),
+        completedAt: json['completedAt'] == null
+            ? null
+            : parseUtc(json['completedAt']),
       );
 }
 
@@ -774,8 +786,8 @@ class AutonomyBudget {
     final perItemRequests = plan.complexity >= 8
         ? 12
         : plan.complexity >= 5
-            ? 9
-            : 6;
+        ? 9
+        : 6;
     final modelRequests = max(80, min(800, items * perItemRequests + 16));
     final toolCalls = max(160, min(1600, items * perItemRequests * 2 + 32));
     final mutations = max(80, min(500, items * 5 + 24));
@@ -802,17 +814,17 @@ class AutonomyBudget {
   final Duration maxWallTime;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'maxModelRequests': maxModelRequests,
-        'maxToolCalls': maxToolCalls,
-        'maxMutations': maxMutations,
-        'maxRepairs': maxRepairs,
-        'maxConsecutiveFailures': maxConsecutiveFailures,
-        'maxAgentTurnsPerAttempt': maxAgentTurnsPerAttempt,
-        'minModelRequestsForRetry': minModelRequestsForRetry,
-        'maxRepeatedToolOutcomes': maxRepeatedToolOutcomes,
-        'maxOutputBytes': maxOutputBytes,
-        'maxWallTimeSeconds': maxWallTime.inSeconds,
-      };
+    'maxModelRequests': maxModelRequests,
+    'maxToolCalls': maxToolCalls,
+    'maxMutations': maxMutations,
+    'maxRepairs': maxRepairs,
+    'maxConsecutiveFailures': maxConsecutiveFailures,
+    'maxAgentTurnsPerAttempt': maxAgentTurnsPerAttempt,
+    'minModelRequestsForRetry': minModelRequestsForRetry,
+    'maxRepeatedToolOutcomes': maxRepeatedToolOutcomes,
+    'maxOutputBytes': maxOutputBytes,
+    'maxWallTimeSeconds': maxWallTime.inSeconds,
+  };
 
   factory AutonomyBudget.fromJson(Map<String, dynamic> json) {
     int bounded(String key, int fallback, int minimum, int maximum) =>
@@ -887,73 +899,71 @@ class RunRecord {
     int? toolCalls,
     int? mutations,
     int? repairs,
-  }) =>
-      RunRecord(
-        id: id,
-        command: command,
-        state: state ?? this.state,
-        items: items ?? this.items,
-        budget: budget,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? DateTime.now().toUtc(),
-        startedAt: startedAt ?? this.startedAt,
-        completedAt: completedAt ?? this.completedAt,
-        summary: summary ?? this.summary,
-        failure: clearFailure ? null : (failure ?? this.failure),
-        modelRequests: modelRequests ?? this.modelRequests,
-        toolCalls: toolCalls ?? this.toolCalls,
-        mutations: mutations ?? this.mutations,
-        repairs: repairs ?? this.repairs,
-        sourceRunId: sourceRunId,
-      );
+  }) => RunRecord(
+    id: id,
+    command: command,
+    state: state ?? this.state,
+    items: items ?? this.items,
+    budget: budget,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? DateTime.now().toUtc(),
+    startedAt: startedAt ?? this.startedAt,
+    completedAt: completedAt ?? this.completedAt,
+    summary: summary ?? this.summary,
+    failure: clearFailure ? null : (failure ?? this.failure),
+    modelRequests: modelRequests ?? this.modelRequests,
+    toolCalls: toolCalls ?? this.toolCalls,
+    mutations: mutations ?? this.mutations,
+    repairs: repairs ?? this.repairs,
+    sourceRunId: sourceRunId,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'command': command.toJson(),
-        'state': state.name,
-        'items': items.map((item) => item.toJson()).toList(),
-        'budget': budget.toJson(),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-        'startedAt': startedAt?.toUtc().toIso8601String(),
-        'completedAt': completedAt?.toUtc().toIso8601String(),
-        'summary': summary,
-        'failure': failure,
-        'modelRequests': modelRequests,
-        'toolCalls': toolCalls,
-        'mutations': mutations,
-        'repairs': repairs,
-        'sourceRunId': sourceRunId,
-      };
+    'id': id,
+    'command': command.toJson(),
+    'state': state.name,
+    'items': items.map((item) => item.toJson()).toList(),
+    'budget': budget.toJson(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'startedAt': startedAt?.toUtc().toIso8601String(),
+    'completedAt': completedAt?.toUtc().toIso8601String(),
+    'summary': summary,
+    'failure': failure,
+    'modelRequests': modelRequests,
+    'toolCalls': toolCalls,
+    'mutations': mutations,
+    'repairs': repairs,
+    'sourceRunId': sourceRunId,
+  };
 
   factory RunRecord.fromJson(Map<String, dynamic> json) => RunRecord(
-        id: json['id']?.toString() ?? newId('run'),
-        command: PreparedCommand.fromJson(mapValue(json['command'])),
-        state: RunState.values
-                .where((state) => state.name == json['state'])
-                .firstOrNull ??
-            RunState.interrupted,
-        items:
-            (json['items'] is List ? json['items'] as List : const <Object>[])
-                .whereType<Map>()
-                .map((item) => WorkItemProgress.fromJson(mapValue(item)))
-                .toList(),
-        budget: AutonomyBudget.fromJson(mapValue(json['budget'])),
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-        updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
-        startedAt:
-            json['startedAt'] == null ? null : parseUtc(json['startedAt']),
-        completedAt:
-            json['completedAt'] == null ? null : parseUtc(json['completedAt']),
-        summary: json['summary']?.toString() ?? '',
-        failure: json['failure']?.toString(),
-        modelRequests:
-            int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
-        toolCalls: int.tryParse(json['toolCalls']?.toString() ?? '') ?? 0,
-        mutations: int.tryParse(json['mutations']?.toString() ?? '') ?? 0,
-        repairs: int.tryParse(json['repairs']?.toString() ?? '') ?? 0,
-        sourceRunId: json['sourceRunId']?.toString(),
-      );
+    id: json['id']?.toString() ?? newId('run'),
+    command: PreparedCommand.fromJson(mapValue(json['command'])),
+    state:
+        RunState.values
+            .where((state) => state.name == json['state'])
+            .firstOrNull ??
+        RunState.interrupted,
+    items: (json['items'] is List ? json['items'] as List : const <Object>[])
+        .whereType<Map>()
+        .map((item) => WorkItemProgress.fromJson(mapValue(item)))
+        .toList(),
+    budget: AutonomyBudget.fromJson(mapValue(json['budget'])),
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+    updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
+    startedAt: json['startedAt'] == null ? null : parseUtc(json['startedAt']),
+    completedAt: json['completedAt'] == null
+        ? null
+        : parseUtc(json['completedAt']),
+    summary: json['summary']?.toString() ?? '',
+    failure: json['failure']?.toString(),
+    modelRequests: int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
+    toolCalls: int.tryParse(json['toolCalls']?.toString() ?? '') ?? 0,
+    mutations: int.tryParse(json['mutations']?.toString() ?? '') ?? 0,
+    repairs: int.tryParse(json['repairs']?.toString() ?? '') ?? 0,
+    sourceRunId: json['sourceRunId']?.toString(),
+  );
 }
 
 class EventEnvelope {
@@ -974,22 +984,22 @@ class EventEnvelope {
   final Map<String, dynamic> data;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'sequence': sequence,
-        'id': id,
-        'type': type,
-        'correlationId': correlationId,
-        'timestamp': timestamp.toUtc().toIso8601String(),
-        'data': data,
-      };
+    'sequence': sequence,
+    'id': id,
+    'type': type,
+    'correlationId': correlationId,
+    'timestamp': timestamp.toUtc().toIso8601String(),
+    'data': data,
+  };
 
   factory EventEnvelope.fromJson(Map<String, dynamic> json) => EventEnvelope(
-        sequence: int.tryParse(json['sequence']?.toString() ?? '') ?? 0,
-        id: json['id']?.toString() ?? newId('event'),
-        type: json['type']?.toString() ?? 'unknown',
-        correlationId: json['correlationId']?.toString() ?? '',
-        timestamp: parseUtc(json['timestamp'], fallback: DateTime.now()),
-        data: mapValue(json['data']),
-      );
+    sequence: int.tryParse(json['sequence']?.toString() ?? '') ?? 0,
+    id: json['id']?.toString() ?? newId('event'),
+    type: json['type']?.toString() ?? 'unknown',
+    correlationId: json['correlationId']?.toString() ?? '',
+    timestamp: parseUtc(json['timestamp'], fallback: DateTime.now()),
+    data: mapValue(json['data']),
+  );
 }
 
 class ResearchSource {
@@ -1022,40 +1032,40 @@ class ResearchSource {
   final Uri? requestedUrl;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'url': url.toString(),
-        'title': title,
-        'mimeType': mimeType,
-        'contentHash': contentHash,
-        'fetchedAt': fetchedAt.toUtc().toIso8601String(),
-        'content': content,
-        'rawContent': rawContent,
-        'statusCode': statusCode,
-        'responseHeaders': responseHeaders,
-        'redirectChain': redirectChain,
-        'requestedUrl': requestedUrl?.toString(),
-        'trust': 'untrusted_external_data',
-      };
+    'id': id,
+    'url': url.toString(),
+    'title': title,
+    'mimeType': mimeType,
+    'contentHash': contentHash,
+    'fetchedAt': fetchedAt.toUtc().toIso8601String(),
+    'content': content,
+    'rawContent': rawContent,
+    'statusCode': statusCode,
+    'responseHeaders': responseHeaders,
+    'redirectChain': redirectChain,
+    'requestedUrl': requestedUrl?.toString(),
+    'trust': 'untrusted_external_data',
+  };
 
   factory ResearchSource.fromJson(Map<String, dynamic> json) => ResearchSource(
-        id: json['id']?.toString() ?? newId('source'),
-        url: Uri.tryParse(json['url']?.toString() ?? '') ?? Uri(),
-        title: json['title']?.toString() ?? '',
-        mimeType: json['mimeType']?.toString() ?? 'text/plain',
-        contentHash: json['contentHash']?.toString() ?? '',
-        fetchedAt: parseUtc(json['fetchedAt'], fallback: DateTime.now()),
-        content: json['content']?.toString() ?? '',
-        rawContent: json['rawContent']?.toString() ?? '',
-        statusCode: int.tryParse(json['statusCode']?.toString() ?? '') ?? 200,
-        responseHeaders: mapValue(json['responseHeaders']).map(
-          (key, value) => MapEntry(key, value.toString()),
-        ),
-        redirectChain: stringList(json['redirectChain']),
-        requestedUrl: switch (json['requestedUrl']?.toString().trim() ?? '') {
-          final value when value.isNotEmpty => Uri.tryParse(value),
-          _ => null,
-        },
-      );
+    id: json['id']?.toString() ?? newId('source'),
+    url: Uri.tryParse(json['url']?.toString() ?? '') ?? Uri(),
+    title: json['title']?.toString() ?? '',
+    mimeType: json['mimeType']?.toString() ?? 'text/plain',
+    contentHash: json['contentHash']?.toString() ?? '',
+    fetchedAt: parseUtc(json['fetchedAt'], fallback: DateTime.now()),
+    content: json['content']?.toString() ?? '',
+    rawContent: json['rawContent']?.toString() ?? '',
+    statusCode: int.tryParse(json['statusCode']?.toString() ?? '') ?? 200,
+    responseHeaders: mapValue(
+      json['responseHeaders'],
+    ).map((key, value) => MapEntry(key, value.toString())),
+    redirectChain: stringList(json['redirectChain']),
+    requestedUrl: switch (json['requestedUrl']?.toString().trim() ?? '') {
+      final value when value.isNotEmpty => Uri.tryParse(value),
+      _ => null,
+    },
+  );
 }
 
 enum KnowledgeKind { note, researchSource, researchSearch, episode }
@@ -1104,38 +1114,37 @@ class KnowledgeEntry {
     KnowledgeKind? kind,
     String? archiveId,
     bool? pinned,
-  }) =>
-      KnowledgeEntry(
-        id: id,
-        projectId: projectId,
-        title: title ?? this.title,
-        content: content ?? this.content,
-        tags: tags ?? this.tags,
-        sourceUrl: sourceUrl ?? this.sourceUrl,
-        contentHash: contentHash ?? this.contentHash,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? DateTime.now().toUtc(),
-        trust: trust ?? this.trust,
-        kind: kind ?? this.kind,
-        archiveId: archiveId ?? this.archiveId,
-        pinned: pinned ?? this.pinned,
-      );
+  }) => KnowledgeEntry(
+    id: id,
+    projectId: projectId,
+    title: title ?? this.title,
+    content: content ?? this.content,
+    tags: tags ?? this.tags,
+    sourceUrl: sourceUrl ?? this.sourceUrl,
+    contentHash: contentHash ?? this.contentHash,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? DateTime.now().toUtc(),
+    trust: trust ?? this.trust,
+    kind: kind ?? this.kind,
+    archiveId: archiveId ?? this.archiveId,
+    pinned: pinned ?? this.pinned,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'projectId': projectId,
-        'title': title,
-        'content': content,
-        'tags': tags.toList()..sort(),
-        'sourceUrl': sourceUrl,
-        'contentHash': contentHash,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-        'trust': trust,
-        'kind': kind.name,
-        'archiveId': archiveId,
-        'pinned': pinned,
-      };
+    'id': id,
+    'projectId': projectId,
+    'title': title,
+    'content': content,
+    'tags': tags.toList()..sort(),
+    'sourceUrl': sourceUrl,
+    'contentHash': contentHash,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'trust': trust,
+    'kind': kind.name,
+    'archiveId': archiveId,
+    'pinned': pinned,
+  };
 
   factory KnowledgeEntry.fromJson(Map<String, dynamic> json) {
     final tags = stringList(json['tags']).toSet();
@@ -1145,9 +1154,9 @@ class KnowledgeEntry {
     final inferredKind = tags.contains('research-search')
         ? KnowledgeKind.researchSearch
         : tags.contains('research') ||
-                (json['sourceUrl']?.toString().isNotEmpty ?? false)
-            ? KnowledgeKind.researchSource
-            : KnowledgeKind.note;
+              (json['sourceUrl']?.toString().isNotEmpty ?? false)
+        ? KnowledgeKind.researchSource
+        : KnowledgeKind.note;
     return KnowledgeEntry(
       id: json['id']?.toString() ?? newId('knowledge'),
       projectId: json['projectId']?.toString() ?? '',
@@ -1216,35 +1225,36 @@ class ResearchArchiveRecord {
   final String trust;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'projectId': projectId,
-        'kind': kind.name,
-        'title': title,
-        'query': query,
-        'requestedUrl': requestedUrl,
-        'finalUrl': finalUrl,
-        'provider': provider,
-        'mimeType': mimeType,
-        'contentHash': contentHash,
-        'rawContentHash': rawContentHash,
-        'statusCode': statusCode,
-        'responseHeaders': responseHeaders,
-        'redirectChain': redirectChain,
-        'capturedAt': capturedAt.toUtc().toIso8601String(),
-        'rawObjectPath': rawObjectPath,
-        'textObjectPath': textObjectPath,
-        'byteLength': byteLength,
-        'extractedCharacters': extractedCharacters,
-        'resultCount': resultCount,
-        'knowledgeId': knowledgeId,
-        'trust': trust,
-      };
+    'id': id,
+    'projectId': projectId,
+    'kind': kind.name,
+    'title': title,
+    'query': query,
+    'requestedUrl': requestedUrl,
+    'finalUrl': finalUrl,
+    'provider': provider,
+    'mimeType': mimeType,
+    'contentHash': contentHash,
+    'rawContentHash': rawContentHash,
+    'statusCode': statusCode,
+    'responseHeaders': responseHeaders,
+    'redirectChain': redirectChain,
+    'capturedAt': capturedAt.toUtc().toIso8601String(),
+    'rawObjectPath': rawObjectPath,
+    'textObjectPath': textObjectPath,
+    'byteLength': byteLength,
+    'extractedCharacters': extractedCharacters,
+    'resultCount': resultCount,
+    'knowledgeId': knowledgeId,
+    'trust': trust,
+  };
 
   factory ResearchArchiveRecord.fromJson(Map<String, dynamic> json) =>
       ResearchArchiveRecord(
         id: json['id']?.toString() ?? newId('archive'),
         projectId: json['projectId']?.toString() ?? '',
-        kind: ResearchArchiveKind.values
+        kind:
+            ResearchArchiveKind.values
                 .where((candidate) => candidate.name == json['kind'])
                 .firstOrNull ??
             ResearchArchiveKind.source,
@@ -1257,9 +1267,9 @@ class ResearchArchiveRecord {
         contentHash: json['contentHash']?.toString() ?? '',
         rawContentHash: json['rawContentHash']?.toString() ?? '',
         statusCode: int.tryParse(json['statusCode']?.toString() ?? '') ?? 0,
-        responseHeaders: mapValue(json['responseHeaders']).map(
-          (key, value) => MapEntry(key, value.toString()),
-        ),
+        responseHeaders: mapValue(
+          json['responseHeaders'],
+        ).map((key, value) => MapEntry(key, value.toString())),
         redirectChain: stringList(json['redirectChain']),
         capturedAt: parseUtc(json['capturedAt'], fallback: DateTime.now()),
         rawObjectPath: json['rawObjectPath']?.toString() ?? '',
@@ -1334,107 +1344,108 @@ class MemoryEpisode {
 
   bool get successful => outcome == RunState.succeeded;
 
-  MemoryEpisode copyWith(
-          {bool? pinned,
-          String? admission,
-          String? admissionReason,
-          bool? diagnosticOnly}) =>
-      MemoryEpisode(
-        id: id,
-        projectId: projectId,
-        runId: runId,
-        request: request,
-        mode: mode,
-        outcome: outcome,
-        summary: summary,
-        failure: failure,
-        lessons: lessons,
-        tags: tags,
-        completedItems: completedItems,
-        failedItems: failedItems,
-        filesChanged: filesChanged,
-        evidenceIds: evidenceIds,
-        evidenceHashes: evidenceHashes,
-        startedAt: startedAt,
-        completedAt: completedAt,
-        modelRequests: modelRequests,
-        toolCalls: toolCalls,
-        mutations: mutations,
-        repairs: repairs,
-        contentHash: contentHash,
-        createdAt: createdAt,
-        pinned: pinned ?? this.pinned,
-        admission: admission ?? this.admission,
-        admissionReason: admissionReason ?? this.admissionReason,
-        diagnosticOnly: diagnosticOnly ?? this.diagnosticOnly,
-      );
+  MemoryEpisode copyWith({
+    bool? pinned,
+    String? admission,
+    String? admissionReason,
+    bool? diagnosticOnly,
+  }) => MemoryEpisode(
+    id: id,
+    projectId: projectId,
+    runId: runId,
+    request: request,
+    mode: mode,
+    outcome: outcome,
+    summary: summary,
+    failure: failure,
+    lessons: lessons,
+    tags: tags,
+    completedItems: completedItems,
+    failedItems: failedItems,
+    filesChanged: filesChanged,
+    evidenceIds: evidenceIds,
+    evidenceHashes: evidenceHashes,
+    startedAt: startedAt,
+    completedAt: completedAt,
+    modelRequests: modelRequests,
+    toolCalls: toolCalls,
+    mutations: mutations,
+    repairs: repairs,
+    contentHash: contentHash,
+    createdAt: createdAt,
+    pinned: pinned ?? this.pinned,
+    admission: admission ?? this.admission,
+    admissionReason: admissionReason ?? this.admissionReason,
+    diagnosticOnly: diagnosticOnly ?? this.diagnosticOnly,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'projectId': projectId,
-        'runId': runId,
-        'request': request,
-        'mode': mode.name,
-        'outcome': outcome.name,
-        'summary': summary,
-        'failure': failure,
-        'lessons': lessons,
-        'tags': tags.toList()..sort(),
-        'completedItems': completedItems,
-        'failedItems': failedItems,
-        'filesChanged': filesChanged,
-        'evidenceIds': evidenceIds,
-        'evidenceHashes': evidenceHashes,
-        'startedAt': startedAt.toUtc().toIso8601String(),
-        'completedAt': completedAt.toUtc().toIso8601String(),
-        'modelRequests': modelRequests,
-        'toolCalls': toolCalls,
-        'mutations': mutations,
-        'repairs': repairs,
-        'contentHash': contentHash,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'pinned': pinned,
-        'admission': admission,
-        'admissionReason': admissionReason,
-        'diagnosticOnly': diagnosticOnly,
-      };
+    'id': id,
+    'projectId': projectId,
+    'runId': runId,
+    'request': request,
+    'mode': mode.name,
+    'outcome': outcome.name,
+    'summary': summary,
+    'failure': failure,
+    'lessons': lessons,
+    'tags': tags.toList()..sort(),
+    'completedItems': completedItems,
+    'failedItems': failedItems,
+    'filesChanged': filesChanged,
+    'evidenceIds': evidenceIds,
+    'evidenceHashes': evidenceHashes,
+    'startedAt': startedAt.toUtc().toIso8601String(),
+    'completedAt': completedAt.toUtc().toIso8601String(),
+    'modelRequests': modelRequests,
+    'toolCalls': toolCalls,
+    'mutations': mutations,
+    'repairs': repairs,
+    'contentHash': contentHash,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'pinned': pinned,
+    'admission': admission,
+    'admissionReason': admissionReason,
+    'diagnosticOnly': diagnosticOnly,
+  };
 
   factory MemoryEpisode.fromJson(Map<String, dynamic> json) => MemoryEpisode(
-        id: json['id']?.toString() ?? newId('episode'),
-        projectId: json['projectId']?.toString() ?? '',
-        runId: json['runId']?.toString() ?? '',
-        request: json['request']?.toString() ?? '',
-        mode: CommandMode.values
-                .where((candidate) => candidate.name == json['mode'])
-                .firstOrNull ??
-            CommandMode.ask,
-        outcome: RunState.values
-                .where((candidate) => candidate.name == json['outcome'])
-                .firstOrNull ??
-            RunState.interrupted,
-        summary: json['summary']?.toString() ?? '',
-        failure: json['failure']?.toString() ?? '',
-        lessons: json['lessons']?.toString() ?? '',
-        tags: stringList(json['tags']).toSet(),
-        completedItems: stringList(json['completedItems']),
-        failedItems: stringList(json['failedItems']),
-        filesChanged: stringList(json['filesChanged']),
-        evidenceIds: stringList(json['evidenceIds']),
-        evidenceHashes: stringList(json['evidenceHashes']),
-        startedAt: parseUtc(json['startedAt'], fallback: DateTime.now()),
-        completedAt: parseUtc(json['completedAt'], fallback: DateTime.now()),
-        modelRequests:
-            int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
-        toolCalls: int.tryParse(json['toolCalls']?.toString() ?? '') ?? 0,
-        mutations: int.tryParse(json['mutations']?.toString() ?? '') ?? 0,
-        repairs: int.tryParse(json['repairs']?.toString() ?? '') ?? 0,
-        contentHash: json['contentHash']?.toString() ?? '',
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-        pinned: json['pinned'] == true,
-        admission: json['admission']?.toString() ?? 'admitted',
-        admissionReason: json['admissionReason']?.toString() ?? '',
-        diagnosticOnly: json['diagnosticOnly'] == true,
-      );
+    id: json['id']?.toString() ?? newId('episode'),
+    projectId: json['projectId']?.toString() ?? '',
+    runId: json['runId']?.toString() ?? '',
+    request: json['request']?.toString() ?? '',
+    mode:
+        CommandMode.values
+            .where((candidate) => candidate.name == json['mode'])
+            .firstOrNull ??
+        CommandMode.ask,
+    outcome:
+        RunState.values
+            .where((candidate) => candidate.name == json['outcome'])
+            .firstOrNull ??
+        RunState.interrupted,
+    summary: json['summary']?.toString() ?? '',
+    failure: json['failure']?.toString() ?? '',
+    lessons: json['lessons']?.toString() ?? '',
+    tags: stringList(json['tags']).toSet(),
+    completedItems: stringList(json['completedItems']),
+    failedItems: stringList(json['failedItems']),
+    filesChanged: stringList(json['filesChanged']),
+    evidenceIds: stringList(json['evidenceIds']),
+    evidenceHashes: stringList(json['evidenceHashes']),
+    startedAt: parseUtc(json['startedAt'], fallback: DateTime.now()),
+    completedAt: parseUtc(json['completedAt'], fallback: DateTime.now()),
+    modelRequests: int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
+    toolCalls: int.tryParse(json['toolCalls']?.toString() ?? '') ?? 0,
+    mutations: int.tryParse(json['mutations']?.toString() ?? '') ?? 0,
+    repairs: int.tryParse(json['repairs']?.toString() ?? '') ?? 0,
+    contentHash: json['contentHash']?.toString() ?? '',
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+    pinned: json['pinned'] == true,
+    admission: json['admission']?.toString() ?? 'admitted',
+    admissionReason: json['admissionReason']?.toString() ?? '',
+    diagnosticOnly: json['diagnosticOnly'] == true,
+  );
 }
 
 class KnowledgeSearchHit {
@@ -1485,58 +1496,58 @@ class KnowledgeSearchHit {
   String get marker => '[$citation]';
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'citation': citation,
-        'marker': marker,
-        'kind': kind.name,
-        'recordId': recordId,
-        'knowledgeId': knowledgeId,
-        'episodeId': episodeId,
-        'archiveId': archiveId,
-        'title': title,
-        'sourceUrl': sourceUrl,
-        'snippet': snippet,
-        'contentHash': contentHash,
-        'trust': trust,
-        'tags': tags.toList()..sort(),
-        'score': score,
-        'lexicalScore': lexicalScore,
-        'semanticScore': semanticScore,
-        'recencyScore': recencyScore,
-        'capturedAt': capturedAt.toUtc().toIso8601String(),
-        'chunkIndex': chunkIndex,
-        'freshness': freshness,
-        'freshnessReason': freshnessReason,
-      };
+    'citation': citation,
+    'marker': marker,
+    'kind': kind.name,
+    'recordId': recordId,
+    'knowledgeId': knowledgeId,
+    'episodeId': episodeId,
+    'archiveId': archiveId,
+    'title': title,
+    'sourceUrl': sourceUrl,
+    'snippet': snippet,
+    'contentHash': contentHash,
+    'trust': trust,
+    'tags': tags.toList()..sort(),
+    'score': score,
+    'lexicalScore': lexicalScore,
+    'semanticScore': semanticScore,
+    'recencyScore': recencyScore,
+    'capturedAt': capturedAt.toUtc().toIso8601String(),
+    'chunkIndex': chunkIndex,
+    'freshness': freshness,
+    'freshnessReason': freshnessReason,
+  };
 
-  factory KnowledgeSearchHit.fromJson(Map<String, dynamic> json) =>
-      KnowledgeSearchHit(
-        citation: json['citation']?.toString() ?? 'K0',
-        kind: KnowledgeKind.values
-                .where((candidate) => candidate.name == json['kind'])
-                .firstOrNull ??
-            KnowledgeKind.note,
-        recordId: json['recordId']?.toString() ?? '',
-        knowledgeId: json['knowledgeId']?.toString() ?? '',
-        episodeId: json['episodeId']?.toString() ?? '',
-        archiveId: json['archiveId']?.toString() ?? '',
-        title: json['title']?.toString() ?? '',
-        sourceUrl: json['sourceUrl']?.toString() ?? '',
-        snippet: json['snippet']?.toString() ?? '',
-        contentHash: json['contentHash']?.toString() ?? '',
-        trust: json['trust']?.toString() ?? '',
-        tags: stringList(json['tags']).toSet(),
-        score: double.tryParse(json['score']?.toString() ?? '') ?? 0,
-        lexicalScore:
-            double.tryParse(json['lexicalScore']?.toString() ?? '') ?? 0,
-        semanticScore:
-            double.tryParse(json['semanticScore']?.toString() ?? '') ?? 0,
-        recencyScore:
-            double.tryParse(json['recencyScore']?.toString() ?? '') ?? 0,
-        capturedAt: parseUtc(json['capturedAt'], fallback: DateTime.now()),
-        chunkIndex: int.tryParse(json['chunkIndex']?.toString() ?? '') ?? 0,
-        freshness: json['freshness']?.toString() ?? 'unknown',
-        freshnessReason: json['freshnessReason']?.toString() ?? '',
-      );
+  factory KnowledgeSearchHit.fromJson(
+    Map<String, dynamic> json,
+  ) => KnowledgeSearchHit(
+    citation: json['citation']?.toString() ?? 'K0',
+    kind:
+        KnowledgeKind.values
+            .where((candidate) => candidate.name == json['kind'])
+            .firstOrNull ??
+        KnowledgeKind.note,
+    recordId: json['recordId']?.toString() ?? '',
+    knowledgeId: json['knowledgeId']?.toString() ?? '',
+    episodeId: json['episodeId']?.toString() ?? '',
+    archiveId: json['archiveId']?.toString() ?? '',
+    title: json['title']?.toString() ?? '',
+    sourceUrl: json['sourceUrl']?.toString() ?? '',
+    snippet: json['snippet']?.toString() ?? '',
+    contentHash: json['contentHash']?.toString() ?? '',
+    trust: json['trust']?.toString() ?? '',
+    tags: stringList(json['tags']).toSet(),
+    score: double.tryParse(json['score']?.toString() ?? '') ?? 0,
+    lexicalScore: double.tryParse(json['lexicalScore']?.toString() ?? '') ?? 0,
+    semanticScore:
+        double.tryParse(json['semanticScore']?.toString() ?? '') ?? 0,
+    recencyScore: double.tryParse(json['recencyScore']?.toString() ?? '') ?? 0,
+    capturedAt: parseUtc(json['capturedAt'], fallback: DateTime.now()),
+    chunkIndex: int.tryParse(json['chunkIndex']?.toString() ?? '') ?? 0,
+    freshness: json['freshness']?.toString() ?? 'unknown',
+    freshnessReason: json['freshnessReason']?.toString() ?? '',
+  );
 }
 
 class KnowledgeRetrieval {
@@ -1561,26 +1572,25 @@ class KnowledgeRetrieval {
   factory KnowledgeRetrieval.empty({
     required String projectId,
     required String query,
-  }) =>
-      KnowledgeRetrieval(
-        projectId: projectId,
-        query: query,
-        hits: const <KnowledgeSearchHit>[],
-        generatedAt: DateTime.now().toUtc(),
-        indexFingerprint: '',
-        documentsScanned: 0,
-        chunksScanned: 0,
-      );
+  }) => KnowledgeRetrieval(
+    projectId: projectId,
+    query: query,
+    hits: const <KnowledgeSearchHit>[],
+    generatedAt: DateTime.now().toUtc(),
+    indexFingerprint: '',
+    documentsScanned: 0,
+    chunksScanned: 0,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'projectId': projectId,
-        'query': query,
-        'hits': hits.map((hit) => hit.toJson()).toList(),
-        'generatedAt': generatedAt.toUtc().toIso8601String(),
-        'indexFingerprint': indexFingerprint,
-        'documentsScanned': documentsScanned,
-        'chunksScanned': chunksScanned,
-      };
+    'projectId': projectId,
+    'query': query,
+    'hits': hits.map((hit) => hit.toJson()).toList(),
+    'generatedAt': generatedAt.toUtc().toIso8601String(),
+    'indexFingerprint': indexFingerprint,
+    'documentsScanned': documentsScanned,
+    'chunksScanned': chunksScanned,
+  };
 
   factory KnowledgeRetrieval.fromJson(Map<String, dynamic> json) =>
       KnowledgeRetrieval(
@@ -1625,17 +1635,17 @@ class KnowledgeStats {
   int get total => notes + researchSources + searchSnapshots + episodes;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'projectId': projectId,
-        'notes': notes,
-        'researchSources': researchSources,
-        'searchSnapshots': searchSnapshots,
-        'episodes': episodes,
-        'pinned': pinned,
-        'archiveBytes': archiveBytes,
-        'indexedChunks': indexedChunks,
-        'lastUpdatedAt': lastUpdatedAt?.toUtc().toIso8601String(),
-        'total': total,
-      };
+    'projectId': projectId,
+    'notes': notes,
+    'researchSources': researchSources,
+    'searchSnapshots': searchSnapshots,
+    'episodes': episodes,
+    'pinned': pinned,
+    'archiveBytes': archiveBytes,
+    'indexedChunks': indexedChunks,
+    'lastUpdatedAt': lastUpdatedAt?.toUtc().toIso8601String(),
+    'total': total,
+  };
 }
 
 class PromptTemplateRecord {
@@ -1675,28 +1685,30 @@ class PromptTemplateRecord {
     CommandMode? mode,
     int? version,
     DateTime? updatedAt,
-  }) =>
-      PromptTemplateRecord(
-        id: id,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        systemPrompt: systemPrompt ?? this.systemPrompt,
-        userPrompt: userPrompt ?? this.userPrompt,
-        variables: variables ?? this.variables,
-        tags: tags ?? this.tags,
-        mode: mode ?? this.mode,
-        version: version ?? this.version,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? DateTime.now().toUtc(),
-      );
+  }) => PromptTemplateRecord(
+    id: id,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    systemPrompt: systemPrompt ?? this.systemPrompt,
+    userPrompt: userPrompt ?? this.userPrompt,
+    variables: variables ?? this.variables,
+    tags: tags ?? this.tags,
+    mode: mode ?? this.mode,
+    version: version ?? this.version,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? DateTime.now().toUtc(),
+  );
 
-  String renderForChat(
-      [Map<String, String> values = const <String, String>{}]) {
+  String renderForChat([
+    Map<String, String> values = const <String, String>{},
+  ]) {
     String render(String input) {
       var output = input;
       for (final variable in variables) {
         output = output.replaceAll(
-            '{{$variable}}', values[variable] ?? '[$variable]');
+          '{{$variable}}',
+          values[variable] ?? '[$variable]',
+        );
       }
       return output.trim();
     }
@@ -1714,18 +1726,18 @@ $user''';
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'title': title,
-        'description': description,
-        'systemPrompt': systemPrompt,
-        'userPrompt': userPrompt,
-        'variables': variables,
-        'tags': tags.toList()..sort(),
-        'mode': mode.name,
-        'version': version,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'systemPrompt': systemPrompt,
+    'userPrompt': userPrompt,
+    'variables': variables,
+    'tags': tags.toList()..sort(),
+    'mode': mode.name,
+    'version': version,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
 
   factory PromptTemplateRecord.fromJson(Map<String, dynamic> json) =>
       PromptTemplateRecord(
@@ -1736,7 +1748,8 @@ $user''';
         userPrompt: json['userPrompt']?.toString() ?? '',
         variables: stringList(json['variables']),
         tags: stringList(json['tags']).toSet(),
-        mode: CommandMode.values
+        mode:
+            CommandMode.values
                 .where((item) => item.name == json['mode'])
                 .firstOrNull ??
             CommandMode.build,
@@ -1822,22 +1835,21 @@ class PromptStudioDraft {
     List<String>? stopConditions,
     List<String>? evaluationCases,
     CommandMode? mode,
-  }) =>
-      PromptStudioDraft(
-        title: title ?? this.title,
-        purpose: purpose ?? this.purpose,
-        systemPrompt: systemPrompt ?? this.systemPrompt,
-        userPrompt: userPrompt ?? this.userPrompt,
-        variables: variables ?? this.variables,
-        assumptions: assumptions ?? this.assumptions,
-        clarifyingQuestions: clarifyingQuestions ?? this.clarifyingQuestions,
-        acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
-        outputExpectations: outputExpectations ?? this.outputExpectations,
-        guardrails: guardrails ?? this.guardrails,
-        stopConditions: stopConditions ?? this.stopConditions,
-        evaluationCases: evaluationCases ?? this.evaluationCases,
-        mode: mode ?? this.mode,
-      );
+  }) => PromptStudioDraft(
+    title: title ?? this.title,
+    purpose: purpose ?? this.purpose,
+    systemPrompt: systemPrompt ?? this.systemPrompt,
+    userPrompt: userPrompt ?? this.userPrompt,
+    variables: variables ?? this.variables,
+    assumptions: assumptions ?? this.assumptions,
+    clarifyingQuestions: clarifyingQuestions ?? this.clarifyingQuestions,
+    acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+    outputExpectations: outputExpectations ?? this.outputExpectations,
+    guardrails: guardrails ?? this.guardrails,
+    stopConditions: stopConditions ?? this.stopConditions,
+    evaluationCases: evaluationCases ?? this.evaluationCases,
+    mode: mode ?? this.mode,
+  );
 
   String renderForChat() {
     final sections = <String>[
@@ -1858,20 +1870,20 @@ class PromptStudioDraft {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'title': title,
-        'purpose': purpose,
-        'systemPrompt': systemPrompt,
-        'userPrompt': userPrompt,
-        'variables': variables,
-        'assumptions': assumptions,
-        'clarifyingQuestions': clarifyingQuestions,
-        'acceptanceCriteria': acceptanceCriteria,
-        'outputExpectations': outputExpectations,
-        'guardrails': guardrails,
-        'stopConditions': stopConditions,
-        'evaluationCases': evaluationCases,
-        'mode': mode.name,
-      };
+    'title': title,
+    'purpose': purpose,
+    'systemPrompt': systemPrompt,
+    'userPrompt': userPrompt,
+    'variables': variables,
+    'assumptions': assumptions,
+    'clarifyingQuestions': clarifyingQuestions,
+    'acceptanceCriteria': acceptanceCriteria,
+    'outputExpectations': outputExpectations,
+    'guardrails': guardrails,
+    'stopConditions': stopConditions,
+    'evaluationCases': evaluationCases,
+    'mode': mode.name,
+  };
 
   factory PromptStudioDraft.fromJson(Map<String, dynamic> json) =>
       PromptStudioDraft(
@@ -1887,7 +1899,8 @@ class PromptStudioDraft {
         guardrails: stringList(json['guardrails']),
         stopConditions: stringList(json['stopConditions']),
         evaluationCases: stringList(json['evaluationCases']),
-        mode: CommandMode.values
+        mode:
+            CommandMode.values
                 .where((item) => item.name == json['mode']?.toString())
                 .firstOrNull ??
             CommandMode.build,
@@ -1920,17 +1933,17 @@ class PromptVersionRecord {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'promptId': promptId,
-        'versionNumber': versionNumber,
-        'sourceGoal': sourceGoal,
-        'action': action.name,
-        'draft': draft.toJson(),
-        'model': model.toJson(),
-        'contentHash': contentHash,
-        'createdBy': createdBy,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'promptId': promptId,
+    'versionNumber': versionNumber,
+    'sourceGoal': sourceGoal,
+    'action': action.name,
+    'draft': draft.toJson(),
+    'model': model.toJson(),
+    'contentHash': contentHash,
+    'createdBy': createdBy,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory PromptVersionRecord.fromJson(Map<String, dynamic> json) =>
       PromptVersionRecord(
@@ -1939,7 +1952,8 @@ class PromptVersionRecord {
         versionNumber:
             int.tryParse(json['versionNumber']?.toString() ?? '') ?? 1,
         sourceGoal: json['sourceGoal']?.toString() ?? '',
-        action: PromptGenerationAction.values
+        action:
+            PromptGenerationAction.values
                 .where((item) => item.name == json['action']?.toString())
                 .firstOrNull ??
             PromptGenerationAction.generate,
@@ -2021,54 +2035,53 @@ class PlanTaskRecord {
     int? maxAttempts,
     bool? enabled,
     bool? manual,
-  }) =>
-      PlanTaskRecord(
-        id: id ?? this.id,
-        phase: phase ?? this.phase,
-        parentId: clearParentId ? null : (parentId ?? this.parentId),
-        title: title ?? this.title,
-        objective: objective ?? this.objective,
-        instructions: instructions ?? this.instructions,
-        dependencies: dependencies ?? this.dependencies,
-        acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
-        verificationSteps: verificationSteps ?? this.verificationSteps,
-        expectedArtifacts: expectedArtifacts ?? this.expectedArtifacts,
-        allowedTools: allowedTools ?? this.allowedTools,
-        complexity: complexity ?? this.complexity,
-        effortPoints: effortPoints ?? this.effortPoints,
-        uncertainty: uncertainty ?? this.uncertainty,
-        risk: risk ?? this.risk,
-        estimateConfidence: estimateConfidence ?? this.estimateConfidence,
-        expectedModelTurns: expectedModelTurns ?? this.expectedModelTurns,
-        expectedToolCalls: expectedToolCalls ?? this.expectedToolCalls,
-        maxAttempts: maxAttempts ?? this.maxAttempts,
-        enabled: enabled ?? this.enabled,
-        manual: manual ?? this.manual,
-      );
+  }) => PlanTaskRecord(
+    id: id ?? this.id,
+    phase: phase ?? this.phase,
+    parentId: clearParentId ? null : (parentId ?? this.parentId),
+    title: title ?? this.title,
+    objective: objective ?? this.objective,
+    instructions: instructions ?? this.instructions,
+    dependencies: dependencies ?? this.dependencies,
+    acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+    verificationSteps: verificationSteps ?? this.verificationSteps,
+    expectedArtifacts: expectedArtifacts ?? this.expectedArtifacts,
+    allowedTools: allowedTools ?? this.allowedTools,
+    complexity: complexity ?? this.complexity,
+    effortPoints: effortPoints ?? this.effortPoints,
+    uncertainty: uncertainty ?? this.uncertainty,
+    risk: risk ?? this.risk,
+    estimateConfidence: estimateConfidence ?? this.estimateConfidence,
+    expectedModelTurns: expectedModelTurns ?? this.expectedModelTurns,
+    expectedToolCalls: expectedToolCalls ?? this.expectedToolCalls,
+    maxAttempts: maxAttempts ?? this.maxAttempts,
+    enabled: enabled ?? this.enabled,
+    manual: manual ?? this.manual,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'phase': phase,
-        'parentId': parentId,
-        'title': title,
-        'objective': objective,
-        'instructions': instructions,
-        'dependencies': dependencies.toList()..sort(),
-        'acceptanceCriteria': acceptanceCriteria,
-        'verificationSteps': verificationSteps,
-        'expectedArtifacts': expectedArtifacts,
-        'allowedTools': allowedTools.toList()..sort(),
-        'complexity': complexity,
-        'effortPoints': effortPoints,
-        'uncertainty': uncertainty.name,
-        'risk': risk.name,
-        'estimateConfidence': estimateConfidence,
-        'expectedModelTurns': expectedModelTurns,
-        'expectedToolCalls': expectedToolCalls,
-        'maxAttempts': maxAttempts,
-        'enabled': enabled,
-        'manual': manual,
-      };
+    'id': id,
+    'phase': phase,
+    'parentId': parentId,
+    'title': title,
+    'objective': objective,
+    'instructions': instructions,
+    'dependencies': dependencies.toList()..sort(),
+    'acceptanceCriteria': acceptanceCriteria,
+    'verificationSteps': verificationSteps,
+    'expectedArtifacts': expectedArtifacts,
+    'allowedTools': allowedTools.toList()..sort(),
+    'complexity': complexity,
+    'effortPoints': effortPoints,
+    'uncertainty': uncertainty.name,
+    'risk': risk.name,
+    'estimateConfidence': estimateConfidence,
+    'expectedModelTurns': expectedModelTurns,
+    'expectedToolCalls': expectedToolCalls,
+    'maxAttempts': maxAttempts,
+    'enabled': enabled,
+    'manual': manual,
+  };
 
   factory PlanTaskRecord.fromJson(Map<String, dynamic> json) {
     final parentId = json['parentId']?.toString().trim() ?? '';
@@ -2088,11 +2101,13 @@ class PlanTaskRecord {
           .clamp(1, 10)
           .toInt(),
       effortPoints: int.tryParse(json['effortPoints']?.toString() ?? '') ?? 3,
-      uncertainty: PlanUncertainty.values
+      uncertainty:
+          PlanUncertainty.values
               .where((item) => item.name == json['uncertainty']?.toString())
               .firstOrNull ??
           PlanUncertainty.medium,
-      risk: PlanRisk.values
+      risk:
+          PlanRisk.values
               .where((item) => item.name == json['risk']?.toString())
               .firstOrNull ??
           PlanRisk.medium,
@@ -2159,8 +2174,9 @@ class TaskPlanRecord {
       enabledTasks.fold<int>(0, (total, item) => total + item.effortPoints);
 
   int get highRiskTasks => enabledTasks
-      .where((item) =>
-          item.risk == PlanRisk.high || item.risk == PlanRisk.critical)
+      .where(
+        (item) => item.risk == PlanRisk.high || item.risk == PlanRisk.critical,
+      )
       .length;
 
   int get maxComplexity => enabledTasks.isEmpty
@@ -2183,7 +2199,7 @@ class TaskPlanRecord {
       errors.add('Task IDs must be unique.');
     }
     final byId = <String, PlanTaskRecord>{
-      for (final item in tasks) item.id: item
+      for (final item in tasks) item.id: item,
     };
     for (final task in tasks) {
       if (task.title.trim().isEmpty || task.instructions.trim().isEmpty) {
@@ -2278,44 +2294,43 @@ class TaskPlanRecord {
     List<PlanTaskRecord>? tasks,
     String? contentHash,
     DateTime? updatedAt,
-  }) =>
-      TaskPlanRecord(
-        id: id ?? this.id,
-        promptId: promptId,
-        promptVersionId: promptVersionId,
-        projectId: projectId,
-        revision: revision ?? this.revision,
-        previousPlanId: clearPreviousPlanId
-            ? null
-            : (previousPlanId ?? this.previousPlanId),
-        title: title ?? this.title,
-        rationale: rationale ?? this.rationale,
-        depth: depth ?? this.depth,
-        maxLeafTasks: maxLeafTasks ?? this.maxLeafTasks,
-        tasks: tasks ?? this.tasks,
-        model: model,
-        contentHash: contentHash ?? this.contentHash,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  }) => TaskPlanRecord(
+    id: id ?? this.id,
+    promptId: promptId,
+    promptVersionId: promptVersionId,
+    projectId: projectId,
+    revision: revision ?? this.revision,
+    previousPlanId: clearPreviousPlanId
+        ? null
+        : (previousPlanId ?? this.previousPlanId),
+    title: title ?? this.title,
+    rationale: rationale ?? this.rationale,
+    depth: depth ?? this.depth,
+    maxLeafTasks: maxLeafTasks ?? this.maxLeafTasks,
+    tasks: tasks ?? this.tasks,
+    model: model,
+    contentHash: contentHash ?? this.contentHash,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'promptId': promptId,
-        'promptVersionId': promptVersionId,
-        'projectId': projectId,
-        'revision': revision,
-        'previousPlanId': previousPlanId,
-        'title': title,
-        'rationale': rationale,
-        'depth': depth.name,
-        'maxLeafTasks': maxLeafTasks,
-        'tasks': tasks.map((item) => item.toJson()).toList(),
-        'model': model.toJson(),
-        'contentHash': contentHash,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'promptId': promptId,
+    'promptVersionId': promptVersionId,
+    'projectId': projectId,
+    'revision': revision,
+    'previousPlanId': previousPlanId,
+    'title': title,
+    'rationale': rationale,
+    'depth': depth.name,
+    'maxLeafTasks': maxLeafTasks,
+    'tasks': tasks.map((item) => item.toJson()).toList(),
+    'model': model.toJson(),
+    'contentHash': contentHash,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
 
   factory TaskPlanRecord.fromJson(Map<String, dynamic> json) {
     final createdAt = parseUtc(json['createdAt'], fallback: DateTime.now());
@@ -2329,7 +2344,8 @@ class TaskPlanRecord {
       previousPlanId: previousPlanId.isEmpty ? null : previousPlanId,
       title: json['title']?.toString() ?? 'Generated task plan',
       rationale: json['rationale']?.toString() ?? '',
-      depth: PlanningDepth.values
+      depth:
+          PlanningDepth.values
               .where((item) => item.name == json['depth']?.toString())
               .firstOrNull ??
           PlanningDepth.auto,
@@ -2372,15 +2388,15 @@ class DiagnosticCheck {
   final int durationMs;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'title': title,
-        'status': status.name,
-        'message': message,
-        'command': command,
-        'output': output,
-        'exitCode': exitCode,
-        'durationMs': durationMs,
-      };
+    'id': id,
+    'title': title,
+    'status': status.name,
+    'message': message,
+    'command': command,
+    'output': output,
+    'exitCode': exitCode,
+    'durationMs': durationMs,
+  };
 }
 
 class ProjectDiagnosticReport {
@@ -2414,20 +2430,20 @@ class ProjectDiagnosticReport {
       checks.where((check) => check.status == DiagnosticStatus.failed).length;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'projectId': projectId,
-        'projectType': projectType,
-        'analyzeCommand': analyzeCommand,
-        'testCommand': testCommand,
-        'buildCommand': buildCommand,
-        'runCommand': runCommand,
-        'checks': checks.map((check) => check.toJson()).toList(),
-        'generatedAt': generatedAt.toUtc().toIso8601String(),
-        'summary': <String, int>{
-          'passed': passed,
-          'warnings': warnings,
-          'failed': failed,
-        },
-      };
+    'projectId': projectId,
+    'projectType': projectType,
+    'analyzeCommand': analyzeCommand,
+    'testCommand': testCommand,
+    'buildCommand': buildCommand,
+    'runCommand': runCommand,
+    'checks': checks.map((check) => check.toJson()).toList(),
+    'generatedAt': generatedAt.toUtc().toIso8601String(),
+    'summary': <String, int>{
+      'passed': passed,
+      'warnings': warnings,
+      'failed': failed,
+    },
+  };
 }
 
 class ProjectProcessStatus {
@@ -2458,18 +2474,18 @@ class ProjectProcessStatus {
   final String logFileName;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'projectId': projectId,
-        'processId': processId,
-        'label': label,
-        'command': command,
-        'pid': pid,
-        'running': running,
-        'exitCode': exitCode,
-        'startedAt': startedAt.toUtc().toIso8601String(),
-        'completedAt': completedAt?.toUtc().toIso8601String(),
-        'outputTail': outputTail,
-        'logFileName': logFileName,
-      };
+    'projectId': projectId,
+    'processId': processId,
+    'label': label,
+    'command': command,
+    'pid': pid,
+    'running': running,
+    'exitCode': exitCode,
+    'startedAt': startedAt.toUtc().toIso8601String(),
+    'completedAt': completedAt?.toUtc().toIso8601String(),
+    'outputTail': outputTail,
+    'logFileName': logFileName,
+  };
 }
 
 class AgentAction {
@@ -2493,8 +2509,8 @@ class AgentAction {
     final calls = json['tool_calls'] is List
         ? json['tool_calls'] as List
         : json['toolCalls'] is List
-            ? json['toolCalls'] as List
-            : const <Object>[];
+        ? json['toolCalls'] as List
+        : const <Object>[];
     final firstCall = calls.whereType<Map>().firstOrNull;
     final toolCall = mapValue(
       firstCall ??
@@ -2512,8 +2528,10 @@ class AgentAction {
       actionObject['type'],
     ]);
     final normalizedActionName = _normalizeKind(actionName);
-    final actionNameIsTerminal =
-        const <String>{'complete', 'fail'}.contains(normalizedActionName);
+    final actionNameIsTerminal = const <String>{
+      'complete',
+      'fail',
+    }.contains(normalizedActionName);
     final rawTool = _firstText(<Object?>[
       json['tool'],
       json['toolName'],
@@ -2653,51 +2671,53 @@ class AgentAction {
     }
     if (kind == 'tool' && arguments.isEmpty) {
       arguments = Map<String, dynamic>.from(json)
-        ..removeWhere((key, _) => const <String>{
-              'action',
-              'kind',
-              'type',
-              'status',
-              'operation',
-              'act',
-              'tool',
-              'toolName',
-              'tool_name',
-              'functionName',
-              'function_name',
-              'command',
-              'name',
-              'arguments',
-              'args',
-              'parameters',
-              'params',
-              'input',
-              'reason',
-              'rationale',
-              'explanation',
-              'summary',
-              'answer',
-              'final_answer',
-              'finalAnswer',
-              'final_response',
-              'finalResponse',
-              'output_text',
-              'outputText',
-              'response',
-              'result',
-              'final',
-              'content',
-              'text',
-              'error',
-              'message',
-              'tool_calls',
-              'toolCalls',
-              'toolCall',
-              'tool_call',
-              'functionCall',
-              'function_call',
-              'function',
-            }.contains(key));
+        ..removeWhere(
+          (key, _) => const <String>{
+            'action',
+            'kind',
+            'type',
+            'status',
+            'operation',
+            'act',
+            'tool',
+            'toolName',
+            'tool_name',
+            'functionName',
+            'function_name',
+            'command',
+            'name',
+            'arguments',
+            'args',
+            'parameters',
+            'params',
+            'input',
+            'reason',
+            'rationale',
+            'explanation',
+            'summary',
+            'answer',
+            'final_answer',
+            'finalAnswer',
+            'final_response',
+            'finalResponse',
+            'output_text',
+            'outputText',
+            'response',
+            'result',
+            'final',
+            'content',
+            'text',
+            'error',
+            'message',
+            'tool_calls',
+            'toolCalls',
+            'toolCall',
+            'tool_call',
+            'functionCall',
+            'function_call',
+            'function',
+          }.contains(key),
+        );
     }
     return AgentAction(
       kind: kind,

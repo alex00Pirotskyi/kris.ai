@@ -1,8 +1,18 @@
 {
-  "authority": "P2 governed source inventory V63 (P2-only; P1A is a merged dependency)",
+  "authority": "P2 governed source inventory V70-R5 owner-risk tri-platform QA (P2-only; P1A source is merged and security evidence is waived for QA)",
   "discovery": {
     "productionRegex": "^p2_.*\\.dart$",
     "testRegex": "^p2_.*\\.dart$"
+  },
+  "ownerRiskQaExtension": {
+    "allPlatformsRequired": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "externalEvidenceTrustRequired": false,
+    "formalSecurityCompletion": false,
+    "productionReleaseEligible": false
   },
   "productionDart": [
     "lib/product/p2_app_shell.dart",
@@ -19,6 +29,7 @@
     "lib/product/p2_host_operations.dart",
     "lib/product/p2_managed_authorization_registry.dart",
     "lib/product/p2_owner_mode.dart",
+    "lib/product/p2_owner_risk_authority.dart",
     "lib/product/p2_owner_workspace.dart",
     "lib/product/p2_p1_authority_adapter.dart",
     "lib/product/p2_process_tree.dart",
@@ -51,6 +62,8 @@
     "test/product/p2_fixture_runtime_unit_test.dart",
     "test/product/p2_host_operations_test.dart",
     "test/product/p2_owner_mode_test.dart",
+    "test/product/p2_owner_risk_contract_test.dart",
+    "test/product/p2_owner_risk_runtime_smoke_test.dart",
     "test/product/p2_owner_workspace_test.dart",
     "test/product/p2_process_terminal_contract_test.dart",
     "test/product/p2_qa_preview_gate_test.dart",

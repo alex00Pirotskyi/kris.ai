@@ -18,9 +18,10 @@ void main() {
     expect(policy.requiresMutualAuthentication, isTrue);
     expect(policy.requiresPeerIdentity, isTrue);
     expect(policy.requiresReplayProtection, isTrue);
-    expect(
-      LocalIpcTransportPolicyV1.transports.keys.toSet(),
-      <String>{'windows', 'macos', 'linux'},
-    );
+    expect(LocalIpcTransportPolicyV1.transports.keys.toSet(), <String>{
+      'windows',
+      'macos',
+      'linux',
+    });
   });
 }

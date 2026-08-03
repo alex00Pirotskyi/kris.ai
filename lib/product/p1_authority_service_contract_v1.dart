@@ -86,8 +86,11 @@ class P1AuthorityServiceEndpointV1 {
 
   void validate() {
     if (!const {'windows', 'macos', 'linux'}.contains(platform) ||
-        !const {'windows-named-pipe', 'macos-xpc', 'linux-af-unix'}
-            .contains(transport) ||
+        !const {
+          'windows-named-pipe',
+          'macos-xpc',
+          'linux-af-unix',
+        }.contains(transport) ||
         address.isEmpty ||
         !_p1aId.hasMatch(serviceInstanceId) ||
         !_p1aHex64.hasMatch(serviceBuildSha256) ||
@@ -103,20 +106,20 @@ class P1AuthorityServiceEndpointV1 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'platform': platform,
-        'transport': transport,
-        'address': address,
-        'serviceInstanceId': serviceInstanceId,
-        'serviceBuildSha256': serviceBuildSha256,
-        'connectorLibrarySha256': connectorLibrarySha256,
-        'installerSha256': installerSha256,
-        'serverIdentity': serverIdentity,
-        'osEnforcedIsolation': osEnforcedIsolation,
-        'workerPrincipalSeparated': workerPrincipalSeparated,
-        'typedOperationsOnly': typedOperationsOnly,
-        'nonExportableKeys': nonExportableKeys,
-      };
+    'schemaVersion': '2.0.0',
+    'platform': platform,
+    'transport': transport,
+    'address': address,
+    'serviceInstanceId': serviceInstanceId,
+    'serviceBuildSha256': serviceBuildSha256,
+    'connectorLibrarySha256': connectorLibrarySha256,
+    'installerSha256': installerSha256,
+    'serverIdentity': serverIdentity,
+    'osEnforcedIsolation': osEnforcedIsolation,
+    'workerPrincipalSeparated': workerPrincipalSeparated,
+    'typedOperationsOnly': typedOperationsOnly,
+    'nonExportableKeys': nonExportableKeys,
+  };
 }
 
 class P1AuthorityOwnerApprovalRequestV2 {
@@ -171,8 +174,9 @@ class P1AuthorityOwnerApprovalRequestV2 {
     if (interactionType != 'native-owner-confirmation' ||
         !userPresent ||
         binding.length < requiredBinding.length ||
-        requiredBinding
-            .any((key) => !_p1aId.hasMatch(binding[key]?.toString() ?? '')) ||
+        requiredBinding.any(
+          (key) => !_p1aId.hasMatch(binding[key]?.toString() ?? ''),
+        ) ||
         (profile != 'owner' && profile != 'owner_unattended') ||
         !_p1aHex64.hasMatch(payloadSha256) ||
         !_p1aHex64.hasMatch(uiSurfaceSha256) ||
@@ -185,22 +189,21 @@ class P1AuthorityOwnerApprovalRequestV2 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aRecordOwnerApprovalOperationV2,
-        'requestId': requestId,
-        'approvalId': approvalId,
-        'interactionNonce': interactionNonce,
-        'interactionType': interactionType,
-        'binding': binding,
-        'effectOperation': effectOperation,
-        'payloadSha256': payloadSha256,
-        'uiSurfaceSha256': uiSurfaceSha256,
-        'confirmationTextSha256': confirmationTextSha256,
-        'userPresent': userPresent,
-        'expiresAtEpochSeconds':
-            expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aRecordOwnerApprovalOperationV2,
+    'requestId': requestId,
+    'approvalId': approvalId,
+    'interactionNonce': interactionNonce,
+    'interactionType': interactionType,
+    'binding': binding,
+    'effectOperation': effectOperation,
+    'payloadSha256': payloadSha256,
+    'uiSurfaceSha256': uiSurfaceSha256,
+    'confirmationTextSha256': confirmationTextSha256,
+    'userPresent': userPresent,
+    'expiresAtEpochSeconds': expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 class P1AuthorityEffectRequestV1 {
@@ -281,31 +284,31 @@ class P1AuthorityEffectRequestV1 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aAuthorizeEffectOperationV1,
-        'requestId': requestId,
-        'requestNonce': requestNonce,
-        'workerSessionId': workerSessionId,
-        'channelId': channelId,
-        'workerIdentity': workerIdentity,
-        'effectOperation': operation,
-        'binding': <String, Object?>{
-          'runId': runId,
-          'taskId': taskId,
-          'actorId': actorId,
-          'toolId': toolId,
-          'accessProfileId': accessProfileId,
-          'capabilityId': capabilityId,
-        },
-        'policyEffect': policyEffect,
-        'requestedBudgets': requestedBudgets,
-        'payload': payload,
-        'payloadSha256': payloadSha256,
-        'ownerApprovalId': ownerApprovalId,
-        'expectedRevocationEpoch': expectedRevocationEpoch,
-        'deadlineEpochSeconds': deadline.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aAuthorizeEffectOperationV1,
+    'requestId': requestId,
+    'requestNonce': requestNonce,
+    'workerSessionId': workerSessionId,
+    'channelId': channelId,
+    'workerIdentity': workerIdentity,
+    'effectOperation': operation,
+    'binding': <String, Object?>{
+      'runId': runId,
+      'taskId': taskId,
+      'actorId': actorId,
+      'toolId': toolId,
+      'accessProfileId': accessProfileId,
+      'capabilityId': capabilityId,
+    },
+    'policyEffect': policyEffect,
+    'requestedBudgets': requestedBudgets,
+    'payload': payload,
+    'payloadSha256': payloadSha256,
+    'ownerApprovalId': ownerApprovalId,
+    'expectedRevocationEpoch': expectedRevocationEpoch,
+    'deadlineEpochSeconds': deadline.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 class P1AuthorityEffectPermitV1 {
@@ -392,16 +395,15 @@ class P1AuthorityEffectOutcomeV1 {
   final String? behaviorSessionId;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aRecordEffectOutcomeOperationV1,
-        'requestId': requestId,
-        'permitId': permitId,
-        'status': status,
-        'receiptSha256': receiptSha256,
-        'finishedAtEpochSeconds':
-            finishedAt.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aRecordEffectOutcomeOperationV1,
+    'requestId': requestId,
+    'permitId': permitId,
+    'status': status,
+    'receiptSha256': receiptSha256,
+    'finishedAtEpochSeconds': finishedAt.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 abstract interface class P1AuthorityServiceConnectorV1 {
@@ -441,7 +443,8 @@ final class P1AuthorityServiceHandleV1 {
   void validateForP2({bool allowQaPreview = false}) {
     service.endpoint.validate();
     final provenance = service.provenance;
-    final qaPreviewAccepted = allowQaPreview &&
+    final qaPreviewAccepted =
+        allowQaPreview &&
         provenance['qaPreview'] == true &&
         provenance['qaPreviewVersion'] == '1.0.0' &&
         provenance['qaPreviewFormalCompletion'] == false &&
@@ -466,23 +469,32 @@ final class P1AuthorityServiceHandleV1 {
         !_p1aHex40.hasMatch(provenance['mergedCommit']?.toString() ?? '') ||
         !_p1aHex40.hasMatch(provenance['mergedTree']?.toString() ?? '') ||
         !_p1aHex64.hasMatch(
-            provenance['aggregateManifestSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['platformReceiptSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['evidenceTrustSha256']?.toString() ?? '') ||
+          provenance['aggregateManifestSha256']?.toString() ?? '',
+        ) ||
         !_p1aHex64.hasMatch(
-            provenance['serviceBehaviorReceiptSha256']?.toString() ?? '') ||
+          provenance['platformReceiptSha256']?.toString() ?? '',
+        ) ||
         !_p1aHex64.hasMatch(
-            provenance['workerDenialReceiptSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['workerLauncherSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['workerExecutableSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['workerIdentitySha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['denialTranscriptSha256']?.toString() ?? '') ||
+          provenance['evidenceTrustSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['serviceBehaviorReceiptSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerDenialReceiptSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerLauncherSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerExecutableSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerIdentitySha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['denialTranscriptSha256']?.toString() ?? '',
+        ) ||
         !_p1aHex64.hasMatch(provenance['p1aPackageSha256']?.toString() ?? '') ||
         provenance['privateAuthorityMaterialPresent'] != false ||
         provenance['arbitraryMessageSigningApi'] != false ||

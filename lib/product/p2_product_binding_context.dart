@@ -23,17 +23,16 @@ final class P2ProductBindingContext implements P2HostBindingProvider {
   String? get runId => _runId;
   String? get taskId => _taskId;
 
-  void activate({
-    required String runId,
-    required String taskId,
-  }) {
+  void activate({required String runId, required String taskId}) {
     final run = runId.trim();
     final task = taskId.trim();
     if (run.isEmpty || task.isEmpty) {
       throw StateError('p2_product_binding_invalid');
     }
-    if (!const <String>{'owner', 'owner_unattended'}
-        .contains(accessProfileId)) {
+    if (!const <String>{
+      'owner',
+      'owner_unattended',
+    }.contains(accessProfileId)) {
       throw StateError('p2_product_binding_profile_invalid');
     }
     _runId = run;
@@ -67,13 +66,13 @@ final class P2ProductBindingContext implements P2HostBindingProvider {
   }
 
   Map<String, Object?> get provenance => <String, Object?>{
-        'implementation': 'P2ProductBindingContext',
-        'active': active,
-        'runId': _runId,
-        'taskId': _taskId,
-        'actorId': actorId,
-        'accessProfileId': accessProfileId,
-        'generation': _generation,
-        'syntheticDefault': false,
-      };
+    'implementation': 'P2ProductBindingContext',
+    'active': active,
+    'runId': _runId,
+    'taskId': _taskId,
+    'actorId': actorId,
+    'accessProfileId': accessProfileId,
+    'generation': _generation,
+    'syntheticDefault': false,
+  };
 }

@@ -17,8 +17,7 @@ Object? _canonicalJsonValue(Object? value) {
         throw StateError('automation_envelope_non_string_key');
       }
       return key;
-    }).toList()
-      ..sort();
+    }).toList()..sort();
     return <String, Object?>{
       for (final key in keys) key: _canonicalJsonValue(value[key]),
     };
@@ -184,21 +183,38 @@ class P2WorkerGrantProof {
         )) {
       throw StateError('worker_authenticated_ipc_record_invalid');
     }
+    final ownerRiskQa = authority['ownerRiskQa'] == true;
+    final authorityModeValid = ownerRiskQa
+        ? authority['authorityKind'] == 'p2-owner-risk-current-account-v1' &&
+              authority['sharedP1ControlPlane'] == false &&
+              authority['securityEvidenceWaived'] == true &&
+              authority['osEnforcedIsolation'] == false &&
+              authority['workerDeniedByOs'] == false &&
+              workerIdentity['principalType'] == 'owner-risk-current-account' &&
+              workerIdentity['ownerRiskQa'] == true &&
+              workerIdentity['osIsolationWaived'] == true &&
+              workerIdentity['currentAccountAuthority'] == true &&
+              workerIdentity['authorityConnectionDenied'] == false &&
+              workerIdentity['authorityDenialCode'] == 'owner_risk_waived'
+        : authority['authorityKind'] == 'p1-isolated-authority-service-v2' &&
+              authority['sharedP1ControlPlane'] == true &&
+              authority['osEnforcedIsolation'] == true &&
+              authority['workerDeniedByOs'] == true;
     if ((auditCheckpoint['id'] ?? '').toString().isEmpty ||
         !hex.hasMatch('${auditCheckpoint['digest'] ?? ''}') ||
-        authority['authorityKind'] != 'p1-isolated-authority-service-v2' ||
+        !authorityModeValid ||
         authority['p2CanIssueGrants'] != false ||
         authority['workerCanIssue'] != false ||
-        authority['osEnforcedIsolation'] != true ||
-        authority['workerDeniedByOs'] != true ||
         authority['workerIdentitySha256'] !=
             authenticatedIpc['workerIdentitySha256'] ||
         workerIdentitySha256 != authenticatedIpc['workerIdentitySha256'] ||
         authority['workerIdentitySha256'] != workerIdentitySha256 ||
-        Sha256.text(_canonicalJson(<String, Object?>{
-              for (final entry in workerIdentity.entries)
-                if (entry.key != 'identitySha256') entry.key: entry.value,
-            })) !=
+        Sha256.text(
+              _canonicalJson(<String, Object?>{
+                for (final entry in workerIdentity.entries)
+                  if (entry.key != 'identitySha256') entry.key: entry.value,
+              }),
+            ) !=
             workerIdentitySha256 ||
         (workerIdentity['identitySha256'] != null &&
             workerIdentity['identitySha256'] != workerIdentitySha256) ||
@@ -208,25 +224,25 @@ class P2WorkerGrantProof {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'grantId': grantId,
-        'grantDigest': grantDigest,
-        'policyDecisionId': policyDecisionId,
-        'policyDecisionDigest': policyDecisionDigest,
-        'scopeDigest': scopeDigest,
-        'notBefore': notBefore.toUtc().toIso8601String(),
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'useNumber': useNumber,
-        'maxUses': maxUses,
-        'revocationEpoch': revocationEpoch,
-        'consumptionReceipt': consumptionReceipt.toJson(),
-        'capabilityGrant': capabilityGrant,
-        'policyDecision': policyDecision,
-        'authenticatedIpc': authenticatedIpc,
-        'auditCheckpoint': auditCheckpoint,
-        'authority': authority,
-        'workerIdentity': workerIdentity,
-        'workerIdentitySha256': workerIdentitySha256,
-      };
+    'grantId': grantId,
+    'grantDigest': grantDigest,
+    'policyDecisionId': policyDecisionId,
+    'policyDecisionDigest': policyDecisionDigest,
+    'scopeDigest': scopeDigest,
+    'notBefore': notBefore.toUtc().toIso8601String(),
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'useNumber': useNumber,
+    'maxUses': maxUses,
+    'revocationEpoch': revocationEpoch,
+    'consumptionReceipt': consumptionReceipt.toJson(),
+    'capabilityGrant': capabilityGrant,
+    'policyDecision': policyDecision,
+    'authenticatedIpc': authenticatedIpc,
+    'auditCheckpoint': auditCheckpoint,
+    'authority': authority,
+    'workerIdentity': workerIdentity,
+    'workerIdentitySha256': workerIdentitySha256,
+  };
 }
 
 /// One-use desktop-issued effect permit. The worker receives only the public
@@ -361,46 +377,46 @@ class P2WorkerEffectPermitV1 {
   }
 
   Map<String, Object?> unsignedJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'permitType': 'p1a-one-use-effect-permit-v2',
-        'permitId': permitId,
-        'workerSessionId': workerSessionId,
-        'channelId': channelId,
-        'workerIdentitySha256': workerIdentitySha256,
-        'peerId': peerId,
-        'requestId': requestId,
-        'operation': operation,
-        'binding': binding,
-        'authorizationSha256': authorizationSha256,
-        'payloadSha256': payloadSha256,
-        'grantId': grantId,
-        'grantDigest': grantDigest,
-        'policyDecisionId': policyDecisionId,
-        'policyDecisionDigest': policyDecisionDigest,
-        'scopeDigest': scopeDigest,
-        'consumptionReceiptSha256': consumptionReceiptSha256,
-        'useNumber': useNumber,
-        'maxUses': maxUses,
-        'revocationEpoch': revocationEpoch,
-        'authoritativeStateVersion': authoritativeStateVersion,
-        'auditCheckpointId': auditCheckpointId,
-        'auditCheckpointSha256': auditCheckpointSha256,
-        'sharedAuthorityInstanceId': sharedAuthorityInstanceId,
-        'authorityImplementationSha256': authorityImplementationSha256,
-        'runtimeBuildSha256': runtimeBuildSha256,
-        'sourceCommit': sourceCommit,
-        'sourceTree': sourceTree,
-        'issuedAt': issuedAt.toUtc().toIso8601String(),
-        'notBefore': notBefore.toUtc().toIso8601String(),
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'algorithm': 'ecdsa-p256-sha256',
-        'signerKeyId': signerKeyId,
-      };
+    'schemaVersion': '2.0.0',
+    'permitType': 'p1a-one-use-effect-permit-v2',
+    'permitId': permitId,
+    'workerSessionId': workerSessionId,
+    'channelId': channelId,
+    'workerIdentitySha256': workerIdentitySha256,
+    'peerId': peerId,
+    'requestId': requestId,
+    'operation': operation,
+    'binding': binding,
+    'authorizationSha256': authorizationSha256,
+    'payloadSha256': payloadSha256,
+    'grantId': grantId,
+    'grantDigest': grantDigest,
+    'policyDecisionId': policyDecisionId,
+    'policyDecisionDigest': policyDecisionDigest,
+    'scopeDigest': scopeDigest,
+    'consumptionReceiptSha256': consumptionReceiptSha256,
+    'useNumber': useNumber,
+    'maxUses': maxUses,
+    'revocationEpoch': revocationEpoch,
+    'authoritativeStateVersion': authoritativeStateVersion,
+    'auditCheckpointId': auditCheckpointId,
+    'auditCheckpointSha256': auditCheckpointSha256,
+    'sharedAuthorityInstanceId': sharedAuthorityInstanceId,
+    'authorityImplementationSha256': authorityImplementationSha256,
+    'runtimeBuildSha256': runtimeBuildSha256,
+    'sourceCommit': sourceCommit,
+    'sourceTree': sourceTree,
+    'issuedAt': issuedAt.toUtc().toIso8601String(),
+    'notBefore': notBefore.toUtc().toIso8601String(),
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'algorithm': 'ecdsa-p256-sha256',
+    'signerKeyId': signerKeyId,
+  };
 
   Map<String, Object?> toJson() => <String, Object?>{
-        ...unsignedJson(),
-        'signatureBase64': signatureBase64,
-      };
+    ...unsignedJson(),
+    'signatureBase64': signatureBase64,
+  };
 
   void validateShape() {
     final hex40 = RegExp(r'^[0-9a-f]{40}$');
@@ -481,8 +497,9 @@ class P2AutomationEnvelope {
       throw const FormatException('automation_envelope_shape');
     }
     final authorization = Map<String, Object?>.from(rawAuthorization);
-    final deadline =
-        DateTime.tryParse(value['deadline']?.toString() ?? '')?.toUtc();
+    final deadline = DateTime.tryParse(
+      value['deadline']?.toString() ?? '',
+    )?.toUtc();
     if (deadline == null) {
       throw const FormatException('automation_envelope_deadline');
     }
@@ -509,15 +526,15 @@ class P2AutomationEnvelope {
   }
 
   Map<String, Object?> get authorizationJson => <String, Object?>{
-        'runId': binding.runId,
-        'taskId': binding.taskId,
-        'actorId': binding.actorId,
-        'toolId': binding.toolId,
-        'accessProfileId': binding.accessProfileId,
-        'capabilityId': binding.capabilityId,
-        'operation': operation,
-        ...grantProof.toJson(),
-      };
+    'runId': binding.runId,
+    'taskId': binding.taskId,
+    'actorId': binding.actorId,
+    'toolId': binding.toolId,
+    'accessProfileId': binding.accessProfileId,
+    'capabilityId': binding.capabilityId,
+    'operation': operation,
+    ...grantProof.toJson(),
+  };
 
   void validate() {
     final now = DateTime.now().toUtc();
@@ -566,7 +583,8 @@ class P2AutomationEnvelope {
             grantProof.authority['workerIdentitySha256'] ||
         effectPermit.consumptionReceiptSha256 !=
             Sha256.text(
-                _canonicalJson(grantProof.consumptionReceipt.toJson())) ||
+              _canonicalJson(grantProof.consumptionReceipt.toJson()),
+            ) ||
         effectPermit.useNumber != grantProof.useNumber ||
         effectPermit.maxUses != grantProof.maxUses ||
         effectPermit.revocationEpoch != grantProof.revocationEpoch ||
@@ -577,13 +595,13 @@ class P2AutomationEnvelope {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '3.0.0',
-        'requestId': requestId,
-        'deadline': deadline.toUtc().toIso8601String(),
-        'authorization': authorizationJson,
-        'effectPermit': effectPermit.toJson(),
-        'payload': payload,
-      };
+    'schemaVersion': '3.0.0',
+    'requestId': requestId,
+    'deadline': deadline.toUtc().toIso8601String(),
+    'authorization': authorizationJson,
+    'effectPermit': effectPermit.toJson(),
+    'payload': payload,
+  };
 }
 
 abstract interface class P2AutomationEnvelopeIssuer {

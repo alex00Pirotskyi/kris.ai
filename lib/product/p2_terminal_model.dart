@@ -42,17 +42,17 @@ class P2TerminalModel {
   int selectedIndex = 0;
 
   Map<P2TerminalAction, String> get shortcuts => const {
-        P2TerminalAction.newTab: 'Ctrl+Shift+T',
-        P2TerminalAction.closeTab: 'Ctrl+Shift+W',
-        P2TerminalAction.focusSearch: 'Ctrl+Shift+F',
-        P2TerminalAction.copySelection: 'Ctrl+Shift+C',
-        P2TerminalAction.saveTranscript: 'Ctrl+Shift+S',
-        P2TerminalAction.sendInterrupt: 'Ctrl+C',
-        P2TerminalAction.terminate: 'Ctrl+Shift+X',
-        P2TerminalAction.detach: 'Ctrl+Shift+D',
-        P2TerminalAction.attach: 'Ctrl+Shift+A',
-        P2TerminalAction.emergencyKill: 'Ctrl+Shift+K',
-      };
+    P2TerminalAction.newTab: 'Ctrl+Shift+T',
+    P2TerminalAction.closeTab: 'Ctrl+Shift+W',
+    P2TerminalAction.focusSearch: 'Ctrl+Shift+F',
+    P2TerminalAction.copySelection: 'Ctrl+Shift+C',
+    P2TerminalAction.saveTranscript: 'Ctrl+Shift+S',
+    P2TerminalAction.sendInterrupt: 'Ctrl+C',
+    P2TerminalAction.terminate: 'Ctrl+Shift+X',
+    P2TerminalAction.detach: 'Ctrl+Shift+D',
+    P2TerminalAction.attach: 'Ctrl+Shift+A',
+    P2TerminalAction.emergencyKill: 'Ctrl+Shift+K',
+  };
 
   P2TerminalTab? get selected => tabs.isEmpty ? null : tabs[selectedIndex];
 
@@ -69,13 +69,13 @@ class P2TerminalModel {
   }
 
   Iterable<P2TerminalTab> search(String query) => tabs.where(
-        (tab) => <String>[
-          tab.title,
-          tab.shell,
-          tab.cwd,
-          tab.runId,
-          tab.taskId,
-          tab.grantId,
-        ].join(' ').toLowerCase().contains(query.toLowerCase()),
-      );
+    (tab) => <String>[
+      tab.title,
+      tab.shell,
+      tab.cwd,
+      tab.runId,
+      tab.taskId,
+      tab.grantId,
+    ].join(' ').toLowerCase().contains(query.toLowerCase()),
+  );
 }

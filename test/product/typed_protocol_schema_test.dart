@@ -43,10 +43,9 @@ void main() {
       const schemas = ToolSchemaRegistry();
 
       expect(
-        () => schemas.normalizeAndValidate(
-          'write_file',
-          <String, dynamic>{'path': 'docs/result.md'},
-        ),
+        () => schemas.normalizeAndValidate('write_file', <String, dynamic>{
+          'path': 'docs/result.md',
+        }),
         throwsA(
           isA<ToolSchemaException>()
               .having((error) => error.code, 'code', 'argument_required')
@@ -89,14 +88,11 @@ void main() {
       const schemas = ToolSchemaRegistry();
 
       expect(
-        () => schemas.normalizeAndValidate(
-          'run_command',
-          <String, dynamic>{
-            'executable': 'dart',
-            'args': <String>['test'],
-            'workingDirectory': '/tmp/outside',
-          },
-        ),
+        () => schemas.normalizeAndValidate('run_command', <String, dynamic>{
+          'executable': 'dart',
+          'args': <String>['test'],
+          'workingDirectory': '/tmp/outside',
+        }),
         throwsA(
           isA<ToolSchemaException>().having(
             (error) => error.code,
@@ -109,14 +105,18 @@ void main() {
 
     test('provider and MCP descriptors come from the same contract', () {
       const schemas = ToolSchemaRegistry();
-      final openAi = schemas.descriptors(
-        allowlist: const <String>{'write_file'},
-        dialect: ToolDescriptorDialect.openAiCompatible,
-      ).single;
-      final mcp = schemas.descriptors(
-        allowlist: const <String>{'write_file'},
-        dialect: ToolDescriptorDialect.mcp,
-      ).single;
+      final openAi = schemas
+          .descriptors(
+            allowlist: const <String>{'write_file'},
+            dialect: ToolDescriptorDialect.openAiCompatible,
+          )
+          .single;
+      final mcp = schemas
+          .descriptors(
+            allowlist: const <String>{'write_file'},
+            dialect: ToolDescriptorDialect.mcp,
+          )
+          .single;
 
       expect(openAi['type'], 'function');
       expect(
@@ -207,38 +207,40 @@ void main() {
       );
     });
 
-    test('canonical failure metadata survives direct and recorded envelopes',
-        () {
-      const adapter = AgentProtocolAdapter();
-      final payload = <String, dynamic>{
-        'action': 'fail',
-        'summary': 'The approved dependency is unavailable.',
-        'code': 'resource_unavailable',
-        'retryable': true,
-        'reason': 'Provider health check failed.',
-      };
+    test(
+      'canonical failure metadata survives direct and recorded envelopes',
+      () {
+        const adapter = AgentProtocolAdapter();
+        final payload = <String, dynamic>{
+          'action': 'fail',
+          'summary': 'The approved dependency is unavailable.',
+          'code': 'resource_unavailable',
+          'retryable': true,
+          'reason': 'Provider health check failed.',
+        };
 
-      final direct = adapter.parseDecision(
-        jsonEncode(payload),
-        item: item,
-        allowPlainCompletion: false,
-      );
-      final recorded = adapter.parseDecision(
-        jsonEncode(<String, dynamic>{'normalizedAction': payload}),
-        item: item,
-        allowPlainCompletion: false,
-        provider: AgentProviderProtocol.recorded,
-      );
+        final direct = adapter.parseDecision(
+          jsonEncode(payload),
+          item: item,
+          allowPlainCompletion: false,
+        );
+        final recorded = adapter.parseDecision(
+          jsonEncode(<String, dynamic>{'normalizedAction': payload}),
+          item: item,
+          allowPlainCompletion: false,
+          provider: AgentProviderProtocol.recorded,
+        );
 
-      for (final decision in <AgentDecision>[direct, recorded]) {
-        expect(decision, isA<FailDecision>());
-        final failure = decision as FailDecision;
-        expect(failure.code, 'resource_unavailable');
-        expect(failure.retryable, isTrue);
-        expect(failure.summary, 'The approved dependency is unavailable.');
-        expect(failure.reason, 'Provider health check failed.');
-      }
-    });
+        for (final decision in <AgentDecision>[direct, recorded]) {
+          expect(decision, isA<FailDecision>());
+          final failure = decision as FailDecision;
+          expect(failure.code, 'resource_unavailable');
+          expect(failure.retryable, isTrue);
+          expect(failure.summary, 'The approved dependency is unavailable.');
+          expect(failure.reason, 'Provider health check failed.');
+        }
+      },
+    );
 
     test('current coordinator bridge rejects future decision kinds', () {
       const adapter = AgentProtocolAdapter();
@@ -375,10 +377,12 @@ void main() {
       const aliases = <String>['content', 'body', 'fileContent', 'new_content'];
 
       for (var index = 0; index < 300; index++) {
-        final content = 'case-$index-${random.nextInt(1 << 30)}\n'
+        final content =
+            'case-$index-${random.nextInt(1 << 30)}\n'
             "${List<String>.filled(random.nextInt(80), 'x').join()}";
-        final path =
-            index.isEven ? '`docs/fuzz-$index.md`' : 'docs/fuzz-$index.md';
+        final path = index.isEven
+            ? '`docs/fuzz-$index.md`'
+            : 'docs/fuzz-$index.md';
         final payload = <String, dynamic>{
           'action': 'tool_call',
           'tool': index % 5 == 0 ? 'write' : 'write_file',
@@ -390,8 +394,8 @@ void main() {
         final wrapped = switch (index % 4) {
           0 => jsonEncode(payload),
           1 => jsonEncode(<String, dynamic>{
-              'message': <String, dynamic>{'content': jsonEncode(payload)},
-            }),
+            'message': <String, dynamic>{'content': jsonEncode(payload)},
+          }),
           2 => 'analysis before action\n```json\n${jsonEncode(payload)}\n```',
           _ => jsonEncode(<String, dynamic>{'decision': payload}),
         };
@@ -425,11 +429,7 @@ void main() {
           'arguments': <String, dynamic>{'path': 'docs/missing-$index.md'},
         });
         expect(
-          () => adapter.parse(
-            payload,
-            item: item,
-            allowPlainCompletion: false,
-          ),
+          () => adapter.parse(payload, item: item, allowPlainCompletion: false),
           throwsA(
             isA<ProductException>().having(
               (error) => error.code,

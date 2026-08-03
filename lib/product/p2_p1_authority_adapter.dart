@@ -7,6 +7,16 @@ import 'p2_automation_host.dart';
 import 'p2_automation_host_process_client.dart';
 import 'p2_effect_boundary.dart';
 
+abstract interface class P2RuntimeAuthority
+    implements
+        P2AutomationEnvelopeAuthority,
+        P2ProtectedAutomationBootstrapProvider,
+        P2RestrictedWorkerIdentitySink,
+        P2CompletionEligibleAuthority {
+  bool get qaPreview;
+  Map<String, Object?>? lastAuthorityObservation(String taskId);
+}
+
 abstract interface class P2CompletionEligibleAuthority {
   String get authorityImplementation;
   String get authorityKind;
@@ -18,22 +28,18 @@ abstract interface class P2CompletionEligibleAuthority {
 /// authority service. P2 owns no policy engine, approval authority, grant
 /// issuer, use ledger, revocation state, audit signer, protected-key handle,
 /// private key, or arbitrary signing process.
-final class P2IsolatedP1AuthorityAdapter
-    implements
-        P2AutomationEnvelopeAuthority,
-        P2ProtectedAutomationBootstrapProvider,
-        P2RestrictedWorkerIdentitySink,
-        P2CompletionEligibleAuthority {
+final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
   P2IsolatedP1AuthorityAdapter(
     P1AuthorityServiceHandleV1 handle, {
     bool qaPreview = false,
-  })  : _handle = handle,
-        _qaPreview = qaPreview {
+  }) : _handle = handle,
+       _qaPreview = qaPreview {
     handle.validateForP2(allowQaPreview: qaPreview);
   }
 
   final P1AuthorityServiceHandleV1 _handle;
   final bool _qaPreview;
+  @override
   bool get qaPreview => _qaPreview;
   bool get _executionEligible => completionEligible || _qaPreview;
   final Random _random = Random.secure();
@@ -55,33 +61,35 @@ final class P2IsolatedP1AuthorityAdapter
   bool get completionEligible => service.completionEligible;
   @override
   Map<String, Object?> get authorityProvenance => <String, Object?>{
-        ...service.provenance,
-        'adapter': 'P2IsolatedP1AuthorityAdapter',
-        'authorityKind': authorityKind,
-        'endpoint': service.endpoint.toJson(),
-        'delegatesToMergedP1aService': true,
-        'p2PolicyEngine': false,
-        'p2GrantIssuer': false,
-        'p2UseLedger': false,
-        'p2RevocationStore': false,
-        'p2AuditSigner': false,
-        'p2ProtectedKeyBroker': false,
-        'workerCanReachAuthoritySigner': false,
-        'workerReceivesSymmetricAuthorityKeys': false,
-        'workerReceivesPrivateSigningMaterial': false,
-        'restrictedWorkerIdentityBound': _restrictedWorkerIdentity != null,
-        'completionEligible': completionEligible,
-        'qaPreview': _qaPreview,
-        'qaPreviewFormalCompletion': false,
-      };
+    ...service.provenance,
+    'adapter': 'P2IsolatedP1AuthorityAdapter',
+    'authorityKind': authorityKind,
+    'endpoint': service.endpoint.toJson(),
+    'delegatesToMergedP1aService': true,
+    'p2PolicyEngine': false,
+    'p2GrantIssuer': false,
+    'p2UseLedger': false,
+    'p2RevocationStore': false,
+    'p2AuditSigner': false,
+    'p2ProtectedKeyBroker': false,
+    'workerCanReachAuthoritySigner': false,
+    'workerReceivesSymmetricAuthorityKeys': false,
+    'workerReceivesPrivateSigningMaterial': false,
+    'restrictedWorkerIdentityBound': _restrictedWorkerIdentity != null,
+    'completionEligible': completionEligible,
+    'qaPreview': _qaPreview,
+    'qaPreviewFormalCompletion': false,
+  };
 
+  @override
   Map<String, Object?>? lastAuthorityObservation(String taskId) =>
       _observations[taskId];
 
   String _id(String prefix) {
     final bytes = List<int>.generate(24, (_) => _random.nextInt(256));
-    final body =
-        bytes.map((value) => value.toRadixString(16).padLeft(2, '0')).join();
+    final body = bytes
+        .map((value) => value.toRadixString(16).padLeft(2, '0'))
+        .join();
     return '$prefix-$body';
   }
 
@@ -106,8 +114,9 @@ final class P2IsolatedP1AuthorityAdapter
         identity['authorityDenialCode'] != 'worker_principal_denied') {
       throw StateError('p1a_restricted_worker_identity_invalid');
     }
-    _restrictedWorkerIdentity =
-        Map<String, Object?>.unmodifiable(Map<String, Object?>.from(identity));
+    _restrictedWorkerIdentity = Map<String, Object?>.unmodifiable(
+      Map<String, Object?>.from(identity),
+    );
   }
 
   @override
@@ -164,8 +173,10 @@ final class P2IsolatedP1AuthorityAdapter
       throw StateError('p1a_worker_identity_not_bound');
     }
     if (binding.operation != operation ||
-        !const <String>{'owner', 'owner_unattended'}
-            .contains(binding.accessProfileId)) {
+        !const <String>{
+          'owner',
+          'owner_unattended',
+        }.contains(binding.accessProfileId)) {
       throw StateError('p1a_effect_binding_invalid');
     }
     final exactPayload = <String, Object?>{'operation': operation, ...payload};
@@ -242,12 +253,14 @@ final class P2IsolatedP1AuthorityAdapter
       'authenticatedIpcChannelId':
           envelope.grantProof.authenticatedIpc['channelId'],
       'authenticatedIpcRequestId': envelope.requestId,
-      'authenticatedIpcSha256':
-          Sha256.text(p1aCanonicalJson(envelope.grantProof.authenticatedIpc)),
+      'authenticatedIpcSha256': Sha256.text(
+        p1aCanonicalJson(envelope.grantProof.authenticatedIpc),
+      ),
       'auditCheckpointId': envelope.grantProof.auditCheckpoint['id'],
       'auditCheckpointSha256': envelope.grantProof.auditCheckpoint['digest'],
-      'effectPermitSha256':
-          Sha256.text(p1aCanonicalJson(envelope.effectPermit.toJson())),
+      'effectPermitSha256': Sha256.text(
+        p1aCanonicalJson(envelope.effectPermit.toJson()),
+      ),
       'effectPermitSignerPublicKeySpkiSha256':
           _permitVerifierPublicKeySpkiSha256,
       'durableConsumptionStateVersion':
@@ -282,16 +295,18 @@ final class P2IsolatedP1AuthorityAdapter
           service.provenance['aggregateManifestSha256'],
       'authorityBuildIdentity': <String, Object?>{
         'implementationSha256': service.endpoint.serviceBuildSha256,
-        'runtimeBuildSha256': service.provenance['runtimeBuildSha256'] ??
+        'runtimeBuildSha256':
+            service.provenance['runtimeBuildSha256'] ??
             service.endpoint.serviceBuildSha256,
         'runtimeResourceManifestSha256':
             service.provenance['runtimeResourceManifestSha256'] ??
-                service.endpoint.serviceBuildSha256,
+            service.endpoint.serviceBuildSha256,
       },
       'p1aEvidence': service.provenance,
     };
-    _observations[binding.taskId] =
-        Map<String, Object?>.unmodifiable(observation);
+    _observations[binding.taskId] = Map<String, Object?>.unmodifiable(
+      observation,
+    );
     return envelope;
   }
 
@@ -370,7 +385,8 @@ final class P2P1OperationRegistry {
     if (operation.startsWith('filesystem.')) {
       final destructive =
           operation.endsWith('delete') || operation.endsWith('quarantine');
-      final read = operation.endsWith('read') ||
+      final read =
+          operation.endsWith('read') ||
           operation.endsWith('enumerate') ||
           operation.endsWith('metadata') ||
           operation.endsWith('search');
@@ -378,20 +394,20 @@ final class P2P1OperationRegistry {
         capabilityId: destructive
             ? 'filesystem.delete'
             : read
-                ? 'filesystem.read'
-                : 'filesystem.write',
+            ? 'filesystem.read'
+            : 'filesystem.write',
         actorId: 'owner_executor',
         toolId: destructive
             ? 'delete_file'
             : read
-                ? 'read_file'
-                : 'write_file',
+            ? 'read_file'
+            : 'write_file',
         domain: 'filesystem',
         action: destructive
             ? 'delete'
             : read
-                ? 'read'
-                : 'write',
+            ? 'read'
+            : 'write',
       );
     }
     if (operation == 'command.run' ||
@@ -399,45 +415,50 @@ final class P2P1OperationRegistry {
         operation.startsWith('application.') ||
         operation.startsWith('host.')) {
       return const P2P1OperationDescriptor(
-          capabilityId: 'process.execute',
-          actorId: 'automation_host',
-          toolId: 'run_command',
-          domain: 'process',
-          action: 'execute');
+        capabilityId: 'process.execute',
+        actorId: 'automation_host',
+        toolId: 'run_command',
+        domain: 'process',
+        action: 'execute',
+      );
     }
     if (operation.startsWith('pty.') || operation.startsWith('watchdog.')) {
       return const P2P1OperationDescriptor(
-          capabilityId: 'process.interactive',
-          actorId: 'automation_host',
-          toolId: 'terminal_open',
-          domain: 'process',
-          action: 'interactive');
+        capabilityId: 'process.interactive',
+        actorId: 'automation_host',
+        toolId: 'terminal_open',
+        domain: 'process',
+        action: 'interactive',
+      );
     }
     if (operation.startsWith('package.') ||
         operation == 'sdk.discover' ||
         operation.startsWith('service.')) {
       return const P2P1OperationDescriptor(
-          capabilityId: 'package.manage',
-          actorId: 'owner_executor',
-          toolId: 'package_install',
-          domain: 'package',
-          action: 'manage');
+        capabilityId: 'package.manage',
+        actorId: 'owner_executor',
+        toolId: 'package_install',
+        domain: 'package',
+        action: 'manage',
+      );
     }
     if (operation.startsWith('clipboard.') || operation.startsWith('screen.')) {
       return const P2P1OperationDescriptor(
-          capabilityId: 'process.execute',
-          actorId: 'automation_host',
-          toolId: 'run_command',
-          domain: 'process',
-          action: 'execute');
+        capabilityId: 'process.execute',
+        actorId: 'automation_host',
+        toolId: 'run_command',
+        domain: 'process',
+        action: 'execute',
+      );
     }
     if (operation.startsWith('snapshot.')) {
       return const P2P1OperationDescriptor(
-          capabilityId: 'filesystem.write',
-          actorId: 'owner_executor',
-          toolId: 'write_file',
-          domain: 'filesystem',
-          action: 'write');
+        capabilityId: 'filesystem.write',
+        actorId: 'owner_executor',
+        toolId: 'write_file',
+        domain: 'filesystem',
+        action: 'write',
+      );
     }
     throw StateError('p1_operation_not_registered');
   }

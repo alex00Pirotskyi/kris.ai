@@ -9,47 +9,49 @@ import 'package:kristin_local_agent/product/p2_snapshot_undo.dart';
 import 'p2_test_support.dart';
 
 void main() {
-  test('product restore executor restores file and journals rollback',
-      () async {
-    final directory = await Directory.systemTemp.createTemp('p2-undo-test-');
-    addTearDown(() => directory.delete(recursive: true));
-    final snapshots = Directory('${directory.path}/snapshots');
-    final target = File('${directory.path}/target.txt');
-    await target.writeAsString('before');
-    final authorizer = _Authorizer();
-    final journal = TestJournal();
-    final service = P2SnapshotUndoService(
-      snapshots,
-      authorizer: authorizer,
-      journal: journal,
-    );
-    final backup = await service.backupFile(target, 'effect-1');
-    await target.writeAsString('after');
-    final receipt = P2EffectReceipt(
-      effectId: 'effect-1',
-      runId: 'run',
-      taskId: 'P2-010',
-      operation: 'filesystem.write',
-      status: P2EffectStatus.succeeded,
-      reversibility: P2Reversibility.reversible,
-      startedAt: DateTime.now().toUtc(),
-      completedAt: DateTime.now().toUtc(),
-      details: <String, Object?>{
-        'backupPath': backup.path,
-        'path': target.path,
-      },
-    );
-    final plan = service.classify(receipt);
-    final result = await service.restore(
-      plan,
-      testBinding('snapshot.restore', taskId: 'P2-010'),
-    );
-    expect(await target.readAsString(), 'before');
-    expect(result.status, P2EffectStatus.rolledBack);
-    expect(result.completedSteps, 1);
-    expect(authorizer.operations, <String>['snapshot.restore']);
-    expect(journal.receipts.single.status, P2EffectStatus.rolledBack);
-  });
+  test(
+    'product restore executor restores file and journals rollback',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('p2-undo-test-');
+      addTearDown(() => directory.delete(recursive: true));
+      final snapshots = Directory('${directory.path}/snapshots');
+      final target = File('${directory.path}/target.txt');
+      await target.writeAsString('before');
+      final authorizer = _Authorizer();
+      final journal = TestJournal();
+      final service = P2SnapshotUndoService(
+        snapshots,
+        authorizer: authorizer,
+        journal: journal,
+      );
+      final backup = await service.backupFile(target, 'effect-1');
+      await target.writeAsString('after');
+      final receipt = P2EffectReceipt(
+        effectId: 'effect-1',
+        runId: 'run',
+        taskId: 'P2-010',
+        operation: 'filesystem.write',
+        status: P2EffectStatus.succeeded,
+        reversibility: P2Reversibility.reversible,
+        startedAt: DateTime.now().toUtc(),
+        completedAt: DateTime.now().toUtc(),
+        details: <String, Object?>{
+          'backupPath': backup.path,
+          'path': target.path,
+        },
+      );
+      final plan = service.classify(receipt);
+      final result = await service.restore(
+        plan,
+        testBinding('snapshot.restore', taskId: 'P2-010'),
+      );
+      expect(await target.readAsString(), 'before');
+      expect(result.status, P2EffectStatus.rolledBack);
+      expect(result.completedSteps, 1);
+      expect(authorizer.operations, <String>['snapshot.restore']);
+      expect(journal.receipts.single.status, P2EffectStatus.rolledBack);
+    },
+  );
 
   test('restore rejects symlink target without replacing it', () async {
     if (Platform.isWindows) return;
@@ -81,10 +83,7 @@ void main() {
       nonRestorableReasons: const <String>[],
     );
     await expectLater(
-      service.restore(
-        plan,
-        testBinding('snapshot.restore', taskId: 'P2-010'),
-      ),
+      service.restore(plan, testBinding('snapshot.restore', taskId: 'P2-010')),
       throwsStateError,
     );
     expect(await victim.readAsString(), 'victim');

@@ -8,12 +8,12 @@ enum AgentDecisionKind { tool, complete, fail, askUser, delegate }
 
 extension AgentDecisionKindWireName on AgentDecisionKind {
   String get wireName => switch (this) {
-        AgentDecisionKind.tool => 'tool',
-        AgentDecisionKind.complete => 'complete',
-        AgentDecisionKind.fail => 'fail',
-        AgentDecisionKind.askUser => 'ask_user',
-        AgentDecisionKind.delegate => 'delegate',
-      };
+    AgentDecisionKind.tool => 'tool',
+    AgentDecisionKind.complete => 'complete',
+    AgentDecisionKind.fail => 'fail',
+    AgentDecisionKind.askUser => 'ask_user',
+    AgentDecisionKind.delegate => 'delegate',
+  };
 }
 
 class AgentDecisionException extends ProductException {
@@ -24,27 +24,24 @@ class AgentDecisionException extends ProductException {
     this.issues = const <SchemaIssue>[],
     Map<String, dynamic> details = const <String, dynamic>{},
   }) : super(
-          code,
-          message,
-          details: <String, dynamic>{
-            ...details,
-            'schemaVersion': generatedAgentDecisionSchemaVersion,
-            'contractDigest': generatedProtocolContractDigest,
-            'retryability': retryability.wireName,
-            if (issues.isNotEmpty)
-              'issues': issues.map((issue) => issue.toJson()).toList(),
-          },
-        );
+         code,
+         message,
+         details: <String, dynamic>{
+           ...details,
+           'schemaVersion': generatedAgentDecisionSchemaVersion,
+           'contractDigest': generatedProtocolContractDigest,
+           'retryability': retryability.wireName,
+           if (issues.isNotEmpty)
+             'issues': issues.map((issue) => issue.toJson()).toList(),
+         },
+       );
 
   final Retryability retryability;
   final List<SchemaIssue> issues;
 }
 
 sealed class AgentDecision {
-  const AgentDecision({
-    this.protocolVersion = '1.0.0',
-    this.reason = '',
-  });
+  const AgentDecision({this.protocolVersion = '1.0.0', this.reason = ''});
 
   final String protocolVersion;
   final String reason;
@@ -56,59 +53,56 @@ sealed class AgentDecision {
   AgentAction toLegacyAction() {
     return switch (this) {
       ToolDecision decision => AgentAction(
-          kind: 'tool',
-          tool: decision.tool,
-          arguments: decision.arguments,
-          reason: decision.reason,
-        ),
+        kind: 'tool',
+        tool: decision.tool,
+        arguments: decision.arguments,
+        reason: decision.reason,
+      ),
       CompleteDecision decision => AgentAction(
-          kind: 'complete',
-          reason: decision.reason,
-          summary: decision.summary,
-        ),
+        kind: 'complete',
+        reason: decision.reason,
+        summary: decision.summary,
+      ),
       FailDecision decision => AgentAction(
-          kind: 'fail',
-          reason: decision.reason,
-          summary: decision.summary,
-        ),
+        kind: 'fail',
+        reason: decision.reason,
+        summary: decision.summary,
+      ),
       AskUserDecision _ => throw AgentDecisionException(
-          code: 'agent_decision_legacy_bridge_unsupported',
-          message:
-              'This decision kind requires the durable V2 workflow kernel and cannot be represented by the v1 coordinator bridge.',
-          retryability: Retryability.never,
-          details: <String, dynamic>{'decisionKind': kind.wireName},
-        ),
+        code: 'agent_decision_legacy_bridge_unsupported',
+        message:
+            'This decision kind requires the durable V2 workflow kernel and cannot be represented by the v1 coordinator bridge.',
+        retryability: Retryability.never,
+        details: <String, dynamic>{'decisionKind': kind.wireName},
+      ),
       DelegateDecision _ => throw AgentDecisionException(
-          code: 'agent_decision_legacy_bridge_unsupported',
-          message:
-              'This decision kind requires the durable V2 workflow kernel and cannot be represented by the v1 coordinator bridge.',
-          retryability: Retryability.never,
-          details: <String, dynamic>{'decisionKind': kind.wireName},
-        ),
+        code: 'agent_decision_legacy_bridge_unsupported',
+        message:
+            'This decision kind requires the durable V2 workflow kernel and cannot be represented by the v1 coordinator bridge.',
+        retryability: Retryability.never,
+        details: <String, dynamic>{'decisionKind': kind.wireName},
+      ),
     };
   }
 
   static AgentDecision fromLegacy(AgentAction action) {
     return switch (action.kind) {
       'tool' => ToolDecision(
-          tool: action.tool ?? '',
-          arguments: Map<String, dynamic>.from(action.arguments),
-          reason: action.reason,
-        ),
+        tool: action.tool ?? '',
+        arguments: Map<String, dynamic>.from(action.arguments),
+        reason: action.reason,
+      ),
       'complete' => CompleteDecision(
-          summary: action.summary,
-          reason: action.reason,
-        ),
-      'fail' => FailDecision(
-          summary: action.summary,
-          reason: action.reason,
-        ),
+        summary: action.summary,
+        reason: action.reason,
+      ),
+      'fail' => FailDecision(summary: action.summary, reason: action.reason),
       _ => throw AgentDecisionException(
-          code: 'model_action_invalid',
-          message: 'Unsupported legacy agent action kind: ${action.kind}',
-          retryability: Retryability.modelCorrection,
-          details: <String, dynamic>{'receivedAction': action.kind},
-        ),
+        code: 'model_action_invalid',
+        message: 'Unsupported legacy agent action kind: ${action.kind}',
+        retryability: Retryability.modelCorrection,
+        details: <String, dynamic>{'receivedAction': action.kind},
+      ),
     };
   }
 }
@@ -132,22 +126,21 @@ class ToolDecision extends AgentDecision {
     Map<String, dynamic>? arguments,
     String? protocolVersion,
     String? reason,
-  }) =>
-      ToolDecision(
-        tool: tool ?? this.tool,
-        arguments: arguments ?? this.arguments,
-        protocolVersion: protocolVersion ?? this.protocolVersion,
-        reason: reason ?? this.reason,
-      );
+  }) => ToolDecision(
+    tool: tool ?? this.tool,
+    arguments: arguments ?? this.arguments,
+    protocolVersion: protocolVersion ?? this.protocolVersion,
+    reason: reason ?? this.reason,
+  );
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'protocolVersion': protocolVersion,
-        'action': kind.wireName,
-        'tool': tool,
-        'arguments': arguments,
-        if (reason.trim().isNotEmpty) 'reason': reason,
-      };
+    'protocolVersion': protocolVersion,
+    'action': kind.wireName,
+    'tool': tool,
+    'arguments': arguments,
+    if (reason.trim().isNotEmpty) 'reason': reason,
+  };
 }
 
 class CompleteDecision extends AgentDecision {
@@ -164,11 +157,11 @@ class CompleteDecision extends AgentDecision {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'protocolVersion': protocolVersion,
-        'action': kind.wireName,
-        'summary': summary,
-        if (reason.trim().isNotEmpty) 'reason': reason,
-      };
+    'protocolVersion': protocolVersion,
+    'action': kind.wireName,
+    'summary': summary,
+    if (reason.trim().isNotEmpty) 'reason': reason,
+  };
 }
 
 class FailDecision extends AgentDecision {
@@ -189,13 +182,13 @@ class FailDecision extends AgentDecision {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'protocolVersion': protocolVersion,
-        'action': kind.wireName,
-        if (summary.trim().isNotEmpty) 'summary': summary,
-        if (reason.trim().isNotEmpty) 'reason': reason,
-        if (code.trim().isNotEmpty) 'code': code,
-        'retryable': retryable,
-      };
+    'protocolVersion': protocolVersion,
+    'action': kind.wireName,
+    if (summary.trim().isNotEmpty) 'summary': summary,
+    if (reason.trim().isNotEmpty) 'reason': reason,
+    if (code.trim().isNotEmpty) 'code': code,
+    'retryable': retryable,
+  };
 }
 
 class AskUserDecision extends AgentDecision {
@@ -214,12 +207,12 @@ class AskUserDecision extends AgentDecision {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'protocolVersion': protocolVersion,
-        'action': kind.wireName,
-        'question': question,
-        if (choices.isNotEmpty) 'choices': choices,
-        if (reason.trim().isNotEmpty) 'reason': reason,
-      };
+    'protocolVersion': protocolVersion,
+    'action': kind.wireName,
+    'question': question,
+    if (choices.isNotEmpty) 'choices': choices,
+    if (reason.trim().isNotEmpty) 'reason': reason,
+  };
 }
 
 class DelegateDecision extends AgentDecision {
@@ -240,13 +233,13 @@ class DelegateDecision extends AgentDecision {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'protocolVersion': protocolVersion,
-        'action': kind.wireName,
-        'delegateTo': delegateTo,
-        'task': task,
-        if (inputs.isNotEmpty) 'inputs': inputs,
-        if (reason.trim().isNotEmpty) 'reason': reason,
-      };
+    'protocolVersion': protocolVersion,
+    'action': kind.wireName,
+    'delegateTo': delegateTo,
+    'task': task,
+    if (inputs.isNotEmpty) 'inputs': inputs,
+    if (reason.trim().isNotEmpty) 'reason': reason,
+  };
 }
 
 class AgentDecisionCodec {
@@ -277,10 +270,7 @@ class AgentDecisionCodec {
     final schema = Map<String, dynamic>.from(
       definitions[definitionName] as Map,
     );
-    final normalized = <String, dynamic>{
-      'protocolVersion': '1.0.0',
-      ...json,
-    };
+    final normalized = <String, dynamic>{'protocolVersion': '1.0.0', ...json};
     final issues = JsonSchemaValidator.validate(normalized, schema);
     if (issues.isNotEmpty) {
       throw AgentDecisionException(
@@ -294,42 +284,42 @@ class AgentDecisionCodec {
     }
     return switch (action) {
       'tool' => ToolDecision(
-          tool: normalized['tool'].toString(),
-          arguments: Map<String, dynamic>.from(normalized['arguments'] as Map),
-          protocolVersion: normalized['protocolVersion'].toString(),
-          reason: normalized['reason']?.toString() ?? '',
-        ),
+        tool: normalized['tool'].toString(),
+        arguments: Map<String, dynamic>.from(normalized['arguments'] as Map),
+        protocolVersion: normalized['protocolVersion'].toString(),
+        reason: normalized['reason']?.toString() ?? '',
+      ),
       'complete' => CompleteDecision(
-          summary: normalized['summary'].toString(),
-          protocolVersion: normalized['protocolVersion'].toString(),
-          reason: normalized['reason']?.toString() ?? '',
-        ),
+        summary: normalized['summary'].toString(),
+        protocolVersion: normalized['protocolVersion'].toString(),
+        reason: normalized['reason']?.toString() ?? '',
+      ),
       'fail' => FailDecision(
-          summary: normalized['summary']?.toString() ?? '',
-          code: normalized['code']?.toString() ?? '',
-          retryable: normalized['retryable'] == true,
-          protocolVersion: normalized['protocolVersion'].toString(),
-          reason: normalized['reason']?.toString() ?? '',
-        ),
+        summary: normalized['summary']?.toString() ?? '',
+        code: normalized['code']?.toString() ?? '',
+        retryable: normalized['retryable'] == true,
+        protocolVersion: normalized['protocolVersion'].toString(),
+        reason: normalized['reason']?.toString() ?? '',
+      ),
       'ask_user' => AskUserDecision(
-          question: normalized['question'].toString(),
-          choices: normalized['choices'] is List
-              ? (normalized['choices'] as List)
+        question: normalized['question'].toString(),
+        choices: normalized['choices'] is List
+            ? (normalized['choices'] as List)
                   .map((choice) => choice.toString())
                   .toList(growable: false)
-              : const <String>[],
-          protocolVersion: normalized['protocolVersion'].toString(),
-          reason: normalized['reason']?.toString() ?? '',
-        ),
+            : const <String>[],
+        protocolVersion: normalized['protocolVersion'].toString(),
+        reason: normalized['reason']?.toString() ?? '',
+      ),
       'delegate' => DelegateDecision(
-          delegateTo: normalized['delegateTo'].toString(),
-          task: normalized['task'].toString(),
-          inputs: normalized['inputs'] is Map
-              ? Map<String, dynamic>.from(normalized['inputs'] as Map)
-              : const <String, dynamic>{},
-          protocolVersion: normalized['protocolVersion'].toString(),
-          reason: normalized['reason']?.toString() ?? '',
-        ),
+        delegateTo: normalized['delegateTo'].toString(),
+        task: normalized['task'].toString(),
+        inputs: normalized['inputs'] is Map
+            ? Map<String, dynamic>.from(normalized['inputs'] as Map)
+            : const <String, dynamic>{},
+        protocolVersion: normalized['protocolVersion'].toString(),
+        reason: normalized['reason']?.toString() ?? '',
+      ),
       _ => throw StateError('unreachable AgentDecision action: $action'),
     };
   }

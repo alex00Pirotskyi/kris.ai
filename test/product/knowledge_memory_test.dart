@@ -15,8 +15,9 @@ void main() {
   late KnowledgeService service;
 
   setUp(() async {
-    temporary =
-        await Directory.systemTemp.createTemp('kristin-knowledge-test-');
+    temporary = await Directory.systemTemp.createTemp(
+      'kristin-knowledge-test-',
+    );
     knowledge = PersistentCollection<KnowledgeEntry>(
       file: File('${temporary.path}/state/knowledge.json'),
       fromJson: KnowledgeEntry.fromJson,
@@ -99,80 +100,83 @@ void main() {
     expect(listed.map((entry) => entry.id), <String>['newer-a', 'older-a']);
   });
 
-  test('research is archived with immutable provenance and cited retrieval',
-      () async {
-    const extracted =
-        'Kristin stores fetched research locally and retrieves cited passages.';
-    final note = await service.addNote(
-      projectId: 'project-a',
-      title: 'Product requirement',
-      content: 'Every answer that uses research must expose a citation marker.',
-      tags: const <String>{'citations', 'requirements'},
-    );
-    final source = await service.addResearch(
-      'project-a',
-      ResearchSource(
-        id: 'source-1',
-        requestedUrl: Uri.parse('https://example.com/start'),
-        url: Uri.parse('https://example.com/final'),
-        title: 'Research archive design',
-        mimeType: 'text/html',
-        contentHash: Sha256.text(extracted),
-        fetchedAt: DateTime.utc(2026, 7, 15, 12),
-        content: extracted,
-        rawContent: '<html><body>$extracted</body></html>',
-        statusCode: 200,
-        responseHeaders: const <String, String>{
-          'content-type': 'text/html',
-        },
-        redirectChain: const <String>[
-          'https://example.com/start',
-          'https://example.com/final',
-        ],
-      ),
-    );
-    await service.addResearchSearch(
-      projectId: 'project-a',
-      query: 'local cited retrieval',
-      provider: 'test-provider',
-      results: const <Map<String, String>>[
-        <String, String>{
-          'title': 'Local knowledge',
-          'url': 'https://example.com/knowledge',
-          'snippet': 'A cited retrieval result.',
-        },
-      ],
-    );
-
-    final records = await service.listArchives('project-a');
-    expect(records, hasLength(2));
-    expect(records.first.knowledgeId, isNotEmpty);
-    expect(records.any((record) => record.requestedUrl.endsWith('/start')),
-        isTrue);
-    for (final record in records) {
-      expect(record.contentHash, isNotEmpty);
-      expect(record.rawObjectPath, isNotEmpty);
-      final object = File(
-        '${temporary.path}/research-archive/'
-        '${record.rawObjectPath.replaceAll('/', Platform.pathSeparator)}',
+  test(
+    'research is archived with immutable provenance and cited retrieval',
+    () async {
+      const extracted =
+          'Kristin stores fetched research locally and retrieves cited passages.';
+      final note = await service.addNote(
+        projectId: 'project-a',
+        title: 'Product requirement',
+        content:
+            'Every answer that uses research must expose a citation marker.',
+        tags: const <String>{'citations', 'requirements'},
       );
-      expect(await object.exists(), isTrue, reason: object.path);
-    }
+      final source = await service.addResearch(
+        'project-a',
+        ResearchSource(
+          id: 'source-1',
+          requestedUrl: Uri.parse('https://example.com/start'),
+          url: Uri.parse('https://example.com/final'),
+          title: 'Research archive design',
+          mimeType: 'text/html',
+          contentHash: Sha256.text(extracted),
+          fetchedAt: DateTime.utc(2026, 7, 15, 12),
+          content: extracted,
+          rawContent: '<html><body>$extracted</body></html>',
+          statusCode: 200,
+          responseHeaders: const <String, String>{'content-type': 'text/html'},
+          redirectChain: const <String>[
+            'https://example.com/start',
+            'https://example.com/final',
+          ],
+        ),
+      );
+      await service.addResearchSearch(
+        projectId: 'project-a',
+        query: 'local cited retrieval',
+        provider: 'test-provider',
+        results: const <Map<String, String>>[
+          <String, String>{
+            'title': 'Local knowledge',
+            'url': 'https://example.com/knowledge',
+            'snippet': 'A cited retrieval result.',
+          },
+        ],
+      );
 
-    final retrieval = await service.retrieve(
-      'project-a',
-      'research citation archive',
-      includeEpisodes: false,
-    );
-    expect(retrieval.hits, isNotEmpty);
-    expect(retrieval.hits.first.citation, 'K1');
-    expect(retrieval.hits.map((hit) => hit.title), contains(source.title));
-    expect(retrieval.hits.map((hit) => hit.title), contains(note.title));
-    final context = service.buildCitedContext(retrieval);
-    expect(context, contains('[K1]'));
-    expect(context, contains('CITATION RULE'));
-    expect(context, contains('UNTRUSTED EXTERNAL REFERENCE'));
-  });
+      final records = await service.listArchives('project-a');
+      expect(records, hasLength(2));
+      expect(records.first.knowledgeId, isNotEmpty);
+      expect(
+        records.any((record) => record.requestedUrl.endsWith('/start')),
+        isTrue,
+      );
+      for (final record in records) {
+        expect(record.contentHash, isNotEmpty);
+        expect(record.rawObjectPath, isNotEmpty);
+        final object = File(
+          '${temporary.path}/research-archive/'
+          '${record.rawObjectPath.replaceAll('/', Platform.pathSeparator)}',
+        );
+        expect(await object.exists(), isTrue, reason: object.path);
+      }
+
+      final retrieval = await service.retrieve(
+        'project-a',
+        'research citation archive',
+        includeEpisodes: false,
+      );
+      expect(retrieval.hits, isNotEmpty);
+      expect(retrieval.hits.first.citation, 'K1');
+      expect(retrieval.hits.map((hit) => hit.title), contains(source.title));
+      expect(retrieval.hits.map((hit) => hit.title), contains(note.title));
+      final context = service.buildCitedContext(retrieval);
+      expect(context, contains('[K1]'));
+      expect(context, contains('CITATION RULE'));
+      expect(context, contains('UNTRUSTED EXTERNAL REFERENCE'));
+    },
+  );
 
   test('run memory participates in retrieval and portable export', () async {
     final completed = DateTime.utc(2026, 7, 15, 13);
@@ -247,7 +251,8 @@ void main() {
       outcome: RunState.failed,
       summary: '',
       failure: 'model_action_invalid: The model returned an invalid action.',
-      lessons: 'model_action_invalid: The model returned an invalid action.\n'
+      lessons:
+          'model_action_invalid: The model returned an invalid action.\n'
           'Failed work: Inspect project and establish evidence baseline.',
       tags: const <String>{'episode', 'ask', 'failed', 'hello'},
       completedItems: const <String>[],
@@ -303,10 +308,7 @@ void main() {
       automatic.hits.map((hit) => hit.episodeId),
       isNot(contains(failed.id)),
     );
-    expect(
-      automatic.hits.map((hit) => hit.episodeId),
-      contains(succeeded.id),
-    );
+    expect(automatic.hits.map((hit) => hit.episodeId), contains(succeeded.id));
 
     final diagnosticWithoutOptIn = await service.retrieve(
       'project-memory-policy',
@@ -331,207 +333,220 @@ void main() {
       'debug previous failed hello run',
       includeUnsuccessfulEpisodes: true,
     );
-    expect(
-      diagnostic.hits.map((hit) => hit.episodeId),
-      contains(failed.id),
-    );
+    expect(diagnostic.hits.map((hit) => hit.episodeId), contains(failed.id));
     final failedHit = diagnostic.hits.firstWhere(
       (hit) => hit.episodeId == failed.id,
     );
-    expect(
-      RegExp('Failed work:').allMatches(failedHit.snippet),
-      hasLength(1),
-    );
+    expect(RegExp('Failed work:').allMatches(failedHit.snippet), hasLength(1));
   });
 
-  test('automatic context excludes unsuccessful and conversational episodes',
-      () async {
-    final now = DateTime.utc(2026, 7, 16, 9);
+  test(
+    'automatic context excludes unsuccessful and conversational episodes',
+    () async {
+      final now = DateTime.utc(2026, 7, 16, 9);
 
-    MemoryEpisode makeEpisode({
-      required String id,
-      required String request,
-      required RunState outcome,
-      required String summary,
-      String failure = '',
-      List<String> failedItems = const <String>[],
-    }) {
-      return MemoryEpisode(
-        id: id,
-        projectId: 'project-memory-filter',
-        runId: 'run-$id',
-        request: request,
-        mode:
-            outcome == RunState.succeeded ? CommandMode.build : CommandMode.fix,
-        outcome: outcome,
-        summary: summary,
-        failure: failure,
-        lessons: failure,
-        tags: <String>{'episode', outcome.name},
-        completedItems: outcome == RunState.succeeded
-            ? const <String>['Create baseline']
-            : const <String>[],
-        failedItems: failedItems,
-        filesChanged: const <String>[],
-        evidenceIds: const <String>[],
-        evidenceHashes: const <String>[],
-        startedAt: now.subtract(const Duration(minutes: 1)),
-        completedAt: now,
-        modelRequests: 1,
-        toolCalls: 0,
-        mutations: 0,
-        repairs: 0,
-        contentHash: Sha256.text('$id-$request-$outcome-$summary-$failure'),
-        createdAt: now,
+      MemoryEpisode makeEpisode({
+        required String id,
+        required String request,
+        required RunState outcome,
+        required String summary,
+        String failure = '',
+        List<String> failedItems = const <String>[],
+      }) {
+        return MemoryEpisode(
+          id: id,
+          projectId: 'project-memory-filter',
+          runId: 'run-$id',
+          request: request,
+          mode: outcome == RunState.succeeded
+              ? CommandMode.build
+              : CommandMode.fix,
+          outcome: outcome,
+          summary: summary,
+          failure: failure,
+          lessons: failure,
+          tags: <String>{'episode', outcome.name},
+          completedItems: outcome == RunState.succeeded
+              ? const <String>['Create baseline']
+              : const <String>[],
+          failedItems: failedItems,
+          filesChanged: const <String>[],
+          evidenceIds: const <String>[],
+          evidenceHashes: const <String>[],
+          startedAt: now.subtract(const Duration(minutes: 1)),
+          completedAt: now,
+          modelRequests: 1,
+          toolCalls: 0,
+          mutations: 0,
+          repairs: 0,
+          contentHash: Sha256.text('$id-$request-$outcome-$summary-$failure'),
+          createdAt: now,
+        );
+      }
+
+      await episodes.put(
+        makeEpisode(
+          id: 'successful',
+          request: 'Create the project evidence baseline',
+          outcome: RunState.succeeded,
+          summary: 'The project evidence baseline was created successfully.',
+        ),
       );
-    }
+      await episodes.put(
+        makeEpisode(
+          id: 'failed',
+          request: 'Create the project evidence baseline',
+          outcome: RunState.failed,
+          summary: '',
+          failure: 'model_action_invalid: response schema was invalid.',
+          failedItems: const <String>[
+            'Inspect project and establish evidence baseline: invalid response',
+          ],
+        ),
+      );
+      await episodes.put(
+        makeEpisode(
+          id: 'greeting',
+          request: 'hello',
+          outcome: RunState.succeeded,
+          summary: 'Hello!',
+        ),
+      );
 
-    await episodes.put(makeEpisode(
-      id: 'successful',
-      request: 'Create the project evidence baseline',
-      outcome: RunState.succeeded,
-      summary: 'The project evidence baseline was created successfully.',
-    ));
-    await episodes.put(makeEpisode(
-      id: 'failed',
-      request: 'Create the project evidence baseline',
-      outcome: RunState.failed,
-      summary: '',
-      failure: 'model_action_invalid: response schema was invalid.',
-      failedItems: const <String>[
-        'Inspect project and establish evidence baseline: invalid response',
-      ],
-    ));
-    await episodes.put(makeEpisode(
-      id: 'greeting',
-      request: 'hello',
-      outcome: RunState.succeeded,
-      summary: 'Hello!',
-    ));
+      final automatic = await service.retrieve(
+        'project-memory-filter',
+        'project evidence baseline',
+        includeEpisodes: true,
+        includeUnsuccessfulEpisodes: false,
+      );
+      expect(
+        automatic.hits.map((hit) => hit.episodeId),
+        contains('successful'),
+      );
+      expect(
+        automatic.hits.map((hit) => hit.episodeId),
+        isNot(contains('failed')),
+      );
 
-    final automatic = await service.retrieve(
-      'project-memory-filter',
-      'project evidence baseline',
-      includeEpisodes: true,
-      includeUnsuccessfulEpisodes: false,
-    );
-    expect(
-      automatic.hits.map((hit) => hit.episodeId),
-      contains('successful'),
-    );
-    expect(
-      automatic.hits.map((hit) => hit.episodeId),
-      isNot(contains('failed')),
-    );
+      final diagnostic = await service.retrieve(
+        'project-memory-filter',
+        'invalid response schema failed work',
+        includeEpisodes: true,
+        includeUnsuccessfulEpisodes: true,
+      );
+      final failedHit = diagnostic.hits.firstWhere(
+        (hit) => hit.episodeId == 'failed',
+      );
+      expect(
+        RegExp(r'Failed work:').allMatches(failedHit.snippet),
+        hasLength(1),
+      );
 
-    final diagnostic = await service.retrieve(
-      'project-memory-filter',
-      'invalid response schema failed work',
-      includeEpisodes: true,
-      includeUnsuccessfulEpisodes: true,
-    );
-    final failedHit = diagnostic.hits.firstWhere(
-      (hit) => hit.episodeId == 'failed',
-    );
-    expect(RegExp(r'Failed work:').allMatches(failedHit.snippet), hasLength(1));
+      final greetingSearch = await service.retrieve(
+        'project-memory-filter',
+        'hello',
+        includeEpisodes: true,
+        includeUnsuccessfulEpisodes: true,
+      );
+      expect(
+        greetingSearch.hits.map((hit) => hit.episodeId),
+        isNot(contains('greeting')),
+      );
+    },
+  );
 
-    final greetingSearch = await service.retrieve(
-      'project-memory-filter',
-      'hello',
-      includeEpisodes: true,
-      includeUnsuccessfulEpisodes: true,
-    );
-    expect(
-      greetingSearch.hits.map((hit) => hit.episodeId),
-      isNot(contains('greeting')),
-    );
-  });
+  test(
+    'v0.8 archive files migrate idempotently and repair missing entries',
+    () async {
+      const projectId = 'project-c';
+      const sourceText =
+          'The legacy archive contains a durable project research finding.';
+      final sourceHash = Sha256.text(sourceText);
+      final legacyDirectory = Directory(
+        '${temporary.path}/research-archive/$projectId',
+      );
+      await legacyDirectory.create(recursive: true);
+      final source = ResearchSource(
+        id: 'legacy-source',
+        requestedUrl: Uri.parse('https://example.com/requested'),
+        url: Uri.parse('https://example.com/final'),
+        title: 'Legacy source',
+        mimeType: 'text/plain',
+        contentHash: sourceHash,
+        fetchedAt: DateTime.utc(2026, 7, 14, 8),
+        content: sourceText,
+        rawContent: sourceText,
+        statusCode: 200,
+        responseHeaders: const <String, String>{'content-type': 'text/plain'},
+        redirectChain: const <String>[
+          'https://example.com/requested',
+          'https://example.com/final',
+        ],
+      );
+      await File(
+        '${legacyDirectory.path}/$sourceHash.source.json',
+      ).writeAsString(
+        const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+          'kind': 'research_source',
+          'projectId': projectId,
+          'capturedAt': '2026-07-14T08:00:00.000Z',
+          'source': source.toJson(),
+        }),
+        flush: true,
+      );
 
-  test('v0.8 archive files migrate idempotently and repair missing entries',
-      () async {
-    const projectId = 'project-c';
-    const sourceText =
-        'The legacy archive contains a durable project research finding.';
-    final sourceHash = Sha256.text(sourceText);
-    final legacyDirectory =
-        Directory('${temporary.path}/research-archive/$projectId');
-    await legacyDirectory.create(recursive: true);
-    final source = ResearchSource(
-      id: 'legacy-source',
-      requestedUrl: Uri.parse('https://example.com/requested'),
-      url: Uri.parse('https://example.com/final'),
-      title: 'Legacy source',
-      mimeType: 'text/plain',
-      contentHash: sourceHash,
-      fetchedAt: DateTime.utc(2026, 7, 14, 8),
-      content: sourceText,
-      rawContent: sourceText,
-      statusCode: 200,
-      responseHeaders: const <String, String>{
-        'content-type': 'text/plain',
-      },
-      redirectChain: const <String>[
-        'https://example.com/requested',
-        'https://example.com/final',
-      ],
-    );
-    await File('${legacyDirectory.path}/$sourceHash.source.json').writeAsString(
-      const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-        'kind': 'research_source',
+      final searchWrapper = <String, dynamic>{
+        'kind': 'research_search',
         'projectId': projectId,
-        'capturedAt': '2026-07-14T08:00:00.000Z',
-        'source': source.toJson(),
-      }),
-      flush: true,
-    );
+        'provider': 'legacy-provider',
+        'query': 'durable local archive',
+        'capturedAt': '2026-07-14T08:05:00.000Z',
+        'results': const <Map<String, String>>[
+          <String, String>{
+            'title': 'Archived search result',
+            'url': 'https://example.com/result',
+            'snippet': 'A legacy search snapshot.',
+          },
+        ],
+      };
+      final searchContent = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(searchWrapper);
+      final searchHash = Sha256.text(searchContent);
+      await File(
+        '${legacyDirectory.path}/$searchHash.search.json',
+      ).writeAsString(searchContent, flush: true);
 
-    final searchWrapper = <String, dynamic>{
-      'kind': 'research_search',
-      'projectId': projectId,
-      'provider': 'legacy-provider',
-      'query': 'durable local archive',
-      'capturedAt': '2026-07-14T08:05:00.000Z',
-      'results': const <Map<String, String>>[
-        <String, String>{
-          'title': 'Archived search result',
-          'url': 'https://example.com/result',
-          'snippet': 'A legacy search snapshot.',
-        },
-      ],
-    };
-    final searchContent =
-        const JsonEncoder.withIndent('  ').convert(searchWrapper);
-    final searchHash = Sha256.text(searchContent);
-    await File('${legacyDirectory.path}/$searchHash.search.json')
-        .writeAsString(searchContent, flush: true);
+      await service.initialize();
+      await service.initialize();
 
-    await service.initialize();
-    await service.initialize();
+      final migratedArchives = await service.listArchives(projectId);
+      final migratedKnowledge = await service.list(projectId);
+      expect(migratedArchives, hasLength(2));
+      expect(migratedKnowledge, hasLength(2));
+      expect(
+        migratedArchives.map((record) => record.provider),
+        containsAll(<String>{'legacy-v0.8-source-file', 'legacy-provider'}),
+      );
+      expect(
+        migratedKnowledge.every(
+          (entry) => entry.tags.contains('migrated-v0.8'),
+        ),
+        isTrue,
+      );
+      expect(
+        migratedKnowledge.every((entry) => entry.archiveId.isNotEmpty),
+        isTrue,
+      );
 
-    final migratedArchives = await service.listArchives(projectId);
-    final migratedKnowledge = await service.list(projectId);
-    expect(migratedArchives, hasLength(2));
-    expect(migratedKnowledge, hasLength(2));
-    expect(
-      migratedArchives.map((record) => record.provider),
-      containsAll(<String>{'legacy-v0.8-source-file', 'legacy-provider'}),
-    );
-    expect(
-      migratedKnowledge.every((entry) => entry.tags.contains('migrated-v0.8')),
-      isTrue,
-    );
-    expect(
-      migratedKnowledge.every((entry) => entry.archiveId.isNotEmpty),
-      isTrue,
-    );
+      final removed = migratedKnowledge.first;
+      await knowledge.remove(removed.id);
+      expect(await knowledge.get(removed.id), isNull);
+      await service.initialize();
 
-    final removed = migratedKnowledge.first;
-    await knowledge.remove(removed.id);
-    expect(await knowledge.get(removed.id), isNull);
-    await service.initialize();
-
-    expect(await service.listArchives(projectId), hasLength(2));
-    expect(await service.list(projectId), hasLength(2));
-    expect(await knowledge.get(removed.id), isNotNull);
-  });
+      expect(await service.listArchives(projectId), hasLength(2));
+      expect(await service.list(projectId), hasLength(2));
+      expect(await knowledge.get(removed.id), isNotNull);
+    },
+  );
 }

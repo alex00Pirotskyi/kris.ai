@@ -19,9 +19,11 @@ void main() {
     expect(approval.requiresElevation, isTrue);
   });
 
-  test('production host contracts expose no implicit direct implementation',
-      () {
-    expect(P2SupportStatus.values, contains(P2SupportStatus.blocked));
-    expect(P2SupportStatus.values, contains(P2SupportStatus.unknown));
-  });
+  test(
+    'production host contracts expose no implicit direct implementation',
+    () {
+      expect(P2SupportStatus.values, contains(P2SupportStatus.blocked));
+      expect(P2SupportStatus.values, contains(P2SupportStatus.unknown));
+    },
+  );
 }

@@ -22,29 +22,26 @@ final class SignedAuditCheckpointV1 {
   final String signatureHex;
 
   Map<String, Object?> body() => <String, Object?>{
-        'schemaVersion': '1.0.0',
-        'sequence': sequence,
-        'eventCount': eventCount,
-        'previousCheckpointHash': previousCheckpointHash,
-        'auditHeadHash': auditHeadHash,
-        'keyId': keyId,
-      };
+    'schemaVersion': '1.0.0',
+    'sequence': sequence,
+    'eventCount': eventCount,
+    'previousCheckpointHash': previousCheckpointHash,
+    'auditHeadHash': auditHeadHash,
+    'keyId': keyId,
+  };
 
   Uint8List canonicalPayload() =>
       Uint8List.fromList(utf8.encode(canonicalJsonV2(body())));
 
   bool verifyWithPublicKeyHex(String publicKeyHex) => Ed25519Reference.verify(
-        hexToBytesV2(publicKeyHex),
-        canonicalPayload(),
-        hexToBytesV2(signatureHex),
-      );
+    hexToBytesV2(publicKeyHex),
+    canonicalPayload(),
+    hexToBytesV2(signatureHex),
+  );
 
   String checkpointHash() => Sha256.text(
-        canonicalJsonV2(<String, Object?>{
-          ...body(),
-          'signature': signatureHex,
-        }),
-      );
+    canonicalJsonV2(<String, Object?>{...body(), 'signature': signatureHex}),
+  );
 }
 
 final class SignedAuditCheckpointVerifierV1 {

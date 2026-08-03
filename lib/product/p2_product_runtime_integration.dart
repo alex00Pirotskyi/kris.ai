@@ -52,7 +52,7 @@ final class P2ProductRuntimeOwnerMode {
   final P2TerminalModel terminalModel;
   final P2EmergencyController emergencyController;
   final P2OwnerWorkspaceServiceActions actions;
-  final P2IsolatedP1AuthorityAdapter authority;
+  final P2RuntimeAuthority authority;
   final Directory stateDirectory;
   final P2ProductBindingContext bindingContext;
   final P2ManagedAuthorizationRegistry authorizationRegistry;
@@ -64,7 +64,7 @@ final class P2ProductRuntimeOwnerMode {
 
   static Future<P2ProductRuntimeOwnerMode> start({
     required Directory stateDirectory,
-    required P2IsolatedP1AuthorityAdapter authority,
+    required P2RuntimeAuthority authority,
     required P2EffectJournal journal,
     required P2AutomationHostLaunchConfig launchConfig,
     required P2HostBindingProvider hostBindingProvider,
@@ -76,15 +76,22 @@ final class P2ProductRuntimeOwnerMode {
     required P2ClipboardTextWriter writeClipboardText,
     required P2TranscriptFileWriter writeTranscriptFile,
     required Future<void> Function(Map<String, Object?> value)
-        persistOwnerSettings,
+    persistOwnerSettings,
     required Future<void> Function() clearOwnerSettings,
     required String emergencyWatchdogId,
     required P2ProductBindingContext bindingContext,
     required P2ManagedAuthorizationRegistry authorizationRegistry,
   }) async {
-    if (!(authority.completionEligible || authority.qaPreview) ||
-        authority.authorityKind != 'p1-isolated-authority-service-v2') {
-      throw StateError('fixture_or_non_p1_authority_rejected');
+    final productionAuthority =
+        authority.completionEligible &&
+        authority.authorityKind == 'p1-isolated-authority-service-v2';
+    final ownerRiskAuthority =
+        authority.qaPreview &&
+        !authority.completionEligible &&
+        authority.authorityKind == 'p2-owner-risk-current-account-v1' &&
+        authority.authorityProvenance['securityEvidenceWaived'] == true;
+    if (!(productionAuthority || ownerRiskAuthority)) {
+      throw StateError('fixture_or_unapproved_authority_rejected');
     }
     await stateDirectory.create(recursive: true);
     late P2ProductRuntimeOwnerMode runtime;
@@ -96,42 +103,43 @@ final class P2ProductRuntimeOwnerMode {
       hostBindingProvider: hostBindingProvider,
       processAuthorizationFor: processAuthorizationFor,
       watchdogAuthorizationFor: watchdogAuthorizationFor,
-      onPtySessionOpened: (
-        P2PtyOpenRequest request,
-        P2PtySession session,
-        P2EffectBinding binding,
-        String grantDigest,
-      ) async {
-        final watchdogId = 'pty-${session.sessionId}';
-        final watchdogAuthorization = P2WatchdogAuthorization(
-          binding: binding,
-          grantDigest: grantDigest,
-          sessionId: session.sessionId,
-          processIdentity: session.processIdentity,
-        );
-        await runtime.supervise(
-          binding: P2SupervisedRunBinding(
-            watchdogId: watchdogId,
-            sessionId: session.sessionId,
-            processIdentity: session.processIdentity,
-            authorization: watchdogAuthorization,
-          ),
-        );
-        terminal.add(
-          P2TerminalTab(
-            id: session.sessionId,
-            title: 'Terminal ${terminal.tabs.length + 1}',
-            shell: request.shell,
-            cwd: request.cwd,
-            runId: session.runId,
-            taskId: session.taskId,
-            grantId: grantDigest,
-            attached: true,
-            accessibilityLabel:
-                'Owner terminal ${terminal.tabs.length + 1}, run ${session.runId}, task ${session.taskId}',
-          ),
-        );
-      },
+      onPtySessionOpened:
+          (
+            P2PtyOpenRequest request,
+            P2PtySession session,
+            P2EffectBinding binding,
+            String grantDigest,
+          ) async {
+            final watchdogId = 'pty-${session.sessionId}';
+            final watchdogAuthorization = P2WatchdogAuthorization(
+              binding: binding,
+              grantDigest: grantDigest,
+              sessionId: session.sessionId,
+              processIdentity: session.processIdentity,
+            );
+            await runtime.supervise(
+              binding: P2SupervisedRunBinding(
+                watchdogId: watchdogId,
+                sessionId: session.sessionId,
+                processIdentity: session.processIdentity,
+                authorization: watchdogAuthorization,
+              ),
+            );
+            terminal.add(
+              P2TerminalTab(
+                id: session.sessionId,
+                title: 'Terminal ${terminal.tabs.length + 1}',
+                shell: request.shell,
+                cwd: request.cwd,
+                runId: session.runId,
+                taskId: session.taskId,
+                grantId: grantDigest,
+                attached: true,
+                accessibilityLabel:
+                    'Owner terminal ${terminal.tabs.length + 1}, run ${session.runId}, task ${session.taskId}',
+              ),
+            );
+          },
     );
     final controller = P2OwnerModeController(
       persistOwnerSettings,
@@ -164,43 +172,38 @@ final class P2ProductRuntimeOwnerMode {
     return runtime;
   }
 
-  void activateEffectContext({
-    required String runId,
-    required String taskId,
-  }) {
+  void activateEffectContext({required String runId, required String taskId}) {
     if (_closed) {
       throw StateError('owner_runtime_closed');
     }
     bindingContext.activate(runId: runId, taskId: taskId);
   }
 
-  void clearEffectContext({
-    required String runId,
-    required String taskId,
-  }) {
+  void clearEffectContext({required String runId, required String taskId}) {
     bindingContext.clear(runId: runId, taskId: taskId);
   }
 
   Map<String, Object?> get runtimeProvenance => <String, Object?>{
-        'entryPoint':
-            'ProductRuntime.initialize -> P2ProductRuntimeBootstrap.start',
-        'shippedProductRuntime': true,
-        'applicationCompositionPatched': true,
-        'ownerRuntime': 'P2ProductRuntimeOwnerMode',
-        'authority': authority.authorityProvenance,
-        'bindingContext': bindingContext.provenance,
-        'authorizationRegistry': authorizationRegistry.provenance,
-        'watchdogLifecycleOwnedByProductRuntime': true,
-        'watchdogAutomaticallyArmed': _supervised.isNotEmpty,
-        'fixtureAuthorityEligible': false,
-      };
+    'entryPoint':
+        'ProductRuntime.initialize -> P2ProductRuntimeBootstrap.start',
+    'shippedProductRuntime': true,
+    'applicationCompositionPatched': true,
+    'ownerRuntime': 'P2ProductRuntimeOwnerMode',
+    'authority': authority.authorityProvenance,
+    'bindingContext': bindingContext.provenance,
+    'authorizationRegistry': authorizationRegistry.provenance,
+    'watchdogLifecycleOwnedByProductRuntime': true,
+    'watchdogAutomaticallyArmed': _supervised.isNotEmpty,
+    'fixtureAuthorityEligible': false,
+    'ownerRiskQa': authority.qaPreview,
+  };
 
   Widget buildWorkspace({Key? key}) => P2OwnerWorkspace(
-        key: key,
-        controller: controller,
-        terminalModel: terminalModel,
-        actions: actions,
-      );
+    key: key,
+    controller: controller,
+    terminalModel: terminalModel,
+    actions: actions,
+  );
 
   /// Called by the shipped runtime immediately after a managed session starts.
   Future<void> supervise({
@@ -281,10 +284,10 @@ final class P2ProductRuntimeOwnerMode {
   }
 
   Map<String, Object?> supervisionSnapshot() => <String, Object?>{
-        'watchdogIds': _supervised.keys.toList(growable: false)..sort(),
-        'heartbeatCount': _heartbeats.length,
-        'automaticallyArmed': _supervised.isNotEmpty,
-      };
+    'watchdogIds': _supervised.keys.toList(growable: false)..sort(),
+    'heartbeatCount': _heartbeats.length,
+    'automaticallyArmed': _supervised.isNotEmpty,
+  };
   Future<void> completeSupervision(
     String watchdogId, {
     required bool processTreeStopped,
@@ -374,10 +377,7 @@ final class P2ProductRuntimeOwnerMode {
     }
     _heartbeats.clear();
     for (final binding in _supervised.values) {
-      await _persistLifecycle(
-        binding,
-        'unknown_requires_reconciliation',
-      );
+      await _persistLifecycle(binding, 'unknown_requires_reconciliation');
     }
     _supervised.clear();
     authorizationRegistry.clear();

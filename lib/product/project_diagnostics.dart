@@ -36,114 +36,138 @@ class ProjectDiagnosticsService {
       );
     }
 
-    checks.add(const DiagnosticCheck(
-      id: 'project-root',
-      title: 'Project folder',
-      status: DiagnosticStatus.passed,
-      message: 'The project folder is available.',
-    ));
+    checks.add(
+      const DiagnosticCheck(
+        id: 'project-root',
+        title: 'Project folder',
+        status: DiagnosticStatus.passed,
+        message: 'The project folder is available.',
+      ),
+    );
 
     final profile = await _detectProfile(root);
     final profileWarning =
         profile.type == 'Unknown' || profile.type == 'Invalid custom profile';
-    checks.add(DiagnosticCheck(
-      id: 'project-type',
-      title: 'Project type',
-      status:
-          profileWarning ? DiagnosticStatus.warning : DiagnosticStatus.passed,
-      message: profile.type == 'Unknown'
-          ? 'No supported project profile was detected. Add kristin.project.json or use an agent task to inspect it.'
-          : profile.type == 'Invalid custom profile'
-              ? 'kristin.project.json could not be parsed. Fix or remove the custom profile.'
-              : '${profile.type} project detected.',
-    ));
+    checks.add(
+      DiagnosticCheck(
+        id: 'project-type',
+        title: 'Project type',
+        status: profileWarning
+            ? DiagnosticStatus.warning
+            : DiagnosticStatus.passed,
+        message: profile.type == 'Unknown'
+            ? 'No supported project profile was detected. Add kristin.project.json or use an agent task to inspect it.'
+            : profile.type == 'Invalid custom profile'
+            ? 'kristin.project.json could not be parsed. Fix or remove the custom profile.'
+            : '${profile.type} project detected.',
+      ),
+    );
 
     if (profile.requiredExecutable.isNotEmpty) {
       final resolved = await _findExecutable(
         profile.requiredExecutable,
         workingDirectory: root.path,
       );
-      checks.add(DiagnosticCheck(
-        id: 'toolchain',
-        title: 'Required toolchain',
-        status: resolved == null
-            ? DiagnosticStatus.failed
-            : DiagnosticStatus.passed,
-        message: resolved == null
-            ? '${profile.requiredExecutable} was not found on PATH.'
-            : '${profile.requiredExecutable} is available.',
-        command: profile.requiredExecutable,
-      ));
+      checks.add(
+        DiagnosticCheck(
+          id: 'toolchain',
+          title: 'Required toolchain',
+          status: resolved == null
+              ? DiagnosticStatus.failed
+              : DiagnosticStatus.passed,
+          message: resolved == null
+              ? '${profile.requiredExecutable} was not found on PATH.'
+              : '${profile.requiredExecutable} is available.',
+          command: profile.requiredExecutable,
+        ),
+      );
     }
 
-    checks.add(DiagnosticCheck(
-      id: 'model',
-      title: 'AI model',
-      status: modelReady ? DiagnosticStatus.passed : DiagnosticStatus.warning,
-      message: modelReady
-          ? 'At least one AI model is ready.'
-          : 'No AI model is currently discovered. Doctor and project tests still work without a model.',
-    ));
+    checks.add(
+      DiagnosticCheck(
+        id: 'model',
+        title: 'AI model',
+        status: modelReady ? DiagnosticStatus.passed : DiagnosticStatus.warning,
+        message: modelReady
+            ? 'At least one AI model is ready.'
+            : 'No AI model is currently discovered. Doctor and project tests still work without a model.',
+      ),
+    );
 
     if (profile.analysisCommands.isEmpty) {
-      checks.add(const DiagnosticCheck(
-        id: 'analysis-profile',
-        title: 'Analyze command',
-        status: DiagnosticStatus.warning,
-        message: 'No automatic static-analysis command was detected.',
-      ));
+      checks.add(
+        const DiagnosticCheck(
+          id: 'analysis-profile',
+          title: 'Analyze command',
+          status: DiagnosticStatus.warning,
+          message: 'No automatic static-analysis command was detected.',
+        ),
+      );
     } else {
-      checks.add(DiagnosticCheck(
-        id: 'analysis-profile',
-        title: 'Analyze command',
-        status: DiagnosticStatus.passed,
-        message:
-            '${profile.analysisCommands.length} safe analysis command(s) detected.',
-        command:
-            profile.analysisCommands.map((item) => item.display).join(' && '),
-      ));
+      checks.add(
+        DiagnosticCheck(
+          id: 'analysis-profile',
+          title: 'Analyze command',
+          status: DiagnosticStatus.passed,
+          message:
+              '${profile.analysisCommands.length} safe analysis command(s) detected.',
+          command: profile.analysisCommands
+              .map((item) => item.display)
+              .join(' && '),
+        ),
+      );
     }
 
     if (profile.testCommands.isEmpty) {
-      checks.add(const DiagnosticCheck(
-        id: 'tests',
-        title: 'Test command',
-        status: DiagnosticStatus.warning,
-        message: 'No automatic test command was detected.',
-      ));
+      checks.add(
+        const DiagnosticCheck(
+          id: 'tests',
+          title: 'Test command',
+          status: DiagnosticStatus.warning,
+          message: 'No automatic test command was detected.',
+        ),
+      );
     } else {
-      checks.add(DiagnosticCheck(
-        id: 'tests',
-        title: 'Test command',
-        status: DiagnosticStatus.passed,
-        message:
-            '${profile.testCommands.length} safe test command(s) detected.',
-        command: profile.testCommands.map((item) => item.display).join(' && '),
-      ));
+      checks.add(
+        DiagnosticCheck(
+          id: 'tests',
+          title: 'Test command',
+          status: DiagnosticStatus.passed,
+          message:
+              '${profile.testCommands.length} safe test command(s) detected.',
+          command: profile.testCommands
+              .map((item) => item.display)
+              .join(' && '),
+        ),
+      );
     }
 
-    checks.add(DiagnosticCheck(
-      id: 'build-profile',
-      title: 'Build command',
-      status: profile.buildCommand == null
-          ? DiagnosticStatus.warning
-          : DiagnosticStatus.passed,
-      message: profile.buildCommand == null
-          ? 'No automatic build command was detected.'
-          : 'A safe build command was detected.',
-      command: profile.buildCommand?.display ?? '',
-    ));
-    checks.add(DiagnosticCheck(
-      id: 'run-profile',
-      title: 'Run command',
-      status: profile.runCommand == null
-          ? DiagnosticStatus.warning
-          : DiagnosticStatus.passed,
-      message: profile.runCommand == null
-          ? 'No automatic run command was detected.'
-          : 'A managed run command was detected.',
-      command: profile.runCommand?.display ?? '',
-    ));
+    checks.add(
+      DiagnosticCheck(
+        id: 'build-profile',
+        title: 'Build command',
+        status: profile.buildCommand == null
+            ? DiagnosticStatus.warning
+            : DiagnosticStatus.passed,
+        message: profile.buildCommand == null
+            ? 'No automatic build command was detected.'
+            : 'A safe build command was detected.',
+        command: profile.buildCommand?.display ?? '',
+      ),
+    );
+    checks.add(
+      DiagnosticCheck(
+        id: 'run-profile',
+        title: 'Run command',
+        status: profile.runCommand == null
+            ? DiagnosticStatus.warning
+            : DiagnosticStatus.passed,
+        message: profile.runCommand == null
+            ? 'No automatic run command was detected.'
+            : 'A managed run command was detected.',
+        command: profile.runCommand?.display ?? '',
+      ),
+    );
 
     return _report(project.id, profile, checks);
   }
@@ -161,13 +185,15 @@ class ProjectDiagnosticsService {
     final profile = await _detectProfile(root);
     final checks = <DiagnosticCheck>[];
     if (profile.testCommands.isEmpty) {
-      checks.add(const DiagnosticCheck(
-        id: 'tests-unavailable',
-        title: 'Quick tests',
-        status: DiagnosticStatus.warning,
-        message:
-            'No safe quick-test profile is available for this project type.',
-      ));
+      checks.add(
+        const DiagnosticCheck(
+          id: 'tests-unavailable',
+          title: 'Quick tests',
+          status: DiagnosticStatus.warning,
+          message:
+              'No safe quick-test profile is available for this project type.',
+        ),
+      );
       return _report(project.id, profile, <DiagnosticCheck>[
         ...initial.checks.where((check) => check.id != 'tests'),
         ...checks,
@@ -182,14 +208,19 @@ class ProjectDiagnosticsService {
         workingDirectory: root.path,
       );
       if (executable == null) {
-        checks.add(DiagnosticCheck(
-          id: 'quick-test-${index + 1}',
-          title: command.label,
-          status: DiagnosticStatus.failed,
-          message: '${command.executable} was not found.',
-          command: command.display,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: 'quick-test-${index + 1}',
+            title: command.label,
+            status: DiagnosticStatus.failed,
+            message: '${command.executable} was not found.',
+            command: command.display,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         break;
       }
       try {
@@ -200,41 +231,56 @@ class ProjectDiagnosticsService {
           timeout: timeoutPerCommand,
         );
         final passed = result.exitCode == 0;
-        checks.add(DiagnosticCheck(
-          id: 'quick-test-${index + 1}',
-          title: command.label,
-          status: passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
-          message: passed
-              ? 'Command completed successfully.'
-              : 'Command exited with code ${result.exitCode}.',
-          command: command.display,
-          output: redactor.redact(result.output),
-          exitCode: result.exitCode,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: 'quick-test-${index + 1}',
+            title: command.label,
+            status: passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
+            message: passed
+                ? 'Command completed successfully.'
+                : 'Command exited with code ${result.exitCode}.',
+            command: command.display,
+            output: redactor.redact(result.output),
+            exitCode: result.exitCode,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         if (!passed) {
           break;
         }
       } on TimeoutException {
-        checks.add(DiagnosticCheck(
-          id: 'quick-test-${index + 1}',
-          title: command.label,
-          status: DiagnosticStatus.failed,
-          message:
-              'Command exceeded the ${timeoutPerCommand.inMinutes}-minute limit.',
-          command: command.display,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: 'quick-test-${index + 1}',
+            title: command.label,
+            status: DiagnosticStatus.failed,
+            message:
+                'Command exceeded the ${timeoutPerCommand.inMinutes}-minute limit.',
+            command: command.display,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         break;
       } catch (error) {
-        checks.add(DiagnosticCheck(
-          id: 'quick-test-${index + 1}',
-          title: command.label,
-          status: DiagnosticStatus.failed,
-          message: redactor.redact('$error'),
-          command: command.display,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: 'quick-test-${index + 1}',
+            title: command.label,
+            status: DiagnosticStatus.failed,
+            message: redactor.redact('$error'),
+            command: command.display,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         break;
       }
     }
@@ -312,11 +358,7 @@ class ProjectDiagnosticsService {
   Future<String?> resolveCommandExecutable(
     ProjectRecord project,
     ProjectCommandSpec command,
-  ) =>
-      _findExecutable(
-        command.executable,
-        workingDirectory: project.rootPath,
-      );
+  ) => _findExecutable(command.executable, workingDirectory: project.rootPath);
 
   Map<String, String> commandEnvironment(ProjectCommandSpec command) =>
       _safeEnvironment(executable: command.executable);
@@ -353,14 +395,19 @@ class ProjectDiagnosticsService {
         workingDirectory: root.path,
       );
       if (executable == null) {
-        checks.add(DiagnosticCheck(
-          id: '$checkPrefix-${index + 1}',
-          title: command.label,
-          status: DiagnosticStatus.failed,
-          message: '${command.executable} was not found.',
-          command: command.display,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: '$checkPrefix-${index + 1}',
+            title: command.label,
+            status: DiagnosticStatus.failed,
+            message: '${command.executable} was not found.',
+            command: command.display,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         break;
       }
       try {
@@ -371,41 +418,56 @@ class ProjectDiagnosticsService {
           timeout: timeoutPerCommand,
         );
         final passed = result.exitCode == 0;
-        checks.add(DiagnosticCheck(
-          id: '$checkPrefix-${index + 1}',
-          title: command.label,
-          status: passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
-          message: passed
-              ? 'Command completed successfully.'
-              : 'Command exited with code ${result.exitCode}.',
-          command: command.display,
-          output: redactor.redact(result.output),
-          exitCode: result.exitCode,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: '$checkPrefix-${index + 1}',
+            title: command.label,
+            status: passed ? DiagnosticStatus.passed : DiagnosticStatus.failed,
+            message: passed
+                ? 'Command completed successfully.'
+                : 'Command exited with code ${result.exitCode}.',
+            command: command.display,
+            output: redactor.redact(result.output),
+            exitCode: result.exitCode,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         if (!passed) {
           break;
         }
       } on TimeoutException {
-        checks.add(DiagnosticCheck(
-          id: '$checkPrefix-${index + 1}',
-          title: command.label,
-          status: DiagnosticStatus.failed,
-          message:
-              'Command exceeded the ${timeoutPerCommand.inMinutes}-minute limit.',
-          command: command.display,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: '$checkPrefix-${index + 1}',
+            title: command.label,
+            status: DiagnosticStatus.failed,
+            message:
+                'Command exceeded the ${timeoutPerCommand.inMinutes}-minute limit.',
+            command: command.display,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         break;
       } catch (error) {
-        checks.add(DiagnosticCheck(
-          id: '$checkPrefix-${index + 1}',
-          title: command.label,
-          status: DiagnosticStatus.failed,
-          message: redactor.redact('$error'),
-          command: command.display,
-          durationMs: DateTime.now().toUtc().difference(started).inMilliseconds,
-        ));
+        checks.add(
+          DiagnosticCheck(
+            id: '$checkPrefix-${index + 1}',
+            title: command.label,
+            status: DiagnosticStatus.failed,
+            message: redactor.redact('$error'),
+            command: command.display,
+            durationMs: DateTime.now()
+                .toUtc()
+                .difference(started)
+                .inMilliseconds,
+          ),
+        );
         break;
       }
     }
@@ -415,8 +477,9 @@ class ProjectDiagnosticsService {
     ]);
   }
 
-  Future<String?> pickFolder(
-      {String prompt = 'Choose a project folder'}) async {
+  Future<String?> pickFolder({
+    String prompt = 'Choose a project folder',
+  }) async {
     try {
       if (Platform.isWindows) {
         final executable = await _findExecutable('powershell');
@@ -424,7 +487,8 @@ class ProjectDiagnosticsService {
           return null;
         }
         final escaped = prompt.replaceAll("'", "''");
-        final script = '''
+        final script =
+            '''
 Add-Type -AssemblyName System.Windows.Forms
 \$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
 \$dialog.Description = '$escaped'
@@ -433,22 +497,19 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
   [Console]::Out.Write(\$dialog.SelectedPath)
 }
 ''';
-        final result = await Process.run(
-          executable,
-          <String>['-NoProfile', '-STA', '-Command', script],
-          runInShell: false,
-        );
+        final result = await Process.run(executable, <String>[
+          '-NoProfile',
+          '-STA',
+          '-Command',
+          script,
+        ], runInShell: false);
         return _cleanFolderResult(result.stdout?.toString() ?? '');
       }
       if (Platform.isMacOS) {
-        final result = await Process.run(
-          'osascript',
-          <String>[
-            '-e',
-            'POSIX path of (choose folder with prompt "${prompt.replaceAll('"', '\\"')}")',
-          ],
-          runInShell: false,
-        );
+        final result = await Process.run('osascript', <String>[
+          '-e',
+          'POSIX path of (choose folder with prompt "${prompt.replaceAll('"', '\\"')}")',
+        ], runInShell: false);
         return result.exitCode == 0
             ? _cleanFolderResult(result.stdout?.toString() ?? '')
             : null;
@@ -456,27 +517,23 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
 
       final zenity = await _findExecutable('zenity');
       if (zenity != null) {
-        final result = await Process.run(
-          zenity,
-          <String>['--file-selection', '--directory', '--title=$prompt'],
-          runInShell: false,
-        );
+        final result = await Process.run(zenity, <String>[
+          '--file-selection',
+          '--directory',
+          '--title=$prompt',
+        ], runInShell: false);
         return result.exitCode == 0
             ? _cleanFolderResult(result.stdout?.toString() ?? '')
             : null;
       }
       final kdialog = await _findExecutable('kdialog');
       if (kdialog != null) {
-        final result = await Process.run(
-          kdialog,
-          <String>[
-            '--getexistingdirectory',
-            Directory.current.path,
-            '--title',
-            prompt
-          ],
-          runInShell: false,
-        );
+        final result = await Process.run(kdialog, <String>[
+          '--getexistingdirectory',
+          Directory.current.path,
+          '--title',
+          prompt,
+        ], runInShell: false);
         return result.exitCode == 0
             ? _cleanFolderResult(result.stdout?.toString() ?? '')
             : null;
@@ -519,24 +576,22 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     String projectId,
     ProjectExecutionProfile profile,
     List<DiagnosticCheck> checks,
-  ) =>
-      ProjectDiagnosticReport(
-        projectId: projectId,
-        projectType: profile.type,
-        analyzeCommand:
-            profile.analysisCommands.map((item) => item.display).join(' && '),
-        testCommand:
-            profile.testCommands.map((item) => item.display).join(' && '),
-        buildCommand: profile.buildCommand?.display ?? '',
-        runCommand: profile.runCommand?.display ?? '',
-        checks: List<DiagnosticCheck>.unmodifiable(checks),
-        generatedAt: DateTime.now().toUtc(),
-      );
+  ) => ProjectDiagnosticReport(
+    projectId: projectId,
+    projectType: profile.type,
+    analyzeCommand: profile.analysisCommands
+        .map((item) => item.display)
+        .join(' && '),
+    testCommand: profile.testCommands.map((item) => item.display).join(' && '),
+    buildCommand: profile.buildCommand?.display ?? '',
+    runCommand: profile.runCommand?.display ?? '',
+    checks: List<DiagnosticCheck>.unmodifiable(checks),
+    generatedAt: DateTime.now().toUtc(),
+  );
 
   Future<ProjectExecutionProfile> _detectProfile(Directory root) async {
-    bool exists(String relative) => File(
-          '${root.path}${Platform.pathSeparator}$relative',
-        ).existsSync();
+    bool exists(String relative) =>
+        File('${root.path}${Platform.pathSeparator}$relative').existsSync();
 
     final custom = await _customProfile(root);
     if (custom != null) {
@@ -547,7 +602,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       final pubspec = await File(
         '${root.path}${Platform.pathSeparator}pubspec.yaml',
       ).readAsString();
-      final isFlutter = RegExp(r'sdk:\s*flutter').hasMatch(pubspec) ||
+      final isFlutter =
+          RegExp(r'sdk:\s*flutter').hasMatch(pubspec) ||
           RegExp(r'^flutter:\s*$', multiLine: true).hasMatch(pubspec);
       if (!isFlutter) {
         return const ProjectExecutionProfile(
@@ -560,28 +616,28 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
             ProjectCommandSpec('Dart analysis', 'dart', <String>['analyze']),
             ProjectCommandSpec('Dart tests', 'dart', <String>['test']),
           ],
-          runCommand: ProjectCommandSpec(
-            'Dart application',
-            'dart',
-            <String>['run'],
-          ),
+          runCommand: ProjectCommandSpec('Dart application', 'dart', <String>[
+            'run',
+          ]),
         );
       }
       final desktopTarget = Platform.isWindows
           ? 'windows'
           : Platform.isMacOS
-              ? 'macos'
-              : 'linux';
+          ? 'macos'
+          : 'linux';
       return ProjectExecutionProfile(
         type: 'Flutter',
         requiredExecutable: 'flutter',
         analysisCommands: const <ProjectCommandSpec>[
-          ProjectCommandSpec(
-              'Flutter analysis', 'flutter', <String>['analyze']),
+          ProjectCommandSpec('Flutter analysis', 'flutter', <String>[
+            'analyze',
+          ]),
         ],
         testCommands: const <ProjectCommandSpec>[
-          ProjectCommandSpec(
-              'Flutter analysis', 'flutter', <String>['analyze']),
+          ProjectCommandSpec('Flutter analysis', 'flutter', <String>[
+            'analyze',
+          ]),
           ProjectCommandSpec('Flutter tests', 'flutter', <String>['test']),
         ],
         buildCommand: ProjectCommandSpec(
@@ -602,40 +658,37 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       final tests = <ProjectCommandSpec>[];
       final analysis = <ProjectCommandSpec>[];
       if (scripts.contains('test')) {
-        tests.add(const ProjectCommandSpec(
-          'JavaScript tests',
-          'npm',
-          <String>['test'],
-        ));
+        tests.add(
+          const ProjectCommandSpec('JavaScript tests', 'npm', <String>['test']),
+        );
       }
       if (scripts.contains('lint')) {
-        const lint = ProjectCommandSpec(
-          'JavaScript lint',
-          'npm',
-          <String>['run', 'lint'],
-        );
+        const lint = ProjectCommandSpec('JavaScript lint', 'npm', <String>[
+          'run',
+          'lint',
+        ]);
         analysis.add(lint);
         tests.insert(0, lint);
       }
       if (scripts.contains('typecheck')) {
-        analysis.add(const ProjectCommandSpec(
-          'JavaScript typecheck',
-          'npm',
-          <String>['run', 'typecheck'],
-        ));
+        analysis.add(
+          const ProjectCommandSpec('JavaScript typecheck', 'npm', <String>[
+            'run',
+            'typecheck',
+          ]),
+        );
       }
       final build = scripts.contains('build')
-          ? const ProjectCommandSpec(
-              'JavaScript build',
-              'npm',
-              <String>['run', 'build'],
-            )
+          ? const ProjectCommandSpec('JavaScript build', 'npm', <String>[
+              'run',
+              'build',
+            ])
           : null;
       final runScript = scripts.contains('dev')
           ? 'dev'
           : scripts.contains('start')
-              ? 'start'
-              : '';
+          ? 'start'
+          : '';
       return ProjectExecutionProfile(
         type: 'Node.js / JavaScript',
         requiredExecutable: 'npm',
@@ -644,19 +697,21 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         buildCommand: build,
         runCommand: runScript.isEmpty
             ? null
-            : ProjectCommandSpec(
-                'Node application',
-                'npm',
-                <String>['run', runScript],
-              ),
+            : ProjectCommandSpec('Node application', 'npm', <String>[
+                'run',
+                runScript,
+              ]),
       );
     }
 
     if (exists('pyproject.toml') ||
         exists('requirements.txt') ||
         exists('setup.py')) {
-      final runFile =
-          <String>['main.py', 'app.py', 'server.py'].where(exists).firstOrNull;
+      final runFile = <String>[
+        'main.py',
+        'app.py',
+        'server.py',
+      ].where(exists).firstOrNull;
       final pythonExecutable = Platform.isWindows ? 'python' : 'python3';
       return ProjectExecutionProfile(
         type: 'Python',
@@ -669,11 +724,11 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
           ),
         ],
         testCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec(
-            'Python tests',
-            pythonExecutable,
-            const <String>['-m', 'pytest', '-q'],
-          ),
+          ProjectCommandSpec('Python tests', pythonExecutable, const <String>[
+            '-m',
+            'pytest',
+            '-q',
+          ]),
         ],
         buildCommand: ProjectCommandSpec(
           'Python package build',
@@ -700,8 +755,10 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Go tests', 'go', <String>['test', './...']),
         ],
-        buildCommand:
-            ProjectCommandSpec('Go build', 'go', <String>['build', './...']),
+        buildCommand: ProjectCommandSpec('Go build', 'go', <String>[
+          'build',
+          './...',
+        ]),
         runCommand: ProjectCommandSpec('Go run', 'go', <String>['run', '.']),
       );
     }
@@ -716,18 +773,23 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Rust tests', 'cargo', <String>['test']),
         ],
-        buildCommand:
-            ProjectCommandSpec('Rust build', 'cargo', <String>['build']),
+        buildCommand: ProjectCommandSpec('Rust build', 'cargo', <String>[
+          'build',
+        ]),
         runCommand: ProjectCommandSpec('Rust run', 'cargo', <String>['run']),
       );
     }
 
     var dotnetProject = false;
     try {
-      dotnetProject = root.listSync(followLinks: false).whereType<File>().any(
-          (file) =>
-              file.path.toLowerCase().endsWith('.sln') ||
-              file.path.toLowerCase().endsWith('.csproj'));
+      dotnetProject = root
+          .listSync(followLinks: false)
+          .whereType<File>()
+          .any(
+            (file) =>
+                file.path.toLowerCase().endsWith('.sln') ||
+                file.path.toLowerCase().endsWith('.csproj'),
+          );
     } on FileSystemException {
       // The root availability check already reports access problems. Profile
       // detection should degrade to Unknown instead of crashing Doctor.
@@ -737,15 +799,21 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: '.NET',
         requiredExecutable: 'dotnet',
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec(
-              '.NET build analysis', 'dotnet', <String>['build', '--nologo']),
+          ProjectCommandSpec('.NET build analysis', 'dotnet', <String>[
+            'build',
+            '--nologo',
+          ]),
         ],
         testCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec(
-              '.NET tests', 'dotnet', <String>['test', '--nologo']),
+          ProjectCommandSpec('.NET tests', 'dotnet', <String>[
+            'test',
+            '--nologo',
+          ]),
         ],
-        buildCommand: ProjectCommandSpec(
-            '.NET build', 'dotnet', <String>['build', '--nologo']),
+        buildCommand: ProjectCommandSpec('.NET build', 'dotnet', <String>[
+          'build',
+          '--nologo',
+        ]),
         runCommand: ProjectCommandSpec('.NET run', 'dotnet', <String>['run']),
       );
     }
@@ -755,14 +823,19 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: 'Java / Maven',
         requiredExecutable: 'mvn',
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec('Maven compile analysis', 'mvn',
-              <String>['-q', '-DskipTests', 'compile']),
+          ProjectCommandSpec('Maven compile analysis', 'mvn', <String>[
+            '-q',
+            '-DskipTests',
+            'compile',
+          ]),
         ],
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Maven tests', 'mvn', <String>['test']),
         ],
-        buildCommand: ProjectCommandSpec(
-            'Maven package', 'mvn', <String>['package', '-DskipTests']),
+        buildCommand: ProjectCommandSpec('Maven package', 'mvn', <String>[
+          'package',
+          '-DskipTests',
+        ]),
       );
     }
 
@@ -773,20 +846,24 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       final wrapper = Platform.isWindows && exists('gradlew.bat')
           ? r'.\gradlew.bat'
           : exists('gradlew')
-              ? './gradlew'
-              : 'gradle';
+          ? './gradlew'
+          : 'gradle';
       return ProjectExecutionProfile(
         type: 'Java / Gradle',
         requiredExecutable: wrapper,
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec(
-              'Gradle classes analysis', wrapper, const <String>['classes']),
+          ProjectCommandSpec('Gradle classes analysis', wrapper, const <String>[
+            'classes',
+          ]),
         ],
         testCommands: <ProjectCommandSpec>[
           ProjectCommandSpec('Gradle tests', wrapper, const <String>['test']),
         ],
         buildCommand: ProjectCommandSpec(
-            'Gradle build', wrapper, const <String>['build']),
+          'Gradle build',
+          wrapper,
+          const <String>['build'],
+        ),
       );
     }
 
@@ -795,29 +872,29 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         type: 'CMake / native',
         requiredExecutable: 'cmake',
         analysisCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec(
-            'CMake configure analysis',
-            'cmake',
-            <String>['-S', '.', '-B', 'build'],
-          ),
+          ProjectCommandSpec('CMake configure analysis', 'cmake', <String>[
+            '-S',
+            '.',
+            '-B',
+            'build',
+          ]),
         ],
         testCommands: <ProjectCommandSpec>[
-          ProjectCommandSpec(
-            'CMake configure',
-            'cmake',
-            <String>['-S', '.', '-B', 'build'],
-          ),
-          ProjectCommandSpec(
-            'CMake build',
-            'cmake',
-            <String>['--build', 'build'],
-          ),
+          ProjectCommandSpec('CMake configure', 'cmake', <String>[
+            '-S',
+            '.',
+            '-B',
+            'build',
+          ]),
+          ProjectCommandSpec('CMake build', 'cmake', <String>[
+            '--build',
+            'build',
+          ]),
         ],
-        buildCommand: ProjectCommandSpec(
-          'CMake build',
-          'cmake',
-          <String>['--build', 'build'],
-        ),
+        buildCommand: ProjectCommandSpec('CMake build', 'cmake', <String>[
+          '--build',
+          'build',
+        ]),
       );
     }
 
@@ -843,8 +920,9 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
   }
 
   Future<ProjectExecutionProfile?> _customProfile(Directory root) async {
-    final file =
-        File('${root.path}${Platform.pathSeparator}kristin.project.json');
+    final file = File(
+      '${root.path}${Platform.pathSeparator}kristin.project.json',
+    );
     if (!await file.exists()) {
       return null;
     }
@@ -875,7 +953,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       final test = command('test', 'Custom project tests');
       final build = command('build', 'Custom project build');
       final run = command('run', 'Custom project run');
-      final required = analyze?.executable ??
+      final required =
+          analyze?.executable ??
           test?.executable ??
           build?.executable ??
           run?.executable ??
@@ -923,7 +1002,8 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
     if (executable.isEmpty) {
       return null;
     }
-    final hasPath = executable.startsWith('./') ||
+    final hasPath =
+        executable.startsWith('./') ||
         executable.startsWith('../') ||
         executable.contains('/') ||
         executable.contains('\\');
@@ -985,8 +1065,9 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
           continue;
         }
         final remaining = maxOutputBytes - bytes;
-        final accepted =
-            chunk.length > remaining ? chunk.sublist(0, remaining) : chunk;
+        final accepted = chunk.length > remaining
+            ? chunk.sublist(0, remaining)
+            : chunk;
         bytes += accepted.length;
         output.write('[$name] ${utf8.decode(accepted, allowMalformed: true)}');
       }
@@ -1064,14 +1145,12 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
       'XDG_DATA_HOME',
     };
     final leaf = executable.replaceAll('\\', '/').split('/').last.toLowerCase();
-    final isSdkCommand = leaf == 'dart' ||
+    final isSdkCommand =
+        leaf == 'dart' ||
         leaf == 'dart.exe' ||
         leaf == 'flutter' ||
         leaf == 'flutter.bat';
-    final allowed = <String>{
-      ...baseAllowed,
-      if (isSdkCommand) ...sdkAllowed,
-    };
+    final allowed = <String>{...baseAllowed, if (isSdkCommand) ...sdkAllowed};
     return <String, String>{
       for (final entry in Platform.environment.entries)
         if (allowed.contains(entry.key.toUpperCase())) entry.key: entry.value,
@@ -1098,19 +1177,16 @@ class ProjectExecutionProfile {
 }
 
 class ProjectCommandSpec {
-  const ProjectCommandSpec(
-    this.label,
-    this.executable,
-    this.arguments,
-  );
+  const ProjectCommandSpec(this.label, this.executable, this.arguments);
 
   final String label;
   final String executable;
   final List<String> arguments;
 
-  String get display => <String>[executable, ...arguments]
-      .map((value) => value.contains(' ') ? '"$value"' : value)
-      .join(' ');
+  String get display => <String>[
+    executable,
+    ...arguments,
+  ].map((value) => value.contains(' ') ? '"$value"' : value).join(' ');
 }
 
 class _ProcessOutput {
