@@ -167,3 +167,120 @@ jobs:
             Windows) flutter build windows --release ;;
             macOS) flutter build macos --release ;;
           esac
+
+  pr14-repair:
+    name: pr14-documented-repair
+    if: >-
+      needs.validate.result == 'success' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 48 &&
+      github.event.pull_request.head.ref == 'ci/direct-pr14-repair-trigger' &&
+      github.event.pull_request.head.sha == '61037b13e71d8b0e6b47feaa9922d476c5666347' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    needs: validate
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CONTROL_SHA: ${{ github.event.pull_request.base.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out trusted protected-base control code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: control
+
+      - name: Check out exact status branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ci/direct-pr14-repair-trigger
+          fetch-depth: 0
+          persist-credentials: true
+          path: status
+
+      - name: Check out exact PR14 target without trigger code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: true
+          path: target
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Construct, validate, and receipt exact documented repair
+        run: >-
+          python control/tool/pr14_product_gate_repair.py
+          --control control
+          --target target
+          --status status
+
+  pr54-source-manifest:
+    name: pr54-source-manifest-candidate
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 54 &&
+      github.event.pull_request.user.login == 'alex00Pirotskyi' &&
+      github.event.pull_request.head.ref == 'agent/pr14-product-gate-handoff' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Validate exact repair helper
+        run: |
+          python -m py_compile tool/pr14_product_gate_repair.py
+          python tool/pr14_product_gate_repair.py --self-test
+      - name: Generate and verify exact source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          git diff --check
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          if [ "${#paths[@]}" -eq 0 ]; then
+            echo 'SOURCE_MANIFEST_CURRENT=true'
+            exit 0
+          fi
+          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 1
+          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
+      - name: Publish exact source manifest to PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            echo 'SOURCE_MANIFEST_PUSH_REQUIRED=false'
+            exit 0
+          fi
+          git config user.name 'Kristin CI Repair'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'ci: refresh source manifest for PR14 product-gate handoff'
+          git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
+      - name: Upload source manifest candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr54-source-manifest-${{ github.run_id }}-${{ github.run_attempt }}
+          path: SOURCE_MANIFEST.sha256
+          if-no-files-found: error
+          retention-days: 7
