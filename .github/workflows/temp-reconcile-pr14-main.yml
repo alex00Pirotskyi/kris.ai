@@ -123,6 +123,8 @@ jobs:
         run: |
           set -euo pipefail
           cd target
+          git config user.name 'Kristin CI Reconciler'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
           set +e
           git merge --no-ff --no-commit "$MAIN_HEAD" > "$RUNNER_TEMP/pr14-main-merge.log" 2>&1
