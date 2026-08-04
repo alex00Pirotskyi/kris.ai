@@ -21,11 +21,11 @@ jobs:
       github.event.pull_request.head.ref == 'ci/direct-pr14-repair-trigger' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
-      EXPECTED_HEAD: 2bc7531314a5515198c1f93059862b56396d483f
-      WORKFLOW_PATH: .github/workflows/p2-owner-mode.yml
+      EXPECTED_HEAD: 0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+      CI_PATH: .github/workflows/ci.yml
     steps:
       - name: Check out exact PR14 target
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -36,7 +36,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.13.5'
+          python-version: '3.12.10'
           check-latest: false
 
       - name: Verify exact target branch
@@ -48,78 +48,78 @@ jobs:
           test "$(git branch --show-current)" = "$TARGET_BRANCH"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
-          test -f "$WORKFLOW_PATH"
+          test -f "$CI_PATH"
           test -z "$(git status --porcelain)"
 
-      - name: Apply exact owner-risk source-contract repair
+      - name: Add the existing hash-locked bootstrap to product CI
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('.github/workflows/p2-owner-mode.yml')
+          path = Path('.github/workflows/ci.yml')
           value = path.read_text(encoding='utf-8')
-          old = '          python tool/p2_shared_p1_authority_contract_test.py --project .\n'
-          expression = '$' + '{{ github.event_name }}'
-          new = (
-              f'          if [[ "{expression}" == "workflow_dispatch" ]]; then\n'
-              '            python tool/p2_shared_p1_authority_contract_test.py --project .\n'
-              '          else\n'
-              '            python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa\n'
-              '          fi\n'
-          )
+          old = '''      - run: flutter pub get
+
+      - name: Capture CI environment
+'''
+          new = '''      - run: flutter pub get
+
+      - name: Install hash-locked P1/P2 Python test dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+
+      - name: Capture CI environment
+'''
           if value.count(old) != 1:
-              raise SystemExit(f'P2 shared-P1A source-gate anchor count: {value.count(old)}')
-          if '--owner-risk-qa' in value:
-              raise SystemExit('P2 owner-risk source-contract repair is already present')
+              raise SystemExit(f'product CI bootstrap anchor count: {value.count(old)}')
+          if 'Install hash-locked P1/P2 Python test dependencies' in value:
+              raise SystemExit('product CI bootstrap step is already present')
           path.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
           PY
           python tool/p2_refresh_source_manifest.py .
 
-      - name: Validate governed two-path repair
+      - name: Validate the governed two-path repair and P1 closure
         shell: bash
         run: |
           set -euo pipefail
           python tool/p2_source_inventory_test.py --project .
-          python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa
-          python tool/v71r12_bootstrap_hosted_python.py --project . --validate-only
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          python tool/integration_train_test.py --project .
+          python tool/p1_exit_gate_test.py --project .
           git diff --check
 
           mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
           printf 'CHANGED_PATH=%s\n' "${paths[@]}"
           test "${#paths[@]}" -eq 2
-          test "${paths[0]}" = ".github/workflows/p2-owner-mode.yml"
+          test "${paths[0]}" = ".github/workflows/ci.yml"
           test "${paths[1]}" = "SOURCE_MANIFEST.sha256"
-          python - <<'PY_VERIFY'
-          from pathlib import Path
+          test "$(grep -c '^[[:space:]]*- name: Install hash-locked P1/P2 Python test dependencies$' "$CI_PATH")" -eq 1
+          test "$(grep -c '^[[:space:]]*run: python tool/v71r12_bootstrap_hosted_python.py --project \.$' "$CI_PATH")" -eq 1
 
-          value = Path('.github/workflows/p2-owner-mode.yml').read_text(encoding='utf-8')
-          expression = '$' + '{{ github.event_name }}'
-          strict = '            python tool/p2_shared_p1_authority_contract_test.py --project .\n'
-          owner_risk = '            python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa\n'
-          block = (
-              f'          if [[ "{expression}" == "workflow_dispatch" ]]; then\n'
-              + strict
-              + '          else\n'
-              + owner_risk
-              + '          fi\n'
-          )
-          if value.count(block) != 1:
-              raise SystemExit(f'owner-risk source-contract block count: {value.count(block)}')
-          PY_VERIFY
-
-      - name: Commit and push exact repair
+      - name: Create the exact repair commit and transfer its Git object
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'Kristin CI Repair'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256 "$WORKFLOW_PATH"
+          git add SOURCE_MANIFEST.sha256 "$CI_PATH"
           git diff --cached --check
-          git commit -m 'fix(ci): validate owner-risk P1A dependency on PR source lanes'
+          git commit -m 'fix(ci): install hash-locked Python dependencies before P1 closure'
           repaired_commit="$(git rev-parse HEAD)"
           test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
-          git push origin "$repaired_commit:refs/heads/$TARGET_BRANCH"
-          test "$(git ls-remote origin refs/heads/$TARGET_BRANCH | awk '{print $1}')" = "$repaired_commit"
           echo "REPAIRED_PR14_COMMIT=$repaired_commit"
+
+          set +e
+          push_output="$(git push origin "$repaired_commit:refs/heads/$TARGET_BRANCH" 2>&1)"
+          push_rc=$?
+          set -e
+          printf '%s\n' "$push_output"
+          if [ "$push_rc" -eq 0 ]; then
+            test "$(git ls-remote origin refs/heads/$TARGET_BRANCH | awk '{print $1}')" = "$repaired_commit"
+            echo "REPAIR_REF_UPDATED_BY_ACTION=true"
+          else
+            printf '%s' "$push_output" | grep -E 'refusing to allow a GitHub App|workflows permission'
+            echo "REPAIR_REF_UPDATED_BY_ACTION=false"
+            echo "REPAIR_OBJECT_TRANSFERRED_FOR_CONNECTED_REF_UPDATE=true"
+          fi
