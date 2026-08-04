@@ -96,13 +96,17 @@ jobs:
 
           value = Path('.github/workflows/p2-owner-mode.yml').read_text(encoding='utf-8')
           expression = '$' + '{{ github.event_name }}'
-          expected = f'          if [[ "{expression}" == "workflow_dispatch" ]]; then\n'
-          if value.count(expected) != 1:
-              raise SystemExit(f'owner-risk event branch count: {value.count(expected)}')
           strict = '            python tool/p2_shared_p1_authority_contract_test.py --project .\n'
           owner_risk = '            python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa\n'
-          if value.count(strict) != 1 or value.count(owner_risk) != 1:
-              raise SystemExit('owner-risk source-contract commands are not exact')
+          block = (
+              f'          if [[ "{expression}" == "workflow_dispatch" ]]; then\n'
+              + strict
+              + '          else\n'
+              + owner_risk
+              + '          fi\n'
+          )
+          if value.count(block) != 1:
+              raise SystemExit(f'owner-risk source-contract block count: {value.count(block)}')
           PY_VERIFY
 
       - name: Commit and push exact repair
