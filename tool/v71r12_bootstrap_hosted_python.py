@@ -30,9 +30,13 @@ EXPECTED: dict[str, tuple[str, set[str]]] = {
     "cffi": (
         "2.1.0",
         {
-            "8e74a6135550c4748af665b1b1118b6aab33b1fc6a16f9aff630af107c3b4512",
-            "799416bae98336e400981ff6e532d67d5c709cfb30afb79865a1315f94b0e224",
+            "1e9f50d192a3e525b15a75ab5114e442d83d657b7ec29182a991bc9a88fd3a66",
             "716ff8ec22f20b4d988b12884086bcef0fc99737043e503f7a3935a6be99b1ea",
+            "78474632761faa0fb96f30b1c928c84ebcf68713cbb80d15bab09dfe61640fde",
+            "799416bae98336e400981ff6e532d67d5c709cfb30afb79865a1315f94b0e224",
+            "8e74a6135550c4748af665b1b1118b6aab33b1fc6a16f9aff630af107c3b4512",
+            "c97f080ea627e2863524c5af3836e2270b5f5dfff1f104392b959f8df0c5d384",
+            "df2b82571a1b30f58a87bf4e5a9e78d2b1eff6c6ce8fd3aa3757221f93f0863f",
         },
     ),
     "pycparser": (
