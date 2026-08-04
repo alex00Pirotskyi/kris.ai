@@ -15,11 +15,11 @@ concurrency:
 jobs:
   repair-pr14:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
-      EXPECTED_HEAD: 0b6a50978de9a954f00de8272ba24134bb85980e
-      SELF_REPAIR_PATH: .github/workflows/temp-pr14-self-repair.yml
+      EXPECTED_HEAD: 0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+      CI_PATH: .github/workflows/ci.yml
       STATUS_BRANCH: ci/direct-pr14-repair-trigger
     steps:
       - name: Check out exact PR14 target
@@ -40,10 +40,10 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.13.5'
+          python-version: '3.12.10'
           check-latest: false
 
-      - name: Apply, validate, commit, and push exact repair
+      - name: Apply and fully validate the exact product-CI repair
         shell: bash
         run: |
           set +e
@@ -55,83 +55,69 @@ jobs:
             test "$(git branch --show-current)" = "$TARGET_BRANCH"
             test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
             test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
-            test -f "$SELF_REPAIR_PATH"
+            test -f "$CI_PATH"
             test -z "$(git status --porcelain)"
-
-            python tool/v71r12_bootstrap_hosted_python.py --project .
 
             python - <<'PY'
           from pathlib import Path
 
-          p2 = Path('.github/workflows/p2-owner-mode.yml')
-          value = p2.read_text(encoding='utf-8')
-          old = '''      - id: toolchains
-        shell: bash
-        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
-'''
-          new = '''      - name: Install exact hash-locked hosted Python test dependencies
-        shell: bash
-        run: python tool/v71r12_bootstrap_hosted_python.py --project .
-      - id: toolchains
-        shell: bash
-        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
-'''
-          if value.count(old) < 1:
-              raise SystemExit('P2 source-contract toolchain anchor missing')
-          p2.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
+          path = Path('.github/workflows/ci.yml')
+          value = path.read_text(encoding='utf-8')
+          old = '''      - run: flutter pub get
 
-          promotion = Path('.github/workflows/p1-p2-owner-risk-promotion-v71r12.yml')
-          value = promotion.read_text(encoding='utf-8')
-          old = '''          if-no-files-found: error
-          retention-days: 30
+      - name: Capture CI environment
 '''
-          new = '''          if-no-files-found: error
-          retention-days: 30
-          include-hidden-files: true
+          new = '''      - run: flutter pub get
+
+      - name: Install hash-locked P1/P2 Python test dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+
+      - name: Capture CI environment
 '''
           if value.count(old) != 1:
-              raise SystemExit(f'expected one shipment upload target, found {value.count(old)}')
-          if 'include-hidden-files: true' in value:
-              raise SystemExit('shipment visibility repair already present')
-          promotion.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
+              raise SystemExit(f'product CI bootstrap anchor count: {value.count(old)}')
+          if 'Install hash-locked P1/P2 Python test dependencies' in value:
+              raise SystemExit('product CI bootstrap step is already present')
+          path.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
           PY
 
-            python tool/benchmark_runner.py run \
-              --project . \
-              --mode portable \
-              --output evals/results/p0_009_baseline.json \
-              --markdown evals/results/P0_009_BASELINE.md
-            rm -f "$SELF_REPAIR_PATH"
             python tool/p2_refresh_source_manifest.py .
-
-            python tool/benchmark_runner.py check --project .
-            python tool/p0_010_generated_state_test.py --project .
             python tool/p2_source_inventory_test.py --project .
+            python tool/v71r12_bootstrap_hosted_python.py --project .
+            python tool/integration_train_test.py --project .
+            python tool/p1_exit_gate_test.py --project .
             git diff --check
 
             mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
             printf 'CHANGED_PATH=%s\n' "${paths[@]}"
-            test "${#paths[@]}" -eq 6
-            test "${paths[0]}" = ".github/workflows/p1-p2-owner-risk-promotion-v71r12.yml"
-            test "${paths[1]}" = ".github/workflows/p2-owner-mode.yml"
-            test "${paths[2]}" = ".github/workflows/temp-pr14-self-repair.yml"
-            test "${paths[3]}" = "SOURCE_MANIFEST.sha256"
-            test "${paths[4]}" = "evals/results/P0_009_BASELINE.md"
-            test "${paths[5]}" = "evals/results/p0_009_baseline.json"
-            test "$(grep -c '^[[:space:]]*include-hidden-files: true$' .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml)" -eq 1
-            test "$(grep -c 'Install exact hash-locked hosted Python test dependencies' .github/workflows/p2-owner-mode.yml)" -eq 1
+            test "${#paths[@]}" -eq 2
+            test "${paths[0]}" = ".github/workflows/ci.yml"
+            test "${paths[1]}" = "SOURCE_MANIFEST.sha256"
+            test "$(grep -c '^[[:space:]]*- name: Install hash-locked P1/P2 Python test dependencies$' "$CI_PATH")" -eq 1
+            test "$(grep -c '^[[:space:]]*run: python tool/v71r12_bootstrap_hosted_python.py --project \.$' "$CI_PATH")" -eq 1
 
             git config user.name 'Kristin CI Repair'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add -A
+            git add SOURCE_MANIFEST.sha256 "$CI_PATH"
             git diff --cached --check
-            git commit -m 'fix(ci): refresh P2 preview gates and benchmark baseline'
+            git commit -m 'fix(ci): install hash-locked Python dependencies before P1 closure'
             repaired_commit="$(git rev-parse HEAD)"
             test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
-            test ! -e "$SELF_REPAIR_PATH"
-            git push origin "$repaired_commit:refs/heads/$TARGET_BRANCH"
-            test "$(git ls-remote origin refs/heads/$TARGET_BRANCH | awk '{print $1}')" = "$repaired_commit"
             printf '%s\n' "$repaired_commit" > "$RUNNER_TEMP/repaired-commit.txt"
+            echo "REPAIRED_PR14_COMMIT=$repaired_commit"
+
+            set +e
+            push_output="$(git push origin "$repaired_commit:refs/heads/$TARGET_BRANCH" 2>&1)"
+            push_rc=$?
+            set -e
+            printf '%s\n' "$push_output"
+            if [ "$push_rc" -eq 0 ]; then
+              test "$(git ls-remote origin refs/heads/$TARGET_BRANCH | awk '{print $1}')" = "$repaired_commit"
+              printf '%s\n' true > "$RUNNER_TEMP/ref-updated.txt"
+            else
+              printf '%s' "$push_output" | grep -E 'refusing to allow a GitHub App|workflows permission'
+              printf '%s\n' false > "$RUNNER_TEMP/ref-updated.txt"
+            fi
           ) > "$RUNNER_TEMP/repair.log" 2>&1
           rc=$?
           echo "REPAIR_RC=$rc" >> "$GITHUB_ENV"
@@ -140,9 +126,15 @@ jobs:
           else
             echo "REPAIRED_COMMIT=" >> "$GITHUB_ENV"
           fi
+          if [[ -f "$RUNNER_TEMP/ref-updated.txt" ]]; then
+            echo "REF_UPDATED_BY_ACTION=$(cat "$RUNNER_TEMP/ref-updated.txt")" >> "$GITHUB_ENV"
+          else
+            echo "REF_UPDATED_BY_ACTION=false" >> "$GITHUB_ENV"
+          fi
+          cat "$RUNNER_TEMP/repair.log"
           exit 0
 
-      - name: Publish repair status to trigger branch
+      - name: Publish exact repair status to the trigger branch
         if: always()
         shell: bash
         run: |
@@ -159,6 +151,7 @@ jobs:
               'targetBranch': os.environ['TARGET_BRANCH'],
               'expectedHead': os.environ['EXPECTED_HEAD'],
               'repairedCommit': os.environ.get('REPAIRED_COMMIT', ''),
+              'refUpdatedByAction': os.environ.get('REF_UPDATED_BY_ACTION', 'false') == 'true',
               'workflowRunId': os.environ.get('GITHUB_RUN_ID', ''),
               'workflowRunAttempt': os.environ.get('GITHUB_RUN_ATTEMPT', ''),
           }
@@ -172,11 +165,11 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add repair.log repair-status.json
           if ! git diff --cached --quiet; then
-            git commit -m 'ci: record direct PR14 repair status'
+            git commit -m 'ci: record product Python bootstrap repair status'
             git push origin "HEAD:refs/heads/$STATUS_BRANCH"
           fi
 
-      - name: Enforce successful repair
+      - name: Enforce successful validation and retained commit
         if: always()
         shell: bash
         run: |
