@@ -1,42 +1,43 @@
-name: TEMP PR14 Pinned Run Repair
+name: TEMP PR14 Explicit Owner Comment Repair
 
 on:
-  workflow_run:
-    workflows:
-      - product-gates
+  issue_comment:
     types:
-      - completed
+      - created
 
 permissions:
   actions: read
   contents: write
+  issues: read
   pull-requests: read
 
 concurrency:
-  group: temp-pr14-pinned-run-repair
+  group: temp-pr14-explicit-owner-comment-repair
   cancel-in-progress: false
 
 jobs:
   repair-pr14:
     if: >-
-      github.event.workflow_run.id == 30950745333 &&
-      github.event.workflow_run.run_attempt == 2 &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.head_branch == 'ci/direct-pr14-repair-trigger' &&
-      github.event.workflow_run.head_sha == '61037b13e71d8b0e6b47feaa9922d476c5666347' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.issue.number == 48 &&
+      github.event.issue.pull_request != null &&
+      github.event.comment.user.login == 'alex00Pirotskyi' &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.event.sender.login == 'alex00Pirotskyi' &&
+      github.actor == 'alex00Pirotskyi' &&
+      github.event.comment.body == '/kristin pr14-repair 0b91e02f2d7413c40dcfa81176877cd3a0daf87e nonce-20260805-bfcd8c76'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
       TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
       EXPECTED_HEAD: 0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+      STATUS_BRANCH: ci/direct-pr14-repair-trigger
       EXPECTED_TRIGGER_HEAD: 61037b13e71d8b0e6b47feaa9922d476c5666347
       EXPECTED_TRIGGER_PR: '48'
+      EXPECTED_OWNER: alex00Pirotskyi
+      EXPECTED_COMMAND: /kristin pr14-repair 0b91e02f2d7413c40dcfa81176877cd3a0daf87e nonce-20260805-bfcd8c76
       EXPECTED_SOURCE_RUN_ID: '30950745333'
-      EVIDENCE_ATTEMPT: '1'
-      EVENT_ATTEMPT: '2'
-      STATUS_BRANCH: ci/direct-pr14-repair-trigger
+      EVIDENCE_ATTEMPT_ONE: '1'
+      EVIDENCE_ATTEMPT_TWO: '2'
       CI_PATH: .github/workflows/ci.yml
       DOC_PATH: docs/progress/2026-08-05-pr14-ci-recovery.md
     steps:
@@ -48,7 +49,7 @@ jobs:
           persist-credentials: true
           path: status
 
-      - name: Check out exact PR14 target without trigger code
+      - name: Check out exact PR14 target without comment-PR code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: merge/p1-p2-owner-risk-qa-preview
@@ -61,40 +62,98 @@ jobs:
           python-version: '3.12.10'
           check-latest: false
 
-      - name: Verify exact run, immutable tri-platform evidence, and fresh event attempt
+      - name: Verify owner command, exact trigger PR, and both successful source attempts
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
-          source_run_id="$(jq -r '.workflow_run.id' "$GITHUB_EVENT_PATH")"
-          source_run_attempt="$(jq -r '.workflow_run.run_attempt' "$GITHUB_EVENT_PATH")"
-          test "$source_run_id" = "$EXPECTED_SOURCE_RUN_ID"
-          test "$source_run_attempt" = "$EVENT_ATTEMPT"
-          test "$(jq -r '.workflow_run.name' "$GITHUB_EVENT_PATH")" = 'product-gates'
-          test "$(jq -r '.workflow_run.event' "$GITHUB_EVENT_PATH")" = 'pull_request'
-          test "$(jq -r '.workflow_run.status' "$GITHUB_EVENT_PATH")" = 'completed'
-          test "$(jq -r '.workflow_run.conclusion' "$GITHUB_EVENT_PATH")" = 'success'
-          test "$(jq -r '.workflow_run.head_branch' "$GITHUB_EVENT_PATH")" = "$STATUS_BRANCH"
-          test "$(jq -r '.workflow_run.head_sha' "$GITHUB_EVENT_PATH")" = "$EXPECTED_TRIGGER_HEAD"
-          test "$(jq -r '.workflow_run.head_repository.full_name' "$GITHUB_EVENT_PATH")" = "$GITHUB_REPOSITORY"
-          test "$(jq --argjson pr "$EXPECTED_TRIGGER_PR" '[.workflow_run.pull_requests[]? | select(.number == $pr)] | length' "$GITHUB_EVENT_PATH")" -eq 1
-
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EXPECTED_SOURCE_RUN_ID" > "$RUNNER_TEMP/source-run.json"
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EXPECTED_SOURCE_RUN_ID/attempts/$EVIDENCE_ATTEMPT/jobs?per_page=100" > "$RUNNER_TEMP/evidence-jobs.json"
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EXPECTED_SOURCE_RUN_ID/attempts/$EVENT_ATTEMPT/jobs?per_page=100" > "$RUNNER_TEMP/event-jobs.json"
-
-          python - "$RUNNER_TEMP/source-run.json" "$RUNNER_TEMP/evidence-jobs.json" "$RUNNER_TEMP/event-jobs.json" <<'PY_VERIFY'
+          python - "$GITHUB_EVENT_PATH" <<'PY_EVENT'
           import json
           import os
           import pathlib
           import sys
 
-          run = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
-          evidence_jobs = json.loads(pathlib.Path(sys.argv[2]).read_text(encoding='utf-8')).get('jobs', [])
-          event_jobs = json.loads(pathlib.Path(sys.argv[3]).read_text(encoding='utf-8')).get('jobs', [])
-          expected = {
+          event = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          issue = event.get('issue') or {}
+          comment = event.get('comment') or {}
+          sender = event.get('sender') or {}
+          expected_owner = os.environ['EXPECTED_OWNER']
+          expected_command = os.environ['EXPECTED_COMMAND']
+
+          if issue.get('number') != int(os.environ['EXPECTED_TRIGGER_PR']):
+              raise SystemExit('trigger issue number mismatch')
+          if not isinstance(issue.get('pull_request'), dict):
+              raise SystemExit('trigger issue is not a pull request')
+          if comment.get('body') != expected_command:
+              raise SystemExit('trigger command mismatch')
+          if (comment.get('user') or {}).get('login') != expected_owner:
+              raise SystemExit('trigger comment owner mismatch')
+          if comment.get('author_association') != 'OWNER':
+              raise SystemExit('trigger author association is not OWNER')
+          if sender.get('login') != expected_owner:
+              raise SystemExit('trigger sender mismatch')
+          comment_id = comment.get('id')
+          if not isinstance(comment_id, int) or comment_id <= 0:
+              raise SystemExit('trigger comment id is invalid')
+
+          with pathlib.Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as handle:
+              handle.write(f'TRIGGER_COMMENT_ID={comment_id}\n')
+          print(f'TRIGGER_COMMENT_ID={comment_id}')
+          PY_EVENT
+
+          gh api "repos/$GITHUB_REPOSITORY/issues/comments/$TRIGGER_COMMENT_ID" > "$RUNNER_TEMP/comment.json"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$EXPECTED_TRIGGER_PR" > "$RUNNER_TEMP/trigger-pr.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EXPECTED_SOURCE_RUN_ID" > "$RUNNER_TEMP/source-run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EXPECTED_SOURCE_RUN_ID/attempts/$EVIDENCE_ATTEMPT_ONE/jobs?per_page=100" > "$RUNNER_TEMP/attempt-one-jobs.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EXPECTED_SOURCE_RUN_ID/attempts/$EVIDENCE_ATTEMPT_TWO/jobs?per_page=100" > "$RUNNER_TEMP/attempt-two-jobs.json"
+
+          python - \
+            "$RUNNER_TEMP/comment.json" \
+            "$RUNNER_TEMP/trigger-pr.json" \
+            "$RUNNER_TEMP/source-run.json" \
+            "$RUNNER_TEMP/attempt-one-jobs.json" \
+            "$RUNNER_TEMP/attempt-two-jobs.json" <<'PY_VERIFY'
+          import json
+          import os
+          import pathlib
+          import sys
+
+          comment = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          pull = json.loads(pathlib.Path(sys.argv[2]).read_text(encoding='utf-8'))
+          run = json.loads(pathlib.Path(sys.argv[3]).read_text(encoding='utf-8'))
+          attempt_one = json.loads(pathlib.Path(sys.argv[4]).read_text(encoding='utf-8')).get('jobs', [])
+          attempt_two = json.loads(pathlib.Path(sys.argv[5]).read_text(encoding='utf-8')).get('jobs', [])
+
+          expected_owner = os.environ['EXPECTED_OWNER']
+          expected_command = os.environ['EXPECTED_COMMAND']
+          expected_pr = int(os.environ['EXPECTED_TRIGGER_PR'])
+
+          if comment.get('id') != int(os.environ['TRIGGER_COMMENT_ID']):
+              raise SystemExit('fetched comment id mismatch')
+          if comment.get('body') != expected_command:
+              raise SystemExit('fetched comment body mismatch')
+          if (comment.get('user') or {}).get('login') != expected_owner:
+              raise SystemExit('fetched comment owner mismatch')
+          if comment.get('author_association') != 'OWNER':
+              raise SystemExit('fetched comment association mismatch')
+
+          if pull.get('number') != expected_pr or pull.get('state') != 'open':
+              raise SystemExit('trigger pull request is not exact and open')
+          if pull.get('draft') is not True:
+              raise SystemExit('disposable trigger pull request must remain draft')
+          if (pull.get('base') or {}).get('ref') != 'main':
+              raise SystemExit('trigger pull request base mismatch')
+          head = pull.get('head') or {}
+          if head.get('ref') != os.environ['STATUS_BRANCH']:
+              raise SystemExit('trigger branch mismatch')
+          if head.get('sha') != os.environ['EXPECTED_TRIGGER_HEAD']:
+              raise SystemExit('trigger head mismatch')
+          if (head.get('repo') or {}).get('full_name') != os.environ['GITHUB_REPOSITORY']:
+              raise SystemExit('trigger repository mismatch')
+
+          expected_run = {
               'id': int(os.environ['EXPECTED_SOURCE_RUN_ID']),
               'name': 'product-gates',
               'event': 'pull_request',
@@ -102,35 +161,33 @@ jobs:
               'conclusion': 'success',
               'head_branch': os.environ['STATUS_BRANCH'],
               'head_sha': os.environ['EXPECTED_TRIGGER_HEAD'],
-              'run_attempt': int(os.environ['EVENT_ATTEMPT']),
+              'run_attempt': int(os.environ['EVIDENCE_ATTEMPT_TWO']),
           }
-          for key, value in expected.items():
+          for key, value in expected_run.items():
               if run.get(key) != value:
                   raise SystemExit(f'source run {key} mismatch: {run.get(key)!r} != {value!r}')
+          if (run.get('head_repository') or {}).get('full_name') != os.environ['GITHUB_REPOSITORY']:
+              raise SystemExit('source run repository mismatch')
+          run_prs = {row.get('number') for row in (run.get('pull_requests') or [])}
+          if expected_pr not in run_prs:
+              raise SystemExit('source run does not reference exact trigger PR')
 
-          for name in ('validate-ubuntu', 'validate-windows', 'validate-macos'):
-              matches = [row for row in evidence_jobs if row.get('name') == name]
-              if len(matches) != 1:
-                  raise SystemExit(f'evidence-attempt job count mismatch for {name}: {len(matches)}')
-              row = matches[0]
-              if row.get('status') != 'completed' or row.get('conclusion') != 'success':
-                  raise SystemExit(f'evidence-attempt job did not pass: {name}')
-              print(f'EVIDENCE_PRODUCT_JOB={name} ID={row.get("id")} CONCLUSION=success')
+          required = ('validate-ubuntu', 'validate-windows', 'validate-macos')
+          for attempt_name, jobs in (('attempt-1', attempt_one), ('attempt-2', attempt_two)):
+              for name in required:
+                  matches = [row for row in jobs if row.get('name') == name]
+                  if len(matches) != 1:
+                      raise SystemExit(f'{attempt_name} job count mismatch for {name}: {len(matches)}')
+                  row = matches[0]
+                  if row.get('status') != 'completed' or row.get('conclusion') != 'success':
+                      raise SystemExit(f'{attempt_name} job did not pass: {name}')
+                  print(f'SOURCE_PRODUCT_JOB={attempt_name}:{name} ID={row.get("id")} CONCLUSION=success')
 
-          ubuntu = [row for row in event_jobs if row.get('name') == 'validate-ubuntu']
-          if len(ubuntu) != 1:
-              raise SystemExit(f'event-attempt Ubuntu job count mismatch: {len(ubuntu)}')
-          if ubuntu[0].get('status') != 'completed' or ubuntu[0].get('conclusion') != 'success':
-              raise SystemExit('event-attempt Ubuntu job did not pass')
-          for row in event_jobs:
-              if row.get('status') != 'completed' or row.get('conclusion') not in {'success', 'skipped'}:
-                  raise SystemExit(f'event-attempt job is not terminal-successful: {row.get("name")}')
-          print(f'EVENT_PRODUCT_JOB=validate-ubuntu ID={ubuntu[0].get("id")} CONCLUSION=success')
+          print('EXPLICIT_OWNER_COMMAND_VERIFIED=true')
           PY_VERIFY
 
-          echo "SOURCE_WORKFLOW_RUN_ID=$source_run_id" >> "$GITHUB_ENV"
-          echo "SOURCE_WORKFLOW_EVIDENCE_ATTEMPT=$EVIDENCE_ATTEMPT" >> "$GITHUB_ENV"
-          echo "SOURCE_WORKFLOW_EVENT_ATTEMPT=$source_run_attempt" >> "$GITHUB_ENV"
+          echo "SOURCE_WORKFLOW_RUN_ID=$EXPECTED_SOURCE_RUN_ID" >> "$GITHUB_ENV"
+          echo "SOURCE_WORKFLOW_EVIDENCE_ATTEMPTS=$EVIDENCE_ATTEMPT_ONE,$EVIDENCE_ATTEMPT_TWO" >> "$GITHUB_ENV"
 
       - name: Build and validate exact documented repair candidate
         shell: bash
@@ -138,9 +195,9 @@ jobs:
           set +e
           (
             set -euo pipefail
+            test -n "${TRIGGER_COMMENT_ID:-}"
             test "${SOURCE_WORKFLOW_RUN_ID:-}" = "$EXPECTED_SOURCE_RUN_ID"
-            test "${SOURCE_WORKFLOW_EVIDENCE_ATTEMPT:-}" = "$EVIDENCE_ATTEMPT"
-            test "${SOURCE_WORKFLOW_EVENT_ATTEMPT:-}" = "$EVENT_ATTEMPT"
+            test "${SOURCE_WORKFLOW_EVIDENCE_ATTEMPTS:-}" = "$EVIDENCE_ATTEMPT_ONE,$EVIDENCE_ATTEMPT_TWO"
 
             cd target
             git config core.autocrlf false
@@ -187,7 +244,7 @@ jobs:
 
           This significant recovery step makes the protected product gate reproducible on clean Windows, macOS, and Ubuntu runners before the P1/P2 owner-risk QA preview can be reconsidered for landing. It changes no product behavior and widens no authority boundary.
 
-          The product workflow already invokes the complete P1 exit gate. Two Ed25519 reference tests import the pinned `cryptography` dependency, but the workflow previously reached them before installing the repository's existing hash-locked hosted-Python dependency bundle. A clean runner could therefore fail with `ModuleNotFoundError: cryptography` despite green product source, Flutter analysis/tests, P1 contracts, and isolated P1/P2 runtime validation.
+          The product workflow invokes the complete P1 exit gate. Two Ed25519 reference tests import the pinned `cryptography` dependency, but the workflow previously reached them before installing the repository's existing hash-locked hosted-Python dependency bundle. A clean runner could therefore fail with `ModuleNotFoundError: cryptography` despite green product source, Flutter analysis/tests, P1 contracts, and isolated P1/P2 runtime validation.
 
           ## Exact change
 
@@ -202,14 +259,15 @@ jobs:
           - Formal manual-dispatch and owner-risk pull-request source contracts were separated without weakening the formal lane.
           - A verifier false positive was corrected by matching the exact inserted five-line block instead of counting unrelated conditions globally.
           - GitHub correctly blocked an Actions token from updating workflow files without workflow-write authority; the exact validated commit object is retained for a separately authenticated ref update.
-          - Connector-authored commits did not reliably emit push workflows, and the reviewed `pull_request_target` fallback emitted no receipt.
-          - A broad `workflow_run` handoff was installed, but a later Ubuntu hosted runner stalled inside package installation while Windows and macOS completed successfully. The stalled run was not accepted as evidence and cannot race the receipt.
-          - The final handoff pins immutable tri-platform evidence to product run `30950745333`, attempt 1, where Windows, macOS, and Ubuntu all passed. A fresh Ubuntu rerun as attempt 2 emits the post-merge event. Both attempts are verified directly, and every other run ID is ignored.
+          - Connector-authored commits did not reliably emit push workflows, the reviewed `pull_request_target` fallback emitted no receipt, and two reviewed `workflow_run` handoffs also emitted no machine-readable receipt.
+          - One Ubuntu hosted runner stalled inside package installation while Windows and macOS completed. That partial run was rejected and could not authorize mutation.
+          - Product run `30950745333` was verified twice. Attempt 1 and attempt 2 each contain successful Windows, macOS, and Ubuntu jobs. Both attempt-specific job sets are re-fetched before mutation.
+          - The final transport is an explicit one-time command on disposable PR #48. The command is accepted only from repository owner `alex00Pirotskyi`, with `OWNER` association, exact body, exact nonce, exact comment ID, exact PR, exact branch, exact SHA, and same-repository provenance.
           - Clean hosted runners exposed the missing dependency bootstrap. The fix reuses the existing locked dependency closure rather than adding unpinned installation or weakening the P1 exit gate.
 
           ## Candidate validation
 
-          Before target mutation, the executor verifies exact trigger PR #48, repository, branch, SHA, source run `30950745333`, all three successful jobs in evidence attempt 1, and a fresh successful Ubuntu job in event attempt 2.
+          Before target mutation, the executor verifies the owner command and re-fetches its comment, PR #48, source run `30950745333`, and all three successful jobs in both source attempts.
 
           Against the exact target head it runs the P2 source inventory, owner-risk P1A dependency contract, hash-locked bootstrap, integration-train gate, full P1 exit gate, P0-003 repair gate, P0-008 roadmap controls, strict roadmap validator, P0-010 generated-state gate, Git whitespace checks, and exact three-path/exact-once assertions.
 
@@ -250,7 +308,7 @@ jobs:
             test "$(grep -c '^[[:space:]]*run: python tool/v71r12_bootstrap_hosted_python.py --project \.$' "$CI_PATH")" -eq 1
             grep -F '**Human roadmap authority:** `docs/roadmap/MASTER.md`' "$DOC_PATH"
             grep -F '## Challenges passed' "$DOC_PATH"
-            grep -F 'pins immutable tri-platform evidence' "$DOC_PATH"
+            grep -F 'explicit one-time command' "$DOC_PATH"
 
             git config user.name 'Kristin CI Repair'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -302,20 +360,25 @@ jobs:
             printf 'candidate construction did not reach captured execution\n' > repair.log
           fi
           python - <<'PY_RECEIPT'
+          import hashlib
           import json
           import os
           from pathlib import Path
 
+          command = os.environ['EXPECTED_COMMAND']
           payload = {
-              'schemaVersion': '1.2.0',
+              'schemaVersion': '1.3.0',
               'repairRc': int(os.environ.get('REPAIR_RC', '255')),
               'targetBranch': os.environ['TARGET_BRANCH'],
               'expectedHead': os.environ['EXPECTED_HEAD'],
+              'triggerBranch': os.environ['STATUS_BRANCH'],
               'triggerHead': os.environ['EXPECTED_TRIGGER_HEAD'],
               'triggerPullRequest': int(os.environ['EXPECTED_TRIGGER_PR']),
+              'triggerCommentId': os.environ.get('TRIGGER_COMMENT_ID', ''),
+              'triggerOwner': os.environ['EXPECTED_OWNER'],
+              'triggerCommandSha256': hashlib.sha256(command.encode('utf-8')).hexdigest(),
               'sourceWorkflowRunId': os.environ.get('SOURCE_WORKFLOW_RUN_ID', ''),
-              'sourceWorkflowEvidenceAttempt': os.environ.get('SOURCE_WORKFLOW_EVIDENCE_ATTEMPT', ''),
-              'sourceWorkflowEventAttempt': os.environ.get('SOURCE_WORKFLOW_EVENT_ATTEMPT', ''),
+              'sourceWorkflowEvidenceAttempts': os.environ.get('SOURCE_WORKFLOW_EVIDENCE_ATTEMPTS', ''),
               'repairedCommit': os.environ.get('REPAIRED_COMMIT', ''),
               'refUpdatedByAction': os.environ.get('REF_UPDATED_BY_ACTION', 'false') == 'true',
               'workflowRunId': os.environ.get('GITHUB_RUN_ID', ''),
@@ -337,7 +400,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add repair.log repair-status.json
           if ! git diff --cached --quiet; then
-            git commit -m 'ci: record pinned documented PR14 repair candidate'
+            git commit -m 'ci: record explicit-owner documented PR14 repair candidate'
             git push origin "HEAD:refs/heads/$STATUS_BRANCH"
           fi
 
