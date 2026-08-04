@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   repair-pr14:
-    if: github.event.pull_request.head.ref == 'ci/execute-pr14-repair'
+    if: github.event.pull_request.head.ref == 'ci/execute-pr14-repair-trigger'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
