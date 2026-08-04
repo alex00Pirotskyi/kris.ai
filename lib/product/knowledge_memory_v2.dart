@@ -65,14 +65,16 @@ class ContentAddressedObjectStore {
     final clean = relativePath.replaceAll('\\', '/');
     if (clean.startsWith('/') ||
         clean.split('/').any((segment) => segment.isEmpty || segment == '..')) {
-      throw ArgumentError.value(relativePath, 'relativePath', 'Invalid object-store path.');
+      throw ArgumentError.value(
+          relativePath, 'relativePath', 'Invalid object-store path.');
     }
     final file = File(
       '${root.path}${Platform.pathSeparator}${clean.replaceAll('/', Platform.pathSeparator)}',
     ).absolute;
     final rootPath = root.absolute.path.replaceAll('\\', '/');
     final candidate = file.path.replaceAll('\\', '/');
-    final normalizedRoot = Platform.isWindows ? rootPath.toLowerCase() : rootPath;
+    final normalizedRoot =
+        Platform.isWindows ? rootPath.toLowerCase() : rootPath;
     final normalizedCandidate =
         Platform.isWindows ? candidate.toLowerCase() : candidate;
     if (normalizedCandidate != normalizedRoot &&
@@ -240,7 +242,8 @@ class MemoryAdmissionPolicy {
           (episode.mutations > 0 || episode.toolCalls >= 2);
       return MemoryAdmissionDecision(
         status: 'admitted',
-        reason: 'Successful governed work with evidence is eligible for retrieval.',
+        reason:
+            'Successful governed work with evidence is eligible for retrieval.',
         retrievalAllowed: true,
         candidateSkill: promoteSuccessfulMutations && reusable,
         diagnosticOnly: false,
@@ -266,8 +269,13 @@ class MemoryAdmissionPolicy {
 
   bool _looksConversational(String request) {
     final lower = request.toLowerCase();
-    return const <String>['what is', 'tell me', 'who is', 'summarize', 'explain']
-        .any(lower.contains);
+    return const <String>[
+      'what is',
+      'tell me',
+      'who is',
+      'summarize',
+      'explain'
+    ].any(lower.contains);
   }
 }
 
@@ -386,7 +394,8 @@ class SkillPublicationService {
   final EntityRepository<PublishedSkillRecord> publishedRepository;
   final ContentAddressedObjectStore objectStore;
 
-  Future<SkillCandidateRecord?> extractFromEpisode(MemoryEpisode episode) async {
+  Future<SkillCandidateRecord?> extractFromEpisode(
+      MemoryEpisode episode) async {
     final decision = const MemoryAdmissionPolicy().evaluateEpisode(episode);
     if (!decision.candidateSkill) {
       return null;
@@ -401,8 +410,10 @@ class SkillPublicationService {
     }
     final instructions = <String>[
       'Objective: ${episode.request.trim()}',
-      if (episode.summary.trim().isNotEmpty) 'Summary: ${episode.summary.trim()}',
-      if (episode.lessons.trim().isNotEmpty) 'Lessons: ${episode.lessons.trim()}',
+      if (episode.summary.trim().isNotEmpty)
+        'Summary: ${episode.summary.trim()}',
+      if (episode.lessons.trim().isNotEmpty)
+        'Lessons: ${episode.lessons.trim()}',
       if (episode.filesChanged.isNotEmpty)
         'Changed files: ${episode.filesChanged.join(', ')}',
     ].join('\n');

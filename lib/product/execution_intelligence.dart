@@ -16,7 +16,9 @@ enum AgentModelRole {
 }
 
 enum ModelDataBoundary { local, privateRemote, publicCloud }
+
 enum ModelCircuitState { closed, open, halfOpen }
+
 enum ConvergenceAction {
   continueExecution,
   compactAndRetry,
@@ -132,8 +134,10 @@ class RoleBasedModelRouter {
     for (final candidate in candidates) {
       final reasons = <String>[];
       if (!candidate.healthy) reasons.add('model_unhealthy');
-      if (candidate.circuit == ModelCircuitState.open) reasons.add('circuit_open');
-      if (!candidate.roles.contains(request.role)) reasons.add('role_unsupported');
+      if (candidate.circuit == ModelCircuitState.open)
+        reasons.add('circuit_open');
+      if (!candidate.roles.contains(request.role))
+        reasons.add('role_unsupported');
       if (candidate.contextTokens < request.requiredContextTokens) {
         reasons.add('context_insufficient');
       }
@@ -143,7 +147,8 @@ class RoleBasedModelRouter {
       if (!policy.approvedModels.contains(candidate.identity)) {
         reasons.add('model_not_approved');
       }
-      if (policy.localOnly && candidate.dataBoundary != ModelDataBoundary.local) {
+      if (policy.localOnly &&
+          candidate.dataBoundary != ModelDataBoundary.local) {
         reasons.add('local_only_policy');
       }
       if (candidate.dataBoundary.index > policy.maximumDataBoundary.index ||
@@ -165,16 +170,19 @@ class RoleBasedModelRouter {
       }
     }
     eligible.sort((left, right) {
-      final reliability = right.reliabilityScore.compareTo(left.reliabilityScore);
+      final reliability =
+          right.reliabilityScore.compareTo(left.reliabilityScore);
       if (reliability != 0) return reliability;
-      final latency = left.estimatedLatencyMs.compareTo(right.estimatedLatencyMs);
+      final latency =
+          left.estimatedLatencyMs.compareTo(right.estimatedLatencyMs);
       if (latency != 0) return latency;
       final cost = left.estimatedCostUsd.compareTo(right.estimatedCostUsd);
       if (cost != 0) return cost;
       return left.identity.compareTo(right.identity);
     });
     final selected = eligible.firstOrNull;
-    final approvalRequired = selected == null && request.allowFallback && !policy.fallbackApproved;
+    final approvalRequired =
+        selected == null && request.allowFallback && !policy.fallbackApproved;
     final payload = <String, dynamic>{
       'request': <String, dynamic>{
         'role': request.role.name,
@@ -297,7 +305,9 @@ class SemanticProgressEngine {
         .toList()
       ..sort();
     final changed = after.artifacts.keys
-        .where((path) => before.artifacts.containsKey(path) && before.artifacts[path] != after.artifacts[path])
+        .where((path) =>
+            before.artifacts.containsKey(path) &&
+            before.artifacts[path] != after.artifacts[path])
         .toList()
       ..sort();
     List<String> added(Set<String> oldValues, Set<String> newValues) =>
@@ -308,12 +318,18 @@ class SemanticProgressEngine {
       newEvidence: added(before.evidenceIds, after.evidenceIds),
       resolvedErrors: added(after.errorCodes, before.errorCodes),
       newErrors: added(before.errorCodes, after.errorCodes),
-      criteriaSatisfied: added(before.satisfiedCriteria, after.satisfiedCriteria),
-      criteriaRegressed: added(after.satisfiedCriteria, before.satisfiedCriteria),
+      criteriaSatisfied:
+          added(before.satisfiedCriteria, after.satisfiedCriteria),
+      criteriaRegressed:
+          added(after.satisfiedCriteria, before.satisfiedCriteria),
       newExternalState: added(before.externalState, after.externalState),
-      planRevised: before.planHash != null && after.planHash != null && before.planHash != after.planHash,
-      repeatedAction: before.actionHash != null && before.actionHash == after.actionHash,
-      repeatedResult: before.resultHash != null && before.resultHash == after.resultHash,
+      planRevised: before.planHash != null &&
+          after.planHash != null &&
+          before.planHash != after.planHash,
+      repeatedAction:
+          before.actionHash != null && before.actionHash == after.actionHash,
+      repeatedResult:
+          before.resultHash != null && before.resultHash == after.resultHash,
       beforeHash: before.hash,
       afterHash: after.hash,
     );
@@ -353,29 +369,51 @@ class ConvergenceController {
       );
     }
     if (stalledTurns <= 1) {
-      return ConvergenceDecision(action: ConvergenceAction.compactAndRetry, reason: 'First no-progress state: compact duplicate context.', stalledTurns: stalledTurns);
+      return ConvergenceDecision(
+          action: ConvergenceAction.compactAndRetry,
+          reason: 'First no-progress state: compact duplicate context.',
+          stalledTurns: stalledTurns);
     }
     if (stalledTurns == 2) {
-      return ConvergenceDecision(action: ConvergenceAction.requireDifferentAction, reason: 'Repeated action or result is not progress.', stalledTurns: stalledTurns);
+      return ConvergenceDecision(
+          action: ConvergenceAction.requireDifferentAction,
+          reason: 'Repeated action or result is not progress.',
+          stalledTurns: stalledTurns);
     }
     if (stalledTurns == 3) {
-      return ConvergenceDecision(action: ConvergenceAction.routeToVerifier, reason: 'Use independent verification to resolve the state.', stalledTurns: stalledTurns);
+      return ConvergenceDecision(
+          action: ConvergenceAction.routeToVerifier,
+          reason: 'Use independent verification to resolve the state.',
+          stalledTurns: stalledTurns);
     }
     if (stalledTurns == 4) {
-      return ConvergenceDecision(action: ConvergenceAction.splitTask, reason: 'Split the blocked objective into independently verifiable work.', stalledTurns: stalledTurns);
+      return ConvergenceDecision(
+          action: ConvergenceAction.splitTask,
+          reason:
+              'Split the blocked objective into independently verifiable work.',
+          stalledTurns: stalledTurns);
     }
     if (stalledTurns == 5) {
-      return ConvergenceDecision(action: ConvergenceAction.askUser, reason: 'One bounded user decision is required.', stalledTurns: stalledTurns);
+      return ConvergenceDecision(
+          action: ConvergenceAction.askUser,
+          reason: 'One bounded user decision is required.',
+          stalledTurns: stalledTurns);
     }
     if (stalledTurns == 6 && strongerModelAvailable) {
       return ConvergenceDecision(
         action: ConvergenceAction.offerStrongerModel,
-        reason: strongerModelApproved ? 'Use the already approved fallback policy.' : 'Offer a stronger model without selecting it silently.',
+        reason: strongerModelApproved
+            ? 'Use the already approved fallback policy.'
+            : 'Offer a stronger model without selecting it silently.',
         stalledTurns: stalledTurns,
         requiresApproval: !strongerModelApproved,
       );
     }
-    return ConvergenceDecision(action: ConvergenceAction.failConvergence, reason: 'Bounded convergence strategies were exhausted without semantic progress.', stalledTurns: stalledTurns);
+    return ConvergenceDecision(
+        action: ConvergenceAction.failConvergence,
+        reason:
+            'Bounded convergence strategies were exhausted without semantic progress.',
+        stalledTurns: stalledTurns);
   }
 }
 
@@ -449,7 +487,8 @@ class IndependentVerifier {
     final criteria = <Map<String, dynamic>>[];
     for (var index = 0; index < item.acceptanceCriteria.length; index++) {
       final id = '${item.id}:criterion:${index + 1}';
-      final matches = usable.where((entry) => entry.criterionIds.contains(id)).toList();
+      final matches =
+          usable.where((entry) => entry.criterionIds.contains(id)).toList();
       criteria.add(<String, dynamic>{
         'criterionId': id,
         'status': matches.isEmpty ? 'unsupported' : 'passed',
@@ -602,7 +641,12 @@ class ContextCompactor {
     for (final record in history) {
       final normalized = <String, dynamic>{
         for (final entry in record.entries)
-          if (!const <String>{'turn', 'toolRepair', 'protocolRepair', 'coordinatorCorrection'}.contains(entry.key))
+          if (!const <String>{
+            'turn',
+            'toolRepair',
+            'protocolRepair',
+            'coordinatorCorrection'
+          }.contains(entry.key))
             entry.key: entry.value,
       };
       deduplicated[Sha256.text(canonicalJson(normalized))] = normalized;

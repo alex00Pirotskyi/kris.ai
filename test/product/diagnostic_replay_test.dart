@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/agent_protocol.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/planning_runtime.dart';
+import 'package:kristin_local_agent/product/storage_security.dart';
 import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 void main() {
@@ -30,7 +31,8 @@ void main() {
       final item = WorkItem(
         id: mapValue(decoded)['id']?.toString() ?? file.path,
         title: 'Create project-local wireframes and user flows',
-        description: 'Create and inspect `$path` for the calculator application.',
+        description:
+            'Create and inspect `$path` for the calculator application.',
         dependencies: const <String>{},
         allowedTools: allowedTools,
         acceptanceCriteria: const <String>[
@@ -47,7 +49,8 @@ void main() {
           reason: file.path);
 
       if (expected['contentMustBePreserved'] == true) {
-        final sourceAction = mapValue(mapValue(replay['modelEnvelope'])['action']);
+        final sourceAction =
+            mapValue(mapValue(replay['modelEnvelope'])['action']);
         expect(action.arguments['content'], sourceAction['content'],
             reason: file.path);
       }
@@ -62,8 +65,7 @@ void main() {
         final recoveryAction = recovery!;
         expect(recoveryAction.tool, 'write_file');
         expect(recoveryAction.arguments['path'], path);
-        final content =
-            recoveryAction.arguments['content']?.toString() ?? '';
+        final content = recoveryAction.arguments['content']?.toString() ?? '';
         final assessment = const ArtifactEvidencePolicy().assess(
           item: item,
           request: request,
@@ -72,16 +74,15 @@ void main() {
             ok: true,
             summary: 'Inspected replay artifact.',
             data: <String, dynamic>{
-              'path': mapValue(mapValue(replay['modelEnvelope'])['arguments'])[
-                  'filePath'],
+              'path': mapValue(
+                  mapValue(replay['modelEnvelope'])['arguments'])['filePath'],
               'sha256': 'diagnostic-replay-hash',
               'textPreview': content,
             },
           ),
           mutatedPaths: <String>{
-            mapValue(mapValue(replay['modelEnvelope'])['arguments'])[
-                    'filePath']
-                ?.toString() ??
+            mapValue(mapValue(replay['modelEnvelope'])['arguments'])['filePath']
+                    ?.toString() ??
                 '',
           },
         );
@@ -97,9 +98,8 @@ void main() {
             mutated: true,
           ),
           mutationPaths: <String>{
-            mapValue(mapValue(replay['modelEnvelope'])['arguments'])[
-                    'filePath']
-                ?.toString() ??
+            mapValue(mapValue(replay['modelEnvelope'])['arguments'])['filePath']
+                    ?.toString() ??
                 '',
           },
         );

@@ -108,7 +108,8 @@ class A2ATaskContractV19 {
 class A2ADelegationController {
   const A2ADelegationController();
 
-  Map<String, dynamic> prepare(A2ATaskContractV19 contract) => <String, dynamic>{
+  Map<String, dynamic> prepare(A2ATaskContractV19 contract) =>
+      <String, dynamic>{
         'taskId': contract.taskId,
         'allowedCapabilities': contract.allowedCapabilities,
         'expectedArtifacts': contract.expectedArtifacts,
@@ -134,7 +135,9 @@ class UpdatePolicyVerifier {
   final SupportLifecyclePolicyV19 policy;
 
   bool allowsChannel(String channel) =>
-      policy.currentVersion.isNotEmpty && policy.minimumSupportedUpgradeFrom.isNotEmpty && channel.isNotEmpty;
+      policy.currentVersion.isNotEmpty &&
+      policy.minimumSupportedUpgradeFrom.isNotEmpty &&
+      channel.isNotEmpty;
 }
 
 bool hasInteroperabilityContract(String name) =>

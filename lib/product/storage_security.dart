@@ -9,7 +9,8 @@ import 'durable_workflow.dart';
 import 'repository.dart';
 
 class ProductException implements Exception {
-  ProductException(this.code, this.message, {this.details = const <String, dynamic>{}});
+  ProductException(this.code, this.message,
+      {this.details = const <String, dynamic>{}});
 
   final String code;
   final String message;
@@ -37,11 +38,14 @@ class AppDirectories {
     if (overrideRoot != null && overrideRoot.trim().isNotEmpty) {
       base = overrideRoot;
     } else if (Platform.isWindows) {
-      base = Platform.environment['APPDATA'] ?? Platform.environment['LOCALAPPDATA'] ?? Directory.current.path;
+      base = Platform.environment['APPDATA'] ??
+          Platform.environment['LOCALAPPDATA'] ??
+          Directory.current.path;
       base = '$base${Platform.pathSeparator}KristinLocalAgent';
     } else if (Platform.isMacOS) {
       final home = Platform.environment['HOME'] ?? Directory.current.path;
-      base = '$home${Platform.pathSeparator}Library${Platform.pathSeparator}Application Support${Platform.pathSeparator}KristinLocalAgent';
+      base =
+          '$home${Platform.pathSeparator}Library${Platform.pathSeparator}Application Support${Platform.pathSeparator}KristinLocalAgent';
     } else {
       final home = Platform.environment['HOME'] ?? Directory.current.path;
       final xdg = Platform.environment['XDG_STATE_HOME'];
@@ -92,17 +96,19 @@ class AtomicJsonFile implements JsonDocumentRepository {
   ) =>
       synchronized(() async {
         final raw = await _readUnlocked(fallback: const <Object>[]);
-        final current = raw is List
-            ? List<Object?>.from(raw)
-            : <Object?>[];
+        final current = raw is List ? List<Object?>.from(raw) : <Object?>[];
         final next = update(current);
         await _writeUnlocked(next);
       });
 
   Future<Object?> _readUnlocked({Object? fallback}) async {
-    if (!await file.exists()) { return fallback; }
+    if (!await file.exists()) {
+      return fallback;
+    }
     final text = await file.readAsString();
-    if (text.trim().isEmpty) { return fallback; }
+    if (text.trim().isEmpty) {
+      return fallback;
+    }
     try {
       return jsonDecode(text);
     } on FormatException catch (error) {
@@ -127,7 +133,9 @@ class AtomicJsonFile implements JsonDocumentRepository {
         // A backup is best-effort; atomic replacement remains the safety boundary.
       }
     }
-    if (Platform.isWindows && await file.exists()) { await file.delete(); }
+    if (Platform.isWindows && await file.exists()) {
+      await file.delete();
+    }
     await temporary.rename(file.path);
   }
 }
@@ -147,13 +155,20 @@ class PersistentCollection<T> implements EntityRepository<T> {
 
   Future<List<T>> all() async {
     final raw = await _store.read(fallback: const <Object>[]);
-    if (raw is! List) { return <T>[]; }
-    return raw.whereType<Map>().map((item) => fromJson(mapValue(item))).toList();
+    if (raw is! List) {
+      return <T>[];
+    }
+    return raw
+        .whereType<Map>()
+        .map((item) => fromJson(mapValue(item)))
+        .toList();
   }
 
   Future<T?> get(String id) async {
     for (final item in await all()) {
-      if (idOf(item) == id) { return item; }
+      if (idOf(item) == id) {
+        return item;
+      }
     }
     return null;
   }
@@ -206,7 +221,10 @@ class ProductSettings {
   const ProductSettings({
     this.apiEnabled = false,
     this.apiPort = 47831,
-    this.allowedOrigins = const <String>{'http://127.0.0.1', 'http://localhost'},
+    this.allowedOrigins = const <String>{
+      'http://127.0.0.1',
+      'http://localhost'
+    },
     this.ollamaBaseUrl = 'http://127.0.0.1:11434',
     this.ollamaLoadTimeoutSeconds = 480,
     this.ollamaLoadRetries = 1,
@@ -261,13 +279,16 @@ class ProductSettings {
         ollamaLoadRetries: ollamaLoadRetries ?? this.ollamaLoadRetries,
         ollamaKeepAliveMinutes:
             ollamaKeepAliveMinutes ?? this.ollamaKeepAliveMinutes,
-        openAiCompatibleBaseUrl: openAiCompatibleBaseUrl ?? this.openAiCompatibleBaseUrl,
-        openAiApiKeyReferenceId: openAiApiKeyReferenceId ?? this.openAiApiKeyReferenceId,
+        openAiCompatibleBaseUrl:
+            openAiCompatibleBaseUrl ?? this.openAiCompatibleBaseUrl,
+        openAiApiKeyReferenceId:
+            openAiApiKeyReferenceId ?? this.openAiApiKeyReferenceId,
         localOnly: localOnly ?? this.localOnly,
         allowPackageNetwork: allowPackageNetwork ?? this.allowPackageNetwork,
         maxResearchBytes: maxResearchBytes ?? this.maxResearchBytes,
         maxResearchRedirects: maxResearchRedirects ?? this.maxResearchRedirects,
-        researchTimeoutSeconds: researchTimeoutSeconds ?? this.researchTimeoutSeconds,
+        researchTimeoutSeconds:
+            researchTimeoutSeconds ?? this.researchTimeoutSeconds,
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -287,14 +308,15 @@ class ProductSettings {
         'researchTimeoutSeconds': researchTimeoutSeconds,
       };
 
-  factory ProductSettings.fromJson(Map<String, dynamic> json) => ProductSettings(
+  factory ProductSettings.fromJson(Map<String, dynamic> json) =>
+      ProductSettings(
         apiEnabled: json['apiEnabled'] == true,
         apiPort: int.tryParse(json['apiPort']?.toString() ?? '') ?? 47831,
         allowedOrigins: stringList(json['allowedOrigins']).toSet().isEmpty
             ? const <String>{'http://127.0.0.1', 'http://localhost'}
             : stringList(json['allowedOrigins']).toSet(),
-        ollamaBaseUrl: json['ollamaBaseUrl']?.toString() ??
-            'http://127.0.0.1:11434',
+        ollamaBaseUrl:
+            json['ollamaBaseUrl']?.toString() ?? 'http://127.0.0.1:11434',
         ollamaLoadTimeoutSeconds:
             (int.tryParse(json['ollamaLoadTimeoutSeconds']?.toString() ?? '') ??
                     480)
@@ -309,13 +331,19 @@ class ProductSettings {
                     15)
                 .clamp(1, 120)
                 .toInt(),
-        openAiCompatibleBaseUrl: json['openAiCompatibleBaseUrl']?.toString() ?? '',
-        openAiApiKeyReferenceId: json['openAiApiKeyReferenceId']?.toString() ?? '',
+        openAiCompatibleBaseUrl:
+            json['openAiCompatibleBaseUrl']?.toString() ?? '',
+        openAiApiKeyReferenceId:
+            json['openAiApiKeyReferenceId']?.toString() ?? '',
         localOnly: json['localOnly'] != false,
         allowPackageNetwork: json['allowPackageNetwork'] == true,
-        maxResearchBytes: int.tryParse(json['maxResearchBytes']?.toString() ?? '') ?? 2097152,
-        maxResearchRedirects: int.tryParse(json['maxResearchRedirects']?.toString() ?? '') ?? 3,
-        researchTimeoutSeconds: int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ?? 20,
+        maxResearchBytes:
+            int.tryParse(json['maxResearchBytes']?.toString() ?? '') ?? 2097152,
+        maxResearchRedirects:
+            int.tryParse(json['maxResearchRedirects']?.toString() ?? '') ?? 3,
+        researchTimeoutSeconds:
+            int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ??
+                20,
       );
 }
 
@@ -688,10 +716,14 @@ class AuditChain {
 
   Future<void> open() async {
     await file.parent.create(recursive: true);
-    if (!await file.exists()) { return; }
+    if (!await file.exists()) {
+      return;
+    }
     final lines = await file.readAsLines();
     for (final line in lines.reversed) {
-      if (line.trim().isEmpty) { continue; }
+      if (line.trim().isEmpty) {
+        continue;
+      }
       try {
         final decoded = jsonDecode(line);
         if (decoded is Map) {
@@ -704,7 +736,8 @@ class AuditChain {
     }
   }
 
-  Future<void> append(String action, String correlationId, Map<String, dynamic> data) {
+  Future<void> append(
+      String action, String correlationId, Map<String, dynamic> data) {
     final completer = Completer<void>();
     _tail = _tail.then((_) async {
       final payload = <String, dynamic>{
@@ -717,36 +750,61 @@ class AuditChain {
       };
       final hash = Sha256.text(canonicalJson(payload));
       final record = <String, dynamic>{...payload, 'hash': hash};
-      await file.writeAsString('${jsonEncode(record)}\n', mode: FileMode.append, flush: true);
+      await file.writeAsString('${jsonEncode(record)}\n',
+          mode: FileMode.append, flush: true);
       _lastHash = hash;
       completer.complete();
     }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) { completer.completeError(error, stackTrace); }
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
     });
     return completer.future;
   }
 
   Future<Map<String, dynamic>> verify() async {
-    if (!await file.exists()) { return <String, dynamic>{'valid': true, 'records': 0, 'lastHash': ''}; }
+    if (!await file.exists()) {
+      return <String, dynamic>{'valid': true, 'records': 0, 'lastHash': ''};
+    }
     var previous = '';
     var records = 0;
     for (final line in await file.readAsLines()) {
-      if (line.trim().isEmpty) { continue; }
+      if (line.trim().isEmpty) {
+        continue;
+      }
       final decoded = jsonDecode(line);
-      if (decoded is! Map) { return <String, dynamic>{'valid': false, 'records': records, 'error': 'non_object_record'}; }
+      if (decoded is! Map) {
+        return <String, dynamic>{
+          'valid': false,
+          'records': records,
+          'error': 'non_object_record'
+        };
+      }
       final record = mapValue(decoded);
       final hash = record.remove('hash')?.toString() ?? '';
       if (record['previousHash']?.toString() != previous) {
-        return <String, dynamic>{'valid': false, 'records': records, 'error': 'previous_hash_mismatch'};
+        return <String, dynamic>{
+          'valid': false,
+          'records': records,
+          'error': 'previous_hash_mismatch'
+        };
       }
       final expected = Sha256.text(canonicalJson(record));
       if (!constantTimeEquals(hash, expected)) {
-        return <String, dynamic>{'valid': false, 'records': records, 'error': 'hash_mismatch'};
+        return <String, dynamic>{
+          'valid': false,
+          'records': records,
+          'error': 'hash_mismatch'
+        };
       }
       previous = hash;
       records++;
     }
-    return <String, dynamic>{'valid': true, 'records': records, 'lastHash': previous};
+    return <String, dynamic>{
+      'valid': true,
+      'records': records,
+      'lastHash': previous
+    };
   }
 }
 
@@ -792,11 +850,13 @@ class PermissionService {
         grant.allows(scope));
     final grant = candidates.firstOrNull;
     if (grant == null) {
-      throw ProductException('permission_required', 'Permission ${scope.name} is required.', details: <String, dynamic>{
-        'projectId': projectId,
-        'commandId': commandId,
-        'scope': scope.name,
-      });
+      throw ProductException(
+          'permission_required', 'Permission ${scope.name} is required.',
+          details: <String, dynamic>{
+            'projectId': projectId,
+            'commandId': commandId,
+            'scope': scope.name,
+          });
     }
     await repository.put(grant.consume());
     await audit.append('permission.consumed', commandId, <String, dynamic>{
@@ -808,7 +868,8 @@ class PermissionService {
 
   Future<void> revokeForCommand(String commandId) async {
     await repository.removeWhere((grant) => grant.commandId == commandId);
-    await audit.append('permission.revoked', commandId, <String, dynamic>{'commandId': commandId});
+    await audit.append('permission.revoked', commandId,
+        <String, dynamic>{'commandId': commandId});
   }
 }
 
@@ -826,7 +887,8 @@ class SecretVault {
     String description = '',
   }) async {
     if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(environmentKey)) {
-      throw ProductException('secret_reference_invalid', 'Environment key is invalid.');
+      throw ProductException(
+          'secret_reference_invalid', 'Environment key is invalid.');
     }
     final reference = SecretReference(
       id: newId('secret'),
@@ -836,22 +898,31 @@ class SecretVault {
       createdAt: DateTime.now().toUtc(),
     );
     await repository.put(reference);
-    await audit.append('secret.reference_registered', reference.id, reference.toJson());
+    await audit.append(
+        'secret.reference_registered', reference.id, reference.toJson());
     return reference;
   }
 
   void setSessionValue(String referenceId, String value) {
-    if (value.isEmpty) { throw ProductException('secret_empty', 'A secret value cannot be empty.'); }
+    if (value.isEmpty) {
+      throw ProductException('secret_empty', 'A secret value cannot be empty.');
+    }
     _sessionValues[referenceId] = value;
     redactor.register(value);
   }
 
-  Future<String> resolve(String referenceId, {required String commandId}) async {
+  Future<String> resolve(String referenceId,
+      {required String commandId}) async {
     final reference = await repository.get(referenceId);
-    if (reference == null) { throw ProductException('secret_reference_missing', 'Unknown secret reference.'); }
-    final value = _sessionValues[referenceId] ?? Platform.environment[reference.environmentKey];
+    if (reference == null) {
+      throw ProductException(
+          'secret_reference_missing', 'Unknown secret reference.');
+    }
+    final value = _sessionValues[referenceId] ??
+        Platform.environment[reference.environmentKey];
     if (value == null || value.isEmpty) {
-      throw ProductException('secret_unavailable', 'Secret "${reference.label}" is not available in this session or environment.');
+      throw ProductException('secret_unavailable',
+          'Secret "${reference.label}" is not available in this session or environment.');
     }
     redactor.register(value);
     await audit.append('secret.resolved', commandId, <String, dynamic>{
@@ -906,14 +977,29 @@ class ApiTokenService {
     return IssuedToken(record, plaintext);
   }
 
-  Future<ApiTokenRecord?> authenticate(String plaintext, {String? requiredScope, String? projectId}) async {
-    if (plaintext.isEmpty) { return null; }
+  Future<ApiTokenRecord?> authenticate(String plaintext,
+      {String? requiredScope, String? projectId}) async {
+    if (plaintext.isEmpty) {
+      return null;
+    }
     final candidateHash = Sha256.text(plaintext);
     for (final record in await repository.all()) {
-      if (!record.isActive || !constantTimeEquals(candidateHash, record.hash)) { continue; }
-      if (requiredScope != null && !record.scopes.contains(requiredScope) && !record.scopes.contains('*')) { return null; }
-      if (record.projectId != null && projectId != null && record.projectId != projectId) { return null; }
-      if (record.projectId != null && projectId == null) { return null; }
+      if (!record.isActive || !constantTimeEquals(candidateHash, record.hash)) {
+        continue;
+      }
+      if (requiredScope != null &&
+          !record.scopes.contains(requiredScope) &&
+          !record.scopes.contains('*')) {
+        return null;
+      }
+      if (record.projectId != null &&
+          projectId != null &&
+          record.projectId != projectId) {
+        return null;
+      }
+      if (record.projectId != null && projectId == null) {
+        return null;
+      }
       return record;
     }
     return null;
@@ -921,7 +1007,9 @@ class ApiTokenService {
 
   Future<void> revoke(String id) async {
     final record = await repository.get(id);
-    if (record == null) { return; }
+    if (record == null) {
+      return;
+    }
     await repository.put(ApiTokenRecord(
       id: record.id,
       label: record.label,
@@ -945,14 +1033,20 @@ class RateLimiter {
 
   bool allow(String key, {int cost = 1}) {
     final now = DateTime.now().toUtc();
-    final bucket = _buckets.putIfAbsent(key, () => _RateBucket(capacity.toDouble(), now));
+    final bucket =
+        _buckets.putIfAbsent(key, () => _RateBucket(capacity.toDouble(), now));
     final elapsed = now.difference(bucket.updatedAt).inMilliseconds / 60000.0;
-    bucket.tokens = (bucket.tokens + elapsed * refillPerMinute).clamp(0, capacity).toDouble();
+    bucket.tokens = (bucket.tokens + elapsed * refillPerMinute)
+        .clamp(0, capacity)
+        .toDouble();
     bucket.updatedAt = now;
-    if (bucket.tokens < cost) { return false; }
+    if (bucket.tokens < cost) {
+      return false;
+    }
     bucket.tokens -= cost;
     if (_buckets.length > 10000) {
-      _buckets.removeWhere((_, value) => now.difference(value.updatedAt) > const Duration(hours: 1));
+      _buckets.removeWhere((_, value) =>
+          now.difference(value.updatedAt) > const Duration(hours: 1));
     }
     return true;
   }

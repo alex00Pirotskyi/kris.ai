@@ -131,8 +131,6 @@ void main() {
         'lib/product/agent_decision.dart',
         'lib/product/agent_protocol.dart',
         'lib/product/api_server.dart',
-        'lib/product/agent_decision.dart',
-        'lib/product/agent_protocol.dart',
         'lib/product/protocol_types.dart',
         'lib/product/tool_schema.dart',
         'lib/product/generated/protocol_contracts.g.dart',
@@ -144,7 +142,6 @@ void main() {
         'lib/product/domain.dart',
         'lib/product/durable_workflow.dart',
         'lib/product/extensions_index.dart',
-        'lib/product/generated/protocol_contracts.g.dart',
         'lib/product/generated/workflow_migrations.g.dart',
         'lib/product/mcp.dart',
         'lib/product/models_research.dart',
@@ -152,11 +149,9 @@ void main() {
         'lib/product/product_runtime.dart',
         'lib/product/project_diagnostics.dart',
         'lib/product/prompt_planning.dart',
-        'lib/product/protocol_types.dart',
         'lib/product/repository.dart',
         'lib/product/retry_policy.dart',
         'lib/product/storage_security.dart',
-        'lib/product/tool_schema.dart',
         'lib/product/ui.dart',
         'lib/product/ui_advanced.dart',
         'lib/product/ui_components.dart',
@@ -326,7 +321,8 @@ void main() {
       }
     });
 
-    test('project diagnostics, prompts, knowledge, skills, and logs are wired', () {
+    test('project diagnostics, prompts, knowledge, skills, and logs are wired',
+        () {
       final chat = source('lib/product/chat_studio.dart');
       for (final marker in <String>[
         'runtime.inspectProject(',
@@ -342,7 +338,8 @@ void main() {
       }
     });
 
-    test('advanced capabilities stay available behind progressive disclosure', () {
+    test('advanced capabilities stay available behind progressive disclosure',
+        () {
       final advanced = source('lib/product/ui_advanced.dart');
       for (final marker in <String>[
         "'AI models'",
@@ -389,7 +386,8 @@ void main() {
     });
 
     test('planning contains contracts, DAGs, budgets, and verification', () {
-      final planning = source('lib/product/planning_runtime.dart').toLowerCase();
+      final planning =
+          source('lib/product/planning_runtime.dart').toLowerCase();
       for (final marker in <String>[
         'taskcontract',
         'executionplan',
@@ -404,7 +402,9 @@ void main() {
       }
     });
 
-    test('v0.9 foundations persist prompts, research, memory, diagnostics, and binary tools', () {
+    test(
+        'v0.9 foundations persist prompts, research, memory, diagnostics, and binary tools',
+        () {
       final domain = source('lib/product/domain.dart');
       final storage = source('lib/product/storage_security.dart');
       final runtime = source('lib/product/product_runtime.dart');
@@ -433,7 +433,9 @@ void main() {
       expect(tools, contains("name: 'write_binary_file'"));
     });
 
-    test('v0.9 knowledge archive, cited retrieval, and episodic memory stay wired', () {
+    test(
+        'v0.9 knowledge archive, cited retrieval, and episodic memory stay wired',
+        () {
       final domain = source('lib/product/domain.dart');
       final storage = source('lib/product/storage_security.dart');
       final research = source('lib/product/models_research.dart');
@@ -474,7 +476,8 @@ void main() {
       expect(cli, contains('"knowledge"'));
     });
 
-    test('v0.9.3 conversational and execution reliability guards stay wired', () {
+    test('v0.9.3 conversational and execution reliability guards stay wired',
+        () {
       final domain = source('lib/product/domain.dart');
       final planning = source('lib/product/planning_runtime.dart');
       final protocol = source('lib/product/agent_protocol.dart');
@@ -523,7 +526,8 @@ void main() {
       expect(api, contains("queryParameters['includeUnsuccessfulEpisodes']"));
       expect(chat, contains('result.contract.requiredPermissions.isEmpty'));
       expect(behavioral, contains('Ollama provider consumes streamed NDJSON'));
-      expect(behavioral, contains('accepts snake-case function_call envelopes'));
+      expect(
+          behavioral, contains('accepts snake-case function_call envelopes'));
       expect(behavioral, contains('normalizes safe tool and argument aliases'));
       expect(behavioral, contains('unwraps double-encoded response objects'));
       expect(behavioral, contains('accepts bounded ReAct-style action output'));
@@ -571,9 +575,8 @@ void main() {
       for (final file in activeDartFiles()) {
         final content = file.readAsStringSync();
         final offsets = unconvertedClampOffsets(content).toList();
-        final details = offsets
-            .map((offset) => sourceLineAt(content, offset))
-            .join(' | ');
+        final details =
+            offsets.map((offset) => sourceLineAt(content, offset)).join(' | ');
         expect(
           offsets,
           isEmpty,
@@ -593,7 +596,9 @@ void main() {
       );
     });
 
-    test('Windows launchers avoid stale overlays and PowerShell-only entry points', () {
+    test(
+        'Windows launchers avoid stale overlays and PowerShell-only entry points',
+        () {
       expect(File('APPLY_V070.cmd').existsSync(), isFalse);
       expect(File('APPLY_AND_RUN_V070.cmd').existsSync(), isFalse);
       for (final path in <String>[
@@ -633,7 +638,8 @@ void main() {
       final research = source('lib/product/models_research.dart');
       expect(
         research,
-        isNot(contains('putIfAbsent(record.knowledgeId, () => <ResearchArchiveRecord>[])\n          ..add(record);')),
+        isNot(contains(
+            'putIfAbsent(record.knowledgeId, () => <ResearchArchiveRecord>[])\n          ..add(record);')),
       );
       expect(
         research,
@@ -646,7 +652,8 @@ void main() {
 
       final migration = source('tool/prune_stale_legacy.dart');
       expect(migration, contains('_allowedDartFiles.contains(relative)'));
-      expect(File('test/product/knowledge_memory_test.dart').existsSync(), isTrue);
+      expect(
+          File('test/product/knowledge_memory_test.dart').existsSync(), isTrue);
 
       final cli = source('tool/kristin_cli.py');
       expect(cli, contains('nargs="?", const="."'));
@@ -671,7 +678,8 @@ void main() {
       expect(domain, contains('class PromptStudioDraft'));
       expect(domain, contains('class PromptVersionRecord'));
       expect(domain, contains('class TaskPlanRecord'));
-      expect(domain, contains('The task plan contains a parent hierarchy cycle.'));
+      expect(
+          domain, contains('The task plan contains a parent hierarchy cycle.'));
       expect(planning, contains('class PromptPlanningService'));
       expect(planning, contains('maxLeafTasks.clamp(1, 100)'));
       expect(planning, contains('revision: plan.revision + 1'));
@@ -698,12 +706,14 @@ void main() {
       expect(cli, contains('mode.add_argument("--system"'));
       expect(cli, contains('mode.add_argument("--release"'));
       expect(behavioral, contains('normalizes in-project absolute paths'));
-      expect(behavioral, contains('rebases recognized virtual workspace paths'));
+      expect(
+          behavioral, contains('rebases recognized virtual workspace paths'));
       expect(behavioral, contains('blocks arbitrary external writes'));
       expect(behavioral, contains('accepts a valid 100-task plan'));
     });
 
-    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired', () {
+    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired',
+        () {
       final domain = source('lib/product/domain.dart');
       final coordinator = source('lib/product/planning_runtime.dart');
       final runtime = source('lib/product/product_runtime.dart');
@@ -726,9 +736,13 @@ void main() {
       expect(coordinator, contains("'model.request_completed'"));
       expect(coordinator, contains("'model.request_failed'"));
       expect(coordinator, contains("'agent.stalled_repeated_tool_outcome'"));
-      expect(coordinator, contains('_enforceToolBudget(current, action.tool!)'));
+      expect(
+          coordinator, contains('_enforceToolBudget(current, action.tool!)'));
       expect(coordinator, contains('tools.isMutatingTool(toolName)'));
-      expect(coordinator, contains('The model may still complete using evidence already collected'));
+      expect(
+          coordinator,
+          contains(
+              'The model may still complete using evidence already collected'));
       expect(coordinator, contains('remainingAgentTurns='));
       expect(runtime, contains('AutonomyBudget.forPlan(command.plan)'));
       expect(runtime, contains('runs.retryRun(runId)'));
@@ -743,12 +757,16 @@ void main() {
       expect(api, contains("'/runs/{runId}/retry'"));
       expect(cli, contains('logs_parser.add_argument("--export"'));
       expect(cli, contains('kristin.diagnostics.cli.v2'));
-      expect(behavioral, contains('tool budgets are checked only when another governed tool is dispatched'));
+      expect(
+          behavioral,
+          contains(
+              'tool budgets are checked only when another governed tool is dispatched'));
       expect(behavioral, contains('retry creates a linked run'));
       expect(behavioral, contains('all-logs bundle retains diagnostics'));
     });
 
-    test('v1.0.3 duplicate read recovery stays bounded and evidence-driven', () {
+    test('v1.0.3 duplicate read recovery stays bounded and evidence-driven',
+        () {
       final coordinator = source('lib/product/planning_runtime.dart');
       final deployment = source('lib/product/deployment_support.dart');
       final behavioral = source('test/product/budget_diagnostics_test.dart');
@@ -764,13 +782,20 @@ void main() {
       expect(coordinator, contains('cachedResultSummary'));
       expect(coordinator, contains(r"'inspect_file:$candidate'"));
       expect(coordinator, contains("label.contains('evidence baseline')"));
-      expect(coordinator, isNot(contains("label.contains('grounded context') ||")));
+      expect(coordinator,
+          isNot(contains("label.contains('grounded context') ||")));
       expect(deployment, contains('### Agent loop recovery'));
       expect(deployment, contains("'agent.repeated_tool_call_blocked'"));
-      expect(behavioral, contains('redirects a duplicate listing to safe new evidence'));
-      expect(behavioral, contains('completes only after diverse objective baseline evidence'));
-      expect(behavioral, contains('never auto-completes a general grounded answer task'));
-      expect(behavioral, contains("expect(decision.action?.arguments['path'], isNot('.env'))"));
+      expect(behavioral,
+          contains('redirects a duplicate listing to safe new evidence'));
+      expect(behavioral,
+          contains('completes only after diverse objective baseline evidence'));
+      expect(behavioral,
+          contains('never auto-completes a general grounded answer task'));
+      expect(
+          behavioral,
+          contains(
+              "expect(decision.action?.arguments['path'], isNot('.env'))"));
     });
 
     test('v1.0.6 workspace canonicalization and path hygiene stay bounded', () {
@@ -787,7 +812,8 @@ void main() {
       expect(workspace, contains("startsWith('UNC/')"));
       expect(
         behavioral,
-        contains('accepts an in-project absolute path when the project root sits'),
+        contains(
+            'accepts an in-project absolute path when the project root sits'),
       );
       final lineage = sourceJsonObject('VERSION_CONTROL.json');
       final priorLineage = jsonObject(
@@ -833,10 +859,12 @@ void main() {
       expect(coordinator, contains("'securityBoundaryPreserved': true"));
       expect(
         coordinator,
-        contains('Project scope cannot improve through a fresh work-item attempt.'),
+        contains(
+            'Project scope cannot improve through a fresh work-item attempt.'),
       );
       expect(deployment, contains('### Project path recovery'));
-      expect(behavioral, contains('rebases recognized virtual workspace paths'));
+      expect(
+          behavioral, contains('rebases recognized virtual workspace paths'));
       expect(behavioral, contains('blocks arbitrary external writes'));
       expect(behavioral, contains('root-scoped read recovery falls back'));
       expect(policy, contains('windows", "flutter", "ephemeral'));
@@ -846,7 +874,9 @@ void main() {
       expect(scanner, contains('is_generated_path(p.relative_to(ROOT))'));
     });
 
-    test('v1.0.7 diagnostic-derived recovery remains explicit and capability-aligned', () {
+    test(
+        'v1.0.7 diagnostic-derived recovery remains explicit and capability-aligned',
+        () {
       final domain = source('lib/product/domain.dart');
       final knowledge = source('lib/product/models_research.dart');
       final coordinator = source('lib/product/planning_runtime.dart');
@@ -866,12 +896,15 @@ void main() {
       final lineage = source('VERSION_CONTROL.json');
 
       expect(domain, contains('bool isFailureInvestigationRequest'));
-      expect(knowledge, contains('final failureIntent = includeUnsuccessfulEpisodes;'));
-      expect(knowledge, contains('includeUnsuccessfulEpisodes || chunk.pinned'));
+      expect(knowledge,
+          contains('final failureIntent = includeUnsuccessfulEpisodes;'));
+      expect(
+          knowledge, contains('includeUnsuccessfulEpisodes || chunk.pinned'));
       expect(knowledge, isNot(contains('_failureIntentTerms')));
       expect(
         memoryBehavioral,
-        contains('calculator history view, input validation, and error handling'),
+        contains(
+            'calculator history view, input validation, and error handling'),
       );
       expect(
         protocolBehavioral,
@@ -886,18 +919,23 @@ void main() {
       expect(coordinator, contains("'antiCopyRule'"));
       expect(coordinator, contains("'protocolRepairAttempt'"));
       expect(planning, contains('settingsProvider'));
-      expect(planning, contains('Create project-local wireframes and user flows'));
-      expect(planning, contains('Prepare local preview and deployment package'));
+      expect(
+          planning, contains('Create project-local wireframes and user flows'));
+      expect(
+          planning, contains('Prepare local preview and deployment package'));
       expect(planBehavioral, contains('Do not claim use of Figma'));
       expect(workspace, contains('isKristinSourceCheckout'));
-      expect(runtime + planning + coordinator, contains('self_project_target_rejected'));
+      expect(runtime + planning + coordinator,
+          contains('self_project_target_rejected'));
       expect(deployment, contains('### Automatic memory policy'));
       expect(deployment, contains('### Model protocol recovery'));
       expect(lineage, contains('47bb8141259ce002'));
       expect(lineage, contains('run_hkjnl5dagrldsloYB4qnRQTS3h'));
     });
 
-    test('v1.0.8 preserves the Flutter SDK environment without widening ordinary commands', () {
+    test(
+        'v1.0.8 preserves the Flutter SDK environment without widening ordinary commands',
+        () {
       final cli = source('tool/kristin_cli.py');
       final validator = source('tool/validate_release.py');
       final release = source('tool/release.py');
@@ -939,7 +977,8 @@ void main() {
 
     test('v1.5.0 preserves the complete release lineage structurally', () {
       final lineage = sourceJsonObject('VERSION_CONTROL.json');
-      final contract = jsonObject(lineage['lineageContract'], 'lineageContract');
+      final contract =
+          jsonObject(lineage['lineageContract'], 'lineageContract');
       final releases = jsonObjectList(
         lineage['transitiveReleaseLineage'],
         'transitiveReleaseLineage',
@@ -1065,7 +1104,8 @@ void main() {
       expect(coordinator, contains('mutationRepairAttempts < 2'));
       expect(
         behavioral,
-        contains('promotes artifact-producing plan tasks to governed build work'),
+        contains(
+            'promotes artifact-producing plan tasks to governed build work'),
       );
       expect(
         behavioral,
@@ -1077,7 +1117,8 @@ void main() {
       );
     });
 
-    test('v1.1.2 cold-model recovery and capability alignment stay bounded', () {
+    test('v1.1.2 cold-model recovery and capability alignment stay bounded',
+        () {
       final models = source('lib/product/models_research.dart');
       final settings = source('lib/product/storage_security.dart');
       final runtime = source('lib/product/planning_runtime.dart');
@@ -1088,7 +1129,8 @@ void main() {
       final modelBehavioral = source(
         'test/product/execution_reliability_test.dart',
       );
-      final planBehavioral = source('test/product/v1_product_preview_test.dart');
+      final planBehavioral =
+          source('test/product/v1_product_preview_test.dart');
       final lineage = sourceJsonObject('VERSION_CONTROL.json');
       final releases = jsonObjectList(
         lineage['transitiveReleaseLineage'],
@@ -1104,7 +1146,8 @@ void main() {
       expect(models, contains("'load_retry_scheduled'"));
       expect(models, contains("'prompt': ''"));
       expect(models, contains("'stream': false"));
-      expect(models, contains('defaultLoadTimeout = const Duration(minutes: 8)'));
+      expect(
+          models, contains('defaultLoadTimeout = const Duration(minutes: 8)'));
       expect(models, contains('defaultLoadRetries = 1'));
       expect(models, contains('_closeOnCancellation'));
       expect(models, contains('_remainingUntil'));
@@ -1116,20 +1159,29 @@ void main() {
       expect(productRuntime, contains('ollama_load_timeout_invalid'));
       expect(runtime, contains('cancellation: control.cancellation.cancelled'));
       expect(runtime, contains("'model_load_timeout'"));
-      expect(runtime, contains('provider already performs its configured bounded cold-load retry'));
+      expect(
+          runtime,
+          contains(
+              'provider already performs its configured bounded cold-load retry'));
       expect(runtime, contains(r"'model.${modelProgress.stage}'"));
       expect(advanced, contains('Cold-load timeout (seconds)'));
       expect(advanced, contains('Cold-load retries'));
       expect(advanced, contains('Keep model loaded (minutes)'));
-      expect(diagnostics, contains('### Model availability and cold-load recovery'));
-      expect(planning, contains('Run local usability and interaction verification'));
+      expect(diagnostics,
+          contains('### Model availability and cold-load recovery'));
+      expect(planning,
+          contains('Run local usability and interaction verification'));
       expect(planning, contains('Do not recruit participants'));
-      expect(planning, contains('Capability alignment replaces the unsupported human-study instruction'));
+      expect(
+          planning,
+          contains(
+              'Capability alignment replaces the unsupported human-study instruction'));
       expect(planning, contains('.clamp(2, 3)'));
       expect(planning, contains('manual: alignedManual'));
       expect(
         modelBehavioral,
-        contains('Ollama retries a transient cold-load timeout inside one model turn'),
+        contains(
+            'Ollama retries a transient cold-load timeout inside one model turn'),
       );
       expect(
         modelBehavioral,
@@ -1140,8 +1192,8 @@ void main() {
           '830f59d1401eab6a97b99f2f96f27dace7902f4541dfbd108ea67f20266604ee');
       expect(compileParent['role'], 'project-manager-compile-parent');
       expect(
-        jsonObject(lineage['priorLineage'], 'priorLineage')
-            ['modelResilienceDiagnostic'],
+        jsonObject(lineage['priorLineage'], 'priorLineage')[
+            'modelResilienceDiagnostic'],
         isA<Map<String, dynamic>>(),
       );
     });
@@ -1153,7 +1205,8 @@ void main() {
       final modelBehavioral = source(
         'test/product/execution_reliability_test.dart',
       );
-      final planBehavioral = source('test/product/v1_product_preview_test.dart');
+      final planBehavioral =
+          source('test/product/v1_product_preview_test.dart');
       final lineage = sourceJsonObject('VERSION_CONTROL.json');
       final releases = jsonObjectList(
         lineage['transitiveReleaseLineage'],
@@ -1196,7 +1249,8 @@ void main() {
           'Do not deploy to an external service. Do not claim a public URL.',
         ),
       );
-      expect(planBehavioral.toLowerCase(), contains('do not claim a public url'));
+      expect(
+          planBehavioral.toLowerCase(), contains('do not claim a public url'));
       expect(modelResilienceParent['version'], '1.1.2+112');
       expect(
         modelResilienceParent['sha256'],
@@ -1208,7 +1262,9 @@ void main() {
       );
     });
 
-    test('v1.1.4 release tests remain deterministic under repeated Windows load', () {
+    test(
+        'v1.1.4 release tests remain deterministic under repeated Windows load',
+        () {
       final protocolBehavioral = source(
         'test/product/execution_reliability_test.dart',
       );
@@ -1295,7 +1351,8 @@ void main() {
       final budgetBehavioral = source(
         'test/product/budget_diagnostics_test.dart',
       );
-      final planBehavioral = source('test/product/v1_product_preview_test.dart');
+      final planBehavioral =
+          source('test/product/v1_product_preview_test.dart');
       final lineage = sourceJsonObject('VERSION_CONTROL.json');
       final parent = jsonObject(lineage['parentRelease'], 'parentRelease');
       final prior = jsonObject(lineage['priorLineage'], 'priorLineage');
@@ -1343,7 +1400,8 @@ void main() {
       expect(planning, contains('Initialize the selected project workspace'));
       expect(
         planning,
-        contains('Implement the client-side calculation engine and session history'),
+        contains(
+            'Implement the client-side calculation engine and session history'),
       );
       expect(planning, contains('unnecessary Express/REST backend'));
       expect(planning, contains('backendImplementationAction'));
@@ -1358,7 +1416,8 @@ void main() {
       );
       expect(
         protocolBehavioral,
-        contains('preserves direct nested write content from the observed failure envelope'),
+        contains(
+            'preserves direct nested write content from the observed failure envelope'),
       );
       expect(coordinator, contains('artifact_mutation_required'));
       expect(tools, contains('Argument \"content\" is required'));
@@ -1380,7 +1439,8 @@ void main() {
         stabilityParent['sha256'],
         '6b32cb8105dcdf6aee0aff9599eefd8552e469f0c813eb992720e84287d7e835',
       );
-      expect(executionReliabilityParent['role'], 'execution-reliability-parent');
+      expect(
+          executionReliabilityParent['role'], 'execution-reliability-parent');
       expect(
         executionReliabilityParent['sha256'],
         'd4c23f7b005d7067bda06c8761f10d1cc489337300f4358b561415ebe2a6c583',
@@ -1403,7 +1463,6 @@ void main() {
         'run_hklsywuyo4NMJgt9ijIxWPhBDr',
       );
     });
-
 
     test('v1.1.7 stability baseline replays the current failure', () {
       final coordinator = source('lib/product/planning_runtime.dart');
@@ -1446,7 +1505,8 @@ void main() {
       expect(harness, contains('canonical_path_token'));
       expect(
         replayBehavioral,
-        contains('all compact production diagnostics satisfy their repaired contracts'),
+        contains(
+            'all compact production diagnostics satisfy their repaired contracts'),
       );
       expect(v115['id'], 'v115_nested_write_content_loss');
       expect(v116['id'], 'v116_markdown_path_repair_loop');
@@ -1511,7 +1571,8 @@ void main() {
       );
       expect(cli, contains('--workflow-kernel'));
       expect(cli, contains('workflow.sqlite3'));
-      expect(kernelGate, contains('Crash after idempotent result replays once'));
+      expect(
+          kernelGate, contains('Crash after idempotent result replays once'));
       expect(kernel['schemaVersion'], 4);
       expect(kernel['appendOnlyRunEvents'], isTrue);
       expect(kernel['durableIdempotency'], isTrue);

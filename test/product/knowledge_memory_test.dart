@@ -15,7 +15,8 @@ void main() {
   late KnowledgeService service;
 
   setUp(() async {
-    temporary = await Directory.systemTemp.createTemp('kristin-knowledge-test-');
+    temporary =
+        await Directory.systemTemp.createTemp('kristin-knowledge-test-');
     knowledge = PersistentCollection<KnowledgeEntry>(
       file: File('${temporary.path}/state/knowledge.json'),
       fromJson: KnowledgeEntry.fromJson,
@@ -98,7 +99,8 @@ void main() {
     expect(listed.map((entry) => entry.id), <String>['newer-a', 'older-a']);
   });
 
-  test('research is archived with immutable provenance and cited retrieval', () async {
+  test('research is archived with immutable provenance and cited retrieval',
+      () async {
     const extracted =
         'Kristin stores fetched research locally and retrieves cited passages.';
     final note = await service.addNote(
@@ -145,7 +147,8 @@ void main() {
     final records = await service.listArchives('project-a');
     expect(records, hasLength(2));
     expect(records.first.knowledgeId, isNotEmpty);
-    expect(records.any((record) => record.requestedUrl.endsWith('/start')), isTrue);
+    expect(records.any((record) => record.requestedUrl.endsWith('/start')),
+        isTrue);
     for (final record in records) {
       expect(record.contentHash, isNotEmpty);
       expect(record.rawObjectPath, isNotEmpty);
@@ -358,9 +361,8 @@ void main() {
         projectId: 'project-memory-filter',
         runId: 'run-$id',
         request: request,
-        mode: outcome == RunState.succeeded
-            ? CommandMode.build
-            : CommandMode.fix,
+        mode:
+            outcome == RunState.succeeded ? CommandMode.build : CommandMode.fix,
         outcome: outcome,
         summary: summary,
         failure: failure,
@@ -473,8 +475,7 @@ void main() {
         'https://example.com/final',
       ],
     );
-    await File('${legacyDirectory.path}/$sourceHash.source.json')
-        .writeAsString(
+    await File('${legacyDirectory.path}/$sourceHash.source.json').writeAsString(
       const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
         'kind': 'research_source',
         'projectId': projectId,
