@@ -1,0 +1,156 @@
+name: V71-R12 Validation Monitor
+
+on:
+  workflow_run:
+    workflows:
+      - TEMP V71-R12 Tri-Platform Repair 30889417167
+      - P1 P2 Owner-Risk Promotion V71-R12
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish-repair-candidate:
+    if: >-
+      github.event.workflow_run.name == 'TEMP V71-R12 Tri-Platform Repair 30889417167' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'fix/v71r12-triplatform-30889417167'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download, verify and publish validated repair candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          EXPECTED_REPAIR_HEAD: b0ac87fc85909141d59c0b2eabc6db92f9fa5729
+          EXPECTED_BASE: a0f7e7a709e79625aa86e4b35fe9c66c8b046ddf
+          TARGET_REF: refs/heads/validated/v71r12-p1-p2-final
+        run: |
+          set -euo pipefail
+
+          test "${{ github.event.workflow_run.head_sha }}" = "$EXPECTED_REPAIR_HEAD"
+
+          handoff="$RUNNER_TEMP/v71r12-handoff"
+          mkdir -p "$handoff"
+
+          gh run download "$SOURCE_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "v71r12-triplatform-candidate-$SOURCE_RUN_ID" \
+            --dir "$handoff"
+
+          (
+            cd "$handoff"
+            sha256sum -c KRISTIN_V71R12_TRIPLATFORM_REPAIR.sha256
+          )
+
+          mapfile -t metadata < <(
+            python - "$handoff/KRISTIN_V71R12_TRIPLATFORM_REPAIR.json" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          data = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8-sig"))
+          print(data["baseCommit"])
+          print(data["candidateCommit"])
+          print(data["candidateTree"])
+          print(str(data["candidateParentExact"]).lower())
+          print(str(data["triPlatformRunMustSucceedBeforePromotion"]).lower())
+          print(str(data["formalSecurityCompletion"]).lower())
+          PY
+          )
+
+          base="${metadata[0]}"
+          candidate="${metadata[1]}"
+          tree="${metadata[2]}"
+
+          test "$base" = "$EXPECTED_BASE"
+          test "${metadata[3]}" = true
+          test "${metadata[4]}" = true
+          test "${metadata[5]}" = false
+
+          git bundle verify "$handoff/KRISTIN_V71R12_TRIPLATFORM_REPAIR.bundle"
+          git fetch "$handoff/KRISTIN_V71R12_TRIPLATFORM_REPAIR.bundle" \
+            "+refs/heads/v71r12-triplatform-candidate:refs/remotes/v71r12-monitor/candidate"
+
+          test "$(git rev-parse refs/remotes/v71r12-monitor/candidate)" = "$candidate"
+          test "$(git rev-parse "$candidate^")" = "$base"
+          test "$(git rev-parse "$candidate^{tree}")" = "$tree"
+
+          existing="$(git ls-remote origin "$TARGET_REF" | awk '{print $1}')"
+          if [ -n "$existing" ] && [ "$existing" != "$candidate" ]; then
+            echo "Validated target already points to unexpected commit: $existing" >&2
+            exit 1
+          fi
+
+          git push origin "$candidate:$TARGET_REF"
+
+          echo "VALIDATED_CANDIDATE=$candidate"
+          echo "VALIDATED_TREE=$tree"
+          echo "SOURCE_RUN_ID=$SOURCE_RUN_ID"
+
+  record-integration-pass:
+    if: >-
+      github.event.workflow_run.name == 'P1 P2 Owner-Risk Promotion V71-R12' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'integration/p2-owner-risk-v71r12'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Record exact successful integration head
+        shell: bash
+        env:
+          VALIDATED_HEAD: ${{ github.event.workflow_run.head_sha }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          set -euo pipefail
+
+          short="${VALIDATED_HEAD:0:12}"
+          branch="validation/v71r12-integration-pass-$short"
+
+          git config user.name "Kristin Validation Monitor"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+
+          mkdir -p release/evidence/P2
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          payload = {
+              "schemaVersion": "1.0.0",
+              "validationType": "v71r12-integration-triplatform-pass",
+              "validatedHeadSha": os.environ["VALIDATED_HEAD"],
+              "workflowRunId": os.environ["SOURCE_RUN_ID"],
+              "workflowRunAttempt": os.environ["SOURCE_RUN_ATTEMPT"],
+              "workflowName": "P1 P2 Owner-Risk Promotion V71-R12",
+              "branch": "integration/p2-owner-risk-v71r12",
+              "conclusion": "success",
+              "formalSecurityCompletion": False,
+              "productionReleaseEligible": False,
+          }
+          pathlib.Path("release/evidence/P2/v71r12-integration-pass.json").write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+              newline="\n",
+          )
+          PY
+
+          git add release/evidence/P2/v71r12-integration-pass.json
+          git commit -m "evidence: record V71-R12 integration tri-platform pass"
+          git push origin "HEAD:refs/heads/$branch"
