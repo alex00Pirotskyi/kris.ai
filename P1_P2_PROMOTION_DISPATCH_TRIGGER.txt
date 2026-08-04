@@ -1,0 +1,11 @@
+Dispatch the governed P1/P2 owner-risk tri-platform promotion from the exact repaired integration ref.
+
+Dispatcher base: 775b6d4481520f86f43954d072028459ae608635
+Workflow: .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml
+Target ref: integration/p2-owner-risk-v71r12
+Expected target head: eb12a6b45d86f83a87eb30c4cb66e99f773c3054
+Required jobs:
+- owner-risk-windows
+- owner-risk-macos
+- owner-risk-linux
+- tri-platform-gate
