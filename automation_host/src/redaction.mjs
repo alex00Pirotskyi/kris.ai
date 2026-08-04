@@ -1,5 +1,5 @@
 const keyPattern = /(secret|token|password|credential|api.?key|private.?key)/i;
-const valuePattern = /(Bearer\s+[A-Za-z0-9._~+/=-]{8,}|sk-[A-Za-z0-9_-]{8,}|gh[opusr]_[A-Za-z0-9]{8,})/gi;
+const valuePattern = /(Bearer\s+[A-Za-z0-9._~+/=-]{8,}|\bsk-[A-Za-z0-9_-]{8,}|\bgh[opusr]_[A-Za-z0-9]{8,})/gi;
 export function redact(value) {
   if (Array.isArray(value)) return value.map(redact);
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k,v]) => [k, keyPattern.test(k) ? '[REDACTED]' : redact(v)]));

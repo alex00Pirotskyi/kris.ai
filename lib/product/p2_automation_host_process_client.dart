@@ -214,6 +214,11 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         );
     _stderrSubscription = _process.stderr.listen((List<int> bytes) {
       _stderrBytes += bytes.length;
+      _stderrTail.addAll(bytes);
+      const tailBudget = 8192;
+      if (_stderrTail.length > tailBudget) {
+        _stderrTail.removeRange(0, _stderrTail.length - tailBudget);
+      }
       if (_stderrBytes > 4 * 1024 * 1024) {
         _failAll(
           const P2AutomationHostException('automation_host_stderr_flood'),
@@ -247,6 +252,16 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       if (config.additionalEnvironment['KRISTIN_OWNER_RISK_QA']
           case final value?)
         'KRISTIN_OWNER_RISK_QA': value,
+      if (config.windowsJobHelper case final value?)
+        'KRISTIN_WINDOWS_JOB_HELPER': value,
+      if (config.posixWatchdog case final value?)
+        'KRISTIN_POSIX_WATCHDOG_HELPER': value,
+      if (config.interactiveDesktopAdapter case final value?)
+        'KRISTIN_INTERACTIVE_DESKTOP_ADAPTER': value,
+      if (config.interactiveDesktopAttested)
+        'KRISTIN_P2_INTERACTIVE_DESKTOP': '1',
+      if (config.fixtureRoot case final value?)
+        'KRISTIN_P2_FIXTURE_ROOT': value,
     };
     final ownerRiskQa =
         config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
@@ -325,6 +340,8 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
   late final StreamSubscription<String> _stdoutSubscription;
   late final StreamSubscription<List<int>> _stderrSubscription;
   int _stderrBytes = 0;
+  final List<int> _stderrTail = <int>[];
+  bool _unexpectedExitReported = false;
   bool _closing = false;
   bool _closed = false;
 
@@ -525,23 +542,58 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     if (type == 'ready') {
       final ownerRiskQa =
           _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
-      final principalReady = ownerRiskQa
-          ? message['restrictedWorkerPrincipal'] == false &&
-              message['ownerRiskCurrentAccount'] == true &&
-              message['osIsolationWaived'] == true
-          : message['restrictedWorkerPrincipal'] == true;
-      if (message['executorOnly'] != true ||
-          message['grantIssuer'] != false ||
-          message['authenticatedIpcRequired'] != true ||
-          message['desktopIssuedEffectPermitRequired'] != true ||
-          message['publicVerifierOnly'] != true ||
-          message['rawAuthorityKeysPresent'] != false ||
-          !principalReady ||
-          message['workerSessionId'] != _expectedWorkerSessionId ||
-          message['pid'] != _workerIdentityValue['pid']) {
+      final mismatches = <String>[];
+      void requireField(bool accepted, String field) {
+        if (!accepted) mismatches.add(field);
+      }
+
+      requireField(message['executorOnly'] == true, 'executorOnly');
+      requireField(message['grantIssuer'] == false, 'grantIssuer');
+      requireField(
+        message['authenticatedIpcRequired'] == true,
+        'authenticatedIpcRequired',
+      );
+      requireField(
+        message['desktopIssuedEffectPermitRequired'] == true,
+        'desktopIssuedEffectPermitRequired',
+      );
+      requireField(message['publicVerifierOnly'] == true, 'publicVerifierOnly');
+      requireField(
+        message['rawAuthorityKeysPresent'] == false,
+        'rawAuthorityKeysPresent',
+      );
+      if (ownerRiskQa) {
+        requireField(
+          message['restrictedWorkerPrincipal'] == false,
+          'restrictedWorkerPrincipal',
+        );
+        requireField(
+          message['ownerRiskCurrentAccount'] == true,
+          'ownerRiskCurrentAccount',
+        );
+        requireField(
+          message['osIsolationWaived'] == true,
+          'osIsolationWaived',
+        );
+      } else {
+        requireField(
+          message['restrictedWorkerPrincipal'] == true,
+          'restrictedWorkerPrincipal',
+        );
+      }
+      requireField(
+        message['workerSessionId'] == _expectedWorkerSessionId,
+        'workerSessionId',
+      );
+      requireField(message['pid'] == _workerIdentityValue['pid'], 'pid');
+
+      if (mismatches.isNotEmpty) {
         if (!_ready.isCompleted) {
           _ready.completeError(
-            const P2AutomationHostException('ready_contract_invalid'),
+            P2AutomationHostException(
+              'ready_contract_invalid',
+              mismatches.join(','),
+            ),
           );
         }
       } else if (!_ready.isCompleted) {
@@ -741,19 +793,32 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
 
   void _handleDone() {
     if (!_closed && !_closing) {
-      _handleTransportError(
-        const P2AutomationHostException('automation_host_transport_closed'),
-      );
+      unawaited(_reportUnexpectedExit());
     }
   }
 
   Future<void> _watchExit() async {
     final code = await _process.exitCode;
-    if (!_closed && !_closing && code != 0) {
-      _handleTransportError(
-        P2AutomationHostException('automation_host_exited', '$code'),
-      );
-    }
+    await _reportUnexpectedExit(code);
+  }
+
+  Future<void> _reportUnexpectedExit([int? knownExitCode]) async {
+    if (_closed || _closing || _unexpectedExitReported) return;
+    final code = knownExitCode ?? await _process.exitCode;
+    if (_closed || _closing || _unexpectedExitReported) return;
+    _unexpectedExitReported = true;
+    final stderr = _safeDiagnostic(
+      utf8.decode(_stderrTail, allowMalformed: true).trim(),
+    );
+    final diagnostic = stderr.isEmpty ? '$code' : '$code:$stderr';
+    _handleTransportError(
+      P2AutomationHostException(
+        code == 0
+            ? 'automation_host_transport_closed'
+            : 'automation_host_exited',
+        diagnostic,
+      ),
+    );
   }
 
   void _failAll(Object error, [StackTrace? stack]) {

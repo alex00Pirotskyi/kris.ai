@@ -1,7 +1,10 @@
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE 1
+#else
 #define _XOPEN_SOURCE 700
+#endif
 #include <errno.h>
 #include <fcntl.h>
-#include <pty.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +12,11 @@
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/types.h>
+#ifdef __APPLE__
+#include <util.h>
+#else
+#include <pty.h>
+#endif
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>

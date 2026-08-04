@@ -45,11 +45,15 @@ class P2PathIdentity {
   final int modifiedMicros;
   final int size;
 
-  bool sameObject(P2PathIdentity other) =>
-      resolvedPath == other.resolvedPath &&
-      entityType == other.entityType &&
-      modifiedMicros == other.modifiedMicros &&
-      size == other.size;
+  bool sameObject(P2PathIdentity other) {
+    if (resolvedPath != other.resolvedPath || entityType != other.entityType) {
+      return false;
+    }
+    if (entityType == 'directory') {
+      return true;
+    }
+    return modifiedMicros == other.modifiedMicros && size == other.size;
+  }
 }
 
 abstract interface class P2FilesystemAuthorizer {

@@ -110,11 +110,11 @@ void main() {
       await fs.write(
         target.path,
         Uint8List.fromList(utf8.encode('KRISTIN_OWNER_RISK_QA')),
-        binding: owner.bindingContext.bindingFor('write'),
+        binding: owner.bindingContext.bindingFor('filesystem.write'),
       );
       final read = await fs.read(
         target.path,
-        binding: owner.bindingContext.bindingFor('read'),
+        binding: owner.bindingContext.bindingFor('filesystem.read'),
         maxBytes: 65536,
       );
       expect(utf8.decode(read), 'KRISTIN_OWNER_RISK_QA');

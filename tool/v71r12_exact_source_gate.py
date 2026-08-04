@@ -26,6 +26,20 @@ import tempfile
 import time
 from typing import Any, Sequence
 
+
+def _configure_utf8_console() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if not callable(reconfigure):
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="backslashreplace")
+        except (OSError, ValueError):
+            pass
+
+
+_configure_utf8_console()
+
 SCHEMA_VERSION = "1.0.0"
 GATE_ID = "V71-R12-EXACT-SOURCE-GATE"
 GENERATOR_SCRIPTS = (

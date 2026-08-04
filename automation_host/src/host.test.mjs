@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import { BoundedTranscript } from './bounded-transcript.mjs';
 import {
   createAuthenticatedIpcVerifier,
@@ -20,6 +21,17 @@ function verifier(authority, overrides = {}) {
     ...overrides,
   });
 }
+
+test('ready binds worker session to validated bootstrap', () => {
+  const source = fs.readFileSync(new URL('./host.mjs', import.meta.url), 'utf8');
+  const start = source.indexOf("type: 'ready'");
+  const end = source.indexOf('continue;', start);
+  assert.notEqual(start, -1);
+  assert.notEqual(end, -1);
+  const readyBlock = source.slice(start, end);
+  assert.match(readyBlock, /workerSessionId:\s*bootstrap\.workerSessionId/);
+  assert.doesNotMatch(readyBlock, /workerSessionId:\s*process\.env/);
+});
 
 test('bounded transcript retains newest exact bytes', () => {
   const transcript = new BoundedTranscript(4096);
@@ -198,6 +210,12 @@ test('secret-shaped fields and values are redacted', () => {
   const text = JSON.stringify(redact({ token: 'raw', line: 'Bearer abcdefghijk' }));
   assert.equal(text.includes('raw'), false);
   assert.equal(text.includes('abcdefghijk'), false);
+});
+
+test('owner-risk session identifiers are not mistaken for secret keys', () => {
+  const workerSessionId = 'owner-risk-0123456789abcdef0123456789abcdef';
+  assert.equal(redact({ workerSessionId }).workerSessionId, workerSessionId);
+  assert.equal(redact({ line: 'sk-abcdefghijk' }).line, '[REDACTED]');
 });
 
 test('secret environment keys fail closed', () => {

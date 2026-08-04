@@ -65,7 +65,12 @@ final class P2AutomationFiniteCommandService {
     final rawReceipt = response['receipt'];
     final rawOutput = response['output'];
     if (rawReceipt is! Map || rawOutput is! Map) {
-      throw StateError('command_worker_response_invalid');
+      final code = response['code']?.toString() ?? 'unknown';
+      final message = response['message']?.toString() ?? '';
+      throw StateError(
+        'command_worker_response_invalid:$code'
+        '${message.isEmpty ? '' : ':$message'}',
+      );
     }
     final receipt = P2EffectReceipt.fromJson(
       Map<String, Object?>.from(rawReceipt),

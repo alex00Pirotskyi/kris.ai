@@ -136,9 +136,25 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
     final useNumber = (_grantUses[grantId] ?? 0) + 1;
     _grantUses[grantId] = useNumber;
     final maxUses = externalGrantDigest == null ? 1 : 64;
+    final requestedPathRoots = <String>[];
+    for (final key in const <String>[
+      'cwd',
+      'executable',
+      'path',
+      'targetPath',
+      'sourcePath',
+      'destinationPath',
+    ]) {
+      final value = payload[key];
+      if (value is String && value.isNotEmpty) {
+        requestedPathRoots.add(value);
+      }
+    }
     final scope = <String, Object?>{
       'paths': <String, Object?>{
-        'roots': <String>['/'],
+        'roots': requestedPathRoots.isEmpty
+            ? <String>['/']
+            : List<String>.unmodifiable(requestedPathRoots),
       },
       'process': <String, Object?>{'operation': operation},
       'network': <String, Object?>{'destinations': <String>[]},

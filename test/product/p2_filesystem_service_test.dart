@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p2_effect_boundary.dart';
@@ -35,6 +36,51 @@ void main() {
         )
         .toList();
     expect(authorizer.operations, contains('enumerate'));
+  });
+
+  test('directory identity ignores transaction-owned metadata changes', () {
+    const before = P2PathIdentity(
+      path: '/tmp/root',
+      resolvedPath: '/tmp/root',
+      entityType: 'directory',
+      modifiedMicros: 1,
+      size: 1,
+    );
+    const after = P2PathIdentity(
+      path: '/tmp/root',
+      resolvedPath: '/tmp/root',
+      entityType: 'directory',
+      modifiedMicros: 2,
+      size: 2,
+    );
+    const replaced = P2PathIdentity(
+      path: '/tmp/root',
+      resolvedPath: '/tmp/other',
+      entityType: 'directory',
+      modifiedMicros: 2,
+      size: 2,
+    );
+    expect(before.sameObject(after), true);
+    expect(before.sameObject(replaced), false);
+  });
+
+  test('atomic write accepts its own same-directory temporary file', () async {
+    final root = await Directory.systemTemp.createTemp('p2-write-');
+    addTearDown(() => root.delete(recursive: true));
+    final authorizer = _Authorizer();
+    final service = P2FilesystemService(
+      authorizer: authorizer,
+      journal: _Journal(),
+      backupRoot: Directory('${root.path}${Platform.pathSeparator}backups'),
+    );
+    final target = File('${root.path}${Platform.pathSeparator}target.txt');
+    await service.write(
+      target.path,
+      Uint8List.fromList(<int>[79, 75]),
+      binding: _binding('write'),
+    );
+    expect(await target.readAsString(), 'OK');
+    expect(authorizer.operations, contains('write'));
   });
 }
 

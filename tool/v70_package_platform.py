@@ -203,6 +203,17 @@ def main() -> int:
         copy_tree(app_source, app_destination)
         runtime_destination = app_destination / "runtime/p2/current"
     copy_tree(runtime_stage / "runtime", runtime_destination)
+    if args.platform == "macos":
+        windows_only_conpty = (
+            runtime_destination
+            / "automation_host"
+            / "node_modules"
+            / "node-pty"
+            / "third_party"
+            / "conpty"
+        )
+        if windows_only_conpty.exists():
+            shutil.rmtree(windows_only_conpty)
     p1a_destination = payload / "p1a-native"
     copy_tree(runtime_stage / "p1a-native", p1a_destination)
     qa_code_signing = "unsigned-owner-risk-qa"
