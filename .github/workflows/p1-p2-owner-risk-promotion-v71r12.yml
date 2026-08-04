@@ -216,6 +216,7 @@ jobs:
             .v70-dist/result-${{ matrix.platform }}.json
           if-no-files-found: error
           retention-days: 30
+          include-hidden-files: true
 
   tri-platform-gate:
     name: tri-platform-gate

@@ -46,6 +46,9 @@ jobs:
         with:
           python-version-file: config/p2.python-version
           check-latest: false
+      - name: Install exact hash-locked hosted Python test dependencies
+        shell: bash
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
       - id: toolchains
         shell: bash
         run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
