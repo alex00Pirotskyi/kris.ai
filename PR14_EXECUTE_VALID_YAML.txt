@@ -1,8 +1,7 @@
-Execute the validated, exact-head-bound PR14 owner-risk source-contract repair after exact-block verifier correction.
+Execute the exact product-CI Python bootstrap repair for PR #14.
 
-Executor base workflow merged on main: 1c901f37403a1d193336ffa2659683a82ab85a90
+Executor helper merged on main: 6886e5fac8e710a2bc675cb739b5d4df56c15abe
 Target branch: merge/p1-p2-owner-risk-qa-preview
-Expected target head: 2bc7531314a5515198c1f93059862b56396d483f
-Authorized repair scope: .github/workflows/p2-owner-mode.yml and SOURCE_MANIFEST.sha256 only.
-Formal workflow_dispatch remains strict; pull-request and push source lanes use the reviewed owner-risk QA dependency contract.
-The helper verifies the complete inserted five-line block exactly once before pushing.
+Expected target head: 0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+Authorized repair scope: .github/workflows/ci.yml and SOURCE_MANIFEST.sha256 only.
+The repair installs the existing hash-locked Python bundle before the P1 closure step and proves the full P1 exit gate under Python 3.12.10 before creating the commit.
