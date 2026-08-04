@@ -51,7 +51,7 @@ jobs:
           test "$(git rev-parse origin/$INTEGRATION_BRANCH)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain)"
 
-      - name: Update exact cross-version wheel lock and source manifest
+      - name: Update exact cross-version wheel lock, verifier, and source manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -66,10 +66,25 @@ jobs:
           if actual != os.environ['REQUIREMENTS_SHA256']:
               raise SystemExit(f'requirements payload hash mismatch: {actual}')
           Path('config/v71r12_hosted_python_requirements.txt').write_bytes(payload)
+
+          bootstrap = Path('tool/v71r12_bootstrap_hosted_python.py')
+          value = bootstrap.read_text(encoding='utf-8')
+          old = '        {\n            "8e74a6135550c4748af665b1b1118b6aab33b1fc6a16f9aff630af107c3b4512",\n            "799416bae98336e400981ff6e532d67d5c709cfb30afb79865a1315f94b0e224",\n            "716ff8ec22f20b4d988b12884086bcef0fc99737043e503f7a3935a6be99b1ea",\n        },\n'
+          new = '        {\n            "1e9f50d192a3e525b15a75ab5114e442d83d657b7ec29182a991bc9a88fd3a66",\n            "716ff8ec22f20b4d988b12884086bcef0fc99737043e503f7a3935a6be99b1ea",\n            "78474632761faa0fb96f30b1c928c84ebcf68713cbb80d15bab09dfe61640fde",\n            "799416bae98336e400981ff6e532d67d5c709cfb30afb79865a1315f94b0e224",\n            "8e74a6135550c4748af665b1b1118b6aab33b1fc6a16f9aff630af107c3b4512",\n            "c97f080ea627e2863524c5af3836e2270b5f5dfff1f104392b959f8df0c5d384",\n            "df2b82571a1b30f58a87bf4e5a9e78d2b1eff6c6ce8fd3aa3757221f93f0863f",\n        },\n'
+          if value.count(old) != 1:
+              raise SystemExit(f'bootstrap cffi allowlist anchor count: {value.count(old)}')
+          if any(digest in value for digest in (
+              '1e9f50d192a3e525b15a75ab5114e442d83d657b7ec29182a991bc9a88fd3a66',
+              'c97f080ea627e2863524c5af3836e2270b5f5dfff1f104392b959f8df0c5d384',
+              'df2b82571a1b30f58a87bf4e5a9e78d2b1eff6c6ce8fd3aa3757221f93f0863f',
+              '78474632761faa0fb96f30b1c928c84ebcf68713cbb80d15bab09dfe61640fde',
+          )):
+              raise SystemExit('bootstrap cffi allowlist repair is already present')
+          bootstrap.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
           PY
           python tool/p2_refresh_source_manifest.py .
 
-      - name: Validate governed two-path change
+      - name: Validate governed three-path change
         shell: bash
         run: |
           set -euo pipefail
@@ -79,10 +94,15 @@ jobs:
           git diff --check
           mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
           printf 'CHANGED_PATH=%s\n' "${paths[@]}"
-          test "${#paths[@]}" -eq 2
+          test "${#paths[@]}" -eq 3
           test "${paths[0]}" = "SOURCE_MANIFEST.sha256"
           test "${paths[1]}" = "config/v71r12_hosted_python_requirements.txt"
+          test "${paths[2]}" = "tool/v71r12_bootstrap_hosted_python.py"
           grep -Fx "$REQUIREMENTS_SHA256  config/v71r12_hosted_python_requirements.txt" SOURCE_MANIFEST.sha256
+          grep -F '1e9f50d192a3e525b15a75ab5114e442d83d657b7ec29182a991bc9a88fd3a66' tool/v71r12_bootstrap_hosted_python.py
+          grep -F 'c97f080ea627e2863524c5af3836e2270b5f5dfff1f104392b959f8df0c5d384' tool/v71r12_bootstrap_hosted_python.py
+          grep -F 'df2b82571a1b30f58a87bf4e5a9e78d2b1eff6c6ce8fd3aa3757221f93f0863f' tool/v71r12_bootstrap_hosted_python.py
+          grep -F '78474632761faa0fb96f30b1c928c84ebcf68713cbb80d15bab09dfe61640fde' tool/v71r12_bootstrap_hosted_python.py
 
       - name: Commit and push exact lock refresh to both integration refs
         shell: bash
@@ -90,7 +110,7 @@ jobs:
           set -euo pipefail
           git config user.name 'Kristin CI Repair'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256 config/v71r12_hosted_python_requirements.txt
+          git add SOURCE_MANIFEST.sha256 config/v71r12_hosted_python_requirements.txt tool/v71r12_bootstrap_hosted_python.py
           git diff --cached --check
           git commit -m 'fix(ci): lock Python 3.12 hosted cffi wheels'
           repaired_commit="$(git rev-parse HEAD)"
