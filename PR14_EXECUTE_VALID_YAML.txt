@@ -1,7 +1,7 @@
-Execute the exact product-CI Python bootstrap repair for PR #14.
+Execute the exact product-CI Python bootstrap repair for PR #14 through the registered push lane.
 
-Executor helper merged on main: 6886e5fac8e710a2bc675cb739b5d4df56c15abe
+Executor workflow merged on main: 7fe4136500a11720127af399f7c5595cb785d26c
 Target branch: merge/p1-p2-owner-risk-qa-preview
 Expected target head: 0b91e02f2d7413c40dcfa81176877cd3a0daf87e
 Authorized repair scope: .github/workflows/ci.yml and SOURCE_MANIFEST.sha256 only.
-The repair installs the existing hash-locked Python bundle before the P1 closure step and proves the full P1 exit gate under Python 3.12.10 before creating the commit.
+The repair installs the existing hash-locked Python bundle before the P1 closure step, proves the full P1 exit gate under Python 3.12.10, creates the exact child commit, and records its SHA in repair-status.json.
