@@ -72,7 +72,9 @@ void main() {
   });
 
   group('failed-memory intent policy', () {
-    test('does not treat application error handling or history as a failed-run investigation', () {
+    test(
+        'does not treat application error handling or history as a failed-run investigation',
+        () {
       expect(
         isFailureInvestigationRequest(
           'Build a calculator with calculation history, input validation, error handling, and responsive tests.',
@@ -94,7 +96,8 @@ void main() {
         isTrue,
       );
       expect(
-        isFailureInvestigationRequest('Retry the failed task from the last run.'),
+        isFailureInvestigationRequest(
+            'Retry the failed task from the last run.'),
         isTrue,
       );
     });
@@ -238,7 +241,6 @@ void main() {
       await server.close(force: true);
     }
   });
-
 
   test('Ollama retries a transient cold-load timeout inside one model turn',
       () async {
@@ -523,8 +525,8 @@ void main() {
       expect(action.arguments['path'], '.');
     });
 
-
-    test('preserves canonical path nested directly inside an action object', () {
+    test('preserves canonical path nested directly inside an action object',
+        () {
       final action = adapter.parse(
         jsonEncode(<String, dynamic>{
           'action': <String, dynamic>{
@@ -541,7 +543,9 @@ void main() {
       expect(action.arguments['path'], 'README.md');
     });
 
-    test('preserves direct nested write content from the observed failure envelope', () {
+    test(
+        'preserves direct nested write content from the observed failure envelope',
+        () {
       const writeItem = WorkItem(
         id: 'wireframe-write-item',
         title: 'Create project-local calculator wireframes',
@@ -615,7 +619,8 @@ void main() {
       expect(action.arguments['path'], 'README.md');
     });
 
-    test('unwraps message envelopes instead of treating them as completion', () {
+    test('unwraps message envelopes instead of treating them as completion',
+        () {
       final action = adapter.parse(
         jsonEncode(<String, dynamic>{
           'type': 'message',
@@ -648,7 +653,8 @@ void main() {
       expect(action.arguments['path'], 'README.md');
     });
 
-    test('uses an explicit allowed tool even with a nonstandard action verb', () {
+    test('uses an explicit allowed tool even with a nonstandard action verb',
+        () {
       final action = adapter.parse(
         '{"action":"continue","tool":"read_file",'
         '"parameters":{"file":"README.md"}}',
@@ -661,7 +667,8 @@ void main() {
       expect(action.arguments['path'], 'README.md');
     });
 
-    test('accepts nested completion payloads and boolean completion signals', () {
+    test('accepts nested completion payloads and boolean completion signals',
+        () {
       final action = adapter.parse(
         jsonEncode(<String, dynamic>{
           'action': 'conclusion',
@@ -697,7 +704,9 @@ void main() {
       expect(action.summary, 'The bounded inspection is complete.');
     });
 
-    test('normalizes the observed composite planning action without failed-memory opt-in', () {
+    test(
+        'normalizes the observed composite planning action without failed-memory opt-in',
+        () {
       const informationItem = WorkItem(
         id: 'information-item',
         title: 'Gather Development Tools and Libraries Information',
@@ -743,7 +752,9 @@ void main() {
       );
     });
 
-    test('normalizes the observed nested command vector to project-scoped Git status', () {
+    test(
+        'normalizes the observed nested command vector to project-scoped Git status',
+        () {
       const commandItem = WorkItem(
         id: 'command-item',
         title: 'Inspect project state',
@@ -774,7 +785,8 @@ void main() {
       expect(action.reason, contains('project-scoped git_status'));
     });
 
-    test('preserves a generic nested command vector as executable and args', () {
+    test('preserves a generic nested command vector as executable and args',
+        () {
       const commandItem = WorkItem(
         id: 'generic-command-item',
         title: 'Run a project check',
@@ -850,7 +862,8 @@ void main() {
       expect(policy.requiresValidatedArtifact(reviewItem), isFalse);
     });
 
-    test('rejects an unrelated commerce wireframe even when the file exists', () {
+    test('rejects an unrelated commerce wireframe even when the file exists',
+        () {
       final assessment = policy.assess(
         item: item,
         request:
@@ -970,7 +983,6 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
     });
   });
 
-
   group('v1.1.7 current diagnostic replay contracts', () {
     const item = WorkItem(
       id: 'diagnostic-wireframe-item',
@@ -1037,7 +1049,9 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
       }
     });
 
-    test('bounded recovery changes repeated discovery into a validated mutation', () {
+    test(
+        'bounded recovery changes repeated discovery into a validated mutation',
+        () {
       final recovery = const BoundedArtifactRecoveryPolicy().actionFor(
         item: item,
         request: request,
@@ -1073,7 +1087,6 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
       expect(assessment.path, 'docs/design/wireframes.md');
     });
 
-
     test('hash-guards deterministic replacement of an inspected artifact', () {
       final recovery = const BoundedArtifactRecoveryPolicy().actionFor(
         item: item,
@@ -1104,9 +1117,10 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
       );
     });
 
-    test('automatically inspects the exact expected artifact after mutation', () {
-      final target = const AutomaticArtifactVerificationPolicy()
-          .inspectionTarget(
+    test('automatically inspects the exact expected artifact after mutation',
+        () {
+      final target =
+          const AutomaticArtifactVerificationPolicy().inspectionTarget(
         item: item,
         mutationResult: const ToolResult(
           ok: true,
@@ -1135,5 +1149,4 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
       expect(policy.remaining(repairs: 10, maxRepairs: 12), 2);
     });
   });
-
 }

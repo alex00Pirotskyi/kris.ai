@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "milestone": "P0-003",
+  "commit": null,
+  "workflowRunUrl": null,
+  "status": "pending",
+  "lanes": {
+    "ubuntu": {
+      "jobUrl": null,
+      "status": "pending",
+      "nativeBuild": "pending",
+      "environmentEvidence": null
+    },
+    "windows": {
+      "jobUrl": null,
+      "status": "pending",
+      "nativeBuild": "pending",
+      "environmentEvidence": null
+    },
+    "macos": {
+      "jobUrl": null,
+      "status": "pending",
+      "nativeBuild": "pending",
+      "environmentEvidence": null
+    }
+  },
+  "closureRule": "All lanes must be passed for the same commit before P0-003 is DONE and P0-004 is unblocked."
+}

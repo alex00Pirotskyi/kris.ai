@@ -54,8 +54,7 @@ class PromptStudioV2Contracts {
 }
 
 abstract class PromptStudioV2Document {
-  PromptStudioV2Document(Map<String, dynamic> value)
-      : _value = _deepMap(value);
+  PromptStudioV2Document(Map<String, dynamic> value) : _value = _deepMap(value);
 
   final Map<String, dynamic> _value;
 
@@ -82,7 +81,8 @@ class ProductSpecificationV2 extends PromptStudioV2Document {
   String get deploymentMode =>
       _map(_value['deploymentBoundary'])['mode']?.toString() ?? 'none';
   String? get deploymentTarget {
-    final value = _map(_value['deploymentBoundary'])['target']?.toString().trim();
+    final value =
+        _map(_value['deploymentBoundary'])['target']?.toString().trim();
     return value == null || value.isEmpty ? null : value;
   }
 }
@@ -102,8 +102,7 @@ class TaskPlanV2 extends PromptStudioV2Document {
   }
 
   String get id => _value['id']?.toString() ?? '';
-  String get specificationId =>
-      _value['specificationId']?.toString() ?? '';
+  String get specificationId => _value['specificationId']?.toString() ?? '';
   bool get localOnly => _value['localOnly'] != false;
   List<Map<String, dynamic>> get tasks => _maps(_value['tasks']);
 }
@@ -174,10 +173,8 @@ class PlanCompilerPolicyV2 {
           : false,
       deploymentTarget: _optionalString(value['deploymentTarget']),
       maxTasks: _int(value['maxTasks'], fallback: 100),
-      maxTotalModelTurns:
-          _int(value['maxTotalModelTurns'], fallback: 1200),
-      maxTotalToolCalls:
-          _int(value['maxTotalToolCalls'], fallback: 5000),
+      maxTotalModelTurns: _int(value['maxTotalModelTurns'], fallback: 1200),
+      maxTotalToolCalls: _int(value['maxTotalToolCalls'], fallback: 5000),
       maxTotalOutputBytes:
           _int(value['maxTotalOutputBytes'], fallback: 500000000),
     );
@@ -347,8 +344,7 @@ class PromptStudioV2Compiler {
             PlanCompilationIssueV2(
               severity: 'error',
               code: 'requirement_id_duplicate',
-              message:
-                  'Duplicate specification requirement ID $requirementId.',
+              message: 'Duplicate specification requirement ID $requirementId.',
               path: '\$.$field',
             ),
           );
@@ -444,7 +440,8 @@ class PromptStudioV2Compiler {
             PlanCompilationIssueV2(
               severity: 'error',
               code: 'dependency_missing',
-              message: 'Task $taskId references missing dependency $dependency.',
+              message:
+                  'Task $taskId references missing dependency $dependency.',
               taskId: taskId,
             ),
           );
@@ -714,7 +711,8 @@ class PromptStudioV2Compiler {
       }
 
       if (task['taskType'] == 'deployment' && !manual) {
-        final target = policy.deploymentTarget ?? specification.deploymentTarget;
+        final target =
+            policy.deploymentTarget ?? specification.deploymentTarget;
         if (const <String>{'none', 'external_manual'}
             .contains(specification.deploymentMode)) {
           issues.add(
@@ -761,8 +759,7 @@ class PromptStudioV2Compiler {
       }
       for (final criterion in _maps(task['acceptanceCriteria'])) {
         criteriaTotal += 1;
-        final references =
-            _strings(criterion['evidenceValidatorIds']).toSet();
+        final references = _strings(criterion['evidenceValidatorIds']).toSet();
         if (references.isNotEmpty &&
             references.difference(localValidatorIds).isEmpty) {
           criteriaVerified += 1;
@@ -834,7 +831,7 @@ class PromptStudioV2Compiler {
         approvals.add('data_boundary:$boundary');
       }
       if (allowed.where(knownTools.contains).any((toolName) {
-        final toolRisk = tools.contractFor(toolName).risk;
+        final toolRisk = tools.schemas.require(toolName).risk;
         return const <ToolRisk>{
           ToolRisk.destructive,
           ToolRisk.external,
@@ -859,8 +856,7 @@ class PromptStudioV2Compiler {
         'allowedTools': allowed.toList()..sort(),
         'approvalRequired': manual ||
             const <String>{'high', 'critical'}.contains(risk) ||
-            const <String>{'secret', 'external', 'network'}
-                .contains(boundary),
+            const <String>{'secret', 'external', 'network'}.contains(boundary),
         'blockReasons': taskBlocks.toList()..sort(),
       });
     }
@@ -874,7 +870,8 @@ class PromptStudioV2Compiler {
     };
     for (final task in compiledTasks) {
       final taskId = task['id']?.toString() ?? '';
-      task['topologicalIndex'] = order.contains(taskId) ? order.indexOf(taskId) : null;
+      task['topologicalIndex'] =
+          order.contains(taskId) ? order.indexOf(taskId) : null;
       task['executionBatch'] = batchIndex[taskId];
     }
 
@@ -944,12 +941,10 @@ class PromptStudioV2Compiler {
     final capabilityScore = capabilityRequired == 0
         ? 20.0
         : 20.0 * capabilityCovered / capabilityRequired;
-    final verificationScore = criteriaTotal == 0
-        ? 15.0
-        : 15.0 * criteriaVerified / criteriaTotal;
-    final artifactScore = artifactsTotal == 0
-        ? 15.0
-        : 15.0 * artifactsValidated / artifactsTotal;
+    final verificationScore =
+        criteriaTotal == 0 ? 15.0 : 15.0 * criteriaVerified / criteriaTotal;
+    final artifactScore =
+        artifactsTotal == 0 ? 15.0 : 15.0 * artifactsValidated / artifactsTotal;
     final policyScore = max(0.0, 10.0 - policyErrors * 3.0);
     final baseScore = schemaScore +
         graphScore +
@@ -1141,9 +1136,8 @@ class PromptStudioV2Compiler {
     final ids = enabled.map((task) => task['id']?.toString() ?? '').toSet();
     final dependencies = <String, Set<String>>{
       for (final task in enabled)
-        task['id']?.toString() ?? '': _strings(task['dependencies'])
-            .where(ids.contains)
-            .toSet(),
+        task['id']?.toString() ?? '':
+            _strings(task['dependencies']).where(ids.contains).toSet(),
     }..remove('');
     final reverse = <String, Set<String>>{};
     final indegree = <String, int>{
@@ -1156,8 +1150,7 @@ class PromptStudioV2Compiler {
     }
     final orderValues = <String, int>{
       for (final task in enabled)
-        task['id']?.toString() ?? '':
-            _int(task['order'], fallback: 0),
+        task['id']?.toString() ?? '': _int(task['order'], fallback: 0),
     }..remove('');
     int compare(String left, String right) {
       final order = (orderValues[left] ?? 0).compareTo(orderValues[right] ?? 0);
@@ -1210,8 +1203,7 @@ class PromptStudioV2Compiler {
       final parents = _strings(task['dependencies'])
           .map((dependency) => distance[dependency] ?? 0);
       final prior = parents.isEmpty ? 0 : parents.reduce(max);
-      distance[taskId] =
-          prior + _int(task['effortPoints'], fallback: 1);
+      distance[taskId] = prior + _int(task['effortPoints'], fallback: 1);
     }
     return distance.values.isEmpty ? 0 : distance.values.reduce(max);
   }
@@ -1285,13 +1277,11 @@ class PromptStudioV2Evaluator {
       'diff': diffPromptVersions(baseline, candidate),
       'measuredImpact': <String, dynamic>{
         'scoreDelta': double.parse(
-          ((candidateResult['score'] as num) -
-                  (baselineResult['score'] as num))
+          ((candidateResult['score'] as num) - (baselineResult['score'] as num))
               .toStringAsFixed(2),
         ),
-        'passedCaseDelta':
-            _int(candidateResult['passedCases'], fallback: 0) -
-                _int(baselineResult['passedCases'], fallback: 0),
+        'passedCaseDelta': _int(candidateResult['passedCases'], fallback: 0) -
+            _int(baselineResult['passedCases'], fallback: 0),
         'acceptanceCriterionDelta':
             _list(candidate['acceptanceCriteria']).length -
                 _list(baseline['acceptanceCriteria']).length,
@@ -1318,9 +1308,8 @@ class PromptStudioV2Evaluator {
       ..._strings(prompt['guardrails']),
       ..._strings(prompt['stopConditions']),
     ].join(' ').toLowerCase();
-    final criteria = _strings(prompt['acceptanceCriteria'])
-        .join(' ')
-        .toLowerCase();
+    final criteria =
+        _strings(prompt['acceptanceCriteria']).join(' ').toLowerCase();
     final variables = _strings(prompt['variables']).toSet();
     final cases = <Map<String, dynamic>>[];
     var weightedScore = 0.0;
@@ -1510,10 +1499,8 @@ class PromptStudioV2Service {
         'outputHash': report['outputHash'],
         'executable': report['executable'],
         'qualityScore': _map(report['quality'])['score'],
-        'readyTaskCount':
-            _map(report['simulation'])['readyTaskCount'],
-        'blockedTaskCount':
-            _map(report['simulation'])['blockedTaskCount'],
+        'readyTaskCount': _map(report['simulation'])['readyTaskCount'],
+        'blockedTaskCount': _map(report['simulation'])['blockedTaskCount'],
       },
     );
     return report;
@@ -1554,9 +1541,8 @@ class PromptStudioV2Service {
   }
 }
 
-Map<String, dynamic> _map(Object? value) => value is Map
-    ? Map<String, dynamic>.from(value)
-    : <String, dynamic>{};
+Map<String, dynamic> _map(Object? value) =>
+    value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
 
 List<Map<String, dynamic>> _maps(Object? value) => value is List
     ? value

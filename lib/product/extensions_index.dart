@@ -38,7 +38,8 @@ class SourceIndexEntry {
         'text': text,
       };
 
-  factory SourceIndexEntry.fromJson(Map<String, dynamic> json) => SourceIndexEntry(
+  factory SourceIndexEntry.fromJson(Map<String, dynamic> json) =>
+      SourceIndexEntry(
         path: json['path']?.toString() ?? '',
         sha256: json['sha256']?.toString() ?? '',
         bytes: int.tryParse(json['bytes']?.toString() ?? '') ?? 0,
@@ -82,15 +83,21 @@ class SourceIndexService {
 
   final Directory indexDirectory;
 
-  AtomicJsonFile _file(String projectId) => AtomicJsonFile(File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'));
+  AtomicJsonFile _file(String projectId) => AtomicJsonFile(
+      File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'));
 
   Future<SourceIndexReport> update(ProjectRecord project) async {
     await indexDirectory.create(recursive: true);
     final root = Directory(project.rootPath).absolute;
-    if (!await root.exists()) { throw ProductException('project_missing', 'Project root no longer exists.'); }
-    final canonicalRoot = (await root.resolveSymbolicLinks()).replaceAll('\\', '/');
+    if (!await root.exists()) {
+      throw ProductException(
+          'project_missing', 'Project root no longer exists.');
+    }
+    final canonicalRoot =
+        (await root.resolveSymbolicLinks()).replaceAll('\\', '/');
     final store = _file(project.id);
-    final raw = await store.read(fallback: <String, dynamic>{'entries': <Object>[]});
+    final raw =
+        await store.read(fallback: <String, dynamic>{'entries': <Object>[]});
     final prior = <String, SourceIndexEntry>{};
     final oldEntries = mapValue(raw)['entries'];
     if (oldEntries is List) {
@@ -104,13 +111,23 @@ class SourceIndexService {
     var changed = 0;
     var skipped = 0;
     await for (final entity in root.list(recursive: true, followLinks: false)) {
-      if (entity is! File) { continue; }
-      if (++scanned > 25000) { throw ProductException('index_file_limit', 'Project contains more than 25,000 indexable files.'); }
-      final canonical = (await entity.resolveSymbolicLinks()).replaceAll('\\', '/');
-      if (!(canonical == canonicalRoot || canonical.startsWith('$canonicalRoot/'))) {
-        throw ProductException('index_symlink_escape', 'A project file resolves outside the project root.');
+      if (entity is! File) {
+        continue;
       }
-      final relative = canonical.substring(canonicalRoot.length).replaceFirst(RegExp(r'^/+'), '');
+      if (++scanned > 25000) {
+        throw ProductException('index_file_limit',
+            'Project contains more than 25,000 indexable files.');
+      }
+      final canonical =
+          (await entity.resolveSymbolicLinks()).replaceAll('\\', '/');
+      if (!(canonical == canonicalRoot ||
+          canonical.startsWith('$canonicalRoot/'))) {
+        throw ProductException('index_symlink_escape',
+            'A project file resolves outside the project root.');
+      }
+      final relative = canonical
+          .substring(canonicalRoot.length)
+          .replaceFirst(RegExp(r'^/+'), '');
       if (_ignored(relative)) {
         skipped++;
         continue;
@@ -121,7 +138,9 @@ class SourceIndexService {
         continue;
       }
       final previous = prior[relative];
-      if (previous != null && previous.bytes == stat.size && previous.modifiedAt.isAtSameMomentAs(stat.modified.toUtc())) {
+      if (previous != null &&
+          previous.bytes == stat.size &&
+          previous.modifiedAt.isAtSameMomentAs(stat.modified.toUtc())) {
         next[relative] = previous;
         continue;
       }
@@ -146,7 +165,8 @@ class SourceIndexService {
       changed++;
     }
     final removed = prior.keys.where((path) => !next.containsKey(path)).length;
-    final ordered = next.values.toList()..sort((a, b) => a.path.compareTo(b.path));
+    final ordered = next.values.toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
     final generatedAt = DateTime.now().toUtc();
     await store.write(<String, dynamic>{
       'schemaVersion': 1,
@@ -165,15 +185,21 @@ class SourceIndexService {
     );
   }
 
-  Future<List<Map<String, dynamic>>> search(String projectId, String query, {int limit = 20}) async {
-    final raw = await _file(projectId).read(fallback: <String, dynamic>{'entries': <Object>[]});
+  Future<List<Map<String, dynamic>>> search(String projectId, String query,
+      {int limit = 20}) async {
+    final raw = await _file(projectId)
+        .read(fallback: <String, dynamic>{'entries': <Object>[]});
     final entriesRaw = mapValue(raw)['entries'];
-    if (entriesRaw is! List) { return <Map<String, dynamic>>[]; }
+    if (entriesRaw is! List) {
+      return <Map<String, dynamic>>[];
+    }
     final terms = RegExp(r'[A-Za-z0-9_\-]{2,}')
         .allMatches(query.toLowerCase())
         .map((match) => match.group(0)!)
         .toSet();
-    if (terms.isEmpty) { return <Map<String, dynamic>>[]; }
+    if (terms.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
     final scored = <({SourceIndexEntry entry, double score, String snippet})>[];
     for (final rawEntry in entriesRaw.whereType<Map>()) {
       final entry = SourceIndexEntry.fromJson(mapValue(rawEntry));
@@ -182,71 +208,141 @@ class SourceIndexService {
       var score = 0.0;
       var firstOffset = -1;
       for (final term in terms) {
-        if (lowerPath.contains(term)) { score += 8; }
-        if (entry.symbols.any((symbol) => symbol.toLowerCase().contains(term))) { score += 6; }
-        if (entry.dependencies.any((dependency) => dependency.toLowerCase().contains(term))) { score += 4; }
+        if (lowerPath.contains(term)) {
+          score += 8;
+        }
+        if (entry.symbols
+            .any((symbol) => symbol.toLowerCase().contains(term))) {
+          score += 6;
+        }
+        if (entry.dependencies
+            .any((dependency) => dependency.toLowerCase().contains(term))) {
+          score += 4;
+        }
         final offset = lowerText.indexOf(term);
         if (offset >= 0) {
-          score += 1 + min(10, RegExp(RegExp.escape(term)).allMatches(lowerText).length) * 0.4;
-          if (firstOffset < 0 || offset < firstOffset) { firstOffset = offset; }
+          score += 1 +
+              min(
+                      10,
+                      RegExp(RegExp.escape(term))
+                          .allMatches(lowerText)
+                          .length) *
+                  0.4;
+          if (firstOffset < 0 || offset < firstOffset) {
+            firstOffset = offset;
+          }
         }
       }
-      if (score <= 0) { continue; }
+      if (score <= 0) {
+        continue;
+      }
       final start = max(0, firstOffset < 0 ? 0 : firstOffset - 250);
       final end = min(entry.text.length, start + 1200);
-      scored.add((entry: entry, score: score, snippet: entry.text.substring(start, end)));
+      scored.add((
+        entry: entry,
+        score: score,
+        snippet: entry.text.substring(start, end)
+      ));
     }
     scored.sort((a, b) {
       final score = b.score.compareTo(a.score);
       return score != 0 ? score : a.entry.path.compareTo(b.entry.path);
     });
-    return scored.take(limit.clamp(1, 100).toInt()).map((result) => <String, dynamic>{
-      'path': result.entry.path,
-      'sha256': result.entry.sha256,
-      'language': result.entry.language,
-      'symbols': result.entry.symbols,
-      'dependencies': result.entry.dependencies,
-      'score': result.score,
-      'snippet': result.snippet,
-    }).toList();
+    return scored
+        .take(limit.clamp(1, 100).toInt())
+        .map((result) => <String, dynamic>{
+              'path': result.entry.path,
+              'sha256': result.entry.sha256,
+              'language': result.entry.language,
+              'symbols': result.entry.symbols,
+              'dependencies': result.entry.dependencies,
+              'score': result.score,
+              'snippet': result.snippet,
+            })
+        .toList();
   }
 
-  bool _ignored(String path) => path
-      .replaceAll('\\', '/')
-      .split('/')
-      .any(const <String>{
-        '.git', '.dart_tool', 'build', 'node_modules', '.venv', 'venv', '__pycache__',
-        '.pytest_cache', '.idea', '.vscode', '.kristin', 'coverage', 'dist', 'target',
-      }.contains);
+  bool _ignored(String path) =>
+      path.replaceAll('\\', '/').split('/').any(const <String>{
+            '.git',
+            '.dart_tool',
+            'build',
+            'node_modules',
+            '.venv',
+            'venv',
+            '__pycache__',
+            '.pytest_cache',
+            '.idea',
+            '.vscode',
+            '.kristin',
+            'coverage',
+            'dist',
+            'target',
+          }.contains);
 
   String _language(String path) {
-    final extension = path.contains('.') ? path.split('.').last.toLowerCase() : '';
+    final extension =
+        path.contains('.') ? path.split('.').last.toLowerCase() : '';
     return const <String, String>{
-          'dart': 'dart', 'py': 'python', 'js': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript',
-          'ts': 'typescript', 'tsx': 'typescript', 'jsx': 'javascript', 'java': 'java', 'kt': 'kotlin',
-          'swift': 'swift', 'go': 'go', 'rs': 'rust', 'c': 'c', 'h': 'c', 'cpp': 'cpp', 'cc': 'cpp',
-          'hpp': 'cpp', 'cs': 'csharp', 'rb': 'ruby', 'php': 'php', 'html': 'html', 'css': 'css',
-          'scss': 'scss', 'sql': 'sql', 'yaml': 'yaml', 'yml': 'yaml', 'json': 'json', 'toml': 'toml',
-          'md': 'markdown', 'sh': 'shell', 'ps1': 'powershell',
+          'dart': 'dart',
+          'py': 'python',
+          'js': 'javascript',
+          'mjs': 'javascript',
+          'cjs': 'javascript',
+          'ts': 'typescript',
+          'tsx': 'typescript',
+          'jsx': 'javascript',
+          'java': 'java',
+          'kt': 'kotlin',
+          'swift': 'swift',
+          'go': 'go',
+          'rs': 'rust',
+          'c': 'c',
+          'h': 'c',
+          'cpp': 'cpp',
+          'cc': 'cpp',
+          'hpp': 'cpp',
+          'cs': 'csharp',
+          'rb': 'ruby',
+          'php': 'php',
+          'html': 'html',
+          'css': 'css',
+          'scss': 'scss',
+          'sql': 'sql',
+          'yaml': 'yaml',
+          'yml': 'yaml',
+          'json': 'json',
+          'toml': 'toml',
+          'md': 'markdown',
+          'sh': 'shell',
+          'ps1': 'powershell',
         }[extension] ??
         'text';
   }
 
   List<String> _symbols(String language, String text) {
     final patterns = <RegExp>[
-      RegExp(r'\b(?:class|enum|mixin|extension|interface|struct|trait)\s+([A-Za-z_][A-Za-z0-9_]*)'),
+      RegExp(
+          r'\b(?:class|enum|mixin|extension|interface|struct|trait)\s+([A-Za-z_][A-Za-z0-9_]*)'),
       RegExp(r'\b(?:def|function|func|fn)\s+([A-Za-z_][A-Za-z0-9_]*)'),
-      RegExp(r'\b(?:Future<[^>]+>|Future|void|int|double|String|bool|Widget|dynamic)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\('),
+      RegExp(
+          r'\b(?:Future<[^>]+>|Future|void|int|double|String|bool|Widget|dynamic)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\('),
       RegExp(r'\b(?:const|let|var|final)\s+([A-Za-z_][A-Za-z0-9_]*)\s*='),
     ];
     final symbols = <String>{};
     for (final pattern in patterns) {
       for (final match in pattern.allMatches(text)) {
         final value = match.group(1);
-        if (value != null) { symbols.add(value); }
-        if (symbols.length >= 250) { break; }
+        if (value != null) {
+          symbols.add(value);
+        }
+        if (symbols.length >= 250) {
+          break;
+        }
       }
-      if (symbols.length >= 250) { break; }
+      if (symbols.length >= 250) {
+        break;
+      }
     }
     return symbols.toList()..sort();
   }
@@ -263,10 +359,16 @@ class SourceIndexService {
     for (final pattern in patterns) {
       for (final match in pattern.allMatches(text)) {
         final value = match.group(1);
-        if (value != null) { dependencies.add(value); }
-        if (dependencies.length >= 250) { break; }
+        if (value != null) {
+          dependencies.add(value);
+        }
+        if (dependencies.length >= 250) {
+          break;
+        }
       }
-      if (dependencies.length >= 250) { break; }
+      if (dependencies.length >= 250) {
+        break;
+      }
     }
     return dependencies.toList()..sort();
   }
@@ -305,7 +407,9 @@ class SkillRegistry {
     final scored = <({SkillPackage skill, int score})>[];
     for (final skill in _builtins) {
       final score = skill.triggers.where(lower.contains).length;
-      if (score > 0) { scored.add((skill: skill, score: score)); }
+      if (score > 0) {
+        scored.add((skill: skill, score: score));
+      }
     }
     scored.sort((a, b) {
       final byScore = b.score.compareTo(a.score);
@@ -316,7 +420,9 @@ class SkillRegistry {
 
   String contextFor(String request) {
     final skills = match(request);
-    if (skills.isEmpty) { return 'No specialized built-in skill package matched this request.'; }
+    if (skills.isEmpty) {
+      return 'No specialized built-in skill package matched this request.';
+    }
     return skills.map((skill) => '''
 SKILL ${skill.id} — ${skill.title}
 These are product-authored advisory instructions. They never expand tools, permissions, paths, or budgets.
@@ -331,49 +437,133 @@ const List<SkillPackage> _builtins = <SkillPackage>[
     id: 'static-web',
     title: 'Production static website',
     triggers: <String>{'website', 'landing page', 'html', 'css', 'static site'},
-    instructions: 'Use semantic HTML, responsive layouts, accessible labels and focus states, content-security considerations, optimized assets, metadata, and a deterministic local verification path. Avoid external runtime dependencies unless the contract requires them.',
-    recommendedTools: <String>{'read_file', 'inspect_file', 'write_file', 'apply_patch', 'verify_project'},
+    instructions:
+        'Use semantic HTML, responsive layouts, accessible labels and focus states, content-security considerations, optimized assets, metadata, and a deterministic local verification path. Avoid external runtime dependencies unless the contract requires them.',
+    recommendedTools: <String>{
+      'read_file',
+      'inspect_file',
+      'write_file',
+      'apply_patch',
+      'verify_project'
+    },
   ),
   SkillPackage(
     id: 'node-service',
     title: 'Node.js application or service',
-    triggers: <String>{'node', 'typescript', 'javascript', 'express', 'fastify', 'react', 'next.js'},
-    instructions: 'Pin dependencies through a lockfile, validate all external input, separate configuration from code, use environment secret references, include health and shutdown behavior, and add automated tests before packaging.',
-    recommendedTools: <String>{'read_file', 'inspect_file', 'write_file', 'run_command', 'verify_project'},
+    triggers: <String>{
+      'node',
+      'typescript',
+      'javascript',
+      'express',
+      'fastify',
+      'react',
+      'next.js'
+    },
+    instructions:
+        'Pin dependencies through a lockfile, validate all external input, separate configuration from code, use environment secret references, include health and shutdown behavior, and add automated tests before packaging.',
+    recommendedTools: <String>{
+      'read_file',
+      'inspect_file',
+      'write_file',
+      'run_command',
+      'verify_project'
+    },
   ),
   SkillPackage(
     id: 'python-service',
     title: 'Python application or service',
     triggers: <String>{'python', 'fastapi', 'flask', 'django', 'pytest'},
-    instructions: 'Use a virtual-environment-compatible dependency manifest, typed boundaries, structured logging, explicit configuration, environment secret references, graceful shutdown, and pytest coverage of core behavior.',
-    recommendedTools: <String>{'read_file', 'inspect_file', 'write_file', 'run_command', 'verify_project'},
+    instructions:
+        'Use a virtual-environment-compatible dependency manifest, typed boundaries, structured logging, explicit configuration, environment secret references, graceful shutdown, and pytest coverage of core behavior.',
+    recommendedTools: <String>{
+      'read_file',
+      'inspect_file',
+      'write_file',
+      'run_command',
+      'verify_project'
+    },
   ),
   SkillPackage(
     id: 'telegram-bot',
     title: 'Telegram bot',
-    triggers: <String>{'telegram', 'tg bot', 'chat bot', 'botfather', 'aiogram', 'telegraf'},
-    instructions: 'Keep the BotFather token exclusively in a named runtime secret. Validate updates, restrict administrator actions by numeric user ID, rate-limit handlers, avoid logging message secrets, mock Telegram in tests, support graceful polling shutdown, and provide webhook deployment only with HTTPS and secret-path validation.',
-    recommendedTools: <String>{'research_fetch', 'read_file', 'inspect_file', 'write_file', 'run_command', 'package_deployment'},
+    triggers: <String>{
+      'telegram',
+      'tg bot',
+      'chat bot',
+      'botfather',
+      'aiogram',
+      'telegraf'
+    },
+    instructions:
+        'Keep the BotFather token exclusively in a named runtime secret. Validate updates, restrict administrator actions by numeric user ID, rate-limit handlers, avoid logging message secrets, mock Telegram in tests, support graceful polling shutdown, and provide webhook deployment only with HTTPS and secret-path validation.',
+    recommendedTools: <String>{
+      'research_fetch',
+      'read_file',
+      'inspect_file',
+      'write_file',
+      'run_command',
+      'package_deployment'
+    },
   ),
   SkillPackage(
     id: 'flutter-application',
     title: 'Flutter application',
-    triggers: <String>{'flutter', 'dart', 'android app', 'ios app', 'desktop app'},
-    instructions: 'Keep state and side effects separated, use responsive Material semantics, avoid blocking the UI isolate, provide deterministic initialization and disposal, test domain behavior and key widgets, and require flutter analyze plus flutter test before release.',
-    recommendedTools: <String>{'read_file', 'inspect_file', 'write_file', 'apply_patch', 'verify_project'},
+    triggers: <String>{
+      'flutter',
+      'dart',
+      'android app',
+      'ios app',
+      'desktop app'
+    },
+    instructions:
+        'Keep state and side effects separated, use responsive Material semantics, avoid blocking the UI isolate, provide deterministic initialization and disposal, test domain behavior and key widgets, and require flutter analyze plus flutter test before release.',
+    recommendedTools: <String>{
+      'read_file',
+      'inspect_file',
+      'write_file',
+      'apply_patch',
+      'verify_project'
+    },
   ),
   SkillPackage(
     id: 'docker-deployment',
     title: 'Container deployment',
-    triggers: <String>{'docker', 'container', 'deploy', 'deployment', 'production', 'compose'},
-    instructions: 'Use a non-root runtime user, a minimal pinned base image, multi-stage builds, read-only configuration, health checks, graceful shutdown, no embedded secrets, explicit exposed ports, and a rollback-ready artifact manifest.',
-    recommendedTools: <String>{'read_file', 'inspect_file', 'write_file', 'verify_project', 'package_deployment'},
+    triggers: <String>{
+      'docker',
+      'container',
+      'deploy',
+      'deployment',
+      'production',
+      'compose'
+    },
+    instructions:
+        'Use a non-root runtime user, a minimal pinned base image, multi-stage builds, read-only configuration, health checks, graceful shutdown, no embedded secrets, explicit exposed ports, and a rollback-ready artifact manifest.',
+    recommendedTools: <String>{
+      'read_file',
+      'inspect_file',
+      'write_file',
+      'verify_project',
+      'package_deployment'
+    },
   ),
   SkillPackage(
     id: 'security-review',
     title: 'Application security review',
-    triggers: <String>{'security', 'auth', 'authentication', 'authorization', 'secret', 'vulnerability'},
-    instructions: 'Map trust boundaries, reject default-allow authorization, validate canonical paths and URLs, apply least privilege, bound resources, avoid sensitive logs, verify cryptographic uses, and rank findings by exploitability and impact with concrete evidence.',
-    recommendedTools: <String>{'search_text', 'read_file', 'run_command', 'git_diff'},
+    triggers: <String>{
+      'security',
+      'auth',
+      'authentication',
+      'authorization',
+      'secret',
+      'vulnerability'
+    },
+    instructions:
+        'Map trust boundaries, reject default-allow authorization, validate canonical paths and URLs, apply least privilege, bound resources, avoid sensitive logs, verify cryptographic uses, and rank findings by exploitability and impact with concrete evidence.',
+    recommendedTools: <String>{
+      'search_text',
+      'read_file',
+      'run_command',
+      'git_diff'
+    },
   ),
 ];

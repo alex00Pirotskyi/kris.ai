@@ -85,9 +85,13 @@ class WorkspaceBoundary {
 
   static Future<WorkspaceBoundary> open(String rootPath) async {
     final root = Directory(rootPath).absolute;
-    if (!await root.exists()) { throw ProductException('project_missing', 'Project root does not exist: ${root.path}'); }
+    if (!await root.exists()) {
+      throw ProductException(
+          'project_missing', 'Project root does not exist: ${root.path}');
+    }
     final canonical = await root.resolveSymbolicLinks();
-    return WorkspaceBoundary._(Directory(canonical), _normalizeAbsolute(canonical));
+    return WorkspaceBoundary._(
+        Directory(canonical), _normalizeAbsolute(canonical));
   }
 
   Future<bool> isKristinSourceCheckout() async {
@@ -122,14 +126,18 @@ class WorkspaceBoundary {
 
   String normalizeToolPath(String input) {
     var raw = canonicalModelPathToken(input);
-    if (raw.isEmpty || raw == '.') { return '.'; }
+    if (raw.isEmpty || raw == '.') {
+      return '.';
+    }
     if (raw.contains('\u0000')) {
-      throw ProductException('path_nul_rejected', 'NUL bytes are not allowed in paths.');
+      throw ProductException(
+          'path_nul_rejected', 'NUL bytes are not allowed in paths.');
     }
 
     if (raw.toLowerCase().startsWith('file:')) {
       final uri = Uri.tryParse(raw);
-      if (uri == null || uri.scheme.toLowerCase() != 'file' ||
+      if (uri == null ||
+          uri.scheme.toLowerCase() != 'file' ||
           (uri.host.isNotEmpty && uri.host.toLowerCase() != 'localhost')) {
         throw ProductException(
           'path_scheme_rejected',
@@ -148,7 +156,8 @@ class WorkspaceBoundary {
       final uri = Uri.tryParse(raw);
       final windowsAbsolute = RegExp(r'^[A-Za-z]:[/\\]').hasMatch(raw);
       if (!windowsAbsolute && uri != null && uri.hasScheme) {
-        throw ProductException('path_scheme_rejected', 'URI paths are not allowed.');
+        throw ProductException(
+            'path_scheme_rejected', 'URI paths are not allowed.');
       }
     }
 
@@ -188,7 +197,9 @@ class WorkspaceBoundary {
     final segments = rawSegments
         .where((segment) => segment.isNotEmpty && segment != '.')
         .toList(growable: false);
-    if (segments.isEmpty) { return '.'; }
+    if (segments.isEmpty) {
+      return '.';
+    }
     return segments.join('/');
   }
 
@@ -330,44 +341,62 @@ class WorkspaceBoundary {
     return null;
   }
 
-  Future<FileSystemEntity> resolve(String relativePath, {bool allowMissing = false}) async {
+  Future<FileSystemEntity> resolve(String relativePath,
+      {bool allowMissing = false}) async {
     final clean = normalizeToolPath(relativePath);
-    if (clean == '.') { return root; }
+    if (clean == '.') {
+      return root;
+    }
     final segments = clean.split('/');
-    final candidate = File('${root.path}${Platform.pathSeparator}${segments.join(Platform.pathSeparator)}').absolute;
-    final type = await FileSystemEntity.type(candidate.path, followLinks: false);
+    final candidate = File(
+            '${root.path}${Platform.pathSeparator}${segments.join(Platform.pathSeparator)}')
+        .absolute;
+    final type =
+        await FileSystemEntity.type(candidate.path, followLinks: false);
     if (type != FileSystemEntityType.notFound) {
       final canonical = await _resolveExistingEntityPath(candidate.path);
       _assertWithin(canonical);
       return _entityFor(type, canonical);
     }
-    if (!allowMissing) { throw ProductException('path_missing', 'Project path does not exist: $relativePath'); }
+    if (!allowMissing) {
+      throw ProductException(
+          'path_missing', 'Project path does not exist: $relativePath');
+    }
 
     var ancestor = candidate.parent;
-    final tail = <String>[candidate.uri.pathSegments.where((item) => item.isNotEmpty).last];
+    final tail = <String>[
+      candidate.uri.pathSegments.where((item) => item.isNotEmpty).last
+    ];
     while (!await ancestor.exists()) {
       if (_samePath(ancestor.path, ancestor.parent.path)) {
-        throw ProductException('path_parent_missing', 'No existing parent could be found for $relativePath.');
+        throw ProductException('path_parent_missing',
+            'No existing parent could be found for $relativePath.');
       }
-      tail.insert(0, ancestor.uri.pathSegments.where((item) => item.isNotEmpty).last);
+      tail.insert(
+          0, ancestor.uri.pathSegments.where((item) => item.isNotEmpty).last);
       ancestor = ancestor.parent;
     }
     final canonicalAncestor = await ancestor.resolveSymbolicLinks();
     _assertWithin(canonicalAncestor);
-    final reconstructed = '$canonicalAncestor${Platform.pathSeparator}${tail.join(Platform.pathSeparator)}';
+    final reconstructed =
+        '$canonicalAncestor${Platform.pathSeparator}${tail.join(Platform.pathSeparator)}';
     _assertWithin(reconstructed);
     return File(reconstructed);
   }
 
   Future<File> file(String relativePath, {bool allowMissing = false}) async {
     final entity = await resolve(relativePath, allowMissing: allowMissing);
-    if (entity is Directory) { throw ProductException('path_not_file', '$relativePath is a directory.'); }
+    if (entity is Directory) {
+      throw ProductException('path_not_file', '$relativePath is a directory.');
+    }
     return File(entity.path);
   }
 
-  Future<Directory> directory(String relativePath, {bool allowMissing = false}) async {
+  Future<Directory> directory(String relativePath,
+      {bool allowMissing = false}) async {
     final entity = await resolve(relativePath, allowMissing: allowMissing);
-    if (await FileSystemEntity.type(entity.path, followLinks: false) == FileSystemEntityType.file) {
+    if (await FileSystemEntity.type(entity.path, followLinks: false) ==
+        FileSystemEntityType.file) {
       throw ProductException('path_not_directory', '$relativePath is a file.');
     }
     return Directory(entity.path);
@@ -376,7 +405,9 @@ class WorkspaceBoundary {
   String relative(String absolutePath) {
     final normalized = _normalizeAbsolute(absolutePath);
     _assertWithin(normalized);
-    if (_samePath(normalized, _canonicalRoot)) { return '.'; }
+    if (_samePath(normalized, _canonicalRoot)) {
+      return '.';
+    }
     final suffix = normalized.substring(_canonicalRoot.length);
     return suffix.replaceFirst(RegExp(r'^[/\\]+'), '').replaceAll('\\', '/');
   }
@@ -384,14 +415,20 @@ class WorkspaceBoundary {
   void _assertWithin(String path) {
     final normalized = _normalizeAbsolute(path);
     final rootWithSeparator = '$_canonicalRoot/';
-    if (!_samePath(normalized, _canonicalRoot) && !_case(normalized).startsWith(_case(rootWithSeparator))) {
-      throw ProductException('workspace_escape_rejected', 'The requested path escapes the active project.');
+    if (!_samePath(normalized, _canonicalRoot) &&
+        !_case(normalized).startsWith(_case(rootWithSeparator))) {
+      throw ProductException('workspace_escape_rejected',
+          'The requested path escapes the active project.');
     }
   }
 
   static FileSystemEntity _entityFor(FileSystemEntityType type, String path) {
-    if (type == FileSystemEntityType.directory) { return Directory(path); }
-    if (type == FileSystemEntityType.link) { return Link(path); }
+    if (type == FileSystemEntityType.directory) {
+      return Directory(path);
+    }
+    if (type == FileSystemEntityType.link) {
+      return Link(path);
+    }
     return File(path);
   }
 
@@ -425,9 +462,7 @@ class WorkspaceBoundary {
     final lower = path.toLowerCase().replaceAll('\\', '/');
     final segments = lower.split('/');
     if (segments.any((segment) =>
-        segment.startsWith('.') &&
-        segment != '.' &&
-        segment != '..')) {
+        segment.startsWith('.') && segment != '.' && segment != '..')) {
       return true;
     }
     return RegExp(
@@ -454,8 +489,11 @@ class WorkspaceBoundary {
     }
     return normalized.replaceAll(RegExp(r'/+$'), '');
   }
-  static String _case(String path) => Platform.isWindows ? path.toLowerCase() : path;
-  static bool _samePath(String a, String b) => _case(_normalizeAbsolute(a)) == _case(_normalizeAbsolute(b));
+
+  static String _case(String path) =>
+      Platform.isWindows ? path.toLowerCase() : path;
+  static bool _samePath(String a, String b) =>
+      _case(_normalizeAbsolute(a)) == _case(_normalizeAbsolute(b));
 }
 
 class MutationRecord {
@@ -593,7 +631,8 @@ class WorkspaceTransaction {
       }
     }
     transaction._committed = await transaction._committedMarker.exists();
-    if (!transaction._committed && !await transaction._rolledBackMarker.exists()) {
+    if (!transaction._committed &&
+        !await transaction._rolledBackMarker.exists()) {
       for (final record in transaction._latest.values.toList()) {
         if (record.status == 'prepared') {
           await transaction._recoverPrepared(record);
@@ -819,7 +858,8 @@ class WorkspaceTransaction {
         continue;
       }
       try {
-        final file = await boundary.file(record.relativePath, allowMissing: true);
+        final file =
+            await boundary.file(record.relativePath, allowMissing: true);
         if (record.existed) {
           final backup = File(record.backupPath);
           if (!await backup.exists()) {
@@ -925,8 +965,7 @@ class WorkspaceTransaction {
     if (!existed) {
       return '';
     }
-    final name =
-        '${_latest.length.toString().padLeft(6, '0')}-'
+    final name = '${_latest.length.toString().padLeft(6, '0')}-'
         '${Sha256.text(relativePath).substring(0, 16)}.bak';
     final backup = File('${directory.path}${Platform.pathSeparator}$name');
     await backup.writeAsBytes(bytes, flush: true);
@@ -1001,13 +1040,17 @@ class CancellationSignal {
   Future<void> get cancelled => _completer.future;
 
   void cancel() {
-    if (_cancelled) { return; }
+    if (_cancelled) {
+      return;
+    }
     _cancelled = true;
     _completer.complete();
   }
 
   void throwIfCancelled() {
-    if (_cancelled) { throw ProductException('cancelled', 'Execution was cancelled.'); }
+    if (_cancelled) {
+      throw ProductException('cancelled', 'Execution was cancelled.');
+    }
   }
 }
 
@@ -1077,13 +1120,20 @@ class ManagedProcessService {
 
   Future<Map<String, dynamic>> status(String id) async {
     final record = _processes[id];
-    if (record == null) { throw ProductException('managed_process_missing', 'Unknown managed process.'); }
+    if (record == null) {
+      throw ProductException(
+          'managed_process_missing', 'Unknown managed process.');
+    }
     return _status(record);
   }
 
-  Future<Map<String, dynamic>> stop(String id, {Duration grace = const Duration(seconds: 5)}) async {
+  Future<Map<String, dynamic>> stop(String id,
+      {Duration grace = const Duration(seconds: 5)}) async {
     final record = _processes[id];
-    if (record == null) { throw ProductException('managed_process_missing', 'Unknown managed process.'); }
+    if (record == null) {
+      throw ProductException(
+          'managed_process_missing', 'Unknown managed process.');
+    }
     if (record.exitCode == null) {
       record.process.kill(ProcessSignal.sigterm);
       try {
@@ -1281,7 +1331,8 @@ class ToolResult {
       );
 }
 
-typedef ToolHandler = Future<ToolResult> Function(ToolContext context, Map<String, dynamic> arguments);
+typedef ToolHandler = Future<ToolResult> Function(
+    ToolContext context, Map<String, dynamic> arguments);
 
 class GovernedTool {
   const GovernedTool({
@@ -1301,7 +1352,6 @@ class GovernedTool {
   }) =>
       contract.descriptor(dialect: dialect);
 }
-
 
 class ToolRegistry {
   ToolRegistry._(this._tools, this.schemas) {
@@ -1431,9 +1481,8 @@ class ToolRegistry {
   bool isMutatingTool(String name) =>
       _tools[name]?.contract.isMutating ?? false;
 
-  Set<String> allowedToolNames(Iterable<String> requested) => requested
-      .where(_tools.containsKey)
-      .toSet();
+  Set<String> allowedToolNames(Iterable<String> requested) =>
+      requested.where(_tools.containsKey).toSet();
 
   Set<PermissionScope> permissionsForTools(Iterable<String> names) => names
       .map((name) => _tools[name]?.permission)
@@ -1517,8 +1566,8 @@ class ToolRegistry {
     }
     tool.contract.validateInput(normalizedArguments);
     final inputHash = Sha256.text(canonicalJson(normalizedArguments));
-    final snapshotSensitive =
-        tool.contract.idempotency == ToolIdempotency.projectSnapshot ||
+    final snapshotSensitive = tool.contract.idempotency ==
+            ToolIdempotency.projectSnapshot ||
         (tool.contract.risk == ToolRisk.process && name == 'verify_project');
     final idempotencyInputHash = snapshotSensitive
         ? Sha256.text(
@@ -1579,7 +1628,8 @@ class ToolRegistry {
       }
       switch (claim.kind) {
         case IdempotencyClaimKind.replay:
-          final replay = ToolResult.fromJson(claim.result ?? const <String, dynamic>{});
+          final replay =
+              ToolResult.fromJson(claim.result ?? const <String, dynamic>{});
           tool.contract.validateOutput(replay.toJson());
           await context.audit.append(
             'tool.idempotency_replayed',
@@ -1792,9 +1842,8 @@ class ToolRegistry {
     }
     final data = Map<String, dynamic>.from(effect);
     final operation = data['operation']?.toString() ?? '';
-    final path = data['relativePath']?.toString() ??
-        arguments['path']?.toString() ??
-        '';
+    final path =
+        data['relativePath']?.toString() ?? arguments['path']?.toString() ?? '';
     if (tool == 'write_binary_file') {
       var encoded = arguments['base64']?.toString().trim() ?? '';
       final comma = encoded.indexOf(',');
@@ -1823,37 +1872,61 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _listDirectory(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _listDirectory(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final path = arguments['path']?.toString() ?? '.';
     final recursive = arguments['recursive'] == true;
-    final maxEntries = (int.tryParse(arguments['maxEntries']?.toString() ?? '') ?? 500).clamp(1, 2000).toInt();
+    final maxEntries =
+        (int.tryParse(arguments['maxEntries']?.toString() ?? '') ?? 500)
+            .clamp(1, 2000)
+            .toInt();
     final directory = await context.boundary.directory(path);
     final entries = <Map<String, dynamic>>[];
-    await for (final entity in directory.list(recursive: recursive, followLinks: false)) {
-      if (entries.length >= maxEntries) { break; }
+    await for (final entity
+        in directory.list(recursive: recursive, followLinks: false)) {
+      if (entries.length >= maxEntries) {
+        break;
+      }
       final relative = context.boundary.relative(entity.path);
-      if (_ignored(relative)) { continue; }
+      if (_ignored(relative)) {
+        continue;
+      }
       final stat = await entity.stat();
       entries.add(<String, dynamic>{
         'path': relative,
-        'type': entity is Directory ? 'directory' : entity is Link ? 'link' : 'file',
+        'type': entity is Directory
+            ? 'directory'
+            : entity is Link
+                ? 'link'
+                : 'file',
         'bytes': stat.size,
         'modifiedAt': stat.modified.toUtc().toIso8601String(),
       });
     }
-    entries.sort((a, b) => a['path'].toString().compareTo(b['path'].toString()));
-    return ToolResult(ok: true, summary: 'Listed ${entries.length} entries.', data: <String, dynamic>{'entries': entries});
+    entries
+        .sort((a, b) => a['path'].toString().compareTo(b['path'].toString()));
+    return ToolResult(
+        ok: true,
+        summary: 'Listed ${entries.length} entries.',
+        data: <String, dynamic>{'entries': entries});
   }
 
-  static Future<ToolResult> _readFile(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _readFile(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final path = _requiredString(arguments, 'path');
-    final maxBytes = (int.tryParse(arguments['maxBytes']?.toString() ?? '') ?? 1048576).clamp(1, 4194304).toInt();
+    final maxBytes =
+        (int.tryParse(arguments['maxBytes']?.toString() ?? '') ?? 1048576)
+            .clamp(1, 4194304)
+            .toInt();
     final file = await context.boundary.file(path);
     final stat = await file.stat();
-    if (stat.size > maxBytes) { throw ProductException('file_too_large', 'File exceeds the read limit.'); }
+    if (stat.size > maxBytes) {
+      throw ProductException('file_too_large', 'File exceeds the read limit.');
+    }
     final bytes = await file.readAsBytes();
     if (bytes.take(min(bytes.length, 8192)).contains(0)) {
-      throw ProductException('binary_file_rejected', 'Binary files cannot be returned to the model.');
+      throw ProductException('binary_file_rejected',
+          'Binary files cannot be returned to the model.');
     }
     final content = utf8.decode(bytes, allowMalformed: true);
     return ToolResult(ok: true, summary: 'Read $path.', data: <String, dynamic>{
@@ -1913,52 +1986,90 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _searchText(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _searchText(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final query = _requiredString(arguments, 'query');
-    if (query.length > 1000) { throw ProductException('query_too_long', 'Search query is too long.'); }
+    if (query.length > 1000) {
+      throw ProductException('query_too_long', 'Search query is too long.');
+    }
     final path = arguments['path']?.toString() ?? '.';
-    final maxResults = (int.tryParse(arguments['maxResults']?.toString() ?? '') ?? 100).clamp(1, 500).toInt();
+    final maxResults =
+        (int.tryParse(arguments['maxResults']?.toString() ?? '') ?? 100)
+            .clamp(1, 500)
+            .toInt();
     final root = await context.boundary.directory(path);
     final results = <Map<String, dynamic>>[];
     var scanned = 0;
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       context.cancellation.throwIfCancelled();
-      if (entity is! File) { continue; }
+      if (entity is! File) {
+        continue;
+      }
       final relative = context.boundary.relative(entity.path);
-      if (_ignored(relative)) { continue; }
+      if (_ignored(relative)) {
+        continue;
+      }
       final stat = await entity.stat();
-      if (stat.size > 1024 * 1024) { continue; }
-      if (++scanned > 5000) { break; }
+      if (stat.size > 1024 * 1024) {
+        continue;
+      }
+      if (++scanned > 5000) {
+        break;
+      }
       final bytes = await entity.readAsBytes();
-      if (bytes.take(min(bytes.length, 4096)).contains(0)) { continue; }
+      if (bytes.take(min(bytes.length, 4096)).contains(0)) {
+        continue;
+      }
       final lines = utf8.decode(bytes, allowMalformed: true).split('\n');
-      for (var index = 0; index < lines.length && results.length < maxResults; index++) {
+      for (var index = 0;
+          index < lines.length && results.length < maxResults;
+          index++) {
         if (lines[index].contains(query)) {
           results.add(<String, dynamic>{
             'path': relative,
             'line': index + 1,
-            'text': lines[index].length > 500 ? lines[index].substring(0, 500) : lines[index],
+            'text': lines[index].length > 500
+                ? lines[index].substring(0, 500)
+                : lines[index],
           });
         }
       }
-      if (results.length >= maxResults) { break; }
+      if (results.length >= maxResults) {
+        break;
+      }
     }
-    return ToolResult(ok: true, summary: 'Found ${results.length} matches.', data: <String, dynamic>{'results': results, 'filesScanned': scanned});
+    return ToolResult(
+        ok: true,
+        summary: 'Found ${results.length} matches.',
+        data: <String, dynamic>{'results': results, 'filesScanned': scanned});
   }
 
-  static Future<ToolResult> _indexProject(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _indexProject(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final report = await context.sourceIndex.update(context.project);
-    return ToolResult(ok: true, summary: 'Indexed ${report.total} project files (${report.changed} changed, ${report.removed} removed).', data: report.toJson());
+    return ToolResult(
+        ok: true,
+        summary:
+            'Indexed ${report.total} project files (${report.changed} changed, ${report.removed} removed).',
+        data: report.toJson());
   }
 
-  static Future<ToolResult> _indexSearch(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _indexSearch(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final query = _requiredString(arguments, 'query');
-    final limit = (int.tryParse(arguments['limit']?.toString() ?? '') ?? 20).clamp(1, 100).toInt();
-    final results = await context.sourceIndex.search(context.project.id, query, limit: limit);
-    return ToolResult(ok: true, summary: 'Found ${results.length} indexed matches.', data: <String, dynamic>{'results': results});
+    final limit = (int.tryParse(arguments['limit']?.toString() ?? '') ?? 20)
+        .clamp(1, 100)
+        .toInt();
+    final results = await context.sourceIndex
+        .search(context.project.id, query, limit: limit);
+    return ToolResult(
+        ok: true,
+        summary: 'Found ${results.length} indexed matches.',
+        data: <String, dynamic>{'results': results});
   }
 
-  static Future<ToolResult> _writeFile(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _writeFile(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final path = _requiredString(arguments, 'path');
     if (!arguments.containsKey('content')) {
       throw ProductException(
@@ -1968,7 +2079,10 @@ class ToolRegistry {
       );
     }
     final content = arguments['content']?.toString() ?? '';
-    if (utf8.encode(content).length > 4 * 1024 * 1024) { throw ProductException('write_too_large', 'A single write cannot exceed 4 MiB.'); }
+    if (utf8.encode(content).length > 4 * 1024 * 1024) {
+      throw ProductException(
+          'write_too_large', 'A single write cannot exceed 4 MiB.');
+    }
     final expectedExists = _optionalBool(arguments, 'expectedExists');
     final record = await context.transaction.writeText(
       relativePath: path,
@@ -2036,7 +2150,8 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _replaceText(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _replaceText(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final path = _requiredString(arguments, 'path');
     final old = _requiredString(arguments, 'old');
     final replacement = arguments['replacement']?.toString() ?? '';
@@ -2044,17 +2159,26 @@ class ToolRegistry {
     final bytes = await file.readAsBytes();
     final hash = Sha256.hex(bytes);
     final expected = arguments['expectedSha256']?.toString();
-    if (expected != null && expected.isNotEmpty && !constantTimeEquals(hash, expected)) {
-      throw ProductException('stale_content', 'The file changed after it was read.');
+    if (expected != null &&
+        expected.isNotEmpty &&
+        !constantTimeEquals(hash, expected)) {
+      throw ProductException(
+          'stale_content', 'The file changed after it was read.');
     }
     final content = utf8.decode(bytes, allowMalformed: true);
     final first = content.indexOf(old);
-    if (first < 0) { throw ProductException('replacement_not_found', 'The exact text to replace was not found.'); }
-    if (content.indexOf(old, first + old.length) >= 0) {
-      throw ProductException('replacement_ambiguous', 'The exact text occurs more than once; use apply_patch with a larger hunk.');
+    if (first < 0) {
+      throw ProductException(
+          'replacement_not_found', 'The exact text to replace was not found.');
     }
-    final updated = content.replaceRange(first, first + old.length, replacement);
-    final record = await context.transaction.writeText(relativePath: path, content: updated, expectedHash: hash);
+    if (content.indexOf(old, first + old.length) >= 0) {
+      throw ProductException('replacement_ambiguous',
+          'The exact text occurs more than once; use apply_patch with a larger hunk.');
+    }
+    final updated =
+        content.replaceRange(first, first + old.length, replacement);
+    final record = await context.transaction
+        .writeText(relativePath: path, content: updated, expectedHash: hash);
     final mutated = record.operation != 'noop';
     return ToolResult(
       ok: true,
@@ -2066,30 +2190,42 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _applyPatch(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _applyPatch(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final path = _requiredString(arguments, 'path');
     final file = await context.boundary.file(path);
     final bytes = await file.readAsBytes();
     final hash = Sha256.hex(bytes);
     final expected = arguments['expectedSha256']?.toString();
-    if (expected != null && expected.isNotEmpty && !constantTimeEquals(hash, expected)) {
-      throw ProductException('stale_content', 'The file changed after it was read.');
+    if (expected != null &&
+        expected.isNotEmpty &&
+        !constantTimeEquals(hash, expected)) {
+      throw ProductException(
+          'stale_content', 'The file changed after it was read.');
     }
     var content = utf8.decode(bytes, allowMalformed: true);
     final hunks = arguments['hunks'];
-    if (hunks is! List || hunks.isEmpty) { throw ProductException('patch_empty', 'At least one replacement hunk is required.'); }
+    if (hunks is! List || hunks.isEmpty) {
+      throw ProductException(
+          'patch_empty', 'At least one replacement hunk is required.');
+    }
     for (var index = 0; index < hunks.length; index++) {
       final hunk = mapValue(hunks[index]);
       final old = _requiredString(hunk, 'old');
       final replacement = hunk['replacement']?.toString() ?? '';
       final first = content.indexOf(old);
-      if (first < 0) { throw ProductException('patch_hunk_not_found', 'Patch hunk ${index + 1} was not found.'); }
+      if (first < 0) {
+        throw ProductException(
+            'patch_hunk_not_found', 'Patch hunk ${index + 1} was not found.');
+      }
       if (content.indexOf(old, first + old.length) >= 0) {
-        throw ProductException('patch_hunk_ambiguous', 'Patch hunk ${index + 1} is ambiguous.');
+        throw ProductException(
+            'patch_hunk_ambiguous', 'Patch hunk ${index + 1} is ambiguous.');
       }
       content = content.replaceRange(first, first + old.length, replacement);
     }
-    final record = await context.transaction.writeText(relativePath: path, content: content, expectedHash: hash);
+    final record = await context.transaction
+        .writeText(relativePath: path, content: content, expectedHash: hash);
     final mutated = record.operation != 'noop';
     return ToolResult(
       ok: true,
@@ -2101,13 +2237,21 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _deleteFile(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _deleteFile(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final path = _requiredString(arguments, 'path');
-    final record = await context.transaction.delete(relativePath: path, expectedHash: arguments['expectedSha256']?.toString());
-    return ToolResult(ok: true, summary: 'Deleted $path.', data: record.toJson(), mutated: true);
+    final record = await context.transaction.delete(
+        relativePath: path,
+        expectedHash: arguments['expectedSha256']?.toString());
+    return ToolResult(
+        ok: true,
+        summary: 'Deleted $path.',
+        data: record.toJson(),
+        mutated: true);
   }
 
-  static Future<ToolResult> _runCommand(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _runCommand(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final executable = _requiredString(arguments, 'executable');
     final args = _validateProcess(
       context,
@@ -2117,7 +2261,8 @@ class ToolRegistry {
     final network = _usesNetwork(executable, args);
     if (network) {
       if (context.settings.localOnly || !context.settings.allowPackageNetwork) {
-        throw ProductException('network_disabled', 'Package and command network access is disabled.');
+        throw ProductException('network_disabled',
+            'Package and command network access is disabled.');
       }
       await context.permissions.require(
         projectId: context.project.id,
@@ -2129,16 +2274,22 @@ class ToolRegistry {
     final secretRefs = mapValue(arguments['environmentSecretRefs']);
     for (final entry in secretRefs.entries) {
       if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(entry.key)) {
-        throw ProductException('environment_key_invalid', 'Invalid environment variable name ${entry.key}.');
+        throw ProductException('environment_key_invalid',
+            'Invalid environment variable name ${entry.key}.');
       }
       await context.permissions.require(
         projectId: context.project.id,
         commandId: context.command.id,
         scope: PermissionScope.secretUse,
       );
-      environment[entry.key] = await context.secrets.resolve(entry.value.toString(), commandId: context.command.id);
+      environment[entry.key] = await context.secrets
+          .resolve(entry.value.toString(), commandId: context.command.id);
     }
-    final timeout = Duration(seconds: (int.tryParse(arguments['timeoutSeconds']?.toString() ?? '') ?? 300).clamp(1, 3600).toInt());
+    final timeout = Duration(
+        seconds:
+            (int.tryParse(arguments['timeoutSeconds']?.toString() ?? '') ?? 300)
+                .clamp(1, 3600)
+                .toInt());
     final result = await _runFinite(
       executable: executable,
       arguments: args,
@@ -2148,10 +2299,14 @@ class ToolRegistry {
       cancellation: context.cancellation,
       redactor: context.redactor,
     );
-    return ToolResult(ok: result['exitCode'] == 0, summary: 'Command exited with code ${result['exitCode']}.', data: result);
+    return ToolResult(
+        ok: result['exitCode'] == 0,
+        summary: 'Command exited with code ${result['exitCode']}.',
+        data: result);
   }
 
-  static Future<ToolResult> _startProcess(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _startProcess(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final executable = _requiredString(arguments, 'executable');
     final args = _validateProcess(
       context,
@@ -2161,7 +2316,8 @@ class ToolRegistry {
     final network = _usesNetwork(executable, args);
     if (network) {
       if (context.settings.localOnly || !context.settings.allowPackageNetwork) {
-        throw ProductException('network_disabled', 'Package and command network access is disabled.');
+        throw ProductException('network_disabled',
+            'Package and command network access is disabled.');
       }
       await context.permissions.require(
         projectId: context.project.id,
@@ -2173,14 +2329,16 @@ class ToolRegistry {
     final secretRefs = mapValue(arguments['environmentSecretRefs']);
     for (final entry in secretRefs.entries) {
       if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(entry.key)) {
-        throw ProductException('environment_key_invalid', 'Invalid environment variable name ${entry.key}.');
+        throw ProductException('environment_key_invalid',
+            'Invalid environment variable name ${entry.key}.');
       }
       await context.permissions.require(
         projectId: context.project.id,
         commandId: context.command.id,
         scope: PermissionScope.secretUse,
       );
-      environment[entry.key] = await context.secrets.resolve(entry.value.toString(), commandId: context.command.id);
+      environment[entry.key] = await context.secrets
+          .resolve(entry.value.toString(), commandId: context.command.id);
     }
     final result = await context.managedProcesses.start(
       executable: executable,
@@ -2190,26 +2348,47 @@ class ToolRegistry {
       runId: context.runId,
       workItemId: context.workItem.id,
     );
-    return ToolResult(ok: true, summary: 'Started managed process ${result['id']} with PID ${result['pid']}.', data: result);
+    return ToolResult(
+        ok: true,
+        summary:
+            'Started managed process ${result['id']} with PID ${result['pid']}.',
+        data: result);
   }
 
-  static Future<ToolResult> _processStatus(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _processStatus(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final id = _requiredString(arguments, 'processId');
     final result = await context.managedProcesses.status(id);
-    return ToolResult(ok: true, summary: result['running'] == true ? 'Managed process is running.' : 'Managed process has exited.', data: result);
+    return ToolResult(
+        ok: true,
+        summary: result['running'] == true
+            ? 'Managed process is running.'
+            : 'Managed process has exited.',
+        data: result);
   }
 
-  static Future<ToolResult> _stopProcess(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _stopProcess(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final id = _requiredString(arguments, 'processId');
-    final grace = Duration(seconds: (int.tryParse(arguments['graceSeconds']?.toString() ?? '') ?? 5).clamp(1, 30).toInt());
+    final grace = Duration(
+        seconds:
+            (int.tryParse(arguments['graceSeconds']?.toString() ?? '') ?? 5)
+                .clamp(1, 30)
+                .toInt());
     final result = await context.managedProcesses.stop(id, grace: grace);
-    return ToolResult(ok: true, summary: 'Managed process stopped.', data: result);
+    return ToolResult(
+        ok: true, summary: 'Managed process stopped.', data: result);
   }
 
-  static Future<ToolResult> _gitStatus(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _gitStatus(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final result = await _runFinite(
       executable: 'git',
-      arguments: const <String>['status', '--porcelain=v1', '--untracked-files=all'],
+      arguments: const <String>[
+        'status',
+        '--porcelain=v1',
+        '--untracked-files=all'
+      ],
       workingDirectory: context.boundary.root.path,
       environment: _safeEnvironment(),
       timeout: const Duration(seconds: 30),
@@ -2229,7 +2408,8 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _gitDiff(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _gitDiff(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final result = await _runFinite(
       executable: 'git',
       arguments: const <String>['diff', '--no-ext-diff', '--unified=3'],
@@ -2253,9 +2433,12 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _knowledgeSearch(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _knowledgeSearch(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final query = _requiredString(arguments, 'query');
-    final limit = (int.tryParse(arguments['limit']?.toString() ?? '') ?? 8).clamp(1, 20).toInt();
+    final limit = (int.tryParse(arguments['limit']?.toString() ?? '') ?? 8)
+        .clamp(1, 20)
+        .toInt();
     final includeEpisodes = arguments['includeEpisodes'] != false;
     final includeUnsuccessfulEpisodes =
         arguments['includeUnsuccessfulEpisodes'] == true;
@@ -2274,30 +2457,43 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _researchFetch(ToolContext context, Map<String, dynamic> arguments) async {
-    if (context.settings.localOnly) { throw ProductException('network_disabled', 'Research is disabled in local-only mode.'); }
+  static Future<ToolResult> _researchFetch(
+      ToolContext context, Map<String, dynamic> arguments) async {
+    if (context.settings.localOnly) {
+      throw ProductException(
+          'network_disabled', 'Research is disabled in local-only mode.');
+    }
     final raw = _requiredString(arguments, 'url');
     final uri = Uri.tryParse(raw);
-    if (uri == null) { throw ProductException('url_invalid', 'The research URL is invalid.'); }
+    if (uri == null) {
+      throw ProductException('url_invalid', 'The research URL is invalid.');
+    }
     final source = await context.research.fetch(uri);
     final entry = await context.knowledge.addResearch(
       context.project.id,
       source,
       tags: stringList(arguments['tags']).toSet(),
     );
-    return ToolResult(ok: true, summary: 'Fetched and indexed ${source.url.host}.', data: <String, dynamic>{
-      'knowledgeId': entry.id,
-      'archiveId': entry.archiveId,
-      'title': entry.title,
-      'url': entry.sourceUrl,
-      'contentHash': entry.contentHash,
-      'trust': entry.trust,
-      'characters': entry.content.length,
-    });
+    return ToolResult(
+        ok: true,
+        summary: 'Fetched and indexed ${source.url.host}.',
+        data: <String, dynamic>{
+          'knowledgeId': entry.id,
+          'archiveId': entry.archiveId,
+          'title': entry.title,
+          'url': entry.sourceUrl,
+          'contentHash': entry.contentHash,
+          'trust': entry.trust,
+          'characters': entry.content.length,
+        });
   }
 
-  static Future<ToolResult> _researchSearch(ToolContext context, Map<String, dynamic> arguments) async {
-    if (context.settings.localOnly) { throw ProductException('network_disabled', 'Research is disabled in local-only mode.'); }
+  static Future<ToolResult> _researchSearch(
+      ToolContext context, Map<String, dynamic> arguments) async {
+    if (context.settings.localOnly) {
+      throw ProductException(
+          'network_disabled', 'Research is disabled in local-only mode.');
+    }
     final query = _requiredString(arguments, 'query');
     final referenceId = _requiredString(arguments, 'secretReferenceId');
     await context.permissions.require(
@@ -2305,7 +2501,8 @@ class ToolRegistry {
       commandId: context.command.id,
       scope: PermissionScope.secretUse,
     );
-    final key = await context.secrets.resolve(referenceId, commandId: context.command.id);
+    final key = await context.secrets
+        .resolve(referenceId, commandId: context.command.id);
     final results = await context.research.braveSearch(
       query: query,
       apiKey: key,
@@ -2328,28 +2525,69 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _verifyProject(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _verifyProject(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final commands = <({String executable, List<String> args, String label})>[];
-    Future<bool> exists(String path) async => (await context.boundary.resolve(path, allowMissing: true)).exists();
+    Future<bool> exists(String path) async =>
+        (await context.boundary.resolve(path, allowMissing: true)).exists();
     if (await exists('pubspec.yaml')) {
-      commands.add((executable: 'flutter', args: <String>['analyze'], label: 'flutter analyze'));
-      commands.add((executable: 'flutter', args: <String>['test'], label: 'flutter test'));
+      commands.add((
+        executable: 'flutter',
+        args: <String>['analyze'],
+        label: 'flutter analyze'
+      ));
+      commands.add((
+        executable: 'flutter',
+        args: <String>['test'],
+        label: 'flutter test'
+      ));
     } else if (await exists('package.json')) {
       final lock = await exists('package-lock.json');
-      if (lock && context.settings.allowPackageNetwork && !context.settings.localOnly) {
-        commands.add((executable: 'npm', args: <String>['ci', '--ignore-scripts'], label: 'npm ci --ignore-scripts'));
+      if (lock &&
+          context.settings.allowPackageNetwork &&
+          !context.settings.localOnly) {
+        commands.add((
+          executable: 'npm',
+          args: <String>['ci', '--ignore-scripts'],
+          label: 'npm ci --ignore-scripts'
+        ));
       }
-      commands.add((executable: 'npm', args: <String>['test', '--', '--runInBand'], label: 'npm test'));
-      commands.add((executable: 'npm', args: <String>['run', 'build', '--if-present'], label: 'npm run build'));
-    } else if (await exists('pyproject.toml') || await exists('requirements.txt')) {
-      commands.add((executable: 'python', args: <String>['-m', 'pytest', '-q'], label: 'pytest'));
+      commands.add((
+        executable: 'npm',
+        args: <String>['test', '--', '--runInBand'],
+        label: 'npm test'
+      ));
+      commands.add((
+        executable: 'npm',
+        args: <String>['run', 'build', '--if-present'],
+        label: 'npm run build'
+      ));
+    } else if (await exists('pyproject.toml') ||
+        await exists('requirements.txt')) {
+      commands.add((
+        executable: 'python',
+        args: <String>['-m', 'pytest', '-q'],
+        label: 'pytest'
+      ));
     } else if (await exists('CMakeLists.txt')) {
-      commands.add((executable: 'cmake', args: <String>['-S', '.', '-B', 'build'], label: 'cmake configure'));
-      commands.add((executable: 'cmake', args: <String>['--build', 'build'], label: 'cmake build'));
+      commands.add((
+        executable: 'cmake',
+        args: <String>['-S', '.', '-B', 'build'],
+        label: 'cmake configure'
+      ));
+      commands.add((
+        executable: 'cmake',
+        args: <String>['--build', 'build'],
+        label: 'cmake build'
+      ));
     } else if (await exists('index.html')) {
-      return const ToolResult(ok: true, summary: 'Static site structure detected.', data: <String, dynamic>{'checks': <Object>[]});
+      return const ToolResult(
+          ok: true,
+          summary: 'Static site structure detected.',
+          data: <String, dynamic>{'checks': <Object>[]});
     } else {
-      throw ProductException('project_type_unknown', 'No supported project verification profile was detected.');
+      throw ProductException('project_type_unknown',
+          'No supported project verification profile was detected.');
     }
 
     final checks = <Map<String, dynamic>>[];
@@ -2369,19 +2607,34 @@ class ToolRegistry {
         );
         final passed = result['exitCode'] == 0;
         allPassed = allPassed && passed;
-        checks.add(<String, dynamic>{'label': command.label, 'passed': passed, ...result});
-        if (!passed) { break; }
+        checks.add(<String, dynamic>{
+          'label': command.label,
+          'passed': passed,
+          ...result
+        });
+        if (!passed) {
+          break;
+        }
       } on ProcessException catch (error) {
         allPassed = false;
-        checks.add(<String, dynamic>{'label': command.label, 'passed': false, 'error': '${error.message}: ${error.executable}'});
+        checks.add(<String, dynamic>{
+          'label': command.label,
+          'passed': false,
+          'error': '${error.message}: ${error.executable}'
+        });
         break;
       }
     }
-    return ToolResult(ok: allPassed, summary: allPassed ? 'Project verification passed.' : 'Project verification failed.', data: <String, dynamic>{'checks': checks});
+    return ToolResult(
+        ok: allPassed,
+        summary: allPassed
+            ? 'Project verification passed.'
+            : 'Project verification failed.',
+        data: <String, dynamic>{'checks': checks});
   }
 
-
-  static Future<ToolResult> _packageDeployment(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _packageDeployment(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final package = await context.deployment.package(
       project: context.project,
       runId: context.runId,
@@ -2394,7 +2647,8 @@ class ToolRegistry {
     );
   }
 
-  static Future<ToolResult> _mcpCall(ToolContext context, Map<String, dynamic> arguments) async {
+  static Future<ToolResult> _mcpCall(
+      ToolContext context, Map<String, dynamic> arguments) async {
     final trustId = _requiredString(arguments, 'trustId');
     final tool = _requiredString(arguments, 'tool');
     final result = await context.mcp.call(
@@ -2404,12 +2658,19 @@ class ToolRegistry {
       arguments: mapValue(arguments['arguments']),
       workingDirectory: context.boundary.root.path,
     );
-    return ToolResult(ok: true, summary: 'Called trusted MCP tool $tool. Output is labeled untrusted.', data: result);
+    return ToolResult(
+        ok: true,
+        summary: 'Called trusted MCP tool $tool. Output is labeled untrusted.',
+        data: result);
   }
 
   static bool _looksBinary(List<int> bytes) {
-    if (bytes.isEmpty) { return false; }
-    if (bytes.contains(0)) { return true; }
+    if (bytes.isEmpty) {
+      return false;
+    }
+    if (bytes.contains(0)) {
+      return true;
+    }
     var suspicious = 0;
     for (final byte in bytes) {
       final printable = byte == 9 ||
@@ -2417,7 +2678,9 @@ class ToolRegistry {
           byte == 13 ||
           (byte >= 32 && byte <= 126) ||
           byte >= 0x80;
-      if (!printable) { suspicious++; }
+      if (!printable) {
+        suspicious++;
+      }
     }
     return suspicious / bytes.length > 0.08;
   }
@@ -2485,9 +2748,13 @@ class ToolRegistry {
   }
 
   static bool _startsWith(List<int> bytes, List<int> signature) {
-    if (bytes.length < signature.length) { return false; }
+    if (bytes.length < signature.length) {
+      return false;
+    }
     for (var index = 0; index < signature.length; index++) {
-      if (bytes[index] != signature[index]) { return false; }
+      if (bytes[index] != signature[index]) {
+        return false;
+      }
     }
     return true;
   }
@@ -2527,7 +2794,15 @@ class ToolRegistry {
 
   static bool _ignored(String path) {
     final normalized = path.replaceAll('\\', '/');
-    return normalized.split('/').any(const <String>{'.git', '.dart_tool', 'build', 'node_modules', '.venv', '__pycache__', '.kristin'}.contains);
+    return normalized.split('/').any(const <String>{
+          '.git',
+          '.dart_tool',
+          'build',
+          'node_modules',
+          '.venv',
+          '__pycache__',
+          '.kristin'
+        }.contains);
   }
 
   static List<String> _validateProcess(
@@ -2537,14 +2812,43 @@ class ToolRegistry {
   ) {
     final name = executable.replaceAll('\\', '/').split('/').last.toLowerCase();
     const denied = <String>{
-      'rm', 'rmdir', 'del', 'erase', 'format', 'mkfs', 'diskpart', 'shutdown', 'reboot',
-      'sudo', 'su', 'doas', 'reg', 'regedit', 'sc', 'net', 'chmod', 'chown', 'dd',
+      'rm',
+      'rmdir',
+      'del',
+      'erase',
+      'format',
+      'mkfs',
+      'diskpart',
+      'shutdown',
+      'reboot',
+      'sudo',
+      'su',
+      'doas',
+      'reg',
+      'regedit',
+      'sc',
+      'net',
+      'chmod',
+      'chown',
+      'dd',
     };
-    if (denied.contains(name)) { throw ProductException('executable_rejected', 'Executable $name is not allowed.'); }
-    if (name == 'sh' || name == 'bash' || name == 'zsh' || name == 'cmd' || name == 'powershell' || name == 'pwsh') {
-      throw ProductException('shell_rejected', 'Shell interpreters are not available to the agent. Use an executable and argument array.');
+    if (denied.contains(name)) {
+      throw ProductException(
+          'executable_rejected', 'Executable $name is not allowed.');
     }
-    if (args.any((arg) => arg.contains('\u0000'))) { throw ProductException('argument_nul_rejected', 'NUL bytes are not allowed in process arguments.'); }
+    if (name == 'sh' ||
+        name == 'bash' ||
+        name == 'zsh' ||
+        name == 'cmd' ||
+        name == 'powershell' ||
+        name == 'pwsh') {
+      throw ProductException('shell_rejected',
+          'Shell interpreters are not available to the agent. Use an executable and argument array.');
+    }
+    if (args.any((arg) => arg.contains('\u0000'))) {
+      throw ProductException('argument_nul_rejected',
+          'NUL bytes are not allowed in process arguments.');
+    }
     if ((name == 'git' || name == 'git.exe') &&
         args.any((arg) =>
             arg == '-C' ||
@@ -2607,10 +2911,28 @@ class ToolRegistry {
 
   static bool _usesNetwork(String executable, List<String> args) {
     final name = executable.replaceAll('\\', '/').split('/').last.toLowerCase();
-    if (const <String>{'curl', 'wget', 'git', 'npm', 'npx', 'pnpm', 'yarn', 'pip', 'pip3', 'cargo', 'go', 'ollama'}.contains(name)) {
+    if (const <String>{
+      'curl',
+      'wget',
+      'git',
+      'npm',
+      'npx',
+      'pnpm',
+      'yarn',
+      'pip',
+      'pip3',
+      'cargo',
+      'go',
+      'ollama'
+    }.contains(name)) {
       final joined = args.join(' ').toLowerCase();
-      if (name == 'git') { return RegExp(r'\b(clone|fetch|pull|push|remote|ls-remote|submodule)\b').hasMatch(joined); }
-      if (name == 'npm') { return !RegExp(r'^\s*(test|run|exec)\b').hasMatch(joined); }
+      if (name == 'git') {
+        return RegExp(r'\b(clone|fetch|pull|push|remote|ls-remote|submodule)\b')
+            .hasMatch(joined);
+      }
+      if (name == 'npm') {
+        return !RegExp(r'^\s*(test|run|exec)\b').hasMatch(joined);
+      }
       return true;
     }
     return false;
@@ -2618,9 +2940,23 @@ class ToolRegistry {
 
   static Map<String, String> _safeEnvironment() {
     const allowed = <String>{
-      'PATH', 'Path', 'HOME', 'USERPROFILE', 'TMP', 'TEMP', 'TMPDIR',
-      'SystemRoot', 'WINDIR', 'COMSPEC', 'PATHEXT', 'LANG', 'LC_ALL',
-      'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'LOCALAPPDATA', 'APPDATA',
+      'PATH',
+      'Path',
+      'HOME',
+      'USERPROFILE',
+      'TMP',
+      'TEMP',
+      'TMPDIR',
+      'SystemRoot',
+      'WINDIR',
+      'COMSPEC',
+      'PATHEXT',
+      'LANG',
+      'LC_ALL',
+      'XDG_CACHE_HOME',
+      'XDG_CONFIG_HOME',
+      'LOCALAPPDATA',
+      'APPDATA',
     };
     return <String, String>{
       for (final entry in Platform.environment.entries)
@@ -2658,7 +2994,9 @@ class ToolRegistry {
           builder.add(chunk);
         } else {
           final remaining = max(0, maxOutputBytes - builder.length);
-          if (remaining > 0) { builder.add(chunk.sublist(0, min(chunk.length, remaining))); }
+          if (remaining > 0) {
+            builder.add(chunk.sublist(0, min(chunk.length, remaining)));
+          }
           truncated = true;
         }
       }
@@ -2670,21 +3008,25 @@ class ToolRegistry {
     // ignore: cancel_subscriptions
     final cancelSubscription = cancellation.cancelled.asStream().listen((_) {
       process.kill(ProcessSignal.sigterm);
-      Future<void>.delayed(const Duration(seconds: 2), () => process.kill(ProcessSignal.sigkill));
+      Future<void>.delayed(const Duration(seconds: 2),
+          () => process.kill(ProcessSignal.sigkill));
     });
     int exitCode;
     try {
       exitCode = await process.exitCode.timeout(timeout, onTimeout: () {
         process.kill(ProcessSignal.sigterm);
-        Future<void>.delayed(const Duration(seconds: 2), () => process.kill(ProcessSignal.sigkill));
+        Future<void>.delayed(const Duration(seconds: 2),
+            () => process.kill(ProcessSignal.sigkill));
         return -124;
       });
       await Future.wait(<Future<void>>[output, errors]);
     } finally {
       await cancelSubscription.cancel();
     }
-    final stdoutText = redactor.redact(utf8.decode(stdoutBytes.takeBytes(), allowMalformed: true));
-    final stderrText = redactor.redact(utf8.decode(stderrBytes.takeBytes(), allowMalformed: true));
+    final stdoutText = redactor
+        .redact(utf8.decode(stdoutBytes.takeBytes(), allowMalformed: true));
+    final stderrText = redactor
+        .redact(utf8.decode(stderrBytes.takeBytes(), allowMalformed: true));
     return <String, dynamic>{
       'executable': executable,
       'arguments': arguments,
@@ -2697,7 +3039,6 @@ class ToolRegistry {
     };
   }
 }
-
 
 Future<String> _resolveExistingEntityPath(String path) async {
   final followed = FileSystemEntity.typeSync(path, followLinks: true);

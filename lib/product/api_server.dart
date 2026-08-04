@@ -3,13 +3,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:kristin_local_agent/product/generated/prompt_studio_contracts.g.dart';
+import 'package:kristin_local_agent/product/prompt_studio_v2.dart';
+
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
 import 'storage_security.dart';
 
 class GovernedApiServer {
-  GovernedApiServer(this.runtime) : _rateLimiter = RateLimiter(capacity: 120, refillPerMinute: 120);
+  GovernedApiServer(this.runtime)
+      : _rateLimiter = RateLimiter(capacity: 120, refillPerMinute: 120);
 
   final ProductRuntime runtime;
   final RateLimiter _rateLimiter;
@@ -20,15 +24,23 @@ class GovernedApiServer {
   int? get port => _server?.port;
 
   Future<void> start() async {
-    if (_server != null) { return; }
+    if (_server != null) {
+      return;
+    }
     final settings = runtime.settings;
-    if (!settings.apiEnabled) { throw ProductException('api_disabled', 'Enable the authenticated API in Settings first.'); }
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, settings.apiPort, shared: false);
+    if (!settings.apiEnabled) {
+      throw ProductException(
+          'api_disabled', 'Enable the authenticated API in Settings first.');
+    }
+    final server = await HttpServer.bind(
+        InternetAddress.loopbackIPv4, settings.apiPort,
+        shared: false);
     server.autoCompress = false;
     _server = server;
     _subscription = server.listen(
       (request) => unawaited(_handle(request)),
-      onError: (Object error, StackTrace stackTrace) => unawaited(runtime.audit.append('api.server_error', 'api', <String, dynamic>{
+      onError: (Object error, StackTrace stackTrace) => unawaited(
+          runtime.audit.append('api.server_error', 'api', <String, dynamic>{
         'error': runtime.redactor.redact('$error'),
         'stackHash': Sha256.text('$stackTrace'),
       })),
@@ -63,41 +75,57 @@ class GovernedApiServer {
       final origin = request.headers.value('origin');
       if (origin != null) {
         if (!_originAllowed(origin)) {
-          throw _HttpFailure(HttpStatus.forbidden, 'origin_rejected', 'Browser origin is not allowed.');
+          throw _HttpFailure(HttpStatus.forbidden, 'origin_rejected',
+              'Browser origin is not allowed.');
         }
         response.headers
           ..set(HttpHeaders.accessControlAllowOriginHeader, origin)
           ..set(HttpHeaders.varyHeader, 'Origin');
       }
       if (request.method == 'OPTIONS') {
-        if (origin == null) { throw _HttpFailure(HttpStatus.badRequest, 'origin_required', 'CORS preflight requires an Origin header.'); }
+        if (origin == null) {
+          throw _HttpFailure(HttpStatus.badRequest, 'origin_required',
+              'CORS preflight requires an Origin header.');
+        }
         response.statusCode = HttpStatus.noContent;
         response.headers
-          ..set(HttpHeaders.accessControlAllowMethodsHeader, 'GET, POST, PUT, DELETE, OPTIONS')
-          ..set(HttpHeaders.accessControlAllowHeadersHeader, 'Authorization, Content-Type, X-Request-ID')
+          ..set(HttpHeaders.accessControlAllowMethodsHeader,
+              'GET, POST, PUT, DELETE, OPTIONS')
+          ..set(HttpHeaders.accessControlAllowHeadersHeader,
+              'Authorization, Content-Type, X-Request-ID')
           ..set(HttpHeaders.accessControlMaxAgeHeader, '600');
         await response.close();
         return;
       }
       final remote = request.connectionInfo?.remoteAddress.address ?? 'unknown';
       if (!_rateLimiter.allow(remote, cost: request.method == 'GET' ? 1 : 2)) {
-        throw _HttpFailure(HttpStatus.tooManyRequests, 'rate_limited', 'Too many API requests.');
+        throw _HttpFailure(HttpStatus.tooManyRequests, 'rate_limited',
+            'Too many API requests.');
       }
       await _route(request, correlationId);
     } on _HttpFailure catch (failure) {
-      await _writeError(response, failure.status, failure.code, failure.message, correlationId, const <String, dynamic>{});
+      await _writeError(response, failure.status, failure.code, failure.message,
+          correlationId, const <String, dynamic>{});
     } on ProductException catch (failure) {
-      await _writeError(response, _statusForProductError(failure.code), failure.code, failure.message, correlationId, failure.details);
+      await _writeError(response, _statusForProductError(failure.code),
+          failure.code, failure.message, correlationId, failure.details);
     } on FormatException {
-      await _writeError(response, HttpStatus.badRequest, 'json_invalid', 'Request JSON is invalid.', correlationId, const <String, dynamic>{});
+      await _writeError(response, HttpStatus.badRequest, 'json_invalid',
+          'Request JSON is invalid.', correlationId, const <String, dynamic>{});
     } catch (error, stackTrace) {
-      await runtime.audit.append('api.request_failed', correlationId, <String, dynamic>{
+      await runtime.audit
+          .append('api.request_failed', correlationId, <String, dynamic>{
         'method': request.method,
         'path': request.uri.path,
         'error': runtime.redactor.redact('$error'),
         'stackHash': Sha256.text('$stackTrace'),
       });
-      await _writeError(response, HttpStatus.internalServerError, 'internal_error', 'The request could not be completed.', correlationId, const <String, dynamic>{});
+      await _writeError(
+          response,
+          HttpStatus.internalServerError,
+          'internal_error',
+          'The request could not be completed.',
+          correlationId, const <String, dynamic>{});
     }
   }
 
@@ -118,11 +146,15 @@ class GovernedApiServer {
       return _json(request.response, HttpStatus.ok, _openApi());
     }
 
-    if (segments.length == 2 && segments[0] == 'v1' && segments[1] == 'projects') {
+    if (segments.length == 2 &&
+        segments[0] == 'v1' &&
+        segments[1] == 'projects') {
       if (request.method == 'GET') {
         await _authenticate(request, 'projects:read');
         return _json(request.response, HttpStatus.ok, <String, dynamic>{
-          'projects': (await runtime.listProjects()).map((project) => project.toJson()).toList(),
+          'projects': (await runtime.listProjects())
+              .map((project) => project.toJson())
+              .toList(),
         });
       }
       if (request.method == 'POST') {
@@ -132,14 +164,17 @@ class GovernedApiServer {
           name: body['name']?.toString() ?? '',
           rootPath: _required(body, 'rootPath'),
         );
-        return _json(request.response, HttpStatus.created, <String, dynamic>{'project': project.toJson()});
+        return _json(request.response, HttpStatus.created,
+            <String, dynamic>{'project': project.toJson()});
       }
     }
 
     if (request.method == 'GET' && request.uri.path == '/v1/models') {
       await _authenticate(request, 'models:read');
       final models = await runtime.discoverModels();
-      return _json(request.response, HttpStatus.ok, <String, dynamic>{'models': models.map((model) => model.toJson()).toList()});
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'models': models.map((model) => model.toJson()).toList()
+      });
     }
 
     if (request.method == 'GET' && request.uri.path == '/v1/prompts') {
@@ -227,8 +262,7 @@ class GovernedApiServer {
           'contractDigest': promptStudioContractDigest,
           'compilerVersion': promptStudioCompilerVersion,
           'schemas': <String, dynamic>{
-            'productSpecification':
-                PromptStudioV2Contracts.specificationSchema,
+            'productSpecification': PromptStudioV2Contracts.specificationSchema,
             'taskPlan': PromptStudioV2Contracts.taskPlanSchema,
             'evaluationDataset': PromptStudioV2Contracts.evaluationSchema,
             'compilationReport':
@@ -386,11 +420,13 @@ class GovernedApiServer {
           'Unknown task plan.',
         );
       }
-      await _authenticate(request, 'commands:prepare', projectId: plan.projectId);
+      await _authenticate(request, 'commands:prepare',
+          projectId: plan.projectId);
       final body = await _body(request, allowEmpty: true);
-      final versionId = body['promptVersionId']?.toString().trim().isNotEmpty == true
-          ? body['promptVersionId']!.toString().trim()
-          : plan.promptVersionId;
+      final versionId =
+          body['promptVersionId']?.toString().trim().isNotEmpty == true
+              ? body['promptVersionId']!.toString().trim()
+              : plan.promptVersionId;
       final version = await runtime.repositories.promptVersions.get(versionId);
       if (version == null) {
         throw _HttpFailure(
@@ -416,70 +452,114 @@ class GovernedApiServer {
       );
     }
 
-    if (request.method == 'POST' && request.uri.path == '/v1/commands/prepare') {
+    if (request.method == 'POST' &&
+        request.uri.path == '/v1/commands/prepare') {
       final body = await _body(request);
       final projectId = _required(body, 'projectId');
       await _authenticate(request, 'commands:prepare', projectId: projectId);
       final modeName = _required(body, 'mode');
-      final mode = CommandMode.values.where((candidate) => candidate.name == modeName).firstOrNull;
-      if (mode == null) { throw _HttpFailure(HttpStatus.badRequest, 'mode_invalid', 'Unknown command mode.'); }
+      final mode = CommandMode.values
+          .where((candidate) => candidate.name == modeName)
+          .firstOrNull;
+      if (mode == null) {
+        throw _HttpFailure(
+            HttpStatus.badRequest, 'mode_invalid', 'Unknown command mode.');
+      }
       final command = await runtime.prepare(
         projectId: projectId,
         mode: mode,
         request: _required(body, 'request'),
         model: ModelIdentity.fromJson(mapValue(body['model'])),
       );
-      return _json(request.response, HttpStatus.created, <String, dynamic>{'command': command.toJson()});
+      return _json(request.response, HttpStatus.created,
+          <String, dynamic>{'command': command.toJson()});
     }
 
-    if (segments.length == 4 && segments[0] == 'v1' && segments[1] == 'commands' && segments[3] == 'runs' && request.method == 'POST') {
+    if (segments.length == 4 &&
+        segments[0] == 'v1' &&
+        segments[1] == 'commands' &&
+        segments[3] == 'runs' &&
+        request.method == 'POST') {
       final command = await runtime.repositories.commands.get(segments[2]);
-      if (command == null) { throw _HttpFailure(HttpStatus.notFound, 'command_missing', 'Unknown command.'); }
-      await _authenticate(request, 'runs:create', projectId: command.contract.projectId);
+      if (command == null) {
+        throw _HttpFailure(
+            HttpStatus.notFound, 'command_missing', 'Unknown command.');
+      }
+      await _authenticate(request, 'runs:create',
+          projectId: command.contract.projectId);
       final body = await _body(request, allowEmpty: true);
       final budget = body.isEmpty
           ? null
           : AutonomyBudget.fromJson(mapValue(body['budget']));
       final run = await runtime.createRun(command.id, budget: budget);
-      return _json(request.response, HttpStatus.created, <String, dynamic>{'run': run.toJson()});
+      return _json(request.response, HttpStatus.created,
+          <String, dynamic>{'run': run.toJson()});
     }
 
     if (segments.length >= 3 && segments[0] == 'v1' && segments[1] == 'runs') {
       if (segments.length == 3 && request.method == 'GET') {
         final run = await runtime.getRun(segments[2]);
-        if (run == null) { throw _HttpFailure(HttpStatus.notFound, 'run_missing', 'Unknown run.'); }
-        await _authenticate(request, 'runs:read', projectId: run.command.contract.projectId);
-        return _json(request.response, HttpStatus.ok, <String, dynamic>{'run': run.toJson()});
+        if (run == null) {
+          throw _HttpFailure(
+              HttpStatus.notFound, 'run_missing', 'Unknown run.');
+        }
+        await _authenticate(request, 'runs:read',
+            projectId: run.command.contract.projectId);
+        return _json(request.response, HttpStatus.ok,
+            <String, dynamic>{'run': run.toJson()});
       }
-      if (segments.length == 4 && segments[3] == 'evidence' && request.method == 'GET') {
+      if (segments.length == 4 &&
+          segments[3] == 'evidence' &&
+          request.method == 'GET') {
         final run = await runtime.getRun(segments[2]);
-        if (run == null) { throw _HttpFailure(HttpStatus.notFound, 'run_missing', 'Unknown run.'); }
-        await _authenticate(request, 'runs:read', projectId: run.command.contract.projectId);
+        if (run == null) {
+          throw _HttpFailure(
+              HttpStatus.notFound, 'run_missing', 'Unknown run.');
+        }
+        await _authenticate(request, 'runs:read',
+            projectId: run.command.contract.projectId);
         final evidence = await runtime.evidenceForRun(run.id);
-        return _json(request.response, HttpStatus.ok, <String, dynamic>{'evidence': evidence.map((item) => item.toJson()).toList()});
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'evidence': evidence.map((item) => item.toJson()).toList()
+        });
       }
       if (segments.length == 4 && request.method == 'POST') {
         final run = await runtime.getRun(segments[2]);
-        if (run == null) { throw _HttpFailure(HttpStatus.notFound, 'run_missing', 'Unknown run.'); }
+        if (run == null) {
+          throw _HttpFailure(
+              HttpStatus.notFound, 'run_missing', 'Unknown run.');
+        }
         final action = segments[3];
-        final scope = action == 'approve' || action == 'execute' ? 'runs:execute' : 'runs:control';
-        await _authenticate(request, scope, projectId: run.command.contract.projectId);
+        final scope = action == 'approve' || action == 'execute'
+            ? 'runs:execute'
+            : 'runs:control';
+        await _authenticate(request, scope,
+            projectId: run.command.contract.projectId);
         if (action == 'approve') {
           final body = await _body(request);
           final scopes = stringList(body['scopes'])
-              .map((name) => PermissionScope.values.where((candidate) => candidate.name == name).firstOrNull)
+              .map((name) => PermissionScope.values
+                  .where((candidate) => candidate.name == name)
+                  .firstOrNull)
               .whereType<PermissionScope>()
               .toSet();
           final grant = await runtime.approve(
             runId: run.id,
             scopes: scopes,
-            validity: Duration(minutes: (int.tryParse(body['validityMinutes']?.toString() ?? '') ?? 120).clamp(1, 1440).toInt()),
+            validity: Duration(
+                minutes:
+                    (int.tryParse(body['validityMinutes']?.toString() ?? '') ??
+                            120)
+                        .clamp(1, 1440)
+                        .toInt()),
           );
-          return _json(request.response, HttpStatus.ok, <String, dynamic>{'grant': grant.toJson()});
+          return _json(request.response, HttpStatus.ok,
+              <String, dynamic>{'grant': grant.toJson()});
         }
         if (action == 'execute') {
           unawaited(runtime.execute(run.id));
-          return _json(request.response, HttpStatus.accepted, <String, dynamic>{'runId': run.id, 'state': 'queued'});
+          return _json(request.response, HttpStatus.accepted,
+              <String, dynamic>{'runId': run.id, 'state': 'queued'});
         }
         if (action == 'retry') {
           final retried = await runtime.retryRun(run.id);
@@ -491,15 +571,18 @@ class GovernedApiServer {
         }
         if (action == 'pause') {
           await runtime.pause(run.id);
-          return _json(request.response, HttpStatus.ok, <String, dynamic>{'runId': run.id, 'state': 'paused'});
+          return _json(request.response, HttpStatus.ok,
+              <String, dynamic>{'runId': run.id, 'state': 'paused'});
         }
         if (action == 'resume') {
           await runtime.resume(run.id);
-          return _json(request.response, HttpStatus.accepted, <String, dynamic>{'runId': run.id, 'state': 'running'});
+          return _json(request.response, HttpStatus.accepted,
+              <String, dynamic>{'runId': run.id, 'state': 'running'});
         }
         if (action == 'cancel') {
           await runtime.cancel(run.id);
-          return _json(request.response, HttpStatus.accepted, <String, dynamic>{'runId': run.id, 'state': 'cancelling'});
+          return _json(request.response, HttpStatus.accepted,
+              <String, dynamic>{'runId': run.id, 'state': 'cancelling'});
         }
       }
     }
@@ -507,8 +590,14 @@ class GovernedApiServer {
     if (request.method == 'GET' && request.uri.path == '/v1/runs') {
       final projectId = request.uri.queryParameters['projectId'];
       await _authenticate(request, 'runs:read', projectId: projectId);
-      final runs = await runtime.listRuns(projectId: projectId, limit: (int.tryParse(request.uri.queryParameters['limit'] ?? '') ?? 100).clamp(1, 500).toInt());
-      return _json(request.response, HttpStatus.ok, <String, dynamic>{'runs': runs.map((run) => run.toJson()).toList()});
+      final runs = await runtime.listRuns(
+          projectId: projectId,
+          limit:
+              (int.tryParse(request.uri.queryParameters['limit'] ?? '') ?? 100)
+                  .clamp(1, 500)
+                  .toInt());
+      return _json(request.response, HttpStatus.ok,
+          <String, dynamic>{'runs': runs.map((run) => run.toJson()).toList()});
     }
 
     if (segments.length == 4 &&
@@ -589,19 +678,27 @@ class GovernedApiServer {
       }
     }
 
-    if (segments.length == 3 && segments[0] == 'v1' && segments[1] == 'projects' && request.method == 'DELETE') {
+    if (segments.length == 3 &&
+        segments[0] == 'v1' &&
+        segments[1] == 'projects' &&
+        request.method == 'DELETE') {
       await _authenticate(request, 'projects:write', projectId: segments[2]);
       await runtime.removeProject(segments[2]);
       request.response.statusCode = HttpStatus.noContent;
       return request.response.close();
     }
 
-    if (segments.length == 4 && segments[0] == 'v1' && segments[1] == 'projects' && segments[3] == 'knowledge') {
+    if (segments.length == 4 &&
+        segments[0] == 'v1' &&
+        segments[1] == 'projects' &&
+        segments[3] == 'knowledge') {
       final projectId = segments[2];
       if (request.method == 'GET') {
         await _authenticate(request, 'knowledge:read', projectId: projectId);
         final entries = await runtime.listKnowledge(projectId);
-        return _json(request.response, HttpStatus.ok, <String, dynamic>{'knowledge': entries.map((entry) => entry.toJson()).toList()});
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'knowledge': entries.map((entry) => entry.toJson()).toList()
+        });
       }
       if (request.method == 'POST') {
         await _authenticate(request, 'knowledge:write', projectId: projectId);
@@ -612,7 +709,8 @@ class GovernedApiServer {
           content: _required(body, 'content'),
           tags: stringList(body['tags']).toSet(),
         );
-        return _json(request.response, HttpStatus.created, <String, dynamic>{'knowledge': entry.toJson()});
+        return _json(request.response, HttpStatus.created,
+            <String, dynamic>{'knowledge': entry.toJson()});
       }
     }
 
@@ -635,14 +733,15 @@ class GovernedApiServer {
         final retrieval = await runtime.searchKnowledge(
           projectId,
           query,
-          limit: (int.tryParse(request.uri.queryParameters['limit'] ?? '') ?? 12)
-              .clamp(1, 30)
-              .toInt(),
+          limit:
+              (int.tryParse(request.uri.queryParameters['limit'] ?? '') ?? 12)
+                  .clamp(1, 30)
+                  .toInt(),
           includeEpisodes:
               request.uri.queryParameters['includeEpisodes'] != 'false',
-          includeUnsuccessfulEpisodes: request
-                  .uri.queryParameters['includeUnsuccessfulEpisodes'] ==
-              'true',
+          includeUnsuccessfulEpisodes:
+              request.uri.queryParameters['includeUnsuccessfulEpisodes'] ==
+                  'true',
         );
         return _json(
           request.response,
@@ -718,7 +817,8 @@ class GovernedApiServer {
       );
     }
 
-    if (request.method == 'POST' && request.uri.path == '/v1/secret-references') {
+    if (request.method == 'POST' &&
+        request.uri.path == '/v1/secret-references') {
       await _authenticate(request, 'secrets:manage');
       final body = await _body(request);
       final reference = await runtime.registerSecretReference(
@@ -726,13 +826,17 @@ class GovernedApiServer {
         environmentKey: _required(body, 'environmentKey'),
         description: body['description']?.toString() ?? '',
       );
-      return _json(request.response, HttpStatus.created, <String, dynamic>{'secretReference': reference.toJson()});
+      return _json(request.response, HttpStatus.created,
+          <String, dynamic>{'secretReference': reference.toJson()});
     }
 
-    if (request.method == 'GET' && request.uri.path == '/v1/secret-references') {
+    if (request.method == 'GET' &&
+        request.uri.path == '/v1/secret-references') {
       await _authenticate(request, 'secrets:manage');
       return _json(request.response, HttpStatus.ok, <String, dynamic>{
-        'secretReferences': (await runtime.listSecretReferences()).map((reference) => reference.toJson()).toList(),
+        'secretReferences': (await runtime.listSecretReferences())
+            .map((reference) => reference.toJson())
+            .toList(),
       });
     }
 
@@ -743,16 +847,24 @@ class GovernedApiServer {
         label: _required(body, 'label'),
         scopes: stringList(body['scopes']).toSet(),
         projectId: body['projectId']?.toString(),
-        validity: Duration(minutes: (int.tryParse(body['validityMinutes']?.toString() ?? '') ?? 43200).clamp(1, 525600).toInt()),
+        validity: Duration(
+            minutes: (int.tryParse(body['validityMinutes']?.toString() ?? '') ??
+                    43200)
+                .clamp(1, 525600)
+                .toInt()),
       );
       return _json(request.response, HttpStatus.created, <String, dynamic>{
         'token': issued.plaintext,
         'record': issued.record.toJson(),
-        'warning': 'This token is shown once. Store it in a secure password manager.',
+        'warning':
+            'This token is shown once. Store it in a secure password manager.',
       });
     }
 
-    if (segments.length == 3 && segments[0] == 'v1' && segments[1] == 'tokens' && request.method == 'DELETE') {
+    if (segments.length == 3 &&
+        segments[0] == 'v1' &&
+        segments[1] == 'tokens' &&
+        request.method == 'DELETE') {
       await _authenticate(request, 'tokens:manage');
       await runtime.revokeApiToken(segments[2]);
       request.response.statusCode = HttpStatus.noContent;
@@ -761,7 +873,8 @@ class GovernedApiServer {
 
     if (request.method == 'GET' && request.uri.path == '/v1/audit/verify') {
       await _authenticate(request, 'audit:read');
-      return _json(request.response, HttpStatus.ok, await runtime.verifyAudit());
+      return _json(
+          request.response, HttpStatus.ok, await runtime.verifyAudit());
     }
 
     if (request.method == 'POST' && request.uri.path == '/v1/support-bundles') {
@@ -784,36 +897,58 @@ class GovernedApiServer {
       return _events(request);
     }
 
-    throw _HttpFailure(HttpStatus.notFound, 'route_not_found', 'API route not found.');
+    throw _HttpFailure(
+        HttpStatus.notFound, 'route_not_found', 'API route not found.');
   }
 
-  Future<ApiTokenRecord> _authenticate(HttpRequest request, String scope, {String? projectId}) async {
-    final authorization = request.headers.value(HttpHeaders.authorizationHeader) ?? '';
-    final match = RegExp(r'^Bearer\s+([^\s]+)$', caseSensitive: false).firstMatch(authorization);
-    if (match == null) { throw _HttpFailure(HttpStatus.unauthorized, 'authentication_required', 'A bearer token is required.'); }
-    final token = await runtime.tokens.authenticate(match.group(1)!, requiredScope: scope, projectId: projectId);
-    if (token == null) { throw _HttpFailure(HttpStatus.forbidden, 'token_invalid', 'Token is invalid, expired, revoked, out of scope, or bound to another project.'); }
+  Future<ApiTokenRecord> _authenticate(HttpRequest request, String scope,
+      {String? projectId}) async {
+    final authorization =
+        request.headers.value(HttpHeaders.authorizationHeader) ?? '';
+    final match = RegExp(r'^Bearer\s+([^\s]+)$', caseSensitive: false)
+        .firstMatch(authorization);
+    if (match == null) {
+      throw _HttpFailure(HttpStatus.unauthorized, 'authentication_required',
+          'A bearer token is required.');
+    }
+    final token = await runtime.tokens.authenticate(match.group(1)!,
+        requiredScope: scope, projectId: projectId);
+    if (token == null) {
+      throw _HttpFailure(HttpStatus.forbidden, 'token_invalid',
+          'Token is invalid, expired, revoked, out of scope, or bound to another project.');
+    }
     return token;
   }
 
-  Future<Map<String, dynamic>> _body(HttpRequest request, {bool allowEmpty = false}) async {
+  Future<Map<String, dynamic>> _body(HttpRequest request,
+      {bool allowEmpty = false}) async {
     final contentType = request.headers.contentType;
     if (contentType != null && contentType.mimeType != 'application/json') {
-      throw _HttpFailure(HttpStatus.unsupportedMediaType, 'content_type_invalid', 'Content-Type must be application/json.');
+      throw _HttpFailure(HttpStatus.unsupportedMediaType,
+          'content_type_invalid', 'Content-Type must be application/json.');
     }
     const maxBytes = 1024 * 1024;
     final builder = BytesBuilder(copy: false);
     await for (final chunk in request) {
       if (builder.length + chunk.length > maxBytes) {
-        throw _HttpFailure(HttpStatus.requestEntityTooLarge, 'body_too_large', 'Request body exceeds 1 MiB.');
+        throw _HttpFailure(HttpStatus.requestEntityTooLarge, 'body_too_large',
+            'Request body exceeds 1 MiB.');
       }
       builder.add(chunk);
     }
     final bytes = builder.takeBytes();
-    if (bytes.isEmpty && allowEmpty) { return <String, dynamic>{}; }
-    if (bytes.isEmpty) { throw _HttpFailure(HttpStatus.badRequest, 'body_required', 'A JSON request body is required.'); }
+    if (bytes.isEmpty && allowEmpty) {
+      return <String, dynamic>{};
+    }
+    if (bytes.isEmpty) {
+      throw _HttpFailure(HttpStatus.badRequest, 'body_required',
+          'A JSON request body is required.');
+    }
     final decoded = jsonDecode(utf8.decode(bytes, allowMalformed: false));
-    if (decoded is! Map) { throw _HttpFailure(HttpStatus.badRequest, 'body_object_required', 'Request body must be a JSON object.'); }
+    if (decoded is! Map) {
+      throw _HttpFailure(HttpStatus.badRequest, 'body_object_required',
+          'Request body must be a JSON object.');
+    }
     return mapValue(decoded);
   }
 
@@ -837,21 +972,30 @@ class GovernedApiServer {
         response.write(_sse(event));
         await response.flush();
       } catch (_) {
-        if (!done.isCompleted) { done.complete(); }
+        if (!done.isCompleted) {
+          done.complete();
+        }
       }
     });
     heartbeat = Timer.periodic(const Duration(seconds: 15), (_) async {
       try {
-        response.write(': heartbeat ${DateTime.now().toUtc().toIso8601String()}\n\n');
+        response.write(
+            ': heartbeat ${DateTime.now().toUtc().toIso8601String()}\n\n');
         await response.flush();
       } catch (_) {
-        if (!done.isCompleted) { done.complete(); }
+        if (!done.isCompleted) {
+          done.complete();
+        }
       }
     });
     response.done.then((_) {
-      if (!done.isCompleted) { done.complete(); }
+      if (!done.isCompleted) {
+        done.complete();
+      }
     }).catchError((_) {
-      if (!done.isCompleted) { done.complete(); }
+      if (!done.isCompleted) {
+        done.complete();
+      }
     });
     await done.future;
     heartbeat.cancel();
@@ -863,28 +1007,45 @@ class GovernedApiServer {
     }
   }
 
-  String _sse(EventEnvelope event) => 'id: ${event.sequence}\nevent: ${event.type}\ndata: ${jsonEncode(event.toJson())}\n\n';
+  String _sse(EventEnvelope event) =>
+      'id: ${event.sequence}\nevent: ${event.type}\ndata: ${jsonEncode(event.toJson())}\n\n';
 
   bool _originAllowed(String raw) {
     final candidate = _normalizeOrigin(raw);
-    if (candidate == null) { return false; }
+    if (candidate == null) {
+      return false;
+    }
     for (final allowed in runtime.settings.allowedOrigins) {
-      if (_normalizeOrigin(allowed) == candidate) { return true; }
+      if (_normalizeOrigin(allowed) == candidate) {
+        return true;
+      }
     }
     return false;
   }
 
   String? _normalizeOrigin(String raw) {
     final uri = Uri.tryParse(raw);
-    if (uri == null || uri.host.isEmpty || !const <String>{'http', 'https'}.contains(uri.scheme) || uri.userInfo.isNotEmpty) { return null; }
-    if (uri.path.isNotEmpty && uri.path != '/' || uri.query.isNotEmpty || uri.fragment.isNotEmpty) { return null; }
+    if (uri == null ||
+        uri.host.isEmpty ||
+        !const <String>{'http', 'https'}.contains(uri.scheme) ||
+        uri.userInfo.isNotEmpty) {
+      return null;
+    }
+    if (uri.path.isNotEmpty && uri.path != '/' ||
+        uri.query.isNotEmpty ||
+        uri.fragment.isNotEmpty) {
+      return null;
+    }
     final defaultPort = uri.scheme == 'https' ? 443 : 80;
     final port = uri.hasPort ? uri.port : defaultPort;
     return '${uri.scheme.toLowerCase()}://${uri.host.toLowerCase()}:$port';
   }
 
   String _correlationId(String? supplied) {
-    if (supplied != null && RegExp(r'^[A-Za-z0-9._-]{8,128}$').hasMatch(supplied)) { return supplied; }
+    if (supplied != null &&
+        RegExp(r'^[A-Za-z0-9._-]{8,128}$').hasMatch(supplied)) {
+      return supplied;
+    }
     return newId('request');
   }
 
@@ -894,14 +1055,18 @@ class GovernedApiServer {
           .firstOrNull ??
       PromptGenerationAction.generate;
 
-  PlanningDepth _planningDepth(Object? raw) => PlanningDepth.values
-      .where((item) => item.name == raw?.toString())
-      .firstOrNull ??
+  PlanningDepth _planningDepth(Object? raw) =>
+      PlanningDepth.values
+          .where((item) => item.name == raw?.toString())
+          .firstOrNull ??
       PlanningDepth.auto;
 
   String _required(Map<String, dynamic> body, String name) {
     final value = body[name]?.toString().trim() ?? '';
-    if (value.isEmpty) { throw _HttpFailure(HttpStatus.badRequest, 'argument_required', 'Field "$name" is required.'); }
+    if (value.isEmpty) {
+      throw _HttpFailure(HttpStatus.badRequest, 'argument_required',
+          'Field "$name" is required.');
+    }
     return value;
   }
 
@@ -922,13 +1087,13 @@ class GovernedApiServer {
   ) async {
     try {
       await _json(response, status, <String, dynamic>{
-      'error': <String, dynamic>{
-        'code': code,
-        'message': message,
-        'details': runtime.redactor.redactJson(details),
-        'correlationId': correlationId,
-      },
-    });
+        'error': <String, dynamic>{
+          'code': code,
+          'message': message,
+          'details': runtime.redactor.redactJson(details),
+          'correlationId': correlationId,
+        },
+      });
     } catch (_) {
       try {
         await response.close();
@@ -939,16 +1104,28 @@ class GovernedApiServer {
   }
 
   int _statusForProductError(String code) {
-    if (code.endsWith('_missing') || code == 'path_missing') { return HttpStatus.notFound; }
-    if (code.startsWith('permission_') || code.endsWith('_rejected') || code == 'network_disabled') { return HttpStatus.forbidden; }
+    if (code.endsWith('_missing') || code == 'path_missing') {
+      return HttpStatus.notFound;
+    }
+    if (code.startsWith('permission_') ||
+        code.endsWith('_rejected') ||
+        code == 'network_disabled') {
+      return HttpStatus.forbidden;
+    }
     if (code == 'stale_content' ||
         code.endsWith('_changed') ||
         code == 'run_retry_required') {
       return HttpStatus.conflict;
     }
-    if (code.contains('timeout')) { return HttpStatus.gatewayTimeout; }
-    if (code.startsWith('model_') && code.contains('unavailable')) { return HttpStatus.serviceUnavailable; }
-    if (code.startsWith('budget_')) { return HttpStatus.unprocessableEntity; }
+    if (code.contains('timeout')) {
+      return HttpStatus.gatewayTimeout;
+    }
+    if (code.startsWith('model_') && code.contains('unavailable')) {
+      return HttpStatus.serviceUnavailable;
+    }
+    if (code.startsWith('budget_')) {
+      return HttpStatus.unprocessableEntity;
+    }
     return HttpStatus.badRequest;
   }
 
@@ -957,10 +1134,13 @@ class GovernedApiServer {
         'info': <String, dynamic>{
           'title': 'Kristin Local Agent Governed API',
           'version': kristinVersion,
-          'description': 'Loopback-only, bearer-authenticated API. Tokens are hashed, scoped, expiring, and optionally project-bound.',
+          'description':
+              'Loopback-only, bearer-authenticated API. Tokens are hashed, scoped, expiring, and optionally project-bound.',
         },
         'servers': <Map<String, String>>[
-          <String, String>{'url': 'http://127.0.0.1:${runtime.settings.apiPort}/v1'},
+          <String, String>{
+            'url': 'http://127.0.0.1:${runtime.settings.apiPort}/v1'
+          },
         ],
         'components': <String, dynamic>{
           'securitySchemes': <String, dynamic>{
@@ -971,45 +1151,194 @@ class GovernedApiServer {
           <String, Object>{'bearerAuth': <Object>[]},
         ],
         'paths': <String, dynamic>{
-          '/health': <String, dynamic>{'get': <String, dynamic>{'security': <Object>[], 'summary': 'Health check'}},
-          '/projects': <String, dynamic>{'get': <String, String>{'summary': 'List projects'}, 'post': <String, String>{'summary': 'Register project'}},
-          '/projects/{projectId}/manager': <String, dynamic>{'get': <String, String>{'summary': 'Read the Project Manager dashboard state'}},
-          '/projects/{projectId}/analyze': <String, dynamic>{'post': <String, String>{'summary': 'Run the detected bounded static analysis'}},
-          '/projects/{projectId}/test': <String, dynamic>{'post': <String, String>{'summary': 'Run detected bounded project tests'}},
-          '/projects/{projectId}/build': <String, dynamic>{'post': <String, String>{'summary': 'Run the detected bounded project build'}},
-          '/projects/{projectId}/run': <String, dynamic>{'post': <String, String>{'summary': 'Start the detected run command as a managed process'}},
-          '/projects/{projectId}/stop': <String, dynamic>{'post': <String, String>{'summary': 'Stop the active managed project process'}},
-          '/models': <String, dynamic>{'get': <String, String>{'summary': 'Discover exact model identities'}},
-          '/prompts': <String, dynamic>{'get': <String, String>{'summary': 'List Prompt Studio prompts'}},
-          '/prompts/generate': <String, dynamic>{'post': <String, String>{'summary': 'Generate or improve a structured prompt draft with a selected model'}},
-          '/prompts/versions': <String, dynamic>{'post': <String, String>{'summary': 'Save an immutable reviewed prompt version'}},
-          '/prompts/{promptId}/versions': <String, dynamic>{'get': <String, String>{'summary': 'List immutable prompt versions'}},
-          '/prompt-studio/v2/contracts': <String, dynamic>{'get': <String, String>{'summary': 'Read the canonical Prompt Studio 2 schemas and capability catalog'}},
-          '/prompt-studio/v2/compile': <String, dynamic>{'post': <String, String>{'summary': 'Compile and dry-run a canonical specification and 1–100 task plan'}},
-          '/prompt-studio/v2/evaluate': <String, dynamic>{'post': <String, String>{'summary': 'Measure a prompt-version change against a deterministic evaluation dataset'}},
-          '/task-plans': <String, dynamic>{'get': <String, String>{'summary': 'List generated task-plan revisions'}},
-          '/task-plans/generate': <String, dynamic>{'post': <String, String>{'summary': 'Generate a validated adaptive 1–100 task plan'}},
-          '/task-plans/{planId}': <String, dynamic>{'get': <String, String>{'summary': 'Read one task-plan revision'}, 'put': <String, String>{'summary': 'Create an immutable edited task-plan revision'}},
-          '/task-plans/{planId}/compile': <String, dynamic>{'post': <String, String>{'summary': 'Compile all or selected tasks into a governed command'}},
-          '/commands/prepare': <String, dynamic>{'post': <String, String>{'summary': 'Prepare deterministic contract and DAG'}},
-          '/commands/{commandId}/runs': <String, dynamic>{'post': <String, String>{'summary': 'Create persistent run'}},
-          '/runs/{runId}/approve': <String, dynamic>{'post': <String, String>{'summary': 'Approve requested granular scopes'}},
-          '/runs/{runId}/execute': <String, dynamic>{'post': <String, String>{'summary': 'Start governed execution'}},
-          '/runs/{runId}/retry': <String, dynamic>{'post': <String, String>{'summary': 'Create a fresh linked retry with reset attempts and plan-scaled budgets'}},
-          '/runs/{runId}': <String, dynamic>{'get': <String, String>{'summary': 'Get run state'}},
-          '/runs/{runId}/evidence': <String, dynamic>{'get': <String, String>{'summary': 'Get evidence records'}},
-          '/projects/{projectId}/knowledge': <String, dynamic>{'get': <String, String>{'summary': 'List project knowledge'}, 'post': <String, String>{'summary': 'Add project note'}},
-          '/projects/{projectId}/knowledge/search': <String, dynamic>{'get': <String, String>{'summary': 'Hybrid search with inspectable citations'}},
-          '/projects/{projectId}/knowledge/stats': <String, dynamic>{'get': <String, String>{'summary': 'Knowledge, archive, memory, and index statistics'}},
-          '/projects/{projectId}/knowledge/reindex': <String, dynamic>{'post': <String, String>{'summary': 'Rebuild the local project index'}},
-          '/projects/{projectId}/knowledge/export': <String, dynamic>{'post': <String, String>{'summary': 'Create a portable knowledge ZIP'}},
-          '/projects/{projectId}/research-archive': <String, dynamic>{'get': <String, String>{'summary': 'List immutable research provenance records'}},
-          '/projects/{projectId}/memory': <String, dynamic>{'get': <String, String>{'summary': 'List terminal-run memory episodes'}},
-          '/events': <String, dynamic>{'get': <String, String>{'summary': 'Resume-capable server-sent event stream'}},
-          '/secret-references': <String, dynamic>{'get': <String, String>{'summary': 'List references only'}, 'post': <String, String>{'summary': 'Register environment reference'}},
-          '/tokens': <String, dynamic>{'post': <String, String>{'summary': 'Issue a token shown once'}},
-          '/audit/verify': <String, dynamic>{'get': <String, String>{'summary': 'Verify tamper-evident audit chain'}},
-          '/support-bundles': <String, dynamic>{'post': <String, String>{'summary': 'Save a redacted diagnostic ZIP with retained logs, run budgets, and evidence metadata'}},
+          '/health': <String, dynamic>{
+            'get': <String, dynamic>{
+              'security': <Object>[],
+              'summary': 'Health check'
+            }
+          },
+          '/projects': <String, dynamic>{
+            'get': <String, String>{'summary': 'List projects'},
+            'post': <String, String>{'summary': 'Register project'}
+          },
+          '/projects/{projectId}/manager': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Read the Project Manager dashboard state'
+            }
+          },
+          '/projects/{projectId}/analyze': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Run the detected bounded static analysis'
+            }
+          },
+          '/projects/{projectId}/test': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Run detected bounded project tests'
+            }
+          },
+          '/projects/{projectId}/build': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Run the detected bounded project build'
+            }
+          },
+          '/projects/{projectId}/run': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Start the detected run command as a managed process'
+            }
+          },
+          '/projects/{projectId}/stop': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Stop the active managed project process'
+            }
+          },
+          '/models': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Discover exact model identities'
+            }
+          },
+          '/prompts': <String, dynamic>{
+            'get': <String, String>{'summary': 'List Prompt Studio prompts'}
+          },
+          '/prompts/generate': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Generate or improve a structured prompt draft with a selected model'
+            }
+          },
+          '/prompts/versions': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Save an immutable reviewed prompt version'
+            }
+          },
+          '/prompts/{promptId}/versions': <String, dynamic>{
+            'get': <String, String>{'summary': 'List immutable prompt versions'}
+          },
+          '/prompt-studio/v2/contracts': <String, dynamic>{
+            'get': <String, String>{
+              'summary':
+                  'Read the canonical Prompt Studio 2 schemas and capability catalog'
+            }
+          },
+          '/prompt-studio/v2/compile': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Compile and dry-run a canonical specification and 1–100 task plan'
+            }
+          },
+          '/prompt-studio/v2/evaluate': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Measure a prompt-version change against a deterministic evaluation dataset'
+            }
+          },
+          '/task-plans': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List generated task-plan revisions'
+            }
+          },
+          '/task-plans/generate': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Generate a validated adaptive 1–100 task plan'
+            }
+          },
+          '/task-plans/{planId}': <String, dynamic>{
+            'get': <String, String>{'summary': 'Read one task-plan revision'},
+            'put': <String, String>{
+              'summary': 'Create an immutable edited task-plan revision'
+            }
+          },
+          '/task-plans/{planId}/compile': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Compile all or selected tasks into a governed command'
+            }
+          },
+          '/commands/prepare': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Prepare deterministic contract and DAG'
+            }
+          },
+          '/commands/{commandId}/runs': <String, dynamic>{
+            'post': <String, String>{'summary': 'Create persistent run'}
+          },
+          '/runs/{runId}/approve': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Approve requested granular scopes'
+            }
+          },
+          '/runs/{runId}/execute': <String, dynamic>{
+            'post': <String, String>{'summary': 'Start governed execution'}
+          },
+          '/runs/{runId}/retry': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Create a fresh linked retry with reset attempts and plan-scaled budgets'
+            }
+          },
+          '/runs/{runId}': <String, dynamic>{
+            'get': <String, String>{'summary': 'Get run state'}
+          },
+          '/runs/{runId}/evidence': <String, dynamic>{
+            'get': <String, String>{'summary': 'Get evidence records'}
+          },
+          '/projects/{projectId}/knowledge': <String, dynamic>{
+            'get': <String, String>{'summary': 'List project knowledge'},
+            'post': <String, String>{'summary': 'Add project note'}
+          },
+          '/projects/{projectId}/knowledge/search': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Hybrid search with inspectable citations'
+            }
+          },
+          '/projects/{projectId}/knowledge/stats': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Knowledge, archive, memory, and index statistics'
+            }
+          },
+          '/projects/{projectId}/knowledge/reindex': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Rebuild the local project index'
+            }
+          },
+          '/projects/{projectId}/knowledge/export': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Create a portable knowledge ZIP'
+            }
+          },
+          '/projects/{projectId}/research-archive': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List immutable research provenance records'
+            }
+          },
+          '/projects/{projectId}/memory': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List terminal-run memory episodes'
+            }
+          },
+          '/events': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Resume-capable server-sent event stream'
+            }
+          },
+          '/secret-references': <String, dynamic>{
+            'get': <String, String>{'summary': 'List references only'},
+            'post': <String, String>{
+              'summary': 'Register environment reference'
+            }
+          },
+          '/tokens': <String, dynamic>{
+            'post': <String, String>{'summary': 'Issue a token shown once'}
+          },
+          '/audit/verify': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Verify tamper-evident audit chain'
+            }
+          },
+          '/support-bundles': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Save a redacted diagnostic ZIP with retained logs, run budgets, and evidence metadata'
+            }
+          },
         },
       };
 }

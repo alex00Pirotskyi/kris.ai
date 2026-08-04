@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from dart_string_literal import dart_single_quoted_string
+
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMAS = (
     "project_profile.v2.json",
@@ -35,7 +37,7 @@ def render() -> str:
     ]
     for name in SCHEMAS:
         encoded = json.dumps(values[name], sort_keys=True, ensure_ascii=False)
-        escaped = encoded.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+        escaped = dart_single_quoted_string(encoded)
         lines.append(f"  '{name}': '{escaped}',")
     lines.extend(["};", ""])
     return "\n".join(lines)

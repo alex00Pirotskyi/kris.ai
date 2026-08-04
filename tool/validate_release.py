@@ -386,7 +386,9 @@ def check_required_files() -> None:
         "lib/product/mcp.dart", "lib/product/ui.dart",
         "lib/product/chat_studio.dart", "lib/product/project_diagnostics.dart",
         "lib/product/ui_advanced.dart", "lib/product/ui_components.dart",
-        "tool/validate_release.py", "tool/kristin_cli.py", "tool/system_test.py", "kristin", "kristin.cmd",
+        "tool/validate_release.py", "tool/kristin_cli.py", "tool/system_test.py",
+        "tool/dart_string_literal.py", "tool/p0_003_repair_test.py",
+        "tool/capture_ci_environment.py", "kristin", "kristin.cmd",
         "RUN_WINDOWS.bat", "RUN_MAC.command", "RUN_LINUX.sh",
         "tool/prune_stale_legacy.dart", "tool/prune_stale_legacy.cmd",
         "README.md", "SECURITY.md",
@@ -1303,6 +1305,7 @@ def check_project_manager_v2() -> None:
         "managed_project_processes",
         "artifact_records",
         "probe_backend",
+        "builtin_snapshot_packager",
         "launcherStartTimeTicks",
         "process_tree_termination_incomplete",
         "class ProjectManagerV2Service",
@@ -1321,7 +1324,7 @@ def check_project_manager_v2() -> None:
     add(
         "v1.6 Project Manager 2 operational layer",
         not failures,
-        "16/16 executable cases passed; strict profiles, live sandbox readiness, retained snapshots, PID-reuse-safe complete-tree Run/Stop, parent-death cleanup, artifacts, and packaging are integrated"
+        "16/16 capability-aware cases passed; real sandbox execution is exercised when available, unsupported platforms prove stable fail-closed behavior, and built-in deterministic packaging remains available without executing project code"
         if not failures
         else "; ".join(failures[:40]),
         started=started,
@@ -2150,37 +2153,105 @@ def check_supply_chain() -> None:
 def check_sdk(run_tests: bool, *, enabled: bool = True) -> None:
     if not enabled:
         detail = "SDK checks disabled by source-only validation invocation"
-        add("dart format", None, detail, blocking=False)
         add("flutter pub get", None, detail, blocking=False)
+        add("dart format", None, detail, blocking=False)
         add("flutter analyze", None, detail, blocking=False)
         add("flutter test", None, detail, blocking=False)
         return
 
     dart = shutil.which("dart")
     flutter = shutil.which("flutter")
-    if dart:
-        started=time.monotonic(); rc,out=run([dart,"format","--output=none","--set-exit-if-changed","lib","test","tool/prune_stale_legacy.dart"],timeout=300)
-        add("dart format", rc==0, out or "formatted", started=started)
-    else:
-        add("dart format", None, "Dart SDK not installed in validation environment", blocking=False)
+    dependencies_ready = False
     if flutter:
-        started=time.monotonic(); rc,out=run([flutter,"pub","get"],timeout=900)
-        add("flutter pub get", rc==0, out or "dependencies resolved", started=started)
-        if rc==0:
-            started=time.monotonic(); arc,aout=run([flutter,"analyze","--no-pub","--fatal-warnings","--fatal-infos"],timeout=900)
-            add("flutter analyze", arc==0, aout or "analysis passed", started=started)
+        started = time.monotonic()
+        rc, out = run([flutter, "pub", "get"], timeout=900)
+        dependencies_ready = rc == 0
+        add("flutter pub get", dependencies_ready, out or "dependencies resolved", started=started)
+    else:
+        add(
+            "flutter pub get",
+            None,
+            "Flutter SDK not installed in validation environment",
+            blocking=False,
+        )
+
+    if dart:
+        if flutter and not dependencies_ready:
+            add("dart format", False, "dependency resolution failed")
+        else:
+            started = time.monotonic()
+            rc, out = run(
+                [
+                    dart,
+                    "format",
+                    "--output=none",
+                    "--set-exit-if-changed",
+                    "lib",
+                    "test",
+                    "tool/prune_stale_legacy.dart",
+                ],
+                timeout=300,
+            )
+            add("dart format", rc == 0, out or "format check passed", started=started)
+    else:
+        add(
+            "dart format",
+            None,
+            "Dart SDK not installed in validation environment",
+            blocking=False,
+        )
+
+    if flutter:
+        if dependencies_ready:
+            started = time.monotonic()
+            arc, aout = run(
+                [
+                    flutter,
+                    "analyze",
+                    "--no-pub",
+                    "--fatal-warnings",
+                    "--fatal-infos",
+                ],
+                timeout=900,
+            )
+            add("flutter analyze", arc == 0, aout or "analysis passed", started=started)
             if run_tests:
-                started=time.monotonic(); trc,tout=run([flutter,"test","--no-pub","--concurrency=1","--reporter","expanded"],timeout=1200)
-                add("flutter test", trc==0, tout or "tests passed", started=started)
+                started = time.monotonic()
+                trc, tout = run(
+                    [
+                        flutter,
+                        "test",
+                        "--no-pub",
+                        "--concurrency=1",
+                        "--reporter",
+                        "expanded",
+                    ],
+                    timeout=1200,
+                )
+                add("flutter test", trc == 0, tout or "tests passed", started=started)
             else:
-                add("flutter test", None, "test execution disabled by invocation", blocking=False)
+                add(
+                    "flutter test",
+                    None,
+                    "test execution disabled by invocation",
+                    blocking=False,
+                )
         else:
             add("flutter analyze", False, "dependency resolution failed")
             add("flutter test", False, "dependency resolution failed")
     else:
-        add("flutter pub get", None, "Flutter SDK not installed in validation environment", blocking=False)
-        add("flutter analyze", None, "Flutter SDK not installed in validation environment", blocking=False)
-        add("flutter test", None, "Flutter SDK not installed in validation environment", blocking=False)
+        add(
+            "flutter analyze",
+            None,
+            "Flutter SDK not installed in validation environment",
+            blocking=False,
+        )
+        add(
+            "flutter test",
+            None,
+            "Flutter SDK not installed in validation environment",
+            blocking=False,
+        )
 
 
 def write_reports() -> dict[str, object]:

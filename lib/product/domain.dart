@@ -7,10 +7,8 @@ const String kristinReleaseChannel = 'preview';
 enum CommandMode { ask, analyze, plan, build, fix, review, run }
 
 bool isConversationalRequest(String request) {
-  final normalized = request
-      .trim()
-      .toLowerCase()
-      .replaceAll(RegExp(r'\s+'), ' ');
+  final normalized =
+      request.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   if (normalized.isEmpty) {
     return false;
   }
@@ -25,10 +23,8 @@ bool isConversationalRequest(String request) {
 }
 
 bool isFailureInvestigationRequest(String request) {
-  final normalized = request
-      .trim()
-      .toLowerCase()
-      .replaceAll(RegExp(r'\s+'), ' ');
+  final normalized =
+      request.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   if (normalized.isEmpty) {
     return false;
   }
@@ -127,9 +123,12 @@ String newId([String prefix = 'id']) {
 DateTime parseUtc(Object? value, {DateTime? fallback}) {
   if (value is String) {
     final parsed = DateTime.tryParse(value);
-    if (parsed != null) { return parsed.toUtc(); }
+    if (parsed != null) {
+      return parsed.toUtc();
+    }
   }
-  return fallback?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  return fallback?.toUtc() ??
+      DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 }
 
 List<String> stringList(Object? value) => value is List
@@ -195,7 +194,8 @@ class SecretReference {
         'createdAt': createdAt.toUtc().toIso8601String(),
       };
 
-  factory SecretReference.fromJson(Map<String, dynamic> json) => SecretReference(
+  factory SecretReference.fromJson(Map<String, dynamic> json) =>
+      SecretReference(
         id: json['id']?.toString() ?? newId('secret'),
         label: json['label']?.toString() ?? 'Secret',
         environmentKey: json['environmentKey']?.toString() ?? '',
@@ -224,7 +224,8 @@ class PermissionGrant {
   final int remainingUses;
 
   bool get isExpired => !expiresAt.isAfter(DateTime.now().toUtc());
-  bool allows(PermissionScope scope) => !isExpired && remainingUses > 0 && scopes.contains(scope);
+  bool allows(PermissionScope scope) =>
+      !isExpired && remainingUses > 0 && scopes.contains(scope);
 
   PermissionGrant consume() => PermissionGrant(
         id: id,
@@ -246,17 +247,21 @@ class PermissionGrant {
         'remainingUses': remainingUses,
       };
 
-  factory PermissionGrant.fromJson(Map<String, dynamic> json) => PermissionGrant(
+  factory PermissionGrant.fromJson(Map<String, dynamic> json) =>
+      PermissionGrant(
         id: json['id']?.toString() ?? newId('grant'),
         projectId: json['projectId']?.toString() ?? '',
         commandId: json['commandId']?.toString() ?? '',
         scopes: stringList(json['scopes'])
-            .map((name) => PermissionScope.values.where((scope) => scope.name == name).firstOrNull)
+            .map((name) => PermissionScope.values
+                .where((scope) => scope.name == name)
+                .firstOrNull)
             .whereType<PermissionScope>()
             .toSet(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
         expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
-        remainingUses: int.tryParse(json['remainingUses']?.toString() ?? '') ?? 0,
+        remainingUses:
+            int.tryParse(json['remainingUses']?.toString() ?? '') ?? 0,
       );
 }
 
@@ -281,7 +286,8 @@ class ApiTokenRecord {
   final DateTime expiresAt;
   final DateTime? revokedAt;
 
-  bool get isActive => revokedAt == null && expiresAt.isAfter(DateTime.now().toUtc());
+  bool get isActive =>
+      revokedAt == null && expiresAt.isAfter(DateTime.now().toUtc());
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
@@ -302,7 +308,8 @@ class ApiTokenRecord {
         projectId: json['projectId']?.toString(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
         expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
-        revokedAt: json['revokedAt'] == null ? null : parseUtc(json['revokedAt']),
+        revokedAt:
+            json['revokedAt'] == null ? null : parseUtc(json['revokedAt']),
       );
 }
 
@@ -323,7 +330,8 @@ class ModelIdentity {
   final String quantization;
   final DateTime discoveredAt;
 
-  String get exactId => digest.isEmpty ? '$providerId/$name' : '$providerId/$name@$digest';
+  String get exactId =>
+      digest.isEmpty ? '$providerId/$name' : '$providerId/$name@$digest';
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'providerId': providerId,
@@ -358,8 +366,20 @@ class AcceptanceCriterion {
   bool get isMeasurable {
     final combined = '$statement $verification'.toLowerCase();
     const markers = <String>[
-      'test', 'verify', 'returns', 'renders', 'build', 'exit code', 'contains',
-      'responds', 'passes', 'creates', 'does not', 'without', 'within', 'equals',
+      'test',
+      'verify',
+      'returns',
+      'renders',
+      'build',
+      'exit code',
+      'contains',
+      'responds',
+      'passes',
+      'creates',
+      'does not',
+      'without',
+      'within',
+      'equals',
     ];
     return statement.trim().length >= 12 &&
         verification.trim().length >= 5 &&
@@ -372,7 +392,8 @@ class AcceptanceCriterion {
         'verification': verification,
       };
 
-  factory AcceptanceCriterion.fromJson(Map<String, dynamic> json) => AcceptanceCriterion(
+  factory AcceptanceCriterion.fromJson(Map<String, dynamic> json) =>
+      AcceptanceCriterion(
         id: json['id']?.toString() ?? newId('criterion'),
         statement: json['statement']?.toString() ?? '',
         verification: json['verification']?.toString() ?? '',
@@ -406,8 +427,12 @@ class TaskContract {
 
   List<String> validate() {
     final errors = <String>[];
-    if (projectId.trim().isEmpty) { errors.add('A project is required.'); }
-    if (request.trim().length < 3 && !isConversationalRequest(request)) { errors.add('The request is too short.'); }
+    if (projectId.trim().isEmpty) {
+      errors.add('A project is required.');
+    }
+    if (request.trim().length < 3 && !isConversationalRequest(request)) {
+      errors.add('The request is too short.');
+    }
     if (acceptanceCriteria.isEmpty && mode != CommandMode.ask) {
       errors.add('At least one acceptance criterion is required.');
     }
@@ -425,10 +450,12 @@ class TaskContract {
         'projectId': projectId,
         'mode': mode.name,
         'request': request,
-        'acceptanceCriteria': acceptanceCriteria.map((item) => item.toJson()).toList(),
+        'acceptanceCriteria':
+            acceptanceCriteria.map((item) => item.toJson()).toList(),
         'constraints': constraints,
         'researchQuestions': researchQuestions,
-        'requiredPermissions': requiredPermissions.map((scope) => scope.name).toList()..sort(),
+        'requiredPermissions':
+            requiredPermissions.map((scope) => scope.name).toList()..sort(),
         'createdAt': createdAt.toUtc().toIso8601String(),
       };
 
@@ -436,16 +463,23 @@ class TaskContract {
         id: json['id']?.toString() ?? newId('contract'),
         revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
         projectId: json['projectId']?.toString() ?? '',
-        mode: CommandMode.values.where((mode) => mode.name == json['mode']).firstOrNull ?? CommandMode.ask,
+        mode: CommandMode.values
+                .where((mode) => mode.name == json['mode'])
+                .firstOrNull ??
+            CommandMode.ask,
         request: json['request']?.toString() ?? '',
-        acceptanceCriteria: (json['acceptanceCriteria'] is List ? json['acceptanceCriteria'] as List : const <Object>[])
+        acceptanceCriteria: (json['acceptanceCriteria'] is List
+                ? json['acceptanceCriteria'] as List
+                : const <Object>[])
             .whereType<Map>()
             .map((item) => AcceptanceCriterion.fromJson(mapValue(item)))
             .toList(),
         constraints: stringList(json['constraints']),
         researchQuestions: stringList(json['researchQuestions']),
         requiredPermissions: stringList(json['requiredPermissions'])
-            .map((name) => PermissionScope.values.where((scope) => scope.name == name).firstOrNull)
+            .map((name) => PermissionScope.values
+                .where((scope) => scope.name == name)
+                .firstOrNull)
             .whereType<PermissionScope>()
             .toSet(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
@@ -512,31 +546,46 @@ class ExecutionPlan {
   List<String> validate() {
     final errors = <String>[];
     final ids = items.map((item) => item.id).toSet();
-    if (ids.length != items.length) { errors.add('Work item IDs must be unique.'); }
+    if (ids.length != items.length) {
+      errors.add('Work item IDs must be unique.');
+    }
     for (final item in items) {
       if (item.title.trim().isEmpty || item.description.trim().isEmpty) {
         errors.add('Every work item requires a title and description.');
       }
       for (final dependency in item.dependencies) {
-        if (!ids.contains(dependency)) { errors.add('${item.id} references missing dependency $dependency.'); }
-        if (dependency == item.id) { errors.add('${item.id} cannot depend on itself.'); }
+        if (!ids.contains(dependency)) {
+          errors.add('${item.id} references missing dependency $dependency.');
+        }
+        if (dependency == item.id) {
+          errors.add('${item.id} cannot depend on itself.');
+        }
       }
     }
     final visited = <String>{};
     final active = <String>{};
     final byId = <String, WorkItem>{for (final item in items) item.id: item};
     bool cycle(String id) {
-      if (active.contains(id)) { return true; }
-      if (visited.contains(id)) { return false; }
+      if (active.contains(id)) {
+        return true;
+      }
+      if (visited.contains(id)) {
+        return false;
+      }
       active.add(id);
       for (final dependency in byId[id]?.dependencies ?? const <String>{}) {
-        if (cycle(dependency)) { return true; }
+        if (cycle(dependency)) {
+          return true;
+        }
       }
       active.remove(id);
       visited.add(id);
       return false;
     }
-    if (items.any((item) => cycle(item.id))) { errors.add('The plan contains a dependency cycle.'); }
+
+    if (items.any((item) => cycle(item.id))) {
+      errors.add('The plan contains a dependency cycle.');
+    }
     return errors;
   }
 
@@ -554,10 +603,11 @@ class ExecutionPlan {
         contractId: json['contractId']?.toString() ?? '',
         complexity: int.tryParse(json['complexity']?.toString() ?? '') ?? 1,
         rationale: json['rationale']?.toString() ?? '',
-        items: (json['items'] is List ? json['items'] as List : const <Object>[])
-            .whereType<Map>()
-            .map((item) => WorkItem.fromJson(mapValue(item)))
-            .toList(),
+        items:
+            (json['items'] is List ? json['items'] as List : const <Object>[])
+                .whereType<Map>()
+                .map((item) => WorkItem.fromJson(mapValue(item)))
+                .toList(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
       );
 }
@@ -588,7 +638,8 @@ class PreparedCommand {
         'createdAt': createdAt.toUtc().toIso8601String(),
       };
 
-  factory PreparedCommand.fromJson(Map<String, dynamic> json) => PreparedCommand(
+  factory PreparedCommand.fromJson(Map<String, dynamic> json) =>
+      PreparedCommand(
         id: json['id']?.toString() ?? newId('command'),
         requestKey: json['requestKey']?.toString() ?? '',
         contract: TaskContract.fromJson(mapValue(json['contract'])),
@@ -634,7 +685,10 @@ class EvidenceRecord {
         id: json['id']?.toString() ?? newId('evidence'),
         runId: json['runId']?.toString() ?? '',
         workItemId: json['workItemId']?.toString() ?? '',
-        kind: EvidenceKind.values.where((kind) => kind.name == json['kind']).firstOrNull ?? EvidenceKind.audit,
+        kind: EvidenceKind.values
+                .where((kind) => kind.name == json['kind'])
+                .firstOrNull ??
+            EvidenceKind.audit,
         summary: json['summary']?.toString() ?? '',
         payload: mapValue(json['payload']),
         hash: json['hash']?.toString() ?? '',
@@ -685,13 +739,19 @@ class WorkItemProgress {
         'completedAt': completedAt?.toUtc().toIso8601String(),
       };
 
-  factory WorkItemProgress.fromJson(Map<String, dynamic> json) => WorkItemProgress(
+  factory WorkItemProgress.fromJson(Map<String, dynamic> json) =>
+      WorkItemProgress(
         item: WorkItem.fromJson(mapValue(json['item'])),
-        state: WorkItemState.values.where((state) => state.name == json['state']).firstOrNull ?? WorkItemState.queued,
+        state: WorkItemState.values
+                .where((state) => state.name == json['state'])
+                .firstOrNull ??
+            WorkItemState.queued,
         attempts: int.tryParse(json['attempts']?.toString() ?? '') ?? 0,
         lastError: json['lastError']?.toString(),
-        startedAt: json['startedAt'] == null ? null : parseUtc(json['startedAt']),
-        completedAt: json['completedAt'] == null ? null : parseUtc(json['completedAt']),
+        startedAt:
+            json['startedAt'] == null ? null : parseUtc(json['startedAt']),
+        completedAt:
+            json['completedAt'] == null ? null : parseUtc(json['completedAt']),
       );
 }
 
@@ -765,16 +825,11 @@ class AutonomyBudget {
       maxToolCalls: bounded('maxToolCalls', 160, 1, 1600),
       maxMutations: bounded('maxMutations', 80, 0, 500),
       maxRepairs: bounded('maxRepairs', 6, 0, 120),
-      maxConsecutiveFailures:
-          bounded('maxConsecutiveFailures', 3, 1, 10),
-      maxAgentTurnsPerAttempt:
-          bounded('maxAgentTurnsPerAttempt', 24, 1, 40),
-      minModelRequestsForRetry:
-          bounded('minModelRequestsForRetry', 6, 1, 40),
-      maxRepeatedToolOutcomes:
-          bounded('maxRepeatedToolOutcomes', 3, 2, 10),
-      maxOutputBytes:
-          bounded('maxOutputBytes', 4000000, 65536, 16000000),
+      maxConsecutiveFailures: bounded('maxConsecutiveFailures', 3, 1, 10),
+      maxAgentTurnsPerAttempt: bounded('maxAgentTurnsPerAttempt', 24, 1, 40),
+      minModelRequestsForRetry: bounded('minModelRequestsForRetry', 6, 1, 40),
+      maxRepeatedToolOutcomes: bounded('maxRepeatedToolOutcomes', 3, 2, 10),
+      maxOutputBytes: bounded('maxOutputBytes', 4000000, 65536, 16000000),
       maxWallTime: Duration(
         seconds: bounded('maxWallTimeSeconds', 7200, 60, 43200),
       ),
@@ -874,19 +929,26 @@ class RunRecord {
   factory RunRecord.fromJson(Map<String, dynamic> json) => RunRecord(
         id: json['id']?.toString() ?? newId('run'),
         command: PreparedCommand.fromJson(mapValue(json['command'])),
-        state: RunState.values.where((state) => state.name == json['state']).firstOrNull ?? RunState.interrupted,
-        items: (json['items'] is List ? json['items'] as List : const <Object>[])
-            .whereType<Map>()
-            .map((item) => WorkItemProgress.fromJson(mapValue(item)))
-            .toList(),
+        state: RunState.values
+                .where((state) => state.name == json['state'])
+                .firstOrNull ??
+            RunState.interrupted,
+        items:
+            (json['items'] is List ? json['items'] as List : const <Object>[])
+                .whereType<Map>()
+                .map((item) => WorkItemProgress.fromJson(mapValue(item)))
+                .toList(),
         budget: AutonomyBudget.fromJson(mapValue(json['budget'])),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
         updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
-        startedAt: json['startedAt'] == null ? null : parseUtc(json['startedAt']),
-        completedAt: json['completedAt'] == null ? null : parseUtc(json['completedAt']),
+        startedAt:
+            json['startedAt'] == null ? null : parseUtc(json['startedAt']),
+        completedAt:
+            json['completedAt'] == null ? null : parseUtc(json['completedAt']),
         summary: json['summary']?.toString() ?? '',
         failure: json['failure']?.toString(),
-        modelRequests: int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
+        modelRequests:
+            int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
         toolCalls: int.tryParse(json['toolCalls']?.toString() ?? '') ?? 0,
         mutations: int.tryParse(json['mutations']?.toString() ?? '') ?? 0,
         repairs: int.tryParse(json['repairs']?.toString() ?? '') ?? 0,
@@ -1082,7 +1144,8 @@ class KnowledgeEntry {
         .firstOrNull;
     final inferredKind = tags.contains('research-search')
         ? KnowledgeKind.researchSearch
-        : tags.contains('research') || (json['sourceUrl']?.toString().isNotEmpty ?? false)
+        : tags.contains('research') ||
+                (json['sourceUrl']?.toString().isNotEmpty ?? false)
             ? KnowledgeKind.researchSource
             : KnowledgeKind.note;
     return KnowledgeEntry(
@@ -1271,7 +1334,12 @@ class MemoryEpisode {
 
   bool get successful => outcome == RunState.succeeded;
 
-  MemoryEpisode copyWith({bool? pinned, String? admission, String? admissionReason, bool? diagnosticOnly}) => MemoryEpisode(
+  MemoryEpisode copyWith(
+          {bool? pinned,
+          String? admission,
+          String? admissionReason,
+          bool? diagnosticOnly}) =>
+      MemoryEpisode(
         id: id,
         projectId: projectId,
         runId: runId,
@@ -1355,7 +1423,8 @@ class MemoryEpisode {
         evidenceHashes: stringList(json['evidenceHashes']),
         startedAt: parseUtc(json['startedAt'], fallback: DateTime.now()),
         completedAt: parseUtc(json['completedAt'], fallback: DateTime.now()),
-        modelRequests: int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
+        modelRequests:
+            int.tryParse(json['modelRequests']?.toString() ?? '') ?? 0,
         toolCalls: int.tryParse(json['toolCalls']?.toString() ?? '') ?? 0,
         mutations: int.tryParse(json['mutations']?.toString() ?? '') ?? 0,
         repairs: int.tryParse(json['repairs']?.toString() ?? '') ?? 0,
@@ -1569,7 +1638,6 @@ class KnowledgeStats {
       };
 }
 
-
 class PromptTemplateRecord {
   const PromptTemplateRecord({
     required this.id,
@@ -1622,18 +1690,22 @@ class PromptTemplateRecord {
         updatedAt: updatedAt ?? DateTime.now().toUtc(),
       );
 
-  String renderForChat([Map<String, String> values = const <String, String>{}]) {
+  String renderForChat(
+      [Map<String, String> values = const <String, String>{}]) {
     String render(String input) {
       var output = input;
       for (final variable in variables) {
-        output = output.replaceAll('{{$variable}}', values[variable] ?? '[$variable]');
+        output = output.replaceAll(
+            '{{$variable}}', values[variable] ?? '[$variable]');
       }
       return output.trim();
     }
 
     final system = render(systemPrompt);
     final user = render(userPrompt);
-    if (system.isEmpty) { return user; }
+    if (system.isEmpty) {
+      return user;
+    }
     return '''Instructions for this task:
 $system
 
@@ -1655,7 +1727,8 @@ $user''';
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };
 
-  factory PromptTemplateRecord.fromJson(Map<String, dynamic> json) => PromptTemplateRecord(
+  factory PromptTemplateRecord.fromJson(Map<String, dynamic> json) =>
+      PromptTemplateRecord(
         id: json['id']?.toString() ?? newId('prompt'),
         title: json['title']?.toString() ?? 'Untitled prompt',
         description: json['description']?.toString() ?? '',
@@ -1663,13 +1736,15 @@ $user''';
         userPrompt: json['userPrompt']?.toString() ?? '',
         variables: stringList(json['variables']),
         tags: stringList(json['tags']).toSet(),
-        mode: CommandMode.values.where((item) => item.name == json['mode']).firstOrNull ?? CommandMode.build,
+        mode: CommandMode.values
+                .where((item) => item.name == json['mode'])
+                .firstOrNull ??
+            CommandMode.build,
         version: int.tryParse(json['version']?.toString() ?? '') ?? 1,
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
         updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
       );
 }
-
 
 enum PromptGenerationAction { generate, improve, simplify, addDetail }
 
@@ -1712,11 +1787,21 @@ class PromptStudioDraft {
 
   List<String> validate() {
     final errors = <String>[];
-    if (title.trim().isEmpty) { errors.add('The generated prompt needs a title.'); }
-    if (purpose.trim().length < 8) { errors.add('The generated prompt needs a clear purpose.'); }
-    if (systemPrompt.trim().length < 20) { errors.add('The generated system instructions are too short.'); }
-    if (userPrompt.trim().length < 8) { errors.add('The generated user prompt is too short.'); }
-    if (acceptanceCriteria.isEmpty) { errors.add('At least one acceptance criterion is required.'); }
+    if (title.trim().isEmpty) {
+      errors.add('The generated prompt needs a title.');
+    }
+    if (purpose.trim().length < 8) {
+      errors.add('The generated prompt needs a clear purpose.');
+    }
+    if (systemPrompt.trim().length < 20) {
+      errors.add('The generated system instructions are too short.');
+    }
+    if (userPrompt.trim().length < 8) {
+      errors.add('The generated user prompt is too short.');
+    }
+    if (acceptanceCriteria.isEmpty) {
+      errors.add('At least one acceptance criterion is required.');
+    }
     if (acceptanceCriteria.any((item) => item.trim().length < 8)) {
       errors.add('Acceptance criteria must be concrete and non-empty.');
     }
@@ -1757,12 +1842,14 @@ class PromptStudioDraft {
   String renderForChat() {
     final sections = <String>[
       if (systemPrompt.trim().isNotEmpty) systemPrompt.trim(),
-      if (assumptions.isNotEmpty) 'Assumptions:\n${assumptions.map((item) => '- $item').join('\n')}',
+      if (assumptions.isNotEmpty)
+        'Assumptions:\n${assumptions.map((item) => '- $item').join('\n')}',
       if (acceptanceCriteria.isNotEmpty)
         'Acceptance criteria:\n${acceptanceCriteria.map((item) => '- $item').join('\n')}',
       if (outputExpectations.isNotEmpty)
         'Expected outputs:\n${outputExpectations.map((item) => '- $item').join('\n')}',
-      if (guardrails.isNotEmpty) 'Guardrails:\n${guardrails.map((item) => '- $item').join('\n')}',
+      if (guardrails.isNotEmpty)
+        'Guardrails:\n${guardrails.map((item) => '- $item').join('\n')}',
       if (stopConditions.isNotEmpty)
         'Stop conditions:\n${stopConditions.map((item) => '- $item').join('\n')}',
       'Task:\n${userPrompt.trim()}',
@@ -1986,50 +2073,47 @@ class PlanTaskRecord {
   factory PlanTaskRecord.fromJson(Map<String, dynamic> json) {
     final parentId = json['parentId']?.toString().trim() ?? '';
     return PlanTaskRecord(
-        id: json['id']?.toString() ?? newId('task'),
-        phase: json['phase']?.toString() ?? 'Implementation',
-        parentId: parentId.isEmpty ? null : parentId,
-        title: json['title']?.toString() ?? 'Task',
-        objective: json['objective']?.toString() ?? '',
-        instructions: json['instructions']?.toString() ?? '',
-        dependencies: stringList(json['dependencies']).toSet(),
-        acceptanceCriteria: stringList(json['acceptanceCriteria']),
-        verificationSteps: stringList(json['verificationSteps']),
-        expectedArtifacts: stringList(json['expectedArtifacts']),
-        allowedTools: stringList(json['allowedTools']).toSet(),
-        complexity: (int.tryParse(json['complexity']?.toString() ?? '') ?? 3)
-            .clamp(1, 10)
-            .toInt(),
-        effortPoints:
-            int.tryParse(json['effortPoints']?.toString() ?? '') ?? 3,
-        uncertainty: PlanUncertainty.values
-                .where((item) => item.name == json['uncertainty']?.toString())
-                .firstOrNull ??
-            PlanUncertainty.medium,
-        risk: PlanRisk.values
-                .where((item) => item.name == json['risk']?.toString())
-                .firstOrNull ??
-            PlanRisk.medium,
-        estimateConfidence:
-            (double.tryParse(json['estimateConfidence']?.toString() ?? '') ??
-                    0.6)
-                .clamp(0.0, 1.0)
-                .toDouble(),
-        expectedModelTurns:
-            (int.tryParse(json['expectedModelTurns']?.toString() ?? '') ?? 2)
-                .clamp(1, 20)
-                .toInt(),
-        expectedToolCalls:
-            (int.tryParse(json['expectedToolCalls']?.toString() ?? '') ?? 4)
-                .clamp(0, 80)
-                .toInt(),
-        maxAttempts:
-            (int.tryParse(json['maxAttempts']?.toString() ?? '') ?? 2)
-                .clamp(1, 3)
-                .toInt(),
-        enabled: json['enabled'] != false,
-        manual: json['manual'] == true,
-      );
+      id: json['id']?.toString() ?? newId('task'),
+      phase: json['phase']?.toString() ?? 'Implementation',
+      parentId: parentId.isEmpty ? null : parentId,
+      title: json['title']?.toString() ?? 'Task',
+      objective: json['objective']?.toString() ?? '',
+      instructions: json['instructions']?.toString() ?? '',
+      dependencies: stringList(json['dependencies']).toSet(),
+      acceptanceCriteria: stringList(json['acceptanceCriteria']),
+      verificationSteps: stringList(json['verificationSteps']),
+      expectedArtifacts: stringList(json['expectedArtifacts']),
+      allowedTools: stringList(json['allowedTools']).toSet(),
+      complexity: (int.tryParse(json['complexity']?.toString() ?? '') ?? 3)
+          .clamp(1, 10)
+          .toInt(),
+      effortPoints: int.tryParse(json['effortPoints']?.toString() ?? '') ?? 3,
+      uncertainty: PlanUncertainty.values
+              .where((item) => item.name == json['uncertainty']?.toString())
+              .firstOrNull ??
+          PlanUncertainty.medium,
+      risk: PlanRisk.values
+              .where((item) => item.name == json['risk']?.toString())
+              .firstOrNull ??
+          PlanRisk.medium,
+      estimateConfidence:
+          (double.tryParse(json['estimateConfidence']?.toString() ?? '') ?? 0.6)
+              .clamp(0.0, 1.0)
+              .toDouble(),
+      expectedModelTurns:
+          (int.tryParse(json['expectedModelTurns']?.toString() ?? '') ?? 2)
+              .clamp(1, 20)
+              .toInt(),
+      expectedToolCalls:
+          (int.tryParse(json['expectedToolCalls']?.toString() ?? '') ?? 4)
+              .clamp(0, 80)
+              .toInt(),
+      maxAttempts: (int.tryParse(json['maxAttempts']?.toString() ?? '') ?? 2)
+          .clamp(1, 3)
+          .toInt(),
+      enabled: json['enabled'] != false,
+      manual: json['manual'] == true,
+    );
   }
 }
 
@@ -2085,14 +2169,22 @@ class TaskPlanRecord {
 
   List<String> validate() {
     final errors = <String>[];
-    if (title.trim().isEmpty) { errors.add('The task plan needs a title.'); }
-    if (tasks.isEmpty) { errors.add('The task plan must contain at least one task.'); }
+    if (title.trim().isEmpty) {
+      errors.add('The task plan needs a title.');
+    }
+    if (tasks.isEmpty) {
+      errors.add('The task plan must contain at least one task.');
+    }
     if (tasks.length > maxLeafTasks || tasks.length > 100) {
       errors.add('The task plan exceeds its configured leaf-task limit.');
     }
     final ids = tasks.map((item) => item.id).toList(growable: false);
-    if (ids.toSet().length != ids.length) { errors.add('Task IDs must be unique.'); }
-    final byId = <String, PlanTaskRecord>{for (final item in tasks) item.id: item};
+    if (ids.toSet().length != ids.length) {
+      errors.add('Task IDs must be unique.');
+    }
+    final byId = <String, PlanTaskRecord>{
+      for (final item in tasks) item.id: item
+    };
     for (final task in tasks) {
       if (task.title.trim().isEmpty || task.instructions.trim().isEmpty) {
         errors.add('${task.id} requires a title and instructions.');
@@ -2113,8 +2205,12 @@ class TaskPlanRecord {
       }
       for (final dependency in task.dependencies) {
         final target = byId[dependency];
-        if (target == null) { errors.add('${task.id} references missing dependency $dependency.'); }
-        if (dependency == task.id) { errors.add('${task.id} cannot depend on itself.'); }
+        if (target == null) {
+          errors.add('${task.id} references missing dependency $dependency.');
+        }
+        if (dependency == task.id) {
+          errors.add('${task.id} cannot depend on itself.');
+        }
         if (task.enabled && target != null && !target.enabled) {
           errors.add('${task.id} depends on disabled task $dependency.');
         }
@@ -2123,33 +2219,47 @@ class TaskPlanRecord {
     final parentVisited = <String>{};
     final parentActive = <String>{};
     bool parentCycle(String id) {
-      if (parentActive.contains(id)) { return true; }
-      if (parentVisited.contains(id)) { return false; }
+      if (parentActive.contains(id)) {
+        return true;
+      }
+      if (parentVisited.contains(id)) {
+        return false;
+      }
       parentActive.add(id);
       final parentId = byId[id]?.parentId;
-      if (parentId != null && byId.containsKey(parentId) && parentCycle(parentId)) {
+      if (parentId != null &&
+          byId.containsKey(parentId) &&
+          parentCycle(parentId)) {
         return true;
       }
       parentActive.remove(id);
       parentVisited.add(id);
       return false;
     }
+
     if (tasks.any((item) => parentCycle(item.id))) {
       errors.add('The task plan contains a parent hierarchy cycle.');
     }
     final visited = <String>{};
     final active = <String>{};
     bool cycle(String id) {
-      if (active.contains(id)) { return true; }
-      if (visited.contains(id)) { return false; }
+      if (active.contains(id)) {
+        return true;
+      }
+      if (visited.contains(id)) {
+        return false;
+      }
       active.add(id);
       for (final dependency in byId[id]?.dependencies ?? const <String>{}) {
-        if (cycle(dependency)) { return true; }
+        if (cycle(dependency)) {
+          return true;
+        }
       }
       active.remove(id);
       visited.add(id);
       return false;
     }
+
     if (tasks.any((item) => cycle(item.id))) {
       errors.add('The task plan contains a dependency cycle.');
     }
@@ -2211,33 +2321,30 @@ class TaskPlanRecord {
     final createdAt = parseUtc(json['createdAt'], fallback: DateTime.now());
     final previousPlanId = json['previousPlanId']?.toString().trim() ?? '';
     return TaskPlanRecord(
-        id: json['id']?.toString() ?? newId('task_plan'),
-        promptId: json['promptId']?.toString() ?? '',
-        promptVersionId: json['promptVersionId']?.toString() ?? '',
-        projectId: json['projectId']?.toString() ?? '',
-        revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
-        previousPlanId: previousPlanId.isEmpty ? null : previousPlanId,
-        title: json['title']?.toString() ?? 'Generated task plan',
-        rationale: json['rationale']?.toString() ?? '',
-        depth: PlanningDepth.values
-                .where((item) => item.name == json['depth']?.toString())
-                .firstOrNull ??
-            PlanningDepth.auto,
-        maxLeafTasks:
-            (int.tryParse(json['maxLeafTasks']?.toString() ?? '') ?? 25)
-                .clamp(1, 100)
-                .toInt(),
-        tasks: (json['tasks'] is List
-                ? json['tasks'] as List
-                : const <Object>[])
-            .whereType<Map>()
-            .map((item) => PlanTaskRecord.fromJson(mapValue(item)))
-            .toList(),
-        model: ModelIdentity.fromJson(mapValue(json['model'])),
-        contentHash: json['contentHash']?.toString() ?? '',
-        createdAt: createdAt,
-        updatedAt: parseUtc(json['updatedAt'], fallback: createdAt),
-      );
+      id: json['id']?.toString() ?? newId('task_plan'),
+      promptId: json['promptId']?.toString() ?? '',
+      promptVersionId: json['promptVersionId']?.toString() ?? '',
+      projectId: json['projectId']?.toString() ?? '',
+      revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
+      previousPlanId: previousPlanId.isEmpty ? null : previousPlanId,
+      title: json['title']?.toString() ?? 'Generated task plan',
+      rationale: json['rationale']?.toString() ?? '',
+      depth: PlanningDepth.values
+              .where((item) => item.name == json['depth']?.toString())
+              .firstOrNull ??
+          PlanningDepth.auto,
+      maxLeafTasks: (int.tryParse(json['maxLeafTasks']?.toString() ?? '') ?? 25)
+          .clamp(1, 100)
+          .toInt(),
+      tasks: (json['tasks'] is List ? json['tasks'] as List : const <Object>[])
+          .whereType<Map>()
+          .map((item) => PlanTaskRecord.fromJson(mapValue(item)))
+          .toList(),
+      model: ModelIdentity.fromJson(mapValue(json['model'])),
+      contentHash: json['contentHash']?.toString() ?? '',
+      createdAt: createdAt,
+      updatedAt: parseUtc(json['updatedAt'], fallback: createdAt),
+    );
   }
 }
 
@@ -2297,10 +2404,14 @@ class ProjectDiagnosticReport {
   final List<DiagnosticCheck> checks;
   final DateTime generatedAt;
 
-  bool get hasBlockingFailure => checks.any((check) => check.status == DiagnosticStatus.failed);
-  int get passed => checks.where((check) => check.status == DiagnosticStatus.passed).length;
-  int get warnings => checks.where((check) => check.status == DiagnosticStatus.warning).length;
-  int get failed => checks.where((check) => check.status == DiagnosticStatus.failed).length;
+  bool get hasBlockingFailure =>
+      checks.any((check) => check.status == DiagnosticStatus.failed);
+  int get passed =>
+      checks.where((check) => check.status == DiagnosticStatus.passed).length;
+  int get warnings =>
+      checks.where((check) => check.status == DiagnosticStatus.warning).length;
+  int get failed =>
+      checks.where((check) => check.status == DiagnosticStatus.failed).length;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'projectId': projectId,
@@ -2401,8 +2512,8 @@ class AgentAction {
       actionObject['type'],
     ]);
     final normalizedActionName = _normalizeKind(actionName);
-    final actionNameIsTerminal = const <String>{'complete', 'fail'}
-        .contains(normalizedActionName);
+    final actionNameIsTerminal =
+        const <String>{'complete', 'fail'}.contains(normalizedActionName);
     final rawTool = _firstText(<Object?>[
       json['tool'],
       json['toolName'],

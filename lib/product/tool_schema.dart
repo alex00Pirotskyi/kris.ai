@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:kristin_local_agent/product/crypto_utils.dart';
+
 import 'domain.dart';
 import 'generated/protocol_contracts.g.dart';
 import 'protocol_types.dart';
@@ -101,8 +103,7 @@ class ToolContract {
       risk: _risk(json['risk']?.toString() ?? ''),
       idempotency: _idempotency(json['idempotency']?.toString() ?? ''),
       dataBoundary: json['dataBoundary']?.toString() ?? 'project-local',
-      compatibilityVersion:
-          json['compatibilityVersion']?.toString() ?? '1.0.0',
+      compatibilityVersion: json['compatibilityVersion']?.toString() ?? '1.0.0',
       inputSchema: _map(json['inputSchema']),
       outputSchema: _map(json['outputSchema']),
       example: _map(json['example']),
@@ -129,8 +130,7 @@ class ToolContract {
   bool get isMutating =>
       risk == ToolRisk.mutation || risk == ToolRisk.destructive;
 
-  List<String> get requiredArguments =>
-      _strings(inputSchema['required']);
+  List<String> get requiredArguments => _strings(inputSchema['required']);
 
   List<String> get optionalArguments {
     final properties = _map(inputSchema['properties']).keys.toSet();
@@ -199,7 +199,8 @@ class ToolContract {
     final properties = _map(inputSchema['properties']);
     for (final entry in properties.entries) {
       final property = _map(entry.value);
-      if (!arguments.containsKey(entry.key) && property.containsKey('default')) {
+      if (!arguments.containsKey(entry.key) &&
+          property.containsKey('default')) {
         arguments[entry.key] = _cloneJson(property['default']);
         changes.add(
           ToolCompatibilityChange(
@@ -393,8 +394,7 @@ class ToolContract {
 class ToolSchemaRegistry {
   const ToolSchemaRegistry();
 
-  static final Map<String, ToolContract> _contracts =
-      <String, ToolContract>{
+  static final Map<String, ToolContract> _contracts = <String, ToolContract>{
     for (final value in generatedToolRegistry['tools'] as List<Object?>)
       if (value is Map)
         value['name'].toString(): ToolContract.fromJson(
@@ -813,9 +813,8 @@ String _idempotencyWireName(ToolIdempotency value) => switch (value) {
       ToolIdempotency.requestHash => 'request_hash',
     };
 
-Map<String, dynamic> _map(Object? value) => value is Map
-    ? Map<String, dynamic>.from(value)
-    : <String, dynamic>{};
+Map<String, dynamic> _map(Object? value) =>
+    value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
 
 List<String> _strings(Object? value) => value is List
     ? value.map((item) => item.toString()).toList(growable: false)
@@ -827,9 +826,8 @@ int? _int(Object? value) => value is int
         ? value.toInt()
         : int.tryParse(value?.toString() ?? '');
 
-num? _number(Object? value) => value is num
-    ? value
-    : num.tryParse(value?.toString() ?? '');
+num? _number(Object? value) =>
+    value is num ? value : num.tryParse(value?.toString() ?? '');
 
 Object? _cloneJson(Object? value) {
   if (value is Map) {
@@ -898,9 +896,8 @@ bool _validFormat(String value, String format) {
 }
 
 String _topLevelArgument(String path) {
-  final normalized = path
-      .replaceFirst(r'$.arguments.', '')
-      .replaceFirst(r'$.', '');
+  final normalized =
+      path.replaceFirst(r'$.arguments.', '').replaceFirst(r'$.', '');
   return normalized.split(RegExp(r'[.\[]')).first;
 }
 

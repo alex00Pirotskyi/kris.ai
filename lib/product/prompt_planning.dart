@@ -139,9 +139,7 @@ Return one JSON object matching the required schema.
       lastResponse = generation.text;
       try {
         final raw = _extractJsonObject(generation.text);
-        final candidate = raw['prompt'] is Map
-            ? mapValue(raw['prompt'])
-            : raw;
+        final candidate = raw['prompt'] is Map ? mapValue(raw['prompt']) : raw;
         final draft = _boundedDraft(PromptStudioDraft.fromJson(candidate));
         final errors = draft.validate();
         if (errors.isNotEmpty) {
@@ -171,7 +169,9 @@ Return one JSON object matching the required schema.
         return draft;
       } catch (error) {
         lastError = error;
-        if (attempt >= 3) { break; }
+        if (attempt >= 3) {
+          break;
+        }
         user = '''
 The previous response failed validation.
 Error: ${redactor.redact('$error')}
@@ -392,7 +392,9 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
         return plan;
       } catch (error) {
         lastError = error;
-        if (attempt >= 3) { break; }
+        if (attempt >= 3) {
+          break;
+        }
         user = '''
 The previous task plan failed validation.
 Error: ${redactor.redact('$error')}
@@ -419,8 +421,12 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
     String? projectId,
   }) async {
     final plans = (await repositories.taskPlans.all()).where((item) {
-      if (promptId != null && item.promptId != promptId) { return false; }
-      if (projectId != null && item.projectId != projectId) { return false; }
+      if (promptId != null && item.promptId != promptId) {
+        return false;
+      }
+      if (projectId != null && item.projectId != projectId) {
+        return false;
+      }
       return true;
     }).toList();
     plans.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
@@ -453,9 +459,8 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
         canonicalJson(<String, dynamic>{
           'previousPlanId': plan.id,
           'revision': plan.revision + 1,
-          'title': title?.trim().isNotEmpty == true
-              ? title!.trim()
-              : plan.title,
+          'title':
+              title?.trim().isNotEmpty == true ? title!.trim() : plan.title,
           'rationale': rationale?.trim().isNotEmpty == true
               ? rationale!.trim()
               : plan.rationale,
@@ -515,7 +520,9 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
         "The selected project is Kristin's own source checkout. Create or select a separate project folder before compiling a mutating task plan.",
       );
     }
-    final all = <String, PlanTaskRecord>{for (final item in plan.tasks) item.id: item};
+    final all = <String, PlanTaskRecord>{
+      for (final item in plan.tasks) item.id: item
+    };
     final selected = selectedTaskIds == null || selectedTaskIds.isEmpty
         ? plan.enabledTasks.map((item) => item.id).toSet()
         : _withDependencies(selectedTaskIds, all);
@@ -523,7 +530,8 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
         .where((item) => item.enabled && selected.contains(item.id))
         .toList(growable: false);
     if (tasks.isEmpty) {
-      throw ProductException('task_plan_empty', 'Select at least one enabled task.');
+      throw ProductException(
+          'task_plan_empty', 'Select at least one enabled task.');
     }
     if (tasks.any((item) => item.manual)) {
       throw ProductException(
@@ -536,16 +544,14 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
     final workItems = tasks.map((task) {
       final allowedTools = tools.allowedToolNames(<String>{
         ...task.allowedTools,
-        if (_taskRequiresMutation(task))
-          ...const <String>{
-            'inspect_file',
-            'write_file',
-            'replace_text',
-            'apply_patch',
-          },
+        if (_taskRequiresMutation(task)) ...const <String>{
+          'inspect_file',
+          'write_file',
+          'replace_text',
+          'apply_patch',
+        },
       });
-      if (_taskRequiresMutation(task) &&
-          !allowedTools.any(_isMutationTool)) {
+      if (_taskRequiresMutation(task) && !allowedTools.any(_isMutationTool)) {
         throw ProductException(
           'task_mutation_tools_missing',
           '${task.id} promises a project artifact but has no governed mutation tool.',
@@ -561,9 +567,9 @@ Instructions: ${task.instructions}
 Verification: ${task.verificationSteps.join(' | ')}
 Expected artifacts: ${task.expectedArtifacts.join(' | ')}
 Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.risk.name}; confidence: ${(task.estimateConfidence * 100).round()}%.
-'''.trim(),
-        dependencies:
-            task.dependencies.where(allowedIds.contains).toSet(),
+'''
+            .trim(),
+        dependencies: task.dependencies.where(allowedIds.contains).toSet(),
         allowedTools: allowedTools,
         acceptanceCriteria: task.acceptanceCriteria,
         maxAttempts: task.maxAttempts.clamp(1, 3).toInt(),
@@ -593,7 +599,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         ),
       );
     }
-    final requestedTools = workItems.expand((item) => item.allowedTools).toSet();
+    final requestedTools =
+        workItems.expand((item) => item.allowedTools).toSet();
     final requiredPermissions = tools.permissionsForTools(requestedTools);
     final contract = TaskContract(
       id: newId('contract'),
@@ -613,7 +620,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         'Compiled from prompt version ${promptVersion.id} and task plan ${plan.id}.',
       ],
       researchQuestions: requestedTools.any(
-        (name) => const <String>{'research_search', 'research_fetch'}.contains(name),
+        (name) =>
+            const <String>{'research_search', 'research_fetch'}.contains(name),
       )
           ? <String>[
               'Which primary sources materially affect this approved task plan?',
@@ -654,7 +662,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     final existing = (await repositories.commands.all())
         .where((item) => item.requestKey == requestKey)
         .firstOrNull;
-    if (existing != null) { return existing; }
+    if (existing != null) {
+      return existing;
+    }
     final prepared = PreparedCommand(
       id: newId('command'),
       requestKey: requestKey,
@@ -718,7 +728,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     ModelGenerationRequest request,
   ) {
     final generator = _generator;
-    if (generator != null) { return generator(request); }
+    if (generator != null) {
+      return generator(request);
+    }
     return models.providerFor(request.identity).generate(request);
   }
 
@@ -759,7 +771,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         ? (json['tasks'] as List).whereType<Map>().map(mapValue).toList()
         : <Map<String, dynamic>>[];
     if (rawTasks.isEmpty) {
-      throw ProductException('task_plan_empty', 'The generated plan contains no tasks.');
+      throw ProductException(
+          'task_plan_empty', 'The generated plan contains no tasks.');
     }
     if (rawTasks.length > maxLeafTasks || rawTasks.length > 100) {
       throw ProductException(
@@ -777,7 +790,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       );
     }
     if (rawIds.toSet().length != rawIds.length) {
-      throw ProductException('task_ids_duplicate', 'Generated task IDs are not unique.');
+      throw ProductException(
+          'task_ids_duplicate', 'Generated task IDs are not unique.');
     }
     final normalizedIds = <String, String>{};
     final used = <String>{};
@@ -873,28 +887,28 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
           !alignment.executableReplacement;
       final expectedArtifacts = alignment.expectedArtifactsOverride ??
           (alignment.localDeployment
-          ? const <String>[
-              'Local preview instructions',
-              'Deployment-ready package',
-              'Manual hosting guide',
-            ]
-          : alignment.localUsabilityTest
               ? const <String>[
-                  'docs/testing/usability-checklist.md',
-                  'Automated interaction-check results',
-                  'Manual keyboard, pointer, and responsive test scenarios',
+                  'Local preview instructions',
+                  'Deployment-ready package',
+                  'Manual hosting guide',
                 ]
-              : alignment.localDesign
+              : alignment.localUsabilityTest
                   ? const <String>[
-                      'docs/design/wireframes.md',
-                      'Project-local responsive design prototype',
-                      'Interface-state and accessibility notes',
+                      'docs/testing/usability-checklist.md',
+                      'Automated interaction-check results',
+                      'Manual keyboard, pointer, and responsive test scenarios',
                     ]
-                  : stringList(raw['expectedArtifacts'])
-                  .map((item) => item.trim())
-                  .where((item) => item.isNotEmpty)
-                  .take(12)
-                  .toList());
+                  : alignment.localDesign
+                      ? const <String>[
+                          'docs/design/wireframes.md',
+                          'Project-local responsive design prototype',
+                          'Interface-state and accessibility notes',
+                        ]
+                      : stringList(raw['expectedArtifacts'])
+                          .map((item) => item.trim())
+                          .where((item) => item.isNotEmpty)
+                          .take(12)
+                          .toList());
       final mutationTaskText = '$title $objective $instructions '
           '${expectedArtifacts.join(' ')}';
       if (_textRequiresMutation(mutationTaskText)) {
@@ -919,53 +933,52 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
           dependencies: dependencies,
           acceptanceCriteria: alignment.acceptanceCriteriaOverride ??
               (alignment.localDeployment
-              ? const <String>[
-                  'The application runs through a documented local preview command.',
-                  'A deployment-ready package and honest manual hosting instructions are produced.',
-                ]
-              : alignment.localUsabilityTest
                   ? const <String>[
-                      'Available automated interaction and project checks pass or their exact limitations are recorded.',
-                      'A project-local checklist covers keyboard, pointer, responsive, accessibility, error-state, and manual review scenarios without claiming unperformed human research.',
+                      'The application runs through a documented local preview command.',
+                      'A deployment-ready package and honest manual hosting instructions are produced.',
                     ]
-                  : alignment.localDesign
+                  : alignment.localUsabilityTest
                       ? const <String>[
-                          'An inspectable project-local responsive design artifact is produced.',
-                          'The design documents layout, states, accessibility, and responsive behavior without claiming external GUI-service execution.',
+                          'Available automated interaction and project checks pass or their exact limitations are recorded.',
+                          'A project-local checklist covers keyboard, pointer, responsive, accessibility, error-state, and manual review scenarios without claiming unperformed human research.',
                         ]
-                      : stringList(raw['acceptanceCriteria'])
-                  .map((item) => item.trim())
-                  .where((item) => item.isNotEmpty)
-                  .take(12)
-                      .toList()),
+                      : alignment.localDesign
+                          ? const <String>[
+                              'An inspectable project-local responsive design artifact is produced.',
+                              'The design documents layout, states, accessibility, and responsive behavior without claiming external GUI-service execution.',
+                            ]
+                          : stringList(raw['acceptanceCriteria'])
+                              .map((item) => item.trim())
+                              .where((item) => item.isNotEmpty)
+                              .take(12)
+                              .toList()),
           verificationSteps: alignment.verificationStepsOverride ??
               (alignment.localDeployment
-              ? const <String>[
-                  'Run the detected project checks and start a bounded local preview.',
-                  'Create and inspect the governed deployment package.',
-                ]
-              : alignment.localUsabilityTest
                   ? const <String>[
-                      'Run the detected analyzer and tests, including available interaction tests.',
-                      'Inspect the local preview or implementation for keyboard, pointer, responsive, accessibility, and error-state coverage.',
-                      'Inspect `docs/testing/usability-checklist.md` and confirm that unperformed human feedback is not presented as evidence.',
+                      'Run the detected project checks and start a bounded local preview.',
+                      'Create and inspect the governed deployment package.',
                     ]
-                  : alignment.localDesign
+                  : alignment.localUsabilityTest
                       ? const <String>[
-                          'Inspect the generated design files and start a bounded local preview when the project supports one.',
-                          'Verify that responsive layout and interface states are represented in project-local artifacts.',
+                          'Run the detected analyzer and tests, including available interaction tests.',
+                          'Inspect the local preview or implementation for keyboard, pointer, responsive, accessibility, and error-state coverage.',
+                          'Inspect `docs/testing/usability-checklist.md` and confirm that unperformed human feedback is not presented as evidence.',
                         ]
-                      : stringList(raw['verificationSteps'])
-                  .map((item) => item.trim())
-                  .where((item) => item.isNotEmpty)
-                  .take(12)
-                  .toList()),
+                      : alignment.localDesign
+                          ? const <String>[
+                              'Inspect the generated design files and start a bounded local preview when the project supports one.',
+                              'Verify that responsive layout and interface states are represented in project-local artifacts.',
+                            ]
+                          : stringList(raw['verificationSteps'])
+                              .map((item) => item.trim())
+                              .where((item) => item.isNotEmpty)
+                              .take(12)
+                              .toList()),
           expectedArtifacts: expectedArtifacts,
           allowedTools: normalizedTools,
-          complexity:
-              (int.tryParse(raw['complexity']?.toString() ?? '') ?? 3)
-                  .clamp(1, 10)
-                  .toInt(),
+          complexity: (int.tryParse(raw['complexity']?.toString() ?? '') ?? 3)
+              .clamp(1, 10)
+              .toInt(),
           effortPoints: _effortPoint(
             int.tryParse(raw['effortPoints']?.toString() ?? '') ?? 3,
           ),
@@ -1016,7 +1029,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     if (const <CommandMode>{CommandMode.build, CommandMode.fix}
         .contains(effectiveGeneratedMode)) {
       final hasVerification = tasks.any(
-        (item) => item.allowedTools.contains('verify_project') ||
+        (item) =>
+            item.allowedTools.contains('verify_project') ||
             item.title.toLowerCase().contains('verify') ||
             item.verificationSteps.any(
               (step) => RegExp(
@@ -1108,8 +1122,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     final localDesignAction = RegExp(
       r'\b(?:create|make|design|produce|generate|document|implement|build)\b',
     ).hasMatch(lower);
-    final localDesign = externalDesign ||
-        (localDesignArtifact && localDesignAction);
+    final localDesign =
+        externalDesign || (localDesignArtifact && localDesignAction);
     final publicDeployment = RegExp(
       r'\b(?:deploy(?:ment)?|publish|production environment|public url|live version|live-accessible|cloud platform|hosting server)\b',
     ).hasMatch(lower);
@@ -1117,8 +1131,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       r'\b(?:user testing|usability testing|usability study|usability sessions?|recruit(?:ing)? users?|recruit participants?|real users?|participants?|interview(?:ing)? users?|user interviews?|focus groups?|survey(?:ing)? users?|collect(?:ing)? (?:human |user )?feedback|observe(?:ing)? (?:their |real )?interactions?|field study|real-world scenario|a/?b test(?:ing)? with users?)\b',
     ).hasMatch(lower);
     final workspaceSetup = RegExp(
-      r'\b(?:set up|setup|prepare|install|initialize)\b[\s\S]{0,100}\b(?:development environment|node(?:\.js)?|npm|git|project directory|workspace)\b',
-    ).hasMatch(lower) ||
+          r'\b(?:set up|setup|prepare|install|initialize)\b[\s\S]{0,100}\b(?:development environment|node(?:\.js)?|npm|git|project directory|workspace)\b',
+        ).hasMatch(lower) ||
         RegExp(r"\bcreate a new project directory\b").hasMatch(lower);
     final backendTask = RegExp(
       r'\b(?:express(?:\.js)?|backend|restful|rest api|api endpoints?|server-side|http server)\b',
@@ -1242,7 +1256,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       executableReplacement = true;
     }
     if (clientOnlyLogic && !localDesign && !localUsabilityTest) {
-      alignedTitle = 'Implement the client-side calculation engine and session history';
+      alignedTitle =
+          'Implement the client-side calculation engine and session history';
       alignedObjective =
           'Implement arithmetic operations, validation, immediate results, and in-session history without an unnecessary server dependency.';
       alignedInstructions =
@@ -1352,9 +1367,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     if (_explicitlyPlanningOnly(combined)) {
       return requestedMode;
     }
-    return _textRequiresMutation(combined)
-        ? CommandMode.build
-        : requestedMode;
+    return _textRequiresMutation(combined) ? CommandMode.build : requestedMode;
   }
 
   CommandMode _effectivePlanMode(
@@ -1431,8 +1444,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     final primaryByKey = <String, PlanTaskRecord>{};
     final duplicateGroups = <String, List<PlanTaskRecord>>{};
     for (final task in tasks) {
-      final isDeployment = task.title ==
-          'Prepare local preview and deployment package';
+      final isDeployment =
+          task.title == 'Prepare local preview and deployment package';
       if (!isDeployment) {
         continue;
       }
@@ -1531,14 +1544,16 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       r'\b(?:research|online|web|documentation|information|requirements?|specifications?|frameworks?|libraries|tools)\b',
     ).hasMatch(lower)) {
       result.add('knowledge_search');
-      if (!settings.localOnly && RegExp(r'\b(?:research|online|web)\b').hasMatch(lower)) {
+      if (!settings.localOnly &&
+          RegExp(r'\b(?:research|online|web)\b').hasMatch(lower)) {
         result.add('research_fetch');
       }
     }
     if (RegExp(r'\b(?:test|verify|analy[sz]e|build|check)\b').hasMatch(lower)) {
       result.addAll(<String>{'run_command', 'verify_project'});
     }
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}.contains(mode) &&
+    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
+            .contains(mode) &&
         RegExp(r'\b(?:implement|create|develop|write|code|build|fix|repair)\b')
             .hasMatch(lower)) {
       result.addAll(<String>{
@@ -1548,7 +1563,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         'run_command',
       });
     }
-    if (RegExp(r'\b(?:preview|serve|run locally|local server)\b').hasMatch(lower)) {
+    if (RegExp(r'\b(?:preview|serve|run locally|local server)\b')
+        .hasMatch(lower)) {
       result.addAll(<String>{
         'run_command',
         'start_process',
@@ -1577,7 +1593,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       'git_diff',
       'knowledge_search',
     };
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}.contains(mode)) {
+    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
+        .contains(mode)) {
       result.addAll(<String>{
         'write_file',
         'write_binary_file',
@@ -1605,11 +1622,14 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     final result = <String>{};
     void add(String id) {
       final task = all[id];
-      if (task == null || !result.add(id)) { return; }
+      if (task == null || !result.add(id)) {
+        return;
+      }
       for (final dependency in task.dependencies) {
         add(dependency);
       }
     }
+
     for (final id in selected) {
       add(id);
     }
@@ -1633,9 +1653,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     const allowed = <int>[1, 2, 3, 5, 8, 13];
     return allowed.reduce(
       (best, candidate) =>
-          (candidate - value).abs() < (best - value).abs()
-              ? candidate
-              : best,
+          (candidate - value).abs() < (best - value).abs() ? candidate : best,
     );
   }
 
@@ -1643,7 +1661,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     final trimmed = text.trim();
     try {
       final decoded = jsonDecode(trimmed);
-      if (decoded is Map) { return mapValue(decoded); }
+      if (decoded is Map) {
+        return mapValue(decoded);
+      }
     } catch (_) {
       // Continue with a bounded JSON object extractor.
     }
@@ -1666,7 +1686,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       if (code == 0x22) {
         inString = true;
       } else if (code == 0x7b) {
-        if (depth == 0) { start = index; }
+        if (depth == 0) {
+          start = index;
+        }
         depth++;
       } else if (code == 0x7d && depth > 0) {
         depth--;
@@ -1674,7 +1696,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
           final candidate = text.substring(start, index + 1);
           try {
             final decoded = jsonDecode(candidate);
-            if (decoded is Map) { return mapValue(decoded); }
+            if (decoded is Map) {
+              return mapValue(decoded);
+            }
           } catch (_) {
             // Keep scanning for a later valid object.
           }
@@ -1690,11 +1714,12 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
 
   String _preview(String text, {required int limit}) {
     final normalized = redactor.redact(text).replaceAll('\u0000', '').trim();
-    if (normalized.length <= limit) { return normalized; }
+    if (normalized.length <= limit) {
+      return normalized;
+    }
     return '${normalized.substring(0, limit)}…';
   }
 }
-
 
 class _TaskCapabilityAlignment {
   const _TaskCapabilityAlignment({

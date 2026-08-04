@@ -140,7 +140,12 @@ class FileAdapterRegistry {
           id: 'image',
           tier: FileAdapterTier.native,
           extensions: <String>{'png', 'jpg', 'jpeg', 'gif', 'webp'},
-          mediaTypes: <String>{'image/png', 'image/jpeg', 'image/gif', 'image/webp'},
+          mediaTypes: <String>{
+            'image/png',
+            'image/jpeg',
+            'image/gif',
+            'image/webp'
+          },
           capabilities: <FileAdapterCapability>{
             FileAdapterCapability.detect,
             FileAdapterCapability.inspect,
@@ -247,9 +252,8 @@ class FileAdapterRegistry {
       ];
 
   FileAdapterDescriptor detect(File file) {
-    final extension = file.path.contains('.')
-        ? file.path.split('.').last.toLowerCase()
-        : '';
+    final extension =
+        file.path.contains('.') ? file.path.split('.').last.toLowerCase() : '';
     for (final adapter in all) {
       if (adapter.extensions.contains(extension)) {
         return adapter;
@@ -288,10 +292,11 @@ class FileAdapterRegistry {
     }
     if (adapter.id == 'email') {
       final text = utf8.decode(bytes, allowMalformed: true);
-      final subject = RegExp(r'^subject:\s*(.+)$', caseSensitive: false, multiLine: true)
-              .firstMatch(text)
-              ?.group(1) ??
-          '';
+      final subject =
+          RegExp(r'^subject:\s*(.+)$', caseSensitive: false, multiLine: true)
+                  .firstMatch(text)
+                  ?.group(1) ??
+              '';
       metadata['subject'] = subject.trim();
     }
     return FileInspectionResult(
@@ -338,10 +343,16 @@ class FileAdapterRegistry {
               bytes[1] == 0x50 &&
               bytes[2] == 0x4E &&
               bytes[3] == 0x47;
-          final isJpeg =
-              bytes.length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
-          final signature = utf8.decode(bytes.take(6).toList(), allowMalformed: true);
-          if (!(isPng || isJpeg || signature.startsWith('GIF8') || signature.startsWith('RIFF'))) {
+          final isJpeg = bytes.length >= 3 &&
+              bytes[0] == 0xFF &&
+              bytes[1] == 0xD8 &&
+              bytes[2] == 0xFF;
+          final signature =
+              utf8.decode(bytes.take(6).toList(), allowMalformed: true);
+          if (!(isPng ||
+              isJpeg ||
+              signature.startsWith('GIF8') ||
+              signature.startsWith('RIFF'))) {
             throw StateError('Image signature is not recognized.');
           }
           break;
@@ -349,9 +360,8 @@ class FileAdapterRegistry {
         case 'ooxml':
         case 'opendocument':
         case 'epub':
-          final header = bytes.length >= 4
-              ? bytes.take(4).toList()
-              : const <int>[];
+          final header =
+              bytes.length >= 4 ? bytes.take(4).toList() : const <int>[];
           final isZip = header.length == 4 &&
               header[0] == 0x50 &&
               header[1] == 0x4B &&
