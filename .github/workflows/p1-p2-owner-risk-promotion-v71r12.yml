@@ -1,0 +1,19 @@
+name: P1 P2 Owner-Risk Promotion V71-R12
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registration-only:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Refuse default-branch execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'This default-branch file only registers workflow_dispatch.'
+          echo 'The governed implementation is executed from integration/p2-owner-risk-v71r12.'
+          exit 1
