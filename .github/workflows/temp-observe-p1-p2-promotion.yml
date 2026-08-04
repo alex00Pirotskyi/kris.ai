@@ -1,0 +1,129 @@
+name: TEMP Observe P1 P2 Promotion
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: temp-observe-p1-p2-promotion
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    if: >-
+      github.event.pull_request.head.ref == 'ci/observe-p1-p2-promotion-trigger' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+    env:
+      EXPECTED_HEAD: eb12a6b45d86f83a87eb30c4cb66e99f773c3054
+      TARGET_BRANCH: integration/p2-owner-risk-v71r12
+      PROMOTION_WORKFLOW: p1-p2-owner-risk-promotion-v71r12.yml
+      MONITOR_WORKFLOW: v71r12-validation-monitor.yml
+      NOT_BEFORE: '2026-08-04T18:19:00Z'
+      CLOSURE_BRANCH: closure/v71r12-p1-p2-eb12a6b45d86
+    steps:
+      - name: Locate and inspect exact manual promotion
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          runs="$(
+            gh api \
+              "repos/$GITHUB_REPOSITORY/actions/workflows/$PROMOTION_WORKFLOW/runs?event=workflow_dispatch&branch=$TARGET_BRANCH&per_page=100"
+          )"
+          run_id="$(
+            printf '%s' "$runs" | jq -r \
+              --arg sha "$EXPECTED_HEAD" \
+              --arg not_before "$NOT_BEFORE" \
+              '[.workflow_runs[] | select(
+                  .event == "workflow_dispatch" and
+                  .head_sha == $sha and
+                  .head_branch == "integration/p2-owner-risk-v71r12" and
+                  .created_at >= $not_before
+                )] | sort_by(.created_at) | last | .id // empty'
+          )"
+          if [ -z "$run_id" ]; then
+            echo "No exact manual P1/P2 promotion run was found" >&2
+            printf '%s' "$runs" | jq -r '.workflow_runs[] | [.id, .event, .status, (.conclusion // ""), .head_branch, .head_sha, .created_at] | @tsv'
+            exit 1
+          fi
+
+          attempts=0
+          while :; do
+            run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id")"
+            status="$(printf '%s' "$run" | jq -r '.status')"
+            conclusion="$(printf '%s' "$run" | jq -r '.conclusion // ""')"
+            echo "PROMOTION_RUN_ID=$run_id"
+            echo "PROMOTION_STATUS=$status"
+            echo "PROMOTION_CONCLUSION=$conclusion"
+            echo "PROMOTION_CREATED_AT=$(printf '%s' "$run" | jq -r '.created_at')"
+            echo "PROMOTION_UPDATED_AT=$(printf '%s' "$run" | jq -r '.updated_at')"
+            echo "PROMOTION_URL=$(printf '%s' "$run" | jq -r '.html_url')"
+            if [ "$status" = completed ]; then
+              break
+            fi
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge 360 ]; then
+              echo "Promotion did not complete inside the observer window" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+
+          jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?per_page=100")"
+          printf '%s' "$jobs" | jq -r '.jobs[] | "PROMOTION_JOB=\(.name) STATUS=\(.status) CONCLUSION=\(.conclusion // \"\") ID=\(.id)"'
+
+          if [ "$conclusion" != success ]; then
+            gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --log-failed || true
+            exit 1
+          fi
+
+          for required in owner-risk-windows owner-risk-macos owner-risk-linux tri-platform-gate; do
+            passed="$(
+              printf '%s' "$jobs" | jq -r --arg required "$required" \
+                '[.jobs[] | select(.name == $required and .status == "completed" and .conclusion == "success")] | length'
+            )"
+            if [ "$passed" -ne 1 ]; then
+              echo "Required promotion job did not pass exactly once: $required" >&2
+              exit 1
+            fi
+          done
+
+          monitor_runs="$(
+            gh api \
+              "repos/$GITHUB_REPOSITORY/actions/workflows/$MONITOR_WORKFLOW/runs?event=workflow_run&per_page=100"
+          )"
+          promotion_created="$(printf '%s' "$run" | jq -r '.created_at')"
+          monitor_id="$(
+            printf '%s' "$monitor_runs" | jq -r \
+              --arg created "$promotion_created" \
+              '[.workflow_runs[] | select(.created_at >= $created)] | sort_by(.created_at) | last | .id // empty'
+          )"
+          if [ -n "$monitor_id" ]; then
+            monitor="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$monitor_id")"
+            echo "MONITOR_RUN_ID=$monitor_id"
+            echo "MONITOR_STATUS=$(printf '%s' "$monitor" | jq -r '.status')"
+            echo "MONITOR_CONCLUSION=$(printf '%s' "$monitor" | jq -r '.conclusion // ""')"
+            echo "MONITOR_URL=$(printf '%s' "$monitor" | jq -r '.html_url')"
+          else
+            echo "MONITOR_RUN_ID=not-yet-visible"
+          fi
+
+          if closure="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$CLOSURE_BRANCH" 2>/dev/null)"; then
+            echo "CLOSURE_BRANCH_PRESENT=true"
+            echo "CLOSURE_COMMIT=$(printf '%s' "$closure" | jq -r '.object.sha')"
+          else
+            echo "CLOSURE_BRANCH_PRESENT=false"
+          fi

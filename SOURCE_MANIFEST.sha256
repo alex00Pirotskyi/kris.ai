@@ -10,9 +10,13 @@ bd942164d87856c44c7c7fa96f23eaf241a41cea4b06834ee34550a4bd3e7662  .github/pull_r
 7643f62a954a3ffbc14502c88bedf1d76981cebf7c6a921a73192c707f321d2b  .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml
 69e8c1ca9e86b41d8bc8510bbfbd538e310fcd65a9422723d80e1c0edbe73f10  .github/workflows/p2-owner-mode.yml
 78fe287958aaf7873c0b46cc16bda55bcfac7b468b4c6fa049ad90921cb9527c  .github/workflows/temp-direct-pr14-repair.yml
+295108fcd523964ae91b04ef18d2ea3af5ff8f2ba7e3d5d1dda3e44833757a97  .github/workflows/temp-dispatch-p1-p2-promotion.yml
 d124ad1de514738922205ca4b4c2af258dac048ab2bdbfd4c170710ed1f068f2  .github/workflows/temp-execute-pr14-repair.yml
+63f498d3024cdcf52ebb8342fa3a6cf36bfdb02cea54e193bb2b32bea8759318  .github/workflows/temp-observe-p1-p2-promotion.yml
+6d1d350111ac66aad3332f63bc606f20042d190de29ef849f6cafe0d1d13deaf  .github/workflows/temp-p2-python-lock-refresh.yml
 96d3fadc23bcd9488c560ebb1b4b7f1f665011a6583bd450e7f32e5acaace02a  .github/workflows/temp-pr14-pull-request-repair.yml
 a90cdea04ec20b85478558acba1e006fa74c339cd26c65766ee8f02a64122cdf  .github/workflows/temp-pr14-workflow-run-repair.yml
+4dc18f0b2b5d0067833ac0925dc9b488ca2700e229438b80f3bb2073a6d0ce51  .github/workflows/temp-reconcile-pr14-main.yml
 2c0be38ee5dd95647923606b5361825e90125455394bbc5b5a833d1406dfb581  .github/workflows/v71r12-validation-failure-recorder.yml
 89e9f2768aca330dc015d7b31ac59a2065ce0392c937df79f391b3ae0ceea05f  .github/workflows/v71r12-validation-monitor.yml
 dca717e07b1531a67258d3dc09c3ba42e245f450b2b75942da150d96863cd89f  .gitignore
