@@ -45,7 +45,7 @@ jobs:
           test -f ".github/workflows/$WORKFLOW_FILE"
           grep -Fx 'name: P1 P2 Owner-Risk Promotion V71-R12' ".github/workflows/$WORKFLOW_FILE"
           grep -F 'workflow_dispatch:' ".github/workflows/$WORKFLOW_FILE"
-          grep -F 'name: owner-risk-${{ matrix.platform }}' ".github/workflows/$WORKFLOW_FILE"
+          grep -F 'name: owner-risk-' ".github/workflows/$WORKFLOW_FILE"
           grep -F 'name: tri-platform-gate' ".github/workflows/$WORKFLOW_FILE"
 
           gh api \
