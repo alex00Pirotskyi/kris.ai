@@ -1,0 +1,103 @@
+name: TEMP P2 Python Lock Refresh
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-p2-python-lock-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-lock:
+    if: github.event.pull_request.head.ref == 'ci/p2-python-lock-refresh-trigger'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
+      INTEGRATION_BRANCH: integration/p2-owner-risk-v71r12
+      EXPECTED_HEAD: 0e7897523e18395a17f43756f98f5cf4af41789b
+      REQUIREMENTS_SHA256: 7e5585be8612ae05f14448c2a4cff8f7afce44a74bc0a88cb3317e3f6ecb3693
+      REQUIREMENTS_BASE64: IyBFeGFjdCBob3N0ZWQtQ0kgUHl0aG9uIHRlc3QgZGVwZW5kZW5jaWVzIGZvciBQeXRob24gMy4xMi4xMCBhbmQgMy4xMy41LgojIEhhc2hlcyBhcmUgb2ZmaWNpYWwgUHlQSSBTSEEtMjU2IGRpZ2VzdHMgZm9yIHRoZSBzdXBwb3J0ZWQgVjcxLVIxMgojIEdpdEh1Yi1ob3N0ZWQgcnVubmVyIGFyY2hpdGVjdHVyZXM6IFdpbmRvd3MgeDY0LCBVYnVudHUgeDg2XzY0LAojIGFuZCBtYWNPUyB4ODZfNjQgb3IgYXJtNjQuCmNyeXB0b2dyYXBoeT09NTAuMC4wIFwKICAgIC0taGFzaD1zaGEyNTY6YmQxYzU5MmU0ZDU5NzRmMGQwOGQ0ODg4ZTQzMjE1N2FkYmE3NTdjNjZkYTAyNDY5MThlNDM2NzdmYWZhMmQzMCBcCiAgICAtLWhhc2g9c2hhMjU2OmI0MmEyOGMxODQ0ZmQ5ZGU4ZjNmN2Q1NDBlMzZiNjZmM2E5YzgzZmNlYWM3MTcwZWJjN2E2YTE5ZWRkOWRjYWUgXAogICAgLS1oYXNoPXNoYTI1NjowMzFlMmQ1ZGQ0YmI5Y2FhM2NhOWM4MmU1YTE5N2ZkOGFlNjgwMjMyY2VlNjI2MDNkMWE4MTNmM2YwN2UzZDAzCmNmZmk9PTIuMS4wIFwKICAgIC0taGFzaD1zaGEyNTY6MWU5ZjUwZDE5MmEzZTUyNWIxNWE3NWFiNTExNGU0NDJkODNkNjU3YjdlYzI5MTgyYTk5MWJjOWE4OGZkM2E2NiBcCiAgICAtLWhhc2g9c2hhMjU2OmM5N2YwODBlYTYyN2UyODYzNTI0YzVhZjM4MzZlMjI3MGI1ZjVkZmZmMWYxMDQzOTJiOTU5ZjhkZjBjNWQzODQgXAogICAgLS1oYXNoPXNoYTI1NjpkZjJiODI1NzFhMWIzMGY1OGE4N2JmNGU1YTllNzhkMmIxZWZmNmM2Y2U4ZmQzYWEzNzU3MjIxZjkzZjA4NjNmIFwKICAgIC0taGFzaD1zaGEyNTY6Nzg0NzQ2MzI3NjFmYWEwZmI5NmYzMGIxYzkyOGM4NGViY2Y2ODcxM2NiYjgwZDE1YmFiMDlkZmU2MTY0MGZkZSBcCiAgICAtLWhhc2g9c2hhMjU2OjhlNzRhNjEzNTU1MGM0NzQ4YWY2NjViMWIxMTE4YjZhYWIzM2IxZmM2YTE2ZjlhZmY2MzBhZjEwN2MzYjQ1MTIgXAogICAgLS1oYXNoPXNoYTI1Njo3OTk0MTZiYWU5ODMzNmU0MDA5ODFmZjZlNTMyZDY3ZDVjNzA5Y2ZiMzBhZmI3OTg2NWExMzE1Zjk0YjBlMjI0IFwKICAgIC0taGFzaD1zaGEyNTY6NzE2ZmY4ZWMyMmYyMGI0ZDk4OGIxMjg4NDA4NmJjZWYwZmM5OTczNzA0M2U1MDNmN2EzOTM1YTZiZTk5YjFlYQpweWNwYXJzZXI9PTMuMCBcCiAgICAtLWhhc2g9c2hhMjU2OmI3Mjc0MTQxNjlhMzZiN2Q1MjRjMWMzZTMxODM5YTUyMTcyNTA3OGQ3YjJmZjAzODY1Njg0NDI2NjE2MGE5OTIK
+    steps:
+      - name: Check out exact P1/P2 integration source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+
+      - name: Verify exact shared branch head
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config core.autocrlf false
+          git fetch origin "$TARGET_BRANCH" "$INTEGRATION_BRANCH"
+          test "$(git branch --show-current)" = "$TARGET_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse origin/$INTEGRATION_BRANCH)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain)"
+
+      - name: Update exact cross-version wheel lock and source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import hashlib
+          import os
+          from pathlib import Path
+
+          payload = base64.b64decode(os.environ['REQUIREMENTS_BASE64'], validate=True)
+          actual = hashlib.sha256(payload).hexdigest()
+          if actual != os.environ['REQUIREMENTS_SHA256']:
+              raise SystemExit(f'requirements payload hash mismatch: {actual}')
+          Path('config/v71r12_hosted_python_requirements.txt').write_bytes(payload)
+          PY
+          python tool/p2_refresh_source_manifest.py .
+
+      - name: Validate governed two-path change
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$REQUIREMENTS_SHA256  config/v71r12_hosted_python_requirements.txt" | sha256sum --check --strict
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          python tool/p2_source_inventory_test.py --project .
+          git diff --check
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 2
+          test "${paths[0]}" = "SOURCE_MANIFEST.sha256"
+          test "${paths[1]}" = "config/v71r12_hosted_python_requirements.txt"
+          grep -Fx "$REQUIREMENTS_SHA256  config/v71r12_hosted_python_requirements.txt" SOURCE_MANIFEST.sha256
+
+      - name: Commit and push exact lock refresh to both integration refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Kristin CI Repair'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256 config/v71r12_hosted_python_requirements.txt
+          git diff --cached --check
+          git commit -m 'fix(ci): lock Python 3.12 hosted cffi wheels'
+          repaired_commit="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
+          git push origin \
+            "$repaired_commit:refs/heads/$TARGET_BRANCH" \
+            "$repaired_commit:refs/heads/$INTEGRATION_BRANCH"
+          test "$(git ls-remote origin refs/heads/$TARGET_BRANCH | awk '{print $1}')" = "$repaired_commit"
+          test "$(git ls-remote origin refs/heads/$INTEGRATION_BRANCH | awk '{print $1}')" = "$repaired_commit"
+          echo "P2_LOCK_REFRESH_COMMIT=$repaired_commit"
