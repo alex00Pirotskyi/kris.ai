@@ -1,0 +1,166 @@
+name: TEMP Export PR14 Repair Artifact
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-export-pr14-repair-artifact
+  cancel-in-progress: false
+
+jobs:
+  export-repair:
+    if: github.event.pull_request.head.ref == 'ci/export-pr14-repair-artifact'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
+      EXPECTED_HEAD: 0b6a50978de9a954f00de8272ba24134bb85980e
+      SELF_REPAIR_PATH: .github/workflows/temp-pr14-self-repair.yml
+    steps:
+      - name: Check out exact PR14 target
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+
+      - name: Verify exact target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config core.autocrlf false
+          git fetch origin "$TARGET_BRANCH"
+          test "$(git branch --show-current)" = "$TARGET_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
+          test -f "$SELF_REPAIR_PATH"
+          test -z "$(git status --porcelain)"
+
+      - name: Install locked Python test dependencies
+        shell: bash
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+
+      - name: Apply exact six-path repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          p2 = Path('.github/workflows/p2-owner-mode.yml')
+          value = p2.read_text(encoding='utf-8')
+          old = '      - id: toolchains\n        shell: bash\n        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"\n'
+          new = '      - name: Install exact hash-locked hosted Python test dependencies\n        shell: bash\n        run: python tool/v71r12_bootstrap_hosted_python.py --project .\n      - id: toolchains\n        shell: bash\n        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"\n'
+          if value.count(old) < 1:
+              raise SystemExit('P2 source-contract toolchain anchor missing')
+          p2.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
+
+          promotion = Path('.github/workflows/p1-p2-owner-risk-promotion-v71r12.yml')
+          value = promotion.read_text(encoding='utf-8')
+          old = '          if-no-files-found: error\n          retention-days: 30\n'
+          new = '          if-no-files-found: error\n          retention-days: 30\n          include-hidden-files: true\n'
+          if value.count(old) != 1:
+              raise SystemExit(f'expected one shipment upload target, found {value.count(old)}')
+          if 'include-hidden-files: true' in value:
+              raise SystemExit('shipment visibility repair already present')
+          promotion.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
+          PY
+
+          python tool/benchmark_runner.py run \
+            --project . \
+            --mode portable \
+            --output evals/results/p0_009_baseline.json \
+            --markdown evals/results/P0_009_BASELINE.md
+          rm -f "$SELF_REPAIR_PATH"
+          python tool/p2_refresh_source_manifest.py .
+
+      - name: Validate exact repaired tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/benchmark_runner.py check --project .
+          python tool/p0_010_generated_state_test.py --project .
+          python tool/p2_source_inventory_test.py --project .
+          git diff --check
+
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 6
+          test "${paths[0]}" = ".github/workflows/p1-p2-owner-risk-promotion-v71r12.yml"
+          test "${paths[1]}" = ".github/workflows/p2-owner-mode.yml"
+          test "${paths[2]}" = ".github/workflows/temp-pr14-self-repair.yml"
+          test "${paths[3]}" = "SOURCE_MANIFEST.sha256"
+          test "${paths[4]}" = "evals/results/P0_009_BASELINE.md"
+          test "${paths[5]}" = "evals/results/p0_009_baseline.json"
+          test "$(grep -c '^[[:space:]]*include-hidden-files: true$' .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml)" -eq 1
+          test "$(grep -c 'Install exact hash-locked hosted Python test dependencies' .github/workflows/p2-owner-mode.yml)" -eq 1
+
+      - name: Stage validated repair bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf export
+          mkdir -p export
+          cp .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml export/p1-p2-owner-risk-promotion-v71r12.yml
+          cp .github/workflows/p2-owner-mode.yml export/p2-owner-mode.yml
+          cp SOURCE_MANIFEST.sha256 export/SOURCE_MANIFEST.sha256
+          cp evals/results/P0_009_BASELINE.md export/P0_009_BASELINE.md
+          cp evals/results/p0_009_baseline.json export/p0_009_baseline.json
+          printf '%s\n' '.github/workflows/temp-pr14-self-repair.yml' > export/DELETE_PATHS.txt
+          git diff --full-index --binary > export/pr14-repair.patch
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('export')
+          rows = []
+          for path in sorted(p for p in root.iterdir() if p.is_file()):
+              rows.append({
+                  'name': path.name,
+                  'bytes': path.stat().st_size,
+                  'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              })
+          manifest = {
+              'schemaVersion': '1.0.0',
+              'status': 'validated',
+              'resultType': 'pr14-six-path-repair-export-v1',
+              'sourceCommit': '0b6a50978de9a954f00de8272ba24134bb85980e',
+              'changedPaths': [
+                  '.github/workflows/p1-p2-owner-risk-promotion-v71r12.yml',
+                  '.github/workflows/p2-owner-mode.yml',
+                  '.github/workflows/temp-pr14-self-repair.yml',
+                  'SOURCE_MANIFEST.sha256',
+                  'evals/results/P0_009_BASELINE.md',
+                  'evals/results/p0_009_baseline.json',
+              ],
+              'files': rows,
+          }
+          (root / 'export-manifest.json').write_text(
+              json.dumps(manifest, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+
+      - name: Upload validated repair artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pr14-six-path-repair-${{ github.run_id }}-${{ github.run_attempt }}
+          path: export/
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
