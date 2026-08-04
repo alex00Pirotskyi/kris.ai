@@ -1,0 +1,12 @@
+Execute the current-main exact-head-bound P2 Python wheel-lock, bootstrap-verifier, and source-manifest refresh.
+
+Executor base: e14a29dca1499d34b26f0deebb6a954fb1e0905b
+Expected P1/P2 integration head: 0e7897523e18395a17f43756f98f5cf4af41789b
+Requirements SHA-256: 7e5585be8612ae05f14448c2a4cff8f7afce44a74bc0a88cb3317e3f6ecb3693
+Governed target paths:
+- config/v71r12_hosted_python_requirements.txt
+- tool/v71r12_bootstrap_hosted_python.py
+- SOURCE_MANIFEST.sha256
+Target refs:
+- merge/p1-p2-owner-risk-qa-preview
+- integration/p2-owner-risk-v71r12
