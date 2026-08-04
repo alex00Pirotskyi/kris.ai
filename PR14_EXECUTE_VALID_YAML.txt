@@ -1,0 +1,6 @@
+Execute the validated, exact-head-bound PR14 repair workflow.
+
+Executor base: f76415a28a221ef0a4fe73f7f86f145162013e17
+Target branch: merge/p1-p2-owner-risk-qa-preview
+Expected target head: 0b6a50978de9a954f00de8272ba24134bb85980e
+Authorized repair scope: six governed paths only.
