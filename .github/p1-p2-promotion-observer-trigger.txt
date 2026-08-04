@@ -1,0 +1,2 @@
+Disposable same-repository trigger for the exact P1/P2 promotion observer.
+Expected integration head: eb12a6b45d86f83a87eb30c4cb66e99f773c3054
