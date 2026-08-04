@@ -64,7 +64,7 @@ jobs:
           while :; do
             run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id")"
             status="$(printf '%s' "$run" | jq -r '.status')"
-            conclusion="$(printf '%s' "$run" | jq -r '.conclusion // "")"
+            conclusion="$(printf '%s' "$run" | jq -r '.conclusion // ""')"
             echo "PROMOTION_RUN_ID=$run_id"
             echo "PROMOTION_STATUS=$status"
             echo "PROMOTION_CONCLUSION=$conclusion"
@@ -115,7 +115,7 @@ jobs:
             monitor="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$monitor_id")"
             echo "MONITOR_RUN_ID=$monitor_id"
             echo "MONITOR_STATUS=$(printf '%s' "$monitor" | jq -r '.status')"
-            echo "MONITOR_CONCLUSION=$(printf '%s' "$monitor" | jq -r '.conclusion // "')"
+            echo "MONITOR_CONCLUSION=$(printf '%s' "$monitor" | jq -r '.conclusion // ""')"
             echo "MONITOR_URL=$(printf '%s' "$monitor" | jq -r '.html_url')"
           else
             echo "MONITOR_RUN_ID=not-yet-visible"
