@@ -184,9 +184,8 @@ class P2FiniteCommandService {
         await processTrees.kill(identity);
         status = P2EffectStatus.killed;
       } else {
-        status = exitCode == 0
-            ? P2EffectStatus.succeeded
-            : P2EffectStatus.failed;
+        status =
+            exitCode == 0 ? P2EffectStatus.succeeded : P2EffectStatus.failed;
       }
     } on TimeoutException {
       await processTrees.kill(identity);
@@ -231,7 +230,7 @@ class P2FiniteCommandService {
   }
 
   bool _sensitiveEnvironmentKey(String key) => RegExp(
-    r'(secret|token|password|credential|api.?key|private.?key)',
-    caseSensitive: false,
-  ).hasMatch(key);
+        r'(secret|token|password|credential|api.?key|private.?key)',
+        caseSensitive: false,
+      ).hasMatch(key);
 }

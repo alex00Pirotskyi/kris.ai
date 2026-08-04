@@ -370,12 +370,23 @@ class ProcessTree:
                 os.killpg(pid, sig)
             except ProcessLookupError:
                 return
+            except PermissionError:
+                # The child is ours even when macOS denies a group-level signal.
+                # Fall back to the group leader and preserve fail-closed cleanup.
+                try:
+                    os.kill(pid, sig)
+                except ProcessLookupError:
+                    return
             deadline = time.monotonic() + delay
             while time.monotonic() < deadline:
                 try:
                     os.killpg(pid, 0)
                 except ProcessLookupError:
                     return
+                except PermissionError:
+                    # macOS may return EPERM for a group transitioning through
+                    # exit. The probe is inconclusive; continue escalation.
+                    break
                 time.sleep(0.02)
 
 

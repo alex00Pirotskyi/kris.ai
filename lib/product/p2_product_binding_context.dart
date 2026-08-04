@@ -66,13 +66,13 @@ final class P2ProductBindingContext implements P2HostBindingProvider {
   }
 
   Map<String, Object?> get provenance => <String, Object?>{
-    'implementation': 'P2ProductBindingContext',
-    'active': active,
-    'runId': _runId,
-    'taskId': _taskId,
-    'actorId': actorId,
-    'accessProfileId': accessProfileId,
-    'generation': _generation,
-    'syntheticDefault': false,
-  };
+        'implementation': 'P2ProductBindingContext',
+        'active': active,
+        'runId': _runId,
+        'taskId': _taskId,
+        'actorId': actorId,
+        'accessProfileId': accessProfileId,
+        'generation': _generation,
+        'syntheticDefault': false,
+      };
 }

@@ -24,14 +24,14 @@ class StoredObjectRecord {
   final Map<String, String> labels;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'schemaVersion': '1.0.0',
-    'sha256': sha256,
-    'relativePath': relativePath,
-    'mediaType': mediaType,
-    'sizeBytes': sizeBytes,
-    'createdAt': createdAt.toUtc().toIso8601String(),
-    'labels': labels,
-  };
+        'schemaVersion': '1.0.0',
+        'sha256': sha256,
+        'relativePath': relativePath,
+        'mediaType': mediaType,
+        'sizeBytes': sizeBytes,
+        'createdAt': createdAt.toUtc().toIso8601String(),
+        'labels': labels,
+      };
 
   factory StoredObjectRecord.fromJson(Map<String, dynamic> json) =>
       StoredObjectRecord(
@@ -77,12 +77,10 @@ class ContentAddressedObjectStore {
     ).absolute;
     final rootPath = root.absolute.path.replaceAll('\\', '/');
     final candidate = file.path.replaceAll('\\', '/');
-    final normalizedRoot = Platform.isWindows
-        ? rootPath.toLowerCase()
-        : rootPath;
-    final normalizedCandidate = Platform.isWindows
-        ? candidate.toLowerCase()
-        : candidate;
+    final normalizedRoot =
+        Platform.isWindows ? rootPath.toLowerCase() : rootPath;
+    final normalizedCandidate =
+        Platform.isWindows ? candidate.toLowerCase() : candidate;
     if (normalizedCandidate != normalizedRoot &&
         !normalizedCandidate.startsWith('$normalizedRoot/')) {
       throw StateError('Object-store path escapes the object root.');
@@ -192,12 +190,12 @@ class MemoryAdmissionDecision {
   final bool diagnosticOnly;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'status': status,
-    'reason': reason,
-    'retrievalAllowed': retrievalAllowed,
-    'candidateSkill': candidateSkill,
-    'diagnosticOnly': diagnosticOnly,
-  };
+        'status': status,
+        'reason': reason,
+        'retrievalAllowed': retrievalAllowed,
+        'candidateSkill': candidateSkill,
+        'diagnosticOnly': diagnosticOnly,
+      };
 }
 
 class MemoryAdmissionPolicy {
@@ -230,8 +228,7 @@ class MemoryAdmissionPolicy {
         diagnosticOnly: false,
       );
     }
-    final conversational =
-        _looksConversational(episode.request) &&
+    final conversational = _looksConversational(episode.request) &&
         episode.filesChanged.isEmpty &&
         episode.completedItems.isEmpty;
     if (conversational) {
@@ -244,8 +241,7 @@ class MemoryAdmissionPolicy {
       );
     }
     if (episode.outcome == RunState.succeeded) {
-      final reusable =
-          (episode.filesChanged.isNotEmpty ||
+      final reusable = (episode.filesChanged.isNotEmpty ||
               episode.completedItems.isNotEmpty) &&
           (episode.mutations > 0 || episode.toolCalls >= 2);
       return MemoryAdmissionDecision(
@@ -313,18 +309,18 @@ class SkillCandidateRecord {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'schemaVersion': '1.0.0',
-    'id': id,
-    'projectId': projectId,
-    'sourceEpisodeId': sourceEpisodeId,
-    'title': title,
-    'instructions': instructions,
-    'triggers': triggers.toList()..sort(),
-    'recommendedTools': recommendedTools.toList()..sort(),
-    'evidenceHashes': evidenceHashes,
-    'candidateHash': candidateHash,
-    'createdAt': createdAt.toUtc().toIso8601String(),
-  };
+        'schemaVersion': '1.0.0',
+        'id': id,
+        'projectId': projectId,
+        'sourceEpisodeId': sourceEpisodeId,
+        'title': title,
+        'instructions': instructions,
+        'triggers': triggers.toList()..sort(),
+        'recommendedTools': recommendedTools.toList()..sort(),
+        'evidenceHashes': evidenceHashes,
+        'candidateHash': candidateHash,
+        'createdAt': createdAt.toUtc().toIso8601String(),
+      };
 
   factory SkillCandidateRecord.fromJson(Map<String, dynamic> json) =>
       SkillCandidateRecord(
@@ -365,17 +361,17 @@ class PublishedSkillRecord {
   final DateTime publishedAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'schemaVersion': '1.0.0',
-    'id': id,
-    'candidateId': candidateId,
-    'version': version,
-    'title': title,
-    'instructions': instructions,
-    'recommendedTools': recommendedTools.toList()..sort(),
-    'approvalNote': approvalNote,
-    'manifestHash': manifestHash,
-    'publishedAt': publishedAt.toUtc().toIso8601String(),
-  };
+        'schemaVersion': '1.0.0',
+        'id': id,
+        'candidateId': candidateId,
+        'version': version,
+        'title': title,
+        'instructions': instructions,
+        'recommendedTools': recommendedTools.toList()..sort(),
+        'approvalNote': approvalNote,
+        'manifestHash': manifestHash,
+        'publishedAt': publishedAt.toUtc().toIso8601String(),
+      };
 
   factory PublishedSkillRecord.fromJson(Map<String, dynamic> json) =>
       PublishedSkillRecord(

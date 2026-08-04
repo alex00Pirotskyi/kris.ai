@@ -135,7 +135,7 @@ void main() {
     timeout: const Timeout(Duration(minutes: 3)),
     skip:
         const bool.fromEnvironment('KRISTIN_OWNER_RISK_QA', defaultValue: false)
-        ? false
-        : 'requires staged owner-risk runtime',
+            ? false
+            : 'requires staged owner-risk runtime',
   );
 }

@@ -223,34 +223,34 @@ CommandMode resolveTaskMode({
 }
 
 String simpleModeLabel(SimpleTaskMode value) => switch (value) {
-  SimpleTaskMode.auto => 'Auto — recommended',
-  SimpleTaskMode.askOnly => 'Ask only',
-  SimpleTaskMode.planOnly => 'Plan only',
-  SimpleTaskMode.choose => 'Choose a mode',
-};
+      SimpleTaskMode.auto => 'Auto — recommended',
+      SimpleTaskMode.askOnly => 'Ask only',
+      SimpleTaskMode.planOnly => 'Plan only',
+      SimpleTaskMode.choose => 'Choose a mode',
+    };
 
 String friendlyRunState(RunState state) => switch (state) {
-  RunState.prepared => 'Plan ready',
-  RunState.awaitingApproval => 'Waiting for your approval',
-  RunState.queued => 'Ready to start',
-  RunState.running => 'Kristin is working',
-  RunState.paused => 'Paused',
-  RunState.cancelling => 'Stopping safely',
-  RunState.cancelled => 'Stopped',
-  RunState.succeeded => 'Ready',
-  RunState.failed => 'Needs attention',
-  RunState.interrupted => 'Ready to continue',
-};
+      RunState.prepared => 'Plan ready',
+      RunState.awaitingApproval => 'Waiting for your approval',
+      RunState.queued => 'Ready to start',
+      RunState.running => 'Kristin is working',
+      RunState.paused => 'Paused',
+      RunState.cancelling => 'Stopping safely',
+      RunState.cancelled => 'Stopped',
+      RunState.succeeded => 'Ready',
+      RunState.failed => 'Needs attention',
+      RunState.interrupted => 'Ready to continue',
+    };
 
 String friendlyWorkState(WorkItemState state) => switch (state) {
-  WorkItemState.queued => 'Waiting',
-  WorkItemState.running => 'Working',
-  WorkItemState.blocked => 'Blocked',
-  WorkItemState.awaitingApproval => 'Needs you',
-  WorkItemState.succeeded => 'Done',
-  WorkItemState.failed => 'Needs attention',
-  WorkItemState.cancelled => 'Stopped',
-};
+      WorkItemState.queued => 'Waiting',
+      WorkItemState.running => 'Working',
+      WorkItemState.blocked => 'Blocked',
+      WorkItemState.awaitingApproval => 'Needs you',
+      WorkItemState.succeeded => 'Done',
+      WorkItemState.failed => 'Needs attention',
+      WorkItemState.cancelled => 'Stopped',
+    };
 
 String jobSizeLabel(int complexity) {
   if (complexity <= 3) {
@@ -266,14 +266,14 @@ String jobSizeLabel(int complexity) {
 }
 
 String modeLabel(CommandMode mode) => switch (mode) {
-  CommandMode.ask => 'Ask',
-  CommandMode.analyze => 'Analyze',
-  CommandMode.plan => 'Plan',
-  CommandMode.build => 'Build',
-  CommandMode.fix => 'Fix',
-  CommandMode.review => 'Review',
-  CommandMode.run => 'Run',
-};
+      CommandMode.ask => 'Ask',
+      CommandMode.analyze => 'Analyze',
+      CommandMode.plan => 'Plan',
+      CommandMode.build => 'Build',
+      CommandMode.fix => 'Fix',
+      CommandMode.review => 'Review',
+      CommandMode.run => 'Run',
+    };
 
 class AccessGroup {
   const AccessGroup({
@@ -307,8 +307,8 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
         description: fileScopes.contains(PermissionScope.projectDelete)
             ? 'Read, change, and remove individual checkpointed files inside the selected project.'
             : fileScopes.contains(PermissionScope.projectWrite)
-            ? 'Read and safely change checkpointed files inside the selected project.'
-            : 'Read files only inside the selected project.',
+                ? 'Read and safely change checkpointed files inside the selected project.'
+                : 'Read files only inside the selected project.',
         icon: Icons.folder_copy_outlined,
         scopes: fileScopes,
         highRisk: fileScopes.contains(PermissionScope.projectDelete),
@@ -452,9 +452,8 @@ int runPhaseIndex({PreparedCommand? prepared, RunRecord? run}) {
     if (run.items.isEmpty) {
       return 2;
     }
-    final succeeded = run.items
-        .where((item) => item.state == WorkItemState.succeeded)
-        .length;
+    final succeeded =
+        run.items.where((item) => item.state == WorkItemState.succeeded).length;
     final verificationStarted = run.items.any((item) {
       final lower = item.item.title.toLowerCase();
       return (lower.contains('verify') || lower.contains('test')) &&
@@ -505,26 +504,25 @@ class StudioPageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Column(
-      crossAxisAlignment: centered
-          ? CrossAxisAlignment.center
-          : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: <Widget>[
         Text(
           title,
           textAlign: centered ? TextAlign.center : TextAlign.start,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.7,
-          ),
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.7,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           subtitle,
           textAlign: centered ? TextAlign.center : TextAlign.start,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            height: 1.45,
-          ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
         ),
       ],
     );
@@ -584,9 +582,9 @@ class EmptyStateCard extends StatelessWidget {
                 message,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  height: 1.45,
-                ),
+                      color: colors.onSurfaceVariant,
+                      height: 1.45,
+                    ),
               ),
             ),
             if (action != null) ...<Widget>[
@@ -618,9 +616,8 @@ class StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: emphasis
-            ? colors.primaryContainer
-            : colors.surfaceContainerHighest,
+        color:
+            emphasis ? colors.primaryContainer : colors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -629,19 +626,18 @@ class StatusPill extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: emphasis
-                ? colors.onPrimaryContainer
-                : colors.onSurfaceVariant,
+            color:
+                emphasis ? colors.onPrimaryContainer : colors.onSurfaceVariant,
           ),
           const SizedBox(width: 7),
           Text(
             label,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: emphasis
-                  ? colors.onPrimaryContainer
-                  : colors.onSurfaceVariant,
-            ),
+                  color: emphasis
+                      ? colors.onPrimaryContainer
+                      : colors.onSurfaceVariant,
+                ),
           ),
         ],
       ),
@@ -703,9 +699,9 @@ class QuickTemplateCard extends StatelessWidget {
                 maxLines: compact ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  height: 1.35,
-                ),
+                      color: colors.onSurfaceVariant,
+                      height: 1.35,
+                    ),
               ),
             ],
           ),
@@ -780,17 +776,17 @@ class FivePhaseProgress extends StatelessWidget {
     final background = error
         ? colors.errorContainer
         : done
-        ? colors.primaryContainer
-        : current
-        ? colors.secondaryContainer
-        : colors.surfaceContainerHighest;
+            ? colors.primaryContainer
+            : current
+                ? colors.secondaryContainer
+                : colors.surfaceContainerHighest;
     final foreground = error
         ? colors.onErrorContainer
         : done
-        ? colors.onPrimaryContainer
-        : current
-        ? colors.onSecondaryContainer
-        : colors.onSurfaceVariant;
+            ? colors.onPrimaryContainer
+            : current
+                ? colors.onSecondaryContainer
+                : colors.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
@@ -804,10 +800,10 @@ class FivePhaseProgress extends StatelessWidget {
             error
                 ? Icons.error_outline
                 : done
-                ? Icons.check
-                : current
-                ? Icons.more_horiz
-                : Icons.circle_outlined,
+                    ? Icons.check
+                    : current
+                        ? Icons.more_horiz
+                        : Icons.circle_outlined,
             size: 16,
             color: foreground,
           ),
@@ -841,40 +837,40 @@ class FlowNode extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final (background, foreground, icon) = switch (state) {
       WorkItemState.succeeded => (
-        colors.primaryContainer,
-        colors.onPrimaryContainer,
-        Icons.check_circle_outline,
-      ),
+          colors.primaryContainer,
+          colors.onPrimaryContainer,
+          Icons.check_circle_outline,
+        ),
       WorkItemState.running => (
-        colors.secondaryContainer,
-        colors.onSecondaryContainer,
-        Icons.autorenew,
-      ),
+          colors.secondaryContainer,
+          colors.onSecondaryContainer,
+          Icons.autorenew,
+        ),
       WorkItemState.failed => (
-        colors.errorContainer,
-        colors.onErrorContainer,
-        Icons.error_outline,
-      ),
+          colors.errorContainer,
+          colors.onErrorContainer,
+          Icons.error_outline,
+        ),
       WorkItemState.awaitingApproval => (
-        colors.tertiaryContainer,
-        colors.onTertiaryContainer,
-        Icons.front_hand_outlined,
-      ),
+          colors.tertiaryContainer,
+          colors.onTertiaryContainer,
+          Icons.front_hand_outlined,
+        ),
       WorkItemState.blocked => (
-        colors.errorContainer,
-        colors.onErrorContainer,
-        Icons.block_outlined,
-      ),
+          colors.errorContainer,
+          colors.onErrorContainer,
+          Icons.block_outlined,
+        ),
       WorkItemState.cancelled => (
-        colors.surfaceContainerHighest,
-        colors.onSurfaceVariant,
-        Icons.stop_circle_outlined,
-      ),
+          colors.surfaceContainerHighest,
+          colors.onSurfaceVariant,
+          Icons.stop_circle_outlined,
+        ),
       WorkItemState.queued => (
-        colors.surfaceContainerHighest,
-        colors.onSurfaceVariant,
-        Icons.schedule_outlined,
-      ),
+          colors.surfaceContainerHighest,
+          colors.onSurfaceVariant,
+          Icons.schedule_outlined,
+        ),
     };
     return InkWell(
       onTap: onTap,
@@ -896,9 +892,9 @@ class FlowNode extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: foreground,
-                fontWeight: FontWeight.w700,
-              ),
+                    color: foreground,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
             const SizedBox(height: 4),
             Text(

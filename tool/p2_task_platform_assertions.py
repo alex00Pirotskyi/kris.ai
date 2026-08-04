@@ -15,6 +15,7 @@ import os
 import pathlib
 import platform
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -110,6 +111,38 @@ def sanitized_environment(extra: dict[str, str] | None = None) -> dict[str, str]
     return result
 
 
+def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    if os.name == "nt":
+        try:
+            subprocess.run(
+                ["taskkill.exe", "/PID", str(process.pid), "/T", "/F"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=20,
+                check=False,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return
+        except PermissionError:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                return
+    if process.poll() is None:
+        try:
+            process.kill()
+        except ProcessLookupError:
+            pass
+
+
 def execute(
     command: list[str],
     cwd: pathlib.Path,
@@ -118,25 +151,19 @@ def execute(
     environment: dict[str, str] | None = None,
 ) -> dict:
     started = time.time()
+    creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
     try:
-        completed = subprocess.run(
+        process = subprocess.Popen(
             command,
             cwd=cwd,
             text=True,
-            capture_output=True,
-            timeout=timeout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
             env=sanitized_environment(environment),
+            start_new_session=(os.name != "nt"),
+            creationflags=creation_flags,
         )
-        return {
-            "command": command,
-            "returnCode": completed.returncode,
-            "stdoutSha256": sha256_bytes(completed.stdout.encode("utf-8", "replace")),
-            "stderrSha256": sha256_bytes(completed.stderr.encode("utf-8", "replace")),
-            "stdoutTail": safe_tail(completed.stdout) if completed.returncode else "",
-            "stderrTail": safe_tail(completed.stderr) if completed.returncode else "",
-            "durationMs": round((time.time() - started) * 1000, 3),
-        }
     except FileNotFoundError as exc:
         return {
             "command": command,
@@ -146,17 +173,39 @@ def execute(
             "stderrTail": "command_not_found",
             "durationMs": round((time.time() - started) * 1000, 3),
         }
-    except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout if isinstance(exc.stdout, bytes) else (exc.stdout or "").encode("utf-8", "replace")
-        stderr = exc.stderr if isinstance(exc.stderr, bytes) else (exc.stderr or "").encode("utf-8", "replace")
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _terminate_process_tree(process)
+        try:
+            stdout, stderr = process.communicate(timeout=20)
+        except subprocess.TimeoutExpired:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass
+            stdout, stderr = process.communicate()
+        stdout = stdout or ""
+        stderr = stderr or ""
         return {
             "command": command,
             "returnCode": 124,
-            "stdoutSha256": sha256_bytes(stdout),
-            "stderrSha256": sha256_bytes(stderr),
+            "stdoutSha256": sha256_bytes(stdout.encode("utf-8", "replace")),
+            "stderrSha256": sha256_bytes(stderr.encode("utf-8", "replace")),
             "stderrTail": "command_timeout",
             "durationMs": round((time.time() - started) * 1000, 3),
         }
+    stdout = stdout or ""
+    stderr = stderr or ""
+    return {
+        "command": command,
+        "returnCode": process.returncode,
+        "stdoutSha256": sha256_bytes(stdout.encode("utf-8", "replace")),
+        "stderrSha256": sha256_bytes(stderr.encode("utf-8", "replace")),
+        "stdoutTail": safe_tail(stdout) if process.returncode else "",
+        "stderrTail": safe_tail(stderr) if process.returncode else "",
+        "durationMs": round((time.time() - started) * 1000, 3),
+    }
 
 
 def read_json(path: pathlib.Path) -> tuple[str, dict]:

@@ -143,6 +143,21 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def canonical_source_bytes(data: bytes) -> bytes:
+    """Normalize only UTF-8 text line endings for cross-platform source identity."""
+    if b"\0" in data:
+        return data
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
+        return data
+    return data.replace(b"\r\n", b"\n")
+
+
+def source_sha256(path: Path) -> str:
+    return hashlib.sha256(canonical_source_bytes(path.read_bytes())).hexdigest()
+
+
 def source_paths(project: Path) -> list[str]:
     policy_path = project / "tool/source_tree_policy.py"
     if not policy_path.is_file():
@@ -200,7 +215,7 @@ def verify_source_manifest(project: Path) -> dict[str, Any]:
         fail(f"source manifest scope mismatch: missing={missing} extra={extra}")
     mismatches: list[str] = []
     for relative, expected in rows.items():
-        actual = hashlib.sha256((project / relative).read_bytes()).hexdigest()
+        actual = source_sha256(project / relative)
         if actual != expected:
             mismatches.append(f"{relative}: {actual} != {expected}")
     if mismatches:
@@ -210,6 +225,7 @@ def verify_source_manifest(project: Path) -> dict[str, Any]:
         "manifestSha256": hashlib.sha256(raw).hexdigest(),
         "exactPathSet": True,
         "exactDigests": True,
+        "canonicalTextDigests": True,
         "lfStable": True,
     }
     print(json.dumps({"sourceManifest": result}, sort_keys=True))

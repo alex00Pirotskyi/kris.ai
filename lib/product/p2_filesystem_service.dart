@@ -358,9 +358,8 @@ class P2FilesystemService {
   Future<void> _copyDirectory(Directory source, Directory target) async {
     await target.create(recursive: true);
     await for (final entity in source.list(followLinks: false)) {
-      final name = entity.uri.pathSegments
-          .where((segment) => segment.isNotEmpty)
-          .last;
+      final name =
+          entity.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
       final destination = '${target.path}${Platform.pathSeparator}$name';
       if (entity is File) {
         await entity.copy(destination);

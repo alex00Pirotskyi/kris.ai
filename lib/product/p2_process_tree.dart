@@ -47,11 +47,11 @@ class P2ProcessIdentity {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'pid': pid,
-    'startToken': startToken,
-    'supervisorToken': supervisorToken,
-    'platformGroupId': platformGroupId,
-  };
+        'pid': pid,
+        'startToken': startToken,
+        'supervisorToken': supervisorToken,
+        'platformGroupId': platformGroupId,
+      };
 }
 
 abstract interface class P2NativeProcessTreeAdapter {
@@ -93,9 +93,9 @@ class P2ProcessTreeManager {
   }
 
   Future<void> kill(P2ProcessIdentity identity) => _kills.putIfAbsent(
-    '${identity.pid}:${identity.startToken}:${identity.supervisorToken}',
-    () => adapter.forceKill(identity),
-  );
+        '${identity.pid}:${identity.startToken}:${identity.supervisorToken}',
+        () => adapter.forceKill(identity),
+      );
 
   Future<P2ProcessLifecycle> reconcile(P2ProcessIdentity identity) =>
       adapter.inspect(identity);

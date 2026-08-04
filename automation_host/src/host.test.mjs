@@ -95,10 +95,20 @@ test('unknown permit signer is rejected', () => {
 });
 
 test('invalid effect permit signature is rejected', () => {
-  const authority = createTestAuthority();
-  const message = authority.next();
-  message.effectPermit.signatureBase64 = Buffer.alloc(72).toString('base64');
-  assert.throws(() => verifier(authority)(message), /signature_invalid/);
+  const previousOwnerRiskQa = process.env.KRISTIN_OWNER_RISK_QA;
+  delete process.env.KRISTIN_OWNER_RISK_QA;
+  try {
+    const authority = createTestAuthority();
+    const message = authority.next();
+    message.effectPermit.signatureBase64 = Buffer.alloc(72).toString('base64');
+    assert.throws(() => verifier(authority)(message), /signature_invalid/);
+  } finally {
+    if (previousOwnerRiskQa === undefined) {
+      delete process.env.KRISTIN_OWNER_RISK_QA;
+    } else {
+      process.env.KRISTIN_OWNER_RISK_QA = previousOwnerRiskQa;
+    }
+  }
 });
 
 test('channel binding is exact', () => {

@@ -104,9 +104,8 @@ void main() {
     'projectRootExcluded': true,
     'quarantinedCount': preserved.length,
     'quarantinedPaths': preserved,
-    'archiveDirectory': preserved.isEmpty
-        ? null
-        : _relativePath(root, archiveRoot),
+    'archiveDirectory':
+        preserved.isEmpty ? null : _relativePath(root, archiveRoot),
     'discardedPaths': 0,
   };
   final reportFile = File(

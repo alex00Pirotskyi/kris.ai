@@ -32,8 +32,8 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
   P2IsolatedP1AuthorityAdapter(
     P1AuthorityServiceHandleV1 handle, {
     bool qaPreview = false,
-  }) : _handle = handle,
-       _qaPreview = qaPreview {
+  })  : _handle = handle,
+        _qaPreview = qaPreview {
     handle.validateForP2(allowQaPreview: qaPreview);
   }
 
@@ -61,25 +61,25 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
   bool get completionEligible => service.completionEligible;
   @override
   Map<String, Object?> get authorityProvenance => <String, Object?>{
-    ...service.provenance,
-    'adapter': 'P2IsolatedP1AuthorityAdapter',
-    'authorityKind': authorityKind,
-    'endpoint': service.endpoint.toJson(),
-    'delegatesToMergedP1aService': true,
-    'p2PolicyEngine': false,
-    'p2GrantIssuer': false,
-    'p2UseLedger': false,
-    'p2RevocationStore': false,
-    'p2AuditSigner': false,
-    'p2ProtectedKeyBroker': false,
-    'workerCanReachAuthoritySigner': false,
-    'workerReceivesSymmetricAuthorityKeys': false,
-    'workerReceivesPrivateSigningMaterial': false,
-    'restrictedWorkerIdentityBound': _restrictedWorkerIdentity != null,
-    'completionEligible': completionEligible,
-    'qaPreview': _qaPreview,
-    'qaPreviewFormalCompletion': false,
-  };
+        ...service.provenance,
+        'adapter': 'P2IsolatedP1AuthorityAdapter',
+        'authorityKind': authorityKind,
+        'endpoint': service.endpoint.toJson(),
+        'delegatesToMergedP1aService': true,
+        'p2PolicyEngine': false,
+        'p2GrantIssuer': false,
+        'p2UseLedger': false,
+        'p2RevocationStore': false,
+        'p2AuditSigner': false,
+        'p2ProtectedKeyBroker': false,
+        'workerCanReachAuthoritySigner': false,
+        'workerReceivesSymmetricAuthorityKeys': false,
+        'workerReceivesPrivateSigningMaterial': false,
+        'restrictedWorkerIdentityBound': _restrictedWorkerIdentity != null,
+        'completionEligible': completionEligible,
+        'qaPreview': _qaPreview,
+        'qaPreviewFormalCompletion': false,
+      };
 
   @override
   Map<String, Object?>? lastAuthorityObservation(String taskId) =>
@@ -87,9 +87,8 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
 
   String _id(String prefix) {
     final bytes = List<int>.generate(24, (_) => _random.nextInt(256));
-    final body = bytes
-        .map((value) => value.toRadixString(16).padLeft(2, '0'))
-        .join();
+    final body =
+        bytes.map((value) => value.toRadixString(16).padLeft(2, '0')).join();
     return '$prefix-$body';
   }
 
@@ -295,12 +294,11 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
           service.provenance['aggregateManifestSha256'],
       'authorityBuildIdentity': <String, Object?>{
         'implementationSha256': service.endpoint.serviceBuildSha256,
-        'runtimeBuildSha256':
-            service.provenance['runtimeBuildSha256'] ??
+        'runtimeBuildSha256': service.provenance['runtimeBuildSha256'] ??
             service.endpoint.serviceBuildSha256,
         'runtimeResourceManifestSha256':
             service.provenance['runtimeResourceManifestSha256'] ??
-            service.endpoint.serviceBuildSha256,
+                service.endpoint.serviceBuildSha256,
       },
       'p1aEvidence': service.provenance,
     };
@@ -385,8 +383,7 @@ final class P2P1OperationRegistry {
     if (operation.startsWith('filesystem.')) {
       final destructive =
           operation.endsWith('delete') || operation.endsWith('quarantine');
-      final read =
-          operation.endsWith('read') ||
+      final read = operation.endsWith('read') ||
           operation.endsWith('enumerate') ||
           operation.endsWith('metadata') ||
           operation.endsWith('search');
@@ -394,20 +391,20 @@ final class P2P1OperationRegistry {
         capabilityId: destructive
             ? 'filesystem.delete'
             : read
-            ? 'filesystem.read'
-            : 'filesystem.write',
+                ? 'filesystem.read'
+                : 'filesystem.write',
         actorId: 'owner_executor',
         toolId: destructive
             ? 'delete_file'
             : read
-            ? 'read_file'
-            : 'write_file',
+                ? 'read_file'
+                : 'write_file',
         domain: 'filesystem',
         action: destructive
             ? 'delete'
             : read
-            ? 'read'
-            : 'write',
+                ? 'read'
+                : 'write',
       );
     }
     if (operation == 'command.run' ||

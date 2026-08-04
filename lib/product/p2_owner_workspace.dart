@@ -27,12 +27,12 @@ class P2TerminalAuthorization {
   final String grantDigest;
 }
 
-typedef P2TerminalAuthorizationResolver =
-    P2TerminalAuthorization Function(P2TerminalTab tab, String operation);
+typedef P2TerminalAuthorizationResolver = P2TerminalAuthorization Function(
+    P2TerminalTab tab, String operation);
 typedef P2TerminalBytesReader = Future<List<int>> Function(P2TerminalTab tab);
 typedef P2ClipboardTextWriter = Future<void> Function(String text);
-typedef P2TranscriptFileWriter =
-    Future<void> Function(P2TerminalTab tab, List<int> bytes);
+typedef P2TranscriptFileWriter = Future<void> Function(
+    P2TerminalTab tab, List<int> bytes);
 
 /// Concrete UI-to-service bridge. Authorization is resolved per tab and the
 /// PTY backend still verifies the exact grant/session binding on every call.
@@ -141,12 +141,12 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
   }
 
   Future<void> _enable() => _run(
-    () => widget.controller.enable(
-      unattended: _unattended,
-      approvalPolicy: _approval,
-      acknowledged: _acknowledged,
-    ),
-  );
+        () => widget.controller.enable(
+          unattended: _unattended,
+          approvalPolicy: _approval,
+          acknowledged: _acknowledged,
+        ),
+      );
 
   P2TerminalTab? get _selected => widget.terminalModel.selected;
 
@@ -215,60 +215,59 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
   }
 
   Widget _buildOnboarding(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(24),
-    children: <Widget>[
-      Text(
-        'Enable Owner Mode',
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
-      const SizedBox(height: 12),
-      const Text(
-        'Owner Mode can reach all files, applications, terminals, and '
-        'account resources available to this OS account. It is not '
-        'containment or isolation.',
-      ),
-      CheckboxListTile(
-        value: _acknowledged,
-        onChanged: _busy
-            ? null
-            : (value) => setState(() => _acknowledged = value ?? false),
-        title: const Text(
-          'I understand the full-current-account data boundary',
-        ),
-      ),
-      SwitchListTile(
-        value: _unattended,
-        onChanged: _busy
-            ? null
-            : (value) => setState(() => _unattended = value),
-        title: const Text('Owner unattended'),
-        subtitle: const Text(
-          'Stricter secret and elevation boundaries still apply.',
-        ),
-      ),
-      DropdownButtonFormField<P2OwnerApprovalPolicy>(
-        initialValue: _approval,
-        decoration: const InputDecoration(labelText: 'Approval policy'),
-        items: P2OwnerApprovalPolicy.values
-            .map(
-              (value) => DropdownMenuItem<P2OwnerApprovalPolicy>(
-                value: value,
-                child: Text(value.name),
-              ),
-            )
-            .toList(growable: false),
-        onChanged: _busy
-            ? null
-            : (value) => setState(() => _approval = value ?? _approval),
-      ),
-      const SizedBox(height: 16),
-      FilledButton.icon(
-        onPressed: _acknowledged && !_busy ? _enable : null,
-        icon: const Icon(Icons.warning_amber),
-        label: const Text('Enable full Owner Mode'),
-      ),
-    ],
-  );
+        padding: const EdgeInsets.all(24),
+        children: <Widget>[
+          Text(
+            'Enable Owner Mode',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Owner Mode can reach all files, applications, terminals, and '
+            'account resources available to this OS account. It is not '
+            'containment or isolation.',
+          ),
+          CheckboxListTile(
+            value: _acknowledged,
+            onChanged: _busy
+                ? null
+                : (value) => setState(() => _acknowledged = value ?? false),
+            title: const Text(
+              'I understand the full-current-account data boundary',
+            ),
+          ),
+          SwitchListTile(
+            value: _unattended,
+            onChanged:
+                _busy ? null : (value) => setState(() => _unattended = value),
+            title: const Text('Owner unattended'),
+            subtitle: const Text(
+              'Stricter secret and elevation boundaries still apply.',
+            ),
+          ),
+          DropdownButtonFormField<P2OwnerApprovalPolicy>(
+            initialValue: _approval,
+            decoration: const InputDecoration(labelText: 'Approval policy'),
+            items: P2OwnerApprovalPolicy.values
+                .map(
+                  (value) => DropdownMenuItem<P2OwnerApprovalPolicy>(
+                    value: value,
+                    child: Text(value.name),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: _busy
+                ? null
+                : (value) => setState(() => _approval = value ?? _approval),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: _acknowledged && !_busy ? _enable : null,
+            icon: const Icon(Icons.warning_amber),
+            label: const Text('Enable full Owner Mode'),
+          ),
+        ],
+      );
 
   Widget _buildTerminal(BuildContext context) {
     final tabs = _search.text.isEmpty

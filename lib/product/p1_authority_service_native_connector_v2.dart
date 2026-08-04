@@ -44,28 +44,28 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
     required this.provenance,
     required this.completionEligible,
     required int maxResponseBytes,
-  }) : _maxResponseBytes = maxResponseBytes,
-       _alloc = library.lookupFunction<_AllocNative, _AllocDart>(
-         'p1a_connector_alloc',
-       ),
-       _free = library.lookupFunction<_FreeNative, _FreeDart>(
-         'p1a_connector_free',
-       ),
-       _configure = library.lookupFunction<_CallNative, _CallDart>(
-         'p1a_connector_configure',
-       ),
-       _request = library.lookupFunction<_CallNative, _CallDart>(
-         'p1a_connector_request',
-       ),
-       _responseSize = library.lookupFunction<_SizeNative, _SizeDart>(
-         'p1a_connector_response_size',
-       ),
-       _copyResponse = library.lookupFunction<_CopyNative, _CopyDart>(
-         'p1a_connector_copy_response',
-       ),
-       _closeNative = library.lookupFunction<_CloseNative, _CloseDart>(
-         'p1a_connector_close',
-       );
+  })  : _maxResponseBytes = maxResponseBytes,
+        _alloc = library.lookupFunction<_AllocNative, _AllocDart>(
+          'p1a_connector_alloc',
+        ),
+        _free = library.lookupFunction<_FreeNative, _FreeDart>(
+          'p1a_connector_free',
+        ),
+        _configure = library.lookupFunction<_CallNative, _CallDart>(
+          'p1a_connector_configure',
+        ),
+        _request = library.lookupFunction<_CallNative, _CallDart>(
+          'p1a_connector_request',
+        ),
+        _responseSize = library.lookupFunction<_SizeNative, _SizeDart>(
+          'p1a_connector_response_size',
+        ),
+        _copyResponse = library.lookupFunction<_CopyNative, _CopyDart>(
+          'p1a_connector_copy_response',
+        ),
+        _closeNative = library.lookupFunction<_CloseNative, _CloseDart>(
+          'p1a_connector_close',
+        );
 
   @override
   final P1AuthorityServiceEndpointV1 endpoint;
@@ -288,29 +288,32 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
   @override
   Future<Map<String, Object?>> recordEffectOutcome(
     P1AuthorityEffectOutcomeV1 outcome,
-  ) async => _requestJson(outcome.toJson());
+  ) async =>
+      _requestJson(outcome.toJson());
 
   @override
   Future<Map<String, Object?>> beginBehaviorSessionForEvidence({
     required String behaviorSessionId,
     required String exactRunBindingSha256,
-  }) async => _requestJson(<String, Object?>{
-    'schemaVersion': '2.0.0',
-    'operation': p1aBeginBehaviorSessionOperationV2,
-    'behaviorSessionId': behaviorSessionId,
-    'exactRunBindingSha256': exactRunBindingSha256,
-  });
+  }) async =>
+      _requestJson(<String, Object?>{
+        'schemaVersion': '2.0.0',
+        'operation': p1aBeginBehaviorSessionOperationV2,
+        'behaviorSessionId': behaviorSessionId,
+        'exactRunBindingSha256': exactRunBindingSha256,
+      });
 
   @override
   Future<Map<String, Object?>> finalizeBehaviorSessionForEvidence({
     required String behaviorSessionId,
     required String exactRunBindingSha256,
-  }) async => _requestJson(<String, Object?>{
-    'schemaVersion': '2.0.0',
-    'operation': p1aFinalizeBehaviorSessionOperationV2,
-    'behaviorSessionId': behaviorSessionId,
-    'exactRunBindingSha256': exactRunBindingSha256,
-  });
+  }) async =>
+      _requestJson(<String, Object?>{
+        'schemaVersion': '2.0.0',
+        'operation': p1aFinalizeBehaviorSessionOperationV2,
+        'behaviorSessionId': behaviorSessionId,
+        'exactRunBindingSha256': exactRunBindingSha256,
+      });
 
   @override
   Future<void> close() async {

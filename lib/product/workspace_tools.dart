@@ -236,8 +236,7 @@ class WorkspaceBoundary {
         .split('/')
         .where((segment) => segment.isNotEmpty)
         .toList(growable: false);
-    final segments =
-        rawSegments.isNotEmpty &&
+    final segments = rawSegments.isNotEmpty &&
             RegExp(r'^[A-Za-z]:$').hasMatch(rawSegments.first)
         ? rawSegments.sublist(1)
         : rawSegments;
@@ -558,46 +557,46 @@ class MutationRecord {
   final String workItemId;
 
   MutationRecord copyWith({String? status}) => MutationRecord(
-    id: id,
-    operation: operation,
-    relativePath: relativePath,
-    existed: existed,
-    beforeHash: beforeHash,
-    afterHash: afterHash,
-    backupPath: backupPath,
-    timestamp: timestamp,
-    status: status ?? this.status,
-    idempotencyKey: idempotencyKey,
-    workItemId: workItemId,
-  );
+        id: id,
+        operation: operation,
+        relativePath: relativePath,
+        existed: existed,
+        beforeHash: beforeHash,
+        afterHash: afterHash,
+        backupPath: backupPath,
+        timestamp: timestamp,
+        status: status ?? this.status,
+        idempotencyKey: idempotencyKey,
+        workItemId: workItemId,
+      );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'id': id,
-    'operation': operation,
-    'relativePath': relativePath,
-    'existed': existed,
-    'beforeHash': beforeHash,
-    'afterHash': afterHash,
-    'backupPath': backupPath,
-    'timestamp': timestamp.toUtc().toIso8601String(),
-    'status': status,
-    if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
-    if (workItemId.isNotEmpty) 'workItemId': workItemId,
-  };
+        'id': id,
+        'operation': operation,
+        'relativePath': relativePath,
+        'existed': existed,
+        'beforeHash': beforeHash,
+        'afterHash': afterHash,
+        'backupPath': backupPath,
+        'timestamp': timestamp.toUtc().toIso8601String(),
+        'status': status,
+        if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
+        if (workItemId.isNotEmpty) 'workItemId': workItemId,
+      };
 
   factory MutationRecord.fromJson(Map<String, dynamic> json) => MutationRecord(
-    id: json['id']?.toString() ?? newId('mutation'),
-    operation: json['operation']?.toString() ?? '',
-    relativePath: json['relativePath']?.toString() ?? '',
-    existed: json['existed'] == true,
-    beforeHash: json['beforeHash']?.toString() ?? '',
-    afterHash: json['afterHash']?.toString() ?? '',
-    backupPath: json['backupPath']?.toString() ?? '',
-    timestamp: parseUtc(json['timestamp'], fallback: DateTime.now()),
-    status: json['status']?.toString() ?? 'applied',
-    idempotencyKey: json['idempotencyKey']?.toString() ?? '',
-    workItemId: json['workItemId']?.toString() ?? '',
-  );
+        id: json['id']?.toString() ?? newId('mutation'),
+        operation: json['operation']?.toString() ?? '',
+        relativePath: json['relativePath']?.toString() ?? '',
+        existed: json['existed'] == true,
+        beforeHash: json['beforeHash']?.toString() ?? '',
+        afterHash: json['afterHash']?.toString() ?? '',
+        backupPath: json['backupPath']?.toString() ?? '',
+        timestamp: parseUtc(json['timestamp'], fallback: DateTime.now()),
+        status: json['status']?.toString() ?? 'applied',
+        idempotencyKey: json['idempotencyKey']?.toString() ?? '',
+        workItemId: json['workItemId']?.toString() ?? '',
+      );
 }
 
 class WorkspaceTransaction {
@@ -706,12 +705,13 @@ class WorkspaceTransaction {
     required String content,
     String? expectedHash,
     bool? expectedExists,
-  }) => writeBytes(
-    relativePath: relativePath,
-    bytes: utf8.encode(content),
-    expectedHash: expectedHash,
-    expectedExists: expectedExists,
-  );
+  }) =>
+      writeBytes(
+        relativePath: relativePath,
+        bytes: utf8.encode(content),
+        expectedHash: expectedHash,
+        expectedExists: expectedExists,
+      );
 
   Future<MutationRecord> writeBytes({
     required String relativePath,
@@ -997,8 +997,7 @@ class WorkspaceTransaction {
     if (!existed) {
       return '';
     }
-    final name =
-        '${_latest.length.toString().padLeft(6, '0')}-'
+    final name = '${_latest.length.toString().padLeft(6, '0')}-'
         '${Sha256.text(relativePath).substring(0, 16)}.bak';
     final backup = File('${directory.path}${Platform.pathSeparator}$name');
     await backup.writeAsBytes(bytes, flush: true);
@@ -1024,9 +1023,8 @@ class WorkspaceTransaction {
       status: status,
       record: record.toJson(),
       workItemId: record.workItemId.isEmpty ? null : record.workItemId,
-      idempotencyKey: record.idempotencyKey.isEmpty
-          ? null
-          : record.idempotencyKey,
+      idempotencyKey:
+          record.idempotencyKey.isEmpty ? null : record.idempotencyKey,
       beforeSha256: record.beforeHash.isEmpty ? null : record.beforeHash,
       afterSha256: record.afterHash.isEmpty ? null : record.afterHash,
       backupPath: record.backupPath.isEmpty ? null : record.backupPath,
@@ -1134,11 +1132,14 @@ class ManagedProcessService {
         record.exitCode = code;
         record.completedAt = DateTime.now().toUtc();
         await Future.wait(<Future<void>>[stdoutPump, stderrPump]);
-        await _writeLog(record, <String, dynamic>{
-          'timestamp': record.completedAt!.toIso8601String(),
-          'stream': 'lifecycle',
-          'message': 'process exited with code $code',
-        }, flush: true);
+        await _writeLog(
+            record,
+            <String, dynamic>{
+              'timestamp': record.completedAt!.toIso8601String(),
+              'stream': 'lifecycle',
+              'message': 'process exited with code $code',
+            },
+            flush: true);
       } catch (error, stackTrace) {
         record.completedAt ??= DateTime.now().toUtc();
         record.lifecycleError = redactor.redact('$error');
@@ -1244,21 +1245,21 @@ class ManagedProcessService {
   }
 
   Map<String, dynamic> _status(_ManagedProcess record) => <String, dynamic>{
-    'id': record.id,
-    'pid': record.process.pid,
-    'executable': record.executable,
-    'arguments': record.arguments,
-    'runId': record.runId,
-    'workItemId': record.workItemId,
-    'startedAt': record.startedAt.toIso8601String(),
-    'completedAt': record.completedAt?.toIso8601String(),
-    'running': record.exitCode == null,
-    'exitCode': record.exitCode,
-    'outputTail': record.tail.toString(),
-    'logFileName': record.log.uri.pathSegments.last,
-    'lifecycleError': record.lifecycleError,
-    'lifecycleErrorHash': record.lifecycleErrorHash,
-  };
+        'id': record.id,
+        'pid': record.process.pid,
+        'executable': record.executable,
+        'arguments': record.arguments,
+        'runId': record.runId,
+        'workItemId': record.workItemId,
+        'startedAt': record.startedAt.toIso8601String(),
+        'completedAt': record.completedAt?.toIso8601String(),
+        'running': record.exitCode == null,
+        'exitCode': record.exitCode,
+        'outputTail': record.tail.toString(),
+        'logFileName': record.log.uri.pathSegments.last,
+        'lifecycleError': record.lifecycleError,
+        'lifecycleErrorHash': record.lifecycleErrorHash,
+      };
 }
 
 class _ManagedProcess {
@@ -1353,25 +1354,24 @@ class ToolResult {
   final bool mutated;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'ok': ok,
-    'summary': summary,
-    'data': data,
-    'mutated': mutated,
-  };
+        'ok': ok,
+        'summary': summary,
+        'data': data,
+        'mutated': mutated,
+      };
 
   factory ToolResult.fromJson(Map<String, dynamic> json) => ToolResult(
-    ok: json['ok'] == true,
-    summary: json['summary']?.toString() ?? '',
-    data: mapValue(json['data']),
-    mutated: json['mutated'] == true,
-  );
+        ok: json['ok'] == true,
+        summary: json['summary']?.toString() ?? '',
+        data: mapValue(json['data']),
+        mutated: json['mutated'] == true,
+      );
 }
 
-typedef ToolHandler =
-    Future<ToolResult> Function(
-      ToolContext context,
-      Map<String, dynamic> arguments,
-    );
+typedef ToolHandler = Future<ToolResult> Function(
+  ToolContext context,
+  Map<String, dynamic> arguments,
+);
 
 class GovernedTool {
   const GovernedTool({required this.contract, required this.handler});
@@ -1385,7 +1385,8 @@ class GovernedTool {
 
   Map<String, dynamic> descriptor({
     ToolDescriptorDialect dialect = ToolDescriptorDialect.canonical,
-  }) => contract.descriptor(dialect: dialect);
+  }) =>
+      contract.descriptor(dialect: dialect);
 }
 
 class ToolRegistry {
@@ -1395,16 +1396,16 @@ class ToolRegistry {
 
   static const Map<String, Set<String>> _pathArgumentKeys =
       <String, Set<String>>{
-        'list_directory': <String>{'path'},
-        'read_file': <String>{'path'},
-        'inspect_file': <String>{'path'},
-        'search_text': <String>{'path'},
-        'write_file': <String>{'path'},
-        'write_binary_file': <String>{'path'},
-        'replace_text': <String>{'path'},
-        'apply_patch': <String>{'path'},
-        'delete_file': <String>{'path'},
-      };
+    'list_directory': <String>{'path'},
+    'read_file': <String>{'path'},
+    'inspect_file': <String>{'path'},
+    'search_text': <String>{'path'},
+    'write_file': <String>{'path'},
+    'write_binary_file': <String>{'path'},
+    'replace_text': <String>{'path'},
+    'apply_patch': <String>{'path'},
+    'delete_file': <String>{'path'},
+  };
 
   final Map<String, GovernedTool> _tools;
   final ToolSchemaRegistry schemas;
@@ -1519,10 +1520,11 @@ class ToolRegistry {
   List<Map<String, dynamic>> descriptors({
     Set<String>? allowlist,
     ToolDescriptorDialect dialect = ToolDescriptorDialect.canonical,
-  }) => _tools.values
-      .where((tool) => allowlist == null || allowlist.contains(tool.name))
-      .map((tool) => tool.descriptor(dialect: dialect))
-      .toList(growable: false);
+  }) =>
+      _tools.values
+          .where((tool) => allowlist == null || allowlist.contains(tool.name))
+          .map((tool) => tool.descriptor(dialect: dialect))
+          .toList(growable: false);
 
   Future<ToolResult> execute(
     String name,
@@ -1578,18 +1580,18 @@ class ToolRegistry {
       if (normalized != raw.trim().replaceAll('\\', '/')) {
         await context.audit
             .append('tool.path_normalized', context.runId, <String, dynamic>{
-              'workItemId': context.workItem.id,
-              'tool': name,
-              'argument': key,
-              'originalPathHash': Sha256.text(raw),
-              'normalizedPath': normalized,
-            });
+          'workItemId': context.workItem.id,
+          'tool': name,
+          'argument': key,
+          'originalPathHash': Sha256.text(raw),
+          'normalizedPath': normalized,
+        });
       }
     }
     tool.contract.validateInput(normalizedArguments);
     final inputHash = Sha256.text(canonicalJson(normalizedArguments));
-    final snapshotSensitive =
-        tool.contract.idempotency == ToolIdempotency.projectSnapshot ||
+    final snapshotSensitive = tool.contract.idempotency ==
+            ToolIdempotency.projectSnapshot ||
         (tool.contract.risk == ToolRisk.process && name == 'verify_project');
     final idempotencyInputHash = snapshotSensitive
         ? Sha256.text('$inputHash:${context.transaction.mutationCount}')
@@ -1786,23 +1788,23 @@ class ToolRegistry {
       }
       await context.audit
           .append('tool.completed', context.runId, <String, dynamic>{
-            'workItemId': context.workItem.id,
-            'tool': name,
-            'schemaVersion': tool.contract.version,
-            'normalizedInputHash': inputHash,
-            if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
-            'outputHash': Sha256.text(canonicalJson(result.toJson())),
-            'ok': result.ok,
-            'mutated': result.mutated,
-            'summary': result.summary,
-          });
+        'workItemId': context.workItem.id,
+        'tool': name,
+        'schemaVersion': tool.contract.version,
+        'normalizedInputHash': inputHash,
+        if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
+        'outputHash': Sha256.text(canonicalJson(result.toJson())),
+        'ok': result.ok,
+        'mutated': result.mutated,
+        'summary': result.summary,
+      });
       return result;
     } catch (error) {
       final code = error is ProductException
           ? error.code
           : error is ToolSchemaException
-          ? error.code
-          : 'tool_runtime_error';
+              ? error.code
+              : 'tool_runtime_error';
       final classification = const WorkflowRetryTaxonomy().classify(code);
       if (idempotencyKey.isNotEmpty) {
         try {
@@ -1819,16 +1821,16 @@ class ToolRegistry {
       }
       await context.audit
           .append('tool.failed', context.runId, <String, dynamic>{
-            'workItemId': context.workItem.id,
-            'tool': name,
-            'schemaVersion': tool.contract.version,
-            'normalizedInputHash': inputHash,
-            if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
-            'failureClass': classification.failureClass.name,
-            'retryDisposition': classification.disposition.name,
-            'retryability': classification.retryability,
-            'error': context.redactor.redact('$error'),
-          });
+        'workItemId': context.workItem.id,
+        'tool': name,
+        'schemaVersion': tool.contract.version,
+        'normalizedInputHash': inputHash,
+        if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
+        'failureClass': classification.failureClass.name,
+        'retryDisposition': classification.disposition.name,
+        'retryability': classification.retryability,
+        'error': context.redactor.redact('$error'),
+      });
       rethrow;
     }
   }
@@ -1912,8 +1914,8 @@ class ToolRegistry {
         'type': entity is Directory
             ? 'directory'
             : entity is Link
-            ? 'link'
-            : 'file',
+                ? 'link'
+                : 'file',
         'bytes': stat.size,
         'modifiedAt': stat.modified.toUtc().toIso8601String(),
       });
@@ -1967,11 +1969,10 @@ class ToolRegistry {
     Map<String, dynamic> arguments,
   ) async {
     final path = _requiredString(arguments, 'path');
-    final maxBytes =
-        (int.tryParse(arguments['maxBytes']?.toString() ?? '') ??
-                8 * 1024 * 1024)
-            .clamp(1, 16 * 1024 * 1024)
-            .toInt();
+    final maxBytes = (int.tryParse(arguments['maxBytes']?.toString() ?? '') ??
+            8 * 1024 * 1024)
+        .clamp(1, 16 * 1024 * 1024)
+        .toInt();
     final previewBytes =
         (int.tryParse(arguments['previewBytes']?.toString() ?? '') ?? 32768)
             .clamp(256, 262144)
@@ -2049,11 +2050,9 @@ class ToolRegistry {
         continue;
       }
       final lines = utf8.decode(bytes, allowMalformed: true).split('\n');
-      for (
-        var index = 0;
-        index < lines.length && results.length < maxResults;
-        index++
-      ) {
+      for (var index = 0;
+          index < lines.length && results.length < maxResults;
+          index++) {
         if (lines[index].contains(query)) {
           results.add(<String, dynamic>{
             'path': relative,
@@ -2797,8 +2796,7 @@ class ToolRegistry {
     }
     var suspicious = 0;
     for (final byte in bytes) {
-      final printable =
-          byte == 9 ||
+      final printable = byte == 9 ||
           byte == 10 ||
           byte == 13 ||
           (byte >= 32 && byte <= 126) ||
@@ -2866,10 +2864,9 @@ class ToolRegistry {
       'mp3' => ('MP3 audio', 'audio/mpeg'),
       'mp4' => ('MP4 video', 'video/mp4'),
       'wav' => ('WAV audio', 'audio/wav'),
-      _ =>
-        _looksBinary(bytes)
-            ? ('Binary file', 'application/octet-stream')
-            : ('Text file', 'text/plain'),
+      _ => _looksBinary(bytes)
+          ? ('Binary file', 'application/octet-stream')
+          : ('Text file', 'text/plain'),
     };
   }
 
@@ -2914,9 +2911,7 @@ class ToolRegistry {
 
   static bool _ignored(String path) {
     final normalized = path.replaceAll('\\', '/');
-    return normalized
-        .split('/')
-        .any(
+    return normalized.split('/').any(
           const <String>{
             '.git',
             '.dart_tool',
@@ -2991,29 +2986,27 @@ class ToolRegistry {
         'Git working-directory and repository-root overrides are not allowed. Use git_status or git_diff so Kristin always operates on the selected project.',
       );
     }
-    return args
-        .map((argument) {
-          final equals = argument.indexOf('=');
-          final prefix = equals > 0 ? argument.substring(0, equals + 1) : '';
-          final value = equals > 0 ? argument.substring(equals + 1) : argument;
-          if (!_looksAbsoluteProcessPath(value)) {
-            return argument;
-          }
-          try {
-            final normalized = context.boundary.normalizeToolPath(value);
-            return '$prefix$normalized';
-          } on ProductException catch (error) {
-            throw ProductException(
-              'process_path_outside_project',
-              'A process argument contains an absolute path outside the selected project. Use a project-relative path or a dedicated project-scoped tool.',
-              details: <String, dynamic>{
-                'argumentHash': Sha256.text(value),
-                'causeCode': error.code,
-              },
-            );
-          }
-        })
-        .toList(growable: false);
+    return args.map((argument) {
+      final equals = argument.indexOf('=');
+      final prefix = equals > 0 ? argument.substring(0, equals + 1) : '';
+      final value = equals > 0 ? argument.substring(equals + 1) : argument;
+      if (!_looksAbsoluteProcessPath(value)) {
+        return argument;
+      }
+      try {
+        final normalized = context.boundary.normalizeToolPath(value);
+        return '$prefix$normalized';
+      } on ProductException catch (error) {
+        throw ProductException(
+          'process_path_outside_project',
+          'A process argument contains an absolute path outside the selected project. Use a project-relative path or a dedicated project-scoped tool.',
+          details: <String, dynamic>{
+            'argumentHash': Sha256.text(value),
+            'causeCode': error.code,
+          },
+        );
+      }
+    }).toList(growable: false);
   }
 
   static bool _looksAbsoluteProcessPath(String value) {
@@ -3023,8 +3016,7 @@ class ToolRegistry {
         trimmed.startsWith('https://')) {
       return false;
     }
-    final windowsSlashOption =
-        Platform.isWindows &&
+    final windowsSlashOption = Platform.isWindows &&
         RegExp(
           r'^/(?:[QqSsDdYyNn]|\?|nologo|restore|m|v:[^/\\]*|p:[^/\\]*|property:[^/\\]*|target:[^/\\]*|verbosity:[^/\\]*)$',
           caseSensitive: false,

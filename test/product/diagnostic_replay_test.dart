@@ -92,28 +92,30 @@ void main() {
             mutatedPaths: <String>{
               mapValue(
                     mapValue(replay['modelEnvelope'])['arguments'],
-                  )['filePath']?.toString() ??
+                  )['filePath']
+                      ?.toString() ??
                   '',
             },
           );
           expect(assessment.state, ArtifactEvidenceState.complete);
 
-          final automaticTarget = const AutomaticArtifactVerificationPolicy()
-              .inspectionTarget(
-                item: item,
-                mutationResult: const ToolResult(
-                  ok: true,
-                  summary: 'Created replay artifact.',
-                  data: <String, dynamic>{},
-                  mutated: true,
-                ),
-                mutationPaths: <String>{
-                  mapValue(
-                        mapValue(replay['modelEnvelope'])['arguments'],
-                      )['filePath']?.toString() ??
-                      '',
-                },
-              );
+          final automaticTarget =
+              const AutomaticArtifactVerificationPolicy().inspectionTarget(
+            item: item,
+            mutationResult: const ToolResult(
+              ok: true,
+              summary: 'Created replay artifact.',
+              data: <String, dynamic>{},
+              mutated: true,
+            ),
+            mutationPaths: <String>{
+              mapValue(
+                    mapValue(replay['modelEnvelope'])['arguments'],
+                  )['filePath']
+                      ?.toString() ??
+                  '',
+            },
+          );
           expect(automaticTarget, path);
 
           final observed = mapValue(mapValue(decoded)['observed']);

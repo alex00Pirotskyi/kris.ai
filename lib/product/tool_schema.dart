@@ -32,10 +32,10 @@ class ToolCompatibilityChange {
   final String? source;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'kind': kind,
-    'target': target,
-    if (source != null) 'source': source,
-  };
+        'kind': kind,
+        'target': target,
+        if (source != null) 'source': source,
+      };
 }
 
 class ToolInputNormalization {
@@ -60,16 +60,16 @@ class ToolSchemaException extends ProductException {
     required this.issues,
     Map<String, dynamic> details = const <String, dynamic>{},
   }) : super(
-         code,
-         message,
-         details: <String, dynamic>{
-           ...details,
-           'tool': tool,
-           'schemaPhase': phase.name,
-           'retryability': retryability.wireName,
-           'issues': issues.map((issue) => issue.toJson()).toList(),
-         },
-       );
+          code,
+          message,
+          details: <String, dynamic>{
+            ...details,
+            'tool': tool,
+            'schemaPhase': phase.name,
+            'retryability': retryability.wireName,
+            'issues': issues.map((issue) => issue.toJson()).toList(),
+          },
+        );
 
   final String tool;
   final ToolSchemaPhase phase;
@@ -314,10 +314,10 @@ class ToolContract {
   }
 
   Map<String, dynamic> repairExample() => <String, dynamic>{
-    'action': 'tool',
-    'tool': name,
-    'arguments': _cloneJson(example),
-  };
+        'action': 'tool',
+        'tool': name,
+        'arguments': _cloneJson(example),
+      };
 
   String repairMessage(Iterable<SchemaIssue> issues) {
     final first = issues.firstOrNull;
@@ -449,12 +449,14 @@ class ToolSchemaRegistry {
   List<Map<String, dynamic>> descriptors({
     Set<String>? allowlist,
     ToolDescriptorDialect dialect = ToolDescriptorDialect.canonical,
-  }) => _contracts.values
-      .where(
-        (contract) => allowlist == null || allowlist.contains(contract.name),
-      )
-      .map((contract) => contract.descriptor(dialect: dialect))
-      .toList(growable: false);
+  }) =>
+      _contracts.values
+          .where(
+            (contract) =>
+                allowlist == null || allowlist.contains(contract.name),
+          )
+          .map((contract) => contract.descriptor(dialect: dialect))
+          .toList(growable: false);
 
   void verifyCoverage(Iterable<String> handlerNames) {
     final handlers = handlerNames.toSet();
@@ -780,31 +782,31 @@ class JsonSchemaValidator {
 }
 
 PermissionScope _permission(String value) => PermissionScope.values.firstWhere(
-  (permission) => permission.name == value,
-  orElse: () => throw StateError('Unknown generated permission: $value'),
-);
+      (permission) => permission.name == value,
+      orElse: () => throw StateError('Unknown generated permission: $value'),
+    );
 
 ToolRisk _risk(String value) => ToolRisk.values.firstWhere(
-  (risk) => risk.name == value,
-  orElse: () => throw StateError('Unknown generated tool risk: $value'),
-);
+      (risk) => risk.name == value,
+      orElse: () => throw StateError('Unknown generated tool risk: $value'),
+    );
 
 ToolIdempotency _idempotency(String value) => switch (value) {
-  'normalized_arguments' => ToolIdempotency.normalizedArguments,
-  'content_hash' => ToolIdempotency.contentHash,
-  'project_snapshot' => ToolIdempotency.projectSnapshot,
-  'operation_key' => ToolIdempotency.operationKey,
-  'request_hash' => ToolIdempotency.requestHash,
-  _ => throw StateError('Unknown generated idempotency policy: $value'),
-};
+      'normalized_arguments' => ToolIdempotency.normalizedArguments,
+      'content_hash' => ToolIdempotency.contentHash,
+      'project_snapshot' => ToolIdempotency.projectSnapshot,
+      'operation_key' => ToolIdempotency.operationKey,
+      'request_hash' => ToolIdempotency.requestHash,
+      _ => throw StateError('Unknown generated idempotency policy: $value'),
+    };
 
 String _idempotencyWireName(ToolIdempotency value) => switch (value) {
-  ToolIdempotency.normalizedArguments => 'normalized_arguments',
-  ToolIdempotency.contentHash => 'content_hash',
-  ToolIdempotency.projectSnapshot => 'project_snapshot',
-  ToolIdempotency.operationKey => 'operation_key',
-  ToolIdempotency.requestHash => 'request_hash',
-};
+      ToolIdempotency.normalizedArguments => 'normalized_arguments',
+      ToolIdempotency.contentHash => 'content_hash',
+      ToolIdempotency.projectSnapshot => 'project_snapshot',
+      ToolIdempotency.operationKey => 'operation_key',
+      ToolIdempotency.requestHash => 'request_hash',
+    };
 
 Map<String, dynamic> _map(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
@@ -816,8 +818,8 @@ List<String> _strings(Object? value) => value is List
 int? _int(Object? value) => value is int
     ? value
     : value is num
-    ? value.toInt()
-    : int.tryParse(value?.toString() ?? '');
+        ? value.toInt()
+        : int.tryParse(value?.toString() ?? '');
 
 num? _number(Object? value) =>
     value is num ? value : num.tryParse(value?.toString() ?? '');
@@ -928,9 +930,8 @@ bool _validFormat(String value, String format) {
 }
 
 String _topLevelArgument(String path) {
-  final normalized = path
-      .replaceFirst(r'$.arguments.', '')
-      .replaceFirst(r'$.', '');
+  final normalized =
+      path.replaceFirst(r'$.arguments.', '').replaceFirst(r'$.', '');
   return normalized.split(RegExp(r'[.\[]')).first;
 }
 

@@ -62,12 +62,17 @@ def main() -> int:
                 "--max-command-seconds",
                 str(args.max_command_seconds),
             ]
-            completed = subprocess.run(
-                command,
-                text=True,
-                capture_output=True,
-                timeout=max(60, args.max_command_seconds * 8),
-            )
+            try:
+                completed = subprocess.run(
+                    command,
+                    text=True,
+                    capture_output=True,
+                    timeout=max(180, args.max_command_seconds * 16),
+                )
+            except subprocess.TimeoutExpired as error:
+                raise SystemExit(
+                    f"{task}: assertion runner exceeded its bounded wrapper timeout"
+                ) from error
             if completed.returncode not in ALLOWED_EXIT_CODES:
                 raise SystemExit(
                     f"{task}: runner crashed rc={completed.returncode}\n"

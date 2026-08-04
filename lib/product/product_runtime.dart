@@ -386,7 +386,8 @@ class ProductRuntime {
 
   Future<String?> pickProjectFolder({
     String prompt = 'Choose a project folder',
-  }) => diagnostics.pickFolder(prompt: prompt);
+  }) =>
+      diagnostics.pickFolder(prompt: prompt);
 
   Future<void> removeProject(String id) async {
     final project = await repositories.projects.get(id);
@@ -619,12 +620,13 @@ class ProductRuntime {
     required String title,
     required String content,
     Set<String> tags = const <String>{},
-  }) => knowledge.addNote(
-    projectId: projectId,
-    title: title,
-    content: content,
-    tags: tags,
-  );
+  }) =>
+      knowledge.addNote(
+        projectId: projectId,
+        title: title,
+        content: content,
+        tags: tags,
+      );
 
   Future<void> deleteKnowledge(String id) => knowledge.deleteEntry(id);
 
@@ -656,10 +658,10 @@ class ProductRuntime {
     });
     await events
         .publish('memory.pin_changed', episode.projectId, <String, dynamic>{
-          'episodeId': episode.id,
-          'projectId': episode.projectId,
-          'pinned': episode.pinned,
-        });
+      'episodeId': episode.id,
+      'projectId': episode.projectId,
+      'pinned': episode.pinned,
+    });
     return episode;
   }
 
@@ -675,13 +677,14 @@ class ProductRuntime {
     int limit = 12,
     bool includeEpisodes = true,
     bool includeUnsuccessfulEpisodes = false,
-  }) => knowledge.retrieve(
-    projectId,
-    query,
-    limit: limit,
-    includeEpisodes: includeEpisodes,
-    includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
-  );
+  }) =>
+      knowledge.retrieve(
+        projectId,
+        query,
+        limit: limit,
+        includeEpisodes: includeEpisodes,
+        includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
+      );
 
   Future<KnowledgeStats> knowledgeStats(String projectId) =>
       knowledge.stats(projectId);
@@ -745,13 +748,12 @@ class ProductRuntime {
       description: description.trim(),
       systemPrompt: systemPrompt.trim(),
       userPrompt: userPrompt.trim(),
-      variables:
-          variables
-              .map((value) => value.trim())
-              .where((value) => value.isNotEmpty)
-              .toSet()
-              .toList()
-            ..sort(),
+      variables: variables
+          .map((value) => value.trim())
+          .where((value) => value.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort(),
       tags: tags
           .map((value) => value.trim().toLowerCase())
           .where((value) => value.isNotEmpty)
@@ -780,15 +782,16 @@ class ProductRuntime {
     required ModelIdentity model,
     PromptGenerationAction action = PromptGenerationAction.generate,
     PromptStudioDraft? current,
-  }) => promptPlanning.generatePrompt(
-    goal: goal,
-    model: model,
-    action: action,
-    current: current,
-  );
+  }) =>
+      promptPlanning.generatePrompt(
+        goal: goal,
+        model: model,
+        action: action,
+        current: current,
+      );
 
   Future<({PromptTemplateRecord prompt, PromptVersionRecord version})>
-  saveGeneratedPrompt({
+      saveGeneratedPrompt({
     String? id,
     required String goal,
     required PromptStudioDraft draft,
@@ -826,30 +829,33 @@ class ProductRuntime {
     required ModelIdentity model,
     PlanningDepth depth = PlanningDepth.auto,
     int maxLeafTasks = 25,
-  }) => promptPlanning.generateTaskPlan(
-    promptVersion: promptVersion,
-    projectId: projectId,
-    model: model,
-    depth: depth,
-    maxLeafTasks: maxLeafTasks,
-  );
+  }) =>
+      promptPlanning.generateTaskPlan(
+        promptVersion: promptVersion,
+        projectId: projectId,
+        model: model,
+        depth: depth,
+        maxLeafTasks: maxLeafTasks,
+      );
 
   Future<List<TaskPlanRecord>> listTaskPlans({
     String? promptId,
     String? projectId,
-  }) => promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
+  }) =>
+      promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
 
   Future<TaskPlanRecord> updateTaskPlan(
     TaskPlanRecord plan, {
     required List<PlanTaskRecord> tasks,
     String? title,
     String? rationale,
-  }) => promptPlanning.updateTaskPlan(
-    plan,
-    tasks: tasks,
-    title: title,
-    rationale: rationale,
-  );
+  }) =>
+      promptPlanning.updateTaskPlan(
+        plan,
+        tasks: tasks,
+        title: title,
+        rationale: rationale,
+      );
 
   Future<PreparedCommand> prepareTaskPlan({
     required TaskPlanRecord plan,
@@ -1135,11 +1141,12 @@ class ProductRuntime {
     required String label,
     required String environmentKey,
     String description = '',
-  }) => secrets.registerReference(
-    label: label,
-    environmentKey: environmentKey,
-    description: description,
-  );
+  }) =>
+      secrets.registerReference(
+        label: label,
+        environmentKey: environmentKey,
+        description: description,
+      );
 
   Future<List<SecretReference>> listSecretReferences() =>
       repositories.secretReferences.all();
@@ -1152,15 +1159,16 @@ class ProductRuntime {
     required Set<String> allowedTools,
     String protocolVersion = '2024-11-05',
     Duration validity = const Duration(days: 30),
-  }) => mcp.trust(
-    projectId: projectId,
-    label: label,
-    executablePath: executablePath,
-    arguments: arguments,
-    allowedTools: allowedTools,
-    protocolVersion: protocolVersion,
-    validity: validity,
-  );
+  }) =>
+      mcp.trust(
+        projectId: projectId,
+        label: label,
+        executablePath: executablePath,
+        arguments: arguments,
+        allowedTools: allowedTools,
+        protocolVersion: protocolVersion,
+        validity: validity,
+      );
 
   Future<List<McpTrustRecord>> listMcpTrust() => mcp.repository.all();
   Future<void> revokeMcpTrust(String id) => mcp.revoke(id);
@@ -1170,12 +1178,13 @@ class ProductRuntime {
     required Set<String> scopes,
     String? projectId,
     Duration validity = const Duration(days: 30),
-  }) => tokens.issue(
-    label: label,
-    scopes: scopes,
-    projectId: projectId,
-    validity: validity,
-  );
+  }) =>
+      tokens.issue(
+        label: label,
+        scopes: scopes,
+        projectId: projectId,
+        validity: validity,
+      );
 
   Future<List<ApiTokenRecord>> listApiTokens() => repositories.tokens.all();
   Future<void> revokeApiToken(String id) => tokens.revoke(id);

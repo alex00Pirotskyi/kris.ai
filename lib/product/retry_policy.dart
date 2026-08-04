@@ -32,10 +32,10 @@ class RetryClassification {
   final String retryability;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'failureClass': failureClass.name,
-    'disposition': disposition.name,
-    'retryability': retryability,
-  };
+        'failureClass': failureClass.name,
+        'disposition': disposition.name,
+        'retryability': retryability,
+      };
 }
 
 class WorkflowRetryTaxonomy {
@@ -141,8 +141,8 @@ class WorkflowRetryTaxonomy {
       return RetryClassification(
         failureClass:
             code.startsWith('model_load') || code.startsWith('provider_')
-            ? WorkflowFailureClass.providerTransient
-            : WorkflowFailureClass.resourceUnavailable,
+                ? WorkflowFailureClass.providerTransient
+                : WorkflowFailureClass.resourceUnavailable,
         disposition: RetryDisposition.awaitResource,
         retryability: 'resource',
       );

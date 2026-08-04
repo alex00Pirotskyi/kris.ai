@@ -20,24 +20,24 @@ final class ProtectedKeyHandleV2 {
   final ProtectedKeyStatus status;
 
   Map<String, Object?> toPublicJson() => <String, Object?>{
-    'keyId': keyId,
-    'purpose': purpose,
-    'provider': provider,
-    'reference': reference,
-    'publicKeyHex': publicKeyHex,
-    'trustDomain': trustDomain,
-    'status': status.name,
-  };
+        'keyId': keyId,
+        'purpose': purpose,
+        'provider': provider,
+        'reference': reference,
+        'publicKeyHex': publicKeyHex,
+        'trustDomain': trustDomain,
+        'status': status.name,
+      };
 
   ProtectedKeyHandleV2 revoke() => ProtectedKeyHandleV2(
-    keyId: keyId,
-    purpose: purpose,
-    provider: provider,
-    reference: reference,
-    publicKeyHex: publicKeyHex,
-    trustDomain: trustDomain,
-    status: ProtectedKeyStatus.revoked,
-  );
+        keyId: keyId,
+        purpose: purpose,
+        provider: provider,
+        reference: reference,
+        publicKeyHex: publicKeyHex,
+        trustDomain: trustDomain,
+        status: ProtectedKeyStatus.revoked,
+      );
 }
 
 final class ProtectedKeyRegistryV2 {
@@ -100,7 +100,7 @@ final class ProtectedKeyRegistryV2 {
   }
 
   List<Map<String, Object?>> exportPublicRegistry() => <Map<String, Object?>>[
-    for (final key in (_handles.keys.toList()..sort()))
-      _handles[key]!.toPublicJson(),
-  ];
+        for (final key in (_handles.keys.toList()..sort()))
+          _handles[key]!.toPublicJson(),
+      ];
 }

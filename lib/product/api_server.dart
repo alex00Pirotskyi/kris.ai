@@ -12,7 +12,7 @@ import 'storage_security.dart';
 
 class GovernedApiServer {
   GovernedApiServer(this.runtime)
-    : _rateLimiter = RateLimiter(capacity: 120, refillPerMinute: 120);
+      : _rateLimiter = RateLimiter(capacity: 120, refillPerMinute: 120);
 
   final ProductRuntime runtime;
   final RateLimiter _rateLimiter;
@@ -150,11 +150,11 @@ class GovernedApiServer {
     } catch (error, stackTrace) {
       await runtime.audit
           .append('api.request_failed', correlationId, <String, dynamic>{
-            'method': request.method,
-            'path': request.uri.path,
-            'error': runtime.redactor.redact('$error'),
-            'stackHash': Sha256.text('$stackTrace'),
-          });
+        'method': request.method,
+        'path': request.uri.path,
+        'error': runtime.redactor.redact('$error'),
+        'stackHash': Sha256.text('$stackTrace'),
+      });
       await _writeError(
         response,
         HttpStatus.internalServerError,
@@ -433,8 +433,8 @@ class GovernedApiServer {
       final body = await _body(request, allowEmpty: true);
       final versionId =
           body['promptVersionId']?.toString().trim().isNotEmpty == true
-          ? body['promptVersionId']!.toString().trim()
-          : plan.promptVersionId;
+              ? body['promptVersionId']!.toString().trim()
+              : plan.promptVersionId;
       final version = await runtime.repositories.promptVersions.get(versionId);
       if (version == null) {
         throw _HttpFailure(
@@ -776,7 +776,7 @@ class GovernedApiServer {
               request.uri.queryParameters['includeEpisodes'] != 'false',
           includeUnsuccessfulEpisodes:
               request.uri.queryParameters['includeUnsuccessfulEpisodes'] ==
-              'true',
+                  'true',
         );
         return _json(request.response, HttpStatus.ok, <String, dynamic>{
           'retrieval': retrieval.toJson(),
@@ -1043,17 +1043,15 @@ class GovernedApiServer {
         }
       }
     });
-    response.done
-        .then((_) {
-          if (!done.isCompleted) {
-            done.complete();
-          }
-        })
-        .catchError((_) {
-          if (!done.isCompleted) {
-            done.complete();
-          }
-        });
+    response.done.then((_) {
+      if (!done.isCompleted) {
+        done.complete();
+      }
+    }).catchError((_) {
+      if (!done.isCompleted) {
+        done.complete();
+      }
+    });
     await done.future;
     heartbeat.cancel();
     await subscription.cancel();
@@ -1190,205 +1188,220 @@ class GovernedApiServer {
   }
 
   Map<String, dynamic> _openApi() => <String, dynamic>{
-    'openapi': '3.1.0',
-    'info': <String, dynamic>{
-      'title': 'Kristin Local Agent Governed API',
-      'version': kristinVersion,
-      'description':
-          'Loopback-only, bearer-authenticated API. Tokens are hashed, scoped, expiring, and optionally project-bound.',
-    },
-    'servers': <Map<String, String>>[
-      <String, String>{
-        'url': 'http://127.0.0.1:${runtime.settings.apiPort}/v1',
-      },
-    ],
-    'components': <String, dynamic>{
-      'securitySchemes': <String, dynamic>{
-        'bearerAuth': <String, String>{'type': 'http', 'scheme': 'bearer'},
-      },
-    },
-    'security': <Map<String, Object>>[
-      <String, Object>{'bearerAuth': <Object>[]},
-    ],
-    'paths': <String, dynamic>{
-      '/health': <String, dynamic>{
-        'get': <String, dynamic>{
-          'security': <Object>[],
-          'summary': 'Health check',
+        'openapi': '3.1.0',
+        'info': <String, dynamic>{
+          'title': 'Kristin Local Agent Governed API',
+          'version': kristinVersion,
+          'description':
+              'Loopback-only, bearer-authenticated API. Tokens are hashed, scoped, expiring, and optionally project-bound.',
         },
-      },
-      '/projects': <String, dynamic>{
-        'get': <String, String>{'summary': 'List projects'},
-        'post': <String, String>{'summary': 'Register project'},
-      },
-      '/projects/{projectId}/manager': <String, dynamic>{
-        'get': <String, String>{
-          'summary': 'Read the Project Manager dashboard state',
+        'servers': <Map<String, String>>[
+          <String, String>{
+            'url': 'http://127.0.0.1:${runtime.settings.apiPort}/v1',
+          },
+        ],
+        'components': <String, dynamic>{
+          'securitySchemes': <String, dynamic>{
+            'bearerAuth': <String, String>{'type': 'http', 'scheme': 'bearer'},
+          },
         },
-      },
-      '/projects/{projectId}/analyze': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Run the detected bounded static analysis',
+        'security': <Map<String, Object>>[
+          <String, Object>{'bearerAuth': <Object>[]},
+        ],
+        'paths': <String, dynamic>{
+          '/health': <String, dynamic>{
+            'get': <String, dynamic>{
+              'security': <Object>[],
+              'summary': 'Health check',
+            },
+          },
+          '/projects': <String, dynamic>{
+            'get': <String, String>{'summary': 'List projects'},
+            'post': <String, String>{'summary': 'Register project'},
+          },
+          '/projects/{projectId}/manager': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Read the Project Manager dashboard state',
+            },
+          },
+          '/projects/{projectId}/analyze': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Run the detected bounded static analysis',
+            },
+          },
+          '/projects/{projectId}/test': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Run detected bounded project tests',
+            },
+          },
+          '/projects/{projectId}/build': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Run the detected bounded project build',
+            },
+          },
+          '/projects/{projectId}/run': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Start the detected run command as a managed process',
+            },
+          },
+          '/projects/{projectId}/stop': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Stop the active managed project process',
+            },
+          },
+          '/models': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Discover exact model identities'
+            },
+          },
+          '/prompts': <String, dynamic>{
+            'get': <String, String>{'summary': 'List Prompt Studio prompts'},
+          },
+          '/prompts/generate': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Generate or improve a structured prompt draft with a selected model',
+            },
+          },
+          '/prompts/versions': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Save an immutable reviewed prompt version',
+            },
+          },
+          '/prompts/{promptId}/versions': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List immutable prompt versions'
+            },
+          },
+          '/prompt-studio/v2/contracts': <String, dynamic>{
+            'get': <String, String>{
+              'summary':
+                  'Read the canonical Prompt Studio 2 schemas and capability catalog',
+            },
+          },
+          '/prompt-studio/v2/compile': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Compile and dry-run a canonical specification and 1–100 task plan',
+            },
+          },
+          '/prompt-studio/v2/evaluate': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Measure a prompt-version change against a deterministic evaluation dataset',
+            },
+          },
+          '/task-plans': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List generated task-plan revisions',
+            },
+          },
+          '/task-plans/generate': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Generate a validated adaptive 1–100 task plan',
+            },
+          },
+          '/task-plans/{planId}': <String, dynamic>{
+            'get': <String, String>{'summary': 'Read one task-plan revision'},
+            'put': <String, String>{
+              'summary': 'Create an immutable edited task-plan revision',
+            },
+          },
+          '/task-plans/{planId}/compile': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Compile all or selected tasks into a governed command',
+            },
+          },
+          '/commands/prepare': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Prepare deterministic contract and DAG',
+            },
+          },
+          '/commands/{commandId}/runs': <String, dynamic>{
+            'post': <String, String>{'summary': 'Create persistent run'},
+          },
+          '/runs/{runId}/approve': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Approve requested granular scopes',
+            },
+          },
+          '/runs/{runId}/execute': <String, dynamic>{
+            'post': <String, String>{'summary': 'Start governed execution'},
+          },
+          '/runs/{runId}/retry': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Create a fresh linked retry with reset attempts and plan-scaled budgets',
+            },
+          },
+          '/runs/{runId}': <String, dynamic>{
+            'get': <String, String>{'summary': 'Get run state'},
+          },
+          '/runs/{runId}/evidence': <String, dynamic>{
+            'get': <String, String>{'summary': 'Get evidence records'},
+          },
+          '/projects/{projectId}/knowledge': <String, dynamic>{
+            'get': <String, String>{'summary': 'List project knowledge'},
+            'post': <String, String>{'summary': 'Add project note'},
+          },
+          '/projects/{projectId}/knowledge/search': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Hybrid search with inspectable citations',
+            },
+          },
+          '/projects/{projectId}/knowledge/stats': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Knowledge, archive, memory, and index statistics',
+            },
+          },
+          '/projects/{projectId}/knowledge/reindex': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Rebuild the local project index'
+            },
+          },
+          '/projects/{projectId}/knowledge/export': <String, dynamic>{
+            'post': <String, String>{
+              'summary': 'Create a portable knowledge ZIP'
+            },
+          },
+          '/projects/{projectId}/research-archive': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List immutable research provenance records',
+            },
+          },
+          '/projects/{projectId}/memory': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'List terminal-run memory episodes'
+            },
+          },
+          '/events': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Resume-capable server-sent event stream',
+            },
+          },
+          '/secret-references': <String, dynamic>{
+            'get': <String, String>{'summary': 'List references only'},
+            'post': <String, String>{
+              'summary': 'Register environment reference'
+            },
+          },
+          '/tokens': <String, dynamic>{
+            'post': <String, String>{'summary': 'Issue a token shown once'},
+          },
+          '/audit/verify': <String, dynamic>{
+            'get': <String, String>{
+              'summary': 'Verify tamper-evident audit chain'
+            },
+          },
+          '/support-bundles': <String, dynamic>{
+            'post': <String, String>{
+              'summary':
+                  'Save a redacted diagnostic ZIP with retained logs, run budgets, and evidence metadata',
+            },
+          },
         },
-      },
-      '/projects/{projectId}/test': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Run detected bounded project tests',
-        },
-      },
-      '/projects/{projectId}/build': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Run the detected bounded project build',
-        },
-      },
-      '/projects/{projectId}/run': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Start the detected run command as a managed process',
-        },
-      },
-      '/projects/{projectId}/stop': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Stop the active managed project process',
-        },
-      },
-      '/models': <String, dynamic>{
-        'get': <String, String>{'summary': 'Discover exact model identities'},
-      },
-      '/prompts': <String, dynamic>{
-        'get': <String, String>{'summary': 'List Prompt Studio prompts'},
-      },
-      '/prompts/generate': <String, dynamic>{
-        'post': <String, String>{
-          'summary':
-              'Generate or improve a structured prompt draft with a selected model',
-        },
-      },
-      '/prompts/versions': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Save an immutable reviewed prompt version',
-        },
-      },
-      '/prompts/{promptId}/versions': <String, dynamic>{
-        'get': <String, String>{'summary': 'List immutable prompt versions'},
-      },
-      '/prompt-studio/v2/contracts': <String, dynamic>{
-        'get': <String, String>{
-          'summary':
-              'Read the canonical Prompt Studio 2 schemas and capability catalog',
-        },
-      },
-      '/prompt-studio/v2/compile': <String, dynamic>{
-        'post': <String, String>{
-          'summary':
-              'Compile and dry-run a canonical specification and 1–100 task plan',
-        },
-      },
-      '/prompt-studio/v2/evaluate': <String, dynamic>{
-        'post': <String, String>{
-          'summary':
-              'Measure a prompt-version change against a deterministic evaluation dataset',
-        },
-      },
-      '/task-plans': <String, dynamic>{
-        'get': <String, String>{
-          'summary': 'List generated task-plan revisions',
-        },
-      },
-      '/task-plans/generate': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Generate a validated adaptive 1–100 task plan',
-        },
-      },
-      '/task-plans/{planId}': <String, dynamic>{
-        'get': <String, String>{'summary': 'Read one task-plan revision'},
-        'put': <String, String>{
-          'summary': 'Create an immutable edited task-plan revision',
-        },
-      },
-      '/task-plans/{planId}/compile': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Compile all or selected tasks into a governed command',
-        },
-      },
-      '/commands/prepare': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Prepare deterministic contract and DAG',
-        },
-      },
-      '/commands/{commandId}/runs': <String, dynamic>{
-        'post': <String, String>{'summary': 'Create persistent run'},
-      },
-      '/runs/{runId}/approve': <String, dynamic>{
-        'post': <String, String>{
-          'summary': 'Approve requested granular scopes',
-        },
-      },
-      '/runs/{runId}/execute': <String, dynamic>{
-        'post': <String, String>{'summary': 'Start governed execution'},
-      },
-      '/runs/{runId}/retry': <String, dynamic>{
-        'post': <String, String>{
-          'summary':
-              'Create a fresh linked retry with reset attempts and plan-scaled budgets',
-        },
-      },
-      '/runs/{runId}': <String, dynamic>{
-        'get': <String, String>{'summary': 'Get run state'},
-      },
-      '/runs/{runId}/evidence': <String, dynamic>{
-        'get': <String, String>{'summary': 'Get evidence records'},
-      },
-      '/projects/{projectId}/knowledge': <String, dynamic>{
-        'get': <String, String>{'summary': 'List project knowledge'},
-        'post': <String, String>{'summary': 'Add project note'},
-      },
-      '/projects/{projectId}/knowledge/search': <String, dynamic>{
-        'get': <String, String>{
-          'summary': 'Hybrid search with inspectable citations',
-        },
-      },
-      '/projects/{projectId}/knowledge/stats': <String, dynamic>{
-        'get': <String, String>{
-          'summary': 'Knowledge, archive, memory, and index statistics',
-        },
-      },
-      '/projects/{projectId}/knowledge/reindex': <String, dynamic>{
-        'post': <String, String>{'summary': 'Rebuild the local project index'},
-      },
-      '/projects/{projectId}/knowledge/export': <String, dynamic>{
-        'post': <String, String>{'summary': 'Create a portable knowledge ZIP'},
-      },
-      '/projects/{projectId}/research-archive': <String, dynamic>{
-        'get': <String, String>{
-          'summary': 'List immutable research provenance records',
-        },
-      },
-      '/projects/{projectId}/memory': <String, dynamic>{
-        'get': <String, String>{'summary': 'List terminal-run memory episodes'},
-      },
-      '/events': <String, dynamic>{
-        'get': <String, String>{
-          'summary': 'Resume-capable server-sent event stream',
-        },
-      },
-      '/secret-references': <String, dynamic>{
-        'get': <String, String>{'summary': 'List references only'},
-        'post': <String, String>{'summary': 'Register environment reference'},
-      },
-      '/tokens': <String, dynamic>{
-        'post': <String, String>{'summary': 'Issue a token shown once'},
-      },
-      '/audit/verify': <String, dynamic>{
-        'get': <String, String>{'summary': 'Verify tamper-evident audit chain'},
-      },
-      '/support-bundles': <String, dynamic>{
-        'post': <String, String>{
-          'summary':
-              'Save a redacted diagnostic ZIP with retained logs, run budgets, and evidence metadata',
-        },
-      },
-    },
-  };
+      };
 }
 
 class _HttpFailure implements Exception {

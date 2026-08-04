@@ -35,9 +35,9 @@ bool _sameAuthority(P2EffectBinding left, P2EffectBinding right) =>
     left.capabilityId == right.capabilityId;
 
 P2PtyState _ptyState(Object? value) => P2PtyState.values.firstWhere(
-  (P2PtyState candidate) => candidate.name == value?.toString(),
-  orElse: () => P2PtyState.unknown,
-);
+      (P2PtyState candidate) => candidate.name == value?.toString(),
+      orElse: () => P2PtyState.unknown,
+    );
 
 final class _P2PtySessionAuthority {
   const _P2PtySessionAuthority({
@@ -58,13 +58,12 @@ final class _P2PtySessionAuthority {
 /// Concrete PTY adapter used by the desktop product. Every session operation
 /// receives a new desktop-issued envelope, while the worker additionally checks
 /// that run/task/actor/tool/profile/capability/grant remain bound to the session.
-typedef P2PtySessionOpened =
-    Future<void> Function(
-      P2PtyOpenRequest request,
-      P2PtySession session,
-      P2EffectBinding binding,
-      String grantDigest,
-    );
+typedef P2PtySessionOpened = Future<void> Function(
+  P2PtyOpenRequest request,
+  P2PtySession session,
+  P2EffectBinding binding,
+  String grantDigest,
+);
 
 final class P2AutomationPtyBackend implements P2PtyBackend {
   P2AutomationPtyBackend({
@@ -162,8 +161,8 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
       transcriptCursor: response['nextCursor'] is int
           ? response['nextCursor']! as int
           : response['cursor'] is int
-          ? response['cursor']! as int
-          : 0,
+              ? response['cursor']! as int
+              : 0,
     );
   }
 
@@ -227,10 +226,14 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
       } catch (_) {
         _sessions.remove(sessionId);
         try {
-          await _invoke(binding, 'pty.terminate', <String, Object?>{
-            'sessionId': sessionId,
-            'processIdentity': identity.toJson(),
-          }, expectedGrantDigest: grantDigest);
+          await _invoke(
+              binding,
+              'pty.terminate',
+              <String, Object?>{
+                'sessionId': sessionId,
+                'processIdentity': identity.toJson(),
+              },
+              expectedGrantDigest: grantDigest);
         } catch (_) {
           // The session is unknown until restart reconciliation; never claim open.
         }
@@ -248,11 +251,15 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
     required String grantDigest,
   }) async* {
     final record = _session(sessionId, binding, grantDigest);
-    final attach = await _invoke(binding, 'pty.attach', <String, Object?>{
-      'sessionId': sessionId,
-      'fromCursor': fromCursor,
-      'processIdentity': record.processIdentity.toJson(),
-    }, expectedGrantDigest: grantDigest);
+    final attach = await _invoke(
+        binding,
+        'pty.attach',
+        <String, Object?>{
+          'sessionId': sessionId,
+          'fromCursor': fromCursor,
+          'processIdentity': record.processIdentity.toJson(),
+        },
+        expectedGrantDigest: grantDigest);
     final backlog = attach['dataBase64'];
     if (backlog is String && backlog.isNotEmpty) {
       yield base64Decode(backlog);
@@ -278,11 +285,15 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
     required String grantDigest,
   }) {
     final record = _session(sessionId, binding, grantDigest);
-    return _invoke(binding, operation, <String, Object?>{
-      'sessionId': sessionId,
-      'processIdentity': record.processIdentity.toJson(),
-      ...payload,
-    }, expectedGrantDigest: grantDigest);
+    return _invoke(
+        binding,
+        operation,
+        <String, Object?>{
+          'sessionId': sessionId,
+          'processIdentity': record.processIdentity.toJson(),
+          ...payload,
+        },
+        expectedGrantDigest: grantDigest);
   }
 
   @override
@@ -396,8 +407,8 @@ class P2ProcessAuthorization {
   final String grantDigest;
 }
 
-typedef P2ProcessAuthorizationResolver =
-    P2ProcessAuthorization Function(int pid, String operation);
+typedef P2ProcessAuthorizationResolver = P2ProcessAuthorization Function(
+    int pid, String operation);
 
 final class P2AutomationProcessTreeAdapter
     implements P2NativeProcessTreeAdapter {
@@ -504,8 +515,8 @@ class P2WatchdogAuthorization {
   final P2ProcessIdentity processIdentity;
 }
 
-typedef P2WatchdogAuthorizationResolver =
-    P2WatchdogAuthorization Function(String watchdogId, String operation);
+typedef P2WatchdogAuthorizationResolver = P2WatchdogAuthorization Function(
+    String watchdogId, String operation);
 
 final class P2AutomationWatchdogTransport implements P2WatchdogTransport {
   P2AutomationWatchdogTransport({

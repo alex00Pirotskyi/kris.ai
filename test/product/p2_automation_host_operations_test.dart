@@ -40,9 +40,13 @@ void main() {
         journal: journal,
         bindingProvider: _Bindings(),
       );
-      final plan = await adapter.plan('fixture', 'install', <String>[
-        'fixture-sdk',
-      ], testBinding('package.plan', taskId: 'P2-007'));
+      final plan = await adapter.plan(
+          'fixture',
+          'install',
+          <String>[
+            'fixture-sdk',
+          ],
+          testBinding('package.plan', taskId: 'P2-007'));
       final applied = await adapter.apply(
         plan,
         testBinding('package.apply', taskId: 'P2-007'),

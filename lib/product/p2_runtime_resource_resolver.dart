@@ -49,27 +49,29 @@ final class P2RuntimeResourceSet {
   final Map<String, String> provisionedEnvironment;
 
   Map<String, Object?> get provenance => <String, Object?>{
-    'resolver': 'P2ApplicationOwnedRuntimeResourceResolver',
-    'applicationOwned': true,
-    'sourceWorkingDirectoryIndependent': true,
-    'manifestSha256': manifestSha256,
-    'sourceCommit': sourceCommit,
-    'sourceTree': sourceTree,
-    'runtimeBuildSha256': runtimeBuildSha256,
-    'p1AuthorityServiceContractSha256': p1AuthorityServiceContractSha256,
-    'rootPathSha256': Sha256.text(root.absolute.path),
-    'nodePathSha256': Sha256.text(nodeExecutable),
-    'hostScriptPathSha256': Sha256.text(hostScript),
-    'restrictedWorkerLauncherPathSha256': Sha256.text(restrictedWorkerLauncher),
-    'workerPolicyPathSha256': Sha256.text(workerPolicy),
-    'provisionedEnvironmentKeys': provisionedEnvironment.keys.toList()..sort(),
-    'provisionedEnvironmentSha256': Sha256.text(
-      jsonEncode(<String, String>{
-        for (final key in (provisionedEnvironment.keys.toList()..sort()))
-          key: provisionedEnvironment[key]!,
-      }),
-    ),
-  };
+        'resolver': 'P2ApplicationOwnedRuntimeResourceResolver',
+        'applicationOwned': true,
+        'sourceWorkingDirectoryIndependent': true,
+        'manifestSha256': manifestSha256,
+        'sourceCommit': sourceCommit,
+        'sourceTree': sourceTree,
+        'runtimeBuildSha256': runtimeBuildSha256,
+        'p1AuthorityServiceContractSha256': p1AuthorityServiceContractSha256,
+        'rootPathSha256': Sha256.text(root.absolute.path),
+        'nodePathSha256': Sha256.text(nodeExecutable),
+        'hostScriptPathSha256': Sha256.text(hostScript),
+        'restrictedWorkerLauncherPathSha256':
+            Sha256.text(restrictedWorkerLauncher),
+        'workerPolicyPathSha256': Sha256.text(workerPolicy),
+        'provisionedEnvironmentKeys': provisionedEnvironment.keys.toList()
+          ..sort(),
+        'provisionedEnvironmentSha256': Sha256.text(
+          jsonEncode(<String, String>{
+            for (final key in (provisionedEnvironment.keys.toList()..sort()))
+              key: provisionedEnvironment[key]!,
+          }),
+        ),
+      };
 }
 
 final class P2ApplicationOwnedRuntimeResourceResolver {
@@ -402,8 +404,7 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
 
   static String _externalPath(Map<String, Object?> row, String key) {
     final value = row['path']?.toString() ?? '';
-    final absolute =
-        value.startsWith('/') ||
+    final absolute = value.startsWith('/') ||
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value) ||
         value.startsWith(r'\\');
     if (!absolute ||

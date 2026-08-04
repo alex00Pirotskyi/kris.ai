@@ -153,14 +153,16 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> detach(
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> input(
@@ -168,7 +170,8 @@ class _PtyBackend implements P2PtyBackend {
     List<int> bytes, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> interrupt(
@@ -184,7 +187,8 @@ class _PtyBackend implements P2PtyBackend {
     P2PtyOpenRequest request,
     P2EffectBinding binding,
     String grantDigest,
-  ) => throw UnimplementedError();
+  ) =>
+      throw UnimplementedError();
 
   @override
   Stream<List<int>> output(
@@ -192,7 +196,8 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => const Stream<List<int>>.empty();
+  }) =>
+      const Stream<List<int>>.empty();
 
   @override
   Future<void> resize(
@@ -201,7 +206,8 @@ class _PtyBackend implements P2PtyBackend {
     int rows, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> terminate(
