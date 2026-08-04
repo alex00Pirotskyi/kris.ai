@@ -1,8 +1,8 @@
-Execute the validated, exact-head-bound PR14 owner-risk source-contract repair after verifier correction.
+Execute the validated, exact-head-bound PR14 owner-risk source-contract repair after exact-block verifier correction.
 
-Executor base workflow merged on main: 6b590aacd66eb76856ac4172991efe80cd47bed4
+Executor base workflow merged on main: 1c901f37403a1d193336ffa2659683a82ab85a90
 Target branch: merge/p1-p2-owner-risk-qa-preview
 Expected target head: 2bc7531314a5515198c1f93059862b56396d483f
 Authorized repair scope: .github/workflows/p2-owner-mode.yml and SOURCE_MANIFEST.sha256 only.
 Formal workflow_dispatch remains strict; pull-request and push source lanes use the reviewed owner-risk QA dependency contract.
-The helper reconstructs the literal Actions expression without workflow-time interpolation.
+The helper verifies the complete inserted five-line block exactly once before pushing.
