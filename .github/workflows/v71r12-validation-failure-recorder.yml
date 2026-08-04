@@ -1,0 +1,78 @@
+name: V71-R12 Validation Failure Recorder
+
+on:
+  workflow_run:
+    workflows:
+      - TEMP V71-R12 Tri-Platform Repair 30889417167
+      - P1 P2 Owner-Risk Promotion V71-R12
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  record-failure:
+    if: >-
+      github.event.workflow_run.conclusion != 'success' &&
+      ((github.event.workflow_run.name == 'TEMP V71-R12 Tri-Platform Repair 30889417167' &&
+        github.event.workflow_run.head_branch == 'fix/v71r12-triplatform-30889417167') ||
+       (github.event.workflow_run.name == 'P1 P2 Owner-Risk Promotion V71-R12' &&
+        github.event.workflow_run.head_branch == 'integration/p2-owner-risk-v71r12'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Publish exact failed-run marker
+        shell: bash
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          SOURCE_HEAD: ${{ github.event.workflow_run.head_sha }}
+          SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SOURCE_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          set -euo pipefail
+
+          if [ "$WORKFLOW_NAME" = "TEMP V71-R12 Tri-Platform Repair 30889417167" ]; then
+            kind="repair"
+          else
+            kind="integration"
+          fi
+          branch="validation/v71r12-${kind}-failure-${SOURCE_RUN_ID}"
+
+          git config user.name "Kristin Validation Recorder"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+
+          mkdir -p release/evidence/validation
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          payload = {
+              "schemaVersion": "1.0.0",
+              "recordType": "v71r12-validation-failure",
+              "workflowName": os.environ["WORKFLOW_NAME"],
+              "workflowRunId": int(os.environ["SOURCE_RUN_ID"]),
+              "workflowRunAttempt": int(os.environ["SOURCE_RUN_ATTEMPT"]),
+              "headSha": os.environ["SOURCE_HEAD"],
+              "headBranch": os.environ["SOURCE_BRANCH"],
+              "conclusion": os.environ["SOURCE_CONCLUSION"],
+          }
+          pathlib.Path("release/evidence/validation/V71R12_FAILURE.json").write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+              newline="\n",
+          )
+          PY
+
+          git add release/evidence/validation/V71R12_FAILURE.json
+          git commit -m "evidence: record failed V71-R12 validation run $SOURCE_RUN_ID"
+          git push origin "HEAD:refs/heads/$branch"
