@@ -1,6 +1,7 @@
-Execute the validated, exact-head-bound PR14 repair workflow.
+Execute the validated, exact-head-bound PR14 owner-risk source-contract repair.
 
-Executor base: f76415a28a221ef0a4fe73f7f86f145162013e17
+Executor base workflow merged on main: 85e413d48b02185171f9aafed07ef04e2485e07d
 Target branch: merge/p1-p2-owner-risk-qa-preview
-Expected target head: 0b6a50978de9a954f00de8272ba24134bb85980e
-Authorized repair scope: six governed paths only.
+Expected target head: 2bc7531314a5515198c1f93059862b56396d483f
+Authorized repair scope: .github/workflows/p2-owner-mode.yml and SOURCE_MANIFEST.sha256 only.
+Formal workflow_dispatch remains strict; pull-request and push source lanes use the reviewed owner-risk QA dependency contract.
