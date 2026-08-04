@@ -1,0 +1,58 @@
+name: TEMP Dispatch P1 P2 Promotion
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: temp-dispatch-p1-p2-promotion
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: >-
+      github.event.pull_request.head.ref == 'ci/dispatch-p1-p2-promotion-trigger' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      TARGET_REF: integration/p2-owner-risk-v71r12
+      EXPECTED_HEAD: eb12a6b45d86f83a87eb30c4cb66e99f773c3054
+      WORKFLOW_FILE: p1-p2-owner-risk-promotion-v71r12.yml
+    steps:
+      - name: Check out exact governed integration source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: integration/p2-owner-risk-v71r12
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact workflow source and dispatch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -f ".github/workflows/$WORKFLOW_FILE"
+          grep -Fx 'name: P1 P2 Owner-Risk Promotion V71-R12' ".github/workflows/$WORKFLOW_FILE"
+          grep -F 'workflow_dispatch:' ".github/workflows/$WORKFLOW_FILE"
+          grep -F 'name: owner-risk-${{ matrix.platform }}' ".github/workflows/$WORKFLOW_FILE"
+          grep -F 'name: tri-platform-gate' ".github/workflows/$WORKFLOW_FILE"
+
+          gh api \
+            --method POST \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/$WORKFLOW_FILE/dispatches" \
+            -f ref="$TARGET_REF"
+
+          echo "DISPATCHED_WORKFLOW=$WORKFLOW_FILE"
+          echo "DISPATCHED_REF=$TARGET_REF"
+          echo "DISPATCHED_HEAD=$EXPECTED_HEAD"
