@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordType": "temporary-pr14-workflow-run-trigger",
+  "targetBranch": "merge/p1-p2-owner-risk-qa-preview",
+  "expectedTargetHead": "0b6a50978de9a954f00de8272ba24134bb85980e",
+  "executorWorkflow": "TEMP PR14 Workflow-Run Repair",
+  "temporary": true,
+  "mergeEligible": false
+}
