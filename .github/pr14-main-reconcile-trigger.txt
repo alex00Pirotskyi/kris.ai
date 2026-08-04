@@ -1,0 +1,4 @@
+Disposable same-repository trigger rebuilt directly from protected main for exact reconciliation of PR #14.
+Expected pre-reconciliation P1/P2 head: eb12a6b45d86f83a87eb30c4cb66e99f773c3054
+Successful promotion run: 30938113426
+Base main: 3b8971ffd8786b4c03f45759a5ef4e9e5ceac433
