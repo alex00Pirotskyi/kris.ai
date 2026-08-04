@@ -62,30 +62,16 @@ jobs:
 
           p2 = Path('.github/workflows/p2-owner-mode.yml')
           value = p2.read_text(encoding='utf-8')
-          old = '''      - id: toolchains
-        shell: bash
-        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
-'''
-          new = '''      - name: Install exact hash-locked hosted Python test dependencies
-        shell: bash
-        run: python tool/v71r12_bootstrap_hosted_python.py --project .
-      - id: toolchains
-        shell: bash
-        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
-'''
+          old = '      - id: toolchains\n        shell: bash\n        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"\n'
+          new = '      - name: Install exact hash-locked hosted Python test dependencies\n        shell: bash\n        run: python tool/v71r12_bootstrap_hosted_python.py --project .\n      - id: toolchains\n        shell: bash\n        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"\n'
           if value.count(old) < 1:
               raise SystemExit('P2 source-contract toolchain anchor missing')
           p2.write_text(value.replace(old, new, 1), encoding='utf-8', newline='\n')
 
           promotion = Path('.github/workflows/p1-p2-owner-risk-promotion-v71r12.yml')
           value = promotion.read_text(encoding='utf-8')
-          old = '''          if-no-files-found: error
-          retention-days: 30
-'''
-          new = '''          if-no-files-found: error
-          retention-days: 30
-          include-hidden-files: true
-'''
+          old = '          if-no-files-found: error\n          retention-days: 30\n'
+          new = '          if-no-files-found: error\n          retention-days: 30\n          include-hidden-files: true\n'
           if value.count(old) != 1:
               raise SystemExit(f'expected one shipment upload target, found {value.count(old)}')
           if 'include-hidden-files: true' in value:
