@@ -67,10 +67,7 @@ int _edgeBacktickRun(String value, {required bool fromStart}) {
 }
 
 class WorkspacePathRecovery {
-  const WorkspacePathRecovery({
-    required this.path,
-    required this.strategy,
-  });
+  const WorkspacePathRecovery({required this.path, required this.strategy});
 
   final String path;
   final String strategy;
@@ -86,17 +83,19 @@ class WorkspaceBoundary {
     final root = Directory(rootPath).absolute;
     if (!await root.exists()) {
       throw ProductException(
-          'project_missing', 'Project root does not exist: ${root.path}');
+        'project_missing',
+        'Project root does not exist: ${root.path}',
+      );
     }
     final canonical = await root.resolveSymbolicLinks();
     return WorkspaceBoundary._(
-        Directory(canonical), _normalizeAbsolute(canonical));
+      Directory(canonical),
+      _normalizeAbsolute(canonical),
+    );
   }
 
   Future<bool> isKristinSourceCheckout() async {
-    final pubspec = File(
-      '${root.path}${Platform.pathSeparator}pubspec.yaml',
-    );
+    final pubspec = File('${root.path}${Platform.pathSeparator}pubspec.yaml');
     final runtime = File(
       '${root.path}${Platform.pathSeparator}lib'
       '${Platform.pathSeparator}product'
@@ -130,7 +129,9 @@ class WorkspaceBoundary {
     }
     if (raw.contains('\u0000')) {
       throw ProductException(
-          'path_nul_rejected', 'NUL bytes are not allowed in paths.');
+        'path_nul_rejected',
+        'NUL bytes are not allowed in paths.',
+      );
     }
 
     if (raw.toLowerCase().startsWith('file:')) {
@@ -156,7 +157,9 @@ class WorkspaceBoundary {
       final windowsAbsolute = RegExp(r'^[A-Za-z]:[/\\]').hasMatch(raw);
       if (!windowsAbsolute && uri != null && uri.hasScheme) {
         throw ProductException(
-            'path_scheme_rejected', 'URI paths are not allowed.');
+          'path_scheme_rejected',
+          'URI paths are not allowed.',
+        );
       }
     }
 
@@ -307,10 +310,7 @@ class WorkspaceBoundary {
               _case(suffix.first) == _case(rootName))) {
         suffix.removeAt(0);
       }
-      final virtual = await validated(
-        suffix,
-        'virtual_workspace_alias',
-      );
+      final virtual = await validated(suffix, 'virtual_workspace_alias');
       if (virtual != null) {
         return virtual;
       }
@@ -340,18 +340,22 @@ class WorkspaceBoundary {
     return null;
   }
 
-  Future<FileSystemEntity> resolve(String relativePath,
-      {bool allowMissing = false}) async {
+  Future<FileSystemEntity> resolve(
+    String relativePath, {
+    bool allowMissing = false,
+  }) async {
     final clean = normalizeToolPath(relativePath);
     if (clean == '.') {
       return root;
     }
     final segments = clean.split('/');
     final candidate = File(
-            '${root.path}${Platform.pathSeparator}${segments.join(Platform.pathSeparator)}')
-        .absolute;
-    final type =
-        await FileSystemEntity.type(candidate.path, followLinks: false);
+      '${root.path}${Platform.pathSeparator}${segments.join(Platform.pathSeparator)}',
+    ).absolute;
+    final type = await FileSystemEntity.type(
+      candidate.path,
+      followLinks: false,
+    );
     if (type != FileSystemEntityType.notFound) {
       final canonical = await _resolveExistingEntityPath(candidate.path);
       _assertWithin(canonical);
@@ -359,20 +363,26 @@ class WorkspaceBoundary {
     }
     if (!allowMissing) {
       throw ProductException(
-          'path_missing', 'Project path does not exist: $relativePath');
+        'path_missing',
+        'Project path does not exist: $relativePath',
+      );
     }
 
     var ancestor = candidate.parent;
     final tail = <String>[
-      candidate.uri.pathSegments.where((item) => item.isNotEmpty).last
+      candidate.uri.pathSegments.where((item) => item.isNotEmpty).last,
     ];
     while (!await ancestor.exists()) {
       if (_samePath(ancestor.path, ancestor.parent.path)) {
-        throw ProductException('path_parent_missing',
-            'No existing parent could be found for $relativePath.');
+        throw ProductException(
+          'path_parent_missing',
+          'No existing parent could be found for $relativePath.',
+        );
       }
       tail.insert(
-          0, ancestor.uri.pathSegments.where((item) => item.isNotEmpty).last);
+        0,
+        ancestor.uri.pathSegments.where((item) => item.isNotEmpty).last,
+      );
       ancestor = ancestor.parent;
     }
     final canonicalAncestor = await ancestor.resolveSymbolicLinks();
@@ -391,8 +401,10 @@ class WorkspaceBoundary {
     return File(entity.path);
   }
 
-  Future<Directory> directory(String relativePath,
-      {bool allowMissing = false}) async {
+  Future<Directory> directory(
+    String relativePath, {
+    bool allowMissing = false,
+  }) async {
     final entity = await resolve(relativePath, allowMissing: allowMissing);
     if (await FileSystemEntity.type(entity.path, followLinks: false) ==
         FileSystemEntityType.file) {
@@ -416,8 +428,10 @@ class WorkspaceBoundary {
     final rootWithSeparator = '$_canonicalRoot/';
     if (!_samePath(normalized, _canonicalRoot) &&
         !_case(normalized).startsWith(_case(rootWithSeparator))) {
-      throw ProductException('workspace_escape_rejected',
-          'The requested path escapes the active project.');
+      throw ProductException(
+        'workspace_escape_rejected',
+        'The requested path escapes the active project.',
+      );
     }
   }
 
@@ -460,8 +474,9 @@ class WorkspaceBoundary {
   static bool _looksSensitiveRecoveryPath(String path) {
     final lower = path.toLowerCase().replaceAll('\\', '/');
     final segments = lower.split('/');
-    if (segments.any((segment) =>
-        segment.startsWith('.') && segment != '.' && segment != '..')) {
+    if (segments.any(
+      (segment) => segment.startsWith('.') && segment != '.' && segment != '..',
+    )) {
       return true;
     }
     return RegExp(
@@ -876,8 +891,10 @@ class WorkspaceTransaction {
         continue;
       }
       try {
-        final file =
-            await boundary.file(record.relativePath, allowMissing: true);
+        final file = await boundary.file(
+          record.relativePath,
+          allowMissing: true,
+        );
         if (record.existed) {
           final backup = File(record.backupPath);
           if (!await backup.exists()) {
@@ -936,10 +953,7 @@ class WorkspaceTransaction {
       await audit.append(
         'workspace.mutation_recovered',
         runId,
-        <String, dynamic>{
-          ...record.toJson(),
-          'recoveredStatus': 'applied',
-        },
+        <String, dynamic>{...record.toJson(), 'recoveredStatus': 'applied'},
       );
       return;
     }
@@ -1119,14 +1133,13 @@ class ManagedProcessService {
         record.completedAt = DateTime.now().toUtc();
         await Future.wait(<Future<void>>[stdoutPump, stderrPump]);
         await _writeLog(
-          record,
-          <String, dynamic>{
-            'timestamp': record.completedAt!.toIso8601String(),
-            'stream': 'lifecycle',
-            'message': 'process exited with code $code',
-          },
-          flush: true,
-        );
+            record,
+            <String, dynamic>{
+              'timestamp': record.completedAt!.toIso8601String(),
+              'stream': 'lifecycle',
+              'message': 'process exited with code $code',
+            },
+            flush: true);
       } catch (error, stackTrace) {
         record.completedAt ??= DateTime.now().toUtc();
         record.lifecycleError = redactor.redact('$error');
@@ -1140,17 +1153,23 @@ class ManagedProcessService {
     final record = _processes[id];
     if (record == null) {
       throw ProductException(
-          'managed_process_missing', 'Unknown managed process.');
+        'managed_process_missing',
+        'Unknown managed process.',
+      );
     }
     return _status(record);
   }
 
-  Future<Map<String, dynamic>> stop(String id,
-      {Duration grace = const Duration(seconds: 5)}) async {
+  Future<Map<String, dynamic>> stop(
+    String id, {
+    Duration grace = const Duration(seconds: 5),
+  }) async {
     final record = _processes[id];
     if (record == null) {
       throw ProductException(
-          'managed_process_missing', 'Unknown managed process.');
+        'managed_process_missing',
+        'Unknown managed process.',
+      );
     }
     if (record.exitCode == null) {
       record.process.kill(ProcessSignal.sigterm);
@@ -1350,13 +1369,12 @@ class ToolResult {
 }
 
 typedef ToolHandler = Future<ToolResult> Function(
-    ToolContext context, Map<String, dynamic> arguments);
+  ToolContext context,
+  Map<String, dynamic> arguments,
+);
 
 class GovernedTool {
-  const GovernedTool({
-    required this.contract,
-    required this.handler,
-  });
+  const GovernedTool({required this.contract, required this.handler});
 
   final ToolContract contract;
   final ToolHandler handler;
@@ -1399,10 +1417,7 @@ class ToolRegistry {
         contract: schemas.require('list_directory'),
         handler: _listDirectory,
       ),
-      GovernedTool(
-        contract: schemas.require('read_file'),
-        handler: _readFile,
-      ),
+      GovernedTool(contract: schemas.require('read_file'), handler: _readFile),
       GovernedTool(
         contract: schemas.require('inspect_file'),
         handler: _inspectFile,
@@ -1459,10 +1474,7 @@ class ToolRegistry {
         contract: schemas.require('git_status'),
         handler: _gitStatus,
       ),
-      GovernedTool(
-        contract: schemas.require('git_diff'),
-        handler: _gitDiff,
-      ),
+      GovernedTool(contract: schemas.require('git_diff'), handler: _gitDiff),
       GovernedTool(
         contract: schemas.require('knowledge_search'),
         handler: _knowledgeSearch,
@@ -1483,15 +1495,11 @@ class ToolRegistry {
         contract: schemas.require('package_deployment'),
         handler: _packageDeployment,
       ),
-      GovernedTool(
-        contract: schemas.require('mcp_call'),
-        handler: _mcpCall,
-      ),
+      GovernedTool(contract: schemas.require('mcp_call'), handler: _mcpCall),
     ];
-    return ToolRegistry._(
-      <String, GovernedTool>{for (final tool in tools) tool.name: tool},
-      schemas,
-    );
+    return ToolRegistry._(<String, GovernedTool>{
+      for (final tool in tools) tool.name: tool,
+    }, schemas);
   }
 
   Set<String> get names => Set<String>.unmodifiable(_tools.keys);
@@ -1514,9 +1522,7 @@ class ToolRegistry {
     ToolDescriptorDialect dialect = ToolDescriptorDialect.canonical,
   }) =>
       _tools.values
-          .where(
-            (tool) => allowlist == null || allowlist.contains(tool.name),
-          )
+          .where((tool) => allowlist == null || allowlist.contains(tool.name))
           .map((tool) => tool.descriptor(dialect: dialect))
           .toList(growable: false);
 
@@ -1539,8 +1545,9 @@ class ToolRegistry {
 
     final normalization = tool.contract.canonicalizeInput(arguments);
     tool.contract.validateInput(normalization.arguments);
-    final normalizedArguments =
-        Map<String, dynamic>.from(normalization.arguments);
+    final normalizedArguments = Map<String, dynamic>.from(
+      normalization.arguments,
+    );
     if (normalization.changed) {
       await context.audit.append(
         'tool.arguments_compatibility_normalized',
@@ -1571,17 +1578,14 @@ class ToolRegistry {
       final normalized = context.boundary.normalizeToolPath(raw);
       normalizedArguments[key] = normalized;
       if (normalized != raw.trim().replaceAll('\\', '/')) {
-        await context.audit.append(
-          'tool.path_normalized',
-          context.runId,
-          <String, dynamic>{
-            'workItemId': context.workItem.id,
-            'tool': name,
-            'argument': key,
-            'originalPathHash': Sha256.text(raw),
-            'normalizedPath': normalized,
-          },
-        );
+        await context.audit
+            .append('tool.path_normalized', context.runId, <String, dynamic>{
+          'workItemId': context.workItem.id,
+          'tool': name,
+          'argument': key,
+          'originalPathHash': Sha256.text(raw),
+          'normalizedPath': normalized,
+        });
       }
     }
     tool.contract.validateInput(normalizedArguments);
@@ -1590,9 +1594,7 @@ class ToolRegistry {
             ToolIdempotency.projectSnapshot ||
         (tool.contract.risk == ToolRisk.process && name == 'verify_project');
     final idempotencyInputHash = snapshotSensitive
-        ? Sha256.text(
-            '$inputHash:${context.transaction.mutationCount}',
-          )
+        ? Sha256.text('$inputHash:${context.transaction.mutationCount}')
         : inputHash;
     final durableOperation = tool.contract.risk != ToolRisk.read;
     final idempotencyKey = durableOperation
@@ -1605,20 +1607,16 @@ class ToolRegistry {
           )
         : '';
 
-    await context.audit.append(
-      'tool.started',
-      context.runId,
-      <String, dynamic>{
-        'workItemId': context.workItem.id,
-        'tool': name,
-        'schemaVersion': tool.contract.version,
-        'registryVersion': schemas.version,
-        'contractDigest': schemas.contractDigest,
-        'normalizedInputHash': inputHash,
-        if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
-        'arguments': context.redactor.redactJson(normalizedArguments),
-      },
-    );
+    await context.audit.append('tool.started', context.runId, <String, dynamic>{
+      'workItemId': context.workItem.id,
+      'tool': name,
+      'schemaVersion': tool.contract.version,
+      'registryVersion': schemas.version,
+      'contractDigest': schemas.contractDigest,
+      'normalizedInputHash': inputHash,
+      if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
+      'arguments': context.redactor.redactJson(normalizedArguments),
+    });
 
     if (idempotencyKey.isNotEmpty) {
       IdempotencyClaim claim;
@@ -1648,8 +1646,9 @@ class ToolRegistry {
       }
       switch (claim.kind) {
         case IdempotencyClaimKind.replay:
-          final replay =
-              ToolResult.fromJson(claim.result ?? const <String, dynamic>{});
+          final replay = ToolResult.fromJson(
+            claim.result ?? const <String, dynamic>{},
+          );
           tool.contract.validateOutput(replay.toJson());
           await context.audit.append(
             'tool.idempotency_replayed',
@@ -1787,21 +1786,18 @@ class ToolRegistry {
           },
         );
       }
-      await context.audit.append(
-        'tool.completed',
-        context.runId,
-        <String, dynamic>{
-          'workItemId': context.workItem.id,
-          'tool': name,
-          'schemaVersion': tool.contract.version,
-          'normalizedInputHash': inputHash,
-          if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
-          'outputHash': Sha256.text(canonicalJson(result.toJson())),
-          'ok': result.ok,
-          'mutated': result.mutated,
-          'summary': result.summary,
-        },
-      );
+      await context.audit
+          .append('tool.completed', context.runId, <String, dynamic>{
+        'workItemId': context.workItem.id,
+        'tool': name,
+        'schemaVersion': tool.contract.version,
+        'normalizedInputHash': inputHash,
+        if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
+        'outputHash': Sha256.text(canonicalJson(result.toJson())),
+        'ok': result.ok,
+        'mutated': result.mutated,
+        'summary': result.summary,
+      });
       return result;
     } catch (error) {
       final code = error is ProductException
@@ -1823,21 +1819,18 @@ class ToolRegistry {
           // The original tool failure remains authoritative.
         }
       }
-      await context.audit.append(
-        'tool.failed',
-        context.runId,
-        <String, dynamic>{
-          'workItemId': context.workItem.id,
-          'tool': name,
-          'schemaVersion': tool.contract.version,
-          'normalizedInputHash': inputHash,
-          if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
-          'failureClass': classification.failureClass.name,
-          'retryDisposition': classification.disposition.name,
-          'retryability': classification.retryability,
-          'error': context.redactor.redact('$error'),
-        },
-      );
+      await context.audit
+          .append('tool.failed', context.runId, <String, dynamic>{
+        'workItemId': context.workItem.id,
+        'tool': name,
+        'schemaVersion': tool.contract.version,
+        'normalizedInputHash': inputHash,
+        if (idempotencyKey.isNotEmpty) 'idempotencyKey': idempotencyKey,
+        'failureClass': classification.failureClass.name,
+        'retryDisposition': classification.disposition.name,
+        'retryability': classification.retryability,
+        'error': context.redactor.redact('$error'),
+      });
       rethrow;
     }
   }
@@ -1893,7 +1886,9 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _listDirectory(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final path = arguments['path']?.toString() ?? '.';
     final recursive = arguments['recursive'] == true;
     final maxEntries =
@@ -1902,8 +1897,10 @@ class ToolRegistry {
             .toInt();
     final directory = await context.boundary.directory(path);
     final entries = <Map<String, dynamic>>[];
-    await for (final entity
-        in directory.list(recursive: recursive, followLinks: false)) {
+    await for (final entity in directory.list(
+      recursive: recursive,
+      followLinks: false,
+    )) {
       if (entries.length >= maxEntries) {
         break;
       }
@@ -1923,16 +1920,20 @@ class ToolRegistry {
         'modifiedAt': stat.modified.toUtc().toIso8601String(),
       });
     }
-    entries
-        .sort((a, b) => a['path'].toString().compareTo(b['path'].toString()));
+    entries.sort(
+      (a, b) => a['path'].toString().compareTo(b['path'].toString()),
+    );
     return ToolResult(
-        ok: true,
-        summary: 'Listed ${entries.length} entries.',
-        data: <String, dynamic>{'entries': entries});
+      ok: true,
+      summary: 'Listed ${entries.length} entries.',
+      data: <String, dynamic>{'entries': entries},
+    );
   }
 
   static Future<ToolResult> _readFile(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final path = _requiredString(arguments, 'path');
     final maxBytes =
         (int.tryParse(arguments['maxBytes']?.toString() ?? '') ?? 1048576)
@@ -1945,16 +1946,22 @@ class ToolRegistry {
     }
     final bytes = await file.readAsBytes();
     if (bytes.take(min(bytes.length, 8192)).contains(0)) {
-      throw ProductException('binary_file_rejected',
-          'Binary files cannot be returned to the model.');
+      throw ProductException(
+        'binary_file_rejected',
+        'Binary files cannot be returned to the model.',
+      );
     }
     final content = utf8.decode(bytes, allowMalformed: true);
-    return ToolResult(ok: true, summary: 'Read $path.', data: <String, dynamic>{
-      'path': path,
-      'content': content,
-      'sha256': Sha256.hex(bytes),
-      'bytes': bytes.length,
-    });
+    return ToolResult(
+      ok: true,
+      summary: 'Read $path.',
+      data: <String, dynamic>{
+        'path': path,
+        'content': content,
+        'sha256': Sha256.hex(bytes),
+        'bytes': bytes.length,
+      },
+    );
   }
 
   static Future<ToolResult> _inspectFile(
@@ -2007,7 +2014,9 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _searchText(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final query = _requiredString(arguments, 'query');
     if (query.length > 1000) {
       throw ProductException('query_too_long', 'Search query is too long.');
@@ -2059,37 +2068,49 @@ class ToolRegistry {
       }
     }
     return ToolResult(
-        ok: true,
-        summary: 'Found ${results.length} matches.',
-        data: <String, dynamic>{'results': results, 'filesScanned': scanned});
+      ok: true,
+      summary: 'Found ${results.length} matches.',
+      data: <String, dynamic>{'results': results, 'filesScanned': scanned},
+    );
   }
 
   static Future<ToolResult> _indexProject(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final report = await context.sourceIndex.update(context.project);
     return ToolResult(
-        ok: true,
-        summary:
-            'Indexed ${report.total} project files (${report.changed} changed, ${report.removed} removed).',
-        data: report.toJson());
+      ok: true,
+      summary:
+          'Indexed ${report.total} project files (${report.changed} changed, ${report.removed} removed).',
+      data: report.toJson(),
+    );
   }
 
   static Future<ToolResult> _indexSearch(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final query = _requiredString(arguments, 'query');
     final limit = (int.tryParse(arguments['limit']?.toString() ?? '') ?? 20)
         .clamp(1, 100)
         .toInt();
-    final results = await context.sourceIndex
-        .search(context.project.id, query, limit: limit);
+    final results = await context.sourceIndex.search(
+      context.project.id,
+      query,
+      limit: limit,
+    );
     return ToolResult(
-        ok: true,
-        summary: 'Found ${results.length} indexed matches.',
-        data: <String, dynamic>{'results': results});
+      ok: true,
+      summary: 'Found ${results.length} indexed matches.',
+      data: <String, dynamic>{'results': results},
+    );
   }
 
   static Future<ToolResult> _writeFile(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final path = _requiredString(arguments, 'path');
     if (!arguments.containsKey('content')) {
       throw ProductException(
@@ -2101,7 +2122,9 @@ class ToolRegistry {
     final content = arguments['content']?.toString() ?? '';
     if (utf8.encode(content).length > 4 * 1024 * 1024) {
       throw ProductException(
-          'write_too_large', 'A single write cannot exceed 4 MiB.');
+        'write_too_large',
+        'A single write cannot exceed 4 MiB.',
+      );
     }
     final expectedExists = _optionalBool(arguments, 'expectedExists');
     final record = await context.transaction.writeText(
@@ -2171,7 +2194,9 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _replaceText(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final path = _requiredString(arguments, 'path');
     final old = _requiredString(arguments, 'old');
     final replacement = arguments['replacement']?.toString() ?? '';
@@ -2183,22 +2208,34 @@ class ToolRegistry {
         expected.isNotEmpty &&
         !constantTimeEquals(hash, expected)) {
       throw ProductException(
-          'stale_content', 'The file changed after it was read.');
+        'stale_content',
+        'The file changed after it was read.',
+      );
     }
     final content = utf8.decode(bytes, allowMalformed: true);
     final first = content.indexOf(old);
     if (first < 0) {
       throw ProductException(
-          'replacement_not_found', 'The exact text to replace was not found.');
+        'replacement_not_found',
+        'The exact text to replace was not found.',
+      );
     }
     if (content.indexOf(old, first + old.length) >= 0) {
-      throw ProductException('replacement_ambiguous',
-          'The exact text occurs more than once; use apply_patch with a larger hunk.');
+      throw ProductException(
+        'replacement_ambiguous',
+        'The exact text occurs more than once; use apply_patch with a larger hunk.',
+      );
     }
-    final updated =
-        content.replaceRange(first, first + old.length, replacement);
-    final record = await context.transaction
-        .writeText(relativePath: path, content: updated, expectedHash: hash);
+    final updated = content.replaceRange(
+      first,
+      first + old.length,
+      replacement,
+    );
+    final record = await context.transaction.writeText(
+      relativePath: path,
+      content: updated,
+      expectedHash: hash,
+    );
     final mutated = record.operation != 'noop';
     return ToolResult(
       ok: true,
@@ -2211,7 +2248,9 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _applyPatch(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final path = _requiredString(arguments, 'path');
     final file = await context.boundary.file(path);
     final bytes = await file.readAsBytes();
@@ -2221,13 +2260,17 @@ class ToolRegistry {
         expected.isNotEmpty &&
         !constantTimeEquals(hash, expected)) {
       throw ProductException(
-          'stale_content', 'The file changed after it was read.');
+        'stale_content',
+        'The file changed after it was read.',
+      );
     }
     var content = utf8.decode(bytes, allowMalformed: true);
     final hunks = arguments['hunks'];
     if (hunks is! List || hunks.isEmpty) {
       throw ProductException(
-          'patch_empty', 'At least one replacement hunk is required.');
+        'patch_empty',
+        'At least one replacement hunk is required.',
+      );
     }
     for (var index = 0; index < hunks.length; index++) {
       final hunk = mapValue(hunks[index]);
@@ -2236,16 +2279,23 @@ class ToolRegistry {
       final first = content.indexOf(old);
       if (first < 0) {
         throw ProductException(
-            'patch_hunk_not_found', 'Patch hunk ${index + 1} was not found.');
+          'patch_hunk_not_found',
+          'Patch hunk ${index + 1} was not found.',
+        );
       }
       if (content.indexOf(old, first + old.length) >= 0) {
         throw ProductException(
-            'patch_hunk_ambiguous', 'Patch hunk ${index + 1} is ambiguous.');
+          'patch_hunk_ambiguous',
+          'Patch hunk ${index + 1} is ambiguous.',
+        );
       }
       content = content.replaceRange(first, first + old.length, replacement);
     }
-    final record = await context.transaction
-        .writeText(relativePath: path, content: content, expectedHash: hash);
+    final record = await context.transaction.writeText(
+      relativePath: path,
+      content: content,
+      expectedHash: hash,
+    );
     final mutated = record.operation != 'noop';
     return ToolResult(
       ok: true,
@@ -2258,20 +2308,26 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _deleteFile(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final path = _requiredString(arguments, 'path');
     final record = await context.transaction.delete(
-        relativePath: path,
-        expectedHash: arguments['expectedSha256']?.toString());
+      relativePath: path,
+      expectedHash: arguments['expectedSha256']?.toString(),
+    );
     return ToolResult(
-        ok: true,
-        summary: 'Deleted $path.',
-        data: record.toJson(),
-        mutated: true);
+      ok: true,
+      summary: 'Deleted $path.',
+      data: record.toJson(),
+      mutated: true,
+    );
   }
 
   static Future<ToolResult> _runCommand(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final executable = _requiredString(arguments, 'executable');
     final args = _validateProcess(
       context,
@@ -2281,8 +2337,10 @@ class ToolRegistry {
     final network = _usesNetwork(executable, args);
     if (network) {
       if (context.settings.localOnly || !context.settings.allowPackageNetwork) {
-        throw ProductException('network_disabled',
-            'Package and command network access is disabled.');
+        throw ProductException(
+          'network_disabled',
+          'Package and command network access is disabled.',
+        );
       }
       await context.permissions.require(
         projectId: context.project.id,
@@ -2294,22 +2352,27 @@ class ToolRegistry {
     final secretRefs = mapValue(arguments['environmentSecretRefs']);
     for (final entry in secretRefs.entries) {
       if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(entry.key)) {
-        throw ProductException('environment_key_invalid',
-            'Invalid environment variable name ${entry.key}.');
+        throw ProductException(
+          'environment_key_invalid',
+          'Invalid environment variable name ${entry.key}.',
+        );
       }
       await context.permissions.require(
         projectId: context.project.id,
         commandId: context.command.id,
         scope: PermissionScope.secretUse,
       );
-      environment[entry.key] = await context.secrets
-          .resolve(entry.value.toString(), commandId: context.command.id);
+      environment[entry.key] = await context.secrets.resolve(
+        entry.value.toString(),
+        commandId: context.command.id,
+      );
     }
     final timeout = Duration(
-        seconds:
-            (int.tryParse(arguments['timeoutSeconds']?.toString() ?? '') ?? 300)
-                .clamp(1, 3600)
-                .toInt());
+      seconds:
+          (int.tryParse(arguments['timeoutSeconds']?.toString() ?? '') ?? 300)
+              .clamp(1, 3600)
+              .toInt(),
+    );
     final result = await _runFinite(
       executable: executable,
       arguments: args,
@@ -2320,13 +2383,16 @@ class ToolRegistry {
       redactor: context.redactor,
     );
     return ToolResult(
-        ok: result['exitCode'] == 0,
-        summary: 'Command exited with code ${result['exitCode']}.',
-        data: result);
+      ok: result['exitCode'] == 0,
+      summary: 'Command exited with code ${result['exitCode']}.',
+      data: result,
+    );
   }
 
   static Future<ToolResult> _startProcess(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final executable = _requiredString(arguments, 'executable');
     final args = _validateProcess(
       context,
@@ -2336,8 +2402,10 @@ class ToolRegistry {
     final network = _usesNetwork(executable, args);
     if (network) {
       if (context.settings.localOnly || !context.settings.allowPackageNetwork) {
-        throw ProductException('network_disabled',
-            'Package and command network access is disabled.');
+        throw ProductException(
+          'network_disabled',
+          'Package and command network access is disabled.',
+        );
       }
       await context.permissions.require(
         projectId: context.project.id,
@@ -2349,16 +2417,20 @@ class ToolRegistry {
     final secretRefs = mapValue(arguments['environmentSecretRefs']);
     for (final entry in secretRefs.entries) {
       if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(entry.key)) {
-        throw ProductException('environment_key_invalid',
-            'Invalid environment variable name ${entry.key}.');
+        throw ProductException(
+          'environment_key_invalid',
+          'Invalid environment variable name ${entry.key}.',
+        );
       }
       await context.permissions.require(
         projectId: context.project.id,
         commandId: context.command.id,
         scope: PermissionScope.secretUse,
       );
-      environment[entry.key] = await context.secrets
-          .resolve(entry.value.toString(), commandId: context.command.id);
+      environment[entry.key] = await context.secrets.resolve(
+        entry.value.toString(),
+        commandId: context.command.id,
+      );
     }
     final result = await context.managedProcesses.start(
       executable: executable,
@@ -2369,45 +2441,56 @@ class ToolRegistry {
       workItemId: context.workItem.id,
     );
     return ToolResult(
-        ok: true,
-        summary:
-            'Started managed process ${result['id']} with PID ${result['pid']}.',
-        data: result);
+      ok: true,
+      summary:
+          'Started managed process ${result['id']} with PID ${result['pid']}.',
+      data: result,
+    );
   }
 
   static Future<ToolResult> _processStatus(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final id = _requiredString(arguments, 'processId');
     final result = await context.managedProcesses.status(id);
     return ToolResult(
-        ok: true,
-        summary: result['running'] == true
-            ? 'Managed process is running.'
-            : 'Managed process has exited.',
-        data: result);
+      ok: true,
+      summary: result['running'] == true
+          ? 'Managed process is running.'
+          : 'Managed process has exited.',
+      data: result,
+    );
   }
 
   static Future<ToolResult> _stopProcess(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final id = _requiredString(arguments, 'processId');
     final grace = Duration(
-        seconds:
-            (int.tryParse(arguments['graceSeconds']?.toString() ?? '') ?? 5)
-                .clamp(1, 30)
-                .toInt());
+      seconds: (int.tryParse(arguments['graceSeconds']?.toString() ?? '') ?? 5)
+          .clamp(1, 30)
+          .toInt(),
+    );
     final result = await context.managedProcesses.stop(id, grace: grace);
     return ToolResult(
-        ok: true, summary: 'Managed process stopped.', data: result);
+      ok: true,
+      summary: 'Managed process stopped.',
+      data: result,
+    );
   }
 
   static Future<ToolResult> _gitStatus(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final result = await _runFinite(
       executable: 'git',
       arguments: const <String>[
         'status',
         '--porcelain=v1',
-        '--untracked-files=all'
+        '--untracked-files=all',
       ],
       workingDirectory: context.boundary.root.path,
       environment: _safeEnvironment(),
@@ -2421,15 +2504,14 @@ class ToolRegistry {
       summary: notRepository
           ? 'The selected project is not a Git repository.'
           : 'Collected Git status.',
-      data: <String, dynamic>{
-        ...result,
-        'isRepository': !notRepository,
-      },
+      data: <String, dynamic>{...result, 'isRepository': !notRepository},
     );
   }
 
   static Future<ToolResult> _gitDiff(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final result = await _runFinite(
       executable: 'git',
       arguments: const <String>['diff', '--no-ext-diff', '--unified=3'],
@@ -2446,15 +2528,14 @@ class ToolRegistry {
       summary: notRepository
           ? 'The selected project is not a Git repository; no Git diff is available.'
           : 'Collected Git diff.',
-      data: <String, dynamic>{
-        ...result,
-        'isRepository': !notRepository,
-      },
+      data: <String, dynamic>{...result, 'isRepository': !notRepository},
     );
   }
 
   static Future<ToolResult> _knowledgeSearch(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final query = _requiredString(arguments, 'query');
     final limit = (int.tryParse(arguments['limit']?.toString() ?? '') ?? 8)
         .clamp(1, 20)
@@ -2478,10 +2559,14 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _researchFetch(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     if (context.settings.localOnly) {
       throw ProductException(
-          'network_disabled', 'Research is disabled in local-only mode.');
+        'network_disabled',
+        'Research is disabled in local-only mode.',
+      );
     }
     final raw = _requiredString(arguments, 'url');
     final uri = Uri.tryParse(raw);
@@ -2495,24 +2580,29 @@ class ToolRegistry {
       tags: stringList(arguments['tags']).toSet(),
     );
     return ToolResult(
-        ok: true,
-        summary: 'Fetched and indexed ${source.url.host}.',
-        data: <String, dynamic>{
-          'knowledgeId': entry.id,
-          'archiveId': entry.archiveId,
-          'title': entry.title,
-          'url': entry.sourceUrl,
-          'contentHash': entry.contentHash,
-          'trust': entry.trust,
-          'characters': entry.content.length,
-        });
+      ok: true,
+      summary: 'Fetched and indexed ${source.url.host}.',
+      data: <String, dynamic>{
+        'knowledgeId': entry.id,
+        'archiveId': entry.archiveId,
+        'title': entry.title,
+        'url': entry.sourceUrl,
+        'contentHash': entry.contentHash,
+        'trust': entry.trust,
+        'characters': entry.content.length,
+      },
+    );
   }
 
   static Future<ToolResult> _researchSearch(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     if (context.settings.localOnly) {
       throw ProductException(
-          'network_disabled', 'Research is disabled in local-only mode.');
+        'network_disabled',
+        'Research is disabled in local-only mode.',
+      );
     }
     final query = _requiredString(arguments, 'query');
     final referenceId = _requiredString(arguments, 'secretReferenceId');
@@ -2521,8 +2611,10 @@ class ToolRegistry {
       commandId: context.command.id,
       scope: PermissionScope.secretUse,
     );
-    final key = await context.secrets
-        .resolve(referenceId, commandId: context.command.id);
+    final key = await context.secrets.resolve(
+      referenceId,
+      commandId: context.command.id,
+    );
     final results = await context.research.braveSearch(
       query: query,
       apiKey: key,
@@ -2546,7 +2638,9 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _verifyProject(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final commands = <({String executable, List<String> args, String label})>[];
     Future<bool> exists(String path) async =>
         (await context.boundary.resolve(path, allowMissing: true)).exists();
@@ -2554,12 +2648,12 @@ class ToolRegistry {
       commands.add((
         executable: 'flutter',
         args: <String>['analyze'],
-        label: 'flutter analyze'
+        label: 'flutter analyze',
       ));
       commands.add((
         executable: 'flutter',
         args: <String>['test'],
-        label: 'flutter test'
+        label: 'flutter test',
       ));
     } else if (await exists('package.json')) {
       final lock = await exists('package-lock.json');
@@ -2569,45 +2663,48 @@ class ToolRegistry {
         commands.add((
           executable: 'npm',
           args: <String>['ci', '--ignore-scripts'],
-          label: 'npm ci --ignore-scripts'
+          label: 'npm ci --ignore-scripts',
         ));
       }
       commands.add((
         executable: 'npm',
         args: <String>['test', '--', '--runInBand'],
-        label: 'npm test'
+        label: 'npm test',
       ));
       commands.add((
         executable: 'npm',
         args: <String>['run', 'build', '--if-present'],
-        label: 'npm run build'
+        label: 'npm run build',
       ));
     } else if (await exists('pyproject.toml') ||
         await exists('requirements.txt')) {
       commands.add((
         executable: 'python',
         args: <String>['-m', 'pytest', '-q'],
-        label: 'pytest'
+        label: 'pytest',
       ));
     } else if (await exists('CMakeLists.txt')) {
       commands.add((
         executable: 'cmake',
         args: <String>['-S', '.', '-B', 'build'],
-        label: 'cmake configure'
+        label: 'cmake configure',
       ));
       commands.add((
         executable: 'cmake',
         args: <String>['--build', 'build'],
-        label: 'cmake build'
+        label: 'cmake build',
       ));
     } else if (await exists('index.html')) {
       return const ToolResult(
-          ok: true,
-          summary: 'Static site structure detected.',
-          data: <String, dynamic>{'checks': <Object>[]});
+        ok: true,
+        summary: 'Static site structure detected.',
+        data: <String, dynamic>{'checks': <Object>[]},
+      );
     } else {
-      throw ProductException('project_type_unknown',
-          'No supported project verification profile was detected.');
+      throw ProductException(
+        'project_type_unknown',
+        'No supported project verification profile was detected.',
+      );
     }
 
     final checks = <Map<String, dynamic>>[];
@@ -2630,7 +2727,7 @@ class ToolRegistry {
         checks.add(<String, dynamic>{
           'label': command.label,
           'passed': passed,
-          ...result
+          ...result,
         });
         if (!passed) {
           break;
@@ -2640,21 +2737,24 @@ class ToolRegistry {
         checks.add(<String, dynamic>{
           'label': command.label,
           'passed': false,
-          'error': '${error.message}: ${error.executable}'
+          'error': '${error.message}: ${error.executable}',
         });
         break;
       }
     }
     return ToolResult(
-        ok: allPassed,
-        summary: allPassed
-            ? 'Project verification passed.'
-            : 'Project verification failed.',
-        data: <String, dynamic>{'checks': checks});
+      ok: allPassed,
+      summary: allPassed
+          ? 'Project verification passed.'
+          : 'Project verification failed.',
+      data: <String, dynamic>{'checks': checks},
+    );
   }
 
   static Future<ToolResult> _packageDeployment(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final package = await context.deployment.package(
       project: context.project,
       runId: context.runId,
@@ -2668,7 +2768,9 @@ class ToolRegistry {
   }
 
   static Future<ToolResult> _mcpCall(
-      ToolContext context, Map<String, dynamic> arguments) async {
+    ToolContext context,
+    Map<String, dynamic> arguments,
+  ) async {
     final trustId = _requiredString(arguments, 'trustId');
     final tool = _requiredString(arguments, 'tool');
     final result = await context.mcp.call(
@@ -2679,9 +2781,10 @@ class ToolRegistry {
       workingDirectory: context.boundary.root.path,
     );
     return ToolResult(
-        ok: true,
-        summary: 'Called trusted MCP tool $tool. Output is labeled untrusted.',
-        data: result);
+      ok: true,
+      summary: 'Called trusted MCP tool $tool. Output is labeled untrusted.',
+      data: result,
+    );
   }
 
   static bool _looksBinary(List<int> bytes) {
@@ -2779,10 +2882,7 @@ class ToolRegistry {
     return true;
   }
 
-  static bool? _optionalBool(
-    Map<String, dynamic> arguments,
-    String name,
-  ) {
+  static bool? _optionalBool(Map<String, dynamic> arguments, String name) {
     if (!arguments.containsKey(name) || arguments[name] == null) {
       return null;
     }
@@ -2793,10 +2893,7 @@ class ToolRegistry {
     throw ProductException(
       'argument_type_invalid',
       'Argument "$name" must be a JSON boolean.',
-      details: <String, dynamic>{
-        'argument': name,
-        'expectedType': 'boolean',
-      },
+      details: <String, dynamic>{'argument': name, 'expectedType': 'boolean'},
     );
   }
 
@@ -2814,15 +2911,17 @@ class ToolRegistry {
 
   static bool _ignored(String path) {
     final normalized = path.replaceAll('\\', '/');
-    return normalized.split('/').any(const <String>{
-          '.git',
-          '.dart_tool',
-          'build',
-          'node_modules',
-          '.venv',
-          '__pycache__',
-          '.kristin'
-        }.contains);
+    return normalized.split('/').any(
+          const <String>{
+            '.git',
+            '.dart_tool',
+            'build',
+            'node_modules',
+            '.venv',
+            '__pycache__',
+            '.kristin',
+          }.contains,
+        );
   }
 
   static List<String> _validateProcess(
@@ -2854,7 +2953,9 @@ class ToolRegistry {
     };
     if (denied.contains(name)) {
       throw ProductException(
-          'executable_rejected', 'Executable $name is not allowed.');
+        'executable_rejected',
+        'Executable $name is not allowed.',
+      );
     }
     if (name == 'sh' ||
         name == 'bash' ||
@@ -2862,18 +2963,24 @@ class ToolRegistry {
         name == 'cmd' ||
         name == 'powershell' ||
         name == 'pwsh') {
-      throw ProductException('shell_rejected',
-          'Shell interpreters are not available to the agent. Use an executable and argument array.');
+      throw ProductException(
+        'shell_rejected',
+        'Shell interpreters are not available to the agent. Use an executable and argument array.',
+      );
     }
     if (args.any((arg) => arg.contains('\u0000'))) {
-      throw ProductException('argument_nul_rejected',
-          'NUL bytes are not allowed in process arguments.');
+      throw ProductException(
+        'argument_nul_rejected',
+        'NUL bytes are not allowed in process arguments.',
+      );
     }
     if ((name == 'git' || name == 'git.exe') &&
-        args.any((arg) =>
-            arg == '-C' ||
-            arg.startsWith('--git-dir') ||
-            arg.startsWith('--work-tree'))) {
+        args.any(
+          (arg) =>
+              arg == '-C' ||
+              arg.startsWith('--git-dir') ||
+              arg.startsWith('--work-tree'),
+        )) {
       throw ProductException(
         'process_scope_argument_rejected',
         'Git working-directory and repository-root overrides are not allowed. Use git_status or git_diff so Kristin always operates on the selected project.',
@@ -2943,12 +3050,13 @@ class ToolRegistry {
       'pip3',
       'cargo',
       'go',
-      'ollama'
+      'ollama',
     }.contains(name)) {
       final joined = args.join(' ').toLowerCase();
       if (name == 'git') {
-        return RegExp(r'\b(clone|fetch|pull|push|remote|ls-remote|submodule)\b')
-            .hasMatch(joined);
+        return RegExp(
+          r'\b(clone|fetch|pull|push|remote|ls-remote|submodule)\b',
+        ).hasMatch(joined);
       }
       if (name == 'npm') {
         return !RegExp(r'^\s*(test|run|exec)\b').hasMatch(joined);
@@ -3028,25 +3136,34 @@ class ToolRegistry {
     // ignore: cancel_subscriptions
     final cancelSubscription = cancellation.cancelled.asStream().listen((_) {
       process.kill(ProcessSignal.sigterm);
-      Future<void>.delayed(const Duration(seconds: 2),
-          () => process.kill(ProcessSignal.sigkill));
+      Future<void>.delayed(
+        const Duration(seconds: 2),
+        () => process.kill(ProcessSignal.sigkill),
+      );
     });
     int exitCode;
     try {
-      exitCode = await process.exitCode.timeout(timeout, onTimeout: () {
-        process.kill(ProcessSignal.sigterm);
-        Future<void>.delayed(const Duration(seconds: 2),
-            () => process.kill(ProcessSignal.sigkill));
-        return -124;
-      });
+      exitCode = await process.exitCode.timeout(
+        timeout,
+        onTimeout: () {
+          process.kill(ProcessSignal.sigterm);
+          Future<void>.delayed(
+            const Duration(seconds: 2),
+            () => process.kill(ProcessSignal.sigkill),
+          );
+          return -124;
+        },
+      );
       await Future.wait(<Future<void>>[output, errors]);
     } finally {
       await cancelSubscription.cancel();
     }
-    final stdoutText = redactor
-        .redact(utf8.decode(stdoutBytes.takeBytes(), allowMalformed: true));
-    final stderrText = redactor
-        .redact(utf8.decode(stderrBytes.takeBytes(), allowMalformed: true));
+    final stdoutText = redactor.redact(
+      utf8.decode(stdoutBytes.takeBytes(), allowMalformed: true),
+    );
+    final stderrText = redactor.redact(
+      utf8.decode(stderrBytes.takeBytes(), allowMalformed: true),
+    );
     return <String, dynamic>{
       'executable': executable,
       'arguments': arguments,

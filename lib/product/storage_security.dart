@@ -9,8 +9,11 @@ import 'durable_workflow.dart';
 import 'repository.dart';
 
 class ProductException implements Exception {
-  ProductException(this.code, this.message,
-      {this.details = const <String, dynamic>{}});
+  ProductException(
+    this.code,
+    this.message, {
+    this.details = const <String, dynamic>{},
+  });
 
   final String code;
   final String message;
@@ -84,14 +87,12 @@ class AtomicJsonFile implements JsonDocumentRepository {
   }
 
   @override
-  Future<Object?> read({Object? fallback}) => synchronized(
-        () => _readUnlocked(fallback: fallback),
-      );
+  Future<Object?> read({Object? fallback}) =>
+      synchronized(() => _readUnlocked(fallback: fallback));
 
   @override
-  Future<void> write(Object? value) => synchronized(
-        () => _writeUnlocked(value),
-      );
+  Future<void> write(Object? value) =>
+      synchronized(() => _writeUnlocked(value));
 
   Future<void> updateList(
     List<Object?> Function(List<Object?> current) update,
@@ -197,19 +198,18 @@ class PersistentCollection<T> implements EntityRepository<T> {
         }
         items
           ..clear()
-          ..addAll(current.values.toList()
-            ..sort((a, b) => idOf(a).compareTo(idOf(b))));
+          ..addAll(
+            current.values.toList()..sort((a, b) => idOf(a).compareTo(idOf(b))),
+          );
       });
 
   @override
-  Future<void> remove(String id) => _mutate(
-        (items) => items.removeWhere((item) => idOf(item) == id),
-      );
+  Future<void> remove(String id) =>
+      _mutate((items) => items.removeWhere((item) => idOf(item) == id));
 
   @override
-  Future<void> removeWhere(bool Function(T item) predicate) => _mutate(
-        (items) => items.removeWhere(predicate),
-      );
+  Future<void> removeWhere(bool Function(T item) predicate) =>
+      _mutate((items) => items.removeWhere(predicate));
 
   @override
   Future<void> replaceAll(Iterable<T> values) =>
@@ -232,7 +232,7 @@ class ProductSettings {
     this.apiPort = 47831,
     this.allowedOrigins = const <String>{
       'http://127.0.0.1',
-      'http://localhost'
+      'http://localhost',
     },
     this.ollamaBaseUrl = 'http://127.0.0.1:11434',
     this.ollamaLoadTimeoutSeconds = 480,
@@ -317,7 +317,9 @@ class ProductSettings {
         'researchTimeoutSeconds': researchTimeoutSeconds,
       };
 
-  factory ProductSettings.fromJson(Map<String, dynamic> json) =>
+  factory ProductSettings.fromJson(
+    Map<String, dynamic> json,
+  ) =>
       ProductSettings(
         apiEnabled: json['apiEnabled'] == true,
         apiPort: int.tryParse(json['apiPort']?.toString() ?? '') ?? 47831,
@@ -400,9 +402,8 @@ class ProductRepositories {
   final File auditFile;
 
   static Future<ProductRepositories> open(AppDirectories directories) async {
-    File legacy(String name) => File(
-          '${directories.state.path}${Platform.pathSeparator}$name.json',
-        );
+    File legacy(String name) =>
+        File('${directories.state.path}${Platform.pathSeparator}$name.json');
     final eventFile = File(
       '${directories.logs.path}${Platform.pathSeparator}events.jsonl',
     );
@@ -554,11 +555,7 @@ class ProductRepositories {
 }
 
 class EventJournal {
-  EventJournal(
-    this.file, {
-    this.workflow,
-    this.maxRetained = 5000,
-  });
+  EventJournal(this.file, {this.workflow, this.maxRetained = 5000});
 
   final File file;
   final DurableWorkflowStore? workflow;
@@ -655,13 +652,13 @@ class EventJournal {
     return completer.future;
   }
 
-  Future<List<EventEnvelope>> after(
-    int sequence, {
-    int limit = 500,
-  }) async {
+  Future<List<EventEnvelope>> after(int sequence, {int limit = 500}) async {
     final durable = workflow;
     if (durable != null) {
-      return (await durable.eventsAfter(sequence, limit: limit))
+      return (await durable.eventsAfter(
+        sequence,
+        limit: limit,
+      ))
           .map((event) => event.toEnvelope())
           .toList(growable: false);
     }
@@ -746,7 +743,10 @@ class AuditChain {
   }
 
   Future<void> append(
-      String action, String correlationId, Map<String, dynamic> data) {
+    String action,
+    String correlationId,
+    Map<String, dynamic> data,
+  ) {
     final completer = Completer<void>();
     _tail = _tail.then((_) async {
       final payload = <String, dynamic>{
@@ -759,8 +759,11 @@ class AuditChain {
       };
       final hash = Sha256.text(canonicalJson(payload));
       final record = <String, dynamic>{...payload, 'hash': hash};
-      await file.writeAsString('${jsonEncode(record)}\n',
-          mode: FileMode.append, flush: true);
+      await file.writeAsString(
+        '${jsonEncode(record)}\n',
+        mode: FileMode.append,
+        flush: true,
+      );
       _lastHash = hash;
       completer.complete();
     }).catchError((Object error, StackTrace stackTrace) {
@@ -786,7 +789,7 @@ class AuditChain {
         return <String, dynamic>{
           'valid': false,
           'records': records,
-          'error': 'non_object_record'
+          'error': 'non_object_record',
         };
       }
       final record = mapValue(decoded);
@@ -795,7 +798,7 @@ class AuditChain {
         return <String, dynamic>{
           'valid': false,
           'records': records,
-          'error': 'previous_hash_mismatch'
+          'error': 'previous_hash_mismatch',
         };
       }
       final expected = Sha256.text(canonicalJson(record));
@@ -803,7 +806,7 @@ class AuditChain {
         return <String, dynamic>{
           'valid': false,
           'records': records,
-          'error': 'hash_mismatch'
+          'error': 'hash_mismatch',
         };
       }
       previous = hash;
@@ -812,7 +815,7 @@ class AuditChain {
     return <String, dynamic>{
       'valid': true,
       'records': records,
-      'lastHash': previous
+      'lastHash': previous,
     };
   }
 }
@@ -853,19 +856,23 @@ class PermissionService {
     required PermissionScope scope,
   }) async {
     final grants = await repository.all();
-    final candidates = grants.where((grant) =>
-        grant.projectId == projectId &&
-        grant.commandId == commandId &&
-        grant.allows(scope));
+    final candidates = grants.where(
+      (grant) =>
+          grant.projectId == projectId &&
+          grant.commandId == commandId &&
+          grant.allows(scope),
+    );
     final grant = candidates.firstOrNull;
     if (grant == null) {
       throw ProductException(
-          'permission_required', 'Permission ${scope.name} is required.',
-          details: <String, dynamic>{
-            'projectId': projectId,
-            'commandId': commandId,
-            'scope': scope.name,
-          });
+        'permission_required',
+        'Permission ${scope.name} is required.',
+        details: <String, dynamic>{
+          'projectId': projectId,
+          'commandId': commandId,
+          'scope': scope.name,
+        },
+      );
     }
     await repository.put(grant.consume());
     await audit.append('permission.consumed', commandId, <String, dynamic>{
@@ -877,8 +884,9 @@ class PermissionService {
 
   Future<void> revokeForCommand(String commandId) async {
     await repository.removeWhere((grant) => grant.commandId == commandId);
-    await audit.append('permission.revoked', commandId,
-        <String, dynamic>{'commandId': commandId});
+    await audit.append('permission.revoked', commandId, <String, dynamic>{
+      'commandId': commandId,
+    });
   }
 }
 
@@ -897,7 +905,9 @@ class SecretVault {
   }) async {
     if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(environmentKey)) {
       throw ProductException(
-          'secret_reference_invalid', 'Environment key is invalid.');
+        'secret_reference_invalid',
+        'Environment key is invalid.',
+      );
     }
     final reference = SecretReference(
       id: newId('secret'),
@@ -908,7 +918,10 @@ class SecretVault {
     );
     await repository.put(reference);
     await audit.append(
-        'secret.reference_registered', reference.id, reference.toJson());
+      'secret.reference_registered',
+      reference.id,
+      reference.toJson(),
+    );
     return reference;
   }
 
@@ -920,18 +933,24 @@ class SecretVault {
     redactor.register(value);
   }
 
-  Future<String> resolve(String referenceId,
-      {required String commandId}) async {
+  Future<String> resolve(
+    String referenceId, {
+    required String commandId,
+  }) async {
     final reference = await repository.get(referenceId);
     if (reference == null) {
       throw ProductException(
-          'secret_reference_missing', 'Unknown secret reference.');
+        'secret_reference_missing',
+        'Unknown secret reference.',
+      );
     }
     final value = _sessionValues[referenceId] ??
         Platform.environment[reference.environmentKey];
     if (value == null || value.isEmpty) {
-      throw ProductException('secret_unavailable',
-          'Secret "${reference.label}" is not available in this session or environment.');
+      throw ProductException(
+        'secret_unavailable',
+        'Secret "${reference.label}" is not available in this session or environment.',
+      );
     }
     redactor.register(value);
     await audit.append('secret.resolved', commandId, <String, dynamic>{
@@ -986,8 +1005,11 @@ class ApiTokenService {
     return IssuedToken(record, plaintext);
   }
 
-  Future<ApiTokenRecord?> authenticate(String plaintext,
-      {String? requiredScope, String? projectId}) async {
+  Future<ApiTokenRecord?> authenticate(
+    String plaintext, {
+    String? requiredScope,
+    String? projectId,
+  }) async {
     if (plaintext.isEmpty) {
       return null;
     }
@@ -1019,16 +1041,18 @@ class ApiTokenService {
     if (record == null) {
       return;
     }
-    await repository.put(ApiTokenRecord(
-      id: record.id,
-      label: record.label,
-      hash: record.hash,
-      scopes: record.scopes,
-      projectId: record.projectId,
-      createdAt: record.createdAt,
-      expiresAt: record.expiresAt,
-      revokedAt: DateTime.now().toUtc(),
-    ));
+    await repository.put(
+      ApiTokenRecord(
+        id: record.id,
+        label: record.label,
+        hash: record.hash,
+        scopes: record.scopes,
+        projectId: record.projectId,
+        createdAt: record.createdAt,
+        expiresAt: record.expiresAt,
+        revokedAt: DateTime.now().toUtc(),
+      ),
+    );
     await audit.append('api_token.revoked', id, <String, dynamic>{'id': id});
   }
 }
@@ -1042,8 +1066,10 @@ class RateLimiter {
 
   bool allow(String key, {int cost = 1}) {
     final now = DateTime.now().toUtc();
-    final bucket =
-        _buckets.putIfAbsent(key, () => _RateBucket(capacity.toDouble(), now));
+    final bucket = _buckets.putIfAbsent(
+      key,
+      () => _RateBucket(capacity.toDouble(), now),
+    );
     final elapsed = now.difference(bucket.updatedAt).inMilliseconds / 60000.0;
     bucket.tokens = (bucket.tokens + elapsed * refillPerMinute)
         .clamp(0, capacity)
@@ -1054,8 +1080,10 @@ class RateLimiter {
     }
     bucket.tokens -= cost;
     if (_buckets.length > 10000) {
-      _buckets.removeWhere((_, value) =>
-          now.difference(value.updatedAt) > const Duration(hours: 1));
+      _buckets.removeWhere(
+        (_, value) =>
+            now.difference(value.updatedAt) > const Duration(hours: 1),
+      );
     }
     return true;
   }

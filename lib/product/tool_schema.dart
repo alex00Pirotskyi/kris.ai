@@ -151,7 +151,10 @@ class ToolContract {
         final aliasValue = arguments[alias];
         if (arguments.containsKey(target)) {
           if (!_compatibilityAliasEquivalent(
-              target, arguments[target], aliasValue)) {
+            target,
+            arguments[target],
+            aliasValue,
+          )) {
             throw ToolSchemaException(
               code: 'argument_alias_conflict',
               message:
@@ -168,10 +171,7 @@ class ToolContract {
                   actualType: _typeName(aliasValue),
                 ),
               ],
-              details: <String, dynamic>{
-                'argument': target,
-                'alias': alias,
-              },
+              details: <String, dynamic>{'argument': target, 'alias': alias},
             );
           }
           arguments.remove(alias);
@@ -557,12 +557,7 @@ class JsonSchemaValidator {
       for (final entry in object.entries) {
         final child = properties[entry.key];
         if (child != null) {
-          _validate(
-            entry.value,
-            _map(child),
-            '$path.${entry.key}',
-            issues,
-          );
+          _validate(entry.value, _map(child), '$path.${entry.key}', issues);
           continue;
         }
         final additional = schema['additionalProperties'];
@@ -842,11 +837,7 @@ Object? _cloneJson(Object? value) {
   return value;
 }
 
-bool _compatibilityAliasEquivalent(
-  String target,
-  Object? left,
-  Object? right,
-) {
+bool _compatibilityAliasEquivalent(String target, Object? left, Object? right) {
   if (_jsonEquivalent(left, right)) {
     return true;
   }

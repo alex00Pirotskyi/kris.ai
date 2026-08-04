@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "2.0.0",
+  "phase": "P2",
+  "status": "source_only_not_complete",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "tasks": [
+    "P2-001",
+    "P2-002",
+    "P2-003",
+    "P2-004",
+    "P2-005",
+    "P2-006",
+    "P2-007",
+    "P2-008",
+    "P2-009",
+    "P2-010",
+    "P2-011",
+    "P2-012",
+    "P2-013",
+    "P2-014"
+  ],
+  "completedTasks": [],
+  "triOsBehavioralEvidence": "pending",
+  "ownerApproval": "pending",
+  "independentSecurityReview": "pending",
+  "sourceOnlyIsNotBehavioralProof": true
+}

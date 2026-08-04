@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-005",
+  "name": "Interactive PTY service",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-004"
+  ],
+  "artifacts": [
+    "lib/product/p2_pty_service.dart",
+    "lib/product/p2_runtime_composition.dart",
+    "lib/product/p2_automation_host_process_client.dart",
+    "automation_host/src/host.mjs",
+    "automation_host/src/authenticated-ipc.mjs",
+    "automation_host/src/windows-pty-broker.mjs",
+    "test/product/p2_runtime_composition_test.dart",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart"
+  ],
+  "testResults": "release/evidence/P2-005/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

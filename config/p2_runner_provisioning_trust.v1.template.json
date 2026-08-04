@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "1.0.0",
+  "provisioningTrustRoots": [
+    "REPLACE_WITH_EXTERNALLY_CONTROLLED_32_BYTE_ED25519_PUBLIC_KEY_HEX"
+  ]
+}

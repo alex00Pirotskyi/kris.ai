@@ -7,8 +7,10 @@ const String kristinReleaseChannel = 'preview';
 enum CommandMode { ask, analyze, plan, build, fix, review, run }
 
 bool isConversationalRequest(String request) {
-  final normalized =
-      request.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  final normalized = request.trim().toLowerCase().replaceAll(
+        RegExp(r'\s+'),
+        ' ',
+      );
   if (normalized.isEmpty) {
     return false;
   }
@@ -23,8 +25,10 @@ bool isConversationalRequest(String request) {
 }
 
 bool isFailureInvestigationRequest(String request) {
-  final normalized =
-      request.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  final normalized = request.trim().toLowerCase().replaceAll(
+        RegExp(r'\s+'),
+        ' ',
+      );
   if (normalized.isEmpty) {
     return false;
   }
@@ -253,9 +257,11 @@ class PermissionGrant {
         projectId: json['projectId']?.toString() ?? '',
         commandId: json['commandId']?.toString() ?? '',
         scopes: stringList(json['scopes'])
-            .map((name) => PermissionScope.values
-                .where((scope) => scope.name == name)
-                .firstOrNull)
+            .map(
+              (name) => PermissionScope.values
+                  .where((scope) => scope.name == name)
+                  .firstOrNull,
+            )
             .whereType<PermissionScope>()
             .toSet(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
@@ -477,9 +483,11 @@ class TaskContract {
         constraints: stringList(json['constraints']),
         researchQuestions: stringList(json['researchQuestions']),
         requiredPermissions: stringList(json['requiredPermissions'])
-            .map((name) => PermissionScope.values
-                .where((scope) => scope.name == name)
-                .firstOrNull)
+            .map(
+              (name) => PermissionScope.values
+                  .where((scope) => scope.name == name)
+                  .firstOrNull,
+            )
             .whereType<PermissionScope>()
             .toSet(),
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
@@ -1047,9 +1055,9 @@ class ResearchSource {
         content: json['content']?.toString() ?? '',
         rawContent: json['rawContent']?.toString() ?? '',
         statusCode: int.tryParse(json['statusCode']?.toString() ?? '') ?? 200,
-        responseHeaders: mapValue(json['responseHeaders']).map(
-          (key, value) => MapEntry(key, value.toString()),
-        ),
+        responseHeaders: mapValue(
+          json['responseHeaders'],
+        ).map((key, value) => MapEntry(key, value.toString())),
         redirectChain: stringList(json['redirectChain']),
         requestedUrl: switch (json['requestedUrl']?.toString().trim() ?? '') {
           final value when value.isNotEmpty => Uri.tryParse(value),
@@ -1257,9 +1265,9 @@ class ResearchArchiveRecord {
         contentHash: json['contentHash']?.toString() ?? '',
         rawContentHash: json['rawContentHash']?.toString() ?? '',
         statusCode: int.tryParse(json['statusCode']?.toString() ?? '') ?? 0,
-        responseHeaders: mapValue(json['responseHeaders']).map(
-          (key, value) => MapEntry(key, value.toString()),
-        ),
+        responseHeaders: mapValue(
+          json['responseHeaders'],
+        ).map((key, value) => MapEntry(key, value.toString())),
         redirectChain: stringList(json['redirectChain']),
         capturedAt: parseUtc(json['capturedAt'], fallback: DateTime.now()),
         rawObjectPath: json['rawObjectPath']?.toString() ?? '',
@@ -1334,11 +1342,12 @@ class MemoryEpisode {
 
   bool get successful => outcome == RunState.succeeded;
 
-  MemoryEpisode copyWith(
-          {bool? pinned,
-          String? admission,
-          String? admissionReason,
-          bool? diagnosticOnly}) =>
+  MemoryEpisode copyWith({
+    bool? pinned,
+    String? admission,
+    String? admissionReason,
+    bool? diagnosticOnly,
+  }) =>
       MemoryEpisode(
         id: id,
         projectId: projectId,
@@ -1508,7 +1517,9 @@ class KnowledgeSearchHit {
         'freshnessReason': freshnessReason,
       };
 
-  factory KnowledgeSearchHit.fromJson(Map<String, dynamic> json) =>
+  factory KnowledgeSearchHit.fromJson(
+    Map<String, dynamic> json,
+  ) =>
       KnowledgeSearchHit(
         citation: json['citation']?.toString() ?? 'K0',
         kind: KnowledgeKind.values
@@ -1690,13 +1701,16 @@ class PromptTemplateRecord {
         updatedAt: updatedAt ?? DateTime.now().toUtc(),
       );
 
-  String renderForChat(
-      [Map<String, String> values = const <String, String>{}]) {
+  String renderForChat([
+    Map<String, String> values = const <String, String>{},
+  ]) {
     String render(String input) {
       var output = input;
       for (final variable in variables) {
         output = output.replaceAll(
-            '{{$variable}}', values[variable] ?? '[$variable]');
+          '{{$variable}}',
+          values[variable] ?? '[$variable]',
+        );
       }
       return output.trim();
     }
@@ -2159,8 +2173,9 @@ class TaskPlanRecord {
       enabledTasks.fold<int>(0, (total, item) => total + item.effortPoints);
 
   int get highRiskTasks => enabledTasks
-      .where((item) =>
-          item.risk == PlanRisk.high || item.risk == PlanRisk.critical)
+      .where(
+        (item) => item.risk == PlanRisk.high || item.risk == PlanRisk.critical,
+      )
       .length;
 
   int get maxComplexity => enabledTasks.isEmpty
@@ -2183,7 +2198,7 @@ class TaskPlanRecord {
       errors.add('Task IDs must be unique.');
     }
     final byId = <String, PlanTaskRecord>{
-      for (final item in tasks) item.id: item
+      for (final item in tasks) item.id: item,
     };
     for (final task in tasks) {
       if (task.title.trim().isEmpty || task.instructions.trim().isEmpty) {
@@ -2512,8 +2527,10 @@ class AgentAction {
       actionObject['type'],
     ]);
     final normalizedActionName = _normalizeKind(actionName);
-    final actionNameIsTerminal =
-        const <String>{'complete', 'fail'}.contains(normalizedActionName);
+    final actionNameIsTerminal = const <String>{
+      'complete',
+      'fail',
+    }.contains(normalizedActionName);
     final rawTool = _firstText(<Object?>[
       json['tool'],
       json['toolName'],
@@ -2653,51 +2670,53 @@ class AgentAction {
     }
     if (kind == 'tool' && arguments.isEmpty) {
       arguments = Map<String, dynamic>.from(json)
-        ..removeWhere((key, _) => const <String>{
-              'action',
-              'kind',
-              'type',
-              'status',
-              'operation',
-              'act',
-              'tool',
-              'toolName',
-              'tool_name',
-              'functionName',
-              'function_name',
-              'command',
-              'name',
-              'arguments',
-              'args',
-              'parameters',
-              'params',
-              'input',
-              'reason',
-              'rationale',
-              'explanation',
-              'summary',
-              'answer',
-              'final_answer',
-              'finalAnswer',
-              'final_response',
-              'finalResponse',
-              'output_text',
-              'outputText',
-              'response',
-              'result',
-              'final',
-              'content',
-              'text',
-              'error',
-              'message',
-              'tool_calls',
-              'toolCalls',
-              'toolCall',
-              'tool_call',
-              'functionCall',
-              'function_call',
-              'function',
-            }.contains(key));
+        ..removeWhere(
+          (key, _) => const <String>{
+            'action',
+            'kind',
+            'type',
+            'status',
+            'operation',
+            'act',
+            'tool',
+            'toolName',
+            'tool_name',
+            'functionName',
+            'function_name',
+            'command',
+            'name',
+            'arguments',
+            'args',
+            'parameters',
+            'params',
+            'input',
+            'reason',
+            'rationale',
+            'explanation',
+            'summary',
+            'answer',
+            'final_answer',
+            'finalAnswer',
+            'final_response',
+            'finalResponse',
+            'output_text',
+            'outputText',
+            'response',
+            'result',
+            'final',
+            'content',
+            'text',
+            'error',
+            'message',
+            'tool_calls',
+            'toolCalls',
+            'toolCall',
+            'tool_call',
+            'functionCall',
+            'function_call',
+            'function',
+          }.contains(key),
+        );
     }
     return AgentAction(
       kind: kind,

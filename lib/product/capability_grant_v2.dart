@@ -78,7 +78,8 @@ class CapabilityGrantV2 {
     if (issuer['actorId'] != 'desktop_host' ||
         issuer['authority'] != 'desktop_host:deterministic_policy') {
       throw CapabilityGrantValidationException(
-          'issuer is not policy authority');
+        'issuer is not policy authority',
+      );
     }
     final binding = _map(value['binding'], 'binding');
     for (final field in const <String>{
@@ -86,7 +87,7 @@ class CapabilityGrantV2 {
       'taskId',
       'actorId',
       'toolId',
-      'accessProfileId'
+      'accessProfileId',
     }) {
       _string(binding[field], 'binding.$field');
     }
@@ -96,18 +97,20 @@ class CapabilityGrantV2 {
       'process',
       'network',
       'browser',
-      'secrets'
+      'secrets',
     }) {
       _map(scope[field], 'scope.$field');
     }
     if (_map(scope['secrets'], 'scope.secrets')['rawReveal'] != false) {
       throw CapabilityGrantValidationException(
-          'raw secret reveal is forbidden');
+        'raw secret reveal is forbidden',
+      );
     }
     final validity = _map(value['validity'], 'validity');
     for (final field in const <String>{'issuedAt', 'notBefore', 'expiresAt'}) {
-      final parsed =
-          DateTime.tryParse(_string(validity[field], 'validity.$field'));
+      final parsed = DateTime.tryParse(
+        _string(validity[field], 'validity.$field'),
+      );
       if (parsed == null || !parsed.isUtc) {
         throw CapabilityGrantValidationException('validity.$field must be UTC');
       }
@@ -134,7 +137,7 @@ class CapabilityGrantV2 {
       'secretValue',
       'rawSecret',
       'privateKey',
-      'signingKey'
+      'signingKey',
     };
     if (value is Map) {
       for (final entry in value.entries) {

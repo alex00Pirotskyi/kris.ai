@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/p2_runner_provisioning_v3.schema.json",
+  "title": "Kristin P2 controlled-runner provisioning packet V3",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "packetType", "packetId", "issuedAt", "expiresAt", "attestationTrustRoots", "cleanupTrustRoots", "independentReviewSha256", "runners", "signerPublicKeyHex", "signatureHex"]
+}

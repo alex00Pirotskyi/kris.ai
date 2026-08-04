@@ -6,8 +6,10 @@ void main() {
     const registry = FileAdapterRegistry();
     final all = registry.all;
     expect(all.any((adapter) => adapter.id == 'text'), isTrue);
-    expect(all.any((adapter) => adapter.id == 'pdf' && adapter.sandboxRequired),
-        isTrue);
+    expect(
+      all.any((adapter) => adapter.id == 'pdf' && adapter.sandboxRequired),
+      isTrue,
+    );
     expect(all.any((adapter) => adapter.id == 'ooxml'), isTrue);
   });
 }

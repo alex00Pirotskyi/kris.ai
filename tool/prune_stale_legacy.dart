@@ -226,10 +226,7 @@ String _availableDestination(String requested) {
     return requested;
   }
   var suffix = 1;
-  while (FileSystemEntity.typeSync(
-        '$requested.$suffix',
-        followLinks: false,
-      ) !=
+  while (FileSystemEntity.typeSync('$requested.$suffix', followLinks: false) !=
       FileSystemEntityType.notFound) {
     suffix += 1;
   }

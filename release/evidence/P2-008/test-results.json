@@ -1,0 +1,15 @@
+{
+  "note": "Local helper and source checks are diagnostics only and are always source_only. Exact shipped-product Windows/macOS/Linux receipts plus independent review are required.",
+  "platform": "win32",
+  "schemaVersion": "1.0.0",
+  "status": "source_only",
+  "taskId": "P2-008",
+  "tests": [
+    {
+      "classification": "source_contract",
+      "detail": "typed adapter matrix is source-checked; target OS smoke required",
+      "name": "service/application support matrix",
+      "status": "source_only"
+    }
+  ]
+}

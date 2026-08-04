@@ -40,10 +40,8 @@ final class SignedAuditCheckpointV1 {
       );
 
   String checkpointHash() => Sha256.text(
-        canonicalJsonV2(<String, Object?>{
-          ...body(),
-          'signature': signatureHex,
-        }),
+        canonicalJsonV2(
+            <String, Object?>{...body(), 'signature': signatureHex}),
       );
 }
 

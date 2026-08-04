@@ -86,8 +86,11 @@ class P1AuthorityServiceEndpointV1 {
 
   void validate() {
     if (!const {'windows', 'macos', 'linux'}.contains(platform) ||
-        !const {'windows-named-pipe', 'macos-xpc', 'linux-af-unix'}
-            .contains(transport) ||
+        !const {
+          'windows-named-pipe',
+          'macos-xpc',
+          'linux-af-unix',
+        }.contains(transport) ||
         address.isEmpty ||
         !_p1aId.hasMatch(serviceInstanceId) ||
         !_p1aHex64.hasMatch(serviceBuildSha256) ||
@@ -171,8 +174,9 @@ class P1AuthorityOwnerApprovalRequestV2 {
     if (interactionType != 'native-owner-confirmation' ||
         !userPresent ||
         binding.length < requiredBinding.length ||
-        requiredBinding
-            .any((key) => !_p1aId.hasMatch(binding[key]?.toString() ?? '')) ||
+        requiredBinding.any(
+          (key) => !_p1aId.hasMatch(binding[key]?.toString() ?? ''),
+        ) ||
         (profile != 'owner' && profile != 'owner_unattended') ||
         !_p1aHex64.hasMatch(payloadSha256) ||
         !_p1aHex64.hasMatch(uiSurfaceSha256) ||
@@ -438,9 +442,22 @@ final class P1AuthorityServiceHandleV1 {
   const P1AuthorityServiceHandleV1(this.service);
   final P1AuthorityServiceClientV1 service;
 
-  void validateForP2() {
+  void validateForP2({bool allowQaPreview = false}) {
     service.endpoint.validate();
     final provenance = service.provenance;
+    final qaPreviewAccepted = allowQaPreview &&
+        provenance['qaPreview'] == true &&
+        provenance['qaPreviewVersion'] == '1.0.0' &&
+        provenance['qaPreviewFormalCompletion'] == false &&
+        provenance['privateAuthorityMaterialPresent'] == false &&
+        provenance['arbitraryMessageSigningApi'] == false &&
+        service.endpoint.osEnforcedIsolation &&
+        service.endpoint.workerPrincipalSeparated &&
+        service.endpoint.typedOperationsOnly &&
+        service.endpoint.nonExportableKeys;
+    if (qaPreviewAccepted) {
+      return;
+    }
     if (!service.completionEligible ||
         provenance['authorityType'] != 'p1-isolated-authority-service-v2' ||
         provenance['p1AmendmentMerged'] != true ||
@@ -453,23 +470,32 @@ final class P1AuthorityServiceHandleV1 {
         !_p1aHex40.hasMatch(provenance['mergedCommit']?.toString() ?? '') ||
         !_p1aHex40.hasMatch(provenance['mergedTree']?.toString() ?? '') ||
         !_p1aHex64.hasMatch(
-            provenance['aggregateManifestSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['platformReceiptSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['evidenceTrustSha256']?.toString() ?? '') ||
+          provenance['aggregateManifestSha256']?.toString() ?? '',
+        ) ||
         !_p1aHex64.hasMatch(
-            provenance['serviceBehaviorReceiptSha256']?.toString() ?? '') ||
+          provenance['platformReceiptSha256']?.toString() ?? '',
+        ) ||
         !_p1aHex64.hasMatch(
-            provenance['workerDenialReceiptSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['workerLauncherSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['workerExecutableSha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['workerIdentitySha256']?.toString() ?? '') ||
-        !_p1aHex64
-            .hasMatch(provenance['denialTranscriptSha256']?.toString() ?? '') ||
+          provenance['evidenceTrustSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['serviceBehaviorReceiptSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerDenialReceiptSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerLauncherSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerExecutableSha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['workerIdentitySha256']?.toString() ?? '',
+        ) ||
+        !_p1aHex64.hasMatch(
+          provenance['denialTranscriptSha256']?.toString() ?? '',
+        ) ||
         !_p1aHex64.hasMatch(provenance['p1aPackageSha256']?.toString() ?? '') ||
         provenance['privateAuthorityMaterialPresent'] != false ||
         provenance['arbitraryMessageSigningApi'] != false ||

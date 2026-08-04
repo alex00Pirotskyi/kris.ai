@@ -28,7 +28,9 @@ class ContractPlanner {
     final normalized = request.trim();
     if (normalized.length < 3 && !isConversationalRequest(normalized)) {
       throw ProductException(
-          'request_too_short', 'Describe the outcome you want to achieve.');
+        'request_too_short',
+        'Describe the outcome you want to achieve.',
+      );
     }
     final permissions = _permissions(mode, normalized);
     final criteria = _criteria(mode, normalized);
@@ -57,20 +59,26 @@ class ContractPlanner {
     if (contractErrors.isNotEmpty) {
       throw ProductException('contract_invalid', contractErrors.join(' '));
     }
-    final complexity =
-        _complexity(mode, normalized, criteria.length, questions.length);
+    final complexity = _complexity(
+      mode,
+      normalized,
+      criteria.length,
+      questions.length,
+    );
     final plan = _plan(contract, complexity);
     final planErrors = plan.validate();
     if (planErrors.isNotEmpty) {
       throw ProductException('plan_invalid', planErrors.join(' '));
     }
-    final requestKey = Sha256.text(canonicalJson(<String, dynamic>{
-      'projectId': project.id,
-      'mode': mode.name,
-      'request': normalized,
-      'model': model.toJson(),
-      'contractRevision': contract.revision,
-    }));
+    final requestKey = Sha256.text(
+      canonicalJson(<String, dynamic>{
+        'projectId': project.id,
+        'mode': mode.name,
+        'request': normalized,
+        'model': model.toJson(),
+        'contractRevision': contract.revision,
+      }),
+    );
     return PreparedCommand(
       id: newId('command'),
       requestKey: requestKey,
@@ -87,8 +95,10 @@ class ContractPlanner {
     if (mode != CommandMode.ask || !isConversationalRequest(request)) {
       permissions.add(PermissionScope.projectRead);
     }
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-        .contains(mode)) {
+    if (const <CommandMode>{
+      CommandMode.build,
+      CommandMode.fix,
+    }.contains(mode)) {
       permissions.addAll(<PermissionScope>{
         PermissionScope.projectWrite,
         PermissionScope.projectDelete,
@@ -98,7 +108,7 @@ class ContractPlanner {
     if (const <CommandMode>{
       CommandMode.analyze,
       CommandMode.review,
-      CommandMode.run
+      CommandMode.run,
     }.contains(mode)) {
       permissions.add(PermissionScope.executeFinite);
     }
@@ -106,26 +116,26 @@ class ContractPlanner {
       permissions.add(PermissionScope.executeManaged);
     }
     if (RegExp(
-            r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online|url|https)\b')
-        .hasMatch(lower)) {
+      r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online|url|https)\b',
+    ).hasMatch(lower)) {
       permissions.add(PermissionScope.networkResearch);
     }
     if (RegExp(
-            r'\b(install|dependency|dependencies|package|npm|pnpm|yarn|pip|cargo|clone|pull)\b')
-        .hasMatch(lower)) {
+      r'\b(install|dependency|dependencies|package|npm|pnpm|yarn|pip|cargo|clone|pull)\b',
+    ).hasMatch(lower)) {
       permissions.addAll(<PermissionScope>{
         PermissionScope.executeFinite,
-        PermissionScope.networkPackages
+        PermissionScope.networkPackages,
       });
     }
     if (RegExp(
-            r'\b(secret|token|api key|credential|telegram|botfather|deploy|production)\b')
-        .hasMatch(lower)) {
+      r'\b(secret|token|api key|credential|telegram|botfather|deploy|production)\b',
+    ).hasMatch(lower)) {
       permissions.add(PermissionScope.secretUse);
     }
     if (RegExp(
-            r'\b(deploy|deployment|release|docker|container|publish|hosting|vercel|cloudflare)\b')
-        .hasMatch(lower)) {
+      r'\b(deploy|deployment|release|docker|container|publish|hosting|vercel|cloudflare)\b',
+    ).hasMatch(lower)) {
       permissions.add(PermissionScope.deploymentPackage);
     }
     if (RegExp(r'\b(mcp|model context protocol)\b').hasMatch(lower)) {
@@ -218,9 +228,9 @@ class ContractPlanner {
     final result = <AcceptanceCriterion>[];
     for (final line in lines) {
       final match = RegExp(
-              r'^\s*(?:[-*]|\d+[.)])\s*(?:acceptance\s*:)?\s*(.+)$',
-              caseSensitive: false)
-          .firstMatch(line);
+        r'^\s*(?:[-*]|\d+[.)])\s*(?:acceptance\s*:)?\s*(.+)$',
+        caseSensitive: false,
+      ).firstMatch(line);
       if (match == null) {
         continue;
       }
@@ -230,16 +240,18 @@ class ContractPlanner {
       }
       final lower = statement.toLowerCase();
       if (!RegExp(
-              r'\b(must|should|passes|returns|renders|creates|supports|does not|without|within)\b')
-          .hasMatch(lower)) {
+        r'\b(must|should|passes|returns|renders|creates|supports|does not|without|within)\b',
+      ).hasMatch(lower)) {
         continue;
       }
-      result.add(AcceptanceCriterion(
-        id: newId('criterion'),
-        statement: statement,
-        verification:
-            'Verify this criterion with the most direct available test, command, file inspection, or response assertion.',
-      ));
+      result.add(
+        AcceptanceCriterion(
+          id: newId('criterion'),
+          statement: statement,
+          verification:
+              'Verify this criterion with the most direct available test, command, file inspection, or response assertion.',
+        ),
+      );
     }
     return result.take(12).toList();
   }
@@ -247,8 +259,8 @@ class ContractPlanner {
   List<String> _researchQuestions(String request) {
     final lower = request.toLowerCase();
     if (!RegExp(
-            r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online)\b')
-        .hasMatch(lower)) {
+      r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online)\b',
+    ).hasMatch(lower)) {
       return <String>[];
     }
     return <String>[
@@ -258,7 +270,11 @@ class ContractPlanner {
   }
 
   int _complexity(
-      CommandMode mode, String request, int criteria, int questions) {
+    CommandMode mode,
+    String request,
+    int criteria,
+    int questions,
+  ) {
     var score = switch (mode) {
       CommandMode.ask => 1,
       CommandMode.analyze => 2,
@@ -273,8 +289,8 @@ class ContractPlanner {
     score += min(2, max(0, criteria - 1));
     score += questions == 0 ? 0 : 1;
     if (RegExp(
-            r'\b(full[- ]stack|production|deployment|database|authentication|telegram|mobile|desktop|migration|security|multi[- ]tenant)\b')
-        .hasMatch(lower)) {
+      r'\b(full[- ]stack|production|deployment|database|authentication|telegram|mobile|desktop|migration|security|multi[- ]tenant)\b',
+    ).hasMatch(lower)) {
       score += 2;
     }
     return score.clamp(1, 10).toInt();
@@ -282,8 +298,13 @@ class ContractPlanner {
 
   ExecutionPlan _plan(TaskContract contract, int complexity) {
     final items = <WorkItem>[];
-    WorkItem item(String title, String description, Set<String> dependencies,
-        Set<String> tools, List<String> criteria) {
+    WorkItem item(
+      String title,
+      String description,
+      Set<String> dependencies,
+      Set<String> tools,
+      List<String> criteria,
+    ) {
       return WorkItem(
         id: newId('work'),
         title: title,
@@ -316,19 +337,21 @@ class ContractPlanner {
           answerTools.addAll(<String>{'research_search', 'research_fetch'});
         }
       }
-      items.add(item(
-        conversational
-            ? 'Respond conversationally'
-            : 'Answer from grounded context',
-        conversational
-            ? 'Reply directly without manufacturing project evidence or requesting unnecessary tools.'
-            : 'Answer the request directly. Inspect project files or retrieve saved knowledge only when the answer depends on them.',
-        <String>{},
-        answerTools,
-        contract.acceptanceCriteria
-            .map((criterion) => criterion.statement)
-            .toList(),
-      ));
+      items.add(
+        item(
+          conversational
+              ? 'Respond conversationally'
+              : 'Answer from grounded context',
+          conversational
+              ? 'Reply directly without manufacturing project evidence or requesting unnecessary tools.'
+              : 'Answer the request directly. Inspect project files or retrieve saved knowledge only when the answer depends on them.',
+          <String>{},
+          answerTools,
+          contract.acceptanceCriteria
+              .map((criterion) => criterion.statement)
+              .toList(),
+        ),
+      );
       return ExecutionPlan(
         id: newId('plan'),
         contractId: contract.id,
@@ -354,10 +377,10 @@ class ContractPlanner {
         'index_search',
         'git_status',
         'git_diff',
-        'knowledge_search'
+        'knowledge_search',
       },
       <String>[
-        'Relevant existing behavior and files are identified with hashes.'
+        'Relevant existing behavior and files are identified with hashes.',
       ],
     );
     items.add(inspect);
@@ -370,7 +393,7 @@ class ContractPlanner {
         <String>{dependency},
         <String>{'knowledge_search', 'research_search', 'research_fetch'},
         <String>[
-          'Material external claims have source URLs, fetch timestamps, and content hashes.'
+          'Material external claims have source URLs, fetch timestamps, and content hashes.',
         ],
       );
       items.add(research);
@@ -382,45 +405,49 @@ class ContractPlanner {
         throw StateError('Ask plans are returned before the engineering plan.');
       case CommandMode.analyze:
       case CommandMode.review:
-        items.add(item(
-          'Analyze and verify findings',
-          'Investigate the request, reproduce material issues when safe, rank findings by impact, and prepare actionable evidence-backed conclusions.',
-          <String>{dependency},
-          <String>{
-            'list_directory',
-            'read_file',
-            'inspect_file',
-            'search_text',
-            'index_project',
-            'index_search',
-            'git_status',
-            'git_diff',
-            'run_command',
-            'verify_project',
-            'knowledge_search'
-          },
-          contract.acceptanceCriteria
-              .map((criterion) => criterion.statement)
-              .toList(),
-        ));
+        items.add(
+          item(
+            'Analyze and verify findings',
+            'Investigate the request, reproduce material issues when safe, rank findings by impact, and prepare actionable evidence-backed conclusions.',
+            <String>{dependency},
+            <String>{
+              'list_directory',
+              'read_file',
+              'inspect_file',
+              'search_text',
+              'index_project',
+              'index_search',
+              'git_status',
+              'git_diff',
+              'run_command',
+              'verify_project',
+              'knowledge_search',
+            },
+            contract.acceptanceCriteria
+                .map((criterion) => criterion.statement)
+                .toList(),
+          ),
+        );
       case CommandMode.plan:
-        items.add(item(
-          'Produce an implementation-ready plan',
-          'Turn the request and project evidence into atomic work items, dependencies, risks, permissions, and objective release gates.',
-          <String>{dependency},
-          <String>{
-            'list_directory',
-            'read_file',
-            'inspect_file',
-            'search_text',
-            'index_project',
-            'index_search',
-            'knowledge_search'
-          },
-          contract.acceptanceCriteria
-              .map((criterion) => criterion.statement)
-              .toList(),
-        ));
+        items.add(
+          item(
+            'Produce an implementation-ready plan',
+            'Turn the request and project evidence into atomic work items, dependencies, risks, permissions, and objective release gates.',
+            <String>{dependency},
+            <String>{
+              'list_directory',
+              'read_file',
+              'inspect_file',
+              'search_text',
+              'index_project',
+              'index_search',
+              'knowledge_search',
+            },
+            contract.acceptanceCriteria
+                .map((criterion) => criterion.statement)
+                .toList(),
+          ),
+        );
       case CommandMode.build:
       case CommandMode.fix:
         final implement = item(
@@ -475,49 +502,54 @@ class ContractPlanner {
             'git_diff',
           },
           <String>[
-            'All measurable acceptance criteria have objective passing evidence.'
+            'All measurable acceptance criteria have objective passing evidence.',
           ],
         );
         items.add(verify);
-        if (contract.requiredPermissions
-            .contains(PermissionScope.deploymentPackage)) {
-          items.add(item(
-            'Create governed deployment package',
-            'Package reviewed source deterministically, reject plaintext secrets, produce an SBOM and deployment manifest, and report the artifact SHA-256.',
-            <String>{verify.id},
-            <String>{
-              'read_file',
-              'git_status',
-              'git_diff',
-              'package_deployment'
-            },
-            <String>[
-              'A deterministic deployment archive is created after a passing secret scan and includes its checksum and SBOM.'
-            ],
-          ));
+        if (contract.requiredPermissions.contains(
+          PermissionScope.deploymentPackage,
+        )) {
+          items.add(
+            item(
+              'Create governed deployment package',
+              'Package reviewed source deterministically, reject plaintext secrets, produce an SBOM and deployment manifest, and report the artifact SHA-256.',
+              <String>{verify.id},
+              <String>{
+                'read_file',
+                'git_status',
+                'git_diff',
+                'package_deployment',
+              },
+              <String>[
+                'A deterministic deployment archive is created after a passing secret scan and includes its checksum and SBOM.',
+              ],
+            ),
+          );
         }
       case CommandMode.run:
-        items.add(item(
-          'Validate and execute the requested project command',
-          'Inspect the project, select a finite non-shell command, execute it with redacted output, and report the observed result.',
-          <String>{dependency},
-          <String>{
-            'list_directory',
-            'read_file',
-            'inspect_file',
-            'search_text',
-            'index_project',
-            'index_search',
-            'run_command',
-            'start_process',
-            'process_status',
-            'stop_process',
-            'verify_project'
-          },
-          contract.acceptanceCriteria
-              .map((criterion) => criterion.statement)
-              .toList(),
-        ));
+        items.add(
+          item(
+            'Validate and execute the requested project command',
+            'Inspect the project, select a finite non-shell command, execute it with redacted output, and report the observed result.',
+            <String>{dependency},
+            <String>{
+              'list_directory',
+              'read_file',
+              'inspect_file',
+              'search_text',
+              'index_project',
+              'index_search',
+              'run_command',
+              'start_process',
+              'process_status',
+              'stop_process',
+              'verify_project',
+            },
+            contract.acceptanceCriteria
+                .map((criterion) => criterion.statement)
+                .toList(),
+          ),
+        );
     }
 
     return ExecutionPlan(
@@ -534,7 +566,11 @@ class ContractPlanner {
 
 class PreparedCommandService {
   PreparedCommandService(
-      this.repositories, this.planner, this.audit, this.events);
+    this.repositories,
+    this.planner,
+    this.audit,
+    this.events,
+  );
 
   final ProductRepositories repositories;
   final ContractPlanner planner;
@@ -551,7 +587,11 @@ class PreparedCommandService {
     final completer = Completer<PreparedCommand>();
     _tail = _tail.then((_) async {
       final candidate = planner.prepare(
-          project: project, mode: mode, request: request, model: model);
+        project: project,
+        mode: mode,
+        request: request,
+        model: model,
+      );
       final existing = (await repositories.commands.all())
           .where((command) => command.requestKey == candidate.requestKey)
           .firstOrNull;
@@ -559,7 +599,11 @@ class PreparedCommandService {
       if (existing == null) {
         await repositories.commands.put(prepared);
       }
-      await audit.append('command.prepared', prepared.id, prepared.toJson());
+      await audit.append(
+        'command.prepared',
+        prepared.id,
+        prepared.toJson(),
+      );
       await events.publish('command.prepared', prepared.id, <String, dynamic>{
         'commandId': prepared.id,
         'projectId': project.id,
@@ -768,16 +812,21 @@ class AgentLoopRecoveryPolicy {
         .where((observation) => observation.tool == 'list_directory')
         .firstOrNull;
     final hashedFiles = successful.where((observation) {
-      if (!const <String>{'read_file', 'inspect_file'}
-          .contains(observation.tool)) {
+      if (!const <String>{
+        'read_file',
+        'inspect_file',
+      }.contains(observation.tool)) {
         return false;
       }
       return observation.result.data['sha256']?.toString().trim().isNotEmpty ==
           true;
     }).toList(growable: false);
     final structural = successful.where((observation) {
-      return const <String>{'index_project', 'git_status', 'git_diff'}
-          .contains(observation.tool);
+      return const <String>{
+        'index_project',
+        'git_status',
+        'git_diff',
+      }.contains(observation.tool);
     }).toList(growable: false);
 
     if (listing == null ||
@@ -923,10 +972,16 @@ class AgentLoopRecoveryPolicy {
       return null;
     }
     final inspectedPaths = observations
-        .where((observation) => const <String>{'read_file', 'inspect_file'}
-            .contains(observation.tool))
-        .map((observation) =>
-            observation.arguments['path']?.toString().replaceAll('\\', '/'))
+        .where(
+          (observation) => const <String>{
+            'read_file',
+            'inspect_file',
+          }.contains(observation.tool),
+        )
+        .map(
+          (observation) =>
+              observation.arguments['path']?.toString().replaceAll('\\', '/'),
+        )
         .whereType<String>()
         .toSet();
     final candidates = <String>[];
@@ -1023,16 +1078,18 @@ class ArtifactEvidencePolicy {
 
   bool requiresValidatedArtifact(WorkItem item) {
     final label = '${item.title}\n${item.description}'.toLowerCase();
-    final boundedArtifactTask =
-        RegExp(r'\b(?:wireframes?|user flows?|screen flows?)\b')
-                .hasMatch(label) ||
-            label.contains('docs/testing/usability-checklist.md');
-    final artifactProducing = item.allowedTools.any(const <String>{
-      'write_file',
-      'write_binary_file',
-      'replace_text',
-      'apply_patch',
-    }.contains);
+    final boundedArtifactTask = RegExp(
+          r'\b(?:wireframes?|user flows?|screen flows?)\b',
+        ).hasMatch(label) ||
+        label.contains('docs/testing/usability-checklist.md');
+    final artifactProducing = item.allowedTools.any(
+      const <String>{
+        'write_file',
+        'write_binary_file',
+        'replace_text',
+        'apply_patch',
+      }.contains,
+    );
     return boundedArtifactTask &&
         artifactProducing &&
         _expectedPaths(item).isNotEmpty;
@@ -1058,11 +1115,12 @@ class ArtifactEvidencePolicy {
       );
     }
     final label = '${item.title}\n${item.description}'.toLowerCase();
-    final wireframeTask =
-        RegExp(r'\b(?:wireframes?|user flows?|screen flows?)\b')
-            .hasMatch(label);
-    final usabilityChecklistTask =
-        label.contains('docs/testing/usability-checklist.md');
+    final wireframeTask = RegExp(
+      r'\b(?:wireframes?|user flows?|screen flows?)\b',
+    ).hasMatch(label);
+    final usabilityChecklistTask = label.contains(
+      'docs/testing/usability-checklist.md',
+    );
     if (!wireframeTask && !usabilityChecklistTask) {
       return const ArtifactEvidenceAssessment(
         state: ArtifactEvidenceState.notApplicable,
@@ -1070,12 +1128,14 @@ class ArtifactEvidencePolicy {
             'Deterministic artifact completion is limited to bounded design and usability-checklist tasks.',
       );
     }
-    final artifactProducing = item.allowedTools.any(const <String>{
-      'write_file',
-      'write_binary_file',
-      'replace_text',
-      'apply_patch',
-    }.contains);
+    final artifactProducing = item.allowedTools.any(
+      const <String>{
+        'write_file',
+        'write_binary_file',
+        'replace_text',
+        'apply_patch',
+      }.contains,
+    );
     if (!artifactProducing) {
       return const ArtifactEvidenceAssessment(
         state: ArtifactEvidenceState.notApplicable,
@@ -1091,9 +1151,7 @@ class ArtifactEvidencePolicy {
         reason: 'The work item does not name a project-relative artifact path.',
       );
     }
-    final observedPath = _normalizePath(
-      result.data['path']?.toString() ?? '',
-    );
+    final observedPath = _normalizePath(result.data['path']?.toString() ?? '');
     if (observedPath.isEmpty || !expectedPaths.contains(observedPath)) {
       return const ArtifactEvidenceAssessment(
         state: ArtifactEvidenceState.notApplicable,
@@ -1233,16 +1291,27 @@ class ArtifactEvidencePolicy {
     }
     if (usabilityChecklistTask) {
       requireAny('keyboard scenarios', const <String>['keyboard', 'shortcut']);
-      requireAny(
-          'pointer scenarios', const <String>['pointer', 'mouse', 'click']);
-      requireAny(
-          'responsive scenarios', const <String>['responsive', 'mobile']);
-      requireAny(
-          'accessibility scenarios', const <String>['accessibility', 'aria']);
-      requireAny('error-state scenarios',
-          const <String>['error state', 'invalid input']);
-      requireAny('manual review labels',
-          const <String>['manual review', 'manual check']);
+      requireAny('pointer scenarios', const <String>[
+        'pointer',
+        'mouse',
+        'click',
+      ]);
+      requireAny('responsive scenarios', const <String>[
+        'responsive',
+        'mobile',
+      ]);
+      requireAny('accessibility scenarios', const <String>[
+        'accessibility',
+        'aria',
+      ]);
+      requireAny('error-state scenarios', const <String>[
+        'error state',
+        'invalid input',
+      ]);
+      requireAny('manual review labels', const <String>[
+        'manual review',
+        'manual check',
+      ]);
     }
 
     if (missing.isNotEmpty) {
@@ -1591,12 +1660,14 @@ class RunCoordinator {
         .map((episode) => episode.runId)
         .toSet();
     final terminalRuns = (await repositories.runs.all())
-        .where((run) => const <RunState>{
-              RunState.succeeded,
-              RunState.failed,
-              RunState.cancelled,
-              RunState.interrupted,
-            }.contains(run.state))
+        .where(
+          (run) => const <RunState>{
+            RunState.succeeded,
+            RunState.failed,
+            RunState.cancelled,
+            RunState.interrupted,
+          }.contains(run.state),
+        )
         .toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     for (final run in terminalRuns.take(2000)) {
@@ -1718,15 +1789,19 @@ class RunCoordinator {
     if (run == null) {
       throw ProductException('run_missing', 'Unknown run: $runId');
     }
-    if (const <RunState>{RunState.running, RunState.cancelling}
-        .contains(run.state)) {
+    if (const <RunState>{
+      RunState.running,
+      RunState.cancelling,
+    }.contains(run.state)) {
       await repositories.workflow.recoverInFlightRuns();
       run = await repositories.runs.get(runId);
       if (run == null) {
         throw ProductException('run_missing', 'Unknown run: $runId');
       }
-      if (const <RunState>{RunState.running, RunState.cancelling}
-          .contains(run.state)) {
+      if (const <RunState>{
+        RunState.running,
+        RunState.cancelling,
+      }.contains(run.state)) {
         throw ProductException(
           'run_claimed',
           'This run is owned by another live Kristin workflow-kernel lease.',
@@ -1783,8 +1858,10 @@ class RunCoordinator {
       );
     }
     _runLeaseOwners[runId] = leaseOwner;
-    final control =
-        _controls.putIfAbsent(runId, () => RunControl(CancellationSignal()));
+    final control = _controls.putIfAbsent(
+      runId,
+      () => RunControl(CancellationSignal()),
+    );
     control.paused = false;
     final execution = _locks.runExclusive(
       run.command.contract.projectId,
@@ -1822,8 +1899,9 @@ class RunCoordinator {
     if (run != null) {
       await _save(run.copyWith(state: RunState.paused));
     }
-    await events
-        .publish('run.paused', runId, <String, dynamic>{'runId': runId});
+    await events.publish('run.paused', runId, <String, dynamic>{
+      'runId': runId,
+    });
   }
 
   Future<void> resume(String runId) async {
@@ -1834,8 +1912,9 @@ class RunCoordinator {
       if (run != null) {
         await _save(run.copyWith(state: RunState.running));
       }
-      await events
-          .publish('run.resumed', runId, <String, dynamic>{'runId': runId});
+      await events.publish('run.resumed', runId, <String, dynamic>{
+        'runId': runId,
+      });
       return;
     }
     unawaited(execute(runId));
@@ -1849,12 +1928,13 @@ class RunCoordinator {
         !const <RunState>{
           RunState.cancelled,
           RunState.succeeded,
-          RunState.failed
+          RunState.failed,
         }.contains(run.state)) {
       await _save(run.copyWith(state: RunState.cancelling));
     }
-    await events
-        .publish('run.cancelling', runId, <String, dynamic>{'runId': runId});
+    await events.publish('run.cancelling', runId, <String, dynamic>{
+      'runId': runId,
+    });
   }
 
   Future<RunRecord> _executeLocked(
@@ -1868,16 +1948,21 @@ class RunCoordinator {
       clearFailure: true,
     );
     await _save(run);
-    await audit
-        .append('run.started', run.id, <String, dynamic>{'runId': run.id});
-    await events
-        .publish('run.started', run.id, <String, dynamic>{'runId': run.id});
+    await audit.append('run.started', run.id, <String, dynamic>{
+      'runId': run.id,
+    });
+    await events.publish('run.started', run.id, <String, dynamic>{
+      'runId': run.id,
+    });
 
-    final project =
-        await repositories.projects.get(run.command.contract.projectId);
+    final project = await repositories.projects.get(
+      run.command.contract.projectId,
+    );
     if (project == null) {
       return _failBeforeTransaction(
-          run, 'The active project no longer exists.');
+        run,
+        'The active project no longer exists.',
+      );
     }
     final boundary = await WorkspaceBoundary.open(project.rootPath);
     final mutatingRun = run.command.contract.requiredPermissions.any(
@@ -1909,7 +1994,8 @@ class RunCoordinator {
       );
     }
     final checkpointRoot = Directory(
-        '${directories.state.path}${Platform.pathSeparator}checkpoints');
+      '${directories.state.path}${Platform.pathSeparator}checkpoints',
+    );
     await checkpointRoot.create(recursive: true);
     final transaction = await WorkspaceTransaction.begin(
       runId: run.id,
@@ -1922,8 +2008,9 @@ class RunCoordinator {
     var consecutiveFailures = 0;
     try {
       if (transaction.isCommitted) {
-        final allItemsSucceeded =
-            run.items.every((item) => item.state == WorkItemState.succeeded);
+        final allItemsSucceeded = run.items.every(
+          (item) => item.state == WorkItemState.succeeded,
+        );
         if (!allItemsSucceeded) {
           throw ProductException(
             'transaction_recovery_required',
@@ -1971,7 +2058,7 @@ class RunCoordinator {
         localOnly: settingsProvider().localOnly,
         approvedProviders: <String>{selectedModel.providerId},
         approvedModels: <String>{
-          '${selectedModel.providerId}/${selectedModel.name}'
+          '${selectedModel.providerId}/${selectedModel.name}',
         },
         fallbackApproved: false,
         maximumDataBoundary: settingsProvider().localOnly
@@ -1996,11 +2083,13 @@ class RunCoordinator {
       await repositories.workflow.appendModelRouteDecision(
         runId: run.id,
         role: AgentModelRole.executor.name,
-        requestSha256: Sha256.text(canonicalJson(<String, dynamic>{
-          'role': AgentModelRole.executor.name,
-          'model': selectedModel.toJson(),
-          'localOnly': settingsProvider().localOnly,
-        })),
+        requestSha256: Sha256.text(
+          canonicalJson(<String, dynamic>{
+            'role': AgentModelRole.executor.name,
+            'model': selectedModel.toJson(),
+            'localOnly': settingsProvider().localOnly,
+          }),
+        ),
         decision: routeDecision.toJson(),
         approvalRequired: routeDecision.approvalRequired,
         selectedProvider: routeDecision.selected?.provider,
@@ -2016,18 +2105,23 @@ class RunCoordinator {
         );
       }
       final provider = modelRegistry.providerFor(selectedModel);
-      final installed =
-          await provider.discover().timeout(const Duration(minutes: 3));
+      final installed = await provider.discover().timeout(
+            const Duration(minutes: 3),
+          );
       final exact = installed
-          .where((identity) =>
-              identity.name == run.command.model.name &&
-              (run.command.model.digest.isEmpty ||
-                  identity.digest.isEmpty ||
-                  identity.digest == run.command.model.digest))
+          .where(
+            (identity) =>
+                identity.name == run.command.model.name &&
+                (run.command.model.digest.isEmpty ||
+                    identity.digest.isEmpty ||
+                    identity.digest == run.command.model.digest),
+          )
           .firstOrNull;
       if (exact == null) {
-        throw ProductException('model_not_installed',
-            'The exact selected model is not available.');
+        throw ProductException(
+          'model_not_installed',
+          'The exact selected model is not available.',
+        );
       }
 
       for (var itemIndex = 0; itemIndex < run.items.length; itemIndex++) {
@@ -2038,21 +2132,25 @@ class RunCoordinator {
           continue;
         }
         final dependenciesPassed = progress.item.dependencies.every(
-            (dependency) =>
-                run.items
-                    .where((candidate) => candidate.item.id == dependency)
-                    .firstOrNull
-                    ?.state ==
-                WorkItemState.succeeded);
+          (dependency) =>
+              run.items
+                  .where((candidate) => candidate.item.id == dependency)
+                  .firstOrNull
+                  ?.state ==
+              WorkItemState.succeeded,
+        );
         if (!dependenciesPassed) {
           final updatedItems = List<WorkItemProgress>.from(run.items);
           updatedItems[itemIndex] = progress.copyWith(
-              state: WorkItemState.blocked,
-              lastError: 'A dependency did not succeed.');
+            state: WorkItemState.blocked,
+            lastError: 'A dependency did not succeed.',
+          );
           run = run.copyWith(items: updatedItems);
           await _save(run);
           throw ProductException(
-              'dependency_failed', 'A work item dependency did not succeed.');
+            'dependency_failed',
+            'A work item dependency did not succeed.',
+          );
         }
 
         var succeeded = false;
@@ -2116,9 +2214,9 @@ class RunCoordinator {
               clearError: true,
             );
             run = run.copyWith(
-                items: items,
-                summary:
-                    outcome.summary.isEmpty ? run.summary : outcome.summary);
+              items: items,
+              summary: outcome.summary.isEmpty ? run.summary : outcome.summary,
+            );
             await _save(run);
             final completedAt =
                 items[itemIndex].completedAt ?? DateTime.now().toUtc();
@@ -2141,12 +2239,15 @@ class RunCoordinator {
                 'summaryHash': Sha256.text(outcome.summary),
               },
             );
-            await events
-                .publish('work_item.succeeded', run.id, <String, dynamic>{
-              'runId': run.id,
-              'workItemId': progress.item.id,
-              'attempt': attempt,
-            });
+            await events.publish(
+              'work_item.succeeded',
+              run.id,
+              <String, dynamic>{
+                'runId': run.id,
+                'workItemId': progress.item.id,
+                'attempt': attempt,
+              },
+            );
             succeeded = true;
             consecutiveFailures = 0;
             break;
@@ -2155,8 +2256,9 @@ class RunCoordinator {
             consecutiveFailures++;
             run = (await repositories.runs.get(run.id)) ?? run;
             final errorCode = _errorCode(error);
-            final classification =
-                const WorkflowRetryTaxonomy().classify(errorCode);
+            final classification = const WorkflowRetryTaxonomy().classify(
+              errorCode,
+            );
             lastErrorCode = errorCode;
             final failedItems = List<WorkItemProgress>.from(run.items);
             failedItems[itemIndex] = failedItems[itemIndex].copyWith(
@@ -2193,10 +2295,7 @@ class RunCoordinator {
                 state: WorkItemState.queued,
                 lastError: lastError,
               );
-              run = run.copyWith(
-                items: retryItems,
-                repairs: run.repairs + 1,
-              );
+              run = run.copyWith(items: retryItems, repairs: run.repairs + 1);
               await _save(run);
             }
             final diagnostic = <String, dynamic>{
@@ -2245,8 +2344,9 @@ class RunCoordinator {
           );
           run = run.copyWith(items: failedItems);
           await _save(run);
-          final terminalClassification = const WorkflowRetryTaxonomy()
-              .classify(lastErrorCode ?? 'unknown');
+          final terminalClassification = const WorkflowRetryTaxonomy().classify(
+            lastErrorCode ?? 'unknown',
+          );
           await repositories.workflow.recordTaskAttempt(
             runId: run.id,
             workItemId: progress.item.id,
@@ -2275,8 +2375,10 @@ class RunCoordinator {
       }
 
       control.cancellation.throwIfCancelled();
-      if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-          .contains(run.command.contract.mode)) {
+      if (const <CommandMode>{
+        CommandMode.build,
+        CommandMode.fix,
+      }.contains(run.command.contract.mode)) {
         final verification = await _deterministicVerification(
           run: run,
           project: project,
@@ -2287,8 +2389,10 @@ class RunCoordinator {
         );
         run = verification.run;
         if (!verification.passed) {
-          throw ProductException('verification_failed',
-              'Deterministic project verification failed.');
+          throw ProductException(
+            'verification_failed',
+            'Deterministic project verification failed.',
+          );
         }
       }
       await transaction.commit();
@@ -2322,11 +2426,10 @@ class RunCoordinator {
         'runId': run.id,
         'mutations': transaction.mutationCount,
       });
-      await _bestEffortEvent(
-        'run.succeeded',
-        run.id,
-        <String, dynamic>{'runId': run.id, 'summary': run.summary},
-      );
+      await _bestEffortEvent('run.succeeded', run.id, <String, dynamic>{
+        'runId': run.id,
+        'summary': run.summary,
+      });
       try {
         await _recordEpisode(run);
       } catch (_) {
@@ -2395,14 +2498,10 @@ class RunCoordinator {
                   ? 'run.interrupted'
                   : 'run.failed';
       await _bestEffortAudit(terminalEvent, run.id, failureDiagnostics);
-      await _bestEffortEvent(
-        terminalEvent,
-        run.id,
-        <String, dynamic>{
-          ...failureDiagnostics,
-          'stackHash': null,
-        },
-      );
+      await _bestEffortEvent(terminalEvent, run.id, <String, dynamic>{
+        ...failureDiagnostics,
+        'stackHash': null,
+      });
       try {
         await _recordEpisode(run);
       } catch (_) {
@@ -2413,15 +2512,19 @@ class RunCoordinator {
   }
 
   Future<RunRecord> _failBeforeTransaction(
-      RunRecord run, String message) async {
+    RunRecord run,
+    String message,
+  ) async {
     final failed = run.copyWith(
       state: RunState.failed,
       completedAt: DateTime.now().toUtc(),
       failure: message,
     );
     await _save(failed);
-    await events.publish('run.failed', run.id,
-        <String, dynamic>{'runId': run.id, 'error': message});
+    await events.publish('run.failed', run.id, <String, dynamic>{
+      'runId': run.id,
+      'error': message,
+    });
     await _recordEpisode(failed);
     return failed;
   }
@@ -2441,8 +2544,9 @@ class RunCoordinator {
     final conversational = run.command.contract.mode == CommandMode.ask &&
         isConversationalRequest(run.command.contract.request) &&
         progress.item.allowedTools.isEmpty;
-    final includeUnsuccessfulEpisodes =
-        isFailureInvestigationRequest(run.command.contract.request);
+    final includeUnsuccessfulEpisodes = isFailureInvestigationRequest(
+      run.command.contract.request,
+    );
     var retrieval = KnowledgeRetrieval.empty(
       projectId: project.id,
       query: run.command.contract.request,
@@ -2522,8 +2626,9 @@ class RunCoordinator {
     }
 
     final priorEvidence = (await repositories.evidence.all())
-        .where((item) =>
-            item.runId == run.id && item.workItemId == progress.item.id)
+        .where(
+          (item) => item.runId == run.id && item.workItemId == progress.item.id,
+        )
         .toList()
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final history = _priorEvidenceHistory(priorEvidence);
@@ -2581,18 +2686,22 @@ class RunCoordinator {
     final priorMutationEvidence =
         priorEvidence.where(isMaterialMutationEvidence).toList(growable: false);
     final priorVerificationEvidence = priorEvidence
-        .where((item) =>
-            item.kind == EvidenceKind.verification && evidenceSucceeded(item))
+        .where(
+          (item) =>
+              item.kind == EvidenceKind.verification && evidenceSucceeded(item),
+        )
         .toList(growable: false);
     final priorObservationEvidence = priorEvidence
-        .where((item) =>
-            evidenceSucceeded(item) &&
-            const <EvidenceKind>{
-              EvidenceKind.command,
-              EvidenceKind.research,
-              EvidenceKind.verification,
-              EvidenceKind.test,
-            }.contains(item.kind))
+        .where(
+          (item) =>
+              evidenceSucceeded(item) &&
+              const <EvidenceKind>{
+                EvidenceKind.command,
+                EvidenceKind.research,
+                EvidenceKind.verification,
+                EvidenceKind.test,
+              }.contains(item.kind),
+        )
         .toList(growable: false);
     final priorArtifactInspectionEvidence = priorEvidence.where((item) {
       if (item.kind != EvidenceKind.command || !evidenceSucceeded(item)) {
@@ -2681,10 +2790,7 @@ class RunCoordinator {
     );
     var phaseToolCalls = 0;
     final turnLimit = min(
-      _agentTurnLimit(
-        current,
-        conversational: conversational,
-      ),
+      _agentTurnLimit(current, conversational: conversational),
       executionPhaseBudget.maxModelRequests,
     );
     await _bestEffortEvent(
@@ -2740,46 +2846,45 @@ class RunCoordinator {
       );
       late ModelGenerationResult generation;
       try {
-        generation = await provider.generate(ModelGenerationRequest(
-          identity: current.command.model,
-          systemPrompt: system,
-          userPrompt: user,
-          commandId: current.command.id,
-          temperature: 0.0,
-          maxOutputTokens: conversational
-              ? min(768, executionPhaseBudget.maxOutputTokens)
-              : executionPhaseBudget.maxOutputTokens,
-          cancellation: control.cancellation.cancelled,
-          isCancelled: () => control.cancellation.isCancelled,
-          onProgress: (modelProgress) {
-            unawaited(
-              _bestEffortEvent(
-                'model.${modelProgress.stage}',
-                current.id,
-                <String, dynamic>{
-                  'runId': current.id,
-                  'workItemId': progress.item.id,
-                  'attempt': progress.attempts,
-                  'workItemAttempt': progress.attempts,
-                  'turn': turn + 1,
-                  'requestNumber': requestNumber,
-                  'model': current.command.model.toJson(),
-                  'stage': modelProgress.stage,
-                  'message': modelProgress.message,
-                  'modelLoadAttempt': modelProgress.attempt,
-                  'modelLoadMaxAttempts': modelProgress.maxAttempts,
-                  'elapsedMilliseconds': modelProgress.elapsed.inMilliseconds,
-                },
-              ),
-            );
-          },
-        ));
+        generation = await provider.generate(
+          ModelGenerationRequest(
+            identity: current.command.model,
+            systemPrompt: system,
+            userPrompt: user,
+            commandId: current.command.id,
+            temperature: 0.0,
+            maxOutputTokens: conversational
+                ? min(768, executionPhaseBudget.maxOutputTokens)
+                : executionPhaseBudget.maxOutputTokens,
+            cancellation: control.cancellation.cancelled,
+            isCancelled: () => control.cancellation.isCancelled,
+            onProgress: (modelProgress) {
+              unawaited(
+                _bestEffortEvent(
+                  'model.${modelProgress.stage}',
+                  current.id,
+                  <String, dynamic>{
+                    'runId': current.id,
+                    'workItemId': progress.item.id,
+                    'attempt': progress.attempts,
+                    'workItemAttempt': progress.attempts,
+                    'turn': turn + 1,
+                    'requestNumber': requestNumber,
+                    'model': current.command.model.toJson(),
+                    'stage': modelProgress.stage,
+                    'message': modelProgress.message,
+                    'modelLoadAttempt': modelProgress.attempt,
+                    'modelLoadMaxAttempts': modelProgress.maxAttempts,
+                    'elapsedMilliseconds': modelProgress.elapsed.inMilliseconds,
+                  },
+                ),
+              );
+            },
+          ),
+        );
       } catch (error) {
         stopwatch.stop();
-        await _recordModelCircuitFailure(
-          current.command.model,
-          error,
-        );
+        await _recordModelCircuitFailure(current.command.model, error);
         await _bestEffortEvent(
           'model.request_failed',
           current.id,
@@ -2972,8 +3077,10 @@ class RunCoordinator {
       }
 
       if (action.kind == 'complete') {
-        if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-                .contains(current.command.contract.mode) &&
+        if (const <CommandMode>{
+              CommandMode.build,
+              CommandMode.fix,
+            }.contains(current.command.contract.mode) &&
             _requiresProjectMutation(progress.item) &&
             itemMutations == 0) {
           if (mutationRepairAttempts < 2 &&
@@ -2990,20 +3097,16 @@ class RunCoordinator {
                   'This item promises a project artifact or implementation. Read-only evidence is not completion evidence. Use an allowed governed mutation tool to create or update the required project-relative artifact, then inspect or verify it before completing.',
             });
             await _bestEffortEvent(
-              'work_item.mutation_required',
-              current.id,
-              <String, dynamic>{
-                'runId': current.id,
-                'workItemId': progress.item.id,
-                'attempt': progress.attempts,
-                'repairAttempt': mutationRepairAttempts,
-                'allowedMutationTools': progress.item.allowedTools
-                    .where(_isMutationToolName)
-                    .toList()
-                  ..sort(),
-                'budget': _budgetSnapshot(current),
-              },
-            );
+                'work_item.mutation_required', current.id, <String, dynamic>{
+              'runId': current.id,
+              'workItemId': progress.item.id,
+              'attempt': progress.attempts,
+              'repairAttempt': mutationRepairAttempts,
+              'allowedMutationTools':
+                  progress.item.allowedTools.where(_isMutationToolName).toList()
+                    ..sort(),
+              'budget': _budgetSnapshot(current),
+            });
             continue;
           }
           throw ProductException(
@@ -3019,8 +3122,9 @@ class RunCoordinator {
         }
         const artifactPolicy = ArtifactEvidencePolicy();
         if (artifactPolicy.requiresValidatedArtifact(progress.item)) {
-          final expectedPaths =
-              artifactPolicy.expectedArtifactPaths(progress.item);
+          final expectedPaths = artifactPolicy.expectedArtifactPaths(
+            progress.item,
+          );
           if (artifactRepairAttempts < 2 &&
               current.repairs < phaseRepairCeiling) {
             artifactRepairAttempts++;
@@ -3134,12 +3238,11 @@ class RunCoordinator {
 
       if (action.kind == 'tool' &&
           const <String>{'read_file', 'inspect_file'}.contains(action.tool)) {
-        final path = canonicalModelPathToken(
-          action.arguments['path']?.toString() ?? '',
-        )
-            .replaceAll('\\', '/')
-            .replaceFirst(RegExp(r'^\./+'), '')
-            .replaceAll(RegExp(r'/+'), '/');
+        final path =
+            canonicalModelPathToken(action.arguments['path']?.toString() ?? '')
+                .replaceAll('\\', '/')
+                .replaceFirst(RegExp(r'^\./+'), '')
+                .replaceAll(RegExp(r'/+'), '/');
         if (artifactPathsNeedingMutation.contains(path)) {
           if (current.repairs >= phaseRepairCeiling) {
             throw ProductException(
@@ -3238,9 +3341,7 @@ class RunCoordinator {
         final prior = staticObservations[actionFingerprint];
         if (prior != null && prior.result.ok) {
           loopRecoveryApplied = true;
-          final repeated = prior.copyWith(
-            repetitions: prior.repetitions + 1,
-          );
+          final repeated = prior.copyWith(repetitions: prior.repetitions + 1);
           staticObservations[actionFingerprint] = repeated;
           if (current.repairs >= phaseRepairCeiling) {
             throw ProductException(
@@ -3424,11 +3525,7 @@ class RunCoordinator {
       );
       ToolResult result;
       try {
-        result = await tools.execute(
-          action.tool!,
-          action.arguments,
-          context,
-        );
+        result = await tools.execute(action.tool!, action.arguments, context);
       } on ProductException catch (toolError) {
         if (!_isRecoverableToolInputError(toolError) ||
             toolRepairAttempts >= 3 ||
@@ -3483,19 +3580,16 @@ class RunCoordinator {
         );
         if (toolError.code == 'path_outside_project') {
           await _bestEffortEvent(
-            'tool.path_recovery_rejected',
-            current.id,
-            <String, dynamic>{
-              'runId': current.id,
-              'workItemId': progress.item.id,
-              'attempt': progress.attempts,
-              'tool': action.tool,
-              'pathDetails': redactor.redactJson(toolError.details),
-              'reason':
-                  'The path did not identify the selected project or a recognized virtual workspace alias. Select the intended project folder or use a project-relative path.',
-              'securityBoundaryPreserved': true,
-            },
-          );
+              'tool.path_recovery_rejected', current.id, <String, dynamic>{
+            'runId': current.id,
+            'workItemId': progress.item.id,
+            'attempt': progress.attempts,
+            'tool': action.tool,
+            'pathDetails': redactor.redactJson(toolError.details),
+            'reason':
+                'The path did not identify the selected project or a recognized virtual workspace alias. Select the intended project folder or use a project-relative path.',
+            'securityBoundaryPreserved': true,
+          });
         }
         continue;
       }
@@ -3531,11 +3625,13 @@ class RunCoordinator {
         mutations: current.mutations + (result.mutated ? 1 : 0),
       );
       await _save(current);
-      final governedEvidenceHash = Sha256.text(canonicalJson(<String, dynamic>{
-        'tool': action.tool,
-        'arguments': action.arguments,
-        'result': result.toJson(),
-      }));
+      final governedEvidenceHash = Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'tool': action.tool,
+          'arguments': action.arguments,
+          'result': result.toJson(),
+        }),
+      );
       await _evidence(
         current,
         progress.item.id,
@@ -3591,9 +3687,7 @@ class RunCoordinator {
         'reason': action.reason,
         'tool': action.tool,
         'arguments': redactor.redactJson(action.arguments),
-        'result': _boundedHistoryValue(
-          redactor.redactJson(result.toJson()),
-        ),
+        'result': _boundedHistoryValue(redactor.redactJson(result.toJson())),
       });
       while (jsonEncode(history).length > 24000 && history.length > 2) {
         history.removeAt(0);
@@ -3609,11 +3703,13 @@ class RunCoordinator {
             resultHash;
         semanticArtifacts[path] = hash;
       }
-      final evidenceFingerprint = Sha256.text(canonicalJson(<String, dynamic>{
-        'tool': action.tool,
-        'arguments': action.arguments,
-        'result': result.toJson(),
-      }));
+      final evidenceFingerprint = Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'tool': action.tool,
+          'arguments': action.arguments,
+          'result': result.toJson(),
+        }),
+      );
       final semanticCriteria = <String>{...semanticSnapshot.satisfiedCriteria};
       if (action.tool == 'verify_project' && result.ok) {
         for (var index = 0;
@@ -3643,10 +3739,12 @@ class RunCoordinator {
             'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
         },
         planHash: semanticSnapshot.planHash,
-        actionHash: Sha256.text(canonicalJson(<String, dynamic>{
-          'tool': action.tool,
-          'arguments': action.arguments,
-        })),
+        actionHash: Sha256.text(
+          canonicalJson(<String, dynamic>{
+            'tool': action.tool,
+            'arguments': action.arguments,
+          }),
+        ),
         resultHash: resultHash,
       );
       final semanticDelta = executionIntelligence.progress.compare(
@@ -4054,14 +4152,10 @@ class RunCoordinator {
             current.id,
             completionDiagnostics,
           );
-          await _bestEffortEvent(
-            completionEvent,
-            current.id,
-            <String, dynamic>{
-              ...completionDiagnostics,
-              'summary': completion.summary,
-            },
-          );
+          await _bestEffortEvent(completionEvent, current.id, <String, dynamic>{
+            ...completionDiagnostics,
+            'summary': completion.summary,
+          });
           return _WorkOutcome(current, completion.summary);
         }
       }
@@ -4102,10 +4196,12 @@ class RunCoordinator {
     required bool includeUnsuccessfulEpisodes,
   }) async {
     final candidates = (await repositories.evidence.all())
-        .where((item) =>
-            item.runId == runId &&
-            item.workItemId == workItemId &&
-            item.kind == EvidenceKind.knowledge)
+        .where(
+          (item) =>
+              item.runId == runId &&
+              item.workItemId == workItemId &&
+              item.kind == EvidenceKind.knowledge,
+        )
         .toList()
         .reversed;
     for (final item in candidates) {
@@ -4137,7 +4233,7 @@ class RunCoordinator {
       dependencies: const <String>{},
       allowedTools: const <String>{'verify_project', 'git_diff', 'git_status'},
       acceptanceCriteria: const <String>[
-        'Detected build and test checks pass.'
+        'Detected build and test checks pass.',
       ],
       maxAttempts: 1,
     );
@@ -4165,7 +4261,10 @@ class RunCoordinator {
       mcp: mcp,
     );
     final result = await tools.execute(
-        'verify_project', const <String, dynamic>{}, context);
+      'verify_project',
+      const <String, dynamic>{},
+      context,
+    );
     var updated = run.copyWith(toolCalls: run.toolCalls + 1);
     await _save(updated);
     await _evidence(
@@ -4249,16 +4348,20 @@ $skillContext
         .map((progress) => progress.item.id)
         .toList(growable: false);
     final remaining = run.items
-        .where((progress) =>
-            progress.item.id != item.id &&
-            progress.state != WorkItemState.succeeded)
+        .where(
+          (progress) =>
+              progress.item.id != item.id &&
+              progress.state != WorkItemState.succeeded,
+        )
         .take(8)
-        .map((progress) => <String, dynamic>{
-              'id': progress.item.id,
-              'title': progress.item.title,
-              'state': progress.state.name,
-              'dependencies': progress.item.dependencies.toList()..sort(),
-            })
+        .map(
+          (progress) => <String, dynamic>{
+            'id': progress.item.id,
+            'title': progress.item.title,
+            'state': progress.state.name,
+            'dependencies': progress.item.dependencies.toList()..sort(),
+          },
+        )
         .toList(growable: false);
     return <String, dynamic>{
       'currentItemId': item.id,
@@ -4277,10 +4380,11 @@ $skillContext
         final instruction = <Object?>[
           entry['correction'],
           entry['reason'],
-          entry['error'],
+          entry['error']
         ].map((value) => value?.toString().trim() ?? '').firstWhere(
-            (value) => value.isNotEmpty,
-            orElse: () => 'Choose a different schema-valid action.');
+              (value) => value.isNotEmpty,
+              orElse: () => 'Choose a different schema-valid action.',
+            );
         final requiredDecision =
             entry['requiredActionExample'] ?? entry['example'];
         return <String, dynamic>{
@@ -4803,13 +4907,15 @@ Choose the single safest next action. Return one JSON object only.
       kind: kind,
       summary: redactor.redact(summary),
       payload: redacted,
-      hash: Sha256.text(canonicalJson(<String, dynamic>{
-        'runId': run.id,
-        'workItemId': workItemId,
-        'kind': kind.name,
-        'summary': summary,
-        'payload': redacted,
-      })),
+      hash: Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'runId': run.id,
+          'workItemId': workItemId,
+          'kind': kind.name,
+          'summary': summary,
+          'payload': redacted,
+        }),
+      ),
       createdAt: DateTime.now().toUtc(),
     );
     await repositories.evidence.put(evidence);
@@ -4821,10 +4927,7 @@ Choose the single safest next action. Return one JSON object only.
     });
   }
 
-  Future<void> _recordEpisode(
-    RunRecord run, {
-    bool reconciled = false,
-  }) async {
+  Future<void> _recordEpisode(RunRecord run, {bool reconciled = false}) async {
     try {
       final evidence = (await repositories.evidence.all())
           .where((item) => item.runId == run.id)
@@ -4858,16 +4961,12 @@ Choose the single safest next action. Return one JSON object only.
         },
       );
     } catch (error, stackTrace) {
-      await _bestEffortAudit(
-        'memory.episode_failed',
-        run.id,
-        <String, dynamic>{
-          'runId': run.id,
-          'projectId': run.command.contract.projectId,
-          'error': redactor.redact('$error'),
-          'stackHash': Sha256.text('$stackTrace'),
-        },
-      );
+      await _bestEffortAudit('memory.episode_failed', run.id, <String, dynamic>{
+        'runId': run.id,
+        'projectId': run.command.contract.projectId,
+        'error': redactor.redact('$error'),
+        'stackHash': Sha256.text('$stackTrace'),
+      });
     }
   }
 
@@ -4949,8 +5048,10 @@ Choose the single safest next action. Return one JSON object only.
   Map<String, dynamic> _budgetSnapshot(RunRecord run) => <String, dynamic>{
         'modelRequests': run.modelRequests,
         'maxModelRequests': run.budget.maxModelRequests,
-        'remainingModelRequests':
-            max(0, run.budget.maxModelRequests - run.modelRequests),
+        'remainingModelRequests': max(
+          0,
+          run.budget.maxModelRequests - run.modelRequests,
+        ),
         'toolCalls': run.toolCalls,
         'maxToolCalls': run.budget.maxToolCalls,
         'mutations': run.mutations,
@@ -4959,10 +5060,7 @@ Choose the single safest next action. Return one JSON object only.
         'maxRepairs': run.budget.maxRepairs,
       };
 
-  int _agentTurnLimit(
-    RunRecord run, {
-    required bool conversational,
-  }) {
+  int _agentTurnLimit(RunRecord run, {required bool conversational}) {
     final remaining = max(0, run.budget.maxModelRequests - run.modelRequests);
     if (remaining == 0) {
       return 0;
@@ -5151,10 +5249,18 @@ Choose the single safest next action. Return one JSON object only.
         normalized['maxBytes'] = boundedInt('maxBytes', 1048576, 1, 4194304);
         break;
       case 'inspect_file':
-        normalized['maxBytes'] =
-            boundedInt('maxBytes', 8 * 1024 * 1024, 1, 16 * 1024 * 1024);
-        normalized['previewBytes'] =
-            boundedInt('previewBytes', 32768, 256, 262144);
+        normalized['maxBytes'] = boundedInt(
+          'maxBytes',
+          8 * 1024 * 1024,
+          1,
+          16 * 1024 * 1024,
+        );
+        normalized['previewBytes'] = boundedInt(
+          'previewBytes',
+          32768,
+          256,
+          262144,
+        );
         break;
       case 'search_text':
         normalized['path'] = normalized['path'] ?? '.';
@@ -5275,12 +5381,17 @@ Choose the single safest next action. Return one JSON object only.
   }
 
   Future<void> _awaitControl(
-      RunControl control, AutonomyBudget budget, DateTime started) async {
+    RunControl control,
+    AutonomyBudget budget,
+    DateTime started,
+  ) async {
     control.cancellation.throwIfCancelled();
     while (control.paused) {
       if (DateTime.now().toUtc().difference(started) > budget.maxWallTime) {
-        throw ProductException('budget_wall_time',
-            'The run exceeded its wall-time budget while paused.');
+        throw ProductException(
+          'budget_wall_time',
+          'The run exceeded its wall-time budget while paused.',
+        );
       }
       await Future<void>.delayed(const Duration(milliseconds: 250));
       control.cancellation.throwIfCancelled();
@@ -5290,7 +5401,9 @@ Choose the single safest next action. Return one JSON object only.
   void _enforceBudget(RunRecord run, DateTime started) {
     if (DateTime.now().toUtc().difference(started) > run.budget.maxWallTime) {
       throw ProductException(
-          'budget_wall_time', 'The run exceeded its wall-time budget.');
+        'budget_wall_time',
+        'The run exceeded its wall-time budget.',
+      );
     }
     if (run.modelRequests >= run.budget.maxModelRequests) {
       throw ProductException(
@@ -5355,11 +5468,9 @@ Choose the single safest next action. Return one JSON object only.
       );
       if (!renewed) {
         _controls[runId]?.cancellation.cancel();
-        await _bestEffortEvent(
-          'run.lease_lost',
-          runId,
-          <String, dynamic>{'runId': runId},
-        );
+        await _bestEffortEvent('run.lease_lost', runId, <String, dynamic>{
+          'runId': runId,
+        });
       }
     } catch (_) {
       // The next state write is fail-closed if the lease cannot be renewed.

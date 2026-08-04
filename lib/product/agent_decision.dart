@@ -41,10 +41,7 @@ class AgentDecisionException extends ProductException {
 }
 
 sealed class AgentDecision {
-  const AgentDecision({
-    this.protocolVersion = '1.0.0',
-    this.reason = '',
-  });
+  const AgentDecision({this.protocolVersion = '1.0.0', this.reason = ''});
 
   final String protocolVersion;
   final String reason;
@@ -99,10 +96,7 @@ sealed class AgentDecision {
           summary: action.summary,
           reason: action.reason,
         ),
-      'fail' => FailDecision(
-          summary: action.summary,
-          reason: action.reason,
-        ),
+      'fail' => FailDecision(summary: action.summary, reason: action.reason),
       _ => throw AgentDecisionException(
           code: 'model_action_invalid',
           message: 'Unsupported legacy agent action kind: ${action.kind}',
@@ -277,10 +271,7 @@ class AgentDecisionCodec {
     final schema = Map<String, dynamic>.from(
       definitions[definitionName] as Map,
     );
-    final normalized = <String, dynamic>{
-      'protocolVersion': '1.0.0',
-      ...json,
-    };
+    final normalized = <String, dynamic>{'protocolVersion': '1.0.0', ...json};
     final issues = JsonSchemaValidator.validate(normalized, schema);
     if (issues.isNotEmpty) {
       throw AgentDecisionException(

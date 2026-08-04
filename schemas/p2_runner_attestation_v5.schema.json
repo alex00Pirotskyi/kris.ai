@@ -1,0 +1,49 @@
+{
+  "$id": "https://kristin.local/schemas/p2_runner_attestation_v5.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "completionEligibleForTaskClosure": {
+      "const": false
+    },
+    "p2ReceivesAuthoritySecrets": {
+      "const": false
+    },
+    "platform": {
+      "enum": [
+        "windows",
+        "macos",
+        "linux"
+      ]
+    },
+    "postRunCleanupObserved": {
+      "const": false
+    },
+    "receiptType": {
+      "const": "p2-controlled-runner-attestation-receipt-v5"
+    },
+    "schemaVersion": {
+      "const": "5.0.0"
+    },
+    "status": {
+      "const": "passed"
+    },
+    "workerCannotAccessAuthorityService": {
+      "const": true
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "receiptType",
+    "status",
+    "platform",
+    "exactBinding",
+    "p1AuthorityService",
+    "workerCannotAccessAuthorityService",
+    "p2ReceivesAuthoritySecrets",
+    "postRunCleanupObserved",
+    "completionEligibleForTaskClosure"
+  ],
+  "title": "P2 controlled runner attestation receipt V5",
+  "type": "object"
+}

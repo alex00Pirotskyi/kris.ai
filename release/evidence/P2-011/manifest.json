@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-011",
+  "name": "Emergency pause and kill watchdog",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-005",
+    "P2-006"
+  ],
+  "artifacts": [
+    "lib/product/p2_emergency_watchdog.dart",
+    "lib/product/p2_runtime_composition.dart",
+    "automation_host/src/external-watchdog.mjs",
+    "automation_host/native/windows/job_supervisor.cpp",
+    "automation_host/native/posix/watchdog.c",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart"
+  ],
+  "testResults": "release/evidence/P2-011/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

@@ -43,7 +43,7 @@ class ProjectManagerV2Service {
         projectRoot,
         '--data-root',
         dataRoot,
-        '--json'
+        '--json',
       ]);
 
   Future<Map<String, dynamic>> execute(
@@ -62,10 +62,7 @@ class ProjectManagerV2Service {
         '--json',
       ]);
 
-  Future<Map<String, dynamic>> start(
-    String projectRoot, {
-    String? runId,
-  }) =>
+  Future<Map<String, dynamic>> start(String projectRoot, {String? runId}) =>
       _invoke(<String>[
         'start',
         '--project',
@@ -77,7 +74,14 @@ class ProjectManagerV2Service {
       ]);
 
   Future<Map<String, dynamic>> processStatus(String processId) => _invoke(
-      <String>['process-status', processId, '--data-root', dataRoot, '--json']);
+        <String>[
+          'process-status',
+          processId,
+          '--data-root',
+          dataRoot,
+          '--json'
+        ],
+      );
 
   Future<Map<String, dynamic>> stop(String processId) =>
       _invoke(<String>['stop', processId, '--data-root', dataRoot, '--json']);
@@ -111,7 +115,7 @@ class ProjectManagerV2Service {
     final response = decoded is Map
         ? <String, dynamic>{
             for (final entry in decoded.entries)
-              entry.key.toString(): entry.value
+              entry.key.toString(): entry.value,
           }
         : <String, dynamic>{};
     if (result.exitCode != 0) {

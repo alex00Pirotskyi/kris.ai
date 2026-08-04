@@ -20,7 +20,9 @@ void main() {
       '5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b',
     );
     expect(
-        Ed25519Reference.verify(publicKey, const <int>[], signature), isTrue);
+      Ed25519Reference.verify(publicKey, const <int>[], signature),
+      isTrue,
+    );
   });
 
   test('Signed Manifest v2 canonical vector matches Python', () {

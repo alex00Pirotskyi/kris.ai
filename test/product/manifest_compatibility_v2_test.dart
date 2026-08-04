@@ -6,9 +6,7 @@ void main() {
 
   test('v1 remains rejected', () {
     expect(
-      () => compatibility.classify(
-        <String, Object?>{'schemaVersion': '1.0.0'},
-      ),
+      () => compatibility.classify(<String, Object?>{'schemaVersion': '1.0.0'}),
       throwsA(isA<FormatException>()),
     );
   });
@@ -25,9 +23,7 @@ void main() {
 
   test('clean v2 envelope is classified', () {
     expect(
-      compatibility.classify(
-        <String, Object?>{'schemaVersion': '2.0.0'},
-      ),
+      compatibility.classify(<String, Object?>{'schemaVersion': '2.0.0'}),
       'signed_manifest_v2',
     );
   });

@@ -40,8 +40,9 @@ class StoredObjectRecord {
         mediaType: json['mediaType']?.toString() ?? 'application/octet-stream',
         sizeBytes: int.tryParse(json['sizeBytes']?.toString() ?? '') ?? 0,
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-        labels: mapValue(json['labels'])
-            .map((key, value) => MapEntry(key, value.toString())),
+        labels: mapValue(
+          json['labels'],
+        ).map((key, value) => MapEntry(key, value.toString())),
       );
 }
 
@@ -66,7 +67,10 @@ class ContentAddressedObjectStore {
     if (clean.startsWith('/') ||
         clean.split('/').any((segment) => segment.isEmpty || segment == '..')) {
       throw ArgumentError.value(
-          relativePath, 'relativePath', 'Invalid object-store path.');
+        relativePath,
+        'relativePath',
+        'Invalid object-store path.',
+      );
     }
     final file = File(
       '${root.path}${Platform.pathSeparator}${clean.replaceAll('/', Platform.pathSeparator)}',
@@ -274,7 +278,7 @@ class MemoryAdmissionPolicy {
       'tell me',
       'who is',
       'summarize',
-      'explain'
+      'explain',
     ].any(lower.contains);
   }
 }
@@ -395,7 +399,8 @@ class SkillPublicationService {
   final ContentAddressedObjectStore objectStore;
 
   Future<SkillCandidateRecord?> extractFromEpisode(
-      MemoryEpisode episode) async {
+    MemoryEpisode episode,
+  ) async {
     final decision = const MemoryAdmissionPolicy().evaluateEpisode(episode);
     if (!decision.candidateSkill) {
       return null;

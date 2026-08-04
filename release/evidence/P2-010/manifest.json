@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-010",
+  "name": "Best-effort host snapshots and undo",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-002",
+    "P2-003"
+  ],
+  "artifacts": [
+    "lib/product/p2_snapshot_undo.dart",
+    "lib/product/p2_desktop_effect_authorizers.dart",
+    "lib/product/p2_effect_journal.dart",
+    "test/product/p2_snapshot_undo_test.dart",
+    "lib/product/p2_runtime_composition.dart",
+    "lib/product/p2_automation_host_process_client.dart",
+    "lib/product/p2_effect_journal.dart",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart"
+  ],
+  "testResults": "release/evidence/P2-010/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

@@ -1,0 +1,330 @@
+name: P2 Owner Mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact protected-main P2 source-landing commit
+        required: true
+        type: string
+      package_sha256:
+        description: Exact KRISTIN_P2_FULL_INTEGRATION_V63R1.zip SHA-256
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+      - integration/p2-full-train-v63r2
+      - integration/p2-full-train-v63r2-evidence
+      - "preflight/p2-v66-*"
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: p2-owner-mode-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source-contract:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+          - os: windows-2025
+          - os: macos-15
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - id: toolchains
+        shell: bash
+        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: config/p2.node-version
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: ${{ steps.toolchains.outputs.flutter }}
+          channel: stable
+          cache: true
+      - name: Exact source and toolchain gates
+        shell: bash
+        run: |
+          python - <<'PY_PACKAGE_SHA'
+          import pathlib,re
+          value=pathlib.Path('release/evidence/P2/source-package-sha256.txt').read_text().strip()
+          assert re.fullmatch(r'[0-9a-f]{64}',value), 'exact P2 source-package SHA-256 missing'
+          PY_PACKAGE_SHA
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            [[ "${{ inputs.source_sha }}" == "${{ github.sha }}" ]]
+            [[ "${{ inputs.package_sha256 }}" == "$(tr -d '\r\n ' < release/evidence/P2/source-package-sha256.txt)" ]]
+          fi
+          python tool/toolchain_lock_test.py --source-only
+          python tool/p2_toolchain_extension_test.py --project .
+          python tool/p2_source_inventory_test.py --project .
+          python tool/p2_evidence_contract_test.py
+          python tool/p2_patch_application_composition_test.py
+          python tool/p2_runtime_resource_contract_test.py
+          python tool/p2_shared_p1_authority_contract_test.py --project .
+          python tool/p2_runner_attestation_contract_test.py
+          python tool/p2_post_run_cleanup_contract_test.py
+          python tool/p2_strict_finalizer_contract_test.py --project .
+          python tool/p2_task_assertion_cli_test.py --project .
+          flutter pub get
+          dart format --output=none --set-exit-if-changed lib/product test/product
+          flutter analyze
+          flutter test test/product
+          npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
+          npm test --prefix automation_host
+          git diff --exit-code
+
+  p2-behavioral-linux:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.source_sha == github.sha && inputs.package_sha256 == vars.KRISTIN_P2_V66_PACKAGE_SHA256 && github.actor == vars.KRISTIN_P2_AUTHORIZED_ACTOR }}
+    environment: p2-controlled
+    needs: source-contract
+    runs-on: [self-hosted, kristin-p2, linux, interactive-desktop, ubuntu-24.04]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - id: toolchains
+        shell: bash
+        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: config/p2.node-version
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: ${{ steps.toolchains.outputs.flutter }}
+          channel: stable
+          cache: true
+      - name: Create exact ephemeral runner session and resolve GitHub job
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          SESSION_ID=$(python -c "import uuid;print(uuid.uuid4())")
+          echo "KRISTIN_P2_RUNNER_EPHEMERAL_SESSION_ID=$SESSION_ID" >> "$GITHUB_ENV"
+          python tool/p2_github_job_identity.py --output "release/evidence/P2/platforms/job-identity-linux-${{ github.run_id }}-${{ github.run_attempt }}.json" --github-env "$GITHUB_ENV" --platform linux --job-name "p2-behavioral-linux" --commit-sha "${{ github.sha }}"
+      - name: Verify external provisioning and obtain exact signed current-job attestation
+        shell: bash
+        env:
+          KRISTIN_P2_RUNNER_PROVISIONING_PACKET: ${{ vars.KRISTIN_P2_RUNNER_PROVISIONING_PACKET_LINUX }}
+          KRISTIN_P2_RUNNER_PROVISIONING_TRUST: ${{ vars.KRISTIN_P2_RUNNER_PROVISIONING_TRUST_LINUX }}
+        run: |
+          : "${KRISTIN_P2_RUNNER_PROVISIONING_PACKET:?missing runner provisioning packet path}"
+          : "${KRISTIN_P2_RUNNER_PROVISIONING_TRUST:?missing runner provisioning trust path}"
+          POLICY="$RUNNER_TEMP/p2-runner-policy.json"
+          python tool/p2_apply_runner_provisioning.py --project . --packet "$KRISTIN_P2_RUNNER_PROVISIONING_PACKET" --trust-policy "$KRISTIN_P2_RUNNER_PROVISIONING_TRUST" --output "$POLICY"
+          python tool/p2_runner_attestation.py --project . --policy "$POLICY" --job-identity "release/evidence/P2/platforms/job-identity-linux-${{ github.run_id }}-${{ github.run_attempt }}.json" --platform linux --commit-sha "${{ github.sha }}" --output "release/evidence/P2/platforms/runner-attestation-linux-${{ github.run_id }}-${{ github.run_attempt }}.json"
+          echo "KRISTIN_P2_RUNNER_POLICY=$POLICY" >> "$GITHUB_ENV"
+      - name: Install exact automation-host dependency closure
+        working-directory: automation_host
+        shell: bash
+        run: npm ci --ignore-scripts=false --no-audit --no-fund
+      - name: Execute ProductRuntime behavioral lane (provisional only)
+        id: behavior
+        continue-on-error: true
+        shell: bash
+        run: |
+          python tool/p2_platform_ci.py --project . --output "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --workflow-run-id "${{ github.run_id }}" --job-name "p2-behavioral-linux" --artifact-name "p2-linux-${{ github.run_id }}-${{ github.run_attempt }}" --commit-sha "${{ github.sha }}" --runner-attestation "release/evidence/P2/platforms/runner-attestation-linux-${{ github.run_id }}-${{ github.run_attempt }}.json" --package-sha256 "${{ inputs.package_sha256 }}" --require-all
+      - name: Ensure fail-closed provisional receipt exists
+        if: always()
+        shell: bash
+        run: |
+          python tool/p2_ensure_provisional_receipt.py --attestation-receipt "release/evidence/P2/platforms/runner-attestation-linux-${{ github.run_id }}-${{ github.run_attempt }}.json" --output "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --reason "behavior-${{ steps.behavior.outcome }}"
+      - name: Perform and verify exact current-job cleanup
+        if: always()
+        shell: bash
+        run: |
+          python tool/p2_post_run_cleanup.py --attestation-receipt "release/evidence/P2/platforms/runner-attestation-linux-${{ github.run_id }}-${{ github.run_attempt }}.json" --provisional-receipt "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --policy "$KRISTIN_P2_RUNNER_POLICY" --output "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}-cleanup.json"
+      - name: Finalize only after signed cleanup
+        if: always()
+        shell: bash
+        run: |
+          python tool/p2_finalize_platform_after_cleanup.py --provisional "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --cleanup "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}-cleanup.json" --output "release/evidence/P2/platforms/linux-${{ github.run_id }}-${{ github.run_attempt }}.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: p2-linux-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/evidence/P2/platforms/
+          if-no-files-found: error
+          retention-days: 30
+
+  p2-behavioral-macos:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.source_sha == github.sha && inputs.package_sha256 == vars.KRISTIN_P2_V66_PACKAGE_SHA256 && github.actor == vars.KRISTIN_P2_AUTHORIZED_ACTOR }}
+    environment: p2-controlled
+    needs: source-contract
+    runs-on: [self-hosted, kristin-p2, macos, interactive-desktop, macos-15]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - id: toolchains
+        shell: bash
+        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: config/p2.node-version
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: ${{ steps.toolchains.outputs.flutter }}
+          channel: stable
+          cache: true
+      - name: Create exact ephemeral runner session and resolve GitHub job
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          SESSION_ID=$(python -c "import uuid;print(uuid.uuid4())")
+          echo "KRISTIN_P2_RUNNER_EPHEMERAL_SESSION_ID=$SESSION_ID" >> "$GITHUB_ENV"
+          python tool/p2_github_job_identity.py --output "release/evidence/P2/platforms/job-identity-macos-${{ github.run_id }}-${{ github.run_attempt }}.json" --github-env "$GITHUB_ENV" --platform macos --job-name "p2-behavioral-macos" --commit-sha "${{ github.sha }}"
+      - name: Verify external provisioning and obtain exact signed current-job attestation
+        shell: bash
+        env:
+          KRISTIN_P2_RUNNER_PROVISIONING_PACKET: ${{ vars.KRISTIN_P2_RUNNER_PROVISIONING_PACKET_MACOS }}
+          KRISTIN_P2_RUNNER_PROVISIONING_TRUST: ${{ vars.KRISTIN_P2_RUNNER_PROVISIONING_TRUST_MACOS }}
+        run: |
+          : "${KRISTIN_P2_RUNNER_PROVISIONING_PACKET:?missing runner provisioning packet path}"
+          : "${KRISTIN_P2_RUNNER_PROVISIONING_TRUST:?missing runner provisioning trust path}"
+          POLICY="$RUNNER_TEMP/p2-runner-policy.json"
+          python tool/p2_apply_runner_provisioning.py --project . --packet "$KRISTIN_P2_RUNNER_PROVISIONING_PACKET" --trust-policy "$KRISTIN_P2_RUNNER_PROVISIONING_TRUST" --output "$POLICY"
+          python tool/p2_runner_attestation.py --project . --policy "$POLICY" --job-identity "release/evidence/P2/platforms/job-identity-macos-${{ github.run_id }}-${{ github.run_attempt }}.json" --platform macos --commit-sha "${{ github.sha }}" --output "release/evidence/P2/platforms/runner-attestation-macos-${{ github.run_id }}-${{ github.run_attempt }}.json"
+          echo "KRISTIN_P2_RUNNER_POLICY=$POLICY" >> "$GITHUB_ENV"
+      - name: Install exact automation-host dependency closure
+        working-directory: automation_host
+        shell: bash
+        run: npm ci --ignore-scripts=false --no-audit --no-fund
+      - name: Execute ProductRuntime behavioral lane (provisional only)
+        id: behavior
+        continue-on-error: true
+        shell: bash
+        run: |
+          python tool/p2_platform_ci.py --project . --output "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --workflow-run-id "${{ github.run_id }}" --job-name "p2-behavioral-macos" --artifact-name "p2-macos-${{ github.run_id }}-${{ github.run_attempt }}" --commit-sha "${{ github.sha }}" --runner-attestation "release/evidence/P2/platforms/runner-attestation-macos-${{ github.run_id }}-${{ github.run_attempt }}.json" --package-sha256 "${{ inputs.package_sha256 }}" --require-all
+      - name: Ensure fail-closed provisional receipt exists
+        if: always()
+        shell: bash
+        run: |
+          python tool/p2_ensure_provisional_receipt.py --attestation-receipt "release/evidence/P2/platforms/runner-attestation-macos-${{ github.run_id }}-${{ github.run_attempt }}.json" --output "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --reason "behavior-${{ steps.behavior.outcome }}"
+      - name: Perform and verify exact current-job cleanup
+        if: always()
+        shell: bash
+        run: |
+          python tool/p2_post_run_cleanup.py --attestation-receipt "release/evidence/P2/platforms/runner-attestation-macos-${{ github.run_id }}-${{ github.run_attempt }}.json" --provisional-receipt "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --policy "$KRISTIN_P2_RUNNER_POLICY" --output "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}-cleanup.json"
+      - name: Finalize only after signed cleanup
+        if: always()
+        shell: bash
+        run: |
+          python tool/p2_finalize_platform_after_cleanup.py --provisional "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --cleanup "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}-cleanup.json" --output "release/evidence/P2/platforms/macos-${{ github.run_id }}-${{ github.run_attempt }}.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: p2-macos-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/evidence/P2/platforms/
+          if-no-files-found: error
+          retention-days: 30
+
+  p2-behavioral-windows:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.source_sha == github.sha && inputs.package_sha256 == vars.KRISTIN_P2_V66_PACKAGE_SHA256 && github.actor == vars.KRISTIN_P2_AUTHORIZED_ACTOR }}
+    environment: p2-controlled
+    needs: source-contract
+    runs-on: [self-hosted, kristin-p2, windows, interactive-desktop, windows-2025]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - id: toolchains
+        shell: pwsh
+        run: python tool/p2_toolchains.py --project . --github-output $env:GITHUB_OUTPUT
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: config/p2.node-version
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: ${{ steps.toolchains.outputs.flutter }}
+          channel: stable
+          cache: true
+      - name: Create exact ephemeral runner session and resolve GitHub job
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $session = python -c "import uuid;print(uuid.uuid4())"
+          "KRISTIN_P2_RUNNER_EPHEMERAL_SESSION_ID=$session" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          python tool/p2_github_job_identity.py --output "release/evidence/P2/platforms/job-identity-windows-${{ github.run_id }}-${{ github.run_attempt }}.json" --github-env $env:GITHUB_ENV --platform windows --job-name "p2-behavioral-windows" --commit-sha "${{ github.sha }}"
+      - name: Verify external provisioning and obtain exact signed current-job attestation
+        shell: pwsh
+        env:
+          KRISTIN_P2_RUNNER_PROVISIONING_PACKET: ${{ vars.KRISTIN_P2_RUNNER_PROVISIONING_PACKET_WINDOWS }}
+          KRISTIN_P2_RUNNER_PROVISIONING_TRUST: ${{ vars.KRISTIN_P2_RUNNER_PROVISIONING_TRUST_WINDOWS }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:KRISTIN_P2_RUNNER_PROVISIONING_PACKET) -or [string]::IsNullOrWhiteSpace($env:KRISTIN_P2_RUNNER_PROVISIONING_TRUST)) { throw "runner provisioning variables required" }
+          $policy = Join-Path $env:RUNNER_TEMP "p2-runner-policy.json"
+          python tool/p2_apply_runner_provisioning.py --project . --packet $env:KRISTIN_P2_RUNNER_PROVISIONING_PACKET --trust-policy $env:KRISTIN_P2_RUNNER_PROVISIONING_TRUST --output $policy
+          python tool/p2_runner_attestation.py --project . --policy $policy --job-identity "release/evidence/P2/platforms/job-identity-windows-${{ github.run_id }}-${{ github.run_attempt }}.json" --platform windows --commit-sha "${{ github.sha }}" --output "release/evidence/P2/platforms/runner-attestation-windows-${{ github.run_id }}-${{ github.run_attempt }}.json"
+          "KRISTIN_P2_RUNNER_POLICY=$policy" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Install exact automation-host dependency closure
+        working-directory: automation_host
+        shell: pwsh
+        run: npm ci --ignore-scripts=false --no-audit --no-fund
+      - name: Execute ProductRuntime behavioral lane (provisional only)
+        id: behavior
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          python tool/p2_platform_ci.py --project . --output "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --workflow-run-id "${{ github.run_id }}" --job-name "p2-behavioral-windows" --artifact-name "p2-windows-${{ github.run_id }}-${{ github.run_attempt }}" --commit-sha "${{ github.sha }}" --runner-attestation "release/evidence/P2/platforms/runner-attestation-windows-${{ github.run_id }}-${{ github.run_attempt }}.json" --package-sha256 "${{ inputs.package_sha256 }}" --require-all
+      - name: Ensure fail-closed provisional receipt exists
+        if: always()
+        shell: pwsh
+        run: |
+          python tool/p2_ensure_provisional_receipt.py --attestation-receipt "release/evidence/P2/platforms/runner-attestation-windows-${{ github.run_id }}-${{ github.run_attempt }}.json" --output "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --reason "behavior-${{ steps.behavior.outcome }}"
+      - name: Perform and verify exact current-job cleanup
+        if: always()
+        shell: pwsh
+        run: |
+          python tool/p2_post_run_cleanup.py --attestation-receipt "release/evidence/P2/platforms/runner-attestation-windows-${{ github.run_id }}-${{ github.run_attempt }}.json" --provisional-receipt "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --policy $env:KRISTIN_P2_RUNNER_POLICY --output "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}-cleanup.json"
+      - name: Finalize only after signed cleanup
+        if: always()
+        shell: pwsh
+        run: |
+          python tool/p2_finalize_platform_after_cleanup.py --provisional "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}-provisional.json" --cleanup "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}-cleanup.json" --output "release/evidence/P2/platforms/windows-${{ github.run_id }}-${{ github.run_attempt }}.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: p2-windows-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/evidence/P2/platforms/
+          if-no-files-found: error
+          retention-days: 30

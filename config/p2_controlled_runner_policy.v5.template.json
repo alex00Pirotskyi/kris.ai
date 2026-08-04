@@ -1,0 +1,30 @@
+{
+  "attestationTrustRoots": [
+    "REPLACE_64_HEX"
+  ],
+  "cleanupTrustRoots": [
+    "REPLACE_64_HEX"
+  ],
+  "independentReviewSha256": "REPLACE_64_HEX",
+  "maximumAttestationAgeSeconds": 900,
+  "maximumCleanupAgeSeconds": 1800,
+  "policyType": "p2-controlled-runner-policy-v5",
+  "postRunCleanupBinding": "exact-signed-cleanup-after-current-job",
+  "provisioningPacketId": "EXTERNAL_SIGNED_PACKET_REQUIRED",
+  "provisioningPacketSha256": "REPLACE_64_HEX",
+  "provisioningSignerPublicKeyHex": "REPLACE_64_HEX",
+  "requireEphemeralSession": true,
+  "requireMergedP1AAuthorityService": true,
+  "requireNoConcurrentUntrustedWorkload": true,
+  "requireWorkerAuthorityDenial": true,
+  "requiredPermissions": [
+    "clipboard",
+    "screenCapture",
+    "activeWindow",
+    "accessibility"
+  ],
+  "requiredRunnerGroup": "kristin-p2-controlled",
+  "runners": {},
+  "schemaVersion": "5.0.0",
+  "sourceCommitBinding": "exact-signed-attestation-per-workflow-run-attempt-job"
+}

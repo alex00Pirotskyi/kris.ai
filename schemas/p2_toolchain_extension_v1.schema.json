@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/p2_toolchain_extension_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "authority", "baseAuthority", "python", "node", "githubActions", "hostedRunnerPins", "interactiveRunnerLabels", "automationHostPackageLock", "declaredInputFingerprint"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "authority": {"const": "P2-toolchain-extension-v1"},
+    "baseAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "manifestSha256", "declaredInputFingerprint", "sourceCommit"],
+      "properties": {
+        "path": {"const": "config/toolchains.lock.json"},
+        "manifestSha256": {"pattern": "^[0-9a-f]{64}$"},
+        "declaredInputFingerprint": {"pattern": "^[0-9a-f]{64}$"},
+        "sourceCommit": {"pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "python": {"type": "object"},
+    "node": {"type": "object", "required": ["version"]},
+    "githubActions": {"type": "object"},
+    "hostedRunnerPins": {"type": "object"},
+    "interactiveRunnerLabels": {"type": "object"},
+    "automationHostPackageLock": {"type": "object", "required": ["path", "sha256"]},
+    "declaredInputFingerprint": {"pattern": "^[0-9a-f]{64}$"}
+  }
+}

@@ -144,7 +144,7 @@ class FileAdapterRegistry {
             'image/png',
             'image/jpeg',
             'image/gif',
-            'image/webp'
+            'image/webp',
           },
           capabilities: <FileAdapterCapability>{
             FileAdapterCapability.detect,
@@ -292,11 +292,12 @@ class FileAdapterRegistry {
     }
     if (adapter.id == 'email') {
       final text = utf8.decode(bytes, allowMalformed: true);
-      final subject =
-          RegExp(r'^subject:\s*(.+)$', caseSensitive: false, multiLine: true)
-                  .firstMatch(text)
-                  ?.group(1) ??
-              '';
+      final subject = RegExp(
+            r'^subject:\s*(.+)$',
+            caseSensitive: false,
+            multiLine: true,
+          ).firstMatch(text)?.group(1) ??
+          '';
       metadata['subject'] = subject.trim();
     }
     return FileInspectionResult(
@@ -347,8 +348,10 @@ class FileAdapterRegistry {
               bytes[0] == 0xFF &&
               bytes[1] == 0xD8 &&
               bytes[2] == 0xFF;
-          final signature =
-              utf8.decode(bytes.take(6).toList(), allowMalformed: true);
+          final signature = utf8.decode(
+            bytes.take(6).toList(),
+            allowMalformed: true,
+          );
           if (!(isPng ||
               isJpeg ||
               signature.startsWith('GIF8') ||

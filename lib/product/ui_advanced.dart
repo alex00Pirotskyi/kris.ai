@@ -53,8 +53,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
   final TextEditingController secretEnvironmentController =
       TextEditingController();
   final TextEditingController sessionSecretController = TextEditingController();
-  final TextEditingController tokenLabelController =
-      TextEditingController(text: 'Kristin integration');
+  final TextEditingController tokenLabelController = TextEditingController(
+    text: 'Kristin integration',
+  );
   final TextEditingController tokenScopesController = TextEditingController(
     text:
         'schema:read,projects:read,projects:write,models:read,commands:prepare,runs:create,runs:read,runs:execute,runs:control,events:read,knowledge:read,knowledge:write,secrets:manage,audit:read,support:create',
@@ -73,8 +74,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
   final TextEditingController mcpExecutableController = TextEditingController();
   final TextEditingController mcpArgumentsController = TextEditingController();
   final TextEditingController mcpToolsController = TextEditingController();
-  final TextEditingController mcpProtocolController =
-      TextEditingController(text: '2024-11-05');
+  final TextEditingController mcpProtocolController = TextEditingController(
+    text: '2024-11-05',
+  );
 
   int section = 0;
   bool busy = false;
@@ -451,8 +453,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
             padding: const EdgeInsets.only(bottom: 4),
             child: ListTile(
               selected: section == index,
-              selectedTileColor:
-                  Theme.of(context).colorScheme.secondaryContainer,
+              selectedTileColor: Theme.of(
+                context,
+              ).colorScheme.secondaryContainer,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -900,16 +903,14 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           children: <Widget>[
             Text(
               'Named secrets',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: secretLabelController,
-              decoration: const InputDecoration(
-                labelText: 'Friendly label',
-              ),
+              decoration: const InputDecoration(labelText: 'Friendly label'),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -1023,9 +1024,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
             children: <Widget>[
               Text(
                 'Registered secret names',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               ...secretReferences.map((reference) {
@@ -1045,9 +1046,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           children: <Widget>[
             Text(
               'API tokens',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -1078,9 +1079,7 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
       ...apiTokens.map((token) {
         return Card(
           child: ListTile(
-            leading: Icon(
-              token.isActive ? Icons.key : Icons.key_off_outlined,
-            ),
+            leading: Icon(token.isActive ? Icons.key : Icons.key_off_outlined),
             title: Text(token.label),
             subtitle: Text(
               '${token.scopes.join(', ')}\nExpires ${token.expiresAt.toLocal()}'
@@ -1122,9 +1121,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           children: <Widget>[
             Text(
               'Authenticated local API',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
@@ -1218,9 +1217,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           children: <Widget>[
             Text(
               'MCP trust',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -1270,31 +1269,33 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                     ? null
                     : () {
                         unawaited(
-                          _perform<void>('Trusting an exact MCP server',
-                              () async {
-                            await runtime.trustMcp(
-                              projectId: selectedProjectId!,
-                              label: mcpLabelController.text,
-                              executablePath: mcpExecutableController.text,
-                              arguments: mcpArgumentsController.text
-                                  .split(RegExp(r'[\r\n]+'))
-                                  .map((item) => item.trim())
-                                  .where((item) => item.isNotEmpty)
-                                  .toList(),
-                              allowedTools: mcpToolsController.text
-                                  .split(',')
-                                  .map((item) => item.trim())
-                                  .where((item) => item.isNotEmpty)
-                                  .toSet(),
-                              protocolVersion:
-                                  mcpProtocolController.text.trim(),
-                            );
-                            mcpTrust = await runtime.listMcpTrust();
-                            mcpLabelController.clear();
-                            mcpExecutableController.clear();
-                            mcpArgumentsController.clear();
-                            mcpToolsController.clear();
-                          }),
+                          _perform<void>(
+                            'Trusting an exact MCP server',
+                            () async {
+                              await runtime.trustMcp(
+                                projectId: selectedProjectId!,
+                                label: mcpLabelController.text,
+                                executablePath: mcpExecutableController.text,
+                                arguments: mcpArgumentsController.text
+                                    .split(RegExp(r'[\r\n]+'))
+                                    .map((item) => item.trim())
+                                    .where((item) => item.isNotEmpty)
+                                    .toList(),
+                                allowedTools: mcpToolsController.text
+                                    .split(',')
+                                    .map((item) => item.trim())
+                                    .where((item) => item.isNotEmpty)
+                                    .toSet(),
+                                protocolVersion:
+                                    mcpProtocolController.text.trim(),
+                              );
+                              mcpTrust = await runtime.listMcpTrust();
+                              mcpLabelController.clear();
+                              mcpExecutableController.clear();
+                              mcpArgumentsController.clear();
+                              mcpToolsController.clear();
+                            },
+                          ),
                         );
                       },
                 icon: const Icon(Icons.hub_outlined),
@@ -1304,9 +1305,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           ],
         ),
       ),
-      ...mcpTrust
-          .where((record) => record.projectId == selectedProjectId)
-          .map((record) {
+      ...mcpTrust.where((record) => record.projectId == selectedProjectId).map((
+        record,
+      ) {
         return Card(
           child: ListTile(
             leading: Icon(record.isActive ? Icons.hub : Icons.link_off),
@@ -1390,9 +1391,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
           children: <Widget>[
             Text(
               'Audit chain',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 10),
             SelectableText(auditStatus.toString()),
@@ -1406,10 +1407,12 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                       ? null
                       : () {
                           unawaited(
-                            _perform<void>('Verifying the audit chain',
-                                () async {
-                              auditStatus = await runtime.verifyAudit();
-                            }),
+                            _perform<void>(
+                              'Verifying the audit chain',
+                              () async {
+                                auditStatus = await runtime.verifyAudit();
+                              },
+                            ),
                           );
                         },
                   icon: const Icon(Icons.verified_outlined),
@@ -1519,11 +1522,7 @@ class _SettingsSection {
 }
 
 const List<_SettingsSection> _settingsSections = <_SettingsSection>[
-  _SettingsSection(
-    'General',
-    'Safe everyday defaults',
-    Icons.tune_outlined,
-  ),
+  _SettingsSection('General', 'Safe everyday defaults', Icons.tune_outlined),
   _SettingsSection(
     'AI models',
     'Providers and exact models',
@@ -1539,11 +1538,7 @@ const List<_SettingsSection> _settingsSections = <_SettingsSection>[
     'Secrets and API tokens',
     Icons.shield_outlined,
   ),
-  _SettingsSection(
-    'Integrations',
-    'Local API and MCP',
-    Icons.hub_outlined,
-  ),
+  _SettingsSection('Integrations', 'Local API and MCP', Icons.hub_outlined),
   _SettingsSection(
     'Developer',
     'Audit, release boundary, and support',

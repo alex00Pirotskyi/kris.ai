@@ -29,20 +29,25 @@ class GovernedApiServer {
     final settings = runtime.settings;
     if (!settings.apiEnabled) {
       throw ProductException(
-          'api_disabled', 'Enable the authenticated API in Settings first.');
+        'api_disabled',
+        'Enable the authenticated API in Settings first.',
+      );
     }
     final server = await HttpServer.bind(
-        InternetAddress.loopbackIPv4, settings.apiPort,
-        shared: false);
+      InternetAddress.loopbackIPv4,
+      settings.apiPort,
+      shared: false,
+    );
     server.autoCompress = false;
     _server = server;
     _subscription = server.listen(
       (request) => unawaited(_handle(request)),
       onError: (Object error, StackTrace stackTrace) => unawaited(
-          runtime.audit.append('api.server_error', 'api', <String, dynamic>{
-        'error': runtime.redactor.redact('$error'),
-        'stackHash': Sha256.text('$stackTrace'),
-      })),
+        runtime.audit.append('api.server_error', 'api', <String, dynamic>{
+          'error': runtime.redactor.redact('$error'),
+          'stackHash': Sha256.text('$stackTrace'),
+        }),
+      ),
       cancelOnError: false,
     );
     await runtime.audit.append('api.started', 'api', <String, dynamic>{
@@ -74,8 +79,11 @@ class GovernedApiServer {
       final origin = request.headers.value('origin');
       if (origin != null) {
         if (!_originAllowed(origin)) {
-          throw _HttpFailure(HttpStatus.forbidden, 'origin_rejected',
-              'Browser origin is not allowed.');
+          throw _HttpFailure(
+            HttpStatus.forbidden,
+            'origin_rejected',
+            'Browser origin is not allowed.',
+          );
         }
         response.headers
           ..set(HttpHeaders.accessControlAllowOriginHeader, origin)
@@ -83,34 +91,62 @@ class GovernedApiServer {
       }
       if (request.method == 'OPTIONS') {
         if (origin == null) {
-          throw _HttpFailure(HttpStatus.badRequest, 'origin_required',
-              'CORS preflight requires an Origin header.');
+          throw _HttpFailure(
+            HttpStatus.badRequest,
+            'origin_required',
+            'CORS preflight requires an Origin header.',
+          );
         }
         response.statusCode = HttpStatus.noContent;
         response.headers
-          ..set(HttpHeaders.accessControlAllowMethodsHeader,
-              'GET, POST, PUT, DELETE, OPTIONS')
-          ..set(HttpHeaders.accessControlAllowHeadersHeader,
-              'Authorization, Content-Type, X-Request-ID')
+          ..set(
+            HttpHeaders.accessControlAllowMethodsHeader,
+            'GET, POST, PUT, DELETE, OPTIONS',
+          )
+          ..set(
+            HttpHeaders.accessControlAllowHeadersHeader,
+            'Authorization, Content-Type, X-Request-ID',
+          )
           ..set(HttpHeaders.accessControlMaxAgeHeader, '600');
         await response.close();
         return;
       }
       final remote = request.connectionInfo?.remoteAddress.address ?? 'unknown';
       if (!_rateLimiter.allow(remote, cost: request.method == 'GET' ? 1 : 2)) {
-        throw _HttpFailure(HttpStatus.tooManyRequests, 'rate_limited',
-            'Too many API requests.');
+        throw _HttpFailure(
+          HttpStatus.tooManyRequests,
+          'rate_limited',
+          'Too many API requests.',
+        );
       }
       await _route(request, correlationId);
     } on _HttpFailure catch (failure) {
-      await _writeError(response, failure.status, failure.code, failure.message,
-          correlationId, const <String, dynamic>{});
+      await _writeError(
+        response,
+        failure.status,
+        failure.code,
+        failure.message,
+        correlationId,
+        const <String, dynamic>{},
+      );
     } on ProductException catch (failure) {
-      await _writeError(response, _statusForProductError(failure.code),
-          failure.code, failure.message, correlationId, failure.details);
+      await _writeError(
+        response,
+        _statusForProductError(failure.code),
+        failure.code,
+        failure.message,
+        correlationId,
+        failure.details,
+      );
     } on FormatException {
-      await _writeError(response, HttpStatus.badRequest, 'json_invalid',
-          'Request JSON is invalid.', correlationId, const <String, dynamic>{});
+      await _writeError(
+        response,
+        HttpStatus.badRequest,
+        'json_invalid',
+        'Request JSON is invalid.',
+        correlationId,
+        const <String, dynamic>{},
+      );
     } catch (error, stackTrace) {
       await runtime.audit
           .append('api.request_failed', correlationId, <String, dynamic>{
@@ -120,11 +156,13 @@ class GovernedApiServer {
         'stackHash': Sha256.text('$stackTrace'),
       });
       await _writeError(
-          response,
-          HttpStatus.internalServerError,
-          'internal_error',
-          'The request could not be completed.',
-          correlationId, const <String, dynamic>{});
+        response,
+        HttpStatus.internalServerError,
+        'internal_error',
+        'The request could not be completed.',
+        correlationId,
+        const <String, dynamic>{},
+      );
     }
   }
 
@@ -163,8 +201,9 @@ class GovernedApiServer {
           name: body['name']?.toString() ?? '',
           rootPath: _required(body, 'rootPath'),
         );
-        return _json(request.response, HttpStatus.created,
-            <String, dynamic>{'project': project.toJson()});
+        return _json(request.response, HttpStatus.created, <String, dynamic>{
+          'project': project.toJson(),
+        });
       }
     }
 
@@ -172,20 +211,16 @@ class GovernedApiServer {
       await _authenticate(request, 'models:read');
       final models = await runtime.discoverModels();
       return _json(request.response, HttpStatus.ok, <String, dynamic>{
-        'models': models.map((model) => model.toJson()).toList()
+        'models': models.map((model) => model.toJson()).toList(),
       });
     }
 
     if (request.method == 'GET' && request.uri.path == '/v1/prompts') {
       await _authenticate(request, 'prompts:read');
       final prompts = await runtime.listPrompts();
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{
-          'prompts': prompts.map((prompt) => prompt.toJson()).toList(),
-        },
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'prompts': prompts.map((prompt) => prompt.toJson()).toList(),
+      });
     }
 
     if (request.method == 'POST' &&
@@ -202,11 +237,9 @@ class GovernedApiServer {
         action: action,
         current: current,
       );
-      return _json(
-        request.response,
-        HttpStatus.created,
-        <String, dynamic>{'draft': draft.toJson()},
-      );
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'draft': draft.toJson(),
+      });
     }
 
     if (request.method == 'POST' &&
@@ -225,14 +258,10 @@ class GovernedApiServer {
             ? body['createdBy']!.toString().trim()
             : 'api-reviewed-model',
       );
-      return _json(
-        request.response,
-        HttpStatus.created,
-        <String, dynamic>{
-          'prompt': saved.prompt.toJson(),
-          'version': saved.version.toJson(),
-        },
-      );
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'prompt': saved.prompt.toJson(),
+        'version': saved.version.toJson(),
+      });
     }
 
     if (segments.length == 4 &&
@@ -242,34 +271,25 @@ class GovernedApiServer {
         request.method == 'GET') {
       await _authenticate(request, 'prompts:read');
       final versions = await runtime.listPromptVersions(segments[2]);
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{
-          'versions': versions.map((version) => version.toJson()).toList(),
-        },
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'versions': versions.map((version) => version.toJson()).toList(),
+      });
     }
 
     if (request.method == 'GET' &&
         request.uri.path == '/v1/prompt-studio/v2/contracts') {
       await _authenticate(request, 'schema:read');
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{
-          'contractDigest': promptStudioContractDigest,
-          'compilerVersion': promptStudioCompilerVersion,
-          'schemas': <String, dynamic>{
-            'productSpecification': PromptStudioV2Contracts.specificationSchema,
-            'taskPlan': PromptStudioV2Contracts.taskPlanSchema,
-            'evaluationDataset': PromptStudioV2Contracts.evaluationSchema,
-            'compilationReport':
-                PromptStudioV2Contracts.compilationReportSchema,
-            'capabilityCatalog': PromptStudioV2Contracts.capabilityCatalog,
-          },
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'contractDigest': promptStudioContractDigest,
+        'compilerVersion': promptStudioCompilerVersion,
+        'schemas': <String, dynamic>{
+          'productSpecification': PromptStudioV2Contracts.specificationSchema,
+          'taskPlan': PromptStudioV2Contracts.taskPlanSchema,
+          'evaluationDataset': PromptStudioV2Contracts.evaluationSchema,
+          'compilationReport': PromptStudioV2Contracts.compilationReportSchema,
+          'capabilityCatalog': PromptStudioV2Contracts.capabilityCatalog,
         },
-      );
+      });
     }
 
     if (request.method == 'POST' &&
@@ -289,11 +309,9 @@ class GovernedApiServer {
             ? PlanCompilerPolicyV2.fromJson(mapValue(policyValue))
             : null,
       );
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{'report': report},
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'report': report,
+      });
     }
 
     if (request.method == 'POST' &&
@@ -305,11 +323,9 @@ class GovernedApiServer {
         candidate: mapValue(body['candidate']),
         dataset: mapValue(body['dataset']),
       );
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{'report': report},
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'report': report,
+      });
     }
 
     if (request.method == 'POST' &&
@@ -336,11 +352,9 @@ class GovernedApiServer {
                 .clamp(1, 100)
                 .toInt(),
       );
-      return _json(
-        request.response,
-        HttpStatus.created,
-        <String, dynamic>{'plan': plan.toJson()},
-      );
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'plan': plan.toJson(),
+      });
     }
 
     if (request.method == 'GET' && request.uri.path == '/v1/task-plans') {
@@ -350,13 +364,9 @@ class GovernedApiServer {
         projectId: projectId,
         promptId: request.uri.queryParameters['promptId'],
       );
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{
-          'plans': plans.map((plan) => plan.toJson()).toList(),
-        },
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'plans': plans.map((plan) => plan.toJson()).toList(),
+      });
     }
 
     if (segments.length == 3 &&
@@ -372,11 +382,9 @@ class GovernedApiServer {
       }
       if (request.method == 'GET') {
         await _authenticate(request, 'plans:read', projectId: plan.projectId);
-        return _json(
-          request.response,
-          HttpStatus.ok,
-          <String, dynamic>{'plan': plan.toJson()},
-        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'plan': plan.toJson(),
+        });
       }
       if (request.method == 'PUT') {
         await _authenticate(request, 'plans:write', projectId: plan.projectId);
@@ -398,11 +406,9 @@ class GovernedApiServer {
               .map((item) => PlanTaskRecord.fromJson(mapValue(item)))
               .toList(),
         );
-        return _json(
-          request.response,
-          HttpStatus.created,
-          <String, dynamic>{'plan': updated.toJson()},
-        );
+        return _json(request.response, HttpStatus.created, <String, dynamic>{
+          'plan': updated.toJson(),
+        });
       }
     }
 
@@ -419,8 +425,11 @@ class GovernedApiServer {
           'Unknown task plan.',
         );
       }
-      await _authenticate(request, 'commands:prepare',
-          projectId: plan.projectId);
+      await _authenticate(
+        request,
+        'commands:prepare',
+        projectId: plan.projectId,
+      );
       final body = await _body(request, allowEmpty: true);
       final versionId =
           body['promptVersionId']?.toString().trim().isNotEmpty == true
@@ -444,11 +453,9 @@ class GovernedApiServer {
             : plan.model,
         selectedTaskIds: selected.isEmpty ? null : selected,
       );
-      return _json(
-        request.response,
-        HttpStatus.created,
-        <String, dynamic>{'command': command.toJson()},
-      );
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'command': command.toJson(),
+      });
     }
 
     if (request.method == 'POST' &&
@@ -462,7 +469,10 @@ class GovernedApiServer {
           .firstOrNull;
       if (mode == null) {
         throw _HttpFailure(
-            HttpStatus.badRequest, 'mode_invalid', 'Unknown command mode.');
+          HttpStatus.badRequest,
+          'mode_invalid',
+          'Unknown command mode.',
+        );
       }
       final command = await runtime.prepare(
         projectId: projectId,
@@ -470,8 +480,9 @@ class GovernedApiServer {
         request: _required(body, 'request'),
         model: ModelIdentity.fromJson(mapValue(body['model'])),
       );
-      return _json(request.response, HttpStatus.created,
-          <String, dynamic>{'command': command.toJson()});
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'command': command.toJson(),
+      });
     }
 
     if (segments.length == 4 &&
@@ -482,17 +493,24 @@ class GovernedApiServer {
       final command = await runtime.repositories.commands.get(segments[2]);
       if (command == null) {
         throw _HttpFailure(
-            HttpStatus.notFound, 'command_missing', 'Unknown command.');
+          HttpStatus.notFound,
+          'command_missing',
+          'Unknown command.',
+        );
       }
-      await _authenticate(request, 'runs:create',
-          projectId: command.contract.projectId);
+      await _authenticate(
+        request,
+        'runs:create',
+        projectId: command.contract.projectId,
+      );
       final body = await _body(request, allowEmpty: true);
       final budget = body.isEmpty
           ? null
           : AutonomyBudget.fromJson(mapValue(body['budget']));
       final run = await runtime.createRun(command.id, budget: budget);
-      return _json(request.response, HttpStatus.created,
-          <String, dynamic>{'run': run.toJson()});
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'run': run.toJson(),
+      });
     }
 
     if (segments.length >= 3 && segments[0] == 'v1' && segments[1] == 'runs') {
@@ -500,12 +518,19 @@ class GovernedApiServer {
         final run = await runtime.getRun(segments[2]);
         if (run == null) {
           throw _HttpFailure(
-              HttpStatus.notFound, 'run_missing', 'Unknown run.');
+            HttpStatus.notFound,
+            'run_missing',
+            'Unknown run.',
+          );
         }
-        await _authenticate(request, 'runs:read',
-            projectId: run.command.contract.projectId);
-        return _json(request.response, HttpStatus.ok,
-            <String, dynamic>{'run': run.toJson()});
+        await _authenticate(
+          request,
+          'runs:read',
+          projectId: run.command.contract.projectId,
+        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'run': run.toJson(),
+        });
       }
       if (segments.length == 4 &&
           segments[3] == 'evidence' &&
@@ -513,75 +538,97 @@ class GovernedApiServer {
         final run = await runtime.getRun(segments[2]);
         if (run == null) {
           throw _HttpFailure(
-              HttpStatus.notFound, 'run_missing', 'Unknown run.');
+            HttpStatus.notFound,
+            'run_missing',
+            'Unknown run.',
+          );
         }
-        await _authenticate(request, 'runs:read',
-            projectId: run.command.contract.projectId);
+        await _authenticate(
+          request,
+          'runs:read',
+          projectId: run.command.contract.projectId,
+        );
         final evidence = await runtime.evidenceForRun(run.id);
         return _json(request.response, HttpStatus.ok, <String, dynamic>{
-          'evidence': evidence.map((item) => item.toJson()).toList()
+          'evidence': evidence.map((item) => item.toJson()).toList(),
         });
       }
       if (segments.length == 4 && request.method == 'POST') {
         final run = await runtime.getRun(segments[2]);
         if (run == null) {
           throw _HttpFailure(
-              HttpStatus.notFound, 'run_missing', 'Unknown run.');
+            HttpStatus.notFound,
+            'run_missing',
+            'Unknown run.',
+          );
         }
         final action = segments[3];
         final scope = action == 'approve' || action == 'execute'
             ? 'runs:execute'
             : 'runs:control';
-        await _authenticate(request, scope,
-            projectId: run.command.contract.projectId);
+        await _authenticate(
+          request,
+          scope,
+          projectId: run.command.contract.projectId,
+        );
         if (action == 'approve') {
           final body = await _body(request);
           final scopes = stringList(body['scopes'])
-              .map((name) => PermissionScope.values
-                  .where((candidate) => candidate.name == name)
-                  .firstOrNull)
+              .map(
+                (name) => PermissionScope.values
+                    .where((candidate) => candidate.name == name)
+                    .firstOrNull,
+              )
               .whereType<PermissionScope>()
               .toSet();
           final grant = await runtime.approve(
             runId: run.id,
             scopes: scopes,
             validity: Duration(
-                minutes:
-                    (int.tryParse(body['validityMinutes']?.toString() ?? '') ??
-                            120)
-                        .clamp(1, 1440)
-                        .toInt()),
+              minutes:
+                  (int.tryParse(body['validityMinutes']?.toString() ?? '') ??
+                          120)
+                      .clamp(1, 1440)
+                      .toInt(),
+            ),
           );
-          return _json(request.response, HttpStatus.ok,
-              <String, dynamic>{'grant': grant.toJson()});
+          return _json(request.response, HttpStatus.ok, <String, dynamic>{
+            'grant': grant.toJson(),
+          });
         }
         if (action == 'execute') {
           unawaited(runtime.execute(run.id));
-          return _json(request.response, HttpStatus.accepted,
-              <String, dynamic>{'runId': run.id, 'state': 'queued'});
+          return _json(request.response, HttpStatus.accepted, <String, dynamic>{
+            'runId': run.id,
+            'state': 'queued',
+          });
         }
         if (action == 'retry') {
           final retried = await runtime.retryRun(run.id);
-          return _json(
-            request.response,
-            HttpStatus.created,
-            <String, dynamic>{'run': retried.toJson()},
-          );
+          return _json(request.response, HttpStatus.created, <String, dynamic>{
+            'run': retried.toJson(),
+          });
         }
         if (action == 'pause') {
           await runtime.pause(run.id);
-          return _json(request.response, HttpStatus.ok,
-              <String, dynamic>{'runId': run.id, 'state': 'paused'});
+          return _json(request.response, HttpStatus.ok, <String, dynamic>{
+            'runId': run.id,
+            'state': 'paused',
+          });
         }
         if (action == 'resume') {
           await runtime.resume(run.id);
-          return _json(request.response, HttpStatus.accepted,
-              <String, dynamic>{'runId': run.id, 'state': 'running'});
+          return _json(request.response, HttpStatus.accepted, <String, dynamic>{
+            'runId': run.id,
+            'state': 'running',
+          });
         }
         if (action == 'cancel') {
           await runtime.cancel(run.id);
-          return _json(request.response, HttpStatus.accepted,
-              <String, dynamic>{'runId': run.id, 'state': 'cancelling'});
+          return _json(request.response, HttpStatus.accepted, <String, dynamic>{
+            'runId': run.id,
+            'state': 'cancelling',
+          });
         }
       }
     }
@@ -590,13 +637,14 @@ class GovernedApiServer {
       final projectId = request.uri.queryParameters['projectId'];
       await _authenticate(request, 'runs:read', projectId: projectId);
       final runs = await runtime.listRuns(
-          projectId: projectId,
-          limit:
-              (int.tryParse(request.uri.queryParameters['limit'] ?? '') ?? 100)
-                  .clamp(1, 500)
-                  .toInt());
-      return _json(request.response, HttpStatus.ok,
-          <String, dynamic>{'runs': runs.map((run) => run.toJson()).toList()});
+        projectId: projectId,
+        limit: (int.tryParse(request.uri.queryParameters['limit'] ?? '') ?? 100)
+            .clamp(1, 500)
+            .toInt(),
+      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'runs': runs.map((run) => run.toJson()).toList(),
+      });
     }
 
     if (segments.length == 4 &&
@@ -617,63 +665,50 @@ class GovernedApiServer {
         final diagnostics = await runtime.inspectProject(projectId);
         final process = await runtime.projectProcessStatus(projectId);
         final runs = await runtime.listRuns(projectId: projectId, limit: 20);
-        return _json(
-          request.response,
-          HttpStatus.ok,
-          <String, dynamic>{
-            'project': project.toJson(),
-            'diagnostics': diagnostics.toJson(),
-            'process': process?.toJson(),
-            'recentRuns': runs.map((run) => run.toJson()).toList(),
-          },
-        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'project': project.toJson(),
+          'diagnostics': diagnostics.toJson(),
+          'process': process?.toJson(),
+          'recentRuns': runs.map((run) => run.toJson()).toList(),
+        });
       }
       if (request.method == 'POST' &&
-          const <String>{'analyze', 'test', 'build', 'run', 'stop'}
-              .contains(action)) {
-        await _authenticate(
-          request,
-          'projects:execute',
-          projectId: projectId,
-        );
+          const <String>{
+            'analyze',
+            'test',
+            'build',
+            'run',
+            'stop',
+          }.contains(action)) {
+        await _authenticate(request, 'projects:execute', projectId: projectId);
         if (action == 'analyze') {
           final report = await runtime.analyzeProject(projectId);
-          return _json(
-            request.response,
-            HttpStatus.ok,
-            <String, dynamic>{'report': report.toJson()},
-          );
+          return _json(request.response, HttpStatus.ok, <String, dynamic>{
+            'report': report.toJson(),
+          });
         }
         if (action == 'test') {
           final report = await runtime.testProject(projectId);
-          return _json(
-            request.response,
-            HttpStatus.ok,
-            <String, dynamic>{'report': report.toJson()},
-          );
+          return _json(request.response, HttpStatus.ok, <String, dynamic>{
+            'report': report.toJson(),
+          });
         }
         if (action == 'build') {
           final report = await runtime.buildProject(projectId);
-          return _json(
-            request.response,
-            HttpStatus.ok,
-            <String, dynamic>{'report': report.toJson()},
-          );
+          return _json(request.response, HttpStatus.ok, <String, dynamic>{
+            'report': report.toJson(),
+          });
         }
         if (action == 'run') {
           final process = await runtime.startProject(projectId);
-          return _json(
-            request.response,
-            HttpStatus.accepted,
-            <String, dynamic>{'process': process.toJson()},
-          );
+          return _json(request.response, HttpStatus.accepted, <String, dynamic>{
+            'process': process.toJson(),
+          });
         }
         final process = await runtime.stopProject(projectId);
-        return _json(
-          request.response,
-          HttpStatus.ok,
-          <String, dynamic>{'process': process?.toJson()},
-        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'process': process?.toJson(),
+        });
       }
     }
 
@@ -696,7 +731,7 @@ class GovernedApiServer {
         await _authenticate(request, 'knowledge:read', projectId: projectId);
         final entries = await runtime.listKnowledge(projectId);
         return _json(request.response, HttpStatus.ok, <String, dynamic>{
-          'knowledge': entries.map((entry) => entry.toJson()).toList()
+          'knowledge': entries.map((entry) => entry.toJson()).toList(),
         });
       }
       if (request.method == 'POST') {
@@ -708,8 +743,9 @@ class GovernedApiServer {
           content: _required(body, 'content'),
           tags: stringList(body['tags']).toSet(),
         );
-        return _json(request.response, HttpStatus.created,
-            <String, dynamic>{'knowledge': entry.toJson()});
+        return _json(request.response, HttpStatus.created, <String, dynamic>{
+          'knowledge': entry.toJson(),
+        });
       }
     }
 
@@ -742,43 +778,34 @@ class GovernedApiServer {
               request.uri.queryParameters['includeUnsuccessfulEpisodes'] ==
                   'true',
         );
-        return _json(
-          request.response,
-          HttpStatus.ok,
-          <String, dynamic>{'retrieval': retrieval.toJson()},
-        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'retrieval': retrieval.toJson(),
+        });
       }
       if (action == 'stats' && request.method == 'GET') {
         await _authenticate(request, 'knowledge:read', projectId: projectId);
         final stats = await runtime.knowledgeStats(projectId);
-        return _json(
-          request.response,
-          HttpStatus.ok,
-          <String, dynamic>{'stats': stats.toJson()},
-        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'stats': stats.toJson(),
+        });
       }
       if (action == 'reindex' && request.method == 'POST') {
         await _authenticate(request, 'knowledge:write', projectId: projectId);
         final chunks = await runtime.rebuildKnowledgeIndex(projectId);
-        return _json(
-          request.response,
-          HttpStatus.ok,
-          <String, dynamic>{'projectId': projectId, 'indexedChunks': chunks},
-        );
+        return _json(request.response, HttpStatus.ok, <String, dynamic>{
+          'projectId': projectId,
+          'indexedChunks': chunks,
+        });
       }
       if (action == 'export' && request.method == 'POST') {
         await _authenticate(request, 'knowledge:write', projectId: projectId);
         final file = await runtime.exportKnowledge(projectId);
-        return _json(
-          request.response,
-          HttpStatus.created,
-          <String, dynamic>{
-            'projectId': projectId,
-            'fileName': file.uri.pathSegments.last,
-            'sha256': Sha256.hex(await file.readAsBytes()),
-            'bytes': await file.length(),
-          },
-        );
+        return _json(request.response, HttpStatus.created, <String, dynamic>{
+          'projectId': projectId,
+          'fileName': file.uri.pathSegments.last,
+          'sha256': Sha256.hex(await file.readAsBytes()),
+          'bytes': await file.length(),
+        });
       }
     }
 
@@ -790,13 +817,9 @@ class GovernedApiServer {
       final projectId = segments[2];
       await _authenticate(request, 'knowledge:read', projectId: projectId);
       final records = await runtime.listResearchArchive(projectId);
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{
-          'researchArchive': records.map((record) => record.toJson()).toList(),
-        },
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'researchArchive': records.map((record) => record.toJson()).toList(),
+      });
     }
 
     if (segments.length == 4 &&
@@ -807,13 +830,9 @@ class GovernedApiServer {
       final projectId = segments[2];
       await _authenticate(request, 'knowledge:read', projectId: projectId);
       final episodes = await runtime.listMemoryEpisodes(projectId);
-      return _json(
-        request.response,
-        HttpStatus.ok,
-        <String, dynamic>{
-          'episodes': episodes.map((episode) => episode.toJson()).toList(),
-        },
-      );
+      return _json(request.response, HttpStatus.ok, <String, dynamic>{
+        'episodes': episodes.map((episode) => episode.toJson()).toList(),
+      });
     }
 
     if (request.method == 'POST' &&
@@ -825,8 +844,9 @@ class GovernedApiServer {
         environmentKey: _required(body, 'environmentKey'),
         description: body['description']?.toString() ?? '',
       );
-      return _json(request.response, HttpStatus.created,
-          <String, dynamic>{'secretReference': reference.toJson()});
+      return _json(request.response, HttpStatus.created, <String, dynamic>{
+        'secretReference': reference.toJson(),
+      });
     }
 
     if (request.method == 'GET' &&
@@ -847,10 +867,11 @@ class GovernedApiServer {
         scopes: stringList(body['scopes']).toSet(),
         projectId: body['projectId']?.toString(),
         validity: Duration(
-            minutes: (int.tryParse(body['validityMinutes']?.toString() ?? '') ??
-                    43200)
-                .clamp(1, 525600)
-                .toInt()),
+          minutes:
+              (int.tryParse(body['validityMinutes']?.toString() ?? '') ?? 43200)
+                  .clamp(1, 525600)
+                  .toInt(),
+        ),
       );
       return _json(request.response, HttpStatus.created, <String, dynamic>{
         'token': issued.plaintext,
@@ -873,7 +894,10 @@ class GovernedApiServer {
     if (request.method == 'GET' && request.uri.path == '/v1/audit/verify') {
       await _authenticate(request, 'audit:read');
       return _json(
-          request.response, HttpStatus.ok, await runtime.verifyAudit());
+        request.response,
+        HttpStatus.ok,
+        await runtime.verifyAudit(),
+      );
     }
 
     if (request.method == 'POST' && request.uri.path == '/v1/support-bundles') {
@@ -897,41 +921,66 @@ class GovernedApiServer {
     }
 
     throw _HttpFailure(
-        HttpStatus.notFound, 'route_not_found', 'API route not found.');
+      HttpStatus.notFound,
+      'route_not_found',
+      'API route not found.',
+    );
   }
 
-  Future<ApiTokenRecord> _authenticate(HttpRequest request, String scope,
-      {String? projectId}) async {
+  Future<ApiTokenRecord> _authenticate(
+    HttpRequest request,
+    String scope, {
+    String? projectId,
+  }) async {
     final authorization =
         request.headers.value(HttpHeaders.authorizationHeader) ?? '';
-    final match = RegExp(r'^Bearer\s+([^\s]+)$', caseSensitive: false)
-        .firstMatch(authorization);
+    final match = RegExp(
+      r'^Bearer\s+([^\s]+)$',
+      caseSensitive: false,
+    ).firstMatch(authorization);
     if (match == null) {
-      throw _HttpFailure(HttpStatus.unauthorized, 'authentication_required',
-          'A bearer token is required.');
+      throw _HttpFailure(
+        HttpStatus.unauthorized,
+        'authentication_required',
+        'A bearer token is required.',
+      );
     }
-    final token = await runtime.tokens.authenticate(match.group(1)!,
-        requiredScope: scope, projectId: projectId);
+    final token = await runtime.tokens.authenticate(
+      match.group(1)!,
+      requiredScope: scope,
+      projectId: projectId,
+    );
     if (token == null) {
-      throw _HttpFailure(HttpStatus.forbidden, 'token_invalid',
-          'Token is invalid, expired, revoked, out of scope, or bound to another project.');
+      throw _HttpFailure(
+        HttpStatus.forbidden,
+        'token_invalid',
+        'Token is invalid, expired, revoked, out of scope, or bound to another project.',
+      );
     }
     return token;
   }
 
-  Future<Map<String, dynamic>> _body(HttpRequest request,
-      {bool allowEmpty = false}) async {
+  Future<Map<String, dynamic>> _body(
+    HttpRequest request, {
+    bool allowEmpty = false,
+  }) async {
     final contentType = request.headers.contentType;
     if (contentType != null && contentType.mimeType != 'application/json') {
-      throw _HttpFailure(HttpStatus.unsupportedMediaType,
-          'content_type_invalid', 'Content-Type must be application/json.');
+      throw _HttpFailure(
+        HttpStatus.unsupportedMediaType,
+        'content_type_invalid',
+        'Content-Type must be application/json.',
+      );
     }
     const maxBytes = 1024 * 1024;
     final builder = BytesBuilder(copy: false);
     await for (final chunk in request) {
       if (builder.length + chunk.length > maxBytes) {
-        throw _HttpFailure(HttpStatus.requestEntityTooLarge, 'body_too_large',
-            'Request body exceeds 1 MiB.');
+        throw _HttpFailure(
+          HttpStatus.requestEntityTooLarge,
+          'body_too_large',
+          'Request body exceeds 1 MiB.',
+        );
       }
       builder.add(chunk);
     }
@@ -940,13 +989,19 @@ class GovernedApiServer {
       return <String, dynamic>{};
     }
     if (bytes.isEmpty) {
-      throw _HttpFailure(HttpStatus.badRequest, 'body_required',
-          'A JSON request body is required.');
+      throw _HttpFailure(
+        HttpStatus.badRequest,
+        'body_required',
+        'A JSON request body is required.',
+      );
     }
     final decoded = jsonDecode(utf8.decode(bytes, allowMalformed: false));
     if (decoded is! Map) {
-      throw _HttpFailure(HttpStatus.badRequest, 'body_object_required',
-          'Request body must be a JSON object.');
+      throw _HttpFailure(
+        HttpStatus.badRequest,
+        'body_object_required',
+        'Request body must be a JSON object.',
+      );
     }
     return mapValue(decoded);
   }
@@ -979,7 +1034,8 @@ class GovernedApiServer {
     heartbeat = Timer.periodic(const Duration(seconds: 15), (_) async {
       try {
         response.write(
-            ': heartbeat ${DateTime.now().toUtc().toIso8601String()}\n\n');
+          ': heartbeat ${DateTime.now().toUtc().toIso8601String()}\n\n',
+        );
         await response.flush();
       } catch (_) {
         if (!done.isCompleted) {
@@ -1063,8 +1119,11 @@ class GovernedApiServer {
   String _required(Map<String, dynamic> body, String name) {
     final value = body[name]?.toString().trim() ?? '';
     if (value.isEmpty) {
-      throw _HttpFailure(HttpStatus.badRequest, 'argument_required',
-          'Field "$name" is required.');
+      throw _HttpFailure(
+        HttpStatus.badRequest,
+        'argument_required',
+        'Field "$name" is required.',
+      );
     }
     return value;
   }
@@ -1138,7 +1197,7 @@ class GovernedApiServer {
         },
         'servers': <Map<String, String>>[
           <String, String>{
-            'url': 'http://127.0.0.1:${runtime.settings.apiPort}/v1'
+            'url': 'http://127.0.0.1:${runtime.settings.apiPort}/v1',
           },
         ],
         'components': <String, dynamic>{
@@ -1153,190 +1212,193 @@ class GovernedApiServer {
           '/health': <String, dynamic>{
             'get': <String, dynamic>{
               'security': <Object>[],
-              'summary': 'Health check'
-            }
+              'summary': 'Health check',
+            },
           },
           '/projects': <String, dynamic>{
             'get': <String, String>{'summary': 'List projects'},
-            'post': <String, String>{'summary': 'Register project'}
+            'post': <String, String>{'summary': 'Register project'},
           },
           '/projects/{projectId}/manager': <String, dynamic>{
             'get': <String, String>{
-              'summary': 'Read the Project Manager dashboard state'
-            }
+              'summary': 'Read the Project Manager dashboard state',
+            },
           },
           '/projects/{projectId}/analyze': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Run the detected bounded static analysis'
-            }
+              'summary': 'Run the detected bounded static analysis',
+            },
           },
           '/projects/{projectId}/test': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Run detected bounded project tests'
-            }
+              'summary': 'Run detected bounded project tests',
+            },
           },
           '/projects/{projectId}/build': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Run the detected bounded project build'
-            }
+              'summary': 'Run the detected bounded project build',
+            },
           },
           '/projects/{projectId}/run': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Start the detected run command as a managed process'
-            }
+              'summary': 'Start the detected run command as a managed process',
+            },
           },
           '/projects/{projectId}/stop': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Stop the active managed project process'
-            }
+              'summary': 'Stop the active managed project process',
+            },
           },
           '/models': <String, dynamic>{
             'get': <String, String>{
               'summary': 'Discover exact model identities'
-            }
+            },
           },
           '/prompts': <String, dynamic>{
-            'get': <String, String>{'summary': 'List Prompt Studio prompts'}
+            'get': <String, String>{'summary': 'List Prompt Studio prompts'},
           },
           '/prompts/generate': <String, dynamic>{
             'post': <String, String>{
               'summary':
-                  'Generate or improve a structured prompt draft with a selected model'
-            }
+                  'Generate or improve a structured prompt draft with a selected model',
+            },
           },
           '/prompts/versions': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Save an immutable reviewed prompt version'
-            }
+              'summary': 'Save an immutable reviewed prompt version',
+            },
           },
           '/prompts/{promptId}/versions': <String, dynamic>{
-            'get': <String, String>{'summary': 'List immutable prompt versions'}
+            'get': <String, String>{
+              'summary': 'List immutable prompt versions'
+            },
           },
           '/prompt-studio/v2/contracts': <String, dynamic>{
             'get': <String, String>{
               'summary':
-                  'Read the canonical Prompt Studio 2 schemas and capability catalog'
-            }
+                  'Read the canonical Prompt Studio 2 schemas and capability catalog',
+            },
           },
           '/prompt-studio/v2/compile': <String, dynamic>{
             'post': <String, String>{
               'summary':
-                  'Compile and dry-run a canonical specification and 1–100 task plan'
-            }
+                  'Compile and dry-run a canonical specification and 1–100 task plan',
+            },
           },
           '/prompt-studio/v2/evaluate': <String, dynamic>{
             'post': <String, String>{
               'summary':
-                  'Measure a prompt-version change against a deterministic evaluation dataset'
-            }
+                  'Measure a prompt-version change against a deterministic evaluation dataset',
+            },
           },
           '/task-plans': <String, dynamic>{
             'get': <String, String>{
-              'summary': 'List generated task-plan revisions'
-            }
+              'summary': 'List generated task-plan revisions',
+            },
           },
           '/task-plans/generate': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Generate a validated adaptive 1–100 task plan'
-            }
+              'summary': 'Generate a validated adaptive 1–100 task plan',
+            },
           },
           '/task-plans/{planId}': <String, dynamic>{
             'get': <String, String>{'summary': 'Read one task-plan revision'},
             'put': <String, String>{
-              'summary': 'Create an immutable edited task-plan revision'
-            }
+              'summary': 'Create an immutable edited task-plan revision',
+            },
           },
           '/task-plans/{planId}/compile': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Compile all or selected tasks into a governed command'
-            }
+              'summary':
+                  'Compile all or selected tasks into a governed command',
+            },
           },
           '/commands/prepare': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Prepare deterministic contract and DAG'
-            }
+              'summary': 'Prepare deterministic contract and DAG',
+            },
           },
           '/commands/{commandId}/runs': <String, dynamic>{
-            'post': <String, String>{'summary': 'Create persistent run'}
+            'post': <String, String>{'summary': 'Create persistent run'},
           },
           '/runs/{runId}/approve': <String, dynamic>{
             'post': <String, String>{
-              'summary': 'Approve requested granular scopes'
-            }
+              'summary': 'Approve requested granular scopes',
+            },
           },
           '/runs/{runId}/execute': <String, dynamic>{
-            'post': <String, String>{'summary': 'Start governed execution'}
+            'post': <String, String>{'summary': 'Start governed execution'},
           },
           '/runs/{runId}/retry': <String, dynamic>{
             'post': <String, String>{
               'summary':
-                  'Create a fresh linked retry with reset attempts and plan-scaled budgets'
-            }
+                  'Create a fresh linked retry with reset attempts and plan-scaled budgets',
+            },
           },
           '/runs/{runId}': <String, dynamic>{
-            'get': <String, String>{'summary': 'Get run state'}
+            'get': <String, String>{'summary': 'Get run state'},
           },
           '/runs/{runId}/evidence': <String, dynamic>{
-            'get': <String, String>{'summary': 'Get evidence records'}
+            'get': <String, String>{'summary': 'Get evidence records'},
           },
           '/projects/{projectId}/knowledge': <String, dynamic>{
             'get': <String, String>{'summary': 'List project knowledge'},
-            'post': <String, String>{'summary': 'Add project note'}
+            'post': <String, String>{'summary': 'Add project note'},
           },
           '/projects/{projectId}/knowledge/search': <String, dynamic>{
             'get': <String, String>{
-              'summary': 'Hybrid search with inspectable citations'
-            }
+              'summary': 'Hybrid search with inspectable citations',
+            },
           },
           '/projects/{projectId}/knowledge/stats': <String, dynamic>{
             'get': <String, String>{
-              'summary': 'Knowledge, archive, memory, and index statistics'
-            }
+              'summary': 'Knowledge, archive, memory, and index statistics',
+            },
           },
           '/projects/{projectId}/knowledge/reindex': <String, dynamic>{
             'post': <String, String>{
               'summary': 'Rebuild the local project index'
-            }
+            },
           },
           '/projects/{projectId}/knowledge/export': <String, dynamic>{
             'post': <String, String>{
               'summary': 'Create a portable knowledge ZIP'
-            }
+            },
           },
           '/projects/{projectId}/research-archive': <String, dynamic>{
             'get': <String, String>{
-              'summary': 'List immutable research provenance records'
-            }
+              'summary': 'List immutable research provenance records',
+            },
           },
           '/projects/{projectId}/memory': <String, dynamic>{
             'get': <String, String>{
               'summary': 'List terminal-run memory episodes'
-            }
+            },
           },
           '/events': <String, dynamic>{
             'get': <String, String>{
-              'summary': 'Resume-capable server-sent event stream'
-            }
+              'summary': 'Resume-capable server-sent event stream',
+            },
           },
           '/secret-references': <String, dynamic>{
             'get': <String, String>{'summary': 'List references only'},
             'post': <String, String>{
               'summary': 'Register environment reference'
-            }
+            },
           },
           '/tokens': <String, dynamic>{
-            'post': <String, String>{'summary': 'Issue a token shown once'}
+            'post': <String, String>{'summary': 'Issue a token shown once'},
           },
           '/audit/verify': <String, dynamic>{
             'get': <String, String>{
               'summary': 'Verify tamper-evident audit chain'
-            }
+            },
           },
           '/support-bundles': <String, dynamic>{
             'post': <String, String>{
               'summary':
-                  'Save a redacted diagnostic ZIP with retained logs, run budgets, and evidence metadata'
-            }
+                  'Save a redacted diagnostic ZIP with retained logs, run budgets, and evidence metadata',
+            },
           },
         },
       };

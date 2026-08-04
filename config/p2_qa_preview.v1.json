@@ -1,0 +1,18 @@
+{
+  "formalCompletion": false,
+  "mergeEligible": false,
+  "mode": "qa-preview-only",
+  "p3DependencySatisfied": false,
+  "requiredConnectorProvenance": {
+    "qaPreview": true,
+    "qaPreviewFormalCompletion": false,
+    "qaPreviewVersion": "1.0.0"
+  },
+  "requiresDartDefine": "KRISTIN_QA_PREVIEW=true",
+  "schemaVersion": "1.0.0",
+  "warnings": [
+    "Never merge this preview patch into main.",
+    "Never use preview receipts as P1A/P2 completion evidence.",
+    "Owner Mode remains formally incomplete until Phase B closes."
+  ]
+}
