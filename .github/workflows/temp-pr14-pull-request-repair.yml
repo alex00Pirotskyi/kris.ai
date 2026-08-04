@@ -91,11 +91,19 @@ jobs:
           test "${#paths[@]}" -eq 2
           test "${paths[0]}" = ".github/workflows/p2-owner-mode.yml"
           test "${paths[1]}" = "SOURCE_MANIFEST.sha256"
-          grep -F 'if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then' "$WORKFLOW_PATH"
-          grep -F 'python tool/p2_shared_p1_authority_contract_test.py --project .' "$WORKFLOW_PATH"
-          grep -F 'python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa' "$WORKFLOW_PATH"
-          grep -F 'else' "$WORKFLOW_PATH"
-          grep -F 'fi' "$WORKFLOW_PATH"
+          python - <<'PY_VERIFY'
+          from pathlib import Path
+
+          value = Path('.github/workflows/p2-owner-mode.yml').read_text(encoding='utf-8')
+          expression = '$' + '{{ github.event_name }}'
+          expected = f'          if [[ "{expression}" == "workflow_dispatch" ]]; then\n'
+          if value.count(expected) != 1:
+              raise SystemExit(f'owner-risk event branch count: {value.count(expected)}')
+          strict = '            python tool/p2_shared_p1_authority_contract_test.py --project .\n'
+          owner_risk = '            python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa\n'
+          if value.count(strict) != 1 or value.count(owner_risk) != 1:
+              raise SystemExit('owner-risk source-contract commands are not exact')
+          PY_VERIFY
 
       - name: Commit and push exact repair
         shell: bash
