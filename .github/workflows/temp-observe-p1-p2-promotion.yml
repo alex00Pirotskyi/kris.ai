@@ -83,7 +83,7 @@ jobs:
           done
 
           jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?per_page=100")"
-          printf '%s' "$jobs" | jq -r '.jobs[] | "PROMOTION_JOB=\(.name) STATUS=\(.status) CONCLUSION=\(.conclusion // \"\") ID=\(.id)"'
+          printf '%s' "$jobs" | jq -r '.jobs[] | ["PROMOTION_JOB=" + .name, "STATUS=" + .status, "CONCLUSION=" + (.conclusion // ""), "ID=" + (.id | tostring)] | join(" ")'
 
           if [ "$conclusion" != success ]; then
             gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --log-failed || true
@@ -106,6 +106,7 @@ jobs:
               "repos/$GITHUB_REPOSITORY/actions/workflows/$MONITOR_WORKFLOW/runs?event=workflow_run&per_page=100"
           )"
           promotion_created="$(printf '%s' "$run" | jq -r '.created_at')"
+          printf '%s' "$monitor_runs" | jq -r --arg created "$promotion_created" '.workflow_runs[] | select(.created_at >= $created) | ["MONITOR_CANDIDATE_ID=" + (.id | tostring), "STATUS=" + .status, "CONCLUSION=" + (.conclusion // ""), "HEAD_BRANCH=" + (.head_branch // ""), "CREATED_AT=" + .created_at] | join(" ")'
           monitor_id="$(
             printf '%s' "$monitor_runs" | jq -r \
               --arg created "$promotion_created" \
