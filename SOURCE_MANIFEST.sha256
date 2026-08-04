@@ -8,7 +8,7 @@ bd942164d87856c44c7c7fa96f23eaf241a41cea4b06834ee34550a4bd3e7662  .github/pull_r
 6501cf36d5caf639c48cf091968da8c1e73a0dcc02dac4618a9e5149564d93c2  .github/workflows/ci.yml
 79bd1e8070b2a1d53c9047436cc6eec005174d5b0fbd69c8c0ba2b4fd30022c0  .github/workflows/p1-authority-amendment.yml
 7643f62a954a3ffbc14502c88bedf1d76981cebf7c6a921a73192c707f321d2b  .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml
-69e8c1ca9e86b41d8bc8510bbfbd538e310fcd65a9422723d80e1c0edbe73f10  .github/workflows/p2-owner-mode.yml
+cd529fc1e8d06ee9437e14c1623e4135b53d8ee1c5d21a95196d505fdb7cd93c  .github/workflows/p2-owner-mode.yml
 78fe287958aaf7873c0b46cc16bda55bcfac7b468b4c6fa049ad90921cb9527c  .github/workflows/temp-direct-pr14-repair.yml
 295108fcd523964ae91b04ef18d2ea3af5ff8f2ba7e3d5d1dda3e44833757a97  .github/workflows/temp-dispatch-p1-p2-promotion.yml
 d124ad1de514738922205ca4b4c2af258dac048ab2bdbfd4c170710ed1f068f2  .github/workflows/temp-execute-pr14-repair.yml

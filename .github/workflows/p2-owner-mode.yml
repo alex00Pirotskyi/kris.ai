@@ -80,7 +80,11 @@ jobs:
           python tool/p2_evidence_contract_test.py
           python tool/p2_patch_application_composition_test.py
           python tool/p2_runtime_resource_contract_test.py
-          python tool/p2_shared_p1_authority_contract_test.py --project .
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            python tool/p2_shared_p1_authority_contract_test.py --project .
+          else
+            python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa
+          fi
           python tool/p2_runner_attestation_contract_test.py
           python tool/p2_post_run_cleanup_contract_test.py
           python tool/p2_strict_finalizer_contract_test.py --project .
