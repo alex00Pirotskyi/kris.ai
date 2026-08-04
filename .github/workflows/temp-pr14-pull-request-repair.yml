@@ -1,47 +1,41 @@
-name: TEMP PR14 Pull Request Target Repair
+name: TEMP PR14 Workflow Run Repair
 
 on:
-  pull_request_target:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - product-gates
     types:
-      - opened
-      - reopened
-      - synchronize
+      - completed
 
 permissions:
+  actions: read
   contents: write
   pull-requests: read
 
 concurrency:
-  group: temp-pr14-pull-request-target-repair
+  group: temp-pr14-workflow-run-repair
   cancel-in-progress: false
 
 jobs:
   repair-pr14:
     if: >-
-      github.event.pull_request.head.ref == 'ci/direct-pr14-repair-trigger' &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.head.sha == '61037b13e71d8b0e6b47feaa9922d476c5666347'
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_branch == 'ci/direct-pr14-repair-trigger' &&
+      github.event.workflow_run.head_sha == '61037b13e71d8b0e6b47feaa9922d476c5666347' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
       TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
       EXPECTED_HEAD: 0b91e02f2d7413c40dcfa81176877cd3a0daf87e
       EXPECTED_TRIGGER_HEAD: 61037b13e71d8b0e6b47feaa9922d476c5666347
+      EXPECTED_TRIGGER_PR: '48'
       STATUS_BRANCH: ci/direct-pr14-repair-trigger
       CI_PATH: .github/workflows/ci.yml
       DOC_PATH: docs/progress/2026-08-05-pr14-ci-recovery.md
     steps:
-      - name: Check out exact PR14 target without PR-supplied code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: merge/p1-p2-owner-risk-qa-preview
-          fetch-depth: 0
-          persist-credentials: true
-          path: target
-
-      - name: Check out exact status branch
+      - name: Check out exact status branch first
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ci/direct-pr14-repair-trigger
@@ -49,10 +43,95 @@ jobs:
           persist-credentials: true
           path: status
 
+      - name: Check out exact PR14 target without trigger-PR code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: true
+          path: target
+
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12.10'
           check-latest: false
+
+      - name: Verify exact successful tri-platform product workflow handoff
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - "$GITHUB_EVENT_PATH" <<'PY_EVENT'
+          import json
+          import os
+          import pathlib
+          import sys
+
+          event = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          run = event.get('workflow_run') or {}
+          expected = {
+              'name': 'product-gates',
+              'event': 'pull_request',
+              'status': 'completed',
+              'conclusion': 'success',
+              'head_branch': os.environ['STATUS_BRANCH'],
+              'head_sha': os.environ['EXPECTED_TRIGGER_HEAD'],
+          }
+          for key, value in expected.items():
+              if run.get(key) != value:
+                  raise SystemExit(f'workflow_run {key} mismatch: {run.get(key)!r} != {value!r}')
+          repository = (run.get('head_repository') or {}).get('full_name')
+          if repository != os.environ['GITHUB_REPOSITORY']:
+              raise SystemExit(f'workflow_run repository mismatch: {repository!r}')
+          pull_requests = run.get('pull_requests') or []
+          numbers = {str(row.get('number')) for row in pull_requests}
+          if os.environ['EXPECTED_TRIGGER_PR'] not in numbers:
+              raise SystemExit(f'exact trigger PR missing from workflow_run: {sorted(numbers)}')
+          run_id = str(run.get('id') or '')
+          run_attempt = str(run.get('run_attempt') or '')
+          if not run_id.isdigit() or not run_attempt.isdigit():
+              raise SystemExit('workflow_run identity is incomplete')
+          with pathlib.Path(os.environ['GITHUB_ENV']).open('a', encoding='utf-8') as handle:
+              handle.write(f'SOURCE_WORKFLOW_RUN_ID={run_id}\n')
+              handle.write(f'SOURCE_WORKFLOW_RUN_ATTEMPT={run_attempt}\n')
+          print(f'SOURCE_WORKFLOW_RUN_ID={run_id}')
+          print(f'SOURCE_WORKFLOW_RUN_ATTEMPT={run_attempt}')
+          PY_EVENT
+
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_WORKFLOW_RUN_ID" > "$RUNNER_TEMP/source-product-run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_WORKFLOW_RUN_ID/jobs?per_page=100" > "$RUNNER_TEMP/source-product-jobs.json"
+          python - "$RUNNER_TEMP/source-product-run.json" "$RUNNER_TEMP/source-product-jobs.json" <<'PY_JOBS'
+          import json
+          import os
+          import pathlib
+          import sys
+
+          run = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          jobs = json.loads(pathlib.Path(sys.argv[2]).read_text(encoding='utf-8')).get('jobs', [])
+          expected = {
+              'id': int(os.environ['SOURCE_WORKFLOW_RUN_ID']),
+              'name': 'product-gates',
+              'event': 'pull_request',
+              'status': 'completed',
+              'conclusion': 'success',
+              'head_branch': os.environ['STATUS_BRANCH'],
+              'head_sha': os.environ['EXPECTED_TRIGGER_HEAD'],
+              'run_attempt': int(os.environ['SOURCE_WORKFLOW_RUN_ATTEMPT']),
+          }
+          for key, value in expected.items():
+              if run.get(key) != value:
+                  raise SystemExit(f'source product run {key} mismatch: {run.get(key)!r} != {value!r}')
+          required = {'validate-ubuntu', 'validate-windows', 'validate-macos'}
+          for name in sorted(required):
+              matches = [row for row in jobs if row.get('name') == name]
+              if len(matches) != 1:
+                  raise SystemExit(f'product job count mismatch for {name}: {len(matches)}')
+              row = matches[0]
+              if row.get('status') != 'completed' or row.get('conclusion') != 'success':
+                  raise SystemExit(f'product job did not pass: {name} {row.get("status")} {row.get("conclusion")}')
+              print(f'SOURCE_PRODUCT_JOB={name} ID={row.get("id")} CONCLUSION=success')
+          PY_JOBS
 
       - name: Build and validate the exact documented repair candidate
         shell: bash
@@ -60,7 +139,8 @@ jobs:
           set +e
           (
             set -euo pipefail
-            test "${{ github.event.pull_request.head.sha }}" = "$EXPECTED_TRIGGER_HEAD"
+            test -n "${SOURCE_WORKFLOW_RUN_ID:-}"
+            test -n "${SOURCE_WORKFLOW_RUN_ATTEMPT:-}"
 
             cd target
             git config core.autocrlf false
@@ -124,12 +204,15 @@ jobs:
           - The first P2 pull-request source lane used the formal manual-dispatch dependency contract and failed honestly; pull-request and push lanes were then narrowed to the explicit owner-risk QA dependency contract while formal dispatch remained strict.
           - An initial verifier counted a similar pre-existing event branch elsewhere in the workflow. The verifier was corrected to match the complete inserted five-line block rather than a global condition count.
           - GitHub correctly refused an Actions GitHub App token that attempted to update a workflow file without workflow-write authority. The recovery process therefore retains the validated child commit as a Git object and requires a separately authenticated connected ref update.
-          - Connector-authored commits do not reliably emit push-triggered Actions runs. The final executor uses `pull_request_target`, accepts only the same repository and exact trigger SHA, and never checks out code from the disposable trigger PR.
+          - Connector-authored commits did not reliably emit the registered push workflow. A same-repository, exact-SHA `pull_request_target` fallback was then reviewed and merged, but reopening the disposable PR produced no machine-readable receipt.
+          - The final handoff uses GitHub's `workflow_run` event after an exact successful `product-gates` run. It verifies the originating PR, branch, SHA, run attempt, repository, and all three platform jobs before checking out only the governed target branch. No code from the disposable trigger PR is executed.
           - Clean hosted runners exposed the missing dependency bootstrap. The fix reuses the existing wheel-only, hash-locked dependency closure instead of adding an unpinned installation or weakening the P1 exit gate.
 
           ## Candidate validation performed before commit creation
 
-          The executor must pass all of the following against the exact target head before it records a candidate commit:
+          Before target mutation, the executor verifies one exact successful `product-gates` run for trigger PR #48 at `61037b13e71d8b0e6b47feaa9922d476c5666347`, including exactly one successful `validate-ubuntu`, `validate-windows`, and `validate-macos` job.
+
+          It then passes all of the following against the exact target head before recording a candidate commit:
 
           - `python tool/p2_source_inventory_test.py --project .`
           - `python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa`
@@ -154,8 +237,9 @@ jobs:
           1. Read and verify the machine-readable `repair-status.json` receipt from the exact trigger branch.
           2. Confirm the candidate is exactly one child of `0b91e02f2d7413c40dcfa81176877cd3a0daf87e` and changes only the three paths listed above.
           3. Move the PR #14 branch ref through the connected GitHub authority if the Actions token was blocked.
-          4. Reopen PR #14 and require fresh protected P1A, P2, and product checks on all three desktop platforms.
-          5. Merge only after those checks are green, then record a separate landing and roadmap-transition document before advancing the next task authorized by `docs/roadmap/MASTER.md`.
+          4. Reconcile the repaired branch with the then-current protected `main`, regenerate governed inventories, and add a separate reconciliation record.
+          5. Reopen PR #14 and require fresh protected P1A, P2, and product checks on all three desktop platforms.
+          6. Merge only after those checks are green, then record a separate landing and roadmap-transition document before advancing the next task authorized by `docs/roadmap/MASTER.md`.
           DOC
 
             python tool/p2_refresh_source_manifest.py .
@@ -181,6 +265,7 @@ jobs:
             test "$(grep -c '^[[:space:]]*run: python tool/v71r12_bootstrap_hosted_python.py --project \.$' "$CI_PATH")" -eq 1
             grep -F '**Human roadmap authority:** `docs/roadmap/MASTER.md`' "$DOC_PATH"
             grep -F '## Challenges passed' "$DOC_PATH"
+            grep -F 'The final handoff uses GitHub' "$DOC_PATH"
 
             git config user.name 'Kristin CI Repair'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -226,18 +311,25 @@ jobs:
         run: |
           set -euo pipefail
           cd status
-          cp "$RUNNER_TEMP/pr14-repair.log" repair.log
+          if [ -f "$RUNNER_TEMP/pr14-repair.log" ]; then
+            cp "$RUNNER_TEMP/pr14-repair.log" repair.log
+          else
+            printf 'candidate construction did not reach the captured execution step\n' > repair.log
+          fi
           python - <<'PY'
           import json
           import os
           from pathlib import Path
 
           payload = {
-              'schemaVersion': '1.0.0',
+              'schemaVersion': '1.1.0',
               'repairRc': int(os.environ.get('REPAIR_RC', '255')),
               'targetBranch': os.environ['TARGET_BRANCH'],
               'expectedHead': os.environ['EXPECTED_HEAD'],
               'triggerHead': os.environ['EXPECTED_TRIGGER_HEAD'],
+              'triggerPullRequest': int(os.environ['EXPECTED_TRIGGER_PR']),
+              'sourceWorkflowRunId': os.environ.get('SOURCE_WORKFLOW_RUN_ID', ''),
+              'sourceWorkflowRunAttempt': os.environ.get('SOURCE_WORKFLOW_RUN_ATTEMPT', ''),
               'repairedCommit': os.environ.get('REPAIRED_COMMIT', ''),
               'refUpdatedByAction': os.environ.get('REF_UPDATED_BY_ACTION', 'false') == 'true',
               'workflowRunId': os.environ.get('GITHUB_RUN_ID', ''),
@@ -259,7 +351,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add repair.log repair-status.json
           if ! git diff --cached --quiet; then
-            git commit -m 'ci: record documented PR14 repair candidate'
+            git commit -m 'ci: record documented PR14 workflow-run repair candidate'
             git push origin "HEAD:refs/heads/$STATUS_BRANCH"
           fi
 
