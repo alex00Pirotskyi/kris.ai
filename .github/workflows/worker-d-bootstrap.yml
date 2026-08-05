@@ -22,19 +22,36 @@ jobs:
         with:
           python-version-file: config/p2.python-version
           check-latest: false
-      - name: Materialize deterministic source package
+      - name: Materialize verified deterministic source package
         run: |
           python - <<'PY'
           from pathlib import Path
+          import base64
+          import hashlib
           import zipfile
+
           root = Path('.').resolve()
-          with zipfile.ZipFile('.worker_d_payload.zip') as archive:
+          parts = [Path(f'.worker_d_payload.part{index:02d}') for index in range(1, 6)]
+          encoded = ''.join(path.read_text(encoding='ascii').strip() for path in parts)
+          payload = base64.b64decode(encoded, validate=True)
+          observed = hashlib.sha256(payload).hexdigest()
+          expected = '917748345350c98ef6e2b4746842490541f0e21599152cb10b4c6283fd73ac78'
+          if observed != expected:
+              raise SystemExit(f'payload checksum mismatch: {observed}')
+          archive_path = Path('.worker_d_payload_v2.zip')
+          archive_path.write_bytes(payload)
+          with zipfile.ZipFile(archive_path) as archive:
+              if archive.testzip() is not None:
+                  raise SystemExit('payload archive failed CRC validation')
               for member in archive.infolist():
                   target = (root / member.filename).resolve()
                   if root not in target.parents and target != root:
                       raise SystemExit(f'unsafe archive path: {member.filename}')
               archive.extractall(root)
-          Path('.worker_d_payload.zip').unlink()
+          archive_path.unlink()
+          Path('.worker_d_payload.zip').unlink(missing_ok=True)
+          for path in parts:
+              path.unlink()
           Path('.github/workflows/worker-d-bootstrap.yml').unlink()
           PY
       - name: Validate Worker D records
