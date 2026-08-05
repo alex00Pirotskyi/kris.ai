@@ -35,7 +35,10 @@ jobs:
               '.worker-a-bootstrap/progress.b64gz': ('docs/roadmap/progress/2026-08-05-worker-a-canonical-test-center-integration.md', 'ab2f7735120a1c310949aa7ae7ed16d6866594afec32bd287f323065087ab92e'),
           }
           for source, (target, expected) in mapping.items():
-              data = gzip.decompress(base64.b64decode((root / source).read_text(encoding='ascii').strip()))
+              encoded = (root / source).read_text(encoding='ascii').strip()
+              print(f'{source}: encoded_length={len(encoded)} modulo={len(encoded) % 4}')
+              encoded += '=' * (-len(encoded) % 4)
+              data = gzip.decompress(base64.b64decode(encoded))
               observed = hashlib.sha256(data).hexdigest()
               if observed != expected:
                   raise SystemExit(f'{source}: sha256 {observed} != {expected}')
