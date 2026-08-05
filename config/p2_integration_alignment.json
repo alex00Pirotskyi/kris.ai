@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "alex00Pirotskyi/kris.ai",
+  "roadmapAuthority": "docs/roadmap/MASTER.md",
+  "controlBaseSha": "5794dffa6fd8f1c16d6c004c9f75aca0e7b8b961",
+  "targetBranch": "merge/p1-p2-owner-risk-qa-preview",
+  "expectedTargetHead": "cec0a2d431edc9b972934fcc5898a30a7a1942f8",
+  "authorizedPaths": [
+    ".github/workflows/p2-owner-mode.yml",
+    "SOURCE_MANIFEST.sha256",
+    "docs/roadmap/progress/2026-08-05-p2-integration-validator-alignment.md",
+    "tool/validate_release.py"
+  ],
+  "appliedProgressPath": "docs/roadmap/progress/2026-08-05-p2-integration-validator-alignment.md"
+}
