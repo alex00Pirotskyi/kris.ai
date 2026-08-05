@@ -276,9 +276,10 @@
         "python",
         "tool/p1a_exit_gate_test.py",
         "--project",
-        "."
+        ".",
+        "--source-only"
       ],
-      "assuranceClass": "platform",
+      "assuranceClass": "source_contract",
       "environmentAllowlist": [
         "CI",
         "GITHUB_ACTIONS",
@@ -290,12 +291,13 @@
         "RUNNER_NAME",
         "RUNNER_OS"
       ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p1a-exit-gate.json",
+      "evidenceDestination": "release/evidence/generated/worker-a/p1a-exit-gate-source.json",
       "expectedOutputs": [],
       "inputPaths": [
         "tool/p1a_exit_gate_test.py",
-        "tool/p1a_evidence_contract.py",
-        "release/evidence/P1A/manifest.json"
+        "release/evidence/P1A/manifest.json",
+        "tasks/active/P1A-001.md",
+        "tasks/active/.gitkeep"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [

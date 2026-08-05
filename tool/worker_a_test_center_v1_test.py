@@ -102,6 +102,18 @@ class WorkerATestCenterV1Test(unittest.TestCase):
             for profile in self.registry["projectTestProfiles"]
         })
 
+    def test_p1a_profile_uses_governed_source_only_mode(self) -> None:
+        profile = next(
+            profile
+            for profile in self.registry["projectTestProfiles"]
+            if profile["stableCheckId"] == "tc.p1a.exit-gate"
+        )
+        self.assertEqual(
+            ["python", "tool/p1a_exit_gate_test.py", "--project", ".", "--source-only"],
+            profile["argv"],
+        )
+        self.assertEqual("source_contract", profile["assuranceClass"])
+
     def test_worker_b_review_is_immutable_history(self) -> None:
         review = json.loads(
             (
