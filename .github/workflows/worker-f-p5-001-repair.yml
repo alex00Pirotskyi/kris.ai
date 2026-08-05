@@ -1,0 +1,127 @@
+name: Worker F P5-001 source repair
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Apply bounded gate and support-state repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f lib/p5_ia_preview.dart
+          test -f .github/workflows/worker-f-p5-001-information-architecture.yml
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          workflow=Path('.github/workflows/worker-f-p5-001-information-architecture.yml')
+          text=workflow.read_text(encoding='utf-8')
+          text=text.replace('> p5-explain.txt 2>&1','> "$RUNNER_TEMP/p5-explain.txt" 2>&1')
+          text=text.replace("grep -E 'Unknown task|outside|scope' p5-explain.txt", "grep -E 'Unknown task|outside|scope' \"$RUNNER_TEMP/p5-explain.txt\"")
+          text=text.replace('                      p5-explain.txt\n','')
+          workflow.write_text(text,encoding='utf-8')
+
+          fixture=Path('lib/product/p5_information_architecture/p5_fixtures.dart')
+          fixture.write_text(fixture.read_text(encoding='utf-8').replace('<T5CapabilityFixture>[','<P5CapabilityFixture>['),encoding='utf-8')
+
+          prototype=Path('lib/product/p5_information_architecture/p5_prototype.dart')
+          source=prototype.read_text(encoding='utf-8')
+          old="""  late final P5InformationArchitectureController controller =
+              widget.controller ?? P5InformationArchitectureController();
+            late final bool ownsController = widget.controller == null;
+
+            @override
+            void dispose() {
+          """
+          new="""  late final P5InformationArchitectureController controller;
+            late final bool ownsController;
+
+            @override
+            void initState() {
+              super.initState();
+              controller = widget.controller ?? P5InformationArchitectureController();
+              ownsController = widget.controller == null;
+            }
+
+            @override
+            void dispose() {
+          """
+          if old in source: source=source.replace(old,new)
+          prototype.write_text(source,encoding='utf-8')
+
+          registry_path=Path('config/test_center_registry.v1.json')
+          registry=json.loads(registry_path.read_text(encoding='utf-8'))
+          def is_p5(record): return 'p5-001' in json.dumps(record,sort_keys=True) or 'p5-information-architecture' in json.dumps(record,sort_keys=True)
+          def force(record):
+              for key,value in list(record.items()):
+                  lower=key.lower()
+                  if isinstance(value,dict): force(value)
+                  elif isinstance(value,list):
+                      for item in value:
+                          if isinstance(item,dict): force(item)
+                  elif isinstance(value,str):
+                      if 'support' in lower and any(token in lower for token in ('state','status','level','classification')):
+                          record[key]='SOURCE_FOUNDATION'
+                      elif 'certification' in lower and any(token in lower for token in ('state','status','decision','result')):
+                          record[key]='NOT_EVALUATED'
+                      elif lower in {'resultstate','testexecutionresult'}:
+                          record[key]='UNKNOWN'
+          for value in registry.values():
+              if isinstance(value,list):
+                  for record in value:
+                      if isinstance(record,dict) and is_p5(record): force(record)
+          registry_path.write_text(json.dumps(registry,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+          flutter pub get
+          dart format lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          flutter analyze
+          flutter test test/product/p5_information_architecture/
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/source-manifest-first
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/source-manifest-first docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+          rm -f .github/workflows/worker-f-bootstrap.yml \
+            .github/workflows/worker-f-materialize-p5-001.yml \
+            .github/workflows/worker-f-stage2-orchestrator.yml \
+            .github/workflows/worker-f-p5-001-repair.yml
+          git add -A .github/workflows \
+            config/test_center_registry.v1.json docs/roadmap/SOURCE_MANIFEST.sha256 \
+            lib/p5_ia_preview.dart lib/product/p5_information_architecture \
+            release/evidence/P5-001 test/product/p5_information_architecture \
+            tool/worker_f_p5_ia.py tool/worker_f_p5_ia_test.py
+          if git diff --cached --quiet; then
+            echo 'No bounded repair was required.'
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'P5-001: repair exact-head verification findings'
+          git push origin HEAD:refs/heads/agent/f/P5-001-information-architecture
