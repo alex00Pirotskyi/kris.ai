@@ -19,7 +19,7 @@ from typing import Any, Iterable, Mapping, Sequence
 SCHEMA_RELATIVE = Path("schemas/test_center.v1.json")
 REGISTRY_RELATIVE = Path("config/test_center_registry.v1.json")
 GENERATED_REPORT_RELATIVE = Path(
-    "release/evidence/generated/worker-b/test-center-contract-validation.json"
+    "release/evidence/worker-b/test-center-contract-validation.json"
 )
 
 STABLE_TEST_ID_RE = re.compile(

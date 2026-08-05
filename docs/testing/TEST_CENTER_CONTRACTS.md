@@ -106,4 +106,4 @@ Generated validation evidence is an explicit separate operation:
 python tool/test_center_contracts.py write-report --project .
 ```
 
-`check` never writes the report.
+`check` never writes the report. The explicitly generated, committed validation record is stored at `release/evidence/worker-b/test-center-contract-validation.json`; `release/evidence/generated/**` remains disposable generated state and must not contain tracked certification evidence.
