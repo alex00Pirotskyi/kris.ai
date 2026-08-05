@@ -1,0 +1,61 @@
+name: Worker A Bootstrap Apply
+
+on:
+  push:
+    branches:
+      - agent/a/p1-p2-new-roadmap-execution
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-a-bootstrap-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Reconstruct reviewed Worker A integration files
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, pathlib
+          root = pathlib.Path('.')
+          mapping = {
+              '.worker-a-bootstrap/registry.b64gz': ('config/test_center_registry.v1.json', 'ac78a28a3208f8a47686dca2c750886ac4debdc0af5721dcb3788c6febcd9663'),
+              '.worker-a-bootstrap/adapter.b64gz': ('tool/worker_a_test_center_v1.py', '03d504a4220ae6296a423cd7b88402d0911204e566fa26471e95bfe0a3170e33'),
+              '.worker-a-bootstrap/tests.b64gz': ('tool/worker_a_test_center_v1_test.py', '63db4b6e06f8238af388c265e41d329130f1c0125b1f4407f949b77a4d557303'),
+              '.worker-a-bootstrap/workflow.b64gz': ('.github/workflows/worker-a-test-center-integration.yml', '54f3f68efd54b5c86bb035e53c2fd5e41e1a0d3c21fd2015bcca8937e6ebd15b'),
+              '.worker-a-bootstrap/rationales.b64gz': ('release/evidence/worker-a/test-center-v1/affected-mapping-rationales.json', 'a51ea1706d56739033d9e4d4030ca2fbda4ae91786bff4b8bb2202ead9e2b26f'),
+              '.worker-a-bootstrap/progress.b64gz': ('docs/roadmap/progress/2026-08-05-worker-a-canonical-test-center-integration.md', '91f9ff4649e9745894ebd8b7f6c45da570679ffaaa017219328a4e09f821ed46'),
+          }
+          for source, (target, expected) in mapping.items():
+              encoded = (root / source).read_text(encoding='ascii').strip()
+              data = gzip.decompress(base64.b64decode(encoded))
+              observed = hashlib.sha256(data).hexdigest()
+              if observed != expected:
+                  raise SystemExit(f'{source}: sha256 {observed} != {expected}')
+              path = root / target
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(data)
+          generated = root / 'release/evidence/generated/worker-b/test-center-contract-validation.json'
+          if generated.exists():
+              generated.unlink()
+          PY
+          rm -rf .worker-a-bootstrap
+          rm -f .github/workflows/worker-a-bootstrap-apply.yml
+          git diff --check
+      - name: Commit exact reconstructed integration
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat(worker-a): integrate canonical Test Center v1 contracts'
+          git push origin HEAD:agent/a/p1-p2-new-roadmap-execution
