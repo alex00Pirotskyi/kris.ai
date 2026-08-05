@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "1.0.0",
+  "classification": "PROPOSED_RECONCILIATION_DECISIONS_NOT_TASK_STATUS_AUTHORITY",
+  "sourceAnchor": {
+    "branch": "agent/anarchy-execution-os",
+    "commit": "6b23beb64070932886e75a131580fbc6fda878b6",
+    "tree": "724b838cae31bb50befb4e7676c55a41f925091e"
+  },
+  "directives": [
+    {
+      "id": "ANARCHY-DIR-001",
+      "source": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md#authority",
+      "repositoryEquivalent": "docs/roadmap/MASTER.md and docs/roadmap/roadmap.yaml",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Adopt execution packets without creating a second normative roadmap authority.",
+      "dependency": "P24-001 adoption gate",
+      "affected": ["docs/roadmap/roadmap.yaml", "docs/roadmap/anarchy/**"],
+      "migrationAction": "Keep MASTER.md human authority; extend roadmap.yaml after compatibility review.",
+      "rollbackAction": "Restore bootstrap scope and retain proposal files as reference.",
+      "validation": "authority conflict and generated-role checks"
+    },
+    {
+      "id": "ANARCHY-DIR-002",
+      "source": "docs/roadmap/anarchy/MIGRATION_FROM_CURRENT.md#roadmap-as-data",
+      "repositoryEquivalent": "P0-008 bootstrap control plane",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "P24 explicitly owns all-task expansion; existing consumers must remain compatible.",
+      "dependency": "all-task import and consumer fixtures",
+      "affected": ["docs/roadmap/roadmap.yaml", "tool/roadmap_control.py", "tool/anarchy_control_plane.py"],
+      "migrationAction": "Use JSON-subset YAML and one canonical machine file.",
+      "rollbackAction": "Remove extension fields and rerun bootstrap generator.",
+      "validation": "359 IDs, graph integrity, compatibility tests"
+    },
+    {
+      "id": "ANARCHY-DIR-003",
+      "source": "docs/roadmap/anarchy/phases/P00-stabilize-contain-and-establish-truth.md#parallel-execution-rules",
+      "repositoryEquivalent": "repository governance and task packets",
+      "decision": "ACCEPT",
+      "rationale": "Single-task claims and exact evidence reduce collisions.",
+      "dependency": "claim validator",
+      "affected": ["docs/roadmap/anarchy/claims/**"],
+      "migrationAction": "Validate one active task per worker and one active owner per task.",
+      "rollbackAction": "Retain claims as historical observations.",
+      "validation": "collision and missing-field fixtures"
+    },
+    {
+      "id": "ANARCHY-DIR-004",
+      "source": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md#worker-resumption",
+      "repositoryEquivalent": "STATUS.md, HANDOFF.md, task packets",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Worker resumption is accepted but must bind to exact Git/evidence state and remain conservative when offline.",
+      "dependency": "worker memory generator and remote reconciliation command",
+      "affected": ["docs/roadmap/anarchy/workers/**", "docs/roadmap/anarchy/DASHBOARD.md"],
+      "migrationAction": "Require branch, base/head/tree, owned paths, review, blockers, and next action.",
+      "rollbackAction": "Fall back to existing HANDOFF.md and task packet.",
+      "validation": "clean-room Worker J fixture"
+    },
+    {
+      "id": "ANARCHY-DIR-005",
+      "source": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md#state",
+      "repositoryEquivalent": "ASSURANCE_MODEL.md and roadmap statusValues",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "State domains must not share overloaded PASS/DONE semantics.",
+      "dependency": "schema adoption",
+      "affected": ["schemas/anarchy_execution.schema.json"],
+      "migrationAction": "Define five separate enums and prohibit automatic cross-domain promotion.",
+      "rollbackAction": "Keep enums as historical schema proposal.",
+      "validation": "exact enum and status-inflation tests"
+    },
+    {
+      "id": "ANARCHY-DIR-006",
+      "source": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md#evidence",
+      "repositoryEquivalent": "release/evidence and exact-head CI",
+      "decision": "ACCEPT",
+      "rationale": "Reviews and evidence must bind to exact commit/tree and content hashes.",
+      "dependency": "evidence generator and reviewers",
+      "affected": ["release/evidence/P24-001/**", "docs/roadmap/anarchy/reviews/**"],
+      "migrationAction": "Record evidence classification and exact binding; stale review cannot certify a repaired head.",
+      "rollbackAction": "Mark evidence stale/revoked without deletion.",
+      "validation": "orphan/stale binding checks"
+    },
+    {
+      "id": "ANARCHY-DIR-007",
+      "source": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md#autonomy",
+      "repositoryEquivalent": "CONTRIBUTING.md and security policy",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Routine work is autonomous; authority, credentials, security, ownership, runtime dependency, and evidence remain genuine blockers.",
+      "dependency": "none",
+      "affected": ["docs/roadmap/anarchy/workers/**"],
+      "migrationAction": "Use precise blocker classes and conservative status.",
+      "rollbackAction": "No runtime effect.",
+      "validation": "claim and worker-memory checks"
+    },
+    {
+      "id": "ANARCHY-DIR-008",
+      "source": "docs/roadmap/anarchy/phases/P24-roadmap-integrity-traceability-and-no-sql-authority.md#no-sql",
+      "repositoryEquivalent": "current SQLite durable workflow persistence",
+      "decision": "DEFER",
+      "rationale": "P24-001 is not authorization to change storage behavior, indexes, or migrations.",
+      "dependency": "separate approved no-SQL task and runtime evidence",
+      "affected": [],
+      "migrationAction": "Record explicit non-goal only.",
+      "rollbackAction": "Not applicable.",
+      "validation": "diff scope and product-gate review"
+    },
+    {
+      "id": "ANARCHY-DIR-009",
+      "source": "docs/roadmap/anarchy/DASHBOARD.md",
+      "repositoryEquivalent": "STATUS.md/HANDOFF.md generated views",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Dashboard is useful only as a generated compatibility view, never as independent status authority.",
+      "dependency": "post-adoption generator",
+      "affected": ["docs/roadmap/anarchy/DASHBOARD.md"],
+      "migrationAction": "Add explicit ownership header and freshness binding after adoption.",
+      "rollbackAction": "Retain current proposal dashboard with warning.",
+      "validation": "generated drift and authority checks"
+    },
+    {
+      "id": "ANARCHY-DIR-010",
+      "source": "docs/roadmap/anarchy/reference/MASTER_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md",
+      "repositoryEquivalent": "hash-linked external planning source",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Preserve provenance but do not treat a pointer as normative source content.",
+      "dependency": "source hash verification",
+      "affected": ["docs/roadmap/anarchy/reference/**"],
+      "migrationAction": "Use normalized phase packets plus explicit source mapping.",
+      "rollbackAction": "Retain pointer unchanged.",
+      "validation": "source mapping and hash ledger"
+    },
+    {
+      "id": "ANARCHY-DIR-011",
+      "source": "docs/roadmap/anarchy/phases/P03-browser-automation-and-web-studio.md",
+      "repositoryEquivalent": "MASTER.md P3 dependency on P2",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Phase packets cannot make P3 ready while P2 behavioral/evidence gates remain open.",
+      "dependency": "proven P2 closure",
+      "affected": ["P3 status projection"],
+      "migrationAction": "Import conservative dependency state only.",
+      "rollbackAction": "No product change.",
+      "validation": "dependency/status inflation checks"
+    },
+    {
+      "id": "ANARCHY-DIR-012",
+      "source": "docs/roadmap/anarchy/workers/WORKER_C.md",
+      "repositoryEquivalent": "draft PR #62",
+      "decision": "ACCEPT",
+      "rationale": "Worker C ownership and source-only P4-001 classification are current proven state.",
+      "dependency": "none",
+      "affected": ["claim projection only"],
+      "migrationAction": "Represent without rewriting or absorbing PR #62.",
+      "rollbackAction": "Remove projection only.",
+      "validation": "live PR exact-head reconciliation"
+    },
+    {
+      "id": "ANARCHY-DIR-013",
+      "source": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md#ten-workers",
+      "repositoryEquivalent": "no current durable A-J runtime registry",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Ten identities are stable lanes, not permission to claim work or invent progress for inactive workers.",
+      "dependency": "claim/worker model",
+      "affected": ["docs/roadmap/anarchy/workers/**"],
+      "migrationAction": "Validate A-J inventory; activate only from proven claims.",
+      "rollbackAction": "Retain cards as proposal references.",
+      "validation": "worker inventory and multiple-active-task checks"
+    },
+    {
+      "id": "ANARCHY-DIR-014",
+      "source": "docs/roadmap/anarchy/MIGRATION_FROM_CURRENT.md#ci",
+      "repositoryEquivalent": ".github/workflows/ci.yml product-gates",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Use existing three-OS exact-head architecture rather than broad workflow replacement.",
+      "dependency": "validator foundation",
+      "affected": [".github/workflows/ci.yml"],
+      "migrationAction": "Add one bounded P24 step using pinned existing toolchains.",
+      "rollbackAction": "Remove the bounded step.",
+      "validation": "Ubuntu/Windows/macOS exact-head runs"
+    },
+    {
+      "id": "ANARCHY-DIR-015",
+      "source": "P24-001 assignment#source-manifest",
+      "repositoryEquivalent": "SOURCE_MANIFEST.sha256",
+      "decision": "ACCEPT_WITH_CHANGES",
+      "rationale": "Manifest ownership must be proven; hashes may not be hand-edited.",
+      "dependency": "identify owning generator",
+      "affected": ["SOURCE_MANIFEST.sha256"],
+      "migrationAction": "Defer refresh until generator is identified and final file set is stable.",
+      "rollbackAction": "Leave manifest unchanged.",
+      "validation": "generator-owned non-mutating check"
+    }
+  ]
+}

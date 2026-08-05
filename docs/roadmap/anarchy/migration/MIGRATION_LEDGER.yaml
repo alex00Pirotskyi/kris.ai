@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "classification": "APPEND_ONLY_MIGRATION_OBSERVATION_NOT_TASK_STATUS_AUTHORITY",
+  "task": "P24-001",
+  "worker": "J",
+  "events": [
+    {
+      "sequence": 1,
+      "observedAtUtc": "2026-08-05T10:23:23Z",
+      "kind": "LIVE_BASELINE",
+      "protectedMain": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "stackedBase": "6b23beb64070932886e75a131580fbc6fda878b6",
+      "evidence": "docs/roadmap/anarchy/migration/BASELINE.json"
+    },
+    {
+      "sequence": 2,
+      "kind": "CLAIM",
+      "commit": "adda21f7c4b5fde7ef2d3c3417f50086a19bc325",
+      "tree": "cae63423e8b94239c93f8d2ec037976ac9b2b041",
+      "evidence": "docs/roadmap/anarchy/claims/P24-001.md"
+    },
+    {
+      "sequence": 3,
+      "kind": "AUTHORITY_DECISION_PROPOSED",
+      "decision": "MASTER.md remains human authority; roadmap.yaml remains and is proposed to become the all-task machine authority after adoption.",
+      "evidence": "docs/roadmap/anarchy/migration/P24-001_RECONCILIATION_ADR.md"
+    },
+    {
+      "sequence": 4,
+      "kind": "VALIDATOR_FOUNDATION",
+      "classification": "SOURCE_FOUNDATION",
+      "evidence": [
+        "schemas/anarchy_execution.schema.json",
+        "tool/anarchy_control_plane.py",
+        "tool/anarchy_control_plane_test.py"
+      ]
+    }
+  ],
+  "pending": [
+    "exact-head three-OS CI",
+    "generator-owned root source-manifest refresh/check",
+    "Worker B exact-SHA review",
+    "Worker I exact-SHA review",
+    "explicit adoption authorization"
+  ]
+}

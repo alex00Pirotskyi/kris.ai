@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "1.0.0",
+  "classification": "MACHINE_OBSERVED_PRE_MIGRATION_BASELINE",
+  "observedAtUtc": "2026-08-05T10:23:23Z",
+  "repository": "alex00Pirotskyi/kris.ai",
+  "protectedMain": {
+    "branch": "main",
+    "sha": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "stackedBase": {
+    "pullRequest": 63,
+    "branch": "agent/anarchy-execution-os",
+    "sha": "6b23beb64070932886e75a131580fbc6fda878b6",
+    "tree": "724b838cae31bb50befb4e7676c55a41f925091e",
+    "state": "OPEN_DRAFT_PROPOSAL",
+    "mergeability": "CLEAN_AT_OBSERVATION"
+  },
+  "workerBranchAtClaim": {
+    "branch": "agent/j/P24-001-roadmap-as-data-adr",
+    "claimCommit": "adda21f7c4b5fde7ef2d3c3417f50086a19bc325",
+    "claimTree": "cae63423e8b94239c93f8d2ec037976ac9b2b041"
+  },
+  "sourceAnchors": {
+    "masterGitBlob": "8fd06e9a2632f7cfc29c103eb591c18f9dfcd8b7",
+    "roadmapYamlGitBlob": "bd579ad11a354fd07ef2b122dbf4046f676e0a8f",
+    "masterPath": "docs/roadmap/MASTER.md",
+    "machineAuthorityPath": "docs/roadmap/roadmap.yaml",
+    "proposalRoot": "docs/roadmap/anarchy",
+    "proposalPhaseCount": 25,
+    "proposalTaskIdCount": 359,
+    "proposalWorkerCount": 10,
+    "referenceV32Role": "HASH_LINKED_REFERENCE_POINTER_NOT_NORMATIVE_SOURCE"
+  },
+  "repositoryTruth": {
+    "humanAuthority": "docs/roadmap/MASTER.md",
+    "machineAuthority": "docs/roadmap/roadmap.yaml within its declared P0/P1 scope",
+    "generatedViews": [
+      "docs/roadmap/STATUS.md",
+      "docs/roadmap/HANDOFF.md",
+      "docs/roadmap/GENERATED_STATE.md"
+    ],
+    "p2": {
+      "taskCount": 14,
+      "classification": "SOURCE_ONLY",
+      "behavioralEvidence": false,
+      "triOsBehavioralEvidence": false,
+      "independentSecurityReview": false,
+      "supportPromotion": false
+    },
+    "p3": {
+      "dependency": "P2",
+      "classification": "DEPENDENCY_GOVERNED_NOT_PROMOTED_BY_PROPOSAL_FILES"
+    },
+    "p4_001": {
+      "pullRequest": 62,
+      "branch": "agent/p4-001-search-provider-foundation",
+      "sha": "3c83f9a502e8e758aa40a20dfac82673339c77b1",
+      "tree": "91101bd11d80b16834a2507b412b3935f629fc99",
+      "classification": "SOURCE_ONLY_WORKER_C_OWNED"
+    }
+  },
+  "openPullRequests": [
+    {
+      "number": 62,
+      "owner": "Worker C",
+      "state": "OPEN_DRAFT",
+      "preservation": "DO_NOT_REBASE_REWRITE_ABSORB_OR_SUPERSEDE"
+    },
+    {
+      "number": 63,
+      "owner": "shared proposal branch",
+      "state": "OPEN_DRAFT",
+      "preservation": "STACK_ON_EXACT_HEAD_DO_NOT_DIRECTLY_EDIT"
+    }
+  ],
+  "toolchain": {
+    "python": "3.12.10 in product-gates",
+    "flutter": "3.44.8 stable in product-gates",
+    "workflow": ".github/workflows/ci.yml",
+    "checkoutAction": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "setupPythonAction": "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97"
+  },
+  "preMigrationChecks": [
+    {
+      "scope": "PR63 exact head",
+      "runId": 30995420737,
+      "name": "product-gates",
+      "result": "PASS"
+    },
+    {
+      "scope": "PR63 exact head",
+      "runId": 30995420714,
+      "name": "P1 Authority Service Amendment",
+      "result": "PASS"
+    },
+    {
+      "scope": "PR63 exact head",
+      "runId": 30995420705,
+      "name": "P2 Owner Mode",
+      "result": "PASS_SOURCE_GATE_NOT_BEHAVIORAL_PROMOTION"
+    },
+    {
+      "scope": "PR62 exact head",
+      "runId": 30993817760,
+      "name": "P4-001 Search Provider Interface",
+      "result": "PASS_SOURCE_ONLY"
+    },
+    {
+      "scope": "PR62 exact head",
+      "runId": 30993817714,
+      "name": "product-gates",
+      "result": "PASS"
+    },
+    {
+      "scope": "PR62 exact head",
+      "runId": 30993817712,
+      "name": "PR14 Current Main Reconciliation",
+      "result": "PRE_EXISTING_UNRELATED_FAILURE"
+    }
+  ],
+  "reconciliationFindings": [
+    {
+      "classification": "AUTHORITY_RECONCILIATION_REQUIRED",
+      "finding": "CONTRIBUTING.md names tool/roadmap_state.py while the live bootstrap implementation is tool/roadmap_control.py.",
+      "action": "Preserve tool/roadmap_control.py and document a compatibility correction; do not rename consumers incidentally."
+    },
+    {
+      "classification": "AUTHORITY_RECONCILIATION_REQUIRED",
+      "finding": "The root SOURCE_MANIFEST.sha256 owning generator was not identified through the connected repository surface during baseline collection.",
+      "action": "Do not hand-edit hashes; keep root-manifest refresh as an adoption gate until the owning generator is proven."
+    }
+  ]
+}
