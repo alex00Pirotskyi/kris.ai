@@ -90,7 +90,7 @@ jobs:
           python tool/p2_strict_finalizer_contract_test.py --project .
           python tool/p2_task_assertion_cli_test.py --project .
           flutter pub get
-          dart format --output=none --set-exit-if-changed lib/product test/product
+          python tool/dart_format_scope.py --check
           flutter analyze
           flutter test test/product
           npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund

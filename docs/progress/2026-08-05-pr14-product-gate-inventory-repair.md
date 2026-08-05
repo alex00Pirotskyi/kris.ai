@@ -48,3 +48,22 @@ security validation on Windows, macOS, and Linux.
 This repair restores CI consistency only. It does not provide independent
 security approval, production-release eligibility, public-GA eligibility,
 or P3 completion evidence.
+
+
+## Follow-up: canonical P2 formatting authority
+
+Fresh exact-head P2 source lanes proved that all source, evidence,
+authority, finalizer, and task-assertion contracts passed before the
+workflow invoked a stale blanket `dart format` command. That command
+included generated Dart outputs and mutated six reviewed generated
+files on Ubuntu and macOS.
+
+The P2 source lane now uses `python tool/dart_format_scope.py --check`,
+the same non-mutating governed formatting authority used by the
+tri-platform product gate. Generated outputs remain governed by their
+generators and generated-state checks rather than an unrelated blanket
+formatter.
+
+This is a CI-authority reconciliation only. It does not change runtime
+behavior, broaden Owner Mode authority, alter the owner-risk QA claim,
+or add roadmap completion evidence.
