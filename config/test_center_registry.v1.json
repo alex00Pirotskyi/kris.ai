@@ -1,0 +1,178 @@
+{
+  "affectedTestMappings": [
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.test-center-contracts",
+      "pathPatterns": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "priority": 10,
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
+    },
+    {
+      "mappingId": "affected.testing-evidence-bridges",
+      "pathPatterns": [
+        "schemas/assurance_report.v1.json",
+        "schemas/project_profile.v2.json",
+        "schemas/verification_report.v1.json",
+        "tool/assurance_model.py"
+      ],
+      "priority": 20,
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
+    }
+  ],
+  "projectTestProfiles": [
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_contracts.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/test-center-contract-validation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.test-center.contracts",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_contracts_test.py"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/test-center-semantic-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.test-center.semantic-regressions",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    }
+  ],
+  "registryId": "test-center.canonical-v1",
+  "schemaVersion": "1.0.0",
+  "testCases": [
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Canonical Test Center contract check",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.contracts"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Test Center semantic regression suite",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.semantic-regressions"
+    }
+  ],
+  "testModules": [
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral",
+        "platform",
+        "release"
+      ],
+      "displayName": "Canonical Test Center",
+      "moduleId": "tm.test-center",
+      "owner": "Worker B / shared testing architecture",
+      "purpose": "Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."
+    }
+  ],
+  "testingStudioPresentationRecords": [
+    {
+      "assuranceClass": "source_contract",
+      "capability": "Canonical Test Center contracts",
+      "certificationImpact": "A PASS validates only the shared data contract; it does not certify a product candidate.",
+      "currentState": "PASS",
+      "displayName": "Development Verification contract",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "Shared testing architecture",
+      "platformMatrix": {
+        "observed": [
+          "linux"
+        ],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.test-center.development-verification",
+      "purpose": "Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.",
+      "requiredNextAction": "Run both stable checks on the exact candidate across the required platform matrix before certification.",
+      "staleResultWarning": false,
+      "stateDomain": "TEST_EXECUTION",
+      "supportClaimImpact": "No capability or release support claim is inferred from this source-contract PASS.",
+      "surface": "DEVELOPMENT_VERIFICATION"
+    }
+  ]
+}

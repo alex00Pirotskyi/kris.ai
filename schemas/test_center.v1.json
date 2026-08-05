@@ -1,0 +1,1305 @@
+{
+  "$defs": {
+    "AffectedTestMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "excludedPaths": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "mappingId": {
+          "pattern": "^affected\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "pathPatterns": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "priority": {
+          "maximum": 100000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "testIds": {
+          "items": {
+            "$ref": "#/$defs/StableTestId"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "mappingId",
+        "pathPatterns",
+        "testIds",
+        "priority"
+      ],
+      "title": "AffectedTestMapping",
+      "type": "object"
+    },
+    "CapabilitySupportRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateCommit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "candidateTree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "capabilityId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "evidenceBindings": {
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          },
+          "type": "array"
+        },
+        "lastReviewedAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/CapabilitySupportStatus"
+        },
+        "supportRecordId": {
+          "pattern": "^support\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "supportedPlatforms": {
+          "items": {
+            "enum": [
+              "linux",
+              "macos",
+              "windows",
+              "android",
+              "ios",
+              "web",
+              "any"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "supportRecordId",
+        "capabilityId",
+        "candidateCommit",
+        "candidateTree",
+        "status",
+        "supportedPlatforms",
+        "evidenceBindings",
+        "lastReviewedAt",
+        "rationale"
+      ],
+      "title": "CapabilitySupportRecord",
+      "type": "object"
+    },
+    "CapabilitySupportStatus": {
+      "enum": [
+        "NOT_IMPLEMENTED",
+        "SOURCE_FOUNDATION",
+        "EXPERIMENTAL",
+        "BEHAVIOR_SUPPORTED",
+        "PLATFORM_SUPPORTED",
+        "RELEASE_SUPPORTED",
+        "DEGRADED",
+        "UNSUPPORTED",
+        "REVOKED"
+      ],
+      "title": "Capability support status",
+      "type": "string"
+    },
+    "CertificationFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "OPEN",
+            "ACCEPTED",
+            "RESOLVED",
+            "DEFERRED"
+          ],
+          "type": "string"
+        },
+        "findingId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "INFO"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "findingId",
+        "severity",
+        "summary",
+        "disposition"
+      ],
+      "type": "object"
+    },
+    "CertificationRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateCommit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "candidateTree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "certificationId": {
+          "pattern": "^cert\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "evidenceBindings": {
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          },
+          "type": "array"
+        },
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/CertificationFinding"
+          },
+          "type": "array"
+        },
+        "independentReview": {
+          "$ref": "#/$defs/IndependentReview"
+        },
+        "observedResults": {
+          "items": {
+            "$ref": "#/$defs/TestExecutionResult"
+          },
+          "type": "array"
+        },
+        "platformMatrix": {
+          "$ref": "#/$defs/PlatformMatrix"
+        },
+        "requiredTestIds": {
+          "items": {
+            "$ref": "#/$defs/StableTestId"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "revocation": {
+          "additionalProperties": false,
+          "properties": {
+            "reason": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "revokedAt": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          "required": [
+            "revokedAt",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "scope": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "staleness": {
+          "additionalProperties": false,
+          "properties": {
+            "evaluatedAt": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "isStale": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "isStale",
+            "evaluatedAt"
+          ],
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/CertificationStatus"
+        },
+        "supportImpact": {
+          "enum": [
+            "NONE",
+            "BLOCKS_BEHAVIOR_SUPPORT",
+            "BLOCKS_PLATFORM_SUPPORT",
+            "BLOCKS_RELEASE_SUPPORT",
+            "REVOKES_SUPPORT"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "certificationId",
+        "candidateCommit",
+        "candidateTree",
+        "scope",
+        "requiredTestIds",
+        "observedResults",
+        "platformMatrix",
+        "evidenceBindings",
+        "status",
+        "staleness",
+        "findings",
+        "supportImpact"
+      ],
+      "title": "CertificationRecord",
+      "type": "object"
+    },
+    "CertificationStatus": {
+      "enum": [
+        "NOT_EVALUATED",
+        "PARTIAL",
+        "PASS",
+        "FAIL",
+        "STALE",
+        "REVOKED"
+      ],
+      "title": "Certification status",
+      "type": "string"
+    },
+    "DevelopmentVerificationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "candidateCommit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "candidateTree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "changedPaths": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "exactShaRequired": {
+          "const": true
+        },
+        "nonMutating": {
+          "const": true
+        },
+        "platformMatrix": {
+          "$ref": "#/$defs/PlatformMatrix"
+        },
+        "profileIds": {
+          "items": {
+            "$ref": "#/$defs/StableTestId"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "requestId": {
+          "pattern": "^verify-request\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "requestedSurfaces": {
+          "items": {
+            "enum": [
+              "TEST_ME",
+              "QUICK_CHECK",
+              "DEVELOPMENT_VERIFICATION",
+              "AFFECTED_TESTS",
+              "PLATFORM_CERTIFICATION",
+              "EVIDENCE",
+              "RELEASE_READINESS"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "workingTreeIdentity": {
+          "$ref": "#/$defs/WorkingTreeIdentity"
+        }
+      },
+      "required": [
+        "requestId",
+        "candidateCommit",
+        "candidateTree",
+        "branch",
+        "workingTreeIdentity",
+        "changedPaths",
+        "requestedSurfaces",
+        "profileIds",
+        "platformMatrix",
+        "exactShaRequired",
+        "nonMutating"
+      ],
+      "title": "DevelopmentVerificationRequest",
+      "type": "object"
+    },
+    "DevelopmentVerificationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "certificationRecords": {
+          "items": {
+            "$ref": "#/$defs/CertificationRecord"
+          },
+          "type": "array"
+        },
+        "generatedAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "overallState": {
+          "$ref": "#/$defs/TestResultState"
+        },
+        "request": {
+          "$ref": "#/$defs/DevelopmentVerificationRequest"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/TestExecutionResult"
+          },
+          "type": "array"
+        },
+        "selectedTestIds": {
+          "items": {
+            "$ref": "#/$defs/StableTestId"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "verificationId": {
+          "pattern": "^verification\\.[a-z0-9._-]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "verificationId",
+        "request",
+        "selectedTestIds",
+        "results",
+        "certificationRecords",
+        "generatedAt",
+        "overallState"
+      ],
+      "title": "DevelopmentVerificationResult",
+      "type": "object"
+    },
+    "EnvironmentIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "allowlisted": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "digest",
+        "allowlisted"
+      ],
+      "type": "object"
+    },
+    "EvidenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "createdAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "evidenceId": {
+          "pattern": "^evidence\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "immutable": {
+          "const": true
+        },
+        "kind": {
+          "enum": [
+            "ORIGINAL",
+            "DERIVED",
+            "REVIEW",
+            "CLEANUP",
+            "LOG",
+            "REPORT"
+          ],
+          "type": "string"
+        },
+        "mediaType": {
+          "minLength": 3,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "sourceEvidenceIds": {
+          "items": {
+            "pattern": "^evidence\\.[a-z0-9._-]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "tree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "uri": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidenceId",
+        "kind",
+        "uri",
+        "sha256",
+        "immutable",
+        "commit",
+        "tree",
+        "createdAt",
+        "mediaType"
+      ],
+      "title": "EvidenceReference",
+      "type": "object"
+    },
+    "IndependentReview": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/EvidenceReference"
+        },
+        "decision": {
+          "enum": [
+            "PASS",
+            "REQUEST_CHANGES",
+            "BLOCKED_BY_CONTRACT",
+            "BLOCKED_EXTERNAL"
+          ],
+          "type": "string"
+        },
+        "reviewId": {
+          "pattern": "^review\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "reviewedCommit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "reviewedTree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "reviewer": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "reviewId",
+        "reviewer",
+        "reviewedCommit",
+        "reviewedTree",
+        "decision",
+        "artifact"
+      ],
+      "type": "object"
+    },
+    "PlatformMatrix": {
+      "additionalProperties": false,
+      "properties": {
+        "observed": {
+          "items": {
+            "enum": [
+              "linux",
+              "macos",
+              "windows",
+              "android",
+              "ios",
+              "web",
+              "any"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "required": {
+          "items": {
+            "enum": [
+              "linux",
+              "macos",
+              "windows",
+              "android",
+              "ios",
+              "web",
+              "any"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "required",
+        "observed"
+      ],
+      "type": "object"
+    },
+    "ProjectTestProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "affectedPaths": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "argv": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[^\\u0000\\r\\n]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "assuranceClass": {
+          "enum": [
+            "architecture_lint",
+            "source_contract",
+            "behavioral",
+            "sdk_toolchain",
+            "platform",
+            "release",
+            "mixed",
+            "unclassified"
+          ],
+          "type": "string"
+        },
+        "environmentAllowlist": {
+          "items": {
+            "pattern": "^[A-Z_][A-Z0-9_]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "evidenceDestination": {
+          "allOf": [
+            {
+              "minLength": 1,
+              "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+              "type": "string"
+            },
+            {
+              "pattern": "^release/evidence/"
+            }
+          ]
+        },
+        "expectedOutputs": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputPaths": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "mutationPolicy": {
+          "const": "NON_MUTATING"
+        },
+        "platforms": {
+          "items": {
+            "enum": [
+              "linux",
+              "macos",
+              "windows",
+              "android",
+              "ios",
+              "web",
+              "any"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "stableCheckId": {
+          "$ref": "#/$defs/StableTestId"
+        },
+        "timeoutSeconds": {
+          "maximum": 86400,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "workingDirectory": {
+          "minLength": 1,
+          "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))(?!~[\\\\/]).+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stableCheckId",
+        "argv",
+        "workingDirectory",
+        "platforms",
+        "timeoutSeconds",
+        "environmentAllowlist",
+        "inputPaths",
+        "expectedOutputs",
+        "mutationPolicy",
+        "assuranceClass",
+        "evidenceDestination",
+        "affectedPaths"
+      ],
+      "title": "ProjectTestProfile",
+      "type": "object"
+    },
+    "RoadmapTaskStatus": {
+      "enum": [
+        "NOT_STARTED",
+        "READY",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "REVIEW",
+        "DONE",
+        "DEFERRED"
+      ],
+      "type": "string"
+    },
+    "RunnerIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "image": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "provider": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "runnerId": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "runnerId",
+        "image",
+        "architecture"
+      ],
+      "type": "object"
+    },
+    "StableTestId": {
+      "pattern": "^tc\\.[a-z0-9]+(?:[._-][a-z0-9]+)*\\.[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+      "title": "StableTestId",
+      "type": "string"
+    },
+    "TestCase": {
+      "additionalProperties": false,
+      "properties": {
+        "assuranceClass": {
+          "enum": [
+            "architecture_lint",
+            "source_contract",
+            "behavioral",
+            "sdk_toolchain",
+            "platform",
+            "release",
+            "mixed",
+            "unclassified"
+          ],
+          "type": "string"
+        },
+        "displayName": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mandatory": {
+          "type": "boolean"
+        },
+        "moduleId": {
+          "pattern": "^tm\\.[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "roadmapTaskIds": {
+          "items": {
+            "pattern": "^P[0-9]+(?:A)?-[0-9]{3}$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "testId": {
+          "$ref": "#/$defs/StableTestId"
+        }
+      },
+      "required": [
+        "testId",
+        "moduleId",
+        "displayName",
+        "purpose",
+        "roadmapTaskIds",
+        "assuranceClass",
+        "mandatory"
+      ],
+      "title": "TestCase",
+      "type": "object"
+    },
+    "TestExecutionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "assuranceClass": {
+          "enum": [
+            "architecture_lint",
+            "source_contract",
+            "behavioral",
+            "sdk_toolchain",
+            "platform",
+            "release",
+            "mixed",
+            "unclassified"
+          ],
+          "type": "string"
+        },
+        "branch": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "certificationImpact": {
+          "enum": [
+            "NONE",
+            "INFORMATIONAL",
+            "BLOCKS_SCOPE",
+            "INVALIDATES_CERTIFICATION"
+          ],
+          "type": "string"
+        },
+        "cleanupState": {
+          "enum": [
+            "CLEAN",
+            "DIRTY",
+            "UNRESOLVED",
+            "NOT_REQUIRED"
+          ],
+          "type": "string"
+        },
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "durationMillis": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "endedAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "environment": {
+          "$ref": "#/$defs/EnvironmentIdentity"
+        },
+        "evidenceReferences": {
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          },
+          "type": "array"
+        },
+        "exitCode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "failureClassification": {
+          "enum": [
+            "NONE",
+            "ASSERTION",
+            "INFRASTRUCTURE",
+            "TIMEOUT",
+            "SECURITY",
+            "CLEANUP",
+            "MISSING_DEPENDENCY",
+            "UNSAFE_PROFILE",
+            "UNKNOWN"
+          ],
+          "type": "string"
+        },
+        "moduleId": {
+          "pattern": "^tm\\.[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "macos",
+            "windows",
+            "android",
+            "ios",
+            "web",
+            "any"
+          ],
+          "type": "string"
+        },
+        "resultId": {
+          "pattern": "^result\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "resultState": {
+          "$ref": "#/$defs/TestResultState"
+        },
+        "roadmapTaskIds": {
+          "items": {
+            "pattern": "^P[0-9]+(?:A)?-[0-9]{3}$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "runner": {
+          "$ref": "#/$defs/RunnerIdentity"
+        },
+        "startedAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "testId": {
+          "$ref": "#/$defs/StableTestId"
+        },
+        "toolchain": {
+          "$ref": "#/$defs/ToolchainIdentity"
+        },
+        "tree": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "workingTreeIdentity": {
+          "$ref": "#/$defs/WorkingTreeIdentity"
+        }
+      },
+      "required": [
+        "resultId",
+        "testId",
+        "moduleId",
+        "roadmapTaskIds",
+        "commit",
+        "tree",
+        "branch",
+        "workingTreeIdentity",
+        "platform",
+        "runner",
+        "toolchain",
+        "environment",
+        "startedAt",
+        "endedAt",
+        "durationMillis",
+        "resultState",
+        "exitCode",
+        "assuranceClass",
+        "evidenceReferences",
+        "cleanupState",
+        "failureClassification",
+        "certificationImpact"
+      ],
+      "title": "TestExecutionResult",
+      "type": "object"
+    },
+    "TestModule": {
+      "additionalProperties": false,
+      "properties": {
+        "assuranceClasses": {
+          "items": {
+            "enum": [
+              "architecture_lint",
+              "source_contract",
+              "behavioral",
+              "sdk_toolchain",
+              "platform",
+              "release",
+              "mixed",
+              "unclassified"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "displayName": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "moduleId": {
+          "pattern": "^tm\\.[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "owner": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "moduleId",
+        "displayName",
+        "purpose",
+        "owner",
+        "assuranceClasses"
+      ],
+      "title": "TestModule",
+      "type": "object"
+    },
+    "TestResultState": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "ERROR",
+        "SKIPPED",
+        "BLOCKED",
+        "UNKNOWN",
+        "FLAKY",
+        "NOT_IMPLEMENTED"
+      ],
+      "title": "TestExecutionResult state",
+      "type": "string"
+    },
+    "TestingStudioPresentationRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "assuranceClass": {
+          "enum": [
+            "architecture_lint",
+            "source_contract",
+            "behavioral",
+            "sdk_toolchain",
+            "platform",
+            "release",
+            "mixed",
+            "unclassified"
+          ],
+          "type": "string"
+        },
+        "capability": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "certificationImpact": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "currentState": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "displayName": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "evidenceLinks": {
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          },
+          "type": "array"
+        },
+        "lastExactCommitResult": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "commit": {
+                  "pattern": "^[0-9a-f]{40}$",
+                  "type": "string"
+                },
+                "resultState": {
+                  "$ref": "#/$defs/TestResultState"
+                },
+                "tree": {
+                  "pattern": "^[0-9a-f]{40}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "commit",
+                "tree",
+                "resultState"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phase": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "platformMatrix": {
+          "$ref": "#/$defs/PlatformMatrix"
+        },
+        "presentationId": {
+          "pattern": "^presentation\\.[a-z0-9._-]+$",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "requiredNextAction": {
+          "type": "string"
+        },
+        "staleResultWarning": {
+          "type": "boolean"
+        },
+        "stateDomain": {
+          "enum": [
+            "ROADMAP_TASK",
+            "WORKER_RUNTIME",
+            "TEST_EXECUTION",
+            "CERTIFICATION",
+            "CAPABILITY_SUPPORT"
+          ],
+          "type": "string"
+        },
+        "supportClaimImpact": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "surface": {
+          "enum": [
+            "TEST_ME",
+            "QUICK_CHECK",
+            "DEVELOPMENT_VERIFICATION",
+            "AFFECTED_TESTS",
+            "PLATFORM_CERTIFICATION",
+            "EVIDENCE",
+            "RELEASE_READINESS"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "presentationId",
+        "surface",
+        "displayName",
+        "purpose",
+        "phase",
+        "capability",
+        "assuranceClass",
+        "platformMatrix",
+        "stateDomain",
+        "currentState",
+        "lastExactCommitResult",
+        "staleResultWarning",
+        "requiredNextAction",
+        "evidenceLinks",
+        "certificationImpact",
+        "supportClaimImpact"
+      ],
+      "title": "TestingStudioPresentationRecord",
+      "type": "object"
+    },
+    "ToolchainIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "components": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minProperties": 1,
+          "type": "object"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "digest",
+        "components"
+      ],
+      "type": "object"
+    },
+    "WorkerRuntimeStatus": {
+      "enum": [
+        "UNCLAIMED",
+        "CLAIMED",
+        "ACTIVE",
+        "YIELDED",
+        "BLOCKED",
+        "CANCELLED",
+        "COMPLETED"
+      ],
+      "type": "string"
+    },
+    "WorkingTreeIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "clean": {
+          "type": "boolean"
+        },
+        "diffSha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "statusSha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "untrackedSha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "clean",
+        "statusSha256",
+        "diffSha256",
+        "untrackedSha256"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://kristin.local/schemas/test_center.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Shared data contracts for Test Center, Development Verification, certification, and Testing Studio presentation. This schema does not define roadmap or worker authority.",
+  "properties": {
+    "affectedTestMappings": {
+      "items": {
+        "$ref": "#/$defs/AffectedTestMapping"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "projectTestProfiles": {
+      "items": {
+        "$ref": "#/$defs/ProjectTestProfile"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "registryId": {
+      "pattern": "^test-center\\.[a-z0-9._-]+$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "testCases": {
+      "items": {
+        "$ref": "#/$defs/TestCase"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "testModules": {
+      "items": {
+        "$ref": "#/$defs/TestModule"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "testingStudioPresentationRecords": {
+      "items": {
+        "$ref": "#/$defs/TestingStudioPresentationRecord"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "registryId",
+    "testModules",
+    "testCases",
+    "projectTestProfiles",
+    "affectedTestMappings",
+    "testingStudioPresentationRecords"
+  ],
+  "title": "Kristin Canonical Test Center Contract Set",
+  "type": "object"
+}
