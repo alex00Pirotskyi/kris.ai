@@ -1,0 +1,247 @@
+name: P4-001 Finalize PR Handoff
+
+on:
+  push:
+    branches:
+      - agent/p4-001-search-provider-foundation
+    paths:
+      - .github/workflows/p4-001-pr-handoff.yml
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: p4-001-pr-handoff
+  cancel-in-progress: false
+
+jobs:
+  handoff:
+    if: startsWith(github.event.head_commit.message, 'chore(p4-001): stage PR handoff finalizer')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Remove one-shot workflow and create clean final head
+        id: final
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p4-001-pr-handoff.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          python tool/p4_001_search_provider_test.py \
+            --project . \
+            --json-output "${RUNNER_TEMP}/p4-001-pr-handoff.json"
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- .github/workflows/p4-001-pr-handoff.yml SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'chore(p4-001): finalize exact-head PR handoff'
+          final_sha="$(git rev-parse HEAD)"
+          final_tree="$(git show -s --format=%T HEAD)"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          test -z "$(git status --porcelain=v1)"
+          printf 'sha=%s\n' "${final_sha}" >> "${GITHUB_OUTPUT}"
+          printf 'tree=%s\n' "${final_tree}" >> "${GITHUB_OUTPUT}"
+
+      - name: Require final exact-head CI and update PR #62
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FINAL_SHA: ${{ steps.final.outputs.sha }}
+          FINAL_TREE: ${{ steps.final.outputs.tree }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import pathlib
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from typing import Any
+
+          repository = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          final_sha = os.environ['FINAL_SHA']
+          final_tree = os.environ['FINAL_TREE']
+          branch = os.environ['GITHUB_REF_NAME']
+          manifest = json.loads(pathlib.Path('release/evidence/P4-001/manifest.json').read_text(encoding='utf-8'))
+          source = manifest['sourceCandidate']
+          roadmap = manifest['roadmapExecutionPin']
+
+          def request(method: str, path: str, payload: Any | None = None) -> Any:
+              data = None if payload is None else json.dumps(payload).encode('utf-8')
+              req = urllib.request.Request(
+                  f'https://api.github.com{path}',
+                  method=method,
+                  data=data,
+                  headers={
+                      'Accept': 'application/vnd.github+json',
+                      'Authorization': f'Bearer {token}',
+                      'Content-Type': 'application/json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'User-Agent': 'p4-001-pr-handoff',
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  if response.status == 204:
+                      return None
+                  return json.load(response)
+
+          def get(path: str) -> Any:
+              return request('GET', path)
+
+          def optional(path: str) -> Any | None:
+              try:
+                  return get(path)
+              except urllib.error.HTTPError as exc:
+                  if exc.code == 404:
+                      return None
+                  raise
+
+          def runs() -> list[dict[str, Any]]:
+              query = urllib.parse.urlencode({'head_sha': final_sha, 'per_page': 100})
+              return get(f'/repos/{repository}/actions/runs?{query}').get('workflow_runs', [])
+
+          def select(items: list[dict[str, Any]]) -> dict[str, dict[str, Any] | None]:
+              ordered = sorted(items, key=lambda item: item.get('run_number', 0), reverse=True)
+              def first(predicate):
+                  return next((item for item in ordered if predicate(item)), None)
+              return {
+                  'P4-001 source': first(lambda item: str(item.get('path', '')).endswith('/p4-001-search-provider.yml')),
+                  'Product Gates': first(lambda item: 'product' in str(item.get('name', '')).casefold() and 'gate' in str(item.get('name', '')).casefold()),
+                  'Branch Hygiene': first(lambda item: 'branch' in str(item.get('name', '')).casefold() and 'hygiene' in str(item.get('name', '')).casefold()),
+              }
+
+          deadline = time.monotonic() + 900
+          required: dict[str, dict[str, Any] | None]
+          all_runs: list[dict[str, Any]]
+          while True:
+              all_runs = runs()
+              required = select(all_runs)
+              if all(required.values()) and all(item.get('status') == 'completed' for item in required.values() if item):
+                  break
+              if time.monotonic() >= deadline:
+                  raise SystemExit(f'final exact-head workflows did not complete: {required}')
+              time.sleep(5)
+          failed = {
+              name: {'id': item.get('id') if item else None, 'status': item.get('status') if item else None, 'conclusion': item.get('conclusion') if item else None}
+              for name, item in required.items()
+              if item is None or item.get('conclusion') != 'success'
+          }
+          if failed:
+              raise SystemExit(f'final exact-head mandatory workflows failed: {failed}')
+
+          main_ref = get(f'/repos/{repository}/git/ref/heads/main')
+          main_sha = main_ref['object']['sha']
+          main_tree = get(f'/repos/{repository}/git/commits/{main_sha}')['tree']['sha']
+          pr = get(f'/repos/{repository}/pulls/62')
+          worker_b_branch = 'agent/test-center-development-verification-foundation'
+          worker_i_branch = 'agent/i/security-ci-supply-chain-governance'
+          worker_b = optional(f"/repos/{repository}/git/ref/heads/{urllib.parse.quote(worker_b_branch, safe='/')}")
+          worker_i = optional(f"/repos/{repository}/git/ref/heads/{urllib.parse.quote(worker_i_branch, safe='/')}")
+
+          run_lines = '\n'.join(
+              f"- **{name}:** run `{item['id']}`, conclusion `{item['conclusion']}`, head `{item['head_sha']}`"
+              for name, item in required.items() if item
+          )
+          body = f'''## Worker C — P4-001 exact-head integration handoff
+
+### Exact repository state
+
+- Protected main: `{main_sha}` / tree `{main_tree}`
+- Worker C branch: `{branch}`
+- Final PR head: `{final_sha}` / tree `{final_tree}`
+- Reviewed source candidate recorded by governed evidence: `{source['commit']}` / tree `{source['tree']}`
+- PR remains draft. No merge is authorized by this update.
+
+### Roadmap execution pin
+
+- Human authority: `docs/roadmap/MASTER.md`
+- Machine authority: `docs/roadmap/roadmap.yaml`
+- Provisional latest roadmap: `{roadmap['provisionalRoadmap']}` / SHA-256 `{roadmap['provisionalRoadmapSha256']}`
+- Worker J: `{roadmap['workerJBranch']}` at `{roadmap['workerJCommit']}` / tree `{roadmap['workerJTree']}`
+- Classification: `PROVISIONAL_EXECUTION_REFERENCE`, `NON_NORMATIVE`, `PENDING_WORKER_J_ADOPTION`
+
+### Reuse and repair summary
+
+The existing provider-neutral request/result/page/error/capability/rate-limit/partial-failure/identity/cursor/schema/fixture implementation was retained. Repairs close private or malformed result URLs, normalized secret aliases, provider-metadata authority aliases, and non-canonical cursor encodings. Eighteen stable semantic IDs, an argv-based Project Test Profile handoff, affected-test mappings, a state-preserving normalized adapter, and Testing Studio metadata were added without creating a competing Worker B schema.
+
+### Protected-main synchronization
+
+Current protected main is incorporated through normal ancestry. The earlier mergeability problem was branch/generated-manifest reconciliation, not a P4 source conflict. Protected-main P1/P2 bytes were preserved. `SOURCE_MANIFEST.sha256` is generated only by `tool/p1a_refresh_source_manifest.py`; two consecutive runs reproduced identical bytes.
+
+### Final exact-head verification
+
+- Source gate: 24 source tests; 18 stable semantic IDs; network-free; non-mutating.
+- Ubuntu 24.04, Windows 2025, and macOS 15 are exercised by the P4 matrix.
+{run_lines}
+
+### Test Center and evidence
+
+- Module handoff: `research.p4-001.search-provider-interface`
+- Canonical status: `BLOCKED_BY_SHARED_CONTRACT` pending Worker B publication/adoption.
+- Evidence: `docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md`, `release/evidence/P4-001/IMPLEMENTATION.md`, `release/evidence/P4-001/test-results.json`, `release/evidence/P4-001/manifest.json`, and `release/evidence/P4-001/test-center-handoff.json`.
+- Worker B branch observed: `{worker_b_branch}`; published=`{worker_b is not None}`.
+- Worker I branch observed: `{worker_i_branch}`; published=`{worker_i is not None}`.
+
+### Scope boundary
+
+No P3 implementation, P4-002, live external search, network retrieval, fetch, browser automation, citations, crawling, or dataset capability is introduced or claimed. Source-level PASS does not imply release, production, or GA support.
+
+### Review and next action
+
+Worker B must review the exact final head and source-candidate evidence for roadmap alignment, contract completeness, Test Center mapping, stable identities, cursor semantics, fixture quality, evidence integrity, and support boundaries. Worker I must review URL handling, credential/secret rejection, provider metadata isolation, cursor validation, limits, dependency/supply-chain impact, and CI behavior. Worker J must record no ownership or roadmap conflict. Until those decisions exist, the truthful status is **P4-001 SOURCE READY FOR INTEGRATION — ROADMAP/DEPENDENCY TRANSITION PENDING**.
+'''
+          request('PATCH', f'/repos/{repository}/pulls/62', {'body': body})
+
+          review_comment = f'''## Independent exact-head review requested
+
+Candidate for review:
+
+- Final PR head: `{final_sha}`
+- Final tree: `{final_tree}`
+- Source candidate bound by evidence: `{source['commit']}` / `{source['tree']}`
+- Protected main: `{main_sha}` / `{main_tree}`
+
+**Worker B review scope:** latest-roadmap alignment, P4-001-only discipline, request/result/page/error/capability/rate-limit/partial-failure completeness, runtime/schema parity, stable query/result identities, provider/query/version cursor semantics, fixture parity, Test Center handoff mapping, normalized state preservation, evidence integrity, and support-claim boundary.
+
+**Worker I review scope:** fail-closed URL handling, credential rejection, normalized secret rejection, untrusted provider metadata isolation, cursor parsing/binding, numeric/domain/size/resource limits, dependency and supply-chain impact, and final CI behavior.
+
+Commands exercised by the exact-head workflow include:
+
+- `python tool/p4_001_search_provider_test.py --project . --json-output <artifact>`
+- `python tool/p4_001_normalize_test_result.py ...`
+- `python tool/p1a_refresh_source_manifest.py .` twice with byte comparison
+- roadmap/generated-state/source-tree checks, `git diff --check`, and clean-status checks
+
+Please record reviewer role, candidate commit/tree, files reviewed, commands executed, findings/severity, disposition, decision, and review-artifact hash. Allowed decisions: `PASS`, `REQUEST_CHANGES`, `BLOCKED_BY_DEPENDENCY`, `BLOCKED_BY_SHARED_CONTRACT`.
+
+PR #62 must remain draft and unmerged until required exact-head Worker B and Worker I decisions and Worker J's no-conflict decision are recorded.
+'''
+          request('POST', f'/repos/{repository}/issues/62/comments', {'body': review_comment})
+          print(json.dumps({
+              'finalHead': final_sha,
+              'finalTree': final_tree,
+              'main': main_sha,
+              'requiredRuns': {name: item['id'] for name, item in required.items() if item},
+              'prDraft': pr.get('draft'),
+          }, indent=2, sort_keys=True))
+          PY
