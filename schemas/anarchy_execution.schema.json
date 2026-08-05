@@ -1,29 +1,43 @@
 {
-  "$id": "https://local.kristin/schemas/p24-001/anarchy-execution-control.v1.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "P24-001 ANARCHY adoption-review execution-control records",
-  "description": "A Worker-J-scoped schema for P24-001 migration records, roadmap references, worker runtime records, claims/shared-contract locks, packet integrity, migration directives, observations, and generated navigation. It is not a Test Center, Project Test Profile, Testing Studio, global certification, product support, or roadmap authority schema.",
-  "type": "object",
-  "required": [
-    "schemaVersion",
-    "recordType"
-  ],
-  "properties": {
-    "schemaVersion": {
-      "const": "1.0.0"
-    },
-    "recordType": {
-      "enum": [
-        "P24AdoptionReviewControl",
-        "AnarchyClaim",
-        "WorkerCoordinationCheckpoint",
-        "IndependentReview",
-        "P24AdoptionReviewGeneratedIndex",
-        "P24AdoptionReviewValidationReport"
-      ]
-    }
-  },
   "$defs": {
+    "capabilitySupportStatus": {
+      "description": "Reference classification only; product support and release authority remain external.",
+      "enum": [
+        "NOT_IMPLEMENTED",
+        "SOURCE_FOUNDATION",
+        "EXPERIMENTAL",
+        "BEHAVIOR_SUPPORTED",
+        "PLATFORM_SUPPORTED",
+        "RELEASE_SUPPORTED",
+        "DEGRADED",
+        "UNSUPPORTED",
+        "REVOKED"
+      ]
+    },
+    "certificationStatusReference": {
+      "description": "Exact foreign-key vocabulary from Worker B canonical Test Center v1; this does not define global certification architecture.",
+      "enum": [
+        "NOT_EVALUATED",
+        "PARTIAL",
+        "PASS",
+        "FAIL",
+        "STALE",
+        "REVOKED"
+      ],
+      "x-canonical-owner": "Worker B",
+      "x-external-contract": "github://alex00Pirotskyi/kris.ai@5e093094bfb8287e70e684026ac88542a221016d/schemas/test_center.v1.json#/$defs/CertificationStatus",
+      "x-observed-worker-b-integration": {
+        "branch": "agent/b/test-center-contracts-and-review",
+        "head": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+        "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
+      },
+      "x-shared-contract-state": "EXACT_VERSION_REFERENCE"
+    },
+    "repositoryRelativePath": {
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$",
+      "type": "string"
+    },
     "roadmapTaskStatus": {
       "description": "Roadmap state only; never inferred from test or review state.",
       "enum": [
@@ -35,6 +49,82 @@
         "DONE",
         "DEFERRED"
       ]
+    },
+    "sha1": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "testAssuranceClassReference": {
+      "description": "Exact Worker B v1 assurance-class vocabulary.",
+      "enum": [
+        "architecture_lint",
+        "source_contract",
+        "behavioral",
+        "sdk_toolchain",
+        "platform",
+        "release",
+        "mixed",
+        "unclassified"
+      ],
+      "x-canonical-owner": "Worker B",
+      "x-external-contract": "github://alex00Pirotskyi/kris.ai@5e093094bfb8287e70e684026ac88542a221016d/schemas/test_center.v1.json",
+      "x-observed-worker-b-integration": {
+        "branch": "agent/b/test-center-contracts-and-review",
+        "head": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+        "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
+      }
+    },
+    "testExecutionResultReference": {
+      "description": "Exact foreign-key state vocabulary from Worker B canonical Test Center v1. Result reason, assurance class, and failure classification remain separate fields.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "ERROR",
+        "SKIPPED",
+        "BLOCKED",
+        "UNKNOWN",
+        "FLAKY",
+        "NOT_IMPLEMENTED"
+      ],
+      "x-canonical-owner": "Worker B",
+      "x-external-contract": "github://alex00Pirotskyi/kris.ai@5e093094bfb8287e70e684026ac88542a221016d/schemas/test_center.v1.json#/$defs/TestResultState",
+      "x-observed-worker-b-integration": {
+        "branch": "agent/b/test-center-contracts-and-review",
+        "head": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+        "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
+      },
+      "x-shared-contract-state": "EXACT_VERSION_REFERENCE"
+    },
+    "testFailureClassificationReference": {
+      "description": "Exact Worker B v1 failure-classification vocabulary, separate from result state.",
+      "enum": [
+        "NONE",
+        "ASSERTION",
+        "INFRASTRUCTURE",
+        "TIMEOUT",
+        "SECURITY",
+        "CLEANUP",
+        "MISSING_DEPENDENCY",
+        "UNSAFE_PROFILE",
+        "UNKNOWN"
+      ],
+      "x-canonical-owner": "Worker B",
+      "x-external-contract": "github://alex00Pirotskyi/kris.ai@5e093094bfb8287e70e684026ac88542a221016d/schemas/test_center.v1.json#/$defs/TestExecutionResult/properties/failureClassification",
+      "x-observed-worker-b-integration": {
+        "branch": "agent/b/test-center-contracts-and-review",
+        "head": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+        "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
+      }
+    },
+    "testResultReasonReference": {
+      "description": "Human-readable reason kept separate from the result state.",
+      "maxLength": 4096,
+      "minLength": 1,
+      "type": "string"
     },
     "workerRuntimeStatus": {
       "description": "Worker execution state only.",
@@ -51,72 +141,39 @@
         "YIELDED",
         "CAPABILITY_BLOCKED"
       ]
-    },
-    "testExecutionResultReference": {
-      "description": "Foreign-key vocabulary constrained for P24 status-separation checks. Canonical ownership remains Worker B; this does not define the Test Center result schema.",
-      "x-canonical-owner": "Worker B",
-      "x-external-contract": "worker-b://test-center/test-execution-result/v1",
-      "x-shared-contract-state": "BLOCKED_BY_SHARED_CONTRACT",
-      "enum": [
-        "PASS",
-        "FAIL",
-        "BLOCKED",
-        "SKIPPED_NOT_APPLICABLE",
-        "SKIPPED_WITH_REASON",
-        "FLAKY_QUARANTINED",
-        "UNKNOWN_RECONCILIATION_REQUIRED",
-        "CANCELLED"
-      ]
-    },
-    "certificationStatusReference": {
-      "description": "Foreign-key vocabulary constrained for P24 status-separation checks. Canonical ownership remains Worker B; this does not define global certification architecture.",
-      "x-canonical-owner": "Worker B",
-      "x-external-contract": "worker-b://test-center/certification-status/v1",
-      "x-shared-contract-state": "BLOCKED_BY_SHARED_CONTRACT",
-      "enum": [
-        "NOT_EVALUATED",
-        "PARTIAL",
-        "PASS",
-        "FAIL",
-        "STALE",
-        "REVOKED"
-      ]
-    },
-    "capabilitySupportStatus": {
-      "description": "Reference classification only; product support and release authority remain external.",
-      "enum": [
-        "NOT_IMPLEMENTED",
-        "SOURCE_FOUNDATION",
-        "EXPERIMENTAL",
-        "BEHAVIOR_SUPPORTED",
-        "PLATFORM_SUPPORTED",
-        "RELEASE_SUPPORTED",
-        "DEGRADED",
-        "UNSUPPORTED",
-        "REVOKED"
-      ]
-    },
-    "sha1": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$"
-    },
-    "sha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
-    },
-    "repositoryRelativePath": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
     }
   },
+  "$id": "https://local.kristin/schemas/p24-001/anarchy-execution-control.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
+  "description": "A Worker-J-scoped schema for P24-001 migration records, roadmap references, worker runtime records, claims/shared-contract locks, packet integrity, migration directives, observations, and generated navigation. It references, but does not replace, Worker B's canonical Test Center v1 contracts.",
+  "properties": {
+    "recordType": {
+      "enum": [
+        "P24AdoptionReviewControl",
+        "AnarchyClaim",
+        "WorkerCoordinationCheckpoint",
+        "IndependentReview",
+        "P24AdoptionReviewGeneratedIndex",
+        "P24AdoptionReviewValidationReport"
+      ]
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType"
+  ],
+  "title": "P24-001 ANARCHY adoption-review execution-control records",
+  "type": "object",
   "x-scope": {
-    "task": "P24-001",
     "authorityPromotion": false,
+    "productRuntimeChange": false,
     "roadmapAuthorityReplacement": false,
+    "task": "P24-001",
     "testCenterReplacement": false,
-    "testingStudioOwnership": false,
-    "productRuntimeChange": false
+    "testingStudioOwnership": false
   }
 }

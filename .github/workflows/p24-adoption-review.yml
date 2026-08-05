@@ -9,7 +9,7 @@ on:
       - docs/roadmap/anarchy/**
       - release/evidence/P24-001/**
       - schemas/anarchy_execution.schema.json
-      - test/anarchy_control_plane/**
+      - test/product/anarchy_control_plane/**
       - tool/anarchy_control_plane.py
       - tool/anarchy_control_plane_parts/**
       - tool/anarchy_control_plane_test.py
@@ -23,7 +23,7 @@ on:
       - docs/roadmap/anarchy/**
       - release/evidence/P24-001/**
       - schemas/anarchy_execution.schema.json
-      - test/anarchy_control_plane/**
+      - test/product/anarchy_control_plane/**
       - tool/anarchy_control_plane.py
       - tool/anarchy_control_plane_parts/**
       - tool/anarchy_control_plane_test.py
@@ -71,6 +71,7 @@ jobs:
         run: |
           python -m py_compile tool/anarchy_control_plane.py tool/anarchy_control_plane_test.py
           python -m unittest -v tool/anarchy_control_plane_test.py
+          python tool/anarchy_control_plane.py --resume-worker J --project .
 
       - name: Build expected generated outputs in an isolated exact-head clone
         shell: bash

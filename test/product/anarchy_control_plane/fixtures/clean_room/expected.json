@@ -6,6 +6,6 @@
   },
   "branch": "agent/j/P24-001-roadmap-as-data-adr",
   "claim": "docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml",
-  "nextActionContains": "stacked draft PR",
+  "nextActionContains": "tri-OS CI",
   "worker": "J"
 }

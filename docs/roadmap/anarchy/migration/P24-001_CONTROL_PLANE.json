@@ -43,6 +43,19 @@
   "classification": "ADOPTION_REVIEW",
   "coordinationCheckpoint": "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
   "directiveMatrix": "docs/roadmap/anarchy/migration/DIRECTIVE_MATRIX.yaml",
+  "externalSharedContracts": {
+    "testCenterV1": {
+      "canonicalCommit": "5e093094bfb8287e70e684026ac88542a221016d",
+      "canonicalRegistry": "config/test_center_registry.v1.json",
+      "canonicalSchema": "schemas/test_center.v1.json",
+      "integrationBranch": "agent/b/test-center-contracts-and-review",
+      "observedIntegrationHead": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+      "observedIntegrationTree": "b33344fd5a7bcc212fd94933e4962654de062aac",
+      "owner": "Worker B",
+      "relationship": "EXACT_VERSION_REFERENCE_NOT_OWNERSHIP_TRANSFER"
+    }
+  },
+  "fixtureRoot": "test/product/anarchy_control_plane/fixtures",
   "generatedPaths": [
     "docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json"
   ],
@@ -61,7 +74,7 @@
     "docs/roadmap/anarchy",
     "release/evidence/P24-001",
     "schemas/anarchy_execution.schema.json",
-    "test/anarchy_control_plane",
+    "test/product/anarchy_control_plane",
     "tool/anarchy_control_plane.py",
     "tool/anarchy_control_plane_test.py",
     "tool/anarchy_control_plane_test_parts",
@@ -115,8 +128,8 @@
       ]
     },
     "CertificationStatus": {
-      "canonicalOwner": "Worker B external Test Center contract; BLOCKED_BY_SHARED_CONTRACT until published",
-      "externalReference": "worker-b://test-center/certification-status/v1",
+      "canonicalOwner": "Worker B canonical Test Center v1 exact contract",
+      "externalReference": "github://alex00Pirotskyi/kris.ai@5e093094bfb8287e70e684026ac88542a221016d/schemas/test_center.v1.json#/$defs/CertificationStatus",
       "values": [
         "NOT_EVALUATED",
         "PARTIAL",
@@ -139,17 +152,17 @@
       ]
     },
     "TestExecutionResult": {
-      "canonicalOwner": "Worker B external Test Center contract; BLOCKED_BY_SHARED_CONTRACT until published",
-      "externalReference": "worker-b://test-center/test-execution-result/v1",
+      "canonicalOwner": "Worker B canonical Test Center v1 exact contract",
+      "externalReference": "github://alex00Pirotskyi/kris.ai@5e093094bfb8287e70e684026ac88542a221016d/schemas/test_center.v1.json#/$defs/TestResultState",
       "values": [
         "PASS",
         "FAIL",
+        "ERROR",
+        "SKIPPED",
         "BLOCKED",
-        "SKIPPED_NOT_APPLICABLE",
-        "SKIPPED_WITH_REASON",
-        "FLAKY_QUARANTINED",
-        "UNKNOWN_RECONCILIATION_REQUIRED",
-        "CANCELLED"
+        "UNKNOWN",
+        "FLAKY",
+        "NOT_IMPLEMENTED"
       ]
     },
     "WorkerRuntimeStatus": {
@@ -191,8 +204,11 @@
       ],
       "roadmapStatus": "IN_PROGRESS",
       "task": "P24-001",
-      "testExecutionResult": "PASS",
-      "workerRuntimeStatus": "VERIFYING"
+      "testAssuranceClass": "source_contract",
+      "testExecutionResult": "BLOCKED",
+      "testFailureClassification": "MISSING_DEPENDENCY",
+      "testResultReason": "The prior exact candidate failed tri-OS portability/generated-state gates and requires a repaired exact-head CI and independent-review cycle; source-only progress is not completion.",
+      "workerRuntimeStatus": "REPAIRING"
     },
     {
       "capabilitySupportStatus": "SOURCE_FOUNDATION",
@@ -210,7 +226,10 @@
       ],
       "roadmapStatus": "IN_PROGRESS",
       "task": "P2-001",
+      "testAssuranceClass": "source_contract",
       "testExecutionResult": "PASS",
+      "testFailureClassification": "NONE",
+      "testResultReason": "Source-contract checks passed; no roadmap completion, behavioral certification, platform support, release support, or authority promotion is inferred.",
       "workerRuntimeStatus": "CAPABILITY_BLOCKED"
     }
   ]
