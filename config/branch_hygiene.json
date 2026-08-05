@@ -1,0 +1,242 @@
+{
+  "audit": {
+    "beforeBranchCount": 38,
+    "capturedAtUtc": "2026-08-05T04:13:10Z",
+    "mainSha": "16459d2fee29e0b6a41b5e4e5da9fc4dcdb93309",
+    "policy": "Exact-SHA, protected-branch, open-PR, and default-branch checks must all pass before the first deletion.",
+    "repository": "alex00Pirotskyi/kris.ai"
+  },
+  "defaultBranch": "main",
+  "delete": [
+    {
+      "class": "disposable-ci",
+      "closedPr": 32,
+      "expectedSha": "2e38fd4242aa19e0e8b63b5d5907ecc9cc633329",
+      "name": "ci/dispatch-p1-p2-promotion-trigger",
+      "reason": "Closed one-shot promotion dispatcher; PR #32 is closed and the governed promotion run is already recorded."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 17,
+      "expectedSha": "48610770e92a41780b93379b2a6fd022a44a5a8b",
+      "name": "ci/execute-pr14-repair-trigger",
+      "reason": "Closed one-shot PR14 execution trigger; PR #17 is closed and superseded by the protected product-gate controller."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 19,
+      "expectedSha": "66d4969c5b00bf6dea594fad41b4c46b4ec05351",
+      "name": "ci/execute-pr14-repair-trigger-2",
+      "reason": "Closed workflow-run repair trigger; PR #19 is closed and superseded by the protected product-gate controller."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 26,
+      "expectedSha": "a1ea42af83417582378ba534ab73dd9e0a5381d7",
+      "name": "ci/export-pr14-repair-artifact",
+      "reason": "Closed read-only artifact export branch; PR #26 is closed and its artifact lineage is recorded."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 23,
+      "expectedSha": "de9b2f6135446348baed7f9ad58c482bffade88e",
+      "name": "ci/fix-pr14-pr-trigger-yaml",
+      "reason": "Superseded YAML repair branch from closed PR #23; authoritative fix landed through PR #24."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 36,
+      "expectedSha": "2cf214ae39beb7022e7aeeb18dd8d30c6ed66966",
+      "name": "ci/observe-p1-p2-promotion-trigger",
+      "reason": "Closed read-only promotion observer used by PRs #34 and #36; exact run evidence is already recorded."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 35,
+      "expectedSha": "26c02165f214e2dfcad80f96ea0dcb89dc247afc",
+      "name": "ci/observe-p1-p2-promotion-trigger-v2",
+      "reason": "Closed read-only promotion observer v2; PR #35 is closed and evidence is already recorded."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 30,
+      "expectedSha": "c95dba06807522194740611d553b117f892aae0f",
+      "name": "ci/p2-python-lock-refresh-trigger",
+      "reason": "Closed exact Python-lock refresh trigger; PR #30 is closed and the governed lock repair is on the retained integration lineage."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 40,
+      "expectedSha": "6ee22690a2e34af211af084a25bcbf25db037ce7",
+      "name": "ci/reconcile-pr14-main-trigger",
+      "reason": "Closed PR14 reconciliation trigger; PR #40 is closed and superseded by the current protected repair controller."
+    },
+    {
+      "class": "superseded-repair",
+      "expectedSha": "21cc7c89207d7c92e391c5f67232d7631a35ca53",
+      "name": "fix/v71r12-hosted-gate-30838146560",
+      "reason": "Historical hosted-gate repair attempt superseded by later V71-R12 validated and integration branches."
+    },
+    {
+      "class": "superseded-repair",
+      "expectedSha": "38adbab8fc3d3198fcfb26a3001690963c07723f",
+      "name": "fix/v71r12-hosted-gate-30839956041",
+      "reason": "Historical hosted-gate repair attempt superseded by later V71-R12 validated and integration branches."
+    },
+    {
+      "class": "superseded-repair",
+      "expectedSha": "7876997395a244814e8b58ea7744f0015a303c23",
+      "name": "fix/v71r12-triplatform-30889417167",
+      "reason": "Historical tri-platform repair attempt superseded by successful validation run 30913519385."
+    },
+    {
+      "class": "superseded-repair",
+      "expectedSha": "7cf6889a8888c1e91b9a1bc6a1983937a1996291",
+      "name": "fix/v71r12-upload-artifact-30915552748",
+      "reason": "Historical hidden-artifact repair attempt superseded by the retained integration and protected control-plane lineage."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-002",
+      "reason": "P0-001/P0-002 foundation is contained in protected main and no longer needs a live branch."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "277f231043f0472f7fe34f4128a16ba4e0897536",
+      "name": "integration/p0-001-p0-010-complete-v3.1.6-v12",
+      "reason": "Completed P0 integration snapshot is contained in main; durable evidence and commit SHA remain in the roadmap records."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "b59107232e032a649d1e0ef3ede787888a36c6a0",
+      "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v12",
+      "reason": "P0 Stage A was superseded by the completed P0 integration and protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "ec01896bf1169eb031c3c1484201b622ab4d6afc",
+      "name": "integration/p1-authority-service-v63r7",
+      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "a708fa1f294d63d3673b6b6c1415c16c4e0ad572",
+      "name": "integration/p1-authority-service-v63r9",
+      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "1761430252746ae1845088df4211d6910532abf8",
+      "name": "integration/p1-authority-service-v63r10",
+      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "e33fde5e3a9650317ddc4c78e6ca0b4d6be963b1",
+      "name": "integration/p1-authority-service-v63r11",
+      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "13be67299263fedd70d5e61caab54b35eeaad560",
+      "name": "integration/p1-authority-service-v63r12",
+      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+    },
+    {
+      "class": "superseded-integration",
+      "closedPr": 7,
+      "expectedSha": "aa59eb618e6e4b5b10101246978c58ebbb9d9b14",
+      "name": "integration/p1-authority-service-v63r13",
+      "reason": "Closed unmerged PR #7 was superseded by the V63-R15 source landing in PR #8."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "p0-003-p0-005-20260723T153513Z",
+      "reason": "Timestamped P0-003/P0-005 working branch was superseded by the completed P0 integration and protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "12f830eaec27a8d6c04c54b9ae1e33af433810df",
+      "name": "validation/v71r12-integration-failure-30915552748",
+      "reason": "Failed integration snapshot; exact run identity and failure evidence are preserved in durable records."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c32b3b135444786e03443fe9a26c495f243ecc9d",
+      "name": "validation/v71r12-integration-failure-30934451574",
+      "reason": "Failed integration snapshot; exact run identity and failure evidence are preserved in durable records."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "35bb9b92022a6a0f04fc98ff10d4e49e2c955b43",
+      "name": "validation/v71r12-repair-failure-30900900467",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "6a75d008684b545263d1bfa5571a7b26a81494ec",
+      "name": "validation/v71r12-repair-failure-30902636921",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "1e02e75b0036ec830f9db7f4389f9a776fa03f34",
+      "name": "validation/v71r12-repair-failure-30904777658",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "29017ce9773c28834f6e1f44cdb4bb2db47bd308",
+      "name": "validation/v71r12-repair-failure-30907221184",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "f2e4d5876a7635fcd28fa59fd5cb098b4a5769c0",
+      "name": "validation/v71r12-repair-failure-30907619291",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "f78910538941a47a71126dbf0bb48c917e53fd2d",
+      "name": "validation/v71r12-repair-failure-30907954535",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "93d33e534559dfc39c31f12a4c2d942b249b5e81",
+      "name": "validation/v71r12-repair-failure-30910847377",
+      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    }
+  ],
+  "keep": [
+    {
+      "name": "main",
+      "reason": "Protected default branch and current roadmap authority."
+    },
+    {
+      "name": "ci/direct-pr14-repair-trigger",
+      "reason": "Active draft PR #48 and exact trigger for the protected PR14 repair controller."
+    },
+    {
+      "name": "integration/p2-owner-risk-v71r12",
+      "reason": "Retained P2 integration/evidence lineage until owner-risk closure is landed."
+    },
+    {
+      "name": "merge/p1-p2-owner-risk-qa-preview",
+      "reason": "Active governed P1/P2 landing target; must remain until protected landing completes."
+    },
+    {
+      "name": "validated/v71r12-p1-p2-final",
+      "reason": "Exact tri-platform validated application candidate anchor."
+    },
+    {
+      "name": "validation/v71r12-repair-success-30913519385",
+      "reason": "Successful repair evidence anchor for run 30913519385."
+    }
+  ],
+  "roadmapAuthority": "docs/roadmap/MASTER.md",
+  "schemaVersion": "1.0.0"
+}
