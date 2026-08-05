@@ -1,0 +1,476 @@
+$ (/home/runner/work/kris.ai/kris.ai/control) git rev-parse HEAD
+950865fe363bf9556a5760faa06e1a4bff5cb177
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/control) git status --porcelain
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/status) git rev-parse HEAD
+61037b13e71d8b0e6b47feaa9922d476c5666347
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/status) git branch --show-current
+ci/direct-pr14-repair-trigger
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/status) git status --porcelain
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git rev-parse HEAD
+0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git branch --show-current
+merge/p1-p2-owner-risk-qa-preview
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git status --porcelain
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git rev-parse origin/merge/p1-p2-owner-risk-qa-preview
+0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/control) gh api repos/alex00Pirotskyi/kris.ai/pulls/48
+{"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48","id":4206849233,"node_id":"PR_kwDOTTSxks76v2zR","html_url":"https://github.com/alex00Pirotskyi/kris.ai/pull/48","diff_url":"https://github.com/alex00Pirotskyi/kris.ai/pull/48.diff","patch_url":"https://github.com/alex00Pirotskyi/kris.ai/pull/48.patch","issue_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/48","number":48,"state":"open","locked":false,"title":"TEMP: execute exact product Python bootstrap repair on PR14","user":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"body":"Disposable execution PR. Protected `main` now contains the exact product-CI bootstrap helper.\n\nOpening this same-repository PR authorizes one run against `merge/p1-p2-owner-risk-qa-preview` at exact head `0b91e02f2d7413c40dcfa81176877cd3a0daf87e`.\n\nThe executor may change only `.github/workflows/ci.yml` and `SOURCE_MANIFEST.sha256`. It inserts the existing hash-locked hosted-Python bootstrap after `flutter pub get`, installs and verifies the dependency bundle under Python 3.12.10, runs the integration-train and full P1 exit gates, verifies the exact two-path diff, creates the commit, and transfers its object for a connected ref update if GitHub blocks the Actions token from changing a workflow file.\n\nThis PR must not be merged and will be closed immediately after the retained commit is verified and published to PR #14.","created_at":"2026-08-04T20:21:48Z","updated_at":"2026-08-05T04:13:10Z","closed_at":null,"merged_at":null,"merge_commit_sha":"73cf53c6350522b61d80424a72d228eda3cce7f4","assignees":[],"requested_reviewers":[],"requested_teams":[],"labels":[],"milestone":null,"draft":true,"commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48/commits","review_comments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48/comments","review_comment_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/comments{/number}","comments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/48/comments","statuses_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/statuses/61037b13e71d8b0e6b47feaa9922d476c5666347","head":{"label":"alex00Pirotskyi:ci/direct-pr14-repair-trigger","ref":"ci/direct-pr14-repair-trigger","sha":"61037b13e71d8b0e6b47feaa9922d476c5666347","user":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"repo":{"id":1295298962,"node_id":"R_kgDOTTSxkg","name":"kris.ai","full_name":"alex00Pirotskyi/kris.ai","private":false,"owner":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"html_url":"https://github.com/alex00Pirotskyi/kris.ai","description":"chatBot","fork":false,"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai","forks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/forks","keys_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/keys{/key_id}","collaborators_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/teams","hooks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/hooks","issue_events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/events{/number}","events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/events","assignees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/assignees{/user}","branches_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/branches{/branch}","tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/tags","blobs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/refs{/sha}","trees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/trees{/sha}","statuses_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/statuses/{sha}","languages_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/languages","stargazers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/stargazers","contributors_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contributors","subscribers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscribers","subscription_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscription","commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/commits{/sha}","git_commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/commits{/sha}","comments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/comments{/number}","issue_comment_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/comments{/number}","contents_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contents/{+path}","compare_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/compare/{base}...{head}","merges_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/merges","archive_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/downloads","issues_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues{/number}","pulls_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls{/number}","milestones_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/milestones{/number}","notifications_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/labels{/name}","releases_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/releases{/id}","deployments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/deployments","created_at":"2026-07-09T13:37:48Z","updated_at":"2026-08-05T05:18:04Z","pushed_at":"2026-08-05T05:17:46Z","git_url":"git://github.com/alex00Pirotskyi/kris.ai.git","ssh_url":"git@github.com:alex00Pirotskyi/kris.ai.git","clone_url":"https://github.com/alex00Pirotskyi/kris.ai.git","svn_url":"https://github.com/alex00Pirotskyi/kris.ai","homepage":null,"size":3284,"stargazers_count":0,"watchers_count":0,"language":"Dart","has_issues":true,"has_projects":true,"has_downloads":false,"has_wiki":false,"has_pages":false,"has_discussions":false,"forks_count":0,"mirror_url":null,"archived":false,"disabled":false,"open_issues_count":1,"license":null,"allow_forking":true,"is_template":false,"web_commit_signoff_required":false,"has_pull_requests":true,"pull_request_creation_policy":"all","topics":[],"visibility":"public","forks":0,"open_issues":1,"watchers":0,"default_branch":"main"}},"base":{"label":"alex00Pirotskyi:main","ref":"main","sha":"16459d2fee29e0b6a41b5e4e5da9fc4dcdb93309","user":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"repo":{"id":1295298962,"node_id":"R_kgDOTTSxkg","name":"kris.ai","full_name":"alex00Pirotskyi/kris.ai","private":false,"owner":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"html_url":"https://github.com/alex00Pirotskyi/kris.ai","description":"chatBot","fork":false,"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai","forks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/forks","keys_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/keys{/key_id}","collaborators_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/teams","hooks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/hooks","issue_events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/events{/number}","events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/events","assignees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/assignees{/user}","branches_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/branches{/branch}","tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/tags","blobs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/refs{/sha}","trees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/trees{/sha}","statuses_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/statuses/{sha}","languages_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/languages","stargazers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/stargazers","contributors_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contributors","subscribers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscribers","subscription_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscription","commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/commits{/sha}","git_commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/commits{/sha}","comments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/comments{/number}","issue_comment_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/comments{/number}","contents_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contents/{+path}","compare_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/compare/{base}...{head}","merges_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/merges","archive_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/downloads","issues_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues{/number}","pulls_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls{/number}","milestones_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/milestones{/number}","notifications_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/labels{/name}","releases_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/releases{/id}","deployments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/deployments","created_at":"2026-07-09T13:37:48Z","updated_at":"2026-08-05T05:18:04Z","pushed_at":"2026-08-05T05:17:46Z","git_url":"git://github.com/alex00Pirotskyi/kris.ai.git","ssh_url":"git@github.com:alex00Pirotskyi/kris.ai.git","clone_url":"https://github.com/alex00Pirotskyi/kris.ai.git","svn_url":"https://github.com/alex00Pirotskyi/kris.ai","homepage":null,"size":3284,"stargazers_count":0,"watchers_count":0,"language":"Dart","has_issues":true,"has_projects":true,"has_downloads":false,"has_wiki":false,"has_pages":false,"has_discussions":false,"forks_count":0,"mirror_url":null,"archived":false,"disabled":false,"open_issues_count":1,"license":null,"allow_forking":true,"is_template":false,"web_commit_signoff_required":false,"has_pull_requests":true,"pull_request_creation_policy":"all","topics":[],"visibility":"public","forks":0,"open_issues":1,"watchers":0,"default_branch":"main"}},"_links":{"self":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48"},"html":{"href":"https://github.com/alex00Pirotskyi/kris.ai/pull/48"},"issue":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/48"},"comments":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/48/comments"},"review_comments":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48/comments"},"review_comment":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/comments{/number}"},"commits":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48/commits"},"statuses":{"href":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/statuses/61037b13e71d8b0e6b47feaa9922d476c5666347"}},"author_association":"OWNER","auto_merge":null,"assignee":null,"active_lock_reason":null,"merged":false,"mergeable":null,"rebaseable":null,"mergeable_state":"unknown","merged_by":null,"comments":1,"review_comments":0,"maintainer_can_modify":false,"commits":6,"additions":7,"deletions":0,"changed_files":1}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/control) gh api repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667
+{"id":30974509667,"name":"product-gates","node_id":"WFR_kwLOTTSxks8AAAAHNjmCYw","head_branch":"ci/direct-pr14-repair-trigger","head_sha":"61037b13e71d8b0e6b47feaa9922d476c5666347","path":".github/workflows/ci.yml","display_title":"TEMP: execute exact product Python bootstrap repair on PR14","run_number":294,"event":"pull_request","status":"completed","conclusion":"success","workflow_id":318604773,"check_suite_id":84003697912,"check_suite_node_id":"CS_kwDOTTSxks8AAAATjwK0-A","url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667","html_url":"https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30974509667","pull_requests":[{"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls/48","id":4206849233,"number":48,"head":{"ref":"ci/direct-pr14-repair-trigger","sha":"61037b13e71d8b0e6b47feaa9922d476c5666347","repo":{"id":1295298962,"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai","name":"kris.ai"}},"base":{"ref":"main","sha":"16459d2fee29e0b6a41b5e4e5da9fc4dcdb93309","repo":{"id":1295298962,"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai","name":"kris.ai"}}}],"created_at":"2026-08-05T04:13:11Z","updated_at":"2026-08-05T04:20:04Z","actor":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"run_attempt":1,"referenced_workflows":[],"run_started_at":"2026-08-05T04:13:11Z","triggering_actor":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"jobs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667/jobs","logs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667/logs","check_suite_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/check-suites/84003697912","artifacts_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667/artifacts","cancel_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667/cancel","rerun_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667/rerun","previous_attempt_url":null,"workflow_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/workflows/318604773","head_commit":{"id":"61037b13e71d8b0e6b47feaa9922d476c5666347","tree_id":"3c699b39bc2ef9ae79db0d6c2345358a7b94b0fb","message":"ci: execute registered product Python bootstrap repair","timestamp":"2026-08-04T20:33:30Z","author":{"name":"WLD","email":"alex.p@wearabledevices.co.il"},"committer":{"name":"WLD","email":"alex.p@wearabledevices.co.il"}},"repository":{"id":1295298962,"node_id":"R_kgDOTTSxkg","name":"kris.ai","full_name":"alex00Pirotskyi/kris.ai","private":false,"owner":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"html_url":"https://github.com/alex00Pirotskyi/kris.ai","description":"chatBot","fork":false,"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai","forks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/forks","keys_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/keys{/key_id}","collaborators_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/teams","hooks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/hooks","issue_events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/events{/number}","events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/events","assignees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/assignees{/user}","branches_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/branches{/branch}","tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/tags","blobs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/refs{/sha}","trees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/trees{/sha}","statuses_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/statuses/{sha}","languages_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/languages","stargazers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/stargazers","contributors_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contributors","subscribers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscribers","subscription_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscription","commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/commits{/sha}","git_commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/commits{/sha}","comments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/comments{/number}","issue_comment_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/comments{/number}","contents_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contents/{+path}","compare_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/compare/{base}...{head}","merges_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/merges","archive_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/downloads","issues_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues{/number}","pulls_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls{/number}","milestones_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/milestones{/number}","notifications_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/labels{/name}","releases_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/releases{/id}","deployments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/deployments"},"head_repository":{"id":1295298962,"node_id":"R_kgDOTTSxkg","name":"kris.ai","full_name":"alex00Pirotskyi/kris.ai","private":false,"owner":{"login":"alex00Pirotskyi","id":177022051,"node_id":"U_kgDOCo0kYw","avatar_url":"https://avatars.githubusercontent.com/u/177022051?v=4","gravatar_id":"","url":"https://api.github.com/users/alex00Pirotskyi","html_url":"https://github.com/alex00Pirotskyi","followers_url":"https://api.github.com/users/alex00Pirotskyi/followers","following_url":"https://api.github.com/users/alex00Pirotskyi/following{/other_user}","gists_url":"https://api.github.com/users/alex00Pirotskyi/gists{/gist_id}","starred_url":"https://api.github.com/users/alex00Pirotskyi/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/alex00Pirotskyi/subscriptions","organizations_url":"https://api.github.com/users/alex00Pirotskyi/orgs","repos_url":"https://api.github.com/users/alex00Pirotskyi/repos","events_url":"https://api.github.com/users/alex00Pirotskyi/events{/privacy}","received_events_url":"https://api.github.com/users/alex00Pirotskyi/received_events","type":"User","user_view_type":"public","site_admin":false},"html_url":"https://github.com/alex00Pirotskyi/kris.ai","description":"chatBot","fork":false,"url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai","forks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/forks","keys_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/keys{/key_id}","collaborators_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/teams","hooks_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/hooks","issue_events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/events{/number}","events_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/events","assignees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/assignees{/user}","branches_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/branches{/branch}","tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/tags","blobs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/refs{/sha}","trees_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/trees{/sha}","statuses_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/statuses/{sha}","languages_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/languages","stargazers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/stargazers","contributors_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contributors","subscribers_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscribers","subscription_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/subscription","commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/commits{/sha}","git_commits_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/git/commits{/sha}","comments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/comments{/number}","issue_comment_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues/comments{/number}","contents_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/contents/{+path}","compare_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/compare/{base}...{head}","merges_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/merges","archive_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/downloads","issues_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/issues{/number}","pulls_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/pulls{/number}","milestones_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/milestones{/number}","notifications_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/labels{/name}","releases_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/releases{/id}","deployments_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/deployments"}}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/control) gh api repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667/jobs?per_page=100
+{"total_count":3,"jobs":[{"id":92205635996,"run_id":30974509667,"workflow_name":"product-gates","head_branch":"ci/direct-pr14-repair-trigger","run_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667","run_attempt":1,"node_id":"CR_kwDOTTSxks8AAAAVd-JZnA","head_sha":"61037b13e71d8b0e6b47feaa9922d476c5666347","url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/jobs/92205635996","html_url":"https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30974509667/job/92205635996","status":"completed","conclusion":"success","created_at":"2026-08-05T04:13:12Z","started_at":"2026-08-05T04:13:14Z","completed_at":"2026-08-05T04:20:03Z","name":"validate-windows","steps":[{"name":"Set up job","status":"completed","conclusion":"success","number":1,"started_at":"2026-08-05T04:13:15Z","completed_at":"2026-08-05T04:13:17Z"},{"name":"Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1","status":"completed","conclusion":"success","number":2,"started_at":"2026-08-05T04:13:17Z","completed_at":"2026-08-05T04:13:26Z"},{"name":"Set up Python","status":"completed","conclusion":"success","number":3,"started_at":"2026-08-05T04:13:26Z","completed_at":"2026-08-05T04:13:26Z"},{"name":"Set up Flutter","status":"completed","conclusion":"success","number":4,"started_at":"2026-08-05T04:13:26Z","completed_at":"2026-08-05T04:15:29Z"},{"name":"Install Linux desktop build dependencies","status":"completed","conclusion":"skipped","number":5,"started_at":"2026-08-05T04:15:29Z","completed_at":"2026-08-05T04:15:29Z"},{"name":"Generate native runner","status":"completed","conclusion":"success","number":6,"started_at":"2026-08-05T04:15:29Z","completed_at":"2026-08-05T04:15:31Z"},{"name":"Run flutter pub get","status":"completed","conclusion":"success","number":7,"started_at":"2026-08-05T04:15:31Z","completed_at":"2026-08-05T04:15:33Z"},{"name":"Capture CI environment","status":"completed","conclusion":"success","number":8,"started_at":"2026-08-05T04:15:33Z","completed_at":"2026-08-05T04:15:35Z"},{"name":"Validate locked toolchain","status":"completed","conclusion":"success","number":9,"started_at":"2026-08-05T04:15:35Z","completed_at":"2026-08-05T04:15:38Z"},{"name":"Upload P0-004 toolchain receipt","status":"completed","conclusion":"success","number":10,"started_at":"2026-08-05T04:15:38Z","completed_at":"2026-08-05T04:15:39Z"},{"name":"Upload P0-003 CI environment","status":"completed","conclusion":"success","number":11,"started_at":"2026-08-05T04:15:39Z","completed_at":"2026-08-05T04:15:40Z"},{"name":"P0-002 trust retirement","status":"completed","conclusion":"success","number":12,"started_at":"2026-08-05T04:15:40Z","completed_at":"2026-08-05T04:15:40Z"},{"name":"P0-003 integration repair","status":"completed","conclusion":"success","number":13,"started_at":"2026-08-05T04:15:40Z","completed_at":"2026-08-05T04:15:41Z"},{"name":"P0-005 policy and support truth","status":"completed","conclusion":"success","number":14,"started_at":"2026-08-05T04:15:41Z","completed_at":"2026-08-05T04:15:42Z"},{"name":"P0-006 repository governance contract","status":"completed","conclusion":"success","number":15,"started_at":"2026-08-05T04:15:42Z","completed_at":"2026-08-05T04:15:42Z"},{"name":"P0-006 GitHub governance client fixtures","status":"completed","conclusion":"success","number":16,"started_at":"2026-08-05T04:15:42Z","completed_at":"2026-08-05T04:15:47Z"},{"name":"V1.7 generated contracts","status":"completed","conclusion":"success","number":17,"started_at":"2026-08-05T04:15:47Z","completed_at":"2026-08-05T04:15:47Z"},{"name":"V1.8 generated contracts","status":"completed","conclusion":"success","number":18,"started_at":"2026-08-05T04:15:47Z","completed_at":"2026-08-05T04:15:48Z"},{"name":"V1.9 generated contracts","status":"completed","conclusion":"success","number":19,"started_at":"2026-08-05T04:15:48Z","completed_at":"2026-08-05T04:15:48Z"},{"name":"P0-008 roadmap control plane","status":"completed","conclusion":"success","number":20,"started_at":"2026-08-05T04:15:48Z","completed_at":"2026-08-05T04:15:49Z"},{"name":"P0-010 generated-state hygiene","status":"completed","conclusion":"success","number":21,"started_at":"2026-08-05T04:15:49Z","completed_at":"2026-08-05T04:16:06Z"},{"name":"Generated protocol contracts","status":"completed","conclusion":"success","number":22,"started_at":"2026-08-05T04:16:06Z","completed_at":"2026-08-05T04:16:07Z"},{"name":"P0-009 reproducible benchmark baseline","status":"completed","conclusion":"success","number":23,"started_at":"2026-08-05T04:16:07Z","completed_at":"2026-08-05T04:16:29Z"},{"name":"P0-007 assurance classification","status":"completed","conclusion":"success","number":24,"started_at":"2026-08-05T04:16:29Z","completed_at":"2026-08-05T04:16:30Z"},{"name":"Generated workflow migrations","status":"completed","conclusion":"success","number":25,"started_at":"2026-08-05T04:16:30Z","completed_at":"2026-08-05T04:16:30Z"},{"name":"Durable workflow kernel","status":"completed","conclusion":"success","number":26,"started_at":"2026-08-05T04:16:30Z","completed_at":"2026-08-05T04:16:32Z"},{"name":"Prompt Studio 2 contracts","status":"completed","conclusion":"success","number":27,"started_at":"2026-08-05T04:16:32Z","completed_at":"2026-08-05T04:16:32Z"},{"name":"Prompt Studio 2 fixtures","status":"completed","conclusion":"success","number":28,"started_at":"2026-08-05T04:16:32Z","completed_at":"2026-08-05T04:16:33Z"},{"name":"Prompt Studio 2 compiler gate","status":"completed","conclusion":"success","number":29,"started_at":"2026-08-05T04:16:33Z","completed_at":"2026-08-05T04:16:33Z"},{"name":"Run python tool/dart_format_scope.py --check","status":"completed","conclusion":"success","number":30,"started_at":"2026-08-05T04:16:33Z","completed_at":"2026-08-05T04:16:34Z"},{"name":"Run flutter analyze --no-pub --fatal-warnings --fatal-infos","status":"completed","conclusion":"success","number":31,"started_at":"2026-08-05T04:16:34Z","completed_at":"2026-08-05T04:16:47Z"},{"name":"Run flutter test --no-pub --concurrency=1 --reporter expanded","status":"completed","conclusion":"success","number":32,"started_at":"2026-08-05T04:16:47Z","completed_at":"2026-08-05T04:17:49Z"},{"name":"P1-002 access profile v2","status":"completed","conclusion":"success","number":33,"started_at":"2026-08-05T04:17:49Z","completed_at":"2026-08-05T04:17:50Z"},{"name":"P1 full trust closure","status":"completed","conclusion":"success","number":34,"started_at":"2026-08-05T04:17:50Z","completed_at":"2026-08-05T04:17:54Z"},{"name":"P1-004 deterministic policy engine","status":"completed","conclusion":"success","number":35,"started_at":"2026-08-05T04:17:54Z","completed_at":"2026-08-05T04:17:54Z"},{"name":"P1-003 capability grant v2","status":"completed","conclusion":"success","number":36,"started_at":"2026-08-05T04:17:54Z","completed_at":"2026-08-05T04:17:55Z"},{"name":"P1-001 runtime boundary contract","status":"completed","conclusion":"success","number":37,"started_at":"2026-08-05T04:17:55Z","completed_at":"2026-08-05T04:17:55Z"},{"name":"Architecture and security gate","status":"completed","conclusion":"success","number":38,"started_at":"2026-08-05T04:17:55Z","completed_at":"2026-08-05T04:18:18Z"},{"name":"Native release build","status":"completed","conclusion":"success","number":39,"started_at":"2026-08-05T04:18:18Z","completed_at":"2026-08-05T04:19:58Z"},{"name":"Post Set up Flutter","status":"completed","conclusion":"success","number":76,"started_at":"2026-08-05T04:19:58Z","completed_at":"2026-08-05T04:19:59Z"},{"name":"Post Set up Python","status":"completed","conclusion":"success","number":77,"started_at":"2026-08-05T04:19:59Z","completed_at":"2026-08-05T04:19:59Z"},{"name":"Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1","status":"completed","conclusion":"success","number":78,"started_at":"2026-08-05T04:19:59Z","completed_at":"2026-08-05T04:20:01Z"},{"name":"Complete job","status":"completed","conclusion":"success","number":79,"started_at":"2026-08-05T04:20:01Z","completed_at":"2026-08-05T04:20:01Z"}],"check_run_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/check-runs/92205635996","labels":["windows-2025"],"runner_id":1000001690,"runner_name":"GitHub Actions 1000001690","runner_group_id":0,"runner_group_name":"GitHub Actions"},{"id":92205635997,"run_id":30974509667,"workflow_name":"product-gates","head_branch":"ci/direct-pr14-repair-trigger","run_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667","run_attempt":1,"node_id":"CR_kwDOTTSxks8AAAAVd-JZnQ","head_sha":"61037b13e71d8b0e6b47feaa9922d476c5666347","url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/jobs/92205635997","html_url":"https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30974509667/job/92205635997","status":"completed","conclusion":"success","created_at":"2026-08-05T04:13:12Z","started_at":"2026-08-05T04:13:14Z","completed_at":"2026-08-05T04:17:27Z","name":"validate-ubuntu","steps":[{"name":"Set up job","status":"completed","conclusion":"success","number":1,"started_at":"2026-08-05T04:13:15Z","completed_at":"2026-08-05T04:13:17Z"},{"name":"Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1","status":"completed","conclusion":"success","number":2,"started_at":"2026-08-05T04:13:17Z","completed_at":"2026-08-05T04:13:18Z"},{"name":"Set up Python","status":"completed","conclusion":"success","number":3,"started_at":"2026-08-05T04:13:18Z","completed_at":"2026-08-05T04:13:28Z"},{"name":"Set up Flutter","status":"completed","conclusion":"success","number":4,"started_at":"2026-08-05T04:13:28Z","completed_at":"2026-08-05T04:13:54Z"},{"name":"Install Linux desktop build dependencies","status":"completed","conclusion":"success","number":5,"started_at":"2026-08-05T04:13:54Z","completed_at":"2026-08-05T04:15:02Z"},{"name":"Generate native runner","status":"completed","conclusion":"success","number":6,"started_at":"2026-08-05T04:15:02Z","completed_at":"2026-08-05T04:15:02Z"},{"name":"Run flutter pub get","status":"completed","conclusion":"success","number":7,"started_at":"2026-08-05T04:15:02Z","completed_at":"2026-08-05T04:15:03Z"},{"name":"Capture CI environment","status":"completed","conclusion":"success","number":8,"started_at":"2026-08-05T04:15:03Z","completed_at":"2026-08-05T04:15:03Z"},{"name":"Validate locked toolchain","status":"completed","conclusion":"success","number":9,"started_at":"2026-08-05T04:15:03Z","completed_at":"2026-08-05T04:15:03Z"},{"name":"Upload P0-004 toolchain receipt","status":"completed","conclusion":"success","number":10,"started_at":"2026-08-05T04:15:03Z","completed_at":"2026-08-05T04:15:05Z"},{"name":"Upload P0-003 CI environment","status":"completed","conclusion":"success","number":11,"started_at":"2026-08-05T04:15:05Z","completed_at":"2026-08-05T04:15:06Z"},{"name":"P0-002 trust retirement","status":"completed","conclusion":"success","number":12,"started_at":"2026-08-05T04:15:06Z","completed_at":"2026-08-05T04:15:06Z"},{"name":"P0-003 integration repair","status":"completed","conclusion":"success","number":13,"started_at":"2026-08-05T04:15:06Z","completed_at":"2026-08-05T04:15:06Z"},{"name":"P0-005 policy and support truth","status":"completed","conclusion":"success","number":14,"started_at":"2026-08-05T04:15:06Z","completed_at":"2026-08-05T04:15:06Z"},{"name":"P0-006 repository governance contract","status":"completed","conclusion":"success","number":15,"started_at":"2026-08-05T04:15:06Z","completed_at":"2026-08-05T04:15:07Z"},{"name":"P0-006 GitHub governance client fixtures","status":"completed","conclusion":"success","number":16,"started_at":"2026-08-05T04:15:07Z","completed_at":"2026-08-05T04:15:09Z"},{"name":"V1.7 generated contracts","status":"completed","conclusion":"success","number":17,"started_at":"2026-08-05T04:15:09Z","completed_at":"2026-08-05T04:15:09Z"},{"name":"V1.8 generated contracts","status":"completed","conclusion":"success","number":18,"started_at":"2026-08-05T04:15:09Z","completed_at":"2026-08-05T04:15:09Z"},{"name":"V1.9 generated contracts","status":"completed","conclusion":"success","number":19,"started_at":"2026-08-05T04:15:09Z","completed_at":"2026-08-05T04:15:10Z"},{"name":"P0-008 roadmap control plane","status":"completed","conclusion":"success","number":20,"started_at":"2026-08-05T04:15:10Z","completed_at":"2026-08-05T04:15:10Z"},{"name":"P0-010 generated-state hygiene","status":"completed","conclusion":"success","number":21,"started_at":"2026-08-05T04:15:10Z","completed_at":"2026-08-05T04:15:12Z"},{"name":"Generated protocol contracts","status":"completed","conclusion":"success","number":22,"started_at":"2026-08-05T04:15:12Z","completed_at":"2026-08-05T04:15:13Z"},{"name":"P0-009 reproducible benchmark baseline","status":"completed","conclusion":"success","number":23,"started_at":"2026-08-05T04:15:13Z","completed_at":"2026-08-05T04:15:16Z"},{"name":"P0-007 assurance classification","status":"completed","conclusion":"success","number":24,"started_at":"2026-08-05T04:15:16Z","completed_at":"2026-08-05T04:15:16Z"},{"name":"Generated workflow migrations","status":"completed","conclusion":"success","number":25,"started_at":"2026-08-05T04:15:16Z","completed_at":"2026-08-05T04:15:17Z"},{"name":"Durable workflow kernel","status":"completed","conclusion":"success","number":26,"started_at":"2026-08-05T04:15:17Z","completed_at":"2026-08-05T04:15:17Z"},{"name":"Prompt Studio 2 contracts","status":"completed","conclusion":"success","number":27,"started_at":"2026-08-05T04:15:17Z","completed_at":"2026-08-05T04:15:17Z"},{"name":"Prompt Studio 2 fixtures","status":"completed","conclusion":"success","number":28,"started_at":"2026-08-05T04:15:17Z","completed_at":"2026-08-05T04:15:17Z"},{"name":"Prompt Studio 2 compiler gate","status":"completed","conclusion":"success","number":29,"started_at":"2026-08-05T04:15:17Z","completed_at":"2026-08-05T04:15:18Z"},{"name":"Run python tool/dart_format_scope.py --check","status":"completed","conclusion":"success","number":30,"started_at":"2026-08-05T04:15:18Z","completed_at":"2026-08-05T04:15:18Z"},{"name":"Run flutter analyze --no-pub --fatal-warnings --fatal-infos","status":"completed","conclusion":"success","number":31,"started_at":"2026-08-05T04:15:18Z","completed_at":"2026-08-05T04:15:28Z"},{"name":"Run flutter test --no-pub --concurrency=1 --reporter expanded","status":"completed","conclusion":"success","number":32,"started_at":"2026-08-05T04:15:28Z","completed_at":"2026-08-05T04:15:54Z"},{"name":"P1-002 access profile v2","status":"completed","conclusion":"success","number":33,"started_at":"2026-08-05T04:15:54Z","completed_at":"2026-08-05T04:15:54Z"},{"name":"P1 full trust closure","status":"completed","conclusion":"success","number":34,"started_at":"2026-08-05T04:15:54Z","completed_at":"2026-08-05T04:15:58Z"},{"name":"P1-004 deterministic policy engine","status":"completed","conclusion":"success","number":35,"started_at":"2026-08-05T04:15:58Z","completed_at":"2026-08-05T04:15:58Z"},{"name":"P1-003 capability grant v2","status":"completed","conclusion":"success","number":36,"started_at":"2026-08-05T04:15:58Z","completed_at":"2026-08-05T04:15:58Z"},{"name":"P1-001 runtime boundary contract","status":"completed","conclusion":"success","number":37,"started_at":"2026-08-05T04:15:58Z","completed_at":"2026-08-05T04:15:58Z"},{"name":"Architecture and security gate","status":"completed","conclusion":"success","number":38,"started_at":"2026-08-05T04:15:58Z","completed_at":"2026-08-05T04:16:12Z"},{"name":"Native release build","status":"completed","conclusion":"success","number":39,"started_at":"2026-08-05T04:16:12Z","completed_at":"2026-08-05T04:17:23Z"},{"name":"Post Set up Flutter","status":"completed","conclusion":"success","number":76,"started_at":"2026-08-05T04:17:23Z","completed_at":"2026-08-05T04:17:23Z"},{"name":"Post Set up Python","status":"completed","conclusion":"success","number":77,"started_at":"2026-08-05T04:17:23Z","completed_at":"2026-08-05T04:17:23Z"},{"name":"Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1","status":"completed","conclusion":"success","number":78,"started_at":"2026-08-05T04:17:23Z","completed_at":"2026-08-05T04:17:24Z"},{"name":"Complete job","status":"completed","conclusion":"success","number":79,"started_at":"2026-08-05T04:17:24Z","completed_at":"2026-08-05T04:17:24Z"}],"check_run_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/check-runs/92205635997","labels":["ubuntu-24.04"],"runner_id":1000001694,"runner_name":"GitHub Actions 1000001694","runner_group_id":0,"runner_group_name":"GitHub Actions"},{"id":92205636005,"run_id":30974509667,"workflow_name":"product-gates","head_branch":"ci/direct-pr14-repair-trigger","run_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/runs/30974509667","run_attempt":1,"node_id":"CR_kwDOTTSxks8AAAAVd-JZpQ","head_sha":"61037b13e71d8b0e6b47feaa9922d476c5666347","url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/actions/jobs/92205636005","html_url":"https://github.com/alex00Pirotskyi/kris.ai/actions/runs/30974509667/job/92205636005","status":"completed","conclusion":"success","created_at":"2026-08-05T04:13:12Z","started_at":"2026-08-05T04:13:14Z","completed_at":"2026-08-05T04:16:41Z","name":"validate-macos","steps":[{"name":"Set up job","status":"completed","conclusion":"success","number":1,"started_at":"2026-08-05T04:13:15Z","completed_at":"2026-08-05T04:13:16Z"},{"name":"Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1","status":"completed","conclusion":"success","number":2,"started_at":"2026-08-05T04:13:16Z","completed_at":"2026-08-05T04:13:19Z"},{"name":"Set up Python","status":"completed","conclusion":"success","number":3,"started_at":"2026-08-05T04:13:19Z","completed_at":"2026-08-05T04:13:19Z"},{"name":"Set up Flutter","status":"completed","conclusion":"success","number":4,"started_at":"2026-08-05T04:13:19Z","completed_at":"2026-08-05T04:13:48Z"},{"name":"Install Linux desktop build dependencies","status":"completed","conclusion":"skipped","number":5,"started_at":"2026-08-05T04:13:48Z","completed_at":"2026-08-05T04:13:48Z"},{"name":"Generate native runner","status":"completed","conclusion":"success","number":6,"started_at":"2026-08-05T04:13:48Z","completed_at":"2026-08-05T04:13:49Z"},{"name":"Run flutter pub get","status":"completed","conclusion":"success","number":7,"started_at":"2026-08-05T04:13:49Z","completed_at":"2026-08-05T04:13:50Z"},{"name":"Capture CI environment","status":"completed","conclusion":"success","number":8,"started_at":"2026-08-05T04:13:50Z","completed_at":"2026-08-05T04:13:50Z"},{"name":"Validate locked toolchain","status":"completed","conclusion":"success","number":9,"started_at":"2026-08-05T04:13:50Z","completed_at":"2026-08-05T04:13:50Z"},{"name":"Upload P0-004 toolchain receipt","status":"completed","conclusion":"success","number":10,"started_at":"2026-08-05T04:13:50Z","completed_at":"2026-08-05T04:13:51Z"},{"name":"Upload P0-003 CI environment","status":"completed","conclusion":"success","number":11,"started_at":"2026-08-05T04:13:51Z","completed_at":"2026-08-05T04:13:51Z"},{"name":"P0-002 trust retirement","status":"completed","conclusion":"success","number":12,"started_at":"2026-08-05T04:13:51Z","completed_at":"2026-08-05T04:13:51Z"},{"name":"P0-003 integration repair","status":"completed","conclusion":"success","number":13,"started_at":"2026-08-05T04:13:51Z","completed_at":"2026-08-05T04:13:52Z"},{"name":"P0-005 policy and support truth","status":"completed","conclusion":"success","number":14,"started_at":"2026-08-05T04:13:52Z","completed_at":"2026-08-05T04:13:52Z"},{"name":"P0-006 repository governance contract","status":"completed","conclusion":"success","number":15,"started_at":"2026-08-05T04:13:52Z","completed_at":"2026-08-05T04:13:52Z"},{"name":"P0-006 GitHub governance client fixtures","status":"completed","conclusion":"success","number":16,"started_at":"2026-08-05T04:13:52Z","completed_at":"2026-08-05T04:14:30Z"},{"name":"V1.7 generated contracts","status":"completed","conclusion":"success","number":17,"started_at":"2026-08-05T04:14:30Z","completed_at":"2026-08-05T04:14:30Z"},{"name":"V1.8 generated contracts","status":"completed","conclusion":"success","number":18,"started_at":"2026-08-05T04:14:30Z","completed_at":"2026-08-05T04:14:30Z"},{"name":"V1.9 generated contracts","status":"completed","conclusion":"success","number":19,"started_at":"2026-08-05T04:14:30Z","completed_at":"2026-08-05T04:14:30Z"},{"name":"P0-008 roadmap control plane","status":"completed","conclusion":"success","number":20,"started_at":"2026-08-05T04:14:30Z","completed_at":"2026-08-05T04:14:30Z"},{"name":"P0-010 generated-state hygiene","status":"completed","conclusion":"success","number":21,"started_at":"2026-08-05T04:14:30Z","completed_at":"2026-08-05T04:14:37Z"},{"name":"Generated protocol contracts","status":"completed","conclusion":"success","number":22,"started_at":"2026-08-05T04:14:37Z","completed_at":"2026-08-05T04:14:37Z"},{"name":"P0-009 reproducible benchmark baseline","status":"completed","conclusion":"success","number":23,"started_at":"2026-08-05T04:14:37Z","completed_at":"2026-08-05T04:14:44Z"},{"name":"P0-007 assurance classification","status":"completed","conclusion":"success","number":24,"started_at":"2026-08-05T04:14:44Z","completed_at":"2026-08-05T04:14:44Z"},{"name":"Generated workflow migrations","status":"completed","conclusion":"success","number":25,"started_at":"2026-08-05T04:14:44Z","completed_at":"2026-08-05T04:14:44Z"},{"name":"Durable workflow kernel","status":"completed","conclusion":"success","number":26,"started_at":"2026-08-05T04:14:44Z","completed_at":"2026-08-05T04:14:45Z"},{"name":"Prompt Studio 2 contracts","status":"completed","conclusion":"success","number":27,"started_at":"2026-08-05T04:14:45Z","completed_at":"2026-08-05T04:14:45Z"},{"name":"Prompt Studio 2 fixtures","status":"completed","conclusion":"success","number":28,"started_at":"2026-08-05T04:14:45Z","completed_at":"2026-08-05T04:14:45Z"},{"name":"Prompt Studio 2 compiler gate","status":"completed","conclusion":"success","number":29,"started_at":"2026-08-05T04:14:45Z","completed_at":"2026-08-05T04:14:45Z"},{"name":"Run python tool/dart_format_scope.py --check","status":"completed","conclusion":"success","number":30,"started_at":"2026-08-05T04:14:45Z","completed_at":"2026-08-05T04:14:46Z"},{"name":"Run flutter analyze --no-pub --fatal-warnings --fatal-infos","status":"completed","conclusion":"success","number":31,"started_at":"2026-08-05T04:14:46Z","completed_at":"2026-08-05T04:14:53Z"},{"name":"Run flutter test --no-pub --concurrency=1 --reporter expanded","status":"completed","conclusion":"success","number":32,"started_at":"2026-08-05T04:14:53Z","completed_at":"2026-08-05T04:15:11Z"},{"name":"P1-002 access profile v2","status":"completed","conclusion":"success","number":33,"started_at":"2026-08-05T04:15:11Z","completed_at":"2026-08-05T04:15:11Z"},{"name":"P1 full trust closure","status":"completed","conclusion":"success","number":34,"started_at":"2026-08-05T04:15:11Z","completed_at":"2026-08-05T04:15:14Z"},{"name":"P1-004 deterministic policy engine","status":"completed","conclusion":"success","number":35,"started_at":"2026-08-05T04:15:14Z","completed_at":"2026-08-05T04:15:14Z"},{"name":"P1-003 capability grant v2","status":"completed","conclusion":"success","number":36,"started_at":"2026-08-05T04:15:14Z","completed_at":"2026-08-05T04:15:15Z"},{"name":"P1-001 runtime boundary contract","status":"completed","conclusion":"success","number":37,"started_at":"2026-08-05T04:15:15Z","completed_at":"2026-08-05T04:15:15Z"},{"name":"Architecture and security gate","status":"completed","conclusion":"success","number":38,"started_at":"2026-08-05T04:15:15Z","completed_at":"2026-08-05T04:15:26Z"},{"name":"Native release build","status":"completed","conclusion":"success","number":39,"started_at":"2026-08-05T04:15:26Z","completed_at":"2026-08-05T04:16:38Z"},{"name":"Post Set up Flutter","status":"completed","conclusion":"success","number":76,"started_at":"2026-08-05T04:16:38Z","completed_at":"2026-08-05T04:16:39Z"},{"name":"Post Set up Python","status":"completed","conclusion":"success","number":77,"started_at":"2026-08-05T04:16:39Z","completed_at":"2026-08-05T04:16:39Z"},{"name":"Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1","status":"completed","conclusion":"success","number":78,"started_at":"2026-08-05T04:16:39Z","completed_at":"2026-08-05T04:16:39Z"},{"name":"Complete job","status":"completed","conclusion":"success","number":79,"started_at":"2026-08-05T04:16:39Z","completed_at":"2026-08-05T04:16:40Z"}],"check_run_url":"https://api.github.com/repos/alex00Pirotskyi/kris.ai/check-runs/92205636005","labels":["macos-15"],"runner_id":1000001692,"runner_name":"GitHub Actions 1000001692","runner_group_id":0,"runner_group_name":"GitHub Actions"}]}
+EXIT_CODE=0
+SOURCE_PRODUCT_JOB=validate-macos ID=92205636005 CONCLUSION=success
+SOURCE_PRODUCT_JOB=validate-ubuntu ID=92205635997 CONCLUSION=success
+SOURCE_PRODUCT_JOB=validate-windows ID=92205635996 CONCLUSION=success
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p2_refresh_source_manifest.py .
+P2 source manifest entries: 1068
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p2_source_inventory_test.py --project .
+P2 exact governed source inventory: PASS (27 production, 16 tests; P1A external dependency)
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa
+P2 isolated P1A-service dependency contract: PASS (owner-risk QA source dependency)
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/v71r12_bootstrap_hosted_python.py --project .
+{
+  "completionClaim": false,
+  "completionEligible": false,
+  "ed25519SignVerify": true,
+  "hashCount": 11,
+  "hashLocked": true,
+  "indexNeutral": true,
+  "installed": {
+    "cffi": "2.1.0",
+    "cryptography": "50.0.0",
+    "pycparser": "3.0"
+  },
+  "packages": {
+    "cffi": "2.1.0",
+    "cryptography": "50.0.0",
+    "pycparser": "3.0"
+  },
+  "pipCheck": true,
+  "rawPublicKeyBytes": 32,
+  "requirementsPath": "config/v71r12_hosted_python_requirements.txt",
+  "schemaVersion": "1.0.0",
+  "signatureBytes": 64,
+  "status": "installed-and-verified",
+  "wheelOnly": true
+}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/integration_train_test.py --project .
+{
+  "caseCount": 5,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 5,
+  "results": [
+    {
+      "detail": "count=12",
+      "name": "Exactly twelve integration trains",
+      "passed": true
+    },
+    {
+      "detail": "['TRAIN-01', 'TRAIN-02', 'TRAIN-03', 'TRAIN-04', 'TRAIN-05', 'TRAIN-06', 'TRAIN-07', 'TRAIN-08', 'TRAIN-09', 'TRAIN-10', 'TRAIN-11', 'TRAIN-12']",
+      "name": "Unique sequential train ids",
+      "passed": true
+    },
+    {
+      "detail": "['P1-004', 'P1-005', 'P1-006', 'P1-007', 'P1-008', 'P1-009', 'P1-010', 'P1-011', 'P1-012']",
+      "name": "P1 closure train contains every remaining P1 task",
+      "passed": true
+    },
+    {
+      "detail": "bundling changes PR cadence, not acceptance criteria",
+      "name": "Canonical task graph preserved",
+      "passed": true
+    },
+    {
+      "detail": "TRAIN-02 ready",
+      "name": "Next train ready",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "testId": "integration-trains"
+}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p1_exit_gate_test.py --project .
+{
+  "caseCount": 12,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 12,
+  "phase": "P1",
+  "results": [
+    {
+      "detail": "{'P1-001': 'DONE', 'P1-002': 'DONE', 'P1-003': 'DONE', 'P1-004': 'DONE', 'P1-005': 'DONE', 'P1-006': 'DONE', 'P1-007': 'DONE', 'P1-008': 'DONE', 'P1-009': 'DONE', 'P1-010': 'DONE', 'P1-011': 'DONE', 'P1-012': 'DONE'}",
+      "name": "P1-001 through P1-012 complete",
+      "passed": true
+    },
+    {
+      "detail": "all present",
+      "name": "P1 closure evidence present",
+      "passed": true
+    },
+    {
+      "detail": "ssuedAt', 'keyId', 'payload', 'schemaVersion', 'signature', 'trustDomain']\",\n      \"name\": \"Purpose, domain and expiry binding\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"['expired', 'payload_modified', 'revoked_key', 'v1_downgrade', 'wrong_domain', 'wrong_use']\",\n      \"name\": \"Negative vector specification\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-005=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-005\"\n}\n",
+      "name": "p1_005_signed_manifest_spec_test.py",
+      "passed": true
+    },
+    {
+      "detail": "xternal keyring accepted\",\n      \"name\": \"Python verification\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"modified payload rejected\",\n      \"name\": \"Mutation rejection\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"Dart signs and verifies same vectors\",\n      \"name\": \"Dart cross-language implementation\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-006=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-006\"\n}\n",
+      "name": "p1_006_cross_language_signing_test.py",
+      "passed": true
+    },
+    {
+      "detail": "pported_manifest_version'}\",\n      \"name\": \"Downgrade and mixed-format rejection\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"v2 accepted\",\n      \"name\": \"Clean v2 accepted\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P0-002 invariant preserved\",\n      \"name\": \"Legacy production trust remains disabled\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-007=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-007\"\n}\n",
+      "name": "p1_007_manifest_compatibility_test.py",
+      "passed": true
+    },
+    {
+      "detail": "ld root\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"['rollback', 'freeze', 'mix_and_match', 'fast_forward', 'consistent_snapshot']\",\n      \"name\": \"Rollback freeze and mix-and-match defenses\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"runbooks approved\",\n      \"name\": \"Rotation and recovery runbooks\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-008=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-008\"\n}\n",
+      "name": "p1_008_tuf_trust_test.py",
+      "passed": true
+    },
+    {
+      "detail": ",\n    {\n      \"detail\": \"revoked key rejected\",\n      \"name\": \"Revocation fails closed\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"{'external': 'external_hsm', 'linux': 'linux_secret_service', 'macos': 'macos_keychain', 'windows': 'windows_credential_manager'}\",\n      \"name\": \"OS protected providers declared\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-009=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-009\"\n}\n",
+      "name": "p1_009_key_registry_test.py",
+      "passed": true
+    },
+    {
+      "detail": "bbbbbbbbbbbbbb'}\",\n      \"name\": \"Valid signed checkpoint chain\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"{'tamper': 'checkpoint_tampered', 'truncate': 'audit_head_mismatch', 'reorder': 'checkpoint_reordered', 'signer': 'unknown_signer'}\",\n      \"name\": \"Tamper truncate reorder signer substitution rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-010=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-010\"\n}\n",
+      "name": "p1_010_signed_audit_test.py",
+      "passed": true
+    },
+    {
+      "detail": "'manifest_trust', 'mcp_a2a', 'model_to_policy', 'owner_executor', 'policy_to_worker', 'updater', 'web_content', 'worker_ipc']\",\n      \"name\": \"Required agentic boundaries covered\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"threat model complete\",\n      \"name\": \"Prompt injection and confused deputy documented\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-011=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-011\"\n}\n",
+      "name": "p1_011_threat_model_test.py",
+      "passed": true
+    },
+    {
+      "detail": "rejected\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"{'linux': ['unix_domain_socket', 'authenticated_loopback_mutual_auth'], 'macos': ['unix_domain_socket', 'authenticated_loopback_mutual_auth'], 'windows': ['named_pipe', 'authenticated_loopback_mutual_auth']}\",\n      \"name\": \"Tri-platform transport contract\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"P1-012=DONE\",\n      \"name\": \"Roadmap state\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"taskId\": \"P1-012\"\n}\n",
+      "name": "p1_012_local_ipc_test.py",
+      "passed": true
+    },
+    {
+      "detail": "'P1-005', 'P1-006', 'P1-007', 'P1-008', 'P1-009', 'P1-010', 'P1-011', 'P1-012']\",\n      \"name\": \"P1 closure train contains every remaining P1 task\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"bundling changes PR cadence, not acceptance criteria\",\n      \"name\": \"Canonical task graph preserved\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"TRAIN-02 ready\",\n      \"name\": \"Next train ready\",\n      \"passed\": true\n    }\n  ],\n  \"schemaVersion\": \"1.0.0\",\n  \"testId\": \"integration-trains\"\n}\n",
+      "name": "integration_train_test.py",
+      "passed": true
+    },
+    {
+      "detail": "all exit claims true",
+      "name": "P1 exit-gate claims",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p0_003_repair_test.py
+{
+  "caseCount": 13,
+  "failedCount": 0,
+  "milestone": "P0-003",
+  "passed": true,
+  "passedCount": 13,
+  "results": [
+    {
+      "detail": "backslash, quote, dollar, newline, and Unicode line separators are encoded",
+      "name": "Shared Dart literal encoder",
+      "passed": true
+    },
+    {
+      "detail": "three generators share one reviewed Dart literal encoder",
+      "name": "Generators use the shared encoder",
+      "passed": true
+    },
+    {
+      "detail": "generated schemas contain 81 escaped dollar occurrences and no known unsafe token",
+      "name": "Generated Dart dollar safety",
+      "passed": true
+    },
+    {
+      "detail": "v170/v180/v190 generated files exactly match their generators",
+      "name": "Generated contract check mode",
+      "passed": true
+    },
+    {
+      "detail": "SQLite JSONPath remains literal at runtime without Dart interpolation",
+      "name": "Durable workflow JSONPath literal",
+      "passed": true
+    },
+    {
+      "detail": "module imports without POSIX resource support and sandbox execution remains unavailable",
+      "name": "POSIX resource import fails closed",
+      "passed": true
+    },
+    {
+      "detail": "Windows receipt portability, URL hygiene, and recorded source-manifest refresh are executable",
+      "name": "CI receipt portability",
+      "passed": true
+    },
+    {
+      "detail": "dependency resolution precedes non-mutating format, analysis, and test gates",
+      "name": "SDK gate ordering and nonmutation",
+      "passed": true
+    },
+    {
+      "detail": "three-OS workflow keeps every step inside its job and reaches trust, generator, repair, format, analyzer, test, validator, and native-build gates",
+      "name": "Three-OS CI contract",
+      "passed": true
+    },
+    {
+      "detail": "handwritten Dart is format-owned while generated contracts remain generator-owned",
+      "name": "Handwritten Dart formatting scope",
+      "passed": true
+    },
+    {
+      "detail": "Project Manager executable labels and cumulative source-contract aggregation agree",
+      "name": "Project Manager system-contract alignment",
+      "passed": true
+    },
+    {
+      "detail": "generated STATUS.md ends with exactly one LF and passes Git whitespace policy",
+      "name": "STATUS terminal newline",
+      "passed": true
+    },
+    {
+      "detail": "P0-002 forgery regression remains active",
+      "name": "P0-002 trust remains disabled",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p0_008_roadmap_test.py --project .
+{
+  "caseCount": 15,
+  "failedCount": 0,
+  "gateId": "P0-008",
+  "passed": true,
+  "passedCount": 15,
+  "results": [
+    {
+      "detail": "required=16",
+      "name": "Required control files",
+      "passed": true
+    },
+    {
+      "detail": "tasks=22 ready=0",
+      "name": "Strict roadmap validator",
+      "passed": true
+    },
+    {
+      "detail": "graph=dbef00a9e2fb2256b0c7f5a76d29aeccd0d482c4155d01ed2028aa67e4102fdc",
+      "name": "Bootstrap manifest contract",
+      "passed": true
+    },
+    {
+      "detail": "ready=0",
+      "name": "Fresh-session next command",
+      "passed": true
+    },
+    {
+      "detail": "Generated roadmap control files are current.",
+      "name": "Generated status and handoff",
+      "passed": true
+    },
+    {
+      "detail": "prompts=5",
+      "name": "AI prompt set",
+      "passed": true
+    },
+    {
+      "detail": "accepted=6 proposed=1",
+      "name": "ADR status boundaries",
+      "passed": true
+    },
+    {
+      "detail": "packets=22",
+      "name": "P0/P1 task packets",
+      "passed": true
+    },
+    {
+      "detail": "verify=true ci=true",
+      "name": "Verification and CI hooks",
+      "passed": true
+    },
+    {
+      "detail": "schemas=2",
+      "name": "Roadmap and evidence schemas",
+      "passed": true
+    },
+    {
+      "detail": "checked=52",
+      "name": "Source-manifest integration",
+      "passed": true
+    },
+    {
+      "detail": "declarations=8",
+      "name": "Single human roadmap authority",
+      "passed": true
+    },
+    {
+      "detail": "disabled=true",
+      "name": "P0-002 trust retirement preservation",
+      "passed": true
+    },
+    {
+      "detail": "directories=9",
+      "name": "Control directory structure",
+      "passed": true
+    },
+    {
+      "detail": "master_tasks=22",
+      "name": "MASTER and manifest graph agreement",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/roadmap_control.py validate --project . --strict
+Roadmap control: PASS
+Tasks: 22  Ready: 0  Errors: 0  Warnings: 0
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) /opt/hostedtoolcache/Python/3.12.10/x64/bin/python tool/p0_010_generated_state_test.py --project .
+{
+  "caseCount": 16,
+  "failedCount": 0,
+  "passed": true,
+  "passedCount": 16,
+  "results": [
+    {
+      "detail": "required=10",
+      "name": "Required P0-010 files",
+      "passed": true
+    },
+    {
+      "detail": "generatedExamples=19",
+      "name": "Generated examples classify as generated",
+      "passed": true
+    },
+    {
+      "detail": "sourceExamples=8",
+      "name": "Source examples remain source",
+      "passed": true
+    },
+    {
+      "detail": "blockBytes=1570",
+      "name": "Canonical .gitignore managed block",
+      "passed": true
+    },
+    {
+      "detail": "authority=git-index pendingDeletion=0",
+      "name": "Strict generated-state audit",
+      "passed": true
+    },
+    {
+      "detail": "manifestEntries=1068",
+      "name": "Source manifest excludes generated state",
+      "passed": true
+    },
+    {
+      "detail": "knownGeneratedOutputsUntracked=true",
+      "name": "Known generated outputs are not source inputs",
+      "passed": true
+    },
+    {
+      "detail": "verifyIntegration=true",
+      "name": "Verification ladder integration",
+      "passed": true
+    },
+    {
+      "detail": "workflowIntegrated=true",
+      "name": "CI integration",
+      "passed": true
+    },
+    {
+      "detail": "sourceTreePolicyUnitSuite=passed",
+      "name": "Source-tree policy unit suite",
+      "passed": true
+    },
+    {
+      "detail": "generatedStateGuardUnitSuite=passed",
+      "name": "Generated-state guard unit suite",
+      "passed": true
+    },
+    {
+      "detail": "schemaInvariant=true",
+      "name": "Generated-state report schema",
+      "passed": true
+    },
+    {
+      "detail": "benchmarkFingerprint=719a911dd34fbe60748fe15366af17f355360aad652f74580f8a60cf5fcccd9a",
+      "name": "P0-009 benchmark baseline current",
+      "passed": true
+    },
+    {
+      "detail": "v1TrustDisabled=true",
+      "name": "P0-002 trust retirement preserved",
+      "passed": true
+    },
+    {
+      "detail": "ledgerStatus=DONE",
+      "name": "P0-008 roadmap ledger current",
+      "passed": true
+    },
+    {
+      "detail": "policyVersion=2.0.0",
+      "name": "Policy version explicit",
+      "passed": true
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "taskId": "P0-010"
+}
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git diff --check
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git diff --name-only
+.github/workflows/ci.yml
+SOURCE_MANIFEST.sha256
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git ls-files --others --exclude-standard
+docs/progress/2026-08-05-pr14-ci-recovery.md
+EXIT_CODE=0
+CHANGED_PATHS=[".github/workflows/ci.yml", "SOURCE_MANIFEST.sha256", "docs/progress/2026-08-05-pr14-ci-recovery.md"]
+$ (/home/runner/work/kris.ai/kris.ai/target) git config user.name Kristin CI Repair
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git add .github/workflows/ci.yml SOURCE_MANIFEST.sha256 docs/progress/2026-08-05-pr14-ci-recovery.md
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git diff --cached --check
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git commit -m fix(ci): bootstrap P1 closure and document PR14 recovery
+[merge/p1-p2-owner-risk-qa-preview 40b3b10] fix(ci): bootstrap P1 closure and document PR14 recovery
+ 3 files changed, 65 insertions(+), 1 deletion(-)
+ create mode 100644 docs/progress/2026-08-05-pr14-ci-recovery.md
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git rev-parse HEAD
+40b3b1002f37bc9c301bfb5faf9c0b32f5f9a18a
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git rev-parse HEAD^
+0b91e02f2d7413c40dcfa81176877cd3a0daf87e
+EXIT_CODE=0
+$ (/home/runner/work/kris.ai/kris.ai/target) git push origin 40b3b1002f37bc9c301bfb5faf9c0b32f5f9a18a:refs/heads/merge/p1-p2-owner-risk-qa-preview
+To https://github.com/alex00Pirotskyi/kris.ai
+ ! [remote rejected] 40b3b1002f37bc9c301bfb5faf9c0b32f5f9a18a -> merge/p1-p2-owner-risk-qa-preview (refusing to allow a GitHub App to create or update workflow `.github/workflows/ci.yml` without `workflows` permission)
+error: failed to push some refs to 'https://github.com/alex00Pirotskyi/kris.ai'
+EXIT_CODE=1
+REPAIR_OBJECT_TRANSFERRED_FOR_CONNECTED_REF_UPDATE=true

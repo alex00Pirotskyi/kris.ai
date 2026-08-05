@@ -1,0 +1,23 @@
+{
+  "authorizedPaths": [
+    ".github/workflows/ci.yml",
+    "SOURCE_MANIFEST.sha256",
+    "docs/progress/2026-08-05-pr14-ci-recovery.md"
+  ],
+  "controlBaseSha": "950865fe363bf9556a5760faa06e1a4bff5cb177",
+  "error": "",
+  "expectedHead": "0b91e02f2d7413c40dcfa81176877cd3a0daf87e",
+  "refUpdatedByAction": false,
+  "repairRc": 0,
+  "repairedCommit": "40b3b1002f37bc9c301bfb5faf9c0b32f5f9a18a",
+  "roadmapAuthority": "docs/roadmap/MASTER.md",
+  "schemaVersion": "1.4.0",
+  "sourceProductRunAttempt": "1",
+  "sourceProductRunId": "30974509667",
+  "targetBranch": "merge/p1-p2-owner-risk-qa-preview",
+  "triggerBranch": "ci/direct-pr14-repair-trigger",
+  "triggerHead": "61037b13e71d8b0e6b47feaa9922d476c5666347",
+  "triggerPullRequest": 48,
+  "workflowRunAttempt": "1",
+  "workflowRunId": "30977682920"
+}
