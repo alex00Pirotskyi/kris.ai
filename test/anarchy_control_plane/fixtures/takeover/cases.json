@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "expectedCode": "unsafe_takeover",
+      "id": "unsafe-takeover",
+      "operation": "claim_state",
+      "value": "TAKEN_OVER"
+    },
+    {
+      "expectedCode": "yield_continuity",
+      "id": "yield-continuity",
+      "operation": "claim_state",
+      "value": "YIELDED"
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

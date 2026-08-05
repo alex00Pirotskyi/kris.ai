@@ -8,88 +8,99 @@
 
 ## Context
 
-The repository already has a deliberately split control plane: `docs/roadmap/MASTER.md` is the sole human-readable implementation constitution, while `docs/roadmap/roadmap.yaml` is the canonical machine-readable authority inside its declared P0/P1 bootstrap scope. `STATUS.md`, `HANDOFF.md`, and `GENERATED_STATE.md` are derived compatibility views. The additive ANARCHY packet in draft PR #63 contains 25 phase packets, 359 task IDs, and ten durable worker identities, but its own documents say that it is a proposal and cannot manufacture task completion.
+The repository already has a deliberately split control plane: `docs/roadmap/MASTER.md` is the sole human-readable implementation constitution, while `docs/roadmap/roadmap.yaml` is the canonical machine-readable authority only inside its declared P0/P1 bootstrap scope. `STATUS.md`, `HANDOFF.md`, and `GENERATED_STATE.md` are compatibility/generated views. Draft PR #63 supplies an additive ANARCHY proposal with 25 phase packets, 359 task IDs, and ten worker cards, but it is not normative authority and cannot manufacture completion.
 
-P24-001 therefore extends the existing model. It does not replace the current authority with a parallel mutable ledger, and it does not promote proposal phase status into live product truth.
+P24-001 prepares a reversible adoption foundation. It does not replace the current authority, extend `roadmap.yaml`, promote PR #63, or enact the v3.2 planning reference.
 
 ## Decision
 
 ### Human authority
 
-`docs/roadmap/MASTER.md` remains the only human-readable normative roadmap authority. Human-readable phase, worker, dashboard, migration, and reference files are governed views, proposal inputs, operational memory, or historical evidence. None may independently assign task status.
+`docs/roadmap/MASTER.md` remains the only human-readable normative roadmap authority. Phase packets, worker cards, dashboards, migration records, and references remain proposal, navigation, operational-memory, compatibility, or evidence artifacts. They cannot independently assign roadmap task state.
 
 ### Machine authority
 
-`docs/roadmap/roadmap.yaml` remains the one canonical machine authority. Adoption will extend that file from its current P0/P1 bootstrap scope to the accepted P0–P24 task set using the schema contract in `schemas/anarchy_execution.schema.json`. The extension must retain the JSON subset of YAML 1.2 unless an independently reviewed migration proves every current consumer supports a richer parser.
+`docs/roadmap/roadmap.yaml` remains the one canonical machine authority within its existing P0/P1 scope. This adoption-review run does **not** extend that scope to P0–P24 and does not rewrite `MASTER.md`, `roadmap.yaml`, `STATUS.md`, `HANDOFF.md`, or `GENERATED_STATE.md`.
 
-`DIRECTIVE_MATRIX.yaml`, `MIGRATION_LEDGER.yaml`, claims, evidence manifests, and generated reports are not competing task-status ledgers. They carry migration decisions, append-only observations, ownership, and evidence bindings. On conflict, canonical machine state wins unless the human authority explicitly requires reconciliation.
+A future, separately authorized adoption action may extend the existing machine authority after exact-head CI, compatibility proof, and independent review. It must not create a second mutable roadmap ledger.
+
+### P24-001 scoped schema
+
+`schemas/anarchy_execution.schema.json` is specifically scoped to P24-001 adoption-review execution records: roadmap references, worker runtime records, claims and shared-contract locks, phase/worker packet integrity, migration directives/observations, and generated navigation. It is not the future full roadmap manifest schema and does not replace Worker B's Test Center, Project Test Profile, Testing Studio, result registry, or certification architecture.
+
+The P24 validator treats TestExecutionResult and CertificationStatus as externally owned Worker B references. Until Worker B publishes canonical versioned contracts, their external bindings remain `BLOCKED_BY_SHARED_CONTRACT`; Worker J validates separation and inflation rules without claiming ownership.
 
 ### File roles
 
-| Source | Role before adoption | Role after adoption |
-|---|---|---|
-| `docs/roadmap/MASTER.md` | normative human authority | unchanged |
-| `docs/roadmap/roadmap.yaml` | normative machine authority for declared P0/P1 scope | normative machine authority for accepted P0–P24 scope |
-| `docs/roadmap/STATUS.md` | generated compatibility view | generated compatibility view |
-| `docs/roadmap/HANDOFF.md` | generated compatibility view | generated compatibility view |
-| `docs/roadmap/GENERATED_STATE.md` | generated-state registry | generated-state registry |
-| `docs/roadmap/anarchy/phases/**` | bounded proposal/input packets | source-mapped navigation packets; status generated from machine authority |
-| `docs/roadmap/anarchy/workers/**` | durable proposal worker memory | durable generated/operational worker memory with freshness binding |
-| `docs/roadmap/anarchy/DASHBOARD.md` | proposal compatibility view | generated compatibility view |
-| v3.2 reference pointer | immutable source reference | immutable historical/reference source |
-| migration files | adoption evidence and decision records | immutable historical migration evidence after adoption |
+| Source | Adoption-review role |
+|---|---|
+| `docs/roadmap/MASTER.md` | normative human authority |
+| `docs/roadmap/roadmap.yaml` | normative machine authority for declared P0/P1 scope |
+| `docs/roadmap/STATUS.md`, `HANDOFF.md`, `GENERATED_STATE.md` | existing compatibility/generated views; unchanged |
+| `docs/roadmap/anarchy/phases/**` | bounded proposal/navigation inputs |
+| `docs/roadmap/anarchy/workers/**` | bounded operational/proposal memory |
+| `docs/roadmap/anarchy/DASHBOARD.md` | proposal compatibility view |
+| `docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json` | deterministic generated P24 navigation index; not authority |
+| v3.2 reference pointer | immutable hash-linked planning reference |
+| `DIRECTIVE_MATRIX.yaml` | proposed reconciliation decisions, not task status |
+| `MIGRATION_LEDGER.yaml` | append-only migration observations, not task status |
+| claims/reviews/evidence | ownership/evidence bindings, not roadmap authority |
 
 ### Source immutability and supersession
 
-Accepted evidence, task IDs, hashes, historical phase wording, and reviewed commits are append-only. A replacement identifies the superseded object, reason, compatibility behavior, and rollback. Files are never silently rewritten to erase an earlier claim. The v3.2 pointer remains a hash-linked reference and is not converted into normative source.
+Accepted evidence, task IDs, hashes, historical wording, and reviewed commits are append-only. A replacement identifies the superseded object, rationale, compatibility behavior, and rollback. Stale claims are corrected by a new observation rather than erased.
 
 ### Task identity
 
-A task ID is immutable once published. Wording may be clarified without changing the ID or acceptance semantics. A semantic split creates new IDs and records `supersedes`; a merge deprecates old IDs but retains them as aliases. Renames require an explicit compatibility map and cannot reuse a retired ID for a different task.
+A published task ID is immutable. Clarification may not alter acceptance semantics. Splits create new IDs and `supersedes` metadata; merges retain deprecated aliases. A retired ID is never reused for different work.
 
-### Separate state machines
+### Separate state domains
 
-The control plane keeps roadmap task status, worker runtime status, test execution result, certification status, and capability support status in separate typed fields. Exact enums are defined in the schema. No inference crosses domains automatically. In particular:
+RoadmapTaskStatus, WorkerRuntimeStatus, TestExecutionResult, CertificationStatus, and CapabilitySupportStatus remain separate typed fields. No parser, generator, review, or report coerces one into another. In particular:
 
-- a static/source test `PASS` does not make a capability `BEHAVIOR_SUPPORTED`;
-- hosted CI `PASS` does not imply platform or release support;
-- task `DONE` requires accepted evidence and dependency/gate closure;
-- certification can become `STALE` or `REVOKED` without rewriting historical test results.
+- `source_only` does not mean supported;
+- test `PASS` does not mean roadmap `DONE`;
+- hosted CI `PASS` does not mean behavioral or platform certification;
+- a review comment does not mean approval;
+- a migration proposal does not mean normative authority;
+- P2 source success remains distinct from controlled behavioral evidence and release support.
 
 ### Claims and shared-contract locks
 
-A valid active claim binds one task to one worker, branch, exact base, owned paths, shared-contract locks, reviewer, and durable next action. Multiple active owners for one task, or overlapping exclusive shared-contract locks, are invalid. Worker J owns P24-001 migration contracts only. Worker C retains PR #62 and Worker A retains proven P2 responsibility.
+A valid active claim binds task, worker, branch, exact base, owned paths, shared-contract locks, reviewers, continuity, and one durable next action. Multiple active owners for one task or overlapping exclusive locks are invalid. Worker J owns only P24-001 migration/control-plane paths. Worker C retains PR #62; Worker B retains horizontal Test Center contracts; Worker I retains security/release review scope.
 
 ### Yield and takeover
 
-A yield records target worker, continuity head/tree, open PR, evidence bindings, uncommitted state (which must be empty or explicitly archived), remaining findings, and next action. A takeover is valid only from that continuity record or an explicit ownership transfer. Neither action rewrites prior ownership history.
+A yield records exact head/tree, safe-takeover condition, evidence continuity, and next action. A takeover is valid only from a yielded record or explicit ownership transfer and preserves prior ownership history.
 
-### Exact-SHA evidence and independent review
+### Exact-head independent review
 
-Evidence and reviews bind to a full commit SHA and tree. A repair creates a new candidate and invalidates review for changed scope. Adoption requires Worker B (roadmap/evidence) and Worker I (security/CI/governance) findings to have no unresolved critical or high severity. GitHub-hosted success is recorded as test evidence, not as independent review.
+A valid Worker B or Worker I review artifact records reviewer role, full candidate commit/tree, reviewed files, commands, findings/severity/disposition, decision, timestamp, and artifact hash. Formal GitHub approval is optional when the same GitHub account makes identity independence unavailable, but Worker J cannot author its own Worker B/I review. Any changed implementation, schema, fixture, workflow, generated report, or source manifest invalidates earlier review.
 
-### Autonomous approval and genuine blockers
+### Deterministic tooling
 
-Routine implementation, repair, formatting, fixture, and deterministic CI work proceeds autonomously. Human or capability blocking is limited to repository authority rejection, ownership collision, credential/signing/platform absence without a deterministic substitute, security exposure, out-of-scope runtime dependency, or evidence that cannot be proven.
+`tool/anarchy_control_plane.py --check --project .` is network-free and strictly non-mutating across declared scope. `--write` is separate, atomic, deterministic, idempotent, fail-closed, and bounded to the generated P24 navigation index. Normal validation never invokes write mode.
 
-### Worker memory and dashboard freshness
+`SOURCE_MANIFEST.sha256` remains owned by `tool/p1a_refresh_source_manifest.py`. The P24 validator verifies expected bytes read-only but does not replace or silently invoke the owner. The canonical write command is:
 
-Generated views carry a visible generator header and input fingerprint. Worker memory must expose lane, active task, branch/PR, exact anchors, owned/forbidden paths, tests, review, blockers, and one exact next action. Offline validation checks the local contract; optional GitHub reconciliation is a separate fail-closed command and must never leak tokens.
+```text
+python tool/p1a_refresh_source_manifest.py .
+```
 
 ### CI and rollback
 
-The existing `product-gates` matrix runs the P24 validator on Ubuntu, Windows, and macOS. `--check` is network-free and non-mutating. `--write` changes only declared generated output atomically and idempotently. Rollback removes the P24 gate and proposal extension while retaining this ADR, baseline, directive ledger, claims, and evidence as historical records; it restores the prior `roadmap.yaml` bytes and generated views through their owning generator.
+`.github/workflows/p24-adoption-review.yml` is a bounded exact-head Ubuntu/Windows/macOS gate. It checks out the candidate SHA, runs tests and `--check`, builds expected generated output and source manifest only in an isolated clone, proves source-manifest second-write idempotence, verifies checkout cleanliness, and uploads bounded evidence. It cannot commit, push, refresh authority, or weaken P1/P1A/P2/P4 gates.
+
+Rollback closes the stacked PR or reverts its focused commits, removes the bounded P24 workflow and generated proposal index, and retains ADR/baseline/directive/claim/review/evidence history. Existing roadmap bytes, product/runtime behavior, PR #62, P2 evidence, and task IDs remain untouched.
 
 ## Compatibility
 
-`tool/roadmap_control.py` remains the P0/P1 bootstrap validator throughout adoption preparation. The new validator is additive and validates ANARCHY packet integrity plus compatibility with the current authority. The existing manifest schema/version is not changed in this PR. A later adoption commit may extend `roadmap.yaml` only after compatibility fixtures prove existing consumers ignore or understand the extension.
-
-`CONTRIBUTING.md` currently mentions `tool/roadmap_state.py`; the live implementation is `tool/roadmap_control.py`. This ADR records the mismatch, but P24-001 does not rename the live tool or silently alter current consumers.
+`tool/roadmap_control.py validate --project . --strict` remains the P0/P1 bootstrap validator. The P24 validator is additive and validates proposal packet integrity and status separation. `CONTRIBUTING.md` still names nonexistent `tool/roadmap_state.py`; the live implementation is `tool/roadmap_control.py`. This mismatch is recorded but is not silently repaired in P24-001.
 
 ## Explicit non-goals
 
-This change does not modify product runtime, P1/P2 authority behavior, browser/search implementation, PR #62, P3 readiness, SQLite or no-SQL storage, persistence indexes or migrations, public APIs, wire formats, native interfaces, release metadata, support policy, signing material, secrets, or GA classification.
+No product runtime, P1/P2 authority behavior, P2 behavioral certification, P3/P4 implementation, PR #62 history, SQLite/no-SQL storage, persistence index/migration, public API, wire format, native interface, release metadata, support policy, signing material, secret, production, or GA claim changes in this run.
 
 ## Adoption gate
 
-This ADR becomes accepted only after exact-head matrix CI, deterministic and non-mutation evidence, generator-owned source-manifest verification, Worker B and Worker I exact-SHA review, and explicit repository adoption approval. Until then, status is `ADOPTION_REVIEW` and PR #63 remains proposal authority only.
+The result remains `ADOPTION_REVIEW` until committed artifacts, exact-head tri-OS CI, full non-mutation, atomic/idempotent write proof, canonical source-manifest verification, Worker B exact-head `PASS`, Worker I exact-head `PASS`, stacked draft PR, and pushed-state clean-room resume all pass. `ADOPTION_READY`, when eventually justified, still does not mean adopted, normative, merged, product-complete, P2 behaviorally complete, release-ready, production-ready, or GA. Authority promotion is a separate explicit action and is not performed by Worker J here.

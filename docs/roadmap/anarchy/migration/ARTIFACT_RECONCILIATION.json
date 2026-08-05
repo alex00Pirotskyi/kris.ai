@@ -1,0 +1,22 @@
+{
+  "classification": "MACHINE_OBSERVED_CORRECTION_OF_PREVIOUS_WORKER_CLAIMS",
+  "observedBranch": "agent/j/P24-001-roadmap-as-data-adr",
+  "observedCommit": "45c435058b63e598223d7080c7ad8d229c5436c3",
+  "observedTree": "d0ed3ae2db15faff9a2c9cbcc92085045fb65371",
+  "records": [
+    {"artifact": "tool/anarchy_control_plane.py", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "tool/anarchy_control_plane_test.py", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "schemas/anarchy_execution.schema.json", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "test/anarchy_control_plane/fixtures/positive", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "test/anarchy_control_plane/fixtures/negative", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "test/anarchy_control_plane/fixtures/collision", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "test/anarchy_control_plane/fixtures/takeover", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "test/anarchy_control_plane/fixtures/clean_room", "previousClaim": "added", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json", "previousClaim": "generated", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": ".github/workflows/p24-adoption-review.yml", "previousClaim": "integrated", "observedState": "MISSING_FROM_PUSHED_BRANCH"},
+    {"artifact": "docs/roadmap/anarchy/migration/ADOPTION_CHECKLIST.md", "previousClaim": "foundation checked", "observedState": "STALE_CLAIM"},
+    {"artifact": "docs/roadmap/anarchy/migration/MIGRATION_LEDGER.yaml#sequence-4", "previousClaim": "validator foundation", "observedState": "DOCUMENTATION_ONLY"}
+  ],
+  "resolution": "Correct the checklist and ledger, implement every missing artifact, and bind all new evidence only to commits that actually contain it.",
+  "schemaVersion": "1.0.0"
+}

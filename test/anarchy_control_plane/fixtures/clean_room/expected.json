@@ -1,0 +1,11 @@
+{
+  "activeTask": "P24-001",
+  "authority": {
+    "human": "docs/roadmap/MASTER.md",
+    "machine": "docs/roadmap/roadmap.yaml"
+  },
+  "branch": "agent/j/P24-001-roadmap-as-data-adr",
+  "claim": "docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml",
+  "nextActionContains": "stacked draft PR",
+  "worker": "J"
+}

@@ -1,46 +1,80 @@
 {
-  "schemaVersion": "1.0.0",
   "classification": "APPEND_ONLY_MIGRATION_OBSERVATION_NOT_TASK_STATUS_AUTHORITY",
-  "task": "P24-001",
-  "worker": "J",
   "events": [
     {
-      "sequence": 1,
-      "observedAtUtc": "2026-08-05T10:23:23Z",
+      "evidence": "docs/roadmap/anarchy/migration/BASELINE.json",
       "kind": "LIVE_BASELINE",
+      "observedAtUtc": "2026-08-05T10:23:23Z",
       "protectedMain": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
-      "stackedBase": "6b23beb64070932886e75a131580fbc6fda878b6",
-      "evidence": "docs/roadmap/anarchy/migration/BASELINE.json"
+      "sequence": 1,
+      "stackedBase": "6b23beb64070932886e75a131580fbc6fda878b6"
     },
     {
-      "sequence": 2,
-      "kind": "CLAIM",
       "commit": "adda21f7c4b5fde7ef2d3c3417f50086a19bc325",
-      "tree": "cae63423e8b94239c93f8d2ec037976ac9b2b041",
-      "evidence": "docs/roadmap/anarchy/claims/P24-001.md"
+      "evidence": "docs/roadmap/anarchy/claims/P24-001.md",
+      "kind": "CLAIM",
+      "sequence": 2,
+      "tree": "cae63423e8b94239c93f8d2ec037976ac9b2b041"
     },
     {
-      "sequence": 3,
+      "decision": "MASTER.md remains human authority; roadmap.yaml remains machine authority only within its declared P0/P1 scope during this adoption-review run.",
+      "evidence": "docs/roadmap/anarchy/migration/P24-001_RECONCILIATION_ADR.md",
       "kind": "AUTHORITY_DECISION_PROPOSED",
-      "decision": "MASTER.md remains human authority; roadmap.yaml remains and is proposed to become the all-task machine authority after adoption.",
-      "evidence": "docs/roadmap/anarchy/migration/P24-001_RECONCILIATION_ADR.md"
+      "sequence": 3
     },
     {
-      "sequence": 4,
-      "kind": "VALIDATOR_FOUNDATION",
-      "classification": "SOURCE_FOUNDATION",
+      "classification": "DOCUMENTATION_ONLY_AT_REPORTED_HEAD",
       "evidence": [
-        "schemas/anarchy_execution.schema.json",
+        "docs/roadmap/anarchy/migration/ADOPTION_CHECKLIST.md",
+        "docs/roadmap/anarchy/migration/ARTIFACT_RECONCILIATION.json"
+      ],
+      "kind": "VALIDATOR_FOUNDATION",
+      "sequence": 4
+    },
+    {
+      "correctedCommit": "45c435058b63e598223d7080c7ad8d229c5436c3",
+      "correctedTree": "d0ed3ae2db15faff9a2c9cbcc92085045fb65371",
+      "evidence": "docs/roadmap/anarchy/migration/ARTIFACT_RECONCILIATION.json",
+      "kind": "STALE_CLAIM_CORRECTED",
+      "sequence": 5
+    },
+    {
+      "classification": "SOURCE_FOUNDATION_CANDIDATE",
+      "evidence": [
         "tool/anarchy_control_plane.py",
-        "tool/anarchy_control_plane_test.py"
-      ]
+        "tool/anarchy_control_plane_test.py",
+        "schemas/anarchy_execution.schema.json",
+        "test/anarchy_control_plane/fixtures/positive/repository.json",
+        "test/anarchy_control_plane/fixtures/negative/cases.json",
+        ".github/workflows/p24-adoption-review.yml"
+      ],
+      "kind": "VALIDATOR_FOUNDATION",
+      "sequence": 6
+    },
+    {
+      "evidence": "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
+      "kind": "COORDINATION_CHECKPOINT",
+      "sequence": 7
+    },
+    {
+      "classification": "LOCAL_PRE_PUSH_OBSERVATION",
+      "evidence": [
+        "release/evidence/P24-001/LOCAL_TEST_RESULTS.json",
+        "docs/roadmap/anarchy/migration/CLEAN_ROOM_RESUME.md"
+      ],
+      "kind": "CLEAN_ROOM_RESUME",
+      "sequence": 8
     }
   ],
   "pending": [
-    "exact-head three-OS CI",
-    "generator-owned root source-manifest refresh/check",
-    "Worker B exact-SHA review",
-    "Worker I exact-SHA review",
-    "explicit adoption authorization"
-  ]
+    "generated view and canonical source manifest from isolated exact-head CI preview",
+    "stacked draft PR",
+    "exact-head Ubuntu/Windows/macOS CI",
+    "Worker B exact-head review",
+    "Worker I exact-head review",
+    "separate explicit adoption authorization"
+  ],
+  "schemaVersion": "1.0.0",
+  "task": "P24-001",
+  "worker": "J"
 }

@@ -1,0 +1,217 @@
+{
+  "adoptionGates": {
+    "atomicWrite": "REQUIRED",
+    "cleanRoomResume": "REQUIRED",
+    "exactHeadCi": [
+      "ubuntu",
+      "windows",
+      "macos"
+    ],
+    "idempotentWrite": "REQUIRED",
+    "independentReviews": [
+      "Worker B",
+      "Worker I"
+    ],
+    "sourceManifest": "CANONICAL_GENERATOR_REQUIRED"
+  },
+  "authority": {
+    "human": "docs/roadmap/MASTER.md",
+    "machine": "docs/roadmap/roadmap.yaml",
+    "machineScopeMustRemain": [
+      "P0",
+      "P1"
+    ],
+    "proposalAndReferenceRoles": [
+      {
+        "path": "docs/roadmap/anarchy/ANARCHY_GOD_TIER_EXECUTION.md",
+        "role": "PROPOSAL"
+      },
+      {
+        "path": "docs/roadmap/anarchy/reference/MASTER_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md",
+        "role": "REFERENCE"
+      },
+      {
+        "path": "docs/roadmap/STATUS.md",
+        "role": "COMPATIBILITY_VIEW"
+      },
+      {
+        "path": "docs/roadmap/anarchy/migration/MIGRATION_LEDGER.yaml",
+        "role": "MIGRATION_EVIDENCE"
+      }
+    ]
+  },
+  "classification": "ADOPTION_REVIEW",
+  "coordinationCheckpoint": "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
+  "directiveMatrix": "docs/roadmap/anarchy/migration/DIRECTIVE_MATRIX.yaml",
+  "generatedPaths": [
+    "docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json"
+  ],
+  "inventory": {
+    "claimGlob": "docs/roadmap/anarchy/claims/*.yaml",
+    "expectedDirectiveCount": 15,
+    "expectedPhaseCount": 25,
+    "expectedTaskCount": 359,
+    "expectedWorkerCount": 10,
+    "phasePacketGlob": "docs/roadmap/anarchy/phases/P??-*.md",
+    "workerPacketGlob": "docs/roadmap/anarchy/workers/WORKER_?.md"
+  },
+  "migrationLedger": "docs/roadmap/anarchy/migration/MIGRATION_LEDGER.yaml",
+  "nonMutationScopes": [
+    ".github/workflows/p24-adoption-review.yml",
+    "docs/roadmap/anarchy",
+    "release/evidence/P24-001",
+    "schemas/anarchy_execution.schema.json",
+    "test/anarchy_control_plane",
+    "tool/anarchy_control_plane.py",
+    "tool/anarchy_control_plane_test.py",
+    "tool/anarchy_control_plane_test_parts",
+    "tool/anarchy_control_plane_parts",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "recordType": "P24AdoptionReviewControl",
+  "resume": {
+    "ciWorkflow": ".github/workflows/p24-adoption-review.yml",
+    "fallbackNextAction": "Resolve the live Worker J branch and claim before changing shared contracts.",
+    "tests": [
+      "python -m unittest -v tool/anarchy_control_plane_test.py",
+      "python tool/anarchy_control_plane.py --check --project .",
+      "python tool/anarchy_control_plane.py --resume-worker J --project ."
+    ]
+  },
+  "reviewRequirements": {
+    "binding": "CURRENT_GIT_COMMIT_AND_TREE",
+    "invalidateOnScopeChange": true,
+    "reviewers": [
+      {
+        "artifact": "docs/roadmap/anarchy/reviews/P24-001-WORKER-B.json",
+        "role": "Worker B"
+      },
+      {
+        "artifact": "docs/roadmap/anarchy/reviews/P24-001-WORKER-I.json",
+        "role": "Worker I"
+      }
+    ]
+  },
+  "schema": "schemas/anarchy_execution.schema.json",
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "checkCommand": "python tool/anarchy_control_plane.py --check --project .",
+    "owner": "tool/p1a_refresh_source_manifest.py",
+    "writeCommand": "python tool/p1a_refresh_source_manifest.py ."
+  },
+  "stateDomainBindings": {
+    "CapabilitySupportStatus": {
+      "canonicalOwner": "P24 adoption-review reference vocabulary; product support authority remains external",
+      "values": [
+        "NOT_IMPLEMENTED",
+        "SOURCE_FOUNDATION",
+        "EXPERIMENTAL",
+        "BEHAVIOR_SUPPORTED",
+        "PLATFORM_SUPPORTED",
+        "RELEASE_SUPPORTED",
+        "DEGRADED",
+        "UNSUPPORTED",
+        "REVOKED"
+      ]
+    },
+    "CertificationStatus": {
+      "canonicalOwner": "Worker B external Test Center contract; BLOCKED_BY_SHARED_CONTRACT until published",
+      "externalReference": "worker-b://test-center/certification-status/v1",
+      "values": [
+        "NOT_EVALUATED",
+        "PARTIAL",
+        "PASS",
+        "FAIL",
+        "STALE",
+        "REVOKED"
+      ]
+    },
+    "RoadmapTaskStatus": {
+      "canonicalOwner": "docs/roadmap/roadmap.yaml within its declared scope",
+      "values": [
+        "NOT_STARTED",
+        "READY",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "REVIEW",
+        "DONE",
+        "DEFERRED"
+      ]
+    },
+    "TestExecutionResult": {
+      "canonicalOwner": "Worker B external Test Center contract; BLOCKED_BY_SHARED_CONTRACT until published",
+      "externalReference": "worker-b://test-center/test-execution-result/v1",
+      "values": [
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "SKIPPED_NOT_APPLICABLE",
+        "SKIPPED_WITH_REASON",
+        "FLAKY_QUARANTINED",
+        "UNKNOWN_RECONCILIATION_REQUIRED",
+        "CANCELLED"
+      ]
+    },
+    "WorkerRuntimeStatus": {
+      "canonicalOwner": "P24-001 ANARCHY execution-control proposal",
+      "values": [
+        "AVAILABLE",
+        "CLAIMING",
+        "BASELINING",
+        "IMPLEMENTING",
+        "VERIFYING",
+        "WAITING_FOR_REVIEW",
+        "REPAIRING",
+        "READY_TO_MERGE",
+        "INTEGRATING",
+        "YIELDED",
+        "CAPABILITY_BLOCKED"
+      ]
+    }
+  },
+  "task": "P24-001",
+  "taskRecords": [
+    {
+      "capabilitySupportStatus": "SOURCE_FOUNDATION",
+      "certificationStatus": "PARTIAL",
+      "completionClaim": false,
+      "evidenceBindings": [
+        {
+          "classification": "PROPOSED_ADOPTION_REVIEW_ADR",
+          "path": "docs/roadmap/anarchy/migration/P24-001_RECONCILIATION_ADR.md"
+        },
+        {
+          "classification": "PROPOSED_RECONCILIATION_MATRIX",
+          "path": "docs/roadmap/anarchy/migration/DIRECTIVE_MATRIX.yaml"
+        },
+        {
+          "classification": "SOURCE_FOUNDATION",
+          "path": "release/evidence/P24-001/FOUNDATION.md"
+        }
+      ],
+      "roadmapStatus": "IN_PROGRESS",
+      "task": "P24-001",
+      "testExecutionResult": "PASS",
+      "workerRuntimeStatus": "VERIFYING"
+    },
+    {
+      "capabilitySupportStatus": "SOURCE_FOUNDATION",
+      "certificationStatus": "PARTIAL",
+      "completionClaim": false,
+      "evidenceBindings": [
+        {
+          "classification": "SOURCE_ONLY",
+          "path": "docs/roadmap/anarchy/migration/BASELINE.json"
+        },
+        {
+          "classification": "HOSTED_CI",
+          "path": "docs/roadmap/anarchy/migration/BASELINE.json"
+        }
+      ],
+      "roadmapStatus": "IN_PROGRESS",
+      "task": "P2-001",
+      "testExecutionResult": "PASS",
+      "workerRuntimeStatus": "CAPABILITY_BLOCKED"
+    }
+  ]
+}

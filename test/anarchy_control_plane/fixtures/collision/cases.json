@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "expectedCode": "active_claim_collision",
+      "id": "active-claim-collision",
+      "operation": "add_claim",
+      "variant": "same_task"
+    },
+    {
+      "expectedCode": "shared_contract_collision",
+      "id": "shared-contract-collision",
+      "operation": "add_claim",
+      "variant": "shared_lock"
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

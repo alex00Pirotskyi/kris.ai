@@ -1,0 +1,41 @@
+{
+  "base": {
+    "commit": "6b23beb64070932886e75a131580fbc6fda878b6",
+    "tree": "724b838cae31bb50befb4e7676c55a41f925091e"
+  },
+  "branch": "agent/j/P24-001-roadmap-as-data-adr",
+  "claimedAtUtc": "2026-08-05T10:23:23Z",
+  "claimedPaths": [
+    ".github/workflows/p24-adoption-review.yml",
+    "docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml",
+    "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
+    "docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json",
+    "docs/roadmap/anarchy/migration/**",
+    "docs/roadmap/anarchy/workers/WORKER_J.md",
+    "release/evidence/P24-001/**",
+    "schemas/anarchy_execution.schema.json",
+    "test/anarchy_control_plane/**",
+    "tool/anarchy_control_plane.py",
+    "tool/anarchy_control_plane_test.py"
+  ],
+  "continuity": {
+    "lastVerifiedHead": "45c435058b63e598223d7080c7ad8d229c5436c3",
+    "lastVerifiedTree": "d0ed3ae2db15faff9a2c9cbcc92085045fb65371",
+    "safeTakeover": "Only after a pushed YIELDED record binds the last head/tree and no newer Worker J commit exists."
+  },
+  "nextAction": "Commit and push the deterministic validator/schema/fixtures/CI candidate, then open the stacked draft PR against agent/anarchy-execution-os.",
+  "recordType": "AnarchyClaim",
+  "reviewerRoles": [
+    "Worker B",
+    "Worker I"
+  ],
+  "schemaVersion": "1.0.0",
+  "sharedContracts": [
+    "docs/roadmap/anarchy/migration/**",
+    "schemas/anarchy_execution.schema.json",
+    "tool/anarchy_control_plane.py"
+  ],
+  "state": "CLAIMED",
+  "task": "P24-001",
+  "worker": "J"
+}

@@ -1,0 +1,169 @@
+name: P24-001 Adoption Review
+
+on:
+  push:
+    branches:
+      - agent/j/P24-001-roadmap-as-data-adr
+    paths:
+      - .github/workflows/p24-adoption-review.yml
+      - docs/roadmap/anarchy/**
+      - release/evidence/P24-001/**
+      - schemas/anarchy_execution.schema.json
+      - test/anarchy_control_plane/**
+      - tool/anarchy_control_plane.py
+      - tool/anarchy_control_plane_parts/**
+      - tool/anarchy_control_plane_test.py
+      - tool/anarchy_control_plane_test_parts/**
+      - SOURCE_MANIFEST.sha256
+  pull_request:
+    branches:
+      - agent/anarchy-execution-os
+    paths:
+      - .github/workflows/p24-adoption-review.yml
+      - docs/roadmap/anarchy/**
+      - release/evidence/P24-001/**
+      - schemas/anarchy_execution.schema.json
+      - test/anarchy_control_plane/**
+      - tool/anarchy_control_plane.py
+      - tool/anarchy_control_plane_parts/**
+      - tool/anarchy_control_plane_test.py
+      - tool/anarchy_control_plane_test_parts/**
+      - SOURCE_MANIFEST.sha256
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p24-001-adoption-review-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: p24-adoption-review-${{ matrix.lane }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: ubuntu
+            os: ubuntu-24.04
+          - lane: windows
+            os: windows-2025
+          - lane: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    env:
+      CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out exact candidate head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up locked Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Compile and run deterministic control-plane tests
+        run: |
+          python -m py_compile tool/anarchy_control_plane.py tool/anarchy_control_plane_test.py
+          python -m unittest -v tool/anarchy_control_plane_test.py
+
+      - name: Build expected generated outputs in an isolated exact-head clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+          import sys
+
+          root = Path.cwd().resolve()
+          runner_temp = Path(os.environ['RUNNER_TEMP']).resolve()
+          candidate = os.environ['CANDIDATE_SHA']
+          isolated = runner_temp / 'p24-isolated-candidate'
+          if isolated.exists():
+              shutil.rmtree(isolated)
+          subprocess.run(['git', 'clone', '--no-checkout', str(root), str(isolated)], check=True)
+          subprocess.run(['git', '-C', str(isolated), 'checkout', '--detach', candidate], check=True)
+
+          write = subprocess.run(
+              [sys.executable, str(isolated / 'tool/anarchy_control_plane.py'), '--write', '--project', str(isolated)],
+              text=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.STDOUT,
+          )
+          if write.returncode not in {0, 1}:
+              raise SystemExit(write.stdout)
+
+          generated = isolated / 'docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json'
+          if not generated.is_file():
+              raise SystemExit('generated P24 control-plane index was not produced')
+          shutil.copy2(generated, runner_temp / 'expected-P24-001_CONTROL_PLANE_INDEX.json')
+
+          generator = isolated / 'tool/p1a_refresh_source_manifest.py'
+          subprocess.run([sys.executable, str(generator), str(isolated)], check=True)
+          first = (isolated / 'SOURCE_MANIFEST.sha256').read_bytes()
+          subprocess.run([sys.executable, str(generator), str(isolated)], check=True)
+          second = (isolated / 'SOURCE_MANIFEST.sha256').read_bytes()
+          if first != second:
+              raise SystemExit('canonical source-manifest generator is not idempotent')
+          (runner_temp / 'expected-SOURCE_MANIFEST.sha256').write_bytes(second)
+
+          proof = {
+              'schemaVersion': '1.0.0',
+              'candidateCommit': candidate,
+              'lane': os.environ.get('RUNNER_OS', 'unknown'),
+              'controlPlaneWriteReturnCode': write.returncode,
+              'sourceManifestOwner': 'tool/p1a_refresh_source_manifest.py',
+              'sourceManifestSecondWriteIdempotent': True,
+              'checkoutModified': False,
+          }
+          (runner_temp / 'p24-isolated-generation-proof.json').write_text(
+              json.dumps(proof, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+
+      - name: Validate exact checkout without mutation
+        id: exact_check
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          tree="$(git rev-parse HEAD^{tree})"
+          python tool/anarchy_control_plane.py \
+            --report "$RUNNER_TEMP/p24-validation-report.json" \
+            --project . \
+            --repository-sha "$CANDIDATE_SHA" \
+            --repository-tree "$tree"
+          cmp docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json \
+            "$RUNNER_TEMP/expected-P24-001_CONTROL_PLANE_INDEX.json"
+          cmp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/expected-SOURCE_MANIFEST.sha256"
+          git diff --exit-code
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload bounded adoption-review evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p24-001-adoption-review-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/p24-validation-report.json
+            ${{ runner.temp }}/expected-P24-001_CONTROL_PLANE_INDEX.json
+            ${{ runner.temp }}/expected-SOURCE_MANIFEST.sha256
+            ${{ runner.temp }}/p24-isolated-generation-proof.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce exact-check conclusion
+        if: always()
+        shell: bash
+        run: test '${{ steps.exact_check.outcome }}' = 'success'

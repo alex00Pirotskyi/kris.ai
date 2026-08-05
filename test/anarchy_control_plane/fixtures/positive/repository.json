@@ -1,0 +1,10 @@
+{
+  "description": "25 phases, 359 unique task IDs, ten worker identities, one active Worker J claim, separated state domains, current generated view, and current source manifest",
+  "expected": {
+    "phaseCount": 25,
+    "taskCount": 359,
+    "workerCount": 10,
+    "passed": true,
+    "classification": "ADOPTION_REVIEW"
+  }
+}

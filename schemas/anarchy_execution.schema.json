@@ -1,0 +1,122 @@
+{
+  "$id": "https://local.kristin/schemas/p24-001/anarchy-execution-control.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "P24-001 ANARCHY adoption-review execution-control records",
+  "description": "A Worker-J-scoped schema for P24-001 migration records, roadmap references, worker runtime records, claims/shared-contract locks, packet integrity, migration directives, observations, and generated navigation. It is not a Test Center, Project Test Profile, Testing Studio, global certification, product support, or roadmap authority schema.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "recordType"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "recordType": {
+      "enum": [
+        "P24AdoptionReviewControl",
+        "AnarchyClaim",
+        "WorkerCoordinationCheckpoint",
+        "IndependentReview",
+        "P24AdoptionReviewGeneratedIndex",
+        "P24AdoptionReviewValidationReport"
+      ]
+    }
+  },
+  "$defs": {
+    "roadmapTaskStatus": {
+      "description": "Roadmap state only; never inferred from test or review state.",
+      "enum": [
+        "NOT_STARTED",
+        "READY",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "REVIEW",
+        "DONE",
+        "DEFERRED"
+      ]
+    },
+    "workerRuntimeStatus": {
+      "description": "Worker execution state only.",
+      "enum": [
+        "AVAILABLE",
+        "CLAIMING",
+        "BASELINING",
+        "IMPLEMENTING",
+        "VERIFYING",
+        "WAITING_FOR_REVIEW",
+        "REPAIRING",
+        "READY_TO_MERGE",
+        "INTEGRATING",
+        "YIELDED",
+        "CAPABILITY_BLOCKED"
+      ]
+    },
+    "testExecutionResultReference": {
+      "description": "Foreign-key vocabulary constrained for P24 status-separation checks. Canonical ownership remains Worker B; this does not define the Test Center result schema.",
+      "x-canonical-owner": "Worker B",
+      "x-external-contract": "worker-b://test-center/test-execution-result/v1",
+      "x-shared-contract-state": "BLOCKED_BY_SHARED_CONTRACT",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "SKIPPED_NOT_APPLICABLE",
+        "SKIPPED_WITH_REASON",
+        "FLAKY_QUARANTINED",
+        "UNKNOWN_RECONCILIATION_REQUIRED",
+        "CANCELLED"
+      ]
+    },
+    "certificationStatusReference": {
+      "description": "Foreign-key vocabulary constrained for P24 status-separation checks. Canonical ownership remains Worker B; this does not define global certification architecture.",
+      "x-canonical-owner": "Worker B",
+      "x-external-contract": "worker-b://test-center/certification-status/v1",
+      "x-shared-contract-state": "BLOCKED_BY_SHARED_CONTRACT",
+      "enum": [
+        "NOT_EVALUATED",
+        "PARTIAL",
+        "PASS",
+        "FAIL",
+        "STALE",
+        "REVOKED"
+      ]
+    },
+    "capabilitySupportStatus": {
+      "description": "Reference classification only; product support and release authority remain external.",
+      "enum": [
+        "NOT_IMPLEMENTED",
+        "SOURCE_FOUNDATION",
+        "EXPERIMENTAL",
+        "BEHAVIOR_SUPPORTED",
+        "PLATFORM_SUPPORTED",
+        "RELEASE_SUPPORTED",
+        "DEGRADED",
+        "UNSUPPORTED",
+        "REVOKED"
+      ]
+    },
+    "sha1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "repositoryRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    }
+  },
+  "additionalProperties": true,
+  "x-scope": {
+    "task": "P24-001",
+    "authorityPromotion": false,
+    "roadmapAuthorityReplacement": false,
+    "testCenterReplacement": false,
+    "testingStudioOwnership": false,
+    "productRuntimeChange": false
+  }
+}

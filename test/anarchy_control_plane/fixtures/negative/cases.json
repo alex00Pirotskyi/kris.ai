@@ -1,0 +1,130 @@
+{
+  "cases": [
+    {
+      "expectedCode": "phase_packet_invalid",
+      "id": "broken-phase-reference",
+      "operation": "broken_phase_reference"
+    },
+    {
+      "expectedCode": "worker_packet_invalid",
+      "id": "broken-worker-reference",
+      "operation": "broken_worker_reference"
+    },
+    {
+      "expectedCode": "claim_path_unsafe",
+      "id": "claim-path-traversal",
+      "operation": "claim_path_traversal"
+    },
+    {
+      "expectedCode": "competing_roadmap_authority",
+      "id": "competing-roadmap-authority",
+      "operation": "competing_authority"
+    },
+    {
+      "expectedCode": "phase_packet_invalid",
+      "id": "crlf-control-markdown",
+      "operation": "crlf_phase"
+    },
+    {
+      "expectedCode": "dependency_cycle",
+      "id": "dependency-cycle",
+      "operation": "dependency_cycle"
+    },
+    {
+      "expectedCode": "directive_decision_invalid",
+      "id": "directive-matrix-invalid",
+      "operation": "directive_invalid"
+    },
+    {
+      "expectedCode": "task_id_duplicate",
+      "id": "duplicate-task-id",
+      "operation": "duplicate_task"
+    },
+    {
+      "expectedCode": "generated_view_drift",
+      "id": "generated-view-drift",
+      "operation": "generated_drift"
+    },
+    {
+      "expectedCode": "hosted_ci_certification_inflation",
+      "id": "hosted-ci-to-certification-inflation",
+      "operation": "hosted_ci_inflation"
+    },
+    {
+      "expectedCode": "state_domain_invalid",
+      "id": "invalid-capability",
+      "operation": "invalid_capability"
+    },
+    {
+      "expectedCode": "state_domain_invalid",
+      "id": "invalid-certification",
+      "operation": "invalid_certification"
+    },
+    {
+      "expectedCode": "review_stale_binding",
+      "id": "invalid-exact-sha-review-binding",
+      "operation": "stale_review"
+    },
+    {
+      "expectedCode": "state_domain_invalid",
+      "id": "invalid-roadmap-status",
+      "operation": "invalid_roadmap_status"
+    },
+    {
+      "expectedCode": "state_domain_invalid",
+      "id": "invalid-test-result",
+      "operation": "invalid_test_result"
+    },
+    {
+      "expectedCode": "state_domain_invalid",
+      "id": "invalid-worker-runtime",
+      "operation": "invalid_worker_runtime"
+    },
+    {
+      "expectedCode": "migration_sequence",
+      "id": "migration-ledger-invalid",
+      "operation": "ledger_invalid"
+    },
+    {
+      "expectedCode": "dependency_missing",
+      "id": "missing-dependency",
+      "operation": "missing_dependency"
+    },
+    {
+      "expectedCode": "evidence_binding_missing",
+      "id": "missing-evidence-binding",
+      "operation": "missing_evidence"
+    },
+    {
+      "expectedCode": "source_status_inflation",
+      "id": "p2-source-to-behavioral-inflation",
+      "operation": "p2_inflation"
+    },
+    {
+      "expectedCode": "review_decision_invalid",
+      "id": "review-comment-is-not-approval",
+      "operation": "review_comment"
+    },
+    {
+      "expectedCode": "source_manifest_drift",
+      "id": "source-manifest-drift",
+      "operation": "source_manifest_drift"
+    },
+    {
+      "expectedCode": "state_domain_mixing",
+      "id": "state-domain-mixing",
+      "operation": "state_domain_mixing"
+    },
+    {
+      "expectedCode": "dependency_unknown",
+      "id": "unknown-dependency",
+      "operation": "unknown_dependency"
+    },
+    {
+      "expectedCode": "unsupported_completion_claim",
+      "id": "unsupported-completion-claim",
+      "operation": "unsupported_completion"
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}

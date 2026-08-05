@@ -1,0 +1,22 @@
+{
+  "classification": "LOCAL_PRE_PUSH_OBSERVATION_NOT_EXACT_HEAD_CI",
+  "command": "python -m unittest -v tool/anarchy_control_plane_test.py",
+  "failed": 0,
+  "passed": 15,
+  "platform": "local Linux validation environment",
+  "result": "PASS",
+  "schemaVersion": "1.0.0",
+  "scope": [
+    "25 phases and 359 unique tasks",
+    "ten worker identities",
+    "negative state/dependency/authority/review fixtures",
+    "claim and shared-contract collisions",
+    "yield/takeover continuity",
+    "byte-and-mtime non-mutation",
+    "atomic write interruption",
+    "deterministic/idempotent write",
+    "canonical source-manifest idempotence",
+    "honest ADOPTION_REVIEW report",
+    "clean-room Worker J resume"
+  ]
+}
