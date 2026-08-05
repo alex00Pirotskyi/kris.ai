@@ -4,70 +4,158 @@ on:
   push:
     branches:
       - agent/a/p1-p2-new-roadmap-execution
+  pull_request:
+    branches:
+      - agent/b/test-center-contracts-and-review
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
 
 concurrency:
   group: worker-a-test-center-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
 jobs:
-  repair-p1a-source-profile:
-    if: github.actor != 'github-actions[bot]'
+  canonical-contracts:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ env.CANDIDATE_SHA }}
           fetch-depth: 0
-      - name: Apply governed P1A source-only profile repair
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Canonical Test Center unit contracts
+        run: python -m unittest -v tool/test_center_contracts_test.py
+      - name: Canonical Test Center check mode
+        run: python tool/test_center_contracts.py check --project .
+      - name: Worker A canonical integration unit contracts
+        run: python -m unittest -v tool/worker_a_test_center_v1_test.py
+      - name: Worker A canonical integration check mode
+        run: python tool/worker_a_test_center_v1.py check --project .
+      - name: Legacy Worker A evidence-history contract
+        run: python tool/worker_a_p1_p2_execution_contract_test.py --skip-git
+      - name: Deterministic affected-test selection
         shell: bash
         run: |
-          python - <<'PY'
-          import json, pathlib
-          root = pathlib.Path('.')
-          registry_path = root / 'config/test_center_registry.v1.json'
-          registry = json.loads(registry_path.read_text(encoding='utf-8'))
-          profile = next(
-              item for item in registry['projectTestProfiles']
-              if item['stableCheckId'] == 'tc.p1a.exit-gate'
-          )
-          profile['argv'] = [
-              'python', 'tool/p1a_exit_gate_test.py', '--project', '.', '--source-only'
-          ]
-          profile['assuranceClass'] = 'source_contract'
-          profile['evidenceDestination'] = (
-              'release/evidence/generated/worker-a/p1a-exit-gate-source.json'
-          )
-          profile['inputPaths'] = [
-              'tool/p1a_exit_gate_test.py',
-              'release/evidence/P1A/manifest.json',
-              'tasks/active/P1A-001.md',
-              'tasks/active/.gitkeep',
-          ]
-          registry_path.write_text(
-              json.dumps(registry, indent=2, sort_keys=True) + '\n', encoding='utf-8'
-          )
-
-          test_path = root / 'tool/worker_a_test_center_v1_test.py'
-          text = test_path.read_text(encoding='utf-8')
-          marker = '    def test_worker_b_review_is_immutable_history(self) -> None:\n'
-          addition = '''    def test_p1a_profile_uses_governed_source_only_mode(self) -> None:\n        profile = next(\n            profile\n            for profile in self.registry["projectTestProfiles"]\n            if profile["stableCheckId"] == "tc.p1a.exit-gate"\n        )\n        self.assertEqual(\n            ["python", "tool/p1a_exit_gate_test.py", "--project", ".", "--source-only"],\n            profile["argv"],\n        )\n        self.assertEqual("source_contract", profile["assuranceClass"])\n\n'''
-          if 'test_p1a_profile_uses_governed_source_only_mode' not in text:
-              if marker not in text:
-                  raise SystemExit('unit-test insertion marker missing')
-              text = text.replace(marker, addition + marker)
-              test_path.write_text(text, encoding='utf-8')
-          PY
-          python tool/test_center_contracts.py check --project .
-          python -m unittest -v tool/worker_a_test_center_v1_test.py
+          A=$(python tool/test_center_contracts.py select-affected --project . \
+            tool/p2_platform_ci.py config/test_center_registry.v1.json tool/p1a_exit_gate_test.py)
+          B=$(python tool/test_center_contracts.py select-affected --project . \
+            tool/p1a_exit_gate_test.py config/test_center_registry.v1.json tool/p2_platform_ci.py)
+          test "$A" = "$B"
+          printf '%s\n' "$A"
+      - name: Prove check mode is non-mutating
+        shell: bash
+        run: |
           git diff --check
-      - name: Commit bounded profile repair
+          test -z "$(git status --porcelain)"
+
+  source-results:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux
+          - os: macos-15
+            platform: macos
+          - os: windows-2025
+            platform: windows
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Install exact hash-locked P1/P2 Python dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Run canonical source result suite
         shell: bash
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add config/test_center_registry.v1.json tool/worker_a_test_center_v1_test.py
-          git commit -m 'fix(worker-a): use governed P1A source-only gate'
-          git push origin HEAD:agent/a/p1-p2-new-roadmap-execution
+          python tool/worker_a_test_center_v1.py run-source-suite \
+            --project . \
+            --platform "${{ matrix.platform }}" \
+            --output "release/evidence/generated/worker-a/${{ matrix.platform }}/development-verification.json"
+      - name: Revalidate generated canonical result
+        shell: bash
+        run: |
+          python tool/worker_a_test_center_v1.py validate-execution \
+            --project . \
+            "release/evidence/generated/worker-a/${{ matrix.platform }}/development-verification.json"
+      - name: Prove generated evidence is excluded from source state
+        shell: bash
+        run: |
+          git diff --check
+          test -z "$(git status --porcelain)"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: worker-a-test-center-${{ github.run_id }}-${{ matrix.platform }}
+          path: release/evidence/generated/worker-a/${{ matrix.platform }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  source-manifest-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Generate canonical source manifest
+        shell: bash
+        run: |
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first.sha256"
+          FIRST=$(sha256sum SOURCE_MANIFEST.sha256 | cut -d' ' -f1)
+          python tool/test_center_contracts.py check --project .
+          python tool/worker_a_test_center_v1.py check --project .
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest-first.sha256" SOURCE_MANIFEST.sha256
+          SECOND=$(sha256sum SOURCE_MANIFEST.sha256 | cut -d' ' -f1)
+          test "$FIRST" = "$SECOND"
+          test -z "$(git status --porcelain | grep -v '^ M SOURCE_MANIFEST.sha256$' || true)"
+          TREE=$(git show -s --format=%T HEAD)
+          COUNT=$(wc -l < SOURCE_MANIFEST.sha256 | tr -d ' ')
+          python - <<PY
+          import json, pathlib
+          pathlib.Path('source-manifest-metadata.json').write_text(json.dumps({
+            'schemaVersion':'1.0.0',
+            'candidateCommit':'${CANDIDATE_SHA}',
+            'candidateTree':'${TREE}',
+            'generator':'python tool/p1a_refresh_source_manifest.py .',
+            'manifestSha256':'${SECOND}',
+            'entryCount':int('${COUNT}'),
+            'idempotent':True,
+            'checkModeNonMutating':True,
+          }, indent=2, sort_keys=True)+'\n', encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: worker-a-source-manifest-${{ github.run_id }}
+          path: |
+            SOURCE_MANIFEST.sha256
+            source-manifest-metadata.json
+          if-no-files-found: error
+          retention-days: 30
