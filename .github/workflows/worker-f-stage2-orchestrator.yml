@@ -1,0 +1,185 @@
+name: Worker F P5-001 Stage 2 orchestrator
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  package:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Bind exact Stage 1 and package Stage 2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: agent/f/P5-001-information-architecture
+          BASE_BRANCH: agent/b/test-center-contracts-and-review
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA=$(git rev-parse HEAD^)
+          SOURCE_TREE=$(git show -s --format=%T "$SOURCE_SHA")
+          git cat-file -e "$SOURCE_SHA:lib/p5_ia_preview.dart"
+          git cat-file -e "$SOURCE_SHA:.github/workflows/worker-f-p5-001-information-architecture.yml"
+          echo "source_sha=$SOURCE_SHA source_tree=$SOURCE_TREE"
+
+          RUN_ID=''
+          RUN_CONCLUSION=''
+          for attempt in $(seq 1 180); do
+            payload=$(gh api "repos/$REPO/actions/runs?head_sha=$SOURCE_SHA&per_page=100")
+            RUN_ID=$(jq -r '[.workflow_runs[] | select(.name == "Worker F P5-001 Information Architecture")] | sort_by(.created_at) | last | .id // empty' <<<"$payload")
+            if [[ -n "$RUN_ID" ]]; then
+              RUN_STATUS=$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .status)
+              if [[ "$RUN_STATUS" == completed ]]; then
+                RUN_CONCLUSION=$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq '.conclusion // ""')
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test -n "$RUN_ID"
+
+          RUN_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID")
+          JOBS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100")
+          RUN_URL=$(jq -r .html_url <<<"$RUN_JSON")
+          echo "run_id=$RUN_ID conclusion=$RUN_CONCLUSION"
+
+          PR_NUMBER=$(gh api "repos/$REPO/pulls?head=${REPO%%/*}:$BRANCH&state=all&per_page=20" --jq '.[0].number // empty')
+          cat > /tmp/worker-f-pr-body.md <<EOF
+          ## Authority
+          - Human authority: \`docs/roadmap/MASTER.md\`
+          - Machine authority: \`docs/roadmap/roadmap.yaml\` within its declared P0/P1 scope
+          - Roadmap authority files are unchanged.
+
+          ## Dependency and base
+          - P0-008 decision: **READY**
+          - Selected Worker B base: \`90c574665363140aeb6cf764ab8387714cab88cf\` / tree \`438fe3f710c0fed32106ee6acdc138f4e4c6accc\`
+          - Exact Stage 1 source: \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`
+          - Exact Stage 1 workflow: [$RUN_ID]($RUN_URL), conclusion **$RUN_CONCLUSION**
+
+          ## Bounded implementation
+          Isolated non-production Flutter prototype for P5-001 information architecture, jobs-to-be-done, workspace navigation, deterministic state transitions, Simple/Advanced/Developer disclosure, Verification Center presentation, Owner Mode presentation boundaries, honest unavailable-capability states, keyboard flow, semantics, deterministic fixtures, canonical Test Center records, and affected-test selection.
+
+          Entry point: \`flutter run -t lib/p5_ia_preview.dart\`. \`lib/main.dart\` is unchanged. The prototype performs no command execution, filesystem mutation, external network, credential, browser, device, or Owner Mode runtime action.
+
+          ## Verification Center boundary
+          Test execution, independent review, certification, capability support, platform support, and release support are separate presentation domains. Capability support remains **SOURCE_FOUNDATION**. A PASS never implies certification or release readiness.
+
+          ## Owner Mode boundary
+          All Owner Mode lifecycle states are presentation fixtures. P2 authority, capability grants, process behavior, and emergency-stop semantics are unchanged. Controlled behavior remains **BLOCKED_EXTERNAL**.
+
+          ## Test Center
+          Module \`tm.p5-information-architecture\`, ten stable test IDs, ten one-to-one NON_MUTATING profiles, and ten deterministic affected mappings.
+
+          ## Claim boundary
+          This draft does not complete P5, P5-002+, Web Studio, production shell replacement, Owner Mode behavioral certification, accessibility certification, P22 consumer readiness, release readiness, production readiness, or GA readiness.
+
+          ## Review requests
+          Worker B exact-SHA Test Center/domain review, Worker A Owner Mode semantic verification, and Worker J no-conflict record are requested. Worker I is not required because no security-sensitive behavior changed.
+          EOF
+          sed -i 's/^          //' /tmp/worker-f-pr-body.md
+
+          if [[ -z "$PR_NUMBER" ]]; then
+            PR_NUMBER=$(gh api "repos/$REPO/pulls" \
+              -f title='P5-001: add information architecture and UX flow prototype' \
+              -f head="$BRANCH" -f base="$BASE_BRANCH" \
+              -f body="$(cat /tmp/worker-f-pr-body.md)" -F draft=true --jq .number)
+          else
+            gh api --method PATCH "repos/$REPO/pulls/$PR_NUMBER" \
+              -f title='P5-001: add information architecture and UX flow prototype' \
+              -f body="$(cat /tmp/worker-f-pr-body.md)" >/dev/null
+          fi
+
+          if [[ "$RUN_CONCLUSION" != success ]]; then
+            gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker F exact-head blocker
+
+          Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` has workflow [$RUN_ID]($RUN_URL) conclusion **$RUN_CONCLUSION**. Stage 2 evidence packaging and review-ready classification are withheld. The draft PR remains unmerged." >/dev/null
+            exit 1
+          fi
+
+          mkdir -p release/evidence/P5-001 /tmp/worker-f-artifacts
+          ARTIFACTS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100")
+          jq -r '.artifacts[] | select(.expired == false) | [.id,.name] | @tsv' <<<"$ARTIFACTS_JSON" | while IFS=$'\t' read -r artifact_id artifact_name; do
+            gh api "repos/$REPO/actions/artifacts/$artifact_id/zip" > "/tmp/worker-f-artifacts/${artifact_id}-${artifact_name}.zip"
+          done
+          find /tmp/worker-f-artifacts -type f -print0 | sort -z | xargs -0 -r sha256sum > /tmp/worker-f-artifact-hashes.txt
+
+          export SOURCE_SHA SOURCE_TREE RUN_ID RUN_URL RUN_JSON JOBS_JSON ARTIFACTS_JSON
+          python - <<'PY'
+          from __future__ import annotations
+          import json, os
+          from pathlib import Path
+
+          root=Path('.')
+          evidence=root/'release/evidence/P5-001'
+          run=json.loads(os.environ['RUN_JSON'])
+          jobs_payload=json.loads(os.environ['JOBS_JSON'])
+          artifacts_payload=json.loads(os.environ['ARTIFACTS_JSON'])
+          jobs=[]
+          for job in sorted(jobs_payload.get('jobs',[]),key=lambda item:(item.get('name',''),item.get('id',0))):
+              jobs.append({'jobId':job.get('id'),'name':job.get('name'),'status':job.get('status'),'conclusion':job.get('conclusion'),'startedAt':job.get('started_at'),'completedAt':job.get('completed_at'),'url':job.get('html_url')})
+          hashes=[]
+          hash_file=Path('/tmp/worker-f-artifact-hashes.txt')
+          if hash_file.exists():
+              for line in hash_file.read_text(encoding='utf-8').splitlines():
+                  digest,path=line.split('  ',1)
+                  hashes.append({'path':Path(path).name,'sha256':digest})
+          stage1={'schemaVersion':'1.0.0','stage':'STAGE_1_CODED_PROTOTYPE','commit':os.environ['SOURCE_SHA'],'tree':os.environ['SOURCE_TREE'],'baseCommit':'90c574665363140aeb6cf764ab8387714cab88cf','baseTree':'438fe3f710c0fed32106ee6acdc138f4e4c6accc','branch':'agent/f/P5-001-information-architecture','moduleId':'tm.p5-information-architecture','capabilitySupport':'SOURCE_FOUNDATION','productionEntryPointChanged':False,'runtimeSideEffects':False}
+          ci={'schemaVersion':'1.0.0','stage':'STAGE_2_EVIDENCE_PACKAGING','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowName':run.get('name'),'runId':run.get('id'),'runUrl':run.get('html_url'),'event':run.get('event'),'status':run.get('status'),'conclusion':run.get('conclusion'),'createdAt':run.get('created_at'),'updatedAt':run.get('updated_at'),'jobs':jobs,'artifacts':[{'artifactId':a.get('id'),'name':a.get('name'),'sizeInBytes':a.get('size_in_bytes'),'expired':a.get('expired')} for a in sorted(artifacts_payload.get('artifacts',[]),key=lambda item:(item.get('name',''),item.get('id',0)))],'artifactFiles':hashes}
+          reviews={'schemaVersion':'1.0.0','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'requests':[{'worker':'B','scope':'canonical Test Center, Verification Center domains, stable IDs, profiles, mappings, evidence, support inflation','status':'REQUESTED','allowedDecisions':['PASS','REQUEST_CHANGES','BLOCKED_BY_CONTRACT','BLOCKED_EXTERNAL']},{'worker':'A','scope':'Owner Mode labels, P2 semantic boundary, controlled blocker honesty','status':'REQUESTED'},{'worker':'J','scope':'P5-001 ownership and no-conflict record','status':'REQUESTED'}],'workerIRequired':False,'workerIReason':'No authority, credential, permission, emergency-stop, or runtime behavior change.'}
+          results={'schemaVersion':'1.0.0','milestone':'P5-001','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':run.get('id'),'conclusion':run.get('conclusion'),'jobs':jobs,'capabilitySupport':'SOURCE_FOUNDATION','certificationState':'NOT_EVALUATED','platformSupport':'UNSUPPORTED','releaseSupport':'UNSUPPORTED'}
+          for name,payload in [('stage-1-source.json',stage1),('stage-2-ci.json',ci),('review-requests.json',reviews),('test-results.json',results)]:
+              (evidence/name).write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/worker-f-stage2-manifest
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/worker-f-stage2-manifest docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+
+          rm -f .github/workflows/worker-f-stage2-orchestrator.yml
+          git add -u .github/workflows/worker-f-stage2-orchestrator.yml
+          git add docs/roadmap/SOURCE_MANIFEST.sha256 release/evidence/P5-001
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'P5-001: package exact-head verification evidence'
+          STAGE2_SHA=$(git rev-parse HEAD)
+          STAGE2_TREE=$(git show -s --format=%T HEAD)
+          git push origin HEAD:refs/heads/agent/f/P5-001-information-architecture
+
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker B exact-SHA review request
+
+          Please review Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` for canonical Test Center conformance, Verification Center mapping, state-domain separation, stable IDs, one-to-one NON_MUTATING profiles, affected mappings, evidence binding, certification presentation, capability-support presentation, and no support inflation.
+
+          Allowed decision: PASS | REQUEST_CHANGES | BLOCKED_BY_CONTRACT | BLOCKED_EXTERNAL. This request applies only to bounded P5-001 source/prototype scope." >/dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker A semantic verification request
+
+          Please verify Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`: Owner Mode labels are accurate; source versus controlled behavior remains separate; no capability-grant semantics changed; no P2 runtime behavior changed; blocked infrastructure remains honest." >/dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker J no-conflict record request
+
+          Please record for Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`: Worker F owns only P5-001; no A/B/C/D/E/J ownership collision exists; roadmap authority is unchanged; P5-002+ remain unstarted; P22 readiness is not claimed." >/dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker F Stage 2 evidence
+
+          Exact Stage 1 source: \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`. Workflow [$RUN_ID]($RUN_URL) is **SUCCESS**. Stage 2: \`$STAGE2_SHA\` / tree \`$STAGE2_TREE\` packages jobs, artifact identities/hashes, and review-request state. Stage 2 is not represented as the tested source candidate. The PR remains draft and unmerged." >/dev/null
