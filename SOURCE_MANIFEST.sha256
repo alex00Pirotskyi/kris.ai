@@ -13,7 +13,7 @@ bd942164d87856c44c7c7fa96f23eaf241a41cea4b06834ee34550a4bd3e7662  .github/pull_r
 35882ecef1f283f2a3d30ff327735e4517891463286cdf903549f3009d63485b  .github/workflows/p2-owner-mode.yml
 691e98dd8db5dfb11c6f7b6d2422343fb72e49e5234e003b43db1015624401db  .github/workflows/p4-001-finalize-evidence.yml
 e4ad00969d9053c4cfc3629f9f8463d58eaa328991d9a761360a222cce94064c  .github/workflows/p4-001-pr-handoff.yml
-f04a0c2ddee7eeda96fe43e875c7f7629b91bda95e8fec5e498cd176ec9865fc  .github/workflows/p4-001-publish-candidate.yml
+0eb93c6b4413e451fabf41a92e18e835c97244e3c830334d5c9b4e746a86a687  .github/workflows/p4-001-publish-candidate.yml
 e6fea9316540a875cbd9a735f936600b46aa0dfa04b66aa9841a571c63f6c100  .github/workflows/p4-001-search-provider.yml
 3f2f4de0183c54d0398e4c606466388b9d2e5974e0265d86ed0b4f3ea70a7e2e  .github/workflows/pr14-current-main-reconciliation.yml
 89477a5432543d0acd36353b53b66454c069a4addf8be4a8a2f1fc617b62836f  .github/workflows/pr14-protected-main-repair.yml
