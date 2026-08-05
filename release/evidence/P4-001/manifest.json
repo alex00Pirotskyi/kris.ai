@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0.0",
+  "taskId": "P4-001",
+  "taskTitle": "Search Provider Interface",
+  "roadmapAuthority": "docs/roadmap/MASTER.md",
+  "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
+  "repository": "alex00Pirotskyi/kris.ai",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "actor": "Worker C",
+  "baseCommit": "de8dc3bcde31356b490c32b7d60bb373d9fa68ed",
+  "baseTree": "f7c295b5bafa366e19af78fd49b90445d6f766fc",
+  "observedSourceHead": "122ea8902bb4c33547928434a6d4d5aa88e08c73",
+  "observedSourceTree": "a2257451d6d6eb72df75717e9921ec6a7f3841c7",
+  "classification": "source_only_machine_observed",
+  "networkUsage": "none",
+  "dependencies": {
+    "production": ["python-standard-library"],
+    "test": ["python-standard-library"],
+    "newExternalDependencies": []
+  },
+  "schemas": [
+    "schemas/web_search_request.v1.json",
+    "schemas/web_search_page.v1.json",
+    "schemas/web_search_error.v1.json"
+  ],
+  "fixtures": [
+    "evals/fixtures/p4_001_search_provider/contract_cases.json",
+    "fixture_alpha",
+    "fixture_beta"
+  ],
+  "source": [
+    "services/research_worker/src/search/validation.py",
+    "services/research_worker/src/search/models.py",
+    "services/research_worker/src/search/provider.py",
+    "services/research_worker/src/search/fixture_provider.py"
+  ],
+  "tests": [
+    "services/research_worker/test/schema_validator.py",
+    "services/research_worker/test/test_contract_models.py",
+    "services/research_worker/test/test_fixture_provider.py",
+    "services/research_worker/test/test_contract_regressions.py",
+    "tool/p4_001_search_provider_test.py"
+  ],
+  "commands": [
+    {
+      "command": "PYTHONPATH=. python -m unittest services.research_worker.test.test_contract_regressions -v",
+      "exitCode": 0,
+      "testsRun": 6,
+      "passed": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "outputSha256": "90fe3eb0b64a9fd2e89b92d1eaa7b2d1e7684afe333abb0ae6f29e60f7af6657"
+    }
+  ],
+  "claimBoundary": {
+    "implemented": [
+      "provider-neutral-search-interface",
+      "typed-query-filter-pagination-contract",
+      "rate-error-partial-failure-semantics",
+      "deterministic-network-free-provider-fixtures",
+      "source-only-validation"
+    ],
+    "notImplemented": [
+      "live-search",
+      "static-fetch",
+      "rendered-fetch",
+      "browser-automation",
+      "extraction",
+      "citations",
+      "crawling",
+      "datasets",
+      "owner-mode",
+      "terminal-execution",
+      "native-execution",
+      "P4-002"
+    ]
+  },
+  "knownLimitations": [
+    "Fixture providers are not external-provider behavioral evidence.",
+    "The machine roadmap ledger currently has no P4 task row.",
+    "Exact-head CI and independent AI review are pending."
+  ],
+  "reviewStatus": "pending_independent_review",
+  "completionEligible": false,
+  "completionReason": "Exact-head CI and an independent AI PASS are required."
+}
