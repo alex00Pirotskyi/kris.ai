@@ -3,14 +3,13 @@ from __future__ import annotations
 import copy
 import unittest
 
-from jsonschema import Draft202012Validator
-
 from services.research_worker.src.search import (
     SearchContractError,
     SearchRequest,
     canonical_json,
 )
 from services.research_worker.src.search.fixture_provider import FixtureCatalogEntry, fixture_provider_a
+from services.research_worker.test.schema_validator import validate_schema_document
 from services.research_worker.test.support import load_contract_state
 
 
@@ -21,7 +20,7 @@ class SearchContractModelsTest(unittest.TestCase):
 
     def test_schema_documents_are_valid_draft_2020_12(self) -> None:
         for schema in self.schemas.values():
-            Draft202012Validator.check_schema(schema)
+            validate_schema_document(schema)
 
     def test_serialization_is_stable_and_strict(self) -> None:
         request = SearchRequest.from_dict(self.fixture["cases"][0]["request"])
