@@ -52,6 +52,26 @@ def main() -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(file_content, encoding="utf-8", newline="\n")
 
+    # Use one canonical module identity in both executable and unittest imports.
+    adapter_path = PROJECT / "tool/p4_001_test_center_v1.py"
+    adapter_text = adapter_path.read_text(encoding="utf-8")
+    old_import = (
+        "sys.path.insert(0, str(Path(__file__).resolve().parent))\n"
+        "import test_center_contracts as canonical\n"
+    )
+    new_import = (
+        "PROJECT_ROOT = Path(__file__).resolve().parents[1]\n"
+        "sys.path.insert(0, str(PROJECT_ROOT))\n"
+        "from tool import test_center_contracts as canonical\n"
+    )
+    if old_import not in adapter_text:
+        raise SystemExit("canonical adapter import anchor is missing")
+    adapter_path.write_text(
+        adapter_text.replace(old_import, new_import, 1),
+        encoding="utf-8",
+        newline="\n",
+    )
+
     for relative in STALE_PATHS:
         target = PROJECT / relative
         if target.exists():
