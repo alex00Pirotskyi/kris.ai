@@ -70,6 +70,7 @@ jobs:
           python tool/test_center_contracts.py check --project .
       - name: Regenerate canonical source manifest twice
         run: |
+          rm .github/workflows/worker-d-p3-readiness.yml
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 /tmp/worker-d-source-manifest-first
           python tool/p1a_refresh_source_manifest.py .
