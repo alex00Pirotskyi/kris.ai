@@ -1,0 +1,171 @@
+name: Worker E Native Parity Readiness
+
+on:
+  push:
+    branches:
+      - agent/e/native-parity-readiness
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-e-native-parity-readiness-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source-manifest:
+    name: Canonical Test Center registration and source manifest
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_sha: ${{ steps.identity.outputs.candidate_sha }}
+      manifest_refreshed: ${{ steps.identity.outputs.manifest_refreshed }}
+    steps:
+      - name: Check out Worker E candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+
+      - name: Register canonical Worker E Test Center records twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/worker_e_test_center_registration.py --project .
+          cp config/test_center_registry.v1.json "${RUNNER_TEMP}/test-center.first.json"
+          python tool/worker_e_test_center_registration.py --project .
+          cmp "${RUNNER_TEMP}/test-center.first.json" config/test_center_registry.v1.json
+          python tool/worker_e_test_center_registration.py --check --project .
+
+      - name: Generate canonical source manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+
+      - name: Commit governed registration and manifest when required
+        id: refresh
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- config/test_center_registry.v1.json SOURCE_MANIFEST.sha256; then
+            echo "refreshed=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/test_center_registry.v1.json SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m "chore: register Worker E and refresh source manifest"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "refreshed=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Record exact candidate identity
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "candidate_sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+          echo "manifest_refreshed=${{ steps.refresh.outputs.refreshed }}" >> "${GITHUB_OUTPUT}"
+          printf 'Worker E exact candidate: %s\n' "$(git rev-parse HEAD)"
+          printf 'Worker E exact tree: %s\n' "$(git rev-parse HEAD^{tree})"
+
+  source-verification:
+    name: Source verification (${{ matrix.platform }})
+    needs: source-manifest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            os: ubuntu-24.04
+          - platform: windows
+            os: windows-2025
+          - platform: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out exact source-manifest candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.source-manifest.outputs.candidate_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+
+      - name: Record exact candidate identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.source-manifest.outputs.candidate_sha }}"
+          printf 'Worker E exact candidate: %s\n' "$(git rev-parse HEAD)"
+          printf 'Worker E exact tree: %s\n' "$(git rev-parse HEAD^{tree})"
+
+      - name: Snapshot non-generated source state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release/evidence/generated/worker-e
+          python tool/generated_state_guard.py snapshot \
+            --project . \
+            --output "release/evidence/generated/worker-e/pre-test-${{ matrix.platform }}.json"
+
+      - name: Verify canonical Worker E Test Center registration
+        shell: bash
+        run: python tool/worker_e_test_center_registration.py --check --project .
+
+      - name: Run Worker E semantic regressions
+        shell: bash
+        run: python -m unittest -v \
+            tool/worker_e_native_parity_readiness_test.py \
+            tool/worker_e_test_center_registration_test.py
+
+      - name: Run Worker E readiness validator
+        shell: bash
+        run: python tool/worker_e_native_parity_readiness.py --check --project .
+
+      - name: Validate canonical Test Center contract
+        shell: bash
+        run: python tool/test_center_contracts.py check --project .
+
+      - name: Validate generated-state hygiene
+        shell: bash
+        run: python tool/generated_state_guard.py audit --project . --strict
+
+      - name: Prove canonical source-manifest idempotence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          git diff --exit-code -- SOURCE_MANIFEST.sha256
+
+      - name: Prove Worker E checks are non-mutating
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/generated_state_guard.py verify-clean \
+            --project . \
+            --baseline "release/evidence/generated/worker-e/pre-test-${{ matrix.platform }}.json"
+
+      - name: Validate diff and clean source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git diff --exit-code
