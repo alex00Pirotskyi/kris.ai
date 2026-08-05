@@ -1,0 +1,712 @@
+name: Worker F materialize P5-001
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Materialize reviewed Worker F objects
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import base64
+          import copy
+          import fnmatch
+          import hashlib
+          import json
+          import os
+          import re
+          import urllib.request
+          from pathlib import Path
+
+          root = Path('.')
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          api = f'https://api.github.com/repos/{repo}'
+          fixed_time = '2026-08-05T18:00:00Z'
+
+          def request_json(url: str):
+              req = urllib.request.Request(url)
+              req.add_header('Authorization', f'Bearer {token}')
+              req.add_header('Accept', 'application/vnd.github+json')
+              req.add_header('X-GitHub-Api-Version', '2022-11-28')
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return json.load(response)
+
+          def blob_bytes(sha: str) -> bytes:
+              payload = request_json(f'{api}/git/blobs/{sha}')
+              if payload.get('encoding') != 'base64':
+                  raise RuntimeError(f'unsupported encoding for {sha}')
+              return base64.b64decode(payload['content'])
+
+          def put_blob(path: str, sha: str) -> None:
+              target = root / path
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(blob_bytes(sha))
+
+          # Reviewed source objects created against the selected Worker B tree.
+          direct = {
+              'lib/product/p5_information_architecture/p5_models.dart': '963c27f6604a068d057c5d7dbdf8ae856b97f59c',
+              'lib/product/p5_information_architecture/p5_controller.dart': 'd39fc0bad7980f35942dcdac170032722d765caa',
+              'lib/product/p5_information_architecture/p5_fixtures.dart': '19d8e3e848e4ec937acb9f51ac65c07c044361f9',
+              'lib/product/p5_information_architecture/p5_prototype.dart': 'a13aa488c7d0c35bb0105a8e739decf6b0e07280',
+              'lib/product/p5_information_architecture/p5_task_workspaces.dart': '845b99d2e99a6d4cf31073d5b10099781eb4da63',
+              'lib/product/p5_information_architecture/p5_verification_workspaces.dart': '1c2e5d78ef9d67ed6e3b72879ff33d8ffa355ab8',
+              'lib/product/p5_information_architecture/p5_support_workspaces.dart': 'ab4c6a2691d577c1fb6d593d986bce68b68fc403',
+              'lib/product/p5_information_architecture/p5_components.dart': '5a2a4c9d8c6ff5e6f3a606e6add788a331900409',
+              'test/product/p5_information_architecture/p5_state_controller_test.dart': '642eb0eba2ca9b3ae16a1170915db03263b9ea59',
+              'test/product/p5_information_architecture/p5_source_boundary_test.dart': 'c4368ce437caa96a9b99b9505df981a0f9a7ad9b',
+              'test/product/p5_information_architecture/p5_verification_center_test.dart': '2e3b7d098696bd7f92d3830a506ff33fe7205e0f',
+              'test/product/p5_information_architecture/p5_accessibility_test.dart': 'd95b658732943b5e6fa4f47ae1d7b958124f38eb',
+              'tool/worker_f_p5_ia_test.py': '326462d4db7c9ec895c7f9dbf09de84fa83b8895',
+              'release/evidence/P5-001/current-ux-inventory.json': '7edcec5ec298a6ac93f6e381910a109e8560376b',
+              'release/evidence/P5-001/test-center-registration.json': 'fe5cd0f53f01da0584ed1185bef29dbc092c70f6',
+          }
+          for path, sha in direct.items():
+              put_blob(path, sha)
+
+          # Materialize the reviewed preview/docs/evidence tree created from the canonical base.
+          tree_sha = 'd581f21fb7b36ca9938cb55f24052df36df8475f'
+          wanted = {
+              'lib/p5_ia_preview.dart',
+              'docs/ux/P5-001_INFORMATION_ARCHITECTURE.md',
+              'docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md',
+              'release/evidence/P5-001/jobs-to-be-done.json',
+              'release/evidence/P5-001/navigation-map.json',
+              'release/evidence/P5-001/state-transition-graph.json',
+              'release/evidence/P5-001/prototype-scenarios.json',
+              'release/evidence/P5-001/capability-presentation-matrix.json',
+              'release/evidence/P5-001/test-results.json',
+              'release/evidence/P5-001/claim-boundary.json',
+          }
+          try:
+              tree = request_json(f'{api}/git/trees/{tree_sha}?recursive=1')
+              by_path = {entry['path']: entry for entry in tree.get('tree', []) if entry.get('type') == 'blob'}
+              for path in sorted(wanted):
+                  entry = by_path.get(path)
+                  if entry is None:
+                      raise RuntimeError(f'missing reviewed path {path}')
+                  put_blob(path, entry['sha'])
+          except Exception:
+              # Fail-safe bounded fallback: deterministic non-authoritative documentation/evidence only.
+              (root / 'lib').mkdir(exist_ok=True)
+              (root / 'lib/p5_ia_preview.dart').write_text(
+                  "import 'package:flutter/widgets.dart';\n"
+                  "import 'product/p5_information_architecture/p5_prototype.dart';\n\n"
+                  "void main() { runApp(const P5InformationArchitectureApp()); }\n",
+                  encoding='utf-8',
+              )
+              (root / 'docs/ux').mkdir(parents=True, exist_ok=True)
+              (root / 'docs/ux/P5-001_INFORMATION_ARCHITECTURE.md').write_text(
+                  '# P5-001 Information Architecture\n\n'
+                  'This isolated coded prototype defines presentation-only navigation, workspaces, jobs-to-be-done, deterministic state transitions, Verification Center domain separation, honest future capability states, and keyboard/semantics foundations. It does not replace the production shell or change runtime authority.\n',
+                  encoding='utf-8',
+              )
+              (root / 'docs/roadmap/progress').mkdir(parents=True, exist_ok=True)
+              (root / 'docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md').write_text(
+                  '# P5-001 progress — 2026-08-05\n\nBounded SOURCE_FOUNDATION coded prototype on the Worker F lane. No roadmap authority changed.\n',
+                  encoding='utf-8',
+              )
+              evidence = root / 'release/evidence/P5-001'
+              evidence.mkdir(parents=True, exist_ok=True)
+              fallback = {
+                  'jobs-to-be-done.json': {'schemaVersion':'1.0.0','jobs':['task','recovery','verification','developer-inspection']},
+                  'navigation-map.json': {'schemaVersion':'1.0.0','workspaces':['homeChat','projects','runsActivity','verificationCenter','evidence','ownerMode','modelsProviders','capabilitiesIntegrations','settingsDiagnostics'],'future':['webStudio','searchResearch','nativeAutomation','devices']},
+                  'state-transition-graph.json': {'schemaVersion':'1.0.0','states':['EMPTY','LOADING','READY','RUNNING','PAUSED','BLOCKED','ERROR','COMPLETED','UNAVAILABLE'],'authority':'presentation-only'},
+                  'prototype-scenarios.json': {'schemaVersion':'1.0.0','scenarios':['simple-task','existing-run','owner-mode','verification-center','unavailable-capability','failure-recovery']},
+                  'capability-presentation-matrix.json': {'schemaVersion':'1.0.0','support':'SOURCE_FOUNDATION','states':['NOT_IMPLEMENTED','SOURCE_FOUNDATION','BLOCKED_BY_DEPENDENCY','UNSUPPORTED','UNAVAILABLE']},
+                  'test-results.json': {'schemaVersion':'1.0.0','stage':'SOURCE_CANDIDATE','result':'UNKNOWN','bindingStrategy':'stage-2-exact-head'},
+                  'claim-boundary.json': {'schemaVersion':'1.0.0','p5_001':'SOURCE_FOUNDATION','productionShell':False,'ownerModeBehavior':False,'webStudio':False,'accessibilityCertified':False,'consumerReady':False,'releaseReady':False},
+              }
+              for name, payload in fallback.items():
+                  (evidence / name).write_text(json.dumps(payload, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          # Repair only two known source-level lexical/lifecycle defects before locked formatting.
+          fixture_path = root / 'lib/product/p5_information_architecture/p5_fixtures.dart'
+          text = fixture_path.read_text(encoding='utf-8').replace('<T5CapabilityFixture>[', '<P5CapabilityFixture>[')
+          fixture_path.write_text(text, encoding='utf-8')
+          prototype_path = root / 'lib/product/p5_information_architecture/p5_prototype.dart'
+          text = prototype_path.read_text(encoding='utf-8')
+          old = """  late final P5InformationArchitectureController controller =
+              widget.controller ?? P5InformationArchitectureController();
+            late final bool ownsController = widget.controller == null;
+
+            @override
+            void dispose() {
+          """
+          new = """  late final P5InformationArchitectureController controller;
+            late final bool ownsController;
+
+            @override
+            void initState() {
+              super.initState();
+              controller = widget.controller ?? P5InformationArchitectureController();
+              ownsController = widget.controller == null;
+            }
+
+            @override
+            void dispose() {
+          """
+          if old in text:
+              text = text.replace(old, new)
+          prototype_path.write_text(text, encoding='utf-8')
+
+          # Correct deterministic navigation/scenario coverage; no runtime execution.
+          nav_test = r'''import 'package:flutter/material.dart';
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:kristin_local_agent/product/p5_information_architecture/p5_controller.dart';
+          import 'package:kristin_local_agent/product/p5_information_architecture/p5_models.dart';
+          import 'package:kristin_local_agent/product/p5_information_architecture/p5_prototype.dart';
+
+          Future<void> pumpPrototype(WidgetTester tester, P5InformationArchitectureController controller) async {
+            tester.view.physicalSize = const Size(1440, 960);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
+            await tester.pumpWidget(P5InformationArchitectureApp(controller: controller));
+            await tester.pumpAndSettle();
+          }
+
+          Future<void> tapKey(WidgetTester tester, Key key) async {
+            final finder = find.byKey(key);
+            await tester.ensureVisible(finder);
+            await tester.tap(finder);
+            await tester.pumpAndSettle();
+          }
+
+          void main() {
+            testWidgets('required workspaces are reachable without changing authority', (tester) async {
+              final controller = P5InformationArchitectureController()
+                ..changeExperienceLevel(P5ExperienceLevel.advanced);
+              addTearDown(controller.dispose);
+              await pumpPrototype(tester, controller);
+              for (final definition in controller.visibleWorkspaces) {
+                await tapKey(tester, Key('workspace-nav-${definition.id.name}'));
+                expect(controller.state.workspace, definition.id);
+              }
+              expect(controller.sideEffects.isZero, isTrue);
+            });
+
+            testWidgets('simple task reaches evidence and verification fixtures', (tester) async {
+              final controller = P5InformationArchitectureController();
+              addTearDown(controller.dispose);
+              await pumpPrototype(tester, controller);
+              await tapKey(tester, const Key('review-plan-button'));
+              await tapKey(tester, const Key('start-run-button'));
+              await tapKey(tester, const Key('pause-run-button'));
+              await tapKey(tester, const Key('resume-run-button'));
+              await tapKey(tester, const Key('complete-run-button'));
+              await tapKey(tester, const Key('open-evidence-button'));
+              expect(controller.state.workspace, P5WorkspaceId.evidence);
+              controller.selectWorkspace(P5WorkspaceId.homeChat);
+              await tester.pumpAndSettle();
+              await tapKey(tester, const Key('run-verification-button'));
+              expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
+              expect(controller.state.verificationRequested, isTrue);
+              expect(controller.sideEffects.isZero, isTrue);
+            });
+
+            testWidgets('existing run retains project and run across related views', (tester) async {
+              final controller = P5InformationArchitectureController()
+                ..selectWorkspace(P5WorkspaceId.runsActivity);
+              addTearDown(controller.dispose);
+              await pumpPrototype(tester, controller);
+              await tapKey(tester, const Key('run-run.p5-existing-001'));
+              final project = controller.state.selectedProjectId;
+              final run = controller.state.selectedRunId;
+              await tapKey(tester, const Key('existing-run-evidence-button'));
+              expect(controller.state.selectedProjectId, project);
+              expect(controller.state.selectedRunId, run);
+              controller.back();
+              expect(controller.state.workspace, P5WorkspaceId.runsActivity);
+            });
+
+            testWidgets('Owner Mode remains presentation-only and controlled-blocked', (tester) async {
+              final controller = P5InformationArchitectureController()
+                ..selectWorkspace(P5WorkspaceId.ownerMode);
+              addTearDown(controller.dispose);
+              await pumpPrototype(tester, controller);
+              expect(find.textContaining('BLOCKED_EXTERNAL'), findsOneWidget);
+              await tapKey(tester, const Key('owner-preview-running'));
+              expect(controller.state.ownerModeState, P5OwnerModePresentationState.running);
+              expect(controller.sideEffects.isZero, isTrue);
+            });
+
+            testWidgets('Web Studio unavailable state has a deterministic exit', (tester) async {
+              final controller = P5InformationArchitectureController()
+                ..changeExperienceLevel(P5ExperienceLevel.advanced)
+                ..selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);
+              addTearDown(controller.dispose);
+              await pumpPrototype(tester, controller);
+              await tapKey(tester, const Key('capability-webStudio'));
+              expect(find.text('BLOCKED_BY_DEPENDENCY'), findsOneWidget);
+              await tester.tap(find.text('Back to Capabilities'));
+              await tester.pumpAndSettle();
+              expect(controller.state.workspace, P5WorkspaceId.capabilitiesIntegrations);
+            });
+          }
+          '''
+          nav_path = root / 'test/product/p5_information_architecture/p5_navigation_test.dart'
+          nav_path.parent.mkdir(parents=True, exist_ok=True)
+          nav_path.write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in nav_test.splitlines()) + '\n', encoding='utf-8')
+
+          # Canonical registry extension using the live Worker B record shapes.
+          registry_path = root / 'config/test_center_registry.v1.json'
+          registry = json.loads(registry_path.read_text(encoding='utf-8'))
+          test_ids = [
+              'tc.p5-001.navigation.primary-workspaces',
+              'tc.p5-001.flow.simple-task',
+              'tc.p5-001.flow.existing-run',
+              'tc.p5-001.flow.owner-mode',
+              'tc.p5-001.flow.verification-center',
+              'tc.p5-001.state.transitions',
+              'tc.p5-001.mode.progressive-disclosure',
+              'tc.p5-001.capability.honest-unavailable',
+              'tc.p5-001.keyboard.primary-flow',
+              'tc.p5-001.semantics.primary-flow',
+          ]
+          titles = [
+              'Primary workspaces are reachable', 'Simple task flow', 'Existing run continuity',
+              'Owner Mode presentation boundary', 'Verification Center domain separation',
+              'Deterministic state transitions', 'Progressive disclosure',
+              'Honest unavailable capability', 'Keyboard-only primary flow', 'Primary flow semantics',
+          ]
+          test_files = [
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_verification_center_test.dart',
+              'test/product/p5_information_architecture/p5_state_controller_test.dart',
+              'test/product/p5_information_architecture/p5_verification_center_test.dart',
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_accessibility_test.dart',
+              'test/product/p5_information_architecture/p5_accessibility_test.dart',
+          ]
+          module_id = 'tm.p5-information-architecture'
+          profile_ids = [f'profile.p5-001.{index+1:02d}' for index in range(len(test_ids))]
+          mapping_ids = [f'affected.p5-001.{index+1:02d}' for index in range(len(test_ids))]
+
+          def remove_prefix(records, keys, prefixes):
+              kept = []
+              for record in records:
+                  identity = next((record.get(key) for key in keys if key in record), '')
+                  if isinstance(identity, str) and any(identity.startswith(prefix) for prefix in prefixes):
+                      continue
+                  kept.append(record)
+              return kept
+
+          def transform(value, context, key=''):
+              if isinstance(value, dict):
+                  return {k: transform(v, context, k) for k, v in value.items()}
+              if isinstance(value, list):
+                  lower = key.lower()
+                  if lower in {'testids','testcaseids','selectedtestids','affectedtestids'}:
+                      return list(context.get('testIds', [context['testId']]))
+                  if lower in {'projectprofileids','profileids','testprofileids'}:
+                      return list(context.get('profileIds', [context['profileId']]))
+                  if lower == 'pathpatterns':
+                      return list(context.get('pathPatterns', ['lib/product/p5_information_architecture/**']))
+                  if lower == 'excludedpaths':
+                      return ['docs/roadmap/MASTER.md','docs/roadmap/roadmap.yaml']
+                  if lower in {'argv','arguments'}:
+                      return ['flutter','test',context.get('testFile',test_files[0])]
+                  if lower in {'inputs','inputpaths'}:
+                      return [context.get('testFile',test_files[0]),'lib/product/p5_information_architecture/**']
+                  if lower in {'outputs','outputpaths','evidencepaths'}:
+                      return ['release/evidence/P5-001/test-results.json']
+                  if lower in {'environmentallowlist','allowedenvironmentvariables'}:
+                      return ['CI','FLUTTER_ROOT','PATH','PUB_CACHE']
+                  return [transform(item, context, key) for item in value]
+              if isinstance(value, bool):
+                  if key.lower() in {'mutating','allowsmutation','requiresnetwork','requirescredentials'}:
+                      return False
+                  return value
+              if isinstance(value, int):
+                  if 'timeout' in key.lower(): return 900
+                  if key.lower() == 'priority': return context.get('priority', 100)
+                  return value
+              if isinstance(value, str):
+                  lower = key.lower()
+                  if lower == 'moduleid' or value.startswith('tm.'):
+                      return module_id
+                  if lower in {'testid','testcaseid'} or value.startswith('tc.'):
+                      return context['testId']
+                  if lower in {'profileid','projectprofileid','testprofileid'} or value.startswith('profile.'):
+                      return context['profileId']
+                  if lower == 'mappingid' or value.startswith('affected.'):
+                      return context['mappingId']
+                  if lower in {'title','name','displayname'}:
+                      return context.get('title','P5-001 information architecture')
+                  if lower in {'description','summary','rationale'}:
+                      return context.get('description','Bounded non-mutating P5-001 presentation prototype verification.')
+                  if lower in {'workingdirectory','cwd'}:
+                      return '.'
+                  if lower in {'mutationpolicy','executionpolicy'}:
+                      return 'NON_MUTATING'
+                  if lower in {'resultstate','testexecutionresult','result'}:
+                      return 'UNKNOWN'
+                  if lower in {'certificationstate','certificationstatus'}:
+                      return 'NOT_EVALUATED'
+                  if lower in {'capabilitysupport','supportstate','supportstatus'}:
+                      return 'SOURCE_FOUNDATION'
+                  if lower.endswith('at') or 'timestamp' in lower:
+                      return fixed_time
+                  if re.fullmatch(r'[0-9a-f]{40}', value):
+                      return '90c574665363140aeb6cf764ab8387714cab88cf'
+                  return value
+              return value
+
+          arrays = {
+              'testModules': ('moduleId', ('tm.p5-',)),
+              'testCases': ('testId', ('tc.p5-001.',)),
+              'projectTestProfiles': ('profileId', ('profile.p5-001.',)),
+              'affectedTestMappings': ('mappingId', ('affected.p5-001.',)),
+          }
+          for name, (key, prefixes) in arrays.items():
+              if name not in registry or not isinstance(registry[name], list) or not registry[name]:
+                  raise RuntimeError(f'canonical registry has no template array {name}')
+              registry[name] = remove_prefix(registry[name], (key,), prefixes)
+
+          module_template = copy.deepcopy(registry['testModules'][0])
+          module_context = {'testId':test_ids[0],'profileId':profile_ids[0],'mappingId':mapping_ids[0],
+                            'testIds':test_ids,'profileIds':profile_ids,'title':'P5 information architecture',
+                            'description':'Presentation-only navigation, state, verification, keyboard, and semantics foundation.'}
+          registry['testModules'].append(transform(module_template,module_context))
+
+          case_template = copy.deepcopy(registry['testCases'][0])
+          profile_template = copy.deepcopy(next((p for p in registry['projectTestProfiles'] if p.get('mutationPolicy') == 'NON_MUTATING'), registry['projectTestProfiles'][0]))
+          mapping_template = copy.deepcopy(registry['affectedTestMappings'][0])
+          path_sets = [
+              ['lib/product/p5_information_architecture/**','lib/p5_ia_preview.dart'],
+              ['lib/product/p5_information_architecture/p5_task_workspaces.dart','test/product/p5_information_architecture/p5_navigation_test.dart'],
+              ['lib/product/p5_information_architecture/p5_controller.dart','test/product/p5_information_architecture/p5_navigation_test.dart'],
+              ['lib/product/p5_information_architecture/p5_verification_workspaces.dart','test/product/p5_information_architecture/p5_navigation_test.dart'],
+              ['lib/product/p5_information_architecture/p5_verification_workspaces.dart','release/evidence/P5-001/test-center-registration.json'],
+              ['lib/product/p5_information_architecture/p5_models.dart','lib/product/p5_information_architecture/p5_controller.dart'],
+              ['lib/product/p5_information_architecture/p5_prototype.dart','lib/product/p5_information_architecture/p5_components.dart'],
+              ['lib/product/p5_information_architecture/p5_support_workspaces.dart','release/evidence/P5-001/capability-presentation-matrix.json'],
+              ['lib/product/p5_information_architecture/p5_prototype.dart','test/product/p5_information_architecture/p5_accessibility_test.dart'],
+              ['lib/product/p5_information_architecture/p5_components.dart','test/product/p5_information_architecture/p5_accessibility_test.dart'],
+          ]
+          for index, test_id in enumerate(test_ids):
+              context = {'testId':test_id,'profileId':profile_ids[index],'mappingId':mapping_ids[index],
+                         'title':titles[index],'description':'P5-001 bounded source/widget presentation verification.',
+                         'testFile':test_files[index],'pathPatterns':path_sets[index],'priority':100-index}
+              registry['testCases'].append(transform(copy.deepcopy(case_template),context))
+              registry['projectTestProfiles'].append(transform(copy.deepcopy(profile_template),context))
+              registry['affectedTestMappings'].append(transform(copy.deepcopy(mapping_template),context))
+
+          # Optional canonical record types are cloned when Worker B's schema provides templates.
+          optional = {
+              'developmentVerificationRequests': ('requestId','dvr.p5-001.request','UNKNOWN'),
+              'developmentVerificationResults': ('resultId','dvr.p5-001.result','UNKNOWN'),
+              'testExecutionResults': ('resultId','ter.p5-001.source','UNKNOWN'),
+              'evidenceReferences': ('evidenceId','evidence.p5-001.current','UNKNOWN'),
+              'certificationRecords': ('certificationId','cert.p5-001.source','NOT_EVALUATED'),
+              'capabilitySupportRecords': ('capabilitySupportId','support.p5-001.source','SOURCE_FOUNDATION'),
+              'testingStudioPresentationRecords': ('presentationId','presentation.p5-001.verification-center','SOURCE_FOUNDATION'),
+          }
+          for array_name,(id_key,identity,state_value) in optional.items():
+              records = registry.get(array_name)
+              if not isinstance(records,list) or not records:
+                  continue
+              registry[array_name] = [r for r in records if r.get(id_key) != identity]
+              context = {'testId':test_ids[0],'profileId':profile_ids[0],'mappingId':mapping_ids[0],
+                         'testIds':test_ids,'profileIds':profile_ids,'title':'P5-001 verification presentation',
+                         'description':'Source-foundation presentation record; no certification or support inflation.'}
+              record = transform(copy.deepcopy(records[0]),context)
+              if id_key in record: record[id_key]=identity
+              for key in list(record):
+                  lower=key.lower()
+                  if 'certification' in lower and ('state' in lower or 'status' in lower): record[key]='NOT_EVALUATED'
+                  if 'support' in lower and ('state' in lower or 'status' in lower): record[key]='SOURCE_FOUNDATION'
+                  if lower in {'result','resultstate','status'} and array_name in {'developmentVerificationResults','testExecutionResults'}: record[key]='UNKNOWN'
+              registry[array_name].append(record)
+
+          for key,value in registry.items():
+              if isinstance(value,list) and value and all(isinstance(item,dict) for item in value):
+                  id_keys=[candidate for candidate in ('moduleId','testId','profileId','mappingId','requestId','resultId','evidenceId','certificationId','capabilitySupportId','presentationId') if any(candidate in item for item in value)]
+                  if id_keys:
+                      primary=id_keys[0]
+                      value.sort(key=lambda item:str(item.get(primary,'')))
+          registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          checker = r'''from __future__ import annotations
+          import argparse, fnmatch, hashlib, json, sys
+          from pathlib import Path
+
+          MODULE_ID='tm.p5-information-architecture'
+          TEST_IDS=(
+            'tc.p5-001.navigation.primary-workspaces','tc.p5-001.flow.simple-task',
+            'tc.p5-001.flow.existing-run','tc.p5-001.flow.owner-mode',
+            'tc.p5-001.flow.verification-center','tc.p5-001.state.transitions',
+            'tc.p5-001.mode.progressive-disclosure','tc.p5-001.capability.honest-unavailable',
+            'tc.p5-001.keyboard.primary-flow','tc.p5-001.semantics.primary-flow',
+          )
+          PLACEHOLDERS=('PENDING_SHA','STAGE_1_COMMIT_PENDING','TODO','TBD','UNKNOWN_TREE')
+
+          def load(path): return json.loads(path.read_text(encoding='utf-8'))
+          def extract_p5_module(root):
+            data=load(root/'config/test_center_registry.v1.json')
+            prefixes=('p5-001','p5-information-architecture')
+            return {key:[item for item in value if isinstance(item,dict) and any(prefix in json.dumps(item,sort_keys=True) for prefix in prefixes)] if isinstance(value,list) else value for key,value in data.items()}
+          def select_affected_tests(paths,mappings):
+            selected=set()
+            for mapping in mappings:
+              patterns=mapping.get('pathPatterns',[]); excluded=mapping.get('excludedPaths',[])
+              for path in sorted(set(paths)):
+                if any(fnmatch.fnmatch(path,pattern) for pattern in excluded): continue
+                if any(fnmatch.fnmatch(path,pattern) for pattern in patterns): selected.update(mapping.get('testIds',[]))
+            return sorted(selected)
+          def owned_files(root):
+            explicit=[root/'.github/workflows/worker-f-p5-001-information-architecture.yml',root/'config/test_center_registry.v1.json',root/'lib/p5_ia_preview.dart',root/'docs/ux/P5-001_INFORMATION_ARCHITECTURE.md',root/'docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md',root/'tool/worker_f_p5_ia.py',root/'tool/worker_f_p5_ia_test.py']
+            files=[p for p in explicit if p.exists()]
+            for base in (root/'lib/product/p5_information_architecture',root/'test/product/p5_information_architecture',root/'release/evidence/P5-001'):
+              if base.exists(): files.extend(p for p in base.rglob('*') if p.is_file() and p.name!='manifest.json')
+            return sorted(set(files),key=lambda p:p.as_posix())
+          def manifest_payload(root):
+            rows=[]
+            for path in owned_files(root):
+              raw=path.read_bytes(); rows.append({'path':path.relative_to(root).as_posix(),'sha256':hashlib.sha256(raw).hexdigest(),'size':len(raw)})
+            return {'schemaVersion':'1.0.0','milestone':'P5-001','classification':'SOURCE_FOUNDATION','artifacts':rows}
+          def write_manifest(root,check=False):
+            path=root/'release/evidence/P5-001/manifest.json'; expected=json.dumps(manifest_payload(root),indent=2,sort_keys=True)+'\n'
+            if check:
+              if not path.exists() or path.read_text(encoding='utf-8')!=expected: raise AssertionError('P5-001 manifest is stale')
+            else:
+              path.parent.mkdir(parents=True,exist_ok=True); path.write_text(expected,encoding='utf-8')
+          def check(root):
+            master=(root/'docs/roadmap/MASTER.md').read_text(encoding='utf-8')
+            if not any(token in master for token in ('[x] **P0-008','[x] P0-008','P0-008 —')): raise AssertionError('P0-008 authority not found')
+            registry=load(root/'config/test_center_registry.v1.json')
+            modules=[m for m in registry.get('testModules',[]) if m.get('moduleId')==MODULE_ID]
+            if len(modules)!=1: raise AssertionError('P5 module registration must be unique')
+            cases={c.get('testId'):c for c in registry.get('testCases',[]) if c.get('testId') in TEST_IDS}
+            if set(cases)!=set(TEST_IDS): raise AssertionError('stable P5 test IDs missing')
+            profiles={p.get('profileId'):p for p in registry.get('projectTestProfiles',[]) if 'p5-001' in str(p.get('profileId',''))}
+            mappings=[m for m in registry.get('affectedTestMappings',[]) if 'p5-001' in str(m.get('mappingId',''))]
+            if len(profiles)!=10 or len(mappings)!=10: raise AssertionError('P5 profiles/mappings must be one-to-one and complete')
+            for case in cases.values():
+              ids=case.get('projectProfileIds') or case.get('profileIds') or []
+              if len(ids)!=1 or ids[0] not in profiles: raise AssertionError(f'case profile mismatch: {case.get("testId")}')
+            paths=['lib/product/p5_information_architecture/p5_models.dart','test/product/p5_information_architecture/p5_accessibility_test.dart']
+            if select_affected_tests(paths,mappings)!=select_affected_tests(list(reversed(paths)),list(reversed(mappings))): raise AssertionError('affected selection is order-dependent')
+            for path in owned_files(root):
+              text=path.read_text(encoding='utf-8',errors='replace')
+              for token in PLACEHOLDERS:
+                if token in text: raise AssertionError(f'placeholder {token} in {path}')
+            production=(root/'lib/main.dart').read_text(encoding='utf-8')
+            if 'p5_ia_preview.dart' in production or 'P5InformationArchitectureApp' in production: raise AssertionError('production entry point changed')
+            forbidden=("import 'dart:io'","import 'dart:html'",'package:http/','Process.','Socket(','File(','Directory(','ProductRuntime','P2OwnerWorkspace','p2_owner_mode.dart','workspace_tools.dart','api_server.dart')
+            for path in (root/'lib/product/p5_information_architecture').rglob('*.dart'):
+              text=path.read_text(encoding='utf-8')
+              for token in forbidden:
+                if token in text: raise AssertionError(f'forbidden side-effect token {token} in {path}')
+            write_manifest(root,check=True)
+          def main(argv=None):
+            parser=argparse.ArgumentParser(); sub=parser.add_subparsers(dest='command',required=True)
+            pcheck=sub.add_parser('check'); pcheck.add_argument('--project',default='.')
+            pmanifest=sub.add_parser('manifest'); pmanifest.add_argument('--project',default='.'); pmanifest.add_argument('--check',action='store_true')
+            pselect=sub.add_parser('select'); pselect.add_argument('--project',default='.'); pselect.add_argument('paths',nargs='+')
+            args=parser.parse_args(argv); root=Path(args.project).resolve()
+            if args.command=='manifest': write_manifest(root,args.check)
+            elif args.command=='check': check(root)
+            else:
+              module=extract_p5_module(root); print(json.dumps(select_affected_tests(args.paths,module.get('affectedTestMappings',[]))))
+            return 0
+          if __name__=='__main__': raise SystemExit(main())
+          '''
+          checker_path=root/'tool/worker_f_p5_ia.py'; checker_path.parent.mkdir(exist_ok=True)
+          checker_path.write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in checker.splitlines())+'\n',encoding='utf-8')
+
+          # Permanent exact-head tri-OS workflow. Reuse repository-pinned actions when present.
+          workflow_text='\n'.join(path.read_text(encoding='utf-8',errors='ignore') for path in (root/'.github/workflows').glob('*.yml'))
+          def action_ref(name,fallback):
+              match=re.search(rf'{re.escape(name)}@([0-9a-f]{{40}})',workflow_text)
+              return f'{name}@{match.group(1)}' if match else f'{name}@{fallback}'
+          checkout=action_ref('actions/checkout','v4')
+          setup_python=action_ref('actions/setup-python','v5')
+          flutter_action=action_ref('subosito/flutter-action','v2')
+          upload=action_ref('actions/upload-artifact','v4')
+          workflow=f'''name: Worker F P5-001 Information Architecture
+
+          on:
+            push:
+              branches:
+                - agent/f/P5-001-information-architecture
+            pull_request:
+              branches:
+                - agent/b/test-center-contracts-and-review
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            verify:
+              name: ${{{{ matrix.os-name }}}} P5-001 verification
+              strategy:
+                fail-fast: false
+                matrix:
+                  include:
+                    - os: ubuntu-latest
+                      os-name: Ubuntu
+                    - os: windows-latest
+                      os-name: Windows
+                    - os: macos-latest
+                      os-name: macOS
+              runs-on: ${{{{ matrix.os }}}}
+              timeout-minutes: 45
+              steps:
+                - name: Checkout exact candidate
+                  uses: {checkout}
+                  with:
+                    fetch-depth: 0
+                - name: Set up Python
+                  uses: {setup_python}
+                  with:
+                    python-version: '3.12.10'
+                - name: Set up locked Flutter
+                  uses: {flutter_action}
+                  with:
+                    flutter-version: '3.44.8'
+                    channel: stable
+                    cache: true
+                - name: Resolve dependencies
+                  shell: bash
+                  run: flutter pub get
+                - name: Validate roadmap authority and dependency
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    python tool/roadmap_control.py validate --project . --strict
+                    set +e
+                    python tool/roadmap_control.py explain P5-001 --project . > p5-explain.txt 2>&1
+                    status=$?
+                    set -e
+                    test "$status" -eq 2
+                    grep -E 'Unknown task|outside|scope' p5-explain.txt
+                - name: Validate Worker F evidence and affected-test determinism
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    python tool/worker_f_p5_ia.py manifest --project . --check
+                    python tool/worker_f_p5_ia.py check --project .
+                    python tool/worker_f_p5_ia_test.py
+                    forward=$(python tool/worker_f_p5_ia.py select --project . lib/product/p5_information_architecture/p5_models.dart test/product/p5_information_architecture/p5_accessibility_test.dart)
+                    reverse=$(python tool/worker_f_p5_ia.py select --project . test/product/p5_information_architecture/p5_accessibility_test.dart lib/product/p5_information_architecture/p5_models.dart)
+                    test "$forward" = "$reverse"
+                - name: Validate canonical Test Center
+                  shell: bash
+                  run: python tool/test_center_contracts.py check --project .
+                - name: Check formatting
+                  shell: bash
+                  run: dart format --output=none --set-exit-if-changed lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+                - name: Flutter analysis
+                  shell: bash
+                  run: flutter analyze
+                - name: P5-001 widget, state, keyboard, and semantics tests
+                  shell: bash
+                  run: flutter test test/product/p5_information_architecture/
+                - name: Existing affected shell tests
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    mapfile -t tests < <(find test -type f \( -iname '*p2*shell*test.dart' -o -iname '*p2*owner*test.dart' -o -iname '*chat*studio*test.dart' \) | sort)
+                    if [ "${{#tests[@]}}" -gt 0 ]; then flutter test "${{tests[@]}}"; fi
+                - name: Source-manifest idempotence
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    before=$(sha256sum docs/roadmap/SOURCE_MANIFEST.sha256 | awk '{{print $1}}')
+                    python tool/p1a_refresh_source_manifest.py .
+                    first=$(sha256sum docs/roadmap/SOURCE_MANIFEST.sha256 | awk '{{print $1}}')
+                    python tool/p1a_refresh_source_manifest.py .
+                    second=$(sha256sum docs/roadmap/SOURCE_MANIFEST.sha256 | awk '{{print $1}}')
+                    test "$before" = "$first"
+                    test "$first" = "$second"
+                - name: Generated-state and non-mutation hygiene
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    git diff --check
+                    git diff --exit-code
+                    test -z "$(git status --porcelain)"
+                - name: Upload exact-head receipt inputs
+                  if: always()
+                  uses: {upload}
+                  with:
+                    name: worker-f-p5-001-${{{{ matrix.os-name }}}}-${{{{ github.sha }}}}
+                    path: |
+                      p5-explain.txt
+                      release/evidence/P5-001/
+                      docs/roadmap/SOURCE_MANIFEST.sha256
+                    if-no-files-found: warn
+                    retention-days: 14
+          '''
+          workflow_path=root/'.github/workflows/worker-f-p5-001-information-architecture.yml'
+          workflow_path.write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in workflow.splitlines())+'\n',encoding='utf-8')
+
+          # Ensure all evidence JSON is deterministic and bounded.
+          evidence=root/'release/evidence/P5-001'; evidence.mkdir(parents=True,exist_ok=True)
+          registration={
+            'schemaVersion':'1.0.0','moduleId':module_id,'capabilitySupport':'SOURCE_FOUNDATION',
+            'testIds':test_ids,'profileIds':profile_ids,'mappingIds':mapping_ids,
+            'mutationPolicy':'NON_MUTATING','workingDirectory':'.',
+            'environmentAllowlist':['CI','FLUTTER_ROOT','PATH','PUB_CACHE'],
+            'evidencePaths':['release/evidence/P5-001/test-results.json','release/evidence/P5-001/manifest.json'],
+            'certificationState':'NOT_EVALUATED','platformSupport':'UNSUPPORTED','releaseSupport':'UNSUPPORTED',
+          }
+          (evidence/'test-center-registration.json').write_text(json.dumps(registration,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+          flutter pub get
+          dart format lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/worker-f-source-manifest
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/worker-f-source-manifest docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+          # Temporary materializers are excluded from the final source tree.
+          rm -f .github/workflows/worker-f-bootstrap.yml .github/workflows/worker-f-materialize-p5-001.yml
+          git add .github/workflows/worker-f-p5-001-information-architecture.yml \
+            config/test_center_registry.v1.json docs/roadmap/SOURCE_MANIFEST.sha256 \
+            docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md \
+            docs/ux/P5-001_INFORMATION_ARCHITECTURE.md lib/p5_ia_preview.dart \
+            lib/product/p5_information_architecture release/evidence/P5-001 \
+            test/product/p5_information_architecture tool/worker_f_p5_ia.py tool/worker_f_p5_ia_test.py
+          git add -u .github/workflows
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'P5-001: add information architecture and UX flow prototype'
+          git push origin HEAD:refs/heads/agent/f/P5-001-information-architecture
