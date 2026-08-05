@@ -1,0 +1,627 @@
+name: P4-001 Finalize Governed Evidence
+
+on:
+  push:
+    branches:
+      - agent/p4-001-search-provider-foundation
+    paths:
+      - .github/workflows/p4-001-finalize-evidence.yml
+
+permissions:
+  actions: read
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: p4-001-finalize-evidence
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    if: startsWith(github.event.head_commit.message, 'chore(p4-001): stage evidence finalizer')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Resolve immutable source candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e .github/workflows/p4-001-publish-candidate.yml
+          candidate="$(git log --format=%H --grep='^fix(p4-001): harden contracts and register verification handoff$' -1)"
+          test -n "${candidate}"
+          git merge-base --is-ancestor "${candidate}" HEAD
+          candidate_tree="$(git show -s --format=%T "${candidate}")"
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor origin/main "${candidate}"
+          printf 'sha=%s\n' "${candidate}" >> "${GITHUB_OUTPUT}"
+          printf 'tree=%s\n' "${candidate_tree}" >> "${GITHUB_OUTPUT}"
+          printf 'staging_sha=%s\n' "$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
+      - name: Re-run source-only gate without repository mutation
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$(git status --porcelain=v1)"
+          python tool/p4_001_search_provider_test.py \
+            --project . \
+            --json-output "${RUNNER_TEMP}/p4-001-local-finalizer.json"
+          after="$(git status --porcelain=v1)"
+          test "${before}" = "${after}"
+
+      - name: Require exact-candidate CI and write governed evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
+          CANDIDATE_TREE: ${{ steps.candidate.outputs.tree }}
+          STAGING_SHA: ${{ steps.candidate.outputs.staging_sha }}
+          RAW_RESULT: ${{ runner.temp }}/p4-001-local-finalizer.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import datetime as dt
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import subprocess
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from typing import Any
+
+          ROOT = pathlib.Path('.').resolve()
+          REPOSITORY = os.environ['GITHUB_REPOSITORY']
+          TOKEN = os.environ['GH_TOKEN']
+          CANDIDATE = os.environ['CANDIDATE_SHA']
+          CANDIDATE_TREE = os.environ['CANDIDATE_TREE']
+          STAGING_SHA = os.environ['STAGING_SHA']
+          BRANCH = os.environ['GITHUB_REF_NAME']
+          RAW_PATH = pathlib.Path(os.environ['RAW_RESULT'])
+          OLD_HEAD = '3c83f9a502e8e758aa40a20dfac82673339c77b1'
+          WORKER_J_BRANCH = 'agent/j/P24-001-roadmap-as-data-adr'
+          WORKER_B_BRANCH = 'agent/test-center-development-verification-foundation'
+          PROVISIONAL_ROADMAP = pathlib.Path('docs/roadmap/anarchy/reference/MASTER_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md')
+          EVIDENCE_DIR = pathlib.Path('release/evidence/P4-001')
+          PROGRESS = pathlib.Path('docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md')
+          IMPLEMENTATION = EVIDENCE_DIR / 'IMPLEMENTATION.md'
+          TEST_RESULTS = EVIDENCE_DIR / 'test-results.json'
+          MANIFEST = EVIDENCE_DIR / 'manifest.json'
+          HANDOFF = EVIDENCE_DIR / 'test-center-handoff.json'
+
+          def now() -> str:
+              return dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
+
+          def sha256_bytes(data: bytes) -> str:
+              return hashlib.sha256(data).hexdigest()
+
+          def sha256_file(path: pathlib.Path) -> str:
+              return sha256_bytes(path.read_bytes())
+
+          def git(*args: str) -> str:
+              return subprocess.check_output(['git', *args], text=True).strip()
+
+          def api(path: str) -> Any:
+              url = f'https://api.github.com{path}'
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      'Accept': 'application/vnd.github+json',
+                      'Authorization': f'Bearer {TOKEN}',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'User-Agent': 'p4-001-evidence-finalizer',
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.load(response)
+
+          def api_optional(path: str) -> Any | None:
+              try:
+                  return api(path)
+              except urllib.error.HTTPError as exc:
+                  if exc.code == 404:
+                      return None
+                  raise
+
+          def old_state(path: pathlib.Path) -> dict[str, Any]:
+              if not path.exists():
+                  return {'present': False}
+              data = path.read_bytes()
+              try:
+                  blob = git('rev-parse', f'HEAD:{path.as_posix()}')
+              except subprocess.CalledProcessError:
+                  blob = None
+              return {
+                  'present': True,
+                  'path': path.as_posix(),
+                  'gitBlob': blob,
+                  'sha256': sha256_bytes(data),
+                  'content': data.decode('utf-8', errors='replace'),
+              }
+
+          historical = {
+              'progress': old_state(PROGRESS),
+              'implementation': old_state(IMPLEMENTATION),
+              'testResults': old_state(TEST_RESULTS),
+              'manifest': old_state(MANIFEST),
+          }
+
+          def candidate_runs() -> list[dict[str, Any]]:
+              query = urllib.parse.urlencode({'head_sha': CANDIDATE, 'per_page': 100})
+              return api(f'/repos/{REPOSITORY}/actions/runs?{query}').get('workflow_runs', [])
+
+          def classify_required(runs: list[dict[str, Any]]) -> dict[str, dict[str, Any] | None]:
+              ordered = sorted(runs, key=lambda item: item.get('run_number', 0), reverse=True)
+              def first(predicate):
+                  return next((item for item in ordered if predicate(item)), None)
+              return {
+                  'p4Source': first(lambda item: str(item.get('path', '')).endswith('/p4-001-search-provider.yml')),
+                  'productGates': first(lambda item: 'product' in str(item.get('name', '')).casefold() and 'gate' in str(item.get('name', '')).casefold()),
+                  'branchHygiene': first(lambda item: 'branch' in str(item.get('name', '')).casefold() and 'hygiene' in str(item.get('name', '')).casefold()),
+              }
+
+          deadline = time.monotonic() + 720
+          required: dict[str, dict[str, Any] | None]
+          all_runs: list[dict[str, Any]]
+          while True:
+              all_runs = candidate_runs()
+              required = classify_required(all_runs)
+              if all(required.values()) and all(item.get('status') == 'completed' for item in required.values() if item):
+                  break
+              if time.monotonic() >= deadline:
+                  raise SystemExit(f'exact-candidate workflows did not complete: {required}')
+              time.sleep(5)
+
+          failed = {
+              name: {'id': item.get('id'), 'status': item.get('status'), 'conclusion': item.get('conclusion')}
+              for name, item in required.items()
+              if item is None or item.get('conclusion') != 'success'
+          }
+          if failed:
+              raise SystemExit(f'exact-candidate mandatory workflows failed: {failed}')
+
+          workflow_evidence: list[dict[str, Any]] = []
+          for role, run in required.items():
+              assert run is not None
+              jobs = api(f"/repos/{REPOSITORY}/actions/runs/{run['id']}/jobs?per_page=100").get('jobs', [])
+              workflow_evidence.append({
+                  'role': role,
+                  'runId': run['id'],
+                  'runNumber': run.get('run_number'),
+                  'attempt': run.get('run_attempt'),
+                  'name': run.get('name'),
+                  'path': run.get('path'),
+                  'event': run.get('event'),
+                  'headSha': run.get('head_sha'),
+                  'status': run.get('status'),
+                  'conclusion': run.get('conclusion'),
+                  'createdAt': run.get('created_at'),
+                  'updatedAt': run.get('updated_at'),
+                  'htmlUrl': run.get('html_url'),
+                  'jobs': [
+                      {
+                          'id': job.get('id'),
+                          'name': job.get('name'),
+                          'status': job.get('status'),
+                          'conclusion': job.get('conclusion'),
+                          'startedAt': job.get('started_at'),
+                          'completedAt': job.get('completed_at'),
+                          'runnerName': job.get('runner_name'),
+                          'labels': job.get('labels'),
+                      }
+                      for job in jobs
+                  ],
+              })
+
+          main_ref = api(f'/repos/{REPOSITORY}/git/ref/heads/main')
+          main_sha = main_ref['object']['sha']
+          main_commit = api(f'/repos/{REPOSITORY}/git/commits/{main_sha}')
+          main_tree = main_commit['tree']['sha']
+          if subprocess.run(['git', 'merge-base', '--is-ancestor', main_sha, CANDIDATE]).returncode != 0:
+              raise SystemExit('protected main is not an ancestor of the source candidate')
+
+          pr = api(f'/repos/{REPOSITORY}/pulls/62')
+          worker_j_ref = api_optional(
+              f"/repos/{REPOSITORY}/git/ref/heads/{urllib.parse.quote(WORKER_J_BRANCH, safe='/')}"
+          )
+          worker_j_sha = worker_j_ref['object']['sha'] if worker_j_ref else None
+          worker_j_tree = None
+          if worker_j_sha:
+              worker_j_tree = api(f'/repos/{REPOSITORY}/git/commits/{worker_j_sha}')['tree']['sha']
+          worker_b_ref = api_optional(
+              f"/repos/{REPOSITORY}/git/ref/heads/{urllib.parse.quote(WORKER_B_BRANCH, safe='/')}"
+          )
+
+          old_query = urllib.parse.urlencode({'head_sha': OLD_HEAD, 'per_page': 100})
+          old_runs = api(f'/repos/{REPOSITORY}/actions/runs?{old_query}').get('workflow_runs', [])
+          reconciliation = next((
+              item for item in old_runs
+              if 'reconciliation' in str(item.get('name', '')).casefold()
+              or 'current main' in str(item.get('name', '')).casefold()
+          ), None)
+
+          raw = json.loads(RAW_PATH.read_text(encoding='utf-8'))
+          if raw.get('resultState') != 'PASS' or raw.get('exitCode') != 0:
+              raise SystemExit('local source gate did not produce PASS')
+          semantic_results = raw.get('semanticResults', [])
+          if len(semantic_results) != 18 or any(item.get('state') != 'PASS' for item in semantic_results):
+              raise SystemExit('stable semantic result set is incomplete or non-PASS')
+          if raw.get('testsRun') != 24:
+              raise SystemExit(f"expected 24 source tests, observed {raw.get('testsRun')}")
+
+          authority_human = pathlib.Path('docs/roadmap/MASTER.md')
+          authority_machine = pathlib.Path('docs/roadmap/roadmap.yaml')
+          provisional_hash = sha256_file(PROVISIONAL_ROADMAP)
+          changed_paths = git('diff', '--name-only', f'{main_sha}...{CANDIDATE}').splitlines()
+          p1_p2_modified = any(path.startswith(('lib/', 'integration_test/', 'test/p1', 'test/p2')) for path in changed_paths)
+          worker_j_modified = any('anarchy/' in path or 'worker-claims' in path or path in {
+              'docs/roadmap/MASTER.md', 'docs/roadmap/roadmap.yaml', 'docs/roadmap/STATUS.md',
+              'docs/roadmap/HANDOFF.md', 'docs/roadmap/GENERATED_STATE.md'
+          } for path in changed_paths)
+          if p1_p2_modified or worker_j_modified:
+              raise SystemExit('candidate modifies Worker A or Worker J owned paths')
+
+          generated_at = now()
+          exact_run_summary = '\n'.join(
+              f"- `{item['role']}`: run `{item['runId']}`, `{item['conclusion']}`, head `{item['headSha']}`"
+              for item in workflow_evidence
+          )
+          reuse_rows = [
+              ('P4-001 provider-neutral interface', 'REUSE_EXISTING_RETEST_REQUIRED', 'Existing abstract provider and typed contracts retained; exact-candidate source gate passed.'),
+              ('Immutable request and explicit semantics', 'REUSE_EXISTING_RETEST_REQUIRED', 'Existing model retained; strict schema/runtime parity and semantic identity retested.'),
+              ('Result/page/error envelopes', 'REUSE_EXISTING_RETEST_REQUIRED', 'Existing models retained; strict URL and page validation retested.'),
+              ('Capabilities, rate limits, partial failure', 'REUSE_EXISTING_RETEST_REQUIRED', 'Existing typed representations retained and assigned stable tests.'),
+              ('Stable query/result identities', 'REUSE_EXISTING_RETEST_REQUIRED', 'Existing identities retained; pagination inputs excluded from query identity.'),
+              ('Cursor provider/query/version binding', 'REPAIR_EXISTING', 'Non-canonical base64 and non-canonical JSON encodings now fail closed.'),
+              ('URL, credential, secret, metadata validation', 'REPAIR_EXISTING', 'Private/localhost URLs, normalized secret aliases, and provider authority aliases now fail closed.'),
+              ('Dependency-free schema validator', 'EXTEND_EXISTING', 'Runtime-equivalent public-result-url format enforcement added.'),
+              ('Deterministic fixture providers', 'REUSE_EXISTING_RETEST_REQUIRED', 'Alpha/beta fixtures remain network-free and parity-tested.'),
+              ('Stable semantic test identities', 'IMPLEMENT_MISSING', 'Eighteen stable P4-001 IDs registered and executed.'),
+              ('Project Test Profile handoff', 'IMPLEMENT_MISSING', 'Argv-based, deterministic, non-mutating Worker C handoff added.'),
+              ('Normalized result adapter', 'IMPLEMENT_MISSING', 'All six result states preserved without PASS inflation.'),
+              ('Testing Studio metadata', 'IMPLEMENT_MISSING', 'Source result, staleness, dependency, next action, and support boundary added.'),
+              ('Canonical Worker B Test Center adoption', 'BLOCKED_BY_SHARED_CONTRACT', 'Worker B branch is not published; no competing schema was created.'),
+              ('Live search, fetch, browser, citations, datasets', 'OUT_OF_SCOPE', 'No excluded capability implemented or claimed.'),
+          ]
+          reuse_table = '\n'.join(f'| {req} | `{classification}` | {detail} |' for req, classification, detail in reuse_rows)
+
+          previous_progress = historical['progress'].get('content', '')
+          progress = f'''# P4-001 Search Provider Foundation — Worker C Progress
+
+Generated: `{generated_at}`
+
+## Exact repository state
+
+- Repository: `{REPOSITORY}`
+- Protected main: `{main_sha}` / tree `{main_tree}`
+- Worker C branch: `{BRANCH}`
+- Source candidate: `{CANDIDATE}` / tree `{CANDIDATE_TREE}`
+- Evidence staging commit: `{STAGING_SHA}`
+- PR #62: draft=`{pr.get('draft')}`, mergeable=`{pr.get('mergeable')}`, mergeable state=`{pr.get('mergeable_state')}`
+- Current-main incorporation: normal merge ancestry verified; protected main is an ancestor of the source candidate.
+
+## Roadmap execution pin
+
+- Human authority: `docs/roadmap/MASTER.md` (SHA-256 `{sha256_file(authority_human)}`)
+- Machine authority: `docs/roadmap/roadmap.yaml` (SHA-256 `{sha256_file(authority_machine)}`)
+- Provisional latest roadmap: `{PROVISIONAL_ROADMAP.as_posix()}` (SHA-256 `{provisional_hash}`)
+- Worker J: `{WORKER_J_BRANCH}` at `{worker_j_sha}` / tree `{worker_j_tree}`
+- Worker B canonical Test Center branch: `{WORKER_B_BRANCH}`; published=`{worker_b_ref is not None}`
+- Pin classification: `PROVISIONAL_EXECUTION_REFERENCE`, `NON_NORMATIVE`, `PENDING_WORKER_J_ADOPTION`
+- Test Center classification: `BLOCKED_BY_SHARED_CONTRACT`; Worker C produced only a non-normative handoff.
+
+## Scope and ownership
+
+- Task: `P4-001 — Search Provider Interface`
+- Scope: provider-neutral, source-only contracts, schemas, validators, deterministic fixtures, tests, workflow, evidence, and Test Center registration handoff.
+- Dependency state: P1 is incorporated from protected main; no P3 implementation was introduced; canonical Worker B Test Center adoption and exact-head independent reviews remain pending.
+- Owned paths: P4-001 source/schema/test/workflow/evidence paths.
+- Forbidden paths: Worker A P1/P1A/P2 runtime/evidence, Worker J migration/claims/schemas/roadmap authority, Worker B canonical schemas, Worker I governance, PR #63.
+- Verified non-interference: Worker A paths modified=`{p1_p2_modified}`; Worker J authority/migration paths modified=`{worker_j_modified}`.
+
+## Latest-roadmap reuse matrix
+
+| Requirement | Classification | Verification / action |
+|---|---|---|
+{reuse_table}
+
+## Synchronization and mergeability diagnosis
+
+- The earlier dirty PR state was caused by branch ancestry and a generated `SOURCE_MANIFEST.sha256` overlap, not a P4 source conflict.
+- Protected-main P1/P2 bytes were preserved; source-manifest bytes are generator-owned.
+- Canonical generator: `tool/p1a_refresh_source_manifest.py`.
+- Write/check command: `python tool/p1a_refresh_source_manifest.py .`; first run refreshes the manifest, second run must reproduce identical bytes.
+- The old protected-main reconciliation failure is classified `P1/P2_RECONCILIATION_FAILURE`: run `{reconciliation.get('id') if reconciliation else None}` was a stale controller pin that failed before P4-001 tests.
+
+## Defect closure
+
+- Result URLs now fail closed for credentials, fragments, control/whitespace/backslash forms, invalid ports, localhost, `.localhost`, non-public IP literals, and invalid public hosts.
+- Provider metadata cannot redefine canonical identity, rank, URL, evidence/retrieval state, pagination identity/cursor, rate-limit state, or failure state, including normalized aliases.
+- Pagination cursors require URL-safe unpadded canonical base64, canonical JSON bytes, exact fields, contract version, provider binding, query binding, and bounded integer offsets.
+- Schema validation and runtime validation share the same public-result-URL boundary.
+
+## Exact-candidate verification
+
+- Local source gate: `{raw.get('testsRun')}` tests, `{len(semantic_results)}` stable semantic IDs, state `{raw.get('resultState')}`.
+- Network proof: `{raw.get('networkUsage')}`.
+- Repository mutation during local gate: none.
+{exact_run_summary}
+
+## Test Center and support boundary
+
+- Module: `research.p4-001.search-provider-interface`
+- Project Test Profile: argv-based, network-free, dependency-bounded, non-mutating; Ubuntu 24.04, Windows 2025, macOS 15.
+- Normalized adapter preserves `PASS`, `FAIL`, `SKIPPED`, `BLOCKED`, `UNKNOWN`, and `NOT_IMPLEMENTED` exactly.
+- Source contract implemented; live provider behavior is not certified; network retrieval, fetch, browser automation, citations, and datasets are not implemented.
+
+## Independent review
+
+- Worker B: `BLOCKED_BY_SHARED_CONTRACT` pending publication/adoption of the canonical Test Center contract and exact-head review.
+- Worker I: `PENDING_EXACT_HEAD_REVIEW` for URL handling, secret rejection, metadata isolation, cursor parsing, limits, dependencies, and CI behavior.
+- No self-authored independent PASS decision is recorded.
+
+## Next exact action
+
+Worker B and Worker I review source candidate `{CANDIDATE}` / tree `{CANDIDATE_TREE}` and the final evidence head; Worker J records no ownership/roadmap conflict before PR #62 can leave draft.
+
+<details>
+<summary>Superseded governed progress observation</summary>
+
+Prior blob: `{historical['progress'].get('gitBlob')}`; SHA-256: `{historical['progress'].get('sha256')}`.
+
+{previous_progress}
+
+</details>
+'''
+          PROGRESS.parent.mkdir(parents=True, exist_ok=True)
+          PROGRESS.write_text(progress, encoding='utf-8')
+
+          previous_implementation = historical['implementation'].get('content', '')
+          implementation = f'''# P4-001 — Search Provider Interface Implementation Evidence
+
+Generated: `{generated_at}`
+
+## Candidate binding
+
+- Repository: `{REPOSITORY}`
+- Branch: `{BRANCH}`
+- Source candidate commit: `{CANDIDATE}`
+- Source candidate tree: `{CANDIDATE_TREE}`
+- Protected-main base: `{main_sha}` / tree `{main_tree}`
+- Classification: `P4-001 SOURCE READY FOR INTEGRATION — ROADMAP/DEPENDENCY TRANSITION PENDING`
+
+## Reused implementation
+
+The existing immutable request, result, page, provider-error, capability, rate-limit, partial-failure, stable semantic identity, cursor, schema, validator, deterministic fixture-provider, workflow, test, evidence, and documentation foundations were retained. P4-001 was not restarted or replaced.
+
+## Repairs and extensions
+
+1. Closed private/localhost/credential/fragment/control-character/invalid-port URL acceptance.
+2. Closed provider-metadata canonical-authority alias bypasses.
+3. Closed malformed and non-canonical cursor encodings while preserving provider/query/version binding.
+4. Extended dependency-free schema validation with the runtime-equivalent public URL format.
+5. Registered eighteen stable semantic test IDs, an argv-based Project Test Profile handoff, affected-test mappings, normalized state-preserving results, and Testing Studio metadata.
+6. Preserved `unfetched_snippet_only` and all source-only support boundaries.
+
+## Verification
+
+The local source gate passed `{raw.get('testsRun')}` tests and all `{len(semantic_results)}` stable semantic IDs without network use or repository mutation. Mandatory exact-candidate workflows passed:
+
+{exact_run_summary}
+
+The source manifest remains generator-owned by `tool/p1a_refresh_source_manifest.py`; publication and evidence finalization each require two identical generator runs.
+
+## Certification boundary
+
+This evidence does not certify live search providers, network retrieval, static or rendered fetch, browser automation, citation extraction/verification, datasets, crawling, P4-002, P4-003, release support, production readiness, or GA readiness.
+
+## Review state
+
+- Worker B canonical Test Center adoption and exact-head review: pending / `BLOCKED_BY_SHARED_CONTRACT`.
+- Worker I exact-head security and CI review: pending.
+- Worker J ownership/roadmap conflict decision: pending.
+- Completion eligibility: false until those independent gates are satisfied.
+
+<details>
+<summary>Superseded governed implementation observation</summary>
+
+Prior blob: `{historical['implementation'].get('gitBlob')}`; SHA-256: `{historical['implementation'].get('sha256')}`.
+
+{previous_implementation}
+
+</details>
+'''
+          EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+          IMPLEMENTATION.write_text(implementation, encoding='utf-8')
+
+          def parse_historical_json(entry: dict[str, Any]) -> Any:
+              if not entry.get('present'):
+                  return None
+              try:
+                  return json.loads(entry['content'])
+              except json.JSONDecodeError:
+                  return {'raw': entry['content']}
+
+          test_results = {
+              'schemaVersion': '1.1.0',
+              'taskId': 'P4-001',
+              'moduleId': 'research.p4-001.search-provider-interface',
+              'classification': 'source_only_machine_observed',
+              'generatedAt': generated_at,
+              'repository': REPOSITORY,
+              'branch': BRANCH,
+              'sourceCandidate': {
+                  'commit': CANDIDATE,
+                  'tree': CANDIDATE_TREE,
+                  'workingTreeIdentity': CANDIDATE_TREE,
+              },
+              'protectedMain': {'commit': main_sha, 'tree': main_tree, 'incorporated': True},
+              'localSourceGate': raw,
+              'exactCandidateWorkflowRuns': workflow_evidence,
+              'stableTestIds': [item['testId'] for item in semantic_results],
+              'resultStatePreservation': {
+                  'states': ['PASS', 'FAIL', 'SKIPPED', 'BLOCKED', 'UNKNOWN', 'NOT_IMPLEMENTED'],
+                  'passInflationAllowed': False,
+              },
+              'sourceManifest': {
+                  'generator': 'tool/p1a_refresh_source_manifest.py',
+                  'writeCommand': ['python', 'tool/p1a_refresh_source_manifest.py', '.'],
+                  'checkCommand': ['python', 'tool/p1a_refresh_source_manifest.py', '.'],
+                  'secondRunByteIdenticalRequired': True,
+                  'candidateManifestSha256': sha256_file(pathlib.Path('SOURCE_MANIFEST.sha256')),
+              },
+              'reviewState': {
+                  'workerB': 'BLOCKED_BY_SHARED_CONTRACT',
+                  'workerI': 'PENDING_EXACT_HEAD_REVIEW',
+                  'workerJ': 'PENDING_NO_CONFLICT_DECISION',
+              },
+              'supportClaimBoundary': {
+                  'sourceContractImplemented': True,
+                  'liveProviderBehaviorCertified': False,
+                  'networkRetrievalImplemented': False,
+                  'fetchImplemented': False,
+                  'browserImplemented': False,
+                  'citationsImplemented': False,
+                  'datasetsImplemented': False,
+                  'releaseSupported': False,
+                  'productionReady': False,
+                  'gaReady': False,
+              },
+              'historicalObservation': {
+                  'gitBlob': historical['testResults'].get('gitBlob'),
+                  'sha256': historical['testResults'].get('sha256'),
+                  'document': parse_historical_json(historical['testResults']),
+              },
+          }
+          TEST_RESULTS.write_text(json.dumps(test_results, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          evidence_hashes = {
+              PROGRESS.as_posix(): sha256_file(PROGRESS),
+              IMPLEMENTATION.as_posix(): sha256_file(IMPLEMENTATION),
+              TEST_RESULTS.as_posix(): sha256_file(TEST_RESULTS),
+              HANDOFF.as_posix(): sha256_file(HANDOFF),
+          }
+          manifest = {
+              'schemaVersion': '1.1.0',
+              'taskId': 'P4-001',
+              'classification': [
+                  'P4-001_SOURCE_READY_FOR_INTEGRATION',
+                  'ROADMAP_DEPENDENCY_TRANSITION_PENDING',
+                  'PROVISIONAL_EXECUTION_REFERENCE',
+                  'NON_NORMATIVE',
+              ],
+              'generatedAt': generated_at,
+              'repository': REPOSITORY,
+              'branch': BRANCH,
+              'sourceCandidate': {'commit': CANDIDATE, 'tree': CANDIDATE_TREE},
+              'protectedMain': {'commit': main_sha, 'tree': main_tree},
+              'pr': {
+                  'number': 62,
+                  'draft': pr.get('draft'),
+                  'mergeable': pr.get('mergeable'),
+                  'mergeableState': pr.get('mergeable_state'),
+              },
+              'roadmapExecutionPin': {
+                  'humanAuthority': authority_human.as_posix(),
+                  'humanAuthoritySha256': sha256_file(authority_human),
+                  'machineAuthority': authority_machine.as_posix(),
+                  'machineAuthoritySha256': sha256_file(authority_machine),
+                  'provisionalRoadmap': PROVISIONAL_ROADMAP.as_posix(),
+                  'provisionalRoadmapSha256': provisional_hash,
+                  'workerJBranch': WORKER_J_BRANCH,
+                  'workerJCommit': worker_j_sha,
+                  'workerJTree': worker_j_tree,
+              },
+              'workflowRuns': workflow_evidence,
+              'sourceManifest': {
+                  'generator': 'tool/p1a_refresh_source_manifest.py',
+                  'candidateManifestSha256': sha256_file(pathlib.Path('SOURCE_MANIFEST.sha256')),
+                  'idempotenceRequired': True,
+              },
+              'evidenceFiles': evidence_hashes,
+              'reviews': {
+                  'workerB': {'decision': 'BLOCKED_BY_SHARED_CONTRACT', 'candidateCommit': CANDIDATE, 'candidateTree': CANDIDATE_TREE},
+                  'workerI': {'decision': 'PENDING', 'candidateCommit': CANDIDATE, 'candidateTree': CANDIDATE_TREE},
+              },
+              'completionEligible': False,
+              'completionBlockers': [
+                  'Worker B canonical Test Center contract/adoption and exact-head review',
+                  'Worker I exact-head security/CI review',
+                  'Worker J no-conflict transition decision',
+              ],
+              'historicalObservation': {
+                  'gitBlob': historical['manifest'].get('gitBlob'),
+                  'sha256': historical['manifest'].get('sha256'),
+                  'document': parse_historical_json(historical['manifest']),
+              },
+          }
+          MANIFEST.write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps({
+              'candidate': CANDIDATE,
+              'tree': CANDIDATE_TREE,
+              'main': main_sha,
+              'mandatoryRuns': {item['role']: item['runId'] for item in workflow_evidence},
+              'testsRun': raw.get('testsRun'),
+              'stableIds': len(semantic_results),
+          }, indent=2, sort_keys=True))
+          PY
+
+      - name: Remove one-shot finalizer and refresh manifest twice
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p4-001-finalize-evidence.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          python tool/p4_001_search_provider_test.py \
+            --project . \
+            --json-output "${RUNNER_TEMP}/p4-001-post-evidence.json"
+
+      - name: Enforce evidence-only path ownership and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "${RUNNER_TEMP}/allowed.txt" <<'EOF'
+          .github/workflows/p4-001-finalize-evidence.yml
+          SOURCE_MANIFEST.sha256
+          docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md
+          release/evidence/P4-001/IMPLEMENTATION.md
+          release/evidence/P4-001/manifest.json
+          release/evidence/P4-001/test-results.json
+          EOF
+          git diff --name-only | LC_ALL=C sort -u > "${RUNNER_TEMP}/actual.txt"
+          LC_ALL=C sort -u "${RUNNER_TEMP}/allowed.txt" > "${RUNNER_TEMP}/allowed.sorted"
+          unexpected="$(comm -23 "${RUNNER_TEMP}/actual.txt" "${RUNNER_TEMP}/allowed.sorted")"
+          if [[ -n "${unexpected}" ]]; then
+            printf 'Unexpected changed paths:\n%s\n' "${unexpected}" >&2
+            exit 1
+          fi
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- \
+            .github/workflows/p4-001-finalize-evidence.yml \
+            SOURCE_MANIFEST.sha256 \
+            docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md \
+            release/evidence/P4-001/IMPLEMENTATION.md \
+            release/evidence/P4-001/manifest.json \
+            release/evidence/P4-001/test-results.json
+          git diff --cached --check
+          git commit -m 'docs(p4-001): bind exact-candidate evidence and review blockers'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
