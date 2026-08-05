@@ -28,6 +28,7 @@ jobs:
           from pathlib import Path
           import base64
           import hashlib
+          import json
           import zipfile
 
           root = Path('.').resolve()
@@ -48,6 +49,14 @@ jobs:
                   if root not in target.parents and target != root:
                       raise SystemExit(f'unsafe archive path: {member.filename}')
               archive.extractall(root)
+
+          registry_path = Path('config/test_center_registry.v1.json')
+          registry = json.loads(registry_path.read_text(encoding='utf-8'))
+          for record in registry['testingStudioPresentationRecords']:
+              if record['presentationId'] == 'presentation.p3-readiness.source':
+                  record['evidenceLinks'] = []
+          registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
           archive_path.unlink()
           Path('.worker_d_payload.zip').unlink(missing_ok=True)
           for path in parts:
