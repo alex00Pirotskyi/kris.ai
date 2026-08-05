@@ -12,6 +12,9 @@ on:
 permissions:
   contents: read
 
+env:
+  P4_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   capture:
     name: p4-001-exact-manifest-capture
@@ -21,8 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ env.P4_CANDIDATE_SHA }}
           persist-credentials: false
           fetch-depth: 0
+      - name: Assert exact candidate checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${P4_CANDIDATE_SHA}"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
@@ -33,22 +42,16 @@ jobs:
           set -euo pipefail
           mkdir -p "${RUNNER_TEMP}/p4-001-manifest-capture"
           python tool/p1a_refresh_source_manifest.py .
-          cp SOURCE_MANIFEST.sha256 \
-            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256"
+          cp SOURCE_MANIFEST.sha256             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256"
           python tool/p1a_refresh_source_manifest.py .
-          cmp --silent \
-            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256" \
-            SOURCE_MANIFEST.sha256
-          cp SOURCE_MANIFEST.sha256 \
-            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.sha256"
-          sha256sum SOURCE_MANIFEST.sha256 > \
-            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.sha256.digest"
-          git show -s --format='%H%n%T' HEAD > \
-            "${RUNNER_TEMP}/p4-001-manifest-capture/candidate.txt"
+          cmp --silent             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256"             SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIEST.sha256             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.sha256"
+          sha256sum SOURCE_MANIFEST.sha256 >             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIEST.sha256.digest"
+          git show -s --format='%H%n%T' HEAD >             "${RUNNER_TEMP}/p4-001-manifest-capture/candidate.txt"
       - name: Upload exact manifest bytes
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: p4-001-exact-manifest-${{ github.sha }}
+          name: p4-001-exact-manifest-${{ env.P4_CANDIDATE_SHA }}
           path: ${{ runner.temp }}/p4-001-manifest-capture
           if-no-files-found: error
           retention-days: 7
