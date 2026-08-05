@@ -40,6 +40,19 @@ void main() {
     expect(discoveredProduction, production);
     expect(discoveredTests, tests);
 
+    final support = (inventory['supportDart'] as List<Object?>)
+        .map((item) => item.toString().replaceAll('\\', '/'))
+        .toList()
+      ..sort();
+    expect(
+      support,
+      <String>['automation_host/probes/dart_native_probe.dart'],
+    );
+    expect(support.toSet().length, support.length);
+    for (final path in support) {
+      expect(File(path).existsSync(), isTrue, reason: path);
+    }
+
     final dependencies = (inventory['requiredMergedP1aFiles'] as List<Object?>)
         .map((item) => item.toString())
         .toList(growable: false);

@@ -1,27 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-const Set<String> _allowedProductFiles = <String>{
-  'api_server.dart',
-  'chat_studio.dart',
-  'crypto_utils.dart',
-  'deployment_support.dart',
-  'domain.dart',
-  'extensions_index.dart',
-  'interoperability_v19.dart',
-  'mcp.dart',
-  'models_research.dart',
-  'planning_runtime.dart',
-  'project_diagnostics.dart',
-  'product_runtime.dart',
-  'prompt_planning.dart',
-  'storage_security.dart',
-  'ui.dart',
-  'ui_advanced.dart',
-  'ui_components.dart',
-  'workspace_tools.dart',
-};
-
 const Set<String> _allowedDartFiles = <String>{
   'lib/main.dart',
   'lib/product/api_server.dart',
@@ -137,7 +116,103 @@ void _requireProductMarker(Directory root, String relativePath) {
   exit(2);
 }
 
+Set<String> _governedDartFiles(Directory root) {
+  final allowed = <String>{..._allowedDartFiles};
+  final inventoryFile = File(
+    _join(root.path, 'config/p2_source_inventory.v1.json'),
+  );
+  if (!inventoryFile.existsSync()) {
+    throw StateError(
+      'config/p2_source_inventory.v1.json is missing; '
+      'refusing stale-source migration.',
+    );
+  }
+  final decoded = jsonDecode(inventoryFile.readAsStringSync());
+  if (decoded is! Map<String, Object?>) {
+    throw const FormatException(
+      'P2 governed source inventory must be a JSON object.',
+    );
+  }
+  for (final key in <String>[
+    'productionDart',
+    'testDart',
+    'supportDart',
+  ]) {
+    final entries = decoded[key];
+    if (entries is! List<Object?> || entries.isEmpty) {
+      throw FormatException(
+        'P2 governed source inventory is missing $key.',
+      );
+    }
+    for (final entry in entries) {
+      final relative = _normalizeGovernedPath(entry, key);
+      if (!File(_join(root.path, relative)).existsSync()) {
+        throw StateError('Governed Dart source is missing: $relative');
+      }
+      allowed.add(relative);
+    }
+  }
+
+  final manifest = File(
+    _join(root.path, 'SOURCE_MANIFEST.sha256'),
+  );
+  if (!manifest.existsSync()) {
+    throw StateError(
+      'SOURCE_MANIFEST.sha256 is missing; '
+      'refusing stale-source migration.',
+    );
+  }
+  final linePattern = RegExp(r'^[0-9a-f]{64}  (.+)$');
+  for (final line in manifest.readAsLinesSync()) {
+    if (line.trim().isEmpty) {
+      continue;
+    }
+    final match = linePattern.firstMatch(line);
+    if (match == null) {
+      throw FormatException(
+        'Malformed SOURCE_MANIFEST.sha256 line: $line',
+      );
+    }
+    final relative = _normalizeGovernedPath(
+      match.group(1),
+      'SOURCE_MANIFEST.sha256',
+    );
+    if (!relative.endsWith('.dart')) {
+      continue;
+    }
+    if (!File(_join(root.path, relative)).existsSync()) {
+      throw StateError('Governed Dart source is missing: $relative');
+    }
+    allowed.add(relative);
+  }
+  return Set<String>.unmodifiable(allowed);
+}
+
+String _normalizeGovernedPath(Object? value, String source) {
+  if (value is! String) {
+    throw FormatException('$source contains a non-string path.');
+  }
+  final relative = value.replaceAll('\\', '/');
+  if (relative.isEmpty ||
+      relative.startsWith('/') ||
+      relative.startsWith('../') ||
+      relative.contains('/../') ||
+      relative.contains('\u0000')) {
+    throw FormatException('$source contains an unsafe path: $relative');
+  }
+  return relative;
+}
+
 List<FileSystemEntity> _migrationCandidates(Directory root) {
+  final allowedDartFiles = _governedDartFiles(root);
+  final allowedProductFiles = allowedDartFiles
+      .where(
+        (path) =>
+            path.startsWith('lib/product/') &&
+            !path.substring('lib/product/'.length).contains('/'),
+      )
+      .map((path) => path.substring('lib/product/'.length))
+      .toSet();
   final candidates = <String, FileSystemEntity>{};
 
   final lib = Directory(_join(root.path, 'lib'));
@@ -155,7 +230,7 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
   if (product.existsSync()) {
     for (final entity in product.listSync(followLinks: false)) {
       final name = _entityName(entity);
-      if (entity is File && _allowedProductFiles.contains(name)) {
+      if (entity is File && allowedProductFiles.contains(name)) {
         continue;
       }
       candidates[_relativePath(root, entity)] = entity;
@@ -178,7 +253,7 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
   if (productTests.existsSync()) {
     for (final entity in productTests.listSync(followLinks: false)) {
       final relative = _relativePath(root, entity);
-      if (entity is File && _allowedDartFiles.contains(relative)) {
+      if (entity is File && allowedDartFiles.contains(relative)) {
         continue;
       }
       candidates[relative] = entity;
@@ -199,7 +274,7 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
     final relative = _relativePath(root, entity);
     final first = relative.split('/').first;
     if (_excludedTopLevelDirectories.contains(first) ||
-        _allowedDartFiles.contains(relative) ||
+        allowedDartFiles.contains(relative) ||
         _coveredByCandidate(relative, candidates.keys)) {
       continue;
     }

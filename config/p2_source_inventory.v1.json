@@ -4,6 +4,9 @@
     "productionRegex": "^p2_.*\\.dart$",
     "testRegex": "^p2_.*\\.dart$"
   },
+  "supportDart": [
+    "automation_host/probes/dart_native_probe.dart"
+  ],
   "ownerRiskQaExtension": {
     "allPlatformsRequired": [
       "windows",

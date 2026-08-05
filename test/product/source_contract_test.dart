@@ -208,6 +208,37 @@ void main() {
       expect(actual, containsAll(expected));
       expect(actual.length, expected.length);
     });
+
+    test('application opens chat-first through the governed P2 shell', () {
+      final ui = source('lib/product/ui.dart');
+      final shell = source('lib/product/p2_app_shell.dart');
+      expect(ui, contains('home: P2KristinShell('));
+      expect(ui, contains('chat: ChatStudio('));
+      expect(shell, contains('var _index = 0;'));
+      final chatOffset = shell.indexOf('widget.chat,');
+      final ownerOffset = shell.indexOf(
+        'widget.ownerMode.buildWorkspace(',
+      );
+      expect(chatOffset, greaterThanOrEqualTo(0));
+      expect(ownerOffset, greaterThan(chatOffset));
+    });
+
+    test('stale-source migration consumes governed inventories', () {
+      final migration = source('tool/prune_stale_legacy.dart');
+      expect(migration, contains('SOURCE_MANIFEST.sha256'));
+      expect(
+        migration,
+        contains('config/p2_source_inventory.v1.json'),
+      );
+      expect(migration, contains('_governedDartFiles(root)'));
+      expect(
+        migration,
+        contains('allowedDartFiles.contains(relative)'),
+      );
+      expect(migration, contains('refusing stale-source migration'));
+      expect(migration, contains('throw FormatException'));
+      expect(migration, isNot(contains('deleteSync')));
+    });
   });
 
   group('security invariants', () {
