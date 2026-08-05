@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/web_search_page.v1.json",
+  "title": "Kristin Web Search Page v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "providerId", "providerRequestId", "results", "nextCursor", "rateLimit", "partialFailure", "retrievedAt"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "requestId": {"$ref": "#/$defs/id"},
+    "providerId": {"$ref": "#/$defs/id"},
+    "providerRequestId": {"$ref": "#/$defs/id"},
+    "results": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/result"}},
+    "nextCursor": {"type": ["string", "null"], "minLength": 1, "maxLength": 512},
+    "rateLimit": {"$ref": "#/$defs/rateLimit"},
+    "partialFailure": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/partialFailure"}]},
+    "retrievedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resultId", "providerId", "providerRank", "title", "url", "displayUrl", "snippet", "publishedAt", "queryId", "retrievedAt", "evidenceStatus", "providerMetadata"],
+      "properties": {
+        "resultId": {"$ref": "#/$defs/id"},
+        "providerId": {"$ref": "#/$defs/id"},
+        "providerRank": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "title": {"type": "string", "minLength": 1, "maxLength": 512},
+        "url": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^https?://[^#]+$"},
+        "displayUrl": {"type": "string", "minLength": 1, "maxLength": 2048},
+        "snippet": {"type": "string", "maxLength": 4096},
+        "publishedAt": {"type": ["string", "null"], "format": "date-time"},
+        "queryId": {"$ref": "#/$defs/id"},
+        "retrievedAt": {"type": "string", "format": "date-time"},
+        "evidenceStatus": {"const": "unfetched_snippet_only"},
+        "providerMetadata": {"type": "object", "maxProperties": 64}
+      }
+    },
+    "rateLimit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limit", "remaining", "resetAt"],
+      "properties": {
+        "limit": {"type": ["integer", "null"], "minimum": 0},
+        "remaining": {"type": ["integer", "null"], "minimum": 0},
+        "resetAt": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "partialFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "safeMessage", "retryable"],
+      "properties": {
+        "code": {"enum": ["provider_partial_failure", "provider_result_truncated", "provider_metadata_omitted"]},
+        "safeMessage": {"type": "string", "minLength": 1, "maxLength": 512},
+        "retryable": {"type": "boolean"}
+      }
+    }
+  }
+}

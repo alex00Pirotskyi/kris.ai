@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/web_search_request.v1.json",
+  "title": "Kristin Web Search Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "query",
+    "limit",
+    "cursor",
+    "language",
+    "country",
+    "safeSearch",
+    "freshness",
+    "domains"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "requestId": {"$ref": "#/$defs/id"},
+    "query": {"type": "string", "minLength": 1, "maxLength": 2048, "pattern": "^[^\\u0000]*$"},
+    "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+    "cursor": {"type": ["string", "null"], "minLength": 1, "maxLength": 512, "pattern": "^[^\\u0000]*$"},
+    "language": {"type": ["string", "null"], "pattern": "^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$"},
+    "country": {"type": ["string", "null"], "pattern": "^[A-Z]{2}$"},
+    "safeSearch": {"enum": ["off", "moderate", "strict"]},
+    "freshness": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "after", "before"],
+          "properties": {
+            "mode": {"enum": ["any", "after", "before", "between"]},
+            "after": {"type": ["string", "null"], "format": "date-time"},
+            "before": {"type": ["string", "null"], "format": "date-time"}
+          },
+          "allOf": [
+            {"if": {"properties": {"mode": {"const": "any"}}}, "then": {"properties": {"after": {"type": "null"}, "before": {"type": "null"}}}},
+            {"if": {"properties": {"mode": {"const": "after"}}}, "then": {"properties": {"after": {"type": "string"}, "before": {"type": "null"}}}},
+            {"if": {"properties": {"mode": {"const": "before"}}}, "then": {"properties": {"after": {"type": "null"}, "before": {"type": "string"}}}},
+            {"if": {"properties": {"mode": {"const": "between"}}}, "then": {"properties": {"after": {"type": "string"}, "before": {"type": "string"}}}}
+          ]
+        }
+      ]
+    },
+    "domains": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["include", "exclude"],
+          "properties": {
+            "include": {"$ref": "#/$defs/domainList"},
+            "exclude": {"$ref": "#/$defs/domainList"}
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "domainList": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253,
+        "pattern": "^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+      }
+    }
+  }
+}
