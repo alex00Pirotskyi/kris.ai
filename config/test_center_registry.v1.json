@@ -30,6 +30,32 @@
         "tc.test-center.contracts",
         "tc.test-center.semantic-regressions"
       ]
+    },
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.p3-readiness",
+      "pathPatterns": [
+        "docs/roadmap/progress/*p3-001*",
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "priority": 30,
+      "testIds": [
+        "tc.p3.readiness.dependencies",
+        "tc.p3.readiness.automation-host-inventory",
+        "tc.p3.readiness.measurement-contract",
+        "tc.p3.readiness.packaging-contract",
+        "tc.p3.readiness.fixture-specification",
+        "tc.p3.readiness.fixture-determinism",
+        "tc.p3.readiness.network-denial",
+        "tc.p3.readiness.generated-state-boundary",
+        "tc.p3.readiness.claim-boundary"
+      ]
     }
   ],
   "projectTestProfiles": [
@@ -108,6 +134,393 @@
       "stableCheckId": "tc.test-center.semantic-regressions",
       "timeoutSeconds": 120,
       "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.dependencies",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.automation-host-inventory",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.measurement-contract",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.packaging-contract",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.fixture-specification",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.fixture-determinism",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.network-denial",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.generated-state-boundary",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "release/evidence/P3-001/**",
+        "tool/worker_d_p3_readiness.py",
+        "tool/worker_d_p3_readiness_test.py",
+        ".github/workflows/worker-d-p3-readiness.yml",
+        "config/test_center_registry.v1.json"
+      ],
+      "argv": [
+        "python",
+        "tool/worker_d_p3_readiness.py",
+        "--check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P3-001/test-center-registration.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "release/evidence/P3-001/dependency-status.json",
+        "release/evidence/P3-001/runtime-candidate-matrix.json",
+        "release/evidence/P3-001/packaging-readiness-contract.json",
+        "release/evidence/P3-001/fixture-specification.json",
+        "release/evidence/P3-001/claim-boundary.json",
+        "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_readiness.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p3.readiness.claim-boundary",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
     }
   ],
   "registryId": "test-center.canonical-v1",
@@ -130,6 +543,105 @@
       "purpose": "Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.",
       "roadmapTaskIds": [],
       "testId": "tc.test-center.semantic-regressions"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P3 dependency evidence",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Validate exact P1-012 and P2-004 dependency decisions and blocker taxonomy.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.dependencies"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Automation-host inventory",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Validate candidate inventory and evidence classifications without selecting an architecture.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.automation-host-inventory"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Measurement contract",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Validate that missing measurements remain explicit and no values are fabricated.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.measurement-contract"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Packaging readiness contract",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Validate the future runtime packaging, shutdown, provenance, and offline requirements.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.packaging-contract"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Browser fixture specification",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Validate required deterministic fixture coverage and record structure.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.fixture-specification"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Fixture determinism",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Recompute fixture checksums and reject unstable identities, routes, or bytes.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.fixture-determinism"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Fixture external-network denial",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Reject external URLs, credentials, unbounded payloads, and non-loopback network policy.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.network-denial"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Generated-state boundary",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Validate generated-state ownership and future P9-002 boundary without creating a competing policy.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.generated-state-boundary"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P3 claim boundary",
+      "mandatory": true,
+      "moduleId": "tm.p3-readiness",
+      "purpose": "Reject capability inflation and P3-002+ implementation in the readiness lane.",
+      "roadmapTaskIds": [
+        "P3-001"
+      ],
+      "testId": "tc.p3.readiness.claim-boundary"
     }
   ],
   "testModules": [
@@ -144,6 +656,15 @@
       "moduleId": "tm.test-center",
       "owner": "Worker B / shared testing architecture",
       "purpose": "Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract"
+      ],
+      "displayName": "P3 Browser Runtime Readiness",
+      "moduleId": "tm.p3-readiness",
+      "owner": "Worker D",
+      "purpose": "Validate P3 dependency decisions, packaging and deterministic fixture contracts without claiming browser runtime behavior."
     }
   ],
   "testingStudioPresentationRecords": [
@@ -172,6 +693,31 @@
       "staleResultWarning": false,
       "stateDomain": "TEST_EXECUTION",
       "supportClaimImpact": "No capability or release support claim is inferred from this source-contract PASS.",
+      "surface": "DEVELOPMENT_VERIFICATION"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "capability": "P3 browser-runtime readiness",
+      "certificationImpact": "Source readiness PASS is not P3-001 behavioral or platform certification.",
+      "currentState": "PASS",
+      "displayName": "P3 readiness source foundation",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "P3-001 readiness",
+      "platformMatrix": {
+        "observed": [],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.p3-readiness.source",
+      "purpose": "Expose dependency, packaging, fixture, generated-state, and claim-boundary readiness.",
+      "requiredNextAction": "Complete P2-004 measurements and independent reviews before implementing P3-001.",
+      "staleResultWarning": false,
+      "stateDomain": "TEST_EXECUTION",
+      "supportClaimImpact": "Capability remains SOURCE_FOUNDATION; browser runtime and behavior remain NOT_IMPLEMENTED.",
       "surface": "DEVELOPMENT_VERIFICATION"
     }
   ]

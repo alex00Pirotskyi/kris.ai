@@ -1,0 +1,407 @@
+{
+  "candidates": [
+    {
+      "candidateId": "typescript-node-node-pty-playwright",
+      "inventoryClassification": "SOURCE_DERIVED",
+      "measurements": {
+        "browserBinarySize": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "coldInstall": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "dependencyCount": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "failureModes": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "firstBrowserLaunchLatency": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "globalRuntimeRequirement": {
+          "classification": "SOURCE_DERIVED",
+          "source": "docs/adr/ADR-0012-p2-automation-host.md",
+          "value": "candidate requires packaging decision; global runtime prohibition not proven"
+        },
+        "idleMemory": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "ipcCompatibility": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "licenseMetadata": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "offlineLaunch": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "packageSize": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "platformSupport": {
+          "classification": "SOURCE_DERIVED",
+          "source": "docs/adr/ADR-0012-p2-automation-host.md",
+          "value": [
+            "linux",
+            "macos",
+            "windows"
+          ]
+        },
+        "processTreeBehavior": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "securitySurface": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "startupLatency": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "updateStrategy": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        }
+      },
+      "name": "TypeScript/Node + node-pty + Playwright",
+      "selectionState": "NOT_SELECTED",
+      "sourceNote": "ADR-0012 candidate 1"
+    },
+    {
+      "candidateId": "native-pty-playwright-sidecar",
+      "inventoryClassification": "SOURCE_DERIVED",
+      "measurements": {
+        "browserBinarySize": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "coldInstall": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "dependencyCount": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "failureModes": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "firstBrowserLaunchLatency": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "globalRuntimeRequirement": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "idleMemory": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "ipcCompatibility": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "licenseMetadata": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "offlineLaunch": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "packageSize": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "platformSupport": {
+          "classification": "SOURCE_DERIVED",
+          "source": "docs/adr/ADR-0012-p2-automation-host.md",
+          "value": [
+            "linux",
+            "macos",
+            "windows"
+          ]
+        },
+        "processTreeBehavior": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "securitySurface": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "startupLatency": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "updateStrategy": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        }
+      },
+      "name": "Native PTY/process supervisor + Playwright sidecar",
+      "selectionState": "NOT_SELECTED",
+      "sourceNote": "ADR-0012 candidate 2"
+    },
+    {
+      "candidateId": "dart-native-pty-helpers",
+      "inventoryClassification": "SOURCE_DERIVED",
+      "measurements": {
+        "browserBinarySize": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "coldInstall": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "dependencyCount": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "failureModes": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "firstBrowserLaunchLatency": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "globalRuntimeRequirement": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "idleMemory": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "ipcCompatibility": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "licenseMetadata": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "offlineLaunch": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "packageSize": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "platformSupport": {
+          "classification": "SOURCE_DERIVED",
+          "source": "docs/adr/ADR-0012-p2-automation-host.md",
+          "value": [
+            "linux",
+            "macos",
+            "windows"
+          ]
+        },
+        "processTreeBehavior": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "securitySurface": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "startupLatency": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "updateStrategy": {
+          "classification": "BLOCKED",
+          "note": "No exact tri-platform measured receipt."
+        }
+      },
+      "name": "Dart control plane + native PTY/lifecycle helpers",
+      "selectionState": "NOT_SELECTED",
+      "sourceNote": "ADR-0012 candidate 3"
+    },
+    {
+      "candidateId": "python-browser-tooling",
+      "inventoryClassification": "NOT_RUN",
+      "measurements": {
+        "browserBinarySize": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "coldInstall": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "dependencyCount": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "failureModes": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "firstBrowserLaunchLatency": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "globalRuntimeRequirement": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "idleMemory": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "ipcCompatibility": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "licenseMetadata": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "offlineLaunch": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "packageSize": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "platformSupport": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "processTreeBehavior": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "securitySurface": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "startupLatency": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "updateStrategy": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        }
+      },
+      "name": "Existing Python browser tooling",
+      "selectionState": "NOT_SELECTED",
+      "sourceNote": "No governed P2-004 candidate implementation identified"
+    },
+    {
+      "candidateId": "flutter-dart-integration",
+      "inventoryClassification": "NOT_RUN",
+      "measurements": {
+        "browserBinarySize": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "coldInstall": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "dependencyCount": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "failureModes": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "firstBrowserLaunchLatency": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "globalRuntimeRequirement": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "idleMemory": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "ipcCompatibility": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "licenseMetadata": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "offlineLaunch": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "packageSize": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "platformSupport": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "processTreeBehavior": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "securitySurface": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "startupLatency": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        },
+        "updateStrategy": {
+          "classification": "NOT_RUN",
+          "note": "No exact tri-platform measured receipt."
+        }
+      },
+      "name": "Existing Flutter/Dart integration",
+      "selectionState": "NOT_SELECTED",
+      "sourceNote": "Control-plane integration exists; no governed browser-runtime measurement"
+    }
+  ],
+  "evidenceClassifications": [
+    "MEASURED",
+    "SOURCE_DERIVED",
+    "NOT_RUN",
+    "BLOCKED",
+    "NOT_APPLICABLE"
+  ],
+  "exactSource": {
+    "commit": "e0f416f36b47cab13d15b8633ec2605a34bb4896",
+    "tree": "ff78974657c25ddc45f6597120fae4b857fe34e9"
+  },
+  "existingDecision": {
+    "adr": "docs/adr/ADR-0012-p2-automation-host.md",
+    "status": "PROVISIONAL_NO_TECHNOLOGY_SELECTED"
+  },
+  "recommendation": {
+    "action": "Run the governed three-round tri-platform technology spike and amend ADR-0012 only after independent review.",
+    "architectureSelectedByWorkerD": false,
+    "owner": "Worker A / P2-004 owner"
+  },
+  "schemaVersion": "1.0.0",
+  "taskId": "P2-004"
+}

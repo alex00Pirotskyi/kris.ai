@@ -1,0 +1,38 @@
+{
+  "certification": "PARTIAL",
+  "pathClaim": {
+    "branch": "agent/d/p3-readiness-fixtures",
+    "forbidden": [
+      "docs/roadmap/MASTER.md",
+      "docs/roadmap/roadmap.yaml",
+      "Worker A P1/P1A/P2 implementation",
+      "Worker B schema/validator semantics",
+      "Worker C P4 contracts",
+      "Worker J authority/migration files",
+      "P3-002+"
+    ],
+    "owned": [
+      "docs/roadmap/progress/2026-08-05-p3-001-readiness.md",
+      "release/evidence/P3-001/**",
+      "tool/worker_d_p3_readiness.py",
+      "tool/worker_d_p3_readiness_test.py",
+      ".github/workflows/worker-d-p3-readiness.yml",
+      "Worker D entries in config/test_center_registry.v1.json"
+    ],
+    "owner": "Worker D"
+  },
+  "schemaVersion": "1.0.0",
+  "statements": {
+    "browserActions": "NOT_IMPLEMENTED",
+    "browserObservations": "NOT_CANONICAL",
+    "browserProfiles": "NOT_IMPLEMENTED",
+    "browserRuntime": "NOT_IMPLEMENTED",
+    "downloads": "NOT_IMPLEMENTED",
+    "externalWebsites": "UNSUPPORTED",
+    "p3_016": "NOT_CLAIMED",
+    "persistentAuthentication": "NOT_IMPLEMENTED",
+    "uploads": "NOT_IMPLEMENTED",
+    "userTakeover": "NOT_IMPLEMENTED"
+  },
+  "supportState": "SOURCE_FOUNDATION"
+}

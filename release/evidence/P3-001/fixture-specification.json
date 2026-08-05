@@ -1,0 +1,1019 @@
+{
+  "constraints": {
+    "boundedFileSizes": true,
+    "captchaBypass": false,
+    "externalNetwork": "DENY",
+    "malware": false,
+    "paymentFlow": false,
+    "realCredentials": false,
+    "secretValues": false,
+    "stableBytes": true,
+    "stableOrdering": true
+  },
+  "fixtures": [
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "0507353550b76b07eaad423d76a053e0326a3ebf66ba553951856de3d17deadb",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "static-page"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:static-page:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/static"
+      },
+      "fixedInput": {
+        "case": 1,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.static-page",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/static",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Static deterministic HTML page",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "c2392e3fff7f55010dbba50ad58aab1515b1e1e5c9be69dfc9c047c06f718ac2",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "javascript-rendered-page"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:javascript-rendered-page:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/javascript"
+      },
+      "fixedInput": {
+        "case": 2,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.javascript-rendered-page",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/javascript",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Client-side deterministic DOM render",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "92e04dcbdd83183d96468d89048c8d1e2e16dd3e382d7d93e4e0df0852a5c88c",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "form-submission"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:form-submission:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "POST",
+        "ordered": true,
+        "route": "/fixtures/form"
+      },
+      "fixedInput": {
+        "case": 3,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.form-submission",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/form",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Local form receipt",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "5060f1899f9e8f005d1774ce4e9687a4a42588c9608378b1857393492c0319a1",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "authentication-placeholder"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:authentication-placeholder:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/auth-placeholder"
+      },
+      "fixedInput": {
+        "case": 4,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.authentication-placeholder",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/auth-placeholder",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "No-credential authentication boundary",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "ac14ecc391d1f3ecadd4389ec1027b3fd64d48fc56590f7352eba7750e26f9c2",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "user-takeover"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:user-takeover:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/takeover"
+      },
+      "fixedInput": {
+        "case": 5,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.user-takeover",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/takeover",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Takeover placeholder only",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "cad394c2dbef1252dc6bdcbc0732c01e0f07959a7716be1613c853bfda93a936",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "captcha-placeholder"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:captcha-placeholder:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/captcha-placeholder"
+      },
+      "fixedInput": {
+        "case": 6,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.captcha-placeholder",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/captcha-placeholder",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "No CAPTCHA bypass",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "0c69e5e843f75d8309741e1c51c90eb31b956bb700cf78f3df1730bc4705613b",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "file-upload"
+      },
+      "expectedFileHash": "48c025af74bb2546e9655ebb729c06a4288fc79e2beac39344daf70b674d32d5",
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:file-upload:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "POST",
+        "ordered": true,
+        "route": "/fixtures/upload"
+      },
+      "fixedInput": {
+        "case": 7,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.file-upload",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/upload",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Bounded synthetic upload placeholder",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "0ac2c8cf681f562309b9d7d5c19a7747e18beadde2cfd128f7bd83a814ea2f98",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "file-download"
+      },
+      "expectedFileHash": "4c917799fd59bca3b525a67fe0b8465be746fd11163d8327c125e446450808d4",
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:file-download:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/download"
+      },
+      "fixedInput": {
+        "case": 8,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.file-download",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/download",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Bounded deterministic download placeholder",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "457f90d793df5b6b84053495e92a8702ca905d4cc93205e43c3eabde4f4d9d17",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "popup"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:popup:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/popup"
+      },
+      "fixedInput": {
+        "case": 9,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.popup",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/popup",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Deterministic local popup",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "d8a61cf5db049d8526b7bfb6dbff5852c56d9e1f9794c59415490ed16089ae54",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "iframe"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:iframe:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/iframe"
+      },
+      "fixedInput": {
+        "case": 10,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.iframe",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/iframe",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Same-origin deterministic iframe",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "0c4f4d1eb4a6b466189e6ba5da57ba49781fa7d28efb6d2866ba0cadcc911f0a",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "redirect"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:redirect:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/redirect"
+      },
+      "fixedInput": {
+        "case": 11,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.redirect",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/redirect",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Fixed local redirect",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "14c49d0edad1fae43aeb9de22c86f477eda329127a02d45b3c011e4965bdce38",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "infinite-scroll"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:infinite-scroll:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/infinite-scroll"
+      },
+      "fixedInput": {
+        "case": 12,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.infinite-scroll",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/infinite-scroll",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Bounded deterministic scroll pages",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "bf7e9b6b1f2119a518a41f5cc4fbfe37c9718f564bb3fa05dc4d484b82e4ac6e",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "dom-mutation"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:dom-mutation:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/dom-mutation"
+      },
+      "fixedInput": {
+        "case": 13,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.dom-mutation",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/dom-mutation",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Fixed-sequence DOM mutation",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "1a483ff62ca0e341e611d246bb15a25238b20448bb1b9ddda69f569e364c0be3",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "stale-locator"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:stale-locator:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/stale-locator"
+      },
+      "fixedInput": {
+        "case": 14,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.stale-locator",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/stale-locator",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Deterministic element replacement",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "0a788a401243b41809beb03e4fcc0a3de2cb4b1a1f2d503f6216647ddb85935e",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "prompt-injection-text"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:prompt-injection-text:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/prompt-injection"
+      },
+      "fixedInput": {
+        "case": 15,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.prompt-injection-text",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/prompt-injection",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Untrusted inert text fixture",
+      "securityClassification": "UNTRUSTED_INERT_TEXT",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "e89135403d391060fa0364a465b78dfe2801a0cce2521ca708a68fa9c1d76f7b",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "console-error"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:console-error:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/console-error"
+      },
+      "fixedInput": {
+        "case": 16,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.console-error",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/console-error",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Fixed console error",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "87f8f3614d6a256172c58a2702b3c416c53048c73f0e4d2070e6b9d7ca5af9d3",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "network-error"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 503,
+        "text": "fixture:network-error:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/network-error"
+      },
+      "fixedInput": {
+        "case": 17,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.network-error",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/network-error",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Deterministic denied local endpoint",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "d886ebeff8879bb1d50b000f0f6539f375902757425d6a2ad1e8015cf94a723c",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "websocket-summary"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:websocket-summary:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/websocket-summary"
+      },
+      "fixedInput": {
+        "case": 18,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.websocket-summary",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/websocket-summary",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Bounded local WebSocket summary",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "545af70a8f2e43585302a5c2b6f6a912d04605b6a77d0ad1048590c9de531fb0",
+      "expectedAccessibilityState": {
+        "classification": "KNOWN_DEFECT",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "accessibility-defect"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:accessibility-defect:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/accessibility-defect"
+      },
+      "fixedInput": {
+        "case": 19,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.accessibility-defect",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/accessibility-defect",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Known deterministic accessibility defect",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    },
+    {
+      "cleanupBehavior": {
+        "closePopups": true,
+        "closeSockets": true,
+        "preserveProfiles": false,
+        "removeTempFiles": true
+      },
+      "deterministicChecksum": "2a597cd427e370a585c60dc4b1859772072e6f5b335ed08021637fa0d9098c50",
+      "expectedAccessibilityState": {
+        "classification": "BASELINE_DEFINED",
+        "stable": true
+      },
+      "expectedDomState": {
+        "attribute": "data-fixture",
+        "selector": "#fixture-root",
+        "value": "responsive-layout-defect"
+      },
+      "expectedFileHash": null,
+      "expectedOutput": {
+        "status": 200,
+        "text": "fixture:responsive-layout-defect:v1"
+      },
+      "expectedServerReceipt": {
+        "method": "GET",
+        "ordered": true,
+        "route": "/fixtures/responsive-defect"
+      },
+      "fixedInput": {
+        "case": 20,
+        "seed": "P3-001",
+        "timestamp": "2000-01-01T00:00:00Z"
+      },
+      "fixtureId": "p3.fixture.responsive-layout-defect",
+      "limits": {
+        "maxIterations": 5,
+        "maxRequestBytes": 65536,
+        "maxResponseBytes": 262144
+      },
+      "localRoute": "/fixtures/responsive-defect",
+      "networkPolicy": {
+        "external": "DENY",
+        "loopback": "ALLOW_ONLY_FIXTURE_SERVER"
+      },
+      "purpose": "Known deterministic layout defect",
+      "securityClassification": "LOCAL_DETERMINISTIC_TEST_DATA",
+      "timePolicy": {
+        "fixedTimestamp": "2000-01-01T00:00:00Z",
+        "normalization": "UTC_FIXED"
+      }
+    }
+  ],
+  "p3_016Claimed": false,
+  "schemaVersion": "1.0.0",
+  "specificationId": "p3.browser-fixtures.v1",
+  "status": "SPECIFICATION_ONLY"
+}

@@ -1,0 +1,72 @@
+{
+  "artifacts": [
+    {
+      "path": ".github/workflows/worker-d-p3-readiness.yml",
+      "sha256": "f3587101ff441a0daaf9f292738d079fc39bf17d5bb192d509039763731ba1a3"
+    },
+    {
+      "path": "config/test_center_registry.v1.json",
+      "sha256": "af9897c3132dd7ec61d248296cce150436bae3a0f4624daad08b40e74d371d62"
+    },
+    {
+      "path": "docs/roadmap/progress/2026-08-05-p3-001-readiness.md",
+      "sha256": "e129a0f868645fcca4b260912ce94a5518f1d9141e812d5b5f18f499caf0df81"
+    },
+    {
+      "path": "release/evidence/P3-001/READINESS.md",
+      "sha256": "a1a9e488716f838d80046fc8b2af5dc376e0d94f4fcb6744b11b5e57bdca5ac8"
+    },
+    {
+      "path": "release/evidence/P3-001/claim-boundary.json",
+      "sha256": "cd7313034dd29a6fc024dad5050df73a86c68e20f114ec32eb6e81b4fc588ea0"
+    },
+    {
+      "path": "release/evidence/P3-001/dependency-status.json",
+      "sha256": "2ddef9259aba74e5c478b4ee6133e11a7b2333a1d2c928ed427fa1e0c346eaed"
+    },
+    {
+      "path": "release/evidence/P3-001/fixture-specification.json",
+      "sha256": "b38d4c3bb9ba6d05c73cb8c4ce061015cfd4fa70f82aad27f939da4966aa714b"
+    },
+    {
+      "path": "release/evidence/P3-001/packaging-readiness-contract.json",
+      "sha256": "91e200db0a5639b5c21d3aa913d882f180854771e87059524df94de5611d964c"
+    },
+    {
+      "path": "release/evidence/P3-001/runtime-candidate-matrix.json",
+      "sha256": "9e041719182f2973648e1ea1432d7907086391a56eb974226256e2fd6f340fc6"
+    },
+    {
+      "path": "release/evidence/P3-001/test-center-registration.json",
+      "sha256": "a1bc3d156d8aac96b695d7d169aa4a5dbfe5542acf05a1a36be8f78fde8a36ad"
+    },
+    {
+      "path": "tool/worker_d_p3_readiness.py",
+      "sha256": "80ed9cbff4cf7bdd3df775ac20291c1513181e71810b0417a5df4cc5369ee145"
+    },
+    {
+      "path": "tool/worker_d_p3_readiness_test.py",
+      "sha256": "57ef42d61caf337c96ecb7dee43e3c18cf8d0d81c12b9435f1082c4600cfa3ac"
+    }
+  ],
+  "base": {
+    "commit": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+    "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
+  },
+  "classification": [
+    "P3_READINESS_SOURCE_FOUNDATION_COMPLETE",
+    "P3-001_BLOCKED_BY_DEPENDENCY"
+  ],
+  "reviews": {
+    "workerB": "REQUESTED_PENDING",
+    "workerI": "BLOCKED_MISSING_ACTIVE_REVIEWER",
+    "workerJ": "REQUESTED_PENDING"
+  },
+  "schemaVersion": "1.0.0",
+  "sourceManifest": {
+    "candidateHash": "PENDING_EXACT_HEAD_CI",
+    "generator": "python tool/p1a_refresh_source_manifest.py .",
+    "secondGenerationMustBeByteIdentical": true
+  },
+  "stage": "STAGE_1_SOURCE_READINESS"
+}

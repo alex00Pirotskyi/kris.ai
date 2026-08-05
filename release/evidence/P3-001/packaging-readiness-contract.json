@@ -1,0 +1,106 @@
+{
+  "claimBoundary": "This file is not proof that a runtime, browser binary, package, or clean-machine launch exists.",
+  "contractId": "p3-001.packaging-readiness.v1",
+  "forbidden": [
+    "external website smoke tests",
+    "persistent profiles",
+    "credentials",
+    "live search",
+    "downloads",
+    "uploads",
+    "remote control binding",
+    "silent browser download during source checks"
+  ],
+  "required": {
+    "browserEngines": {
+      "fields": [
+        "engine",
+        "version",
+        "archiveSha256",
+        "unpackedTreeSha256",
+        "license",
+        "sourceUrlRecord"
+      ],
+      "required": true
+    },
+    "hostDependencyLock": {
+      "mustBeHashLocked": true,
+      "required": true
+    },
+    "launch": {
+      "requiredFields": [
+        "structuredArgv",
+        "workingDirectory",
+        "healthProbe",
+        "startupTimeoutSeconds"
+      ]
+    },
+    "offlineInstallation": {
+      "globalRuntimeRequired": false,
+      "networkDefault": "DENY",
+      "required": true
+    },
+    "paths": {
+      "cache": "package-owned or disabled",
+      "downloads": "disabled",
+      "profiles": "ephemeral only for P3-001",
+      "temporary": "per-run contained",
+      "traces": "disabled by default",
+      "uploads": "disabled"
+    },
+    "processTreeOwnership": {
+      "noSurvivingDescendants": true,
+      "required": true
+    },
+    "rollback": {
+      "required": true,
+      "strategy": "retain previous verified package and lock manifest"
+    },
+    "runtimeEntryPoint": {
+      "required": true,
+      "type": "repository-relative packaged path"
+    },
+    "runtimeVersion": {
+      "required": true,
+      "type": "semver or immutable build identifier"
+    },
+    "shutdown": {
+      "requiredFields": [
+        "gracefulSignal",
+        "deadlineSeconds",
+        "forcedCleanup",
+        "descendantVerification"
+      ]
+    },
+    "supplyChain": {
+      "requiredFields": [
+        "SBOM",
+        "provenance",
+        "dependencyLicenses",
+        "archiveChecksums",
+        "signingInputs"
+      ]
+    },
+    "supportedMatrix": {
+      "architectures": [
+        "x64",
+        "arm64 where product-supported"
+      ],
+      "os": [
+        "linux",
+        "macos",
+        "windows"
+      ]
+    },
+    "updateCompatibility": {
+      "requiredFields": [
+        "packageFormatVersion",
+        "minimumDesktopVersion",
+        "maximumDesktopVersion",
+        "rollbackCompatibility"
+      ]
+    }
+  },
+  "schemaVersion": "1.0.0",
+  "status": "READINESS_CONTRACT_ONLY"
+}
