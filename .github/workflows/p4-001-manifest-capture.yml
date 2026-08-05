@@ -42,12 +42,18 @@ jobs:
           set -euo pipefail
           mkdir -p "${RUNNER_TEMP}/p4-001-manifest-capture"
           python tool/p1a_refresh_source_manifest.py .
-          cp SOURCE_MANIFEST.sha256             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256"
+          cp SOURCE_MANIFEST.sha256 \
+            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256"
           python tool/p1a_refresh_source_manifest.py .
-          cmp --silent             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256"             SOURCE_MANIFEST.sha256
-          cp SOURCE_MANIEST.sha256             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.sha256"
-          sha256sum SOURCE_MANIFEST.sha256 >             "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIEST.sha256.digest"
-          git show -s --format='%H%n%T' HEAD >             "${RUNNER_TEMP}/p4-001-manifest-capture/candidate.txt"
+          cmp --silent \
+            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.first.sha256" \
+            SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 \
+            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.sha256"
+          sha256sum SOURCE_MANIFEST.sha256 > \
+            "${RUNNER_TEMP}/p4-001-manifest-capture/SOURCE_MANIFEST.sha256.digest"
+          git show -s --format='%H%n%T' HEAD > \
+            "${RUNNER_TEMP}/p4-001-manifest-capture/candidate.txt"
       - name: Upload exact manifest bytes
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
