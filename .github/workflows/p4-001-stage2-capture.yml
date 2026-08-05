@@ -1,0 +1,311 @@
+name: P4-001 Stage 2 Evidence Blob Capture
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/p4-001-stage2-capture.yml
+
+permissions:
+  contents: write
+
+env:
+  P4_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+  P4_PR_NUMBER: ${{ github.event.pull_request.number }}
+
+jobs:
+  capture:
+    name: p4-001-stage2-blob-capture
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.P4_CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert exact packaging-preparation checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${P4_CANDIDATE_SHA}"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Materialize immutable Stage 1 artifacts and Stage 2 metadata
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          output_dir="${RUNNER_TEMP}/p4-001-stage2"
+          artifact_dir="${RUNNER_TEMP}/p4-001-stage1-artifacts"
+          mkdir -p "${output_dir}" "${artifact_dir}"
+          python - "${output_dir}/payload.b64" <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import pathlib
+          import re
+          import sys
+          import urllib.request
+
+          target = pathlib.Path(sys.argv[1])
+          marker = '<!-- P4_STAGE2_PAYLOAD 87709ff4934d4cc4327bfd1158bb47748c4dd61093cd89fdb21e5c300077a1d4 -->'
+          url = (
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}"
+              f"/issues/{os.environ['P4_PR_NUMBER']}/comments?per_page=100"
+          )
+          request = urllib.request.Request(
+              url,
+              headers={
+                  'Accept': 'application/vnd.github+json',
+                  'Authorization': f"Bearer {os.environ['GH_TOKEN']}",
+                  'X-GitHub-Api-Version': '2022-11-28',
+              },
+          )
+          with urllib.request.urlopen(request, timeout=60) as response:
+              comments = json.load(response)
+          matches = [item['body'] for item in comments if marker in item.get('body', '')]
+          if len(matches) != 1:
+              raise SystemExit(f'expected exactly one Stage 2 payload comment, found {len(matches)}')
+          fenced = re.search(r'```text\n([A-Za-z0-9+/=\n]+)\n```', matches[0])
+          if fenced is None:
+              raise SystemExit('Stage 2 payload comment has no text code fence')
+          target.write_text(''.join(fenced.group(1).split()), encoding='ascii')
+          PY
+          python - "${output_dir}" <<'PY'
+          from __future__ import annotations
+
+          import base64
+          import gzip
+          import hashlib
+          import json
+          import pathlib
+          import sys
+
+          project = pathlib.Path('.').resolve()
+          output = pathlib.Path(sys.argv[1])
+          compressed = base64.b64decode(
+              ''.join((output / 'payload.b64').read_text(encoding='ascii').split()),
+              validate=True,
+          )
+          expected = '87709ff4934d4cc4327bfd1158bb47748c4dd61093cd89fdb21e5c300077a1d4'
+          observed = hashlib.sha256(compressed).hexdigest()
+          if observed != expected:
+              raise SystemExit(f'Stage 2 metadata payload mismatch: {observed}')
+          documents = json.loads(gzip.decompress(compressed))
+          if not isinstance(documents, dict) or len(documents) != 9:
+              raise SystemExit('Stage 2 metadata payload must contain exactly 9 documents')
+          for relative, content in documents.items():
+              target = project / relative
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_text(content, encoding='utf-8', newline='\n')
+          PY
+
+          python - "${artifact_dir}" <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import pathlib
+          import subprocess
+          import sys
+          import urllib.request
+
+          root = pathlib.Path(sys.argv[1])
+          expected = {
+              8939211534: 'sha256:b1ac02cd035a38ccfa78e52c50447cbf185fc68d12ab051253a06d87117e6f29',
+              8939199034: 'sha256:676cce145cfec38be94652c87da43ed3393f2b5d56775610043de42af29b64dc',
+              8939207372: 'sha256:061f5dcd56a69935383943a72d05f9621ac22c61ea4eef85ea13aeaf99c599f5',
+              8939204941: 'sha256:e172131ef739acbc4d676ae27f041ef2e84a806659274f2c92f0635c901e5df5',
+          }
+          for artifact_id, digest in expected.items():
+              api = f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/artifacts/{artifact_id}"
+              request = urllib.request.Request(
+                  api,
+                  headers={
+                      'Accept': 'application/vnd.github+json',
+                      'Authorization': f"Bearer {os.environ['GH_TOKEN']}",
+                      'X-GitHub-Api-Version': '2022-11-28',
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  metadata = json.load(response)
+              if metadata.get('expired') or metadata.get('digest') != digest:
+                  raise SystemExit(f'artifact {artifact_id} metadata mismatch: {metadata}')
+              zip_path = root / f'{artifact_id}.zip'
+              subprocess.run(
+                  [
+                      'curl', '-L', '--fail', '--retry', '3',
+                      '-H', f"Authorization: Bearer {os.environ['GH_TOKEN']}",
+                      '-H', 'Accept: application/vnd.github+json',
+                      f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/artifacts/{artifact_id}/zip",
+                      '-o', str(zip_path),
+                  ],
+                  check=True,
+              )
+              target = root / str(artifact_id)
+              target.mkdir()
+              subprocess.run(['unzip', '-q', str(zip_path), '-d', str(target)], check=True)
+          PY
+
+          mkdir -p release/evidence/P4-001/canonical/stage1
+          cp "${artifact_dir}/8939211534/p4-001-canonical-linux.json"             release/evidence/P4-001/canonical/stage1/linux.json
+          cp "${artifact_dir}/8939199034/p4-001-canonical-macos.json"             release/evidence/P4-001/canonical/stage1/macos.json
+          cp "${artifact_dir}/8939207372/p4-001-canonical-windows.json"             release/evidence/P4-001/canonical/stage1/windows.json
+          cp "${artifact_dir}/8939211534/p4-001-raw-linux.json"             release/evidence/P4-001/canonical/stage1/raw-linux.json
+          cp "${artifact_dir}/8939199034/p4-001-raw-macos.json"             release/evidence/P4-001/canonical/stage1/raw-macos.json
+          cp "${artifact_dir}/8939207372/p4-001-raw-windows.json"             release/evidence/P4-001/canonical/stage1/raw-windows.json
+          cp "${artifact_dir}/8939204941/metadata.json"             release/evidence/P4-001/canonical/stage1/source-manifest-metadata.json
+
+          python - <<'PY'
+          import hashlib
+          import pathlib
+
+          expected = {
+              'release/evidence/P4-001/canonical/stage1/linux.json': '18a8f1e889061fc9ccdbae75ed503ee03141e6bc53a8e3094093c169b8dd7697',
+              'release/evidence/P4-001/canonical/stage1/macos.json': 'a71765471c5874a7949348d74e85c492bad5d7188836089a33c27f3ff10ac767',
+              'release/evidence/P4-001/canonical/stage1/windows.json': 'cf755a7c17c78f4b9486a94c1f810132155767190a902103632258f4d665f9aa',
+              'release/evidence/P4-001/canonical/stage1/raw-linux.json': 'd6140c8657badf9e82c44949798d987eadf15f8a2407c9ce30a833e099fc18e4',
+              'release/evidence/P4-001/canonical/stage1/raw-macos.json': '44f8b370481e7cd9915f8ab65ab56193ce1992904c076c6cef5e1ce48f6d43e3',
+              'release/evidence/P4-001/canonical/stage1/raw-windows.json': '4a36e9fd9c3dd9577ca26d4172b6816572ef79f138d3714095fb4953a4ab340e',
+              'release/evidence/P4-001/canonical/stage1/source-manifest-metadata.json': '6c26e809b397ce341da22b34f2aec1197901d9c42a4eaee09a66237c44e8d988',
+          }
+          for relative, digest in expected.items():
+              observed = hashlib.sha256(pathlib.Path(relative).read_bytes()).hexdigest()
+              if observed != digest:
+                  raise SystemExit(f'committed artifact-copy mismatch: {relativ} {observed}')
+          PY
+
+          rm .github/workflows/p4-001-stage2-capture.yml
+
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/p4_001_test_center_v1.py check --project .
+          python -m unittest -v tool/p4_001_test_center_v1_test.py
+          python tool/p4_001_search_provider_test.py --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/generated_state_guard.py audit --project . --strict
+          python tool/source_tree_policy_test.py
+
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIEST.sha256 "${output_dir}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp --silent "${output_dir}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "${output_dir}/SOURCE_MANIEST.sha256"
+          sha256sum SOURCE_MANIFEST.sha256 > "${output_dir}/SOURCE_MANIFEST.sha256.digest"
+          git diff --check
+
+          python - "${output_dir}" <<'PY'
+          from __future__ import annotations
+
+          import base64
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import sys
+          import urllib.request
+
+          output = pathlib.Path(sys.argv[1])
+          changed = [
+              '.github/workflows/p4-001-branch-hygiene.yml',
+              'docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md',
+              'release/evidence/P4-001/IMPLEMENTATION.md',
+              'release/evidence/P4-001/canonical/stage1/linux.json',
+              'release/evidence/P4-001/canonical/stage1/macos.json',
+              'release/evidence/P4-001/canonical/stage1/product-gates-run.json',
+              'release/evidence/P4-001/canonical/stage1/raw-linux.json',
+              'release/evidence/P4-001/canonical/stage1/raw-macos.json',
+              'release/evidence/P4-001/canonical/stage1/raw-windows.json',
+              'release/evidence/P4-001/canonical/stage1/source-manifest-metadata.json',
+              'release/evidence/P4-001/canonical/stage1/windows.json',
+              'release/evidence/P4-001/canonical/stage1/workflow-summary.json',
+              'release/evidence/P4-001/manifest.json',
+              'release/evidence/P4-001/proposed-roadmap-transition.json',
+              'release/evidence/P4-001/test-center-handoff.json',
+              'release/evidence/P4-001/test-results.json',
+          ]
+          records = {}
+          for relative in changed:
+              payload = pathlib.Path(relative).read_bytes()
+              request = urllib.request.Request(
+                  f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/git/blobs",
+                  data=json.dumps({'content': base64.b64encode(payload).decode('ascii'), 'encoding': 'base64'}).encode(),
+                  headers={
+                      'Accept': 'application/vnd.github+json',
+                      'Authorization': f"Bearer {os.environ['GH_TOKEN']}",
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'Content-Type': 'application/json',
+                  },
+                  method='POST',
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  blob = json.load(response)['sha']
+              records[relative] = {
+                  'gitBlobSha': blob,
+                  'sha256': hashlib.sha256(payload).hexdigest(),
+                  'size': len(payload),
+              }
+          manifest = pathlib.Path('SOURCE_MANIFEST.sha256').read_bytes()
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/git/blobs",
+              data=json.dumps({'content': base64.b64encode(manifest).decode('ascii'), 'encoding': 'base64'}).encode(),
+              headers={
+                  'Accept': 'application/vnd.github+json',
+                  'Authorization': f"Bearer {os.environ['GH_TOKEN']}",
+                  'X-GitHub-Api-Version': '2022-11-28',
+                  'Content-Type': 'application/json',
+              },
+              method='POST',
+          )
+          with urllib.request.urlopen(request, timeout=60) as response:
+              manifest_blob = json.load(response)['sha']
+          (output / 'stage2-document-blobs.json').write_text(
+              json.dumps(records, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          (output / 'stage2-manifest-blob.json').write_text(
+              json.dumps(
+                  {
+                      'schemaVersion': '1.0.0',
+                      'taskId': 'P4-001',
+                      'generator': 'tool/p1a_refresh_source_manifest.py',
+                      'firstSecondByteIdentical': True,
+                      'sha256': hashlib.sha256(manifest).hexdigest(),
+                      'gitBlobSha': manifest_blob,
+                      'size': len(manifest),
+                  },
+                  indent=2,
+                  sort_keys=True,
+              ) + '\n',
+              encoding='utf-8',
+          )
+          (output / 'preparation.json').write_text(
+              json.dumps(
+                  {
+                      'schemaVersion': '1.0.0',
+                      'taskId': 'P4-001',
+                      'preparationCommit': os.environ['P4_CANDIDATE_SHA'],
+                      'preparationTree': os.popen('git show -s --format=%T HEAD').read().strip(),
+                      'stage1Commit': 'fc276b04cb5a3d13628f8e3a015d2cbf3b949a3b',
+                      'stage1Tree': 'dc31a734184d7f9cfac781753d45157b5ad0c6f0',
+                      'latestWorkerBMergeCommit': '3e789032e600e29039c75b7c76a425e4533ade90',
+                      'latestWorkerBMergeTree': '1114c576fe67d9f9202f7f44c98a0af6e35a915a',
+                  },
+                  indent=2,
+                  sort_keys=True,
+              ) + '\n',
+              encoding='utf-8',
+          )
+          print(f'P4_STAGE2_MANIFEST_BLOB={manifest_blob}')
+          PY
+      - name: Upload exact Stage 2 blob map
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p4-001-stage2-blobs-${{ env.P4_CANDIDATE_SHA }}
+          path: ${{ runner.temp }}/p4-001-stage2
+          if-no-files-found: error
+          retention-days: 7
