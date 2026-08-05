@@ -1,0 +1,165 @@
+name: P4-001 Publish Verified Candidate
+
+on:
+  push:
+    branches:
+      - agent/p4-001-search-provider-foundation
+    paths:
+      - .github/workflows/p4-001-publish-candidate.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p4-001-publish-candidate
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: startsWith(github.event.head_commit.message, 'chore(p4-001): stage publisher')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Materialize exact verified Git blobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import urllib.request
+
+          blobs = {
+              '.github/workflows/p4-001-search-provider.yml': '52fbe050b9601ab05eed48185add1cb4d4926173',
+              'schemas/web_search_page.v1.json': '7830e5f23aaa5b6595722107e075088e79f39adc',
+              'services/research_worker/src/search/validation.py': 'c78b6a0c430088b222952455cc679d7f8c7311ec',
+              'services/research_worker/src/search/fixture_provider.py': '579600a1938ec22328250a8a74f892bd3e0b19ad',
+              'services/research_worker/test/schema_validator.py': 'e3e8b52f6a30a5e65288e2fc7151b960bbcf30ef',
+              'services/research_worker/test/test_contract_models.py': 'ce9698df910d810ad8b9f77b3f8385c1fe2f6fa8',
+              'services/research_worker/test/test_contract_regressions.py': '5d34747bb1ecce4657fa7e36341ff46f39566627',
+              'services/research_worker/test/test_fixture_provider.py': '7cc9e6aaf7ab8ceaf405c6fbe9fab38423d97033',
+              'services/research_worker/test/test_normalized_result_adapter.py': '7e547768b0547e817b41cc4356a8147b93e3db18',
+              'tool/p4_001_search_provider_test.py': 'fcef842ef6c1aeebd79a017960d9f34dcae96537',
+              'tool/p4_001_normalize_test_result.py': '56a916688bfc157ced9aa6b275124d62bcc1be31',
+              'release/evidence/P4-001/test-center-handoff.json': '5ce4bc9eb6e9802bf99cc5c1e277963dba419753',
+          }
+          token = os.environ['GH_TOKEN']
+          repository = os.environ['GITHUB_REPOSITORY']
+          for path, expected in blobs.items():
+              url = f'https://api.github.com/repos/{repository}/git/blobs/{expected}'
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      'Accept': 'application/vnd.github+json',
+                      'Authorization': f'Bearer {token}',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'User-Agent': 'p4-001-publisher',
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  payload = json.load(response)
+              data = base64.b64decode(payload['content'])
+              actual = hashlib.sha1(
+                  b'blob ' + str(len(data)).encode('ascii') + b'\0' + data
+              ).hexdigest()
+              if actual != expected or payload.get('sha') != expected:
+                  raise SystemExit(f'blob identity mismatch for {path}: {actual} != {expected}')
+              target = pathlib.Path(path)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+              print(f'OK {path} {expected}')
+          PY
+
+      - name: Remove one-shot publisher
+        shell: bash
+        run: rm -f .github/workflows/p4-001-publish-candidate.yml
+
+      - name: Run source-only P4-001 gate
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p4_001_search_provider_test.py \
+            --project . \
+            --json-output "${RUNNER_TEMP}/p4-001-publisher-result.json"
+
+      - name: Refresh governed source manifest and prove idempotence
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+
+      - name: Enforce publication path allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "${RUNNER_TEMP}/allowed.txt" <<'EOF'
+          .github/workflows/p4-001-publish-candidate.yml
+          .github/workflows/p4-001-search-provider.yml
+          SOURCE_MANIFEST.sha256
+          release/evidence/P4-001/test-center-handoff.json
+          schemas/web_search_page.v1.json
+          services/research_worker/src/search/fixture_provider.py
+          services/research_worker/src/search/validation.py
+          services/research_worker/test/schema_validator.py
+          services/research_worker/test/test_contract_models.py
+          services/research_worker/test/test_contract_regressions.py
+          services/research_worker/test/test_fixture_provider.py
+          services/research_worker/test/test_normalized_result_adapter.py
+          tool/p4_001_normalize_test_result.py
+          tool/p4_001_search_provider_test.py
+          EOF
+          git diff --name-only | LC_ALL=C sort -u > "${RUNNER_TEMP}/actual.txt"
+          LC_ALL=C sort -u "${RUNNER_TEMP}/allowed.txt" > "${RUNNER_TEMP}/allowed.sorted"
+          unexpected="$(comm -23 "${RUNNER_TEMP}/actual.txt" "${RUNNER_TEMP}/allowed.sorted")"
+          if [[ -n "${unexpected}" ]]; then
+            printf 'Unexpected changed paths:\n%s\n' "${unexpected}" >&2
+            exit 1
+          fi
+          git diff --check
+
+      - name: Commit and push verified candidate without rewriting history
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- \
+            .github/workflows/p4-001-publish-candidate.yml \
+            .github/workflows/p4-001-search-provider.yml \
+            SOURCE_MANIFEST.sha256 \
+            release/evidence/P4-001/test-center-handoff.json \
+            schemas/web_search_page.v1.json \
+            services/research_worker/src/search/fixture_provider.py \
+            services/research_worker/src/search/validation.py \
+            services/research_worker/test/schema_validator.py \
+            services/research_worker/test/test_contract_models.py \
+            services/research_worker/test/test_contract_regressions.py \
+            services/research_worker/test/test_fixture_provider.py \
+            services/research_worker/test/test_normalized_result_adapter.py \
+            tool/p4_001_normalize_test_result.py \
+            tool/p4_001_search_provider_test.py
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'No candidate change remains to publish.'
+            exit 1
+          fi
+          git commit -m 'fix(p4-001): harden contracts and register verification handoff'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
