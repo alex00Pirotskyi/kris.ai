@@ -178,3 +178,67 @@ jobs:
           git diff --exit-code -- SOURCE_MANIFEST.sha256
           git diff --check
           test -z "$(git status --porcelain)"
+
+  publish-source-manifest:
+    if: >-
+      github.event_name == 'push' &&
+      github.actor != 'github-actions[bot]' &&
+      github.event.head_commit.message == 'chore(worker-a): stage canonical source manifest publication'
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Generate and commit only the canonical source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGING_REF='refs/heads/agent/a/worker-a-manifest-staging'
+          set +e
+          git ls-remote --exit-code --heads origin "$STAGING_REF" >/dev/null 2>&1
+          rc=$?
+          set -e
+          test "$rc" -eq 2
+          test -z "$(git status --porcelain)"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first.sha256"
+          python tool/test_center_contracts.py check --project .
+          python tool/worker_a_test_center_v1.py check --project .
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest-first.sha256" SOURCE_MANIFEST.sha256
+          git diff --check
+          test -z "$(git status --porcelain | grep -v '^ M SOURCE_MANIFEST.sha256$' || true)"
+          test -n "$(git diff -- SOURCE_MANIFEST.sha256)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git commit -m 'chore(worker-a): refresh canonical source manifest'
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = 'SOURCE_MANIFEST.sha256'
+          git push origin "HEAD:${STAGING_REF}"
+
+  cleanup-source-manifest-staging:
+    if: >-
+      github.event_name == 'push' &&
+      github.event.head_commit.message == 'chore(worker-a): refresh canonical source manifest'
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Remove bounded staging ref after App publication
+        shell: bash
+        run: git push origin ':refs/heads/agent/a/worker-a-manifest-staging'
