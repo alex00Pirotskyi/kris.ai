@@ -54,7 +54,7 @@
         "RUNNER_ARCH",
         "RUNNER_OS"
       ],
-      "evidenceDestination": "release/evidence/generated/worker-b/test-center-contract-validation.json",
+      "evidenceDestination": "release/evidence/worker-b/test-center-contract-validation.json",
       "expectedOutputs": [],
       "inputPaths": [
         "config/test_center_registry.v1.json",
