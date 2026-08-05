@@ -44,9 +44,13 @@ The connector can safely create small reviewed control files, but it cannot reli
 
 The candidate modifies a workflow file. GitHub may correctly block the Actions token from moving the target ref without workflow-write authority. The helper accepts only that known rejection, preserves the exact candidate object, and emits a 90-day machine receipt for a separately authenticated, receipt-bound fast-forward.
 
+The first control-PR run compiled and self-tested the helper successfully, then failed closed before source-manifest publication because protected `main` intentionally predates P2 and therefore does not contain `tool/p2_refresh_source_manifest.py`. The control-branch refresh now uses the existing repository-wide `tool/p1a_refresh_source_manifest.py`; protected target execution still uses P2's own generator after checking out the exact P2 branch. This changes no target authorization or candidate content.
+
 ## Resolutions
 
 The controller uses exact anchors and exact path authorization rather than broad regex rewriting. It never executes code from a future-phase branch. It runs from protected `main`, checks out the P1/P2 target as data, and validates all resulting source before candidate creation.
+
+The manifest-generator split is explicit: the pre-P2 controller branch uses the repository-wide generator only to inventory its own control files, while the P2 target candidate uses `p2_refresh_source_manifest.py` and then passes P2 source-inventory validation.
 
 ## Compatibility impact
 
