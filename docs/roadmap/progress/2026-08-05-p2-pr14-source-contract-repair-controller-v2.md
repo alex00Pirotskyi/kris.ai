@@ -19,7 +19,7 @@ This significant control-plane commit adds one disposable, exact-SHA GitHub Acti
 
 The controller:
 
-1. checks that PR #14 is still exactly `bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b` with tree `98855292814eb94e452cceb6205869b60ff07268` before editing;
+1. checks that PR #14 is still exactly `bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b` with tree `181671cace704b3dd1b10496c02b20d006533515` before editing;
 2. patches only `test/product/source_contract_test.dart` and creates one target progress document;
 3. refreshes `SOURCE_MANIFEST.sha256` through the canonical P2 command;
 4. runs the affected test, full Flutter suite, generator checks, P1/P2 gates, automation-host tests, roadmap, governance, generated-state, and whitespace validation;
@@ -34,6 +34,10 @@ Any target movement, missing anchor, unexpected path, validation failure, source
 ## Challenges and resolution
 
 The prior protected alignment controller was intentionally bound to historical head `cec0a2d431edc9b972934fcc5898a30a7a1942f8` and correctly refused to patch later concurrent work. Rather than weakening that guard or resetting PR #14, this controller is bound to the newly verified live head and preserves all legitimate intervening commits.
+
+## Failed-closed guard correction
+
+Controller run `30987841430` failed before patching because the preliminary record supplied tree `98855292814eb94e452cceb6205869b60ff07268`. The Git object API and checkout both prove that exact head `bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b` has tree `181671cace704b3dd1b10496c02b20d006533515`, identical to its parent because the head is a deliberate empty CI retrigger commit. The failed run produced no command results, candidate, branch update, or target mutation; artifact `8922823226` has archive SHA-256 `364e0cea5cce3e4a570895d78d2b7a17f3e25fded4d258e740cdb16c05d412f3`. This correction updates only the exact tree guard and the corresponding documentation, preserving the exact head requirement.
 
 ## Compatibility and parallel merge considerations
 

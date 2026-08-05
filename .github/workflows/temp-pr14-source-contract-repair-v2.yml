@@ -20,7 +20,7 @@ jobs:
     env:
       TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
       EXPECTED_HEAD: bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b
-      EXPECTED_TREE: 98855292814eb94e452cceb6205869b60ff07268
+      EXPECTED_TREE: 181671cace704b3dd1b10496c02b20d006533515
       PROGRESS_PATH: docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md
       TEST_PATH: test/product/source_contract_test.dart
     steps:
@@ -134,10 +134,11 @@ jobs:
           - Protected base tree: `f7c295b5bafa366e19af78fd49b90445d6f766fc`
           - PR #14 branch: `merge/p1-p2-owner-risk-qa-preview`
           - Exact pre-repair head and candidate parent: `bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b`
-          - Exact pre-repair tree: `98855292814eb94e452cceb6205869b60ff07268`
+          - Exact pre-repair tree: `181671cace704b3dd1b10496c02b20d006533515`
           - Pre-repair parent: `5e496d9348ae32213b06c55099b76751e7e835d0`
           - Pre-repair parent tree: `181671cace704b3dd1b10496c02b20d006533515`
-          - Current PR synthetic merge tested by Actions: `24189051ccef3fa26cd15428b83058443ccb0230`
+          - Current PR synthetic merge at repair preflight: `eaad3ca616a1079be5aee800e775981106c13f2a`
+          - Historical failing product run synthetic merge: `24189051ccef3fa26cd15428b83058443ccb0230`
 
           ## Roadmap authorization
 
