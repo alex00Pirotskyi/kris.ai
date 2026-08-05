@@ -1,51 +1,66 @@
-name: Worker D Manifest Refresh
+name: Worker D P3 Readiness
 
 on:
   push:
     branches:
       - agent/d/p3-readiness-fixtures
+  pull_request:
+    branches:
+      - agent/b/test-center-contracts-and-review
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: worker-d-manifest-refresh
+  group: worker-d-p3-readiness-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  refresh:
-    if: ${{ github.actor != 'github-actions[bot]' }}
-    runs-on: ubuntu-24.04
+  source-readiness:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux
+          - os: macos-15
+            platform: macos
+          - os: windows-2025
+            platform: windows
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: agent/d/p3-readiness-fixtures
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version-file: config/p2.python-version
           check-latest: false
-      - name: Generate canonical manifest against final workflow bytes
+      - name: Worker D unit tests
+        run: python -m unittest -v tool/worker_d_p3_readiness_test.py
+      - name: Worker D non-mutating check
+        run: python tool/worker_d_p3_readiness.py --check --project .
+      - name: Canonical Test Center
+        run: python tool/test_center_contracts.py check --project .
+      - name: Affected selection is order independent
         shell: bash
         run: |
-          git show 1cfba672ef3b1eac9db0d4efb868623c0e630177:.github/workflows/worker-d-p3-readiness.yml > "$RUNNER_TEMP/final-worker-d-workflow.yml"
-          cp "$RUNNER_TEMP/final-worker-d-workflow.yml" .github/workflows/worker-d-p3-readiness.yml
+          A=$(python tool/test_center_contracts.py select-affected --project . release/evidence/P3-001/fixture-specification.json tool/worker_d_p3_readiness.py)
+          B=$(python tool/test_center_contracts.py select-affected --project . tool/worker_d_p3_readiness.py release/evidence/P3-001/fixture-specification.json)
+          test "$A" = "$B"
+      - name: Source manifest owner is deterministic
+        shell: bash
+        run: |
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest-first"
           python tool/p1a_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/manifest-first" SOURCE_MANIFEST.sha256
-          git show HEAD:.github/workflows/worker-d-p3-readiness.yml > .github/workflows/worker-d-p3-readiness.yml
-      - name: Validate and publish manifest only
+      - name: Generated-state and non-mutation check
         shell: bash
         run: |
-          python tool/worker_d_p3_readiness.py --check --project .
-          python -m unittest -v tool/worker_d_p3_readiness_test.py
-          python tool/test_center_contracts.py check --project .
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256
-          git diff --cached --check
-          git diff --cached --quiet && exit 0
-          git commit -m 'chore(p3): refresh canonical source manifest'
-          git push origin HEAD:agent/d/p3-readiness-fixtures
+          python tool/source_tree_policy.py check --project .
+          git diff --check
+          test -z "$(git status --porcelain | grep -v '^ M SOURCE_MANIFEST.sha256$' || true)"
