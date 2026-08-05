@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python tool/p1a_refresh_source_manifest.py .
+          PYTHONDONTWRITEBYTECODE=1 python tool/p1a_refresh_source_manifest.py .
           git diff --check
           mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
           if [ "${#paths[@]}" -eq 0 ]; then
@@ -67,6 +67,8 @@ jobs:
   validate:
     name: p4-001-contract-source-gate
     runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -75,21 +77,30 @@ jobs:
         with:
           python-version: '3.12.10'
           check-latest: false
-      - name: Compile P4-001 sources
+      - name: Parse P4-001 Python sources
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile \
-            services/research_worker/src/search/*.py \
-            services/research_worker/test/*.py \
-            tool/p4_001_search_provider_test.py
+          python - <<'PY'
+          import ast
+          import pathlib
+          roots = (
+              pathlib.Path('services/research_worker/src/search'),
+              pathlib.Path('services/research_worker/test'),
+          )
+          paths = [path for root in roots for path in root.glob('*.py')]
+          paths.append(pathlib.Path('tool/p4_001_search_provider_test.py'))
+          for path in paths:
+              ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
+          print(f'P4-001 Python sources parsed: {len(paths)}')
+          PY
       - name: Run exact P4-001 source gate
         shell: bash
         run: |
           set -euo pipefail
           python tool/p4_001_search_provider_test.py \
             --project . \
-            --json-output release/evidence/P4-001/ci-test-results.json
+            --json-output "$RUNNER_TEMP/p4-001-ci-test-results.json"
       - name: Validate roadmap and generated-state boundaries
         shell: bash
         run: |
