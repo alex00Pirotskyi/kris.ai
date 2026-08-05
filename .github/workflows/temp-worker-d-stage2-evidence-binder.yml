@@ -1,0 +1,54 @@
+name: TEMP Worker D Stage 2 Evidence Binder
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-worker-d-stage2-evidence-binder
+  cancel-in-progress: false
+
+jobs:
+  bind-stage2:
+    if: >-
+      github.event.pull_request.head.ref == 'ci/worker-d-stage2-evidence-binding' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact bootstrap source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: bootstrap
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out frozen Worker D Stage 1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/d/p3-readiness-fixtures
+          path: target
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up locked Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+
+      - name: Materialize and publish one bounded Stage 2 commit
+        id: bind
+        shell: bash
+        run: |
+          set -euo pipefail
+          python bootstrap/tool/materialize_worker_d_stage2.py target
