@@ -23,16 +23,16 @@
     "tool/p24_ci_driver_parts/**"
   ],
   "continuity": {
-    "lastVerifiedHead": "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec",
-    "lastVerifiedTree": "1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a",
+    "lastVerifiedHead": "bb75b9d4db0cb91ac512fdd17d47853439f3ad92",
+    "lastVerifiedTree": "b6d3c6f2033b15f792079345f4f1d72a92094c8c",
     "safeTakeover": "Only after a later pushed YIELDED record binds the last head/tree and no newer Worker J commit exists."
   },
   "nextAction": "Inspect the current exact-head P24 and product-gates state. If the generated P24 index and owner-generated root source manifest are zero-diff and all required lanes are green, request Worker B and Worker I review of that exact commit/tree; otherwise commit only the generator-produced closure bytes and rerun exact-head CI.",
   "publishedCandidate": {
-    "commit": "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec",
-    "p24Conclusion": "GENERATOR_CLOSURE_PENDING",
+    "commit": "bb75b9d4db0cb91ac512fdd17d47853439f3ad92",
+    "p24Conclusion": "MIGRATION_LEDGER_KIND_REPAIR_PENDING",
     "productGatesConclusion": "PENDING",
-    "tree": "1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a"
+    "tree": "b6d3c6f2033b15f792079345f4f1d72a92094c8c"
   },
   "recordType": "AnarchyClaim",
   "reviewerRoles": [

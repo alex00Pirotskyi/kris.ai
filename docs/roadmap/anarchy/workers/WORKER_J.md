@@ -4,95 +4,61 @@ role: "Roadmap-as-data and integration governor"
 status: REPAIRING
 branch: "agent/j/P24-001-roadmap-as-data-adr"
 active_task: "P24-001 published exact-head repair and adoption review"
-last_anchor: "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec / 1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a"
+last_anchor: "bb75b9d4db0cb91ac512fdd17d47853439f3ad92 / b6d3c6f2033b15f792079345f4f1d72a92094c8c"
 reviewer: "Worker B and Worker I"
 ---
 
-# Worker J — Roadmap-as-data and integration governor
+# Worker J — P24-001 durable resume
 
-## Activation command
-
-```text
-Take https://github.com/alex00Pirotskyi/kris.ai.
-You are Worker J. Continue autonomously.
-```
-
-## Mission
-
-Complete P24-001 adoption-review preparation without promoting authority, merging PR #63 or PR #66, changing product behavior, or taking Worker A/B/C/D/I ownership.
-
-## Phase lane
-
-- [`P24`](../phases/P24-roadmap-integrity-traceability-and-no-sql-authority.md) — roadmap integrity and traceability
-- all-phase coordination view only; the coordination checkpoint is not task-launch authority
-
-## Exact repository anchors
+## Exact state
 
 ```text
-protected main: 0a4176bcbcb975684c3a590be652c9fffe1ce770
-protected main tree: 641e11e63fa84f3a16dc4d74b418778839ce5bc2
-stacked base / PR #63: 6b23beb64070932886e75a131580fbc6fda878b6
-stacked base tree: 724b838cae31bb50befb4e7676c55a41f925091e
-published Worker J parent: a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec
-published Worker J parent tree: 1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a
-previous repaired-source P24 run: 31030838938 — FAIL only at generated index/source-manifest closure
-previous repaired-source product-gates run: 31030839006 — in progress at the coordination snapshot
-PR #66: open, draft, unmerged
+protected main: 0a4176bcbcb975684c3a590be652c9fffe1ce770 / 641e11e63fa84f3a16dc4d74b418778839ce5bc2
+PR #63 proposal base: 6b23beb64070932886e75a131580fbc6fda878b6 / 724b838cae31bb50befb4e7676c55a41f925091e
+branch: agent/j/P24-001-roadmap-as-data-adr
+PR: #66 (draft, unmerged)
+last observed parent: bb75b9d4db0cb91ac512fdd17d47853439f3ad92 / b6d3c6f2033b15f792079345f4f1d72a92094c8c
+P24 run 31032418401: FAIL — invalid migration-ledger event-kind domain; portable path/write/resume tests passed
+product-gates run 31032416576: PASS
 ```
 
-Re-resolve all anchors before every write.
+Re-resolve the branch head/tree and workflows before every write.
 
 ## Authority boundary
 
-```text
-human authority: docs/roadmap/MASTER.md
-machine authority: docs/roadmap/roadmap.yaml within its declared P0/P1 scope
-PR #63: proposal source
-v3.2: hash-linked planning reference
-phase packets and worker cards: proposal/navigation inputs
-migration ledger: migration evidence, not task-status authority
-generated P24 index: compatibility/navigation output, not authority
-```
+- Human authority: `docs/roadmap/MASTER.md`.
+- Machine authority: `docs/roadmap/roadmap.yaml` only within its declared scope.
+- PR #63, v3.2, phase packets, worker cards, migration ledger, checkpoint, and generated P24 index remain proposal, migration, or navigation inputs.
+- No merge, adoption, task completion, P2 behavioral support, product/release support, or GA claim is authorized.
 
-## Ownership
+## Owned paths
 
-- P24-001 authority/supersession decision artifacts
-- scoped ANARCHY execution-control contract/schema
-- deterministic P24 validator/generator
-- P24 fixtures/evidence/generated navigation index
-- Worker A–J coordination projection
-- stacked P24 draft PR body
+- P24 migration/authority artifacts, validator/generator, fixtures/tests, exact-head workflow, generated P24 navigation index, evidence, claim, Worker J memory, and A–J coordination projection.
 
-## Forbidden without transfer
+## Forbidden paths
 
-- product runtime, storage, public APIs, wire formats, or native interfaces
-- P1/P2 authority/runtime behavior or P2 behavioral/release claims
-- Worker A, Worker B, Worker C, or Worker D implementation
-- Worker B Test Center schema semantics or Testing Studio ownership
-- Worker I security/release implementation or self-authored Worker I PASS
-- `MASTER.md`, `roadmap.yaml`, `STATUS.md`, `HANDOFF.md`, or `GENERATED_STATE.md`
-- merge, retarget, force-push, ANARCHY adoption, or task-completion promotion
+- Product runtime, storage, public APIs, wire/native interfaces, support/release state.
+- Worker A/B/C/D implementation and Worker B Test Center semantics.
+- `MASTER.md`, `roadmap.yaml`, `STATUS.md`, `HANDOFF.md`, `GENERATED_STATE.md`.
+- Force-push, merge, retarget, or ANARCHY adoption.
 
-## Published failure and repair
+## Completed
 
-The published candidate improved `resolve_safe()` but active repository-relative derivation still used raw `Path.relative_to(project)` in `write_generated()`, `iter_scope_files()`, and `snapshot_scopes()`. macOS `/var` versus `/private/var` and Windows long-name versus `RUNNER~1` aliases therefore failed during synthetic repository construction.
+- Published canonical `repository_relative(project, candidate)` helper.
+- Repaired `write_generated()`, `iter_scope_files()`, and `snapshot_scopes()` alias-sensitive identity derivation.
+- Added actual macOS `/var`, Windows 8.3/case, write/snapshot/sort, root, missing-target, traversal, sibling-prefix, symlink/junction, and cross-drive regressions.
+- Published bounded always-upload diagnostics that retain the first failure.
+- Refreshed the non-authoritative A–J checkpoint, including live E/F branches as `HOLD` rather than active.
+- Inspected run `31032418401`; first source failure was two new migration-ledger kinds outside the existing validator domain.
 
-The current source repair:
+## Current repair
 
-- defines one fail-closed `repository_relative(project, candidate)` helper;
-- canonicalizes root and candidate before containment and identity derivation;
-- rejects traversal, sibling-prefix, symlink/junction escape, and cross-drive paths;
-- explicitly supports root equality and nonexistent in-root generated targets;
-- uses the helper in write-result identity, scope sorting, and scope snapshots;
-- adds actual write/snapshot/sort alias regressions;
-- corrects moved fixture paths in the append-only migration record;
-- makes the tri-platform workflow always preserve diagnostics and the first failure;
-- refreshes the live A–J coordination checkpoint without assigning task authority.
+Preserve the validator's existing migration event kinds. Record diagnostic-bounding and checkpoint-refresh details in `classification`, add a production-ledger vocabulary regression, then rerun exact-head CI. Do not weaken ledger validation.
 
-## Exact commands
+## Required commands
 
 ```text
-python -m py_compile tool/anarchy_control_plane.py tool/anarchy_control_plane_test.py
+python -m py_compile tool/anarchy_control_plane.py tool/anarchy_control_plane_test.py tool/p24_ci_driver.py
 python -m unittest -v tool/anarchy_control_plane_test.py
 python tool/anarchy_control_plane.py --write --project .
 python tool/anarchy_control_plane.py --write --project .
@@ -102,41 +68,35 @@ python tool/p1a_refresh_source_manifest.py .
 python tool/p1a_refresh_source_manifest.py .
 ```
 
-The live test count is discovered from the suite; do not reuse the historical 15-test count.
+## Evidence and reviews
 
-## Evidence
+- Claim: `docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml`
+- Checkpoint: `docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json`
+- Ledger: `docs/roadmap/anarchy/migration/MIGRATION_LEDGER.yaml`
+- Clean-room contract: `docs/roadmap/anarchy/migration/CLEAN_ROOM_RESUME.md`
+- Historical Worker B review applies only to `365e7e74...` and remains `REQUEST_CHANGES` history.
+- Current-head Worker B review: absent until CI is green.
+- Current-head Worker I review: absent; no durable Worker I mechanism has been verified.
 
-- `docs/roadmap/anarchy/migration/ARTIFACT_RECONCILIATION.json`
-- `docs/roadmap/anarchy/migration/P24-001_CONTROL_PLANE.json`
-- `docs/roadmap/anarchy/migration/SOURCE_MANIFEST_OWNERSHIP.md`
-- `docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json`
-- `release/evidence/P24-001/FOUNDATION.md`
-- `release/evidence/P24-001/LOCAL_TEST_RESULTS.json`
-- historical Worker B review: bound only to `365e7e74e147b90df6cd78f64b444dccfcca7d73`
-- current-head Worker B review: absent
-- current-head Worker I review: absent
+## Remaining gates
 
-## Remaining work
-
-- [x] Publish the canonical repository-relative repair and bounded diagnostic upload without force.
-- [x] Inspect source-candidate run `31030838938`; semantic/write/resume generation passed and only generated closure remained.
-- [ ] Inspect the current coordination-bound exact-head P24 and product-gates workflows.
-- [ ] Use bounded exact-head generation artifacts to commit only the generated P24 index and canonical owner-produced root source manifest.
-- [ ] Prove second write and second manifest generation are byte-identical and exact generation creates zero diff.
-- [ ] Obtain P24 Ubuntu, Windows, and macOS PASS plus product-gates PASS on the same source candidate.
-- [ ] Record final pushed-state clean-room resume.
-- [ ] Request Worker B and Worker I review of the same exact commit/tree only after CI is green.
-- [ ] Keep `ADOPTION_REVIEW`; green source validation is not authority adoption or task completion.
+1. Publish the ledger-kind repair without force.
+2. Obtain P24 Ubuntu/Windows/macOS semantic and generation PASS.
+3. Commit only generator-produced P24 index and owner-generated root manifest when exact source artifacts differ.
+4. Obtain zero-diff P24 tri-platform PASS plus product-gates PASS.
+5. Verify final pushed-state clean-room resume.
+6. Request Worker B and Worker I review of the same exact commit/tree; record `BLOCKED_EXTERNAL` rather than self-authoring Worker I PASS when no mechanism exists.
+7. Keep PR #66 draft and `ADOPTION_REVIEW` pending separate adoption authorization.
 
 ## Next exact action
 
-Inspect the current exact-head P24 and product-gates state. If the generated P24 index and owner-generated root source manifest are zero-diff and all required lanes are green, request Worker B and Worker I review of that exact commit/tree; otherwise commit only the generator-produced closure bytes and rerun exact-head CI.
+Inspect current exact-head P24 and product-gates. If the generated P24 index and owner-generated root source manifest are zero-diff and all required lanes are green, request Worker B and Worker I review of that exact commit/tree; otherwise commit only generator-produced closure bytes and rerun exact-head CI.
 
-## Yield / takeover
+## Safe takeover
 
 ```text
-status: ACTIVE
-last_verified_head: a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec
-last_verified_tree: 1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a
-safe_takeover: only from a later pushed YIELDED record with exact head/tree continuity
+state: ACTIVE
+last_verified_head: bb75b9d4db0cb91ac512fdd17d47853439f3ad92
+last_verified_tree: b6d3c6f2033b15f792079345f4f1d72a92094c8c
+safe_takeover: only after a later pushed YIELDED record binds the last head/tree and no newer Worker J commit exists
 ```
