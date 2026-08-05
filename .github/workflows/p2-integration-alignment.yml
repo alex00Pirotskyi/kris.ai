@@ -1,0 +1,145 @@
+name: P2 Integration Alignment
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/p2-integration-alignment.yml
+      - config/p2_integration_alignment.json
+      - docs/roadmap/progress/2026-08-05-p2-integration-validator-alignment-controller.md
+      - tool/p2_integration_alignment.py
+      - SOURCE_MANIFEST.sha256
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/p2-integration-alignment.yml
+      - config/p2_integration_alignment.json
+      - docs/roadmap/progress/2026-08-05-p2-integration-validator-alignment-controller.md
+      - tool/p2_integration_alignment.py
+
+permissions:
+  contents: read
+
+jobs:
+  validate-control:
+    name: p2-integration-alignment-validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Compile and self-test exact P2 integration alignment
+        run: |
+          python -m py_compile tool/p2_integration_alignment.py
+          python tool/p2_integration_alignment.py --self-test
+          python - <<'PY_CONFIG'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('config/p2_integration_alignment.json').read_text())
+          assert payload['roadmapAuthority'] == 'docs/roadmap/MASTER.md'
+          assert payload['repository'] == 'alex00Pirotskyi/kris.ai'
+          assert payload['expectedTargetHead'] == 'cec0a2d431edc9b972934fcc5898a30a7a1942f8'
+          assert payload['authorizedPaths'] == sorted(payload['authorizedPaths'])
+          assert len(payload['authorizedPaths']) == 4
+          PY_CONFIG
+          git diff --check
+
+  source-manifest:
+    name: p2-integration-alignment-source-manifest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'alex00Pirotskyi' &&
+      github.event.pull_request.head.ref == 'agent/p2-integration-alignment-20260805' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Regenerate and verify governed source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tool/p2_integration_alignment.py
+          python tool/p2_integration_alignment.py --self-test
+          python tool/p2_refresh_source_manifest.py .
+          git diff --check
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          if [ "${#paths[@]}" -eq 0 ]; then
+            echo 'SOURCE_MANIFEST_CURRENT=true'
+            exit 0
+          fi
+          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 1
+          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
+      - name: Publish exact source manifest to control branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            echo 'SOURCE_MANIFEST_PUSH_REQUIRED=false'
+            exit 0
+          fi
+          git config user.name 'Kristin P2 Integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'ci: refresh source manifest for P2 integration alignment'
+          git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
+
+  execute-protected-alignment:
+    name: p2-integration-alignment-execute
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out exact protected-main controller
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: control
+      - name: Check out exact reconciled PR14 target
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: true
+          path: target
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Construct exact documented P2 integration candidate
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: >-
+          python control/tool/p2_integration_alignment.py
+          --control control
+          --target target
+          --status "${{ runner.temp }}/p2-integration-alignment-status.json"
+      - name: Upload exact alignment receipt
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p2-integration-alignment-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/p2-integration-alignment-status.json
+          if-no-files-found: error
+          retention-days: 90
