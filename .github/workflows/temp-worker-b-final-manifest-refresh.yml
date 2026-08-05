@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = 'c14552ea17d6710c1eb2ef557e163f7a2d1333e0'
+          test "$(git rev-parse HEAD^)" = '479f5907a30593497a2c24af8b5d93c24b4feefd'
           git rm .github/workflows/temp-worker-b-final-manifest-refresh.yml
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first.sha256"
@@ -36,7 +36,7 @@ jobs:
           python tool/p1a_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/source-manifest-first.sha256" SOURCE_MANIFEST.sha256
           git diff --check
-          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          mapfile -t paths < <({ git diff --name-only; git diff --cached --name-only; } | LC_ALL=C sort -u)
           test "${#paths[@]}" -eq 2
           test "${paths[0]}" = '.github/workflows/temp-worker-b-final-manifest-refresh.yml'
           test "${paths[1]}" = 'SOURCE_MANIFEST.sha256'
