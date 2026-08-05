@@ -7,7 +7,9 @@ on:
     paths:
       - .github/workflows/pr14-protected-main-repair.yml
       - tool/pr14_main_push_repair.py
+      - tool/pr14_main_push_repair_v2.py
       - docs/progress/2026-08-05-pr14-protected-main-push-handoff.md
+      - docs/progress/2026-08-05-pr14-handoff-bookkeeping-fix.md
       - SOURCE_MANIFEST.sha256
   push:
     branches:
@@ -15,7 +17,9 @@ on:
     paths:
       - .github/workflows/pr14-protected-main-repair.yml
       - tool/pr14_main_push_repair.py
+      - tool/pr14_main_push_repair_v2.py
       - docs/progress/2026-08-05-pr14-protected-main-push-handoff.md
+      - docs/progress/2026-08-05-pr14-handoff-bookkeeping-fix.md
       - SOURCE_MANIFEST.sha256
 
 permissions:
@@ -40,14 +44,16 @@ jobs:
           check-latest: false
       - name: Compile and self-test protected main repair handoff
         run: |
-          python -m py_compile tool/pr14_main_push_repair.py
-          python tool/pr14_main_push_repair.py --self-test
+          python -m py_compile \
+            tool/pr14_main_push_repair.py \
+            tool/pr14_main_push_repair_v2.py
+          python tool/pr14_main_push_repair_v2.py --self-test
 
   refresh-source-manifest:
     name: pr14-main-push-source-manifest
     if: >-
       github.event_name == 'pull_request' &&
-      github.event.pull_request.head.ref == 'agent/pr14-protected-main-push-handoff' &&
+      github.event.pull_request.head.ref == 'agent/pr14-handoff-bookkeeping-fix-20260805' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     permissions:
@@ -62,12 +68,14 @@ jobs:
         with:
           python-version: '3.12.10'
           check-latest: false
-      - name: Validate helper and regenerate governed inventory
+      - name: Validate corrected helper and regenerate governed inventory
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile tool/pr14_main_push_repair.py
-          python tool/pr14_main_push_repair.py --self-test
+          python -m py_compile \
+            tool/pr14_main_push_repair.py \
+            tool/pr14_main_push_repair_v2.py
+          python tool/pr14_main_push_repair_v2.py --self-test
           python tool/p1a_refresh_source_manifest.py .
           git diff --check
           mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
@@ -78,7 +86,7 @@ jobs:
           printf 'CHANGED_PATH=%s\n' "${paths[@]}"
           test "${#paths[@]}" -eq 1
           test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
-      - name: Publish exact source manifest to handoff branch
+      - name: Publish exact source manifest to bookkeeping-fix branch
         shell: bash
         run: |
           set -euo pipefail
@@ -90,7 +98,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add SOURCE_MANIFEST.sha256
           git diff --cached --check
-          git commit -m 'ci: refresh source manifest for protected PR14 handoff'
+          git commit -m 'ci: refresh source manifest for PR14 bookkeeping fix'
           git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
 
   execute:
@@ -135,7 +143,7 @@ jobs:
           check-latest: false
       - name: Construct and receipt exact documented PR14 candidate
         run: >-
-          python control/tool/pr14_main_push_repair.py
+          python control/tool/pr14_main_push_repair_v2.py
           --control control
           --target target
           --status status
