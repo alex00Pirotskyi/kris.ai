@@ -1,0 +1,267 @@
+{
+  "artifactIdsAndDigestsInspected": [
+    {
+      "artifactId": 8936232494,
+      "contentSha256": "6e4eed7088627f2a24cf97dc4edbdb6ea65eca37823fe85f5a67425e313713d2",
+      "digest": "sha256:dee4264f96337e570eb8ad503b69f8d439b4e1bf3dff40a4d10e522fd545eded",
+      "platform": "linux",
+      "runId": 31020134276
+    },
+    {
+      "artifactId": 8936273539,
+      "contentSha256": "eee8818edfeb73c0afc6b030c4cac1bb7a2b064098db9957bc0dc8e7635e1ddc",
+      "digest": "sha256:fbcf8c13c9ec1791415b8d9505dfe76f3f4e9879604d6f0db72f6792a943de68",
+      "platform": "macos",
+      "runId": 31020134276
+    },
+    {
+      "artifactId": 8936285728,
+      "contentSha256": "ece9f5a389cb12e707850cba238e63d8dae5e080d198261fe832003f3cd38638",
+      "digest": "sha256:6105dacceee5e689f2079a0702d7734e442e9e82e4423b3d9f317d321814f63f",
+      "platform": "windows",
+      "runId": 31020134276
+    },
+    {
+      "artifactId": 8936225568,
+      "contentSha256": "b29eaf549684005f45437dbaa3777503bd6b23e0144cce354f5047ed0285eb2f",
+      "digest": "sha256:c62493e6f80b8d7c8af17cb13b5b1d5ade264006820c0ed462bb0b29eea27077",
+      "entryCount": 1119,
+      "platform": "source-manifest",
+      "runId": 31020134276
+    },
+    {
+      "artifactId": 8936402914,
+      "contentSha256": "1da5903d62799f236a5fb9b44c1b8fd866a20117bc873b7413c26fffb5fa8c00",
+      "digest": "sha256:3f6959ec94edcffbbdd2b44e692bd43f8208716446eb63e448f0a3ada14b33f3",
+      "entryCount": 1125,
+      "gitBlob": "527b8cac0068e17ec435aaa2288963d7ed54fe12",
+      "platform": "source-manifest",
+      "runId": 31020564649
+    }
+  ],
+  "behavioralBlocker": {
+    "currentAvailability": "No authorized protected-main controlled run or controlled platform receipts were present for the reviewed candidate.",
+    "requiredActor": "repository variable KRISTIN_P2_AUTHORIZED_ACTOR",
+    "requiredEnvironment": "p2-controlled",
+    "requiredEvent": "workflow_dispatch",
+    "requiredPackageIdentity": "input package_sha256 must equal KRISTIN_P2_V66_PACKAGE_SHA256 and source package receipt",
+    "requiredProvisioning": "signed platform-specific provisioning packet and trust policy",
+    "requiredRef": "refs/heads/main",
+    "requiredRunners": [
+      "self-hosted,kristin-p2,windows,interactive-desktop,windows-2025",
+      "self-hosted,kristin-p2,macos,interactive-desktop,macos-15",
+      "self-hosted,kristin-p2,linux,interactive-desktop,ubuntu-24.04"
+    ],
+    "requiredWorkflow": ".github/workflows/p2-owner-mode.yml",
+    "state": "BLOCKED_EXTERNAL"
+  },
+  "behavioralCertificationState": "BLOCKED_EXTERNAL",
+  "candidateIntegrity": {
+    "ancestry": "PASS",
+    "artifactVerification": "PASS",
+    "exactHeadSourceCi": "GREEN_BUT_INSUFFICIENT_FOR_MANIFEST_CURRENCY",
+    "forcePushObserved": false,
+    "stage1Binding": "PASS",
+    "stage1ManifestSnapshot": "PASS",
+    "stage2Binding": "PASS_WITH_FINDINGS",
+    "stage2RootSourceManifest": "FAIL_STALE",
+    "workerBBaseExact": true
+  },
+  "canonicalIntegrationDecision": "REQUEST_CHANGES",
+  "commandsExecuted": [
+    "resolve protected main, Worker B PR #65, Worker A PR #64, Worker C PR #62, and Worker J PR #66 live refs",
+    "compare 2b8988b84c4eb8929cc1e733de274d5f484afea1...e0f416f36b47cab13d15b8633ec2605a34bb4896",
+    "compare 70bfeaaf62acad99bf4aa5195e97e5307c0d805f...e0f416f36b47cab13d15b8633ec2605a34bb4896",
+    "inspect all 18 PR #64 changed files and classify their ownership surface",
+    "inspect canonical registry, Worker A adapter, tests, rationales, source records, compatibility evidence, and controlled P2 workflow",
+    "inspect Stage 1 workflow run 31020134276 jobs and artifact metadata",
+    "download and hash Stage 1 Linux, macOS, Windows, and source-manifest artifacts",
+    "compare committed Stage 2 execution records byte-for-byte with Stage 1 artifacts",
+    "inspect final-head runs 31020564649, 31020564121, and 31020564251 at job and step level",
+    "download and hash final-head source-manifest artifact 8936402914",
+    "compare final generated source-manifest Git blob with committed root SOURCE_MANIFEST.sha256 Git blob",
+    "verify controlled P2 workflow dispatch, actor, environment, package, provisioning, and interactive self-hosted runner gates",
+    "re-resolve Worker A exact head before issuing decision"
+  ],
+  "decision": "REQUEST_CHANGES",
+  "disposition": "Worker A must refresh and commit the final Stage 2 root source manifest with a zero-diff exact-head check and remove or explicitly freeze stale placeholder identities in current compatibility evidence. Controlled P2 behavior remains independently BLOCKED_EXTERNAL and must not be fabricated.",
+  "filesReviewed": [
+    {
+      "classification": "Worker A workflow",
+      "path": ".github/workflows/worker-a-test-center-integration.yml"
+    },
+    {
+      "classification": "source manifest",
+      "path": "SOURCE_MANIFEST.sha256"
+    },
+    {
+      "classification": "canonical registry extension",
+      "path": "config/test_center_registry.v1.json"
+    },
+    {
+      "classification": "Worker A documentation",
+      "path": "docs/roadmap/progress/2026-08-05-worker-a-canonical-test-center-integration.md"
+    },
+    {
+      "classification": "Worker A documentation",
+      "path": "docs/roadmap/progress/2026-08-05-worker-a-p1-p2-new-roadmap-execution.md"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/p1-p1a-p2-execution-package.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/p1-p1a-p2-reuse-matrix.jsonl"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/p1-p1a-p2-test-center.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/affected-mapping-rationales.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/evidence-package.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/executions/linux.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/executions/macos.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/executions/windows.json"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/source-manifest-candidate/SOURCE_MANIFEST.sha256"
+    },
+    {
+      "classification": "Worker A evidence",
+      "path": "release/evidence/worker-a/test-center-v1/source-manifest-candidate/metadata.json"
+    },
+    {
+      "classification": "Worker A test",
+      "path": "tool/worker_a_p1_p2_execution_contract_test.py"
+    },
+    {
+      "classification": "Worker A adapter",
+      "path": "tool/worker_a_test_center_v1.py"
+    },
+    {
+      "classification": "Worker A test",
+      "path": "tool/worker_a_test_center_v1_test.py"
+    }
+  ],
+  "historicalFindings": [
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-101",
+      "severity": "HIGH",
+      "summary": "The canonical Stage 1/Stage 2 evidence chain is exact and genuine, but the current non-normative execution-package evidence still contains a candidate placeholder and stale embedded Worker A, Worker B-contract, and Worker J identities. The prompt requires no placeholder or stale candidate identity to remain in the reviewed evidence set."
+    },
+    {
+      "disposition": "PASS",
+      "findingId": "B-A-102",
+      "severity": "HIGH",
+      "summary": "Canonical lowercase dotted tc.* IDs, valid modules, NON_MUTATING profiles, structured argv, repository-relative paths, canonical platforms, explicit environment allowlists, inputs, outputs, and release/evidence destinations are present and validated."
+    },
+    {
+      "disposition": "PASS",
+      "findingId": "B-A-103",
+      "severity": "HIGH",
+      "summary": "Schema-valid DevelopmentVerificationRequest/Result, TestExecutionResult, EvidenceReference, capability-support boundary, certification boundary, and Testing Studio presentation records use exactly PASS, FAIL, ERROR, SKIPPED, BLOCKED, UNKNOWN, FLAKY, and NOT_IMPLEMENTED. Hosted source PASS is not promoted to behavior or support."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-104",
+      "severity": "HIGH",
+      "summary": "Stage 1 manifest evidence is exact and idempotent, but the final-head manifest artifact has Git blob 527b8cac0068e17ec435aaa2288963d7ed54fe12 while committed root SOURCE_MANIFEST.sha256 has Git blob 10d7d22584271ebdb9e987b462c95f249aaf8b77. The workflow permits this modification and therefore reports success without proving the Stage 2 root manifest is current."
+    },
+    {
+      "disposition": "OPEN_BLOCKED_EXTERNAL",
+      "findingId": "B-A-105",
+      "severity": "HIGH",
+      "summary": "Controlled Windows, macOS, Linux, hello.txt acceptance, cleanup, process-tree termination, aggregate evidence, and independent certification remain unavailable. The repository correctly requires protected-main workflow_dispatch, an authorized actor, approved p2-controlled environment, exact package identity, signed provisioning, and interactive self-hosted runners."
+    },
+    {
+      "disposition": "PASS",
+      "findingId": "B-A-106",
+      "severity": "MEDIUM",
+      "summary": "Seven stable mappings provide pathPatterns, canonical test IDs, priority, exclusions where applicable, rationale coverage, and order-independent deterministic selection."
+    }
+  ],
+  "newFindings": [
+    {
+      "disposition": "REQUEST_CHANGES",
+      "findingId": "B-A-108",
+      "requiredRepair": "Commit the exact output of tool/p1a_refresh_source_manifest.py for the final file set, run it twice, require zero diff after generation, and rerun exact-head gates.",
+      "severity": "HIGH",
+      "summary": "Final Stage 2 root source manifest is stale even though final-head CI is green."
+    },
+    {
+      "disposition": "REQUEST_CHANGES",
+      "findingId": "B-A-109",
+      "requiredRepair": "Refresh those fields to exact current identities or explicitly freeze the files as immutable superseded history with captured snapshot identities and a canonical supersededBy reference; leave normative=false and do not alter canonical contract semantics.",
+      "severity": "MEDIUM",
+      "summary": "Current Worker A compatibility evidence retains placeholder and stale identities that contradict the exact final candidate."
+    }
+  ],
+  "protectedMainCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+  "protectedMainTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+  "reviewArtifactHashSidecar": "WORKER_B_A_REVIEW_e0f416f.json.sha256",
+  "reviewId": "worker-b-a-review-e0f416f",
+  "reviewedAt": "2026-08-05T16:20:33Z",
+  "reviewedBranch": "agent/a/p1-p2-new-roadmap-execution",
+  "reviewedCommit": "e0f416f36b47cab13d15b8633ec2605a34bb4896",
+  "reviewedPullRequest": 64,
+  "reviewedTree": "ff78974657c25ddc45f6597120fae4b857fe34e9",
+  "reviewer": "Worker B — Test Center Authority and independent certification review",
+  "schemaVersion": "1.0.0",
+  "supportClaimImpact": "NO_PROMOTION",
+  "testedImplementationCommit": "70bfeaaf62acad99bf4aa5195e97e5307c0d805f",
+  "testedImplementationTree": "04b4a452a31100ca7a82994749b78fcda3f61e25",
+  "validUntilScopeChanges": true,
+  "workerBBaseCommit": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+  "workerBBaseTree": "b33344fd5a7bcc212fd94933e4962654de062aac",
+  "workflowRunsInspected": [
+    {
+      "conclusion": "success",
+      "event": "push",
+      "headSha": "70bfeaaf62acad99bf4aa5195e97e5307c0d805f",
+      "headTree": "04b4a452a31100ca7a82994749b78fcda3f61e25",
+      "runId": 31020134276,
+      "scope": "Stage 1 implementation candidate",
+      "workflow": "Worker A Test Center Integration"
+    },
+    {
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "e0f416f36b47cab13d15b8633ec2605a34bb4896",
+      "headTree": "ff78974657c25ddc45f6597120fae4b857fe34e9",
+      "runId": 31020564649,
+      "scope": "Stage 2 final head",
+      "workflow": "Worker A Test Center Integration"
+    },
+    {
+      "conclusion": "success",
+      "headSha": "e0f416f36b47cab13d15b8633ec2605a34bb4896",
+      "runId": 31020564121,
+      "scope": "Stage 2 final head",
+      "workflow": "product-gates"
+    },
+    {
+      "conclusion": "success",
+      "headSha": "e0f416f36b47cab13d15b8633ec2605a34bb4896",
+      "runId": 31020564251,
+      "scope": "validation passed; controlled execute and source-manifest lanes skipped",
+      "workflow": "P2 Integration Alignment"
+    }
+  ]
+}
