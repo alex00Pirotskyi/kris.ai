@@ -1,0 +1,543 @@
+name: Worker F P5-001 finalizer
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: worker-f-p5-001-finalizer
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    outputs:
+      source_sha: ${{ steps.identity.outputs.source_sha }}
+      source_tree: ${{ steps.identity.outputs.source_tree }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Cancel older competing Worker F runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT_RUN: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPO/actions/runs?branch=agent/f/P5-001-information-architecture&per_page=100" \
+            --jq '.workflow_runs[] | select(.status == "queued" or .status == "in_progress") | .id' \
+            | while read -r run_id; do
+                if [[ "$run_id" != "$CURRENT_RUN" ]]; then
+                  gh api --method POST "repos/$REPO/actions/runs/$run_id/cancel" >/dev/null 2>&1 || true
+                fi
+              done
+          sleep 12
+      - name: Materialize source if required
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f lib/p5_ia_preview.dart && -d lib/product/p5_information_architecture ]]; then
+            echo 'P5 source is already materialized; continuing with deterministic repair.'
+            exit 0
+          fi
+          test -f .github/workflows/worker-f-materialize-p5-001.yml
+          python -m pip install --disable-pip-version-check --quiet pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          source=Path('.github/workflows/worker-f-materialize-p5-001.yml')
+          payload=yaml.safe_load(source.read_text(encoding='utf-8'))
+          steps=payload['jobs']['materialize']['steps']
+          script=next(step['run'] for step in steps if step.get('name')=='Materialize reviewed Worker F objects')
+          # Keep the current finalizer alive until its matrix completes; all other temporary files may be deleted.
+          cleanup='rm -f .github/workflows/worker-f-bootstrap.yml .github/workflows/worker-f-materialize-p5-001.yml .github/workflows/worker-f-stage2-orchestrator.yml .github/workflows/worker-f-p5-001-repair.yml .github/workflows/worker-f-stage2-orchestrator-v2.yml .github/workflows/worker-f-p5-001-serialize.yml'
+          marker='rm -f .github/workflows/worker-f-bootstrap.yml'
+          if marker in script:
+            start=script.index(marker)
+            end=script.find('\n',start)
+            script=script[:start]+cleanup+script[end:]
+          out=Path('/tmp/worker-f-materialize.sh')
+          out.write_text('#!/usr/bin/env bash\n'+script+'\n',encoding='utf-8')
+          out.chmod(0o755)
+          PY
+          /tmp/worker-f-materialize.sh
+      - name: Apply bounded source and workflow repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f lib/p5_ia_preview.dart
+          test -d lib/product/p5_information_architecture
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          fixture=Path('lib/product/p5_information_architecture/p5_fixtures.dart')
+          fixture.write_text(fixture.read_text(encoding='utf-8').replace('<T5CapabilityFixture>[','<P5CapabilityFixture>['),encoding='utf-8')
+
+          prototype=Path('lib/product/p5_information_architecture/p5_prototype.dart')
+          source=prototype.read_text(encoding='utf-8')
+          old="""  late final P5InformationArchitectureController controller =
+              widget.controller ?? P5InformationArchitectureController();
+            late final bool ownsController = widget.controller == null;
+
+            @override
+            void dispose() {
+          """
+          new="""  late final P5InformationArchitectureController controller;
+            late final bool ownsController;
+
+            @override
+            void initState() {
+              super.initState();
+              controller = widget.controller ?? P5InformationArchitectureController();
+              ownsController = widget.controller == null;
+            }
+
+            @override
+            void dispose() {
+          """
+          if old in source:
+            source=source.replace(old,new)
+          prototype.write_text(source,encoding='utf-8')
+
+          registry_path=Path('config/test_center_registry.v1.json')
+          registry=json.loads(registry_path.read_text(encoding='utf-8'))
+          def is_p5(record):
+            encoded=json.dumps(record,sort_keys=True)
+            return 'p5-001' in encoded or 'p5-information-architecture' in encoded
+          def force(record):
+            for key,value in list(record.items()):
+              lower=key.lower()
+              if isinstance(value,dict):
+                force(value)
+              elif isinstance(value,list):
+                for item in value:
+                  if isinstance(item,dict): force(item)
+              elif isinstance(value,str):
+                if 'support' in lower and any(token in lower for token in ('state','status','level','classification')):
+                  record[key]='SOURCE_FOUNDATION'
+                elif 'certification' in lower and any(token in lower for token in ('state','status','decision','result')):
+                  record[key]='NOT_EVALUATED'
+                elif lower in {'resultstate','testexecutionresult'}:
+                  record[key]='UNKNOWN'
+          for value in registry.values():
+            if isinstance(value,list):
+              for record in value:
+                if isinstance(record,dict) and is_p5(record): force(record)
+          registry_path.write_text(json.dumps(registry,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+
+          # Permanent bounded workflow: future pushes validate only and never package or mutate.
+          cat > .github/workflows/worker-f-p5-001-information-architecture.yml <<'YAML'
+          name: Worker F P5-001 Information Architecture
+
+          on:
+            push:
+              branches:
+                - agent/f/P5-001-information-architecture
+            pull_request:
+              branches:
+                - agent/b/test-center-contracts-and-review
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            verify:
+              name: ${{ matrix.os-name }} P5-001 verification
+              strategy:
+                fail-fast: false
+                matrix:
+                  include:
+                    - os: ubuntu-latest
+                      os-name: Ubuntu
+                    - os: windows-latest
+                      os-name: Windows
+                    - os: macos-latest
+                      os-name: macOS
+              runs-on: ${{ matrix.os }}
+              timeout-minutes: 50
+              steps:
+                - uses: actions/checkout@v4
+                  with:
+                    fetch-depth: 0
+                - uses: actions/setup-python@v5
+                  with:
+                    python-version: '3.12.10'
+                - uses: subosito/flutter-action@v2
+                  with:
+                    flutter-version: '3.44.8'
+                    channel: stable
+                    cache: true
+                - name: Resolve dependencies
+                  shell: bash
+                  run: flutter pub get
+                - name: Validate authority, contracts, and deterministic evidence
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    python tool/roadmap_control.py validate --project . --strict
+                    python - <<'PY'
+                    import subprocess
+                    result=subprocess.run(['python','tool/roadmap_control.py','explain','P5-001','--project','.'],text=True,capture_output=True)
+                    text=result.stdout+result.stderr
+                    if result.returncode != 2 or not any(token in text for token in ('Unknown task','outside','scope')):
+                      raise SystemExit(f'unexpected P5 scope decision: code={result.returncode}\n{text}')
+                    PY
+                    python tool/worker_f_p5_ia.py manifest --project . --check
+                    python tool/worker_f_p5_ia.py check --project .
+                    python tool/worker_f_p5_ia_test.py
+                    python tool/test_center_contracts.py check --project .
+                    python - <<'PY'
+                    import subprocess
+                    a=subprocess.check_output(['python','tool/worker_f_p5_ia.py','select','--project','.','lib/product/p5_information_architecture/p5_models.dart','test/product/p5_information_architecture/p5_accessibility_test.dart'],text=True).strip()
+                    b=subprocess.check_output(['python','tool/worker_f_p5_ia.py','select','--project','.','test/product/p5_information_architecture/p5_accessibility_test.dart','lib/product/p5_information_architecture/p5_models.dart'],text=True).strip()
+                    if a != b: raise SystemExit('affected selection is input-order dependent')
+                    PY
+                - name: Format, analyze, and test
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    dart format --output=none --set-exit-if-changed lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+                    flutter analyze
+                    flutter test test/product/p5_information_architecture/
+                    python - <<'PY'
+                    from pathlib import Path
+                    import subprocess
+                    tests=sorted({str(p) for p in Path('test').rglob('*test.dart') if any(token in p.name.lower() for token in ('p2_app_shell','p2_owner','chat_studio'))})
+                    for test in tests:
+                      subprocess.run(['flutter','test',test],check=True)
+                    PY
+                - name: Manifest idempotence and non-mutation
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    python - <<'PY'
+                    from pathlib import Path
+                    import hashlib, subprocess
+                    path=Path('docs/roadmap/SOURCE_MANIFEST.sha256')
+                    before=hashlib.sha256(path.read_bytes()).hexdigest()
+                    subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True)
+                    first=hashlib.sha256(path.read_bytes()).hexdigest()
+                    subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True)
+                    second=hashlib.sha256(path.read_bytes()).hexdigest()
+                    if before != first or first != second: raise SystemExit('source manifest is not exact-head idempotent')
+                    PY
+                    git diff --check
+                    git diff --exit-code
+                    test -z "$(git status --porcelain)"
+          YAML
+          sed -i 's/^          //' .github/workflows/worker-f-p5-001-information-architecture.yml
+
+          rm -f .github/workflows/worker-f-bootstrap.yml \
+            .github/workflows/worker-f-materialize-p5-001.yml \
+            .github/workflows/worker-f-stage2-orchestrator.yml \
+            .github/workflows/worker-f-p5-001-repair.yml \
+            .github/workflows/worker-f-stage2-orchestrator-v2.yml \
+            .github/workflows/worker-f-p5-001-serialize.yml
+
+          flutter pub get
+          dart format lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          flutter analyze
+          flutter test test/product/p5_information_architecture/
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/worker-f-source-first
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/worker-f-source-first docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Commit immutable Stage 1 source candidate
+        id: identity
+        env:
+          BRANCH: agent/f/P5-001-information-architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/worker-f-p5-001-finalize.yml
+          git add -A .github/workflows \
+            config/test_center_registry.v1.json docs/roadmap/SOURCE_MANIFEST.sha256 \
+            docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md \
+            docs/ux/P5-001_INFORMATION_ARCHITECTURE.md lib/p5_ia_preview.dart \
+            lib/product/p5_information_architecture release/evidence/P5-001 \
+            test/product/p5_information_architecture tool/worker_f_p5_ia.py tool/worker_f_p5_ia_test.py
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit -m 'P5-001: finalize information architecture source candidate'
+            git push origin HEAD:refs/heads/$BRANCH
+          fi
+          SOURCE_SHA=$(git rev-parse HEAD)
+          SOURCE_TREE=$(git show -s --format=%T HEAD)
+          git cat-file -e "$SOURCE_SHA:lib/p5_ia_preview.dart"
+          git cat-file -e "$SOURCE_SHA:.github/workflows/worker-f-p5-001-information-architecture.yml"
+          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          echo "source_tree=$SOURCE_TREE" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: ${{ matrix.os_name }} exact Stage 1
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os_name: Ubuntu
+          - os: windows-latest
+            os_name: Windows
+          - os: macos-latest
+            os_name: macOS
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Confirm exact Stage 1 identity
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ needs.prepare.outputs.source_sha }}
+          EXPECTED_TREE: ${{ needs.prepare.outputs.source_tree }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git show -s --format=%T HEAD)" = "$EXPECTED_TREE"
+      - name: Resolve dependencies
+        shell: bash
+        run: flutter pub get
+      - name: Validate roadmap authority and bounded dependency decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/roadmap_control.py validate --project . --strict
+          python - <<'PY'
+          import subprocess
+          result=subprocess.run(['python','tool/roadmap_control.py','explain','P5-001','--project','.'],text=True,capture_output=True)
+          text=result.stdout+result.stderr
+          if result.returncode != 2 or not any(token in text for token in ('Unknown task','outside','scope')):
+            raise SystemExit(f'unexpected scope decision: {result.returncode}\n{text}')
+          PY
+      - name: Validate contracts, affected selection, and source boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python - <<'PY'
+          import subprocess
+          a=subprocess.check_output(['python','tool/worker_f_p5_ia.py','select','--project','.','lib/product/p5_information_architecture/p5_models.dart','test/product/p5_information_architecture/p5_accessibility_test.dart'],text=True).strip()
+          b=subprocess.check_output(['python','tool/worker_f_p5_ia.py','select','--project','.','test/product/p5_information_architecture/p5_accessibility_test.dart','lib/product/p5_information_architecture/p5_models.dart'],text=True).strip()
+          if a != b: raise SystemExit('affected selection is input-order dependent')
+          PY
+      - name: Format, analyze, widget, keyboard, and semantics tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format --output=none --set-exit-if-changed lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          flutter analyze
+          flutter test test/product/p5_information_architecture/
+      - name: Existing affected shell tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          tests=sorted({str(p) for p in Path('test').rglob('*test.dart') if any(token in p.name.lower() for token in ('p2_app_shell','p2_owner','chat_studio'))})
+          for test in tests:
+            subprocess.run(['flutter','test',test],check=True)
+          PY
+      - name: Source manifest idempotence, generated-state hygiene, and non-mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, subprocess
+          path=Path('docs/roadmap/SOURCE_MANIFEST.sha256')
+          before=hashlib.sha256(path.read_bytes()).hexdigest()
+          subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True)
+          first=hashlib.sha256(path.read_bytes()).hexdigest()
+          subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True)
+          second=hashlib.sha256(path.read_bytes()).hexdigest()
+          if before != first or first != second: raise SystemExit('source manifest is not exact-head idempotent')
+          PY
+          git diff --check
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+      - name: Upload exact Stage 1 receipt inputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-f-p5-001-${{ matrix.os_name }}-${{ needs.prepare.outputs.source_sha }}
+          path: |
+            release/evidence/P5-001/
+            docs/roadmap/SOURCE_MANIFEST.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  package:
+    name: Package Stage 2 and request independent review
+    needs: [prepare, verify]
+    if: needs.verify.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Open/update draft PR and bind exact run evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: agent/f/P5-001-information-architecture
+          BASE_BRANCH: agent/b/test-center-contracts-and-review
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          SOURCE_TREE: ${{ needs.prepare.outputs.source_tree }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git show -s --format=%T HEAD)" = "$SOURCE_TREE"
+          RUN_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID")
+          JOBS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100")
+          ARTIFACTS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100")
+
+          PR_NUMBER=$(gh api "repos/$REPO/pulls?head=${REPO%%/*}:$BRANCH&state=all&per_page=20" --jq '.[0].number // empty')
+          cat > /tmp/worker-f-pr.md <<EOF
+          ## Authority and dependency
+          - Human authority: \`docs/roadmap/MASTER.md\`
+          - Machine authority: \`docs/roadmap/roadmap.yaml\` within its declared P0/P1 scope
+          - P0-008 dependency: **READY**
+          - Selected Worker B base: \`90c574665363140aeb6cf764ab8387714cab88cf\` / tree \`438fe3f710c0fed32106ee6acdc138f4e4c6accc\`
+          - Exact Stage 1 source: \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`
+          - Exact tri-OS run: [$RUN_ID]($RUN_URL)
+
+          ## Bounded prototype
+          Isolated Flutter entry: \`flutter run -t lib/p5_ia_preview.dart\`. It covers jobs-to-be-done, workspaces, deterministic presentation transitions, Simple/Advanced/Developer disclosure, Verification Center domain separation, Owner Mode presentation boundaries, honest unavailable capabilities, failures/recovery, keyboard flow, semantics, deterministic fixtures, canonical Test Center records, and affected-test mappings.
+
+          \`lib/main.dart\`, P2 runtime semantics, capability grants, process execution, and roadmap authority are unchanged. The prototype performs no filesystem mutation, network, credential, browser, device, command, or Owner Mode runtime action.
+
+          Capability support remains **SOURCE_FOUNDATION**. Test PASS is not represented as independent review, certification, platform support, release support, accessibility certification, P22 consumer readiness, production readiness, or GA readiness.
+
+          Worker B exact-SHA review, Worker A semantic verification, and Worker J no-conflict record are requested below. Worker I is not required because no security-sensitive behavioral change was introduced. This PR remains draft and unmerged.
+          EOF
+          sed -i 's/^          //' /tmp/worker-f-pr.md
+          if [[ -z "$PR_NUMBER" ]]; then
+            PR_NUMBER=$(gh api "repos/$REPO/pulls" \
+              -f title='P5-001: add information architecture and UX flow prototype' \
+              -f head="$BRANCH" -f base="$BASE_BRANCH" \
+              -f body="$(cat /tmp/worker-f-pr.md)" -F draft=true --jq .number)
+          else
+            gh api --method PATCH "repos/$REPO/pulls/$PR_NUMBER" \
+              -f title='P5-001: add information architecture and UX flow prototype' \
+              -f body="$(cat /tmp/worker-f-pr.md)" >/dev/null
+          fi
+
+          mkdir -p /tmp/worker-f-artifacts release/evidence/P5-001
+          jq -r '.artifacts[] | select(.expired == false) | [.id,.name] | @tsv' <<<"$ARTIFACTS_JSON" | while IFS=$'\t' read -r artifact_id artifact_name; do
+            gh api "repos/$REPO/actions/artifacts/$artifact_id/zip" > "/tmp/worker-f-artifacts/${artifact_id}-${artifact_name}.zip"
+          done
+          find /tmp/worker-f-artifacts -type f -print0 | sort -z | xargs -0 -r sha256sum > /tmp/worker-f-hashes.txt
+          export RUN_JSON JOBS_JSON ARTIFACTS_JSON PR_NUMBER
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          evidence=Path('release/evidence/P5-001')
+          run=json.loads(os.environ['RUN_JSON'])
+          jobs_raw=json.loads(os.environ['JOBS_JSON'])
+          artifacts_raw=json.loads(os.environ['ARTIFACTS_JSON'])
+          jobs=[]
+          for job in sorted(jobs_raw.get('jobs',[]),key=lambda item:(item.get('name',''),item.get('id',0))):
+            if job.get('name') in ('Ubuntu exact Stage 1','Windows exact Stage 1','macOS exact Stage 1'):
+              jobs.append({'jobId':job.get('id'),'name':job.get('name'),'status':job.get('status'),'conclusion':job.get('conclusion'),'startedAt':job.get('started_at'),'completedAt':job.get('completed_at'),'url':job.get('html_url')})
+          hashes=[]
+          hash_path=Path('/tmp/worker-f-hashes.txt')
+          if hash_path.exists():
+            for line in hash_path.read_text(encoding='utf-8').splitlines():
+              digest,path=line.split('  ',1)
+              hashes.append({'path':Path(path).name,'sha256':digest})
+          source={'schemaVersion':'1.0.0','stage':'STAGE_1_CODED_PROTOTYPE','commit':os.environ['SOURCE_SHA'],'tree':os.environ['SOURCE_TREE'],'baseCommit':'90c574665363140aeb6cf764ab8387714cab88cf','baseTree':'438fe3f710c0fed32106ee6acdc138f4e4c6accc','moduleId':'tm.p5-information-architecture','capabilitySupport':'SOURCE_FOUNDATION','productionEntryPointChanged':False,'runtimeSideEffects':False}
+          ci={'schemaVersion':'1.0.0','stage':'STAGE_2_EVIDENCE_PACKAGING','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowName':'Worker F P5-001 finalizer','runId':int(os.environ['RUN_ID']),'runUrl':os.environ['RUN_URL'],'status':run.get('status'),'conclusion':'success','jobs':jobs,'artifacts':[{'artifactId':a.get('id'),'name':a.get('name'),'sizeInBytes':a.get('size_in_bytes'),'expired':a.get('expired')} for a in sorted(artifacts_raw.get('artifacts',[]),key=lambda item:(item.get('name',''),item.get('id',0)))],'artifactFiles':hashes}
+          reviews={'schemaVersion':'1.0.0','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'requests':[{'worker':'B','status':'REQUESTED','scope':'canonical Test Center, Verification Center domains, stable IDs, profiles, mappings, evidence, support inflation','allowedDecisions':['PASS','REQUEST_CHANGES','BLOCKED_BY_CONTRACT','BLOCKED_EXTERNAL']},{'worker':'A','status':'REQUESTED','scope':'Owner Mode labels and unchanged P2 semantics'},{'worker':'J','status':'REQUESTED','scope':'P5-001 ownership and no-conflict record'}],'workerIRequired':False}
+          results={'schemaVersion':'1.0.0','milestone':'P5-001','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':int(os.environ['RUN_ID']),'conclusion':'success','jobs':jobs,'capabilitySupport':'SOURCE_FOUNDATION','certificationState':'NOT_EVALUATED','platformSupport':'UNSUPPORTED','releaseSupport':'UNSUPPORTED'}
+          handoff={'schemaVersion':'1.0.0','classification':'P5-001_PROTOTYPE_REVIEW_READY','branch':'agent/f/P5-001-information-architecture','pullRequestNumber':int(os.environ['PR_NUMBER']),'stage1Commit':os.environ['SOURCE_SHA'],'stage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':int(os.environ['RUN_ID']),'workflowRunUrl':os.environ['RUN_URL'],'workerB':'REQUESTED','workerA':'REQUESTED','workerJ':'REQUESTED','merge':False}
+          for name,payload in [('stage-1-source.json',source),('stage-2-ci.json',ci),('review-requests.json',reviews),('test-results.json',results),('final-handoff.json',handoff)]:
+            (evidence/name).write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/worker-f-stage2-source-first
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/worker-f-stage2-source-first docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+
+          git add docs/roadmap/SOURCE_MANIFEST.sha256 release/evidence/P5-001
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'P5-001: package exact-head verification evidence'
+          STAGE2_SHA=$(git rev-parse HEAD)
+          STAGE2_TREE=$(git show -s --format=%T HEAD)
+          git push origin HEAD:refs/heads/$BRANCH
+
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker B exact-SHA review request
+
+          Review Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` for canonical Test Center conformance, Verification Center domain separation, stable IDs, one-to-one NON_MUTATING profiles, affected mappings, evidence binding, certification/support presentation, and no support inflation. Allowed decision: PASS | REQUEST_CHANGES | BLOCKED_BY_CONTRACT | BLOCKED_EXTERNAL." >/dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker A semantic verification request
+
+          Verify Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`: Owner Mode labels are accurate, source versus controlled behavior remains separate, no capability-grant or P2 runtime semantic changed, and BLOCKED_EXTERNAL remains honest." >/dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker J no-conflict record request
+
+          Record for Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`: Worker F owns only P5-001, roadmap authority is unchanged, no A/B/C/D/E/J collision exists, P5-002+ remain unstarted, and P22 readiness is not claimed." >/dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="## Worker F Stage 2 evidence
+
+          Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` passed exact Ubuntu, Windows, and macOS jobs in run [$RUN_ID]($RUN_URL). Stage 2 \`$STAGE2_SHA\` / tree \`$STAGE2_TREE\` packages job IDs, artifacts, hashes, and review-request state without representing itself as the tested source candidate. Classification: **P5-001_PROTOTYPE_REVIEW_READY**. The PR remains draft and unmerged." >/dev/null
