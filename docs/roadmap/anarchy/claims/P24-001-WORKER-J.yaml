@@ -23,18 +23,16 @@
     "tool/p24_ci_driver_parts/**"
   ],
   "continuity": {
-    "lastVerifiedHead": "171053b2f68bb065f305dabd0d637945aff658ec",
-    "lastVerifiedTree": "55bc95eedd29abcad7a077d197af835ade95d902",
+    "lastVerifiedHead": "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec",
+    "lastVerifiedTree": "1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a",
     "safeTakeover": "Only after a later pushed YIELDED record binds the last head/tree and no newer Worker J commit exists."
   },
-  "nextAction": "Inspect the exact-head P24 and product-gates runs for the canonical repository-relative source repair; if generation is deterministic, commit only the generated index and owner-generated root source manifest, then rerun CI before requesting reviews.",
+  "nextAction": "Inspect the current exact-head P24 and product-gates state. If the generated P24 index and owner-generated root source manifest are zero-diff and all required lanes are green, request Worker B and Worker I review of that exact commit/tree; otherwise commit only the generator-produced closure bytes and rerun exact-head CI.",
   "publishedCandidate": {
-    "commit": "171053b2f68bb065f305dabd0d637945aff658ec",
-    "p24Conclusion": "FAIL",
-    "p24Run": 31024658913,
-    "productGatesConclusion": "PASS",
-    "productGatesRun": 31024659087,
-    "tree": "55bc95eedd29abcad7a077d197af835ade95d902"
+    "commit": "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec",
+    "p24Conclusion": "GENERATOR_CLOSURE_PENDING",
+    "productGatesConclusion": "PENDING",
+    "tree": "1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a"
   },
   "recordType": "AnarchyClaim",
   "reviewerRoles": [

@@ -98,10 +98,24 @@
       "kind": "COORDINATION_CHECKPOINT",
       "observedAtUtc": "2026-08-05T17:10:00Z",
       "sequence": 12
+    },
+    {
+      "classification": "SOURCE_REPAIR",
+      "commit": "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec",
+      "evidence": ".github/workflows/p24-adoption-review.yml",
+      "kind": "DIAGNOSTIC_ARTIFACT_BOUNDING_REPAIR",
+      "sequence": 13,
+      "tree": "1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a"
+    },
+    {
+      "evidence": "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
+      "kind": "COORDINATION_CHECKPOINT_REFRESHED",
+      "observedAtUtc": "2026-08-05T17:47:00Z",
+      "sequence": 14
     }
   ],
   "pending": [
-    "exact-head Ubuntu/Windows/macOS validation of the canonical repository-relative source repair",
+    "exact-head Ubuntu/Windows/macOS validation of the final coordination-bound source candidate",
     "generator-produced P24 index and canonical root source-manifest closure",
     "zero-diff exact-check rerun",
     "Worker B exact-head review",

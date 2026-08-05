@@ -4,7 +4,7 @@ role: "Roadmap-as-data and integration governor"
 status: REPAIRING
 branch: "agent/j/P24-001-roadmap-as-data-adr"
 active_task: "P24-001 published exact-head repair and adoption review"
-last_anchor: "171053b2f68bb065f305dabd0d637945aff658ec / 55bc95eedd29abcad7a077d197af835ade95d902"
+last_anchor: "a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec / 1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a"
 reviewer: "Worker B and Worker I"
 ---
 
@@ -33,10 +33,10 @@ protected main: 0a4176bcbcb975684c3a590be652c9fffe1ce770
 protected main tree: 641e11e63fa84f3a16dc4d74b418778839ce5bc2
 stacked base / PR #63: 6b23beb64070932886e75a131580fbc6fda878b6
 stacked base tree: 724b838cae31bb50befb4e7676c55a41f925091e
-published Worker J candidate: 171053b2f68bb065f305dabd0d637945aff658ec
-published Worker J tree: 55bc95eedd29abcad7a077d197af835ade95d902
-P24 exact-head run: 31024658913 — FAIL
-product-gates run: 31024659087 — PASS
+published Worker J parent: a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec
+published Worker J parent tree: 1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a
+previous repaired-source P24 run: 31030838938 — FAIL only at generated index/source-manifest closure
+previous repaired-source product-gates run: 31030839006 — in progress at the coordination snapshot
 PR #66: open, draft, unmerged
 ```
 
@@ -118,9 +118,10 @@ The live test count is discovered from the suite; do not reuse the historical 15
 
 ## Remaining work
 
-- [ ] Publish the canonical repository-relative source repair without force.
-- [ ] Inspect the exact-head P24 and product-gates workflows.
-- [ ] Use uploaded exact-head generation artifacts to commit only the generated P24 index and canonical owner-produced root source manifest.
+- [x] Publish the canonical repository-relative repair and bounded diagnostic upload without force.
+- [x] Inspect source-candidate run `31030838938`; semantic/write/resume generation passed and only generated closure remained.
+- [ ] Inspect the current coordination-bound exact-head P24 and product-gates workflows.
+- [ ] Use bounded exact-head generation artifacts to commit only the generated P24 index and canonical owner-produced root source manifest.
 - [ ] Prove second write and second manifest generation are byte-identical and exact generation creates zero diff.
 - [ ] Obtain P24 Ubuntu, Windows, and macOS PASS plus product-gates PASS on the same source candidate.
 - [ ] Record final pushed-state clean-room resume.
@@ -129,13 +130,13 @@ The live test count is discovered from the suite; do not reuse the historical 15
 
 ## Next exact action
 
-Inspect the exact-head P24 and product-gates runs for the canonical repository-relative source repair. When deterministic generation artifacts are available, commit only their generated index and root source-manifest bytes and rerun exact-head CI before requesting reviews.
+Inspect the current exact-head P24 and product-gates state. If the generated P24 index and owner-generated root source manifest are zero-diff and all required lanes are green, request Worker B and Worker I review of that exact commit/tree; otherwise commit only the generator-produced closure bytes and rerun exact-head CI.
 
 ## Yield / takeover
 
 ```text
 status: ACTIVE
-last_verified_head: 171053b2f68bb065f305dabd0d637945aff658ec
-last_verified_tree: 55bc95eedd29abcad7a077d197af835ade95d902
+last_verified_head: a5db5a74fe1fa28e0fafab52cc3c681ca66d17ec
+last_verified_tree: 1f1e9d4d8f2843fbc9aff2d2680a12c705e3698a
 safe_takeover: only from a later pushed YIELDED record with exact head/tree continuity
 ```

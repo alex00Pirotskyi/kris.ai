@@ -16,6 +16,6 @@ It must discover:
 - Worker B and Worker I review blockers;
 - the current P24 tri-platform repair/closure action.
 
-It must not instruct Worker J to create the branch, open the PR, or publish the already-published `171053b2...` candidate. The repository-derived next action is to inspect the repaired exact-head P24/product-gates runs, commit only generator-produced index/manifest closure when needed, and request independent reviews only after green CI.
+It must not instruct Worker J to create the branch or open the already-existing draft PR. It must resolve the current pushed head from Git rather than relying on a hard-coded historical candidate. The repository-derived next action is conditional and remains valid across closure commits: inspect the current exact-head P24/product-gates state; when generated index and root source-manifest closure are zero-diff and green, request independent reviews of that exact commit/tree; otherwise commit only generator-produced closure bytes and rerun CI.
 
 Exact-head CI and the final pushed-state clean-room observation remain adoption-review gates. A clean-room PASS does not adopt PR #63, complete P24-001, complete P2 behavior, or confer product/release support.
