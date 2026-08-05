@@ -1,4 +1,4 @@
-name: TEMP PR14 Exact Run Approval V7
+name: TEMP P2 Superseded Run Release V8
 
 on:
   push:
@@ -9,21 +9,21 @@ permissions:
   contents: read
 
 concurrency:
-  group: temp-pr14-exact-run-approval-v7
+  group: temp-p2-superseded-run-release-v8
   cancel-in-progress: false
 
 jobs:
-  approve-exact-pr-runs:
+  release-exact-head-p2-source-run:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      EXPECTED_HEAD: 227f1cbfe1c044c4eb4310e872d3aff5b5721615
-      EXPECTED_PR: '14'
-      RUN_IDS: >-
-        30991734224 30991734199 30991734215 30991734241
-        30991734306 30991734270 30991734546 30991734700
+      OBSOLETE_RUN: '30991734270'
+      OBSOLETE_SHA: 227f1cbfe1c044c4eb4310e872d3aff5b5721615
+      CURRENT_RUN: '30992084248'
+      CURRENT_SHA: 2cb15db0898fb0337b821bbce17bbf60092d3c66
+      TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
     steps:
-      - name: Approve only exact candidate runs
+      - name: Cancel only the superseded serialized run
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -37,16 +37,18 @@ jobs:
           from pathlib import Path
 
           repository = os.environ['GITHUB_REPOSITORY']
-          expected_head = os.environ['EXPECTED_HEAD']
-          expected_pr = int(os.environ['EXPECTED_PR'])
-          run_ids = [int(value) for value in os.environ['RUN_IDS'].split()]
           token = os.environ['GITHUB_TOKEN']
+          obsolete_run = int(os.environ['OBSOLETE_RUN'])
+          current_run = int(os.environ['CURRENT_RUN'])
+          obsolete_sha = os.environ['OBSOLETE_SHA']
+          current_sha = os.environ['CURRENT_SHA']
+          target_branch = os.environ['TARGET_BRANCH']
           base = f'https://api.github.com/repos/{repository}'
           headers = {
               'Accept': 'application/vnd.github+json',
               'Authorization': f'Bearer {token}',
-              'X-GitHub-Api-Version': '2026-03-10',
-              'User-Agent': 'kristin-worker-a-exact-run-approval-v7',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'User-Agent': 'kristin-worker-a-p2-run-release-v8',
           }
 
           def request(path: str, method: str = 'GET'):
@@ -54,73 +56,74 @@ jobs:
               try:
                   with urllib.request.urlopen(req, timeout=30) as response:
                       body = response.read()
-                      decoded = json.loads(body) if body else None
-                      return response.status, decoded
+                      return response.status, json.loads(body) if body else None
               except urllib.error.HTTPError as exc:
                   body = exc.read().decode('utf-8', errors='replace')
                   raise RuntimeError(
                       f'{method} {path} failed status={exc.code} body={body[:1000]}'
                   ) from exc
 
-          receipts = []
-          for run_id in run_ids:
-              status, run = request(f'/actions/runs/{run_id}')
-              assert status == 200, (run_id, status)
-              assert run['head_sha'] == expected_head, (run_id, run['head_sha'])
-              assert run['head_branch'] == 'merge/p1-p2-owner-risk-qa-preview', run_id
-              assert run['event'] == 'pull_request', (run_id, run['event'])
-              pr_numbers = sorted(item['number'] for item in run.get('pull_requests', []))
-              assert pr_numbers == [expected_pr], (run_id, pr_numbers)
-              before = {
-                  'status': run['status'],
-                  'conclusion': run['conclusion'],
-                  'workflow': run['name'],
-                  'path': run['path'],
-              }
-              approval_status = None
-              if run['status'] == 'completed' and run['conclusion'] == 'action_required':
-                  approval_status, _ = request(f'/actions/runs/{run_id}/approve', 'POST')
-                  assert approval_status == 201, (run_id, approval_status)
-              else:
-                  assert run['conclusion'] != 'action_required', (run_id, before)
+          _, old = request(f'/actions/runs/{obsolete_run}')
+          _, current = request(f'/actions/runs/{current_run}')
+          for run, expected_id, expected_sha in (
+              (old, obsolete_run, obsolete_sha),
+              (current, current_run, current_sha),
+          ):
+              assert run['id'] == expected_id
+              assert run['head_sha'] == expected_sha, (expected_id, run['head_sha'])
+              assert run['head_branch'] == target_branch
+              assert run['path'] == '.github/workflows/p2-owner-mode.yml'
+              assert run['event'] == 'pull_request'
+              assert [item['number'] for item in run.get('pull_requests', [])] == [14]
 
-              after = None
-              for _ in range(15):
-                  _, after = request(f'/actions/runs/{run_id}')
-                  if not (
-                      after['status'] == 'completed'
-                      and after['conclusion'] == 'action_required'
-                  ):
-                      break
-                  time.sleep(2)
-              assert after is not None
-              assert after['head_sha'] == expected_head
-              receipts.append({
-                  'runId': run_id,
-                  'workflow': run['name'],
-                  'path': run['path'],
-                  'before': before,
-                  'approvalStatus': approval_status,
-                  'after': {
-                      'status': after['status'],
-                      'conclusion': after['conclusion'],
-                      'runAttempt': after['run_attempt'],
-                  },
-              })
+          assert current['status'] == 'pending', current
+          cancel_status = None
+          if old['status'] in {'queued', 'in_progress', 'pending', 'waiting', 'requested'}:
+              cancel_status, _ = request(f'/actions/runs/{obsolete_run}/cancel', 'POST')
+              assert cancel_status == 202, cancel_status
+          else:
+              assert old['status'] == 'completed', old
 
+          old_after = old
+          current_after = current
+          for _ in range(45):
+              _, old_after = request(f'/actions/runs/{obsolete_run}')
+              _, current_after = request(f'/actions/runs/{current_run}')
+              if old_after['status'] == 'completed' and current_after['status'] != 'pending':
+                  break
+              time.sleep(2)
+
+          assert old_after['status'] == 'completed', old_after
+          assert current_after['head_sha'] == current_sha
+          assert current_after['status'] != 'pending', current_after
           payload = {
               'schemaVersion': '1.0.0',
               'repository': repository,
-              'pullRequest': expected_pr,
-              'candidateHead': expected_head,
-              'controllerCommit': os.environ['GITHUB_SHA'],
-              'workflowRunId': os.environ['GITHUB_RUN_ID'],
-              'runs': receipts,
-              'allExact': True,
+              'pullRequest': 14,
+              'targetBranch': target_branch,
+              'obsoleteRun': {
+                  'id': obsolete_run,
+                  'headSha': obsolete_sha,
+                  'beforeStatus': old['status'],
+                  'beforeConclusion': old['conclusion'],
+                  'cancelStatus': cancel_status,
+                  'afterStatus': old_after['status'],
+                  'afterConclusion': old_after['conclusion'],
+              },
+              'currentRun': {
+                  'id': current_run,
+                  'headSha': current_sha,
+                  'beforeStatus': current['status'],
+                  'afterStatus': current_after['status'],
+                  'afterConclusion': current_after['conclusion'],
+                  'runAttempt': current_after['run_attempt'],
+              },
+              'evidenceReused': False,
               'protectionsWeakened': False,
+              'workerCBranchTouched': False,
               'completionClaim': False,
           }
-          output = Path(os.environ['RUNNER_TEMP']) / 'exact-run-approval-receipt.json'
+          output = Path(os.environ['RUNNER_TEMP']) / 'p2-superseded-run-release-receipt.json'
           output.write_text(
               json.dumps(payload, indent=2, sort_keys=True) + '\n',
               encoding='utf-8',
@@ -129,11 +132,11 @@ jobs:
           print(json.dumps(payload, indent=2, sort_keys=True))
           PY
 
-      - name: Upload exact approval receipt
+      - name: Upload exact concurrency-release receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: pr14-exact-run-approval-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/exact-run-approval-receipt.json
+          name: p2-superseded-run-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/p2-superseded-run-release-receipt.json
           if-no-files-found: error
           retention-days: 90
