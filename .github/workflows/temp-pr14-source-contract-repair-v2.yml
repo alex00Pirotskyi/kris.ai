@@ -1,20 +1,18 @@
-name: TEMP PR14 Source Contract Repair V4
+name: TEMP PR14 Source Contract Repair V5
 
 on:
   push:
-    branches:
-      - ci/pr14-source-contract-repair-20260805
+    branches: [ci/pr14-source-contract-repair-20260805]
 
 permissions:
   contents: write
 
 concurrency:
-  group: temp-pr14-source-contract-repair-v4
+  group: temp-pr14-source-contract-repair-v5
   cancel-in-progress: false
 
 jobs:
-  repair-pr14-source-contracts:
-    name: repair-pr14-source-contracts-v4
+  repair:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -23,243 +21,143 @@ jobs:
       EXPECTED_TREE: 181671cace704b3dd1b10496c02b20d006533515
       PROGRESS_PATH: docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md
       TEST_PATH: test/product/source_contract_test.dart
-      PARENT_CONTROLLER: 9bfcbb7f240ac0af6d87e1acfaae28f4f433e0e5
-      PARENT_WORKFLOW: .github/workflows/temp-pr14-source-contract-repair-v2.yml
+      PARENT: 9bfcbb7f240ac0af6d87e1acfaae28f4f433e0e5
+      WORKFLOW: .github/workflows/temp-pr14-source-contract-repair-v2.yml
     steps:
-      - name: Check out exact controller history
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-          path: control
-
-      - name: Check out exact PR14 target
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: merge/p1-p2-owner-risk-qa-preview
-          fetch-depth: 0
-          persist-credentials: true
-          path: target
-
-      - name: Set up exact Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12.10'
-          check-latest: false
-
-      - name: Set up exact Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v7.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-
-      - name: Set up exact Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.21.0
-        with:
-          flutter-version: '3.44.8'
-          channel: stable
-          cache: true
-
-      - name: Resolve target Flutter dependencies for candidate formatting
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {ref: '${{ github.sha }}', fetch-depth: 0, persist-credentials: false, path: control}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {ref: merge/p1-p2-owner-risk-qa-preview, fetch-depth: 0, persist-credentials: true, path: target}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with: {python-version: '3.12.10', check-latest: false}
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v7.0.0
+        with: {node-version: '24.18.0', check-latest: false}
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.21.0
+        with: {flutter-version: '3.44.8', channel: stable, cache: true}
+      - run: flutter pub get
         working-directory: target
-        shell: bash
-        run: flutter pub get
 
-      - name: Execute immutable parent controller with dependency-resolved one-file repair
+      - name: Execute source-manifest-bound exact-head repair
         id: repair
         continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY_EXTRACT'
-          import os
-          import subprocess
+          python - <<'PY'
+          import os, subprocess
           from pathlib import Path
 
-          parent = os.environ['PARENT_CONTROLLER']
-          workflow = os.environ['PARENT_WORKFLOW']
           raw = subprocess.check_output(
-              ['git', '-C', 'control', 'show', f'{parent}:{workflow}'],
+              ['git', '-C', 'control', 'show', f"{os.environ['PARENT']}:{os.environ['WORKFLOW']}"],
               text=True,
           )
           lines = raw.splitlines()
-          step_name = '      - name: Patch and validate exact live PR14 head'
-          try:
-              step_index = lines.index(step_name)
-          except ValueError as exc:
-              raise SystemExit('immutable parent repair step is missing') from exc
-          run_index = next(
-              index
-              for index in range(step_index + 1, len(lines))
-              if lines[index] == '        run: |'
-          )
-          script_lines = []
-          for line in lines[run_index + 1:]:
+          name = '      - name: Patch and validate exact live PR14 head'
+          start = lines.index(name)
+          run = next(i for i in range(start + 1, len(lines)) if lines[i] == '        run: |')
+          body = []
+          for line in lines[run + 1:]:
               if line.startswith('      - name: ') or line.startswith('      - uses: '):
                   break
-              if not line:
-                  script_lines.append('')
-              elif line.startswith('          '):
-                  script_lines.append(line[10:])
-              else:
-                  raise SystemExit(f'unexpected parent workflow indentation: {line!r}')
-          script = '\n'.join(script_lines) + '\n'
-          needle = """PY_PATCH
+              body.append('' if not line else line[10:])
+          script = '\n'.join(body) + '\n'
 
-            python tool/p2_refresh_source_manifest.py .
-          """
-          if script.count(needle) != 1:
-              raise SystemExit(
-                  f'parent construction insertion anchor count={script.count(needle)}'
-              )
-          insertion = r'''PY_PATCH
+          wrong = "new_inventory_assertions = '''      final inventory = sourceJsonObject('config/p2_source_inventory.v1.json');\n      final productionDart = (inventory['productionDart'] as List)\n          .whereType<String>()\n          .toSet();\n      expect(\n        productionDart,\n        containsAll(<String>[\n          'lib/product/ui_advanced.dart',\n          'lib/product/ui_components.dart',\n        ]),\n      );'''"
+          correct = "new_inventory_assertions = '''      final sourceManifest = source('SOURCE_MANIFEST.sha256');\n      expect(sourceManifest, contains('  lib/product/ui_advanced.dart'));\n      expect(sourceManifest, contains('  lib/product/ui_components.dart'));'''"
+          if script.count(wrong) != 1:
+              raise SystemExit(f'semantic repair anchor count={script.count(wrong)}')
+          script = script.replace(wrong, correct, 1)
 
-            python - <<'PY_PROGRESS_CORRECTION'
+          marker = "PY_PATCH\n\n  python tool/p2_refresh_source_manifest.py .\n"
+          doc = r'''PY_PATCH
+
+            python - <<'PY_V5_DOC'
           import os
           from pathlib import Path
-
           path = Path(os.environ['PROGRESS_PATH'])
           value = path.read_text(encoding='utf-8')
-          marker = '\n## Formatter and compatibility impact\n'
-          section = f"""\n## Failed-closed formatter-canonical correction\n\nController run `30988129124` passed the corrected exact head/tree guard and completed the hosted Python bootstrap, dependency resolution, all current generated-contract checks, protocol contracts, durable workflow-kernel checks, and Prompt Studio gates. It then failed closed at `python tool/dart_format_scope.py --check` because the intended handwritten test edit was not formatter-canonical. The check reported only `Changed test/product/source_contract_test.dart`; its output SHA-256 is `be9dc630a03846edab1dbc77eb10b885cffca30d7206cce0a8ed2237e320439d`. Artifact `8922939745` has archive digest `sha256:3873350320c9e346282d5ea38b7c2b35efdd8157ff5039864455c743ac38434c`. No candidate or target branch update was created.\n\nController run `30989119599` proved the one-file repair itself exited zero, but it ran before Flutter dependency resolution and emitted `Failed to resolve package URI "package:flutter_lints/flutter.yaml"`; the subsequent governed formatter therefore still reported `Changed test/product/source_contract_test.dart`. Its candidate-format output SHA-256 is `282ea833865ea07acf3f495681b128750c36263054f0d955a5866c4effa20e54`; its governed format-check output SHA-256 is `60a71cf72bf39e985b5a1862a090df0d90eb64c94c1c8b78d30d78c60e865c4b`. Artifact `8923344309` has archive digest `sha256:597030611c1f162f8e4aeef0f0488ba0f4dd42c2371b911c333281edb41bf02a`. No candidate or target branch update was created.\n\nFinal controller run `{os.environ.get('GITHUB_RUN_ID', 'unknown')}` first resolves the target Flutter dependencies, then performs the explicit candidate-construction repair `dart format test/product/source_contract_test.dart`, refreshes `SOURCE_MANIFEST.sha256`, and takes the immutable verification snapshot. The later governed format check and every automatic gate remain non-mutating.\n"""
-          if value.count(marker) != 1:
-              raise SystemExit(f'target progress formatter marker count={value.count(marker)}')
-          old = 'The live P2 workflow already uses `python tool/dart_format_scope.py --check` and finishes with `git diff --exit-code`; no broad generator-mutating formatter remains in this path. Generated Dart remains generator-owned. This repair changes no API, wire format, persistence schema, runtime composition, platform adapter, or Owner Mode authority behavior.'
-          new = 'The live P2 workflow already uses `python tool/dart_format_scope.py --check` and finishes with `git diff --exit-code`; no broad generator-mutating formatter remains in this path. The controller formats only the intended handwritten regression test during candidate construction, before verification. Generated Dart remains generator-owned, and the before/after snapshot proves automatic verification is non-mutating. This repair changes no API, wire format, persistence schema, runtime composition, platform adapter, or Owner Mode authority behavior.'
-          if value.count(old) != 1:
-              raise SystemExit(f'target progress formatter paragraph count={value.count(old)}')
-          value = value.replace(marker, section + marker, 1).replace(old, new, 1)
+          old = '- verifies `lib/product/ui_advanced.dart` and `lib/product/ui_components.dart` through the governed P2 source inventory itself;'
+          new = '- verifies `lib/product/ui_advanced.dart` and `lib/product/ui_components.dart` through `SOURCE_MANIFEST.sha256`, which is unioned by `_governedDartFiles(root)` with the P2 source inventory;'
+          heading = '\n## Formatter and compatibility impact\n'
+          section = f"""\n## Failed-closed controller corrections\n\nRuns `30987841430`, `30988129124`, and `30989119599` failed closed on, respectively, a stale tree guard, non-canonical candidate formatting, and formatting before Flutter dependency resolution. Run `30989744903` resolved dependencies and passed governed formatting plus fatal analysis, then proved the first test repair used the P2-only inventory instead of the full governed union. `SOURCE_MANIFEST.sha256` contains both legacy UI paths and `_governedDartFiles(root)` consumes it with the P2 inventory. Affected-test output SHA-256: `e0c5bd28d3006a198ef4b2a419353876131308665fec41d47ace1ba73bcad3b6`; artifact `8923596034`, archive digest `sha256:ea0d0d00dbe9565a5f3e507468a2e44e8842d2bb1dd5f21f5e72959cc5673e7d`. None of those runs created a candidate or branch update. Final run `{os.environ.get('GITHUB_RUN_ID', 'unknown')}` binds the assertion to the actual source-manifest authority without changing production code.\n"""
+          fmt_old = 'The live P2 workflow already uses `python tool/dart_format_scope.py --check` and finishes with `git diff --exit-code`; no broad generator-mutating formatter remains in this path. Generated Dart remains generator-owned. This repair changes no API, wire format, persistence schema, runtime composition, platform adapter, or Owner Mode authority behavior.'
+          fmt_new = 'The live P2 workflow already uses `python tool/dart_format_scope.py --check` and finishes with `git diff --exit-code`; no broad generator-mutating formatter remains in this path. The controller formats only the intended handwritten regression test during candidate construction, before verification. Generated Dart remains generator-owned, and the before/after snapshot proves automatic verification is non-mutating. This repair changes no API, wire format, persistence schema, runtime composition, platform adapter, or Owner Mode authority behavior.'
+          if value.count(old) != 1 or value.count(heading) != 1 or value.count(fmt_old) != 1:
+              raise SystemExit('target progress correction anchors changed')
+          value = value.replace(old, new, 1).replace(heading, section + heading, 1).replace(fmt_old, fmt_new, 1)
           path.write_text(value, encoding='utf-8', newline='\n')
-          PY_PROGRESS_CORRECTION
+          PY_V5_DOC
 
             set +e
             dart format "$TEST_PATH" 2>&1 | tee "$RUNNER_TEMP/candidate-format.log"
             candidate_format_rc=${PIPESTATUS[0]}
             set -e
-            printf '%s\n' "$candidate_format_rc" > "$RUNNER_TEMP/candidate-format-rc.txt"
-            python - "$RUNNER_TEMP/candidate-format.log" > "$RUNNER_TEMP/candidate-format-sha256.txt" <<'PY_FORMAT_HASH'
-          import hashlib
-          import sys
-          from pathlib import Path
-          print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
-          PY_FORMAT_HASH
             test "$candidate_format_rc" -eq 0
 
             python tool/p2_refresh_source_manifest.py .
           '''
-          script = script.replace(needle, insertion, 1)
-          destination = Path(os.environ['RUNNER_TEMP']) / 'extracted-repair-v4.sh'
-          destination.write_text(script, encoding='utf-8', newline='\n')
-          destination.chmod(0o700)
-          print(f'EXTRACTED_PARENT_CONTROLLER={parent}')
-          print(f'EXTRACTED_SCRIPT_SHA256={__import__("hashlib").sha256(script.encode()).hexdigest()}')
-          PY_EXTRACT
-          bash "$RUNNER_TEMP/extracted-repair-v4.sh"
+          if script.count(marker) != 1:
+              raise SystemExit(f'doc insertion anchor count={script.count(marker)}')
+          script = script.replace(marker, doc, 1)
+          out = Path(os.environ['RUNNER_TEMP']) / 'repair-v5.sh'
+          out.write_text(script, encoding='utf-8', newline='\n')
+          out.chmod(0o700)
+          PY
+          bash "$RUNNER_TEMP/repair-v5.sh"
 
-      - name: Build exact repair receipt
+      - name: Build receipt
         if: always()
         shell: bash
         run: |
-          python - <<'PY_STATUS'
-          import json
-          import os
+          python - <<'PY'
+          import json, os
           from pathlib import Path
-
-          root = Path(os.environ['RUNNER_TEMP'])
-
-          def read(name: str) -> str:
-              path = root / name
-              return path.read_text(encoding='utf-8').strip() if path.exists() else ''
-
-          commands = []
-          path = root / 'command-results.tsv'
-          if path.exists():
-              for line in path.read_text(encoding='utf-8').splitlines():
-                  name, exit_code, digest = line.split('\t')
-                  commands.append({
-                      'name': name,
-                      'exitCode': int(exit_code),
-                      'outputSha256': digest,
-                  })
-          format_rc = read('candidate-format-rc.txt')
-          payload = {
-              'schemaVersion': '1.0.0',
-              'roadmapAuthority': 'docs/roadmap/MASTER.md',
-              'repository': os.environ.get('GITHUB_REPOSITORY', ''),
-              'workflowRunId': os.environ.get('GITHUB_RUN_ID', ''),
-              'workflowRunAttempt': os.environ.get('GITHUB_RUN_ATTEMPT', ''),
-              'controllerCommit': os.environ.get('GITHUB_SHA', ''),
-              'parentController': os.environ['PARENT_CONTROLLER'],
-              'targetBranch': os.environ['TARGET_BRANCH'],
-              'expectedHead': os.environ['EXPECTED_HEAD'],
-              'expectedTree': os.environ['EXPECTED_TREE'],
-              'repairRc': int('${{ steps.repair.outputs.repair_rc }}' or '255'),
-              'candidateFormat': {
-                  'exitCode': int(format_rc) if format_rc else None,
-                  'outputSha256': read('candidate-format-sha256.txt'),
-                  'path': os.environ['TEST_PATH'],
-                  'phase': 'dependency-resolved-candidate-construction',
-              },
-              'candidateCommit': read('candidate-commit.txt'),
-              'candidateTree': read('candidate-tree.txt'),
-              'refUpdatedByAction': read('ref-updated.txt') == 'true',
-              'changedPaths': read('changed-paths.txt').splitlines() if read('changed-paths.txt') else [],
-              'commands': commands,
-              'completionClaim': False,
-              'behavioralEvidenceClaim': False,
-              'workerCBranchTouched': False,
+          r = Path(os.environ['RUNNER_TEMP'])
+          def read(n):
+              p=r/n
+              return p.read_text().strip() if p.exists() else ''
+          commands=[]
+          if (r/'command-results.tsv').exists():
+              for line in (r/'command-results.tsv').read_text().splitlines():
+                  n, rc, h=line.split('\t'); commands.append({'name':n,'exitCode':int(rc),'outputSha256':h})
+          payload={
+              'runId':os.environ['GITHUB_RUN_ID'], 'controller':os.environ['GITHUB_SHA'],
+              'expectedHead':os.environ['EXPECTED_HEAD'], 'expectedTree':os.environ['EXPECTED_TREE'],
+              'repairRc':int('${{ steps.repair.outputs.repair_rc }}' or '255'),
+              'candidateCommit':read('candidate-commit.txt'), 'candidateTree':read('candidate-tree.txt'),
+              'refUpdated':read('ref-updated.txt')=='true',
+              'changedPaths':read('changed-paths.txt').splitlines() if read('changed-paths.txt') else [],
+              'commands':commands, 'completionClaim':False, 'behavioralEvidenceClaim':False,
+              'workerCBranchTouched':False,
           }
-          (root / 'repair-status.json').write_text(
-              json.dumps(payload, indent=2, sort_keys=True) + '\n',
-              encoding='utf-8',
-              newline='\n',
-          )
-          print(json.dumps(payload, indent=2, sort_keys=True))
-          PY_STATUS
-
-      - name: Upload exact repair evidence
+          (r/'repair-status.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(payload,indent=2,sort_keys=True))
+          PY
+      - name: Upload receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: pr14-source-contract-repair-v4-${{ github.run_id }}-${{ github.run_attempt }}
+          name: pr14-source-contract-repair-v5-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/repair-status.json
             ${{ runner.temp }}/repair.log
             ${{ runner.temp }}/candidate-format.log
-            ${{ runner.temp }}/candidate-format-rc.txt
-            ${{ runner.temp }}/candidate-format-sha256.txt
             ${{ runner.temp }}/command-results.tsv
             ${{ runner.temp }}/command-logs
             ${{ runner.temp }}/changed-paths.txt
             ${{ runner.temp }}/local-governance-results.json
-            ${{ runner.temp }}/extracted-repair-v4.sh
+            ${{ runner.temp }}/repair-v5.sh
           if-no-files-found: error
           retention-days: 90
-
-      - name: Enforce successful exact-head repair
+      - name: Enforce receipt
         if: always()
         shell: bash
         run: |
-          python - <<'PY_ENFORCE'
-          import json
-          import os
+          python - <<'PY'
+          import json, os
           from pathlib import Path
-
-          payload = json.loads(
-              (Path(os.environ['RUNNER_TEMP']) / 'repair-status.json').read_text()
-          )
-          assert payload['repairRc'] == 0, payload
-          assert payload['candidateFormat']['exitCode'] == 0, payload
-          assert payload['candidateFormat']['outputSha256'], payload
-          assert payload['candidateCommit'], payload
-          assert payload['candidateTree'], payload
-          assert payload['refUpdatedByAction'] is True, payload
-          assert payload['changedPaths'] == [
-              'SOURCE_MANIFEST.sha256',
-              'docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md',
-              'test/product/source_contract_test.dart',
-          ], payload
-          assert payload['commands'], payload
-          assert all(item['exitCode'] == 0 for item in payload['commands']), payload
-          PY_ENFORCE
+          p=json.loads((Path(os.environ['RUNNER_TEMP'])/'repair-status.json').read_text())
+          assert p['repairRc']==0 and p['candidateCommit'] and p['candidateTree'] and p['refUpdated'], p
+          assert p['changedPaths']==['SOURCE_MANIFEST.sha256','docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md','test/product/source_contract_test.dart'], p
+          assert p['commands'] and all(x['exitCode']==0 for x in p['commands']), p
+          PY
