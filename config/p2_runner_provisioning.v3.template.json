@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "3.0.0",
+  "packetType": "p2-controlled-runner-provisioning-v3",
+  "packetId": "REPLACE",
+  "issuedAt": "REPLACE_UTC",
+  "expiresAt": "REPLACE_UTC",
+  "attestationTrustRoots": [
+    "REPLACE_64_HEX"
+  ],
+  "cleanupTrustRoots": [
+    "REPLACE_64_HEX"
+  ],
+  "independentReviewSha256": "REPLACE_64_HEX",
+  "runners": {
+    "linux": {
+      "runnerId": 1001,
+      "runnerName": "REPLACE_LINUX_RUNNER",
+      "runnerGroup": "kristin-p2-controlled",
+      "runnerGroupId": 2001,
+      "labels": [
+        "self-hosted",
+        "kristin-p2",
+        "linux",
+        "interactive-desktop",
+        "ubuntu-24.04"
+      ],
+      "hostImageSha256": "REPLACE_64_HEX",
+      "configurationReceiptPath": "/REPLACE/linux/configuration.json",
+      "configurationSha256": "REPLACE_64_HEX",
+      "attestationProviderPath": "/REPLACE/linux/attest",
+      "attestationProviderSha256": "REPLACE_64_HEX",
+      "postRunCleanupProviderPath": "/REPLACE/linux/cleanup",
+      "postRunCleanupProviderSha256": "REPLACE_64_HEX",
+      "requiredPermissions": [
+        "clipboard",
+        "screenCapture",
+        "activeWindow",
+        "accessibility"
+      ],
+      "ephemeralSessionRequired": true,
+      "noConcurrentUntrustedWorkload": true
+    },
+    "macos": {
+      "runnerId": 1002,
+      "runnerName": "REPLACE_MACOS_RUNNER",
+      "runnerGroup": "kristin-p2-controlled",
+      "runnerGroupId": 2002,
+      "labels": [
+        "self-hosted",
+        "kristin-p2",
+        "macos",
+        "interactive-desktop",
+        "macos-15"
+      ],
+      "hostImageSha256": "REPLACE_64_HEX",
+      "configurationReceiptPath": "/REPLACE/macos/configuration.json",
+      "configurationSha256": "REPLACE_64_HEX",
+      "attestationProviderPath": "/REPLACE/macos/attest",
+      "attestationProviderSha256": "REPLACE_64_HEX",
+      "postRunCleanupProviderPath": "/REPLACE/macos/cleanup",
+      "postRunCleanupProviderSha256": "REPLACE_64_HEX",
+      "requiredPermissions": [
+        "clipboard",
+        "screenCapture",
+        "activeWindow",
+        "accessibility"
+      ],
+      "ephemeralSessionRequired": true,
+      "noConcurrentUntrustedWorkload": true
+    },
+    "windows": {
+      "runnerId": 1003,
+      "runnerName": "REPLACE_WINDOWS_RUNNER",
+      "runnerGroup": "kristin-p2-controlled",
+      "runnerGroupId": 2003,
+      "labels": [
+        "self-hosted",
+        "kristin-p2",
+        "windows",
+        "interactive-desktop",
+        "windows-2025"
+      ],
+      "hostImageSha256": "REPLACE_64_HEX",
+      "configurationReceiptPath": "/REPLACE/windows/configuration.json",
+      "configurationSha256": "REPLACE_64_HEX",
+      "attestationProviderPath": "/REPLACE/windows/attest",
+      "attestationProviderSha256": "REPLACE_64_HEX",
+      "postRunCleanupProviderPath": "/REPLACE/windows/cleanup",
+      "postRunCleanupProviderSha256": "REPLACE_64_HEX",
+      "requiredPermissions": [
+        "clipboard",
+        "screenCapture",
+        "activeWindow",
+        "accessibility"
+      ],
+      "ephemeralSessionRequired": true,
+      "noConcurrentUntrustedWorkload": true
+    }
+  },
+  "signerPublicKeyHex": "REPLACE_64_HEX",
+  "signatureHex": "REPLACE_128_HEX"
+}

@@ -98,16 +98,22 @@ class McpTrustService {
     final executable = File(executablePath).absolute;
     if (!await executable.exists()) {
       throw ProductException(
-          'mcp_executable_missing', 'MCP executable does not exist.');
+        'mcp_executable_missing',
+        'MCP executable does not exist.',
+      );
     }
     final canonical = await executable.resolveSymbolicLinks();
     if (allowedTools.isEmpty) {
-      throw ProductException('mcp_tools_empty',
-          'At least one exact MCP tool name must be allowed.');
+      throw ProductException(
+        'mcp_tools_empty',
+        'At least one exact MCP tool name must be allowed.',
+      );
     }
     if (arguments.any((argument) => argument.contains('\u0000'))) {
       throw ProductException(
-          'mcp_argument_invalid', 'MCP arguments contain an invalid NUL byte.');
+        'mcp_argument_invalid',
+        'MCP arguments contain an invalid NUL byte.',
+      );
     }
     final now = DateTime.now().toUtc();
     final record = McpTrustRecord(
@@ -142,19 +148,21 @@ class McpTrustService {
       return;
     }
     await close(id);
-    await repository.put(McpTrustRecord(
-      id: record.id,
-      projectId: record.projectId,
-      label: record.label,
-      executablePath: record.executablePath,
-      executableHash: record.executableHash,
-      arguments: record.arguments,
-      allowedTools: record.allowedTools,
-      protocolVersion: record.protocolVersion,
-      createdAt: record.createdAt,
-      expiresAt: record.expiresAt,
-      revokedAt: DateTime.now().toUtc(),
-    ));
+    await repository.put(
+      McpTrustRecord(
+        id: record.id,
+        projectId: record.projectId,
+        label: record.label,
+        executablePath: record.executablePath,
+        executableHash: record.executableHash,
+        arguments: record.arguments,
+        allowedTools: record.allowedTools,
+        protocolVersion: record.protocolVersion,
+        createdAt: record.createdAt,
+        expiresAt: record.expiresAt,
+        revokedAt: DateTime.now().toUtc(),
+      ),
+    );
     await audit.append('mcp.revoked', id, <String, dynamic>{'id': id});
   }
 
@@ -169,33 +177,45 @@ class McpTrustService {
     final trust = await repository.get(trustId);
     if (trust == null || !trust.isActive) {
       throw ProductException(
-          'mcp_trust_invalid', 'MCP trust is missing, expired, or revoked.');
+        'mcp_trust_invalid',
+        'MCP trust is missing, expired, or revoked.',
+      );
     }
     if (trust.projectId != projectId) {
       throw ProductException(
-          'mcp_project_mismatch', 'MCP trust belongs to another project.');
+        'mcp_project_mismatch',
+        'MCP trust belongs to another project.',
+      );
     }
     if (!trust.allowedTools.contains(tool)) {
-      throw ProductException('mcp_tool_rejected',
-          'MCP tool $tool is not in the trusted allowlist.');
+      throw ProductException(
+        'mcp_tool_rejected',
+        'MCP tool $tool is not in the trusted allowlist.',
+      );
     }
     final executable = File(trust.executablePath);
     if (!await executable.exists()) {
       throw ProductException(
-          'mcp_executable_missing', 'Trusted MCP executable no longer exists.');
+        'mcp_executable_missing',
+        'Trusted MCP executable no longer exists.',
+      );
     }
     final currentHash = Sha256.hex(await executable.readAsBytes());
     if (!constantTimeEquals(currentHash, trust.executableHash)) {
       await close(trust.id);
-      throw ProductException('mcp_executable_changed',
-          'Trusted MCP executable hash changed; explicit re-approval is required.');
+      throw ProductException(
+        'mcp_executable_changed',
+        'Trusted MCP executable hash changed; explicit re-approval is required.',
+      );
     }
     final session = await _session(trust, workingDirectory, timeout);
     final response = await session.request(
-      'tools/call',
-      <String, dynamic>{'name': tool, 'arguments': arguments},
-      timeout: timeout,
-    );
+        'tools/call',
+        <String, dynamic>{
+          'name': tool,
+          'arguments': arguments,
+        },
+        timeout: timeout);
     await audit.append('mcp.tool_called', trust.id, <String, dynamic>{
       'projectId': projectId,
       'trustId': trust.id,
@@ -212,7 +232,10 @@ class McpTrustService {
   }
 
   Future<_McpSession> _session(
-      McpTrustRecord trust, String workingDirectory, Duration timeout) async {
+    McpTrustRecord trust,
+    String workingDirectory,
+    Duration timeout,
+  ) async {
     final existing = _sessions[trust.id];
     if (existing != null && existing.running) {
       return existing;
@@ -229,25 +252,28 @@ class McpTrustService {
     _sessions[trust.id] = session;
     process.exitCode.then((_) => _sessions.remove(trust.id));
     final initialized = await session.request(
-      'initialize',
-      <String, dynamic>{
-        'protocolVersion': trust.protocolVersion,
-        'capabilities': <String, dynamic>{},
-        'clientInfo': <String, String>{
-          'name': 'Kristin Local Agent',
-          'version': kristinVersion
+        'initialize',
+        <String, dynamic>{
+          'protocolVersion': trust.protocolVersion,
+          'capabilities': <String, dynamic>{},
+          'clientInfo': <String, String>{
+            'name': 'Kristin Local Agent',
+            'version': kristinVersion,
+          },
         },
-      },
-      timeout: timeout,
-    );
+        timeout: timeout);
     if (initialized['protocolVersion'] == null) {
       await session.close();
       _sessions.remove(trust.id);
-      throw ProductException('mcp_initialize_invalid',
-          'MCP server returned an invalid initialize result.');
+      throw ProductException(
+        'mcp_initialize_invalid',
+        'MCP server returned an invalid initialize result.',
+      );
     }
-    await session
-        .notify('notifications/initialized', const <String, dynamic>{});
+    await session.notify(
+      'notifications/initialized',
+      const <String, dynamic>{},
+    );
     return session;
   }
 
@@ -296,12 +322,16 @@ class _McpSession {
     _stdoutSubscription = process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen(_onLine,
-            onError: _failAll,
-            onDone: () => _failAll(ProductException(
-                'mcp_closed', 'MCP server closed its output.')));
-    _stderrSubscription =
-        process.stderr.transform(utf8.decoder).listen((chunk) {
+        .listen(
+          _onLine,
+          onError: _failAll,
+          onDone: () => _failAll(
+            ProductException('mcp_closed', 'MCP server closed its output.'),
+          ),
+        );
+    _stderrSubscription = process.stderr.transform(utf8.decoder).listen((
+      chunk,
+    ) {
       final cleaned = redactor.redact(chunk);
       if (_stderr.length + cleaned.length <= 65536) {
         _stderr.write(cleaned);
@@ -322,8 +352,10 @@ class _McpSession {
   bool get running => !_closed;
 
   Future<Map<String, dynamic>> request(
-      String method, Map<String, dynamic> params,
-      {required Duration timeout}) async {
+    String method,
+    Map<String, dynamic> params, {
+    required Duration timeout,
+  }) async {
     if (_closed) {
       throw ProductException('mcp_closed', 'MCP session is closed.');
     }
@@ -334,12 +366,14 @@ class _McpSession {
       'jsonrpc': '2.0',
       'id': id,
       'method': method,
-      'params': params
+      'params': params,
     };
     final encoded = jsonEncode(message);
     if (utf8.encode(encoded).length > 1024 * 1024) {
       throw ProductException(
-          'mcp_request_too_large', 'MCP request exceeds 1 MiB.');
+        'mcp_request_too_large',
+        'MCP request exceeds 1 MiB.',
+      );
     }
     process.stdin.writeln(encoded);
     await process.stdin.flush();
@@ -355,18 +389,24 @@ class _McpSession {
     if (_closed) {
       return;
     }
-    process.stdin.writeln(jsonEncode(<String, dynamic>{
-      'jsonrpc': '2.0',
-      'method': method,
-      'params': params
-    }));
+    process.stdin.writeln(
+      jsonEncode(<String, dynamic>{
+        'jsonrpc': '2.0',
+        'method': method,
+        'params': params,
+      }),
+    );
     await process.stdin.flush();
   }
 
   void _onLine(String line) {
     if (utf8.encode(line).length > 1024 * 1024) {
-      _failAll(ProductException(
-          'mcp_response_too_large', 'MCP response exceeds 1 MiB.'));
+      _failAll(
+        ProductException(
+          'mcp_response_too_large',
+          'MCP response exceeds 1 MiB.',
+        ),
+      );
       return;
     }
     try {
@@ -384,16 +424,24 @@ class _McpSession {
         return;
       }
       if (message['error'] != null) {
-        completer.completeError(ProductException(
-            'mcp_remote_error', 'MCP server returned an error.',
-            details: mapValue(redactor.redactJson(message['error']))));
+        completer.completeError(
+          ProductException(
+            'mcp_remote_error',
+            'MCP server returned an error.',
+            details: mapValue(redactor.redactJson(message['error'])),
+          ),
+        );
       } else {
         completer.complete(mapValue(redactor.redactJson(message['result'])));
       }
     } catch (error) {
-      _failAll(ProductException(
-          'mcp_response_invalid', 'MCP server returned invalid JSON.',
-          details: <String, dynamic>{'error': '$error'}));
+      _failAll(
+        ProductException(
+          'mcp_response_invalid',
+          'MCP server returned invalid JSON.',
+          details: <String, dynamic>{'error': '$error'},
+        ),
+      );
     }
   }
 

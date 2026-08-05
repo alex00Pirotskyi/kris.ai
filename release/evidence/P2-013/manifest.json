@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-013",
+  "name": "Owner Mode adversarial suite",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-002",
+    "P2-003",
+    "P2-006",
+    "P2-011"
+  ],
+  "artifacts": [
+    "lib/product/p2_p1_authority_adapter.dart",
+    "lib/product/p2_product_runtime_bootstrap.dart",
+    "lib/product/p2_product_runtime_integration.dart",
+    "lib/product/p2_managed_authorization_registry.dart",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart",
+    "tool/p2_behavioral_gate.py",
+    "tool/p2_task_fixture.py",
+    "tool/p2_task_platform_assertions.py",
+    "tool/p2_evidence_contract.py",
+    "tool/p2_evidence_contract_test.py",
+    "tool/p2_strict_finalizer_contract_test.py",
+    "evals/fixtures/p2",
+    "docs/security/P2_SECURITY_REVIEW_PACKET.md"
+  ],
+  "testResults": "release/evidence/P2-013/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

@@ -332,13 +332,15 @@ class DurableWorkflowStore {
     required String logicalOperation,
     required String normalizedArgumentsSha256,
   }) {
-    return Sha256.text(canonicalJson(<String, dynamic>{
-      'runId': runId,
-      'workItemId': workItemId,
-      'attempt': attempt,
-      'logicalOperation': logicalOperation,
-      'normalizedArgumentsSha256': normalizedArgumentsSha256,
-    }));
+    return Sha256.text(
+      canonicalJson(<String, dynamic>{
+        'runId': runId,
+        'workItemId': workItemId,
+        'attempt': attempt,
+        'logicalOperation': logicalOperation,
+        'normalizedArgumentsSha256': normalizedArgumentsSha256,
+      }),
+    );
   }
 
   int get schemaVersion {
@@ -524,7 +526,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
           importedRecords: imported,
           details: <String, dynamic>{
             'kind': 'collection',
-            'collection': collection
+            'collection': collection,
           },
         );
       });
@@ -586,10 +588,12 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
       try {
         final decoded = jsonDecode(line);
         if (decoded is Map) {
-          events.add(EventEnvelope.fromJson(<String, dynamic>{
-            for (final entry in decoded.entries)
-              entry.key.toString(): entry.value,
-          }));
+          events.add(
+            EventEnvelope.fromJson(<String, dynamic>{
+              for (final entry in decoded.entries)
+                entry.key.toString(): entry.value,
+            }),
+          );
         }
       } catch (_) {
         // Preserve valid surrounding records and record the bounded count below.
@@ -669,10 +673,11 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     final backup = await _backupLegacy(file, sourceSha);
     final runs = decodedRuns
         .whereType<Map>()
-        .map((item) => RunRecord.fromJson(<String, dynamic>{
-              for (final entry in item.entries)
-                entry.key.toString(): entry.value,
-            }))
+        .map(
+          (item) => RunRecord.fromJson(<String, dynamic>{
+            for (final entry in item.entries) entry.key.toString(): entry.value,
+          }),
+        )
         .toList(growable: false);
     await _serialize<void>(() {
       _transaction<void>(() {
@@ -696,7 +701,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
           importedRecords: imported,
           details: <String, dynamic>{
             'kind': 'runs',
-            'parsedRecords': runs.length
+            'parsedRecords': runs.length,
           },
         );
       });
@@ -823,7 +828,9 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     if (existing.isNotEmpty) {
       if (preserveExisting ||
           constantTimeEquals(
-              existing.first['record_sha256']?.toString() ?? '', sha)) {
+            existing.first['record_sha256']?.toString() ?? '',
+            sha,
+          )) {
         return;
       }
     }
@@ -912,7 +919,9 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     if (existing.isNotEmpty) {
       if (preserveExisting ||
           constantTimeEquals(
-              existing.first['document_sha256']?.toString() ?? '', sha)) {
+            existing.first['document_sha256']?.toString() ?? '',
+            sha,
+          )) {
         return;
       }
     }
@@ -944,10 +953,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             : RunRecord.fromJson(_decodeMap(rows.first['run_json']));
       });
 
-  Future<void> saveRun(
-    RunRecord run, {
-    String eventType = 'run.snapshot',
-  }) =>
+  Future<void> saveRun(RunRecord run, {String eventType = 'run.snapshot'}) =>
       _serialize<void>(() {
         _transaction<void>(() {
           _saveRunUnlocked(run, eventType: eventType);
@@ -962,10 +968,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         });
       });
 
-  void _saveRunUnlocked(
-    RunRecord run, {
-    String eventType = 'run.snapshot',
-  }) {
+  void _saveRunUnlocked(RunRecord run, {String eventType = 'run.snapshot'}) {
     final runJson = canonicalJson(run.toJson());
     final snapshotSha = Sha256.text(runJson);
     final existing = _database.select(
@@ -1051,8 +1054,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             stateVersion: version,
           );
           _database.execute('DELETE FROM runs WHERE id = ?', <Object?>[id]);
-          _database.execute(
-              'DELETE FROM run_leases WHERE run_id = ?', <Object?>[id]);
+          _database
+              .execute('DELETE FROM run_leases WHERE run_id = ?', <Object?>[
+            id,
+          ]);
         });
       });
 
@@ -1125,10 +1130,9 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   }) {
     var resolvedRunId = runId;
     if (resolvedRunId == null &&
-        _database.select(
-          'SELECT 1 FROM runs WHERE id = ? LIMIT 1',
-          <Object?>[correlationId],
-        ).isNotEmpty) {
+        _database.select('SELECT 1 FROM runs WHERE id = ? LIMIT 1', <Object?>[
+          correlationId,
+        ]).isNotEmpty) {
       resolvedRunId = correlationId;
     }
     final payload = canonicalJson(data);
@@ -1266,10 +1270,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         });
       });
 
-  Future<WorkflowCheckpoint?> latestCheckpoint(
-    String runId, {
-    String? kind,
-  }) =>
+  Future<WorkflowCheckpoint?> latestCheckpoint(String runId, {String? kind}) =>
       _serialize<WorkflowCheckpoint?>(() {
         final rows = _database.select(
           kind == null
@@ -1557,10 +1558,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             type: 'operation.completed',
             correlationId: key,
             timestamp: DateTime.now().toUtc(),
-            data: <String, dynamic>{
-              'idempotencyKey': key,
-              'resultSha256': sha,
-            },
+            data: <String, dynamic>{'idempotencyKey': key, 'resultSha256': sha},
             idempotencyKey: key,
           );
         });
@@ -1591,15 +1589,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
                  status = 'failed', error_class = ?, error_code = ?,
                  retryability = ?, lease_expires_at = ?, updated_at = ?,
                  completed_at = ? WHERE idempotency_key = ?''',
-            <Object?>[
-              errorClass,
-              errorCode,
-              retryability,
-              now,
-              now,
-              now,
-              key,
-            ],
+            <Object?>[errorClass, errorCode, retryability, now, now, now, key],
           );
           _appendEventUnlocked(
             id: newId('event'),
@@ -1959,10 +1949,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
                   ? 'run.recovered_committed'
                   : 'run.interrupted',
             );
-            _database.execute(
-              'DELETE FROM run_leases WHERE run_id = ?',
-              <Object?>[run.id],
-            );
+            _database
+                .execute('DELETE FROM run_leases WHERE run_id = ?', <Object?>[
+              run.id,
+            ]);
             _database.execute(
               '''INSERT INTO recovery_actions(
                    id, run_id, action, reason, before_state, after_state,
@@ -2082,16 +2072,14 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
           }
         }
         var projectionMismatches = 0;
-        for (final row in _database.select(
-          '''SELECT r.id, r.snapshot_sha256,
+        for (final row in _database.select('''SELECT r.id, r.snapshot_sha256,
                     (SELECT json_extract(e.payload_json, '\$.snapshotSha256')
                      FROM run_events e
                      WHERE e.run_id = r.id
                        AND e.type IN ('run.snapshot', 'legacy.run_imported',
                                       'run.recovered_committed', 'run.interrupted')
                      ORDER BY e.sequence DESC LIMIT 1) AS event_sha
-             FROM runs r''',
-        )) {
+             FROM runs r''')) {
           final eventSha = row['event_sha']?.toString() ?? '';
           if (eventSha.isNotEmpty &&
               !constantTimeEquals(
@@ -2202,9 +2190,7 @@ class SqliteEntityRepository<T> implements EntityRepository<T> {
         collection,
         values.map(
           (value) => MapEntry<String, Map<String, dynamic>>(
-            idOf(value),
-            toJson(value),
-          ),
+              idOf(value), toJson(value)),
         ),
       );
 
@@ -2225,9 +2211,7 @@ class SqliteEntityRepository<T> implements EntityRepository<T> {
         collection,
         values.map(
           (value) => MapEntry<String, Map<String, dynamic>>(
-            idOf(value),
-            toJson(value),
-          ),
+              idOf(value), toJson(value)),
         ),
       );
 }

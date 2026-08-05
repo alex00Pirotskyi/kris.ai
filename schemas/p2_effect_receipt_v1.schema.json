@@ -1,0 +1,12 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://kristin.local/schemas/p2_effect_receipt_v1.schema.json",
+  "title":"Kristin P2 effect receipt v1",
+  "type":"object",
+  "required":["schemaVersion","effectId","runId","taskId","operation","status","reversibility","startedAt","details"],
+  "properties":{
+    "schemaVersion":{"const":"1.0.0"},"effectId":{"type":"string","minLength":1},"runId":{"type":"string","minLength":1},"taskId":{"type":"string","minLength":1},"operation":{"type":"string","minLength":1},
+    "status":{"enum":["authorized","started","succeeded","failed","cancelled","killed","rolledBack","unknown","unsupported"]},
+    "reversibility":{"enum":["reversible","partiallyReversible","irreversible"]},"startedAt":{"type":"string","format":"date-time"},"completedAt":{"type":["string","null"],"format":"date-time"},"details":{"type":"object"}
+  },"additionalProperties":false
+}

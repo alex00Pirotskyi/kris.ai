@@ -9,8 +9,7 @@ import 'storage_security.dart';
 import 'workspace_tools.dart';
 
 typedef ModelGenerationDelegate = Future<ModelGenerationResult> Function(
-  ModelGenerationRequest request,
-);
+    ModelGenerationRequest request);
 
 class PromptPlanningService {
   PromptPlanningService({
@@ -145,27 +144,19 @@ Return one JSON object matching the required schema.
         if (errors.isNotEmpty) {
           throw ProductException('prompt_generation_invalid', errors.join(' '));
         }
-        await audit.append(
-          'prompt.generated',
-          commandId,
-          <String, dynamic>{
-            'action': action.name,
-            'goalHash': Sha256.text(normalizedGoal),
-            'model': model.toJson(),
-            'draftHash': Sha256.text(canonicalJson(draft.toJson())),
-            'attempt': attempt,
-          },
-        );
-        await events.publish(
-          'prompt.generated',
-          commandId,
-          <String, dynamic>{
-            'action': action.name,
-            'title': draft.title,
-            'mode': draft.mode.name,
-            'acceptanceCriteria': draft.acceptanceCriteria.length,
-          },
-        );
+        await audit.append('prompt.generated', commandId, <String, dynamic>{
+          'action': action.name,
+          'goalHash': Sha256.text(normalizedGoal),
+          'model': model.toJson(),
+          'draftHash': Sha256.text(canonicalJson(draft.toJson())),
+          'attempt': attempt,
+        });
+        await events.publish('prompt.generated', commandId, <String, dynamic>{
+          'action': action.name,
+          'title': draft.title,
+          'mode': draft.mode.name,
+          'acceptanceCriteria': draft.acceptanceCriteria.length,
+        });
         return draft;
       } catch (error) {
         lastError = error;
@@ -228,22 +219,16 @@ $normalizedGoal
       createdAt: DateTime.now().toUtc(),
     );
     await repositories.promptVersions.put(version);
-    await audit.append(
-      'prompt.version_saved',
-      version.id,
-      <String, dynamic>{
-        'promptId': promptId,
-        'versionId': version.id,
-        'versionNumber': version.versionNumber,
-        'contentHash': version.contentHash,
-        'createdBy': createdBy,
-      },
-    );
-    await events.publish(
-      'prompt.version_saved',
-      promptId,
-      <String, dynamic>{'version': version.toJson()},
-    );
+    await audit.append('prompt.version_saved', version.id, <String, dynamic>{
+      'promptId': promptId,
+      'versionId': version.id,
+      'versionNumber': version.versionNumber,
+      'contentHash': version.contentHash,
+      'createdBy': createdBy,
+    });
+    await events.publish('prompt.version_saved', promptId, <String, dynamic>{
+      'version': version.toJson(),
+    });
     return version;
   }
 
@@ -369,26 +354,20 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
           throw ProductException('task_plan_invalid', errors.join(' '));
         }
         await repositories.taskPlans.put(plan);
-        await audit.append(
-          'task_plan.generated',
-          plan.id,
-          <String, dynamic>{
-            'promptId': plan.promptId,
-            'promptVersionId': plan.promptVersionId,
-            'projectId': plan.projectId,
-            'taskCount': plan.tasks.length,
-            'totalEffortPoints': plan.totalEffortPoints,
-            'maxComplexity': plan.maxComplexity,
-            'highRiskTasks': plan.highRiskTasks,
-            'contentHash': plan.contentHash,
-            'attempt': attempt,
-          },
-        );
-        await events.publish(
-          'task_plan.generated',
-          plan.id,
-          <String, dynamic>{'plan': plan.toJson()},
-        );
+        await audit.append('task_plan.generated', plan.id, <String, dynamic>{
+          'promptId': plan.promptId,
+          'promptVersionId': plan.promptVersionId,
+          'projectId': plan.projectId,
+          'taskCount': plan.tasks.length,
+          'totalEffortPoints': plan.totalEffortPoints,
+          'maxComplexity': plan.maxComplexity,
+          'highRiskTasks': plan.highRiskTasks,
+          'contentHash': plan.contentHash,
+          'attempt': attempt,
+        });
+        await events.publish('task_plan.generated', plan.id, <String, dynamic>{
+          'plan': plan.toJson(),
+        });
         return plan;
       } catch (error) {
         lastError = error;
@@ -475,21 +454,15 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
       throw ProductException('task_plan_invalid', errors.join(' '));
     }
     await repositories.taskPlans.put(candidate);
-    await audit.append(
-      'task_plan.updated',
-      candidate.id,
-      <String, dynamic>{
-        'previousPlanId': plan.id,
-        'revision': candidate.revision,
-        'taskCount': candidate.tasks.length,
-        'contentHash': candidate.contentHash,
-      },
-    );
-    await events.publish(
-      'task_plan.updated',
-      candidate.id,
-      <String, dynamic>{'plan': candidate.toJson()},
-    );
+    await audit.append('task_plan.updated', candidate.id, <String, dynamic>{
+      'previousPlanId': plan.id,
+      'revision': candidate.revision,
+      'taskCount': candidate.tasks.length,
+      'contentHash': candidate.contentHash,
+    });
+    await events.publish('task_plan.updated', candidate.id, <String, dynamic>{
+      'plan': candidate.toJson(),
+    });
     return candidate;
   }
 
@@ -511,17 +484,20 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
       plan.tasks,
       sourceGoal: promptVersion.sourceGoal,
     );
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-            .contains(effectiveMode) &&
-        await WorkspaceBoundary.open(project.rootPath)
-            .then((boundary) => boundary.isKristinSourceCheckout())) {
+    if (const <CommandMode>{
+          CommandMode.build,
+          CommandMode.fix,
+        }.contains(effectiveMode) &&
+        await WorkspaceBoundary.open(
+          project.rootPath,
+        ).then((boundary) => boundary.isKristinSourceCheckout())) {
       throw ProductException(
         'self_project_target_rejected',
         "The selected project is Kristin's own source checkout. Create or select a separate project folder before compiling a mutating task plan.",
       );
     }
     final all = <String, PlanTaskRecord>{
-      for (final item in plan.tasks) item.id: item
+      for (final item in plan.tasks) item.id: item,
     };
     final selected = selectedTaskIds == null || selectedTaskIds.isEmpty
         ? plan.enabledTasks.map((item) => item.id).toSet()
@@ -531,7 +507,9 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
         .toList(growable: false);
     if (tasks.isEmpty) {
       throw ProductException(
-          'task_plan_empty', 'Select at least one enabled task.');
+        'task_plan_empty',
+        'Select at least one enabled task.',
+      );
     }
     if (tasks.any((item) => item.manual)) {
       throw ProductException(
@@ -620,8 +598,10 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         'Compiled from prompt version ${promptVersion.id} and task plan ${plan.id}.',
       ],
       researchQuestions: requestedTools.any(
-        (name) =>
-            const <String>{'research_search', 'research_fetch'}.contains(name),
+        (name) => const <String>{
+          'research_search',
+          'research_fetch',
+        }.contains(name),
       )
           ? <String>[
               'Which primary sources materially affect this approved task plan?',
@@ -674,31 +654,23 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       createdAt: DateTime.now().toUtc(),
     );
     await repositories.commands.put(prepared);
-    await audit.append(
-      'task_plan.compiled',
-      prepared.id,
-      <String, dynamic>{
-        'commandId': prepared.id,
-        'projectId': project.id,
-        'promptVersionId': promptVersion.id,
-        'taskPlanId': plan.id,
-        'workItems': workItems.length,
-        'permissions': requiredPermissions.map((item) => item.name).toList()
-          ..sort(),
-      },
-    );
-    await events.publish(
-      'command.prepared',
-      prepared.id,
-      <String, dynamic>{
-        'commandId': prepared.id,
-        'projectId': project.id,
-        'mode': contract.mode.name,
-        'complexity': executionPlan.complexity,
-        'generatedTaskPlan': true,
-        'taskPlanId': plan.id,
-      },
-    );
+    await audit.append('task_plan.compiled', prepared.id, <String, dynamic>{
+      'commandId': prepared.id,
+      'projectId': project.id,
+      'promptVersionId': promptVersion.id,
+      'taskPlanId': plan.id,
+      'workItems': workItems.length,
+      'permissions': requiredPermissions.map((item) => item.name).toList()
+        ..sort(),
+    });
+    await events.publish('command.prepared', prepared.id, <String, dynamic>{
+      'commandId': prepared.id,
+      'projectId': project.id,
+      'mode': contract.mode.name,
+      'complexity': executionPlan.complexity,
+      'generatedTaskPlan': true,
+      'taskPlanId': plan.id,
+    });
     return prepared;
   }
 
@@ -709,24 +681,19 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     required ModelGenerationProgress progress,
   }) async {
     try {
-      await events.publish(
-        'model.${progress.stage}',
-        commandId,
-        <String, dynamic>{
-          'commandId': commandId,
-          'operation': operation,
-          'model': model.toJson(),
-          ...progress.toJson(),
-        },
-      );
+      await events
+          .publish('model.${progress.stage}', commandId, <String, dynamic>{
+        'commandId': commandId,
+        'operation': operation,
+        'model': model.toJson(),
+        ...progress.toJson(),
+      });
     } catch (_) {
       // Progress events must never change prompt or plan generation.
     }
   }
 
-  Future<ModelGenerationResult> _generate(
-    ModelGenerationRequest request,
-  ) {
+  Future<ModelGenerationResult> _generate(ModelGenerationRequest request) {
     final generator = _generator;
     if (generator != null) {
       return generator(request);
@@ -772,7 +739,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         : <Map<String, dynamic>>[];
     if (rawTasks.isEmpty) {
       throw ProductException(
-          'task_plan_empty', 'The generated plan contains no tasks.');
+        'task_plan_empty',
+        'The generated plan contains no tasks.',
+      );
     }
     if (rawTasks.length > maxLeafTasks || rawTasks.length > 100) {
       throw ProductException(
@@ -791,7 +760,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     }
     if (rawIds.toSet().length != rawIds.length) {
       throw ProductException(
-          'task_ids_duplicate', 'Generated task IDs are not unique.');
+        'task_ids_duplicate',
+        'Generated task IDs are not unique.',
+      );
     }
     final normalizedIds = <String, String>{};
     final used = <String>{};
@@ -855,11 +826,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         settings: settings,
       );
       var normalizedTools = capabilityAllowedTools.isEmpty
-          ? _defaultTools(
-              taskMode,
-              taskText,
-              settings: settings,
-            )
+          ? _defaultTools(taskMode, taskText, settings: settings)
           : tools.allowedToolNames(<String>{
               ...capabilityAllowedTools,
               ...inferredTools,
@@ -983,9 +950,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
             int.tryParse(raw['effortPoints']?.toString() ?? '') ?? 3,
           ),
           uncertainty: PlanUncertainty.values
-                  .where(
-                    (item) => item.name == raw['uncertainty']?.toString(),
-                  )
+                  .where((item) => item.name == raw['uncertainty']?.toString())
                   .firstOrNull ??
               PlanUncertainty.medium,
           risk: PlanRisk.values
@@ -1026,8 +991,10 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       tasks,
       sourceGoal: promptVersion.sourceGoal,
     );
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-        .contains(effectiveGeneratedMode)) {
+    if (const <CommandMode>{
+      CommandMode.build,
+      CommandMode.fix,
+    }.contains(effectiveGeneratedMode)) {
       final hasVerification = tasks.any(
         (item) =>
             item.allowedTools.contains('verify_project') ||
@@ -1359,8 +1326,11 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     String text, {
     required String sourceGoal,
   }) {
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix, CommandMode.run}
-        .contains(requestedMode)) {
+    if (const <CommandMode>{
+      CommandMode.build,
+      CommandMode.fix,
+      CommandMode.run,
+    }.contains(requestedMode)) {
       return requestedMode;
     }
     final combined = '$sourceGoal $text'.toLowerCase();
@@ -1375,8 +1345,11 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     Iterable<PlanTaskRecord> tasks, {
     required String sourceGoal,
   }) {
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix, CommandMode.run}
-        .contains(draft.mode)) {
+    if (const <CommandMode>{
+      CommandMode.build,
+      CommandMode.fix,
+      CommandMode.run,
+    }.contains(draft.mode)) {
       return draft.mode;
     }
     final promptText = <String>[
@@ -1421,13 +1394,15 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     if (task.allowedTools.any(_isMutationTool)) {
       return true;
     }
-    return _textRequiresMutation(<String>[
-      task.title,
-      task.objective,
-      task.instructions,
-      ...task.expectedArtifacts,
-      ...task.acceptanceCriteria,
-    ].join(' '));
+    return _textRequiresMutation(
+      <String>[
+        task.title,
+        task.objective,
+        task.instructions,
+        ...task.expectedArtifacts,
+        ...task.acceptanceCriteria,
+      ].join(' '),
+    );
   }
 
   bool _isMutationTool(String name) => const <String>{
@@ -1437,9 +1412,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         'apply_patch',
       }.contains(name);
 
-  List<PlanTaskRecord> _deduplicateCapabilityTasks(
-    List<PlanTaskRecord> tasks,
-  ) {
+  List<PlanTaskRecord> _deduplicateCapabilityTasks(List<PlanTaskRecord> tasks) {
     final redirect = <String, String>{};
     final primaryByKey = <String, PlanTaskRecord>{};
     final duplicateGroups = <String, List<PlanTaskRecord>>{};
@@ -1552,10 +1525,13 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
     if (RegExp(r'\b(?:test|verify|analy[sz]e|build|check)\b').hasMatch(lower)) {
       result.addAll(<String>{'run_command', 'verify_project'});
     }
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-            .contains(mode) &&
-        RegExp(r'\b(?:implement|create|develop|write|code|build|fix|repair)\b')
-            .hasMatch(lower)) {
+    if (const <CommandMode>{
+          CommandMode.build,
+          CommandMode.fix,
+        }.contains(mode) &&
+        RegExp(
+          r'\b(?:implement|create|develop|write|code|build|fix|repair)\b',
+        ).hasMatch(lower)) {
       result.addAll(<String>{
         'write_file',
         'replace_text',
@@ -1563,8 +1539,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         'run_command',
       });
     }
-    if (RegExp(r'\b(?:preview|serve|run locally|local server)\b')
-        .hasMatch(lower)) {
+    if (RegExp(
+      r'\b(?:preview|serve|run locally|local server)\b',
+    ).hasMatch(lower)) {
       result.addAll(<String>{
         'run_command',
         'start_process',
@@ -1593,8 +1570,10 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       'git_diff',
       'knowledge_search',
     };
-    if (const <CommandMode>{CommandMode.build, CommandMode.fix}
-        .contains(mode)) {
+    if (const <CommandMode>{
+      CommandMode.build,
+      CommandMode.fix,
+    }.contains(mode)) {
       result.addAll(<String>{
         'write_file',
         'write_binary_file',

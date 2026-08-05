@@ -1,0 +1,1 @@
+const started=process.hrtime.bigint();setTimeout(()=>{const usage=process.memoryUsage();console.log(JSON.stringify({schemaVersion:'1.0.0',startupMs:Number(process.hrtime.bigint()-started)/1e6,rssBytes:usage.rss,node:process.version,platform:process.platform,arch:process.arch}));},50);

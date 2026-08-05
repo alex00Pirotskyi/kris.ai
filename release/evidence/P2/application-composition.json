@@ -1,0 +1,25 @@
+{
+  "applicationOwnedRuntimeResources": true,
+  "applicationUi": {
+    "afterSha256": "dcd291a016455b584a12aa209ed8f45fbb4ca03ed62153a573aeba1dbc384f1f",
+    "beforeSha256": "9d7bea250c18c3fbb458ea6f9605f6ec68e74f62f7ba44cf6a162acc0c59d804"
+  },
+  "entryPoint": "ProductRuntime.initialize",
+  "fixtureAuthorityEligible": false,
+  "lifecycleOwner": "ProductRuntime",
+  "navigation": "KristinApp -> P2KristinShell -> Owner Mode",
+  "p1AuthorityField": "ProductRuntime.p1AuthorityService",
+  "p1AuthorityImplementation": "merged-P1A-isolated-service",
+  "p2Bootstrap": "P2ProductRuntimeBootstrap.start",
+  "p2CanConstructP1Authority": false,
+  "p2CompositionField": "ProductRuntime.p2OwnerMode",
+  "p2StagesAuthorityBroker": false,
+  "productRuntime": {
+    "afterSha256": "f698707eb9cbb70f16d83b8a23cde3b8664ad56e26d19829f19ea74d59255983",
+    "beforeSha256": "9999918246dc6c868dd225d9d2fb582123a7d41a6a806ec84c975f5c9677adee"
+  },
+  "resultType": "p2-shipped-application-composition-patch-v5",
+  "schemaVersion": "5.0.0",
+  "sourceCommit": "PENDING_SOURCE_COMMIT",
+  "sourceTree": "PENDING_SOURCE_TREE"
+}

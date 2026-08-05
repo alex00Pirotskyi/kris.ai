@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "1.0.0",
+  "phase": "P2",
+  "tasks": [
+    {
+      "id": "P2-001",
+      "name": "Owner Mode onboarding and settings",
+      "dependsOn": [
+        "P1-002",
+        "P1-004"
+      ],
+      "requiredOutput": "Explicit enablement, persistent indicator, approval policy, data boundary, disable/reset controls.",
+      "doneWhen": "User can choose full access and UI never mislabels it as sandboxed.",
+      "checkpoint": "A-foundations"
+    },
+    {
+      "id": "P2-002",
+      "name": "Full filesystem service",
+      "dependsOn": [
+        "P1-003",
+        "P1-012"
+      ],
+      "requiredOutput": "Absolute paths, drives, shares, hidden files, metadata, search, copy, move, delete, and transactions in Owner Mode.",
+      "doneWhen": "Cross-platform fixtures pass, including symlinks/reparse points and long paths.",
+      "checkpoint": "A-foundations"
+    },
+    {
+      "id": "P2-003",
+      "name": "Owner finite command execution",
+      "dependsOn": [
+        "P1-003",
+        "P1-012"
+      ],
+      "requiredOutput": "Arbitrary direct processes with cwd/env, bounded output, cancellation, and effect records.",
+      "doneWhen": "Commands run outside projects only in Owner Mode and are fully journaled.",
+      "checkpoint": "A-foundations"
+    },
+    {
+      "id": "P2-004",
+      "name": "Automation host technology spike",
+      "dependsOn": [
+        "P1-001",
+        "P1-012"
+      ],
+      "requiredOutput": "Measured comparison of TypeScript/node-pty+Playwright, native/Rust PTY+Playwright, and other viable packaging options.",
+      "doneWhen": "An ADR selects a solution using measured startup, memory, packaging, and reliability.",
+      "checkpoint": "A-foundations"
+    },
+    {
+      "id": "P2-005",
+      "name": "Interactive PTY service",
+      "dependsOn": [
+        "P2-004"
+      ],
+      "requiredOutput": "Shell sessions, input, resize, ANSI, attach, detach, reconnect, and transcript.",
+      "doneWhen": "Interactive fixtures pass on Windows, macOS, and Linux.",
+      "checkpoint": "B-execution-core"
+    },
+    {
+      "id": "P2-006",
+      "name": "Process-tree lifecycle manager",
+      "dependsOn": [
+        "P2-003",
+        "P2-005"
+      ],
+      "requiredOutput": "Stable process identity, descendants, readiness, stop, kill, parent death, and PID-reuse handling.",
+      "doneWhen": "No child remains after kill or timeout in adversarial tests.",
+      "checkpoint": "B-execution-core"
+    },
+    {
+      "id": "P2-007",
+      "name": "Package and SDK operations",
+      "dependsOn": [
+        "P2-003"
+      ],
+      "requiredOutput": "Package install/remove/update and SDK discovery with structured receipts.",
+      "doneWhen": "Fixture installers and dry-run policies pass; real smoke tests run on target images.",
+      "checkpoint": "C-host-operations"
+    },
+    {
+      "id": "P2-008",
+      "name": "Service and application control",
+      "dependsOn": [
+        "P2-003"
+      ],
+      "requiredOutput": "Service status/start/stop and application open/close adapters with platform-specific implementations.",
+      "doneWhen": "Supported operations return honest status and rollback notes.",
+      "checkpoint": "C-host-operations"
+    },
+    {
+      "id": "P2-009",
+      "name": "Clipboard and screen capabilities",
+      "dependsOn": [
+        "P1-003",
+        "P1-012"
+      ],
+      "requiredOutput": "Clipboard read/write, screen capture, active-window metadata, and redaction policy.",
+      "doneWhen": "Capabilities obey profile and do not leak content into logs.",
+      "checkpoint": "C-host-operations"
+    },
+    {
+      "id": "P2-010",
+      "name": "Best-effort host snapshots and undo",
+      "dependsOn": [
+        "P2-002",
+        "P2-003"
+      ],
+      "requiredOutput": "File backups, Git checkpoints, restore points where available, and operation receipts.",
+      "doneWhen": "Injected failures restore supported file changes and mark non-restorable effects.",
+      "checkpoint": "C-host-operations"
+    },
+    {
+      "id": "P2-011",
+      "name": "Emergency pause and kill watchdog",
+      "dependsOn": [
+        "P2-005",
+        "P2-006"
+      ],
+      "requiredOutput": "UI, tray, keyboard shortcut, and worker-watchdog kill paths.",
+      "doneWhen": "Kill works with frozen UI, runaway output, and descendant processes.",
+      "checkpoint": "D-safety-and-ux"
+    },
+    {
+      "id": "P2-012",
+      "name": "Terminal UX",
+      "dependsOn": [
+        "P2-005",
+        "P2-006"
+      ],
+      "requiredOutput": "Tabs, shell/cwd selector, search, save, copy, interrupt, terminate, attach, and run linkage.",
+      "doneWhen": "Keyboard and screen-reader terminal scenarios pass.",
+      "checkpoint": "D-safety-and-ux"
+    },
+    {
+      "id": "P2-013",
+      "name": "Owner Mode adversarial suite",
+      "dependsOn": [
+        "P2-002",
+        "P2-003",
+        "P2-006",
+        "P2-011"
+      ],
+      "requiredOutput": "Destructive-command, path-race, output-flood, fork-bomb, crash, and restart tests.",
+      "doneWhen": "Effects are intended, bounded by the OS account, observable, cancellable, and recoverable where claimed.",
+      "checkpoint": "E-adversarial-and-docs"
+    },
+    {
+      "id": "P2-014",
+      "name": "Owner Mode operator guide",
+      "dependsOn": [
+        "P2-001",
+        "P2-013"
+      ],
+      "requiredOutput": "Privileges, risk, backups, unattended mode, secrets, kill, and recovery documentation.",
+      "doneWhen": "Guide matches UI and tested behavior.",
+      "checkpoint": "E-adversarial-and-docs"
+    }
+  ],
+  "exitGate": [
+    "Owner Mode can access the full host available to the OS account.",
+    "Interactive terminals work on Windows, macOS, and Linux with platform-specific shell and lifecycle evidence.",
+    "Process trees can be killed reliably.",
+    "Full-host effects are observable, journaled, and recoverable where claimed.",
+    "Owner Mode is clearly distinguished from isolation."
+  ]
+}

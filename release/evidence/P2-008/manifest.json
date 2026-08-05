@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-008",
+  "name": "Service and application control",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-003"
+  ],
+  "artifacts": [
+    "lib/product/p2_automation_host_operations.dart",
+    "automation_host/src/host-operations.mjs",
+    "docs/architecture/P2_PLATFORM_SUPPORT_MATRIX.md",
+    "test/product/p2_automation_host_operations_test.dart",
+    "lib/product/p2_runtime_composition.dart",
+    "lib/product/p2_automation_host_process_client.dart",
+    "lib/product/p2_effect_journal.dart",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart"
+  ],
+  "testResults": "release/evidence/P2-008/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

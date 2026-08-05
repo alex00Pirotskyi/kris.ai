@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-006",
+  "name": "Process-tree lifecycle manager",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-003",
+    "P2-005"
+  ],
+  "artifacts": [
+    "lib/product/p2_process_tree.dart",
+    "lib/product/p2_runtime_composition.dart",
+    "automation_host/src/process-tree.mjs",
+    "automation_host/src/windows-process-broker.mjs",
+    "automation_host/native/windows/job_supervisor.cpp",
+    "automation_host/native/posix/watchdog.c",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart"
+  ],
+  "testResults": "release/evidence/P2-006/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

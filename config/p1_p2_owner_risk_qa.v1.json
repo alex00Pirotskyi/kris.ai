@@ -1,0 +1,16 @@
+{
+  "allPlatformsRequired": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "externalEvidenceTrustRequired": false,
+  "formalSecurityCompletion": false,
+  "mode": "owner-risk-tri-platform-qa",
+  "productionReleaseEligible": false,
+  "qaShipmentEligibleAfterTriPlatformPass": true,
+  "requiresDartDefine": "KRISTIN_OWNER_RISK_QA=true",
+  "rootOrAdministratorAuthorityAccepted": true,
+  "schemaVersion": "1.0.0",
+  "warning": "This mode waives P1A isolation/evidence security only; it does not waive platform build or QA failures."
+}

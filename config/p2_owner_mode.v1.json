@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "profiles": ["owner", "owner_unattended"],
+  "notSandbox": true,
+  "persistentIndicator": true,
+  "dataBoundaryAcknowledgementRequired": true,
+  "disableAndReset": true,
+  "elevation": {"modelConsentAllowed": false, "nativeOwnerInteractionRequired": true},
+  "finalEffectAuthorization": {"policyDecisionRequired": true, "capabilityGrantV2Required": true, "consumeUseBeforeEffect": true}
+}

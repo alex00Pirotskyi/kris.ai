@@ -112,6 +112,43 @@ EXPECTED_DART_FILES = {
                           'test/product/p1_authority_service_contract_v1_test.dart',
                           'test/product/p1_authority_service_product_runtime_v1_test.dart',
 }
+
+def _load_governed_p2_dart_files() -> set[str]:
+    inventory_path = ROOT / "config" / "p2_source_inventory.v1.json"
+    try:
+        decoded = json.loads(inventory_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(
+            f"cannot load governed P2 Dart inventory: {error}"
+        ) from error
+    if not isinstance(decoded, dict):
+        raise RuntimeError("governed P2 Dart inventory must be an object")
+    governed: set[str] = set()
+    for key in ("productionDart", "testDart", "supportDart"):
+        values = decoded.get(key)
+        if not isinstance(values, list) or not values:
+            raise RuntimeError(f"governed P2 Dart inventory missing {key}")
+        for raw in values:
+            if not isinstance(raw, str):
+                raise RuntimeError(f"{key} contains a non-string path")
+            relative = raw.replace("\\", "/")
+            if (
+                not relative.endswith(".dart")
+                or relative.startswith("/")
+                or relative.startswith("../")
+                or "/../" in relative
+            ):
+                raise RuntimeError(
+                    f"{key} contains an unsafe Dart path: {relative}"
+                )
+            if relative in governed:
+                raise RuntimeError(
+                    f"duplicate governed P2 Dart path: {relative}"
+                )
+            governed.add(relative)
+    return governed
+
+EXPECTED_DART_FILES.update(_load_governed_p2_dart_files())
 EXCLUDED_DART_TOP_LEVEL = {
     ".dart_tool", ".git", "archive", "build", "coverage", "dist",
     "node_modules",
@@ -918,8 +955,16 @@ def check_flutter_dart_compatibility() -> None:
         failures.append("Windows verification does not run the stale-source migration")
 
     migration = read(ROOT / "tool/prune_stale_legacy.dart")
-    if "_allowedDartFiles.contains(relative)" not in migration:
-        failures.append("knowledge-memory test is not protected by the stale-source allowlist")
+    if (
+        "SOURCE_MANIFEST.sha256" not in migration
+        or "config/p2_source_inventory.v1.json" not in migration
+        or "_governedDartFiles(root)" not in migration
+        or "allowedDartFiles.contains(relative)" not in migration
+    ):
+        failures.append(
+            "stale-source migration does not consume the governed "
+            "source manifest and P2 Dart inventory"
+        )
 
     launcher_text = read(ROOT / "RUN_WINDOWS.bat")
     if "Starting Kristin v1.0 Prompt-to-Task Product Preview" not in launcher_text:
@@ -1014,7 +1059,22 @@ def check_chat_workspace_ux() -> None:
     failures: list[str] = []
 
     if "home: ChatStudio(" not in ui:
-        failures.append("the application does not open in ChatStudio")
+        shell = read(ROOT / "lib/product/p2_app_shell.dart")
+        shell_is_chat_first = (
+            "home: P2KristinShell(" in ui
+            and "chat: ChatStudio(" in ui
+            and "var _index = 0;" in shell
+            and source_contains(
+                shell,
+                "final pages = <Widget>[ widget.chat, "
+                "widget.ownerMode.buildWorkspace(",
+            )
+        )
+        if not shell_is_chat_first:
+            failures.append(
+                "the application does not open in ChatStudio or the "
+                "governed chat-first P2 shell"
+            )
 
     primary = re.search(
         r"const List<_NavigationItem> _primaryItems = <_NavigationItem>\[(.*?)\];",

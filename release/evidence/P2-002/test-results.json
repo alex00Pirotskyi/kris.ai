@@ -1,0 +1,39 @@
+{
+  "note": "Local helper and source checks are diagnostics only and are always source_only. Exact shipped-product Windows/macOS/Linux receipts plus independent review are required.",
+  "platform": "win32",
+  "schemaVersion": "1.0.0",
+  "status": "source_only",
+  "taskId": "P2-002",
+  "tests": [
+    {
+      "classification": "behavioral",
+      "detail": "succeeded",
+      "name": "absolute hidden Unicode write transaction",
+      "status": "passed"
+    },
+    {
+      "classification": "behavioral",
+      "detail": "",
+      "name": "absolute Unicode read",
+      "status": "passed"
+    },
+    {
+      "classification": "behavioral",
+      "detail": "['C:\\\\Users\\\\alex.p\\\\AppData\\\\Local\\\\Temp\\\\kristin-p2-35fwyn69\\\\test_filesystem\\\\外部 host space\\\\深い\\\\.hidden-Δ.txt']",
+      "name": "bounded traversal without link following",
+      "status": "passed"
+    },
+    {
+      "classification": "behavioral",
+      "detail": "",
+      "name": "delete quarantine and undo",
+      "status": "passed"
+    },
+    {
+      "classification": "behavioral",
+      "detail": "fail-closed: symlink_mutation_requires_handle_relative_adapter",
+      "name": "symlink final-target revalidation",
+      "status": "passed"
+    }
+  ]
+}

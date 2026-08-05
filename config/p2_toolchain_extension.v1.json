@@ -1,0 +1,68 @@
+{
+  "authority": "P2-toolchain-extension-v1",
+  "automationHostPackageLock": {
+    "path": "automation_host/package-lock.json",
+    "sha256": "b23e7e78736ed689317e5edb2e346fb5de31230863ea42d2380d297c1cd3f428"
+  },
+  "baseAuthority": {
+    "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
+    "manifestSha256": "ff7d6d1fb0b2f3a17d89f412557cd00bb1ed39f9ba2beae4f8e12f0f20f96d48",
+    "path": "config/toolchains.lock.json",
+    "sourceCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20"
+  },
+  "dart": {
+    "pinnedBy": "flutter-sdk",
+    "version": "3.12.2"
+  },
+  "declaredInputFingerprint": "95241b65e9eea2fcec9c4a52e336d41d2a867736c65384cec0440bd9ca186168",
+  "flutter": {
+    "channel": "stable",
+    "version": "3.44.8"
+  },
+  "githubActions": {
+    "actions/setup-node": {
+      "commit": "48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e",
+      "release": "v6.4.0"
+    },
+    "actions/setup-python": {
+      "commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+      "release": "v7.0.0"
+    }
+  },
+  "hostedRunnerPins": {
+    "macos": "macos-15",
+    "ubuntu": "ubuntu-24.04",
+    "windows": "windows-2025"
+  },
+  "interactiveRunnerLabels": {
+    "macos": [
+      "self-hosted",
+      "kristin-p2",
+      "macos",
+      "interactive-desktop",
+      "macos-15"
+    ],
+    "ubuntu": [
+      "self-hosted",
+      "kristin-p2",
+      "linux",
+      "interactive-desktop",
+      "ubuntu-24.04"
+    ],
+    "windows": [
+      "self-hosted",
+      "kristin-p2",
+      "windows",
+      "interactive-desktop",
+      "windows-2025"
+    ]
+  },
+  "node": {
+    "version": "24.18.0"
+  },
+  "python": {
+    "version": "3.12.10",
+    "versionSource": "P0-004"
+  },
+  "schemaVersion": "1.0.0"
+}
