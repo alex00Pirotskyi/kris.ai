@@ -1,4 +1,4 @@
-name: TEMP PR14 Source Contract Repair V3
+name: TEMP PR14 Source Contract Repair V4
 
 on:
   push:
@@ -9,12 +9,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: temp-pr14-source-contract-repair-v3
+  group: temp-pr14-source-contract-repair-v4
   cancel-in-progress: false
 
 jobs:
   repair-pr14-source-contracts:
-    name: repair-pr14-source-contracts-v3
+    name: repair-pr14-source-contracts-v4
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -61,7 +61,12 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Execute immutable parent controller with explicit one-file repair
+      - name: Resolve target Flutter dependencies for candidate formatting
+        working-directory: target
+        shell: bash
+        run: flutter pub get
+
+      - name: Execute immutable parent controller with dependency-resolved one-file repair
         id: repair
         continue-on-error: true
         shell: bash
@@ -117,7 +122,7 @@ jobs:
           path = Path(os.environ['PROGRESS_PATH'])
           value = path.read_text(encoding='utf-8')
           marker = '\n## Formatter and compatibility impact\n'
-          section = f"""\n## Failed-closed formatter-canonical correction\n\nController run `30988129124` passed the corrected exact head/tree guard and completed the hosted Python bootstrap, dependency resolution, all current generated-contract checks, protocol contracts, durable workflow-kernel checks, and Prompt Studio gates. It then failed closed at `python tool/dart_format_scope.py --check` because the intended handwritten test edit was not formatter-canonical. The check reported only `Changed test/product/source_contract_test.dart`; its output SHA-256 is `be9dc630a03846edab1dbc77eb10b885cffca30d7206cce0a8ed2237e320439d`. Artifact `8922939745` has archive digest `sha256:3873350320c9e346282d5ea38b7c2b35efdd8157ff5039864455c743ac38434c`. No candidate or target branch update was created.\n\nFinal controller run `{os.environ.get('GITHUB_RUN_ID', 'unknown')}` performs one explicit candidate-construction repair, `dart format test/product/source_contract_test.dart`, before refreshing `SOURCE_MANIFEST.sha256` and taking the immutable verification snapshot. The later governed format check and every automatic gate remain non-mutating.\n"""
+          section = f"""\n## Failed-closed formatter-canonical correction\n\nController run `30988129124` passed the corrected exact head/tree guard and completed the hosted Python bootstrap, dependency resolution, all current generated-contract checks, protocol contracts, durable workflow-kernel checks, and Prompt Studio gates. It then failed closed at `python tool/dart_format_scope.py --check` because the intended handwritten test edit was not formatter-canonical. The check reported only `Changed test/product/source_contract_test.dart`; its output SHA-256 is `be9dc630a03846edab1dbc77eb10b885cffca30d7206cce0a8ed2237e320439d`. Artifact `8922939745` has archive digest `sha256:3873350320c9e346282d5ea38b7c2b35efdd8157ff5039864455c743ac38434c`. No candidate or target branch update was created.\n\nController run `30989119599` proved the one-file repair itself exited zero, but it ran before Flutter dependency resolution and emitted `Failed to resolve package URI "package:flutter_lints/flutter.yaml"`; the subsequent governed formatter therefore still reported `Changed test/product/source_contract_test.dart`. Its candidate-format output SHA-256 is `282ea833865ea07acf3f495681b128750c36263054f0d955a5866c4effa20e54`; its governed format-check output SHA-256 is `60a71cf72bf39e985b5a1862a090df0d90eb64c94c1c8b78d30d78c60e865c4b`. Artifact `8923344309` has archive digest `sha256:597030611c1f162f8e4aeef0f0488ba0f4dd42c2371b911c333281edb41bf02a`. No candidate or target branch update was created.\n\nFinal controller run `{os.environ.get('GITHUB_RUN_ID', 'unknown')}` first resolves the target Flutter dependencies, then performs the explicit candidate-construction repair `dart format test/product/source_contract_test.dart`, refreshes `SOURCE_MANIFEST.sha256`, and takes the immutable verification snapshot. The later governed format check and every automatic gate remain non-mutating.\n"""
           if value.count(marker) != 1:
               raise SystemExit(f'target progress formatter marker count={value.count(marker)}')
           old = 'The live P2 workflow already uses `python tool/dart_format_scope.py --check` and finishes with `git diff --exit-code`; no broad generator-mutating formatter remains in this path. Generated Dart remains generator-owned. This repair changes no API, wire format, persistence schema, runtime composition, platform adapter, or Owner Mode authority behavior.'
@@ -144,13 +149,13 @@ jobs:
             python tool/p2_refresh_source_manifest.py .
           '''
           script = script.replace(needle, insertion, 1)
-          destination = Path(os.environ['RUNNER_TEMP']) / 'extracted-repair-v3.sh'
+          destination = Path(os.environ['RUNNER_TEMP']) / 'extracted-repair-v4.sh'
           destination.write_text(script, encoding='utf-8', newline='\n')
           destination.chmod(0o700)
           print(f'EXTRACTED_PARENT_CONTROLLER={parent}')
           print(f'EXTRACTED_SCRIPT_SHA256={__import__("hashlib").sha256(script.encode()).hexdigest()}')
           PY_EXTRACT
-          bash "$RUNNER_TEMP/extracted-repair-v3.sh"
+          bash "$RUNNER_TEMP/extracted-repair-v4.sh"
 
       - name: Build exact repair receipt
         if: always()
@@ -194,7 +199,7 @@ jobs:
                   'exitCode': int(format_rc) if format_rc else None,
                   'outputSha256': read('candidate-format-sha256.txt'),
                   'path': os.environ['TEST_PATH'],
-                  'phase': 'candidate-construction',
+                  'phase': 'dependency-resolved-candidate-construction',
               },
               'candidateCommit': read('candidate-commit.txt'),
               'candidateTree': read('candidate-tree.txt'),
@@ -217,7 +222,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: pr14-source-contract-repair-v3-${{ github.run_id }}-${{ github.run_attempt }}
+          name: pr14-source-contract-repair-v4-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/repair-status.json
             ${{ runner.temp }}/repair.log
@@ -228,7 +233,7 @@ jobs:
             ${{ runner.temp }}/command-logs
             ${{ runner.temp }}/changed-paths.txt
             ${{ runner.temp }}/local-governance-results.json
-            ${{ runner.temp }}/extracted-repair-v3.sh
+            ${{ runner.temp }}/extracted-repair-v4.sh
           if-no-files-found: error
           retention-days: 90
 
