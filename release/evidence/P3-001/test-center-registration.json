@@ -1,21 +1,32 @@
 {
   "capabilitySupportRecord": {
     "capability": "browser-automation-runtime",
-    "reason": "Readiness contracts exist; no bundled runtime or clean-machine launch evidence exists.",
-    "supportState": "SOURCE_FOUNDATION"
+    "reason": "Readiness contracts and tri-platform source validation exist; no bundled runtime, clean-machine launch, no-global-runtime, or process-cleanup behavior evidence exists.",
+    "sourceValidationPlatforms": [
+      "linux",
+      "macos",
+      "windows"
+    ],
+    "supportState": "SOURCE_FOUNDATION",
+    "supportedRuntimePlatforms": [],
+    "supportPromotion": false
   },
   "certificationRecord": {
+    "behavioralChecks": "NOT_IMPLEMENTED",
     "independentReview": "PENDING",
     "requiredBehavioralEvidence": [
       "tc.p3-001.clean-machine-launch",
       "tc.p3-001.no-global-runtime",
       "tc.p3-001.process-cleanup"
     ],
-    "status": "PARTIAL"
+    "scope": "P3 readiness source contracts and evidence binding",
+    "sourceContractChecks": "OBSERVED",
+    "status": "PARTIAL",
+    "supportPromotion": false
   },
   "developmentVerificationRequest": {
-    "candidateCommit": "STAGE_1_COMMIT_PENDING",
-    "candidateTree": "STAGE_1_TREE_PENDING",
+    "candidateCommit": "e7dee26404a11f076206251f619bfc3f9078753c",
+    "candidateTree": "27a2d09ed4ed1d61775a74bccd6eac5aa4b739c6",
     "mutationPolicy": "NON_MUTATING",
     "platforms": [
       "linux",
@@ -33,26 +44,32 @@
       "tc.p3.readiness.network-denial",
       "tc.p3.readiness.generated-state-boundary",
       "tc.p3.readiness.claim-boundary"
-    ]
+    ],
+    "testedBaseCommit": "d3452aa224c3228a9a3e3155a896e828af8d9ded",
+    "testedBaseTree": "d6717a2954c15a76d4e71739fe448caac68a4333"
   },
   "developmentVerificationResult": {
     "behavioralChecks": "NOT_IMPLEMENTED",
+    "independentReview": "PENDING",
     "sourceChecks": "PASS",
-    "status": "PARTIAL"
+    "status": "PARTIAL",
+    "supportPromotion": false
   },
   "evidenceReferences": [
     "release/evidence/P3-001/dependency-status.json",
     "release/evidence/P3-001/runtime-candidate-matrix.json",
     "release/evidence/P3-001/packaging-readiness-contract.json",
     "release/evidence/P3-001/fixture-specification.json",
-    "release/evidence/P3-001/claim-boundary.json"
+    "release/evidence/P3-001/claim-boundary.json",
+    "release/evidence/P3-001/manifest.json",
+    "release/evidence/P3-001/READINESS.md"
   ],
   "module": {
     "moduleId": "tm.p3-readiness",
     "owner": "Worker D",
     "purpose": "P3 dependency-safe source readiness without browser behavior claims."
   },
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "stableTestIds": [
     "tc.p3.readiness.dependencies",
     "tc.p3.readiness.automation-host-inventory",
@@ -130,6 +147,7 @@
     "currentState": "PASS",
     "presentationId": "presentation.p3-readiness.source",
     "stateDomain": "TEST_EXECUTION",
-    "supportClaimImpact": "No browser behavior or platform support inferred."
-  }
+    "supportClaimImpact": "No browser behavior or runtime platform support is inferred."
+  },
+  "workflowEvidenceReference": "release/evidence/P3-001/manifest.json#/workflowEvidence"
 }

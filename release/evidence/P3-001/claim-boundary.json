@@ -1,5 +1,11 @@
 {
   "certification": "PARTIAL",
+  "evidencePackagingCandidate": {
+    "binding": "EXTERNAL_AFTER_PUBLICATION",
+    "classification": "STAGE_2_EVIDENCE_PACKAGING",
+    "commit": null,
+    "tree": null
+  },
   "pathClaim": {
     "branch": "agent/d/p3-readiness-fixtures",
     "forbidden": [
@@ -9,6 +15,7 @@
       "Worker B schema/validator semantics",
       "Worker C P4 contracts",
       "Worker J authority/migration files",
+      "P3-001 runtime implementation",
       "P3-002+"
     ],
     "owned": [
@@ -17,22 +24,44 @@
       "tool/worker_d_p3_readiness.py",
       "tool/worker_d_p3_readiness_test.py",
       ".github/workflows/worker-d-p3-readiness.yml",
-      "Worker D entries in config/test_center_registry.v1.json"
+      "Worker D entries in config/test_center_registry.v1.json",
+      "SOURCE_MANIFEST.sha256"
     ],
     "owner": "Worker D"
   },
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
+  "sourceValidation": {
+    "platforms": [
+      "linux",
+      "macos",
+      "windows"
+    ],
+    "runtimePlatformSupportInferred": false
+  },
   "statements": {
     "browserActions": "NOT_IMPLEMENTED",
     "browserObservations": "NOT_CANONICAL",
     "browserProfiles": "NOT_IMPLEMENTED",
     "browserRuntime": "NOT_IMPLEMENTED",
+    "browserSessions": "NOT_IMPLEMENTED",
     "downloads": "NOT_IMPLEMENTED",
     "externalWebsites": "UNSUPPORTED",
+    "p3_001": "NOT_IMPLEMENTED",
     "p3_016": "NOT_CLAIMED",
     "persistentAuthentication": "NOT_IMPLEMENTED",
+    "productionSupport": "UNSUPPORTED",
     "uploads": "NOT_IMPLEMENTED",
-    "userTakeover": "NOT_IMPLEMENTED"
+    "userTakeover": "NOT_IMPLEMENTED",
+    "webStudio": "NOT_IMPLEMENTED"
   },
-  "supportState": "SOURCE_FOUNDATION"
+  "supportPromotion": false,
+  "supportState": "SOURCE_FOUNDATION",
+  "testedBase": {
+    "commit": "d3452aa224c3228a9a3e3155a896e828af8d9ded",
+    "tree": "d6717a2954c15a76d4e71739fe448caac68a4333"
+  },
+  "testedSourceCandidate": {
+    "commit": "e7dee26404a11f076206251f619bfc3f9078753c",
+    "tree": "27a2d09ed4ed1d61775a74bccd6eac5aa4b739c6"
+  }
 }
