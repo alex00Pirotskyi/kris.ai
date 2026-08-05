@@ -44,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --check
-          mapfile -t paths < <(git status --short | sed -E 's/^...//' | LC_ALL=C sort)
+          mapfile -t paths < <(git status --porcelain=v1 -uall | sed -E 's/^...//' | LC_ALL=C sort)
           printf 'P4-001_MATERIALIZED_PATH=%s\n' "${paths[@]}"
           test "${#paths[@]}" -gt 0
           for path in "${paths[@]}"; do
