@@ -1,0 +1,118 @@
+{
+  "commandsExecuted": [
+    "resolve protected main, stacked base, Worker J branch, PR #66 head, exact commit, and exact tree",
+    "inspect all 37 PR #66 changed paths and exact candidate metadata",
+    "inspect .github/workflows/p24-adoption-review.yml, schemas/anarchy_execution.schema.json, tool/anarchy_control_plane.py, and all six implementation parts",
+    "inspect exact-head workflow run 31008557325 and Ubuntu, Windows, and macOS job logs",
+    "download and hash-check Ubuntu evidence artifact 8931394586",
+    "inspect p24-validation-report.json, isolated generation proof, generated control-plane index, and expected source manifest",
+    "cross-check TestExecutionResult and certification references against canonical Worker B Test Center v1",
+    "cross-check authority, state-domain, collision, yield/takeover, exact-SHA, non-mutation, determinism, idempotence, generated-view, P2-inflation, and clean-room-resume gates"
+  ],
+  "decision": "REQUEST_CHANGES",
+  "disposition": "Normalize repository containment portably and add alias-path regressions; replace the local TestExecutionResult enum with the canonical Worker B v1 reference and separate reason/classification fields; commit the deterministic generated index and canonical refreshed source manifest through their declared owners; rerun the exact-head Ubuntu/Windows/macOS workflow to green; obtain Worker I exact-head review; then request a new Worker B exact-SHA review.",
+  "filesReviewed": [
+    ".github/workflows/p24-adoption-review.yml",
+    "docs/roadmap/anarchy/MIGRATION_PROMPT.md",
+    "docs/roadmap/anarchy/VALIDATION_REPORT.md",
+    "docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml",
+    "docs/roadmap/anarchy/claims/P24-001.md",
+    "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
+    "docs/roadmap/anarchy/migration/ADOPTION_CHECKLIST.md",
+    "docs/roadmap/anarchy/migration/ARTIFACT_RECONCILIATION.json",
+    "docs/roadmap/anarchy/migration/AUTHORITY_AND_SUPERSESSION.md",
+    "docs/roadmap/anarchy/migration/BASELINE.json",
+    "docs/roadmap/anarchy/migration/CLEAN_ROOM_RESUME.md",
+    "docs/roadmap/anarchy/migration/COMPATIBILITY_AND_ROLLBACK.md",
+    "docs/roadmap/anarchy/migration/DIRECTIVE_MATRIX.yaml",
+    "docs/roadmap/anarchy/migration/MIGRATION_LEDGER.yaml",
+    "docs/roadmap/anarchy/migration/P24-001_CONTROL_PLANE.json",
+    "docs/roadmap/anarchy/migration/P24-001_RECONCILIATION_ADR.md",
+    "docs/roadmap/anarchy/migration/SOURCE_MANIFEST_OWNERSHIP.md",
+    "docs/roadmap/anarchy/workers/WORKER_J.md",
+    "release/evidence/P24-001/FOUNDATION.md",
+    "release/evidence/P24-001/LOCAL_TEST_RESULTS.json",
+    "schemas/anarchy_execution.schema.json",
+    "test/anarchy_control_plane/fixtures/clean_room/expected.json",
+    "test/anarchy_control_plane/fixtures/collision/cases.json",
+    "test/anarchy_control_plane/fixtures/negative/cases.json",
+    "test/anarchy_control_plane/fixtures/positive/repository.json",
+    "test/anarchy_control_plane/fixtures/takeover/cases.json",
+    "tool/anarchy_control_plane.py",
+    "tool/anarchy_control_plane_parts/part01.inc",
+    "tool/anarchy_control_plane_parts/part02.inc",
+    "tool/anarchy_control_plane_parts/part03.inc",
+    "tool/anarchy_control_plane_parts/part04.inc",
+    "tool/anarchy_control_plane_parts/part05.inc",
+    "tool/anarchy_control_plane_parts/part06.inc",
+    "tool/anarchy_control_plane_test.py",
+    "tool/anarchy_control_plane_test_parts/part01.inc",
+    "tool/anarchy_control_plane_test_parts/part02.inc",
+    "tool/anarchy_control_plane_test_parts/part03.inc",
+    "PR #66 metadata, exact candidate diff, exact-head workflow run 31008557325, all three job logs, and Ubuntu evidence artifact 8931394586"
+  ],
+  "findings": [
+    {
+      "disposition": "OPEN",
+      "findingId": "B-J-101",
+      "severity": "HIGH",
+      "summary": "The exact tri-OS candidate is not portable. resolve_safe() resolves the candidate path but compares it against an un-normalized project root. On macOS /var versus /private/var aliases and on Windows long-name versus RUNNER~1 aliases cause valid repository paths to be rejected as escapes. The macOS and Windows suites each stop with 38 setup errors; only the resource-limit and scoped-ownership tests execute successfully."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-J-102",
+      "severity": "HIGH",
+      "summary": "The exact candidate intentionally omits docs/roadmap/anarchy/generated/P24-001_CONTROL_PLANE_INDEX.json and the canonical refreshed SOURCE_MANIFEST.sha256. The exact Ubuntu validation report is bound to commit 365e7e7.../tree 6b9e870... and records passed=false, generatedView=MISSING, sourceManifest=DRIFT, validator=FAIL. The dedicated workflow is therefore red and the candidate is not adoption-ready."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-J-103",
+      "severity": "HIGH",
+      "summary": "The Worker-J-scoped schema claims an external Worker B TestExecutionResult reference but hard-codes a competing vocabulary: it omits canonical ERROR, SKIPPED, UNKNOWN, FLAKY, and NOT_IMPLEMENTED while adding SKIPPED_NOT_APPLICABLE, SKIPPED_WITH_REASON, FLAKY_QUARANTINED, UNKNOWN_RECONCILIATION_REQUIRED, and CANCELLED. Result state and reason/classification must remain separate and the reference must match the canonical Worker B v1 state domain exactly."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-J-104",
+      "severity": "MEDIUM",
+      "summary": "Independent adoption review remains incomplete. This artifact supplies Worker B’s exact-head decision, but Worker I exact-head review is still absent; the candidate’s own report correctly keeps independentReviews=BLOCKED. No adoption or authority promotion may occur until the next exact candidate has both required reviews and no high/critical finding."
+    },
+    {
+      "disposition": "VERIFIED",
+      "findingId": "B-J-105",
+      "severity": "INFO",
+      "summary": "On Ubuntu, all 15 deterministic tests pass, including active-claim and shared-contract collision rejection, safe takeover/yield continuity, clean-room Worker J resume, atomic-write interruption safety, non-mutating check mode, source-manifest generator idempotence, bounded/honest generated reporting, and P2/source-to-behavior status-inflation rejection."
+    },
+    {
+      "disposition": "VERIFIED",
+      "findingId": "B-J-106",
+      "severity": "INFO",
+      "summary": "The candidate preserves one human authority and one bounded machine authority, does not promote PR #63 or v3.2 references, labels generated navigation as non-authoritative, keeps task/worker/test/certification/capability domains separate, pins exact candidate checkout, and does not edit Worker A, Worker B, Worker C, or product runtime scope."
+    }
+  ],
+  "priorReviewInvalidatedByScopeChange": true,
+  "protectedMainCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+  "protectedMainTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+  "reviewArtifactHashSidecar": "WORKER_B_J_REVIEW_365e7e7.json.sha256",
+  "reviewId": "worker-b-j-review-365e7e7",
+  "reviewedAt": "2026-08-05T13:13:58Z",
+  "reviewedBranch": "agent/j/P24-001-roadmap-as-data-adr",
+  "reviewedCommit": "365e7e74e147b90df6cd78f64b444dccfcca7d73",
+  "reviewedPullRequest": 66,
+  "reviewedTree": "6b9e870c8a242dd8384a7b7b02cf7a0f594fb3a9",
+  "reviewedWorkflow": {
+    "conclusion": "FAILURE",
+    "expectedGeneratedIndexSha256": "8c13b9fe6ce4f415ef3c97c47cedc1eb2022019f5e9b27e330cc77b5ff15daae",
+    "expectedSourceManifestSha256": "55e162f4daa838f968eb0228ef1f4981af87293f8ba70f781a46535b61dc7727",
+    "runId": 31008557325,
+    "ubuntuArtifactDigest": "sha256:d581c810c53acce86a84788bfd45b2b758dbf99840f9b7c7fbd023c5ec374d24",
+    "ubuntuArtifactId": 8931394586,
+    "validationReportSha256": "eb6504e575c862d5ef50ae9fa6978c98c358827da59c30ae8ab0458e4e456d66"
+  },
+  "reviewer": "Worker B — Test Center and independent certification review",
+  "schemaVersion": "1.0.0",
+  "stackedBaseBranch": "agent/anarchy-execution-os",
+  "stackedBaseCommit": "6b23beb64070932886e75a131580fbc6fda878b6",
+  "stackedBaseTree": "724b838cae31bb50befb4e7676c55a41f925091e",
+  "supersedesReview": "worker-b-j-baseline-45c4350",
+  "validUntilScopeChanges": true
+}
