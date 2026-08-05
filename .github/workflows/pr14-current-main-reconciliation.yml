@@ -10,6 +10,7 @@ on:
       - config/pr14_main_reconciliation.json
       - tool/pr14_current_main_reconciliation.py
       - docs/progress/2026-08-05-pr14-current-main-reconciliation-controller.md
+      - docs/progress/2026-08-05-pr14-reconciliation-ancestry-fix.md
       - SOURCE_MANIFEST.sha256
   push:
     branches:
@@ -20,6 +21,7 @@ on:
       - config/pr14_main_reconciliation.json
       - tool/pr14_current_main_reconciliation.py
       - docs/progress/2026-08-05-pr14-current-main-reconciliation-controller.md
+      - docs/progress/2026-08-05-pr14-reconciliation-ancestry-fix.md
       - SOURCE_MANIFEST.sha256
 
 permissions:
@@ -98,7 +100,7 @@ jobs:
     name: pr14-current-main-source-manifest
     if: >-
       github.event_name == 'pull_request' &&
-      github.event.pull_request.head.ref == 'agent/pr14-current-main-reconciliation-20260805' &&
+      github.event.pull_request.head.ref == 'agent/pr14-reconciliation-ancestry-fix-20260805' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     permissions:
@@ -145,7 +147,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add SOURCE_MANIFEST.sha256
           git diff --cached --check
-          git commit -m 'ci: refresh source manifest for PR14 reconciliation'
+          git commit -m 'ci: refresh source manifest for PR14 reconciliation ancestry fix'
           git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
 
   execute:
@@ -163,7 +165,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
           path: control
       - name: Check out exact governed P1/P2 target
