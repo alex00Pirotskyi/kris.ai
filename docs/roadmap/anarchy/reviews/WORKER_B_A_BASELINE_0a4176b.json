@@ -1,0 +1,77 @@
+{
+  "commandsExecuted": [
+    "resolve refs/heads/agent/a/p1-p2-new-roadmap-execution and protected main",
+    "inspect exact commit 0a4176bcbcb975684c3a590be652c9fffe1ce770 and tree 641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "inspect workflow run 30993987137 and all four jobs",
+    "inspect workflow artifacts for Windows and macOS",
+    "verify outer artifact digests, nested ZIP SHA-256 sidecars, result metadata, exact commit/tree bindings, and every QA_BUNDLE_MANIFEST entry",
+    "inspect QA feature coverage, known limitations, shipment classification, handoff, and tri-platform manual test matrix"
+  ],
+  "decision": "REQUEST_CHANGES",
+  "disposition": "Worker A owns the bounded runtime and evidence repair. Produce a new exact candidate with a passing Linux ProductRuntime smoke and artifact, canonical stable test IDs/profiles/mappings, tri-platform behavioral receipts, cleanup/process-tree termination evidence, normalized exact-SHA evidence aggregation, and certification inputs, then request a new review.",
+  "filesReviewed": [
+    ".github/workflows/p1-p2-owner-risk-promotion-v71r12.yml",
+    "workflow run 30993987137 job metadata",
+    "kristin-p1-p2-owner-risk-windows-30993987137-1 artifact",
+    "kristin-p1-p2-owner-risk-macos-30993987137-1 artifact",
+    "QA_BUILD_METADATA.json",
+    "QA_BUNDLE_MANIFEST.json",
+    "qa/KNOWN_LIMITATIONS.md",
+    "qa/P1_P2_FEATURE_COVERAGE.json",
+    "qa/QA_HANDOFF.md",
+    "qa/SHIPMENT_CLASSIFICATION.md",
+    "qa/TRI_PLATFORM_TEST_MATRIX.md"
+  ],
+  "findings": [
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-001",
+      "severity": "HIGH",
+      "summary": "The exact protected-main owner-risk workflow concluded failure because Linux failed the ProductRuntime smoke before packaging; no Linux QA artifact exists for the reviewed run."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-002",
+      "severity": "HIGH",
+      "summary": "The candidate declares all three platforms mandatory, but only Windows and macOS artifacts are present. Required platform coverage and aggregate certification inputs are incomplete."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-003",
+      "severity": "HIGH",
+      "summary": "The bundles explicitly state that manual interactive acceptance remains required and formal P1A/P2 completion, production eligibility, and release certification are false. No completed Windows/macOS/Linux behavioral receipt matrix was found."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-004",
+      "severity": "HIGH",
+      "summary": "Canonical cleanup and process-tree termination receipts, exact-SHA normalized evidence aggregation, and independent certification records are absent; a hosted source/smoke PASS cannot close these gates."
+    },
+    {
+      "disposition": "OPEN",
+      "findingId": "B-A-005",
+      "severity": "MEDIUM",
+      "summary": "The reviewed candidate predates the canonical Test Center contract and does not yet provide P1/P1A/P2 stable test IDs, Project Test Profile entries, affected-test mappings, or normalized adapters required for shared architecture integration."
+    },
+    {
+      "disposition": "VERIFIED",
+      "findingId": "B-A-006",
+      "severity": "INFO",
+      "summary": "Windows and macOS artifact integrity is internally consistent: outer Actions digests match, nested sidecars match result metadata, exact source commit/tree bindings match the candidate, and 369 Windows plus 386 macOS manifest entries verified without hash failures."
+    }
+  ],
+  "invalidation": {
+    "invalidatedAt": "2026-08-05T12:44:18Z",
+    "reason": "Worker A advanced agent/a/p1-p2-new-roadmap-execution from 0a4176bcbcb975684c3a590be652c9fffe1ce770 to 345847cb06b3123f2841bdface68a6615cd5de42 in relevant scope.",
+    "supersededBy": "WORKER_B_A_REVIEW_345847c.json"
+  },
+  "reviewArtifactHashSidecar": "WORKER_B_A_BASELINE_0a4176b.json.sha256",
+  "reviewId": "worker-b-a-baseline-0a4176b",
+  "reviewedAt": "2026-08-05T12:32:49Z",
+  "reviewedBranch": "agent/a/p1-p2-new-roadmap-execution",
+  "reviewedCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+  "reviewedTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+  "reviewer": "Worker B \u2014 Test Center and independent certification review",
+  "schemaVersion": "1.0.0",
+  "validUntilScopeChanges": false
+}
