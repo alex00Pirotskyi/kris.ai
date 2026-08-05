@@ -289,8 +289,9 @@ void main() {
       expect(launcher, isNot(contains('powershell')));
       expect(migration, contains('_alloweddartfiles'));
       expect(migration, contains('archive/legacy_pre_v070_'));
-      expect(migration, contains("'ui_advanced.dart'"));
-      expect(migration, contains("'ui_components.dart'"));
+      final sourceManifest = source('SOURCE_MANIFEST.sha256');
+      expect(sourceManifest, contains('  lib/product/ui_advanced.dart'));
+      expect(sourceManifest, contains('  lib/product/ui_components.dart'));
       expect(migration, contains('_moveentity'));
       expect(migration, contains('quarantinedpaths'));
       expect(migration, contains("'discardedpaths': 0"));
@@ -755,7 +756,11 @@ void main() {
         );
 
         final migration = source('tool/prune_stale_legacy.dart');
-        expect(migration, contains('_allowedDartFiles.contains(relative)'));
+        expect(
+          migration,
+          contains('final allowedDartFiles = _governedDartFiles(root);'),
+        );
+        expect(migration, contains('allowedDartFiles.contains(relative)'));
         expect(
           File('test/product/knowledge_memory_test.dart').existsSync(),
           isTrue,
