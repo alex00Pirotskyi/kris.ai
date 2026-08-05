@@ -112,8 +112,14 @@ jobs:
         with:
           name: p24-001-adoption-review-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/p24-*
-            ${{ runner.temp }}/expected-*
+            ${{ runner.temp }}/p24-diagnostic.json
+            ${{ runner.temp }}/p24-tests.log
+            ${{ runner.temp }}/p24-generation.log
+            ${{ runner.temp }}/p24-exact-check.log
+            ${{ runner.temp }}/p24-isolated-generation-proof.json
+            ${{ runner.temp }}/p24-validation-report.json
+            ${{ runner.temp }}/expected-P24-001_CONTROL_PLANE_INDEX.json
+            ${{ runner.temp }}/expected-SOURCE_MANIFEST.sha256
           if-no-files-found: error
           retention-days: 90
 
