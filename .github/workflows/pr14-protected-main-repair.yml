@@ -1,0 +1,149 @@
+name: PR14 Protected Main Repair Handoff
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pr14-protected-main-repair.yml
+      - tool/pr14_main_push_repair.py
+      - tool/pr14_main_push_repair_v2.py
+      - docs/progress/2026-08-05-pr14-protected-main-push-handoff.md
+      - docs/progress/2026-08-05-pr14-handoff-bookkeeping-fix.md
+      - SOURCE_MANIFEST.sha256
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pr14-protected-main-repair.yml
+      - tool/pr14_main_push_repair.py
+      - tool/pr14_main_push_repair_v2.py
+      - docs/progress/2026-08-05-pr14-protected-main-push-handoff.md
+      - docs/progress/2026-08-05-pr14-handoff-bookkeeping-fix.md
+      - SOURCE_MANIFEST.sha256
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr14-protected-main-repair-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: pr14-main-push-repair-validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Compile and self-test protected main repair handoff
+        run: |
+          python -m py_compile \
+            tool/pr14_main_push_repair.py \
+            tool/pr14_main_push_repair_v2.py
+          python tool/pr14_main_push_repair_v2.py --self-test
+
+  refresh-source-manifest:
+    name: pr14-main-push-source-manifest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.ref == 'agent/pr14-handoff-bookkeeping-fix-20260805' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Validate corrected helper and regenerate governed inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tool/pr14_main_push_repair.py \
+            tool/pr14_main_push_repair_v2.py
+          python tool/pr14_main_push_repair_v2.py --self-test
+          python tool/p1a_refresh_source_manifest.py .
+          git diff --check
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          if [ "${#paths[@]}" -eq 0 ]; then
+            echo 'SOURCE_MANIFEST_CURRENT=true'
+            exit 0
+          fi
+          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 1
+          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
+      - name: Publish exact source manifest to bookkeeping-fix branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            echo 'SOURCE_MANIFEST_PUSH_REQUIRED=false'
+            exit 0
+          fi
+          git config user.name 'Kristin PR14 Handoff'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'ci: refresh source manifest for PR14 bookkeeping fix'
+          git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
+
+  execute:
+    name: pr14-main-push-repair-execute
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: read
+    env:
+      CONTROL_SHA: ${{ github.sha }}
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_PRODUCT_RUN_ID: '30974509667'
+      SOURCE_PRODUCT_RUN_ATTEMPT: '1'
+    steps:
+      - name: Check out exact protected main control code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: control
+      - name: Check out exact PR14 status branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ci/direct-pr14-repair-trigger
+          fetch-depth: 0
+          persist-credentials: true
+          path: status
+      - name: Check out exact governed PR14 target
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: true
+          path: target
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Construct and receipt exact documented PR14 candidate
+        run: >-
+          python control/tool/pr14_main_push_repair_v2.py
+          --control control
+          --target target
+          --status status

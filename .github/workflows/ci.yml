@@ -2,6 +2,8 @@ name: product-gates
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
   pull_request:
 permissions:
   contents: read
@@ -66,7 +68,6 @@ jobs:
 
       - name: Capture CI environment
         run: python tool/capture_ci_environment.py --output "release/evidence/P0-003/ci-environment-${{ runner.os }}.json" --print
-
 
       - name: Validate locked toolchain
         run: python tool/toolchain_lock_test.py --json-output "release/evidence/P0-004/toolchain-${{ runner.os }}.json"
