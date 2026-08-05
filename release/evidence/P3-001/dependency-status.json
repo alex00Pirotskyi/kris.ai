@@ -2,12 +2,12 @@
   "activation": {
     "blockers": [
       "MISSING_INDEPENDENT_REVIEW",
-      "MISSING_ADR",
       "MISSING_MEASUREMENT",
+      "CONFLICTING_ARCHITECTURE_DECISION",
       "BLOCKED_EXTERNAL"
     ],
     "decision": "P3-001_BLOCKED_BY_DEPENDENCY",
-    "nextActivationCondition": "A reviewed exact-SHA P1-012 decision and a final P2-004 ADR selecting one host from exact tri-platform startup, memory, packaging, and reliability measurements.",
+    "nextActivationCondition": "P1-012 receives an independent exact-commit review and P2-004 records accepted exact tri-platform startup, memory, packaging, and reliability measurements, a final automation-host selection, owner approval, and independent exact-SHA review.",
     "p3_001ImplementationAuthorized": false,
     "selectedLane": "A"
   },
@@ -44,7 +44,7 @@
         "commit": "e9cd72c7fbc77744aac9749776fa90dc9fc07e16",
         "tree": "8f276e8da13e30950a427390a9452ca5b7d67182"
       },
-      "notes": "Implementation commit/tree were resolved from file history; the task evidence itself does not include an independent review submission.",
+      "notes": "Implementation commit/tree were resolved from repository history; task evidence contains owner approval but no independent exact-commit review submission.",
       "review": {
         "independentReview": "MISSING",
         "ownerApproval": "PASS"
@@ -65,7 +65,7 @@
     },
     {
       "additionalBlockers": [
-        "MISSING_ADR",
+        "CONFLICTING_ARCHITECTURE_DECISION",
         "MISSING_INDEPENDENT_REVIEW",
         "BLOCKED_EXTERNAL"
       ],
@@ -89,7 +89,7 @@
         "reliability": "MISSING_MEASUREMENT",
         "startup": "MISSING_MEASUREMENT"
       },
-      "notes": "ADR-0012 is explicitly provisional and selects no technology; exact tri-platform measured receipts are required.",
+      "notes": "ADR-0012 exists but is explicitly provisional and selects no technology; exact tri-platform measured receipts and reviewed acceptance are required.",
       "review": {
         "independentReview": "MISSING",
         "ownerApproval": "MISSING"
@@ -98,7 +98,7 @@
       "title": "Automation host technology spike"
     }
   ],
-  "generatedAt": "2026-08-05T16:06:35Z",
+  "generatedAt": "2026-08-05T16:46:00Z",
   "repository": {
     "protectedMain": {
       "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
@@ -109,19 +109,30 @@
       "pr": 64,
       "tree": "ff78974657c25ddc45f6597120fae4b857fe34e9"
     },
-    "workerBBase": {
+    "workerBBranchCreationBase": {
       "commit": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
-      "pr": 65,
       "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
     },
+    "workerBSynchronizedBase": {
+      "commit": "d3452aa224c3228a9a3e3155a896e828af8d9ded",
+      "pr": 65,
+      "tree": "d6717a2954c15a76d4e71739fe448caac68a4333"
+    },
     "workerC": {
-      "commit": "35a53821979b987962ca18c05cb62a12fd3963ed",
-      "pr": 62
+      "commit": "cc3c46b9e964b76c4aea48e746a92d42190a0942",
+      "pr": 62,
+      "tree": "aa447844c19d6709fe9b4624007609b93d512839"
+    },
+    "workerD": {
+      "branch": "agent/d/p3-readiness-fixtures",
+      "synchronizationCommit": "c51266b96e7cb3e016728972d2862f1f509e8a65",
+      "synchronizationTree": "981cdfecedc3f7e58f080916fd40dea6e7037176"
     },
     "workerJ": {
-      "commit": "95c12f3a240564a87e594fa6a8a393925fc10167",
+      "commit": "171053b2f68bb065f305dabd0d637945aff658ec",
       "pr": 66,
-      "status": "ADOPTION_REVIEW_REQUEST_CHANGES"
+      "status": "ADOPTION_REVIEW",
+      "tree": "55bc95eedd29abcad7a077d197af835ade95d902"
     }
   },
   "schemaVersion": "1.0.0",
