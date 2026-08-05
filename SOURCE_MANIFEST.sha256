@@ -11,6 +11,7 @@ bd942164d87856c44c7c7fa96f23eaf241a41cea4b06834ee34550a4bd3e7662  .github/pull_r
 7643f62a954a3ffbc14502c88bedf1d76981cebf7c6a921a73192c707f321d2b  .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml
 05918a5c978d9a25e5aa7c2c520bc27a48dece702120b9b995d770325a755dcc  .github/workflows/p2-integration-alignment.yml
 35882ecef1f283f2a3d30ff327735e4517891463286cdf903549f3009d63485b  .github/workflows/p2-owner-mode.yml
+691e98dd8db5dfb11c6f7b6d2422343fb72e49e5234e003b43db1015624401db  .github/workflows/p4-001-finalize-evidence.yml
 638d9671cdebbe657c1f63cb7f5c7f7bf50621e4556bc187768cf918288682cf  .github/workflows/p4-001-publish-candidate.yml
 e6fea9316540a875cbd9a735f936600b46aa0dfa04b66aa9841a571c63f6c100  .github/workflows/p4-001-search-provider.yml
 62c6d41d83e64ba052069577831155874c14c903b3854884aae8aa9c4f1ea96f  .github/workflows/pr14-current-main-reconciliation.yml
