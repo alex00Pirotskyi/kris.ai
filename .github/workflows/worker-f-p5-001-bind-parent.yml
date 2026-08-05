@@ -1,0 +1,184 @@
+name: Worker F P5-001 bind clean parent
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  bind:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Resolve the clean parent workflow and package its exact result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: agent/f/P5-001-information-architecture
+          BASE: agent/b/test-center-contracts-and-review
+          CURRENT_RUN: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          CURRENT_SHA=$(git rev-parse HEAD)
+          SOURCE_SHA=$(git rev-parse HEAD^)
+          SOURCE_TREE=$(git show -s --format=%T "$SOURCE_SHA")
+          WORKFLOW_NAME='Worker F P5-001 Information Architecture'
+
+          # The binder commit may start an irrelevant validation of itself. Preserve only the clean parent run.
+          gh api "repos/$REPO/actions/runs?head_sha=$CURRENT_SHA&per_page=100" \
+            --jq '.workflow_runs[] | select(.name == "Worker F P5-001 Information Architecture" and (.status == "queued" or .status == "in_progress")) | .id' \
+            | while read -r run_id; do gh api --method POST "repos/$REPO/actions/runs/$run_id/cancel" >/dev/null 2>&1 || true; done
+
+          RUN_ID=''
+          CONCLUSION=''
+          for attempt in $(seq 1 300); do
+            runs=$(gh api "repos/$REPO/actions/runs?head_sha=$SOURCE_SHA&per_page=100")
+            RUN_ID=$(jq -r --arg name "$WORKFLOW_NAME" '[.workflow_runs[] | select(.name == $name)] | sort_by(.created_at) | last | .id // empty' <<<"$runs")
+            if [[ -n "$RUN_ID" ]]; then
+              status=$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .status)
+              if [[ "$status" == completed ]]; then
+                CONCLUSION=$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq '.conclusion // ""')
+                break
+              fi
+            fi
+            sleep 8
+          done
+
+          PR=$(gh api "repos/$REPO/pulls?head=${REPO%%/*}:$BRANCH&state=all&per_page=20" --jq '.[0].number // empty')
+          cat > /tmp/pr.md <<EOF
+          ## Worker F — P5-001 bounded handoff
+          - Authority: \`docs/roadmap/MASTER.md\`; \`roadmap.yaml\` within its declared scope
+          - P0-008: **READY**
+          - Selected Worker B base: \`90c574665363140aeb6cf764ab8387714cab88cf\` / tree \`438fe3f710c0fed32106ee6acdc138f4e4c6accc\`
+          - Clean Stage 1 candidate: \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`
+          - Exact permanent workflow run: ${RUN_ID:-NOT_FOUND}, conclusion ${CONCLUSION:-NOT_SETTLED}
+
+          The branch is bounded to the isolated non-production P5-001 information-architecture prototype and its deterministic Test Center/evidence contracts. It does not replace \`lib/main.dart\`, change P2 or Owner Mode runtime semantics, access network/credentials/devices, or claim P5-002+, P22, accessibility certification, platform support, release support, production readiness, or GA readiness.
+
+          The PR remains draft and unmerged. Review-ready classification is allowed only when the clean Stage 1 SHA has successful Ubuntu, Windows, and macOS jobs.
+          EOF
+          sed -i 's/^          //' /tmp/pr.md
+          if [[ -z "$PR" ]]; then
+            PR=$(gh api "repos/$REPO/pulls" -f title='P5-001: add information architecture and UX flow prototype' -f head="$BRANCH" -f base="$BASE" -f body="$(cat /tmp/pr.md)" -F draft=true --jq .number)
+          else
+            gh api --method PATCH "repos/$REPO/pulls/$PR" -f title='P5-001: add information architecture and UX flow prototype' -f body="$(cat /tmp/pr.md)" >/dev/null
+          fi
+
+          mkdir -p release/evidence/P5-001
+          JOBS_JSON='{"jobs":[]}'
+          RUN_JSON='{}'
+          ARTIFACTS_JSON='{"artifacts":[]}'
+          if [[ -n "$RUN_ID" ]]; then
+            RUN_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID")
+            JOBS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100")
+            ARTIFACTS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100")
+          fi
+          export SOURCE_SHA SOURCE_TREE RUN_ID CONCLUSION RUN_JSON JOBS_JSON ARTIFACTS_JSON PR
+
+          if [[ "$CONCLUSION" != success ]]; then
+            python - <<'PY'
+          import json,os
+          from pathlib import Path
+          jobs_raw=json.loads(os.environ['JOBS_JSON'])
+          payload={
+            'schemaVersion':'1.0.0',
+            'classification':'BLOCKED',
+            'reason':'EXACT_HEAD_WORKFLOW_NOT_GREEN' if os.environ.get('RUN_ID') else 'EXACT_HEAD_WORKFLOW_NOT_FOUND',
+            'stage1Commit':os.environ['SOURCE_SHA'],
+            'stage1Tree':os.environ['SOURCE_TREE'],
+            'workflowRunId':int(os.environ['RUN_ID']) if os.environ.get('RUN_ID') else None,
+            'workflowConclusion':os.environ.get('CONCLUSION') or 'NOT_SETTLED',
+            'jobs':[{'jobId':j.get('id'),'name':j.get('name'),'status':j.get('status'),'conclusion':j.get('conclusion'),'url':j.get('html_url'),'steps':[{'number':s.get('number'),'name':s.get('name'),'status':s.get('status'),'conclusion':s.get('conclusion')} for s in j.get('steps',[])]} for j in jobs_raw.get('jobs',[])],
+            'pullRequestNumber':int(os.environ['PR']),
+            'merge':False,
+          }
+          Path('release/evidence/P5-001/exact-head-blocker.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+            rm -f .github/workflows/worker-f-p5-001-bind-parent.yml
+            if [[ -f tool/worker_f_p5_ia.py ]]; then python tool/worker_f_p5_ia.py manifest --project .; fi
+            if [[ -f tool/p1a_refresh_source_manifest.py ]]; then python tool/p1a_refresh_source_manifest.py .; python tool/p1a_refresh_source_manifest.py .; fi
+            git add -A .github/workflows/worker-f-p5-001-bind-parent.yml release/evidence/P5-001 docs/roadmap/SOURCE_MANIFEST.sha256
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'P5-001: record exact-head verification blocker'
+            BLOCKER_SHA=$(git rev-parse HEAD); BLOCKER_TREE=$(git show -s --format=%T HEAD)
+            git push origin HEAD:refs/heads/$BRANCH
+            gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker F exact-head blocker
+
+          Clean candidate \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` did not obtain a green permanent workflow. Run: ${RUN_ID:-NOT_FOUND}; conclusion: ${CONCLUSION:-NOT_SETTLED}. Exact jobs and steps are recorded in \`release/evidence/P5-001/exact-head-blocker.json\`. Blocker evidence commit: \`$BLOCKER_SHA\` / tree \`$BLOCKER_TREE\`. The PR remains draft and unmerged; PROTOTYPE_REVIEW_READY is withheld." >/dev/null
+            exit 0
+          fi
+
+          python - <<'PY'
+          import json,os
+          jobs=json.loads(os.environ['JOBS_JSON']).get('jobs',[])
+          required={'Ubuntu P5-001 verification','Windows P5-001 verification','macOS P5-001 verification'}
+          exact={j.get('name'):j for j in jobs if j.get('name') in required}
+          if set(exact)!=required or any(j.get('conclusion')!='success' for j in exact.values()):
+            raise SystemExit('permanent workflow conclusion was success but required platform jobs were not all successful')
+          PY
+
+          mkdir -p /tmp/artifacts
+          jq -r '.artifacts[] | select(.expired == false) | [.id,.name] | @tsv' <<<"$ARTIFACTS_JSON" | while IFS=$'\t' read -r id name; do gh api "repos/$REPO/actions/artifacts/$id/zip" > "/tmp/artifacts/${id}-${name}.zip"; done
+          find /tmp/artifacts -type f -print0 | sort -z | xargs -0 -r sha256sum > /tmp/hashes.txt
+          export RUN_URL="https://github.com/$REPO/actions/runs/$RUN_ID"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          e=Path('release/evidence/P5-001'); run=json.loads(os.environ['RUN_JSON']); jobs_raw=json.loads(os.environ['JOBS_JSON']); artifacts_raw=json.loads(os.environ['ARTIFACTS_JSON'])
+          required={'Ubuntu P5-001 verification','Windows P5-001 verification','macOS P5-001 verification'}
+          jobs=[{'jobId':j.get('id'),'name':j.get('name'),'status':j.get('status'),'conclusion':j.get('conclusion'),'url':j.get('html_url')} for j in sorted(jobs_raw.get('jobs',[]),key=lambda x:(x.get('name',''),x.get('id',0))) if j.get('name') in required]
+          hashes=[]; hp=Path('/tmp/hashes.txt')
+          if hp.exists():
+            for line in hp.read_text().splitlines(): digest,path=line.split('  ',1); hashes.append({'path':Path(path).name,'sha256':digest})
+          payloads={
+            'stage-1-source.json':{'schemaVersion':'1.0.0','stage':'STAGE_1_CODED_PROTOTYPE','commit':os.environ['SOURCE_SHA'],'tree':os.environ['SOURCE_TREE'],'baseCommit':'90c574665363140aeb6cf764ab8387714cab88cf','baseTree':'438fe3f710c0fed32106ee6acdc138f4e4c6accc','moduleId':'tm.p5-information-architecture','capabilitySupport':'SOURCE_FOUNDATION','productionEntryPointChanged':False,'runtimeSideEffects':False},
+            'stage-2-ci.json':{'schemaVersion':'1.0.0','stage':'STAGE_2_EVIDENCE_PACKAGING','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowName':'Worker F P5-001 Information Architecture','runId':int(os.environ['RUN_ID']),'runUrl':os.environ['RUN_URL'],'conclusion':'success','jobs':jobs,'artifacts':[{'artifactId':a.get('id'),'name':a.get('name'),'sizeInBytes':a.get('size_in_bytes')} for a in artifacts_raw.get('artifacts',[])],'artifactFiles':hashes},
+            'review-requests.json':{'schemaVersion':'1.0.0','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'requests':[{'worker':'B','status':'REQUESTED','allowedDecisions':['PASS','REQUEST_CHANGES','BLOCKED_BY_CONTRACT','BLOCKED_EXTERNAL']},{'worker':'A','status':'REQUESTED'},{'worker':'J','status':'REQUESTED'}],'workerIRequired':False},
+            'test-results.json':{'schemaVersion':'1.0.0','milestone':'P5-001','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':int(os.environ['RUN_ID']),'conclusion':'success','jobs':jobs,'capabilitySupport':'SOURCE_FOUNDATION','certificationState':'NOT_EVALUATED','platformSupport':'UNSUPPORTED','releaseSupport':'UNSUPPORTED'},
+            'final-handoff.json':{'schemaVersion':'1.0.0','classification':'P5-001_PROTOTYPE_REVIEW_READY','branch':'agent/f/P5-001-information-architecture','pullRequestNumber':int(os.environ['PR']),'stage1Commit':os.environ['SOURCE_SHA'],'stage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':int(os.environ['RUN_ID']),'workflowRunUrl':os.environ['RUN_URL'],'workerB':'REQUESTED','workerA':'REQUESTED','workerJ':'REQUESTED','merge':False},
+          }
+          for name,payload in payloads.items(): (e/name).write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          blocker=e/'exact-head-blocker.json'
+          if blocker.exists(): blocker.unlink()
+          PY
+
+          rm -f .github/workflows/worker-f-p5-001-bind-parent.yml
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/one
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/one docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+          git add -A .github/workflows/worker-f-p5-001-bind-parent.yml release/evidence/P5-001 docs/roadmap/SOURCE_MANIFEST.sha256
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'P5-001: package exact-head verification evidence'
+          STAGE2_SHA=$(git rev-parse HEAD); STAGE2_TREE=$(git show -s --format=%T HEAD); git push origin HEAD:refs/heads/$BRANCH
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker B exact-SHA review request
+
+          Review Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` for canonical Test Center conformance, Verification Center domain separation, stable IDs, one-to-one NON_MUTATING profiles, mappings, evidence binding, certification/support presentation, and no support inflation. Decision: PASS | REQUEST_CHANGES | BLOCKED_BY_CONTRACT | BLOCKED_EXTERNAL." >/dev/null
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker A semantic verification request
+
+          Verify Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`: Owner Mode labels are accurate, source/controlled behavior remains separate, P2 runtime semantics and capability grants are unchanged, and BLOCKED_EXTERNAL remains honest." >/dev/null
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker J no-conflict request
+
+          Record that Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` owns only P5-001, changes no roadmap authority, collides with no A/B/C/D/E/J implementation, starts no P5-002+, and claims no P22 readiness." >/dev/null
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## P5-001 Stage 2
+
+          Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` passed the permanent Ubuntu, Windows, and macOS jobs in run [$RUN_ID]($RUN_URL). Stage 2 \`$STAGE2_SHA\` / tree \`$STAGE2_TREE\` packages exact evidence and review requests. Classification: **P5-001_PROTOTYPE_REVIEW_READY**. Draft and unmerged." >/dev/null
