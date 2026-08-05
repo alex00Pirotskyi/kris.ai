@@ -1,0 +1,26 @@
+{
+  "contract": "Worker A companion rationale metadata for canonical AffectedTestMapping records; the Worker B v1 schema remains unchanged.",
+  "mappings": [
+    {
+      "mappingId": "affected.p1.trust-authority",
+      "reason": "P1 trust, policy, manifest, audit, threat-model, IPC, tests, or durable evidence changes require the complete P1 exit gate."
+    },
+    {
+      "mappingId": "affected.p1a.native-authority",
+      "reason": "Native authority, cross-language trust, P1A toolchain, platform, or durable evidence changes require the P1A exit gate."
+    },
+    {
+      "mappingId": "affected.p2.owner-mode-source",
+      "reason": "Owner Mode runtime, automation host, product tests, source contracts, workflows, or evidence changes select all dependency-safe P2 source and lifecycle checks."
+    },
+    {
+      "mappingId": "affected.p2.behavioral-certification",
+      "reason": "Behavioral runner, cleanup/finalization, platform receipt, aggregate manifest, or controlled workflow changes require the distinct behavioral-closure gate."
+    },
+    {
+      "mappingId": "affected.worker-a.canonical-integration",
+      "reason": "Worker A registry, adapter, evidence-pack, historical compatibility, or progress changes require both canonical shared checks and the Worker A integration check."
+    }
+  ],
+  "schemaVersion": "1.0.0"
+}
