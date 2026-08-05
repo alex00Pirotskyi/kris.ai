@@ -63,6 +63,9 @@ jobs:
           flutter create --project-name kristin_local_agent --org local.kristin --platforms="$platforms" .
       - run: flutter pub get
 
+      - name: Install hash-locked P1/P2 Python test dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+
       - name: Capture CI environment
         run: python tool/capture_ci_environment.py --output "release/evidence/P0-003/ci-environment-${{ runner.os }}.json" --print
 

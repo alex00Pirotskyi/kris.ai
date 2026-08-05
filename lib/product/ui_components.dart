@@ -150,12 +150,23 @@ CommandMode inferCommandMode(String request) {
 
   bool hasAny(Iterable<String> values) => values.any(lower.contains);
 
-  if (hasAny(
-      <String>['fix ', 'repair ', 'debug ', 'broken', 'error', 'failing'])) {
+  if (hasAny(<String>[
+    'fix ',
+    'repair ',
+    'debug ',
+    'broken',
+    'error',
+    'failing',
+  ])) {
     return CommandMode.fix;
   }
-  if (hasAny(
-      <String>['review ', 'audit ', 'assess ', 'inspect ', 'critique '])) {
+  if (hasAny(<String>[
+    'review ',
+    'audit ',
+    'assess ',
+    'inspect ',
+    'critique ',
+  ])) {
     return CommandMode.review;
   }
   if (hasAny(<String>['run ', 'launch ', 'start the ', 'execute ']) &&
@@ -167,7 +178,7 @@ CommandMode inferCommandMode(String request) {
     'analyse ',
     'investigate ',
     'compare ',
-    'examine '
+    'examine ',
   ])) {
     return CommandMode.analyze;
   }
@@ -183,7 +194,7 @@ CommandMode inferCommandMode(String request) {
             'explain ',
             'tell me ',
             'where ',
-            'when '
+            'when ',
           ])) &&
       !hasAny(<String>[
         'build ',
@@ -191,7 +202,7 @@ CommandMode inferCommandMode(String request) {
         'implement ',
         'make ',
         'change ',
-        'add '
+        'add ',
       ])) {
     return CommandMode.ask;
   }
@@ -288,38 +299,44 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
     PermissionScope.projectDelete,
   });
   if (fileScopes.isNotEmpty) {
-    groups.add(AccessGroup(
-      title: fileScopes.contains(PermissionScope.projectWrite)
-          ? 'Work in this project folder'
-          : 'Read this project folder',
-      description: fileScopes.contains(PermissionScope.projectDelete)
-          ? 'Read, change, and remove individual checkpointed files inside the selected project.'
-          : fileScopes.contains(PermissionScope.projectWrite)
-              ? 'Read and safely change checkpointed files inside the selected project.'
-              : 'Read files only inside the selected project.',
-      icon: Icons.folder_copy_outlined,
-      scopes: fileScopes,
-      highRisk: fileScopes.contains(PermissionScope.projectDelete),
-    ));
+    groups.add(
+      AccessGroup(
+        title: fileScopes.contains(PermissionScope.projectWrite)
+            ? 'Work in this project folder'
+            : 'Read this project folder',
+        description: fileScopes.contains(PermissionScope.projectDelete)
+            ? 'Read, change, and remove individual checkpointed files inside the selected project.'
+            : fileScopes.contains(PermissionScope.projectWrite)
+                ? 'Read and safely change checkpointed files inside the selected project.'
+                : 'Read files only inside the selected project.',
+        icon: Icons.folder_copy_outlined,
+        scopes: fileScopes,
+        highRisk: fileScopes.contains(PermissionScope.projectDelete),
+      ),
+    );
   }
 
   if (scopes.contains(PermissionScope.networkResearch)) {
-    groups.add(const AccessGroup(
-      title: 'Read approved documentation',
-      description:
-          'Fetch public HTTPS documentation through size, redirect, and private-network protections.',
-      icon: Icons.public_outlined,
-      scopes: <PermissionScope>{PermissionScope.networkResearch},
-    ));
+    groups.add(
+      const AccessGroup(
+        title: 'Read approved documentation',
+        description:
+            'Fetch public HTTPS documentation through size, redirect, and private-network protections.',
+        icon: Icons.public_outlined,
+        scopes: <PermissionScope>{PermissionScope.networkResearch},
+      ),
+    );
   }
   if (scopes.contains(PermissionScope.networkPackages)) {
-    groups.add(const AccessGroup(
-      title: 'Install project packages',
-      description:
-          'Download approved dependencies for this project when package networking is enabled.',
-      icon: Icons.inventory_2_outlined,
-      scopes: <PermissionScope>{PermissionScope.networkPackages},
-    ));
+    groups.add(
+      const AccessGroup(
+        title: 'Install project packages',
+        description:
+            'Download approved dependencies for this project when package networking is enabled.',
+        icon: Icons.inventory_2_outlined,
+        scopes: <PermissionScope>{PermissionScope.networkPackages},
+      ),
+    );
   }
 
   final processScopes = scopes.intersection(<PermissionScope>{
@@ -327,47 +344,55 @@ List<AccessGroup> groupPermissions(Set<PermissionScope> scopes) {
     PermissionScope.executeManaged,
   });
   if (processScopes.isNotEmpty) {
-    groups.add(AccessGroup(
-      title: processScopes.contains(PermissionScope.executeManaged)
-          ? 'Run and keep the project active'
-          : 'Run checks and local commands',
-      description: processScopes.contains(PermissionScope.executeManaged)
-          ? 'Run bounded checks and start a tracked local project process.'
-          : 'Run bounded tests, builds, and project commands without a shell.',
-      icon: Icons.play_circle_outline,
-      scopes: processScopes,
-      highRisk: processScopes.contains(PermissionScope.executeManaged),
-    ));
+    groups.add(
+      AccessGroup(
+        title: processScopes.contains(PermissionScope.executeManaged)
+            ? 'Run and keep the project active'
+            : 'Run checks and local commands',
+        description: processScopes.contains(PermissionScope.executeManaged)
+            ? 'Run bounded checks and start a tracked local project process.'
+            : 'Run bounded tests, builds, and project commands without a shell.',
+        icon: Icons.play_circle_outline,
+        scopes: processScopes,
+        highRisk: processScopes.contains(PermissionScope.executeManaged),
+      ),
+    );
   }
 
   if (scopes.contains(PermissionScope.secretUse)) {
-    groups.add(const AccessGroup(
-      title: 'Use a named secret',
-      description:
-          'Resolve only an approved named secret reference. The value is never shown or saved in source.',
-      icon: Icons.key_outlined,
-      scopes: <PermissionScope>{PermissionScope.secretUse},
-      highRisk: true,
-    ));
+    groups.add(
+      const AccessGroup(
+        title: 'Use a named secret',
+        description:
+            'Resolve only an approved named secret reference. The value is never shown or saved in source.',
+        icon: Icons.key_outlined,
+        scopes: <PermissionScope>{PermissionScope.secretUse},
+        highRisk: true,
+      ),
+    );
   }
   if (scopes.contains(PermissionScope.deploymentPackage)) {
-    groups.add(const AccessGroup(
-      title: 'Prepare an export package',
-      description:
-          'Create a scanned deployment archive with a manifest and dependency inventory.',
-      icon: Icons.archive_outlined,
-      scopes: <PermissionScope>{PermissionScope.deploymentPackage},
-    ));
+    groups.add(
+      const AccessGroup(
+        title: 'Prepare an export package',
+        description:
+            'Create a scanned deployment archive with a manifest and dependency inventory.',
+        icon: Icons.archive_outlined,
+        scopes: <PermissionScope>{PermissionScope.deploymentPackage},
+      ),
+    );
   }
   if (scopes.contains(PermissionScope.mcpConnect)) {
-    groups.add(const AccessGroup(
-      title: 'Use a trusted integration',
-      description:
-          'Connect only to a separately approved project-bound MCP server and its exact tool list.',
-      icon: Icons.hub_outlined,
-      scopes: <PermissionScope>{PermissionScope.mcpConnect},
-      highRisk: true,
-    ));
+    groups.add(
+      const AccessGroup(
+        title: 'Use a trusted integration',
+        description:
+            'Connect only to a separately approved project-bound MCP server and its exact tool list.',
+        icon: Icons.hub_outlined,
+        scopes: <PermissionScope>{PermissionScope.mcpConnect},
+        highRisk: true,
+      ),
+    );
   }
   return groups;
 }
@@ -546,9 +571,9 @@ class EmptyStateCard extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             ConstrainedBox(
@@ -664,9 +689,9 @@ class QuickTemplateCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 template.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 7),
               Text(
@@ -785,9 +810,9 @@ class FivePhaseProgress extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             _labels[index],
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: foreground,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: foreground),
           ),
         ],
       ),
@@ -874,9 +899,9 @@ class FlowNode extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               friendlyWorkState(state),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: foreground,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: foreground),
             ),
           ],
         ),

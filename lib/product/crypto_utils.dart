@@ -208,7 +208,7 @@ String canonicalJson(Object? value) {
     if (item is Map) {
       final keys = item.keys.map((key) => key.toString()).toList()..sort();
       return <String, dynamic>{
-        for (final key in keys) key: normalize(item[key])
+        for (final key in keys) key: normalize(item[key]),
       };
     }
     if (item is Iterable) {
@@ -230,8 +230,10 @@ class SecretRedactor {
   final Set<String> _values = <String>{};
 
   static final List<RegExp> _patterns = <RegExp>[
-    RegExp(r'(authorization\s*:\s*bearer\s+)[A-Za-z0-9._~+\-/]+=*',
-        caseSensitive: false),
+    RegExp(
+      r'(authorization\s*:\s*bearer\s+)[A-Za-z0-9._~+\-/]+=*',
+      caseSensitive: false,
+    ),
     RegExp(r'(api[_-]?key\s*[=:]\s*)[^\s,;]+', caseSensitive: false),
     RegExp(r'(token\s*[=:]\s*)[^\s,;]+', caseSensitive: false),
     RegExp(r'(password\s*[=:]\s*)[^\s,;]+', caseSensitive: false),
@@ -239,7 +241,8 @@ class SecretRedactor {
     RegExp(r'\bsk-[A-Za-z0-9_-]{16,}\b'),
     RegExp(r'\b\d{6,12}:[A-Za-z0-9_-]{20,}\b'),
     RegExp(
-        r'-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+PRIVATE KEY-----'),
+      r'-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+PRIVATE KEY-----',
+    ),
   ];
 
   void register(String value) {
@@ -276,9 +279,9 @@ class SecretRedactor {
       return value.map((key, item) {
         final name = key.toString();
         final sensitive = RegExp(
-                r'(secret|token|password|credential|authorization|api.?key)',
-                caseSensitive: false)
-            .hasMatch(name);
+          r'(secret|token|password|credential|authorization|api.?key)',
+          caseSensitive: false,
+        ).hasMatch(name);
         return MapEntry(name, sensitive ? '[REDACTED]' : redactJson(item));
       });
     }

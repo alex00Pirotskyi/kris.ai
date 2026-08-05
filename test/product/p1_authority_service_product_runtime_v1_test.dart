@@ -9,11 +9,13 @@ final class _BlockedConnector implements P1AuthorityServiceConnectorV1 {
 }
 
 void main() {
-  test('ProductRuntime fails closed when isolated P1A service is unavailable',
-      () async {
-    await expectLater(
-      P1AuthorityServiceProductRuntimeV1.open(connector: _BlockedConnector()),
-      throwsStateError,
-    );
-  });
+  test(
+    'ProductRuntime fails closed when isolated P1A service is unavailable',
+    () async {
+      await expectLater(
+        P1AuthorityServiceProductRuntimeV1.open(connector: _BlockedConnector()),
+        throwsStateError,
+      );
+    },
+  );
 }

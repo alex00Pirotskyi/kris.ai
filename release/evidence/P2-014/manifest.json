@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-014",
+  "name": "Owner Mode operator guide",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P2-001",
+    "P2-013"
+  ],
+  "artifacts": [
+    "docs/OWNER_MODE_OPERATOR_GUIDE.md"
+  ],
+  "testResults": "release/evidence/P2-014/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

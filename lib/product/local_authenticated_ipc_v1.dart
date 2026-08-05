@@ -53,11 +53,11 @@ final class LocalIpcTransportPolicyV1 {
     'windows': <String>['named_pipe', 'authenticated_loopback_mutual_auth'],
     'macos': <String>[
       'unix_domain_socket',
-      'authenticated_loopback_mutual_auth'
+      'authenticated_loopback_mutual_auth',
     ],
     'linux': <String>[
       'unix_domain_socket',
-      'authenticated_loopback_mutual_auth'
+      'authenticated_loopback_mutual_auth',
     ],
   };
 

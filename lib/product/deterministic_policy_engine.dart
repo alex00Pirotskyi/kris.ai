@@ -44,8 +44,10 @@ class DeterministicPolicyEngineV2 {
     _string(binding['taskId'], 'taskId');
 
     final reasons = <String>{};
-    final registry =
-        _map(_policyConfig['capabilityRegistry'], 'capabilityRegistry');
+    final registry = _map(
+      _policyConfig['capabilityRegistry'],
+      'capabilityRegistry',
+    );
     final capabilityValue = registry[capabilityId];
     final capability = capabilityValue is Map
         ? Map<String, dynamic>.from(capabilityValue)
@@ -57,9 +59,10 @@ class DeterministicPolicyEngineV2 {
     if (capabilityValue is! Map) {
       reasons.add('unknown_capability');
     }
-    final tools = _list(capability['tools'], 'capability.tools')
-        .map((item) => item.toString())
-        .toSet();
+    final tools = _list(
+      capability['tools'],
+      'capability.tools',
+    ).map((item) => item.toString()).toSet();
     if (!tools.contains(toolId)) {
       reasons.add('tool_not_registered_for_capability');
     }
@@ -74,7 +77,9 @@ class DeterministicPolicyEngineV2 {
     final baseScope = _copy(scope);
     final budgets = _profileBudgets(profileId);
     final requestedBudgets = _map(
-        request['requestedBudgets'] ?? <String, dynamic>{}, 'requestedBudgets');
+      request['requestedBudgets'] ?? <String, dynamic>{},
+      'requestedBudgets',
+    );
     for (final field in budgets.keys.toList(growable: false)) {
       final requested = requestedBudgets[field] ?? budgets[field];
       if (requested is! int || requested < 0) {
@@ -90,16 +95,20 @@ class DeterministicPolicyEngineV2 {
     final deniedCapabilities = <String>{};
     final deniedTools = <String>{};
     var forceDeny = false;
-    final overlays = _list(request['overlays'] ?? <dynamic>[], 'overlays')
-        .map((item) => _map(item, 'overlay'))
-        .toList(growable: false)
+    final overlays = _list(
+      request['overlays'] ?? <dynamic>[],
+      'overlays',
+    ).map((item) => _map(item, 'overlay')).toList(growable: false)
       ..sort((left, right) {
-        final layer =
-            _layerRank(left['layer']).compareTo(_layerRank(right['layer']));
+        final layer = _layerRank(
+          left['layer'],
+        ).compareTo(_layerRank(right['layer']));
         return layer != 0
             ? layer
-            : _string(left['overlayId'], 'overlayId')
-                .compareTo(_string(right['overlayId'], 'overlayId'));
+            : _string(
+                left['overlayId'],
+                'overlayId',
+              ).compareTo(_string(right['overlayId'], 'overlayId'));
       });
     for (final overlay in overlays) {
       deniedCapabilities.addAll(_strings(overlay['denyCapabilities']));
@@ -108,31 +117,35 @@ class DeterministicPolicyEngineV2 {
       if (overlay.containsKey('pathPrefixes')) {
         scope['pathPrefixes'] = _pathIntersection(
           _strings(scope['pathPrefixes']),
-          _strings(overlay['pathPrefixes'])
-              .map(_normalizePath)
-              .toList(growable: false),
+          _strings(
+            overlay['pathPrefixes'],
+          ).map(_normalizePath).toList(growable: false),
         );
       }
       if (overlay.containsKey('networkDestinations')) {
         scope['networkDestinations'] = _intersection(
           _strings(scope['networkDestinations']),
-          _strings(overlay['networkDestinations'])
-              .map((item) => item.toLowerCase())
-              .toList(growable: false),
+          _strings(
+            overlay['networkDestinations'],
+          ).map((item) => item.toLowerCase()).toList(growable: false),
         );
       }
       if (overlay.containsKey('browserProfiles')) {
         scope['browserProfiles'] = _intersection(
-            _strings(scope['browserProfiles']),
-            _strings(overlay['browserProfiles']));
+          _strings(scope['browserProfiles']),
+          _strings(overlay['browserProfiles']),
+        );
       }
       if (overlay.containsKey('secretLeaseIds')) {
         scope['secretLeaseIds'] = _intersection(
-            _strings(scope['secretLeaseIds']),
-            _strings(overlay['secretLeaseIds']));
+          _strings(scope['secretLeaseIds']),
+          _strings(overlay['secretLeaseIds']),
+        );
       }
       final maximums = _map(
-          overlay['maxBudgets'] ?? <String, dynamic>{}, 'overlay.maxBudgets');
+        overlay['maxBudgets'] ?? <String, dynamic>{},
+        'overlay.maxBudgets',
+      );
       for (final entry in maximums.entries) {
         final value = entry.value;
         if (!budgets.containsKey(entry.key) || value is! int || value < 0) {
@@ -143,7 +156,9 @@ class DeterministicPolicyEngineV2 {
       }
       if (overlay['approvalPolicy'] != null) {
         approvalPolicy = _stricterApproval(
-            approvalPolicy, overlay['approvalPolicy'].toString());
+          approvalPolicy,
+          overlay['approvalPolicy'].toString(),
+        );
       }
     }
     if (deniedCapabilities.contains(capabilityId)) {
@@ -156,15 +171,19 @@ class DeterministicPolicyEngineV2 {
       reasons.add('force_deny');
     }
 
-    final approval =
-        _map(request['approval'] ?? <String, dynamic>{}, 'approval');
+    final approval = _map(
+      request['approval'] ?? <String, dynamic>{},
+      'approval',
+    );
     final approvalResult = _validApproval(approval);
     if (approvalResult.error != null) {
       reasons.add(approvalResult.error!);
     }
 
     final widening = _map(
-        request['explicitWidening'] ?? <String, dynamic>{}, 'explicitWidening');
+      request['explicitWidening'] ?? <String, dynamic>{},
+      'explicitWidening',
+    );
     final wideningRequested = const <String>{
       'restorePaths',
       'restoreNetworkDestinations',
@@ -181,38 +200,43 @@ class DeterministicPolicyEngineV2 {
       } else {
         for (final path in _strings(widening['restorePaths'])) {
           final normalized = _normalizePath(path);
-          if (_strings(baseScope['pathPrefixes'])
-              .any((prefix) => _pathWithin(normalized, prefix))) {
+          if (_strings(
+            baseScope['pathPrefixes'],
+          ).any((prefix) => _pathWithin(normalized, prefix))) {
             scope['pathPrefixes'] = <String>{
               ..._strings(scope['pathPrefixes']),
-              normalized
+              normalized,
             }.toList()
               ..sort();
           } else {
             reasons.add('widening_exceeds_profile_ceiling');
           }
         }
-        for (final destination
-            in _strings(widening['restoreNetworkDestinations'])) {
+        for (final destination in _strings(
+          widening['restoreNetworkDestinations'],
+        )) {
           if (_destinationAllowed(
-              destination, _strings(baseScope['networkDestinations']))) {
+            destination,
+            _strings(baseScope['networkDestinations']),
+          )) {
             scope['networkDestinations'] = <String>{
               ..._strings(scope['networkDestinations']),
-              destination.toLowerCase()
+              destination.toLowerCase(),
             }.toList()
               ..sort();
           } else {
             reasons.add('widening_exceeds_profile_ceiling');
           }
         }
-        for (final browserProfile
-            in _strings(widening['restoreBrowserProfiles'])) {
+        for (final browserProfile in _strings(
+          widening['restoreBrowserProfiles'],
+        )) {
           final baseProfiles = _strings(baseScope['browserProfiles']);
           if (baseProfiles.contains('*') ||
               baseProfiles.contains(browserProfile)) {
             scope['browserProfiles'] = <String>{
               ..._strings(scope['browserProfiles']),
-              browserProfile
+              browserProfile,
             }.toList()
               ..sort();
           } else {
@@ -223,7 +247,7 @@ class DeterministicPolicyEngineV2 {
           if (_strings(baseScope['secretLeaseIds']).contains(leaseId)) {
             scope['secretLeaseIds'] = <String>{
               ..._strings(scope['secretLeaseIds']),
-              leaseId
+              leaseId,
             }.toList()
               ..sort();
           } else {
@@ -242,8 +266,9 @@ class DeterministicPolicyEngineV2 {
         reasons.add('filesystem_action_denied');
       }
       if (target is! String ||
-          !_strings(scope['pathPrefixes'])
-              .any((prefix) => _pathWithin(target, prefix))) {
+          !_strings(
+            scope['pathPrefixes'],
+          ).any((prefix) => _pathWithin(target, prefix))) {
         reasons.add('path_outside_effective_scope');
       }
     } else if (domain == 'process') {
@@ -255,8 +280,10 @@ class DeterministicPolicyEngineV2 {
         'service': 'services',
       }[action];
       if (action == 'elevation') {
-        if (!const <String>{'interactive_only', 'preconfigured'}
-            .contains(process['elevation'])) {
+        if (!const <String>{
+          'interactive_only',
+          'preconfigured',
+        }.contains(process['elevation'])) {
           reasons.add('elevation_denied');
         }
       } else if (requiredFlag == null || process[requiredFlag] != true) {
@@ -265,7 +292,9 @@ class DeterministicPolicyEngineV2 {
     } else if (domain == 'network') {
       if (target is! String ||
           !_destinationAllowed(
-              target, _strings(scope['networkDestinations']))) {
+            target,
+            _strings(scope['networkDestinations']),
+          )) {
         reasons.add('network_destination_denied');
       }
       if (context['privateNetwork'] == true &&
@@ -320,13 +349,13 @@ class DeterministicPolicyEngineV2 {
 
     final decisionId = 'policy-${_fnv64(_canonical(<String, dynamic>{
           'request': _normalizeRequestForHash(request),
-          'policyRevision': _policyConfig['policyRevision'],
+          'policyRevision': _policyConfig['policyRevision']
         }))}';
     final grantDraft = status == 'allow'
         ? <String, dynamic>{
             'issuer': <String, dynamic>{
               'actorId': 'desktop_host',
-              'authority': 'desktop_host:deterministic_policy'
+              'authority': 'desktop_host:deterministic_policy',
             },
             'binding': <String, dynamic>{
               'runId': binding['runId'],
@@ -360,7 +389,9 @@ class DeterministicPolicyEngineV2 {
   }
 
   Map<String, dynamic> _baseScope(
-      Map<String, dynamic> profile, Map<String, dynamic> context) {
+    Map<String, dynamic> profile,
+    Map<String, dynamic> context,
+  ) {
     final filesystem = _map(profile['filesystem'], 'filesystem');
     final process = _map(profile['process'], 'process');
     final network = _map(profile['network'], 'network');
@@ -370,22 +401,24 @@ class DeterministicPolicyEngineV2 {
     final paths = switch (filesystem['scope']) {
       'none' => <String>[],
       'project' => <String>[
-          _normalizePath(_string(context['projectRoot'], 'projectRoot'))
+          _normalizePath(_string(context['projectRoot'], 'projectRoot')),
         ],
-      'current_account' => _strings(context['currentAccountRoots'])
-          .map(_normalizePath)
-          .toList(growable: false),
+      'current_account' => _strings(
+          context['currentAccountRoots'],
+        ).map(_normalizePath).toList(growable: false),
       'sandbox' => <String>[
-          _normalizePath(_string(context['sandboxRoot'], 'sandboxRoot'))
+          _normalizePath(_string(context['sandboxRoot'], 'sandboxRoot')),
         ],
       _ => throw PolicyInputException('unsupported filesystem scope'),
     };
     final destinations = switch (network['scope']) {
       'none' => <String>[],
       'unrestricted' => <String>['*'],
-      'allowlist' => _strings(context[profileId == 'isolated_untrusted'
-          ? 'grantDestinations'
-          : 'projectDestinations']),
+      'allowlist' => _strings(
+          context[profileId == 'isolated_untrusted'
+              ? 'grantDestinations'
+              : 'projectDestinations'],
+        ),
       _ => throw PolicyInputException('unsupported network scope'),
     };
     final browserProfiles = switch (browser['scope']) {
@@ -421,7 +454,7 @@ class DeterministicPolicyEngineV2 {
         'maxOutputBytes',
         'maxNetworkBytes',
         'maxCostMicros',
-        'maxMutations'
+        'maxMutations',
       ])
         field: raw[field] as int,
     };
@@ -430,8 +463,10 @@ class DeterministicPolicyEngineV2 {
   static _ApprovalResult _validApproval(Map<String, dynamic> value) {
     final approved = value['approved'] == true;
     if (approved &&
-        !const <String>{'owner', 'organization_policy'}
-            .contains(value['source'])) {
+        !const <String>{
+          'owner',
+          'organization_policy',
+        }.contains(value['source'])) {
       return const _ApprovalResult(false, 'untrusted_authority_source');
     }
     if (approved &&
@@ -460,7 +495,9 @@ class DeterministicPolicyEngineV2 {
   }
 
   static List<String> _intersection(
-      List<String> current, List<String> constraint) {
+    List<String> current,
+    List<String> constraint,
+  ) {
     if (constraint.isEmpty) {
       return <String>[];
     }
@@ -474,7 +511,9 @@ class DeterministicPolicyEngineV2 {
   }
 
   static List<String> _pathIntersection(
-      List<String> current, List<String> constraint) {
+    List<String> current,
+    List<String> constraint,
+  ) {
     final result = <String>{};
     for (final left in current) {
       for (final right in constraint) {
@@ -511,7 +550,8 @@ class DeterministicPolicyEngineV2 {
       if (part == '..') {
         if (stack.isEmpty) {
           throw PolicyInputException(
-              'path traversal is not a valid policy target');
+            'path traversal is not a valid policy target',
+          );
         }
         stack.removeLast();
       } else {
@@ -525,8 +565,10 @@ class DeterministicPolicyEngineV2 {
   static bool _destinationAllowed(String host, List<String> allowed) {
     final value = host.trim().toLowerCase().replaceFirst(RegExp(r'[.]$'), '');
     for (final item in allowed) {
-      final pattern =
-          item.trim().toLowerCase().replaceFirst(RegExp(r'[.]$'), '');
+      final pattern = item.trim().toLowerCase().replaceFirst(
+            RegExp(r'[.]$'),
+            '',
+          );
       if (pattern == '*') {
         return true;
       }
@@ -544,19 +586,22 @@ class DeterministicPolicyEngineV2 {
   }
 
   static Map<String, dynamic> _normalizeRequestForHash(
-      Map<String, dynamic> request) {
+    Map<String, dynamic> request,
+  ) {
     final result = _copy(request);
-    final overlays = _list(result['overlays'] ?? <dynamic>[], 'overlays')
-        .map((item) => _map(item, 'overlay'))
-        .toList(growable: false)
+    final overlays = _list(
+      result['overlays'] ?? <dynamic>[],
+      'overlays',
+    ).map((item) => _map(item, 'overlay')).toList(growable: false)
       ..sort((left, right) {
-        final layer =
-            _layerRank(left['layer']).compareTo(_layerRank(right['layer']));
+        final layer = _layerRank(
+          left['layer'],
+        ).compareTo(_layerRank(right['layer']));
         return layer != 0
             ? layer
-            : left['overlayId']
-                .toString()
-                .compareTo(right['overlayId'].toString());
+            : left['overlayId'].toString().compareTo(
+                  right['overlayId'].toString(),
+                );
       });
     result['overlays'] = overlays;
     return result;

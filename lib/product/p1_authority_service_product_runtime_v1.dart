@@ -38,7 +38,12 @@ final class P1AuthorityServiceProductRuntimeV1 {
   }) async {
     final client = await connector.connect();
     final handle = P1AuthorityServiceHandleV1(client);
-    handle.validateForP2();
+    const qaPreviewBuild = bool.fromEnvironment(
+      'KRISTIN_QA_PREVIEW',
+      defaultValue: false,
+    );
+    final qaPreview = qaPreviewBuild && client.provenance['qaPreview'] == true;
+    handle.validateForP2(allowQaPreview: qaPreview);
     return P1AuthorityServiceProductRuntimeV1._(handle);
   }
 

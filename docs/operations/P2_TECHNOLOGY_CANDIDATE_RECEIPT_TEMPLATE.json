@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "4.0.0",
+  "receiptType": "p2-technology-candidate-observation-v4",
+  "candidateId": "REPLACE_EXACT_CANDIDATE_ID",
+  "implementationFamily": "REPLACE_node_OR_native_OR_dart",
+  "platform": "REPLACE_windows_OR_macos_OR_linux",
+  "commitSha": "REPLACE_EXACT_40_HEX",
+  "status": "passed",
+  "sourceOnly": false,
+  "independentlyExecuted": true,
+  "sourceTreeSha256": "REPLACE_64_HEX",
+  "implementationSha256": "REPLACE_64_HEX",
+  "executableSha256": "REPLACE_64_HEX",
+  "buildReceiptSha256": "REPLACE_64_HEX",
+  "packagingReceiptSha256": "REPLACE_64_HEX",
+  "artifactRoot": "ABSOLUTE_ARTIFACT_DIRECTORY",
+  "independentControlPlaneImplementation": "REQUIRED_TRUE_FOR_DART_CANDIDATE",
+  "delegatedProbeReceiptSha256": null,
+  "rounds": [
+    {
+      "roundId": 1,
+      "status": "passed",
+      "coldStartMs": 1,
+      "steadyRssKiB": 1,
+      "packageSizeBytes": 1,
+      "detachReconnect": {
+        "consumerDetached": true,
+        "outputWhileDetached": true,
+        "reconnectedByDurableCursor": true,
+        "backlogReplayExact": true,
+        "noDuplicationOrLoss": true,
+        "detachedCursor": 1,
+        "reconnectCursor": 2,
+        "outputWhileDetachedBytes": 1,
+        "expectedBacklogSha256": "REPLACE_64_HEX",
+        "observedBacklogSha256": "SAME_64_HEX",
+        "duplicateSequenceCount": 0,
+        "missingSequenceCount": 0
+      },
+      "processTree": {
+        "descendantCreated": true,
+        "identityVerified": true,
+        "descendantProcessIdentities": [
+          {
+            "pid": 1,
+            "startIdentity": "REPLACE"
+          }
+        ],
+        "terminationStatus": "killed",
+        "remainingDescendants": [],
+        "zeroSurvivingDescendants": true
+      },
+      "evidencePath": "round-1.json",
+      "evidenceSha256": "REPLACE_64_HEX"
+    }
+  ],
+  "packaging": {
+    "threePlatformReliable": true,
+    "codeSigningImpactMeasured": true,
+    "updaterImpactMeasured": true
+  },
+  "platformFidelity": {
+    "ptyInteractiveInput": true,
+    "resize": true,
+    "ansiUnicode": true
+  }
+}

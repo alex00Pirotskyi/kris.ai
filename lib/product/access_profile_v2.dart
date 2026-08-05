@@ -122,8 +122,10 @@ class AccessProfileV2 {
       authorityClass: json['authorityClass']?.toString() ?? '',
       sandboxed: _boolean(json['sandboxed'], 'sandboxed'),
       interactive: _boolean(json['interactive'], 'interactive'),
-      unattendedAllowed:
-          _boolean(json['unattendedAllowed'], 'unattendedAllowed'),
+      unattendedAllowed: _boolean(
+        json['unattendedAllowed'],
+        'unattendedAllowed',
+      ),
       approvalPolicy: _parseApprovalPolicy(json['approvalPolicy']),
       filesystem: _map(json['filesystem'], 'filesystem'),
       process: _map(json['process'], 'process'),
@@ -155,19 +157,23 @@ class AccessProfileV2 {
   void validate() {
     if (schemaVersion != '2.0.0') {
       throw const AccessProfileValidationException(
-          'schemaVersion must be 2.0.0');
+        'schemaVersion must be 2.0.0',
+      );
     }
     if (profileRevision < 1) {
       throw const AccessProfileValidationException(
-          'profileRevision must be positive');
+        'profileRevision must be positive',
+      );
     }
     if (displayName.isEmpty || authorityClass.isEmpty) {
       throw const AccessProfileValidationException(
-          'profile identity fields are required');
+        'profile identity fields are required',
+      );
     }
     if (dataBoundary['contentMayBecomeAuthority'] != false) {
       throw const AccessProfileValidationException(
-          'content cannot become authority');
+        'content cannot become authority',
+      );
     }
     switch (profileId) {
       case AccessProfileId.chat:
@@ -181,7 +187,8 @@ class AccessProfileV2 {
             credentials['mode'] != 'none';
         if (hasEffect) {
           throw const AccessProfileValidationException(
-              'chat profile cannot authorize effects');
+            'chat profile cannot authorize effects',
+          );
         }
         break;
       case AccessProfileId.project:
@@ -190,77 +197,93 @@ class AccessProfileV2 {
             roots is! List ||
             roots.isEmpty) {
           throw const AccessProfileValidationException(
-              'project profile requires project roots');
+            'project profile requires project roots',
+          );
         }
         if (filesystem['absolutePaths'] != false) {
           throw const AccessProfileValidationException(
-              'project profile cannot authorize arbitrary absolute paths');
+            'project profile cannot authorize arbitrary absolute paths',
+          );
         }
         if (process['elevation'] != 'none' || process['services'] != false) {
           throw const AccessProfileValidationException(
-              'project profile cannot elevate or control services');
+            'project profile cannot elevate or control services',
+          );
         }
         break;
       case AccessProfileId.owner:
         if (sandboxed || filesystem['scope'] != 'current_account') {
           throw const AccessProfileValidationException(
-              'owner must be explicit non-sandbox authority');
+            'owner must be explicit non-sandbox authority',
+          );
         }
         if (!interactive || unattendedAllowed) {
           throw const AccessProfileValidationException(
-              'owner profile must remain interactive');
+            'owner profile must remain interactive',
+          );
         }
         break;
       case AccessProfileId.ownerUnattended:
         if (sandboxed || filesystem['scope'] != 'current_account') {
           throw const AccessProfileValidationException(
-              'owner_unattended must be explicit non-sandbox authority');
+            'owner_unattended must be explicit non-sandbox authority',
+          );
         }
         if (interactive || !unattendedAllowed) {
           throw const AccessProfileValidationException(
-              'owner_unattended lifecycle is invalid');
+            'owner_unattended lifecycle is invalid',
+          );
         }
         if (process['elevation'] != 'none') {
           throw const AccessProfileValidationException(
-              'owner_unattended cannot request elevation');
+            'owner_unattended cannot request elevation',
+          );
         }
         if (credentials['rawReveal'] != 'never') {
           throw const AccessProfileValidationException(
-              'unattended raw secret reveal is forbidden');
+            'unattended raw secret reveal is forbidden',
+          );
         }
         if (credentials['mode'] != 'brokered_leases' ||
             credentials['unattendedUse'] != true) {
           throw const AccessProfileValidationException(
-              'owner_unattended requires brokered unattended leases');
+            'owner_unattended requires brokered unattended leases',
+          );
         }
         break;
       case AccessProfileId.isolatedUntrusted:
         if (!sandboxed) {
           throw const AccessProfileValidationException(
-              'isolated_untrusted must be sandboxed');
+            'isolated_untrusted must be sandboxed',
+          );
         }
         if (filesystem['scope'] != 'sandbox' ||
             filesystem['absolutePaths'] != false) {
           throw const AccessProfileValidationException(
-              'isolated_untrusted filesystem must remain sandbox-only');
+            'isolated_untrusted filesystem must remain sandbox-only',
+          );
         }
         if (process['scope'] != 'sandbox' || process['elevation'] != 'none') {
           throw const AccessProfileValidationException(
-              'isolated_untrusted process scope is invalid');
+            'isolated_untrusted process scope is invalid',
+          );
         }
         if (credentials['mode'] != 'none' ||
             credentials['rawReveal'] != 'never') {
           throw const AccessProfileValidationException(
-              'isolated_untrusted credentials must be none');
+            'isolated_untrusted credentials must be none',
+          );
         }
         if (network['privateAddresses'] != false ||
             network['listen'] != false) {
           throw const AccessProfileValidationException(
-              'isolated_untrusted network must reject private/listening access');
+            'isolated_untrusted network must reject private/listening access',
+          );
         }
         if (browser['authenticatedProfiles'] != false) {
           throw const AccessProfileValidationException(
-              'isolated_untrusted cannot use authenticated browser profiles');
+            'isolated_untrusted cannot use authenticated browser profiles',
+          );
         }
         break;
     }

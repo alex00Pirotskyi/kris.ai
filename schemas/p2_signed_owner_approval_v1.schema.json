@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/p2_signed_owner_approval_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "approved", "source", "approvalId", "ownerActorId", "runId", "taskId", "effectActorId", "toolId", "accessProfileId", "capabilityId", "operation", "payloadSha256", "approvedAt", "expiresAt", "nonce", "publicKeyHex", "signatureHex"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "approved": {"const": true},
+    "source": {"enum": ["owner", "organization_policy"]},
+    "approvalId": {"type": "string", "minLength": 1},
+    "ownerActorId": {"type": "string", "minLength": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "taskId": {"type": "string", "minLength": 1},
+    "effectActorId": {"type": "string", "minLength": 1},
+    "toolId": {"type": "string", "minLength": 1},
+    "accessProfileId": {"enum": ["owner", "owner_unattended"]},
+    "capabilityId": {"type": "string", "minLength": 1},
+    "operation": {"type": "string", "minLength": 1},
+    "payloadSha256": {"pattern": "^[0-9a-f]{64}$"},
+    "approvedAt": {"type": "string", "format": "date-time"},
+    "expiresAt": {"type": "string", "format": "date-time"},
+    "nonce": {"type": "string", "minLength": 16},
+    "publicKeyHex": {"pattern": "^[0-9a-f]{64}$"},
+    "signatureHex": {"pattern": "^[0-9a-f]{128}$"}
+  }
+}

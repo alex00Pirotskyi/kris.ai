@@ -1,0 +1,168 @@
+{
+  "allPlatformsRequired": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "classification": "owner-risk-tri-platform-functional-qa-shipment-coverage",
+  "completionClaim": false,
+  "dartAnalyzerCompatibilityFiles": 12,
+  "dartAnalyzerCompatibilityIssueCount": 97,
+  "dartAnalyzerCompatibilityRepair": true,
+  "formalSecurityCompletion": false,
+  "p1": {
+    "manualQaRequired": true,
+    "repositoryStatus": "DONE",
+    "roadmapTasks": [
+      "P1-001",
+      "P1-002",
+      "P1-003",
+      "P1-004",
+      "P1-005",
+      "P1-006",
+      "P1-007",
+      "P1-008",
+      "P1-009",
+      "P1-010",
+      "P1-011",
+      "P1-012"
+    ],
+    "sourceAndContractCoverage": true,
+    "triPlatformArtifactInclusion": true
+  },
+  "p1a": {
+    "activeRuntimeMode": "owner-risk-current-account",
+    "formalCompletionClaim": false,
+    "isolatedAuthorityServiceRequiredForThisQaLane": false,
+    "manualQaRequired": true,
+    "nativeServiceConnectorWorkerBuiltOnEveryPlatformByV70R5": true,
+    "nativeSourceSelfTestsRequiredOnEveryPlatform": true,
+    "securityEvidenceWaived": true,
+    "sourceMerged": true,
+    "sourceRevision": "V63-R15"
+  },
+  "p2": {
+    "formalCompletionClaim": false,
+    "ownerRiskRuntimeSmokeRequiredOnEveryPlatform": true,
+    "sourcePackage": "KRISTIN_P2_FULL_INTEGRATION_V63R2",
+    "sourcePackageSha256": "7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0",
+    "tasks": [
+      {
+        "id": "P2-001",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-002",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-003",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-004",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-005",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-006",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-007",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-008",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-009",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-010",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-011",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-012",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-013",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      },
+      {
+        "id": "P2-014",
+        "manualQaRequired": true,
+        "sourceGateRequired": true,
+        "sourceIncluded": true,
+        "triPlatformArtifactRequired": true
+      }
+    ]
+  },
+  "productionReleaseEligible": false,
+  "schemaVersion": "1.0.0",
+  "shipmentGate": {
+    "manualInteractiveAcceptanceStillRequired": true,
+    "qaShipmentReadyOnlyAfterArtifactVerification": true,
+    "requiredArtifacts": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "requiredJobs": [
+      "owner-risk-windows",
+      "owner-risk-macos",
+      "owner-risk-linux",
+      "tri-platform-gate"
+    ]
+  },
+  "shipmentTrain": "KRISTIN_P1_P2_OWNER_RISK_QA_SHIPMENT_V70R5"
+}

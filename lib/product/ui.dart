@@ -8,6 +8,7 @@ import 'api_server.dart';
 import 'chat_studio.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
+import 'p2_app_shell.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
@@ -55,10 +56,13 @@ class _KristinAppState extends State<KristinApp> {
       theme: _studioTheme(Brightness.light),
       darkTheme: _studioTheme(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: ChatStudio(
-        runtime: widget.runtime,
-        api: api,
-        startupError: startupError,
+      home: P2KristinShell(
+        ownerMode: widget.runtime.p2OwnerMode,
+        chat: ChatStudio(
+          runtime: widget.runtime,
+          api: api,
+          startupError: startupError,
+        ),
       ),
     );
   }
@@ -121,25 +125,19 @@ ThemeData _studioTheme(Brightness brightness) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
     dividerTheme: DividerThemeData(color: scheme.outlineVariant),
@@ -370,21 +368,18 @@ class _SimpleStudioState extends State<SimpleStudio> {
       requestFocus.requestFocus();
       return;
     }
-    final result = await _perform<PreparedCommand>(
-      'Creating a clear plan',
-      () {
-        return runtime.prepare(
-          projectId: project.id,
-          mode: resolveTaskMode(
-            request: request,
-            choice: simpleTaskMode,
-            chosenMode: chosenMode,
-          ),
+    final result = await _perform<PreparedCommand>('Creating a clear plan', () {
+      return runtime.prepare(
+        projectId: project.id,
+        mode: resolveTaskMode(
           request: request,
-          model: model,
-        );
-      },
-    );
+          choice: simpleTaskMode,
+          chosenMode: chosenMode,
+        ),
+        request: request,
+        model: model,
+      );
+    });
     if (result == null || !mounted) {
       return;
     }
@@ -445,12 +440,10 @@ class _SimpleStudioState extends State<SimpleStudio> {
     await _refreshRuns(silent: true);
   }
 
-  Future<bool> _confirmHighRiskAccess(
-    Set<PermissionScope> required,
-  ) async {
-    final highRiskGroups = groupPermissions(required)
-        .where((group) => group.highRisk)
-        .toList(growable: false);
+  Future<bool> _confirmHighRiskAccess(Set<PermissionScope> required) async {
+    final highRiskGroups = groupPermissions(
+      required,
+    ).where((group) => group.highRisk).toList(growable: false);
     if (highRiskGroups.isEmpty) {
       return true;
     }
@@ -515,17 +508,19 @@ class _SimpleStudioState extends State<SimpleStudio> {
       return;
     }
     final retried = await _perform<RunRecord>(
-        'Trying the task again as a fresh run', () async {
-      final fresh = await runtime.retryRun(run.id);
-      final required = fresh.command.contract.requiredPermissions;
-      await runtime.approve(
-        runId: fresh.id,
-        scopes: Set<PermissionScope>.from(required),
-      );
-      unawaited(runtime.execute(fresh.id));
-      await Future<void>.delayed(const Duration(milliseconds: 180));
-      return await runtime.getRun(fresh.id) ?? fresh;
-    });
+      'Trying the task again as a fresh run',
+      () async {
+        final fresh = await runtime.retryRun(run.id);
+        final required = fresh.command.contract.requiredPermissions;
+        await runtime.approve(
+          runId: fresh.id,
+          scopes: Set<PermissionScope>.from(required),
+        );
+        unawaited(runtime.execute(fresh.id));
+        await Future<void>.delayed(const Duration(milliseconds: 180));
+        return await runtime.getRun(fresh.id) ?? fresh;
+      },
+    );
     if (retried != null && mounted) {
       setState(() {
         currentRun = retried;
@@ -540,21 +535,23 @@ class _SimpleStudioState extends State<SimpleStudio> {
       return;
     }
     await _perform<void>(
-        switch (action) {
-          'pause' => 'Pausing safely',
-          'resume' => 'Continuing your task',
-          _ => 'Stopping safely',
-        }, () async {
-      if (action == 'pause') {
-        await runtime.pause(run.id);
-      } else if (action == 'resume') {
-        await runtime.resume(run.id);
-      } else {
-        await runtime.cancel(run.id);
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 150));
-      currentRun = await runtime.getRun(run.id) ?? run;
-    });
+      switch (action) {
+        'pause' => 'Pausing safely',
+        'resume' => 'Continuing your task',
+        _ => 'Stopping safely',
+      },
+      () async {
+        if (action == 'pause') {
+          await runtime.pause(run.id);
+        } else if (action == 'resume') {
+          await runtime.resume(run.id);
+        } else {
+          await runtime.cancel(run.id);
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        currentRun = await runtime.getRun(run.id) ?? run;
+      },
+    );
     await _refreshRuns(silent: true);
   }
 
@@ -886,10 +883,7 @@ class _SimpleStudioState extends State<SimpleStudio> {
                               fontSize: 19,
                             ),
                           ),
-                          Text(
-                            'Simple Studio',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                          Text('Simple Studio', style: TextStyle(fontSize: 12)),
                         ],
                       ),
                     ),
@@ -1049,59 +1043,56 @@ class _SimpleStudioState extends State<SimpleStudio> {
       };
 
   Widget _newTaskPage() {
-    return _pageScroll(
-      <Widget>[
-        StudioPageHeader(
-          title: 'What would you like Kristin to make?',
-          subtitle:
-              'Describe the result in your own words. Kristin will choose the right mode, make a safe plan, and show every important step.',
-          centered: prepared == null && currentRun == null,
-          trailing: prepared == null && currentRun == null
-              ? null
-              : TextButton.icon(
-                  onPressed: busy ? null : _resetTask,
-                  icon: const Icon(Icons.add),
-                  label: const Text('New task'),
-                ),
-        ),
-        if (projects.isEmpty)
-          EmptyStateCard(
-            icon: Icons.folder_open_outlined,
-            title: 'Choose a safe project folder',
-            message:
-                'Kristin works only inside a folder you register. Existing files stay protected by checkpoints and project boundaries.',
-            action: FilledButton.icon(
-              onPressed: () {
-                setState(() {
-                  section = StudioSection.projects;
-                });
-              },
-              icon: const Icon(Icons.folder_open),
-              label: const Text('Add a project'),
-            ),
-          )
-        else if (models.isEmpty)
-          EmptyStateCard(
-            icon: Icons.memory_outlined,
-            title: 'Connect an AI model',
-            message:
-                'Kristin found no installed model. Start Ollama or configure a compatible provider in Settings.',
-            action: FilledButton.icon(
-              onPressed: () => _openSettings(initialSection: 1),
-              icon: const Icon(Icons.settings_outlined),
-              label: const Text('Open AI settings'),
-            ),
-          )
-        else ...<Widget>[
-          _taskContextBar(),
-          if (prepared == null && currentRun == null) _quickStartGrid(),
-          _composer(),
-          if (prepared != null && currentRun == null) _friendlyPlan(),
-          if (currentRun != null) _executionWorkspace(currentRun!),
-        ],
+    return _pageScroll(<Widget>[
+      StudioPageHeader(
+        title: 'What would you like Kristin to make?',
+        subtitle:
+            'Describe the result in your own words. Kristin will choose the right mode, make a safe plan, and show every important step.',
+        centered: prepared == null && currentRun == null,
+        trailing: prepared == null && currentRun == null
+            ? null
+            : TextButton.icon(
+                onPressed: busy ? null : _resetTask,
+                icon: const Icon(Icons.add),
+                label: const Text('New task'),
+              ),
+      ),
+      if (projects.isEmpty)
+        EmptyStateCard(
+          icon: Icons.folder_open_outlined,
+          title: 'Choose a safe project folder',
+          message:
+              'Kristin works only inside a folder you register. Existing files stay protected by checkpoints and project boundaries.',
+          action: FilledButton.icon(
+            onPressed: () {
+              setState(() {
+                section = StudioSection.projects;
+              });
+            },
+            icon: const Icon(Icons.folder_open),
+            label: const Text('Add a project'),
+          ),
+        )
+      else if (models.isEmpty)
+        EmptyStateCard(
+          icon: Icons.memory_outlined,
+          title: 'Connect an AI model',
+          message:
+              'Kristin found no installed model. Start Ollama or configure a compatible provider in Settings.',
+          action: FilledButton.icon(
+            onPressed: () => _openSettings(initialSection: 1),
+            icon: const Icon(Icons.settings_outlined),
+            label: const Text('Open AI settings'),
+          ),
+        )
+      else ...<Widget>[
+        _taskContextBar(),
+        if (prepared == null && currentRun == null) _quickStartGrid(),
+        _composer(),
+        if (prepared != null && currentRun == null) _friendlyPlan(),
+        if (currentRun != null) _executionWorkspace(currentRun!),
       ],
-      maxWidth: 1180,
-    );
+    ], maxWidth: 1180);
   }
 
   Widget _taskContextBar() {
@@ -1135,10 +1126,7 @@ class _SimpleStudioState extends State<SimpleStudio> {
                   items: projects.map((item) {
                     return DropdownMenuItem<String>(
                       value: item.id,
-                      child: Text(
-                        item.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(item.name, overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
                   onChanged: busy ? null : _selectProject,
@@ -1168,9 +1156,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
       children: <Widget>[
         Text(
           'Start with an idea',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -1365,13 +1353,15 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 children: <Widget>[
                   CircleAvatar(
                     radius: 14,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.secondaryContainer,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.secondaryContainer,
                     child: Text(
                       '${entry.key + 1}',
                       style: TextStyle(
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -1408,9 +1398,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
           const Divider(height: 30),
           Text(
             'Access needed',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -1532,9 +1522,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
       children: <Widget>[
         Text(
           'Technical contract',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 10),
         SelectableText(
@@ -1546,9 +1536,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
         const SizedBox(height: 16),
         Text(
           'Acceptance criteria',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         ...command.contract.acceptanceCriteria.map((criterion) {
           return ListTile(
@@ -1566,9 +1556,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
         if (command.contract.constraints.isNotEmpty) ...<Widget>[
           Text(
             'Constraints',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           ...command.contract.constraints.map((constraint) {
             return ListTile(
@@ -1757,8 +1747,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
           Row(
             children: <Widget>[
               CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).colorScheme.secondaryContainer,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.secondaryContainer,
                 child: Icon(
                   Icons.auto_awesome,
                   color: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -1803,9 +1794,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
                               child: Icon(
                                 _eventIcon(event.type),
                                 size: 17,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -1817,8 +1808,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
                                   const SizedBox(height: 2),
                                   Text(
                                     _timeLabel(event.timestamp),
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ],
                               ),
@@ -1975,9 +1967,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
       children: <Widget>[
         Text(
           run.state == RunState.succeeded ? 'Result' : 'Live output',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 10),
         Text(
@@ -2015,9 +2007,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
         else ...<Widget>[
           Text(
             'Latest verified output',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           ...latest.map((item) {
@@ -2048,9 +2040,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
       children: <Widget>[
         Text(
           'Files',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 8),
         ...paths.map((path) {
@@ -2107,9 +2099,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
       children: <Widget>[
         Text(
           'How the task flows',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 6),
         Text(
@@ -2136,17 +2128,15 @@ class _SimpleStudioState extends State<SimpleStudio> {
           const Divider(height: 30),
           Text(
             selected.item.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(selected.item.description),
           const SizedBox(height: 10),
           Text('State: ${friendlyWorkState(selected.state)}'),
-          Text(
-            'Attempts: ${selected.attempts}/${selected.item.maxAttempts}',
-          ),
+          Text('Attempts: ${selected.attempts}/${selected.item.maxAttempts}'),
           if (selected.lastError != null) ...<Widget>[
             const SizedBox(height: 8),
             Text(
@@ -2165,75 +2155,68 @@ class _SimpleStudioState extends State<SimpleStudio> {
   }
 
   Widget _activityPage() {
-    return _pageScroll(
-      <Widget>[
-        StudioPageHeader(
-          title: 'Activity',
-          subtitle:
-              'See what Kristin did, what changed, which checks passed, and the full redacted execution trail.',
-          trailing: OutlinedButton.icon(
-            onPressed: busy
-                ? null
-                : () {
-                    unawaited(_refreshRuns());
-                  },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Refresh'),
-          ),
+    return _pageScroll(<Widget>[
+      StudioPageHeader(
+        title: 'Activity',
+        subtitle:
+            'See what Kristin did, what changed, which checks passed, and the full redacted execution trail.',
+        trailing: OutlinedButton.icon(
+          onPressed: busy
+              ? null
+              : () {
+                  unawaited(_refreshRuns());
+                },
+          icon: const Icon(Icons.refresh),
+          label: const Text('Refresh'),
         ),
-        if (projects.isNotEmpty) _taskContextBar(),
-        if (runs.isEmpty)
-          EmptyStateCard(
-            icon: Icons.history_outlined,
-            title: 'No activity yet',
-            message:
-                'Start a task and its friendly progress, evidence, changes, and logs will appear here.',
-            action: FilledButton.icon(
-              onPressed: () {
-                setState(() {
-                  section = StudioSection.newTask;
-                });
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Start a task'),
-            ),
-          )
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final split = constraints.maxWidth >= 980;
-              final list = _runList();
-              final inspector = currentRun == null
-                  ? const EmptyStateCard(
-                      icon: Icons.touch_app_outlined,
-                      title: 'Choose an activity',
-                      message:
-                          'Select a task to inspect its result and execution details.',
-                    )
-                  : _activityInspector(currentRun!);
-              if (!split) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    list,
-                    const SizedBox(height: 14),
-                    inspector,
-                  ],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SizedBox(width: 360, child: list),
-                  const SizedBox(width: 14),
-                  Expanded(child: inspector),
-                ],
-              );
+      ),
+      if (projects.isNotEmpty) _taskContextBar(),
+      if (runs.isEmpty)
+        EmptyStateCard(
+          icon: Icons.history_outlined,
+          title: 'No activity yet',
+          message:
+              'Start a task and its friendly progress, evidence, changes, and logs will appear here.',
+          action: FilledButton.icon(
+            onPressed: () {
+              setState(() {
+                section = StudioSection.newTask;
+              });
             },
+            icon: const Icon(Icons.add),
+            label: const Text('Start a task'),
           ),
-      ],
-      maxWidth: 1280,
-    );
+        )
+      else
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final split = constraints.maxWidth >= 980;
+            final list = _runList();
+            final inspector = currentRun == null
+                ? const EmptyStateCard(
+                    icon: Icons.touch_app_outlined,
+                    title: 'Choose an activity',
+                    message:
+                        'Select a task to inspect its result and execution details.',
+                  )
+                : _activityInspector(currentRun!);
+            if (!split) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[list, const SizedBox(height: 14), inspector],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(width: 360, child: list),
+                const SizedBox(width: 14),
+                Expanded(child: inspector),
+              ],
+            );
+          },
+        ),
+    ], maxWidth: 1280);
   }
 
   Widget _runList() {
@@ -2246,9 +2229,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
             child: Text(
               'Recent tasks',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
           ...runs.map((run) {
@@ -2257,8 +2240,9 @@ class _SimpleStudioState extends State<SimpleStudio> {
               padding: const EdgeInsets.only(bottom: 5),
               child: ListTile(
                 selected: selected,
-                selectedTileColor:
-                    Theme.of(context).colorScheme.secondaryContainer,
+                selectedTileColor: Theme.of(
+                  context,
+                ).colorScheme.secondaryContainer,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -2515,265 +2499,259 @@ class _SimpleStudioState extends State<SimpleStudio> {
   }
 
   Widget _projectsPage() {
-    return _pageScroll(
-      <Widget>[
-        const StudioPageHeader(
-          title: 'Projects',
-          subtitle:
-              'A project is the safe folder where Kristin can read, create, test, and package work. Files outside it remain unavailable.',
-        ),
-        StudioPanel(
-          child: ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            initiallyExpanded: projects.isEmpty,
-            leading: const Icon(Icons.create_new_folder_outlined),
-            title: const Text('Open an existing folder'),
-            subtitle: const Text(
-              'Register a local folder without moving or deleting its files.',
-            ),
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    TextField(
-                      controller: projectNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Project name',
-                        hintText: 'My Telegram bot',
-                      ),
+    return _pageScroll(<Widget>[
+      const StudioPageHeader(
+        title: 'Projects',
+        subtitle:
+            'A project is the safe folder where Kristin can read, create, test, and package work. Files outside it remain unavailable.',
+      ),
+      StudioPanel(
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: projects.isEmpty,
+          leading: const Icon(Icons.create_new_folder_outlined),
+          title: const Text('Open an existing folder'),
+          subtitle: const Text(
+            'Register a local folder without moving or deleting its files.',
+          ),
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  TextField(
+                    controller: projectNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Project name',
+                      hintText: 'My Telegram bot',
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: projectPathController,
-                      decoration: const InputDecoration(
-                        labelText: 'Existing folder path',
-                        hintText: r'C:\dev\my_project',
-                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: projectPathController,
+                    decoration: const InputDecoration(
+                      labelText: 'Existing folder path',
+                      hintText: r'C:\dev\my_project',
                     ),
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: FilledButton.icon(
-                        onPressed: busy ? null : _addProject,
-                        icon: const Icon(Icons.folder_open),
-                        label: const Text('Add project'),
-                      ),
+                  ),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.icon(
+                      onPressed: busy ? null : _addProject,
+                      icon: const Icon(Icons.folder_open),
+                      label: const Text('Add project'),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        if (projects.isEmpty)
-          const EmptyStateCard(
-            icon: Icons.folder_open_outlined,
-            title: 'No projects yet',
-            message:
-                'Add one existing folder. Kristin will use it as a strict safety boundary.',
-          )
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final cardWidth = width >= 1000
-                  ? (width - 28) / 3
-                  : width >= 640
-                      ? (width - 14) / 2
-                      : width;
-              return Wrap(
-                spacing: 14,
-                runSpacing: 14,
-                children: projects.map((project) {
-                  final selected = project.id == selectedProjectId;
-                  return SizedBox(
-                    width: cardWidth,
-                    child: Card(
-                      color: selected
-                          ? Theme.of(context).colorScheme.secondaryContainer
-                          : null,
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            Row(
-                              children: <Widget>[
-                                Icon(
-                                  selected
-                                      ? Icons.folder_special
-                                      : Icons.folder_outlined,
-                                  size: 28,
-                                ),
-                                const Spacer(),
-                                if (selected)
-                                  const StatusPill(
-                                    label: 'Active',
-                                    icon: Icons.check,
-                                    emphasis: true,
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              project.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 6),
-                            SelectableText(
-                              project.rootPath,
-                              maxLines: 2,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 14),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: <Widget>[
-                                FilledButton.tonal(
-                                  onPressed: busy
-                                      ? null
-                                      : () {
-                                          unawaited(_selectProject(project.id));
-                                        },
-                                  child: Text(
-                                    selected
-                                        ? 'Using this project'
-                                        : 'Use project',
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Remove registration',
-                                  onPressed: busy
-                                      ? null
-                                      : () {
-                                          unawaited(_removeProject(project));
-                                        },
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        if (selectedProject != null)
-          StudioPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  selectedProject!.name,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'This folder is the boundary for task files, checkpoints, permissions, knowledge, processes, and integrations.',
-                ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: <Widget>[
-                    FilledButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          section = StudioSection.newTask;
-                        });
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('New task here'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: _copyProjectPath,
-                      icon: const Icon(Icons.copy_outlined),
-                      label: const Text('Copy folder path'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          section = StudioSection.activity;
-                        });
-                      },
-                      icon: const Icon(Icons.history),
-                      label: const Text('See activity'),
-                    ),
-                  ],
-                ),
-              ],
             ),
-          ),
-      ],
-      maxWidth: 1180,
-    );
-  }
-
-  Widget _templatesPage() {
-    return _pageScroll(
-      <Widget>[
-        const StudioPageHeader(
-          title: 'Templates',
-          subtitle:
-              'Begin with a proven request, then describe your exact idea. Templates choose a sensible mode but never bypass planning or approval.',
+          ],
         ),
+      ),
+      if (projects.isEmpty)
+        const EmptyStateCard(
+          icon: Icons.folder_open_outlined,
+          title: 'No projects yet',
+          message:
+              'Add one existing folder. Kristin will use it as a strict safety boundary.',
+        )
+      else
         LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final cardWidth = width >= 1000
                 ? (width - 28) / 3
-                : width >= 650
+                : width >= 640
                     ? (width - 14) / 2
                     : width;
             return Wrap(
               spacing: 14,
               runSpacing: 14,
-              children: studioTemplates.map((template) {
+              children: projects.map((project) {
+                final selected = project.id == selectedProjectId;
                 return SizedBox(
                   width: cardWidth,
-                  child: QuickTemplateCard(
-                    template: template,
-                    onTap: () {
-                      _useTemplate(template);
-                    },
+                  child: Card(
+                    color: selected
+                        ? Theme.of(context).colorScheme.secondaryContainer
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Icon(
+                                selected
+                                    ? Icons.folder_special
+                                    : Icons.folder_outlined,
+                                size: 28,
+                              ),
+                              const Spacer(),
+                              if (selected)
+                                const StatusPill(
+                                  label: 'Active',
+                                  icon: Icons.check,
+                                  emphasis: true,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            project.name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 6),
+                          SelectableText(
+                            project.rootPath,
+                            maxLines: 2,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 14),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: <Widget>[
+                              FilledButton.tonal(
+                                onPressed: busy
+                                    ? null
+                                    : () {
+                                        unawaited(_selectProject(project.id));
+                                      },
+                                child: Text(
+                                  selected
+                                      ? 'Using this project'
+                                      : 'Use project',
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Remove registration',
+                                onPressed: busy
+                                    ? null
+                                    : () {
+                                        unawaited(_removeProject(project));
+                                      },
+                                icon: const Icon(Icons.remove_circle_outline),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               }).toList(),
             );
           },
         ),
-        const StudioPanel(
+      if (selectedProject != null)
+        StudioPanel(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
-                'What happens after choosing a template?',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                selectedProject!.name,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
-              SizedBox(height: 10),
-              Text(
-                  '1. Kristin fills the request with a strong starting point.'),
-              Text('2. You change any words you want.'),
-              Text(
-                  '3. Kristin creates a friendly plan and shows required access.'),
-              Text('4. Work starts only after you approve that exact plan.'),
+              const SizedBox(height: 6),
+              const Text(
+                'This folder is the boundary for task files, checkpoints, permissions, knowledge, processes, and integrations.',
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  FilledButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        section = StudioSection.newTask;
+                      });
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('New task here'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _copyProjectPath,
+                    icon: const Icon(Icons.copy_outlined),
+                    label: const Text('Copy folder path'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        section = StudioSection.activity;
+                      });
+                    },
+                    icon: const Icon(Icons.history),
+                    label: const Text('See activity'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
-      ],
-      maxWidth: 1180,
-    );
+    ], maxWidth: 1180);
+  }
+
+  Widget _templatesPage() {
+    return _pageScroll(<Widget>[
+      const StudioPageHeader(
+        title: 'Templates',
+        subtitle:
+            'Begin with a proven request, then describe your exact idea. Templates choose a sensible mode but never bypass planning or approval.',
+      ),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final cardWidth = width >= 1000
+              ? (width - 28) / 3
+              : width >= 650
+                  ? (width - 14) / 2
+                  : width;
+          return Wrap(
+            spacing: 14,
+            runSpacing: 14,
+            children: studioTemplates.map((template) {
+              return SizedBox(
+                width: cardWidth,
+                child: QuickTemplateCard(
+                  template: template,
+                  onTap: () {
+                    _useTemplate(template);
+                  },
+                ),
+              );
+            }).toList(),
+          );
+        },
+      ),
+      const StudioPanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'What happens after choosing a template?',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            ),
+            SizedBox(height: 10),
+            Text('1. Kristin fills the request with a strong starting point.'),
+            Text('2. You change any words you want.'),
+            Text(
+              '3. Kristin creates a friendly plan and shows required access.',
+            ),
+            Text('4. Work starts only after you approve that exact plan.'),
+          ],
+        ),
+      ),
+    ], maxWidth: 1180);
   }
 
   Widget _pageScroll(List<Widget> children, {required double maxWidth}) {

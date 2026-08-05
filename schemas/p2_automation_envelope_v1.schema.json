@@ -1,0 +1,419 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/p2_automation_envelope_v2.schema.json",
+  "title": "P2 authenticated automation envelope v2",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "deadline",
+    "authorization",
+    "ipc",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "authorization": {
+      "type": "object",
+      "required": [
+        "runId",
+        "taskId",
+        "actorId",
+        "toolId",
+        "accessProfileId",
+        "capabilityId",
+        "operation",
+        "grantDigest",
+        "grantId",
+        "policyDecisionDigest",
+        "scopeDigest",
+        "notBefore",
+        "expiresAt",
+        "useNumber",
+        "maxUses",
+        "revocationEpoch",
+        "capabilityGrant",
+        "policyDecision",
+        "consumptionReceipt"
+      ],
+      "properties": {
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taskId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "toolId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessProfileId": {
+          "enum": [
+            "owner",
+            "owner_unattended"
+          ]
+        },
+        "capabilityId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grantDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "grantId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policyDecisionDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "scopeDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "notBefore": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "useNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxUses": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "revocationEpoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capabilityGrant": {
+          "type": "object"
+        },
+        "policyDecision": {
+          "type": "object"
+        },
+        "consumptionReceipt": {
+          "type": "object",
+          "required": [
+            "schemaVersion",
+            "grantId",
+            "requestId",
+            "useNumber",
+            "previousUseNumber",
+            "stateVersion",
+            "revocationEpoch",
+            "consumedAt",
+            "auth"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": "1.0.0"
+            },
+            "grantId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "useNumber": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "previousUseNumber": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stateVersion": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "revocationEpoch": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "consumedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "auth": {
+              "type": "object",
+              "required": [
+                "algorithm",
+                "keyId",
+                "mac"
+              ],
+              "properties": {
+                "algorithm": {
+                  "const": "hmac-sha256"
+                },
+                "keyId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "mac": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{64}$"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ipc": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "peerId",
+        "requestId",
+        "deadline",
+        "body",
+        "mac"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "peerId": {
+          "const": "desktop-host"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "body": {
+          "type": "object",
+          "required": [
+            "authorization",
+            "issuedAt",
+            "payload"
+          ],
+          "properties": {
+            "authorization": {
+              "type": "object",
+              "required": [
+                "runId",
+                "taskId",
+                "actorId",
+                "toolId",
+                "accessProfileId",
+                "capabilityId",
+                "operation",
+                "grantDigest",
+                "grantId",
+                "policyDecisionDigest",
+                "scopeDigest",
+                "notBefore",
+                "expiresAt",
+                "useNumber",
+                "maxUses",
+                "revocationEpoch",
+                "capabilityGrant",
+                "policyDecision",
+                "consumptionReceipt"
+              ],
+              "properties": {
+                "runId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "taskId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "actorId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "toolId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "accessProfileId": {
+                  "enum": [
+                    "owner",
+                    "owner_unattended"
+                  ]
+                },
+                "capabilityId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "operation": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "grantDigest": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{64}$"
+                },
+                "grantId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "policyDecisionDigest": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{64}$"
+                },
+                "scopeDigest": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{64}$"
+                },
+                "notBefore": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "useNumber": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "maxUses": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "revocationEpoch": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "capabilityGrant": {
+                  "type": "object"
+                },
+                "policyDecision": {
+                  "type": "object"
+                },
+                "consumptionReceipt": {
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "grantId",
+                    "requestId",
+                    "useNumber",
+                    "previousUseNumber",
+                    "stateVersion",
+                    "revocationEpoch",
+                    "consumedAt",
+                    "auth"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    },
+                    "grantId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "useNumber": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "previousUseNumber": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "stateVersion": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "revocationEpoch": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "consumedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "auth": {
+                      "type": "object",
+                      "required": [
+                        "algorithm",
+                        "keyId",
+                        "mac"
+                      ],
+                      "properties": {
+                        "algorithm": {
+                          "const": "hmac-sha256"
+                        },
+                        "keyId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "mac": {
+                          "type": "string",
+                          "pattern": "^[0-9a-fA-F]{64}$"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "issuedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "payload": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mac": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

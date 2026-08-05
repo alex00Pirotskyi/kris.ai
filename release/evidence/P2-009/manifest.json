@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "2.0.0",
+  "taskId": "P2-009",
+  "name": "Clipboard and screen capabilities",
+  "status": "source_only",
+  "localResult": "source_only",
+  "generatedAt": "2026-08-03T17:43:27Z",
+  "dependsOn": [
+    "P1-003",
+    "P1-012"
+  ],
+  "artifacts": [
+    "lib/product/p2_automation_host_operations.dart",
+    "automation_host/src/interactive-desktop-adapter.mjs",
+    "automation_host/src/redaction.mjs",
+    "test/product/p2_automation_host_operations_test.dart",
+    "lib/product/p2_runtime_composition.dart",
+    "lib/product/p2_automation_host_process_client.dart",
+    "lib/product/p2_effect_journal.dart",
+    "test/product/p2_shipped_product_runtime_e2e_test.dart"
+  ],
+  "testResults": "release/evidence/P2-009/test-results.json",
+  "ownerApproval": {
+    "status": "pending"
+  },
+  "independentReview": {
+    "status": "pending"
+  },
+  "platformReceipts": {},
+  "completedTaskPacket": null,
+  "sourceOnlyIsNotBehavioralProof": true
+}

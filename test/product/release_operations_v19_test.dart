@@ -17,10 +17,7 @@ void main() {
       minimumSupportedUpgradeFrom: '1.8.0+180',
       minimumSupportedRollbackTo: '1.8.0+180',
     );
-    const audit = AuditVerificationResultV19(
-      verified: true,
-      recordCount: 3,
-    );
+    const audit = AuditVerificationResultV19(verified: true, recordCount: 3);
 
     expect(profile.allowedUpdateChannels, contains('stable'));
     expect(support.currentVersion, '1.9.0+190');

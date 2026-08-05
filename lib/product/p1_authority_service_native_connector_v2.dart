@@ -45,20 +45,27 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
     required this.completionEligible,
     required int maxResponseBytes,
   })  : _maxResponseBytes = maxResponseBytes,
-        _alloc = library
-            .lookupFunction<_AllocNative, _AllocDart>('p1a_connector_alloc'),
-        _free = library
-            .lookupFunction<_FreeNative, _FreeDart>('p1a_connector_free'),
-        _configure = library
-            .lookupFunction<_CallNative, _CallDart>('p1a_connector_configure'),
-        _request = library
-            .lookupFunction<_CallNative, _CallDart>('p1a_connector_request'),
+        _alloc = library.lookupFunction<_AllocNative, _AllocDart>(
+          'p1a_connector_alloc',
+        ),
+        _free = library.lookupFunction<_FreeNative, _FreeDart>(
+          'p1a_connector_free',
+        ),
+        _configure = library.lookupFunction<_CallNative, _CallDart>(
+          'p1a_connector_configure',
+        ),
+        _request = library.lookupFunction<_CallNative, _CallDart>(
+          'p1a_connector_request',
+        ),
         _responseSize = library.lookupFunction<_SizeNative, _SizeDart>(
-            'p1a_connector_response_size'),
+          'p1a_connector_response_size',
+        ),
         _copyResponse = library.lookupFunction<_CopyNative, _CopyDart>(
-            'p1a_connector_copy_response'),
-        _closeNative = library
-            .lookupFunction<_CloseNative, _CloseDart>('p1a_connector_close');
+          'p1a_connector_copy_response',
+        ),
+        _closeNative = library.lookupFunction<_CloseNative, _CloseDart>(
+          'p1a_connector_close',
+        );
 
   @override
   final P1AuthorityServiceEndpointV1 endpoint;
@@ -81,7 +88,8 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
   bool _closed = false;
 
   static Future<P1AuthorityNativeClientV2> open(
-      Map<String, Object?> config) async {
+    Map<String, Object?> config,
+  ) async {
     if (config['schemaVersion'] != '2.0.0') {
       throw const FormatException('p1a_native_connector_config_version');
     }
@@ -113,14 +121,11 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
       completionEligible: config['completionEligible'] == true,
       maxResponseBytes: maxResponseBytes,
     );
-    client._invokeNative(
-      client._configure,
-      <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'address': endpoint.address,
-        'maxResponseBytes': maxResponseBytes,
-      },
-    );
+    client._invokeNative(client._configure, <String, Object?>{
+      'schemaVersion': '2.0.0',
+      'address': endpoint.address,
+      'maxResponseBytes': maxResponseBytes,
+    });
     final described = client._requestJson(<String, Object?>{
       'schemaVersion': '2.0.0',
       'operation': p1aPublicVerifierBootstrapOperationV1,
@@ -156,7 +161,9 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
   }
 
   Map<String, Object?> _invokeNative(
-      _CallDart function, Map<String, Object?> request) {
+    _CallDart function,
+    Map<String, Object?> request,
+  ) {
     final input = utf8.encode(p1aCanonicalJson(request));
     final inputPointer = _alloc(input.length).cast<Uint8>();
     if (inputPointer.address == 0) {
@@ -178,8 +185,9 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
         if (copied != size) {
           throw StateError('p1a_native_connector_response_copy_failed');
         }
-        final decoded =
-            jsonDecode(utf8.decode(outputPointer.asTypedList(size)));
+        final decoded = jsonDecode(
+          utf8.decode(outputPointer.asTypedList(size)),
+        );
         if (decoded is! Map) {
           throw const FormatException('p1a_native_connector_response');
         }
@@ -188,7 +196,8 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
             response['status'] == 'denied' ||
             response['status'] == 'transport-error') {
           throw StateError(
-              'p1a_authority_denied:${response['errorCode'] ?? 'unknown'}');
+            'p1a_authority_denied:${response['errorCode'] ?? 'unknown'}',
+          );
         }
         return response;
       } finally {
@@ -262,7 +271,8 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
 
   @override
   Future<P1AuthorityEffectPermitV1> authorizeEffect(
-      P1AuthorityEffectRequestV1 request) async {
+    P1AuthorityEffectRequestV1 request,
+  ) async {
     final workerSessionId = _workerSessionId;
     final channelId = _channelId;
     if (workerSessionId == null ||
@@ -277,7 +287,8 @@ final class P1AuthorityNativeClientV2 implements P1AuthorityServiceClientV1 {
 
   @override
   Future<Map<String, Object?>> recordEffectOutcome(
-          P1AuthorityEffectOutcomeV1 outcome) async =>
+    P1AuthorityEffectOutcomeV1 outcome,
+  ) async =>
       _requestJson(outcome.toJson());
 
   @override

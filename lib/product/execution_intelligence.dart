@@ -172,11 +172,13 @@ class RoleBasedModelRouter {
       }
     }
     eligible.sort((left, right) {
-      final reliability =
-          right.reliabilityScore.compareTo(left.reliabilityScore);
+      final reliability = right.reliabilityScore.compareTo(
+        left.reliabilityScore,
+      );
       if (reliability != 0) return reliability;
-      final latency =
-          left.estimatedLatencyMs.compareTo(right.estimatedLatencyMs);
+      final latency = left.estimatedLatencyMs.compareTo(
+        right.estimatedLatencyMs,
+      );
       if (latency != 0) return latency;
       final cost = left.estimatedCostUsd.compareTo(right.estimatedCostUsd);
       if (cost != 0) return cost;
@@ -225,16 +227,18 @@ class SemanticProgressSnapshot {
   final String? actionHash;
   final String? resultHash;
 
-  String get hash => Sha256.text(canonicalJson(<String, dynamic>{
-        'artifacts': artifacts,
-        'evidenceIds': evidenceIds.toList()..sort(),
-        'errorCodes': errorCodes.toList()..sort(),
-        'satisfiedCriteria': satisfiedCriteria.toList()..sort(),
-        'externalState': externalState.toList()..sort(),
-        'planHash': planHash,
-        'actionHash': actionHash,
-        'resultHash': resultHash,
-      }));
+  String get hash => Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'artifacts': artifacts,
+          'evidenceIds': evidenceIds.toList()..sort(),
+          'errorCodes': errorCodes.toList()..sort(),
+          'satisfiedCriteria': satisfiedCriteria.toList()..sort(),
+          'externalState': externalState.toList()..sort(),
+          'planHash': planHash,
+          'actionHash': actionHash,
+          'resultHash': resultHash,
+        }),
+      );
 }
 
 class SemanticProgressDelta {
@@ -307,9 +311,11 @@ class SemanticProgressEngine {
         .toList()
       ..sort();
     final changed = after.artifacts.keys
-        .where((path) =>
-            before.artifacts.containsKey(path) &&
-            before.artifacts[path] != after.artifacts[path])
+        .where(
+          (path) =>
+              before.artifacts.containsKey(path) &&
+              before.artifacts[path] != after.artifacts[path],
+        )
         .toList()
       ..sort();
     List<String> added(Set<String> oldValues, Set<String> newValues) =>
@@ -320,10 +326,14 @@ class SemanticProgressEngine {
       newEvidence: added(before.evidenceIds, after.evidenceIds),
       resolvedErrors: added(after.errorCodes, before.errorCodes),
       newErrors: added(before.errorCodes, after.errorCodes),
-      criteriaSatisfied:
-          added(before.satisfiedCriteria, after.satisfiedCriteria),
-      criteriaRegressed:
-          added(after.satisfiedCriteria, before.satisfiedCriteria),
+      criteriaSatisfied: added(
+        before.satisfiedCriteria,
+        after.satisfiedCriteria,
+      ),
+      criteriaRegressed: added(
+        after.satisfiedCriteria,
+        before.satisfiedCriteria,
+      ),
       newExternalState: added(before.externalState, after.externalState),
       planRevised: before.planHash != null &&
           after.planHash != null &&
@@ -372,34 +382,39 @@ class ConvergenceController {
     }
     if (stalledTurns <= 1) {
       return ConvergenceDecision(
-          action: ConvergenceAction.compactAndRetry,
-          reason: 'First no-progress state: compact duplicate context.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.compactAndRetry,
+        reason: 'First no-progress state: compact duplicate context.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 2) {
       return ConvergenceDecision(
-          action: ConvergenceAction.requireDifferentAction,
-          reason: 'Repeated action or result is not progress.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.requireDifferentAction,
+        reason: 'Repeated action or result is not progress.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 3) {
       return ConvergenceDecision(
-          action: ConvergenceAction.routeToVerifier,
-          reason: 'Use independent verification to resolve the state.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.routeToVerifier,
+        reason: 'Use independent verification to resolve the state.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 4) {
       return ConvergenceDecision(
-          action: ConvergenceAction.splitTask,
-          reason:
-              'Split the blocked objective into independently verifiable work.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.splitTask,
+        reason:
+            'Split the blocked objective into independently verifiable work.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 5) {
       return ConvergenceDecision(
-          action: ConvergenceAction.askUser,
-          reason: 'One bounded user decision is required.',
-          stalledTurns: stalledTurns);
+        action: ConvergenceAction.askUser,
+        reason: 'One bounded user decision is required.',
+        stalledTurns: stalledTurns,
+      );
     }
     if (stalledTurns == 6 && strongerModelAvailable) {
       return ConvergenceDecision(
@@ -412,10 +427,11 @@ class ConvergenceController {
       );
     }
     return ConvergenceDecision(
-        action: ConvergenceAction.failConvergence,
-        reason:
-            'Bounded convergence strategies were exhausted without semantic progress.',
-        stalledTurns: stalledTurns);
+      action: ConvergenceAction.failConvergence,
+      reason:
+          'Bounded convergence strategies were exhausted without semantic progress.',
+      stalledTurns: stalledTurns,
+    );
   }
 }
 
@@ -647,7 +663,7 @@ class ContextCompactor {
             'turn',
             'toolRepair',
             'protocolRepair',
-            'coordinatorCorrection'
+            'coordinatorCorrection',
           }.contains(entry.key))
             entry.key: entry.value,
       };

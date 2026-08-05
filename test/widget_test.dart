@@ -21,10 +21,12 @@ void main() {
 
   test('simple studio exposes only four primary destinations', () {
     expect(studioDestinations.length, 4);
-    expect(
-      studioDestinations.map((destination) => destination.label),
-      <String>['New task', 'Activity', 'Projects', 'Templates'],
-    );
+    expect(studioDestinations.map((destination) => destination.label), <String>[
+      'New task',
+      'Activity',
+      'Projects',
+      'Templates',
+    ]);
   });
 
   test('templates cover the first six common jobs', () {

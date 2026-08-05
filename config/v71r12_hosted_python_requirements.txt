@@ -1,0 +1,18 @@
+# Exact hosted-CI Python test dependencies for Python 3.12.10 and 3.13.5.
+# Hashes are official PyPI SHA-256 digests for the supported V71-R12
+# GitHub-hosted runner architectures: Windows x64, Ubuntu x86_64,
+# and macOS x86_64 or arm64.
+cryptography==50.0.0 \
+    --hash=sha256:bd1c592e4d5974f0d08d4888e432157adba757c66da0246918e43677fafa2d30 \
+    --hash=sha256:b42a28c1844fd9de8f3f7d540e36b66f3a9c83fceac7170ebc7a6a19edd9dcae \
+    --hash=sha256:031e2d5dd4bb9caa3ca9c82e5a197fd8ae680232cee62603d1a813f3f07e3d03
+cffi==2.1.0 \
+    --hash=sha256:1e9f50d192a3e525b15a75ab5114e442d83d657b7ec29182a991bc9a88fd3a66 \
+    --hash=sha256:c97f080ea627e2863524c5af3836e2270b5f5dfff1f104392b959f8df0c5d384 \
+    --hash=sha256:df2b82571a1b30f58a87bf4e5a9e78d2b1eff6c6ce8fd3aa3757221f93f0863f \
+    --hash=sha256:78474632761faa0fb96f30b1c928c84ebcf68713cbb80d15bab09dfe61640fde \
+    --hash=sha256:8e74a6135550c4748af665b1b1118b6aab33b1fc6a16f9aff630af107c3b4512 \
+    --hash=sha256:799416bae98336e400981ff6e532d67d5c709cfb30afb79865a1315f94b0e224 \
+    --hash=sha256:716ff8ec22f20b4d988b12884086bcef0fc99737043e503f7a3935a6be99b1ea
+pycparser==3.0 \
+    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992

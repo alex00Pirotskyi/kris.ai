@@ -41,11 +41,7 @@ void main() {
         summary: 'Listed 3 entries.',
         data: <String, dynamic>{
           'entries': <Map<String, dynamic>>[
-            <String, dynamic>{
-              'path': '.env',
-              'type': 'file',
-              'bytes': 20,
-            },
+            <String, dynamic>{'path': '.env', 'type': 'file', 'bytes': 20},
             <String, dynamic>{
               'path': 'README.md',
               'type': 'file',
@@ -115,11 +111,7 @@ void main() {
       );
       final complete = policy.completionFor(
         item: baselineItem,
-        observations: const <ToolLoopObservation>[
-          listing,
-          inspected,
-          indexed,
-        ],
+        observations: const <ToolLoopObservation>[listing, inspected, indexed],
       );
 
       expect(incomplete.kind, AgentLoopRecoveryKind.none);
@@ -161,10 +153,7 @@ void main() {
       const indexed = ToolLoopObservation(
         tool: 'index_project',
         arguments: <String, dynamic>{},
-        result: ToolResult(
-          ok: true,
-          summary: 'Indexed project.',
-        ),
+        result: ToolResult(ok: true, summary: 'Indexed project.'),
         actionFingerprint: 'answer-index',
         outcomeFingerprint: 'answer-index-outcome',
         mutationEpoch: 0,
@@ -172,11 +161,7 @@ void main() {
 
       final decision = policy.completionFor(
         item: answerItem,
-        observations: const <ToolLoopObservation>[
-          listing,
-          inspected,
-          indexed,
-        ],
+        observations: const <ToolLoopObservation>[listing, inspected, indexed],
       );
 
       expect(decision.kind, AgentLoopRecoveryKind.none);
@@ -219,35 +204,34 @@ void main() {
     });
 
     test(
-        'tool budgets are checked only when another governed tool is dispatched',
-        () {
-      final tools = ToolRegistry.standard();
+      'tool budgets are checked only when another governed tool is dispatched',
+      () {
+        final tools = ToolRegistry.standard();
 
-      expect(tools.isMutatingTool('write_file'), isTrue);
-      expect(tools.isMutatingTool('apply_patch'), isTrue);
-      expect(tools.isMutatingTool('delete_file'), isTrue);
-      expect(tools.isMutatingTool('read_file'), isFalse);
-      expect(tools.isMutatingTool('verify_project'), isFalse);
-    });
+        expect(tools.isMutatingTool('write_file'), isTrue);
+        expect(tools.isMutatingTool('apply_patch'), isTrue);
+        expect(tools.isMutatingTool('delete_file'), isTrue);
+        expect(tools.isMutatingTool('read_file'), isFalse);
+        expect(tools.isMutatingTool('verify_project'), isFalse);
+      },
+    );
 
-    test('tool descriptors expose required arguments and canonical examples',
-        () {
-      final tools = ToolRegistry.standard();
-      final descriptor = tools.descriptors(
-        allowlist: const <String>{'write_file'},
-      ).single;
-      final schema = descriptor['argumentSchema'] as Map<String, dynamic>;
+    test(
+      'tool descriptors expose required arguments and canonical examples',
+      () {
+        final tools = ToolRegistry.standard();
+        final descriptor =
+            tools.descriptors(allowlist: const <String>{'write_file'}).single;
+        final schema = descriptor['argumentSchema'] as Map<String, dynamic>;
 
-      expect(schema['required'], containsAll(<String>['path', 'content']));
-      expect(
-        schema['example'],
-        containsPair('path', 'src/app.js'),
-      );
-      expect(
-        schema['example'],
-        containsPair('content', 'export const ready = true;\n'),
-      );
-    });
+        expect(schema['required'], containsAll(<String>['path', 'content']));
+        expect(schema['example'], containsPair('path', 'src/app.js'));
+        expect(
+          schema['example'],
+          containsPair('content', 'export const ready = true;\n'),
+        );
+      },
+    );
 
     test('caller-supplied budgets are clamped to product safety bounds', () {
       final budget = AutonomyBudget.fromJson(<String, dynamic>{
@@ -277,120 +261,126 @@ void main() {
   });
 
   group('v1.1.6 no-op mutation convergence', () {
-    test('identical writes do not create rollback mutations or backups',
-        () async {
-      final temporary = await Directory.systemTemp.createTemp(
-        'kristin-noop-mutation-',
-      );
-      try {
-        final project = Directory(
-          '${temporary.path}${Platform.pathSeparator}project',
+    test(
+      'identical writes do not create rollback mutations or backups',
+      () async {
+        final temporary = await Directory.systemTemp.createTemp(
+          'kristin-noop-mutation-',
         );
-        final checkpoints = Directory(
-          '${temporary.path}${Platform.pathSeparator}checkpoints',
-        );
-        await project.create(recursive: true);
-        final file = File(
-          '${project.path}${Platform.pathSeparator}README.md',
-        );
-        await file.writeAsString('# Already current\n');
-        final boundary = await WorkspaceBoundary.open(project.path);
-        final auditFile = File(
-          '${temporary.path}${Platform.pathSeparator}logs'
-          '${Platform.pathSeparator}audit.jsonl',
-        );
-        final audit = AuditChain(auditFile, SecretRedactor());
-        await audit.open();
-        final transaction = await WorkspaceTransaction.begin(
-          runId: 'run-noop',
-          boundary: boundary,
-          checkpointRoot: checkpoints,
-          audit: audit,
-        );
-
-        final record = await transaction.writeText(
-          relativePath: 'README.md',
-          content: '# Already current\n',
-        );
-
-        expect(record.operation, 'noop');
-        expect(record.beforeHash, record.afterHash);
-        expect(record.backupPath, isEmpty);
-        expect(transaction.mutationCount, 0);
-        expect(await file.readAsString(), '# Already current\n');
-        final journal = File(
-          '${checkpoints.path}${Platform.pathSeparator}run-noop'
-          '${Platform.pathSeparator}journal.jsonl',
-        );
-        expect(await journal.exists(), isFalse);
-        expect(await auditFile.readAsString(),
-            contains('workspace.mutation_noop'));
-      } finally {
-        if (await temporary.exists()) {
-          await temporary.delete(recursive: true);
-        }
-      }
-    });
-
-    test('create-only recovery cannot replace an uninspected artifact',
-        () async {
-      final temporary = await Directory.systemTemp.createTemp(
-        'kristin-create-only-recovery-',
-      );
-      try {
-        final project = Directory(
-          '${temporary.path}${Platform.pathSeparator}project',
-        );
-        final checkpoints = Directory(
-          '${temporary.path}${Platform.pathSeparator}checkpoints',
-        );
-        await project.create(recursive: true);
-        final file = File(
-          '${project.path}${Platform.pathSeparator}docs'
-          '${Platform.pathSeparator}design'
-          '${Platform.pathSeparator}wireframes.md',
-        );
-        await file.parent.create(recursive: true);
-        await file.writeAsString('# User-authored design\n');
-        final boundary = await WorkspaceBoundary.open(project.path);
-        final audit = AuditChain(
-          File(
+        try {
+          final project = Directory(
+            '${temporary.path}${Platform.pathSeparator}project',
+          );
+          final checkpoints = Directory(
+            '${temporary.path}${Platform.pathSeparator}checkpoints',
+          );
+          await project.create(recursive: true);
+          final file = File(
+            '${project.path}${Platform.pathSeparator}README.md',
+          );
+          await file.writeAsString('# Already current\n');
+          final boundary = await WorkspaceBoundary.open(project.path);
+          final auditFile = File(
             '${temporary.path}${Platform.pathSeparator}logs'
             '${Platform.pathSeparator}audit.jsonl',
-          ),
-          SecretRedactor(),
-        );
-        await audit.open();
-        final transaction = await WorkspaceTransaction.begin(
-          runId: 'run-create-only',
-          boundary: boundary,
-          checkpointRoot: checkpoints,
-          audit: audit,
-        );
+          );
+          final audit = AuditChain(auditFile, SecretRedactor());
+          await audit.open();
+          final transaction = await WorkspaceTransaction.begin(
+            runId: 'run-noop',
+            boundary: boundary,
+            checkpointRoot: checkpoints,
+            audit: audit,
+          );
 
-        await expectLater(
-          transaction.writeText(
-            relativePath: 'docs/design/wireframes.md',
-            content: '# Deterministic recovery draft\n',
-            expectedExists: false,
-          ),
-          throwsA(
-            isA<ProductException>().having(
-              (error) => error.code,
-              'code',
-              'stale_existence',
-            ),
-          ),
-        );
+          final record = await transaction.writeText(
+            relativePath: 'README.md',
+            content: '# Already current\n',
+          );
 
-        expect(await file.readAsString(), '# User-authored design\n');
-        expect(transaction.mutationCount, 0);
-      } finally {
-        if (await temporary.exists()) {
-          await temporary.delete(recursive: true);
+          expect(record.operation, 'noop');
+          expect(record.beforeHash, record.afterHash);
+          expect(record.backupPath, isEmpty);
+          expect(transaction.mutationCount, 0);
+          expect(await file.readAsString(), '# Already current\n');
+          final journal = File(
+            '${checkpoints.path}${Platform.pathSeparator}run-noop'
+            '${Platform.pathSeparator}journal.jsonl',
+          );
+          expect(await journal.exists(), isFalse);
+          expect(
+            await auditFile.readAsString(),
+            contains('workspace.mutation_noop'),
+          );
+        } finally {
+          if (await temporary.exists()) {
+            await temporary.delete(recursive: true);
+          }
         }
-      }
-    });
+      },
+    );
+
+    test(
+      'create-only recovery cannot replace an uninspected artifact',
+      () async {
+        final temporary = await Directory.systemTemp.createTemp(
+          'kristin-create-only-recovery-',
+        );
+        try {
+          final project = Directory(
+            '${temporary.path}${Platform.pathSeparator}project',
+          );
+          final checkpoints = Directory(
+            '${temporary.path}${Platform.pathSeparator}checkpoints',
+          );
+          await project.create(recursive: true);
+          final file = File(
+            '${project.path}${Platform.pathSeparator}docs'
+            '${Platform.pathSeparator}design'
+            '${Platform.pathSeparator}wireframes.md',
+          );
+          await file.parent.create(recursive: true);
+          await file.writeAsString('# User-authored design\n');
+          final boundary = await WorkspaceBoundary.open(project.path);
+          final audit = AuditChain(
+            File(
+              '${temporary.path}${Platform.pathSeparator}logs'
+              '${Platform.pathSeparator}audit.jsonl',
+            ),
+            SecretRedactor(),
+          );
+          await audit.open();
+          final transaction = await WorkspaceTransaction.begin(
+            runId: 'run-create-only',
+            boundary: boundary,
+            checkpointRoot: checkpoints,
+            audit: audit,
+          );
+
+          await expectLater(
+            transaction.writeText(
+              relativePath: 'docs/design/wireframes.md',
+              content: '# Deterministic recovery draft\n',
+              expectedExists: false,
+            ),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.code,
+                'code',
+                'stale_existence',
+              ),
+            ),
+          );
+
+          expect(await file.readAsString(), '# User-authored design\n');
+          expect(transaction.mutationCount, 0);
+        } finally {
+          if (await temporary.exists()) {
+            await temporary.delete(recursive: true);
+          }
+        }
+      },
+    );
 
     test('redirects repeated no-op writes to one artifact inspection', () {
       const item = WorkItem(
@@ -430,10 +420,7 @@ void main() {
 
       expect(decision.kind, AgentLoopRecoveryKind.redirect);
       expect(decision.action?.tool, 'inspect_file');
-      expect(
-        decision.action?.arguments['path'],
-        'docs/design/wireframes.md',
-      );
+      expect(decision.action?.arguments['path'], 'docs/design/wireframes.md');
     });
   });
 
@@ -503,85 +490,87 @@ void main() {
       }
     });
 
-    test('retry creates a linked run with fresh attempts and counters',
-        () async {
-      await expectLater(
-        runtime.execute(failedRun.id),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'run_retry_required',
+    test(
+      'retry creates a linked run with fresh attempts and counters',
+      () async {
+        await expectLater(
+          runtime.execute(failedRun.id),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'run_retry_required',
+            ),
           ),
-        ),
-      );
+        );
 
-      final retried = await runtime.retryRun(failedRun.id);
+        final retried = await runtime.retryRun(failedRun.id);
 
-      expect(retried.id, isNot(failedRun.id));
-      expect(retried.sourceRunId, failedRun.id);
-      expect(retried.state, RunState.awaitingApproval);
-      expect(retried.modelRequests, 0);
-      expect(retried.toolCalls, 0);
-      expect(retried.mutations, 0);
-      expect(retried.repairs, 0);
-      expect(retried.items.every((item) => item.attempts == 0), isTrue);
-      expect(
-        retried.budget.maxModelRequests,
-        AutonomyBudget.forPlan(command.plan).maxModelRequests,
-      );
-    });
+        expect(retried.id, isNot(failedRun.id));
+        expect(retried.sourceRunId, failedRun.id);
+        expect(retried.state, RunState.awaitingApproval);
+        expect(retried.modelRequests, 0);
+        expect(retried.toolCalls, 0);
+        expect(retried.mutations, 0);
+        expect(retried.repairs, 0);
+        expect(retried.items.every((item) => item.attempts == 0), isTrue);
+        expect(
+          retried.budget.maxModelRequests,
+          AutonomyBudget.forPlan(command.plan).maxModelRequests,
+        );
+      },
+    );
 
     test(
-        'all-logs bundle retains diagnostics while redacting source and secrets',
-        () async {
-      await runtime.repositories.evidence.put(
-        EvidenceRecord(
-          id: 'evidence-diagnostic-fixture',
-          runId: failedRun.id,
-          workItemId: failedRun.items.first.item.id,
-          kind: EvidenceKind.model,
-          summary: 'Model response fixture.',
-          payload: const <String, dynamic>{
-            'source': 'TOP_SECRET_SOURCE_PAYLOAD',
-            'responsePreview': 'password=do-not-share',
-            'responseCharacters': 21,
-          },
-          hash: Sha256.text('diagnostic fixture'),
-          createdAt: DateTime.utc(2026, 7, 17),
-        ),
-      );
-      await runtime.events.publish(
-        'diagnostic.fixture',
-        failedRun.id,
-        <String, dynamic>{
+      'all-logs bundle retains diagnostics while redacting source and secrets',
+      () async {
+        await runtime.repositories.evidence.put(
+          EvidenceRecord(
+            id: 'evidence-diagnostic-fixture',
+            runId: failedRun.id,
+            workItemId: failedRun.items.first.item.id,
+            kind: EvidenceKind.model,
+            summary: 'Model response fixture.',
+            payload: const <String, dynamic>{
+              'source': 'TOP_SECRET_SOURCE_PAYLOAD',
+              'responsePreview': 'password=do-not-share',
+              'responseCharacters': 21,
+            },
+            hash: Sha256.text('diagnostic fixture'),
+            createdAt: DateTime.utc(2026, 7, 17),
+          ),
+        );
+        await runtime.events
+            .publish('diagnostic.fixture', failedRun.id, <String, dynamic>{
           'runId': failedRun.id,
           'apiKey': 'diagnostic-key-value',
           'budget': failedRun.budget.toJson(),
-        },
-      );
+        });
 
-      final bundle = await runtime.createSupportBundle(
-        projectId: project.id,
-        runId: failedRun.id,
-        includeAllLogs: true,
-      );
-      final text =
-          utf8.decode(await bundle.readAsBytes(), allowMalformed: true);
+        final bundle = await runtime.createSupportBundle(
+          projectId: project.id,
+          runId: failedRun.id,
+          includeAllLogs: true,
+        );
+        final text = utf8.decode(
+          await bundle.readAsBytes(),
+          allowMalformed: true,
+        );
 
-      expect(await bundle.exists(), isTrue);
-      expect(bundle.path, endsWith('.zip'));
-      expect(text, contains('kristin.diagnostics.bundle.v2'));
-      expect(text, contains('runs-redacted.json'));
-      expect(text, contains('evidence-redacted.json'));
-      expect(text, contains('events-redacted.jsonl'));
-      expect(text, contains('bundle-manifest.json'));
-      expect(text, contains('run-diagnostic-summary.md'));
-      expect(text, contains('maxModelRequests'));
-      expect(text, isNot(contains('TOP_SECRET_SOURCE_PAYLOAD')));
-      expect(text, isNot(contains('supersecretvalue')));
-      expect(text, isNot(contains('do-not-share')));
-      expect(text, isNot(contains('diagnostic-key-value')));
-    });
+        expect(await bundle.exists(), isTrue);
+        expect(bundle.path, endsWith('.zip'));
+        expect(text, contains('kristin.diagnostics.bundle.v2'));
+        expect(text, contains('runs-redacted.json'));
+        expect(text, contains('evidence-redacted.json'));
+        expect(text, contains('events-redacted.jsonl'));
+        expect(text, contains('bundle-manifest.json'));
+        expect(text, contains('run-diagnostic-summary.md'));
+        expect(text, contains('maxModelRequests'));
+        expect(text, isNot(contains('TOP_SECRET_SOURCE_PAYLOAD')));
+        expect(text, isNot(contains('supersecretvalue')));
+        expect(text, isNot(contains('do-not-share')));
+        expect(text, isNot(contains('diagnostic-key-value')));
+      },
+    );
   });
 }

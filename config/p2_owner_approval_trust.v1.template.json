@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "1.0.0",
+  "authority": "P2-owner-approval-trust-v1",
+  "trustedPublicKeys": [],
+  "note": "Populate only through a separately reviewed owner/organization trust-root packet. Private keys never enter the repository."
+}
