@@ -21,6 +21,7 @@ REQUIRED = (
     "services/research_worker/src/search/models.py",
     "services/research_worker/src/search/provider.py",
     "services/research_worker/src/search/fixture_provider.py",
+    "services/research_worker/test/schema_validator.py",
     "services/research_worker/test/test_contract_models.py",
     "services/research_worker/test/test_fixture_provider.py",
     "evals/fixtures/p4_001_search_provider/contract_cases.json",
