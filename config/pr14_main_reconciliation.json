@@ -1,10 +1,14 @@
 {
-  "expectedConflicts": [],
+  "expectedConflicts": [
+    "SOURCE_MANIFEST.sha256"
+  ],
   "expectedTargetHead": "40b3b1002f37bc9c301bfb5faf9c0b32f5f9a18a",
   "minimumMainAncestor": "950865fe363bf9556a5760faa06e1a4bff5cb177",
-  "ready": false,
+  "ready": true,
   "repository": "alex00Pirotskyi/kris.ai",
-  "resolutions": {},
+  "resolutions": {
+    "SOURCE_MANIFEST.sha256": "source_manifest"
+  },
   "roadmapAuthority": "docs/roadmap/MASTER.md",
   "schemaVersion": "1.0.0",
   "targetBranch": "merge/p1-p2-owner-risk-qa-preview"
