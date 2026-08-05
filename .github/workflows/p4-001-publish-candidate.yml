@@ -70,9 +70,48 @@ jobs:
                 ;;
             esac
           done
-          git config user.name 'Kristin P4-001 Canonical Integrator'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          base_sha="$(git rev-parse HEAD)"
           git add -A
           git diff --cached --check
+          patch="$RUNNER_TEMP/p4-001-materialized.patch"
+          git diff --cached --binary -- . ':(exclude)SOURCE_MANIFEST.sha256' > "$patch"
+          test -s "$patch"
+
+          git fetch origin \
+            "refs/heads/${{ github.event.pull_request.head.ref }}:refs/remotes/origin/p4-001-publish-target"
+          remote_sha="$(git rev-parse refs/remotes/origin/p4-001-publish-target)"
+          echo "P4-001_BASE_SHA=$base_sha"
+          echo "P4-001_REMOTE_SHA=$remote_sha"
+
+          if [ "$remote_sha" != "$base_sha" ]; then
+            git merge-base --is-ancestor "$base_sha" "$remote_sha"
+            mapfile -t remote_paths < <(git diff --name-only "$base_sha" "$remote_sha" | LC_ALL=C sort)
+            printf 'P4-001_CONCURRENT_PATH=%s\n' "${remote_paths[@]}"
+            test "${#remote_paths[@]}" -eq 1
+            test "${remote_paths[0]}" = 'SOURCE_MANIFEST.sha256'
+            git reset --hard "$remote_sha"
+            git clean -fd
+            git apply --index --3way "$patch"
+          fi
+
+          python tool/p1a_refresh_source_manifest.py .
+          first_manifest_sha="$(sha256sum SOURCE_MANIFEST.sha256 | awk '{print $1}')"
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          second_manifest_sha="$(sha256sum SOURCE_MANIFEST.sha256 | awk '{print $1}')"
+          test "$first_manifest_sha" = "$second_manifest_sha"
+          git add SOURCE_MANIFEST.sha256
+
+          python tool/test_center_contracts.py check --project .
+          python tool/p4_001_test_center_v1.py check --project .
+          python tool/p4_001_search_provider_test.py --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --cached --check
+
+          git config user.name 'Kristin P4-001 Canonical Integrator'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'P4-001: materialize canonical Test Center v1 integration'
           git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
