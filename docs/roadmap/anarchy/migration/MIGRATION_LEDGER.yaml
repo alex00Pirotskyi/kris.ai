@@ -44,8 +44,8 @@
         "tool/anarchy_control_plane.py",
         "tool/anarchy_control_plane_test.py",
         "schemas/anarchy_execution.schema.json",
-        "test/anarchy_control_plane/fixtures/positive/repository.json",
-        "test/anarchy_control_plane/fixtures/negative/cases.json",
+        "test/product/anarchy_control_plane/fixtures/positive/repository.json",
+        "test/product/anarchy_control_plane/fixtures/negative/cases.json",
         ".github/workflows/p24-adoption-review.yml"
       ],
       "kind": "VALIDATOR_FOUNDATION",
@@ -64,14 +64,48 @@
       ],
       "kind": "CLEAN_ROOM_RESUME",
       "sequence": 8
+    },
+    {
+      "classification": "PUBLISHED_REPAIR_CANDIDATE",
+      "commit": "171053b2f68bb065f305dabd0d637945aff658ec",
+      "evidence": "docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml",
+      "kind": "CANDIDATE_PUSHED",
+      "sequence": 9,
+      "tree": "55bc95eedd29abcad7a077d197af835ade95d902"
+    },
+    {
+      "classification": "EXACT_HEAD_CI_FAILED",
+      "evidence": ".github/workflows/p24-adoption-review.yml",
+      "kind": "CI_OBSERVED",
+      "p24Run": 31024658913,
+      "productGatesConclusion": "PASS",
+      "productGatesRun": 31024659087,
+      "sequence": 10
+    },
+    {
+      "classification": "CANONICAL_REPOSITORY_RELATIVE_SOURCE_REPAIR",
+      "evidence": [
+        "tool/anarchy_control_plane_parts/part05c.inc",
+        "tool/anarchy_control_plane_parts/part06.inc",
+        "tool/anarchy_control_plane_test_parts/part05.inc",
+        ".github/workflows/p24-adoption-review.yml"
+      ],
+      "kind": "VALIDATOR_FOUNDATION",
+      "sequence": 11
+    },
+    {
+      "evidence": "docs/roadmap/anarchy/coordination/P24-001_WORKER_CHECKPOINT.json",
+      "kind": "COORDINATION_CHECKPOINT",
+      "observedAtUtc": "2026-08-05T17:10:00Z",
+      "sequence": 12
     }
   ],
   "pending": [
-    "generated view and canonical source manifest from isolated exact-head CI preview",
-    "stacked draft PR",
-    "exact-head Ubuntu/Windows/macOS CI",
+    "exact-head Ubuntu/Windows/macOS validation of the canonical repository-relative source repair",
+    "generator-produced P24 index and canonical root source-manifest closure",
+    "zero-diff exact-check rerun",
     "Worker B exact-head review",
-    "Worker I exact-head review",
+    "Worker I exact-head review or precise BLOCKED_EXTERNAL record",
     "separate explicit adoption authorization"
   ],
   "schemaVersion": "1.0.0",

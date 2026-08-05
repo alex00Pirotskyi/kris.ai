@@ -31,13 +31,23 @@ def atomic_replace(path: Path, content: bytes) -> None:
 def write_generated(project: Path) -> dict[str, Any]:
     state = validate_project(project, check_generated=False, check_source_manifest=False, enforce_non_mutation=False)
     if state.errors:
-        raise ControlPlaneError("refusing write because source control-plane validation failed")
+        detail = "; ".join(
+            f"{issue.code}: {issue.message}" for issue in state.errors[:5]
+        )
+        raise ControlPlaneError(
+            "refusing write because source control-plane validation failed"
+            + (f": {detail}" if detail else "")
+        )
     path = resolve_safe(project, str(state.contract["generatedPaths"][0]))
     content = canonical_bytes(generated_index_data(state))
     before = path.read_bytes() if path.exists() else None
     if before != content:
         atomic_replace(path, content)
-    return {"path": path.relative_to(project).as_posix(), "changed": before != content, "sha256": sha256_bytes(content)}
+    return {
+        "path": repository_relative(project, path, must_exist=True),
+        "changed": before != content,
+        "sha256": sha256_bytes(content),
+    }
 
 
 def iter_scope_files(project: Path, relative: str) -> Iterable[Path]:
@@ -45,8 +55,20 @@ def iter_scope_files(project: Path, relative: str) -> Iterable[Path]:
     if path.is_file():
         yield path
     elif path.is_dir():
-        for candidate in sorted(path.rglob("*"), key=lambda item: item.relative_to(project).as_posix()):
+        candidates = list(path.rglob("*"))
+        candidates.sort(
+            key=lambda item: repository_relative(
+                project,
+                item,
+                must_exist=item.exists(),
+            )
+        )
+        for candidate in candidates:
             if candidate.is_file():
+                # Revalidate after sorting so a file replaced by an escaping
+                # symlink/junction between enumeration and consumption fails
+                # closed instead of entering the snapshot.
+                repository_relative(project, candidate, must_exist=True)
                 yield candidate
 
 
@@ -54,7 +76,7 @@ def snapshot_scopes(project: Path, scopes: Sequence[str]) -> dict[str, tuple[str
     result: dict[str, tuple[str, int, int]] = {}
     for relative in scopes:
         for path in iter_scope_files(project, relative):
-            rel = path.relative_to(project).as_posix()
+            rel = repository_relative(project, path, must_exist=True)
             stat = path.stat()
             result[rel] = (file_sha256(path), stat.st_size, stat.st_mtime_ns)
     return result

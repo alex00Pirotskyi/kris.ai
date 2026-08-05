@@ -14,16 +14,28 @@
     "docs/roadmap/anarchy/workers/WORKER_J.md",
     "release/evidence/P24-001/**",
     "schemas/anarchy_execution.schema.json",
-    "test/anarchy_control_plane/**",
+    "test/product/anarchy_control_plane/**",
     "tool/anarchy_control_plane.py",
-    "tool/anarchy_control_plane_test.py"
+    "tool/anarchy_control_plane_parts/**",
+    "tool/anarchy_control_plane_test.py",
+    "tool/anarchy_control_plane_test_parts/**",
+    "tool/p24_ci_driver.py",
+    "tool/p24_ci_driver_parts/**"
   ],
   "continuity": {
-    "lastVerifiedHead": "45c435058b63e598223d7080c7ad8d229c5436c3",
-    "lastVerifiedTree": "d0ed3ae2db15faff9a2c9cbcc92085045fb65371",
-    "safeTakeover": "Only after a pushed YIELDED record binds the last head/tree and no newer Worker J commit exists."
+    "lastVerifiedHead": "171053b2f68bb065f305dabd0d637945aff658ec",
+    "lastVerifiedTree": "55bc95eedd29abcad7a077d197af835ade95d902",
+    "safeTakeover": "Only after a later pushed YIELDED record binds the last head/tree and no newer Worker J commit exists."
   },
-  "nextAction": "Commit and push the deterministic validator/schema/fixtures/CI candidate, then open the stacked draft PR against agent/anarchy-execution-os.",
+  "nextAction": "Inspect the exact-head P24 and product-gates runs for the canonical repository-relative source repair; if generation is deterministic, commit only the generated index and owner-generated root source manifest, then rerun CI before requesting reviews.",
+  "publishedCandidate": {
+    "commit": "171053b2f68bb065f305dabd0d637945aff658ec",
+    "p24Conclusion": "FAIL",
+    "p24Run": 31024658913,
+    "productGatesConclusion": "PASS",
+    "productGatesRun": 31024659087,
+    "tree": "55bc95eedd29abcad7a077d197af835ade95d902"
+  },
   "recordType": "AnarchyClaim",
   "reviewerRoles": [
     "Worker B",
