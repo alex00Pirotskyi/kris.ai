@@ -1,7 +1,9 @@
 """Deterministic, network-free providers for the P4-001 contract gate."""
 from __future__ import annotations
 import base64
+import binascii
 import json
+import re
 import urllib.parse
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
@@ -11,6 +13,7 @@ from .validation import SearchContractError, canonical_json, require_exact_keys
 _FIXED_RETRIEVED_AT = '2026-08-05T00:00:00Z'
 _FIXED_RESET_AT = '2026-08-05T00:05:00Z'
 _CURSOR_PREFIX = 'p4c1.'
+_CURSOR_TOKEN_RE = re.compile(r'^[A-Za-z0-9_-]+$')
 
 @dataclass(frozen=True)
 class FixtureCatalogEntry:
@@ -100,13 +103,30 @@ class DeterministicFixtureSearchProvider(SearchProvider):
         if not cursor.startswith(_CURSOR_PREFIX):
             raise SearchProviderException(self._invalid_cursor(request, 'cursor_format_invalid'))
         token = cursor[len(_CURSOR_PREFIX):]
-        if not token or len(token) > 480:
+        if (
+            not token
+            or len(token) > 480
+            or _CURSOR_TOKEN_RE.fullmatch(token) is None
+        ):
             raise SearchProviderException(self._invalid_cursor(request, 'cursor_payload_invalid'))
         try:
-            raw = base64.urlsafe_b64decode(token + '=' * ((4 - len(token) % 4) % 4))
+            raw = base64.b64decode(
+                token + '=' * ((4 - len(token) % 4) % 4),
+                altchars=b'-_',
+                validate=True,
+            )
             payload = json.loads(raw.decode('utf-8'))
             require_exact_keys(payload, {'contractVersion', 'providerId', 'queryId', 'offset'}, 'cursor')
-        except (ValueError, UnicodeDecodeError, json.JSONDecodeError, SearchContractError):
+            canonical_token = base64.urlsafe_b64encode(raw).decode().rstrip('=')
+            if canonical_token != token or canonical_json(payload).encode() != raw:
+                raise SearchContractError('cursor payload is not canonical')
+        except (
+            ValueError,
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+            SearchContractError,
+            binascii.Error,
+        ):
             raise SearchProviderException(self._invalid_cursor(request, 'cursor_payload_invalid'))
         if payload['contractVersion'] != CONTRACT_VERSION:
             raise SearchProviderException(self._invalid_cursor(request, 'cursor_version_invalid'))

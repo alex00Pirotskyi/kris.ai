@@ -27,7 +27,7 @@
         "providerId": {"$ref": "#/$defs/id"},
         "providerRank": {"type": "integer", "minimum": 1, "maximum": 10000},
         "title": {"type": "string", "minLength": 1, "maxLength": 512},
-        "url": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^https?://[^#]+$"},
+        "url": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^https?://[^#]+$", "format": "public-result-url"},
         "displayUrl": {"type": "string", "minLength": 1, "maxLength": 2048},
         "snippet": {"type": "string", "maxLength": 4096},
         "publishedAt": {"type": ["string", "null"], "format": "date-time"},

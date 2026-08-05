@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import socket
 import unittest
+from unittest import mock
 
 from services.research_worker.src.search import SearchProviderException, SearchRequest
 from services.research_worker.test.support import load_contract_state
@@ -81,6 +83,15 @@ class FixtureProviderContractTest(unittest.TestCase):
         )
         self.validate("page", alpha)
         self.validate("page", beta)
+
+    def test_fixture_execution_is_network_free(self) -> None:
+        request = SearchRequest.from_dict(self.fixture["cases"][0]["request"])
+        denied = AssertionError("P4-001 fixture provider attempted network access")
+        with mock.patch.object(socket, "socket", side_effect=denied), mock.patch.object(
+            socket, "create_connection", side_effect=denied
+        ):
+            pages = [provider.search(request) for provider in self.providers.values()]
+        self.assertEqual({"fixture_alpha", "fixture_beta"}, {page.provider_id for page in pages})
 
     def test_invalid_cursor_is_typed_and_bound(self) -> None:
         request = SearchRequest(

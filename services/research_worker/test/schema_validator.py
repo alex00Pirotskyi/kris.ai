@@ -12,6 +12,11 @@ import re
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
+from services.research_worker.src.search.validation import (
+    SearchContractError,
+    require_public_result_url,
+)
+
 DRAFT = "https://json-schema.org/draft/2020-12/schema"
 KEYWORDS = {
     "$schema", "$id", "$ref", "$defs", "title", "description", "type",
@@ -83,8 +88,14 @@ class ContractSchemaValidator:
             errors.append(SchemaValidationError("string longer than maxLength", path))
         if "pattern" in schema and re.search(schema["pattern"], value) is None:
             errors.append(SchemaValidationError("string does not match pattern", path))
-        if schema.get("format") == "date-time" and not _date_time(value):
+        format_name = schema.get("format")
+        if format_name == "date-time" and not _date_time(value):
             errors.append(SchemaValidationError("invalid RFC3339 date-time", path))
+        elif format_name == "public-result-url":
+            try:
+                require_public_result_url(value, "schema.url")
+            except SearchContractError as exc:
+                errors.append(SchemaValidationError(str(exc), path))
 
     def _object(self, value, schema, path, errors) -> None:
         for name in schema.get("required", ()):
@@ -176,7 +187,10 @@ def _inspect(node: Any, root: Mapping[str, Any], path: tuple[Any, ...]) -> None:
             _inspect(node[name], root, path + (name,))
     if "pattern" in node:
         re.compile(node["pattern"])
-    if "format" in node and node["format"] != "date-time":
+    if "format" in node and node["format"] not in {
+        "date-time",
+        "public-result-url",
+    }:
         raise ValueError(f"unsupported format at {path!r}")
 
 

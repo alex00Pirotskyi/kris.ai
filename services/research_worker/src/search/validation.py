@@ -12,8 +12,19 @@ _ID_RE = re.compile('^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')
 _LANGUAGE_RE = re.compile('^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$')
 _COUNTRY_RE = re.compile('^[A-Z]{2}$')
 _DOMAIN_RE = re.compile('^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$')
+_URL_FORBIDDEN_RE = re.compile(r'[\x00-\x20\x7f\\]')
 _SECRET_MARKERS = ('authorization', 'cookie', 'password', 'secret', 'token', 'apikey', 'clientsecret', 'privatekey')
-_AUTHORITY_MARKERS = {'resultid', 'providerid', 'providerrank', 'title', 'url', 'displayurl', 'snippet', 'publishedat', 'queryid', 'retrievedat', 'evidencestatus', 'schemaversion', 'requestid', 'providerrequestid', 'nextcursor', 'ratelimit', 'partialfailure'}
+_AUTHORITY_MARKERS = {
+    'resultid', 'providerid', 'providerrank', 'title', 'url', 'displayurl',
+    'snippet', 'publishedat', 'queryid', 'retrievedat', 'evidencestatus',
+    'schemaversion', 'requestid', 'providerrequestid', 'nextcursor',
+    'ratelimit', 'partialfailure',
+    # Common aliases must not become a second authority channel.
+    'identity', 'canonicalidentity', 'resultidentity', 'queryidentity',
+    'paginationidentity', 'rank', 'resultrank', 'canonicalrank',
+    'canonicalurl', 'evidencestate', 'retrievalstate', 'paginationstate',
+    'paginationcursor', 'ratelimitstate', 'failurestate',
+}
 
 class SearchContractError(ValueError):
     """Raised when a P4-001 contract value is malformed."""
@@ -130,6 +141,8 @@ def normalized_domains(value):
 
 def require_public_result_url(value: Any, field: str) -> str:
     require_text(value, field, maximum=4096)
+    if _URL_FORBIDDEN_RE.search(value):
+        raise SearchContractError(f'{field} contains whitespace, control characters, or backslashes')
     parsed = urllib.parse.urlsplit(value)
     if parsed.scheme not in {'http', 'https'}:
         raise SearchContractError(f'{field} must use http or https')
@@ -139,6 +152,26 @@ def require_public_result_url(value: Any, field: str) -> str:
         raise SearchContractError(f'{field} must contain a host')
     if parsed.fragment:
         raise SearchContractError(f'{field} must not contain a fragment')
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise SearchContractError(f'{field} contains an invalid port') from exc
+    if port == 0 or parsed.netloc.endswith(':'):
+        raise SearchContractError(f'{field} contains an invalid port')
+
+    hostname = parsed.hostname.casefold()
+    if '%' in hostname or hostname.endswith('.'):
+        raise SearchContractError(f'{field} contains a non-canonical host')
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        if hostname == 'localhost' or hostname.endswith('.localhost'):
+            raise SearchContractError(f'{field} must use a public host')
+        if '.' not in hostname or _DOMAIN_RE.fullmatch(hostname) is None:
+            raise SearchContractError(f'{field} contains an invalid public host')
+    else:
+        if not address.is_global:
+            raise SearchContractError(f'{field} must not use a non-public IP address')
     return value
 
 def _compact_key(key: str) -> str:
