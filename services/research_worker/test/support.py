@@ -3,13 +3,12 @@ from __future__ import annotations
 import json
 import pathlib
 
-from jsonschema import Draft202012Validator, FormatChecker
-
 from services.research_worker.src.search.fixture_provider import (
     FixtureCatalogEntry,
     fixture_provider_a,
     fixture_provider_b,
 )
+from services.research_worker.test.schema_validator import ContractSchemaValidator
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 FIXTURE_PATH = ROOT / "evals/fixtures/p4_001_search_provider/contract_cases.json"
@@ -28,8 +27,7 @@ def load_contract_state():
     fixture = load_json(FIXTURE_PATH)
     schemas = {name: load_json(path) for name, path in SCHEMA_PATHS.items()}
     validators = {
-        name: Draft202012Validator(schema, format_checker=FormatChecker())
-        for name, schema in schemas.items()
+        name: ContractSchemaValidator(schema) for name, schema in schemas.items()
     }
     entries = tuple(
         FixtureCatalogEntry(
