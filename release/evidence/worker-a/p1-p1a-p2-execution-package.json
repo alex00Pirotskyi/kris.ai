@@ -1,0 +1,164 @@
+{
+  "artifacts": {
+    "progress": {
+      "path": "docs/roadmap/progress/2026-08-05-worker-a-p1-p2-new-roadmap-execution.md",
+      "sha256": "26fb61be9ce1653144189c5ff74ecbbf403553430330b56ac5e918c7a4d05932"
+    },
+    "reuse_matrix": {
+      "path": "release/evidence/worker-a/p1-p1a-p2-reuse-matrix.jsonl",
+      "sha256": "014d5a32df4440398bdbf99a54f36f2d28eb03bfa1465ed74fadd6c21a15cdde",
+      "task_count": 39
+    },
+    "test_center": {
+      "check_count": 13,
+      "module_count": 16,
+      "path": "release/evidence/worker-a/p1-p1a-p2-test-center.json",
+      "sha256": "fa26d91dedec99abbeaef5910e55d3fd7886d08be080172eccbea1d9fbc79d90"
+    },
+    "validator": {
+      "path": "tool/worker_a_p1_p2_execution_contract_test.py",
+      "sha256": "6f80f6f4c0ffc11a8be0c2601feb246406bb8a4d8a5a5ef43c82dbfae99cf417"
+    }
+  },
+  "certification": {
+    "P1A_platforms": {
+      "linux": "BLOCKED_EXTERNAL",
+      "macos": "BLOCKED_EXTERNAL",
+      "windows": "BLOCKED_EXTERNAL"
+    },
+    "P1A_source_native": "RETEST_REQUIRED",
+    "P1_behavioral_security": "RETEST_REQUIRED",
+    "P1_source": "RETEST_REQUIRED",
+    "P2_aggregate": {
+      "completion_claim": false,
+      "state": "BLOCKED",
+      "support_claim": "NO_PROMOTION"
+    },
+    "P2_canonical_acceptance": {
+      "scenario": "disposable Desktop hello.txt exact Hello World bytes; reopen/hash/cleanup/process-tree/no unrelated effects",
+      "state": "BLOCKED_EXTERNAL"
+    },
+    "P2_cleanup": "BLOCKED_EXTERNAL",
+    "P2_platforms": {
+      "linux": "BLOCKED_EXTERNAL",
+      "macos": "BLOCKED_EXTERNAL",
+      "windows": "BLOCKED_EXTERNAL"
+    },
+    "P2_process_tree_termination": "BLOCKED_EXTERNAL",
+    "P2_source": "RETEST_REQUIRED"
+  },
+  "evidence": {
+    "classification": "SOURCE_FOUNDATION_AND_EXECUTION_METADATA_ONLY",
+    "exact_commit_binding": {
+      "baseline_commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "baseline_tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+      "worker_a_candidate": "bind in draft PR and exact-head CI"
+    },
+    "immutable_sources_preserved": true
+  },
+  "normative": false,
+  "ownership": {
+    "forbidden_paths": [
+      "docs/roadmap/anarchy/**",
+      "docs/roadmap/MASTER.md",
+      "docs/roadmap/roadmap.yaml",
+      "docs/roadmap/STATUS.md",
+      "docs/roadmap/HANDOFF.md",
+      "docs/roadmap/GENERATED_STATE.md",
+      "docs/roadmap/CONTROL_PLANE.md",
+      "docs/roadmap/REPOSITORY_GOVERNANCE.md",
+      "docs/roadmap/task_claim.schema.json",
+      "tool/generate_roadmap_views.py",
+      "SOURCE_MANIFEST.sha256",
+      "VERSION_CONTROL.json",
+      "Worker C PR #62"
+    ],
+    "owned_paths": [
+      "docs/roadmap/progress/2026-08-05-worker-a-p1-p2-new-roadmap-execution.md",
+      "release/evidence/worker-a/p1-p1a-p2-execution-package.json",
+      "release/evidence/worker-a/p1-p1a-p2-reuse-matrix.jsonl",
+      "release/evidence/worker-a/p1-p1a-p2-test-center.json",
+      "tool/worker_a_p1_p2_execution_contract_test.py"
+    ]
+  },
+  "parallel_worker_safety": {
+    "competing_authority_or_global_schema_created": false,
+    "p3_work_introduced": false,
+    "worker_c_files_touched": [],
+    "worker_j_files_touched": []
+  },
+  "pin": {
+    "anarchy_reference": {
+      "branch": "agent/anarchy-execution-os",
+      "commit": "6b23beb64070932886e75a131580fbc6fda878b6",
+      "pr": 63
+    },
+    "classification": [
+      "PROVISIONAL_EXECUTION_REFERENCE",
+      "NON_NORMATIVE",
+      "PENDING_WORKER_J_ADOPTION"
+    ],
+    "human_roadmap_authority": "docs/roadmap/MASTER.md",
+    "latest_roadmap": {
+      "sha256": "b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c",
+      "source_filename": "KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md"
+    },
+    "machine_roadmap_authority": "docs/roadmap/roadmap.yaml within declared bootstrap scope",
+    "next_exact_action": "python tool/worker_a_p1_p2_execution_contract_test.py",
+    "project_test_profile_source": {
+      "state": "PROVISIONAL_WORKER_A_SCOPED"
+    },
+    "protected_main": {
+      "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+    },
+    "repository": "alex00Pirotskyi/kris.ai",
+    "review_partner": "Worker B",
+    "test_center_contract_source": {
+      "detail": "no canonical Worker B contract found",
+      "state": "BLOCKED_BY_SHARED_CONTRACT"
+    },
+    "worker_a": {
+      "base_commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "base_tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+      "branch": "agent/a/p1-p2-new-roadmap-execution",
+      "observed_head_commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "observed_head_tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+    },
+    "worker_j": {
+      "branch": "agent/j/P24-001-roadmap-as-data-adr",
+      "commit": "45c435058b63e598223d7080c7ad8d229c5436c3",
+      "pull_request": null
+    }
+  },
+  "schema": "worker-a-p1-p1a-p2-execution-package/v1",
+  "worker_j_handoff": {
+    "blockers": [
+      "BLOCKED_BY_SHARED_CONTRACT: Worker B Test Center/result/certification contract",
+      "BLOCKED_EXTERNAL: controlled Windows/macOS/Linux receipts",
+      "OWNERSHIP_COLLISION: SOURCE_MANIFEST.sha256 is Worker J-owned"
+    ],
+    "latest_roadmap": {
+      "sha256": "b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c",
+      "source": "KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md"
+    },
+    "proposed_transitions": [
+      {
+        "canonical": "PENDING_WORKER_J_RECONCILIATION",
+        "proposed": "TECHNICALLY_READY_FOR_TRANSITION after exact-head retest",
+        "scope": "P1"
+      },
+      {
+        "canonical": "PENDING_WORKER_J_RECONCILIATION",
+        "proposed": "technical inputs only",
+        "scope": "P1A source/native"
+      },
+      {
+        "canonical": "PENDING_WORKER_J_RECONCILIATION",
+        "proposed": "technical inputs only; behavior blocked",
+        "scope": "P2 source"
+      }
+    ],
+    "worker_b_review": "PENDING"
+  }
+}
