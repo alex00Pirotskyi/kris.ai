@@ -1,7 +1,7 @@
 # PR #14 recovery control: exact run and attempt pinning
 
-**Recorded:** 2026-08-05  
-**Human roadmap authority:** `docs/roadmap/MASTER.md`  
+**Recorded:** 2026-08-05
+**Human roadmap authority:** `docs/roadmap/MASTER.md`
 **Repository:** `alex00Pirotskyi/kris.ai`
 
 ## Objective
