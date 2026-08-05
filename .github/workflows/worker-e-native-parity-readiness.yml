@@ -42,6 +42,32 @@ jobs:
           cmp "${RUNNER_TEMP}/test-center.first.json" config/test_center_registry.v1.json
           python tool/worker_e_test_center_registration.py --check --project .
 
+      - name: Refresh Worker E artifact binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          manifest_path = Path("release/evidence/P11-001/manifest.json")
+          workflow_path = Path(".github/workflows/worker-e-native-parity-readiness.yml")
+          data = json.loads(manifest_path.read_text(encoding="utf-8"))
+          workflow_bytes = workflow_path.read_bytes()
+          for artifact in data["artifacts"]:
+              if artifact["path"] == workflow_path.as_posix():
+                  artifact["bytes"] = len(workflow_bytes)
+                  artifact["sha256"] = hashlib.sha256(workflow_bytes).hexdigest()
+                  break
+          else:
+              raise SystemExit("Worker E workflow artifact binding is missing")
+          manifest_path.write_text(
+              json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
       - name: Generate canonical source manifest twice
         shell: bash
         run: |
@@ -56,15 +82,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- config/test_center_registry.v1.json SOURCE_MANIFEST.sha256; then
+          if git diff --quiet -- config/test_center_registry.v1.json release/evidence/P11-001/manifest.json SOURCE_MANIFEST.sha256; then
             echo "refreshed=false" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add config/test_center_registry.v1.json SOURCE_MANIFEST.sha256
+          git add config/test_center_registry.v1.json release/evidence/P11-001/manifest.json SOURCE_MANIFEST.sha256
           git diff --cached --check
-          git commit -m "chore: register Worker E and refresh source manifest"
+          git commit -m "chore: bind Worker E evidence and refresh source manifest"
           git push origin "HEAD:${GITHUB_REF_NAME}"
           echo "refreshed=true" >> "${GITHUB_OUTPUT}"
 
@@ -129,9 +155,7 @@ jobs:
 
       - name: Run Worker E semantic regressions
         shell: bash
-        run: python -m unittest -v \
-            tool/worker_e_native_parity_readiness_test.py \
-            tool/worker_e_test_center_registration_test.py
+        run: python -m unittest -v tool/worker_e_native_parity_readiness_test.py tool/worker_e_test_center_registration_test.py
 
       - name: Run Worker E readiness validator
         shell: bash
