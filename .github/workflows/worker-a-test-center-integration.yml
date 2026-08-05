@@ -123,9 +123,12 @@ jobs:
         with:
           python-version-file: config/p2.python-version
           check-latest: false
-      - name: Generate canonical source manifest
+      - id: manifest
+        name: Generate canonical source manifest and detect drift
         shell: bash
         run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain)"
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first.sha256"
           FIRST=$(sha256sum SOURCE_MANIFEST.sha256 | cut -d' ' -f1)
@@ -135,6 +138,13 @@ jobs:
           cmp "$RUNNER_TEMP/source-manifest-first.sha256" SOURCE_MANIFEST.sha256
           SECOND=$(sha256sum SOURCE_MANIFEST.sha256 | cut -d' ' -f1)
           test "$FIRST" = "$SECOND"
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            CURRENT=true
+          else
+            CURRENT=false
+          fi
+          echo "committed_current=$CURRENT" >> "$GITHUB_OUTPUT"
+          git diff --check
           test -z "$(git status --porcelain | grep -v '^ M SOURCE_MANIFEST.sha256$' || true)"
           TREE=$(git show -s --format=%T HEAD)
           COUNT=$(wc -l < SOURCE_MANIFEST.sha256 | tr -d ' ')
@@ -149,6 +159,7 @@ jobs:
             'entryCount':int('${COUNT}'),
             'idempotent':True,
             'checkModeNonMutating':True,
+            'committedManifestCurrent':'${CURRENT}' == 'true',
           }, indent=2, sort_keys=True)+'\n', encoding='utf-8')
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -159,3 +170,11 @@ jobs:
             source-manifest-metadata.json
           if-no-files-found: error
           retention-days: 30
+      - name: Enforce committed source manifest currency
+        shell: bash
+        run: |
+          rm source-manifest-metadata.json
+          test '${{ steps.manifest.outputs.committed_current }}' = 'true'
+          git diff --exit-code -- SOURCE_MANIFEST.sha256
+          git diff --check
+          test -z "$(git status --porcelain)"
