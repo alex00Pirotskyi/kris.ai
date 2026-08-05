@@ -215,3 +215,70 @@ class AnarchyControlPlanePathAndTestContractTest(unittest.TestCase):
                 "p2_source_inflation",
             }
             self.assertFalse(forbidden & issue_codes(state), [issue.as_dict() for issue in state.issues])
+
+# Keep the synthetic repository builder aligned with the governed product-test
+# fixture root and the canonical Worker B metadata fields introduced above.
+_p24_build_contract_v1 = build_contract
+
+
+def build_contract() -> dict[str, object]:
+    result = _p24_build_contract_v1()
+    records = result.get("taskRecords")
+    if isinstance(records, list):
+        for raw in records:
+            if not isinstance(raw, dict):
+                continue
+            raw.setdefault("testAssuranceClass", "source_contract")
+            raw.setdefault("testFailureClassification", "NONE")
+            raw.setdefault(
+                "testResultReason",
+                "Synthetic source-contract observation; no completion or support promotion is inferred.",
+            )
+    return result
+
+
+_p24_valid_claim_v1 = valid_claim
+
+
+def valid_claim() -> dict[str, object]:
+    result = _p24_valid_claim_v1()
+    result["nextAction"] = "Inspect the exact-head tri-OS CI and repair only proven P24 defects."
+    return result
+
+
+_p24_build_repository_v1 = build_repository
+
+
+def build_repository(root: Path) -> None:
+    original_copytree = shutil.copytree
+    retired = root / "test/anarchy_control_plane/fixtures"
+    governed = root / "test/product/anarchy_control_plane/fixtures"
+
+    def redirect_copytree(src, dst, *args, **kwargs):
+        destination = Path(dst)
+        if destination == retired:
+            destination = governed
+        return original_copytree(src, destination, *args, **kwargs)
+
+    with mock.patch.object(shutil, "copytree", side_effect=redirect_copytree):
+        _p24_build_repository_v1(root)
+
+
+def _test_scoped_schema_preserves_worker_b_exact_reference(self) -> None:
+    schema = read_json(ROOT / "schemas/anarchy_execution.schema.json")
+    self.assertFalse(schema["x-scope"]["testCenterReplacement"])
+    self.assertFalse(schema["x-scope"]["roadmapAuthorityReplacement"])
+    result_reference = schema["$defs"]["testExecutionResultReference"]
+    certification_reference = schema["$defs"]["certificationStatusReference"]
+    self.assertEqual(result_reference["x-canonical-owner"], "Worker B")
+    self.assertEqual(result_reference["x-shared-contract-state"], "EXACT_VERSION_REFERENCE")
+    self.assertEqual(certification_reference["x-shared-contract-state"], "EXACT_VERSION_REFERENCE")
+    self.assertIn(
+        "5e093094bfb8287e70e684026ac88542a221016d",
+        result_reference["x-external-contract"],
+    )
+
+
+AnarchyControlPlaneTest.test_scoped_schema_preserves_worker_b_ownership = (
+    _test_scoped_schema_preserves_worker_b_exact_reference
+)
