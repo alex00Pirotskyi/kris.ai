@@ -1,6 +1,7 @@
 name: P4-001 Stage 2 Evidence Blob Capture Retry
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - .github/workflows/p4-001-stage2-capture-retry.yml
