@@ -1,126 +1,139 @@
-name: TEMP PR14 Source Contract Repair V6
+name: TEMP PR14 Exact Run Approval V7
 
 on:
   push:
     branches: [ci/pr14-source-contract-repair-20260805]
 
 permissions:
-  contents: write
+  actions: write
+  contents: read
 
 concurrency:
-  group: temp-pr14-source-contract-repair-v6
+  group: temp-pr14-exact-run-approval-v7
   cancel-in-progress: false
 
 jobs:
-  repair:
+  approve-exact-pr-runs:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 15
     env:
-      TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
-      EXPECTED_HEAD: bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b
-      EXPECTED_TREE: 181671cace704b3dd1b10496c02b20d006533515
-      PROGRESS_PATH: docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md
-      TEST_PATH: test/product/source_contract_test.dart
-      PARENT: 9bfcbb7f240ac0af6d87e1acfaae28f4f433e0e5
-      WORKFLOW: .github/workflows/temp-pr14-source-contract-repair-v2.yml
-      V5_CONTROLLER: ef46e7e661debb93356ee66633d66bc956913769
+      EXPECTED_HEAD: 227f1cbfe1c044c4eb4310e872d3aff5b5721615
+      EXPECTED_PR: '14'
+      RUN_IDS: >-
+        30991734224 30991734199 30991734215 30991734241
+        30991734306 30991734270 30991734546 30991734700
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with: {ref: '${{ github.sha }}', fetch-depth: 0, persist-credentials: false, path: control}
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with: {ref: merge/p1-p2-owner-risk-qa-preview, fetch-depth: 0, persist-credentials: true, path: target}
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with: {python-version: '3.12.10', check-latest: false}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v7.0.0
-        with: {node-version: '24.18.0', check-latest: false}
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.21.0
-        with: {flutter-version: '3.44.8', channel: stable, cache: true}
-      - run: flutter pub get
-        working-directory: target
-
-      - name: Execute whitespace-clean exact-head repair
-        id: repair
-        continue-on-error: true
+      - name: Approve only exact candidate runs
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
           python - <<'PY'
-          import os, subprocess
-          from pathlib import Path
-          raw=subprocess.check_output(['git','-C','control','show',f"{os.environ['V5_CONTROLLER']}:{os.environ['WORKFLOW']}"],text=True)
-          lines=raw.splitlines(); name='      - name: Execute source-manifest-bound exact-head repair'; start=lines.index(name)
-          run=next(i for i in range(start+1,len(lines)) if lines[i]=='        run: |'); body=[]
-          for line in lines[run+1:]:
-              if line.startswith('      - name: ') or line.startswith('      - uses: '): break
-              body.append('' if not line else line[10:])
-          script='\n'.join(body)+'\n'
-          needle='''  test "$candidate_format_rc" -eq 0
-
-            python tool/p2_refresh_source_manifest.py .'''
-          replacement=r'''  test "$candidate_format_rc" -eq 0
-
-            python - <<'PY_V6_DOC'
-          from pathlib import Path
+          import json
           import os
-          path=Path(os.environ['PROGRESS_PATH'])
-          value=path.read_text(encoding='utf-8')
-          heading='\n## Formatter and compatibility impact\n'
-          section="""\n## Failed-closed staged-whitespace correction\n\nController run `30990878896` passed all substantive source, Flutter, P1, P2, automation-host, roadmap, generated-state, governance, and non-mutating verification gates. It then failed closed at `git diff --cached --check` because the generated progress header used four Markdown hard-break lines with trailing spaces. Artifact `8924108162` has archive digest `sha256:68d2713ac9b550055c1038b7ab2f41e57bf192cf4a57fa12c025d67ed8e73248`; all 36 recorded commands exited zero, including affected-test hash `f4cebfd453355a13de543d7c4ee403f1fc98662c303af2547ce3aaca6dc16e3b` and full-suite hash `b10223a2088b68c02628460f03d4de73e6fd87aab3217f0c5a34c8e178ab923e`. No candidate commit or branch update occurred. V6 strips trailing whitespace from the progress document before refreshing the source manifest and taking the immutable verification snapshot.\n"""
-          if value.count(heading)!=1: raise SystemExit(f'whitespace-section anchor count={value.count(heading)}')
-          value=value.replace(heading,section+heading,1)
-          value='\n'.join(line.rstrip() for line in value.splitlines())+'\n'
-          path.write_text(value,encoding='utf-8',newline='\n')
-          PY_V6_DOC
-
-            python tool/p2_refresh_source_manifest.py .'''
-          if script.count(needle)!=1: raise SystemExit(f'v6 insertion anchor count={script.count(needle)}')
-          script=script.replace(needle,replacement,1)
-          out=Path(os.environ['RUNNER_TEMP'])/'repair-v6.sh'; out.write_text(script,encoding='utf-8',newline='\n'); out.chmod(0o700)
-          PY
-          bash "$RUNNER_TEMP/repair-v6.sh"
-
-      - name: Build receipt
-        if: always()
-        shell: bash
-        run: |
-          python - <<'PY'
-          import json,os
+          import time
+          import urllib.error
+          import urllib.request
           from pathlib import Path
-          r=Path(os.environ['RUNNER_TEMP'])
-          def read(n):
-              p=r/n; return p.read_text().strip() if p.exists() else ''
-          commands=[]
-          if (r/'command-results.tsv').exists():
-              for line in (r/'command-results.tsv').read_text().splitlines():
-                  n,rc,h=line.split('\t'); commands.append({'name':n,'exitCode':int(rc),'outputSha256':h})
-          p={'runId':os.environ['GITHUB_RUN_ID'],'controller':os.environ['GITHUB_SHA'],'expectedHead':os.environ['EXPECTED_HEAD'],'expectedTree':os.environ['EXPECTED_TREE'],'repairRc':int('${{ steps.repair.outputs.repair_rc }}' or '255'),'candidateCommit':read('candidate-commit.txt'),'candidateTree':read('candidate-tree.txt'),'refUpdated':read('ref-updated.txt')=='true','changedPaths':read('changed-paths.txt').splitlines() if read('changed-paths.txt') else [],'commands':commands,'completionClaim':False,'behavioralEvidenceClaim':False,'workerCBranchTouched':False}
-          (r/'repair-status.json').write_text(json.dumps(p,indent=2,sort_keys=True)+'\n'); print(json.dumps(p,indent=2,sort_keys=True))
+
+          repository = os.environ['GITHUB_REPOSITORY']
+          expected_head = os.environ['EXPECTED_HEAD']
+          expected_pr = int(os.environ['EXPECTED_PR'])
+          run_ids = [int(value) for value in os.environ['RUN_IDS'].split()]
+          token = os.environ['GITHUB_TOKEN']
+          base = f'https://api.github.com/repos/{repository}'
+          headers = {
+              'Accept': 'application/vnd.github+json',
+              'Authorization': f'Bearer {token}',
+              'X-GitHub-Api-Version': '2026-03-10',
+              'User-Agent': 'kristin-worker-a-exact-run-approval-v7',
+          }
+
+          def request(path: str, method: str = 'GET'):
+              req = urllib.request.Request(base + path, method=method, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as response:
+                      body = response.read()
+                      decoded = json.loads(body) if body else None
+                      return response.status, decoded
+              except urllib.error.HTTPError as exc:
+                  body = exc.read().decode('utf-8', errors='replace')
+                  raise RuntimeError(
+                      f'{method} {path} failed status={exc.code} body={body[:1000]}'
+                  ) from exc
+
+          receipts = []
+          for run_id in run_ids:
+              status, run = request(f'/actions/runs/{run_id}')
+              assert status == 200, (run_id, status)
+              assert run['head_sha'] == expected_head, (run_id, run['head_sha'])
+              assert run['head_branch'] == 'merge/p1-p2-owner-risk-qa-preview', run_id
+              assert run['event'] == 'pull_request', (run_id, run['event'])
+              pr_numbers = sorted(item['number'] for item in run.get('pull_requests', []))
+              assert pr_numbers == [expected_pr], (run_id, pr_numbers)
+              before = {
+                  'status': run['status'],
+                  'conclusion': run['conclusion'],
+                  'workflow': run['name'],
+                  'path': run['path'],
+              }
+              approval_status = None
+              if run['status'] == 'completed' and run['conclusion'] == 'action_required':
+                  approval_status, _ = request(f'/actions/runs/{run_id}/approve', 'POST')
+                  assert approval_status == 201, (run_id, approval_status)
+              else:
+                  assert run['conclusion'] != 'action_required', (run_id, before)
+
+              after = None
+              for _ in range(15):
+                  _, after = request(f'/actions/runs/{run_id}')
+                  if not (
+                      after['status'] == 'completed'
+                      and after['conclusion'] == 'action_required'
+                  ):
+                      break
+                  time.sleep(2)
+              assert after is not None
+              assert after['head_sha'] == expected_head
+              receipts.append({
+                  'runId': run_id,
+                  'workflow': run['name'],
+                  'path': run['path'],
+                  'before': before,
+                  'approvalStatus': approval_status,
+                  'after': {
+                      'status': after['status'],
+                      'conclusion': after['conclusion'],
+                      'runAttempt': after['run_attempt'],
+                  },
+              })
+
+          payload = {
+              'schemaVersion': '1.0.0',
+              'repository': repository,
+              'pullRequest': expected_pr,
+              'candidateHead': expected_head,
+              'controllerCommit': os.environ['GITHUB_SHA'],
+              'workflowRunId': os.environ['GITHUB_RUN_ID'],
+              'runs': receipts,
+              'allExact': True,
+              'protectionsWeakened': False,
+              'completionClaim': False,
+          }
+          output = Path(os.environ['RUNNER_TEMP']) / 'exact-run-approval-receipt.json'
+          output.write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          print(json.dumps(payload, indent=2, sort_keys=True))
           PY
-      - name: Upload receipt
+
+      - name: Upload exact approval receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: pr14-source-contract-repair-v6-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/repair-status.json
-            ${{ runner.temp }}/repair.log
-            ${{ runner.temp }}/candidate-format.log
-            ${{ runner.temp }}/command-results.tsv
-            ${{ runner.temp }}/command-logs
-            ${{ runner.temp }}/changed-paths.txt
-            ${{ runner.temp }}/local-governance-results.json
-            ${{ runner.temp }}/repair-v6.sh
+          name: pr14-exact-run-approval-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/exact-run-approval-receipt.json
           if-no-files-found: error
           retention-days: 90
-      - name: Enforce receipt
-        if: always()
-        shell: bash
-        run: |
-          python - <<'PY'
-          import json,os
-          from pathlib import Path
-          p=json.loads((Path(os.environ['RUNNER_TEMP'])/'repair-status.json').read_text())
-          assert p['repairRc']==0 and p['candidateCommit'] and p['candidateTree'] and p['refUpdated'],p
-          assert p['changedPaths']==['SOURCE_MANIFEST.sha256','docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md','test/product/source_contract_test.dart'],p
-          assert p['commands'] and all(x['exitCode']==0 for x in p['commands']),p
-          PY
