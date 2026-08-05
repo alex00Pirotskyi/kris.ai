@@ -1,0 +1,14 @@
+name: Worker F bootstrap
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo connected-bootstrap
