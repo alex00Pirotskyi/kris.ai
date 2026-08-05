@@ -1,0 +1,423 @@
+name: TEMP PR14 Source Contract Repair V2
+
+on:
+  push:
+    branches:
+      - ci/pr14-source-contract-repair-20260805
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-pr14-source-contract-repair-v2
+  cancel-in-progress: false
+
+jobs:
+  repair-pr14-source-contracts:
+    name: repair-pr14-source-contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      TARGET_BRANCH: merge/p1-p2-owner-risk-qa-preview
+      EXPECTED_HEAD: bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b
+      EXPECTED_TREE: 98855292814eb94e452cceb6205869b60ff07268
+      PROGRESS_PATH: docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md
+      TEST_PATH: test/product/source_contract_test.dart
+    steps:
+      - name: Check out exact PR14 target
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: merge/p1-p2-owner-risk-qa-preview
+          fetch-depth: 0
+          persist-credentials: true
+          path: target
+
+      - name: Set up exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Set up exact Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v7.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+
+      - name: Set up exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.21.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+
+      - name: Patch and validate exact live PR14 head
+        id: repair
+        shell: bash
+        run: |
+          set +e
+          (
+            set -euo pipefail
+            cd target
+            git config core.autocrlf false
+            git fetch origin "$TARGET_BRANCH"
+            test "$(git branch --show-current)" = "$TARGET_BRANCH"
+            test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+            test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+            test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
+            test -z "$(git status --porcelain)"
+
+            python - <<'PY_PATCH'
+          import os
+          from pathlib import Path
+
+          test_path = Path(os.environ['TEST_PATH'])
+          value = test_path.read_text(encoding='utf-8')
+
+          old_inventory_assertions = '''      expect(migration, contains("'ui_advanced.dart'"));
+                expect(migration, contains("'ui_components.dart'"));'''
+          new_inventory_assertions = '''      final inventory = sourceJsonObject('config/p2_source_inventory.v1.json');
+                final productionDart = (inventory['productionDart'] as List)
+                    .whereType<String>()
+                    .toSet();
+                expect(
+                  productionDart,
+                  containsAll(<String>[
+                    'lib/product/ui_advanced.dart',
+                    'lib/product/ui_components.dart',
+                  ]),
+                );'''
+          if value.count(old_inventory_assertions) != 1:
+              raise SystemExit(
+                  'stale UI inventory assertion anchor count: '
+                  f'{value.count(old_inventory_assertions)}'
+              )
+
+          old_dynamic_assertion = '''        final migration = source('tool/prune_stale_legacy.dart');
+                  expect(migration, contains('_allowedDartFiles.contains(relative)'));'''
+          new_dynamic_assertion = '''        final migration = source('tool/prune_stale_legacy.dart');
+                  expect(
+                    migration,
+                    contains('final allowedDartFiles = _governedDartFiles(root);'),
+                  );
+                  expect(migration, contains('allowedDartFiles.contains(relative)'));'''
+          if value.count(old_dynamic_assertion) != 1:
+              raise SystemExit(
+                  'stale dynamic inventory assertion anchor count: '
+                  f'{value.count(old_dynamic_assertion)}'
+              )
+
+          value = value.replace(
+              old_inventory_assertions,
+              new_inventory_assertions,
+              1,
+          ).replace(
+              old_dynamic_assertion,
+              new_dynamic_assertion,
+              1,
+          )
+          test_path.write_text(value, encoding='utf-8', newline='\n')
+
+          run_id = os.environ.get('GITHUB_RUN_ID', 'unknown')
+          run_attempt = os.environ.get('GITHUB_RUN_ATTEMPT', 'unknown')
+          progress = f'''# P2 PR #14 source-contract regression closure
+
+          **Recorded:** 2026-08-05  
+          **Worker:** A  
+          **Roadmap authority:** `docs/roadmap/MASTER.md`  
+          **Machine authority:** `docs/roadmap/roadmap.yaml`  
+          **Controller run:** `{run_id}`, attempt `{run_attempt}`
+
+          ## Exact repository state
+
+          - Protected base `main`: `de8dc3bcde31356b490c32b7d60bb373d9fa68ed`
+          - Protected base tree: `f7c295b5bafa366e19af78fd49b90445d6f766fc`
+          - PR #14 branch: `merge/p1-p2-owner-risk-qa-preview`
+          - Exact pre-repair head and candidate parent: `bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b`
+          - Exact pre-repair tree: `98855292814eb94e452cceb6205869b60ff07268`
+          - Pre-repair parent: `5e496d9348ae32213b06c55099b76751e7e835d0`
+          - Pre-repair parent tree: `181671cace704b3dd1b10496c02b20d006533515`
+          - Current PR synthetic merge tested by Actions: `24189051ccef3fa26cd15428b83058443ccb0230`
+
+          ## Roadmap authorization
+
+          `MASTER.md` requires P2 to deliver a complete, tri-platform Owner Mode vertical slice while preserving truthful evidence and non-mutating verification. P0-010 additionally requires standard verification to remain source-clean. This repair is limited to the stale source-contract assertions that prevent the already-implemented governed inventory architecture from reaching the P2 landing gates.
+
+          ## Failure evidence and root cause
+
+          Product workflow `30985513818` failed identically in the Windows, macOS, and Ubuntu product jobs during `flutter test --no-pub --concurrency=1 --reporter expanded`. P2 source workflow `30985513862` reproduced the same two failures; its Ubuntu job was `92241780114`, macOS job `92241780185`, and Windows job `92241780173`.
+
+          The failing tests were:
+
+          1. `security invariants Windows verification migrates stale legacy code safely`;
+          2. `product completeness Windows launchers avoid stale overlays and PowerShell-only entry points`.
+
+          The implementation correctly changed stale-source protection from a fixed literal-only allowlist to `_governedDartFiles(root)`, which validates and unions `config/p2_source_inventory.v1.json` with `SOURCE_MANIFEST.sha256`, then checks `allowedDartFiles.contains(relative)`. Two legacy assertions still required obsolete source text: bare `ui_advanced.dart`/`ui_components.dart` literals and `_allowedDartFiles.contains(relative)`. This was a stale-test regression, not a product defect and not a platform-specific failure.
+
+          ## Minimal repair and permanent regression coverage
+
+          The production implementation and interfaces are unchanged. The test now:
+
+          - verifies `lib/product/ui_advanced.dart` and `lib/product/ui_components.dart` through the governed P2 source inventory itself;
+          - verifies construction through `_governedDartFiles(root)` and consumption through `allowedDartFiles.contains(relative)`;
+          - retains fail-closed, quarantine, rename-only, and no-delete assertions.
+
+          Changed target paths are intentionally limited to:
+
+          1. `test/product/source_contract_test.dart`;
+          2. `docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md`;
+          3. `SOURCE_MANIFEST.sha256` refreshed by `python tool/p2_refresh_source_manifest.py .`.
+
+          ## Verification
+
+          The exact-SHA controller commits only after every listed command exits zero. Per-command exit codes and SHA-256 output hashes are retained in the workflow artifact alongside the complete logs:
+
+          - exact hash-locked Python bootstrap;
+          - `flutter pub get`;
+          - all current generated-contract `--check` gates;
+          - governed `python tool/dart_format_scope.py --check`;
+          - fatal Flutter analysis;
+          - the exact affected source-contract test;
+          - the complete Flutter suite;
+          - P2 inventory, evidence, runtime-resource, shared-P1A, runner-attestation, cleanup, strict-finalizer, and task-assertion gates;
+          - automation-host install and tests;
+          - integration-train, P1 exit, P0 repair, roadmap, generated-state, governance, and Git whitespace gates;
+          - before/after working-tree comparison proving automatic verification did not mutate the intended source delta.
+
+          ## Formatter and compatibility impact
+
+          The live P2 workflow already uses `python tool/dart_format_scope.py --check` and finishes with `git diff --exit-code`; no broad generator-mutating formatter remains in this path. Generated Dart remains generator-owned. This repair changes no API, wire format, persistence schema, runtime composition, platform adapter, or Owner Mode authority behavior.
+
+          ## Concurrent and parallel work
+
+          Legitimate commits through `bdfec2232cc1718e8b160e7e2fe5c4374fd4b42b` are preserved. The controller checks the target head and tree before editing, again before committing, and again before non-force push. Any concurrent branch movement fails closed. Worker C branch `agent/p4-001-search-provider-foundation` is not read, modified, rebased, reset, or merged.
+
+          ## Claim boundary and remaining risks
+
+          This commit is source-stage repair evidence only. It does not mark P2 complete, does not convert hosted source checks into behavioral proof, and does not claim GA, signed-installer readiness, production readiness, independent penetration testing, P3, browser, or P4 completion. P2 remains incomplete until the exact landing commit passes protected checks and the roadmap-required Windows, macOS, and Linux controlled behavioral certification, acceptance scenario, cleanup/process-kill receipts, evidence aggregation, and independent AI review.
+
+          ## Merge and next dependency-controlled action
+
+          Require fresh checks on the exact candidate commit, then merge PR #14 only through the protected repository policy. After protected landing, dispatch the exact P2 behavioral workflow against that landing SHA and source digest. Only after all mandatory platform receipts and final aggregation pass may the P2 status and handoff be advanced. The first dependency-satisfied P3 task may then be identified but is not implemented by this work.
+          '''
+          progress = '\n'.join(line[10:] if line.startswith('          ') else line for line in progress.splitlines()) + '\n'
+          progress_path = Path(os.environ['PROGRESS_PATH'])
+          progress_path.parent.mkdir(parents=True, exist_ok=True)
+          progress_path.write_text(progress, encoding='utf-8', newline='\n')
+          PY_PATCH
+
+            python tool/p2_refresh_source_manifest.py .
+
+            mkdir -p "$RUNNER_TEMP/command-logs"
+            : > "$RUNNER_TEMP/command-results.tsv"
+
+            run_step() {
+              local name="$1"
+              shift
+              local log="$RUNNER_TEMP/command-logs/${name}.log"
+              set +e
+              "$@" 2>&1 | tee "$log"
+              local rc=${PIPESTATUS[0]}
+              set -e
+              local digest
+              digest="$(python - "$log" <<'PY_HASH'
+          import hashlib
+          import sys
+          from pathlib import Path
+          print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
+          PY_HASH
+          )"
+              printf '%s\t%s\t%s\n' "$name" "$rc" "$digest" >> "$RUNNER_TEMP/command-results.tsv"
+              test "$rc" -eq 0
+            }
+
+            git diff --binary > "$RUNNER_TEMP/intentional-before.patch"
+            git status --porcelain=v1 > "$RUNNER_TEMP/status-before.txt"
+            python - "$PROGRESS_PATH" > "$RUNNER_TEMP/progress-before.sha256" <<'PY_DOC_HASH'
+          import hashlib
+          import sys
+          from pathlib import Path
+          print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
+          PY_DOC_HASH
+
+            run_step bootstrap_python python tool/v71r12_bootstrap_hosted_python.py --project .
+            run_step flutter_pub_get flutter pub get
+            run_step v170_contracts python tool/generate_v170_contracts.py --check
+            run_step v180_contracts python tool/generate_v180_contracts.py --check
+            run_step v190_contracts python tool/generate_v190_contracts.py --check
+            run_step protocol_contracts python tool/protocol_contract_test.py
+            run_step workflow_migrations python tool/generate_workflow_migrations.py --check
+            run_step workflow_kernel python tool/workflow_kernel_test.py --project .
+            run_step prompt_studio_contracts python tool/generate_prompt_studio_contracts.py --check
+            run_step prompt_studio_fixtures python tool/generate_prompt_studio_fixtures.py --check
+            run_step prompt_studio_gate python tool/prompt_studio_v2_test.py
+            run_step format_scope python tool/dart_format_scope.py --check
+            run_step flutter_analyze flutter analyze --no-pub --fatal-warnings --fatal-infos
+            run_step affected_test flutter test --no-pub --concurrency=1 --reporter expanded test/product/source_contract_test.dart
+            run_step full_flutter_suite flutter test --no-pub --concurrency=1 --reporter expanded
+            run_step p2_source_inventory python tool/p2_source_inventory_test.py --project .
+            run_step p2_evidence_contract python tool/p2_evidence_contract_test.py
+            run_step p2_patch_composition python tool/p2_patch_application_composition_test.py
+            run_step p2_runtime_resource python tool/p2_runtime_resource_contract_test.py
+            run_step p2_shared_p1a python tool/p2_shared_p1_authority_contract_test.py --project . --owner-risk-qa
+            run_step p2_runner_attestation python tool/p2_runner_attestation_contract_test.py
+            run_step p2_cleanup_contract python tool/p2_post_run_cleanup_contract_test.py
+            run_step p2_strict_finalizer python tool/p2_strict_finalizer_contract_test.py --project .
+            run_step p2_task_assertions python tool/p2_task_assertion_cli_test.py --project .
+            run_step npm_ci npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
+            run_step npm_test npm test --prefix automation_host
+            run_step integration_train python tool/integration_train_test.py --project .
+            run_step p1_exit python tool/p1_exit_gate_test.py --project .
+            run_step p0_repair python tool/p0_003_repair_test.py
+            run_step roadmap_unit python tool/roadmap_control_test.py
+            run_step roadmap_gate python tool/p0_008_roadmap_test.py --project .
+            run_step roadmap_strict python tool/roadmap_control.py validate --project . --strict
+            run_step generated_state python tool/generated_state_guard.py audit --project . --strict
+            run_step repository_governance python tool/repository_governance_test.py --json-output "$RUNNER_TEMP/local-governance-results.json"
+            run_step git_diff_check git diff --check
+
+            git diff --binary > "$RUNNER_TEMP/intentional-after.patch"
+            git status --porcelain=v1 > "$RUNNER_TEMP/status-after.txt"
+            python - "$PROGRESS_PATH" > "$RUNNER_TEMP/progress-after.sha256" <<'PY_DOC_HASH_AFTER'
+          import hashlib
+          import sys
+          from pathlib import Path
+          print(hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest())
+          PY_DOC_HASH_AFTER
+            cmp "$RUNNER_TEMP/intentional-before.patch" "$RUNNER_TEMP/intentional-after.patch"
+            cmp "$RUNNER_TEMP/status-before.txt" "$RUNNER_TEMP/status-after.txt"
+            cmp "$RUNNER_TEMP/progress-before.sha256" "$RUNNER_TEMP/progress-after.sha256"
+
+            mapfile -t paths < <(
+              {
+                git diff --name-only
+                git ls-files --others --exclude-standard
+              } | LC_ALL=C sort -u
+            )
+            printf '%s\n' "${paths[@]}" | tee "$RUNNER_TEMP/changed-paths.txt"
+            test "${#paths[@]}" -eq 3
+            test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
+            test "${paths[1]}" = "$PROGRESS_PATH"
+            test "${paths[2]}" = "$TEST_PATH"
+
+            git fetch origin "$TARGET_BRANCH"
+            test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
+            git config user.name 'Kristin Worker A'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add SOURCE_MANIFEST.sha256 "$PROGRESS_PATH" "$TEST_PATH"
+            git diff --cached --check
+            git commit -m 'fix(p2): align stale-source regression contracts'
+            candidate_commit="$(git rev-parse HEAD)"
+            candidate_tree="$(git rev-parse HEAD^{tree})"
+            test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
+            mapfile -t committed_paths < <(git diff-tree --no-commit-id --name-only -r HEAD | LC_ALL=C sort)
+            test "${#committed_paths[@]}" -eq 3
+            test "${committed_paths[0]}" = 'SOURCE_MANIFEST.sha256'
+            test "${committed_paths[1]}" = "$PROGRESS_PATH"
+            test "${committed_paths[2]}" = "$TEST_PATH"
+            printf '%s\n' "$candidate_commit" > "$RUNNER_TEMP/candidate-commit.txt"
+            printf '%s\n' "$candidate_tree" > "$RUNNER_TEMP/candidate-tree.txt"
+
+            git fetch origin "$TARGET_BRANCH"
+            test "$(git rev-parse origin/$TARGET_BRANCH)" = "$EXPECTED_HEAD"
+            git push origin "$candidate_commit:refs/heads/$TARGET_BRANCH"
+            test "$(git ls-remote origin refs/heads/$TARGET_BRANCH | awk '{print $1}')" = "$candidate_commit"
+            printf '%s\n' true > "$RUNNER_TEMP/ref-updated.txt"
+          ) > "$RUNNER_TEMP/repair.log" 2>&1
+          repair_rc=$?
+          echo "repair_rc=$repair_rc" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/repair.log"
+          exit 0
+
+      - name: Build exact repair receipt
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY_STATUS'
+          import json
+          import os
+          from pathlib import Path
+
+          runner_temp = Path(os.environ['RUNNER_TEMP'])
+
+          def read(name: str) -> str:
+              path = runner_temp / name
+              return path.read_text(encoding='utf-8').strip() if path.exists() else ''
+
+          commands = []
+          results_path = runner_temp / 'command-results.tsv'
+          if results_path.exists():
+              for line in results_path.read_text(encoding='utf-8').splitlines():
+                  name, exit_code, sha256 = line.split('\t')
+                  commands.append({
+                      'name': name,
+                      'exitCode': int(exit_code),
+                      'outputSha256': sha256,
+                  })
+
+          payload = {
+              'schemaVersion': '1.0.0',
+              'roadmapAuthority': 'docs/roadmap/MASTER.md',
+              'repository': os.environ.get('GITHUB_REPOSITORY', ''),
+              'workflowRunId': os.environ.get('GITHUB_RUN_ID', ''),
+              'workflowRunAttempt': os.environ.get('GITHUB_RUN_ATTEMPT', ''),
+              'targetBranch': os.environ['TARGET_BRANCH'],
+              'expectedHead': os.environ['EXPECTED_HEAD'],
+              'expectedTree': os.environ['EXPECTED_TREE'],
+              'repairRc': int('${{ steps.repair.outputs.repair_rc }}' or '255'),
+              'candidateCommit': read('candidate-commit.txt'),
+              'candidateTree': read('candidate-tree.txt'),
+              'refUpdatedByAction': read('ref-updated.txt') == 'true',
+              'changedPaths': read('changed-paths.txt').splitlines() if read('changed-paths.txt') else [],
+              'commands': commands,
+              'completionClaim': False,
+              'behavioralEvidenceClaim': False,
+              'workerCBranchTouched': False,
+          }
+          (runner_temp / 'repair-status.json').write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          print(json.dumps(payload, indent=2, sort_keys=True))
+          PY_STATUS
+
+      - name: Upload exact repair evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr14-source-contract-repair-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/repair-status.json
+            ${{ runner.temp }}/repair.log
+            ${{ runner.temp }}/command-results.tsv
+            ${{ runner.temp }}/command-logs
+            ${{ runner.temp }}/changed-paths.txt
+            ${{ runner.temp }}/local-governance-results.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce successful exact-head repair
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY_ENFORCE'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(
+              (Path(os.environ['RUNNER_TEMP']) / 'repair-status.json').read_text()
+          )
+          assert payload['repairRc'] == 0, payload
+          assert payload['candidateCommit'], payload
+          assert payload['candidateTree'], payload
+          assert payload['refUpdatedByAction'] is True, payload
+          assert payload['changedPaths'] == [
+              'SOURCE_MANIFEST.sha256',
+              'docs/roadmap/progress/2026-08-05-p2-pr14-source-contract-regression-closure.md',
+              'test/product/source_contract_test.dart',
+          ], payload
+          assert payload['commands'], payload
+          assert all(item['exitCode'] == 0 for item in payload['commands']), payload
+          PY_ENFORCE
