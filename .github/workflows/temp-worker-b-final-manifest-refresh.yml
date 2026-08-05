@@ -1,0 +1,49 @@
+name: TEMP Worker B Final Manifest Refresh
+
+on:
+  push:
+    branches:
+      - agent/b/test-center-contracts-and-review
+    paths:
+      - .github/workflows/temp-worker-b-final-manifest-refresh.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-and-remove-self:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Remove temporary controller and publish canonical manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 'c14552ea17d6710c1eb2ef557e163f7a2d1333e0'
+          git rm .github/workflows/temp-worker-b-final-manifest-refresh.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first.sha256"
+          python tool/test_center_contracts.py check --project .
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest-first.sha256" SOURCE_MANIFEST.sha256
+          git diff --check
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          test "${#paths[@]}" -eq 2
+          test "${paths[0]}" = '.github/workflows/temp-worker-b-final-manifest-refresh.yml'
+          test "${paths[1]}" = 'SOURCE_MANIFEST.sha256'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'ci: refresh Worker B final source manifest'
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD | LC_ALL=C sort | tr '\n' ' ')" = '.github/workflows/temp-worker-b-final-manifest-refresh.yml SOURCE_MANIFEST.sha256 '
+          git push origin HEAD:refs/heads/agent/b/test-center-contracts-and-review
