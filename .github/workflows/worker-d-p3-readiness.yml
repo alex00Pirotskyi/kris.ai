@@ -1,73 +1,66 @@
-name: Worker D Base Sync
+name: Worker D P3 Readiness
 
 on:
   push:
     branches:
       - agent/d/p3-readiness-fixtures
+  pull_request:
+    branches:
+      - agent/b/test-center-contracts-and-review
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: worker-d-base-sync
+  group: worker-d-p3-readiness-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  synchronize:
-    if: ${{ github.actor != 'github-actions[bot]' }}
-    runs-on: ubuntu-24.04
+  source-readiness:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux
+          - os: macos-15
+            platform: macos
+          - os: windows-2025
+            platform: windows
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: agent/d/p3-readiness-fixtures
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version-file: config/p2.python-version
           check-latest: false
-      - name: Merge current Worker B base
+      - name: Worker D unit tests
+        run: python -m unittest -v tool/worker_d_p3_readiness_test.py
+      - name: Worker D non-mutating check
+        run: python tool/worker_d_p3_readiness.py --check --project .
+      - name: Canonical Test Center
+        run: python tool/test_center_contracts.py check --project .
+      - name: Affected selection is order independent
         shell: bash
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git fetch origin agent/b/test-center-contracts-and-review
-          set +e
-          git merge --no-commit --no-ff origin/agent/b/test-center-contracts-and-review
-          MERGE_STATUS=$?
-          set -e
-          if [ "$MERGE_STATUS" -ne 0 ]; then
-            CONFLICTS=$(git diff --name-only --diff-filter=U)
-            test "$CONFLICTS" = "SOURCE_MANIFEST.sha256"
-            git checkout --ours SOURCE_MANIFEST.sha256
-            git add SOURCE_MANIFEST.sha256
-          fi
-      - name: Generate manifest for final read-only workflow
+          A=$(python tool/test_center_contracts.py select-affected --project . release/evidence/P3-001/fixture-specification.json tool/worker_d_p3_readiness.py)
+          B=$(python tool/test_center_contracts.py select-affected --project . tool/worker_d_p3_readiness.py release/evidence/P3-001/fixture-specification.json)
+          test "$A" = "$B"
+      - name: Source manifest owner is deterministic
         shell: bash
-        env:
-          FINAL_WORKFLOW_BASE64: bmFtZTogV29ya2VyIEQgUDMgUmVhZGluZXNzCgpvbjoKICBwdXNoOgogICAgYnJhbmNoZXM6CiAgICAgIC0gYWdlbnQvZC9wMy1yZWFkaW5lc3MtZml4dHVyZXMKICBwdWxsX3JlcXVlc3Q6CiAgICBicmFuY2hlczoKICAgICAgLSBhZ2VudC9iL3Rlc3QtY2VudGVyLWNvbnRyYWN0cy1hbmQtcmV2aWV3CiAgd29ya2Zsb3dfZGlzcGF0Y2g6CgpwZXJtaXNzaW9uczoKICBjb250ZW50czogcmVhZAoKY29uY3VycmVuY3k6CiAgZ3JvdXA6IHdvcmtlci1kLXAzLXJlYWRpbmVzcy0ke3sgZ2l0aHViLndvcmtmbG93IH19LSR7eyBnaXRodWIucmVmIH19CiAgY2FuY2VsLWluLXByb2dyZXNzOiB0cnVlCgpqb2JzOgogIHNvdXJjZS1yZWFkaW5lc3M6CiAgICBzdHJhdGVneToKICAgICAgZmFpbC1mYXN0OiBmYWxzZQogICAgICBtYXRyaXg6CiAgICAgICAgaW5jbHVkZToKICAgICAgICAgIC0gb3M6IHVidW50dS0yNC4wNAogICAgICAgICAgICBwbGF0Zm9ybTogbGludXgKICAgICAgICAgIC0gb3M6IG1hY29zLTE1CiAgICAgICAgICAgIHBsYXRmb3JtOiBtYWNvcwogICAgICAgICAgLSBvczogd2luZG93cy0yMDI1CiAgICAgICAgICAgIHBsYXRmb3JtOiB3aW5kb3dzCiAgICBydW5zLW9uOiAke3sgbWF0cml4Lm9zIH19CiAgICB0aW1lb3V0LW1pbnV0ZXM6IDIwCiAgICBzdGVwczoKICAgICAgLSB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QDNkM2M0MmU1YWFjNWJhODA1ODI1ZGE3NjQxMGMxODEyNzNiYTkwYjEKICAgICAgICB3aXRoOgogICAgICAgICAgZmV0Y2gtZGVwdGg6IDAKICAgICAgICAgIHBlcnNpc3QtY3JlZGVudGlhbHM6IGZhbHNlCiAgICAgIC0gdXNlczogYWN0aW9ucy9zZXR1cC1weXRob25ANWZkYTNiOTVhNGVhOTEyOTlhMzRlODk0NTgzYzM4NjIxNTNlNGI5NwogICAgICAgIHdpdGg6CiAgICAgICAgICBweXRob24tdmVyc2lvbi1maWxlOiBjb25maWcvcDIucHl0aG9uLXZlcnNpb24KICAgICAgICAgIGNoZWNrLWxhdGVzdDogZmFsc2UKICAgICAgLSBuYW1lOiBXb3JrZXIgRCB1bml0IHRlc3RzCiAgICAgICAgcnVuOiBweXRob24gLW0gdW5pdHRlc3QgLXYgdG9vbC93b3JrZXJfZF9wM19yZWFkaW5lc3NfdGVzdC5weQogICAgICAtIG5hbWU6IFdvcmtlciBEIG5vbi1tdXRhdGluZyBjaGVjawogICAgICAgIHJ1bjogcHl0aG9uIHRvb2wvd29ya2VyX2RfcDNfcmVhZGluZXNzLnB5IC0tY2hlY2sgLS1wcm9qZWN0IC4KICAgICAgLSBuYW1lOiBDYW5vbmljYWwgVGVzdCBDZW50ZXIKICAgICAgICBydW46IHB5dGhvbiB0b29sL3Rlc3RfY2VudGVyX2NvbnRyYWN0cy5weSBjaGVjayAtLXByb2plY3QgLgogICAgICAtIG5hbWU6IEFmZmVjdGVkIHNlbGVjdGlvbiBpcyBvcmRlciBpbmRlcGVuZGVudAogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBBPSQocHl0aG9uIHRvb2wvdGVzdF9jZW50ZXJfY29udHJhY3RzLnB5IHNlbGVjdC1hZmZlY3RlZCAtLXByb2plY3QgLiByZWxlYXNlL2V2aWRlbmNlL1AzLTAwMS9maXh0dXJlLXNwZWNpZmljYXRpb24uanNvbiB0b29sL3dvcmtlcl9kX3AzX3JlYWRpbmVzcy5weSkKICAgICAgICAgIEI9JChweXRob24gdG9vbC90ZXN0X2NlbnRlcl9jb250cmFjdHMucHkgc2VsZWN0LWFmZmVjdGVkIC0tcHJvamVjdCAuIHRvb2wvd29ya2VyX2RfcDNfcmVhZGluZXNzLnB5IHJlbGVhc2UvZXZpZGVuY2UvUDMtMDAxL2ZpeHR1cmUtc3BlY2lmaWNhdGlvbi5qc29uKQogICAgICAgICAgdGVzdCAiJEEiID0gIiRCIgogICAgICAtIG5hbWU6IFNvdXJjZSBtYW5pZmVzdCBvd25lciBpcyBkZXRlcm1pbmlzdGljCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHB5dGhvbiB0b29sL3AxYV9yZWZyZXNoX3NvdXJjZV9tYW5pZmVzdC5weSAuCiAgICAgICAgICBjcCBTT1VSQ0VfTUFOSUZFU1Quc2hhMjU2ICIkUlVOTkVSX1RFTVAvbWFuaWZlc3QtZmlyc3QiCiAgICAgICAgICBweXRob24gdG9vbC9wMWFfcmVmcmVzaF9zb3VyY2VfbWFuaWZlc3QucHkgLgogICAgICAgICAgY21wICIkUlVOTkVSX1RFTVAvbWFuaWZlc3QtZmlyc3QiIFNPVVJDRV9NQU5JRkVTVC5zaGEyNTYKICAgICAgLSBuYW1lOiBHZW5lcmF0ZWQtc3RhdGUgYW5kIG5vbi1tdXRhdGlvbiBjaGVjawogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBweXRob24gdG9vbC9zb3VyY2VfdHJlZV9wb2xpY3kucHkgY2hlY2sgLS1wcm9qZWN0IC4KICAgICAgICAgIGdpdCBkaWZmIC0tY2hlY2sKICAgICAgICAgIHRlc3QgLXogIiQoZ2l0IHN0YXR1cyAtLXBvcmNlbGFpbiB8IGdyZXAgLXYgJ14gTSBTT1VSQ0VfTUFOSUZFU1Quc2hhMjU2JCcgfHwgdHJ1ZSkiCg==
         run: |
-          python - <<'PY'
-          import base64
-          import os
-          from pathlib import Path
-          Path('.github/workflows/worker-d-p3-readiness.yml').write_bytes(
-              base64.b64decode(os.environ['FINAL_WORKFLOW_BASE64'], validate=True)
-          )
-          PY
           python tool/p1a_refresh_source_manifest.py .
-          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/worker-d-merged-manifest-first"
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest-first"
           python tool/p1a_refresh_source_manifest.py .
-          cmp "$RUNNER_TEMP/worker-d-merged-manifest-first" SOURCE_MANIFEST.sha256
-          git show HEAD:.github/workflows/worker-d-p3-readiness.yml > .github/workflows/worker-d-p3-readiness.yml
-      - name: Validate and publish merged non-workflow state
+          cmp "$RUNNER_TEMP/manifest-first" SOURCE_MANIFEST.sha256
+      - name: Generated-state and non-mutation check
         shell: bash
         run: |
-          python tool/worker_d_p3_readiness.py --check --project .
-          python -m unittest -v tool/worker_d_p3_readiness_test.py
-          python tool/test_center_contracts.py check --project .
-          git add -A
-          git diff --cached --check
-          git diff --cached --quiet && exit 0
-          git commit -m 'sync(p3): reconcile current Worker B base and manifest'
-          git push origin HEAD:agent/d/p3-readiness-fixtures
+          python tool/source_tree_policy.py check --project .
+          git diff --check
+          test -z "$(git status --porcelain | grep -v '^ M SOURCE_MANIFEST.sha256$' || true)"
