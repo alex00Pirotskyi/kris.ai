@@ -1,7 +1,5 @@
 name: Mission Execution Materializer
 
-# Connector-authored retrigger after generator repair bd2f4172c90a5874e9438bcaea308ed07ff5fa8e.
-
 on:
   push:
     branches:
@@ -40,11 +38,13 @@ jobs:
         shell: bash
         run: |
           git rm -rf --ignore-unmatch -- \
+            .github/workflows/mission-execution-generator-repair.yml \
             docs/roadmap/anarchy/materializer \
             docs/roadmap/anarchy/materializer-v2 \
             docs/roadmap/missions-bootstrap \
             docs/roadmap/anarchy/workers/prompts \
             docs/roadmap/anarchy/AUTONOMOUS_WORKER_EXECUTION.md \
+            docs/roadmap/v32-source-import \
             tool/temp_anarchy_mission_materializer.py \
             tool/temp_anarchy_mission_materializer_v2.py
       - name: Validate generated mission model
