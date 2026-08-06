@@ -11,13 +11,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: materialize-mission-delivery-enforcement-v2
+  group: materialize-mission-delivery-enforcement-v3
   cancel-in-progress: true
 
 jobs:
   materialize:
     if: github.repository == 'alex00Pirotskyi/kris.ai'
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,18 +34,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          carrier="${RUNNER_TEMP}/mission-delivery-patch.b64"
-          archive="${RUNNER_TEMP}/mission-delivery-patch.tar.xz"
-          : > "${carrier}"
-          for part in docs/roadmap/missions/materializer/mission-delivery-patch.part*.b64; do
-            cat "${part}" >> "${carrier}"
-          done
-          base64 --decode "${carrier}" > "${archive}"
-          test "$(wc -c < "${archive}")" = 38576
-          printf '%s  %s\n' \
-            8c2c37836aee978f92b3d0f306f8769df4e1ddee6058ff3513cf262053279501 \
-            "${archive}" | sha256sum -c -
-          tar -xJf "${archive}" -C .
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import hashlib
+          import lzma
+          import tarfile
+
+          parts = sorted(Path('docs/roadmap/missions/materializer').glob('mission-delivery-patch.part*.b64'))
+          if len(parts) != 7:
+              raise SystemExit(f'expected 7 carrier parts, found {len(parts)}')
+          encoded = ''.join(path.read_text(encoding='utf-8') for path in parts)
+          archive = base64.b64decode(encoded, validate=True)
+          if len(archive) != 38576:
+              raise SystemExit(f'archive size mismatch: {len(archive)}')
+          digest = hashlib.sha256(archive).hexdigest()
+          expected = '8c2c37836aee978f92b3d0f306f8769df4e1ddee6058ff3513cf262053279501'
+          if digest != expected:
+              raise SystemExit(f'archive digest mismatch: {digest}')
+          target = Path('${{ runner.temp }}') / 'mission-delivery-patch.tar.xz'
+          target.write_bytes(archive)
+          with tarfile.open(target, mode='r:xz') as bundle:
+              bundle.extractall('.')
+          print(f'MISSION_DELIVERY_PATCH_VALID bytes={len(archive)} sha256={digest}')
+          PY
           rm -rf tool/__pycache__
       - name: Remove one-shot carrier and materializer
         shell: bash
@@ -64,7 +76,6 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-
           paths = [
               Path('config/mission_delivery.v1.json'),
               Path('schemas/mission_delivery.schema.json'),
@@ -92,6 +103,7 @@ jobs:
           python tool/mission_delivery_control.py --project . validate
           python tool/mission_delivery_control.py --project . generate --check
           python -m unittest -v tool/mission_delivery_control_test.py
+          rm -rf tool/__pycache__
           test ! -e docs/roadmap/missions/materializer
           test ! -e .github/workflows/materialize-mission-delivery-enforcement.yml
           test ! -e tool/__pycache__
