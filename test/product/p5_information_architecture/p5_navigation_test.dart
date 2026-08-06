@@ -71,13 +71,14 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('plan-only control is disabled after a run starts', (tester) async {
+  testWidgets('plan-only control is disabled after a run starts',
+      (tester) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
 
-    CheckboxListTile planOnlyTile() =>
-        tester.widget<CheckboxListTile>(find.byKey(const Key('plan-only-toggle')));
+    CheckboxListTile planOnlyTile() => tester
+        .widget<CheckboxListTile>(find.byKey(const Key('plan-only-toggle')));
 
     expect(planOnlyTile().onChanged, isNotNull);
     await tapKey(tester, const Key('review-plan-button'));
@@ -97,10 +98,10 @@ void main() {
     await tapKey(tester, const Key('review-plan-button'));
     await tapKey(tester, const Key('start-run-button'));
 
-    FilledButton reviewButton() =>
-        tester.widget<FilledButton>(find.byKey(const Key('review-plan-button')));
-    OutlinedButton startButton() =>
-        tester.widget<OutlinedButton>(find.byKey(const Key('start-run-button')));
+    FilledButton reviewButton() => tester
+        .widget<FilledButton>(find.byKey(const Key('review-plan-button')));
+    OutlinedButton startButton() => tester
+        .widget<OutlinedButton>(find.byKey(const Key('start-run-button')));
 
     expect(controller.state.runState, P5RunPresentationState.running);
     expect(reviewButton().onPressed, isNull);
@@ -184,7 +185,8 @@ void main() {
     expect(controller.state.workspace, P5WorkspaceId.runsActivity);
   });
 
-  testWidgets('interrupted-run recovery restores the deterministic saved fixture',
+  testWidgets(
+      'interrupted-run recovery restores the deterministic saved fixture',
       (tester) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
@@ -277,8 +279,16 @@ void main() {
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
 
-    final evidenceRecovery = find.text('Open failing evidence');
-    await tester.ensureVisible(evidenceRecovery);
+    final failureCard = find.byKey(const Key('failure.test-fail'));
+    await tester.scrollUntilVisible(
+      failureCard,
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    final evidenceRecovery = find.descendant(
+      of: failureCard,
+      matching: find.text('Open failing evidence'),
+    );
     await tester.tap(evidenceRecovery);
     await tester.pumpAndSettle();
 
@@ -288,6 +298,11 @@ void main() {
 
     controller.changeExperienceLevel(P5ExperienceLevel.advanced);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      failureCard,
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(evidenceRecovery);
     await tester.pumpAndSettle();
     expect(controller.state.workspace, P5WorkspaceId.evidence);

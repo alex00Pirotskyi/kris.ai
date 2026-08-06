@@ -103,6 +103,9 @@ void main() {
   testWidgets('verification request selects affected tests without execution',
       (tester) async {
     final controller = P5InformationArchitectureController()
+      ..apply(P5PrototypeAction.reviewPlan)
+      ..apply(P5PrototypeAction.startRun)
+      ..apply(P5PrototypeAction.completeRun)
       ..apply(P5PrototypeAction.runVerification);
     addTearDown(controller.dispose);
     await _pump(tester, controller);

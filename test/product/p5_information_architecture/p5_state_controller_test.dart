@@ -241,6 +241,13 @@ void main() {
     expect(controller.state.runState, P5RunPresentationState.running);
 
     controller.selectRun('run.p5-existing-001');
+    expect(controller.state.selectedRunId, activeRun);
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(controller.state.recoveryMessage, contains('cannot change'));
+
+    controller.apply(P5PrototypeAction.completeRun);
+    expect(controller.state.runState, P5RunPresentationState.completed);
+    controller.selectRun('run.p5-existing-001');
     expect(controller.state.runState, P5RunPresentationState.interrupted);
     controller.selectProject('project.kristin-local');
     expect(controller.state.selectedRunId, 'run.p5-existing-001');
@@ -322,7 +329,8 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('plan and start actions cannot replace active or resumable run state', () {
+  test('plan and start actions cannot replace active or resumable run state',
+      () {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
 
@@ -342,6 +350,13 @@ void main() {
     expect(controller.state.runState, P5RunPresentationState.paused);
     expect(controller.state.recoveryMessage, contains('cannot replace'));
 
+    controller.selectRun('run.p5-existing-001');
+    expect(controller.state.runState, P5RunPresentationState.paused);
+    expect(controller.state.recoveryMessage, contains('cannot change'));
+
+    controller.apply(P5PrototypeAction.resumeRun);
+    controller.apply(P5PrototypeAction.completeRun);
+    expect(controller.state.runState, P5RunPresentationState.completed);
     controller.selectRun('run.p5-existing-001');
     expect(controller.state.runState, P5RunPresentationState.interrupted);
     controller.apply(P5PrototypeAction.reviewPlan);

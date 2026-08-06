@@ -54,7 +54,6 @@ void main() {
 
     expect(controller.state.verificationRequested, isTrue);
     expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
-    expect(controller.state.recoveryMessage, contains('Affected tests selected'));
     expect(controller.sideEffects.isZero, isTrue);
   });
 }

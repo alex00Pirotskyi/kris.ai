@@ -39,12 +39,12 @@ void main() {
     addTearDown(controller.dispose);
 
     controller.apply(P5PrototypeAction.reviewPlan);
+    controller.apply(P5PrototypeAction.startRun);
+    controller.apply(P5PrototypeAction.completeRun);
     controller.apply(P5PrototypeAction.runVerification);
-    controller.selectWorkspace(P5WorkspaceId.homeChat);
-    controller.apply(P5PrototypeAction.choosePlanOnly);
 
     expect(controller.state.planReviewed, isTrue);
-    expect(controller.state.planOnly, isTrue);
+    expect(controller.state.planOnly, isFalse);
     expect(controller.state.verificationRequested, isTrue);
 
     controller.selectRun('run.p5-complete-001');
@@ -64,9 +64,11 @@ void main() {
     addTearDown(controller.dispose);
 
     controller.apply(P5PrototypeAction.reviewPlan);
-    controller.apply(P5PrototypeAction.runVerification);
-    controller.selectWorkspace(P5WorkspaceId.homeChat);
     controller.apply(P5PrototypeAction.choosePlanOnly);
+
+    expect(controller.state.planReviewed, isTrue);
+    expect(controller.state.planOnly, isTrue);
+    expect(controller.state.verificationRequested, isFalse);
 
     controller.deepLink(
       workspace: P5WorkspaceId.runsActivity,
