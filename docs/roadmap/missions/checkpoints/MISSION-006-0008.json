@@ -1,0 +1,43 @@
+{
+  "blockers": [
+    "GitHub allocated no workflow run, check suite, or commit status for exact head 570c20eab481e121fe91c41e336a38ec82d593c2.",
+    "No local Dart or Flutter toolchain is available; no local test PASS is claimed.",
+    "SOURCE_MANIFEST.sha256 remains generator-owned and stale; it requires python tool/p1a_refresh_source_manifest.py . in an executable canonical environment.",
+    "test/product/source_contract_test.dart remains outside Worker G ownership; MISSION-006-P6-001-SOURCE-INVENTORY is still REQUESTED from Worker A.",
+    "P6-TC-001 remains OWNER_HANDOFF_PENDING and requires Worker B publication and exact owner review.",
+    "Fresh independent SOURCE, EVIDENCE, and INTEGRATION review is required after ownership, manifest, and exact-head CI settle.",
+    "PR #78 remains open, draft, unmerged, and overlay-only; its delivery gates are not integrated authority.",
+    "P6-002 depends on P6-001 and must not begin; no other dependency-satisfied P6/P18 product task fits the current claim without new shared-path authority.",
+    "Merge, behavior/platform support, release, production, and GA promotion remain unauthorized."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Generated execution trace WRK-20260806T204210Z-568c05c2 and resumed the sole Worker G MISSION-006 claim.",
+    "Kept artifact identity validation in the core ModelDefinitionRegistry so importing model_registry.dart directly cannot bypass canonical-ID or alias drift checks.",
+    "Required every approved model definition to carry a non-empty immutable artifact digest.",
+    "Replaced string-only approval authorization with identity-bound requireApproved(ModelIdentity, taskClassId), forcing the actual discovered digest, parameter size, and quantization through resolveDiscovered before approval can be returned.",
+    "Preserved deterministic model-ID-safe quarantine for digest, parameter-size, or quantization drift and fail-closed validation for malformed discovered IDs and unknown providers.",
+    "Migrated all P6-001 approval regressions to exact ModelIdentity inputs and added direct-core-import, digestless-approved-record, malformed-ID, deterministic-quarantine, canonical-ID, and alias regressions.",
+    "Confirmed the effective PR changed-file inventory contains no Worker B Test Center authority path; P6-C-002 remains repaired on Worker G's branch.",
+    "Rebound the Worker A source-inventory request and Worker B Test Center handoff to exact candidate 570c20eab481e121fe91c41e336a38ec82d593c2 / 553e81386a5989f8c2cc364b83d64e718e882b39.",
+    "Stopped creating validation-only trigger commits after repeated new-SHA/new-PR attempts received zero Actions allocation."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants and reviews the exact source-inventory append; an executable canonical environment regenerates SOURCE_MANIFEST.sha256 twice; GitHub runs focused and affected exact-head CI for 570c20eab481e121fe91c41e336a38ec82d593c2; Worker B publishes P6-TC-001 and performs exact owner review; then obtain fresh independent review. Do not merge or begin P6-002 before those gates pass.",
+  "observedHead": "570c20eab481e121fe91c41e336a38ec82d593c2",
+  "observedTree": "553e81386a5989f8c2cc364b83d64e718e882b39",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 8,
+  "supersededBy": null,
+  "validation": [
+    "Current Worker B authority branch observed at a60284ca55a06dcdba13d2048bcfdd69e88db450 / 4b4401b33aebf8adaa5bf250e695ff756c3e8099; its move from 71770c8ced388d83a278d951fd45a07afdec84db changes only the Worker B P8 workflow.",
+    "PR #76 effective changed files are limited to SOURCE_MANIFEST.sha256, lib/product/model/**, release/evidence/P6-001/**, test/product/model/**, and test/product/source_contract_test.dart.",
+    "The PR patch contains no string-only requireApproved call; approval tests use exact ModelIdentity values.",
+    "Historical green runs for 9799768170f13556d3098a07b40be922377f8deb do not certify this candidate.",
+    "Exact head 570c20eab481e121fe91c41e336a38ec82d593c2 has zero allocated workflow runs and zero commit statuses.",
+    "No behavioral, platform, release, production, or GA support claim is made."
+  ],
+  "worker": "G",
+  "workExecutionId": "WRK-20260806T204210Z-568c05c2"
+}
