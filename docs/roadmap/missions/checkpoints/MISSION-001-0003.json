@@ -1,0 +1,108 @@
+{
+  "blockers": [
+    {
+      "class": "SHARED_CONTRACT_BASE_MOVED",
+      "detail": "Worker B PR #65 advanced from reviewed landing-packet head 90c574665363140aeb6cf764ab8387714cab88cf to substantive P8-001 head 22a8ac34cbf9601100f60c4929198f15f3c60e52 / ef5d5ae584b1d823502bf6f2191ecf4285d36845. The previous PR #65 landing packet is historical and cannot authorize the new head."
+    },
+    {
+      "class": "SHARED_CONTRACT_COMPATIBILITY_REVIEW_REQUIRED",
+      "detail": "P8-001 and Worker A both modify config/test_center_registry.v1.json. PR #64 is currently non-mergeable against the moving Worker B base. Combining both canonical registration sets will change Worker A's tree and require manifest regeneration, exact-head CI, and fresh Worker B review after PR #65 is settled and authorized."
+    },
+    {
+      "class": "PR65_EXACT_HEAD_CI_PENDING",
+      "detail": "P8-001 Formal Test Hierarchy, branch hygiene, P2 Integration Alignment, and PR14 lanes pass on 22a8ac3, while product-gates, P1 Authority Service Amendment, and P2 Owner Mode remain in progress."
+    },
+    {
+      "class": "WORKER_J_RECONCILIATION_PENDING",
+      "detail": "No Worker J decision has been published for exact Worker A commit/tree 89a15332019c73675a19cdacd7021fae2199d75e / 2ea1f8a718a69dba0120a4f98acb78053d6cebfb despite the MISSION-001 request on PR #66."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "Neither the new PR #65 head nor PR #64 has explicit merge authorization. Protected main remains unchanged."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "Controlled P2 behavior remains unavailable because the governed p2-controlled environment, signed provisioning/trust inputs, and exact interactive self-hosted Windows, macOS, and Linux runners are not proven available."
+    },
+    {
+      "class": "MISSION_SYSTEM_GOVERNANCE",
+      "detail": "Checkpoint 0002 materialized successfully at 626bd8b90ab2f434edf61725ede27c07df4af351. Pull-request workflows for that bot-authored exact SHA are action_required with no jobs allocated; GitHub rejected a rerun with HTTP 403."
+    }
+  ],
+  "branch": "agent/a/p1-p2-new-roadmap-execution",
+  "classifications": [
+    "WORKER_A_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_REVIEW_VALID_FOR_FROZEN_SHA",
+    "TEST_CENTER_INTEGRATION_READY_AT_REVIEWED_BASE",
+    "PR65_PREVIOUS_LANDING_PACKET_SUPERSEDED",
+    "SHARED_CONTRACT_COMPATIBILITY_REVIEW_REQUIRED",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "PENDING_WORKER_J_RECONCILIATION",
+    "PENDING_AUTHORIZED_STACKED_INTEGRATION"
+  ],
+  "completed": [
+    "Materialized MISSION-001 checkpoint 0002 through the governed mission materializer and refreshed the canonical source manifest.",
+    "Confirmed exact Worker A head/tree remain unchanged and independently reviewed.",
+    "Confirmed the mission model and deterministic generated views passed on the human-authored checkpoint commit; only pre-materialization source-manifest drift failed.",
+    "Classified bot-authored materialized-head action_required runs as repository governance before job allocation rather than a code failure.",
+    "Re-resolved PR #65 and detected substantive P8-001 shared-contract scope added after the prior landing packet.",
+    "Compared Worker B P8 and Worker A changed paths and isolated the canonical registry overlap.",
+    "Posted a refreshed exact Worker J reconciliation request and an exact PR #65 landing/compatibility refresh request."
+  ],
+  "evidence": {
+    "missionMaterialization": {
+      "checkpointCommit": "5410b6e7bdaea648ab6fdef40860e5c37525e14b",
+      "materializedCommit": "626bd8b90ab2f434edf61725ede27c07df4af351",
+      "materializedTree": "0cc65f24c9b6a1efed3fcf66ad2d06aec316b47e",
+      "materializerRun": 31091138423,
+      "result": "PASS"
+    },
+    "pr65": {
+      "head": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+      "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+      "previousLandingHead": "90c574665363140aeb6cf764ab8387714cab88cf",
+      "p8WorkflowRun": 31091545680,
+      "p8WorkflowResult": "PASS",
+      "compatibilityRequestComment": 5203187072
+    },
+    "workerA": {
+      "head": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+      "pullRequest": 64,
+      "mergeable": false,
+      "reviewArtifact": "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json",
+      "reviewArtifactSha256": "d613497c297e332bab8ea47d3e29e96bc242dc7ed801b9fb57aa439ef93aac4d",
+      "reviewDecision": "PASS"
+    },
+    "workerJ": {
+      "head": "2a14b875ff529cfd90348673e8e45b2442663619",
+      "tree": "595346993b4512411f48075a47289333c51b3850",
+      "pullRequest": 66,
+      "reconciliationRequestComment": 5203103817,
+      "reconciliationState": "PENDING"
+    }
+  },
+  "mission": "MISSION-001",
+  "nextAction": "Keep Worker A frozen. Wait for PR #65 exact-head CI and independent governance to settle at one immutable P8 candidate and for Worker J to publish the bounded reconciliation. After authorized PR #65 landing, combine the P8 and Worker A registry entries, regenerate SOURCE_MANIFEST.sha256 through its owner, run exact-head Worker A Test Center/product/P2 alignment checks, and request a fresh Worker B exact-SHA review because the Worker A tree will change.",
+  "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
+  "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 64,
+  "schemaVersion": 1,
+  "sequence": 3,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0002.json",
+  "validation": [
+    "Worker A exact-head Test Center Integration 31028254841 remains PASS.",
+    "Worker A exact-head product-gates 31028253830 remains PASS.",
+    "Worker A exact-head P2 Integration Alignment 31028254437 remains PASS.",
+    "Worker B exact-SHA PASS remains valid for the unchanged Worker A commit/tree but does not cover a future registry-conflict resolution tree.",
+    "P8-001 Formal Test Hierarchy run 31091545680 passes on the new Worker B head.",
+    "No Worker A product source, runtime, public API, wire format, persistence, native interface, P2 behavior, roadmap authority, or P3 implementation changed."
+  ],
+  "worker": "A"
+}
