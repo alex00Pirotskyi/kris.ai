@@ -1,0 +1,260 @@
+{
+  "adoption": {
+    "authorityPromotionPerformed": false,
+    "classification": "ADOPTION_REVIEW",
+    "reviewersRequired": [
+      "Worker B",
+      "Worker I"
+    ]
+  },
+  "authority": {
+    "human": "docs/roadmap/MASTER.md",
+    "machine": "docs/roadmap/roadmap.yaml",
+    "machineScope": [
+      "P0",
+      "P1"
+    ]
+  },
+  "claims": [
+    {
+      "branch": "agent/j/P24-001-roadmap-as-data-adr",
+      "path": "docs/roadmap/anarchy/claims/P24-001-WORKER-J.yaml",
+      "state": "CLAIMED",
+      "task": "P24-001",
+      "worker": "J"
+    }
+  ],
+  "classification": "ADOPTION_REVIEW_GENERATED_NAVIGATION_NOT_AUTHORITY",
+  "generated": {
+    "doNotEdit": true,
+    "generatorVersion": "1.0.0",
+    "owner": "tool/anarchy_control_plane.py",
+    "sourceContract": "docs/roadmap/anarchy/migration/P24-001_CONTROL_PLANE.json"
+  },
+  "inventory": {
+    "activeClaimCount": 1,
+    "coordinationWorkerCount": 10,
+    "directiveCount": 15,
+    "migrationEventCount": 15,
+    "phaseCount": 25,
+    "taskCount": 359,
+    "taskGraphSha256": "ef6ba2aa9293f9167e4ae84bfd9d43a8be02529619d0e9ca637f2052f09f5db7",
+    "workerCount": 10
+  },
+  "phases": [
+    {
+      "packet": "docs/roadmap/anarchy/phases/P00-stabilize-contain-and-establish-truth.md",
+      "phase": "P0",
+      "sha256": "8199618d7feb320050283d58bce357e422c6c697fa739f6aba98ce7d29d27040",
+      "taskCount": 10
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P01-trust-policy-and-core-architecture.md",
+      "phase": "P1",
+      "sha256": "0e180c50817bfdaf599a07d001c605dc9b7ca454881edad145863ba4fa456a58",
+      "taskCount": 12
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P02-owner-mode-terminal-filesystem-and-os-operations.md",
+      "phase": "P2",
+      "sha256": "eb6969a5447c87eae19a75cffbe8f601e4e1f6d7f55926e300d5353c4e0cd9d3",
+      "taskCount": 14
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P03-browser-automation-and-web-studio.md",
+      "phase": "P3",
+      "sha256": "1ae51ee3a6e3c41448dbc8c9a78497bdfe58c1bfdc51ee1305fdd576e9c2ff75",
+      "taskCount": 18
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P04-web-search-extraction-citations-and-data-saving.md",
+      "phase": "P4",
+      "sha256": "dc13a8af92cdf9737437b2af7936daa6cf7f5430a20808a5ca818146a89a0948",
+      "taskCount": 22
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P05-ux-ui-redesign-and-accessibility.md",
+      "phase": "P5",
+      "sha256": "69827ba180476713e196e84f70a8824ac972f8a283afc78b86d8778ba8497459",
+      "taskCount": 15
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P06-agent-intelligence-model-routing-and-safe-autonomy.md",
+      "phase": "P6",
+      "sha256": "27252a4776c2252c0de5c9d60a28837ddd07ef349f2fb74ecb2c4ca37d1253e0",
+      "taskCount": 15
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P07-mcp-a2a-skills-and-extension-ecosystem.md",
+      "phase": "P7",
+      "sha256": "c561527fbab09660cb43db8f0357dbac1b4f3d23ede445319cea07c78cd9ff5a",
+      "taskCount": 12
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P08-reliability-security-observability-and-evaluation.md",
+      "phase": "P8",
+      "sha256": "05a0af211df2005ddad943bd3fcac53d28041c74c84a527a0aae6774cd6a427e",
+      "taskCount": 15
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P09-release-engineering-installers-signing-and-updates.md",
+      "phase": "P9",
+      "sha256": "ebd2d49a5b658d00b4405449df5f425762adb97cfbf73c6253887cc9813c1c13",
+      "taskCount": 16
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P10-core-alpha-beta-release-candidate-and-integration-checkpoint.md",
+      "phase": "P10",
+      "sha256": "2b82091098fce5fe4dbba6812fccc22ebf318a6672ef5a45ce188a347fae7a82",
+      "taskCount": 10
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P11-omni-platform-native-parity-and-desktop-control.md",
+      "phase": "P11",
+      "sha256": "90a8a7f8a38567733e3b8683cfb11ffbd74a68a0acc7fafec14899e22b8e0597",
+      "taskCount": 15
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P12-identity-credentials-and-universal-connectors.md",
+      "phase": "P12",
+      "sha256": "03a685b73154299052be3fc42c88f44b37d3fe9dc4a107884ebef692f9f7d862",
+      "taskCount": 14
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P13-application-factory-and-advanced-vibe-coding.md",
+      "phase": "P13",
+      "sha256": "1a9661142628319c9e7a8924548b999bcc0bf4fcfb4edfecab956e3f4db37ec4",
+      "taskCount": 14
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P14-content-manufacturing-and-publishing.md",
+      "phase": "P14",
+      "sha256": "ce8b1a8bf408c75ba443828afe6fbab01a67d35d675c96cdeb021fa364115c75",
+      "taskCount": 14
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P15-native-application-device-automation-and-remote-operation.md",
+      "phase": "P15",
+      "sha256": "b252175391341d5b31e090d95c5db0ac78c5efc8b47b672be0c041f18cf2d891",
+      "taskCount": 10
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P16-deployment-cloud-infrastructure-and-fleet.md",
+      "phase": "P16",
+      "sha256": "a92ec2fee58cc280eb04eb8c25d5ebbad33e5643c0dac43444b528b2fdb4ba56",
+      "taskCount": 12
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P17-multimodal-realtime-and-omnichannel.md",
+      "phase": "P17",
+      "sha256": "260698b24b2b179d16b74975af0b291a604360b4ae98c2d3f4e14b3ee1dcc01c",
+      "taskCount": 10
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P18-local-models-hardware-acceleration-and-advanced-intelligence.md",
+      "phase": "P18",
+      "sha256": "dc271cba94f90eaca1c7ab1d0c28c0e7dd2e29cea498162fc6efd76fb2fe2816",
+      "taskCount": 11
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P19-web-mobile-companions-headless-nodes-and-ecosystem.md",
+      "phase": "P19",
+      "sha256": "5703aa9851f1f235a1a9960f8a473d22b3b2ca2abc8c1e682268664d6d24cf92",
+      "taskCount": 10
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P20-maximum-capability-beta-rc-and-synchronized-ga.md",
+      "phase": "P20",
+      "sha256": "a761867b3432a2b291599929490f1dc4bf7fe2a94a50093d3b66ed3db55a33ca",
+      "taskCount": 12
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P21-multi-provider-ai-orchestration.md",
+      "phase": "P21",
+      "sha256": "b8329d29f1806cd3937fc0d046fca229a2ec445f759675b96b2bee8fc697287c",
+      "taskCount": 24
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P22-consumer-productization-and-experience-assurance.md",
+      "phase": "P22",
+      "sha256": "ed0083480fe86dcd5327011d761864b39a666ecf3abf522337bbec048525a718",
+      "taskCount": 18
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P23-tool-skill-and-capability-operating-system.md",
+      "phase": "P23",
+      "sha256": "475772b52ff8f6491f5502ba6f31b049645c930fb93f9507fa0aa06a74ee9627",
+      "taskCount": 24
+    },
+    {
+      "packet": "docs/roadmap/anarchy/phases/P24-roadmap-integrity-traceability-and-no-sql-authority.md",
+      "phase": "P24",
+      "sha256": "750e457f025c213166243b6da20052ce269b7f8d8bfaac60e703079676c25241",
+      "taskCount": 12
+    }
+  ],
+  "recordType": "P24AdoptionReviewGeneratedIndex",
+  "schemaVersion": "1.0.0",
+  "workers": [
+    {
+      "branch": "merge/p1-p2-owner-risk-qa-preview",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_A.md",
+      "sha256": "b2820117ce3b6d6c5ee2dc806c45b430360df582383d3c7ef230f6555d0a781c",
+      "worker": "A"
+    },
+    {
+      "branch": "agent/test-center-development-verification-foundation",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_B.md",
+      "sha256": "208267b1fdc50792dfcc2fba60d2000a2dca61f425f60b2df7a19a2a7d10c803",
+      "worker": "B"
+    },
+    {
+      "branch": "agent/p4-001-search-provider-foundation",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_C.md",
+      "sha256": "61c6ba6619775e3452b45693ecb3819adf6a24fd68db98c4dc6e7102589e9d33",
+      "worker": "C"
+    },
+    {
+      "branch": "agent/d/p3-readiness-fixtures",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_D.md",
+      "sha256": "788506a0ca7924873c094063bdc434fd765d92200a65ff25fdef8d933e16721f",
+      "worker": "D"
+    },
+    {
+      "branch": "agent/e/native-parity-readiness",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_E.md",
+      "sha256": "9b68cdd4ffc59a93517516a449f5293e968f0206383ad0baa5751aaa8752caa3",
+      "worker": "E"
+    },
+    {
+      "branch": "agent/f/P5-001-information-architecture",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_F.md",
+      "sha256": "12d539561b02aafbea488fead255c78d1ea7d4261c6b45784acc097580ac59ad",
+      "worker": "F"
+    },
+    {
+      "branch": "agent/g/P6-001-model-registry-v2",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_G.md",
+      "sha256": "4c305948caef4ac8832bae85a2a3b05ec0e1bd25d21c9573ebbbf7a5a62073c4",
+      "worker": "G"
+    },
+    {
+      "branch": "agent/h/P7-001-mcp-version-architecture",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_H.md",
+      "sha256": "362954aaf4925e0dc03b11dfec08e71f7e9fc7f504e0640bdd72ed5972f6364d",
+      "worker": "H"
+    },
+    {
+      "branch": "agent/i/P8-007-secret-scanning-v2",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_I.md",
+      "sha256": "6e6bc32a3c8a0d8e122913ed26185fc3a4f0143c3d9940c8048d64b086d00aac",
+      "worker": "I"
+    },
+    {
+      "branch": "agent/j/P24-001-roadmap-as-data-adr",
+      "packet": "docs/roadmap/anarchy/workers/WORKER_J.md",
+      "sha256": "9b1ea6e071e5d1142ea17659b08425a9932a81bbe71292381d46699811e6197d",
+      "worker": "J"
+    }
+  ]
+}
