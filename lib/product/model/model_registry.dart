@@ -1274,8 +1274,8 @@ class ModelDefinition {
 /// Deterministic provider/model catalog. Runtime routing is intentionally out
 /// of scope; this object only validates identity and approval metadata.
 ///
-/// Discovery is fail-closed in this core class. Direct imports of this file
-/// therefore cannot bypass artifact identity validation.
+/// Discovery and approval are fail-closed in this core class. Direct imports of
+/// this file therefore cannot bypass artifact identity validation.
 class ModelDefinitionRegistry {
   ModelDefinitionRegistry({
     required Iterable<ModelProviderDescriptor> providers,
@@ -1436,18 +1436,15 @@ class ModelDefinitionRegistry {
     );
   }
 
+  /// Requires approval for the exact model artifact that was actually
+  /// discovered. String-only registry lookup is never sufficient to authorize
+  /// an artifact because aliases and mutable tags can be reused.
   ModelDefinition requireApproved({
-    required String providerId,
-    required String modelIdOrAlias,
+    required ModelIdentity identity,
     required String taskClassId,
   }) {
     _validateStableId(taskClassId, 'taskClassId');
-    final model = lookup(providerId, modelIdOrAlias);
-    if (model == null) {
-      throw ModelRegistryValidationException(
-        'model $providerId::$modelIdOrAlias is not registered',
-      );
-    }
+    final model = resolveDiscovered(identity);
     if (!model.isApprovedFor(taskClassId)) {
       throw ModelRegistryValidationException(
         'model ${model.registryKey} is not approved for $taskClassId',
