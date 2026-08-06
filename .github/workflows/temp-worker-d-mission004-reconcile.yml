@@ -1,0 +1,201 @@
+name: TEMP Worker D MISSION-004 Reconcile
+
+on:
+  push:
+    branches:
+      - ci/worker-d-mission004-reconcile
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-d-mission004-reconcile
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ci/worker-d-mission004-reconcile
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Build exact Worker D MISSION-004 reconciliation candidate
+        shell: bash
+        env:
+          P4_SHA: 69e44e08395d89da1767c58b84655c289a969f66
+          P4_TREE: 1114c576fe67d9f9202f7f44c98a0af6e35a915a
+          WORKER_B_SHA: 22a8ac34cbf9601100f60c4929198f15f3c60e52
+          WORKER_B_TREE: ef5d5ae584b1d823502bf6f2191ecf4285d36845
+          TARGET_BRANCH: agent/p4-001-search-provider-foundation
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git fetch --no-tags origin \
+            agent/p4-001-search-provider-foundation \
+            agent/b/test-center-contracts-and-review
+          test "$(git rev-parse origin/agent/p4-001-search-provider-foundation)" = "$P4_SHA"
+          test "$(git show -s --format=%T "$P4_SHA")" = "$P4_TREE"
+          test "$(git rev-parse origin/agent/b/test-center-contracts-and-review)" = "$WORKER_B_SHA"
+          test "$(git show -s --format=%T "$WORKER_B_SHA")" = "$WORKER_B_TREE"
+
+          git config user.name 'Worker D MISSION-004 Reconciler'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C worker-d-mission004-reconcile "$P4_SHA"
+
+          merge_rc=0
+          git merge --no-ff --no-commit "$WORKER_B_SHA" || merge_rc=$?
+          if [ "$merge_rc" -ne 0 ] && [ ! -f .git/MERGE_HEAD ]; then
+            echo "merge failed before producing a merge state" >&2
+            exit "$merge_rc"
+          fi
+          test "$(git rev-parse MERGE_HEAD)" = "$WORKER_B_SHA"
+
+          python - <<'PY'
+          from __future__ import annotations
+
+          import copy
+          import json
+          import pathlib
+          import subprocess
+
+          project = pathlib.Path('.').resolve()
+          p4_sha = '69e44e08395d89da1767c58b84655c289a969f66'
+          worker_b_sha = '22a8ac34cbf9601100f60c4929198f15f3c60e52'
+          registry_path = 'config/test_center_registry.v1.json'
+          hierarchy_path = project / 'config/test_center_assurance_hierarchy.v1.json'
+
+          def git_show(commit: str, path: str) -> bytes:
+              return subprocess.check_output(['git', 'show', f'{commit}:{path}'])
+
+          p4_registry = json.loads(git_show(p4_sha, registry_path))
+          worker_b_registry = json.loads(git_show(worker_b_sha, registry_path))
+          merged = copy.deepcopy(worker_b_registry)
+
+          identity_keys = {
+              'testModules': 'moduleId',
+              'testCases': 'testId',
+              'projectTestProfiles': 'stableCheckId',
+              'affectedTestMappings': 'mappingId',
+              'presentationRecords': 'presentationId',
+          }
+
+          for key, p4_value in p4_registry.items():
+              if key not in merged:
+                  merged[key] = copy.deepcopy(p4_value)
+                  continue
+              worker_b_value = merged[key]
+              if key in identity_keys:
+                  if not isinstance(p4_value, list) or not isinstance(worker_b_value, list):
+                      raise SystemExit(f'{key} must remain a list')
+                  identity_key = identity_keys[key]
+                  indexed = {}
+                  for item in worker_b_value:
+                      if not isinstance(item, dict) or identity_key not in item:
+                          raise SystemExit(f'{key} contains an item without {identity_key}')
+                      identity = item[identity_key]
+                      if identity in indexed:
+                          raise SystemExit(f'duplicate Worker B identity {identity!r} in {key}')
+                      indexed[identity] = item
+                  for item in p4_value:
+                      if not isinstance(item, dict) or identity_key not in item:
+                          raise SystemExit(f'P4 {key} contains an item without {identity_key}')
+                      identity = item[identity_key]
+                      if identity in indexed:
+                          if indexed[identity] != item:
+                              raise SystemExit(f'shared registry identity drift for {key}:{identity}')
+                      else:
+                          worker_b_value.append(copy.deepcopy(item))
+                          indexed[identity] = item
+              elif worker_b_value != p4_value:
+                  raise SystemExit(f'unexpected shared registry field drift: {key}')
+
+          registry_target = project / registry_path
+          registry_target.write_text(
+              json.dumps(merged, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+
+          hierarchy = json.loads(hierarchy_path.read_text(encoding='utf-8'))
+          bindings = hierarchy.get('testBindings')
+          if not isinstance(bindings, list):
+              raise SystemExit('P8 hierarchy testBindings must be a list')
+          existing = {binding.get('testId') for binding in bindings if isinstance(binding, dict)}
+          p4_test_ids = (
+              'tc.p4-001.request-schema',
+              'tc.p4-001.result-schema',
+              'tc.p4-001.page-schema',
+              'tc.p4-001.provider-error-schema',
+              'tc.p4-001.url-fail-closed',
+              'tc.p4-001.credential-rejection',
+              'tc.p4-001.secret-normalization',
+              'tc.p4-001.provider-metadata-isolation',
+              'tc.p4-001.stable-query-identity',
+              'tc.p4-001.stable-result-identity',
+              'tc.p4-001.cursor-provider-binding',
+              'tc.p4-001.capability-negotiation',
+              'tc.p4-001.rate-limit-representation',
+              'tc.p4-001.partial-failure-representation',
+              'tc.p4-001.fixture-provider-parity',
+              'tc.p4-001.network-free-determinism',
+              'tc.p4-001.unfetched-snippet-classification',
+              'tc.p4-001.normalized-result-state-preservation',
+          )
+          architecture_lint = set(p4_test_ids[:4])
+          for test_id in p4_test_ids:
+              if test_id in existing:
+                  raise SystemExit(f'P4 hierarchy binding already exists unexpectedly: {test_id}')
+              level_id = 'architecture_lint' if test_id in architecture_lint else 'unit'
+              rationale = (
+                  'Validates the static P4-001 schema and provider-neutral source contract.'
+                  if level_id == 'architecture_lint'
+                  else 'Executes deterministic, network-free P4-001 provider, identity, security, and state behavior.'
+              )
+              bindings.append({'testId': test_id, 'levelId': level_id, 'rationale': rationale})
+              existing.add(test_id)
+          hierarchy_path.write_text(
+              json.dumps(hierarchy, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+
+          git checkout --ours -- SOURCE_MANIFEST.sha256
+          git add -- \
+            config/test_center_registry.v1.json \
+            config/test_center_assurance_hierarchy.v1.json \
+            SOURCE_MANIFEST.sha256
+          if test -n "$(git diff --name-only --diff-filter=U)"; then
+            echo "unexpected unresolved merge paths:" >&2
+            git diff --name-only --diff-filter=U >&2
+            exit 1
+          fi
+
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          git add -- SOURCE_MANIFEST.sha256
+
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          python tool/p4_001_test_center_v1.py check --project .
+          python -m unittest -v tool/p4_001_test_center_v1_test.py
+          python tool/p4_001_search_provider_test.py
+          python -m unittest discover -s services/research_worker/test -p 'test_*.py' -v
+
+          git diff --check
+          git diff --cached --check
+          test -z "$(git ls-files --others --exclude-standard)"
+          git commit -m 'P4-001: reconcile canonical Test Center and P8 hierarchy'
+
+          parents="$(git show -s --format=%P HEAD)"
+          test "$parents" = "$P4_SHA $WORKER_B_SHA"
+          test ! -e .github/workflows/temp-worker-d-mission004-reconcile.yml
+          git push origin HEAD:"$TARGET_BRANCH"
