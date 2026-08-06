@@ -1,0 +1,90 @@
+{
+  "commands": [
+    "python tool/p2_task_gate.py --project . --task P2-001..P2-014",
+    "python tool/p2_task_assertion_cli_test.py --project . --max-command-seconds 15",
+    "python tool/p1a_refresh_source_manifest.py .",
+    "python tool/p1a_refresh_source_manifest.py .",
+    "cmp first-pass SOURCE_MANIFEST.sha256 second-pass SOURCE_MANIFEST.sha256",
+    "cmp artifact SOURCE_MANIFEST.sha256 regenerated SOURCE_MANIFEST.sha256",
+    "git diff --check",
+    "git diff --exit-code"
+  ],
+  "conclusion": {
+    "classification": "NO_ADDITIONAL_PROVEN_SOURCE_DEFECT_IN_CURRENT_P2_SNAPSHOT",
+    "noPromotion": true,
+    "reason": "Every P2 task source/local gate passes. Product-path assertions P2-001 through P2-013 remain blocked without governed controlled platform evidence, and P2-004 additionally requires the MISSION-002 owner-preserving Test Center union and real tri-platform measurements.",
+    "sameMissionSourceTaskExecutable": false
+  },
+  "dependencyFrontier": {
+    "P2-004": "BLOCKED_BY_OWNER_UNION_AND_REAL_TRI_PLATFORM_MEASUREMENTS",
+    "P2-005": "BLOCKED_BY_P2-004_MEASURED_TECHNOLOGY_DECISION",
+    "P2-006": "BLOCKED_BY_P2-005_BEHAVIORAL_CLOSURE",
+    "P2-011": "BLOCKED_BY_P2-005_AND_P2-006_BEHAVIORAL_CLOSURE",
+    "P2-012": "BLOCKED_BY_P2-005_AND_P2-006_BEHAVIORAL_CLOSURE",
+    "P2-013": "BLOCKED_BY_CONTROLLED_BEHAVIORAL_DEPENDENCIES",
+    "P2-014": "SOURCE_GUIDE_CONSISTENCY_PASS_NO_MISSION_PROMOTION"
+  },
+  "generatedAt": "2026-08-06T20:53:18Z",
+  "mission": "MISSION-001",
+  "nextAction": "Worker B repairs and validates P8-001, then MISSION-002 publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds the exact P2-004 candidate against that union. Controlled Windows/macOS/Linux measurements and behavior remain separate external prerequisites.",
+  "observedTaskAssertionsWithoutControlledReceipts": {
+    "P2-001": "BLOCKED",
+    "P2-002": "BLOCKED",
+    "P2-003": "BLOCKED",
+    "P2-004": "BLOCKED",
+    "P2-005": "BLOCKED",
+    "P2-006": "BLOCKED",
+    "P2-007": "BLOCKED",
+    "P2-008": "BLOCKED",
+    "P2-009": "BLOCKED",
+    "P2-010": "BLOCKED",
+    "P2-011": "BLOCKED",
+    "P2-012": "BLOCKED",
+    "P2-013": "BLOCKED",
+    "P2-014": "PASSED_GUIDE_CONSISTENCY"
+  },
+  "p2TechnologyContract": "PASS_TRUSTED_RECEIPT_INTEGRITY_FRESHNESS_UNIQUENESS_CONTAINMENT_FAIL_CLOSED",
+  "reportId": "MISSION-001-P2-SOURCE-FRONTIER-6B821B7",
+  "repositoryMutationCheck": "PASS_CLEAN",
+  "schemaVersion": 1,
+  "source": {
+    "artifactId": 8970093356,
+    "artifactJobId": 92635442027,
+    "artifactRunId": 31107230047,
+    "artifactZipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b",
+    "exportedTree": "6b821b719f23cb981653334c10a2215346771f08",
+    "pullRequest": 75,
+    "remoteCarrierCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+    "remoteCarrierTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "treeArchiveSha256": "7694d45002717aaabe51df5bb75c885770b55e1b6be13faf50ab0296e96a5fea"
+  },
+  "sourceLocalGates": {
+    "P2-001": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-002": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-003": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-004": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-005": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-006": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-007": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-008": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-009": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-010": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-011": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-012": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-013": "PASS_SOURCE_LOCAL_ONLY",
+    "P2-014": "PASS_SOURCE_LOCAL_ONLY"
+  },
+  "sourceManifest": {
+    "artifactRegenerationByteIdentical": true,
+    "entryCount": 1130,
+    "firstSecondPassByteIdentical": true,
+    "sha256": "f6cf74a1b47fa36bf115089ef1dafeefeccd93ce114f0dcaedb6e99fed3e0804"
+  },
+  "validationEnvironment": {
+    "classification": "LOCAL_REPLAY_OF_DURABLE_EXACT_TREE_ARTIFACT",
+    "gitInitialization": "A synthetic local Git repository was initialized only so canonical repository generators could enumerate tracked files. No synthetic commit is represented as candidate identity.",
+    "supportBoundary": "Local replay is source-contract evidence only and is not controlled platform, behavioral, certification, release, production, or GA evidence."
+  },
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+  "worker": "A"
+}
