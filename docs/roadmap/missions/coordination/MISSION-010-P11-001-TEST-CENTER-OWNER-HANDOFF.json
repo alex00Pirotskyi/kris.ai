@@ -3,7 +3,7 @@
   "coordinationId": "MISSION-010-P11-001-TEST-CENTER-OWNER-HANDOFF",
   "status": "OWNER_PUBLICATION_REQUIRED",
   "recordedAt": "2026-08-06T20:30:18Z",
-  "updatedAt": "2026-08-06T21:21:20Z",
+  "updatedAt": "2026-08-06T21:31:15Z",
   "workExecutionId": "WRK-20260806T203018Z-9c4e7b21",
   "requestingMission": "MISSION-010",
   "requestingWorker": "E",
@@ -13,16 +13,16 @@
   "sourceCandidate": {
     "branch": "agent/e/native-parity-readiness",
     "pullRequest": 71,
-    "commit": "c40570919721e651dc6e84956b7f7827aedada05",
-    "tree": "bee2fa0b2ef077d62ed74c9bf9ac7a4a92e42ccd",
-    "sourcePredecessorCommit": "825769f639edb5db22b27a222cd5c1c57f4ed775",
-    "sourcePredecessorTree": "4fd309a006ff4b88c2293b7962c130b5998426ac"
+    "commit": "493fd49efffba4a2986f4fb17cddc56a91b07254",
+    "tree": "974bd068ac57777b35397b92fa127156fa33c4f7",
+    "sourcePredecessorCommit": "c40570919721e651dc6e84956b7f7827aedada05",
+    "sourcePredecessorTree": "bee2fa0b2ef077d62ed74c9bf9ac7a4a92e42ccd"
   },
   "currentOwnerAuthority": {
     "branch": "agent/b/test-center-contracts-and-review",
     "pullRequest": 65,
-    "observedCommit": "467076d6a21ef2c584aa2ba7a4efcf62bf14fd3b",
-    "observedTree": "9ce0d8280b41e17c7fe9b24feba3d22d20ddef1c",
+    "observedCommit": "b5528a2bf9d3fbf3841d2373a87c1f4a84ff741c",
+    "observedTree": "e865fd6f85215d0290874995443ba6a23688139d",
     "consumedAsSecondParent": true,
     "mustReResolveBeforePublication": true
   },
@@ -32,8 +32,8 @@
     "workerERegistryDiffRemoved": true,
     "workerERetainsSpecificationOnly": true,
     "workerEDependencyBindingsFailClosed": true,
-    "workerECurrentOwnerAncestryConsumed": true,
-    "reason": "Worker E published an ownership-clean two-parent repair that preserves the exact current MISSION-002 registry and P8 authority bytes."
+    "workerELatestOwnerAncestryConsumed": true,
+    "reason": "Worker E published an ownership-clean two-parent repair that preserves the latest MISSION-002 typed evidence, registry, hierarchy, and P8 authority bytes."
   },
   "requiredOwnerOperation": {
     "mode": "OWNER_PUBLISHED_UNION",
@@ -83,5 +83,5 @@
     "releaseSupportPromoted": false,
     "mergeAuthorized": false
   },
-  "nextAction": "Run the canonical source-manifest generator twice on c40570919721e651dc6e84956b7f7827aedada05, settle exact-head CI, then MISSION-002 publishes the exact registry union and reviews the final integration candidate."
+  "nextAction": "Run the canonical source-manifest generator twice on 493fd49efffba4a2986f4fb17cddc56a91b07254, settle exact-head CI, then MISSION-002 publishes the exact registry union and reviews the final integration candidate."
 }
