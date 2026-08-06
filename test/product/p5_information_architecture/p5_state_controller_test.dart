@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_controller.dart';
+import 'package:kristin_local_agent/product/p5_information_architecture/p5_fixtures.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_models.dart';
 
 void main() {
@@ -138,6 +139,35 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  test('stale hidden history and reopen cannot bypass Simple mode', () {
+    final initial = P5PrototypeFixtures.initialState().copyWith(
+      navigationHistory: const <P5WorkspaceId>[
+        P5WorkspaceId.homeChat,
+        P5WorkspaceId.evidence,
+        P5WorkspaceId.verificationCenter,
+      ],
+      navigationIndex: 0,
+      reopenWorkspace: P5WorkspaceId.evidence,
+    );
+    final controller = P5InformationArchitectureController(
+      initialState: initial,
+    );
+    addTearDown(controller.dispose);
+
+    controller.reopen();
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
+    expect(controller.canGoForward, isTrue);
+    controller.forward();
+    expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
+    expect(controller.canGoBack, isTrue);
+
+    controller.back();
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('unknown project and run identities fail closed', () {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
@@ -222,10 +252,8 @@ void main() {
 
     expect(controller.state.planOnly, isFalse);
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(
-      controller.state.recoveryMessage,
-      contains('before a simulated run starts'),
-    );
+    expect(controller.state.recoveryMessage,
+        contains('before a simulated run starts'));
     expect(controller.sideEffects.isZero, isTrue);
   });
 
