@@ -34,12 +34,10 @@ jobs:
       - name: Require exact branch head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-      - name: Apply authorized MISSION-004 transfer and restore controller
+      - name: Apply authorized MISSION-004 transfer
         shell: bash
         run: |
           set -euo pipefail
-          git show HEAD^:.github/workflows/mission-execution-materialize.yml \
-            > .github/workflows/mission-execution-materialize.yml
           python - <<'PY'
           from __future__ import annotations
           import datetime
