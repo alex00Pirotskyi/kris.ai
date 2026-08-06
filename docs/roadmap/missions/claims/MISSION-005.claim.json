@@ -1,6 +1,6 @@
 {
   "branch": "agent/f/P5-001-information-architecture",
-  "current": "P5-001 product-state repair at exact Worker F head; progressive-disclosure and fixture-identity defects are the next executable source work, while shared-path grants, current Worker B integration, canonical manifests, exact CI, and final reviews remain unsettled",
+  "current": "P5-001 dependency-safe product-state repair is frozen at e11fcff4b0abdfb83faf07680b5c95d739dd918f / 096ad3cc1ca93ff72f6f8c0d572878a685aca4ad; known P5 state and recovery defects are repaired, the ungranted source-inventory delta is removed, and remaining publication gates are external ownership/P8/manifests/exact-CI/review dependencies",
   "exclusivePaths": [
     "lib/product/p5_information_architecture/**",
     "lib/p5_ia_preview.dart",
@@ -10,12 +10,12 @@
     "release/evidence/P22-*/**",
     ".github/workflows/worker-f*.yml"
   ],
-  "head": "83d1848d014f4cdc27972be047c8cfc8f8563303",
+  "head": "e11fcff4b0abdfb83faf07680b5c95d739dd918f",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-005",
   "pr": 72,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "0d4e03c9fb61937ae785f10885679f47173cf1fd",
+  "tree": "096ad3cc1ca93ff72f6f8c0d572878a685aca4ad",
   "worker": "F"
 }

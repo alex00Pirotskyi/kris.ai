@@ -1,0 +1,40 @@
+{
+  "blockers": [
+    "MISSION-005-P5-001-SOURCE-CONTRACT remains REQUESTED with resolution=null. MISSION-001 has not published the nine P5 analyzer-visible library entries in test/product/source_contract_test.dart, and MISSION-005 has no grant for that path.",
+    "Worker B/P8 live head 604905039aa26952045e69ebe6799ae464144635 / b5070956963404b4d9f5f8875db40d06bc093b4c remains exact REQUEST_CHANGES, including independent-review provenance/authenticity and evidence/support contract findings, with exact-head workflow runs absent.",
+    "P5 evidence manifest and root SOURCE_MANIFEST.sha256 are stale after the product-source/test repairs. They must be regenerated only by their canonical tools, including two byte-identical root-manifest generations.",
+    "Worker F exact head e11fcff4b0abdfb83faf07680b5c95d739dd918f has no GitHub Actions workflow run. The execution container cannot resolve github.com, and connector-authored commits do not emit the canonical exact-head workflow event; CI carrier/no-op/reopen churn is prohibited.",
+    "Fresh source/integration and genuinely independent review are required after the final ownership-clean P8 union and canonical manifest/CI settlement."
+  ],
+  "branch": "agent/f/P5-001-information-architecture",
+  "completed": [
+    "Resumed the unique Worker F MISSION-005 claim under WORK_EXECUTION_ID WRK-20260806T201211Z-19E2373A and repeatedly re-resolved live heads before writes; all branch publications were non-force fast-forwards and losing race attempts were discarded.",
+    "Repaired the plan-only state invariant so toggling presentation cannot overwrite an active simulated run; disabled the rendered control once a run starts; repaired affected-shell test discovery to fail closed.",
+    "Closed progressive-disclosure bypasses across direct workspace selection, deep links, back/forward history, reopen, keyboard entry, and experience-level downgrade; sanitized hidden history and added negative regressions.",
+    "Validated project/run fixture identities and failed closed on unknown or mismatched deep-link context instead of fabricating retained run state.",
+    "Separated current simulated-run presentation from saved-run fixture detail; removed invented saved timelines; allowed saved-run resume only for interrupted fixtures and guarded retry at the controller boundary.",
+    "Moved Worker F validators into test/product/p5_information_architecture/**, removed unowned progress files, and restored live Worker B helper blobs byte-identically.",
+    "Removed the ungranted test/product/source_contract_test.dart delta instead of weakening ownership policy; the owner-controlled source-inventory request remains external.",
+    "Consolidated retry and experience-warning regressions into the canonical tc.p5-001.state.transitions test file rather than creating unregistered test islands.",
+    "Made Settings recovery actions deterministic: interrupted-run recovery selects the known saved fixture before resuming; no-model and capability recovery elevate disclosure presentation only as required and route to the workspace advertised by the action label.",
+    "Preserved unrelated recovery errors across experience-level changes while still clearing a resolved exact workspace-level warning.",
+    "Preserved the prototype's no-side-effect boundary; no ProductRuntime, P2 runtime, Owner Mode authority, persistence, public API, wire format, credential, network, filesystem, process, browser, search, native, or device behavior was added."
+  ],
+  "mission": "MISSION-005",
+  "nextAction": "Re-resolve MISSION-001 source-inventory disposition and Worker B/P8. When and only when the nine P5 library entries are owner-authorized or owner-published and P8 is repaired with current canonical manifest, exact CI, and acceptable review, construct the ownership-clean P5/P8 union preserving only granted P5 Test Center records; regenerate P5 evidence and SOURCE_MANIFEST.sha256 canonically; run ownership/review-impact and exact P5/P8/product/P2 CI; then request fresh independent exact-candidate review.",
+  "observedHead": "e11fcff4b0abdfb83faf07680b5c95d739dd918f",
+  "observedTree": "096ad3cc1ca93ff72f6f8c0d572878a685aca4ad",
+  "pullRequest": 72,
+  "schemaVersion": 1,
+  "sequence": 6,
+  "supersededBy": null,
+  "validation": [
+    "Current Worker F product source and behavior regressions are committed on owned P5 paths; no local or exact-head test PASS is claimed because this execution environment cannot run the repository and exact Actions were not emitted.",
+    "Historical run 31107508357 remains supporting tree-equivalent evidence only and does not certify current source.",
+    "Live PR changed-file review confirms test/product/source_contract_test.dart, docs/roadmap/progress/**, and tool/worker_f_p5_ia*.py are no longer part of the Worker F PR delta; Worker B assurance helper blobs match the live Worker B head byte-for-byte.",
+    "Approved shared authority remains limited to append-only P5 Test Center registry/hierarchy records under grant MISSION-005-P5-001-TEST-CENTER; the global source inventory is not granted.",
+    "Capability support remains SOURCE_FOUNDATION; certification NOT_EVALUATED; behavioral/platform/release/consumer/production/GA support is not established."
+  ],
+  "worker": "F",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A"
+}
