@@ -1,0 +1,256 @@
+name: V3.2 Exact Source Import
+
+on:
+  push:
+    branches:
+      - agent/anarchy-autonomous-worker-missions
+    paths:
+      - '.github/workflows/v32-exact-source-import.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v32-exact-source-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    if: github.repository == 'alex00Pirotskyi/kris.ai'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/anarchy-autonomous-worker-missions
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Require exact triggering head
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+      - name: Reconstruct and verify reviewed V3.2 source archive
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/roadmap.md.xz"
+          : > "$archive"
+          binary_blobs=(
+            26761d538f4548578946ec3790c18424d5af5d22
+            f941e1873b1d71924b0822a4727a334b5c25b4e7
+            689be3907f6b75fb8e5576f4c23dd125debdab8f
+            b722b1b3a47ffccb60d1535a132d07cf8d1fe706
+            c5ec8594d283cb64b89aa12440f6e28ee625be54
+            1cdc7e5e35f1359f8db9f0c2d53a4862bdcdd077
+            fdb90f80b9a93add8bba1fed88ed2395165a46a6
+            cb777cb3acf650f89a885921fc19a9b37a5782fb
+            c4792c018dcbbb26c231d1dbf9aa4c05ee366e69
+            fdf0e05cc2cc2d87032a5d94b2eb610e891d817a
+            ec05fc87dd2ab96c210b3766f99ac50d429a027d
+          )
+          text_blobs=(
+            ad0d694edd3e3de78a0cc0e343c466fe9999b81f
+            845e700eac7a54e1082ca77ef4b60e4062c27871
+            ab2db3803611f650d09fd58640e8d926034f603f
+            ee0c3b744dba53ab45bc4853b64f367d9a4bc225
+            344356ccfe59c977d4297e9e4685800eda62ec72
+            8ba5a9654138d2f784367e2d9f6cc78a0e596949
+            388a78accda65e2d8aa25c13f9e92e3b9b22a960
+            b5579ca7088e057681d70d690983883016d70eb3
+            250fef41d96bf64f6afc6de5a32aeeee241e447e
+            6769f01ad0a09f6037f9c158ae3774f938b544c5
+            433dd8416dad993a1c3b5df17cb141cc8703ba84
+            82d7fc89ec0cea86685c411245a3b9dd43fb28e7
+            68350ec1fa6e0dedc31ee903304f2c626e077a1a
+            024d24584ed30204d26d1ce65679e6d2790fb788
+            cd51d17a86f88ed17317cb524cc2353ba84a7732
+            4f07784c756f3de5360058932cd7b385e1aad3fc
+            6ccb3becd9ed3ca251950d07c6bd8b0dccc5cf50
+            3316ce1725119680d490cb3a648110413397d03c
+            315f9a31c733b2bc1449ed68e07a819d82b85825
+            a18c9dca3a96f60dd815e2d72e062cc0d2fb1a1c
+          )
+          for sha in "${binary_blobs[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$sha" --jq .content \
+              | tr -d '\n' | base64 --decode >> "$archive"
+          done
+          for sha in "${text_blobs[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$sha" --jq .content \
+              | tr -d '\n' | base64 --decode \
+              | tr -d '\n' | base64 --decode >> "$archive"
+          done
+          test "$(wc -c < "$archive")" = 116900
+          printf '%s  %s\n' \
+            9b1068bff471f39ca747ec1c70f87f8a4a83f0a9273ac27be5b65397076ecb3b \
+            "$archive" | sha256sum -c -
+      - name: Materialize and prove exact V3.2 Markdown
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import lzma
+
+          archive = Path("${{ runner.temp }}") / "roadmap.md.xz"
+          target = Path("docs/roadmap/reference/KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md")
+          data = lzma.decompress(archive.read_bytes())
+          expected_sha = "b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c"
+          expected_blob = "998458544e9fce1355358b4c70dcb6d0fd6b5ea6"
+          assert len(data) == 428141, len(data)
+          assert data.count(b"\n") == 11679
+          assert data.endswith(b"\n")
+          assert b"\r\n" not in data
+          data.decode("utf-8")
+          assert hashlib.sha256(data).hexdigest() == expected_sha
+          header = b"blob " + str(len(data)).encode("ascii") + b"\0"
+          assert hashlib.sha1(header + data).hexdigest() == expected_blob
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_bytes(data)
+          print(f"V32_SOURCE_MATERIALIZED bytes={len(data)} lines={data.count(b'\\n')} sha256={expected_sha} git_blob={expected_blob}")
+          PY
+      - name: Install permanent exact-source validator
+        shell: bash
+        run: |
+          cat > tool/validate_v32_source.py <<'PY'
+          #!/usr/bin/env python3
+          """Validate the byte-exact V3.2 golden roadmap source."""
+          from __future__ import annotations
+
+          import hashlib
+          import pathlib
+          import sys
+
+          SOURCE = pathlib.Path("docs/roadmap/reference/KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md")
+          SHA256 = "b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c"
+          GIT_BLOB = "998458544e9fce1355358b4c70dcb6d0fd6b5ea6"
+          SIZE = 428141
+          LINES = 11679
+
+          def main() -> int:
+              root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+              path = root / SOURCE
+              data = path.read_bytes()
+              if len(data) != SIZE:
+                  raise SystemExit(f"V32_SOURCE_INVALID size={len(data)} expected={SIZE}")
+              if data.count(b"\n") != LINES:
+                  raise SystemExit(f"V32_SOURCE_INVALID lines={data.count(b'\\n')} expected={LINES}")
+              if not data.endswith(b"\n") or b"\r\n" in data:
+                  raise SystemExit("V32_SOURCE_INVALID line_endings")
+              data.decode("utf-8")
+              digest = hashlib.sha256(data).hexdigest()
+              header = b"blob " + str(len(data)).encode("ascii") + b"\0"
+              blob = hashlib.sha1(header + data).hexdigest()
+              if digest != SHA256 or blob != GIT_BLOB:
+                  raise SystemExit(f"V32_SOURCE_INVALID sha256={digest} git_blob={blob}")
+              print(f"V32_SOURCE_VALID bytes={SIZE} lines={LINES} sha256={SHA256} git_blob={GIT_BLOB}")
+              return 0
+
+          if __name__ == "__main__":
+              raise SystemExit(main())
+          PY
+          chmod +x tool/validate_v32_source.py
+      - name: Bind mission authority metadata to committed source
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          path = Path("config/mission_execution.v1.json")
+          value = json.loads(path.read_text(encoding="utf-8"))
+          source = value["authority"]["v32Source"]
+          source["reference"] = "docs/roadmap/reference/KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md"
+          source["committed"] = True
+          source["status"] = "COMMITTED_EXACT"
+          source["gitBlobSha1"] = "998458544e9fce1355358b4c70dcb6d0fd6b5ea6"
+          path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+          PY
+      - name: Enable branch-push exact-head Mission Execution Control
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path(".github/workflows/mission-execution-control.yml")
+          lines = path.read_text(encoding="utf-8").splitlines()
+          on_index = next(i for i, line in enumerate(lines) if line == "on:")
+          end = on_index + 1
+          while end < len(lines) and (not lines[end] or lines[end].startswith(" ")):
+              end += 1
+          on_block = lines[on_index + 1:end]
+          if not any(line == "  push:" for line in on_block):
+              push = [
+                  "  push:",
+                  "    branches:",
+                  "      - agent/anarchy-autonomous-worker-missions",
+                  "    paths:",
+                  "      - '.github/workflows/mission-execution-control.yml'",
+                  "      - 'config/mission_execution.v1.json'",
+                  "      - 'docs/roadmap/missions/**'",
+                  "      - 'docs/roadmap/reference/KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md'",
+                  "      - 'tool/mission_control.py'",
+                  "      - 'tool/validate_v32_source.py'",
+                  "      - 'SOURCE_MANIFEST.sha256'",
+              ]
+              lines[on_index + 1:on_index + 1] = push
+          else:
+              push_index = next(i for i in range(on_index + 1, end) if lines[i] == "  push:")
+              push_end = push_index + 1
+              while push_end < len(lines) and (not lines[push_end] or lines[push_end].startswith("    ")):
+                  push_end += 1
+              block = lines[push_index + 1:push_end]
+              if "    branches:" not in block:
+                  lines[push_index + 1:push_index + 1] = ["    branches:", "      - agent/anarchy-autonomous-worker-missions"]
+              elif "      - agent/anarchy-autonomous-worker-missions" not in block:
+                  branches_index = next(i for i in range(push_index + 1, push_end) if lines[i] == "    branches:")
+                  lines.insert(branches_index + 1, "      - agent/anarchy-autonomous-worker-missions")
+          if not any("Validate exact V3.2 source" in line for line in lines):
+              marker = None
+              for index, line in enumerate(lines):
+                  if "- name:" in line and "validat" in line.lower() and "mission" in line.lower():
+                      marker = index
+                      break
+              if marker is None:
+                  for index, line in enumerate(lines):
+                      if "python tool/mission_control.py" in line and "validate" in line:
+                          marker = index
+                          while marker > 0 and "- name:" not in lines[marker]:
+                              marker -= 1
+                          break
+              if marker is None:
+                  raise SystemExit("cannot locate mission validation step")
+              indent = lines[marker][:len(lines[marker]) - len(lines[marker].lstrip())]
+              lines[marker:marker] = [
+                  f"{indent}- name: Validate exact V3.2 source",
+                  f"{indent}  run: python tool/validate_v32_source.py .",
+              ]
+          path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+      - name: Remove one-time importer and validate final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/v32-exact-source-import.yml
+          python tool/mission_control.py --project . bootstrap
+          python tool/validate_v32_source.py .
+          python tool/mission_control.py --project . validate
+          python tool/mission_control.py --project . bootstrap --check
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Publish exact source import
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- .
+          git diff --cached --check
+          git commit -m 'ROADMAP: import byte-exact V3.2 source and enable exact-head control'
+          git push origin HEAD:agent/anarchy-autonomous-worker-missions
