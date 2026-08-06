@@ -70,13 +70,45 @@ jobs:
           CARRIER_SHA: ${{ github.sha }}
           BRANCH: agent/a/p2-004-measurement-contract-repair
         run: |
-          git fetch origin "$BRANCH"
-          test "$(git rev-parse "origin/$BRANCH")" = "$CARRIER_SHA"
-          git config user.name "github-actions[bot]"
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          test -n "$(git status --porcelain=v1)"
-          git commit -m \
-            "fix(p2-004): harden trusted measurement receipts"
-          git push origin "HEAD:$BRANCH"
+          set +e
+          {
+            set -euo pipefail
+            remote_sha="$(
+              git ls-remote --exit-code origin "refs/heads/$BRANCH" |
+                awk '{print $1}'
+            )"
+            test "$remote_sha" = "$CARRIER_SHA"
+            git config user.name "github-actions[bot]"
+            git config user.email \
+              "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git status --short
+            if git diff --cached --quiet; then
+              echo "No materialized source changes are staged." >&2
+              exit 1
+            fi
+            git commit -m \
+              "fix(p2-004): harden trusted measurement receipts"
+            git push --porcelain origin \
+              "HEAD:refs/heads/$BRANCH"
+          } >"$RUNNER_TEMP/publish.log" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/publish.log"
+          if [ "$rc" -ne 0 ]; then
+            python - "$RUNNER_TEMP/publish.log" <<'PYCODE'
+          import pathlib
+          import sys
+
+          text = pathlib.Path(sys.argv[1]).read_text(
+              encoding="utf-8", errors="replace"
+          )[-12000:]
+          escaped = (
+              text.replace("%", "%25")
+              .replace("\r", "%0D")
+              .replace("\n", "%0A")
+          )
+          print(f"::error title=P2-004 publication::{escaped}")
+          PYCODE
+            exit "$rc"
+          fi
