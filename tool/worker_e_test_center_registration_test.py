@@ -1,87 +1,47 @@
 #!/usr/bin/env python3
-"""Atomicity and idempotence regressions for Worker E Test Center registration."""
 from __future__ import annotations
-
-import importlib.util
+import copy
 import json
 from pathlib import Path
-import shutil
 import sys
 import tempfile
 import unittest
-from unittest import mock
 
-ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "tool" / "worker_e_test_center_registration.py"
-SPEC = importlib.util.spec_from_file_location("worker_e_test_center_registration", MODULE_PATH)
-assert SPEC and SPEC.loader
-registration = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = registration
-SPEC.loader.exec_module(registration)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import worker_e_test_center_registration as registration
 
-INDEX_PATHS = (
-    Path("release/evidence/P11-001/native-capability-inventory.json"),
-    Path("release/evidence/P11-001/platform-gap-matrix.json"),
-    Path("release/evidence/P11-001/conformance-fixture-catalog.json"),
-    Path("release/evidence/P11-001/isolation-readiness.json"),
-)
+BASE = {"schemaVersion": "1.0.0", "testModules": [], "testCases": [], "projectTestProfiles": [], "affectedTestMappings": []}
 
-
-class WorkerETestCenterRegistrationTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix="worker-e-registration-")
-        self.project = Path(self.temp.name)
-        for relative in (registration.REGISTRY, *INDEX_PATHS):
-            source = ROOT / relative
-            target = self.project / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-
-    def tearDown(self) -> None:
+class RegistrationTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        (self.root / "config").mkdir()
+        (self.root / "release/evidence/P11-001").mkdir(parents=True)
+        (self.root / registration.REGISTRY).write_text(json.dumps(BASE))
+        source_root = Path(__file__).resolve().parents[1]
+        (self.root / registration.SPEC).write_text((source_root / registration.SPEC).read_text())
+        (self.root / registration.HANDOFF).write_text((source_root / registration.HANDOFF).read_text())
+    def tearDown(self):
         self.temp.cleanup()
-
-    def base_registry_bytes(self) -> bytes:
-        path = self.project / registration.REGISTRY
-        data = json.loads(path.read_text(encoding="utf-8"))
-        data["testModules"] = [
-            row for row in data["testModules"] if row.get("moduleId") != registration.MODULE_ID
-        ]
-        data["testCases"] = [
-            row for row in data["testCases"] if row.get("moduleId") != registration.MODULE_ID
-        ]
-        data["projectTestProfiles"] = [
-            row
-            for row in data["projectTestProfiles"]
-            if not row.get("stableCheckId", "").startswith("tc.p11.readiness.")
-        ]
-        data["affectedTestMappings"] = [
-            row
-            for row in data["affectedTestMappings"]
-            if not row.get("mappingId", "").startswith("affected.p11-readiness")
-        ]
-        return registration.canonical_bytes(data)
-
-    def test_registration_is_deterministic_and_idempotent(self) -> None:
-        path = self.project / registration.REGISTRY
-        expected = path.read_bytes()
-        path.write_bytes(self.base_registry_bytes())
-        first = registration.register(self.project)
-        first_bytes = path.read_bytes()
-        second = registration.register(self.project)
-        self.assertTrue(first["changed"])
-        self.assertFalse(second["changed"])
-        self.assertEqual(expected, first_bytes)
-        self.assertEqual(first_bytes, path.read_bytes())
-
-    def test_replace_failure_preserves_original(self) -> None:
-        path = self.project / registration.REGISTRY
-        path.write_bytes(self.base_registry_bytes())
-        before = path.read_bytes()
-        with mock.patch.object(registration.os, "replace", side_effect=OSError("injected")):
-            with self.assertRaisesRegex(OSError, "injected"):
-                registration.register(self.project)
-        self.assertEqual(before, path.read_bytes())
-
+    def test_pending_is_nonmutating(self):
+        before = (self.root / registration.REGISTRY).read_bytes()
+        first = registration.validate_handoff(self.root)
+        second = registration.validate_handoff(self.root)
+        self.assertEqual("OWNER_HANDOFF_PENDING", first["state"])
+        self.assertEqual(first, second)
+        self.assertEqual(before, (self.root / registration.REGISTRY).read_bytes())
+    def test_partial_publication_fails(self):
+        data = copy.deepcopy(BASE)
+        data["testModules"].append({"moduleId": registration.MODULE_ID})
+        (self.root / registration.REGISTRY).write_text(json.dumps(data))
+        with self.assertRaisesRegex(registration.RegistrationError, "partial or stale"):
+            registration.validate_handoff(self.root)
+    def test_complete_publication_passes(self):
+        spec = json.loads((self.root / registration.SPEC).read_text())
+        complete = registration.build_registry(copy.deepcopy(BASE), spec)
+        (self.root / registration.REGISTRY).write_bytes(registration.canonical_bytes(complete))
+        self.assertEqual("OWNER_PUBLICATION_PRESENT", registration.validate_handoff(self.root)["state"])
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)

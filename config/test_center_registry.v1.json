@@ -1,1 +1,328 @@
-{"affectedTestMappings":[{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.test-center-contracts","pathPatterns":["config/test_center_registry.v1.json","docs/testing/**","schemas/test_center.v1.json","tool/test_center_contracts.py"],"priority":10,"testIds":["tc.test-center.contracts","tc.test-center.semantic-regressions"]},{"mappingId":"affected.testing-evidence-bridges","pathPatterns":["schemas/assurance_report.v1.json","schemas/project_profile.v2.json","schemas/verification_report.v1.json","tool/assurance_model.py"],"priority":20,"testIds":["tc.test-center.contracts","tc.test-center.semantic-regressions"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-dependencies","pathPatterns":["release/evidence/P11-001/dependency-status.json","docs/adr/ADR-0001-runtime-boundaries.md","docs/adr/ADR-0004-automation-host.md","docs/adr/ADR-0012-p2-automation-host.md","release/evidence/P1-001/**","release/evidence/P1-012/**","release/evidence/P2-004/**"],"priority":30,"testIds":["tc.p11.readiness.dependency-status","tc.p11.readiness.claim-boundary"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-native-inventory","pathPatterns":["release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/native-capabilities/*.json"],"priority":31,"testIds":["tc.p11.readiness.native-capability-inventory","tc.p11.readiness.claim-boundary"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-windows-capabilities","pathPatterns":["authority_service/native/windows/**","automation_host/src/windows-*.mjs","windows/**"],"priority":32,"testIds":["tc.p11.readiness.native-capability-inventory","tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-macos-capabilities","pathPatterns":["authority_service/native/macos/**","macos/**"],"priority":33,"testIds":["tc.p11.readiness.native-capability-inventory","tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-linux-capabilities","pathPatterns":["authority_service/native/linux/**","tool/sandbox_worker.py","tool/sandbox_worker_test.py","linux/**"],"priority":34,"testIds":["tc.p11.readiness.native-capability-inventory","tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance","tc.p11.readiness.isolation-inventory"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-semantic-matrix","pathPatterns":["release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/*.json"],"priority":35,"testIds":["tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance","tc.p11.readiness.no-silent-fallback","tc.p11.readiness.claim-boundary"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-conformance-fixtures","pathPatterns":["release/evidence/P11-001/conformance-fixture-catalog.json","release/evidence/P11-001/conformance-fixtures/*.json","evals/fixtures/p11/**"],"priority":36,"testIds":["tc.p11.readiness.semantic-conformance","tc.p11.readiness.fixture-catalog","tc.p11.readiness.nonmutation"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-isolation","pathPatterns":["release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/isolation-tiers/*.json","tool/sandbox_worker.py","automation_host/src/process-tree.mjs"],"priority":37,"testIds":["tc.p11.readiness.no-silent-fallback","tc.p11.readiness.isolation-inventory","tc.p11.readiness.claim-boundary"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-devices","pathPatterns":["release/evidence/P11-001/device-contract-readiness.json"],"priority":38,"testIds":["tc.p11.readiness.device-contracts","tc.p11.readiness.claim-boundary"]},{"mappingId":"affected.p11-readiness-validator","pathPatterns":["tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_readiness_test.py",".github/workflows/worker-e-native-parity-readiness.yml","tool/worker_e_test_center_registration.py","tool/worker_e_native_parity_model.py","tool/worker_e_test_center_registration_test.py"],"priority":39,"testIds":["tc.p11.readiness.dependency-status","tc.p11.readiness.native-capability-inventory","tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance","tc.p11.readiness.fixture-catalog","tc.p11.readiness.no-silent-fallback","tc.p11.readiness.isolation-inventory","tc.p11.readiness.device-contracts","tc.p11.readiness.claim-boundary","tc.p11.readiness.nonmutation"]},{"mappingId":"affected.p11-readiness-test-center","pathPatterns":["config/test_center_registry.v1.json"],"priority":40,"testIds":["tc.p11.readiness.dependency-status","tc.p11.readiness.native-capability-inventory","tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance","tc.p11.readiness.fixture-catalog","tc.p11.readiness.no-silent-fallback","tc.p11.readiness.isolation-inventory","tc.p11.readiness.device-contracts","tc.p11.readiness.claim-boundary","tc.p11.readiness.nonmutation"]},{"mappingId":"affected.p11-readiness-conditional-adrs","pathPatterns":["docs/adr/P11-*.md","docs/architecture/P11-*.md"],"priority":41,"testIds":["tc.p11.readiness.dependency-status","tc.p11.readiness.platform-gap-matrix","tc.p11.readiness.semantic-conformance","tc.p11.readiness.no-silent-fallback","tc.p11.readiness.claim-boundary"]},{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.p11-readiness-progress","pathPatterns":["docs/roadmap/progress/2026-08-05-p11-native-parity-readiness.md","release/evidence/P11-001/manifest.json"],"priority":42,"testIds":["tc.p11.readiness.dependency-status","tc.p11.readiness.claim-boundary","tc.p11.readiness.nonmutation"]}],"projectTestProfiles":[{"affectedPaths":["config/test_center_registry.v1.json","docs/testing/**","schemas/test_center.v1.json","tool/test_center_contracts.py"],"argv":["python","tool/test_center_contracts.py","check","--project","."],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/worker-b/test-center-contract-validation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.test-center.contracts","timeoutSeconds":60,"workingDirectory":"."},{"affectedPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","tool/test_center_contracts.py","tool/test_center_contracts_test.py"],"argv":["python","-m","unittest","-v","tool/test_center_contracts_test.py"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-b/test-center-semantic-regressions.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","tool/test_center_contracts.py","tool/test_center_contracts_test.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.test-center.semantic-regressions","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/dependency-status.json","release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/device-contract-readiness.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.claim-boundary"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.claim-boundary.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/dependency-status.json","release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/device-contract-readiness.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.claim-boundary","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/dependency-status.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.dependency-status"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.dependency-status.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/dependency-status.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.dependency-status","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/device-contract-readiness.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.device-contracts"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.device-contracts.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/device-contract-readiness.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.device-contracts","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/conformance-fixture-catalog.json","release/evidence/P11-001/conformance-fixtures/fixtures-01.json","release/evidence/P11-001/conformance-fixtures/fixtures-02.json","release/evidence/P11-001/conformance-fixtures/fixtures-03.json","release/evidence/P11-001/conformance-fixtures/fixtures-04.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.fixture-catalog"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.fixture-catalog.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/conformance-fixture-catalog.json","release/evidence/P11-001/conformance-fixtures/fixtures-01.json","release/evidence/P11-001/conformance-fixtures/fixtures-02.json","release/evidence/P11-001/conformance-fixtures/fixtures-03.json","release/evidence/P11-001/conformance-fixtures/fixtures-04.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.fixture-catalog","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/isolation-tiers/windows.json","release/evidence/P11-001/isolation-tiers/macos.json","release/evidence/P11-001/isolation-tiers/linux.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.isolation-inventory"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.isolation-inventory.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/isolation-tiers/windows.json","release/evidence/P11-001/isolation-tiers/macos.json","release/evidence/P11-001/isolation-tiers/linux.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.isolation-inventory","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/native-capabilities/windows-01.json","release/evidence/P11-001/native-capabilities/windows-02.json","release/evidence/P11-001/native-capabilities/windows-03.json","release/evidence/P11-001/native-capabilities/macos-01.json","release/evidence/P11-001/native-capabilities/macos-02.json","release/evidence/P11-001/native-capabilities/linux-01.json","release/evidence/P11-001/native-capabilities/linux-02.json","release/evidence/P11-001/native-capabilities/linux-03.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.native-capability-inventory"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.native-capability-inventory.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/native-capabilities/windows-01.json","release/evidence/P11-001/native-capabilities/windows-02.json","release/evidence/P11-001/native-capabilities/windows-03.json","release/evidence/P11-001/native-capabilities/macos-01.json","release/evidence/P11-001/native-capabilities/macos-02.json","release/evidence/P11-001/native-capabilities/linux-01.json","release/evidence/P11-001/native-capabilities/linux-02.json","release/evidence/P11-001/native-capabilities/linux-03.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.native-capability-inventory","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.no-silent-fallback"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.no-silent-fallback.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.no-silent-fallback","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/dependency-status.json","release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/native-capabilities/windows-01.json","release/evidence/P11-001/native-capabilities/windows-02.json","release/evidence/P11-001/native-capabilities/windows-03.json","release/evidence/P11-001/native-capabilities/macos-01.json","release/evidence/P11-001/native-capabilities/macos-02.json","release/evidence/P11-001/native-capabilities/linux-01.json","release/evidence/P11-001/native-capabilities/linux-02.json","release/evidence/P11-001/native-capabilities/linux-03.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","release/evidence/P11-001/conformance-fixture-catalog.json","release/evidence/P11-001/conformance-fixtures/fixtures-01.json","release/evidence/P11-001/conformance-fixtures/fixtures-02.json","release/evidence/P11-001/conformance-fixtures/fixtures-03.json","release/evidence/P11-001/conformance-fixtures/fixtures-04.json","release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/isolation-tiers/windows.json","release/evidence/P11-001/isolation-tiers/macos.json","release/evidence/P11-001/isolation-tiers/linux.json","release/evidence/P11-001/device-contract-readiness.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py","tool/worker_e_native_parity_readiness_test.py","tool/worker_e_test_center_registration_test.py","tool/worker_e_test_center_registration.py","docs/roadmap/progress/2026-08-05-p11-native-parity-readiness.md",".github/workflows/worker-e-native-parity-readiness.yml"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.nonmutation"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.nonmutation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/dependency-status.json","release/evidence/P11-001/native-capability-inventory.json","release/evidence/P11-001/native-capabilities/windows-01.json","release/evidence/P11-001/native-capabilities/windows-02.json","release/evidence/P11-001/native-capabilities/windows-03.json","release/evidence/P11-001/native-capabilities/macos-01.json","release/evidence/P11-001/native-capabilities/macos-02.json","release/evidence/P11-001/native-capabilities/linux-01.json","release/evidence/P11-001/native-capabilities/linux-02.json","release/evidence/P11-001/native-capabilities/linux-03.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","release/evidence/P11-001/conformance-fixture-catalog.json","release/evidence/P11-001/conformance-fixtures/fixtures-01.json","release/evidence/P11-001/conformance-fixtures/fixtures-02.json","release/evidence/P11-001/conformance-fixtures/fixtures-03.json","release/evidence/P11-001/conformance-fixtures/fixtures-04.json","release/evidence/P11-001/isolation-readiness.json","release/evidence/P11-001/isolation-tiers/windows.json","release/evidence/P11-001/isolation-tiers/macos.json","release/evidence/P11-001/isolation-tiers/linux.json","release/evidence/P11-001/device-contract-readiness.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py","tool/worker_e_native_parity_readiness_test.py","tool/worker_e_test_center_registration_test.py","tool/worker_e_test_center_registration.py","docs/roadmap/progress/2026-08-05-p11-native-parity-readiness.md",".github/workflows/worker-e-native-parity-readiness.yml"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.nonmutation","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.platform-gap-matrix"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.platform-gap-matrix.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.platform-gap-matrix","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":["release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"argv":["python","tool/worker_e_native_parity_readiness.py","--check","--project",".","--test-id","tc.p11.readiness.semantic-conformance"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-e/tc.p11.readiness.semantic-conformance.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","release/evidence/P11-001/platform-gap-matrix.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-01.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-02.json","release/evidence/P11-001/platform-gap-matrix/process-filesystem-03.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-01.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-02.json","release/evidence/P11-001/platform-gap-matrix/desktop-lifecycle-03.json","release/evidence/P11-001/platform-gap-matrix/security-device-01.json","release/evidence/P11-001/manifest.json","tool/worker_e_native_parity_readiness.py","tool/worker_e_native_parity_model.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p11.readiness.semantic-conformance","timeoutSeconds":120,"workingDirectory":"."}],"registryId":"test-center.canonical-v1","schemaVersion":"1.0.0","testCases":[{"assuranceClass":"source_contract","displayName":"Canonical Test Center contract check","mandatory":true,"moduleId":"tm.test-center","purpose":"Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.","roadmapTaskIds":[],"testId":"tc.test-center.contracts"},{"assuranceClass":"source_contract","displayName":"Test Center semantic regression suite","mandatory":true,"moduleId":"tm.test-center","purpose":"Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.","roadmapTaskIds":[],"testId":"tc.test-center.semantic-regressions"},{"assuranceClass":"source_contract","displayName":"P11 claim boundary","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Reject P11-002+, P15, native parity, isolation, device, or release support claims.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.claim-boundary"},{"assuranceClass":"source_contract","displayName":"P11 dependency status","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate exact P1-001, P2-004, and P1-012 dependency decisions without inferring completion from phase-level claims.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.dependency-status"},{"assuranceClass":"source_contract","displayName":"Device contract readiness","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate privacy-safe device states and keep P11-009 and P15-007 unclaimed.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.device-contracts"},{"assuranceClass":"source_contract","displayName":"Native conformance fixture catalog","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate deterministic bounded fixture specifications without executing privileged or personal-device behavior.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.fixture-catalog"},{"assuranceClass":"source_contract","displayName":"Isolation readiness inventory","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate advertised-versus-actual isolation tiers and reject source markers as support claims.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.isolation-inventory"},{"assuranceClass":"source_contract","displayName":"Native capability inventory","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate unique native capability identities, repository paths, platform coverage, and source-versus-behavior classifications.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.native-capability-inventory"},{"assuranceClass":"source_contract","displayName":"No silent native fallback","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Reject silent downgrade into shell parsing, blind input, coordinate-only actions, unknown process identity, or unverified cleanup.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.no-silent-fallback"},{"assuranceClass":"source_contract","displayName":"Worker E non-mutation","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Prove Worker E check mode leaves durable repository inputs byte-identical.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.nonmutation"},{"assuranceClass":"source_contract","displayName":"Platform semantic gap matrix","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate the platform-neutral semantic matrix while preserving Windows, macOS, and Linux truth.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.platform-gap-matrix"},{"assuranceClass":"source_contract","displayName":"Native semantic conformance contract","mandatory":true,"moduleId":"tm.p11-readiness","purpose":"Validate request, result, error, timeout, cancellation, cleanup, and evidence-receipt semantics.","roadmapTaskIds":["P11-001"],"testId":"tc.p11.readiness.semantic-conformance"}],"testModules":[{"assuranceClasses":["source_contract","behavioral","platform","release"],"displayName":"Canonical Test Center","moduleId":"tm.test-center","owner":"Worker B / shared testing architecture","purpose":"Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."},{"assuranceClasses":["source_contract","behavioral","platform","release"],"displayName":"P11 Native Parity Readiness","moduleId":"tm.p11-readiness","owner":"Worker E / native parity readiness","purpose":"Validate dependency truth, cross-platform semantic inventories, deterministic conformance specifications, isolation and device claim boundaries, and non-mutation without promoting native platform support."}],"testingStudioPresentationRecords":[{"assuranceClass":"source_contract","capability":"Canonical Test Center contracts","certificationImpact":"A PASS validates only the shared data contract; it does not certify a product candidate.","currentState":"PASS","displayName":"Development Verification contract","evidenceLinks":[],"lastExactCommitResult":null,"phase":"Shared testing architecture","platformMatrix":{"observed":["linux"],"required":["linux","macos","windows"]},"presentationId":"presentation.test-center.development-verification","purpose":"Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.","requiredNextAction":"Run both stable checks on the exact candidate across the required platform matrix before certification.","staleResultWarning":false,"stateDomain":"TEST_EXECUTION","supportClaimImpact":"No capability or release support claim is inferred from this source-contract PASS.","surface":"DEVELOPMENT_VERIFICATION"}]}
+{
+  "affectedTestMappings": [
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.test-center-contracts",
+      "pathPatterns": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "priority": 10,
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.p8-formal-test-hierarchy",
+      "pathPatterns": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
+      ],
+      "priority": 15,
+      "testIds": [
+        "tc.p8.formal-test-hierarchy",
+        "tc.p8.formal-test-hierarchy-regressions"
+      ]
+    },
+    {
+      "mappingId": "affected.testing-evidence-bridges",
+      "pathPatterns": [
+        "schemas/assurance_report.v1.json",
+        "schemas/project_profile.v2.json",
+        "schemas/verification_report.v1.json",
+        "tool/assurance_model.py"
+      ],
+      "priority": 20,
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
+    }
+  ],
+  "projectTestProfiles": [
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_contracts.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/worker-b/test-center-contract-validation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.test-center.contracts",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_contracts_test.py"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/test-center-semantic-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.test-center.semantic-regressions",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_assurance_hierarchy.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/TEST_CENTER/P8-001/formal-test-hierarchy-validation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p8.formal-test-hierarchy",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/p8-001-formal-hierarchy-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p8.formal-test-hierarchy-regressions",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    }
+  ],
+  "registryId": "test-center.canonical-v1",
+  "schemaVersion": "1.0.0",
+  "testCases": [
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Canonical Test Center contract check",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.contracts"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Test Center semantic regression suite",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.semantic-regressions"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P8-001 formal Test Center hierarchy",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Enforce the canonical eight-level assurance hierarchy, exact ordering, report fields, fail-closed level handling, and complete stable-test binding coverage.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "P8-001 hierarchy semantic regressions",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, and support-promoting source checks are rejected.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy-regressions"
+    }
+  ],
+  "testModules": [
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral",
+        "platform",
+        "release"
+      ],
+      "displayName": "Canonical Test Center",
+      "moduleId": "tm.test-center",
+      "owner": "Worker B / shared testing architecture",
+      "purpose": "Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral"
+      ],
+      "displayName": "Reliability, Security & Diagnostics",
+      "moduleId": "tm.reliability-security-diagnostics",
+      "owner": "Worker B / MISSION-002",
+      "purpose": "Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."
+    }
+  ],
+  "testingStudioPresentationRecords": [
+    {
+      "assuranceClass": "source_contract",
+      "capability": "Canonical Test Center contracts",
+      "certificationImpact": "A PASS validates only the shared data contract; it does not certify a product candidate.",
+      "currentState": "PASS",
+      "displayName": "Development Verification contract",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "Shared testing architecture",
+      "platformMatrix": {
+        "observed": [
+          "linux"
+        ],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.test-center.development-verification",
+      "purpose": "Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.",
+      "requiredNextAction": "Run both stable checks on the exact candidate across the required platform matrix before certification.",
+      "staleResultWarning": false,
+      "stateDomain": "TEST_EXECUTION",
+      "supportClaimImpact": "No capability or release support claim is inferred from this source-contract PASS.",
+      "surface": "DEVELOPMENT_VERIFICATION"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0.0",
+  "reportId": "assurance-report.p8-001-unit-pass",
+  "generatedAt": "2026-08-06T10:30:02Z",
+  "candidateCommit": "1111111111111111111111111111111111111111",
+  "candidateTree": "2222222222222222222222222222222222222222",
+  "executionResult": {
+    "resultId": "result.p8-001.unit-linux",
+    "testId": "tc.p8.formal-test-hierarchy-regressions",
+    "moduleId": "tm.reliability-security-diagnostics",
+    "roadmapTaskIds": ["P8-001"],
+    "commit": "1111111111111111111111111111111111111111",
+    "tree": "2222222222222222222222222222222222222222",
+    "branch": "agent/b/test-center-contracts-and-review",
+    "workingTreeIdentity": {"clean": true, "statusSha256": "0000000000000000000000000000000000000000000000000000000000000000", "diffSha256": "0000000000000000000000000000000000000000000000000000000000000000", "untrackedSha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    "platform": "linux",
+    "runner": {"provider": "fixture", "runnerId": "fixture-linux", "image": "fixture", "architecture": "x86_64"},
+    "toolchain": {"digest": "0000000000000000000000000000000000000000000000000000000000000000", "components": {"python": "3.12.10"}},
+    "environment": {"digest": "0000000000000000000000000000000000000000000000000000000000000000", "allowlisted": {"CI": "true"}},
+    "startedAt": "2026-08-06T10:30:00Z",
+    "endedAt": "2026-08-06T10:30:01Z",
+    "durationMillis": 1000,
+    "resultState": "PASS",
+    "exitCode": 0,
+    "assuranceClass": "behavioral",
+    "evidenceReferences": [
+      {"evidenceId": "evidence.p8-001.unit-pass.candidate", "kind": "ORIGINAL", "uri": "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-candidate-identity.json", "sha256": "2b22953ae4b4dbc2c241a9bf7fd86ee214045213ed904a044f49d8d66a91978f", "immutable": true, "commit": "1111111111111111111111111111111111111111", "tree": "2222222222222222222222222222222222222222", "createdAt": "2026-08-06T10:30:01Z", "mediaType": "application/json", "sourceEvidenceIds": []},
+      {"evidenceId": "evidence.p8-001.unit-pass.result", "kind": "ORIGINAL", "uri": "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-machine-result.json", "sha256": "69974389e0f180de6ee4ddbaede800b061111df82e2c079f12cf76fa5181595e", "immutable": true, "commit": "1111111111111111111111111111111111111111", "tree": "2222222222222222222222222222222222222222", "createdAt": "2026-08-06T10:30:01Z", "mediaType": "application/json", "sourceEvidenceIds": []},
+      {"evidenceId": "evidence.p8-001.unit-pass.fixture", "kind": "ORIGINAL", "uri": "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-deterministic-fixture.json", "sha256": "f150c1d8435e6494ab4bf7ce310fb8fe65470fc9e4196bc34c3a6027b58364b4", "immutable": true, "commit": "1111111111111111111111111111111111111111", "tree": "2222222222222222222222222222222222222222", "createdAt": "2026-08-06T10:30:01Z", "mediaType": "application/json", "sourceEvidenceIds": []}
+    ],
+    "cleanupState": "CLEAN",
+    "failureClassification": "NONE",
+    "certificationImpact": "NONE"
+  },
+  "assuranceLevel": "unit",
+  "hierarchyBinding": {"testId": "tc.p8.formal-test-hierarchy-regressions", "levelId": "unit", "moduleId": "tm.reliability-security-diagnostics", "roadmapTaskIds": ["P8-001"], "sourceOnly": false},
+  "requestedSupportImpact": "SOURCE_FOUNDATION",
+  "evidenceReferences": ["evidence.p8-001.unit-pass.candidate", "evidence.p8-001.unit-pass.result", "evidence.p8-001.unit-pass.fixture"],
+  "evidenceBindings": [
+    {"category": "exact_candidate_identity", "evidenceId": "evidence.p8-001.unit-pass.candidate"},
+    {"category": "machine_readable_result", "evidenceId": "evidence.p8-001.unit-pass.result"},
+    {"category": "deterministic_fixture", "evidenceId": "evidence.p8-001.unit-pass.fixture"}
+  ],
+  "predecessorResults": []
+}
