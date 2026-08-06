@@ -11,13 +11,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: materialize-mission-delivery-enforcement-v3
+  group: materialize-mission-delivery-enforcement-v4
   cancel-in-progress: true
 
 jobs:
   materialize:
     if: github.repository == 'alex00Pirotskyi/kris.ai'
-    runs-on: macos-15
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -38,7 +38,6 @@ jobs:
           from pathlib import Path
           import base64
           import hashlib
-          import lzma
           import tarfile
 
           parts = sorted(Path('docs/roadmap/missions/materializer').glob('mission-delivery-patch.part*.b64'))
