@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "recordType": "INDEPENDENT_REVIEW",
+  "workExecutionId": "WRK-20260806T181602Z-65512959",
+  "worker": "C",
+  "recordedAt": "2026-08-06T18:20:19Z",
+  "executionControl": {
+    "source": "agent/mission-delivery-enforcement-v1",
+    "overlayOnly": true,
+    "promptPath": "docs/roadmap/missions/UNIFIED_AUTONOMOUS_WORKER_PROMPT.md",
+    "pr": 78,
+    "integrated": false
+  },
+  "observedRepository": {
+    "protectedMain": {
+      "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+    },
+    "missionSystem": {
+      "branch": "agent/anarchy-autonomous-worker-missions",
+      "commit": "74d217e3ac023511371b394e843d2f297c263e96",
+      "tree": "f1fe7c179e358708d13b8936773632ff93002640"
+    }
+  },
+  "reviewTarget": {
+    "pullRequest": 78,
+    "mission": "MISSION-015",
+    "candidateAuthorWorker": "J",
+    "base": "082b4e2b6c95b3f9d00f42f79b2aa035f43b116d",
+    "head": "ef18bdf4562ddff499af85f797accf5c77a94710",
+    "tree": "9bd9c9512f21e41e75ab13e344ddfc1664be6530",
+    "changedFileCount": 25,
+    "changedFileSetSha256": "b629f7dbed07d78b4bc6a3182f97327a81e5c763a4fd1daa9d9cf4de1adad109",
+    "reviewImpact": {
+      "classification": "MULTI_SCOPE_REVIEW_INVALIDATED",
+      "invalidatedScopes": [
+        "SOURCE",
+        "SECURITY",
+        "EVIDENCE",
+        "INTEGRATION"
+      ]
+    }
+  },
+  "decision": "BLOCKED_EXTERNAL",
+  "requiredTechnicalDecision": "REQUEST_CHANGES",
+  "githubReview": {
+    "commentReviewId": 4877342582,
+    "formalRequestChangesAttempt": "REJECTED_BY_GITHUB_OWN_PR",
+    "independentApprovalSatisfied": false,
+    "reason": "The connected GitHub account owns PR #78, so GitHub correctly rejected a formal REQUEST_CHANGES review. The exact findings were posted as a non-approving COMMENT review and cannot satisfy the independent-review gate."
+  },
+  "blockingFindings": [
+    {
+      "id": "P78-C-001",
+      "severity": "BLOCKING",
+      "title": "Ownership enforcement does not enforce the active claim lock",
+      "detail": "classify_changed_paths authorizes from mutable missionPathPolicies and does not intersect actual changes with the active claim exclusivePaths, worker identity, or claimed branch. A candidate can expand its own policy and pass while changing paths absent from the durable claim.",
+      "requiredRepair": "Bind ownership to the exact durable active claim, enforce head-branch equality or an explicit completed transfer/grant, and prevent candidate-head policy edits from self-authorizing their own diff."
+    },
+    {
+      "id": "P78-C-002",
+      "severity": "BLOCKING",
+      "title": "Accepted and merged-main delivery states can be fabricated",
+      "detail": "validate_record checks only syntactic commit/tree strings and non-empty evidence. It does not verify dependencies, evidence existence or hashes, settled exact-head CI, independent review, mission acceptance gates, authorization, or protected-main ancestry. mergedMainCommit is only required to be non-empty.",
+      "requiredRepair": "Add fail-closed acceptance authorization and live protected-main verification with negative tests for unmet dependencies, fabricated evidence, absent review, red or pending CI, and fake main identities."
+    },
+    {
+      "id": "P78-C-003",
+      "severity": "BLOCKING",
+      "title": "Append-only delivery history is globally writable",
+      "detail": "delivery records are classified as common generated paths, allowing any mission to add, modify, rename, or delete another mission's history as GENERATOR_OWNED. The implementation does not prove canonical generator provenance or immutable base-tree history, and same-second record ties are not causally ordered.",
+      "requiredRepair": "Enforce add-only base-tree semantics, mission/task ownership, immutable prior records, canonical generator provenance, and deterministic tie resolution."
+    }
+  ],
+  "exactHeadCi": [
+    {
+      "workflow": "product-gates",
+      "run": 31125590807,
+      "conclusion": "action_required"
+    },
+    {
+      "workflow": "Mission Execution Control",
+      "run": 31125590871,
+      "conclusion": "action_required"
+    },
+    {
+      "workflow": "P2 Integration Alignment",
+      "run": 31125589909,
+      "conclusion": "action_required"
+    },
+    {
+      "workflow": "Mission Delivery Enforcement",
+      "run": 31125589939,
+      "conclusion": "action_required"
+    }
+  ],
+  "artifacts": "NONE_AVAILABLE",
+  "supportBoundary": {
+    "deliveryGateIntegrated": false,
+    "mergeAuthorized": false,
+    "acceptedProgressPromotion": false,
+    "behavioralEvidencePromotion": false,
+    "platformEvidencePromotion": false,
+    "releaseOrGaPromotion": false
+  },
+  "nextAction": "Worker J must repair P78-C-001 through P78-C-003, obtain execution approval for all exact-head workflows, publish ownership and review-impact artifacts, and request a fresh exact-head review from a genuinely independent GitHub identity."
+}
