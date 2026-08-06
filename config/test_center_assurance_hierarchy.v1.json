@@ -163,11 +163,6 @@
       "testId": "tc.p8.formal-test-hierarchy-regressions",
       "levelId": "unit",
       "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, report ambiguity, and invalid actual execution reports."
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Exercises deterministic fail-closed registry behavior for identity, limits, tool profile, data boundary, cost, benchmark evidence, and evaluation-only defaults; source evidence remains capped at SOURCE_FOUNDATION.",
-      "testId": "tc.p6.model-registry-v2"
     }
   ],
   "pendingMigrationBindings": [

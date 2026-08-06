@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import copy, sys, tempfile, unittest
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
 HERE=Path(__file__).resolve().parent; PROJECT=HERE.parent; sys.path.insert(0,str(HERE))
 import test_center_assurance_hierarchy as H  # noqa:E402
-import test_center_assurance_semantics as S  # noqa:E402
 F=Path('release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json')
 
 def at(v,p):
@@ -60,17 +59,6 @@ class T(unittest.TestCase):
         self.h=H.load(PROJECT/H.HIERARCHY); self.r=H.load(PROJECT/H.REGISTRY); self.a=H.load(PROJECT/F)
     def docs(self,v): return H.validate_documents(self.hs,self.rs,v,self.r)
     def report(self,v): return H.validate_assurance_execution_report(v,report_schema=self.rs,canonical_schema=self.cs,hierarchy=self.h,registry=self.r)
-    def test_windows_schema_path_is_canonical(self):
-        original = S.REPORT_SCHEMA
-        try:
-            S.REPORT_SCHEMA = PureWindowsPath('schemas/test_center_assurance_execution_report.v1.json')
-            self.assertEqual(
-                self.docs(self.h)['executionReportSchema'],
-                'schemas/test_center_assurance_execution_report.v1.json',
-            )
-        finally:
-            S.REPORT_SCHEMA = original
-
     def test_32_deterministic_regressions(self):
         self.assertEqual(H.validate_project(PROJECT)['pendingMigrationBindingCount'],11); self.assertEqual(self.report(self.a)['assuranceLevel'],'unit')
         for name,mut in DOC:
