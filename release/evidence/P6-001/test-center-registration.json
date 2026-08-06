@@ -1,16 +1,26 @@
 {
-  "assuranceClass": "behavioral",
   "authorityMission": "MISSION-002",
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
-  "moduleId": "tm.agent-quality-model-routing",
-  "mutationPolicy": "NON_MUTATING",
-  "platforms": [
+  "integrationStatus": "OWNER_HANDOFF_PENDING",
+  "mission": "MISSION-006",
+  "nonClaims": [
+    "canonical Test Center registration",
+    "assurance hierarchy binding",
+    "behavioral support",
+    "platform support",
+    "release support"
+  ],
+  "requestedAssuranceClass": "behavioral",
+  "requestedModuleId": "tm.agent-quality-model-routing",
+  "requestedMutationPolicy": "NON_MUTATING",
+  "requestedPlatforms": [
     "linux",
     "macos",
     "windows"
   ],
+  "requestedStableCheckId": "tc.p6.model-registry-v2",
   "schemaVersion": 1,
-  "stableCheckId": "tc.p6.model-registry-v2",
   "task": "P6-001",
-  "testCenterTask": "P6-TC-001"
+  "testCenterTask": "P6-TC-001",
+  "workerBranchContainsAuthorityChanges": false
 }
