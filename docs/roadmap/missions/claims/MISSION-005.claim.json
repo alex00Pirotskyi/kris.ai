@@ -1,6 +1,6 @@
 {
   "branch": "agent/f/P5-001-information-architecture",
-  "current": "P5-001 bounded information architecture and UX prototype; ownership coordination, live Worker B reconciliation, canonical manifests, exact CI, and independent review remain unsettled",
+  "current": "P5-001 bounded information architecture and UX prototype; exact ownership grants, reviewed Worker B dependency, canonical manifests, exact CI, and final reviews remain unsettled",
   "exclusivePaths": [
     "lib/product/p5_information_architecture/**",
     "lib/p5_ia_preview.dart",
@@ -10,7 +10,7 @@
     "release/evidence/P22-*/**",
     ".github/workflows/worker-f*.yml"
   ],
-  "head": "0e27d120aa00f35c7c6bdf99fb1d3a8d0ee35b33",
+  "head": "ba74ad56970b00b789e7814548d46abcfdd96394",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-005",
   "pr": 72,
