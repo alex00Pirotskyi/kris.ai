@@ -1,8 +1,8 @@
 {
   "base": {
     "branch": "agent/b/test-center-contracts-and-review",
-    "commit": "f14ba34e501972b13cd4310c4869c87e021012da",
-    "tree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2"
+    "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
+    "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d"
   },
   "classification": "SOURCE_FOUNDATION",
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
@@ -10,9 +10,10 @@
     "unknown models are evaluation-only",
     "unknown providers fail closed because data boundary is unknown",
     "canonical IDs and aliases reuse approval only when digest, parameter size, and quantization match exactly",
+    "approved models require a non-empty immutable artifact digest",
     "identity drift receives a deterministic evaluation-only quarantine identity",
     "quarantine identity encoding is deterministic and uses only model-ID-safe base64url characters",
-    "product source must consume the public model.dart facade rather than importing model_registry.dart directly",
+    "artifact identity validation is enforced inside the single exported ModelDefinitionRegistry and cannot be bypassed by direct imports",
     "a quarantined identity cannot pass requireApproved",
     "approved task classes require benchmark evidence",
     "provider and model data boundaries must agree",
