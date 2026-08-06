@@ -7,16 +7,20 @@ on:
       - '.github/workflows/worker-b-p8-001-formal-test-hierarchy.yml'
       - 'SOURCE_MANIFEST.sha256'
       - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'config/test_center_assurance_report_contract.v1.json'
       - 'config/test_center_registry.v1.json'
       - 'docs/testing/TEST_CENTER_P8_001_HIERARCHY.md'
       - 'release/evidence/TEST_CENTER/P8-001/**'
       - 'schemas/test_center.v1.json'
       - 'schemas/test_center_assurance_execution_report.v1.json'
       - 'schemas/test_center_assurance_hierarchy.v1.json'
+      - 'schemas/test_center_assurance_report_contract.v1.json'
       - 'tool/p1a_refresh_source_manifest.py'
       - 'tool/source_tree_policy.py'
       - 'tool/test_center_contracts.py'
       - 'tool/test_center_contracts_test.py'
+      - 'tool/test_center_assurance_enforcement.py'
+      - 'tool/test_center_assurance_enforcement_test.py'
       - 'tool/test_center_assurance_jsonschema.py'
       - 'tool/test_center_assurance_semantics.py'
       - 'tool/test_center_assurance_hierarchy.py'
@@ -28,16 +32,20 @@ on:
       - '.github/workflows/worker-b-p8-001-formal-test-hierarchy.yml'
       - 'SOURCE_MANIFEST.sha256'
       - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'config/test_center_assurance_report_contract.v1.json'
       - 'config/test_center_registry.v1.json'
       - 'docs/testing/TEST_CENTER_P8_001_HIERARCHY.md'
       - 'release/evidence/TEST_CENTER/P8-001/**'
       - 'schemas/test_center.v1.json'
       - 'schemas/test_center_assurance_execution_report.v1.json'
       - 'schemas/test_center_assurance_hierarchy.v1.json'
+      - 'schemas/test_center_assurance_report_contract.v1.json'
       - 'tool/p1a_refresh_source_manifest.py'
       - 'tool/source_tree_policy.py'
       - 'tool/test_center_contracts.py'
       - 'tool/test_center_contracts_test.py'
+      - 'tool/test_center_assurance_enforcement.py'
+      - 'tool/test_center_assurance_enforcement_test.py'
       - 'tool/test_center_assurance_jsonschema.py'
       - 'tool/test_center_assurance_semantics.py'
       - 'tool/test_center_assurance_hierarchy.py'
@@ -82,6 +90,7 @@ jobs:
           python tool/test_center_assurance_hierarchy.py check --project .
           python tool/test_center_assurance_hierarchy.py check-report --project . --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
           python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          python -m unittest -v tool/test_center_assurance_enforcement_test.py
       - name: Regenerate root source manifest twice through canonical owner
         shell: bash
         run: |
