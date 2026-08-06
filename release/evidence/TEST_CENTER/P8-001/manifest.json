@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "roadmapTaskId": "P8-001",
+  "status": "REVIEW_CHANGES_ADDRESSED_PENDING_EXACT_CI_AND_MANIFEST_REFRESH",
+  "reviewedPredecessor": {
+    "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+    "pullRequest": 65,
+    "reviewDecision": "REQUEST_CHANGES",
+    "reviewId": "PRR_kwDOTTSxks8AAAABIn1Efw",
+    "findingsAddressed": [
+      "P8-A-001",
+      "P8-A-002",
+      "P8-A-003"
+    ],
+    "reviewState": "COMMENTED",
+    "reviewDisposition": "REQUEST_CHANGES"
+  },
+  "implementation": {
+    "assuranceExecutionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
+    "actualExecutionFixture": "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+    "actualExecutionValidation": "tool/test_center_assurance_hierarchy.py check-report",
+    "regressionCount": 32,
+    "downstreamMigrationBindingCount": 11,
+    "sourceManifestGenerator": "tool/p1a_refresh_source_manifest.py",
+    "downstreamMigrationSource": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a7c12c34c71ee75ba06fdf047cf9528223",
+      "reviewCommentId": 5203350863
+    }
+  },
+  "exactRepairCandidate": null,
+  "exactCi": null,
+  "sourceManifest": {
+    "state": "PENDING_CANONICAL_GENERATOR_ARTIFACT",
+    "path": "SOURCE_MANIFEST.sha256"
+  },
+  "supportImpact": "NO_PROMOTION",
+  "mergeAuthorization": "ABSENT"
+}

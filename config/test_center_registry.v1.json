@@ -2,6 +2,176 @@
   "affectedTestMappings": [
     {
       "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.01",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/**",
+        "lib/p5_ia_preview.dart"
+      ],
+      "priority": 100,
+      "testIds": [
+        "tc.p5-001.navigation.primary-workspaces"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.02",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_task_workspaces.dart",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "priority": 99,
+      "testIds": [
+        "tc.p5-001.flow.simple-task"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.03",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_controller.dart",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "priority": 98,
+      "testIds": [
+        "tc.p5-001.flow.existing-run"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.04",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_verification_workspaces.dart",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "priority": 97,
+      "testIds": [
+        "tc.p5-001.flow.owner-mode"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.05",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_verification_workspaces.dart",
+        "release/evidence/P5-001/test-center-registration.json"
+      ],
+      "priority": 96,
+      "testIds": [
+        "tc.p5-001.flow.verification-center"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.06",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_models.dart",
+        "lib/product/p5_information_architecture/p5_controller.dart"
+      ],
+      "priority": 95,
+      "testIds": [
+        "tc.p5-001.state.transitions"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.07",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_prototype.dart",
+        "lib/product/p5_information_architecture/p5_components.dart"
+      ],
+      "priority": 94,
+      "testIds": [
+        "tc.p5-001.mode.progressive-disclosure"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.08",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_support_workspaces.dart",
+        "release/evidence/P5-001/capability-presentation-matrix.json"
+      ],
+      "priority": 93,
+      "testIds": [
+        "tc.p5-001.capability.honest-unavailable"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.09",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_prototype.dart",
+        "test/product/p5_information_architecture/p5_accessibility_test.dart"
+      ],
+      "priority": 92,
+      "testIds": [
+        "tc.p5-001.keyboard.primary-flow"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "docs/roadmap/MASTER.md",
+        "docs/roadmap/roadmap.yaml"
+      ],
+      "mappingId": "affected.p5-001.10",
+      "pathPatterns": [
+        "lib/product/p5_information_architecture/p5_components.dart",
+        "test/product/p5_information_architecture/p5_accessibility_test.dart"
+      ],
+      "priority": 91,
+      "testIds": [
+        "tc.p5-001.semantics.primary-flow"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.p8-formal-test-hierarchy",
+      "pathPatterns": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "priority": 15,
+      "testIds": [
+        "tc.p8.formal-test-hierarchy",
+        "tc.p8.formal-test-hierarchy-regressions"
+      ]
+    },
+    {
+      "excludedPaths": [
         "release/evidence/generated/**"
       ],
       "mappingId": "affected.test-center-contracts",
@@ -108,11 +278,574 @@
       "stableCheckId": "tc.test-center.semantic-regressions",
       "timeoutSeconds": 120,
       "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_assurance_hierarchy.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/TEST_CENTER/P8-001/formal-test-hierarchy-validation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p8.formal-test-hierarchy",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/p8-001-formal-hierarchy-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p8.formal-test-hierarchy-regressions",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_navigation_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.navigation.primary-workspaces",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_navigation_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.flow.simple-task",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_navigation_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.flow.existing-run",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_navigation_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.flow.owner-mode",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_verification_center_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_verification_center_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.flow.verification-center",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_state_controller_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_state_controller_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.state.transitions",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_verification_center_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_verification_center_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.mode.progressive-disclosure",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_navigation_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_navigation_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.capability.honest-unavailable",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_accessibility_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_accessibility_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.keyboard.primary-flow",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/p5_information_architecture/p5_accessibility_test.dart"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P5-001/test-results.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "test/product/p5_information_architecture/p5_accessibility_test.dart",
+        "lib/product/p5_information_architecture/**"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p5-001.semantics.primary-flow",
+      "timeoutSeconds": 900,
+      "workingDirectory": "."
     }
   ],
   "registryId": "test-center.canonical-v1",
   "schemaVersion": "1.0.0",
   "testCases": [
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Primary workspaces are reachable",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.navigation.primary-workspaces"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Simple task flow",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.flow.simple-task"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Existing run continuity",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.flow.existing-run"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Owner Mode presentation boundary",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.flow.owner-mode"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Verification Center domain separation",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.flow.verification-center"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Deterministic state transitions",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.state.transitions"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Progressive disclosure",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.mode.progressive-disclosure"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Honest unavailable capability",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.capability.honest-unavailable"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Keyboard-only primary flow",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.keyboard.primary-flow"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "Primary flow semantics",
+      "mandatory": true,
+      "moduleId": "tm.p5-information-architecture",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [
+        "P5-001"
+      ],
+      "testId": "tc.p5-001.semantics.primary-flow"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P8-001 formal Test Center hierarchy",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Enforce the canonical eight-level assurance hierarchy, exact ordering, report fields, fail-closed level handling, and complete stable-test binding coverage.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "P8-001 hierarchy semantic regressions",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, and support-promoting source checks are rejected.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy-regressions"
+    },
     {
       "assuranceClass": "source_contract",
       "displayName": "Canonical Test Center contract check",
@@ -136,6 +869,26 @@
     {
       "assuranceClasses": [
         "source_contract",
+        "behavioral"
+      ],
+      "displayName": "P5 information architecture",
+      "moduleId": "tm.p5-information-architecture",
+      "owner": "Worker F / MISSION-005",
+      "purpose": "Validate the isolated presentation-only P5-001 navigation, workspace, state, Verification Center, Owner Mode, keyboard, and semantics prototype."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral"
+      ],
+      "displayName": "Reliability, Security & Diagnostics",
+      "moduleId": "tm.reliability-security-diagnostics",
+      "owner": "Worker B / MISSION-002",
+      "purpose": "Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract",
         "behavioral",
         "platform",
         "release"
@@ -147,6 +900,81 @@
     }
   ],
   "testingStudioPresentationRecords": [
+    {
+      "assuranceClass": "behavioral",
+      "capability": "Information architecture prototype",
+      "certificationImpact": "No certification state is inferred.",
+      "currentState": "SOURCE_FOUNDATION",
+      "displayName": "P5-001 capability support ceiling",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "P5-001 coded prototype",
+      "platformMatrix": {
+        "observed": [],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.p5-001.capability-support",
+      "purpose": "Expose the source-foundation ceiling without consumer or release inflation.",
+      "requiredNextAction": "Retain SOURCE_FOUNDATION until later production UX tasks and certifications complete.",
+      "staleResultWarning": false,
+      "stateDomain": "CAPABILITY_SUPPORT",
+      "supportClaimImpact": "Maximum claim is SOURCE_FOUNDATION.",
+      "surface": "RELEASE_READINESS"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "capability": "Information architecture prototype",
+      "certificationImpact": "Certification remains NOT_EVALUATED.",
+      "currentState": "NOT_EVALUATED",
+      "displayName": "P5-001 certification boundary",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "P5-001 coded prototype",
+      "platformMatrix": {
+        "observed": [],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.p5-001.certification",
+      "purpose": "Keep certification independent from source and widget results.",
+      "requiredNextAction": "Obtain exact-candidate independent review after exact CI passes.",
+      "staleResultWarning": false,
+      "stateDomain": "CERTIFICATION",
+      "supportClaimImpact": "No platform or release support is established.",
+      "surface": "PLATFORM_CERTIFICATION"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "capability": "Information architecture prototype",
+      "certificationImpact": "Test execution alone does not certify P5-001.",
+      "currentState": "UNKNOWN",
+      "displayName": "P5-001 test execution",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "P5-001 coded prototype",
+      "platformMatrix": {
+        "observed": [],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.p5-001.test-execution",
+      "purpose": "Present exact test execution without implying review, certification, platform, or release support.",
+      "requiredNextAction": "Run exact-head tests on all three required desktop CI hosts.",
+      "staleResultWarning": false,
+      "stateDomain": "TEST_EXECUTION",
+      "supportClaimImpact": "No support promotion is allowed from this record.",
+      "surface": "DEVELOPMENT_VERIFICATION"
+    },
     {
       "assuranceClass": "source_contract",
       "capability": "Canonical Test Center contracts",

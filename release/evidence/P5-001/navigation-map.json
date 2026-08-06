@@ -1,0 +1,20 @@
+{
+  "future": [
+    "webStudio",
+    "searchResearch",
+    "nativeAutomation",
+    "devices"
+  ],
+  "schemaVersion": "1.0.0",
+  "workspaces": [
+    "homeChat",
+    "projects",
+    "runsActivity",
+    "verificationCenter",
+    "evidence",
+    "ownerMode",
+    "modelsProviders",
+    "capabilitiesIntegrations",
+    "settingsDiagnostics"
+  ]
+}

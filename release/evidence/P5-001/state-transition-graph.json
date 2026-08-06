@@ -1,0 +1,15 @@
+{
+  "authority": "presentation-only",
+  "schemaVersion": "1.0.0",
+  "states": [
+    "EMPTY",
+    "LOADING",
+    "READY",
+    "RUNNING",
+    "PAUSED",
+    "BLOCKED",
+    "ERROR",
+    "COMPLETED",
+    "UNAVAILABLE"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "jobs": [
+    "task",
+    "project-continuity",
+    "run-recovery",
+    "verification",
+    "developer-inspection"
+  ],
+  "schemaVersion": "1.0.0"
+}

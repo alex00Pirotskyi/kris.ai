@@ -1,0 +1,165 @@
+{
+  "artifacts": [
+    {
+      "path": ".github/workflows/worker-f-p5-001-information-architecture.yml",
+      "sha256": "47df788050466bb3bb2a4f84567e02e30ff6e91febbf0f6f58541268a18ba69f",
+      "sizeBytes": 5677
+    },
+    {
+      "path": "config/test_center_assurance_hierarchy.v1.json",
+      "sha256": "ab727ffbb1c4a09d4b5be68d3d5642294db20998099e8e1d2cc7bcc6c3e042a9",
+      "sizeBytes": 12148
+    },
+    {
+      "path": "config/test_center_registry.v1.json",
+      "sha256": "c950cc51a57ad850bebd116440a5bc0e73220a268fd6169f0cf463cd2f55fec5",
+      "sizeBytes": 32748
+    },
+    {
+      "path": "docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md",
+      "sha256": "0bd2108d00ad63e5e6a913c056342040cd9db9fb8df0893cbd76aa8d6e9b2d69",
+      "sizeBytes": 100
+    },
+    {
+      "path": "docs/roadmap/progress/2026-08-06-mission-005-p5-001-recovery.md",
+      "sha256": "849f1243277c1e0220d1b867cd7697367202b8a01373eeedbc32f83ad51ed0ac",
+      "sizeBytes": 980
+    },
+    {
+      "path": "docs/ux/P5-001_INFORMATION_ARCHITECTURE.md",
+      "sha256": "32a8f62baeceab0aa0215e2399e30fe9938677d44690cae95ed55e8a58838d19",
+      "sizeBytes": 120
+    },
+    {
+      "path": "lib/p5_ia_preview.dart",
+      "sha256": "fa681f64e99029e28e1d30c68ebec1660c40acb3907baeb0c876ff5695bb8b55",
+      "sizeBytes": 168
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_components.dart",
+      "sha256": "00e821369c92283c60ee3ccf07556182dfd04ac4559966f78f27fad88e6e3a1f",
+      "sizeBytes": 6437
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_controller.dart",
+      "sha256": "d0ece94aa917a77f2f542d0e758b6192cd0a4b5a48f12e54436ad22aa316623b",
+      "sizeBytes": 10117
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_fixtures.dart",
+      "sha256": "fd4af84fe092c0af74d70db7a6110a608cb5be37462a617e8cb50f5785aa0ba8",
+      "sizeBytes": 11441
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_models.dart",
+      "sha256": "7f8be94d0577aa9d334b1aa26977cac0cceac912c0b976cc7161dc7f6eab1774",
+      "sizeBytes": 14839
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_prototype.dart",
+      "sha256": "fd4ef032c71b9f6af750783e0196f6eb948e816653808377f3a6fcca1e5bb790",
+      "sizeBytes": 14380
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_support_workspaces.dart",
+      "sha256": "1051a1450201bc8e162ce9c02de92c3119c223746c2ef782ce7f405b2a81ded4",
+      "sizeBytes": 7847
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_task_workspaces.dart",
+      "sha256": "bbce8c50b2a8cb7009f304257d4c973afaf91aee59d2488d6fcd464662dc4e92",
+      "sizeBytes": 13695
+    },
+    {
+      "path": "lib/product/p5_information_architecture/p5_verification_workspaces.dart",
+      "sha256": "d76ed99d115b7078e306b9f873aedc4e5ed2d09c0318f37e5d34390478934b6c",
+      "sizeBytes": 12272
+    },
+    {
+      "path": "release/evidence/P5-001/capability-presentation-matrix.json",
+      "sha256": "00c74ec706f822c902a1604e5069e3525c0337b3b15a2893fc8d546bc920ecd7",
+      "sizeBytes": 198
+    },
+    {
+      "path": "release/evidence/P5-001/claim-boundary.json",
+      "sha256": "39fa6af60923c6c09b3b936cb57dec446adef83b72acc89a10ca287ed2f74ab2",
+      "sizeBytes": 230
+    },
+    {
+      "path": "release/evidence/P5-001/current-ux-inventory.json",
+      "sha256": "d8f20d9f0f03dab0838664ee175d5c5eff236fa15cbc7b1f81491dfeb5f276e3",
+      "sizeBytes": 13111
+    },
+    {
+      "path": "release/evidence/P5-001/jobs-to-be-done.json",
+      "sha256": "fa28cbf43542c37e1cd3c99f8b3c659245ecbd76082ec0e079e3e5876e0147f4",
+      "sizeBytes": 153
+    },
+    {
+      "path": "release/evidence/P5-001/navigation-map.json",
+      "sha256": "70344a561564134d2b3c06c461ccaa8dc1c352d53a3f6c31dbab20a804951fca",
+      "sizeBytes": 342
+    },
+    {
+      "path": "release/evidence/P5-001/prototype-scenarios.json",
+      "sha256": "32cbd90528269d64b23e9a64a6d84dd3810daadea92abd027fd67dfb1fc60236",
+      "sizeBytes": 190
+    },
+    {
+      "path": "release/evidence/P5-001/state-transition-graph.json",
+      "sha256": "fdc42c1bfa33dea1fe0f858ea84444d2b75d24bb8e73885a008c3a255d911609",
+      "sizeBytes": 219
+    },
+    {
+      "path": "release/evidence/P5-001/test-center-registration.json",
+      "sha256": "463ae1acf5e17b617ed31862e5cadcedea31d163986e9f30ad36b164dc7d5e0f",
+      "sizeBytes": 1795
+    },
+    {
+      "path": "release/evidence/P5-001/test-results.json",
+      "sha256": "57714ea928c2b70f9a7bd6cd1872cd06a146d0a00d39594286829f9feb7b5161",
+      "sizeBytes": 404
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_accessibility_test.dart",
+      "sha256": "e7427a17fe06bfbfe1d8499505a1a857da3d7fb7659eefbee78ac691a618ce99",
+      "sizeBytes": 4805
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_navigation_test.dart",
+      "sha256": "eb37e8ae0a6d3427581aadc54c03607048aafde15fabcc01581f7a32c407bc0b",
+      "sizeBytes": 4447
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_source_boundary_test.dart",
+      "sha256": "e40e0bcce5db9a3c8f6ec8db767ec374cb7a9e737794e3336f9e7cdf841cb774",
+      "sizeBytes": 1287
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_state_controller_test.dart",
+      "sha256": "71284f8847bf368f20b89c3761025c373541f326f907a3de07fb547df3606624",
+      "sizeBytes": 3845
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_verification_center_test.dart",
+      "sha256": "1b7d0842bb51fe93cfdd7fe931dd20bb91474bd8061778f916b1c9e1290b4453",
+      "sizeBytes": 3952
+    },
+    {
+      "path": "tool/worker_f_p5_ia.py",
+      "sha256": "b042c26579c4840f8b8314bc606d6e0dde53a0266d7ff00d3955ce0fbdbba62a",
+      "sizeBytes": 13789
+    },
+    {
+      "path": "tool/worker_f_p5_ia_test.py",
+      "sha256": "ae29f7739af74674f522f4b66c77c100821df156b8fa2662283d62d82b6ae01d",
+      "sizeBytes": 3944
+    }
+  ],
+  "claimBoundary": "Coded information-architecture and UX-flow prototype only.",
+  "classification": "SOURCE_FOUNDATION",
+  "schemaVersion": "1.0.0",
+  "selfExclusion": "release/evidence/P5-001/manifest.json",
+  "sourceCandidateBinding": "EXTERNAL_AFTER_PUBLICATION",
+  "taskId": "P5-001"
+}

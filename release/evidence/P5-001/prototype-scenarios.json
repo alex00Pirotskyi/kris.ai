@@ -1,0 +1,11 @@
+{
+  "scenarios": [
+    "simple-task",
+    "existing-run",
+    "owner-mode",
+    "verification-center",
+    "unavailable-capability",
+    "failure-recovery"
+  ],
+  "schemaVersion": "1.0.0"
+}

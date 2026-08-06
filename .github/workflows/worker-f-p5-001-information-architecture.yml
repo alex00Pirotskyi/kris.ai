@@ -129,7 +129,7 @@ jobs:
           from pathlib import Path
           import hashlib
           import subprocess
-          path=Path('docs/roadmap/SOURCE_MANIFEST.sha256')
+          path=Path('SOURCE_MANIFEST.sha256')
           before=hashlib.sha256(path.read_bytes()).hexdigest()
           subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True)
           first=hashlib.sha256(path.read_bytes()).hexdigest()
