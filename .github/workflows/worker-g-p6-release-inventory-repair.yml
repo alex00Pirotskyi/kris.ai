@@ -22,7 +22,7 @@ jobs:
     env:
       WORKER_G_BRANCH: agent/g/mission-006-model-routing
       WORKER_B_BRANCH: agent/b/test-center-contracts-and-review
-      EXPECTED_G_PARENT: 88405ba55ca7336d05797ec801f579704436f94c
+      EXPECTED_G_PARENT: 6e08109f81dd3c50162ec8c89422dd4c0dddd336
       EXPECTED_B_HEAD: 800643bb5898a80ee3843f83f7657411183a9e6a
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,7 +47,7 @@ jobs:
           git fetch origin "${WORKER_G_BRANCH}" "${WORKER_B_BRANCH}"
           test "$(git rev-parse refs/remotes/origin/${WORKER_G_BRANCH})" = "${GITHUB_SHA}"
           test "$(git rev-parse refs/remotes/origin/${WORKER_B_BRANCH})" = "${EXPECTED_B_HEAD}"
-      - name: Repair the release validator P6 Dart inventory
+      - name: Repair the complete release validator P6 Dart inventory
         shell: bash
         run: |
           set -euo pipefail
@@ -56,32 +56,43 @@ jobs:
 
           path = Path('tool/validate_release.py')
           text = path.read_text(encoding='utf-8')
-          entries = (
-              "                          'lib/product/model/model.dart',\n"
-              "                          'lib/product/model/model_registry.dart',\n"
-          )
-          needles = [line.strip() for line in entries.splitlines() if line.strip()]
-          present = [needle in text for needle in needles]
-          if all(present):
-              raise SystemExit('P6 model files already exist in validate_release inventory')
-          if any(present):
-              raise SystemExit('partial P6 validate_release inventory detected')
-          anchor = (
+          required = {
+              "'lib/product/model/model.dart'",
+              "'lib/product/model/model_registry.dart'",
+              "'test/product/model/model_registry_test.dart'",
+          }
+          present = {entry for entry in required if entry in text}
+          if present:
+              raise SystemExit(
+                  f'partial or redundant P6 validate_release inventory detected: {sorted(present)!r}'
+              )
+
+          production_anchor = (
               "                          'lib/product/mcp.dart',\n"
               "                          'lib/product/models_research.dart',\n"
           )
-          replacement = (
+          production_replacement = (
               "                          'lib/product/mcp.dart',\n"
-              + entries
-              + "                          'lib/product/models_research.dart',\n"
+              "                          'lib/product/model/model.dart',\n"
+              "                          'lib/product/model/model_registry.dart',\n"
+              "                          'lib/product/models_research.dart',\n"
           )
-          if text.count(anchor) != 1:
-              raise SystemExit('validate_release inventory anchor is not unique')
-          path.write_text(
-              text.replace(anchor, replacement, 1),
-              encoding='utf-8',
-              newline='\n',
+          test_anchor = (
+              "                          'test/product/knowledge_memory_test.dart',\n"
+              "                          'test/product/execution_reliability_test.dart',\n"
           )
+          test_replacement = (
+              "                          'test/product/knowledge_memory_test.dart',\n"
+              "                          'test/product/model/model_registry_test.dart',\n"
+              "                          'test/product/execution_reliability_test.dart',\n"
+          )
+          if text.count(production_anchor) != 1:
+              raise SystemExit('validate_release production inventory anchor is not unique')
+          if text.count(test_anchor) != 1:
+              raise SystemExit('validate_release test inventory anchor is not unique')
+          text = text.replace(production_anchor, production_replacement, 1)
+          text = text.replace(test_anchor, test_replacement, 1)
+          path.write_text(text, encoding='utf-8', newline='\n')
           PY
       - name: Add a durable Worker G release-inventory regression
         shell: bash
@@ -104,15 +115,16 @@ jobs:
 
           import validate_release as V  # noqa: E402
 
-          P6_MODEL_DART = {
+          P6_DART = {
               "lib/product/model/model.dart",
               "lib/product/model/model_registry.dart",
+              "test/product/model/model_registry_test.dart",
           }
 
 
           class P6ReleaseInventoryTest(unittest.TestCase):
-              def test_p6_model_sources_are_governed(self) -> None:
-                  self.assertTrue(P6_MODEL_DART.issubset(V.EXPECTED_DART_FILES))
+              def test_p6_sources_and_tests_are_governed(self) -> None:
+                  self.assertTrue(P6_DART.issubset(V.EXPECTED_DART_FILES))
 
               def test_release_inventory_accepts_every_active_dart_source(self) -> None:
                   actual = {
