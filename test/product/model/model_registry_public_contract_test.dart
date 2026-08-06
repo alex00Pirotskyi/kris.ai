@@ -1,7 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/model/model.dart';
 import 'package:kristin_local_agent/product/model/model_registry.dart' as direct;
+
+const String digestA =
+    'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const String digestB =
+    'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const String benchmarkEvidenceSha =
+    'sha256:aa9351c8d629a6eb591756bc6eec3252a49f27b11b970ab329c2b17b65cd92f7';
 
 ModelLimits _limits() => ModelLimits(
       evidenceLevel: ModelEvidenceLevel.measured,
@@ -19,17 +28,40 @@ ModelToolProfile _tools() => ModelToolProfile(
       supportsParallelToolCalls: false,
     );
 
-ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence(
-      benchmarkId: 'p6.code-fixture-v1',
-      taskClassId: 'code-generation',
-      modelDigest: 'sha256:registered',
-      score: 1,
-      scoreUnit: 'ratio',
-      higherIsBetter: true,
-      sampleCount: 1,
-      measuredAt: DateTime.utc(2026, 8, 6),
-      evidenceUri: 'release/evidence/P6-001/benchmark.json',
-    );
+Map<String, Object?> _benchmarkJson() => <String, Object?>{
+      'benchmarkId': 'p6.code-fixture-v1',
+      'taskClassId': 'code-generation',
+      'modelDigest': digestA,
+      'score': 0.91,
+      'scoreUnit': 'ratio',
+      'higherIsBetter': true,
+      'sampleCount': 100,
+      'measuredAt': '2026-08-06T00:00:00.000Z',
+      'evidence': <String, Object?>{
+        'locationKind': 'embedded_content_addressed',
+        'sha256': benchmarkEvidenceSha,
+        'payload': <String, Object?>{
+          'schemaVersion': '1.0.0',
+          'kind': 'MODEL_BENCHMARK_RESULT',
+          'candidateCommit': '1111111111111111111111111111111111111111',
+          'candidateTree': '2222222222222222222222222222222222222222',
+          'benchmarkId': 'p6.code-fixture-v1',
+          'taskClassId': 'code-generation',
+          'modelDigest': digestA,
+          'score': 0.91,
+          'scoreUnit': 'ratio',
+          'higherIsBetter': true,
+          'sampleCount': 100,
+          'measuredAt': '2026-08-06T00:00:00.000Z',
+        },
+      },
+    };
+
+direct.ModelBenchmarkEvidence _directBenchmark() =>
+    direct.ModelBenchmarkEvidence.fromJson(_benchmarkJson());
+
+ModelBenchmarkEvidence _benchmark() =>
+    ModelBenchmarkEvidence.fromJson(_benchmarkJson());
 
 ModelProviderDescriptor _provider() => ModelProviderDescriptor(
       providerId: 'ollama.local',
@@ -41,7 +73,7 @@ ModelDefinition _approved() => ModelDefinition.approved(
       providerId: 'ollama.local',
       modelId: 'qwen3:14b',
       displayName: 'Qwen 3 14B',
-      digest: 'sha256:registered',
+      digest: digestA,
       parameterSize: '14B',
       quantization: 'Q4_K_M',
       aliases: const <String>['qwen3-latest'],
@@ -53,10 +85,14 @@ ModelDefinition _approved() => ModelDefinition.approved(
       approvedTaskClasses: const <String>['code-generation'],
     );
 
-ModelIdentity _changedIdentity({String name = 'qwen3:14b'}) => ModelIdentity(
+ModelIdentity _identity({
+  String name = 'qwen3:14b',
+  String digest = digestA,
+}) =>
+    ModelIdentity(
       providerId: 'ollama.local',
       name: name,
-      digest: 'sha256:changed',
+      digest: digest,
       parameterSize: '14B',
       quantization: 'Q4_K_M',
       discoveredAt: DateTime.utc(2026, 8, 6),
@@ -64,7 +100,8 @@ ModelIdentity _changedIdentity({String name = 'qwen3:14b'}) => ModelIdentity(
 
 void main() {
   group('P6-001 public model-registry contract', () {
-    test('direct core import cannot bypass artifact identity validation', () {
+    test('direct core import exposes metadata lookup but no approval predicate',
+        () {
       final registry = direct.ModelDefinitionRegistry(
         providers: <direct.ModelProviderDescriptor>[
           direct.ModelProviderDescriptor(
@@ -78,7 +115,7 @@ void main() {
             providerId: 'ollama.local',
             modelId: 'qwen3:14b',
             displayName: 'Qwen 3 14B',
-            digest: 'sha256:registered',
+            digest: digestA,
             parameterSize: '14B',
             quantization: 'Q4_K_M',
             aliases: const <String>['qwen3-latest'],
@@ -98,95 +135,130 @@ void main() {
             ),
             dataBoundary: direct.ModelDataBoundary.localOnly,
             cost: direct.ModelCostProfile.noDirectCharge(),
-            benchmarks: <direct.ModelBenchmarkEvidence>[
-              direct.ModelBenchmarkEvidence(
-                benchmarkId: 'p6.code-fixture-v1',
-                taskClassId: 'code-generation',
-                modelDigest: 'sha256:registered',
-                score: 1,
-                scoreUnit: 'ratio',
-                higherIsBetter: true,
-                sampleCount: 1,
-                measuredAt: DateTime.utc(2026, 8, 6),
-                evidenceUri: 'release/evidence/P6-001/benchmark.json',
-              ),
-            ],
+            benchmarks: <direct.ModelBenchmarkEvidence>[_directBenchmark()],
             approvedTaskClasses: const <String>['code-generation'],
           ),
         ],
       );
 
       for (final name in <String>['qwen3:14b', 'qwen3-latest']) {
-        final resolved = registry.resolveDiscovered(
-          ModelIdentity(
-            providerId: 'ollama.local',
-            name: name,
-            digest: 'sha256:changed',
-            parameterSize: '14B',
-            quantization: 'Q4_K_M',
-            discoveredAt: DateTime.utc(2026, 8, 6),
-          ),
-        );
-        expect(resolved.supportStatus, direct.ModelSupportStatus.evaluationOnly);
-        expect(resolved.approvedTaskClasses, isEmpty);
-        expect(resolved.modelId, startsWith('$name:identity-mismatch:'));
+        final metadata = registry.lookup('ollama.local', name);
+        expect(metadata, isA<direct.ModelRegistryMetadata>());
+        final json = metadata!.toJson();
+        expect(json.containsKey('supportStatus'), isFalse);
+        expect(json.containsKey('approvedTaskClasses'), isFalse);
+        expect(json.containsKey('evaluationReasons'), isFalse);
       }
+      final registryJson = jsonEncode(registry.toMetadataJson());
+      expect(registryJson, isNot(contains('supportStatus')));
+      expect(registryJson, isNot(contains('approvedTaskClasses')));
     });
 
-    test('direct core import rejects cross-artifact benchmark evidence', () {
+    test('direct core approval still requires exact discovered identity', () {
+      final registry = direct.ModelDefinitionRegistry(
+        providers: <direct.ModelProviderDescriptor>[
+          direct.ModelProviderDescriptor(
+            providerId: 'ollama.local',
+            displayName: 'Local Ollama',
+            dataBoundary: direct.ModelDataBoundary.localOnly,
+          ),
+        ],
+        models: <direct.ModelDefinition>[
+          direct.ModelDefinition.approved(
+            providerId: 'ollama.local',
+            modelId: 'qwen3:14b',
+            displayName: 'Qwen 3 14B',
+            digest: digestA,
+            parameterSize: '14B',
+            quantization: 'Q4_K_M',
+            aliases: const <String>['qwen3-latest'],
+            limits: direct.ModelLimits(
+              evidenceLevel: direct.ModelEvidenceLevel.measured,
+              contextWindowTokens: 32768,
+              maxOutputTokens: 4096,
+              maxConcurrentRequests: 1,
+              maxToolCallsPerTurn: 0,
+              supportsStreaming: true,
+            ),
+            toolProfile: direct.ModelToolProfile(
+              evidenceLevel: direct.ModelEvidenceLevel.measured,
+              supportsToolCalling: false,
+              supportsStructuredOutput: true,
+              supportsParallelToolCalls: false,
+            ),
+            dataBoundary: direct.ModelDataBoundary.localOnly,
+            cost: direct.ModelCostProfile.noDirectCharge(),
+            benchmarks: <direct.ModelBenchmarkEvidence>[_directBenchmark()],
+            approvedTaskClasses: const <String>['code-generation'],
+          ),
+        ],
+      );
+      final handle = registry.requireApproved(
+        identity: _identity(name: 'qwen3-latest'),
+        taskClassId: 'code-generation',
+      );
+      expect(handle.model.registryKey, 'ollama.local::qwen3:14b');
+      expect(
+        () => registry.requireApproved(
+          identity: _identity(name: 'qwen3-latest', digest: digestB),
+          taskClassId: 'code-generation',
+        ),
+        throwsA(isA<direct.ModelRegistryValidationException>()),
+      );
+    });
+
+    test('direct core rejects malformed immutable digest identities', () {
       expect(
         () => direct.ModelDefinition.approved(
           providerId: 'ollama.local',
-          modelId: 'replacement:latest',
-          displayName: 'Replacement',
-          digest: 'sha256:replacement',
-          parameterSize: '14B',
-          quantization: 'Q4_K_M',
+          modelId: 'bad',
+          displayName: 'Bad',
+          digest: 'latest',
           limits: direct.ModelLimits(
             evidenceLevel: direct.ModelEvidenceLevel.measured,
-            contextWindowTokens: 32768,
-            maxOutputTokens: 4096,
+            contextWindowTokens: 4096,
+            maxOutputTokens: 1024,
             maxConcurrentRequests: 1,
             maxToolCallsPerTurn: 0,
-            supportsStreaming: true,
+            supportsStreaming: false,
           ),
           toolProfile: direct.ModelToolProfile(
             evidenceLevel: direct.ModelEvidenceLevel.measured,
             supportsToolCalling: false,
-            supportsStructuredOutput: true,
+            supportsStructuredOutput: false,
             supportsParallelToolCalls: false,
           ),
           dataBoundary: direct.ModelDataBoundary.localOnly,
           cost: direct.ModelCostProfile.noDirectCharge(),
-          benchmarks: <direct.ModelBenchmarkEvidence>[
-            direct.ModelBenchmarkEvidence(
-              benchmarkId: 'p6.code-fixture-v1',
-              taskClassId: 'code-generation',
-              modelDigest: 'sha256:registered',
-              score: 1,
-              scoreUnit: 'ratio',
-              higherIsBetter: true,
-              sampleCount: 1,
-              measuredAt: DateTime.utc(2026, 8, 6),
-              evidenceUri: 'release/evidence/P6-001/benchmark.json',
-            ),
-          ],
+          benchmarks: <direct.ModelBenchmarkEvidence>[_directBenchmark()],
           approvedTaskClasses: const <String>['code-generation'],
         ),
         throwsA(
           isA<direct.ModelRegistryValidationException>().having(
             (error) => error.message,
             'message',
-            allOf(
-              contains('belongs to artifact sha256:registered'),
-              contains('expected sha256:replacement'),
-            ),
+            contains('canonical sha256:<64 lowercase hex>'),
           ),
         ),
       );
     });
 
-    test('approved records require an immutable artifact digest', () {
+    test('content-addressed benchmark evidence rejects digest tampering', () {
+      final json = _benchmarkJson();
+      (json['evidence'] as Map<String, Object?>)['sha256'] = digestB;
+      expect(
+        () => direct.ModelBenchmarkEvidence.fromJson(json),
+        throwsA(
+          isA<direct.ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('benchmark evidence digest mismatch'),
+          ),
+        ),
+      );
+    });
+
+    test('approved records still require immutable artifact identity', () {
       expect(
         () => ModelDefinition.approved(
           providerId: 'ollama.local',
@@ -199,70 +271,35 @@ void main() {
           benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
           approvedTaskClasses: const <String>['code-generation'],
         ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('artifact digest is required for approval'),
-          ),
-        ),
-      );
-
-      final raw = _approved().toJson();
-      raw['digest'] = null;
-      expect(
-        () => ModelDefinition.fromJson(raw),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('artifact digest is required for approval'),
-          ),
-        ),
+        throwsA(isA<ModelRegistryValidationException>()),
       );
     });
 
-    test('quarantine IDs are deterministic and model-ID safe', () {
+    test('quarantine IDs remain deterministic and model-ID safe', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_provider()],
         models: <ModelDefinition>[_approved()],
       );
-      final identity = _changedIdentity();
-
+      final identity = _identity(digest: digestB);
       final first = registry.resolveDiscovered(identity);
       final second = registry.resolveDiscovered(identity);
-
-      expect(first.modelId, second.modelId);
-      expect(first.modelId, matches(RegExp(r'^[A-Za-z0-9._:/+-]+$')));
-      expect(first.modelId, isNot(contains('=')));
-      expect(first.supportStatus, ModelSupportStatus.evaluationOnly);
+      expect(first.model.modelId, second.model.modelId);
+      expect(first.model.modelId, matches(RegExp(r'^[A-Za-z0-9._:/+-]+$')));
+      expect(first.model.modelId, isNot(contains('=')));
+      expect(first.isEvaluationOnly, isTrue);
     });
 
-    test('malformed discovered IDs fail closed before lookup', () {
+    test('malformed discovered IDs fail closed before metadata lookup', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_provider()],
         models: <ModelDefinition>[_approved()],
       );
-
       expect(
         () => registry.resolveDiscovered(
           ModelIdentity(
             providerId: ' ollama.local',
             name: 'qwen3:14b',
-            digest: 'sha256:registered',
-            parameterSize: '14B',
-            quantization: 'Q4_K_M',
-            discoveredAt: DateTime.utc(2026, 8, 6),
-          ),
-        ),
-        throwsA(isA<ModelRegistryValidationException>()),
-      );
-      expect(
-        () => registry.resolveDiscovered(
-          ModelIdentity(
-            providerId: 'ollama.local',
-            name: ' qwen3:14b',
-            digest: 'sha256:registered',
+            digest: digestA,
             parameterSize: '14B',
             quantization: 'Q4_K_M',
             discoveredAt: DateTime.utc(2026, 8, 6),
