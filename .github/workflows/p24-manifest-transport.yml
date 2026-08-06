@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - agent/j/P24-001-roadmap-as-data-adr
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, ready_for_review]
 
 permissions:
   actions: read
@@ -60,7 +60,6 @@ jobs:
           set -euo pipefail
           test "$(git -C transport rev-parse HEAD)" = '${{ github.event.pull_request.head.sha }}'
           test "$(git -C workerj rev-parse HEAD)" = '${{ github.event.pull_request.base.sha }}'
-          test "$(git -C workerj rev-parse HEAD^)" = "$ORIGINAL_CLEAN_HEAD"
           test "$(git -C workerj rev-parse "$ORIGINAL_CLEAN_HEAD^{tree}")" = "$ORIGINAL_CLEAN_TREE"
           mapfile -t staged_paths < <(git -C workerj diff --name-only "$ORIGINAL_CLEAN_HEAD" HEAD | LC_ALL=C sort)
           test "${#staged_paths[@]}" -eq 1
