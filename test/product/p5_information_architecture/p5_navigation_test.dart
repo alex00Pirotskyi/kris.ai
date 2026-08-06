@@ -173,6 +173,33 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  testWidgets('settings recovery opens the advertised advanced workspaces',
+      (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    final modelsRecovery = find.text('Open Models and Providers');
+    await tester.ensureVisible(modelsRecovery);
+    await tester.tap(modelsRecovery);
+    await tester.pumpAndSettle();
+
+    expect(controller.state.experienceLevel, P5ExperienceLevel.advanced);
+    expect(controller.state.workspace, P5WorkspaceId.modelsProviders);
+
+    controller.selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+    await tester.pumpAndSettle();
+    final capabilityRecovery = find.text('Open capability requirements');
+    await tester.ensureVisible(capabilityRecovery);
+    await tester.tap(capabilityRecovery);
+    await tester.pumpAndSettle();
+
+    expect(controller.state.experienceLevel, P5ExperienceLevel.advanced);
+    expect(controller.state.workspace, P5WorkspaceId.capabilitiesIntegrations);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('Owner Mode remains presentation-only', (tester) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.ownerMode);

@@ -146,18 +146,23 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                 onPressed: () {
                   if (failure.id == 'failure.no-project') {
                     controller.apply(P5PrototypeAction.createSampleProject);
+                  } else if (failure.id == 'failure.no-model') {
+                    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+                    controller.selectWorkspace(P5WorkspaceId.modelsProviders);
                   } else if (failure.id == 'failure.interrupted-run') {
                     controller.selectRun('run.p5-existing-001');
                     controller.apply(P5PrototypeAction.retryInterruptedRun);
                   } else if (failure.id == 'failure.offline') {
                     controller
                         .apply(P5PrototypeAction.acknowledgeOfflineFixture);
-                  } else {
+                  } else if (failure.id == 'failure.permission-denied' ||
+                      failure.id == 'failure.capability-blocked') {
+                    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
                     controller.selectWorkspace(
-                      failure.id.contains('test')
-                          ? P5WorkspaceId.verificationCenter
-                          : P5WorkspaceId.capabilitiesIntegrations,
+                      P5WorkspaceId.capabilitiesIntegrations,
                     );
+                  } else {
+                    controller.selectWorkspace(P5WorkspaceId.verificationCenter);
                   }
                 },
                 child: Text(failure.recoveryAction),
