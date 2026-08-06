@@ -1,0 +1,62 @@
+{
+  "artifactHash": "86d4bd14299b8454309fac15c239dcf709a0e57ea08f02bf035973021b9bd7e9",
+  "candidate": {
+    "branch": "agent/a/p1-p2-new-roadmap-execution",
+    "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "reviewedBaseCommit": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+    "testedStage1Commit": "70bfeaaf62acad99bf4aa5195e97e5307c0d805f",
+    "testedStage1Tree": "04b4a452a31100ca7a82994749b78fcda3f61e25",
+    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+  },
+  "claimBoundary": {
+    "gaClaimed": false,
+    "mergeAuthorized": false,
+    "p2BehaviorCertified": false,
+    "p2CompleteClaimed": false,
+    "p3Authorized": false,
+    "platformSupportClaimed": false,
+    "productionClaimed": false,
+    "releaseSupportClaimed": false,
+    "sourceReconciliationOnly": true
+  },
+  "decision": "PASS",
+  "evidence": {
+    "p2AlignmentRun": 31028254437,
+    "productGatesRun": 31028253830,
+    "workerATestCenterRun": 31028254841,
+    "workerBArtifactSha256": "d613497c297e332bab8ea47d3e29e96bc242dc7ed801b9fb57aa439ef93aac4d",
+    "workerBDecision": "PASS",
+    "workerBReviewArtifact": "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json"
+  },
+  "mission": "MISSION-001",
+  "pullRequest": 64,
+  "recordType": "CoordinationReview",
+  "recordedAtUtc": "2026-08-06T20:06:35Z",
+  "remainingBlocks": [
+    "Worker B P8 repair must reach a final reviewed exact candidate before stacked integration.",
+    "An authorized integration owner must approve merge order and retargeting.",
+    "Combining current Worker B and frozen Worker A registries/hierarchy will create a new tree requiring regenerated SOURCE_MANIFEST.sha256, exact-head CI, and fresh Worker B review.",
+    "Controlled P2 behavioral campaign remains BLOCKED_EXTERNAL.",
+    "GitHub currently reports PR #64 non-mergeable against its moving base."
+  ],
+  "resolvedStates": {
+    "P1": "SOURCE_VERIFICATION_READY_FOR_RECONCILIATION",
+    "P1A": "SOURCE_NATIVE_INTEGRATION_READY_FOR_RECONCILIATION",
+    "P2Behavior": "BLOCKED_EXTERNAL",
+    "P2Source": "SOURCE_INTEGRATION_READY_FOR_RECONCILIATION",
+    "supportImpact": "NO_PROMOTION"
+  },
+  "reviewId": "MISSION-001-WORKER-J-89a15332",
+  "reviewType": "SOURCE_RECONCILIATION_AND_NO_PROMOTION",
+  "reviewerRole": "Worker J",
+  "schemaVersion": 1,
+  "verified": [
+    "The reviewed Worker A commit/tree remains unchanged after Worker B's exact-SHA PASS.",
+    "Canonical Test Center/source integration is valid only for the frozen reviewed base and does not automatically apply to the moving Worker B/P8 branch.",
+    "The final source manifest and source/evidence bindings were reviewed and accepted at the frozen candidate.",
+    "Controlled P2 Windows, macOS, Linux, hello.txt, cleanup, process-tree, aggregate-certification, platform-support, and release-support receipts remain unavailable.",
+    "Worker A does not modify Worker J P24/migration ownership, Worker C/D/E/F/G/I branches, roadmap authority, public APIs, wire formats, persistence, or native interfaces.",
+    "P3 is not authorized and P2 completion is not claimed."
+  ],
+  "workExecutionId": "WRK-20260806T195501Z-5dbbcca5"
+}
