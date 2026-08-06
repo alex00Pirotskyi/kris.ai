@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "sequence": 13,
+  "mission": "MISSION-001",
+  "worker": "A",
+  "status": "BLOCKED",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "pullRequest": 75,
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0012.json",
+  "supersededBy": null,
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_004_SOURCE_REPAIR_VALIDATED_IN_DURABLE_ARTIFACT",
+    "P2_004_OWNER_MEDIATED_TEST_CENTER_UNION_REQUIRED",
+    "P8_001_CURRENT_HEAD_REQUEST_CHANGES",
+    "P8_001_PREDECESSOR_RESULTS_NOT_ENFORCED",
+    "P8_001_REQUIRED_EVIDENCE_CATEGORIES_NOT_ENFORCED",
+    "P8_001_SCHEMA_TIME_AND_EVIDENCE_RESOLUTION_DEFECTS",
+    "P8_001_EXACT_HEAD_CI_NOT_EXECUTED",
+    "P8_001_SOURCE_MANIFEST_STALE",
+    "P2_004_TARGET_NOT_PUBLISHED",
+    "BLOCKED_BY_COORDINATION",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "blockers": [
+    {
+      "class": "P8_SOURCE_CONTRACT_REQUEST_CHANGES",
+      "detail": "Current PR #65 candidate 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d does not enforce declared predecessor assurance results or level-specific required evidence categories for support-bearing reports. Additional exact Worker F findings cover minProperties, RFC3339/time ordering, and durable evidence resolution."
+    },
+    {
+      "class": "P8_EXACT_CI_NOT_EXECUTED",
+      "detail": "GitHub reports zero workflow runs, zero check runs, and no statuses for the exact PR #65 candidate."
+    },
+    {
+      "class": "P8_SOURCE_MANIFEST_STALE",
+      "detail": "SOURCE_MANIFEST.sha256 still binds .github/workflows/p8-001-formal-test-hierarchy.yml rather than the current .github/workflows/worker-b-p8-001-formal-test-hierarchy.yml and does not certify the current semantic/test changes."
+    },
+    {
+      "class": "OWNER_MEDIATED_UNION_REQUIRED",
+      "detail": "MISSION-002 has not produced the owner-preserving Test Center registry union needed to bind the P2-004 trusted measurement sources into tc.p2.acceptance-contract while preserving all current P8 authority records."
+    },
+    {
+      "class": "VALIDATED_SOURCE_NOT_PUBLISHED",
+      "detail": "The trusted P2-004 source repair remains durable in workflow artifact 8970093356, but PR #75 remains at carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a because no valid owner union exists."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane startup, memory, packaging, reliability, detach/reconnect, and process-tree measurements exist for Windows, macOS, and Linux."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "The p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning/trust inputs, approvals, and controlled behavior receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, PR #64, and PR #78 remain draft and unmerged without a valid authorized integration sequence."
+    }
+  ],
+  "completed": [
+    "Generated unique work execution identity WRK-20260806T203125Z-c4e19a72 and resolved Worker A from the live unique MISSION-001 claim.",
+    "Re-resolved protected main, the canonical mission branch, PR #78, PR #64, PR #65, PR #75, current heads/trees, claim ownership, reviews, workflow/check allocation, registry authority, and the owner-union handoff.",
+    "Confirmed the newest unified worker prompt remains present only on PR #78 branch agent/mission-delivery-enforcement-v1 and consumed it strictly as a read-only overlay.",
+    "Tracked PR #65 movement from 92ebab6c985685620a025fa85faa157f7eddd6e5 to current exact head 71770c8ced388d83a278d951fd45a07afdec84db and did not reuse the superseded review as current approval.",
+    "Inspected the current P8 hierarchy, canonical TestExecutionResult schema and validator, AssuranceExecutionReport schema and validator, deterministic regression suite, workflow, registry, evidence fixture, and source manifest.",
+    "Found that actual report validation does not enforce requiredPredecessorLevels or level-specific requiredEvidence categories, allowing support-bearing reports without the declared assurance chain and evidence classes.",
+    "Consumed Worker F exact review findings for minProperties, RFC3339/time ordering, durable evidence URI/digest resolution, and unsettled exact manifest/CI.",
+    "Published exact GitHub downstream review 4878098718 with technical disposition REQUEST_CHANGES bound to 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d.",
+    "Committed review artifact docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-71770c8c.json and SHA-256 sidecar 0a329928ff3a214fb952aece3e024f7e8bb7a3feeb6bfea2c632353708f293f2.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T204723Z-P2-004.json at 604597f96ccca9f2d5f6eb561c5fb7f7be2514db / 3f82c8e820f01a934f6de5661319b48beb0870b4.",
+    "Kept PR #64 frozen, PR #75 unadvanced, and all behavior/support/technology/merge boundaries intact."
+  ],
+  "evidence": {
+    "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+    "parentCandidate": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "sourceCarrier": {
+      "pullRequest": 75,
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "validatedSourceArtifact": {
+      "runId": 31107230047,
+      "jobId": 92635442027,
+      "artifactId": 8970093356,
+      "zipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b",
+      "cleanTree": "6b821b719f23cb981653334c10a2215346771f08"
+    },
+    "currentOwnerCandidate": {
+      "pullRequest": 65,
+      "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
+      "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d",
+      "registryBlob": "ba785d79d282b54f5990b0003e24721ae7f6a984",
+      "workflowRuns": [],
+      "checkRuns": [],
+      "statuses": []
+    },
+    "reviews": {
+      "workerA": {
+        "githubReviewId": 4878098718,
+        "decision": "REQUEST_CHANGES",
+        "artifact": "docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-71770c8c.json",
+        "artifactSha256": "0a329928ff3a214fb952aece3e024f7e8bb7a3feeb6bfea2c632353708f293f2",
+        "artifactCommit": "46def410a2ecf0136efbd617be33a35e6ea3d904",
+        "sidecarCommit": "13b4b9cc9fa56adf0006bd82ddfdef539470e086"
+      },
+      "workerF": {
+        "decision": "REQUEST_CHANGES",
+        "artifact": "docs/roadmap/missions/coordination/MISSION-002-worker-f-review-71770c8c.json",
+        "artifactSha256": "f0e785b1f01b07f4c4c85d37296838b9672db0a033693931f36dc80f24e583f4"
+      }
+    },
+    "ownerUnion": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json",
+      "status": "OWNER_INTEGRATION_REQUIRED"
+    },
+    "deliveryRecord": {
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T204723Z-P2-004.json",
+      "commit": "604597f96ccca9f2d5f6eb561c5fb7f7be2514db",
+      "tree": "3f82c8e820f01a934f6de5661319b48beb0870b4"
+    },
+    "deliveryOverlay": {
+      "pullRequest": 78,
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false
+    }
+  },
+  "validation": [
+    "The live MISSION-001 claim remained unique after every mission-branch write.",
+    "The current exact PR #65 candidate is one test-only commit after 92ebab6c985685620a025fa85faa157f7eddd6e5; the source semantic findings remain applicable and the expanded tests do not cover predecessor or required-evidence enforcement.",
+    "GitHub reports zero exact-head workflow/check/status evidence for the current candidate.",
+    "No product source, product branch ref, protected-main identity, frozen Worker A parent, or valid existing review identity was rewritten.",
+    "No source or hosted check was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No automation-host technology, controlled P2 behavior, capability support, platform support, release support, roadmap authority, P3 implementation, P11 implementation, or merge authorization was claimed."
+  ],
+  "nextAction": "Worker B repairs the exact P8-001 predecessor, required-evidence, minProperties, RFC3339/time-ordering, evidence-resolution, manifest, and CI findings and obtains a fresh exact-candidate review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes the P2-004 candidate only against that exact union, with fresh ownership, review-impact, CI, artifacts, and independent review."
+}
