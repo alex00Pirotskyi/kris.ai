@@ -238,6 +238,64 @@ void main() {
       );
     });
 
+    test('evaluation-only model rejects benchmark evidence from another artifact',
+        () {
+      expect(
+        () => ModelDefinition.evaluationOnly(
+          providerId: 'ollama.local',
+          modelId: 'evaluation:latest',
+          displayName: 'Evaluation',
+          digest: 'sha256:evaluation-artifact',
+          parameterSize: '14B',
+          quantization: 'Q4_K_M',
+          limits: _measuredLimits(),
+          toolProfile: _measuredNoTools(),
+          dataBoundary: ModelDataBoundary.localOnly,
+          cost: ModelCostProfile.noDirectCharge(),
+          benchmarks: <ModelBenchmarkEvidence>[
+            _benchmark(modelDigest: 'sha256:other-artifact'),
+          ],
+          evaluationReasons: const <String>['evaluation pending'],
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            allOf(
+              contains('belongs to artifact sha256:other-artifact'),
+              contains('expected sha256:evaluation-artifact'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('evaluation-only benchmark evidence requires model artifact identity',
+        () {
+      expect(
+        () => ModelDefinition.evaluationOnly(
+          providerId: 'ollama.local',
+          modelId: 'evaluation:digestless',
+          displayName: 'Evaluation digestless',
+          limits: _measuredLimits(),
+          toolProfile: _measuredNoTools(),
+          dataBoundary: ModelDataBoundary.localOnly,
+          cost: ModelCostProfile.noDirectCharge(),
+          benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
+          evaluationReasons: const <String>['evaluation pending'],
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains(
+              'model with benchmark evidence must contain an immutable artifact digest',
+            ),
+          ),
+        ),
+      );
+    });
+
     test('approved JSON cannot relabel an artifact and retain stale benchmarks',
         () {
       final raw = _approvedModel().toJson();
