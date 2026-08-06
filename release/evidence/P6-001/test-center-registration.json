@@ -11,6 +11,17 @@
     "release support"
   ],
   "requestedAssuranceClass": "behavioral",
+  "requestedCoverage": [
+    "unknown model remains evaluation-only",
+    "raw string lookup cannot expose approval state",
+    "requireApproved requires exact discovered ModelIdentity",
+    "canonical and alias identity drift cannot inherit approval",
+    "artifact identities reject non-canonical SHA-256 values",
+    "content-addressed benchmark evidence digest mismatch fails closed",
+    "benchmark metadata must match immutable evidence payload",
+    "approved benchmark artifact mismatch fails closed",
+    "evaluation-only benchmark artifact mismatch fails closed"
+  ],
   "requestedModuleId": "tm.agent-quality-model-routing",
   "requestedMutationPolicy": "NON_MUTATING",
   "requestedPlatforms": [
@@ -20,6 +31,10 @@
   ],
   "requestedStableCheckId": "tc.p6.model-registry-v2",
   "schemaVersion": 1,
+  "sourceMilestone": {
+    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
+    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+  },
   "task": "P6-001",
   "testCenterTask": "P6-TC-001",
   "workerBranchContainsAuthorityChanges": false

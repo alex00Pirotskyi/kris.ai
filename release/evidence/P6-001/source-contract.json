@@ -9,29 +9,28 @@
   "invariants": [
     "unknown models are evaluation-only",
     "unknown providers fail closed because data boundary is unknown",
-    "canonical IDs and aliases reuse approval only when digest, parameter size, and quantization match exactly",
-    "approved models require a non-empty immutable artifact digest",
+    "approved, discovered, and benchmark artifact identities use canonical sha256:<64 lowercase hex> values only",
+    "canonical IDs and aliases reuse registered identity only when digest, parameter size, and quantization match exactly",
     "identity drift receives a deterministic evaluation-only quarantine identity",
-    "quarantine identity encoding is deterministic and uses only model-ID-safe base64url characters",
-    "artifact identity validation is enforced inside the single exported ModelDefinitionRegistry and cannot be bypassed by direct imports",
-    "requireApproved requires the actual discovered ModelIdentity rather than string-only provider/model lookup",
-    "a quarantined identity cannot pass requireApproved",
-    "benchmark evidence carries the exact model artifact digest it measured",
-    "approved models reject benchmark evidence measured for a different artifact digest",
-    "JSON cannot relabel a model digest and retain benchmark evidence measured for another artifact",
-    "evaluation-only records reject benchmark evidence measured for another artifact",
-    "benchmark-bearing evaluation-only records require their own immutable model artifact digest",
-    "approved task classes require benchmark evidence for every approved task class",
+    "raw string lookup returns non-authoritative ModelRegistryMetadata without support status, approved task classes, or approval predicates",
+    "runtime metadata serialization omits approval policy",
+    "requireApproved requires the actual discovered ModelIdentity and is the only registry API that can produce ApprovedModelHandle",
+    "direct imports of model_registry.dart cannot recover a string-only authorization shortcut",
+    "benchmark evidence is embedded content-addressed canonical JSON with a verified SHA-256",
+    "benchmark evidence carries schema/version identity, exact candidate commit/tree, exact model digest, task class, score, sample count, and measurement timestamp",
+    "top-level benchmark metadata must exactly match the immutable content-addressed evidence payload",
+    "approved and evaluation-only models reject benchmark evidence measured for another artifact digest",
+    "approved task classes require immutable benchmark evidence for every approved task class",
+    "all benchmark records used by one approved model bind one exact candidate commit/tree",
     "provider and model data boundaries must agree",
     "credential records contain references and never secret values",
-    "registry serialization and quarantine identities are deterministic"
+    "runtime metadata and quarantine identities are deterministic"
   ],
   "integration": {
     "mergeCommit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
     "mergeTree": "7ff410b5606719a3f627ce6a5eea84eb4f2509dc",
-    "parentWorkerG": "4515c66f857d61fc415f37e737c6926e716ef3b5",
     "parentWorkerB": "604905039aa26952045e69ebe6799ae464144635",
-    "workerBBehindBy": 0,
+    "workerBBehindByAtSourceMilestone": 0,
     "effectiveDiffExcludesSourceManifest": true,
     "effectiveDiffExcludesTestCenterAuthority": true
   },
@@ -50,12 +49,15 @@
   "reviewRepairs": [
     "P6-C-001",
     "P6-C-002",
-    "P6-BENCHMARK-ARTIFACT-BINDING"
+    "P6-BENCHMARK-ARTIFACT-BINDING",
+    "P6-I-451-001",
+    "P6-I-451-002",
+    "P6-H-001-LOOKUP-AUTHORIZATION"
   ],
   "schemaVersion": 1,
   "sourceMilestone": {
-    "commit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
-    "tree": "7ff410b5606719a3f627ce6a5eea84eb4f2509dc"
+    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
+    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
   },
   "task": "P6-001",
   "testCenter": {
@@ -73,8 +75,9 @@
     "dartOrFlutterExecutedForCurrentSource": false,
     "exactHeadCiAllocatedForSourceMilestone": false,
     "historicalCiPromoted": false,
+    "staticPublishedBlobAudit": "PASS",
     "sourceManifestClaimedCurrent": false
   },
   "worker": "G",
-  "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
+  "workExecutionId": "WRK-20260806T223554Z-6d2a4f1c"
 }
