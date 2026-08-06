@@ -22,7 +22,7 @@ jobs:
     env:
       WORKER_G_BRANCH: agent/g/mission-006-model-routing
       WORKER_B_BRANCH: agent/b/test-center-contracts-and-review
-      EXPECTED_G_PARENT: c9a1c02f231a4e3b7881df20a3433494b2e41a4b
+      EXPECTED_G_PARENT: ae208fde49d03a2ca8acf343ca3ac5eebc56823d
       EXPECTED_B_HEAD: af68bf5e0dd60113ccf29c24140830214f238729
       EXPECTED_B_TREE: fb859967cc9e210480308cac38be6b6da79251e0
     steps:
@@ -120,7 +120,14 @@ jobs:
           python -m unittest -v tool/test_center_assurance_hierarchy_test.py
           grep -F 'REPORT_SCHEMA.as_posix()' tool/test_center_assurance_semantics.py
           grep -F 'test_windows_schema_path_is_canonical' tool/test_center_assurance_hierarchy_test.py
-          grep -F 'ref: ${{ github.event.pull_request.head.sha || github.sha }}' .github/workflows/p8-001-formal-test-hierarchy.yml
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path('.github/workflows/p8-001-formal-test-hierarchy.yml').read_text(encoding='utf-8')
+          needle = 'ref: $' + '{{ github.event.pull_request.head.sha || github.sha }}'
+          if needle not in text:
+              raise SystemExit('P8 workflow does not bind checkout to the exact PR head')
+          PY
       - name: Validate P6 and governed source inventory
         shell: bash
         run: |
