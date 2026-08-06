@@ -1,0 +1,37 @@
+{
+  "blockers": [
+    "Worker B exact-commit/tree Test Center authority review is pending.",
+    "No independent exact-commit/tree source review is recorded.",
+    "The canonical mission claim and generated mission views still contain the superseded candidate because generator-owned outputs cannot be truthfully refreshed while mission-system Actions are action_required and the direct Git transport cannot execute canonical generators.",
+    "SOURCE_MANIFEST.sha256 cannot be claimed current for this append-only checkpoint until the canonical owner runs; the existing MISSION-015-0003 checkpoint records the same repository-wide transport blocker.",
+    "PR #78 remains open, draft, unmerged, and under blocking review findings, so its delivery controls remain a read-only execution overlay rather than integrated authority.",
+    "P6-002 and later P6/P18 implementation remain unauthorized, and no merge authorization exists."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Re-resolved protected main, the canonical mission-system branch, PR #78, the newest repository prompt overlay, active MISSION-006 ownership, PR #76, exact branch identities, CI, artifacts, and reviews.",
+    "Reused the existing P6-001 model registry implementation, tests, evidence, canonical Test Center registration, and Worker B ancestry without restarting completed work.",
+    "Confirmed exact candidate 9799768170f13556d3098a07b40be922377f8deb / 2a5def77debba67066e083222bd7ef76af66c1f9 remains unchanged and all required exact-head P2, P8, and product-gates workflows are successful.",
+    "Updated draft PR #76 to bind the current base, exact candidate, scope boundary, exact CI, artifacts, evidence, blockers, and NO_MERGE_AUTHORIZATION.",
+    "Refreshed the exact-candidate review request on PR #76 for Worker B authority review and an independent implementation review.",
+    "Detected a live mission-branch claim race, preserved the winning concurrent commits, rejected a non-fast-forward update, and removed the temporary Worker G carrier through a later non-force exact-parent commit."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker B must publish the Test Center authority decision and a genuinely independent reviewer must publish an exact decision for commit 9799768170f13556d3098a07b40be922377f8deb and tree 2a5def77debba67066e083222bd7ef76af66c1f9. When canonical mission generation and source-manifest execution become available, refresh the MISSION-006 claim/views from this checkpoint, then re-resolve integration authorization. Do not merge or begin P6-002 before those gates pass.",
+  "observedHead": "9799768170f13556d3098a07b40be922377f8deb",
+  "observedTree": "2a5def77debba67066e083222bd7ef76af66c1f9",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 3,
+  "supersededBy": null,
+  "validation": [
+    "Work execution ID: WRK-20260806T181504Z-e3b9bdf0",
+    "P2 Integration Alignment run 31108017750: success; validation job passed; gated execute/materializer jobs intentionally skipped; artifact NONE.",
+    "P8-001 Formal Test Hierarchy run 31108017702: Ubuntu, Windows, and macOS success; committed source manifest and non-mutation checks passed.",
+    "P8 source-manifest artifact 8970421528: 108239 bytes; sha256:dbfda395997b1fd4a8aa4a38ee0fbb79c0277f1591e5de702b21c945b62b7ac4; not expired.",
+    "Product-gates run 31108017755: Ubuntu, Windows, and macOS success, including full Flutter tests, architecture/security checks, and native release builds.",
+    "PR #76 currently has no submitted review and no unresolved inline review thread; exact review request comment 5205624730 is current.",
+    "Mission checkpoint publication is append-only and deliberately makes no claim that generator-owned mission views or SOURCE_MANIFEST.sha256 are current."
+  ],
+  "worker": "G"
+}
