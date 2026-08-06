@@ -1,0 +1,165 @@
+{
+  "blockers": [
+    {
+      "class": "BLOCKED_BY_COORDINATION",
+      "detail": "The smallest complete P2-004 source repair requires the shared Test Center registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 for exact full target tree d4526dc84554ecd1d77beefeff63b044e92a174f. MISSION-002 has not issued the exact grant; its latest continuation comment 5208498830 explicitly records shared grants: none."
+    },
+    {
+      "class": "SOURCE_ONLY_SPLIT_REJECTED_FAIL_CLOSED",
+      "detail": "A reconstructed candidate containing only MISSION-001-owned paths and the carrier registry regenerated the source manifest twice with 1130 entries, then the hardened contract correctly failed with: P2-004 contract sources are not bound into Test Center inputs. Publishing that partial candidate would create a known failing canonical contract."
+    },
+    {
+      "class": "DELIVERY_OVERLAY_NOT_INTEGRATED",
+      "detail": "PR #78 remains open, draft, unmerged, and non-mergeable. Its prompt is used only as a read-only control overlay. Current PR-head workflow runs 31125590807, 31125590871, 31125589909, and 31125589939 are action_required rather than validated PASS."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane startup, memory, packaging, reliability, detach/reconnect, and process-tree measurements exist for Windows, macOS, and Linux. ADR-0012 remains provisional and no automation-host technology is selected."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "The p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning/trust inputs, approvals, and controlled behavior receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, and PR #64 remain draft and unmerged. No current mission, review, security, evidence, roadmap, or explicit integration gate authorizes landing."
+    }
+  ],
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_004_TRUSTED_RECEIPT_CONTRACT_HARDENED",
+    "P2_004_COMPLETE_TARGET_VALIDATED_NOT_PUBLISHED",
+    "SOURCE_ONLY_SPLIT_REJECTED_FAIL_CLOSED",
+    "BLOCKED_BY_COORDINATION",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "completed": [
+    "Generated unique work execution identity WRK-20260806T191526Z-89c76579 and resolved Worker A from the live unique MISSION-001 claim.",
+    "Re-resolved protected main, canonical mission branch, PR #78, PR #64, PR #65, PR #75, exact heads/trees, current comments, workflow dispositions, and the latest MISSION-001 checkpoint.",
+    "Confirmed the newest unified worker prompt is absent from protected main and the canonical mission branch and present only on agent/mission-delivery-enforcement-v1; consumed it as a read-only overlay.",
+    "Reused durable run 31107230047 / job 92635442027 / artifact 8970093356 rather than restarting the P2-004 implementation.",
+    "Reconstructed a source-only split with all Worker A paths ownership-aligned, the carrier Test Center registry unchanged, and all temporary carrier files removed.",
+    "Regenerated SOURCE_MANIFEST.sha256 twice with 1130 entries and byte-identical output on the split candidate.",
+    "Observed the hardened P2-004 contract reject the split with the exact fail-closed result: P2-004 contract sources are not bound into Test Center inputs.",
+    "Preserved the regression and declined to publish a partial source candidate or weaken canonical Test Center binding.",
+    "Published PR #75 continuation comment 5208564549 and PR #65 coordination revalidation comment 5208566551.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T192844Z-P2-004.json at mission-system commit bd797a829b23ffe9520cb2ea6b97481dede3fa12."
+  ],
+  "evidence": {
+    "coordination": {
+      "latestMission002ContinuationComment": 5208498830,
+      "latestMission002SharedGrantState": "NONE",
+      "pr65ExactGrantRequestComment": 5208181850,
+      "pr65RevalidationComment": 5208566551,
+      "pr75FailClosedContinuationComment": 5208564549
+    },
+    "deliveryOverlay": {
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false,
+      "promptBlob": "d11d949184f1c5e04efc05beba0d917b3c24d0dc",
+      "pullRequest": 78,
+      "workflowRuns": [
+        {
+          "conclusion": "action_required",
+          "name": "product-gates",
+          "runId": 31125590807
+        },
+        {
+          "conclusion": "action_required",
+          "name": "Mission Execution Control",
+          "runId": 31125590871
+        },
+        {
+          "conclusion": "action_required",
+          "name": "P2 Integration Alignment",
+          "runId": 31125589909
+        },
+        {
+          "conclusion": "action_required",
+          "name": "Mission Delivery Enforcement",
+          "runId": 31125589939
+        }
+      ]
+    },
+    "deliveryRecord": {
+      "commit": "bd797a829b23ffe9520cb2ea6b97481dede3fa12",
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T192844Z-P2-004.json",
+      "tree": "5003fb4a559c1fde50a527387a55da263a735208"
+    },
+    "missionBranchDiscovery": {
+      "commit": "84a0e2a7510a7a96acb69129ff9b864b70ce9b46",
+      "tree": "d207cce0ddc6e9a2baea5a457a0ad221bf9d2958"
+    },
+    "mission002CurrentCandidate": {
+      "branch": "agent/b/test-center-contracts-and-review",
+      "commit": "f14ba34e501972b13cd4310c4869c87e021012da",
+      "pullRequest": 65,
+      "tree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2"
+    },
+    "ownershipAlignedCompleteTarget": {
+      "commit": "d9fdd8fafb597e453bc8f358935ae8fe4ab4dd2a",
+      "manifestEntries": 1130,
+      "registryBlob": "b4ec5f5eaea363263920ff81dcba2dd174b56df1",
+      "tree": "d4526dc84554ecd1d77beefeff63b044e92a174f"
+    },
+    "parentCandidate": {
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "pullRequest": 64,
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "protectedMain": {
+      "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+      "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+    },
+    "sourceCarrier": {
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "pullRequest": 75,
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "sourceOnlySplit": {
+      "canonicalManifestEntryCount": 1130,
+      "canonicalManifestSecondWriteIdentical": true,
+      "result": "REJECTED_FAIL_CLOSED",
+      "testFailure": "P2-004 contract sources are not bound into Test Center inputs"
+    },
+    "validatedExport": {
+      "artifactId": 8970093356,
+      "jobId": 92635442027,
+      "runId": 31107230047,
+      "zipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b"
+    },
+    "workExecutionId": "WRK-20260806T191526Z-89c76579"
+  },
+  "mission": "MISSION-001",
+  "nextAction": "MISSION-002 must publish an exact machine-readable grant for registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 and full target tree d4526dc84554ecd1d77beefeff63b044e92a174f. After the grant is durable, reconstruct and publish the complete candidate by non-forced fast-forward, resolve the exact remote commit/tree, inspect every exact-head workflow/job/log/artifact, rerun ownership and review-impact checks, and request a fresh independent exact-candidate review. Keep PR #64 frozen and preserve all behavioral, support, technology-selection, P3, P11, and merge boundaries.",
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 75,
+  "schemaVersion": 1,
+  "sequence": 11,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0010.json",
+  "validation": [
+    "The live MISSION-001 claim remains unique and unchanged after re-fetching the moving mission-system branch.",
+    "The source-only split was not published because the canonical hardened contract rejected missing Test Center binding.",
+    "No product source, registry, workflow, source manifest, PR head, review identity, branch ref, or protected-main identity changed.",
+    "No source or hosted check was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No automation-host technology, controlled P2 behavior, capability support, platform support, release support, roadmap authority, P3 implementation, P11 implementation, or merge authorization was claimed."
+  ],
+  "worker": "A"
+}
