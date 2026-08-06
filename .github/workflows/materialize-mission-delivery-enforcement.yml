@@ -11,13 +11,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: materialize-mission-delivery-enforcement-v1
-  cancel-in-progress: false
+  group: materialize-mission-delivery-enforcement-v2
+  cancel-in-progress: true
 
 jobs:
   materialize:
     if: github.repository == 'alex00Pirotskyi/kris.ai'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
