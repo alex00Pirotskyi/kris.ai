@@ -1,0 +1,109 @@
+name: Worker G P6-001 source inventory repair
+
+on:
+  push:
+    branches:
+      - agent/g/mission-006-model-routing
+    paths:
+      - '.github/workflows/worker-g-p6-001-source-inventory.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-g-p6-001-source-inventory
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BRANCH: agent/g/mission-006-model-routing
+      EXPECTED_PARENT: 8dc88e6be32371519228a2923fd6b61a260a59f0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/g/mission-006-model-routing
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Require exact uncontended repair head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git fetch origin "${BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${BRANCH})" = "${GITHUB_SHA}"
+      - name: Register governed P6 model sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('test/product/source_contract_test.dart')
+          text = path.read_text(encoding='utf-8')
+          entries = (
+              "        'lib/product/model/model.dart',\n"
+              "        'lib/product/model/model_registry.dart',\n"
+          )
+          present = [entry.strip() in text for entry in entries.splitlines() if entry.strip()]
+          if all(present):
+              raise SystemExit('P6 model source inventory entries already exist; refusing redundant repair')
+          if any(present):
+              raise SystemExit('partial P6 model source inventory detected; refusing ambiguous repair')
+          anchor = (
+              "        'lib/product/mcp.dart',\n"
+              "        'lib/product/models_research.dart',\n"
+          )
+          replacement = (
+              "        'lib/product/mcp.dart',\n"
+              + entries
+              + "        'lib/product/models_research.dart',\n"
+          )
+          if text.count(anchor) != 1:
+              raise SystemExit('expected governed-source inventory anchor was not unique')
+          path.write_text(
+              text.replace(anchor, replacement, 1),
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+      - name: Validate focused P6 and source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          python tool/dart_format_scope.py --check
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/model/model_registry_test.dart \
+            test/product/source_contract_test.dart
+      - name: Remove repair workflow and refresh source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/worker-g-p6-001-source-inventory.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Commit exact validated repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${BRANCH})" = "${GITHUB_SHA}"
+          git add -A -- .
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(p6-001): register model sources in governed inventory'
+          git push origin "HEAD:${BRANCH}"
