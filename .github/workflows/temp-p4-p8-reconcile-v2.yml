@@ -1,0 +1,96 @@
+name: Temporary P4 P8 Reconciliation V2
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+env:
+  P4_HEAD: 1c089c7094a122bb3cfbbc78221f218b3dd7ac0f
+  P8_HEAD: 800643bb5898a80ee3843f83f7657411183a9e6a
+  P4_BRANCH: agent/p4-001-search-provider-foundation
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+      - name: Reconcile exact P4 and P8 candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Kristin P4 P8 Reconciler'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch --no-tags origin "${P4_HEAD}" "${P8_HEAD}"
+          test "$(git ls-remote origin refs/heads/${P4_BRANCH} | cut -f1)" = "${P4_HEAD}"
+          git checkout --detach "${P4_HEAD}"
+          cp config/test_center_registry.v1.json "$RUNNER_TEMP/p4-registry.json"
+          cp config/test_center_assurance_hierarchy.v1.json "$RUNNER_TEMP/p4-hierarchy.json"
+          git show "${P8_HEAD}:config/test_center_registry.v1.json" > "$RUNNER_TEMP/p8-registry.json"
+          git show "${P8_HEAD}:config/test_center_assurance_hierarchy.v1.json" > "$RUNNER_TEMP/p8-hierarchy.json"
+          git merge --no-ff --no-commit "${P8_HEAD}" || true
+          python - <<'PY'
+          import copy, json, os
+          from pathlib import Path
+          t = Path(os.environ['RUNNER_TEMP'])
+          identities = {
+              'affectedTestMappings':'mappingId', 'projectTestProfiles':'stableCheckId',
+              'testBindings':'testId', 'levels':'levelId', 'modules':'moduleId',
+              'testModules':'moduleId', 'tests':'testId'
+          }
+          candidates = ('mappingId','stableCheckId','testId','moduleId','levelId','profileId','id','name')
+          def union(p4, p8):
+              out = copy.deepcopy(p8)
+              for key, value in p4.items():
+                  if key not in out:
+                      out[key] = copy.deepcopy(value); continue
+                  if not isinstance(value, list) or not isinstance(out[key], list):
+                      continue
+                  if not value or not all(isinstance(x, dict) for x in value + out[key]):
+                      continue
+                  identity = identities.get(key)
+                  if identity is None:
+                      identity = next((x for x in candidates if all(x in y for y in value + out[key])), None)
+                  if identity is None:
+                      continue
+                  seen = {x[identity] for x in out[key]}
+                  out[key].extend(copy.deepcopy(x) for x in value if x[identity] not in seen)
+              return out
+          for a,b,d in (
+              ('p4-registry.json','p8-registry.json','config/test_center_registry.v1.json'),
+              ('p4-hierarchy.json','p8-hierarchy.json','config/test_center_assurance_hierarchy.v1.json')):
+              p4=json.loads((t/a).read_text()); p8=json.loads((t/b).read_text())
+              Path(d).write_text(json.dumps(union(p4,p8),indent=2,sort_keys=True)+'\n')
+          PY
+          git checkout --ours SOURCE_MANIFEST.sha256
+          git add config/test_center_registry.v1.json config/test_center_assurance_hierarchy.v1.json SOURCE_MANIFEST.sha256
+          test -z "$(git diff --name-only --diff-filter=U)"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+          git add SOURCE_MANIFEST.sha256
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report --project . --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          python tool/p4_001_test_center_v1.py check --project .
+          python -m unittest -v tool/p4_001_test_center_v1_test.py
+          python tool/p4_001_search_provider_test.py --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/generated_state_guard.py audit --project . --strict
+          python tool/source_tree_policy_test.py
+          git diff --check --cached
+          git commit -m 'merge(p4): reconcile final P8 compatibility repair'
+          test "$(git rev-parse HEAD^1)" = "${P4_HEAD}"
+          test "$(git rev-parse HEAD^2)" = "${P8_HEAD}"
+          test "$(git ls-remote origin refs/heads/${P4_BRANCH} | cut -f1)" = "${P4_HEAD}"
+          head=$(git rev-parse HEAD); tree=$(git rev-parse HEAD^{tree})
+          git push origin "${head}:refs/heads/${P4_BRANCH}"
+          echo "FINAL_HEAD=${head}"
+          echo "FINAL_TREE=${tree}"
