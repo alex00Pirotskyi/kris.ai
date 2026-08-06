@@ -1,0 +1,75 @@
+{
+  "blockers": [
+    {
+      "class": "P8_CONTRACT_REVIEW_REQUEST_CHANGES",
+      "detail": "Exact downstream review 4873602175 requests P8 contract and evidence repairs on 22a8ac34cbf9601100f60c4929198f15f3c60e52 / ef5d5ae584b1d823502bf6f2191ecf4285d36845."
+    },
+    {
+      "class": "WORKER_J_RECONCILIATION_PENDING",
+      "detail": "No bounded Worker J decision exists for the frozen Worker A candidate."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "No current PR #65 or PR #64 merge authorization exists."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "Controlled P2 tri-platform behavior, hello.txt acceptance, cleanup, process-tree termination, and aggregate certification remain unavailable."
+    }
+  ],
+  "branch": "agent/a/p1-p2-new-roadmap-execution",
+  "classifications": [
+    "WORKER_A_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P8_EXACT_SOURCE_CI_PASS",
+    "P8_INDEPENDENT_REVIEW_REQUEST_CHANGES",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "PENDING_WORKER_J_RECONCILIATION",
+    "PENDING_AUTHORIZED_STACKED_INTEGRATION"
+  ],
+  "completed": [
+    "Materialized MISSION-001 checkpoint 0004 and its P8 compatibility coordination artifact.",
+    "Aligned the canonical MISSION-001 state and dashboard with checkpoint 0004 and exact P8 review 4873602175.",
+    "Preserved the frozen Worker A product commit/tree without source, runtime, manifest, registry, evidence, or workflow changes.",
+    "Bound the exact current blockers and post-landing Worker A repair sequence into repository-native mission state."
+  ],
+  "evidence": {
+    "canonicalStateAlignmentCommit": "1e4d3ab8456527b0d7eb2958868c429c94541852",
+    "checkpoint0004MaterializedCommit": "3d356a0ea2985b911d914e84583171861d6fda26",
+    "coordinationArtifact": "docs/roadmap/missions/coordination/MISSION-001-p8-compatibility-review-2026-08-06.json",
+    "p8Review": {
+      "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+      "decision": "REQUEST_CHANGES",
+      "pullRequest": 65,
+      "reviewId": 4873602175,
+      "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
+    },
+    "workerA": {
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "pullRequest": 64,
+      "reviewDecision": "PASS",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    }
+  },
+  "mission": "MISSION-001",
+  "nextAction": "Keep Worker A frozen. Worker B repairs P8-A-001 and P8-A-002 and obtains fresh exact-SHA review; Worker J publishes bounded reconciliation; only after reviewed authorized P8 landing may Worker A combine registry/hierarchy records, regenerate the source manifest, rerun exact-head CI, and obtain fresh Worker B review.",
+  "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
+  "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 64,
+  "schemaVersion": 1,
+  "sequence": 5,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0004.json",
+  "validation": [
+    "Canonical mission state points to checkpoint 0004 before this checkpoint materialization.",
+    "Mission dashboard and state agree on the P8 review and Worker A frozen identity.",
+    "Worker A exact-head source CI remains green and the independent PASS remains valid for the unchanged SHA/tree.",
+    "No P2 behavior, support, roadmap authority, or P3 state is promoted."
+  ],
+  "worker": "A"
+}
