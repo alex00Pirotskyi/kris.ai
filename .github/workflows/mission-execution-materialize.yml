@@ -34,89 +34,6 @@ jobs:
       - name: Require exact branch head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-      - name: Apply authorized MISSION-004 transfer
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from __future__ import annotations
-          import datetime
-          import json
-          import pathlib
-
-          config_path = pathlib.Path('config/mission_execution.v1.json')
-          config = json.loads(config_path.read_text(encoding='utf-8'))
-          claims = config['activeClaims']
-          matches = [claim for claim in claims if claim['mission'] == 'MISSION-004']
-          if len(matches) != 1:
-              raise SystemExit(f'expected one MISSION-004 claim, found {len(matches)}')
-          claim = matches[0]
-          if claim['worker'] not in {'C', 'D'}:
-              raise SystemExit(f"unexpected prior MISSION-004 worker {claim['worker']}")
-          if claim['branch'] != 'agent/p4-001-search-provider-foundation' or claim['pr'] != 62:
-              raise SystemExit('MISSION-004 branch/PR changed; refusing stale transfer')
-          if claim['head'] != '69e44e08395d89da1767c58b84655c289a969f66':
-              raise SystemExit('MISSION-004 head changed; refusing stale transfer')
-          if claim.get('tree') != '1114c576fe67d9f9202f7f44c98a0af6e35a915a':
-              raise SystemExit('MISSION-004 tree changed; refusing stale transfer')
-
-          now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
-          config['generatedAt'] = now
-          claim['worker'] = 'D'
-          claim['status'] = 'CLAIMED'
-          claim['current'] = (
-              'Worker D replacement claim accepted by explicit user transfer; preserve the existing '
-              'P4-001 source candidate, reconcile PR #62 with current Worker B ancestry, restore exact-head '
-              'CI and evidence, and do not restart or expand beyond dependency-safe P4 work.'
-          )
-          config_path.write_text(
-              json.dumps(config, indent=2, ensure_ascii=False) + '\n',
-              encoding='utf-8',
-              newline='\n',
-          )
-
-          checkpoint = {
-              'schemaVersion': 1,
-              'mission': 'MISSION-004',
-              'sequence': 2,
-              'status': 'TRANSFERRED',
-              'worker': 'C',
-              'transferredTo': 'D',
-              'authorizedBy': 'explicit user instruction dated 2026-08-06T09:15:09Z',
-              'recordedAt': now,
-              'branch': 'agent/p4-001-search-provider-foundation',
-              'pullRequest': 62,
-              'observedHead': '69e44e08395d89da1767c58b84655c289a969f66',
-              'observedTree': '1114c576fe67d9f9202f7f44c98a0af6e35a915a',
-              'completed': [
-                  'Preserved the existing P4-001 source implementation and historical exact Stage 1 evidence.',
-                  'Recorded Worker C yield and Worker D replacement without changing the P4 source candidate.',
-              ],
-              'validation': [
-                  'Transfer is bounded to the existing MISSION-004 exclusive paths and does not release Worker D MISSION-003 ownership.',
-                  'Mission collision validation and deterministic regeneration are required in the publication workflow.',
-              ],
-              'blockers': [
-                  'PR #62 is conflicting/non-mergeable against the current Worker B base.',
-                  'Current P4 head has no exact-head check suite after temporary Stage 2 workflow removal.',
-                  'Worker B queue disposition is BLOCKED_BY_CONTRACT until one stable reconciled candidate has exact evidence.',
-                  'Independent Worker B/Worker I review and Worker J no-conflict remain pending.',
-              ],
-              'nextAction': (
-                  'Worker D must reconcile the immutable P4 implementation with current Worker B ancestry, preserve '
-                  'canonical Test Center semantics and P4 registration exactly once, regenerate the root source manifest '
-                  'through its owner, run exact-head CI, and request exact-candidate reviews without merging.'
-              ),
-              'supersedes': 'docs/roadmap/missions/checkpoints/MISSION-004-0001.json',
-              'supersededBy': None,
-          }
-          checkpoint_path = pathlib.Path('docs/roadmap/missions/checkpoints/MISSION-004-0002.transfer.json')
-          checkpoint_path.write_text(
-              json.dumps(checkpoint, indent=2, sort_keys=True, ensure_ascii=False) + '\n',
-              encoding='utf-8',
-              newline='\n',
-          )
-          PY
       - name: Materialize deterministic mission views
         run: python tool/mission_control.py --project . bootstrap
       - name: Remove superseded prompt and transport artifacts
@@ -137,7 +54,6 @@ jobs:
         run: |
           python tool/mission_control.py --project . validate
           python tool/mission_control.py --project . bootstrap --check
-          python tool/mission_control.py --project . resume --mission MISSION-004 --worker D
       - name: Refresh canonical source manifest twice
         shell: bash
         run: |
@@ -157,5 +73,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A -- .
           git diff --cached --check
-          git commit -m 'ANARCHY: transfer MISSION-004 from Worker C to Worker D'
+          git commit -m 'ANARCHY: materialize protected mission execution OS'
           git push origin HEAD:agent/anarchy-autonomous-worker-missions
