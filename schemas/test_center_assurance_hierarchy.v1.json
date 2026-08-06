@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.kristin/schemas/test_center_assurance_hierarchy.v1.json",
+  "title": "Kristin Test Center formal assurance hierarchy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "hierarchyId",
+    "roadmapTaskId",
+    "levels",
+    "testBindings",
+    "reportContract"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "hierarchyId": {
+      "const": "test-center.assurance-hierarchy-v1"
+    },
+    "roadmapTaskId": {
+      "const": "P8-001"
+    },
+    "levels": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "levelId",
+          "rank",
+          "displayName",
+          "proofKind",
+          "executionScope",
+          "requiredPredecessorLevels",
+          "requiredEvidence",
+          "supportClaimCeiling",
+          "description"
+        ],
+        "properties": {
+          "levelId": {
+            "enum": [
+              "architecture_lint",
+              "unit",
+              "component",
+              "integration",
+              "platform",
+              "adversarial",
+              "benchmark",
+              "release"
+            ]
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 80
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "proofKind": {
+            "enum": [
+              "SOURCE_ONLY",
+              "BEHAVIORAL",
+              "PLATFORM",
+              "BENCHMARK",
+              "RELEASE"
+            ]
+          },
+          "executionScope": {
+            "enum": [
+              "STATIC",
+              "PROCESS_LOCAL",
+              "COMPONENT_BOUNDARY",
+              "MULTI_COMPONENT",
+              "NATIVE_PLATFORM",
+              "HOSTILE_INPUT",
+              "MEASURED_WORKLOAD",
+              "RELEASE_CANDIDATE"
+            ]
+          },
+          "requiredPredecessorLevels": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "architecture_lint",
+                "unit",
+                "component",
+                "integration",
+                "platform",
+                "adversarial",
+                "benchmark",
+                "release"
+              ]
+            }
+          },
+          "requiredEvidence": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "supportClaimCeiling": {
+            "enum": [
+              "NONE",
+              "SOURCE_FOUNDATION",
+              "BEHAVIOR_SUPPORTED",
+              "PLATFORM_SUPPORTED",
+              "RELEASE_SUPPORTED"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "testBindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "testId",
+          "levelId",
+          "rationale"
+        ],
+        "properties": {
+          "testId": {
+            "type": "string",
+            "pattern": "^tc\\.[a-z0-9._-]+\\.[a-z0-9._-]+$"
+          },
+          "levelId": {
+            "enum": [
+              "architecture_lint",
+              "unit",
+              "component",
+              "integration",
+              "platform",
+              "adversarial",
+              "benchmark",
+              "release"
+            ]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "reportContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requiredFields",
+        "unknownLevelPolicy",
+        "crossLevelPromotionPolicy",
+        "unexecutedResultStates",
+        "sourceOnlySupportPromotion"
+      ],
+      "properties": {
+        "requiredFields": {
+          "type": "array",
+          "minItems": 11,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unknownLevelPolicy": {
+          "const": "FAIL"
+        },
+        "crossLevelPromotionPolicy": {
+          "const": "FORBIDDEN"
+        },
+        "unexecutedResultStates": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "BLOCKED",
+              "SKIPPED",
+              "NOT_IMPLEMENTED"
+            ]
+          }
+        },
+        "sourceOnlySupportPromotion": {
+          "const": "FORBIDDEN"
+        }
+      }
+    }
+  }
+}

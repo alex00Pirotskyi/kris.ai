@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "1.0.0",
+  "hierarchyId": "test-center.assurance-hierarchy-v1",
+  "roadmapTaskId": "P8-001",
+  "levels": [
+    {
+      "levelId": "architecture_lint",
+      "rank": 10,
+      "displayName": "Architecture lint",
+      "proofKind": "SOURCE_ONLY",
+      "executionScope": "STATIC",
+      "requiredPredecessorLevels": [],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result"
+      ],
+      "supportClaimCeiling": "NONE",
+      "description": "Static architecture, policy, schema, manifest, and source-contract checks. A pass proves only that reviewed source satisfies declared invariants."
+    },
+    {
+      "levelId": "unit",
+      "rank": 20,
+      "displayName": "Unit",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "PROCESS_LOCAL",
+      "requiredPredecessorLevels": [],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "deterministic_fixture"
+      ],
+      "supportClaimCeiling": "SOURCE_FOUNDATION",
+      "description": "Deterministic behavior of one function, class, or isolated module without external process, platform, or network claims."
+    },
+    {
+      "levelId": "component",
+      "rank": 30,
+      "displayName": "Component",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "COMPONENT_BOUNDARY",
+      "requiredPredecessorLevels": [
+        "unit"
+      ],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "component_fixture"
+      ],
+      "supportClaimCeiling": "BEHAVIOR_SUPPORTED",
+      "description": "Behavior across a bounded component boundary with real serialization, persistence, IPC, or adapter contracts where applicable."
+    },
+    {
+      "levelId": "integration",
+      "rank": 40,
+      "displayName": "Integration",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "MULTI_COMPONENT",
+      "requiredPredecessorLevels": [
+        "component"
+      ],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "integration_fixture",
+        "cleanup_receipt"
+      ],
+      "supportClaimCeiling": "BEHAVIOR_SUPPORTED",
+      "description": "End-to-end behavior across multiple production components with durable state, cleanup, and failure visibility."
+    },
+    {
+      "levelId": "platform",
+      "rank": 50,
+      "displayName": "Platform",
+      "proofKind": "PLATFORM",
+      "executionScope": "NATIVE_PLATFORM",
+      "requiredPredecessorLevels": [
+        "integration"
+      ],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "native_platform_receipt",
+        "cleanup_receipt"
+      ],
+      "supportClaimCeiling": "PLATFORM_SUPPORTED",
+      "description": "Real behavior on a named mandatory platform. Source inspection, emulation, or another operating system cannot substitute."
+    },
+    {
+      "levelId": "adversarial",
+      "rank": 60,
+      "displayName": "Adversarial",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "HOSTILE_INPUT",
+      "requiredPredecessorLevels": [
+        "integration"
+      ],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "seeded_attack_fixture",
+        "recovery_receipt"
+      ],
+      "supportClaimCeiling": "PLATFORM_SUPPORTED",
+      "description": "Fault injection, hostile inputs, abuse cases, race conditions, and security-negative behavior with explicit recovery or unknown state."
+    },
+    {
+      "levelId": "benchmark",
+      "rank": 70,
+      "displayName": "Benchmark",
+      "proofKind": "BENCHMARK",
+      "executionScope": "MEASURED_WORKLOAD",
+      "requiredPredecessorLevels": [
+        "integration"
+      ],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "versioned_corpus",
+        "environment_identity"
+      ],
+      "supportClaimCeiling": "BEHAVIOR_SUPPORTED",
+      "description": "Versioned reproducible performance, quality, throughput, resource, or agent-evaluation measurement with declared environment identity."
+    },
+    {
+      "levelId": "release",
+      "rank": 80,
+      "displayName": "Release",
+      "proofKind": "RELEASE",
+      "executionScope": "RELEASE_CANDIDATE",
+      "requiredPredecessorLevels": [
+        "platform",
+        "adversarial",
+        "benchmark"
+      ],
+      "requiredEvidence": [
+        "exact_candidate_identity",
+        "machine_readable_result",
+        "release_candidate_identity",
+        "independent_review",
+        "support_matrix"
+      ],
+      "supportClaimCeiling": "RELEASE_SUPPORTED",
+      "description": "Certification of an exact release candidate after all applicable lower assurance evidence, independent review, and support-policy gates."
+    }
+  ],
+  "testBindings": [
+    {
+      "testId": "tc.test-center.contracts",
+      "levelId": "architecture_lint",
+      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation."
+    },
+    {
+      "testId": "tc.test-center.semantic-regressions",
+      "levelId": "unit",
+      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation."
+    },
+    {
+      "testId": "tc.p8.formal-test-hierarchy",
+      "levelId": "architecture_lint",
+      "rationale": "Validates the P8-001 hierarchy, exact level ordering, report contract, and complete canonical Test Center binding coverage."
+    },
+    {
+      "testId": "tc.p8.formal-test-hierarchy-regressions",
+      "levelId": "unit",
+      "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, and report ambiguity."
+    }
+  ],
+  "reportContract": {
+    "requiredFields": [
+      "assuranceLevel",
+      "candidateCommit",
+      "candidateTree",
+      "durationMillis",
+      "endedAt",
+      "evidenceReferences",
+      "moduleId",
+      "platform",
+      "resultState",
+      "startedAt",
+      "testId"
+    ],
+    "unknownLevelPolicy": "FAIL",
+    "crossLevelPromotionPolicy": "FORBIDDEN",
+    "unexecutedResultStates": [
+      "BLOCKED",
+      "SKIPPED",
+      "NOT_IMPLEMENTED"
+    ],
+    "sourceOnlySupportPromotion": "FORBIDDEN"
+  }
+}
