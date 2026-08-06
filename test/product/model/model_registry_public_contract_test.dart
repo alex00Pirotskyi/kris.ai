@@ -8,6 +8,9 @@ void main() {
   group('P6-001 public model-registry contract', () {
     test('product source cannot bypass the fail-closed facade', () {
       final violations = <String>[];
+      final internalRegistryDirective = RegExp(
+        r'''\b(?:import|export|part)\s+["'][^"']*model_registry\.dart["']''',
+      );
       for (final entity in Directory('lib').listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) {
           continue;
@@ -16,10 +19,7 @@ void main() {
         if (path == 'lib/product/model/model.dart') {
           continue;
         }
-        final source = entity.readAsStringSync();
-        if (source.contains('model/model_registry.dart') ||
-            source.contains("import 'model_registry.dart'") ||
-            source.contains('import "model_registry.dart"')) {
+        if (internalRegistryDirective.hasMatch(entity.readAsStringSync())) {
           violations.add(path);
         }
       }
@@ -29,6 +29,35 @@ void main() {
         isEmpty,
         reason: 'Product code must import model.dart so discovered artifact '
             'identity checks cannot be bypassed: ${violations.join(', ')}',
+      );
+    });
+
+    test('bypass matcher covers relative and package URI forms', () {
+      final internalRegistryDirective = RegExp(
+        r'''\b(?:import|export|part)\s+["'][^"']*model_registry\.dart["']''',
+      );
+
+      expect(
+        internalRegistryDirective.hasMatch("import './model_registry.dart';"),
+        isTrue,
+      );
+      expect(
+        internalRegistryDirective.hasMatch(
+          "import 'package:kristin_local_agent/product/model/model_registry.dart';",
+        ),
+        isTrue,
+      );
+      expect(
+        internalRegistryDirective.hasMatch("export 'model_registry.dart';"),
+        isTrue,
+      );
+      expect(
+        internalRegistryDirective.hasMatch("part '../model/model_registry.dart';"),
+        isTrue,
+      );
+      expect(
+        internalRegistryDirective.hasMatch("import 'model.dart';"),
+        isFalse,
       );
     });
 
