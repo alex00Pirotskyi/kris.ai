@@ -142,10 +142,15 @@ class P5InformationArchitectureController extends ChangeNotifier {
       return;
     }
 
-    if (fixture.id == _state.selectedProjectId &&
-        _state.selectedRunId == null &&
-        _state.runState == P5RunPresentationState.planReady) {
-      return;
+    if (fixture.id == _state.selectedProjectId) {
+      final recoverableBlockedState = _state.selectedRunId == null &&
+          const <P5RunPresentationState>{
+            P5RunPresentationState.blocked,
+            P5RunPresentationState.error,
+          }.contains(_state.runState);
+      if (!recoverableBlockedState) {
+        return;
+      }
     }
 
     _state = _state.copyWith(

@@ -225,6 +225,36 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  test('reselecting the current project preserves active and saved run context',
+      () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.apply(P5PrototypeAction.reviewPlan);
+    controller.apply(P5PrototypeAction.startRun);
+    final activeRun = controller.state.selectedRunId;
+    expect(activeRun, 'run.p5-simulated-current');
+    expect(controller.state.runState, P5RunPresentationState.running);
+
+    controller.selectProject('project.kristin-local');
+    expect(controller.state.selectedRunId, activeRun);
+    expect(controller.state.runState, P5RunPresentationState.running);
+
+    controller.selectRun('run.p5-existing-001');
+    expect(controller.state.runState, P5RunPresentationState.interrupted);
+    controller.selectProject('project.kristin-local');
+    expect(controller.state.selectedRunId, 'run.p5-existing-001');
+    expect(controller.state.runState, P5RunPresentationState.interrupted);
+
+    controller.selectRun('run.missing');
+    expect(controller.state.selectedRunId, isNull);
+    expect(controller.state.runState, P5RunPresentationState.blocked);
+    controller.selectProject('project.kristin-local');
+    expect(controller.state.runState, P5RunPresentationState.planReady);
+    expect(controller.state.selectedRunId, isNull);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('mismatched project and run deep link clears incompatible run context',
       () {
     final controller = P5InformationArchitectureController();
