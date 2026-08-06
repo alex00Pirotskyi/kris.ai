@@ -2,8 +2,8 @@
   "authorityOwner": {
     "branch": "agent/b/test-center-contracts-and-review",
     "mission": "MISSION-002",
-    "observedHead": "b5528a2bf9d3fbf3841d2373a87c1f4a84ff741c",
-    "observedTree": "e865fd6f85215d0290874995443ba6a23688139d",
+    "observedHead": "a39a544c211dcdfcffc5910a7c287f3917f89f65",
+    "observedTree": "8f41821ec8cabf1e5b22d73187efe360c84cff70",
     "pullRequest": 65,
     "worker": "B"
   },
@@ -18,12 +18,13 @@
   ],
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
   "currentBlockers": [
-    "exact candidate has no allocated exact-head CI run or status",
-    "SOURCE_MANIFEST.sha256 awaits an executable canonical generator",
+    "exact P6 candidate has no allocated exact-head CI run or status",
+    "SOURCE_MANIFEST.sha256 awaits an executable canonical generator on the P6 candidate",
     "Worker A source-inventory grant remains pending",
-    "Worker B P8 authority head has live REQUEST_CHANGES findings and no exact-head CI",
-    "Worker B must publish and review P6-TC-001",
-    "fresh independent exact-candidate review is required after validation settles",
+    "Worker B a39a544c repairs predecessor lineage substitution and evidence category/content swapping, but exact Worker G review 4878356788 returns REQUEST_CHANGES for non-compositional transitive predecessor assurance and self-declarable independent-review evidence",
+    "Worker B a39a544c has no exact-head CI and its canonical manifest/evidence are not final-current",
+    "Worker B must repair the remaining P8 proof semantics, publish P6-TC-001, and review the exact P6 integration candidate",
+    "fresh independent P6 exact-candidate review is required after validation settles",
     "PR #78 remains overlay-only",
     "P6-002+ and merge remain unauthorized"
   ],
@@ -34,6 +35,21 @@
     "requiredAuthorityReview": "Worker B",
     "reviewStatus": "PENDING_FINAL_CANDIDATE_VALIDATION",
     "tree": "32202b0b1d2776f79a22ba31ee387cb97d4f979b"
+  },
+  "ownerDependencyReview": {
+    "reviewedCommit": "a39a544c211dcdfcffc5910a7c287f3917f89f65",
+    "reviewedTree": "8f41821ec8cabf1e5b22d73187efe360c84cff70",
+    "reviewId": 4878356788,
+    "technicalDecision": "REQUEST_CHANGES",
+    "repairedFindings": [
+      "predecessor-subject-lineage-substitution",
+      "evidence-category-to-content-kind-binding"
+    ],
+    "remainingFindings": [
+      "transitive-predecessor-assurance-is-not-compositional",
+      "independent-review-evidence-does-not-prove-reviewer-independence",
+      "exact-head-ci-and-final-manifest-are-absent"
+    ]
   },
   "requestedAt": "2026-08-06T11:42:30Z",
   "requester": {
@@ -46,7 +62,7 @@
     "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
   },
   "schemaVersion": 1,
-  "scope": "Worker B publishes P6-TC-001 for the fail-closed identity-bound model registry including exact benchmark-to-artifact digest binding after ownership, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
+  "scope": "Worker B publishes P6-TC-001 for the fail-closed identity-bound model registry including exact benchmark-to-artifact digest binding after ownership, proof semantics, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
   "sharedPaths": [],
   "status": "OWNER_HANDOFF_PENDING"
 }
