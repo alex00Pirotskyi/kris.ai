@@ -1,0 +1,43 @@
+name: TEMP Worker E Mission System Live Validate
+
+on:
+  push:
+    branches:
+      - agent/e/mission-system-live-validate-1a04c186
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Assert bounded validation carrier
+        shell: bash
+        env:
+          EXPECTED_PARENT: 1a04c186665967933c225ac0f26fd196ac296f9a
+          EXPECTED_PATH: .github/workflows/temp-worker-e-mission-system-live-validate.yml
+        run: |
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+          test "$(git diff --name-only HEAD^ HEAD)" = "$EXPECTED_PATH"
+      - name: Validate mission execution model
+        run: python tool/mission_control.py --project . validate
+      - name: Print mission status
+        run: python tool/mission_control.py --project . status
+      - name: Verify deterministic generated views
+        run: python tool/mission_control.py --project . bootstrap --check
+      - name: Verify Worker E resume contract
+        run: python tool/mission_control.py --project . resume --mission MISSION-010 --worker E
+      - name: Verify repository whitespace and non-mutation
+        shell: bash
+        run: |
+          git diff --check
+          test -z "$(git status --porcelain=v1)"
