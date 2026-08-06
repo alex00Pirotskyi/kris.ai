@@ -61,6 +61,40 @@ void main() {
     },
   );
 
+  test('plan-only changes are fail-closed once a run exists', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    expect(controller.canChangePlanOnly, isTrue);
+    expect(controller.state.runState, P5RunPresentationState.planReady);
+
+    controller.apply(P5PrototypeAction.choosePlanOnly);
+    expect(controller.state.planOnly, isTrue);
+    expect(controller.state.runState, P5RunPresentationState.planOnly);
+
+    controller.apply(P5PrototypeAction.choosePlanOnly);
+    expect(controller.state.planOnly, isFalse);
+    expect(controller.state.runState, P5RunPresentationState.planReady);
+
+    controller.apply(P5PrototypeAction.reviewPlan);
+    expect(controller.state.runState, P5RunPresentationState.ready);
+    controller.apply(P5PrototypeAction.startRun);
+
+    expect(controller.state.selectedRunId, 'run.p5-simulated-current');
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(controller.canChangePlanOnly, isFalse);
+
+    controller.apply(P5PrototypeAction.choosePlanOnly);
+
+    expect(controller.state.planOnly, isFalse);
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(
+      controller.state.recoveryMessage,
+      contains('before a simulated run starts'),
+    );
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('selected project and run persist across navigation and reopen', () {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);

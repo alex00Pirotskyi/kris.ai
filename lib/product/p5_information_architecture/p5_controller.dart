@@ -16,6 +16,15 @@ class P5InformationArchitectureController extends ChangeNotifier {
   bool get canGoForward =>
       _state.navigationIndex < _state.navigationHistory.length - 1;
 
+  bool get canChangePlanOnly =>
+      _state.selectedRunId == null &&
+      const <P5RunPresentationState>{
+        P5RunPresentationState.planReady,
+        P5RunPresentationState.planOnly,
+        P5RunPresentationState.ready,
+        P5RunPresentationState.blocked,
+      }.contains(_state.runState);
+
   List<P5WorkspaceDefinition> get visibleWorkspaces {
     return P5PrototypeFixtures.workspaces.where((definition) {
       if (definition.id.isFutureCapability) {
@@ -197,11 +206,22 @@ class P5InformationArchitectureController extends ChangeNotifier {
         notifyListeners();
         return;
       case P5PrototypeAction.choosePlanOnly:
+        if (!canChangePlanOnly) {
+          _state = _state.copyWith(
+            recoveryMessage:
+                'Plan-only can only be changed before a simulated run starts.',
+          );
+          notifyListeners();
+          return;
+        }
+        final nextPlanOnly = !_state.planOnly;
         _state = _state.copyWith(
-          planOnly: !_state.planOnly,
-          runState: !_state.planOnly
+          planOnly: nextPlanOnly,
+          runState: nextPlanOnly
               ? P5RunPresentationState.planOnly
-              : P5RunPresentationState.ready,
+              : (_state.planReviewed
+                  ? P5RunPresentationState.ready
+                  : P5RunPresentationState.planReady),
           recoveryMessage: 'Plan-only changes presentation, not authority.',
         );
         notifyListeners();
