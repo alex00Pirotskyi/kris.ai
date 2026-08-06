@@ -1,0 +1,40 @@
+{
+  "branch": "agent/g/mission-006-model-routing",
+  "commit": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
+  "evidence": [
+    "Supersedes MISSION-006 delivery record 20260806T221148Z-P6-001.json after material source/security repair",
+    "P6-001 exact candidate 17eed9bb16c25b8de80b69bd8a0be7eed323173a / 4da3e4e9d122926a67a04f4d2aae26edde3d02c3",
+    "Product source/test milestone 954f231fa28a22c85e0be3a76205cc31635f6466 / 34aa8b80adc34255ca04986c2368759a05a3dfc9",
+    "Repaired raw lookup authorization bypass by separating non-authoritative ModelRegistryMetadata from identity-bound ApprovedModelHandle authorization",
+    "Canonical SHA-256 artifact identity is enforced for registered/discovered/benchmark identities",
+    "Unchecked benchmark evidenceUri was replaced with verified embedded content-addressed canonical JSON evidence bound to exact candidate commit/tree and model artifact",
+    "Focused tests cover malformed digests, direct-core lookup bypass, evidence digest tampering, metadata/payload drift, wrong schema/candidate, alias identity drift, and approved/evaluation cross-artifact evidence",
+    "Exact compare against Worker B 604905039aa26952045e69ebe6799ae464144635 has behind_by=0 and effective diff excludes SOURCE_MANIFEST.sha256 and Worker B Test Center authority paths",
+    "Published blob static audit passed; no Dart/Flutter execution is claimed",
+    "Exact-head GitHub workflow query for 17eed9bb16c25b8de80b69bd8a0be7eed323173a returned no runs",
+    "Worker A source-inventory coordination remains REQUESTED for this exact candidate",
+    "P6-TC-001 remains OWNER_HANDOFF_PENDING; every prior P6 SOURCE/SECURITY review is superseded and fresh exact review is required after execution settles"
+  ],
+  "integration": {
+    "baseCommit": "604905039aa26952045e69ebe6799ae464144635",
+    "baseTree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+    "mergeCommit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
+    "candidateBehindBy": 0,
+    "sourceManifestEffectiveDiff": false,
+    "testCenterAuthorityEffectiveDiff": false
+  },
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants/reviews the exact source-inventory append; regenerate SOURCE_MANIFEST.sha256 twice through its canonical owner; execute exact P6/affected CI; Worker B repairs its authority-lane blocker, publishes P6-TC-001 and reviews the exact integration; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before these gates pass.",
+  "productSourceMilestone": {
+    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
+    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+  },
+  "pullRequest": 76,
+  "recordedAt": "2026-08-06T23:15:00Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P6-001",
+  "tree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3",
+  "workExecutionId": "WRK-20260806T223554Z-6d2a4f1c",
+  "worker": "G"
+}
