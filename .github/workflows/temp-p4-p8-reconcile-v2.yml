@@ -39,10 +39,11 @@ jobs:
           t = Path(os.environ['RUNNER_TEMP'])
           identities = {
               'affectedTestMappings':'mappingId', 'projectTestProfiles':'stableCheckId',
+              'testingStudioPresentationRecords':'presentationId',
               'testBindings':'testId', 'levels':'levelId', 'modules':'moduleId',
               'testModules':'moduleId', 'tests':'testId'
           }
-          candidates = ('mappingId','stableCheckId','testId','moduleId','levelId','profileId','id','name')
+          candidates = ('mappingId','stableCheckId','presentationId','testId','moduleId','levelId','profileId','id','name')
           def union(p4, p8):
               out = copy.deepcopy(p8)
               for key, value in p4.items():
