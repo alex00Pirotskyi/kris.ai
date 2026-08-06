@@ -57,7 +57,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
         self.assertEqual(self.validate_documents()["status"], "PASS")
         result = self.validate_report(self.report)
         self.assertEqual(result["status"], "PASS")
-        self.assertEqual(result["evidenceResolution"], "REPOSITORY_RELATIVE_SHA256")
+        self.assertEqual(result["evidenceResolution"], "REPOSITORY_RELATIVE_SHA256_AND_TYPED_JSON")
         self.assertEqual(result["predecessorLevelsVerified"], [])
 
     def test_empty_toolchain_components_fail_min_properties(self) -> None:
@@ -111,7 +111,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
     def test_one_evidence_object_cannot_fill_two_categories(self) -> None:
         report = copy.deepcopy(self.report)
         report["evidenceBindings"][2]["evidenceId"] = report["evidenceBindings"][0]["evidenceId"]
-        with self.assertRaisesRegex(HierarchyError, "cannot satisfy multiple"):
+        with self.assertRaisesRegex(HierarchyError, "reuses one evidence object"):
             self.validate_report(report)
 
     def _component_report_and_hierarchy(self) -> tuple[dict, dict]:
@@ -142,7 +142,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
         for evidence in predecessor["evidenceReferences"]:
             evidence["commit"] = predecessor["commit"]
             evidence["tree"] = predecessor["tree"]
-        report["predecessorResults"] = [{"assuranceLevel": "unit", "executionResult": predecessor}]
+        report["predecessorResults"] = [{"assuranceLevel": "unit", "executionResult": predecessor, "evidenceBindings": copy.deepcopy(self.report["evidenceBindings"])}]
         with self.assertRaisesRegex(HierarchyError, "another candidate"):
             self.validate_report(report, hierarchy=hierarchy)
 

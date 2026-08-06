@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
@@ -21,6 +22,8 @@ from test_center_contracts import ContractError, validate_test_execution_result
 
 REPORT_CONTRACT_SCHEMA = Path("schemas/test_center_assurance_report_contract.v1.json")
 REPORT_CONTRACT = Path("config/test_center_assurance_report_contract.v1.json")
+PROOF_CONTRACT_SCHEMA = Path("release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.schema.json")
+PROOF_CONTRACT = Path("release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json")
 
 
 def fail(message: str) -> None:
@@ -133,6 +136,55 @@ def validate_report_contract(
     }
 
 
+def validate_proof_contract(
+    contract_schema: dict[str, Any],
+    contract: dict[str, Any],
+    hierarchy: dict[str, Any],
+) -> dict[str, Any]:
+    try:
+        validate_instance(contract, contract_schema, root=contract_schema)
+    except SchemaValidationError as exc:
+        raise HierarchyError(str(exc)) from exc
+    if (
+        contract.get("contractId") != "test-center.assurance-proof-contract-v1"
+        or contract.get("hierarchyId") != hierarchy.get("hierarchyId")
+    ):
+        fail("assurance proof contract identity drifted")
+    evidence = contract["evidenceContracts"]
+    categories = [item["category"] for item in evidence]
+    if len(categories) != len(set(categories)):
+        fail("assurance proof contract contains duplicate evidence categories")
+    required_categories = {
+        category
+        for level in hierarchy["levels"]
+        for category in level["requiredEvidence"]
+    }
+    if set(categories) != required_categories:
+        fail(
+            "assurance proof contract evidence catalog does not exactly cover hierarchy; "
+            f"missing={sorted(required_categories - set(categories))}, "
+            f"extra={sorted(set(categories) - required_categories)}"
+        )
+    lineages = contract["lineageBindings"]
+    lineage_ids = [item["testId"] for item in lineages]
+    if len(lineage_ids) != len(set(lineage_ids)):
+        fail("assurance proof contract contains duplicate test lineage bindings")
+    active_ids = {item["testId"] for item in hierarchy["testBindings"]}
+    if set(lineage_ids) != active_ids:
+        fail(
+            "assurance proof contract lineage bindings do not exactly cover active tests; "
+            f"missing={sorted(active_ids - set(lineage_ids))}, "
+            f"extra={sorted(set(lineage_ids) - active_ids)}"
+        )
+    return {
+        "schemaVersion": "1.0.0",
+        "status": "PASS",
+        "proofContractId": contract["contractId"],
+        "evidenceContractCount": len(evidence),
+        "lineageBindingCount": len(lineages),
+    }
+
+
 def validate_documents(
     hierarchy_schema: dict[str, Any],
     report_schema: dict[str, Any],
@@ -149,7 +201,7 @@ def validate_documents(
     return {**base, **mapping}
 
 
-def _resolve_evidence(project: Path, evidence: Mapping[str, Any]) -> None:
+def _resolve_evidence(project: Path, evidence: Mapping[str, Any]) -> tuple[Path, bytes]:
     uri = str(evidence.get("uri", ""))
     normalized = uri.replace("\\", "/")
     relative = PurePosixPath(normalized)
@@ -168,46 +220,128 @@ def _resolve_evidence(project: Path, evidence: Mapping[str, Any]) -> None:
         raise HierarchyError(f"evidence URI escapes project root: {uri!r}") from exc
     if not target.is_file():
         fail(f"evidence URI does not resolve to a durable file: {uri}")
-    actual = hashlib.sha256(target.read_bytes()).hexdigest()
+    payload = target.read_bytes()
+    actual = hashlib.sha256(payload).hexdigest()
     if actual != evidence.get("sha256"):
         fail(f"evidence digest mismatch for {evidence.get('evidenceId')}: {uri}")
+    return target, payload
+
+
+def _dot_value(value: Mapping[str, Any], path: str) -> Any:
+    current: Any = value
+    for segment in path.split("."):
+        if not isinstance(current, Mapping) or segment not in current:
+            fail(f"evidence contract context path does not exist: {path}")
+        current = current[segment]
+    return current
+
+
+def _validate_evidence_semantics(
+    project: Path,
+    evidence: Mapping[str, Any],
+    category: str,
+    result: Mapping[str, Any],
+    proof_contract: Mapping[str, Any],
+) -> None:
+    contracts = {item["category"]: item for item in proof_contract["evidenceContracts"]}
+    if category not in contracts:
+        fail(f"unknown assurance evidence category contract: {category}")
+    contract = contracts[category]
+    if evidence.get("mediaType") != contract["mediaType"]:
+        fail(f"evidence {evidence.get('evidenceId')} has wrong media type for {category}")
+    target, payload = _resolve_evidence(project, evidence)
+    try:
+        document = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HierarchyError(f"evidence for {category} is not canonical JSON: {target}") from exc
+    if not isinstance(document, dict):
+        fail(f"evidence for {category} must be a JSON object: {target}")
+    missing = sorted(set(contract["requiredJsonFields"]) - set(document))
+    if missing:
+        fail(f"evidence for {category} is missing semantic fields: {missing}")
+    if document.get("kind") != contract["jsonKind"]:
+        fail(
+            f"evidence kind mismatch for {category}: expected {contract['jsonKind']}, "
+            f"got {document.get('kind')!r}"
+        )
+    context = {
+        "candidateCommit": result["commit"],
+        "candidateTree": result["tree"],
+        "executionResult": result,
+    }
+    for evidence_field, context_path in contract["valueBindings"].items():
+        if _dot_value(document, evidence_field) != _dot_value(context, context_path):
+            fail(
+                f"evidence semantic binding mismatch for {category}.{evidence_field}"
+            )
+    for evidence_field, expected in contract["requiredConstants"].items():
+        if _dot_value(document, evidence_field) != expected:
+            fail(
+                f"evidence semantic constant mismatch for {category}.{evidence_field}"
+            )
+
+
+def _validate_typed_evidence(
+    *,
+    result: Mapping[str, Any],
+    bindings: list[Mapping[str, Any]],
+    required_categories: set[str],
+    project: Path,
+    proof_contract: Mapping[str, Any],
+    label: str,
+) -> list[str]:
+    canonical = result.get("evidenceReferences", [])
+    canonical_by_id = {item["evidenceId"]: item for item in canonical}
+    categories = [item["category"] for item in bindings]
+    evidence_ids = [item["evidenceId"] for item in bindings]
+    if len(categories) != len(set(categories)):
+        fail(f"{label} contains duplicate evidence categories")
+    if len(evidence_ids) != len(set(evidence_ids)):
+        fail(f"{label} reuses one evidence object across categories")
+    actual = set(categories)
+    if actual != required_categories:
+        fail(
+            f"{label} evidence categories do not exactly satisfy level requirements; "
+            f"missing={sorted(required_categories - actual)}, "
+            f"extra={sorted(actual - required_categories)}"
+        )
+    if set(evidence_ids) != set(canonical_by_id):
+        fail(f"{label} evidence bindings do not exactly cover canonical evidence objects")
+    for binding in bindings:
+        evidence = canonical_by_id[binding["evidenceId"]]
+        _validate_evidence_semantics(
+            project, evidence, binding["category"], result, proof_contract
+        )
+    return sorted(required_categories)
 
 
 def _validate_evidence_categories(
     report: Mapping[str, Any],
     level: Mapping[str, Any],
     project: Path,
-) -> None:
-    canonical = report["executionResult"].get("evidenceReferences", [])
-    canonical_by_id = {item["evidenceId"]: item for item in canonical}
-    bindings = report["evidenceBindings"]
-    categories = [item["category"] for item in bindings]
-    evidence_ids = [item["evidenceId"] for item in bindings]
-    if len(categories) != len(set(categories)):
-        fail("assurance report contains duplicate evidence categories")
-    if len(evidence_ids) != len(set(evidence_ids)):
-        fail("one evidence object cannot satisfy multiple assurance categories")
-    required = set(level["requiredEvidence"])
-    actual = set(categories)
-    if actual != required:
-        fail(
-            "assurance evidence categories do not exactly satisfy level requirements; "
-            f"missing={sorted(required - actual)}, extra={sorted(actual - required)}"
-        )
-    if set(evidence_ids) != set(canonical_by_id):
-        fail("assurance evidence bindings do not exactly cover canonical evidence objects")
-    for evidence_id in evidence_ids:
-        _resolve_evidence(project, canonical_by_id[evidence_id])
+    proof_contract: Mapping[str, Any],
+) -> list[str]:
+    return _validate_typed_evidence(
+        result=report["executionResult"],
+        bindings=report["evidenceBindings"],
+        required_categories=set(level["requiredEvidence"]),
+        project=project,
+        proof_contract=proof_contract,
+        label="assurance report",
+    )
 
 
 def _validate_predecessors(
     report: Mapping[str, Any],
     hierarchy: Mapping[str, Any],
     project: Path,
-) -> None:
+    proof_contract: Mapping[str, Any],
+) -> list[dict[str, Any]]:
     levels = {item["levelId"]: item for item in hierarchy["levels"]}
     active = {item["testId"]: item for item in hierarchy["testBindings"]}
+    lineages = {item["testId"]: item["lineageId"] for item in proof_contract["lineageBindings"]}
     current = levels[report["assuranceLevel"]]
+    current_test_id = report["executionResult"]["testId"]
     predecessors = report["predecessorResults"]
     ids = [item["assuranceLevel"] for item in predecessors]
     if len(ids) != len(set(ids)):
@@ -219,6 +353,7 @@ def _validate_predecessors(
             "assurance predecessor results do not exactly satisfy level requirements; "
             f"missing={sorted(required - actual)}, extra={sorted(actual - required)}"
         )
+    proofs: list[dict[str, Any]] = []
     for predecessor in predecessors:
         level_id = predecessor["assuranceLevel"]
         result = predecessor["executionResult"]
@@ -233,13 +368,33 @@ def _validate_predecessors(
         binding = active.get(result["testId"])
         if binding is None or binding["levelId"] != level_id:
             fail(f"required predecessor {level_id} does not bind an active canonical test")
+        if lineages.get(result["testId"]) != lineages.get(current_test_id):
+            fail(
+                f"required predecessor {level_id} belongs to unrelated assurance lineage: "
+                f"{result['testId']}"
+            )
         if level_id not in CLASS_LEVELS.get(result["assuranceClass"], set()):
             fail(
                 f"required predecessor {level_id} has incompatible assuranceClass "
                 f"{result['assuranceClass']!r}"
             )
-        for evidence in result.get("evidenceReferences", []):
-            _resolve_evidence(project, evidence)
+        verified = _validate_typed_evidence(
+            result=result,
+            bindings=predecessor["evidenceBindings"],
+            required_categories=set(levels[level_id]["requiredEvidence"]),
+            project=project,
+            proof_contract=proof_contract,
+            label=f"predecessor {level_id}",
+        )
+        proofs.append(
+            {
+                "assuranceLevel": level_id,
+                "testId": result["testId"],
+                "lineageId": lineages[result["testId"]],
+                "requiredEvidence": verified,
+            }
+        )
+    return proofs
 
 
 def validate_assurance_execution_report(
@@ -250,6 +405,7 @@ def validate_assurance_execution_report(
     hierarchy: dict[str, Any],
     registry: dict[str, Any],
     project: Path,
+    proof_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     base = validate_base_report(
         report,
@@ -259,17 +415,21 @@ def validate_assurance_execution_report(
         registry=registry,
     )
     project = project.resolve()
+    if proof_contract is None:
+        proof_contract = json.loads((project / PROOF_CONTRACT).read_text(encoding="utf-8"))
     ended = parse_rfc3339(report["executionResult"]["endedAt"], "$.executionResult.endedAt")
     generated = parse_rfc3339(report["generatedAt"], "$.generatedAt")
     if generated < ended:
         fail("assurance report generatedAt precedes executionResult.endedAt")
     levels = {item["levelId"]: item for item in hierarchy["levels"]}
     level = levels[report["assuranceLevel"]]
-    _validate_predecessors(report, hierarchy, project)
-    _validate_evidence_categories(report, level, project)
+    predecessors = _validate_predecessors(report, hierarchy, project, proof_contract)
+    current_evidence = _validate_evidence_categories(report, level, project, proof_contract)
     return {
         **base,
         "predecessorLevelsVerified": sorted(level["requiredPredecessorLevels"]),
-        "requiredEvidenceVerified": sorted(level["requiredEvidence"]),
-        "evidenceResolution": "REPOSITORY_RELATIVE_SHA256",
+        "predecessorEvidenceProofs": predecessors,
+        "predecessorEvidenceProofCount": len(predecessors),
+        "requiredEvidenceVerified": current_evidence,
+        "evidenceResolution": "REPOSITORY_RELATIVE_SHA256_AND_TYPED_JSON",
     }

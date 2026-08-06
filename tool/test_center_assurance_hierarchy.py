@@ -10,10 +10,13 @@ from pathlib import Path
 from typing import Any
 
 from test_center_assurance_enforcement import (
+    PROOF_CONTRACT,
+    PROOF_CONTRACT_SCHEMA,
     REPORT_CONTRACT,
     REPORT_CONTRACT_SCHEMA,
     validate_assurance_execution_report as _validate_enforced_report,
     validate_documents as _validate_enforced_documents,
+    validate_proof_contract,
 )
 from test_center_assurance_jsonschema import SchemaValidationError
 from test_center_assurance_semantics import (
@@ -66,59 +69,6 @@ def validate_documents(
     )
 
 
-def _validate_predecessor_evidence_bindings(
-    report: dict[str, Any], hierarchy: dict[str, Any]
-) -> dict[str, Any]:
-    levels = {item["levelId"]: item for item in hierarchy["levels"]}
-    verified: list[dict[str, Any]] = []
-    for predecessor in report["predecessorResults"]:
-        level_id = predecessor["assuranceLevel"]
-        level = levels[level_id]
-        bindings = predecessor["evidenceBindings"]
-        categories = [item["category"] for item in bindings]
-        evidence_ids = [item["evidenceId"] for item in bindings]
-        canonical_ids = [
-            item["evidenceId"]
-            for item in predecessor["executionResult"].get("evidenceReferences", [])
-        ]
-        if len(categories) != len(set(categories)):
-            raise HierarchyError(
-                f"predecessor {level_id} contains duplicate evidence categories"
-            )
-        if len(evidence_ids) != len(set(evidence_ids)):
-            raise HierarchyError(
-                f"predecessor {level_id} reuses one evidence object across categories"
-            )
-        if len(canonical_ids) != len(set(canonical_ids)):
-            raise HierarchyError(
-                f"predecessor {level_id} contains duplicate canonical evidence IDs"
-            )
-        required = set(level["requiredEvidence"])
-        actual = set(categories)
-        if actual != required:
-            raise HierarchyError(
-                f"predecessor {level_id} evidence categories do not exactly satisfy "
-                f"level requirements; missing={sorted(required - actual)}, "
-                f"extra={sorted(actual - required)}"
-            )
-        if set(evidence_ids) != set(canonical_ids):
-            raise HierarchyError(
-                f"predecessor {level_id} evidence bindings do not exactly cover "
-                "canonical evidence objects"
-            )
-        verified.append(
-            {
-                "assuranceLevel": level_id,
-                "requiredEvidence": sorted(required),
-                "evidenceObjectCount": len(evidence_ids),
-            }
-        )
-    return {
-        "predecessorEvidenceProofs": verified,
-        "predecessorEvidenceProofCount": len(verified),
-    }
-
-
 def validate_assurance_execution_report(
     report: dict[str, Any],
     *,
@@ -127,20 +77,21 @@ def validate_assurance_execution_report(
     hierarchy: dict[str, Any],
     registry: dict[str, Any],
     project: Path | None = None,
+    proof_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Keep existing callers valid while enforcing durable proof resolution."""
-    validated = _validate_enforced_report(
+    """Keep existing callers valid while enforcing typed evidence and lineage."""
+    resolved_project = (project or DEFAULT_PROJECT).resolve()
+    if proof_contract is None:
+        proof_contract = load(resolved_project / PROOF_CONTRACT)
+    return _validate_enforced_report(
         report,
         report_schema=report_schema,
         canonical_schema=canonical_schema,
         hierarchy=hierarchy,
         registry=registry,
-        project=(project or DEFAULT_PROJECT),
+        project=resolved_project,
+        proof_contract=proof_contract,
     )
-    return {
-        **validated,
-        **_validate_predecessor_evidence_bindings(report, hierarchy),
-    }
 
 
 def project_documents(project: Path) -> tuple[dict[str, Any], ...]:
@@ -162,9 +113,13 @@ def validate_project(project: Path) -> dict[str, Any]:
     report = validate_documents(
         hierarchy_schema, report_schema, canonical, hierarchy, registry, contract_schema, contract
     )
+    proof_schema = load(project / PROOF_CONTRACT_SCHEMA)
+    proof_contract = load(project / PROOF_CONTRACT)
+    proof = validate_proof_contract(proof_schema, proof_contract, hierarchy)
     digest = lambda path: hashlib.sha256((project / path).read_bytes()).hexdigest()
     return {
         **report,
+        **proof,
         "hierarchySchema": str(HIERARCHY_SCHEMA),
         "hierarchySchemaSha256": digest(HIERARCHY_SCHEMA),
         "executionReportSchema": str(REPORT_SCHEMA),
@@ -175,6 +130,10 @@ def validate_project(project: Path) -> dict[str, Any]:
         "reportContractSchemaSha256": digest(REPORT_CONTRACT_SCHEMA),
         "reportContract": str(REPORT_CONTRACT),
         "reportContractSha256": digest(REPORT_CONTRACT),
+        "proofContractSchema": str(PROOF_CONTRACT_SCHEMA),
+        "proofContractSchemaSha256": digest(PROOF_CONTRACT_SCHEMA),
+        "proofContract": str(PROOF_CONTRACT),
+        "proofContractSha256": digest(PROOF_CONTRACT),
         "hierarchy": str(HIERARCHY),
         "hierarchySha256": digest(HIERARCHY),
         "registry": str(REGISTRY),
@@ -193,6 +152,9 @@ def validate_report_file(project: Path, report_path: Path) -> dict[str, Any]:
     validate_documents(
         hierarchy_schema, report_schema, canonical, hierarchy, registry, contract_schema, contract
     )
+    proof_schema = load(project / PROOF_CONTRACT_SCHEMA)
+    proof_contract = load(project / PROOF_CONTRACT)
+    validate_proof_contract(proof_schema, proof_contract, hierarchy)
     return validate_assurance_execution_report(
         load(path),
         report_schema=report_schema,
@@ -200,6 +162,7 @@ def validate_report_file(project: Path, report_path: Path) -> dict[str, Any]:
         hierarchy=hierarchy,
         registry=registry,
         project=project,
+        proof_contract=proof_contract,
     )
 
 
