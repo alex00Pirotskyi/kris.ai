@@ -3,8 +3,9 @@ name: Worker B P8 Manifest Carrier
 on:
   pull_request:
     branches:
-      - agent/b/test-center-contracts-and-review
+      - main
     paths:
+      - .github/workflows/worker-b-p8-manifest-carrier.yml
       - release/evidence/TEST_CENTER/P8-001/manifest-carrier.trigger
 
 permissions:
@@ -16,6 +17,7 @@ concurrency:
 
 env:
   TARGET_BRANCH: agent/b/test-center-contracts-and-review
+  EXPECTED_TARGET_BASE: fef9b1dc28ab8730d601baab8f1bd653a9960e4f
   CARRIER_BRANCH: agent/b/p8-cleanup-safety-anchor
   SELF_PATH: .github/workflows/worker-b-p8-manifest-carrier.yml
   EXPECTED_MANIFEST_SHA256: e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f
@@ -25,7 +27,7 @@ jobs:
   validate-final-tree:
     name: worker-b-p8-manifest-${{ matrix.lane }}
     if: >-
-      github.event.pull_request.base.ref == 'agent/b/test-center-contracts-and-review' &&
+      github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.ref == 'agent/b/p8-cleanup-safety-anchor' &&
       github.event.pull_request.head.repo.full_name == github.repository
     strategy:
@@ -40,10 +42,10 @@ jobs:
             os: macos-15
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Check out exact target base
+      - name: Check out exact Worker B target
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ env.EXPECTED_TARGET_BASE }}
           fetch-depth: 1
           persist-credentials: false
       - name: Set up Python
@@ -56,7 +58,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.base.sha }}"
+          test "$(git rev-parse HEAD)" = "${EXPECTED_TARGET_BASE}"
           git rm -- "${SELF_PATH}"
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
@@ -118,7 +120,7 @@ jobs:
       - name: Upload final-tree receipt
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: worker-b-p8-final-tree-${{ matrix.lane }}-${{ github.event.pull_request.base.sha }}
+          name: worker-b-p8-final-tree-${{ matrix.lane }}-${{ env.EXPECTED_TARGET_BASE }}
           path: ${{ runner.temp }}/p8-final-tree-receipt.json
           if-no-files-found: error
           retention-days: 90
@@ -127,17 +129,17 @@ jobs:
     name: worker-b-p8-manifest-publish
     needs: validate-final-tree
     if: >-
-      github.event.pull_request.base.ref == 'agent/b/test-center-contracts-and-review' &&
+      github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.ref == 'agent/b/p8-cleanup-safety-anchor' &&
       github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: write
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out exact target base with branch credentials
+      - name: Check out exact Worker B target with branch credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ env.EXPECTED_TARGET_BASE }}
           fetch-depth: 1
           persist-credentials: true
       - name: Set up Python
@@ -148,10 +150,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected_base="${{ github.event.pull_request.base.sha }}"
-          test "$(git rev-parse HEAD)" = "${expected_base}"
+          test "$(git rev-parse HEAD)" = "${EXPECTED_TARGET_BASE}"
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
-          test "${remote_head}" = "${expected_base}"
+          test "${remote_head}" = "${EXPECTED_TARGET_BASE}"
           git rm -- "${SELF_PATH}"
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
@@ -179,6 +180,6 @@ jobs:
           final_commit="$(git rev-parse HEAD)"
           final_tree="$(git rev-parse HEAD^{tree})"
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
-          test "${remote_head}" = "${expected_base}"
+          test "${remote_head}" = "${EXPECTED_TARGET_BASE}"
           git push origin "HEAD:${TARGET_BRANCH}"
           printf 'FINAL_COMMIT=%s\nFINAL_TREE=%s\n' "${final_commit}" "${final_tree}"
