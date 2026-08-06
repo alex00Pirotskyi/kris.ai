@@ -1,9 +1,10 @@
 schemaVersion: 1
-purpose: trigger the guarded Worker B P8 manifest carrier
+purpose: trigger exact-base Worker B P8 validation and canonical manifest closure
 workExecutionId: WRK-20260806T192544Z-c3089a68
-carrierRevision: 2
-carrierWorkflowCommit: c2d66475fc9de42da1c414729d15f7aa8aea2f19
+carrierRevision: 3
 targetBranch: agent/b/test-center-contracts-and-review
-targetBaseCommit: fef9b1dc28ab8730d601baab8f1bd653a9960e4f
-expectedFinalManifestSha256: e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f
+targetBaseCommit: bd45bf6b1da0665a33a50b334b9dce2441965e62
+targetBaseTree: 8de9cdd793b570e5ae2d17b189b5b4c26002514c
+validationWorkflow: .github/workflows/worker-b-p8-001-formal-test-hierarchy.yml
+manifestGenerator: python tool/p1a_refresh_source_manifest.py .
 supportPromotion: none
