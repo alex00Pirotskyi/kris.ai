@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "sequence": 14,
+  "mission": "MISSION-001",
+  "worker": "A",
+  "status": "BLOCKED",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "pullRequest": 75,
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0013.json",
+  "supersededBy": null,
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_SOURCE_LOCAL_FRONTIER_EXHAUSTED",
+    "P2_ALL_FOURTEEN_SOURCE_LOCAL_GATES_PASS",
+    "P2_001_THROUGH_P2_013_CONTROLLED_ASSERTIONS_BLOCKED",
+    "P2_014_GUIDE_CONSISTENCY_PASS_NO_PROMOTION",
+    "P2_004_SOURCE_REPAIR_VALIDATED_IN_DURABLE_ARTIFACT",
+    "P2_004_OWNER_MEDIATED_TEST_CENTER_UNION_REQUIRED",
+    "P8_001_CURRENT_HEAD_REQUEST_CHANGES",
+    "P8_001_EXACT_HEAD_CI_NOT_EXECUTED",
+    "P8_001_SOURCE_MANIFEST_STALE",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_ADDITIONAL_PROVEN_SOURCE_DEFECT",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "blockers": [
+    {
+      "class": "P8_SOURCE_CONTRACT_REQUEST_CHANGES",
+      "detail": "PR #65 exact candidate 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d has unresolved predecessor-result, required-evidence, minProperties, RFC3339/time-ordering, durable evidence-resolution, source-manifest, and exact-CI findings."
+    },
+    {
+      "class": "OWNER_MEDIATED_UNION_REQUIRED",
+      "detail": "MISSION-002 has not produced the owner-preserving Test Center union required to bind the trusted P2-004 sources into tc.p2.acceptance-contract without replacing current P8 authority."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane startup, memory, packaging, reliability, detach/reconnect, and process-tree measurements exist for Windows, macOS, and Linux."
+    },
+    {
+      "class": "CONTROLLED_BEHAVIORAL_INFRASTRUCTURE_ABSENT",
+      "detail": "P2-001 through P2-013 product assertions correctly remain blocked without the p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning/trust inputs, approvals, and governed receipts."
+    },
+    {
+      "class": "DEPENDENCY_FRONTIER_BLOCKED",
+      "detail": "P2-005 depends on the measured P2-004 decision; P2-006 depends on P2-005; P2-011 and P2-012 depend on P2-005/P2-006; P2-013 depends on the controlled process/watchdog chain."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, PR #64, and PR #78 remain draft and unmerged without a valid authorized integration sequence."
+    }
+  ],
+  "completed": [
+    "Continued after checkpoint MISSION-001-0013 and inspected the complete P2 task frontier rather than stopping at the P8 coordination milestone.",
+    "Replayed the durable exact-tree source artifact 8970093356 for tree 6b821b719f23cb981653334c10a2215346771f08.",
+    "Ran tool/p2_task_gate.py for P2-001 through P2-014; every source/local gate passed.",
+    "Ran tool/p2_task_assertion_cli_test.py across all fourteen tasks; P2-001 through P2-013 emitted valid BLOCKED results, P2-014 guide consistency passed, and no runner crashed or omitted evidence.",
+    "Re-ran the P2-004 trusted receipt integrity, freshness, uniqueness, containment, and fail-closed regression successfully.",
+    "Regenerated SOURCE_MANIFEST.sha256 twice through tool/p1a_refresh_source_manifest.py, proved both passes and the artifact manifest byte-identical, recorded 1130 entries and SHA-256 f6cf74a1b47fa36bf115089ef1dafeefeccd93ce114f0dcaedb6e99fed3e0804.",
+    "Completed git diff --check and repository non-mutation validation with a clean result.",
+    "Committed source-frontier report docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json and checksum edc9b6af5d86d779292374098c374c6783ed27edc23e0d519bf4a34c2810c320.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T205417Z-P2-004.json at 50d784a91b12de2a6101c9ddef5ccd6edb26f26b / 129826cb504d9b7c76fe12598b724a6080ca295c.",
+    "Confirmed no additional proven source defect or dependency-safe implementation task remains in the current P2 snapshot.",
+    "Kept PR #64 frozen, PR #75 unadvanced, and all behavior, platform, support, technology-selection, downstream, and merge boundaries intact."
+  ],
+  "evidence": {
+    "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+    "parentCandidate": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "sourceCarrier": {
+      "pullRequest": 75,
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "sourceFrontier": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json",
+      "artifactSha256": "edc9b6af5d86d779292374098c374c6783ed27edc23e0d519bf4a34c2810c320",
+      "artifactCommit": "38a19b9ac9a646c8b8977315eb36d38f4f8afd7c",
+      "sidecarCommit": "bff9d056ea619c09fbe0fdbb7d3740af8f8f680a",
+      "exportedTree": "6b821b719f23cb981653334c10a2215346771f08",
+      "sourceLocalGatePassCount": 14,
+      "controlledBlockedCount": 13,
+      "guideConsistencyPassCount": 1,
+      "sourceManifestEntries": 1130,
+      "sourceManifestSha256": "f6cf74a1b47fa36bf115089ef1dafeefeccd93ce114f0dcaedb6e99fed3e0804",
+      "repositoryMutationCheck": "PASS_CLEAN"
+    },
+    "currentOwnerReview": {
+      "pullRequest": 65,
+      "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
+      "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d",
+      "githubReviewId": 4878098718,
+      "decision": "REQUEST_CHANGES",
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-71770c8c.json",
+      "artifactSha256": "0a329928ff3a214fb952aece3e024f7e8bb7a3feeb6bfea2c632353708f293f2"
+    },
+    "ownerUnion": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json",
+      "status": "OWNER_INTEGRATION_REQUIRED"
+    },
+    "deliveryRecord": {
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T205417Z-P2-004.json",
+      "commit": "50d784a91b12de2a6101c9ddef5ccd6edb26f26b",
+      "tree": "129826cb504d9b7c76fe12598b724a6080ca295c"
+    },
+    "deliveryOverlay": {
+      "pullRequest": 78,
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false
+    }
+  },
+  "validation": [
+    "The live MISSION-001 claim remained unique after every mission-branch write.",
+    "All fourteen P2 source/local gates pass on the durable exact-tree artifact; no missing governed source path or failed local/source result was found.",
+    "The product assertion runner correctly distinguishes source readiness from absent controlled behavior: P2-001 through P2-013 remain BLOCKED and P2-014 guide consistency alone does not promote the mission.",
+    "The source manifest is deterministic and byte-identical on the artifact snapshot, and validation does not mutate the repository.",
+    "No product source, product branch ref, protected-main identity, frozen Worker A parent, or valid existing review identity was rewritten.",
+    "No local/source result was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No automation-host technology, controlled P2 behavior, capability support, platform support, release support, roadmap authority, P3 implementation, P11 implementation, or merge authorization was claimed."
+  ],
+  "nextAction": "Worker B repairs and validates the current P8-001 exact candidate and obtains fresh review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes against that exact union. Real controlled Windows/macOS/Linux measurements and behavior remain external prerequisites."
+}
