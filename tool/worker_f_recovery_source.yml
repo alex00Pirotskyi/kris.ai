@@ -1,0 +1,695 @@
+name: Worker F P5-001 repaired finalizer
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: worker-f-p5-001-repaired-finalizer
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    outputs:
+      source_sha: ${{ steps.identity.outputs.source_sha }}
+      source_tree: ${{ steps.identity.outputs.source_tree }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Cancel competing Worker F runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT_RUN: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPO/actions/runs?branch=agent/f/P5-001-information-architecture&per_page=100" \
+            --jq '.workflow_runs[] | select(.status == "queued" or .status == "in_progress") | .id' \
+            | while read -r run_id; do
+                if [[ "$run_id" != "$CURRENT_RUN" ]]; then
+                  gh api --method POST "repos/$REPO/actions/runs/$run_id/cancel" >/dev/null 2>&1 || true
+                fi
+              done
+          sleep 15
+      - name: Materialize reviewed source and deterministic contracts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import base64, copy, fnmatch, json, os, re, urllib.request
+          from pathlib import Path
+
+          root=Path('.')
+          repo=os.environ['REPO']
+          token=os.environ['GH_TOKEN']
+          api=f'https://api.github.com/repos/{repo}'
+          fixed='2026-08-05T18:00:00Z'
+
+          def request(url):
+            req=urllib.request.Request(url,headers={'Authorization':f'Bearer {token}','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+            with urllib.request.urlopen(req,timeout=60) as response: return json.load(response)
+          def blob(sha):
+            payload=request(f'{api}/git/blobs/{sha}')
+            return base64.b64decode(payload['content'])
+          def put(path,sha,overwrite=False):
+            target=root/path
+            if target.exists() and not overwrite: return
+            target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_bytes(blob(sha))
+
+          direct={
+            'lib/product/p5_information_architecture/p5_models.dart':'963c27f6604a068d057c5d7dbdf8ae856b97f59c',
+            'lib/product/p5_information_architecture/p5_controller.dart':'d39fc0bad7980f35942dcdac170032722d765caa',
+            'lib/product/p5_information_architecture/p5_fixtures.dart':'19d8e3e848e4ec937acb9f51ac65c07c044361f9',
+            'lib/product/p5_information_architecture/p5_prototype.dart':'a13aa488c7d0c35bb0105a8e739decf6b0e07280',
+            'lib/product/p5_information_architecture/p5_task_workspaces.dart':'845b99d2e99a6d4cf31073d5b10099781eb4da63',
+            'lib/product/p5_information_architecture/p5_verification_workspaces.dart':'1c2e5d78ef9d67ed6e3b72879ff33d8ffa355ab8',
+            'lib/product/p5_information_architecture/p5_support_workspaces.dart':'ab4c6a2691d577c1fb6d593d986bce68b68fc403',
+            'lib/product/p5_information_architecture/p5_components.dart':'5a2a4c9d8c6ff5e6f3a606e6add788a331900409',
+            'test/product/p5_information_architecture/p5_state_controller_test.dart':'642eb0eba2ca9b3ae16a1170915db03263b9ea59',
+            'test/product/p5_information_architecture/p5_source_boundary_test.dart':'c4368ce437caa96a9b99b9505df981a0f9a7ad9b',
+            'test/product/p5_information_architecture/p5_verification_center_test.dart':'2e3b7d098696bd7f92d3830a506ff33fe7205e0f',
+            'test/product/p5_information_architecture/p5_accessibility_test.dart':'d95b658732943b5e6fa4f47ae1d7b958124f38eb',
+            'tool/worker_f_p5_ia_test.py':'326462d4db7c9ec895c7f9dbf09de84fa83b8895',
+            'release/evidence/P5-001/current-ux-inventory.json':'7edcec5ec298a6ac93f6e381910a109e8560376b',
+          }
+          for path,sha in direct.items(): put(path,sha)
+
+          tree=request(f'{api}/git/trees/d581f21fb7b36ca9938cb55f24052df36df8475f?recursive=1')
+          entries={item['path']:item for item in tree.get('tree',[]) if item.get('type')=='blob'}
+          wanted=[
+            'lib/p5_ia_preview.dart','docs/ux/P5-001_INFORMATION_ARCHITECTURE.md',
+            'docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md',
+            'release/evidence/P5-001/jobs-to-be-done.json','release/evidence/P5-001/navigation-map.json',
+            'release/evidence/P5-001/state-transition-graph.json','release/evidence/P5-001/prototype-scenarios.json',
+            'release/evidence/P5-001/capability-presentation-matrix.json','release/evidence/P5-001/test-results.json',
+            'release/evidence/P5-001/claim-boundary.json',
+          ]
+          for path in wanted:
+            if path in entries: put(path,entries[path]['sha'])
+
+          preview=root/'lib/p5_ia_preview.dart'
+          if not preview.exists():
+            preview.write_text("import 'package:flutter/widgets.dart';\nimport 'product/p5_information_architecture/p5_prototype.dart';\n\nvoid main() { runApp(const P5InformationArchitectureApp()); }\n",encoding='utf-8')
+          docs=root/'docs/ux/P5-001_INFORMATION_ARCHITECTURE.md'; docs.parent.mkdir(parents=True,exist_ok=True)
+          if not docs.exists(): docs.write_text('# P5-001 Information Architecture\n\nIsolated presentation-only coded prototype. No production runtime authority changes.\n',encoding='utf-8')
+          progress=root/'docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md'; progress.parent.mkdir(parents=True,exist_ok=True)
+          if not progress.exists(): progress.write_text('# P5-001 progress — 2026-08-05\n\nBounded SOURCE_FOUNDATION prototype; roadmap authority unchanged.\n',encoding='utf-8')
+          evidence=root/'release/evidence/P5-001'; evidence.mkdir(parents=True,exist_ok=True)
+          fallback={
+            'jobs-to-be-done.json':{'schemaVersion':'1.0.0','jobs':['task','project-continuity','run-recovery','verification','developer-inspection']},
+            'navigation-map.json':{'schemaVersion':'1.0.0','workspaces':['homeChat','projects','runsActivity','verificationCenter','evidence','ownerMode','modelsProviders','capabilitiesIntegrations','settingsDiagnostics'],'future':['webStudio','searchResearch','nativeAutomation','devices']},
+            'state-transition-graph.json':{'schemaVersion':'1.0.0','states':['EMPTY','LOADING','READY','RUNNING','PAUSED','BLOCKED','ERROR','COMPLETED','UNAVAILABLE'],'authority':'presentation-only'},
+            'prototype-scenarios.json':{'schemaVersion':'1.0.0','scenarios':['simple-task','existing-run','owner-mode','verification-center','unavailable-capability','failure-recovery']},
+            'capability-presentation-matrix.json':{'schemaVersion':'1.0.0','support':'SOURCE_FOUNDATION','states':['NOT_IMPLEMENTED','SOURCE_FOUNDATION','BLOCKED_BY_DEPENDENCY','UNSUPPORTED','UNAVAILABLE']},
+            'test-results.json':{'schemaVersion':'1.0.0','stage':'SOURCE_CANDIDATE','result':'UNKNOWN','bindingStrategy':'stage-2-exact-head'},
+            'claim-boundary.json':{'schemaVersion':'1.0.0','p5_001':'SOURCE_FOUNDATION','productionShell':False,'ownerModeBehavior':False,'webStudio':False,'accessibilityCertified':False,'consumerReady':False,'releaseReady':False},
+          }
+          for name,payload in fallback.items():
+            path=evidence/name
+            if not path.exists(): path.write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+
+          fixture=root/'lib/product/p5_information_architecture/p5_fixtures.dart'
+          fixture.write_text(fixture.read_text(encoding='utf-8').replace('<T5CapabilityFixture>[','<P5CapabilityFixture>['),encoding='utf-8')
+          prototype=root/'lib/product/p5_information_architecture/p5_prototype.dart'
+          text=prototype.read_text(encoding='utf-8')
+          old="""  late final P5InformationArchitectureController controller =
+              widget.controller ?? P5InformationArchitectureController();
+            late final bool ownsController = widget.controller == null;
+
+            @override
+            void dispose() {
+          """
+          new="""  late final P5InformationArchitectureController controller;
+            late final bool ownsController;
+
+            @override
+            void initState() {
+              super.initState();
+              controller = widget.controller ?? P5InformationArchitectureController();
+              ownsController = widget.controller == null;
+            }
+
+            @override
+            void dispose() {
+          """
+          if old in text: text=text.replace(old,new)
+          prototype.write_text(text,encoding='utf-8')
+
+          nav=r'''import 'package:flutter/material.dart';
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:kristin_local_agent/product/p5_information_architecture/p5_controller.dart';
+          import 'package:kristin_local_agent/product/p5_information_architecture/p5_models.dart';
+          import 'package:kristin_local_agent/product/p5_information_architecture/p5_prototype.dart';
+
+          Future<void> pumpPrototype(WidgetTester tester, P5InformationArchitectureController controller) async {
+            tester.view.physicalSize = const Size(1440, 960);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
+            await tester.pumpWidget(P5InformationArchitectureApp(controller: controller));
+            await tester.pumpAndSettle();
+          }
+          Future<void> tapKey(WidgetTester tester, Key key) async {
+            final finder=find.byKey(key); await tester.ensureVisible(finder); await tester.tap(finder); await tester.pumpAndSettle();
+          }
+          void main() {
+            testWidgets('all required workspaces are reachable', (tester) async {
+              final controller=P5InformationArchitectureController()..changeExperienceLevel(P5ExperienceLevel.advanced);
+              addTearDown(controller.dispose); await pumpPrototype(tester,controller);
+              for (final definition in controller.visibleWorkspaces) { await tapKey(tester,Key('workspace-nav-${definition.id.name}')); expect(controller.state.workspace,definition.id); }
+              expect(controller.sideEffects.isZero,isTrue);
+            });
+            testWidgets('simple task reaches evidence and verification', (tester) async {
+              final controller=P5InformationArchitectureController(); addTearDown(controller.dispose); await pumpPrototype(tester,controller);
+              await tapKey(tester,const Key('review-plan-button')); await tapKey(tester,const Key('start-run-button'));
+              await tapKey(tester,const Key('pause-run-button')); await tapKey(tester,const Key('resume-run-button'));
+              await tapKey(tester,const Key('complete-run-button')); await tapKey(tester,const Key('open-evidence-button'));
+              expect(controller.state.workspace,P5WorkspaceId.evidence); controller.selectWorkspace(P5WorkspaceId.homeChat); await tester.pumpAndSettle();
+              await tapKey(tester,const Key('run-verification-button')); expect(controller.state.workspace,P5WorkspaceId.verificationCenter);
+              expect(controller.state.verificationRequested,isTrue); expect(controller.sideEffects.isZero,isTrue);
+            });
+            testWidgets('existing run retains project and run context', (tester) async {
+              final controller=P5InformationArchitectureController()..selectWorkspace(P5WorkspaceId.runsActivity);
+              addTearDown(controller.dispose); await pumpPrototype(tester,controller); await tapKey(tester,const Key('run-run.p5-existing-001'));
+              final project=controller.state.selectedProjectId; final run=controller.state.selectedRunId;
+              await tapKey(tester,const Key('existing-run-evidence-button')); expect(controller.state.selectedProjectId,project); expect(controller.state.selectedRunId,run);
+              controller.back(); expect(controller.state.workspace,P5WorkspaceId.runsActivity);
+            });
+            testWidgets('Owner Mode remains presentation-only', (tester) async {
+              final controller=P5InformationArchitectureController()..selectWorkspace(P5WorkspaceId.ownerMode);
+              addTearDown(controller.dispose); await pumpPrototype(tester,controller); expect(find.textContaining('BLOCKED_EXTERNAL'),findsOneWidget);
+              await tapKey(tester,const Key('owner-preview-running')); expect(controller.state.ownerModeState,P5OwnerModePresentationState.running); expect(controller.sideEffects.isZero,isTrue);
+            });
+            testWidgets('Web Studio unavailable state has an exit', (tester) async {
+              final controller=P5InformationArchitectureController()..changeExperienceLevel(P5ExperienceLevel.advanced)..selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);
+              addTearDown(controller.dispose); await pumpPrototype(tester,controller); await tapKey(tester,const Key('capability-webStudio'));
+              expect(find.text('BLOCKED_BY_DEPENDENCY'),findsOneWidget); await tester.tap(find.text('Back to Capabilities')); await tester.pumpAndSettle();
+              expect(controller.state.workspace,P5WorkspaceId.capabilitiesIntegrations); expect(controller.sideEffects.isZero,isTrue);
+            });
+          }
+          '''
+          nav_path=root/'test/product/p5_information_architecture/p5_navigation_test.dart'; nav_path.parent.mkdir(parents=True,exist_ok=True)
+          nav_path.write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in nav.splitlines())+'\n',encoding='utf-8')
+
+          registry_path=root/'config/test_center_registry.v1.json'
+          registry=json.loads(registry_path.read_text(encoding='utf-8'))
+          test_ids=['tc.p5-001.navigation.primary-workspaces','tc.p5-001.flow.simple-task','tc.p5-001.flow.existing-run','tc.p5-001.flow.owner-mode','tc.p5-001.flow.verification-center','tc.p5-001.state.transitions','tc.p5-001.mode.progressive-disclosure','tc.p5-001.capability.honest-unavailable','tc.p5-001.keyboard.primary-flow','tc.p5-001.semantics.primary-flow']
+          titles=['Primary workspaces are reachable','Simple task flow','Existing run continuity','Owner Mode presentation boundary','Verification Center domain separation','Deterministic state transitions','Progressive disclosure','Honest unavailable capability','Keyboard-only primary flow','Primary flow semantics']
+          files=['test/product/p5_information_architecture/p5_navigation_test.dart']*4+['test/product/p5_information_architecture/p5_verification_center_test.dart','test/product/p5_information_architecture/p5_state_controller_test.dart','test/product/p5_information_architecture/p5_verification_center_test.dart','test/product/p5_information_architecture/p5_navigation_test.dart','test/product/p5_information_architecture/p5_accessibility_test.dart','test/product/p5_information_architecture/p5_accessibility_test.dart']
+          profiles=[f'profile.p5-001.{i+1:02d}' for i in range(10)]; mappings=[f'affected.p5-001.{i+1:02d}' for i in range(10)]; module='tm.p5-information-architecture'
+          paths=[['lib/product/p5_information_architecture/**','lib/p5_ia_preview.dart'],['lib/product/p5_information_architecture/p5_task_workspaces.dart','test/product/p5_information_architecture/p5_navigation_test.dart'],['lib/product/p5_information_architecture/p5_controller.dart','test/product/p5_information_architecture/p5_navigation_test.dart'],['lib/product/p5_information_architecture/p5_verification_workspaces.dart','test/product/p5_information_architecture/p5_navigation_test.dart'],['lib/product/p5_information_architecture/p5_verification_workspaces.dart','release/evidence/P5-001/test-center-registration.json'],['lib/product/p5_information_architecture/p5_models.dart','lib/product/p5_information_architecture/p5_controller.dart'],['lib/product/p5_information_architecture/p5_prototype.dart','lib/product/p5_information_architecture/p5_components.dart'],['lib/product/p5_information_architecture/p5_support_workspaces.dart','release/evidence/P5-001/capability-presentation-matrix.json'],['lib/product/p5_information_architecture/p5_prototype.dart','test/product/p5_information_architecture/p5_accessibility_test.dart'],['lib/product/p5_information_architecture/p5_components.dart','test/product/p5_information_architecture/p5_accessibility_test.dart']]
+          def p5(record): return 'p5-001' in json.dumps(record,sort_keys=True) or 'p5-information-architecture' in json.dumps(record,sort_keys=True)
+          for key in ('testModules','testCases','projectTestProfiles','affectedTestMappings'):
+            if not isinstance(registry.get(key),list) or not registry[key]: raise RuntimeError(f'missing canonical template {key}')
+            registry[key]=[record for record in registry[key] if not p5(record)]
+          def transform(value,ctx,key=''):
+            if isinstance(value,dict): return {k:transform(v,ctx,k) for k,v in value.items()}
+            if isinstance(value,list):
+              lower=key.lower()
+              if lower in {'testids','testcaseids','selectedtestids','affectedtestids'}: return list(ctx.get('testIds',[ctx['testId']]))
+              if lower in {'projectprofileids','profileids','testprofileids'}: return list(ctx.get('profileIds',[ctx['profileId']]))
+              if lower=='pathpatterns': return list(ctx.get('pathPatterns',['lib/product/p5_information_architecture/**']))
+              if lower=='excludedpaths': return ['docs/roadmap/MASTER.md','docs/roadmap/roadmap.yaml']
+              if lower in {'argv','arguments'}: return ['flutter','test',ctx.get('testFile',files[0])]
+              if lower in {'inputs','inputpaths'}: return [ctx.get('testFile',files[0]),'lib/product/p5_information_architecture/**']
+              if lower in {'outputs','outputpaths','evidencepaths'}: return ['release/evidence/P5-001/test-results.json']
+              if lower in {'environmentallowlist','allowedenvironmentvariables'}: return ['CI','FLUTTER_ROOT','PATH','PUB_CACHE']
+              return [transform(item,ctx,key) for item in value]
+            if isinstance(value,bool): return False if key.lower() in {'mutating','allowsmutation','requiresnetwork','requirescredentials'} else value
+            if isinstance(value,int): return 900 if 'timeout' in key.lower() else ctx.get('priority',100) if key.lower()=='priority' else value
+            if isinstance(value,str):
+              lower=key.lower()
+              if lower=='moduleid' or value.startswith('tm.'): return module
+              if lower in {'testid','testcaseid'} or value.startswith('tc.'): return ctx['testId']
+              if lower in {'profileid','projectprofileid','testprofileid'} or value.startswith('profile.'): return ctx['profileId']
+              if lower=='mappingid' or value.startswith('affected.'): return ctx['mappingId']
+              if lower in {'title','name','displayname'}: return ctx.get('title','P5-001 information architecture')
+              if lower in {'description','summary','rationale'}: return ctx.get('description','Bounded non-mutating P5-001 presentation verification.')
+              if lower in {'workingdirectory','cwd'}: return '.'
+              if lower in {'mutationpolicy','executionpolicy'}: return 'NON_MUTATING'
+              if lower in {'resultstate','testexecutionresult','result'}: return 'UNKNOWN'
+              if lower in {'certificationstate','certificationstatus'}: return 'NOT_EVALUATED'
+              if lower in {'capabilitysupport','supportstate','supportstatus'}: return 'SOURCE_FOUNDATION'
+              if lower.endswith('at') or 'timestamp' in lower: return fixed
+              if re.fullmatch(r'[0-9a-f]{40}',value): return '90c574665363140aeb6cf764ab8387714cab88cf'
+            return value
+          module_ctx={'testId':test_ids[0],'profileId':profiles[0],'mappingId':mappings[0],'testIds':test_ids,'profileIds':profiles,'title':'P5 information architecture','description':'Presentation-only navigation, state, verification, keyboard, and semantics foundation.'}
+          registry['testModules'].append(transform(copy.deepcopy(registry['testModules'][0]),module_ctx))
+          case_template=copy.deepcopy(registry['testCases'][0]); profile_template=copy.deepcopy(next((item for item in registry['projectTestProfiles'] if item.get('mutationPolicy')=='NON_MUTATING'),registry['projectTestProfiles'][0])); mapping_template=copy.deepcopy(registry['affectedTestMappings'][0])
+          for i,test_id in enumerate(test_ids):
+            ctx={'testId':test_id,'profileId':profiles[i],'mappingId':mappings[i],'title':titles[i],'description':'P5-001 bounded source/widget presentation verification.','testFile':files[i],'pathPatterns':paths[i],'priority':100-i}
+            registry['testCases'].append(transform(copy.deepcopy(case_template),ctx)); registry['projectTestProfiles'].append(transform(copy.deepcopy(profile_template),ctx)); registry['affectedTestMappings'].append(transform(copy.deepcopy(mapping_template),ctx))
+          for key,value in registry.items():
+            if isinstance(value,list) and value and all(isinstance(item,dict) for item in value):
+              for identity in ('moduleId','testId','profileId','mappingId','requestId','resultId','evidenceId','certificationId','capabilitySupportId','presentationId'):
+                if any(identity in item for item in value): value.sort(key=lambda item:str(item.get(identity,''))); break
+          registry_path.write_text(json.dumps(registry,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          registration={'schemaVersion':'1.0.0','moduleId':module,'capabilitySupport':'SOURCE_FOUNDATION','testIds':test_ids,'profileIds':profiles,'mappingIds':mappings,'mutationPolicy':'NON_MUTATING','workingDirectory':'.','environmentAllowlist':['CI','FLUTTER_ROOT','PATH','PUB_CACHE'],'evidencePaths':['release/evidence/P5-001/test-results.json','release/evidence/P5-001/manifest.json'],'certificationState':'NOT_EVALUATED','platformSupport':'UNSUPPORTED','releaseSupport':'UNSUPPORTED'}
+          (evidence/'test-center-registration.json').write_text(json.dumps(registration,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          PY
+
+          cat > tool/worker_f_p5_ia.py <<'PY'
+          from __future__ import annotations
+          import argparse, fnmatch, hashlib, json
+          from pathlib import Path
+          MODULE_ID='tm.p5-information-architecture'
+          TEST_IDS=('tc.p5-001.navigation.primary-workspaces','tc.p5-001.flow.simple-task','tc.p5-001.flow.existing-run','tc.p5-001.flow.owner-mode','tc.p5-001.flow.verification-center','tc.p5-001.state.transitions','tc.p5-001.mode.progressive-disclosure','tc.p5-001.capability.honest-unavailable','tc.p5-001.keyboard.primary-flow','tc.p5-001.semantics.primary-flow')
+          PLACEHOLDERS=('PENDING_SHA','STAGE_1_COMMIT_PENDING','TODO','TBD','UNKNOWN_TREE')
+          def load(path): return json.loads(path.read_text(encoding='utf-8'))
+          def extract_p5_module(root):
+            data=load(root/'config/test_center_registry.v1.json'); prefixes=('p5-001','p5-information-architecture')
+            return {key:[item for item in value if isinstance(item,dict) and any(prefix in json.dumps(item,sort_keys=True) for prefix in prefixes)] if isinstance(value,list) else value for key,value in data.items()}
+          def select_affected_tests(paths,mappings):
+            selected=set()
+            for mapping in mappings:
+              for path in sorted(set(paths)):
+                if any(fnmatch.fnmatch(path,p) for p in mapping.get('excludedPaths',[])): continue
+                if any(fnmatch.fnmatch(path,p) for p in mapping.get('pathPatterns',[])): selected.update(mapping.get('testIds',[]))
+            return sorted(selected)
+          def owned_files(root):
+            explicit=[root/'.github/workflows/worker-f-p5-001-information-architecture.yml',root/'config/test_center_registry.v1.json',root/'lib/p5_ia_preview.dart',root/'docs/ux/P5-001_INFORMATION_ARCHITECTURE.md',root/'docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md',root/'tool/worker_f_p5_ia.py',root/'tool/worker_f_p5_ia_test.py']
+            files=[path for path in explicit if path.exists()]
+            for base in (root/'lib/product/p5_information_architecture',root/'test/product/p5_information_architecture',root/'release/evidence/P5-001'):
+              if base.exists(): files.extend(path for path in base.rglob('*') if path.is_file() and path.name!='manifest.json')
+            return sorted(set(files),key=lambda path:path.as_posix())
+          def manifest_payload(root):
+            rows=[]
+            for path in owned_files(root):
+              raw=path.read_bytes(); rows.append({'path':path.relative_to(root).as_posix(),'sha256':hashlib.sha256(raw).hexdigest(),'size':len(raw)})
+            return {'schemaVersion':'1.0.0','milestone':'P5-001','classification':'SOURCE_FOUNDATION','artifacts':rows}
+          def write_manifest(root,check=False):
+            path=root/'release/evidence/P5-001/manifest.json'; expected=json.dumps(manifest_payload(root),indent=2,sort_keys=True)+'\n'
+            if check:
+              if not path.exists() or path.read_text(encoding='utf-8')!=expected: raise AssertionError('P5-001 manifest is stale')
+            else:
+              path.parent.mkdir(parents=True,exist_ok=True); path.write_text(expected,encoding='utf-8')
+          def check(root):
+            master=(root/'docs/roadmap/MASTER.md').read_text(encoding='utf-8')
+            if 'P0-008' not in master: raise AssertionError('P0-008 authority not found')
+            registry=load(root/'config/test_center_registry.v1.json')
+            modules=[item for item in registry.get('testModules',[]) if item.get('moduleId')==MODULE_ID]
+            if len(modules)!=1: raise AssertionError('P5 module registration must be unique')
+            cases={item.get('testId'):item for item in registry.get('testCases',[]) if item.get('testId') in TEST_IDS}
+            if set(cases)!=set(TEST_IDS): raise AssertionError('stable P5 test IDs missing')
+            profiles={item.get('profileId'):item for item in registry.get('projectTestProfiles',[]) if 'p5-001' in str(item.get('profileId',''))}
+            mappings=[item for item in registry.get('affectedTestMappings',[]) if 'p5-001' in str(item.get('mappingId',''))]
+            if len(profiles)!=10 or len(mappings)!=10: raise AssertionError('P5 profiles/mappings must be complete')
+            for case in cases.values():
+              ids=case.get('projectProfileIds') or case.get('profileIds') or []
+              if len(ids)!=1 or ids[0] not in profiles: raise AssertionError(f'case profile mismatch: {case.get("testId")}')
+            paths=['lib/product/p5_information_architecture/p5_models.dart','test/product/p5_information_architecture/p5_accessibility_test.dart']
+            if select_affected_tests(paths,mappings)!=select_affected_tests(list(reversed(paths)),list(reversed(mappings))): raise AssertionError('affected selection is order-dependent')
+            checker=(root/'tool/worker_f_p5_ia.py').resolve()
+            for path in owned_files(root):
+              if path.resolve()==checker: continue
+              text=path.read_text(encoding='utf-8',errors='replace')
+              for token in PLACEHOLDERS:
+                if token in text: raise AssertionError(f'placeholder {token} in {path}')
+            production=(root/'lib/main.dart').read_text(encoding='utf-8')
+            if 'p5_ia_preview.dart' in production or 'P5InformationArchitectureApp' in production: raise AssertionError('production entry point changed')
+            forbidden=("import 'dart:io'","import 'dart:html'",'package:http/','Process.','Socket(','File(','Directory(','ProductRuntime','P2OwnerWorkspace','p2_owner_mode.dart','workspace_tools.dart','api_server.dart')
+            for path in (root/'lib/product/p5_information_architecture').rglob('*.dart'):
+              text=path.read_text(encoding='utf-8')
+              for token in forbidden:
+                if token in text: raise AssertionError(f'forbidden side-effect token {token} in {path}')
+            write_manifest(root,check=True)
+          def main(argv=None):
+            parser=argparse.ArgumentParser(); sub=parser.add_subparsers(dest='command',required=True)
+            p=sub.add_parser('check'); p.add_argument('--project',default='.')
+            p=sub.add_parser('manifest'); p.add_argument('--project',default='.'); p.add_argument('--check',action='store_true')
+            p=sub.add_parser('select'); p.add_argument('--project',default='.'); p.add_argument('paths',nargs='+')
+            args=parser.parse_args(argv); root=Path(args.project).resolve()
+            if args.command=='manifest': write_manifest(root,args.check)
+            elif args.command=='check': check(root)
+            else: print(json.dumps(select_affected_tests(args.paths,extract_p5_module(root).get('affectedTestMappings',[]))))
+            return 0
+          if __name__=='__main__': raise SystemExit(main())
+          PY
+          sed -i 's/^          //' tool/worker_f_p5_ia.py
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          texts='\n'.join(path.read_text(encoding='utf-8',errors='ignore') for path in Path('.github/workflows').glob('*.yml'))
+          def pinned(name):
+            match=re.search(re.escape(name)+r'@([0-9a-f]{40})',texts)
+            if not match: raise RuntimeError(f'no pinned {name} action found in governed workflows')
+            return f'{name}@{match.group(1)}'
+          checkout=pinned('actions/checkout'); setup=pinned('actions/setup-python'); flutter=pinned('subosito/flutter-action'); upload=pinned('actions/upload-artifact')
+          workflow=f'''name: Worker F P5-001 Information Architecture
+
+          on:
+            push:
+              branches:
+                - agent/f/P5-001-information-architecture
+            pull_request:
+              branches:
+                - agent/b/test-center-contracts-and-review
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            verify:
+              name: ${{{{ matrix.os-name }}}} P5-001 verification
+              strategy:
+                fail-fast: false
+                matrix:
+                  include:
+                    - os: ubuntu-latest
+                      os-name: Ubuntu
+                    - os: windows-latest
+                      os-name: Windows
+                    - os: macos-latest
+                      os-name: macOS
+              runs-on: ${{{{ matrix.os }}}}
+              timeout-minutes: 55
+              steps:
+                - uses: {checkout}
+                  with:
+                    fetch-depth: 0
+                - uses: {setup}
+                  with:
+                    python-version: '3.12.10'
+                - uses: {flutter}
+                  with:
+                    flutter-version: '3.44.8'
+                    channel: stable
+                    cache: true
+                - shell: bash
+                  run: flutter pub get
+                - name: Validate authority and contracts
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    python tool/roadmap_control.py validate --project . --strict
+                    python - <<'PY2'
+                    import subprocess
+                    result=subprocess.run(['python','tool/roadmap_control.py','explain','P5-001','--project','.'],text=True,capture_output=True)
+                    text=result.stdout+result.stderr
+                    if result.returncode != 2 or not any(token in text for token in ('Unknown task','outside','scope')): raise SystemExit(text)
+                    PY2
+                    python tool/worker_f_p5_ia.py manifest --project . --check
+                    python tool/worker_f_p5_ia.py check --project .
+                    python tool/worker_f_p5_ia_test.py
+                    python tool/test_center_contracts.py check --project .
+                - name: Format, analyze, and test
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    dart format --output=none --set-exit-if-changed lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+                    flutter analyze
+                    flutter test test/product/p5_information_architecture/
+                - name: Manifest and non-mutation
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    python - <<'PY2'
+                    from pathlib import Path
+                    import hashlib, subprocess
+                    path=Path('docs/roadmap/SOURCE_MANIFEST.sha256'); before=hashlib.sha256(path.read_bytes()).hexdigest()
+                    subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True); first=hashlib.sha256(path.read_bytes()).hexdigest()
+                    subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True); second=hashlib.sha256(path.read_bytes()).hexdigest()
+                    if before != first or first != second: raise SystemExit('source manifest changed')
+                    PY2
+                    git diff --check
+                    git diff --exit-code
+                    test -z "$(git status --porcelain)"
+                - if: always()
+                  uses: {upload}
+                  with:
+                    name: worker-f-p5-001-${{{{ matrix.os-name }}}}-${{{{ github.sha }}}}
+                    path: |
+                      release/evidence/P5-001/
+                      docs/roadmap/SOURCE_MANIFEST.sha256
+                    if-no-files-found: error
+                    retention-days: 14
+          '''
+          path=Path('.github/workflows/worker-f-p5-001-information-architecture.yml')
+          path.write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in workflow.splitlines())+'\n',encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/worker-f-p5-001-finalize-v2.yml \
+            .github/workflows/worker-f-p5-001-finalize.yml \
+            .github/workflows/worker-f-bootstrap.yml \
+            .github/workflows/worker-f-materialize-p5-001.yml \
+            .github/workflows/worker-f-stage2-orchestrator.yml \
+            .github/workflows/worker-f-p5-001-repair.yml \
+            .github/workflows/worker-f-stage2-orchestrator-v2.yml \
+            .github/workflows/worker-f-p5-001-serialize.yml
+
+          flutter pub get
+          dart format lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          flutter analyze
+          flutter test test/product/p5_information_architecture/
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/source-manifest-one
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/source-manifest-one docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Commit immutable Stage 1
+        id: identity
+        env:
+          BRANCH: agent/f/P5-001-information-architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A .github/workflows config/test_center_registry.v1.json docs/roadmap/SOURCE_MANIFEST.sha256 \
+            docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md docs/ux/P5-001_INFORMATION_ARCHITECTURE.md \
+            lib/p5_ia_preview.dart lib/product/p5_information_architecture release/evidence/P5-001 \
+            test/product/p5_information_architecture tool/worker_f_p5_ia.py tool/worker_f_p5_ia_test.py
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'P5-001: add information architecture and UX flow prototype'
+            git push origin HEAD:refs/heads/$BRANCH
+          fi
+          echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "source_tree=$(git show -s --format=%T HEAD)" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: ${{ matrix.os_name }} exact Stage 1
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os_name: Ubuntu
+          - os: windows-latest
+            os_name: Windows
+          - os: macos-latest
+            os_name: macOS
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Confirm exact identity
+        shell: bash
+        env:
+          SHA: ${{ needs.prepare.outputs.source_sha }}
+          TREE: ${{ needs.prepare.outputs.source_tree }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SHA"
+          test "$(git show -s --format=%T HEAD)" = "$TREE"
+      - shell: bash
+        run: flutter pub get
+      - name: Validate authority, contracts, formatting, analysis, and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/roadmap_control.py validate --project . --strict
+          python - <<'PY'
+          import subprocess
+          result=subprocess.run(['python','tool/roadmap_control.py','explain','P5-001','--project','.'],text=True,capture_output=True)
+          text=result.stdout+result.stderr
+          if result.returncode != 2 or not any(token in text for token in ('Unknown task','outside','scope')): raise SystemExit(text)
+          PY
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python - <<'PY'
+          import subprocess
+          a=subprocess.check_output(['python','tool/worker_f_p5_ia.py','select','--project','.','lib/product/p5_information_architecture/p5_models.dart','test/product/p5_information_architecture/p5_accessibility_test.dart'],text=True).strip()
+          b=subprocess.check_output(['python','tool/worker_f_p5_ia.py','select','--project','.','test/product/p5_information_architecture/p5_accessibility_test.dart','lib/product/p5_information_architecture/p5_models.dart'],text=True).strip()
+          if a != b: raise SystemExit('affected selection is order-dependent')
+          PY
+          dart format --output=none --set-exit-if-changed lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          flutter analyze
+          flutter test test/product/p5_information_architecture/
+      - name: Existing affected shell tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          tests=sorted({str(path) for path in Path('test').rglob('*test.dart') if any(token in path.name.lower() for token in ('p2_app_shell','p2_owner','chat_studio'))})
+          for test in tests: subprocess.run(['flutter','test',test],check=True)
+          PY
+      - name: Manifest idempotence and non-mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, subprocess
+          path=Path('docs/roadmap/SOURCE_MANIFEST.sha256'); before=hashlib.sha256(path.read_bytes()).hexdigest()
+          subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True); first=hashlib.sha256(path.read_bytes()).hexdigest()
+          subprocess.run(['python','tool/p1a_refresh_source_manifest.py','.'],check=True); second=hashlib.sha256(path.read_bytes()).hexdigest()
+          if before != first or first != second: raise SystemExit('source manifest changed')
+          PY
+          git diff --check
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-f-p5-001-${{ matrix.os_name }}-${{ needs.prepare.outputs.source_sha }}
+          path: |
+            release/evidence/P5-001/
+            docs/roadmap/SOURCE_MANIFEST.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  package:
+    name: Stage 2 evidence and review requests
+    needs: [prepare, verify]
+    if: needs.verify.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Package exact evidence and open draft PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: agent/f/P5-001-information-architecture
+          BASE: agent/b/test-center-contracts-and-review
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          SOURCE_TREE: ${{ needs.prepare.outputs.source_tree }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git show -s --format=%T HEAD)" = "$SOURCE_TREE"
+          RUN_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID")
+          JOBS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100")
+          ARTIFACTS_JSON=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100")
+          PR=$(gh api "repos/$REPO/pulls?head=${REPO%%/*}:$BRANCH&state=all&per_page=20" --jq '.[0].number // empty')
+          cat > /tmp/body.md <<EOF
+          ## P5-001 bounded source foundation
+          - Human authority: \`docs/roadmap/MASTER.md\`
+          - Machine authority: \`docs/roadmap/roadmap.yaml\` within its P0/P1 scope
+          - P0-008: **READY**
+          - Selected Worker B base: \`90c574665363140aeb6cf764ab8387714cab88cf\` / tree \`438fe3f710c0fed32106ee6acdc138f4e4c6accc\`
+          - Stage 1: \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`
+          - Tri-OS run: [$RUN_ID]($RUN_URL)
+
+          Isolated entry: \`flutter run -t lib/p5_ia_preview.dart\`. The prototype covers jobs-to-be-done, navigation, workspaces, deterministic presentation transitions, Simple/Advanced/Developer disclosure, Verification Center domain separation, Owner Mode presentation boundaries, future-capability honesty, failures/recovery, keyboard flow, semantics, deterministic fixtures, canonical Test Center records, and deterministic affected mappings.
+
+          \`lib/main.dart\`, roadmap authority, P2 runtime semantics, capability grants, processes, credentials, network, browsers, devices, and Owner Mode runtime actions are unchanged. Capability support remains **SOURCE_FOUNDATION**. PASS is not certification, platform support, release support, accessibility certification, P22 readiness, production readiness, or GA readiness.
+
+          Worker B, Worker A, and Worker J exact-SHA records are requested. The PR remains draft and unmerged.
+          EOF
+          sed -i 's/^          //' /tmp/body.md
+          if [[ -z "$PR" ]]; then PR=$(gh api "repos/$REPO/pulls" -f title='P5-001: add information architecture and UX flow prototype' -f head="$BRANCH" -f base="$BASE" -f body="$(cat /tmp/body.md)" -F draft=true --jq .number); else gh api --method PATCH "repos/$REPO/pulls/$PR" -f title='P5-001: add information architecture and UX flow prototype' -f body="$(cat /tmp/body.md)" >/dev/null; fi
+          mkdir -p /tmp/artifacts release/evidence/P5-001
+          jq -r '.artifacts[] | select(.expired == false) | [.id,.name] | @tsv' <<<"$ARTIFACTS_JSON" | while IFS=$'\t' read -r id name; do gh api "repos/$REPO/actions/artifacts/$id/zip" > "/tmp/artifacts/${id}-${name}.zip"; done
+          find /tmp/artifacts -type f -print0 | sort -z | xargs -0 -r sha256sum > /tmp/hashes.txt
+          export RUN_JSON JOBS_JSON ARTIFACTS_JSON PR
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          e=Path('release/evidence/P5-001'); run=json.loads(os.environ['RUN_JSON']); raw_jobs=json.loads(os.environ['JOBS_JSON']); raw_artifacts=json.loads(os.environ['ARTIFACTS_JSON'])
+          jobs=[{'jobId':j.get('id'),'name':j.get('name'),'status':j.get('status'),'conclusion':j.get('conclusion'),'url':j.get('html_url')} for j in sorted(raw_jobs.get('jobs',[]),key=lambda x:(x.get('name',''),x.get('id',0))) if j.get('name') in ('Ubuntu exact Stage 1','Windows exact Stage 1','macOS exact Stage 1')]
+          hashes=[]; hp=Path('/tmp/hashes.txt')
+          if hp.exists():
+            for line in hp.read_text().splitlines(): digest,path=line.split('  ',1); hashes.append({'path':Path(path).name,'sha256':digest})
+          payloads={
+            'stage-1-source.json':{'schemaVersion':'1.0.0','stage':'STAGE_1_CODED_PROTOTYPE','commit':os.environ['SOURCE_SHA'],'tree':os.environ['SOURCE_TREE'],'baseCommit':'90c574665363140aeb6cf764ab8387714cab88cf','baseTree':'438fe3f710c0fed32106ee6acdc138f4e4c6accc','moduleId':'tm.p5-information-architecture','capabilitySupport':'SOURCE_FOUNDATION','productionEntryPointChanged':False,'runtimeSideEffects':False},
+            'stage-2-ci.json':{'schemaVersion':'1.0.0','stage':'STAGE_2_EVIDENCE_PACKAGING','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowName':'Worker F P5-001 repaired finalizer','runId':int(os.environ['RUN_ID']),'runUrl':os.environ['RUN_URL'],'conclusion':'success','jobs':jobs,'artifacts':[{'artifactId':a.get('id'),'name':a.get('name'),'sizeInBytes':a.get('size_in_bytes')} for a in raw_artifacts.get('artifacts',[])],'artifactFiles':hashes},
+            'review-requests.json':{'schemaVersion':'1.0.0','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'requests':[{'worker':'B','status':'REQUESTED','allowedDecisions':['PASS','REQUEST_CHANGES','BLOCKED_BY_CONTRACT','BLOCKED_EXTERNAL']},{'worker':'A','status':'REQUESTED'},{'worker':'J','status':'REQUESTED'}],'workerIRequired':False},
+            'test-results.json':{'schemaVersion':'1.0.0','milestone':'P5-001','boundStage1Commit':os.environ['SOURCE_SHA'],'boundStage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':int(os.environ['RUN_ID']),'conclusion':'success','jobs':jobs,'capabilitySupport':'SOURCE_FOUNDATION','certificationState':'NOT_EVALUATED','platformSupport':'UNSUPPORTED','releaseSupport':'UNSUPPORTED'},
+            'final-handoff.json':{'schemaVersion':'1.0.0','classification':'P5-001_PROTOTYPE_REVIEW_READY','branch':'agent/f/P5-001-information-architecture','pullRequestNumber':int(os.environ['PR']),'stage1Commit':os.environ['SOURCE_SHA'],'stage1Tree':os.environ['SOURCE_TREE'],'workflowRunId':int(os.environ['RUN_ID']),'workflowRunUrl':os.environ['RUN_URL'],'workerB':'REQUESTED','workerA':'REQUESTED','workerJ':'REQUESTED','merge':False},
+          }
+          for name,payload in payloads.items(): (e/name).write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          PY
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/stage2-one
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/stage2-one docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+          git add docs/roadmap/SOURCE_MANIFEST.sha256 release/evidence/P5-001
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'P5-001: package exact-head verification evidence'
+          STAGE2_SHA=$(git rev-parse HEAD); STAGE2_TREE=$(git show -s --format=%T HEAD); git push origin HEAD:refs/heads/$BRANCH
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker B exact-SHA review request
+
+          Review Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` for canonical Test Center conformance, Verification Center domain separation, stable IDs, one-to-one NON_MUTATING profiles, mappings, evidence binding, certification/support presentation, and no support inflation. Decision: PASS | REQUEST_CHANGES | BLOCKED_BY_CONTRACT | BLOCKED_EXTERNAL." >/dev/null
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker A semantic verification request
+
+          Verify Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\`: Owner Mode labels are accurate, source/controlled behavior remains separate, P2 runtime semantics and capability grants are unchanged, and BLOCKED_EXTERNAL remains honest." >/dev/null
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## Worker J no-conflict request
+
+          Record that Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` owns only P5-001, changes no roadmap authority, collides with no A/B/C/D/E/J implementation, starts no P5-002+, and claims no P22 readiness." >/dev/null
+          gh api "repos/$REPO/issues/$PR/comments" -f body="## P5-001 Stage 2
+
+          Stage 1 \`$SOURCE_SHA\` / tree \`$SOURCE_TREE\` passed Ubuntu, Windows, and macOS in run [$RUN_ID]($RUN_URL). Stage 2 \`$STAGE2_SHA\` / tree \`$STAGE2_TREE\` packages exact evidence and review requests. Classification: **P5-001_PROTOTYPE_REVIEW_READY**. Draft and unmerged." >/dev/null
