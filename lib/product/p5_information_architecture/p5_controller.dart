@@ -26,12 +26,21 @@ class P5InformationArchitectureController extends ChangeNotifier {
 
   bool get canReviewPlan => !_runLifecycleLocked;
   bool get canStartRun => !_runLifecycleLocked;
+  bool get canEditTaskDraft => !_runContextLocked;
+  bool get canChangeProjectContext => !_runContextLocked;
+  bool get canSelectSavedRun => !_runContextLocked;
 
   bool get _runLifecycleLocked => const <P5RunPresentationState>{
         P5RunPresentationState.running,
         P5RunPresentationState.paused,
         P5RunPresentationState.stopping,
         P5RunPresentationState.interrupted,
+      }.contains(_state.runState);
+
+  bool get _runContextLocked => const <P5RunPresentationState>{
+        P5RunPresentationState.running,
+        P5RunPresentationState.paused,
+        P5RunPresentationState.stopping,
       }.contains(_state.runState);
 
   List<P5WorkspaceDefinition> get visibleWorkspaces {
@@ -106,11 +115,28 @@ class P5InformationArchitectureController extends ChangeNotifier {
     if (value == _state.taskDraft) {
       return;
     }
+    if (_runContextLocked) {
+      _state = _state.copyWith(
+        recoveryMessage:
+            'Task context cannot change while a simulated run is active. Use the run controls first.',
+      );
+      notifyListeners();
+      return;
+    }
     _state = _state.copyWith(taskDraft: value, planReviewed: false);
     notifyListeners();
   }
 
   void selectProject(String? projectId) {
+    if (_runContextLocked && projectId != _state.selectedProjectId) {
+      _state = _state.copyWith(
+        recoveryMessage:
+            'Project context cannot change while a simulated run is active. Use the run controls first.',
+      );
+      notifyListeners();
+      return;
+    }
+
     if (projectId == null) {
       if (_state.selectedProjectId == null && _state.selectedRunId == null) {
         return;
@@ -165,6 +191,15 @@ class P5InformationArchitectureController extends ChangeNotifier {
   }
 
   void selectRun(String? runId) {
+    if (_runContextLocked && runId != _state.selectedRunId) {
+      _state = _state.copyWith(
+        recoveryMessage:
+            'Run context cannot change while a simulated run is active. Use the run controls first.',
+      );
+      notifyListeners();
+      return;
+    }
+
     if (runId == null) {
       if (_state.selectedRunId == null) {
         return;
@@ -326,6 +361,23 @@ class P5InformationArchitectureController extends ChangeNotifier {
       );
       notifyListeners();
       return;
+    }
+
+    if (_runContextLocked) {
+      final requestedProjectId = run?.projectId ?? project?.id;
+      final requestedRunId = run?.id;
+      final changesContext =
+          (requestedProjectId != null &&
+              requestedProjectId != _state.selectedProjectId) ||
+          (requestedRunId != null && requestedRunId != _state.selectedRunId);
+      if (changesContext) {
+        _state = _state.copyWith(
+          recoveryMessage:
+              'Deep link context cannot replace an active simulated run. Use the run controls first.',
+        );
+        notifyListeners();
+        return;
+      }
     }
 
     if (run != null) {
