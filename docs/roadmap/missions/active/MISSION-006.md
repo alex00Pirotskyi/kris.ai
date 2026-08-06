@@ -23,9 +23,9 @@ Deliver the agent loop, planning, memory, model/provider routing, safe autonomy,
 - Worker: `G`
 - Branch: `agent/g/mission-006-model-routing`
 - Draft PR: `#76`
-- Observed head: `fc62949503caad11a6edbeb65535d3d3409631f4`
-- Observed tree: `ef5d5ae584b1d823502bf6f2191ecf4285d36845`
-- Current work: P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review.
+- Observed head: `0aa6203e89a9b825c575954af54a0c108c79b67a`
+- Observed tree: `4b262889edb61ec0c705b289aa29fd0df7c8456c`
+- Current work: P6-001 exact candidate repaired the governed Dart source inventory; focused model-registry and source-contract tests pass; full tri-platform product gates, Worker B Test Center review, and an independent exact-commit/tree review remain pending.
 - These are discovery anchors, not permission to skip live-state discovery.
 
 ## P6 — Agent intelligence, model routing, and safe autonomy

@@ -1,0 +1,30 @@
+{
+  "blockers": [
+    "Exact-head full tri-platform product-gates are not yet settled.",
+    "Worker B exact-commit/tree Test Center authority review is pending.",
+    "No independent exact-commit/tree review is recorded.",
+    "Mission and repository integration gates do not authorize merge."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Re-resolved protected main, mission-system authority, active claims, PR #76, CI failures, dependencies, coordination, and path ownership.",
+    "Reused the existing P6-001 model registry implementation and evidence without restarting completed work.",
+    "Repaired the exact-head governed-source inventory by registering lib/product/model/model.dart and lib/product/model/model_registry.dart.",
+    "The guarded repair workflow removed itself and refreshed SOURCE_MANIFEST.sha256 deterministically."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Inspect all exact-head PR checks for 0aa6203e89a9b825c575954af54a0c108c79b67a, repair only proven regressions, then request Worker B and independent exact-commit/tree review; do not merge.",
+  "observedHead": "0aa6203e89a9b825c575954af54a0c108c79b67a",
+  "observedTree": "4b262889edb61ec0c705b289aa29fd0df7c8456c",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 2,
+  "supersededBy": null,
+  "validation": [
+    "Worker G P6-001 source inventory repair workflow run 31102766620 completed successfully.",
+    "Focused model_registry_test.dart and source_contract_test.dart passed before the repair commit.",
+    "mission bootstrap verified 60 files\nMISSION_EXECUTION_VALID phases=25 tasks=359 missions=15 interlocks=230 claims=8 roadmap_sha256=b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c",
+    "MISSION-006\tCLAIMED\tWorker G\tP6,P18\tAgent Intelligence, Model Routing, Local Models, and Hardware Acceleration"
+  ],
+  "worker": "G"
+}

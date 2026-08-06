@@ -1,6 +1,6 @@
 {
   "blockers": [
-    "P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review."
+    "P6-001 exact candidate repaired the governed Dart source inventory; focused model-registry and source-contract tests pass; full tri-platform product gates, Worker B Test Center review, and an independent exact-commit/tree review remain pending."
   ],
   "branch": "agent/g/mission-006-model-routing",
   "completed": [
@@ -8,8 +8,8 @@
   ],
   "mission": "MISSION-006",
   "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
-  "observedHead": "fc62949503caad11a6edbeb65535d3d3409631f4",
-  "observedTree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+  "observedHead": "0aa6203e89a9b825c575954af54a0c108c79b67a",
+  "observedTree": "4b262889edb61ec0c705b289aa29fd0df7c8456c",
   "pullRequest": 76,
   "schemaVersion": 1,
   "sequence": 1,

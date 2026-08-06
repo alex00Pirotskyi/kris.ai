@@ -185,7 +185,7 @@
     {
       "activeClaim": {
         "branch": "agent/g/mission-006-model-routing",
-        "current": "P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review.",
+        "current": "P6-001 exact candidate repaired the governed Dart source inventory; focused model-registry and source-contract tests pass; full tri-platform product gates, Worker B Test Center review, and an independent exact-commit/tree review remain pending.",
         "exclusivePaths": [
           ".github/workflows/worker-g*.yml",
           "lib/ai/model/**",
@@ -197,11 +197,11 @@
           "test/product/model/**",
           "tool/worker_g*.py"
         ],
-        "head": "fc62949503caad11a6edbeb65535d3d3409631f4",
+        "head": "0aa6203e89a9b825c575954af54a0c108c79b67a",
         "mission": "MISSION-006",
         "pr": 76,
         "status": "CLAIMED",
-        "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+        "tree": "4b262889edb61ec0c705b289aa29fd0df7c8456c",
         "worker": "G"
       },
       "contract": "docs/roadmap/missions/active/MISSION-006.md",
