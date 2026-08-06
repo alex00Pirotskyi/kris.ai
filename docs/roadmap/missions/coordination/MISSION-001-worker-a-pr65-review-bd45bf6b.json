@@ -1,0 +1,64 @@
+{
+  "candidate": {
+    "baseCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "baseTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "bd45bf6b1da0665a33a50b334b9dce2441965e62",
+    "tree": "8de9cdd793b570e5ae2d17b189b5b4c26002514c"
+  },
+  "ci": {
+    "artifacts": [],
+    "checkRuns": [],
+    "classification": "NOT_RUN",
+    "workflowRuns": []
+  },
+  "decision": "REQUEST_CHANGES",
+  "delta": {
+    "commits": [
+      {
+        "classification": "REVIEW_ARTIFACT_DELETION",
+        "commit": "151d4555ddb7cd7a9928ca28389c7636a88fd6d9"
+      },
+      {
+        "classification": "BOUNDED_CARRIER_WORKFLOW",
+        "commit": "bd45bf6b1da0665a33a50b334b9dce2441965e62"
+      }
+    ],
+    "sourceSemanticRepair": false
+  },
+  "github": {
+    "reviewId": 4878193392,
+    "submissionConstraint": "The connected GitHub identity is also the PR author.",
+    "submissionState": "COMMENTED"
+  },
+  "inheritedReview": {
+    "artifact": "docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-71770c8c.json",
+    "disposition": "ALL_SOURCE_FINDINGS_UNRESOLVED",
+    "sha256": "0a329928ff3a214fb952aece3e024f7e8bb7a3feeb6bfea2c632353708f293f2"
+  },
+  "manifestState": "STALE",
+  "mergeAuthorization": "NONE",
+  "newFinding": {
+    "deletedPaths": [
+      "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json",
+      "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json.sha256"
+    ],
+    "detail": "The exact PASS artifact for frozen PR #64 is absent from protected main, the Worker A branch, and the canonical mission-system branch. Checkpoints retain its name and digest but not the complete immutable review body. Landing the current candidate would discard the only committed artifact underlying Worker A's exact source/Test Center PASS.",
+    "findingId": "P8-A-BD45-001",
+    "requiredRepair": "Migrate the exact artifact and sidecar to an authorized append-only coordination/evidence path, verify the digest, update all pointers, and only then remove the old copy.",
+    "severity": "HIGH",
+    "title": "Frozen Worker A PASS evidence is deleted without migration"
+  },
+  "nextAction": "Worker B restores or migrates immutable review evidence, repairs all inherited P8 source findings, regenerates the manifest, settles exact-head CI/artifacts, and requests fresh review before producing the P2-004 owner union.",
+  "ownerUnionState": "NOT_IMPLEMENTED",
+  "pullRequest": 65,
+  "reviewId": "MISSION-001-WORKER-A-PR65-REVIEW-BD45BF6B",
+  "reviewedAt": "2026-08-06T21:05:39Z",
+  "reviewedMission": "MISSION-002",
+  "reviewer": "Worker A",
+  "reviewingMission": "MISSION-001",
+  "schemaVersion": 1,
+  "supportImpact": "NO_PROMOTION",
+  "task": "P8-001",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72"
+}
