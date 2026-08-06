@@ -2,6 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local.kristin/schemas/test_center_assurance_execution_report.v1.json",
   "title": "Kristin Test Center assurance execution report",
+  "$defs": {
+    "EvidenceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "evidenceId"],
+      "properties": {
+        "category": {"type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"},
+        "evidenceId": {"type": "string", "pattern": "^evidence\\.[a-z0-9._-]+$"}
+      }
+    },
+    "PredecessorProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assuranceLevel", "executionResult", "evidenceBindings", "predecessorResults"],
+      "properties": {
+        "assuranceLevel": {"enum": ["architecture_lint", "unit", "component", "integration", "platform", "adversarial", "benchmark", "release"]},
+        "executionResult": {"$ref": "test_center.v1.json#/$defs/TestExecutionResult"},
+        "evidenceBindings": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"$ref": "#/$defs/EvidenceBinding"}},
+        "predecessorResults": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/PredecessorProof"}}
+      }
+    }
+  },
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -40,46 +62,7 @@
     },
     "requestedSupportImpact": {"enum": ["NONE", "SOURCE_FOUNDATION", "BEHAVIOR_SUPPORTED", "PLATFORM_SUPPORTED", "RELEASE_SUPPORTED"]},
     "evidenceReferences": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-    "evidenceBindings": {
-      "type": "array",
-      "minItems": 2,
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["category", "evidenceId"],
-        "properties": {
-          "category": {"type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"},
-          "evidenceId": {"type": "string", "pattern": "^evidence\\.[a-z0-9._-]+$"}
-        }
-      }
-    },
-    "predecessorResults": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["assuranceLevel", "executionResult", "evidenceBindings"],
-        "properties": {
-          "assuranceLevel": {"enum": ["architecture_lint", "unit", "component", "integration", "platform", "adversarial", "benchmark", "release"]},
-          "executionResult": {"$ref": "test_center.v1.json#/$defs/TestExecutionResult"},
-          "evidenceBindings": {
-            "type": "array",
-            "minItems": 2,
-            "uniqueItems": true,
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["category", "evidenceId"],
-              "properties": {
-                "category": {"type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"},
-                "evidenceId": {"type": "string", "pattern": "^evidence\\.[a-z0-9._-]+$"}
-              }
-            }
-          }
-        }
-      }
-    }
+    "evidenceBindings": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"$ref": "#/$defs/EvidenceBinding"}},
+    "predecessorResults": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/PredecessorProof"}}
   }
 }
