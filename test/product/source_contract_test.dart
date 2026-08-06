@@ -146,6 +146,8 @@ void main() {
         'lib/product/interoperability_v19.dart',
         'lib/product/knowledge_memory_v2.dart',
         'lib/product/mcp.dart',
+        'lib/product/model/model.dart',
+        'lib/product/model/model_registry.dart',
         'lib/product/models_research.dart',
         'lib/product/planning_runtime.dart',
         'lib/product/product_runtime.dart',
