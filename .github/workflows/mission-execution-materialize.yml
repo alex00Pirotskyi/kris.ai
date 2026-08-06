@@ -23,6 +23,12 @@ jobs:
   materialize:
     if: github.repository == 'alex00Pirotskyi/kris.ai'
     runs-on: ubuntu-24.04
+    env:
+      WORKER_J_BRANCH: agent/j/P24-001-roadmap-as-data-adr
+      EXPECTED_WORKER_J_HEAD: cb5e16c232c7a2309632a3fc0dcccd8d6e9d0bd7
+      EXPECTED_WORKER_J_TREE: 9497333f131ccddcb229aa5b179927aeac8dfd31
+      EXPECTED_MANIFEST_SHA256: bd779a0852c174880cc30f4888eb6975b2ab330a9d00480672e7683a574cd2f8
+      EXPECTED_MANIFEST_BLOB: e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,9 +37,69 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.10'
-      - name: Require exact branch head
+      - name: Require exact mission branch head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+      - name: Publish exact Worker J source manifest closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_head="$(git ls-remote origin "refs/heads/$WORKER_J_BRANCH" | awk '{print $1}')"
+          test "$remote_head" = "$EXPECTED_WORKER_J_HEAD"
+          git fetch origin "$WORKER_J_BRANCH"
+          worker_j="$RUNNER_TEMP/worker-j"
+          git worktree add --detach "$worker_j" "origin/$WORKER_J_BRANCH"
+          cd "$worker_j"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_WORKER_J_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_WORKER_J_TREE"
+          test -z "$(git status --porcelain=v1)"
+
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+
+          actual_sha256="$(sha256sum SOURCE_MANIFEST.sha256 | awk '{print $1}')"
+          actual_blob="$(git hash-object SOURCE_MANIFEST.sha256)"
+          test "$actual_sha256" = "$EXPECTED_MANIFEST_SHA256"
+          test "$actual_blob" = "$EXPECTED_MANIFEST_BLOB"
+          test "$(wc -c < SOURCE_MANIFEST.sha256 | tr -d ' ')" = '128802'
+          test "$(wc -l < SOURCE_MANIFEST.sha256 | tr -d ' ')" = '1195'
+
+          python -m py_compile \
+            tool/anarchy_control_plane.py \
+            tool/anarchy_control_plane_test.py \
+            tool/p24_ci_driver.py
+          python -m unittest -v tool/anarchy_control_plane_test.py
+          python tool/anarchy_control_plane.py --check --project .
+          python tool/anarchy_control_plane.py --resume-worker J --project .
+          python tool/test_center_contracts.py check --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/generated_state_guard.py audit --project . --strict
+          python tool/validate_release.py --skip-tests
+          git diff --check
+
+          mapfile -t paths < <(git diff --name-only "$EXPECTED_WORKER_J_HEAD" | LC_ALL=C sort)
+          test "${#paths[@]}" -eq 1
+          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'P24-001: commit deterministic source manifest closure'
+          final_commit="$(git rev-parse HEAD)"
+          final_tree="$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_WORKER_J_HEAD"
+          test "$(git diff --name-only "$EXPECTED_WORKER_J_HEAD" HEAD)" = 'SOURCE_MANIFEST.sha256'
+          test "$(git ls-remote origin "refs/heads/$WORKER_J_BRANCH" | awk '{print $1}')" = "$EXPECTED_WORKER_J_HEAD"
+          git push origin "$final_commit:refs/heads/$WORKER_J_BRANCH"
+          test "$(git ls-remote origin "refs/heads/$WORKER_J_BRANCH" | awk '{print $1}')" = "$final_commit"
+          printf '%s\n' "$final_commit" > "$RUNNER_TEMP/worker-j-final-commit"
+          printf '%s\n' "$final_tree" > "$RUNNER_TEMP/worker-j-final-tree"
+      - name: Restore temporary mission materializer transport change
+        shell: bash
+        run: git checkout HEAD^ -- .github/workflows/mission-execution-materialize.yml
       - name: Materialize deterministic mission views
         run: python tool/mission_control.py --project . bootstrap
       - name: Remove superseded prompt and transport artifacts
@@ -54,7 +120,7 @@ jobs:
         run: |
           python tool/mission_control.py --project . validate
           python tool/mission_control.py --project . bootstrap --check
-      - name: Refresh canonical source manifest twice
+      - name: Refresh canonical mission source manifest twice
         shell: bash
         run: |
           python tool/p1a_refresh_source_manifest.py .
@@ -63,15 +129,18 @@ jobs:
           cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
       - name: Verify generated diff
         shell: bash
-        run: |
-          git diff --check
-          test -n "$(git status --porcelain=v1)"
-      - name: Publish generated mission system
+        run: git diff --check
+      - name: Publish generated mission system and restored materializer
         shell: bash
         run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A -- .
           git diff --cached --check
-          git commit -m 'ANARCHY: materialize protected mission execution OS'
-          git push origin HEAD:agent/anarchy-autonomous-worker-missions
+          if git diff --cached --quiet; then
+            echo 'Mission branch already materialized after restoring the transport change.'
+          else
+            git commit -m 'ANARCHY: restore materializer after P24 manifest closure'
+            git push origin HEAD:agent/anarchy-autonomous-worker-missions
+          fi
