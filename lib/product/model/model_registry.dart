@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import '../domain.dart';
 
@@ -248,6 +249,49 @@ void _validateStableId(String value, String path) {
 String? _nonBlankOrNull(String? value) {
   final normalized = value?.trim();
   return normalized == null || normalized.isEmpty ? null : normalized;
+}
+
+void _validateDiscoveredIdentity(ModelIdentity identity) {
+  if (identity.providerId != identity.providerId.trim() ||
+      !_providerIdPattern.hasMatch(identity.providerId)) {
+    throw ModelRegistryValidationException(
+      'discovered model has invalid provider id ${identity.providerId}',
+    );
+  }
+  if (identity.name != identity.name.trim() ||
+      !_modelIdPattern.hasMatch(identity.name)) {
+    throw ModelRegistryValidationException(
+      'discovered model has invalid model id ${identity.name}',
+    );
+  }
+}
+
+String _identityFingerprint(ModelIdentity identity) {
+  final canonical = jsonEncode(<String, Object?>{
+    'digest': _nonBlankOrNull(identity.digest),
+    'name': identity.name,
+    'parameterSize': _nonBlankOrNull(identity.parameterSize),
+    'providerId': identity.providerId,
+    'quantization': _nonBlankOrNull(identity.quantization),
+  });
+  return base64UrlEncode(utf8.encode(canonical)).replaceAll('=', '');
+}
+
+List<String> _identityMismatches(
+  ModelDefinition registered,
+  ModelIdentity discovered,
+) {
+  final mismatches = <String>[];
+  if (registered.digest != _nonBlankOrNull(discovered.digest)) {
+    mismatches.add('digest');
+  }
+  if (registered.parameterSize != _nonBlankOrNull(discovered.parameterSize)) {
+    mismatches.add('parameterSize');
+  }
+  if (registered.quantization != _nonBlankOrNull(discovered.quantization)) {
+    mismatches.add('quantization');
+  }
+  return mismatches;
 }
 
 /// Token, concurrency, and streaming limits for one exact model identity.
@@ -916,6 +960,7 @@ class ModelDefinition {
     required Iterable<ModelBenchmarkEvidence> benchmarks,
     required Iterable<String> approvedTaskClasses,
   }) {
+    final canonicalDigest = _nonBlankOrNull(digest);
     final canonicalBenchmarks = _canonicalBenchmarks(benchmarks);
     final canonicalTaskClasses = _canonicalIds(
       approvedTaskClasses,
@@ -923,6 +968,9 @@ class ModelDefinition {
       pattern: _stableIdPattern,
     );
     final blockers = <String>[];
+    if (canonicalDigest == null) {
+      blockers.add('artifact digest is required for approval');
+    }
     if (!limits.isCompleteForApproval) {
       blockers.add('limits are not measured and complete');
     }
@@ -936,7 +984,8 @@ class ModelDefinition {
       }
       if (!toolProfile.supportsToolCalling && maxToolCalls != 0) {
         blockers.add(
-            'tool calling is disabled but the tool-call limit is non-zero');
+          'tool calling is disabled but the tool-call limit is non-zero',
+        );
       }
     }
     if (!cost.isKnown) {
@@ -962,7 +1011,7 @@ class ModelDefinition {
       providerId: providerId,
       modelId: modelId,
       displayName: displayName,
-      digest: _nonBlankOrNull(digest),
+      digest: canonicalDigest,
       parameterSize: _nonBlankOrNull(parameterSize),
       quantization: _nonBlankOrNull(quantization),
       aliases: _canonicalIds(
@@ -1188,6 +1237,11 @@ class ModelDefinition {
         'evaluation-only model cannot expose approved task classes',
       );
     }
+    if (supportStatus == ModelSupportStatus.approved && digest == null) {
+      throw const ModelRegistryValidationException(
+        'approved model must contain an immutable artifact digest',
+      );
+    }
     if (supportStatus == ModelSupportStatus.approved &&
         evaluationReasons.isNotEmpty) {
       throw const ModelRegistryValidationException(
@@ -1219,6 +1273,9 @@ class ModelDefinition {
 
 /// Deterministic provider/model catalog. Runtime routing is intentionally out
 /// of scope; this object only validates identity and approval metadata.
+///
+/// Discovery is fail-closed in this core class. Direct imports of this file
+/// therefore cannot bypass artifact identity validation.
 class ModelDefinitionRegistry {
   ModelDefinitionRegistry({
     required Iterable<ModelProviderDescriptor> providers,
@@ -1328,13 +1385,44 @@ class ModelDefinitionRegistry {
     return _models[key] ?? _aliases[key];
   }
 
-  /// Reuses an existing record or creates a non-persistent evaluation-only
-  /// descriptor for a model discovered through the legacy provider interface.
+  /// Reuses a registered record only when its artifact identity still matches.
+  /// Any drift is quarantined as a non-persistent evaluation-only descriptor.
   ModelDefinition resolveDiscovered(ModelIdentity identity) {
+    _validateDiscoveredIdentity(identity);
     final existing = lookup(identity.providerId, identity.name);
     if (existing != null) {
-      return existing;
+      final mismatches = _identityMismatches(existing, identity);
+      if (mismatches.isEmpty) {
+        return existing;
+      }
+      final quarantineModelId =
+          '${identity.name}:identity-mismatch:${_identityFingerprint(identity)}';
+      if (lookup(identity.providerId, quarantineModelId) != null) {
+        throw ModelRegistryValidationException(
+          'discovered model ${identity.exactId} identity quarantine collides '
+          'with a registered model',
+        );
+      }
+      return ModelDefinition.evaluationOnly(
+        providerId: identity.providerId,
+        modelId: quarantineModelId,
+        displayName: identity.name,
+        digest: _nonBlankOrNull(identity.digest),
+        parameterSize: _nonBlankOrNull(identity.parameterSize),
+        quantization: _nonBlankOrNull(identity.quantization),
+        limits: ModelLimits.unknown(),
+        toolProfile: ModelToolProfile.unknown(),
+        dataBoundary: existing.dataBoundary,
+        cost: ModelCostProfile.unknown(),
+        evaluationReasons: <String>[
+          'discovered identity does not match registered '
+              '${existing.registryKey}: ${mismatches.join(', ')}',
+          'approval is blocked until the exact artifact identity is registered '
+              'and measured',
+        ],
+      );
     }
+
     final provider = _providers[identity.providerId];
     if (provider == null) {
       throw ModelRegistryValidationException(
