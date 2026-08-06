@@ -75,17 +75,18 @@ jobs:
           if 'P5-001' not in master:
               raise SystemExit('P5-001 is absent from human roadmap authority')
           PY
-      - name: Validate Test Center, assurance hierarchy, and Worker F records
+      - name: Generate and validate canonical P5 records
         shell: bash
         run: |
           set -euo pipefail
+          cp release/evidence/P5-001/manifest.json "$RUNNER_TEMP/p5-manifest-before.json"
           python tool/test_center_contracts.py check --project .
           python tool/test_center_assurance_hierarchy.py check --project .
-          python test/product/p5_information_architecture/worker_f_p5_ia.py manifest --project . --check
+          python test/product/p5_information_architecture/worker_f_p5_ia.py manifest --project .
           python test/product/p5_information_architecture/worker_f_p5_ia.py check --project .
           python test/product/p5_information_architecture/worker_f_p5_ia_test.py
           python - <<'PY'
-          import subprocess
+          import hashlib, json, os, pathlib, subprocess
           checker='test/product/p5_information_architecture/worker_f_p5_ia.py'
           forward=subprocess.check_output([
               'python',checker,'select','--project','.',
@@ -99,7 +100,28 @@ jobs:
           ],text=True).strip()
           if forward != reverse:
               raise SystemExit('affected selection is input-order dependent')
+          manifest=pathlib.Path('release/evidence/P5-001/manifest.json')
+          receipt={
+              'schemaVersion':1,
+              'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+              'tree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
+              'manifestSha256':hashlib.sha256(manifest.read_bytes()).hexdigest(),
+              'sizeBytes':manifest.stat().st_size,
+              'generatedBy':checker + ' manifest --project .',
+          }
+          pathlib.Path(os.environ['RUNNER_TEMP'],'p5-manifest-receipt.json').write_text(
+              json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n',encoding='utf-8')
           PY
+      - name: Upload canonical P5 evidence-manifest candidate
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p5-001-evidence-manifest-${{ github.sha }}
+          path: |
+            release/evidence/P5-001/manifest.json
+            ${{ runner.temp }}/p5-manifest-receipt.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Check scoped Dart formatting
         shell: bash
         run: >-
@@ -128,7 +150,7 @@ jobs:
               flutter test "$test_path"
             fi
           done < "$affected_tests"
-      - name: Verify source-manifest idempotence
+      - name: Regenerate root source manifest twice through canonical owner
         shell: bash
         run: |
           set -euo pipefail
@@ -137,12 +159,46 @@ jobs:
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first"
           python tool/p1a_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/source-manifest-first" SOURCE_MANIFEST.sha256
-          cmp "$RUNNER_TEMP/source-manifest-before" SOURCE_MANIFEST.sha256
-      - name: Verify generated-state and non-mutation hygiene
+          python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          manifest=pathlib.Path('SOURCE_MANIFEST.sha256')
+          first=pathlib.Path(os.environ['RUNNER_TEMP'],'source-manifest-first')
+          receipt={
+              'schemaVersion':1,
+              'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+              'tree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
+              'manifestSha256':hashlib.sha256(manifest.read_bytes()).hexdigest(),
+              'firstPassSha256':hashlib.sha256(first.read_bytes()).hexdigest(),
+              'byteIdentical':first.read_bytes()==manifest.read_bytes(),
+          }
+          pathlib.Path(os.environ['RUNNER_TEMP'],'p5-source-manifest-receipt.json').write_text(
+              json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n',encoding='utf-8')
+          PY
+      - name: Upload canonical source-manifest candidate
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p5-001-source-manifest-${{ github.sha }}
+          path: |
+            SOURCE_MANIFEST.sha256
+            ${{ runner.temp }}/source-manifest-first
+            ${{ runner.temp }}/p5-source-manifest-receipt.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Verify generated-state hygiene
         shell: bash
         run: |
           set -euo pipefail
           python tool/generated_state_guard.py audit --project . --strict
           git diff --check
+      - name: Verify committed generated artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- release/evidence/P5-001/manifest.json SOURCE_MANIFEST.sha256
+      - name: Verify final non-mutation hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
           git diff --exit-code
           test -z "$(git status --porcelain)"
