@@ -23,9 +23,9 @@ Build search, safe fetch, extraction, citations, crawling, content-addressed res
 - Worker: `D`
 - Branch: `agent/p4-001-search-provider-foundation`
 - Draft PR: `#62`
-- Observed head: `69e44e08395d89da1767c58b84655c289a969f66`
-- Observed tree: `1114c576fe67d9f9202f7f44c98a0af6e35a915a`
-- Current work: Worker D replacement claim accepted by explicit user transfer; preserve the existing P4-001 source candidate, reconcile PR #62 with current Worker B ancestry, restore exact-head CI and evidence, and do not restart or expand beyond dependency-safe P4 work.
+- Observed head: `1c089c7094a122bb3cfbbc78221f218b3dd7ac0f`
+- Observed tree: `276481693c3da7d56fa3e315018c851e659ddec5`
+- Current work: P4-001 exact source/integration candidate is reconciled with current Worker B/P8 ancestry and all exact-head CI passes; Worker B and Worker J decisions are pending, Worker I is BLOCKED_EXTERNAL, and P4-002 plus merge remain unauthorized.
 - These are discovery anchors, not permission to skip live-state discovery.
 
 ## P4 — Web search, extraction, citations, and data saving
