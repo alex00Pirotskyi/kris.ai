@@ -1,0 +1,67 @@
+name: Mission Execution Generator Repair
+
+on:
+  push:
+    branches:
+      - agent/anarchy-autonomous-worker-missions
+    paths:
+      - '.github/workflows/mission-execution-generator-repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mission-execution-generator-repair-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.repository == 'alex00Pirotskyi/kris.ai'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/anarchy-autonomous-worker-missions
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Remove generator-owned trailing spaces
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tool/mission_control.py')
+          text = path.read_text(encoding='utf-8')
+          markers = (
+              '**Default executor:**',
+              '**Priority:**',
+              '**Roadmap phases:**',
+              '**Packet:**',
+              '**Current execution view:**',
+          )
+          lines = []
+          changed = 0
+          for line in text.splitlines():
+              if any(marker in line for marker in markers) and line.endswith('  ",'):
+                  line = line[:-4] + '",'
+                  changed += 1
+              lines.append(line)
+          if changed != 5:
+              raise SystemExit(f'expected 5 generator whitespace repairs, found {changed}')
+          path.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
+          PY
+          python -m py_compile tool/mission_control.py
+          python tool/mission_control.py --project . validate
+          git diff --check
+      - name: Publish focused generator repair
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- tool/mission_control.py
+          git diff --cached --check
+          git commit -m 'ANARCHY: align mission generator with whitespace policy'
+          git push origin HEAD:agent/anarchy-autonomous-worker-missions
