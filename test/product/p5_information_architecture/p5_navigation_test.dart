@@ -88,6 +88,25 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  testWidgets('current simulated run does not fabricate a saved timeline',
+      (tester) async {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    await tapKey(tester, const Key('review-plan-button'));
+    await tapKey(tester, const Key('start-run-button'));
+    controller.selectWorkspace(P5WorkspaceId.runsActivity);
+    await tester.pumpAndSettle();
+
+    expect(controller.state.selectedRunId, 'run.p5-simulated-current');
+    expect(find.byKey(const Key('current-run-detail')), findsOneWidget);
+    expect(find.byKey(const Key('selected-run-detail')), findsNothing);
+    expect(find.text('Saved run timeline'), findsNothing);
+    expect(find.text('Current simulated run'), findsOneWidget);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('existing run retains project and run context', (tester) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)

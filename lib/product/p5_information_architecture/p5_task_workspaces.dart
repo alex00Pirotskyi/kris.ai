@@ -251,6 +251,11 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
 
   Widget _runsWorkspace(BuildContext context) {
     final state = controller.state;
+    final selectedSavedRun = P5PrototypeFixtures.runs
+        .where((run) => run.id == state.selectedRunId)
+        .firstOrNull;
+    final isCurrentSimulatedRun =
+        state.selectedRunId == 'run.p5-simulated-current';
     return _scrollWorkspace(
       context,
       children: <Widget>[
@@ -282,7 +287,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
             ],
           ),
         ),
-        if (state.selectedRunId != null)
+        if (selectedSavedRun != null)
           Card(
             key: const Key('selected-run-detail'),
             child: Padding(
@@ -329,6 +334,60 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                 ],
               ),
             ),
+          )
+        else if (isCurrentSimulatedRun)
+          Card(
+            key: const Key('current-run-detail'),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Current simulated run',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Status: ${state.runState.label}'),
+                  const SizedBox(height: 8),
+                  const _BoundaryNotice(
+                    message:
+                        'This is the in-memory current run, not a saved-run fixture. No saved timeline is fabricated for it.',
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    children: <Widget>[
+                      OutlinedButton.icon(
+                        key: const Key('current-run-home-button'),
+                        onPressed: () =>
+                            controller.selectWorkspace(P5WorkspaceId.homeChat),
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Back to task'),
+                      ),
+                      OutlinedButton.icon(
+                        key: const Key('current-run-verification-button'),
+                        onPressed: () => controller.selectWorkspace(
+                          P5WorkspaceId.verificationCenter,
+                        ),
+                        icon: const Icon(Icons.fact_check_outlined),
+                        label: const Text('Verification'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (state.selectedRunId != null)
+          _RecoveryCard(
+            key: const Key('invalid-run-state'),
+            state: 'BLOCKED',
+            title: 'Run unavailable',
+            message:
+                'The selected run does not match a saved or current fixture.',
+            actionLabel: 'Clear invalid run',
+            onAction: () => controller.selectRun(null),
           ),
       ],
     );
