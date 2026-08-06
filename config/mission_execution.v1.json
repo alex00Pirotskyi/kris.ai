@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-06T08:30:00Z",
+  "generatedAt": "2026-08-06T08:45:00Z",
   "authority": {
     "human": "docs/roadmap/MASTER.md",
     "machine": "docs/roadmap/roadmap.yaml",
@@ -154,46 +154,121 @@
   ],
   "activeClaims": [
     {
-      "mission": "MISSION-001", "worker": "A", "branch": "agent/a/p1-p2-new-roadmap-execution", "pr": 64,
-      "head": "89a15332019c73675a19cdacd7021fae2199d75e", "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
-      "status": "CLAIMED", "current": "P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked",
-      "exclusivePaths": ["authority_service/**", "lib/product/p1*/**", "lib/product/p2*/**", "release/evidence/P1*/**", "release/evidence/P2*/**"]
+      "mission": "MISSION-001",
+      "worker": "A",
+      "branch": "agent/a/p1-p2-new-roadmap-execution",
+      "pr": 64,
+      "head": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+      "status": "CLAIMED",
+      "current": "P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked",
+      "exclusivePaths": [
+        "authority_service/**",
+        "lib/product/p1*/**",
+        "lib/product/p2*/**",
+        "release/evidence/P0-*/**",
+        "release/evidence/P1-*/**",
+        "release/evidence/P1A*/**",
+        "release/evidence/P2-*/**"
+      ]
     },
     {
-      "mission": "MISSION-002", "worker": "B", "branch": "agent/b/test-center-contracts-and-review", "pr": 65,
-      "head": "90c574665363140aeb6cf764ab8387714cab88cf", "tree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc",
-      "status": "CLAIMED", "current": "Canonical Test Center contracts, exact reviews, certification and integration governance",
-      "exclusivePaths": ["config/test_center_registry.v1.json", "docs/roadmap/anarchy/reviews/**", "tool/test_center*.py", "release/evidence/TEST_CENTER/**"]
+      "mission": "MISSION-002",
+      "worker": "B",
+      "branch": "agent/b/test-center-contracts-and-review",
+      "pr": 65,
+      "head": "90c574665363140aeb6cf764ab8387714cab88cf",
+      "tree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc",
+      "status": "CLAIMED",
+      "current": "Canonical Test Center contracts, exact reviews, certification and integration governance",
+      "exclusivePaths": [
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/anarchy/reviews/**",
+        "tool/test_center*.py",
+        "release/evidence/TEST_CENTER/**"
+      ]
     },
     {
-      "mission": "MISSION-003", "worker": "D", "branch": "agent/d/p3-readiness-fixtures", "pr": 68,
-      "head": "7eecc840f68ca0dff13ab58c138845593254e390", "tree": "2080824a34956e3b202126a0a9bd61b4d645d338",
-      "status": "CLAIMED", "current": "P3 browser-runtime readiness source foundation; P3-001 blocked by P2-004 evidence",
-      "exclusivePaths": ["release/evidence/P3*/**", "tool/worker_d*.py", "lib/product/browser/**", "test/**/browser/**"]
+      "mission": "MISSION-003",
+      "worker": "D",
+      "branch": "agent/d/p3-readiness-fixtures",
+      "pr": 68,
+      "head": "7eecc840f68ca0dff13ab58c138845593254e390",
+      "tree": "2080824a34956e3b202126a0a9bd61b4d645d338",
+      "status": "CLAIMED",
+      "current": "P3 browser-runtime readiness source foundation; P3-001 blocked by P2-004 evidence",
+      "exclusivePaths": [
+        "release/evidence/P3-*/**",
+        "tool/worker_d*.py",
+        "lib/product/browser/**",
+        "test/product/browser/**"
+      ]
     },
     {
-      "mission": "MISSION-004", "worker": "C", "branch": "agent/p4-001-search-provider-foundation", "pr": 62,
-      "head": "69e44e08395d89da1767c58b84655c289a969f66", "tree": "1114c576fe67d9f9202f7f44c98a0af6e35a915a",
-      "status": "CLAIMED", "current": "P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted",
-      "exclusivePaths": ["release/evidence/P4*/**", "tool/worker_c*.py", "lib/product/research/**", "test/**/research/**"]
+      "mission": "MISSION-004",
+      "worker": "C",
+      "branch": "agent/p4-001-search-provider-foundation",
+      "pr": 62,
+      "head": "69e44e08395d89da1767c58b84655c289a969f66",
+      "tree": "1114c576fe67d9f9202f7f44c98a0af6e35a915a",
+      "status": "CLAIMED",
+      "current": "P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted",
+      "exclusivePaths": [
+        "release/evidence/P4-*/**",
+        "tool/worker_c*.py",
+        "lib/product/research/**",
+        "test/product/research/**"
+      ]
     },
     {
-      "mission": "MISSION-005", "worker": "F", "branch": "agent/f/P5-001-information-architecture", "pr": 72,
-      "head": "fd89a66925b90c75448ef33583349b90ca88531b", "tree": null,
-      "status": "CLAIMED", "current": "P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled",
-      "exclusivePaths": ["release/evidence/P5*/**", "lib/product/ux/**", "test/**/ux/**", "docs/ux/**"]
+      "mission": "MISSION-005",
+      "worker": "F",
+      "branch": "agent/f/P5-001-information-architecture",
+      "pr": 72,
+      "head": "fd89a66925b90c75448ef33583349b90ca88531b",
+      "tree": null,
+      "status": "CLAIMED",
+      "current": "P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled",
+      "exclusivePaths": [
+        "release/evidence/P5-*/**",
+        "release/evidence/P22-*/**",
+        "lib/product/ux/**",
+        "test/product/ux/**",
+        "docs/ux/**"
+      ]
     },
     {
-      "mission": "MISSION-010", "worker": "E", "branch": "agent/e/native-parity-readiness", "pr": 71,
-      "head": "825769f639edb5db22b27a222cd5c1c57f4ed775", "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac",
-      "status": "CLAIMED", "current": "P11 native parity inventory and conformance readiness; P11-001 blocked by P2-004 and native transport evidence",
-      "exclusivePaths": ["release/evidence/P11*/**", "release/evidence/P15*/**", "tool/worker_e*.py", "native/**"]
+      "mission": "MISSION-010",
+      "worker": "E",
+      "branch": "agent/e/native-parity-readiness",
+      "pr": 71,
+      "head": "825769f639edb5db22b27a222cd5c1c57f4ed775",
+      "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac",
+      "status": "CLAIMED",
+      "current": "P11 native parity inventory and conformance readiness; P11-001 blocked by P2-004 and native transport evidence",
+      "exclusivePaths": [
+        "release/evidence/P11-*/**",
+        "release/evidence/P15-*/**",
+        "tool/worker_e*.py",
+        "native/**"
+      ]
     },
     {
-      "mission": "MISSION-015", "worker": "J", "branch": "agent/j/P24-001-roadmap-as-data-adr", "pr": 66,
-      "head": "2a14b875ff529cfd90348673e8e45b2442663619", "tree": "595346993b4512411f48075a47289333c51b3850",
-      "status": "CLAIMED", "current": "P24-001 ANARCHY adoption-review source repair; product gates pass while the P24 adoption review remains red",
-      "exclusivePaths": ["docs/roadmap/anarchy/coordination/**", "docs/roadmap/anarchy/generated/**", "docs/roadmap/anarchy/migrations/**", "tool/anarchy_*.py", "release/evidence/P24*/**"]
+      "mission": "MISSION-015",
+      "worker": "J",
+      "branch": "agent/j/P24-001-roadmap-as-data-adr",
+      "pr": 66,
+      "head": "2a14b875ff529cfd90348673e8e45b2442663619",
+      "tree": "595346993b4512411f48075a47289333c51b3850",
+      "status": "CLAIMED",
+      "current": "P24-001 ANARCHY adoption-review source repair; product gates pass while the P24 adoption review remains red",
+      "exclusivePaths": [
+        "docs/roadmap/anarchy/coordination/**",
+        "docs/roadmap/anarchy/generated/**",
+        "docs/roadmap/anarchy/migrations/**",
+        "tool/anarchy_*.py",
+        "release/evidence/P24-*/**"
+      ]
     }
   ]
 }
