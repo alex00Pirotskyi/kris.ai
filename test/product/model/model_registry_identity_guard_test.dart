@@ -2,17 +2,55 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/model/model.dart';
 
+const String digestA =
+    'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const String digestB =
+    'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const String benchmarkEvidenceSha =
+    'sha256:aa9351c8d629a6eb591756bc6eec3252a49f27b11b970ab329c2b17b65cd92f7';
+
 ModelProviderDescriptor _provider() => ModelProviderDescriptor(
       providerId: 'ollama.local',
       displayName: 'Local Ollama',
       dataBoundary: ModelDataBoundary.localOnly,
     );
 
+ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence.fromJson(
+      <String, Object?>{
+        'benchmarkId': 'p6.code-fixture-v1',
+        'taskClassId': 'code-generation',
+        'modelDigest': digestA,
+        'score': 0.91,
+        'scoreUnit': 'ratio',
+        'higherIsBetter': true,
+        'sampleCount': 100,
+        'measuredAt': '2026-08-06T00:00:00.000Z',
+        'evidence': <String, Object?>{
+          'locationKind': 'embedded_content_addressed',
+          'sha256': benchmarkEvidenceSha,
+          'payload': <String, Object?>{
+            'schemaVersion': '1.0.0',
+            'kind': 'MODEL_BENCHMARK_RESULT',
+            'candidateCommit': '1111111111111111111111111111111111111111',
+            'candidateTree': '2222222222222222222222222222222222222222',
+            'benchmarkId': 'p6.code-fixture-v1',
+            'taskClassId': 'code-generation',
+            'modelDigest': digestA,
+            'score': 0.91,
+            'scoreUnit': 'ratio',
+            'higherIsBetter': true,
+            'sampleCount': 100,
+            'measuredAt': '2026-08-06T00:00:00.000Z',
+          },
+        },
+      },
+    );
+
 ModelDefinition _approvedModel() => ModelDefinition.approved(
       providerId: 'ollama.local',
       modelId: 'qwen3:14b',
       displayName: 'Qwen 3 14B',
-      digest: 'sha256:0123456789abcdef',
+      digest: digestA,
       parameterSize: '14B',
       quantization: 'Q4_K_M',
       aliases: const <String>['qwen3-latest'],
@@ -32,25 +70,13 @@ ModelDefinition _approvedModel() => ModelDefinition.approved(
       ),
       dataBoundary: ModelDataBoundary.localOnly,
       cost: ModelCostProfile.noDirectCharge(),
-      benchmarks: <ModelBenchmarkEvidence>[
-        ModelBenchmarkEvidence(
-          benchmarkId: 'p6.code-fixture-v1',
-          taskClassId: 'code-generation',
-          modelDigest: 'sha256:0123456789abcdef',
-          score: 0.91,
-          scoreUnit: 'ratio',
-          higherIsBetter: true,
-          sampleCount: 100,
-          measuredAt: DateTime.utc(2026, 8, 6),
-          evidenceUri: 'release/evidence/P6-001/benchmark.json',
-        ),
-      ],
+      benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
       approvedTaskClasses: const <String>['code-generation'],
     );
 
 ModelIdentity _identity({
   required String name,
-  String digest = 'sha256:0123456789abcdef',
+  String digest = digestA,
   String parameterSize = '14B',
   String quantization = 'Q4_K_M',
 }) =>
@@ -65,28 +91,22 @@ ModelIdentity _identity({
 
 void main() {
   group('P6-001 discovered identity guard', () {
-    test('exact canonical and alias identities reuse the approved record', () {
-      final approved = _approvedModel();
+    test('exact canonical and alias identities resolve without granting by lookup',
+        () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_provider()],
-        models: <ModelDefinition>[approved],
+        models: <ModelDefinition>[_approvedModel()],
       );
-
-      expect(
-        registry.resolveDiscovered(_identity(name: 'qwen3:14b')),
-        same(approved),
-      );
-      expect(
-        registry.resolveDiscovered(_identity(name: 'qwen3-latest')),
-        same(approved),
-      );
-      expect(
-        registry.requireApproved(
-          identity: _identity(name: 'qwen3-latest'),
+      for (final name in <String>['qwen3:14b', 'qwen3-latest']) {
+        final resolved = registry.resolveDiscovered(_identity(name: name));
+        expect(resolved.isEvaluationOnly, isFalse);
+        expect(resolved.model.registryKey, 'ollama.local::qwen3:14b');
+        final handle = registry.requireApproved(
+          identity: _identity(name: name),
           taskClassId: 'code-generation',
-        ),
-        same(approved),
-      );
+        );
+        expect(handle.model.registryKey, 'ollama.local::qwen3:14b');
+      }
     });
 
     for (final lookupName in <String>['qwen3:14b', 'qwen3-latest']) {
@@ -94,13 +114,16 @@ void main() {
         _expectQuarantined(
           lookupName: lookupName,
           changedField: 'digest',
-          identity: _identity(
-            name: lookupName,
-            digest: 'sha256:changed-artifact',
-          ),
+          identity: _identity(name: lookupName, digest: digestB),
         );
       });
-
+      test('$lookupName missing digest is quarantined evaluation-only', () {
+        _expectQuarantined(
+          lookupName: lookupName,
+          changedField: 'digest',
+          identity: _identity(name: lookupName, digest: ''),
+        );
+      });
       test('$lookupName parameter-size drift is quarantined evaluation-only',
           () {
         _expectQuarantined(
@@ -109,7 +132,6 @@ void main() {
           identity: _identity(name: lookupName, parameterSize: '8B'),
         );
       });
-
       test('$lookupName quantization drift is quarantined evaluation-only', () {
         _expectQuarantined(
           lookupName: lookupName,
@@ -124,16 +146,12 @@ void main() {
         providers: <ModelProviderDescriptor>[_provider()],
         models: <ModelDefinition>[_approvedModel()],
       );
-      final identity = _identity(
-        name: 'qwen3-latest',
-        digest: 'sha256:changed-artifact',
-      );
-
+      final identity = _identity(name: 'qwen3-latest', digest: digestB);
       final first = registry.resolveDiscovered(identity);
       final second = registry.resolveDiscovered(identity);
-
-      expect(second.modelId, first.modelId);
-      expect(second.toJson(), first.toJson());
+      expect(second.model.modelId, first.model.modelId);
+      expect(second.model.toJson(), first.model.toJson());
+      expect(second.isEvaluationOnly, isTrue);
     });
   });
 }
@@ -147,19 +165,10 @@ void _expectQuarantined({
     providers: <ModelProviderDescriptor>[_provider()],
     models: <ModelDefinition>[_approvedModel()],
   );
-
   final resolved = registry.resolveDiscovered(identity);
-
-  expect(resolved.supportStatus, ModelSupportStatus.evaluationOnly);
-  expect(resolved.approvedTaskClasses, isEmpty);
-  expect(
-    resolved.modelId,
-    startsWith('$lookupName:identity-mismatch:'),
-  );
-  expect(
-    resolved.evaluationReasons.join(' '),
-    contains(changedField),
-  );
+  expect(resolved.isEvaluationOnly, isTrue);
+  expect(resolved.model.modelId, startsWith('$lookupName:identity-mismatch:'));
+  expect(resolved.evaluationReasons.join(' '), contains(changedField));
   expect(
     () => registry.requireApproved(
       identity: identity,
