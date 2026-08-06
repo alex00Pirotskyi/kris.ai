@@ -33,7 +33,7 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Reconcile exact current Worker B ancestry
+      - name: Reset validation tree to exact current Worker B
         env:
           EXPECTED_WORKER_B: 788af8db5891518a2b405d25e8d5b50cb89e8871
         shell: bash
@@ -43,8 +43,18 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin agent/b/test-center-contracts-and-review
           test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_WORKER_B"
-          git merge --no-ff --no-commit FETCH_HEAD
-          test "$(git rev-parse MERGE_HEAD)" = "$EXPECTED_WORKER_B"
+          helper_dir=$(mktemp -d)
+          cp tool/worker_f_recovery_source.yml "$helper_dir/"
+          cp tool/worker_f_recovery_patch.py "$helper_dir/"
+          cp tool/worker_f_recovery_bootstrap.py "$helper_dir/"
+          cp tool/worker_f_recovery_test_patch.py "$helper_dir/"
+          cp tool/worker_f_recovery_manifest_patch.py "$helper_dir/"
+          cp tool/worker_f_p5_ia_template.py "$helper_dir/"
+          cp tool/worker_f_p5_ia_workflow_template.yml "$helper_dir/"
+          git reset --hard "$EXPECTED_WORKER_B"
+          mkdir -p tool
+          cp "$helper_dir"/* tool/
+          test "$(git rev-parse HEAD)" = "$EXPECTED_WORKER_B"
       - name: Install governed Python dependencies
         shell: bash
         run: python tool/v71r12_bootstrap_hosted_python.py --project .
@@ -59,8 +69,6 @@ jobs:
           python tool/worker_f_recovery_test_patch.py
           python tool/worker_f_recovery_manifest_patch.py
           rm -f \
-            .github/workflows/worker-f-p5-001-exact-manifest-repair.yml \
-            .github/workflows/worker-f-p5-001-explicit-publication.yml \
             tool/worker_f_recovery_source.yml \
             tool/worker_f_recovery_patch.py \
             tool/worker_f_recovery_bootstrap.py \
@@ -103,7 +111,6 @@ jobs:
           import base64
           import json
           import os
-          import subprocess
           import urllib.request
           from pathlib import Path
 
@@ -129,12 +136,7 @@ jobs:
                   return json.load(response)
 
           carrier = os.environ['GITHUB_SHA']
-          worker_b = subprocess.check_output(
-              ['git', 'rev-parse', 'MERGE_HEAD'], text=True
-          ).strip()
-          if worker_b != os.environ['EXPECTED_WORKER_B']:
-              raise RuntimeError(f'Worker B moved during publication: {worker_b}')
-
+          worker_b = os.environ['EXPECTED_WORKER_B']
           exact = {
               'config/test_center_registry.v1.json',
               'config/test_center_assurance_hierarchy.v1.json',
@@ -185,8 +187,6 @@ jobs:
           elements = []
           for relative in sorted(exact):
               path = project / relative
-              if not path.is_file():
-                  raise RuntimeError(f'publication path disappeared: {relative}')
               raw = path.read_bytes()
               blob = request('POST', 'git/blobs', {
                   'content': base64.b64encode(raw).decode('ascii'),
