@@ -187,7 +187,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       onPressed: () =>
                           controller.apply(P5PrototypeAction.openEvidence),
                       icon: const Icon(Icons.receipt_long_outlined),
-                      label: const Text('Open evidence'),
+                      label: const Text('Open evidence (Advanced)'),
                     ),
                     FilledButton.icon(
                       key: const Key('run-verification-button'),
@@ -334,7 +334,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                         onPressed: () =>
                             controller.selectWorkspace(P5WorkspaceId.evidence),
                         icon: const Icon(Icons.receipt_long_outlined),
-                        label: const Text('Evidence'),
+                        label: const Text('Evidence (Advanced)'),
                       ),
                       OutlinedButton.icon(
                         key: const Key('existing-run-verification-button'),
