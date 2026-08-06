@@ -8,17 +8,17 @@
   },
   "authorityTransferred": false,
   "constraints": [
-    "Grant only the exact file test/product/source_contract_test.dart.",
-    "Permit only adding lib/product/model/model.dart and lib/product/model/model_registry.dart to the analyzer-visible source inventory.",
-    "Do not transfer broader architecture, P1/P2, test, release, or source-manifest authority.",
+    "Grant only test/product/source_contract_test.dart.",
+    "Permit only adding lib/product/model/model.dart and lib/product/model/model_registry.dart to the analyzer-visible inventory.",
+    "Do not transfer broader P1/P2, architecture, test, release, or manifest authority.",
     "SOURCE_MANIFEST.sha256 must be refreshed only by python tool/p1a_refresh_source_manifest.py .",
     "Worker A owner review is required before integration."
   ],
   "coordinationId": "MISSION-006-P6-001-SOURCE-INVENTORY",
   "exactCandidate": {
-    "commit": "a6b44fdb2e99509fa1c32e8f1066bbd9648816ca",
+    "commit": "9c4a37eaea43592eaf3b2a5c6bf464e763b8a8f6",
     "pullRequest": 76,
-    "tree": "f586cc6cd14cad486c47bb426ccf98a4550b1d9a"
+    "tree": "cce99b82bef2baa565860db7b69f734972848815"
   },
   "operations": [
     "append-two-governed-dart-source-paths",
