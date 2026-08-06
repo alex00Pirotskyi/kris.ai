@@ -1,0 +1,124 @@
+name: Worker G P8 Windows path repair
+
+on:
+  push:
+    branches:
+      - agent/g/mission-006-model-routing
+    paths:
+      - '.github/workflows/worker-g-p8-windows-path-repair.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-g-p8-windows-path-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      WORKER_G_BRANCH: agent/g/mission-006-model-routing
+      WORKER_B_BRANCH: agent/b/test-center-contracts-and-review
+      EXPECTED_G_PARENT: ece1feeae4056d5c21861d11f2b7d99f0dc331fa
+      EXPECTED_B_HEAD: 788af8db5891518a2b405d25e8d5b50cb89e8871
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/g/mission-006-model-routing
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Require exact uncontended heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_G_PARENT}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git fetch origin "${WORKER_G_BRANCH}" "${WORKER_B_BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_G_BRANCH})" = "${GITHUB_SHA}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_B_BRANCH})" = "${EXPECTED_B_HEAD}"
+      - name: Repair canonical schema path comparison and add regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          semantics = Path('tool/test_center_assurance_semantics.py')
+          text = semantics.read_text(encoding='utf-8')
+          old = 'contract["executionReportSchema"] != str(REPORT_SCHEMA)'
+          new = 'contract["executionReportSchema"] != REPORT_SCHEMA.as_posix()'
+          if text.count(old) != 1 or new in text:
+              raise SystemExit('unexpected assurance schema path comparison state')
+          semantics.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+
+          test_path = Path('tool/test_center_assurance_hierarchy_test.py')
+          test_text = test_path.read_text(encoding='utf-8')
+          import_old = 'from pathlib import Path\n'
+          import_new = 'from pathlib import Path, PureWindowsPath\n'
+          if test_text.count(import_old) != 1 or import_new in test_text:
+              raise SystemExit('unexpected pathlib import state')
+          test_text = test_text.replace(import_old, import_new, 1)
+          module_old = 'import test_center_assurance_hierarchy as H  # noqa:E402\n'
+          module_new = module_old + 'import test_center_assurance_semantics as S  # noqa:E402\n'
+          if test_text.count(module_old) != 1 or 'import test_center_assurance_semantics as S' in test_text:
+              raise SystemExit('unexpected assurance semantics import state')
+          test_text = test_text.replace(module_old, module_new, 1)
+          method_anchor = "    def test_32_deterministic_regressions(self):\n"
+          method = (
+              "    def test_windows_schema_path_is_canonical(self):\n"
+              "        original = S.REPORT_SCHEMA\n"
+              "        try:\n"
+              "            S.REPORT_SCHEMA = PureWindowsPath('schemas/test_center_assurance_execution_report.v1.json')\n"
+              "            self.assertEqual(\n"
+              "                self.docs(self.h)['executionReportSchema'],\n"
+              "                'schemas/test_center_assurance_execution_report.v1.json',\n"
+              "            )\n"
+              "        finally:\n"
+              "            S.REPORT_SCHEMA = original\n"
+              "\n"
+          )
+          if test_text.count(method_anchor) != 1 or 'test_windows_schema_path_is_canonical' in test_text:
+              raise SystemExit('unexpected regression method state')
+          test_text = test_text.replace(method_anchor, method + method_anchor, 1)
+          test_path.write_text(test_text, encoding='utf-8', newline='\n')
+          PY
+      - name: Validate portable P8 semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report \
+            --project . \
+            --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+      - name: Remove workflow and refresh source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/worker-g-p8-windows-path-repair.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Commit exact repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${WORKER_G_BRANCH}" "${WORKER_B_BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_G_BRANCH})" = "${GITHUB_SHA}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_B_BRANCH})" = "${EXPECTED_B_HEAD}"
+          git add -A -- .
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(p8): normalize assurance schema paths on Windows'
+          git push origin "HEAD:${WORKER_G_BRANCH}"
