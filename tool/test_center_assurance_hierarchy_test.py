@@ -249,14 +249,43 @@ class AssuranceHierarchyTest(unittest.TestCase):
             self.registry,
         )
 
-    def validate_report(self, value):
+    def validate_report(self, value, *, hierarchy=None):
         return H.validate_assurance_execution_report(
             value,
             report_schema=self.report_schema,
             canonical_schema=self.canonical_schema,
-            hierarchy=self.hierarchy,
+            hierarchy=hierarchy or self.hierarchy,
             registry=self.registry,
+            project=PROJECT,
         )
+
+    def component_report_with_unit_predecessor(self):
+        report = copy.deepcopy(self.report_fixture)
+        hierarchy = copy.deepcopy(self.hierarchy)
+        current_test_id = report["executionResult"]["testId"]
+        for binding in hierarchy["testBindings"]:
+            if binding["testId"] == current_test_id:
+                binding["levelId"] = "component"
+        report["assuranceLevel"] = "component"
+        report["hierarchyBinding"]["levelId"] = "component"
+        report["requestedSupportImpact"] = "BEHAVIOR_SUPPORTED"
+        report["evidenceBindings"][2]["category"] = "component_fixture"
+
+        predecessor = copy.deepcopy(self.report_fixture["executionResult"])
+        predecessor["resultId"] = "result.test-center.semantic-regressions-linux"
+        predecessor["testId"] = "tc.test-center.semantic-regressions"
+        predecessor["moduleId"] = "tm.test-center"
+        predecessor["roadmapTaskIds"] = []
+        report["predecessorResults"] = [
+            {
+                "assuranceLevel": "unit",
+                "executionResult": predecessor,
+                "evidenceBindings": copy.deepcopy(
+                    self.report_fixture["evidenceBindings"]
+                ),
+            }
+        ]
+        return report, hierarchy
 
     def test_47_deterministic_contract_checks(self):
         self.assertEqual(H.validate_project(PROJECT)["pendingMigrationBindingCount"], 11)
@@ -282,6 +311,74 @@ class AssuranceHierarchyTest(unittest.TestCase):
                 Path("../outside.json"),
                 H.validate_project(PROJECT),
             )
+
+    def test_canonical_registry_runs_enforcement_layer(self):
+        mapping = next(
+            item
+            for item in self.registry["affectedTestMappings"]
+            if item["mappingId"] == "affected.p8-formal-test-hierarchy"
+        )
+        required_paths = {
+            "config/test_center_assurance_report_contract.v1.json",
+            "schemas/test_center_assurance_report_contract.v1.json",
+            "tool/test_center_assurance_enforcement.py",
+            "tool/test_center_assurance_enforcement_test.py",
+        }
+        self.assertTrue(required_paths.issubset(set(mapping["pathPatterns"])))
+
+        profiles = {
+            item["stableCheckId"]: item for item in self.registry["projectTestProfiles"]
+        }
+        formal = profiles["tc.p8.formal-test-hierarchy"]
+        regressions = profiles["tc.p8.formal-test-hierarchy-regressions"]
+        self.assertTrue(
+            {
+                "config/test_center_assurance_report_contract.v1.json",
+                "schemas/test_center_assurance_report_contract.v1.json",
+                "tool/test_center_assurance_enforcement.py",
+            }.issubset(set(formal["inputPaths"]))
+        )
+        self.assertEqual(
+            regressions["argv"],
+            [
+                "python",
+                "-m",
+                "unittest",
+                "-v",
+                "tool/test_center_assurance_hierarchy_test.py",
+                "tool/test_center_assurance_enforcement_test.py",
+            ],
+        )
+        self.assertTrue(required_paths.issubset(set(regressions["affectedPaths"])))
+
+    def test_component_accepts_unit_predecessor_with_complete_typed_evidence(self):
+        report, hierarchy = self.component_report_with_unit_predecessor()
+        validated = self.validate_report(report, hierarchy=hierarchy)
+        self.assertEqual(validated["predecessorEvidenceProofCount"], 1)
+        self.assertEqual(
+            validated["predecessorEvidenceProofs"][0]["assuranceLevel"], "unit"
+        )
+
+    def test_predecessor_missing_required_evidence_category_is_rejected(self):
+        report, hierarchy = self.component_report_with_unit_predecessor()
+        report["predecessorResults"][0]["evidenceBindings"].pop()
+        with self.assertRaisesRegex(H.HierarchyError, "predecessor unit evidence categories"):
+            self.validate_report(report, hierarchy=hierarchy)
+
+    def test_predecessor_mistyped_required_evidence_category_is_rejected(self):
+        report, hierarchy = self.component_report_with_unit_predecessor()
+        report["predecessorResults"][0]["evidenceBindings"][2][
+            "category"
+        ] = "component_fixture"
+        with self.assertRaisesRegex(H.HierarchyError, "predecessor unit evidence categories"):
+            self.validate_report(report, hierarchy=hierarchy)
+
+    def test_predecessor_cannot_reuse_one_evidence_object_across_categories(self):
+        report, hierarchy = self.component_report_with_unit_predecessor()
+        bindings = report["predecessorResults"][0]["evidenceBindings"]
+        bindings[1]["evidenceId"] = bindings[0]["evidenceId"]
+        with self.assertRaisesRegex(H.HierarchyError, "reuses one evidence object"):
+            self.validate_report(report, hierarchy=hierarchy)
 
 
 if __name__ == "__main__":
