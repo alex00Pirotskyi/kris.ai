@@ -296,24 +296,30 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Saved run timeline',
+                    selectedSavedRun.title,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
-                  const Text('18:00 — Context restored'),
-                  const Text('18:01 — Plan receipt opened'),
-                  const Text('18:02 — Run interrupted safely'),
+                  Text(
+                    '${selectedSavedRun.updatedAtLabel} • Current presentation: ${state.runState.label}',
+                  ),
+                  const SizedBox(height: 8),
+                  const _BoundaryNotice(
+                    message:
+                        'Saved-run detail is rendered from deterministic fixture fields. No synthetic event timeline is invented.',
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     children: <Widget>[
-                      OutlinedButton.icon(
-                        key: const Key('resume-existing-run-button'),
-                        onPressed: () => controller
-                            .apply(P5PrototypeAction.retryInterruptedRun),
-                        icon: const Icon(Icons.replay),
-                        label: const Text('Resume fixture'),
-                      ),
+                      if (state.runState == P5RunPresentationState.interrupted)
+                        OutlinedButton.icon(
+                          key: const Key('resume-existing-run-button'),
+                          onPressed: () => controller
+                              .apply(P5PrototypeAction.retryInterruptedRun),
+                          icon: const Icon(Icons.replay),
+                          label: const Text('Resume fixture'),
+                        ),
                       OutlinedButton.icon(
                         key: const Key('existing-run-evidence-button'),
                         onPressed: () =>

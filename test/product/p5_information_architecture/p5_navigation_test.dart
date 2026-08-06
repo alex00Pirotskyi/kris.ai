@@ -107,6 +107,30 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  testWidgets('saved run detail exposes resume only for interrupted fixture',
+      (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced)
+      ..selectWorkspace(P5WorkspaceId.runsActivity);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    await tapKey(tester, const Key('run-run.p5-complete-001'));
+    expect(controller.state.runState, P5RunPresentationState.completed);
+    expect(find.byKey(const Key('selected-run-detail')), findsOneWidget);
+    expect(find.byKey(const Key('resume-existing-run-button')), findsNothing);
+    expect(find.text('Saved run timeline'), findsNothing);
+
+    await tapKey(tester, const Key('run-run.p5-existing-001'));
+    expect(controller.state.runState, P5RunPresentationState.interrupted);
+    expect(find.byKey(const Key('resume-existing-run-button')), findsOneWidget);
+
+    await tapKey(tester, const Key('resume-existing-run-button'));
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(find.byKey(const Key('resume-existing-run-button')), findsNothing);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('existing run retains project and run context', (tester) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)
