@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "coordinationId": "MISSION-005-MATERIALIZER-CLAIM-REGRESSION-20260806T231743Z",
+  "status": "REQUESTED",
+  "recordedAt": "2026-08-06T23:17:43Z",
+  "requestingMission": "MISSION-005",
+  "requestingWorker": "F",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A",
+  "requestedOwnerMission": "MISSION-015",
+  "requestType": "MISSION_MATERIALIZER_PROVENANCE_AND_STALE_STATE_REPAIR",
+  "observedMaterializerCommit": "52dc244d0d9e42d9d862cf9790a252945141904e",
+  "observedMaterializerTree": "88348632010a7c8adcea6ccf979dcc3729787e3a",
+  "previousLiveMissionCommit": "1352266ac7f43f2c41eb74172409fd8568e63858",
+  "affectedPaths": [
+    "docs/roadmap/missions/claims/MISSION-005.claim.json",
+    "docs/roadmap/missions/state/MISSION-005.json"
+  ],
+  "staleValuesMaterialized": {
+    "head": "fd89a66925b90c75448ef33583349b90ca88531b",
+    "tree": "9d9caf5ff13ace5d1d0f9cad9871ac7381412ed8",
+    "obsoleteOwnershipPatterns": [
+      "lib/product/ux/**",
+      "test/product/ux/**"
+    ]
+  },
+  "currentLiveWorkerF": {
+    "branch": "agent/f/P5-001-information-architecture",
+    "head": "256cf730a283743c7d2bad60bcd91b0e46ed990f",
+    "tree": "e74fcf31c8948bdf66ef3ae172cfdb24b89f3be6",
+    "pullRequest": 72,
+    "requiredOwnershipPatterns": [
+      "lib/product/p5_information_architecture/**",
+      "lib/p5_ia_preview.dart",
+      "test/product/p5_information_architecture/**",
+      "docs/ux/**",
+      "release/evidence/P5-*/**",
+      "release/evidence/P22-*/**",
+      ".github/workflows/worker-f*.yml"
+    ]
+  },
+  "requiredRepair": [
+    "Identify the materializer input that produced the stale MISSION-005 claim/state and remove or supersede that stale source.",
+    "Materialization must fail closed instead of overwriting a newer live claim/state with older observed head/tree or obsolete ownership patterns.",
+    "Preserve append-only checkpoints/delivery records and current active claim ownership across generated-state refreshes.",
+    "Add a regression proving a newer live claim/state cannot be downgraded by stale V3.2 or generated input.",
+    "Do not treat PR #78 delivery controls as integrated while docs/roadmap/missions/UNIFIED_AUTONOMOUS_WORKER_PROMPT.md remains absent from the canonical mission branch."
+  ],
+  "scopeBoundary": [
+    "No product/runtime change is requested from MISSION-015.",
+    "No ownership expansion for MISSION-005 is requested beyond the current live P5 namespace and existing exact shared grants.",
+    "No force-push, claim overwrite, support promotion, acceptance, or merge authorization is implied."
+  ],
+  "blockingEffect": "Until the materializer preserves current claim/state or fails closed, generated mission ownership cannot be relied upon without a live GitHub re-resolution. Worker F restores its live claim/state in the same atomic mission-system milestone but does not modify MISSION-015 implementation.",
+  "resolution": null
+}
