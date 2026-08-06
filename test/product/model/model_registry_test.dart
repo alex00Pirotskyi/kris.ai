@@ -70,6 +70,23 @@ ModelDefinition _approvedModel({
   );
 }
 
+ModelIdentity _identity({
+  String providerId = 'ollama.local',
+  required String name,
+  String digest = 'sha256:0123456789abcdef',
+  String parameterSize = '14B',
+  String quantization = 'Q4_K_M',
+}) {
+  return ModelIdentity(
+    providerId: providerId,
+    name: name,
+    digest: digest,
+    parameterSize: parameterSize,
+    quantization: quantization,
+    discoveredAt: DateTime.utc(2026, 8, 6),
+  );
+}
+
 void main() {
   group('P6-001 model registry v2', () {
     test('unknown discovered model starts evaluation-only', () {
@@ -77,17 +94,14 @@ void main() {
         providers: <ModelProviderDescriptor>[_localProvider()],
         models: const <ModelDefinition>[],
       );
-
-      final discovered = registry.resolveDiscovered(
-        ModelIdentity(
-          providerId: 'ollama.local',
-          name: 'unmeasured:latest',
-          digest: 'sha256:unmeasured',
-          parameterSize: '7B',
-          quantization: 'Q4_0',
-          discoveredAt: DateTime.utc(2026, 8, 6),
-        ),
+      final identity = _identity(
+        name: 'unmeasured:latest',
+        digest: 'sha256:unmeasured',
+        parameterSize: '7B',
+        quantization: 'Q4_0',
       );
+
+      final discovered = registry.resolveDiscovered(identity);
 
       expect(discovered.supportStatus, ModelSupportStatus.evaluationOnly);
       expect(discovered.approvedTaskClasses, isEmpty);
@@ -100,8 +114,7 @@ void main() {
       );
       expect(
         () => registry.requireApproved(
-          providerId: discovered.providerId,
-          modelIdOrAlias: discovered.modelId,
+          identity: identity,
           taskClassId: 'code-generation',
         ),
         throwsA(isA<ModelRegistryValidationException>()),
@@ -156,7 +169,8 @@ void main() {
       );
     });
 
-    test('approval requires measured limits, cost, and benchmark evidence', () {
+    test('approval requires digest, measured limits, cost, and benchmark evidence',
+        () {
       expect(
         () => ModelDefinition.approved(
           providerId: 'ollama.local',
@@ -171,6 +185,11 @@ void main() {
         ),
         throwsA(
           isA<ModelRegistryValidationException>()
+              .having(
+                (error) => error.message,
+                'message',
+                contains('artifact digest is required for approval'),
+              )
               .having(
                 (error) => error.message,
                 'message',
@@ -195,16 +214,14 @@ void main() {
 
       expect(
         registry.requireApproved(
-          providerId: 'ollama.local',
-          modelIdOrAlias: 'qwen3-latest',
+          identity: _identity(name: 'qwen3-latest'),
           taskClassId: 'code-generation',
         ),
         same(model),
       );
       expect(
         () => registry.requireApproved(
-          providerId: 'ollama.local',
-          modelIdOrAlias: 'qwen3:14b',
+          identity: _identity(name: 'qwen3:14b'),
           taskClassId: 'browser-control',
         ),
         throwsA(
