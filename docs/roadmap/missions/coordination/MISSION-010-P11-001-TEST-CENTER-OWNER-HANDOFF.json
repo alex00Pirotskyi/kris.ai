@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "coordinationId": "MISSION-010-P11-001-TEST-CENTER-OWNER-HANDOFF",
+  "status": "OWNER_PUBLICATION_REQUIRED",
+  "recordedAt": "2026-08-06T20:30:18Z",
+  "workExecutionId": "WRK-20260806T203018Z-9c4e7b21",
+  "requestingMission": "MISSION-010",
+  "requestingWorker": "E",
+  "ownerMission": "MISSION-002",
+  "ownerWorker": "B",
+  "authorityPath": "config/test_center_registry.v1.json",
+  "sourceCandidate": {
+    "branch": "agent/e/native-parity-readiness",
+    "pullRequest": 71,
+    "commit": "825769f639edb5db22b27a222cd5c1c57f4ed775",
+    "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac"
+  },
+  "currentOwnerAuthority": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "pullRequest": 65,
+    "observedCommit": "92ebab6c985685620a025fa85faa157f7eddd6e5",
+    "mustReResolveBeforePublication": true
+  },
+  "repairDecision": {
+    "workerEMayWriteRegistry": false,
+    "workerEMayClaimRegistryOwnership": false,
+    "workerEWillRemoveRegistryDiff": true,
+    "workerEWillRetainSpecificationOnly": true,
+    "reason": "The canonical MISSION-010 claim does not own the Test Center registry, and PR #78 remains an unmerged read-only overlay. Worker E will reconcile on the current Worker B tree without carrying a registry modification."
+  },
+  "requiredOwnerOperation": {
+    "mode": "OWNER_PUBLISHED_UNION",
+    "moduleId": "tm.p11-readiness",
+    "stableTestIds": [
+      "tc.p11.readiness.dependency-status",
+      "tc.p11.readiness.native-capability-inventory",
+      "tc.p11.readiness.platform-gap-matrix",
+      "tc.p11.readiness.semantic-conformance",
+      "tc.p11.readiness.fixture-catalog",
+      "tc.p11.readiness.no-silent-fallback",
+      "tc.p11.readiness.isolation-inventory",
+      "tc.p11.readiness.device-contracts",
+      "tc.p11.readiness.claim-boundary",
+      "tc.p11.readiness.nonmutation"
+    ],
+    "sourceSpecification": "tool/worker_e_test_center_registration.py",
+    "evidenceRoot": "release/evidence/P11-001",
+    "mustPreserveAllOwnerRegistryRecords": true,
+    "mustPreserveCurrentP8HierarchyBindings": true,
+    "mustRunCanonicalTestCenterContracts": true,
+    "mustRunP8HierarchyValidation": true,
+    "mustRegenerateSourceManifest": true,
+    "mustBindExactWorkerEIntegrationTree": true
+  },
+  "publicationRule": {
+    "workerERegistryMutationAllowed": false,
+    "ownerPublicationRequiredBeforeFinalIntegration": true,
+    "ownerReviewRequired": true,
+    "invalidateOnOwnerHeadChange": true,
+    "invalidateOnWorkerEHeadChange": true
+  },
+  "boundaries": {
+    "p11_001Approved": false,
+    "p11_002PlusAuthorized": false,
+    "p15Authorized": false,
+    "nativeBehaviorSupported": false,
+    "platformSupportPromoted": false,
+    "releaseSupportPromoted": false,
+    "mergeAuthorized": false
+  },
+  "nextAction": "Worker E removes the registry diff, repairs dependency binding validation, reconciles current Worker B ancestry, and publishes an ownership-clean exact candidate. MISSION-002 then publishes the exact registry union and reviews the final integration candidate."
+}
