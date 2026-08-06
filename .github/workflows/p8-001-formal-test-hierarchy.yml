@@ -5,14 +5,20 @@ on:
   pull_request:
     paths:
       - '.github/workflows/p8-001-formal-test-hierarchy.yml'
+      - 'SOURCE_MANIFEST.sha256'
       - 'config/test_center_assurance_hierarchy.v1.json'
       - 'config/test_center_registry.v1.json'
       - 'docs/testing/TEST_CENTER_P8_001_HIERARCHY.md'
       - 'release/evidence/TEST_CENTER/P8-001/**'
       - 'schemas/test_center.v1.json'
+      - 'schemas/test_center_assurance_execution_report.v1.json'
       - 'schemas/test_center_assurance_hierarchy.v1.json'
+      - 'tool/p1a_refresh_source_manifest.py'
+      - 'tool/source_tree_policy.py'
       - 'tool/test_center_contracts.py'
       - 'tool/test_center_contracts_test.py'
+      - 'tool/test_center_assurance_jsonschema.py'
+      - 'tool/test_center_assurance_semantics.py'
       - 'tool/test_center_assurance_hierarchy.py'
       - 'tool/test_center_assurance_hierarchy_test.py'
 
@@ -37,6 +43,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -47,12 +54,97 @@ jobs:
         run: |
           python tool/test_center_contracts.py check --project .
           python -m unittest -v tool/test_center_contracts_test.py
-      - name: P8-001 formal hierarchy
+      - name: P8-001 formal hierarchy and actual execution report
         run: |
           python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report --project . --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
           python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+      - name: Regenerate root source manifest twice through canonical owner
+        shell: bash
+        run: |
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          manifest = pathlib.Path("SOURCE_MANIFEST.sha256")
+          receipt = {
+              "schemaVersion": 1,
+              "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "tree": subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], text=True).strip(),
+              "manifestSha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+              "firstPassSha256": hashlib.sha256(pathlib.Path(os.environ["RUNNER_TEMP"], "SOURCE_MANIFEST.first.sha256").read_bytes()).hexdigest(),
+              "byteIdentical": True,
+          }
+          pathlib.Path(os.environ["RUNNER_TEMP"], "p8-source-manifest-receipt.json").write_text(json.dumps(receipt, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+          PY
+      - name: Upload canonical source-manifest candidate
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p8-001-source-manifest-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            SOURCE_MANIFEST.sha256
+            ${{ runner.temp }}/SOURCE_MANIFEST.first.sha256
+            ${{ runner.temp }}/p8-source-manifest-receipt.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Verify committed source manifest
+        shell: bash
+        run: git diff --exit-code -- SOURCE_MANIFEST.sha256
       - name: Verify non-mutation
         shell: bash
         run: |
           git diff --check
           git diff --exit-code
+
+  publish-source-manifest:
+    name: p8-001-publish-source-manifest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.head_ref == 'agent/b/test-center-contracts-and-review' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      HEAD_BRANCH: ${{ github.head_ref }}
+    steps:
+      - name: Check out exact Worker B head with branch credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Publish only the canonical source manifest when stale
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${HEAD_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          git diff --check
+
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            echo "Canonical source manifest is already current."
+            exit 0
+          fi
+
+          test "$(git diff --name-only)" = "SOURCE_MANIFEST.sha256"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SOURCE_MANIFEST.sha256
+          test "$(git diff --cached --name-only)" = "SOURCE_MANIFEST.sha256"
+          git commit -m "chore(p8): refresh canonical source manifest"
+          git push origin "HEAD:${HEAD_BRANCH}"

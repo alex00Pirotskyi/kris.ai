@@ -27,9 +27,12 @@
         "config/test_center_registry.v1.json",
         "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
         "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
         "tool/test_center_assurance_hierarchy.py",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "priority": 15,
       "testIds": [
@@ -52,28 +55,32 @@
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.request",
       "pathPatterns": [
         "services/research_worker/src/search/models.py",
         "schemas/web_search_request.v1.json"
       ],
+      "priority": 200,
       "testIds": [
         "tc.p4-001.request-schema",
         "tc.p4-001.capability-negotiation",
         "tc.p4-001.stable-query-identity",
         "tc.p4-001.fixture-provider-parity"
-      ],
-      "priority": 200,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.result-page",
       "pathPatterns": [
         "services/research_worker/src/search/models.py",
         "schemas/web_search_page.v1.json"
       ],
+      "priority": 201,
       "testIds": [
         "tc.p4-001.result-schema",
         "tc.p4-001.page-schema",
@@ -81,95 +88,94 @@
         "tc.p4-001.rate-limit-representation",
         "tc.p4-001.partial-failure-representation",
         "tc.p4-001.unfetched-snippet-classification"
-      ],
-      "priority": 201,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.provider",
       "pathPatterns": [
         "services/research_worker/src/search/provider.py",
         "services/research_worker/src/search/models.py"
       ],
+      "priority": 202,
       "testIds": [
         "tc.p4-001.provider-error-schema",
         "tc.p4-001.capability-negotiation",
         "tc.p4-001.fixture-provider-parity"
-      ],
-      "priority": 202,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.cursor",
       "pathPatterns": [
         "services/research_worker/src/search/fixture_provider.py"
       ],
+      "priority": 203,
       "testIds": [
         "tc.p4-001.cursor-provider-binding",
         "tc.p4-001.stable-query-identity",
         "tc.p4-001.fixture-provider-parity"
-      ],
-      "priority": 203,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.security-validation",
       "pathPatterns": [
         "services/research_worker/src/search/validation.py",
         "services/research_worker/test/schema_validator.py"
       ],
+      "priority": 204,
       "testIds": [
         "tc.p4-001.url-fail-closed",
         "tc.p4-001.credential-rejection",
         "tc.p4-001.secret-normalization",
         "tc.p4-001.provider-metadata-isolation"
-      ],
-      "priority": 204,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.schemas",
       "pathPatterns": [
         "schemas/web_search_*.v1.json"
       ],
+      "priority": 205,
       "testIds": [
         "tc.p4-001.request-schema",
         "tc.p4-001.result-schema",
         "tc.p4-001.page-schema",
         "tc.p4-001.provider-error-schema",
         "tc.p4-001.url-fail-closed"
-      ],
-      "priority": 205,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.fixtures",
       "pathPatterns": [
         "services/research_worker/src/search/fixture_provider.py",
         "services/research_worker/test/**",
         "evals/fixtures/p4_001_search_provider/**"
       ],
+      "priority": 206,
       "testIds": [
         "tc.p4-001.fixture-provider-parity",
         "tc.p4-001.network-free-determinism",
         "tc.p4-001.unfetched-snippet-classification"
-      ],
-      "priority": 206,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p4-001.workflow",
       "pathPatterns": [
         ".github/workflows/p4-001-search-provider.yml",
@@ -177,6 +183,7 @@
         "tool/p4_001_test_center_v1.py",
         "tool/p4_001_test_center_v1_test.py"
       ],
+      "priority": 207,
       "testIds": [
         "tc.p4-001.request-schema",
         "tc.p4-001.result-schema",
@@ -196,26 +203,22 @@
         "tc.p4-001.network-free-determinism",
         "tc.p4-001.unfetched-snippet-classification",
         "tc.p4-001.normalized-result-state-preservation"
-      ],
-      "priority": 207,
-      "excludedPaths": [
-        "release/evidence/generated/**"
       ]
     },
     {
+      "excludedPaths": [
+        "release/evidence/generated/**",
+        "release/evidence/P4-001/history/**"
+      ],
       "mappingId": "affected.p4-001.evidence",
       "pathPatterns": [
         "release/evidence/P4-001/**",
         "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md"
       ],
+      "priority": 208,
       "testIds": [
         "tc.p4-001.normalized-result-state-preservation",
         "tc.p4-001.network-free-determinism"
-      ],
-      "priority": 208,
-      "excludedPaths": [
-        "release/evidence/generated/**",
-        "release/evidence/P4-001/history/**"
       ]
     }
   ],
@@ -302,8 +305,12 @@
         "config/test_center_registry.v1.json",
         "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
         "release/evidence/TEST_CENTER/P8-001/**",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
-        "tool/test_center_assurance_hierarchy.py"
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "argv": [
         "python",
@@ -324,7 +331,11 @@
       "inputPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
         "config/test_center_registry.v1.json",
-        "schemas/test_center_assurance_hierarchy.v1.json"
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [
@@ -340,9 +351,12 @@
       "affectedPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
         "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
         "tool/test_center_assurance_hierarchy.py",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "argv": [
         "python",
@@ -363,9 +377,12 @@
       "inputPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
         "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
         "tool/test_center_assurance_hierarchy.py",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [
