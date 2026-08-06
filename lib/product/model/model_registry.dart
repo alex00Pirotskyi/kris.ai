@@ -641,11 +641,13 @@ class ModelCostProfile {
       };
 }
 
-/// Repository- or harness-backed measurement for one task class.
+/// Repository- or harness-backed measurement for one task class and exact
+/// model artifact. Benchmark evidence is never transferable across digests.
 class ModelBenchmarkEvidence {
   ModelBenchmarkEvidence({
     required this.benchmarkId,
     required this.taskClassId,
+    required this.modelDigest,
     required this.score,
     required this.scoreUnit,
     required this.higherIsBetter,
@@ -662,6 +664,7 @@ class ModelBenchmarkEvidence {
       const <String>{
         'benchmarkId',
         'taskClassId',
+        'modelDigest',
         'score',
         'scoreUnit',
         'higherIsBetter',
@@ -695,6 +698,7 @@ class ModelBenchmarkEvidence {
     return ModelBenchmarkEvidence(
       benchmarkId: _requiredString(json, 'benchmarkId', 'benchmark'),
       taskClassId: _requiredString(json, 'taskClassId', 'benchmark'),
+      modelDigest: _requiredString(json, 'modelDigest', 'benchmark'),
       score: score,
       scoreUnit: _requiredString(json, 'scoreUnit', 'benchmark'),
       higherIsBetter: _requiredBool(json, 'higherIsBetter', 'benchmark'),
@@ -706,6 +710,7 @@ class ModelBenchmarkEvidence {
 
   final String benchmarkId;
   final String taskClassId;
+  final String modelDigest;
   final double score;
   final String scoreUnit;
   final bool higherIsBetter;
@@ -716,6 +721,11 @@ class ModelBenchmarkEvidence {
   void _validate() {
     _validateStableId(benchmarkId, 'benchmark.benchmarkId');
     _validateStableId(taskClassId, 'benchmark.taskClassId');
+    if (modelDigest.trim().isEmpty) {
+      throw const ModelRegistryValidationException(
+        'benchmark.modelDigest must be non-empty',
+      );
+    }
     if (!score.isFinite) {
       throw const ModelRegistryValidationException(
         'benchmark.score must be finite',
@@ -741,6 +751,7 @@ class ModelBenchmarkEvidence {
   Map<String, Object?> toJson() => <String, Object?>{
         'benchmarkId': benchmarkId,
         'taskClassId': taskClassId,
+        'modelDigest': modelDigest,
         'score': score,
         'scoreUnit': scoreUnit,
         'higherIsBetter': higherIsBetter,
@@ -970,6 +981,17 @@ class ModelDefinition {
     final blockers = <String>[];
     if (canonicalDigest == null) {
       blockers.add('artifact digest is required for approval');
+    }
+    if (canonicalDigest != null) {
+      for (final benchmark in canonicalBenchmarks) {
+        if (benchmark.modelDigest != canonicalDigest) {
+          blockers.add(
+            'benchmark ${benchmark.benchmarkId}::${benchmark.taskClassId} '
+            'belongs to artifact ${benchmark.modelDigest}, expected '
+            '$canonicalDigest',
+          );
+        }
+      }
     }
     if (!limits.isCompleteForApproval) {
       blockers.add('limits are not measured and complete');
@@ -1228,6 +1250,20 @@ class ModelDefinition {
       if (alias == modelId) {
         throw ModelRegistryValidationException(
           'model $registryKey cannot alias its canonical modelId',
+        );
+      }
+    }
+    if (benchmarks.isNotEmpty && digest == null) {
+      throw const ModelRegistryValidationException(
+        'model with benchmark evidence must contain an immutable artifact digest',
+      );
+    }
+    for (final benchmark in benchmarks) {
+      if (benchmark.modelDigest != digest) {
+        throw ModelRegistryValidationException(
+          'model $registryKey benchmark ${benchmark.benchmarkId}::'
+          '${benchmark.taskClassId} belongs to artifact '
+          '${benchmark.modelDigest}, expected $digest',
         );
       }
     }
