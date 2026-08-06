@@ -147,6 +147,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                   if (failure.id == 'failure.no-project') {
                     controller.apply(P5PrototypeAction.createSampleProject);
                   } else if (failure.id == 'failure.interrupted-run') {
+                    controller.selectRun('run.p5-existing-001');
                     controller.apply(P5PrototypeAction.retryInterruptedRun);
                   } else if (failure.id == 'failure.offline') {
                     controller

@@ -148,6 +148,31 @@ void main() {
     expect(controller.state.workspace, P5WorkspaceId.runsActivity);
   });
 
+  testWidgets('interrupted-run recovery restores the deterministic saved fixture',
+      (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    expect(controller.state.runState, P5RunPresentationState.planReady);
+    expect(controller.state.selectedRunId, isNull);
+
+    final recovery = find.text('Resume the saved run');
+    await tester.ensureVisible(recovery);
+    await tester.tap(recovery);
+    await tester.pumpAndSettle();
+
+    expect(controller.state.selectedProjectId, 'project.kristin-local');
+    expect(controller.state.selectedRunId, 'run.p5-existing-001');
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(
+      controller.state.recoveryMessage,
+      'Interrupted run restored from the saved fixture.',
+    );
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('Owner Mode remains presentation-only', (tester) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.ownerMode);

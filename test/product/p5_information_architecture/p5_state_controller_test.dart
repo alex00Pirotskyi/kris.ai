@@ -62,6 +62,22 @@ void main() {
     },
   );
 
+  test('satisfying a workspace level requirement clears its stale warning', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.selectWorkspace(P5WorkspaceId.evidence);
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
+    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+
+    expect(controller.state.experienceLevel, P5ExperienceLevel.advanced);
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.recoveryMessage, isNull);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('advanced workspace selection and deep links fail closed in Simple mode',
       () {
     final controller = P5InformationArchitectureController();
