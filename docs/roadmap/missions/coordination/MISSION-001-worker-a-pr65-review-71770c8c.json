@@ -1,0 +1,164 @@
+{
+  "candidate": {
+    "baseCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "baseTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
+    "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d"
+  },
+  "ci": {
+    "artifacts": [],
+    "checkRuns": [],
+    "classification": "NOT_RUN",
+    "statuses": [],
+    "workflowRuns": []
+  },
+  "decision": "REQUEST_CHANGES",
+  "findings": [
+    {
+      "detail": "Actual-report validation checks only the current report and does not require exact-candidate PASS results or certification evidence for requiredPredecessorLevels. Release support can be requested without proving platform, adversarial, and benchmark predecessors.",
+      "findingId": "P8-A-717-001",
+      "paths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Add a closed predecessor-result binding contract; require exact candidate identity, PASS state, uniqueness, and all declared predecessor levels; add missing/wrong-candidate/duplicate predecessor regressions.",
+      "severity": "HIGH",
+      "title": "Declared predecessor assurance levels are not enforced"
+    },
+    {
+      "detail": "The hierarchy declares requiredEvidence categories such as native_platform_receipt, cleanup_receipt, independent_review, support_matrix, and release_candidate_identity, but support-bearing validation only requires a nonempty generic evidence list.",
+      "findingId": "P8-A-717-002",
+      "paths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Add typed evidence-category bindings, candidate/digest validation, uniqueness, and negative regressions for missing categories, duplicate reuse, and release support without independent review/support matrix.",
+      "severity": "HIGH",
+      "title": "Level-specific required evidence categories are not enforced"
+    },
+    {
+      "detail": "The deterministic schema validator does not enforce minProperties, allowing an empty toolchain.components object to bypass canonical ToolchainIdentity.",
+      "findingId": "P8-A-717-003",
+      "paths": [
+        "tool/test_center_assurance_jsonschema.py",
+        "schemas/test_center.v1.json",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Implement minProperties enforcement and add an empty-toolchain-components negative regression.",
+      "severity": "HIGH",
+      "title": "Canonical minProperties constraints are not enforced"
+    },
+    {
+      "detail": "Time parsing accepts timezone-less or non-RFC3339 forms, and report.generatedAt is not required to be at or after the canonical execution interval.",
+      "findingId": "P8-A-717-004",
+      "paths": [
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_contracts.py",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Require strict timezone-qualified RFC3339 timestamps, aware comparisons, generatedAt ordering, and negative regressions.",
+      "severity": "HIGH",
+      "title": "RFC3339 and report time ordering are incomplete"
+    },
+    {
+      "detail": "Evidence references are candidate-bound and syntactically hashed, but support-bearing validation does not resolve the URI or verify the digest against durable bytes.",
+      "findingId": "P8-A-717-005",
+      "paths": [
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py",
+        "schemas/test_center.v1.json",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Define deterministic repository/workflow-artifact resolution, verify existence and SHA-256, and add missing-target/digest-mismatch regressions.",
+      "severity": "HIGH",
+      "title": "Support-bearing evidence URI and digest are unresolved"
+    },
+    {
+      "detail": "GitHub reports zero workflow runs, zero check runs, and no statuses for the exact candidate.",
+      "findingId": "P8-A-717-006",
+      "paths": [
+        ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml"
+      ],
+      "requiredRepair": "Run the final exact head on Ubuntu, Windows, and macOS, inspect every job/step, and retrieve the manifest artifact.",
+      "severity": "HIGH",
+      "title": "Exact-head CI and checks are absent"
+    },
+    {
+      "detail": "The committed manifest does not bind the current workflow path or current semantic/test changes.",
+      "findingId": "P8-A-717-007",
+      "paths": [
+        "SOURCE_MANIFEST.sha256",
+        ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Regenerate SOURCE_MANIFEST.sha256 twice through the canonical owner and validate the exact resulting commit.",
+      "severity": "HIGH",
+      "title": "Canonical source manifest is stale"
+    },
+    {
+      "detail": "The owner registry still contains only the active P8 set. The owner-preserving P2-004 tc.p2.acceptance-contract union has not been produced.",
+      "findingId": "P8-A-717-008",
+      "paths": [
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json"
+      ],
+      "requiredRepair": "After the P8 source candidate is stable, publish and validate the owner-preserving registry union without replacing current P8 authority.",
+      "severity": "MEDIUM",
+      "title": "MISSION-001 owner-union handoff remains unresolved"
+    }
+  ],
+  "github": {
+    "reviewId": 4878098718,
+    "submissionConstraint": "The connected GitHub identity is also the PR author and cannot formally submit REQUEST_CHANGES on its own pull request.",
+    "submissionState": "COMMENTED"
+  },
+  "mergeAuthorization": "NONE",
+  "nextAction": "Worker B repairs all source findings, regenerates the canonical manifest, settles exact-head CI/artifacts, and requests a fresh exact-candidate review. Then MISSION-002 produces the owner-preserving P2-004 registry union for Worker A.",
+  "pullRequest": 65,
+  "relatedReviews": [
+    {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-002-worker-f-review-71770c8c.json",
+      "checksum": "f0e785b1f01b07f4c4c85d37296838b9672db0a033693931f36dc80f24e583f4",
+      "decision": "REQUEST_CHANGES",
+      "reviewer": "Worker F"
+    },
+    {
+      "candidateCommit": "92ebab6c985685620a025fa85faa157f7eddd6e5",
+      "disposition": "SUPERSEDED_BY_CURRENT_HEAD_REVIEW",
+      "githubReviewId": 4878077938,
+      "reviewer": "Worker A"
+    }
+  ],
+  "reviewId": "MISSION-001-WORKER-A-PR65-REVIEW-71770C8C",
+  "reviewScopes": {
+    "EVIDENCE": "INVALIDATED_AND_REVIEWED",
+    "INTEGRATION": "INVALIDATED_AND_REVIEWED",
+    "SECURITY": "INVALIDATED_AND_REVIEWED",
+    "SOURCE": "INVALIDATED_AND_REVIEWED"
+  },
+  "reviewedAt": "2026-08-06T20:46:13Z",
+  "reviewedMission": "MISSION-002",
+  "reviewer": "Worker A",
+  "reviewingMission": "MISSION-001",
+  "schemaVersion": 1,
+  "sourceInspection": {
+    "manifestFinding": "SOURCE_MANIFEST.sha256 still binds .github/workflows/p8-001-formal-test-hierarchy.yml rather than the current .github/workflows/worker-b-p8-001-formal-test-hierarchy.yml and does not certify the current semantics/test changes.",
+    "manifestState": "STALE",
+    "preservedImprovements": [
+      "Closed AssuranceExecutionReport embeds canonical TestExecutionResult.",
+      "Canonical result state, duration, evidence candidate identity, wrapper identity, active hierarchy binding, support ceiling, cleanup, and failure contradictions are checked.",
+      "The exact candidate adds deterministic negative coverage for canonical result and wrapper-evidence bypasses.",
+      "Worker A pending migration bindings remain source-only except the inactive release identity."
+    ]
+  },
+  "supportImpact": "NO_PROMOTION",
+  "task": "P8-001",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72"
+}
