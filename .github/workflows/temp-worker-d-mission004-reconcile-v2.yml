@@ -1,0 +1,59 @@
+name: TEMP Worker D MISSION-004 Reconcile v2
+
+on:
+  push:
+    branches:
+      - ci/worker-d-mission004-reconcile
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-d-mission004-reconcile-v2
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ci/worker-d-mission004-reconcile
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Execute corrected guarded reconciliation
+        shell: bash
+        env:
+          P4_SHA: 69e44e08395d89da1767c58b84655c289a969f66
+          P4_TREE: 1114c576fe67d9f9202f7f44c98a0af6e35a915a
+          WORKER_B_SHA: 22a8ac34cbf9601100f60c4929198f15f3c60e52
+          WORKER_B_TREE: ef5d5ae584b1d823502bf6f2191ecf4285d36845
+          TARGET_BRANCH: agent/p4-001-search-provider-foundation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('.github/workflows/temp-worker-d-mission004-reconcile.yml').read_text(encoding='utf-8').splitlines()
+          marker = '        run: |'
+          start = source.index(marker) + 1
+          script_lines = []
+          for line in source[start:]:
+              if line.startswith('          '):
+                  script_lines.append(line[10:])
+              elif not line.strip():
+                  script_lines.append('')
+              else:
+                  break
+          script = '\n'.join(script_lines) + '\n'
+          old = "'presentationRecords': 'presentationId',"
+          new = "'testingStudioPresentationRecords': 'presentationId',"
+          if script.count(old) != 1:
+              raise SystemExit('expected exactly one obsolete presentation-record mapping')
+          script = script.replace(old, new)
+          target = Path('/tmp/worker-d-mission004-reconcile.sh')
+          target.write_text(script, encoding='utf-8', newline='\n')
+          PY
+          bash /tmp/worker-d-mission004-reconcile.sh
