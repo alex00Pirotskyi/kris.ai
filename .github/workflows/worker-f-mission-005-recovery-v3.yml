@@ -1,4 +1,4 @@
-name: Worker F MISSION-005 source recovery v2
+name: Worker F MISSION-005 source recovery v3
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: worker-f-mission-005-source-recovery-v2
+  group: worker-f-mission-005-source-recovery-v3
   cancel-in-progress: false
 
 jobs:
@@ -48,12 +48,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python tool/worker_f_recovery_patch.py
+          python tool/worker_f_recovery_bootstrap.py
           rm -f \
-            .github/workflows/worker-f-mission-005-recovery.yml \
             .github/workflows/worker-f-mission-005-recovery-v2.yml \
+            .github/workflows/worker-f-mission-005-recovery-v3.yml \
             tool/worker_f_recovery_source.yml \
-            tool/worker_f_recovery_patch.py
+            tool/worker_f_recovery_patch.py \
+            tool/worker_f_recovery_bootstrap.py
       - name: Validate ordinary recovered candidate
         shell: bash
         run: |
