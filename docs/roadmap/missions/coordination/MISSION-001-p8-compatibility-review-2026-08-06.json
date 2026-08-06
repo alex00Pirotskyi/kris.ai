@@ -1,0 +1,111 @@
+{
+  "authorityImpact": "NONE",
+  "behavioralCertificationState": "BLOCKED_EXTERNAL",
+  "decision": "REQUEST_CHANGES",
+  "findings": [
+    {
+      "findingId": "P8-A-001",
+      "requiredRepair": "Make assuranceLevel machine-validatable on actual normalized execution reports: either add a compatible assuranceLevel property and binding validation to canonical TestExecutionResult, or define and validate a separate closed AssuranceExecutionReport linked to TestExecutionResult and the hierarchy. Add negative execution-record regressions for missing, unknown, and mismatched levels plus forbidden promotion.",
+      "severity": "HIGH",
+      "summary": "P8 requires assuranceLevel in every assurance report, but canonical TestExecutionResult is closed and has no assuranceLevel property; current validation checks only a field-name list in static hierarchy configuration."
+    },
+    {
+      "findingId": "P8-A-002",
+      "requiredRepair": "Refresh the exact-candidate evidence packet with commit/tree, all workflow and job identities, hierarchy/schema/registry hashes, non-mutation evidence, and the independent review disposition; regenerate the root manifest through its owner, rerun exact-head CI, and request a fresh exact-SHA review.",
+      "severity": "HIGH",
+      "summary": "The committed P8 evidence manifest still reports exact tri-platform CI and independent review as pending after exact source CI completed."
+    },
+    {
+      "findingId": "P8-A-003",
+      "requiredRepair": "When Worker A is integrated after P8 landing, add exactly one hierarchy binding for each of the 11 Worker A stable IDs and resolve the P1A source-only versus platform metadata mismatch without promoting source evidence.",
+      "severity": "MEDIUM",
+      "summary": "P8 enforces one binding per canonical test ID; Worker A's stacked registry contributes 11 additional IDs and tc.p1a.exit-gate is labeled platform while executing --source-only."
+    }
+  ],
+  "mission": "MISSION-001",
+  "p2BehaviorImpact": "NONE",
+  "p3Impact": "NONE",
+  "positiveFindings": [
+    "The canonical eight-level order, rank and predecessor model are fail-closed.",
+    "Every test ID registered in the reviewed P8 candidate has exactly one static hierarchy binding.",
+    "Unknown levels, rank drift, invalid predecessor ordering, missing bindings, duplicate bindings, permissive promotion, and source-only support promotion have deterministic regression coverage.",
+    "P8 exact source CI passes on Ubuntu, macOS, and Windows and proves non-mutation.",
+    "Roadmap, worker runtime, test execution, certification, capability support, and release domains remain separate.",
+    "No P2 behavior, P3 authorization, platform support, release support, production readiness, or GA claim is fabricated."
+  ],
+  "postLandingWorkerABindings": {
+    "architecture_lint": [
+      "tc.p1.exit-gate",
+      "tc.p1a.exit-gate",
+      "tc.p2.source-inventory",
+      "tc.p2.application-composition",
+      "tc.p2.acceptance-contract",
+      "tc.p2.evidence-contract",
+      "tc.p2.runner-attestation",
+      "tc.p2.cleanup-contract",
+      "tc.p2.strict-finalizer",
+      "tc.worker-a.canonical-integration"
+    ],
+    "release": [
+      "tc.p2.behavioral-closure"
+    ]
+  },
+  "review": {
+    "githubReviewId": 4873602175,
+    "reviewedCommit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "reviewedPullRequest": 65,
+    "reviewedTree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+    "reviewer": "Worker A — MISSION-001 downstream canonical-contract consumer"
+  },
+  "schemaVersion": 1,
+  "sourceSupportImpact": "NO_PROMOTION",
+  "workerAFrozenCandidate": {
+    "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "pullRequest": 64,
+    "reviewArtifact": "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json",
+    "reviewArtifactSha256": "d613497c297e332bab8ea47d3e29e96bc242dc7ed801b9fb57aa439ef93aac4d",
+    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+  },
+  "workflowEvidence": [
+    {
+      "conclusion": "PASS",
+      "name": "P8-001 Formal Test Hierarchy",
+      "runId": 31091545680
+    },
+    {
+      "conclusion": "PASS",
+      "name": "product-gates",
+      "runId": 31091545536
+    },
+    {
+      "conclusion": "PASS",
+      "name": "P1 Authority Service Amendment",
+      "runId": 31091545630
+    },
+    {
+      "conclusion": "PASS_SOURCE_ONLY",
+      "name": "P2 Owner Mode",
+      "runId": 31091546127
+    },
+    {
+      "conclusion": "PASS",
+      "name": "P2 Integration Alignment",
+      "runId": 31091544646
+    },
+    {
+      "conclusion": "PASS",
+      "name": "repository-branch-hygiene",
+      "runId": 31091545026
+    },
+    {
+      "conclusion": "PASS",
+      "name": "PR14 Current Main Reconciliation",
+      "runId": 31091544843
+    },
+    {
+      "conclusion": "PASS",
+      "name": "PR14 Protected Main Repair Handoff",
+      "runId": 31091545440
+    }
+  ]
+}

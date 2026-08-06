@@ -1,0 +1,101 @@
+{
+  "blockers": [
+    {
+      "class": "P8_CONTRACT_REVIEW_REQUEST_CHANGES",
+      "detail": "Worker A independent consumer review 4873602175 requests changes on exact P8 candidate 22a8ac34cbf9601100f60c4929198f15f3c60e52 / ef5d5ae584b1d823502bf6f2191ecf4285d36845 because assuranceLevel is not machine-connected to actual normalized execution reports and the exact evidence packet is stale."
+    },
+    {
+      "class": "SHARED_CONTRACT_COMPATIBILITY_REVIEW_REQUIRED",
+      "detail": "P8 and Worker A overlap at config/test_center_registry.v1.json, and P8 requires one hierarchy binding per stable ID. Worker A adds 11 IDs, including a P1A source-only/profile metadata mismatch requiring an explicit non-promoting mapping decision."
+    },
+    {
+      "class": "WORKER_J_RECONCILIATION_PENDING",
+      "detail": "Worker J has not published a bounded reconciliation decision for exact Worker A commit/tree 89a15332019c73675a19cdacd7021fae2199d75e / 2ea1f8a718a69dba0120a4f98acb78053d6cebfb."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "Neither PR #65 nor PR #64 has merge authorization. Protected main remains unchanged."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "Controlled P2 Windows, macOS, Linux, hello.txt acceptance, cleanup, process-tree termination, and aggregate certification remain unavailable under the governed p2-controlled campaign."
+    }
+  ],
+  "branch": "agent/a/p1-p2-new-roadmap-execution",
+  "classifications": [
+    "WORKER_A_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_REVIEW_VALID_FOR_FROZEN_SHA",
+    "TEST_CENTER_INTEGRATION_READY_AT_REVIEWED_BASE",
+    "P8_EXACT_SOURCE_CI_PASS",
+    "P8_INDEPENDENT_REVIEW_REQUEST_CHANGES",
+    "SHARED_CONTRACT_COMPATIBILITY_REVIEW_REQUIRED",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "PENDING_WORKER_J_RECONCILIATION",
+    "PENDING_AUTHORIZED_STACKED_INTEGRATION"
+  ],
+  "completed": [
+    "Confirmed Worker A product source remains unchanged at the exact independently reviewed commit/tree.",
+    "Confirmed all Worker A exact-head source workflows remain successful.",
+    "Confirmed all P8 exact source and integration workflows pass on the exact current Worker B head, including hosted P2 source/toolchain validation on Ubuntu, macOS, and Windows.",
+    "Confirmed controlled P2 behavioral jobs remain skipped and unproven.",
+    "Performed an independent downstream canonical-contract review of P8 and published exact review 4873602175 with REQUEST_CHANGES.",
+    "Identified the missing machine connection between P8 assuranceLevel and actual normalized execution reports.",
+    "Identified stale P8 exact-candidate evidence and documented the required evidence-packaging sequence.",
+    "Produced the deterministic Worker A post-landing hierarchy binding map for all 11 stable IDs.",
+    "Restored mission durability after the standard mission materializer was repaired and source-manifest materialization resumed."
+  ],
+  "evidence": {
+    "missionCoordinationArtifact": "docs/roadmap/missions/coordination/MISSION-001-p8-compatibility-review-2026-08-06.json",
+    "p8": {
+      "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+      "pullRequest": 65,
+      "reviewDecision": "REQUEST_CHANGES",
+      "reviewId": 4873602175,
+      "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
+    },
+    "workerA": {
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "pullRequest": 64,
+      "reviewArtifact": "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json",
+      "reviewArtifactSha256": "d613497c297e332bab8ea47d3e29e96bc242dc7ed801b9fb57aa439ef93aac4d",
+      "reviewDecision": "PASS",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+      "workflows": {
+        "p2IntegrationAlignment": 31028254437,
+        "productGates": 31028253830,
+        "testCenterIntegration": 31028254841
+      }
+    },
+    "workerJ": {
+      "commit": "2a14b875ff529cfd90348673e8e45b2442663619",
+      "pullRequest": 66,
+      "reconciliationRequestComment": 5203103817,
+      "reconciliationState": "PENDING",
+      "tree": "595346993b4512411f48075a47289333c51b3850"
+    }
+  },
+  "mission": "MISSION-001",
+  "nextAction": "Keep Worker A frozen. Worker B must repair P8-A-001 and P8-A-002, rerun exact-head CI, and obtain a fresh exact-SHA review. Worker J must publish the bounded P1/P1A/P2 source reconciliation. Only after an authorized reviewed P8 landing may Worker A combine registry and hierarchy bindings, regenerate SOURCE_MANIFEST.sha256, rerun exact-head CI, and obtain a fresh Worker B review for the changed Worker A tree.",
+  "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
+  "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 64,
+  "schemaVersion": 1,
+  "sequence": 4,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0003.json",
+  "validation": [
+    "Worker A exact-head Test Center Integration 31028254841 remains PASS.",
+    "Worker A exact-head product-gates 31028253830 remains PASS.",
+    "Worker A exact-head P2 Integration Alignment 31028254437 remains PASS.",
+    "P8 Formal Test Hierarchy 31091545680 passes on Ubuntu, macOS, and Windows.",
+    "P8 product-gates, P1 Authority, P2 source-only Owner Mode, P2 Alignment, branch hygiene, and PR14 workflows pass on exact head 22a8ac34cbf9601100f60c4929198f15f3c60e52.",
+    "P8 controlled behavioral jobs are skipped and do not promote support.",
+    "No Worker A product source, runtime API, wire format, persistence, native interface, roadmap authority, P2 behavior, or P3 implementation changed."
+  ],
+  "worker": "A"
+}
