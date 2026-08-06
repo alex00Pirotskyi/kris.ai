@@ -4,7 +4,7 @@ All Git identities below are discovery anchors and must be re-resolved before wr
 
 | Mission | Executor | Status | Phases | Current |
 |---|---|---|---|---|
-| `MISSION-001` Foundation, Trust, Product Core, and Owner Mode | Worker A | `CLAIMED` | P0, P1, P2 | Frozen reviewed P1/P1A/P2 candidate; P8 exact source CI passes but independent review requests assurance-report contract and evidence repairs; Worker J reconciliation and controlled P2 behavior remain pending |
+| `MISSION-001` Foundation, Trust, Product Core, and Owner Mode | Worker A | `CLAIMED` | P0, P1, P2 | P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked |
 | `MISSION-002` Verification OS, Security, Reliability, and Continuous Certification | Worker B | `CLAIMED` | P8 | Canonical Test Center contracts, exact reviews, certification and integration governance |
 | `MISSION-003` Browser Automation and Web Studio | Worker D | `CLAIMED` | P3 | P3 browser-runtime readiness source foundation; P3-001 blocked by P2-004 evidence |
 | `MISSION-004` Research, Data, Citations, and Knowledge | Worker D | `CLAIMED` | P4 | Worker D replacement claim accepted by explicit user transfer; preserve the existing P4-001 source candidate, reconcile PR #62 with current Worker B ancestry, restore exact-head CI and evidence, and do not restart or expand beyond dependency-safe P4 work. |
