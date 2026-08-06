@@ -105,7 +105,7 @@ def validate_documents(schema: dict[str, Any], report_schema: dict[str, Any], hi
         fail("assurance reports omit required fields or contain duplicates")
     if contract["unknownLevelPolicy"] != "FAIL" or contract["crossLevelPromotionPolicy"] != "FORBIDDEN" or contract["sourceOnlySupportPromotion"] != "FORBIDDEN":
         fail("assurance report policies must fail closed")
-    if set(contract["unexecutedResultStates"]) != UNEXECUTED or contract["executionReportSchema"] != str(REPORT_SCHEMA):
+    if set(contract["unexecutedResultStates"]) != UNEXECUTED or contract["executionReportSchema"] != REPORT_SCHEMA.as_posix():
         fail("assurance report execution contract drifted")
     case_ids = registry_ids(registry)
     bindings = hierarchy["testBindings"]
