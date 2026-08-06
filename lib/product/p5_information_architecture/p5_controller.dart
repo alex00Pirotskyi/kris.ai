@@ -72,13 +72,22 @@ class P5InformationArchitectureController extends ChangeNotifier {
       sanitizedHistory.add(currentWorkspace);
     }
 
+    final recoveryMessage = _state.recoveryMessage;
+    final clearsResolvedExperienceWarning = recoveryMessage != null &&
+        P5PrototypeFixtures.workspaces.any(
+          (definition) =>
+              recoveryMessage ==
+              '${definition.id.label} requires ${definition.minimumLevel.label} mode.',
+        );
+
     _state = _state.copyWith(
       experienceLevel: level,
       navigationHistory:
           List<P5WorkspaceId>.unmodifiable(sanitizedHistory),
       navigationIndex: sanitizedHistory.length - 1,
       reopenWorkspace: currentWorkspace,
-      recoveryMessage: null,
+      recoveryMessage:
+          clearsResolvedExperienceWarning ? null : recoveryMessage,
     );
     notifyListeners();
   }

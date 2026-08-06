@@ -78,6 +78,26 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  test('experience level changes preserve unrelated recovery errors', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.selectProject(null);
+    expect(controller.state.recoveryMessage, 'Choose a project to continue.');
+
+    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+    expect(controller.state.recoveryMessage, 'Choose a project to continue.');
+
+    controller.selectProject('project.kristin-local');
+    controller.selectRun('run.missing');
+    final missingRunMessage = controller.state.recoveryMessage;
+    expect(missingRunMessage, contains('was not found'));
+
+    controller.changeExperienceLevel(P5ExperienceLevel.developer);
+    expect(controller.state.recoveryMessage, missingRunMessage);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('advanced workspace selection and deep links fail closed in Simple mode',
       () {
     final controller = P5InformationArchitectureController();
