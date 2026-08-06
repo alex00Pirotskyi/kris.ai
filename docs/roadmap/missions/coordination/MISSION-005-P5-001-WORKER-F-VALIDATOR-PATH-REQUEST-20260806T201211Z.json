@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "coordinationId": "MISSION-005-P5-001-WORKER-F-VALIDATOR-PATH-REQUEST-20260806T201211Z",
+  "mission": "MISSION-005",
+  "task": "P5-001",
+  "worker": "F",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A",
+  "status": "REQUESTED",
+  "requestType": "SHARED_PATH_GRANT_OR_OWNER_APPROVED_RELOCATION",
+  "requestingBranch": "agent/f/P5-001-information-architecture",
+  "requestingCommit": "0e27d120aa00f35c7c6bdf99fb1d3a8d0ee35b33",
+  "requestingTree": "c971c3210e9925369a97d02858f855467f73e342",
+  "paths": [
+    "tool/worker_f_p5_ia.py",
+    "tool/worker_f_p5_ia_test.py"
+  ],
+  "requestedOperations": [
+    "retain-worker-f-read-only-validator",
+    "retain-worker-f-deterministic-regressions"
+  ],
+  "alternative": {
+    "operation": "relocate-to-mission-owned-test-namespace",
+    "targetPaths": [
+      "test/product/p5_information_architecture/worker_f_p5_ia.py",
+      "test/product/p5_information_architecture/worker_f_p5_ia_test.py"
+    ],
+    "requires": [
+      "owner-approved update of existing Test Center profile argv",
+      "owner-approved update of Worker F workflow commands",
+      "canonical P5 evidence-manifest regeneration",
+      "canonical source-manifest regeneration",
+      "exact-head retest"
+    ]
+  },
+  "reason": "The validators are P5-001-specific, read-only, deterministic, and already registered by the recovered candidate, but the PR #78 overlay does not classify tool/worker_f*.py as MISSION-005-owned. Silent relocation would mutate registered Test Center commands beyond the existing append-only grant.",
+  "boundaries": {
+    "runtimeBehaviorChanged": false,
+    "productionEntryPointChanged": false,
+    "ownerModeBehaviorChanged": false,
+    "publicApiChanged": false,
+    "wireOrStorageFormatChanged": false,
+    "networkOrCredentialAccessAdded": false,
+    "capabilityPromotion": "NONE",
+    "platformPromotion": "NONE",
+    "releasePromotion": "NONE"
+  },
+  "requiredDecision": "Grant exactly tool/worker_f_p5_ia.py and tool/worker_f_p5_ia_test.py to MISSION-005, or authorize the exact relocation and Test Center profile updates above. Do not grant a broad tool/** namespace.",
+  "requiredReview": [
+    "MISSION-002 Test Center owner for any profile-command modification",
+    "MISSION-015 delivery-policy owner for path classification"
+  ],
+  "recordedAt": "2026-08-06T20:21:11Z"
+}
