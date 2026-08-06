@@ -1,0 +1,53 @@
+name: Worker A P2-004 Measurement Contract
+
+on:
+  push:
+    branches:
+      - agent/a/p2-004-measurement-contract-repair
+  pull_request:
+    branches:
+      - agent/a/p1-p2-new-roadmap-execution
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-a-p2-004-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - windows-2025
+          - macos-15
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Validate P2-004 receipt bridge and fail-closed behavior
+        shell: bash
+        run: python tool/p2_task_assertion_cli_test.py --project . --max-command-seconds 15
+      - name: Validate canonical Test Center binding
+        shell: bash
+        run: |
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/worker_a_test_center_v1_test.py
+      - name: Verify canonical source manifest and non-mutation
+        shell: bash
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.before"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.before" SOURCE_MANIFEST.sha256
+          git diff --check
+          git diff --exit-code
