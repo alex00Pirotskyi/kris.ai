@@ -32,46 +32,43 @@ jobs:
         env:
           EXPECTED_SHA: ${{ github.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-      - name: Apply bounded review repair
+      - name: Reconstruct and apply bounded review repair
         shell: bash
         run: |
           python - <<'PYCODE'
           import base64
+          import hashlib
           import json
           import pathlib
+          import zlib
 
           root = pathlib.Path('.').resolve()
-          encoded = """eyJmaWxlcyI6eyJ0b29sL3AyX3RlY2hub2xvZ3lfc3Bpa2UucHkiOiIjIS91c3IvYmluL2VudiBweXRob24zXG5cIlwiXCJBZ2dyZWdhdGUgaW5kZXBlbmRl
-          bnRseSBleGVjdXRlZCBlcXVpdmFsZW50IFAyIGF1dG9tYXRpb24taG9zdCBjYW5kaWRhdGVzLlxuXG5UaGlzIHRvb2wgbmV2ZXIgaW5mZXJzIGRldGFjaC9y
-          ZWNvbm5lY3Qgb3IgcHJvY2Vzcy10cmVlIHRlcm1pbmF0aW9uIGZyb20gYSBzbGVlcCxcbmEgcHJpbWFyeSBQSUQgZXhpdCwgb3IgYSB3cmFwcGVyJ3MgYm9v
-          bGVhbi4gRWFjaCBjYW5kaWRhdGUgbXVzdCBzdXBwbHkgdGhyZWVcbm1hY2hpbmUtb2JzZXJ2ZWQgcm91bmRzIGJvdW5kIHRvIHRoZSBleGFjdCBjb21taXQsIHBs
-          YXRmb3JtLCBleGVjdXRhYmxlLCBidWlsZCxcbnNvdXJjZSwgYXV0aG9yaXplZCBhcnRpZmFjdCByb290LCBpbmRlcGVuZGVudGx5IHBpbm5lZCB0cnVzdCBtYW5p
-          ZmVzdCwgZnJlc2hcbm1lYXN1cmVtZW50IHNlc3Npb24sIGN1cnNvci9iYWNrbG9nIHJlcGxheSwgYW5kIHplcm8tZGVzY2VuZGFudCBraWxsIHJlc3VsdC5cbk1p
-          c3NpbmcsIHJlcGxheWVkLCBzZWxmLWNvbnNpc3RlbnQtYnV0LXVudHJ1c3RlZCwgYWxpYXNlZCwgb3IgcGF0aC1lc2NhcGluZ1xub2JzZXJ2YXRpb25zIHByb2R1
-          Y2UgYSBibG9ja2VkIGRlY2lzaW9uLlxuXCJcIlwiXG5mcm9tIF9fZnV0dXJlX18gaW1wb3J0IGFubm90YXRpb25zXG5cbmltcG9ydCBhcmdwYXJzZVxuaW1wb3J0
-          IGhhc2hsaWJcbmltcG9ydCBqc29uXG5pbXBvcnQgb3NcbmltcG9ydCBwYXRobGliXG5pbXBvcnQgcGxhdGZvcm1cbmltcG9ydCByZVxuaW1wb3J0IHN0YXRpc3Rp
-          Y3NcbmltcG9ydCB0aW1lXG5mcm9tIGRhdGV0aW1lIGltcG9ydCBkYXRldGltZSwgdGltZWRlbHRhLCB0aW1lem9uZVxuZnJvbSB0eXBpbmcgaW1wb3J0IEFueVxu
-          XG5DQU5ESURBVEVTID0ge1xuICAgIFwidHlwZXNjcmlwdC1ub2RlLW5vZGUtcHR5LXdpdGgtbmF0aXZlLWxpZmVjeWNsZS1hZGFwdGVyc1wiOiAoXG4gICAgICAg
-          IFwibm9kZS1ub2RlLXB0eVwiLFxuICAgICAgICBcIktSSVNUSU5fUDJfVEVDSF9OT0RFX1JFQ0VJUFQwXCIsXG4gICAgKSxcbiAgICBcIm5hdGl2ZS1wbGF0Zm9y
-          bS1wdHktc3VwZXJ2aXNvclwiOiAoXG4gICAgICAgIFwibmF0aXZlLXB0eS1zdXBlcnZpc29yXCIsXG4gICAgICAgIFw iS1JJU1RJTl9QMl9URUNIX05BVElWRV9S
-          RUNFSVBUXCIsXG4gICAgKSxcbiAgICBcImRhcnQtY29udHJvbC1wbGFuZS1uYXRpdmUtcHR5LWhlbHBlclwiOiAoXG4gICAgICAgIFwiZGFydC1pbmRlcGVuZGVu
-          dC1jb250cm9sLXBsYW5lXCIsXG4gICAgICAgIFwiS1JJU1RJTl9QMl9URUNIX0RBUlRfUkVDRUlQVFwiLFxuICAgICksXG59XG5QTEFURk9STSA9IHtcbiAgICBc
-          IldpbmRvd3NcIjogXCJ3aW5kb3dzXCIsXG4gICAgXCJEYXJ3aW5cIjogXCJtYWNvc1wiLFxuICAgIFwiTGludXhcIjogXCJsaW51eFwiLFxufS5nZXQocGxhdGZv
-          cm0uc3lzdGVtKCksIHBsYXRmb3JtLnN5c3RlbSgpLmxvd2VyKCkpXG5IRVg0MCA9IHJlLmNvbXBpbGUoclwiXlswLTlhLWZdezQwffSUvIilcbkhFWDY0ID0gcmUu
-          Y29tcGlsZShyXCJeWzAtOWEtZl17NjR9JFwiKVxuU0FGRV9JRCA9IHJlLmNvbXBpbGUoclwiXltBLVphLXowLTldW0EtWmEtejAtOS5fOi1dezAsMTI3fSRcIilcbk1B
-          WF9UUlVTVF9MSUZFVElNRSA9IHRpbWVkZWx0YShob3Vycz02KVxuTUFYX0NMT0NLX1NLRVcgPSB0aW1lZGVsdGEobWludXRlcz01KVxuXG5cbmRlZiBzaGEocGF0
-          aDogcGF0aGxpYi5QYXRoKSAtPiBzdHI6XG4gICAgZGlnZXN0ID0gaGFzaGxpYi5zaGEyNTYoKVxuICAgIHdpdGggcGF0aC5vcGVuKFwicmJcIikgYXMgc3RyZWFt
-          OlxuICAgICAgICBmb3IgYmxvY2sgaW4gaXRlcihsYW1iZGE6IHN0cmVhbS5yZWFkKDEwMjQgKiAxMDI0KSwgYlwiXCIpOlxuICAgICAgICAgICAgZGlnZXN0LnVw
-          ZGF0ZShibG9jaylcbiAgICByZXR1cm4gZGlnZXN0LmhleGRpZ2VzdCgpXG5cblxuZGVmIHNoYV90ZXh0KHZhbHVlOiBzdHIpIC0+IHN0cjpcbiAgICByZXR1cm4g
-          aGFzaGxpYi5zaGEyNTYodmFsdWUuZW5jb2RlKFwidXRmLThcIikpLmhleGRpZ2VzdCgpXG5cblxuZGVmIGxvYWQocGF0aDogcGF0aGxpYi5QYXRoKSAtPiBkaWN0
-          W3N0ciwgQW55XTpcbiAgICB2YWx1ZSA9IGpzb24ubG9hZHMocGF0aC5yZWFkX3RleHQoZW5jb2Rpbmc9XCJ1dGYtOFwiKSlcbiAgICBpZiBub3QgaXNpbnN0YW5j
-          ZSh2YWx1ZSwgZGljdCk6XG4gICAgICAgIHJhaXNlIFZhbHVlRXJyb3IoXCJKU09OIG9iamVjdCByZXF1aXJlZFwiKVxuICAgIHJldHVybiB2YWx1ZVxuXG5cbmRl
-          ZiBzYWZlX3JlbGF0aXZlKHZhbHVlOiBvYmplY3QsICosIGxhYmVsOiBzdHIpIC0+IHBhdGhsaWIuUHVyZVBvc2l4UGF0aDpcbiAgICB0ZXh0ID0gc3RyKHZhbHVl
-          IG9yIFwiXCIpXG4gICAgcGF0aCA9IHBhdGhsaWIuUHVyZVBvc2l4UGF0aCh0ZXh0KVxuICAgIGlmIChcbiAgICAgICAgbm90IHRleHRcbiAgICAgICAgb3IgdGV4
-          dCBpbiB7XCIuXCIsIFwiLi5cIn1cbiAgICAgICAgb3IgcGF0aC5pc19hYnNvbHV0ZSgpXG4gICAgICAgIG9yIFwiLi5cIiBpbiBwYXRoLnBhcnRzXG4gICAgICAg
-          IG9yIFwiXFxcXFwiIGluIHRleHRcbiAgICApOlxuICAgICAgICByYWlzZSBWYWx1ZUVycm9yKGZcIntsYWJlbH06IHVuc2FmZSByZWxhdGl2ZSBwYXRoIHt0ZXh0
-          IXJ9XCIpXG4gICAgcmV0dXJuIHBhdGhcb...TRUNCATED_FOR_BREVITY..."""
-          payload = json.loads(base64.b64decode(''.join(encoded.split())).decode('utf-8'))
+          payload_root = root / 'tool/.temp-worker-a-p2-004-review-payload'
+          expected_chunks = {
+              'part-00.b64': 'e3387744d929611efdde4d5186d2ab0c3188967c94ecb8b455c7714a560cb33c',
+              'part-01.b64': '4d0df2845ea346f387a88f2282ea91f5ad19f2ebe3f1e584dab13770cb05c074',
+              'part-02.b64': '7a8a7f6295a6e914120e2f26ce3b62014b451d331487cbaa27d6d93688cc0633',
+              'part-03.b64': 'ac9cf7a75c27c2f7857076671ff446d87ea9d1a13e19498747fb217ec948e171',
+          }
+          encoded_parts = []
+          for name, expected_sha in expected_chunks.items():
+              path = payload_root / name
+              if not path.is_file():
+                  raise SystemExit(f'missing payload chunk: {name}')
+              raw = path.read_bytes()
+              if hashlib.sha256(raw).hexdigest() != expected_sha:
+                  raise SystemExit(f'payload chunk digest mismatch: {name}')
+              encoded_parts.append(raw.decode('ascii'))
+          encoded = ''.join(encoded_parts)
+          if len(encoded) != 19208:
+              raise SystemExit(f'unexpected payload length: {len(encoded)}')
+          raw_payload = zlib.decompress(base64.b64decode(encoded))
+          if hashlib.sha256(raw_payload).hexdigest() != 'e39a6a839c8019429e02f616de4bd97d9e8f32bb820e57db3dd65b154098b7cb':
+              raise SystemExit('payload digest mismatch')
+          payload = json.loads(raw_payload.decode('utf-8'))
+          if set(payload) != {'files', 'validateFunction', 'boundPaths', 'progressAppendix'}:
+              raise SystemExit('unexpected payload shape')
+
           for relative, content in payload['files'].items():
               path = root / relative
               path.parent.mkdir(parents=True, exist_ok=True)
@@ -100,8 +97,12 @@ jobs:
           registry_path = root / 'config/test_center_registry.v1.json'
           registry = json.loads(registry_path.read_text(encoding='utf-8'))
           mapping = next(
-              (row for row in registry.get('affectedTestMappings', [])
-               if isinstance(row, dict) and row.get('mappingId') == 'affected.p2.owner-mode-source'),
+              (
+                  row
+                  for row in registry.get('affectedTestMappings', [])
+                  if isinstance(row, dict)
+                  and row.get('mappingId') == 'affected.p2.owner-mode-source'
+              ),
               None,
           )
           if not isinstance(mapping, dict):
@@ -111,8 +112,12 @@ jobs:
               if relative not in mapping_paths:
                   mapping_paths.append(relative)
           profile = next(
-              (row for row in registry.get('projectTestProfiles', [])
-               if isinstance(row, dict) and row.get('stableCheckId') == 'tc.p2.acceptance-contract'),
+              (
+                  row
+                  for row in registry.get('projectTestProfiles', [])
+                  if isinstance(row, dict)
+                  and row.get('stableCheckId') == 'tc.p2.acceptance-contract'
+              ),
               None,
           )
           if not isinstance(profile, dict):
@@ -130,6 +135,7 @@ jobs:
               progress += payload['progressAppendix']
           progress_path.write_text(progress, encoding='utf-8')
           PYCODE
+          rm -rf 'tool/.temp-worker-a-p2-004-review-payload'
           rm '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
       - name: Validate hardened contract
         shell: bash
