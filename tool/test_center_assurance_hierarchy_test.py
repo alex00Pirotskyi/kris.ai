@@ -283,6 +283,45 @@ class AssuranceHierarchyTest(unittest.TestCase):
                 H.validate_project(PROJECT),
             )
 
+    def test_canonical_registry_runs_enforcement_layer(self):
+        mapping = next(
+            item
+            for item in self.registry["affectedTestMappings"]
+            if item["mappingId"] == "affected.p8-formal-test-hierarchy"
+        )
+        required_paths = {
+            "config/test_center_assurance_report_contract.v1.json",
+            "schemas/test_center_assurance_report_contract.v1.json",
+            "tool/test_center_assurance_enforcement.py",
+            "tool/test_center_assurance_enforcement_test.py",
+        }
+        self.assertTrue(required_paths.issubset(set(mapping["pathPatterns"])))
+
+        profiles = {
+            item["stableCheckId"]: item for item in self.registry["projectTestProfiles"]
+        }
+        formal = profiles["tc.p8.formal-test-hierarchy"]
+        regressions = profiles["tc.p8.formal-test-hierarchy-regressions"]
+        self.assertTrue(
+            {
+                "config/test_center_assurance_report_contract.v1.json",
+                "schemas/test_center_assurance_report_contract.v1.json",
+                "tool/test_center_assurance_enforcement.py",
+            }.issubset(set(formal["inputPaths"]))
+        )
+        self.assertEqual(
+            regressions["argv"],
+            [
+                "python",
+                "-m",
+                "unittest",
+                "-v",
+                "tool/test_center_assurance_hierarchy_test.py",
+                "tool/test_center_assurance_enforcement_test.py",
+            ],
+        )
+        self.assertTrue(required_paths.issubset(set(regressions["affectedPaths"])))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

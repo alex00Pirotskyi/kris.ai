@@ -24,15 +24,21 @@
       "mappingId": "affected.p8-formal-test-hierarchy",
       "pathPatterns": [
         "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
         "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
         "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center.v1.json",
         "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_enforcement_test.py",
         "tool/test_center_assurance_hierarchy.py",
         "tool/test_center_assurance_hierarchy_test.py",
         "tool/test_center_assurance_jsonschema.py",
-        "tool/test_center_assurance_semantics.py"
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
       "priority": 15,
       "testIds": [
@@ -135,15 +141,20 @@
     {
       "affectedPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
         "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
         "release/evidence/TEST_CENTER/P8-001/**",
         "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center.v1.json",
         "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
         "tool/test_center_assurance_hierarchy.py",
         "tool/test_center_assurance_jsonschema.py",
-        "tool/test_center_assurance_semantics.py"
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
       "argv": [
         "python",
@@ -163,12 +174,17 @@
       "expectedOutputs": [],
       "inputPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
         "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center.v1.json",
         "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
         "tool/test_center_assurance_jsonschema.py",
-        "tool/test_center_assurance_semantics.py"
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [
@@ -183,20 +199,28 @@
     {
       "affectedPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center.v1.json",
         "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_enforcement_test.py",
         "tool/test_center_assurance_hierarchy.py",
         "tool/test_center_assurance_hierarchy_test.py",
         "tool/test_center_assurance_jsonschema.py",
-        "tool/test_center_assurance_semantics.py"
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
       "argv": [
         "python",
         "-m",
         "unittest",
         "-v",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_enforcement_test.py"
       ],
       "assuranceClass": "behavioral",
       "environmentAllowlist": [
@@ -209,13 +233,23 @@
       "expectedOutputs": [],
       "inputPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-candidate-identity.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-deterministic-fixture.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-machine-result.json",
+        "schemas/test_center.v1.json",
         "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_enforcement_test.py",
         "tool/test_center_assurance_hierarchy.py",
         "tool/test_center_assurance_hierarchy_test.py",
         "tool/test_center_assurance_jsonschema.py",
-        "tool/test_center_assurance_semantics.py"
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [
@@ -265,7 +299,7 @@
       "displayName": "P8-001 hierarchy semantic regressions",
       "mandatory": true,
       "moduleId": "tm.reliability-security-diagnostics",
-      "purpose": "Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, and support-promoting source checks are rejected.",
+      "purpose": "Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, evidence-contract drift, and support-promoting source checks are rejected.",
       "roadmapTaskIds": [
         "P8-001"
       ],
