@@ -61,6 +61,140 @@ void main() {
     },
   );
 
+  test('advanced workspace selection and deep links fail closed in Simple mode',
+      () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.selectWorkspace(P5WorkspaceId.evidence);
+
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.navigationHistory, <P5WorkspaceId>[
+      P5WorkspaceId.homeChat,
+    ]);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
+    controller.deepLink(
+      workspace: P5WorkspaceId.modelsProviders,
+      projectId: 'project.kristin-local',
+      runId: 'run.p5-existing-001',
+    );
+
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.selectedProjectId, 'project.kristin-local');
+    expect(controller.state.selectedRunId, 'run.p5-existing-001');
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  test('downgrade sanitizes advanced workspace history and reopen target', () {
+    final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced)
+      ..selectWorkspace(P5WorkspaceId.evidence)
+      ..selectWorkspace(P5WorkspaceId.modelsProviders);
+    addTearDown(controller.dispose);
+
+    controller.changeExperienceLevel(P5ExperienceLevel.simple);
+
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.navigationHistory, <P5WorkspaceId>[
+      P5WorkspaceId.homeChat,
+    ]);
+    expect(controller.state.navigationIndex, 0);
+    expect(controller.state.reopenWorkspace, P5WorkspaceId.homeChat);
+    expect(controller.canGoBack, isFalse);
+    expect(controller.canGoForward, isFalse);
+
+    controller.reopen();
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  test('downgrade removes hidden entries from back and forward navigation', () {
+    final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced)
+      ..selectWorkspace(P5WorkspaceId.evidence)
+      ..selectWorkspace(P5WorkspaceId.verificationCenter);
+    addTearDown(controller.dispose);
+
+    controller.changeExperienceLevel(P5ExperienceLevel.simple);
+
+    expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
+    expect(
+      controller.state.navigationHistory,
+      <P5WorkspaceId>[
+        P5WorkspaceId.homeChat,
+        P5WorkspaceId.verificationCenter,
+      ],
+    );
+    expect(controller.canGoBack, isTrue);
+
+    controller.back();
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.canGoForward, isTrue);
+
+    controller.forward();
+    expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  test('unknown project and run identities fail closed', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.selectProject('project.missing');
+
+    expect(controller.state.selectedProjectId, isNull);
+    expect(controller.state.selectedRunId, isNull);
+    expect(controller.state.runState, P5RunPresentationState.blocked);
+    expect(controller.state.recoveryMessage, contains('was not found'));
+
+    controller.selectProject('project.kristin-local');
+    controller.selectRun('run.missing');
+
+    expect(controller.state.selectedProjectId, 'project.kristin-local');
+    expect(controller.state.selectedRunId, isNull);
+    expect(controller.state.runState, P5RunPresentationState.blocked);
+    expect(controller.state.recoveryMessage, contains('was not found'));
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  test('mismatched project and run deep link clears incompatible run context',
+      () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.deepLink(
+      workspace: P5WorkspaceId.runsActivity,
+      projectId: 'project.sample-notes',
+      runId: 'run.p5-existing-001',
+    );
+
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.selectedProjectId, 'project.sample-notes');
+    expect(controller.state.selectedRunId, isNull);
+    expect(controller.state.runState, P5RunPresentationState.blocked);
+    expect(controller.state.recoveryMessage, contains('does not belong'));
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  test('valid saved-run deep link restores deterministic fixture context', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.deepLink(
+      workspace: P5WorkspaceId.runsActivity,
+      projectId: 'project.kristin-local',
+      runId: 'run.p5-existing-001',
+    );
+
+    expect(controller.state.workspace, P5WorkspaceId.runsActivity);
+    expect(controller.state.selectedProjectId, 'project.kristin-local');
+    expect(controller.state.selectedRunId, 'run.p5-existing-001');
+    expect(controller.state.runState, P5RunPresentationState.interrupted);
+    expect(controller.state.recoveryMessage, isNull);
+  });
+
   test('plan-only changes are fail-closed once a run exists', () {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
@@ -95,8 +229,10 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('selected project and run persist across navigation and reopen', () {
-    final controller = P5InformationArchitectureController();
+  test('selected project and run persist across eligible navigation and reopen',
+      () {
+    final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced);
     addTearDown(controller.dispose);
 
     controller.selectRun('run.p5-existing-001');

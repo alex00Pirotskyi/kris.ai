@@ -33,7 +33,10 @@ void main() {
     }
     expect(controller.sideEffects.isZero, isTrue);
   });
-  testWidgets('simple task reaches evidence and verification', (tester) async {
+
+  testWidgets(
+      'simple task cannot bypass advanced evidence and can open verification',
+      (tester) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
@@ -43,14 +46,31 @@ void main() {
     await tapKey(tester, const Key('resume-run-button'));
     await tapKey(tester, const Key('complete-run-button'));
     await tapKey(tester, const Key('open-evidence-button'));
-    expect(controller.state.workspace, P5WorkspaceId.evidence);
-    controller.selectWorkspace(P5WorkspaceId.homeChat);
-    await tester.pumpAndSettle();
+
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
     await tapKey(tester, const Key('run-verification-button'));
     expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
     expect(controller.state.verificationRequested, isTrue);
     expect(controller.sideEffects.isZero, isTrue);
   });
+
+  testWidgets('advanced task can open evidence', (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    await tapKey(tester, const Key('review-plan-button'));
+    await tapKey(tester, const Key('start-run-button'));
+    await tapKey(tester, const Key('complete-run-button'));
+    await tapKey(tester, const Key('open-evidence-button'));
+
+    expect(controller.state.workspace, P5WorkspaceId.evidence);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('plan-only control is disabled after a run starts', (tester) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
@@ -67,8 +87,10 @@ void main() {
     expect(planOnlyTile().onChanged, isNull);
     expect(controller.sideEffects.isZero, isTrue);
   });
+
   testWidgets('existing run retains project and run context', (tester) async {
     final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced)
       ..selectWorkspace(P5WorkspaceId.runsActivity);
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
@@ -76,11 +98,13 @@ void main() {
     final project = controller.state.selectedProjectId;
     final run = controller.state.selectedRunId;
     await tapKey(tester, const Key('existing-run-evidence-button'));
+    expect(controller.state.workspace, P5WorkspaceId.evidence);
     expect(controller.state.selectedProjectId, project);
     expect(controller.state.selectedRunId, run);
     controller.back();
     expect(controller.state.workspace, P5WorkspaceId.runsActivity);
   });
+
   testWidgets('Owner Mode remains presentation-only', (tester) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.ownerMode);
@@ -92,6 +116,7 @@ void main() {
         controller.state.ownerModeState, P5OwnerModePresentationState.running);
     expect(controller.sideEffects.isZero, isTrue);
   });
+
   testWidgets('Web Studio unavailable state has an exit', (tester) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)

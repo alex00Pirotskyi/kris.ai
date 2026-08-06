@@ -12,9 +12,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
 
   P5SideEffectLedger get sideEffects => P5SideEffectLedger.zero;
 
-  bool get canGoBack => _state.navigationIndex > 0;
-  bool get canGoForward =>
-      _state.navigationIndex < _state.navigationHistory.length - 1;
+  bool get canGoBack => _findEligibleHistoryIndex(-1) != null;
+  bool get canGoForward => _findEligibleHistoryIndex(1) != null;
 
   bool get canChangePlanOnly =>
       _state.selectedRunId == null &&
@@ -30,7 +29,10 @@ class P5InformationArchitectureController extends ChangeNotifier {
       if (definition.id.isFutureCapability) {
         return false;
       }
-      return definition.minimumLevel.index <= _state.experienceLevel.index;
+      return _isWorkspaceEligibleAt(
+        definition.id,
+        _state.experienceLevel,
+      );
     }).toList(growable: false);
   }
 
@@ -38,7 +40,45 @@ class P5InformationArchitectureController extends ChangeNotifier {
     if (level == _state.experienceLevel) {
       return;
     }
-    _state = _state.copyWith(experienceLevel: level);
+
+    final currentWorkspace = _state.workspace;
+    final currentRemainsEligible = _isWorkspaceEligibleAt(
+      currentWorkspace,
+      level,
+    );
+
+    if (!currentRemainsEligible) {
+      _state = _state.copyWith(
+        experienceLevel: level,
+        workspace: P5WorkspaceId.homeChat,
+        navigationHistory: const <P5WorkspaceId>[
+          P5WorkspaceId.homeChat,
+        ],
+        navigationIndex: 0,
+        reopenWorkspace: P5WorkspaceId.homeChat,
+        recoveryMessage:
+            '${currentWorkspace.label} requires ${_minimumLevel(currentWorkspace).label} mode. Returned to Home / Chat.',
+      );
+      notifyListeners();
+      return;
+    }
+
+    final sanitizedHistory = _state.navigationHistory
+        .take(_state.navigationIndex + 1)
+        .where((workspace) => _isWorkspaceEligibleAt(workspace, level))
+        .toList(growable: true);
+    if (sanitizedHistory.isEmpty ||
+        sanitizedHistory.last != currentWorkspace) {
+      sanitizedHistory.add(currentWorkspace);
+    }
+
+    _state = _state.copyWith(
+      experienceLevel: level,
+      navigationHistory:
+          List<P5WorkspaceId>.unmodifiable(sanitizedHistory),
+      navigationIndex: sanitizedHistory.length - 1,
+      reopenWorkspace: currentWorkspace,
+    );
     notifyListeners();
   }
 
@@ -51,41 +91,108 @@ class P5InformationArchitectureController extends ChangeNotifier {
   }
 
   void selectProject(String? projectId) {
-    if (projectId == _state.selectedProjectId) {
+    if (projectId == null) {
+      if (_state.selectedProjectId == null && _state.selectedRunId == null) {
+        return;
+      }
+      _state = _state.copyWith(
+        selectedProjectId: null,
+        selectedRunId: null,
+        runState: P5RunPresentationState.blocked,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage: 'Choose a project to continue.',
+      );
+      notifyListeners();
       return;
     }
+
+    final fixture = _projectFixture(projectId);
+    if (fixture == null) {
+      _state = _state.copyWith(
+        selectedProjectId: null,
+        selectedRunId: null,
+        runState: P5RunPresentationState.blocked,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage:
+            'Project "$projectId" was not found. Choose an available project.',
+      );
+      notifyListeners();
+      return;
+    }
+
+    if (fixture.id == _state.selectedProjectId &&
+        _state.selectedRunId == null &&
+        _state.runState == P5RunPresentationState.planReady) {
+      return;
+    }
+
     _state = _state.copyWith(
-      selectedProjectId: projectId,
+      selectedProjectId: fixture.id,
       selectedRunId: null,
-      runState: projectId == null
-          ? P5RunPresentationState.blocked
-          : P5RunPresentationState.planReady,
+      runState: P5RunPresentationState.planReady,
       planReviewed: false,
       verificationRequested: false,
-      recoveryMessage: projectId == null
-          ? 'Choose a project to continue.'
-          : 'Project context retained across workspaces.',
+      recoveryMessage: 'Project context retained across workspaces.',
     );
     notifyListeners();
   }
 
   void selectRun(String? runId) {
-    if (runId == _state.selectedRunId) {
+    if (runId == null) {
+      if (_state.selectedRunId == null) {
+        return;
+      }
+      final projectId = _knownProjectIdOrNull(_state.selectedProjectId);
+      _state = _state.copyWith(
+        selectedProjectId: projectId,
+        selectedRunId: null,
+        runState: projectId == null
+            ? P5RunPresentationState.blocked
+            : P5RunPresentationState.planReady,
+        planReviewed: false,
+        recoveryMessage:
+            projectId == null ? 'Choose a project to continue.' : null,
+      );
+      notifyListeners();
       return;
     }
-    final fixture =
-        P5PrototypeFixtures.runs.where((run) => run.id == runId).firstOrNull;
+
+    final fixture = _runFixture(runId);
+    if (fixture == null) {
+      _state = _state.copyWith(
+        selectedProjectId: _knownProjectIdOrNull(_state.selectedProjectId),
+        selectedRunId: null,
+        runState: P5RunPresentationState.blocked,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage:
+            'Run "$runId" was not found. Choose an available saved run.',
+      );
+      notifyListeners();
+      return;
+    }
+
+    if (fixture.id == _state.selectedRunId &&
+        fixture.projectId == _state.selectedProjectId) {
+      return;
+    }
+
     _state = _state.copyWith(
-      selectedRunId: runId,
-      selectedProjectId: fixture?.projectId ?? _state.selectedProjectId,
-      runState: fixture?.state ?? _state.runState,
-      recoveryMessage:
-          runId == null ? null : 'Run context restored without losing project.',
+      selectedRunId: fixture.id,
+      selectedProjectId: fixture.projectId,
+      runState: fixture.state,
+      recoveryMessage: 'Run context restored without losing project.',
     );
     notifyListeners();
   }
 
   void selectWorkspace(P5WorkspaceId workspace) {
+    if (!_isWorkspaceEligible(workspace)) {
+      _rejectWorkspace(workspace);
+      return;
+    }
     if (_state.workspace == workspace) {
       return;
     }
@@ -104,28 +211,30 @@ class P5InformationArchitectureController extends ChangeNotifier {
   }
 
   void back() {
-    if (!canGoBack) {
+    final nextIndex = _findEligibleHistoryIndex(-1);
+    if (nextIndex == null) {
       return;
     }
-    final nextIndex = _state.navigationIndex - 1;
+    final workspace = _state.navigationHistory[nextIndex];
     _state = _state.copyWith(
-      workspace: _state.navigationHistory[nextIndex],
+      workspace: workspace,
       navigationIndex: nextIndex,
-      reopenWorkspace: _state.navigationHistory[nextIndex],
+      reopenWorkspace: workspace,
       recoveryMessage: null,
     );
     notifyListeners();
   }
 
   void forward() {
-    if (!canGoForward) {
+    final nextIndex = _findEligibleHistoryIndex(1);
+    if (nextIndex == null) {
       return;
     }
-    final nextIndex = _state.navigationIndex + 1;
+    final workspace = _state.navigationHistory[nextIndex];
     _state = _state.copyWith(
-      workspace: _state.navigationHistory[nextIndex],
+      workspace: workspace,
       navigationIndex: nextIndex,
-      reopenWorkspace: _state.navigationHistory[nextIndex],
+      reopenWorkspace: workspace,
       recoveryMessage: null,
     );
     notifyListeners();
@@ -133,6 +242,10 @@ class P5InformationArchitectureController extends ChangeNotifier {
 
   void reopen() {
     final workspace = _state.reopenWorkspace;
+    if (!_isWorkspaceEligible(workspace)) {
+      _rejectWorkspace(workspace);
+      return;
+    }
     if (_state.workspace == workspace) {
       return;
     }
@@ -144,11 +257,73 @@ class P5InformationArchitectureController extends ChangeNotifier {
     String? projectId,
     String? runId,
   }) {
-    if (projectId != null) {
-      selectProject(projectId);
+    final project =
+        projectId == null ? null : _projectFixture(projectId);
+    if (projectId != null && project == null) {
+      _state = _state.copyWith(
+        selectedProjectId: null,
+        selectedRunId: null,
+        runState: P5RunPresentationState.blocked,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage:
+            'Project "$projectId" was not found. Deep link context was not applied.',
+      );
+      notifyListeners();
+      return;
     }
-    if (runId != null) {
-      selectRun(runId);
+
+    final run = runId == null ? null : _runFixture(runId);
+    if (runId != null && run == null) {
+      _state = _state.copyWith(
+        selectedProjectId:
+            project?.id ?? _knownProjectIdOrNull(_state.selectedProjectId),
+        selectedRunId: null,
+        runState: P5RunPresentationState.blocked,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage:
+            'Run "$runId" was not found. Deep link context was not applied.',
+      );
+      notifyListeners();
+      return;
+    }
+
+    if (project != null && run != null && run.projectId != project.id) {
+      _state = _state.copyWith(
+        selectedProjectId: project.id,
+        selectedRunId: null,
+        runState: P5RunPresentationState.blocked,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage:
+            'Run "${run.id}" does not belong to project "${project.id}". Deep link context was not applied.',
+      );
+      notifyListeners();
+      return;
+    }
+
+    if (run != null) {
+      _state = _state.copyWith(
+        selectedProjectId: run.projectId,
+        selectedRunId: run.id,
+        runState: run.state,
+        recoveryMessage: null,
+      );
+    } else if (project != null) {
+      _state = _state.copyWith(
+        selectedProjectId: project.id,
+        selectedRunId: null,
+        runState: P5RunPresentationState.planReady,
+        planReviewed: false,
+        verificationRequested: false,
+        recoveryMessage: null,
+      );
+    }
+
+    if (!_isWorkspaceEligible(workspace)) {
+      _rejectWorkspace(workspace);
+      return;
     }
     selectWorkspace(workspace);
   }
@@ -318,6 +493,63 @@ class P5InformationArchitectureController extends ChangeNotifier {
         notifyListeners();
         return;
     }
+  }
+
+  P5ProjectFixture? _projectFixture(String projectId) {
+    return P5PrototypeFixtures.projects
+        .where((project) => project.id == projectId)
+        .firstOrNull;
+  }
+
+  P5RunFixture? _runFixture(String runId) {
+    return P5PrototypeFixtures.runs.where((run) => run.id == runId).firstOrNull;
+  }
+
+  String? _knownProjectIdOrNull(String? projectId) {
+    if (projectId == null) {
+      return null;
+    }
+    return _projectFixture(projectId)?.id;
+  }
+
+  P5ExperienceLevel _minimumLevel(P5WorkspaceId workspace) {
+    return P5PrototypeFixtures.workspaces
+        .where((definition) => definition.id == workspace)
+        .firstOrNull!
+        .minimumLevel;
+  }
+
+  bool _isWorkspaceEligible(P5WorkspaceId workspace) {
+    return _isWorkspaceEligibleAt(workspace, _state.experienceLevel);
+  }
+
+  bool _isWorkspaceEligibleAt(
+    P5WorkspaceId workspace,
+    P5ExperienceLevel level,
+  ) {
+    final definition = P5PrototypeFixtures.workspaces
+        .where((candidate) => candidate.id == workspace)
+        .firstOrNull;
+    return definition != null && definition.minimumLevel.index <= level.index;
+  }
+
+  int? _findEligibleHistoryIndex(int direction) {
+    var index = _state.navigationIndex + direction;
+    while (index >= 0 && index < _state.navigationHistory.length) {
+      if (_isWorkspaceEligible(_state.navigationHistory[index])) {
+        return index;
+      }
+      index += direction;
+    }
+    return null;
+  }
+
+  void _rejectWorkspace(P5WorkspaceId workspace) {
+    _state = _state.copyWith(
+      recoveryMessage:
+          '${workspace.label} requires ${_minimumLevel(workspace).label} mode.',
+    );
+    notifyListeners();
   }
 
   void _setRunState({
