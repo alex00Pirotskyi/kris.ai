@@ -81,7 +81,9 @@
         "test/product/**",
         "tool/p2_*.py",
         ".github/workflows/p2-owner-mode.yml",
-        "release/evidence/P2/**"
+        "release/evidence/P2/**",
+        "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+        ".github/workflows/worker-a-p2-004-measurement-contract.yml"
       ],
       "priority": 120,
       "testIds": [
@@ -395,7 +397,13 @@
       "affectedPaths": [
         "tool/p2_task_assertion*.py",
         "tool/p2_platform_ci.py",
-        "release/evidence/P2/**"
+        "release/evidence/P2/**",
+        "tool/p2_task_platform_assertions.py",
+        "tool/p2_technology_spike.py",
+        "tool/p2_technology_spike_contract_test.py",
+        "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+        ".github/workflows/p2-owner-mode.yml",
+        ".github/workflows/worker-a-p2-004-measurement-contract.yml"
       ],
       "argv": [
         "python",
@@ -419,7 +427,13 @@
       "expectedOutputs": [],
       "inputPaths": [
         "tool/p2_task_assertion_cli_test.py",
-        "tool/p2_platform_ci.py"
+        "tool/p2_platform_ci.py",
+        "tool/p2_task_platform_assertions.py",
+        "tool/p2_technology_spike.py",
+        "tool/p2_technology_spike_contract_test.py",
+        "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+        ".github/workflows/p2-owner-mode.yml",
+        ".github/workflows/worker-a-p2-004-measurement-contract.yml"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [

@@ -52,6 +52,78 @@
       },
       "evidencePath": "round-1.json",
       "evidenceSha256": "REPLACE_64_HEX"
+    },
+    {
+      "roundId": 2,
+      "status": "passed",
+      "coldStartMs": 1,
+      "steadyRssKiB": 1,
+      "packageSizeBytes": 1,
+      "detachReconnect": {
+        "consumerDetached": true,
+        "outputWhileDetached": true,
+        "reconnectedByDurableCursor": true,
+        "backlogReplayExact": true,
+        "noDuplicationOrLoss": true,
+        "detachedCursor": 1,
+        "reconnectCursor": 2,
+        "outputWhileDetachedBytes": 1,
+        "expectedBacklogSha256": "REPLACE_64_HEX",
+        "observedBacklogSha256": "SAME_64_HEX",
+        "duplicateSequenceCount": 0,
+        "missingSequenceCount": 0
+      },
+      "processTree": {
+        "descendantCreated": true,
+        "identityVerified": true,
+        "descendantProcessIdentities": [
+          {
+            "pid": 1,
+            "startIdentity": "REPLACE"
+          }
+        ],
+        "terminationStatus": "killed",
+        "remainingDescendants": [],
+        "zeroSurvivingDescendants": true
+      },
+      "evidencePath": "round-2.json",
+      "evidenceSha256": "REPLACE_64_HEX"
+    },
+    {
+      "roundId": 3,
+      "status": "passed",
+      "coldStartMs": 1,
+      "steadyRssKiB": 1,
+      "packageSizeBytes": 1,
+      "detachReconnect": {
+        "consumerDetached": true,
+        "outputWhileDetached": true,
+        "reconnectedByDurableCursor": true,
+        "backlogReplayExact": true,
+        "noDuplicationOrLoss": true,
+        "detachedCursor": 1,
+        "reconnectCursor": 2,
+        "outputWhileDetachedBytes": 1,
+        "expectedBacklogSha256": "REPLACE_64_HEX",
+        "observedBacklogSha256": "SAME_64_HEX",
+        "duplicateSequenceCount": 0,
+        "missingSequenceCount": 0
+      },
+      "processTree": {
+        "descendantCreated": true,
+        "identityVerified": true,
+        "descendantProcessIdentities": [
+          {
+            "pid": 1,
+            "startIdentity": "REPLACE"
+          }
+        ],
+        "terminationStatus": "killed",
+        "remainingDescendants": [],
+        "zeroSurvivingDescendants": true
+      },
+      "evidencePath": "round-3.json",
+      "evidenceSha256": "REPLACE_64_HEX"
     }
   ],
   "packaging": {

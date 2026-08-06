@@ -106,8 +106,25 @@ def main() -> int:
                     raise SystemExit(f"{task}: assertion evidence file missing")
             summaries[task] = str(data["status"])
 
+    technology_contract = root / "tool/p2_technology_spike_contract_test.py"
+    if not technology_contract.is_file():
+        raise SystemExit("P2-004 technology-spike contract regression missing")
+    technology = subprocess.run(
+        [sys.executable, str(technology_contract), "--project", str(root)],
+        text=True,
+        capture_output=True,
+        timeout=300,
+    )
+    if technology.returncode != 0:
+        raise SystemExit(
+            "P2-004 technology-spike contract regression failed\n"
+            f"stdout={technology.stdout[-4000:]}\n"
+            f"stderr={technology.stderr[-4000:]}"
+        )
+
     print("P2 task assertion CLI all-task execution: PASS")
     print(json.dumps(summaries, sort_keys=True))
+    print(technology.stdout.strip())
     return 0
 
 
