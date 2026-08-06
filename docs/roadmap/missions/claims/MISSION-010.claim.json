@@ -1,0 +1,18 @@
+{
+  "branch": "agent/e/native-parity-readiness",
+  "current": "P11 native parity inventory and conformance readiness; P11-001 blocked by P2-004 and native transport evidence",
+  "exclusivePaths": [
+    "release/evidence/P11-*/**",
+    "release/evidence/P15-*/**",
+    "tool/worker_e*.py",
+    "native/**"
+  ],
+  "head": "825769f639edb5db22b27a222cd5c1c57f4ed775",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-010",
+  "pr": 71,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac",
+  "worker": "E"
+}

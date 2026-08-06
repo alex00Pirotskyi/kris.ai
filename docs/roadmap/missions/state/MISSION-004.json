@@ -1,0 +1,14 @@
+{
+  "assignedWorker": "C",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "current": "P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-004",
+  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
+  "observedHead": "69e44e08395d89da1767c58b84655c289a969f66",
+  "observedTree": "1114c576fe67d9f9202f7f44c98a0af6e35a915a",
+  "pullRequest": 62,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "title": "Research, Data, Citations, and Knowledge"
+}

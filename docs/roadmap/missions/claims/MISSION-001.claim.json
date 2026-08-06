@@ -1,0 +1,21 @@
+{
+  "branch": "agent/a/p1-p2-new-roadmap-execution",
+  "current": "P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked",
+  "exclusivePaths": [
+    "authority_service/**",
+    "lib/product/p1*/**",
+    "lib/product/p2*/**",
+    "release/evidence/P0-*/**",
+    "release/evidence/P1-*/**",
+    "release/evidence/P1A*/**",
+    "release/evidence/P2-*/**"
+  ],
+  "head": "89a15332019c73675a19cdacd7021fae2199d75e",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-001",
+  "pr": 64,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+  "worker": "A"
+}

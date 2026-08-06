@@ -1,0 +1,21 @@
+{
+  "blockers": [
+    "Canonical Test Center contracts, exact reviews, certification and integration governance"
+  ],
+  "branch": "agent/b/test-center-contracts-and-review",
+  "completed": [
+    "Imported current worker branch, PR, exact-candidate narrative, blockers, and valid reusable work into mission state."
+  ],
+  "mission": "MISSION-002",
+  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
+  "observedHead": "90c574665363140aeb6cf764ab8387714cab88cf",
+  "observedTree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc",
+  "pullRequest": 65,
+  "schemaVersion": 1,
+  "sequence": 1,
+  "supersededBy": null,
+  "validation": [
+    "Mission generation and collision validation only; product claims remain unchanged."
+  ],
+  "worker": "B"
+}

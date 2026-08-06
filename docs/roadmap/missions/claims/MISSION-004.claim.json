@@ -1,0 +1,18 @@
+{
+  "branch": "agent/p4-001-search-provider-foundation",
+  "current": "P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted",
+  "exclusivePaths": [
+    "release/evidence/P4-*/**",
+    "tool/worker_c*.py",
+    "lib/product/research/**",
+    "test/product/research/**"
+  ],
+  "head": "69e44e08395d89da1767c58b84655c289a969f66",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-004",
+  "pr": 62,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "tree": "1114c576fe67d9f9202f7f44c98a0af6e35a915a",
+  "worker": "C"
+}

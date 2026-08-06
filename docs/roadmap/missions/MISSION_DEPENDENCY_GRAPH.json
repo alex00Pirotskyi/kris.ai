@@ -1,0 +1,76 @@
+{
+  "edges": {
+    "MISSION-001": [],
+    "MISSION-002": [
+      "MISSION-001"
+    ],
+    "MISSION-003": [
+      "MISSION-001",
+      "MISSION-002"
+    ],
+    "MISSION-004": [
+      "MISSION-001",
+      "MISSION-002"
+    ],
+    "MISSION-005": [
+      "MISSION-001",
+      "MISSION-002"
+    ],
+    "MISSION-006": [
+      "MISSION-001",
+      "MISSION-002"
+    ],
+    "MISSION-007": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-006"
+    ],
+    "MISSION-008": [
+      "MISSION-001",
+      "MISSION-002"
+    ],
+    "MISSION-009": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-008"
+    ],
+    "MISSION-010": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-009"
+    ],
+    "MISSION-011": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-006",
+      "MISSION-010"
+    ],
+    "MISSION-012": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-006",
+      "MISSION-010"
+    ],
+    "MISSION-013": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-005",
+      "MISSION-006"
+    ],
+    "MISSION-014": [
+      "MISSION-001",
+      "MISSION-002",
+      "MISSION-003",
+      "MISSION-005",
+      "MISSION-006",
+      "MISSION-010",
+      "MISSION-011"
+    ],
+    "MISSION-015": [
+      "MISSION-001",
+      "MISSION-002"
+    ]
+  },
+  "meaning": "Acyclic entry-frontier dependencies. Later exact cross-task dependencies are preserved in MISSION_INTERLOCKS.json.",
+  "schemaVersion": 1
+}

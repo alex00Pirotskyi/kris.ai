@@ -1,0 +1,19 @@
+{
+  "branch": "agent/f/P5-001-information-architecture",
+  "current": "P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled",
+  "exclusivePaths": [
+    "release/evidence/P5-*/**",
+    "release/evidence/P22-*/**",
+    "lib/product/ux/**",
+    "test/product/ux/**",
+    "docs/ux/**"
+  ],
+  "head": "fd89a66925b90c75448ef33583349b90ca88531b",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-005",
+  "pr": 72,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "tree": null,
+  "worker": "F"
+}

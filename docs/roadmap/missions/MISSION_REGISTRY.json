@@ -1,0 +1,428 @@
+{
+  "authority": {
+    "human": "docs/roadmap/MASTER.md",
+    "machine": "docs/roadmap/roadmap.yaml",
+    "missionSystem": "execution_overlay_only",
+    "v32Source": {
+      "lineCount": 11679,
+      "name": "KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md",
+      "normalizedPackets": "docs/roadmap/anarchy/phases",
+      "reference": "docs/roadmap/anarchy/reference/MASTER_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md",
+      "sha256": "b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c",
+      "sizeBytes": 428141
+    }
+  },
+  "missionCount": 15,
+  "missions": [
+    {
+      "activeClaim": {
+        "branch": "agent/a/p1-p2-new-roadmap-execution",
+        "current": "P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked",
+        "exclusivePaths": [
+          "authority_service/**",
+          "lib/product/p1*/**",
+          "lib/product/p2*/**",
+          "release/evidence/P0-*/**",
+          "release/evidence/P1-*/**",
+          "release/evidence/P1A*/**",
+          "release/evidence/P2-*/**"
+        ],
+        "head": "89a15332019c73675a19cdacd7021fae2199d75e",
+        "mission": "MISSION-001",
+        "pr": 64,
+        "status": "CLAIMED",
+        "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+        "worker": "A"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-001.md",
+      "defaultWorker": "A",
+      "entryDependsOn": [],
+      "id": "MISSION-001",
+      "objective": "Finish the reproducible foundation, trust and policy authority, product runtime, Owner Mode, terminal, filesystem, OS operations, recovery, and the exact P2 behavioral closure without restarting valid Worker A work.",
+      "phases": [
+        "P0",
+        "P1",
+        "P2"
+      ],
+      "priority": "CRITICAL_PATH",
+      "state": "docs/roadmap/missions/state/MISSION-001.json",
+      "taskCount": 36,
+      "title": "Foundation, Trust, Product Core, and Owner Mode"
+    },
+    {
+      "activeClaim": {
+        "branch": "agent/b/test-center-contracts-and-review",
+        "current": "Canonical Test Center contracts, exact reviews, certification and integration governance",
+        "exclusivePaths": [
+          "config/test_center_registry.v1.json",
+          "docs/roadmap/anarchy/reviews/**",
+          "tool/test_center*.py",
+          "release/evidence/TEST_CENTER/**"
+        ],
+        "head": "90c574665363140aeb6cf764ab8387714cab88cf",
+        "mission": "MISSION-002",
+        "pr": 65,
+        "status": "CLAIMED",
+        "tree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc",
+        "worker": "B"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-002.md",
+      "defaultWorker": "B",
+      "entryDependsOn": [
+        "MISSION-001"
+      ],
+      "id": "MISSION-002",
+      "objective": "Operate the canonical Test Center, Development Verification, security, reliability, observability, evaluation, certification, evidence, and independent review backbone used by every mission.",
+      "phases": [
+        "P8"
+      ],
+      "priority": "CRITICAL_PATH",
+      "state": "docs/roadmap/missions/state/MISSION-002.json",
+      "taskCount": 15,
+      "title": "Verification OS, Security, Reliability, and Continuous Certification"
+    },
+    {
+      "activeClaim": {
+        "branch": "agent/d/p3-readiness-fixtures",
+        "current": "P3 browser-runtime readiness source foundation; P3-001 blocked by P2-004 evidence",
+        "exclusivePaths": [
+          "release/evidence/P3-*/**",
+          "tool/worker_d*.py",
+          "lib/product/browser/**",
+          "test/product/browser/**"
+        ],
+        "head": "7eecc840f68ca0dff13ab58c138845593254e390",
+        "mission": "MISSION-003",
+        "pr": 68,
+        "status": "CLAIMED",
+        "tree": "2080824a34956e3b202126a0a9bd61b4d645d338",
+        "worker": "D"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-003.md",
+      "defaultWorker": "D",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002"
+      ],
+      "id": "MISSION-003",
+      "objective": "Deliver a real bundled browser runtime, deterministic browser sessions, actions, profiles, downloads, uploads, recovery, security boundaries, and the complete Web Studio vertical slice.",
+      "phases": [
+        "P3"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-003.json",
+      "taskCount": 18,
+      "title": "Browser Automation and Web Studio"
+    },
+    {
+      "activeClaim": {
+        "branch": "agent/p4-001-search-provider-foundation",
+        "current": "P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted",
+        "exclusivePaths": [
+          "release/evidence/P4-*/**",
+          "tool/worker_c*.py",
+          "lib/product/research/**",
+          "test/product/research/**"
+        ],
+        "head": "69e44e08395d89da1767c58b84655c289a969f66",
+        "mission": "MISSION-004",
+        "pr": 62,
+        "status": "CLAIMED",
+        "tree": "1114c576fe67d9f9202f7f44c98a0af6e35a915a",
+        "worker": "C"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-004.md",
+      "defaultWorker": "C",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002"
+      ],
+      "id": "MISSION-004",
+      "objective": "Build search, safe fetch, extraction, citations, crawling, content-addressed research storage, datasets, indexes, workspaces, change monitoring, and evidence-backed reusable knowledge.",
+      "phases": [
+        "P4"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-004.json",
+      "taskCount": 22,
+      "title": "Research, Data, Citations, and Knowledge"
+    },
+    {
+      "activeClaim": {
+        "branch": "agent/f/P5-001-information-architecture",
+        "current": "P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled",
+        "exclusivePaths": [
+          "release/evidence/P5-*/**",
+          "release/evidence/P22-*/**",
+          "lib/product/ux/**",
+          "test/product/ux/**",
+          "docs/ux/**"
+        ],
+        "head": "fd89a66925b90c75448ef33583349b90ca88531b",
+        "mission": "MISSION-005",
+        "pr": 72,
+        "status": "CLAIMED",
+        "tree": null,
+        "worker": "F"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-005.md",
+      "defaultWorker": "F",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002"
+      ],
+      "id": "MISSION-005",
+      "objective": "Create the information architecture, Simple Mode, advanced workspaces, Verification Center presentation, accessibility, onboarding, localization, support, cost transparency, and consumer experience assurance.",
+      "phases": [
+        "P5",
+        "P22"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-005.json",
+      "taskCount": 33,
+      "title": "Experience Platform and Consumer Productization"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-006.md",
+      "defaultWorker": "G",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002"
+      ],
+      "id": "MISSION-006",
+      "objective": "Deliver the agent loop, planning, memory, model/provider routing, safe autonomy, local model execution, hardware acceleration, evaluation, fallback, and medium-machine operating profile.",
+      "phases": [
+        "P6",
+        "P18"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-006.json",
+      "taskCount": 26,
+      "title": "Agent Intelligence, Model Routing, Local Models, and Hardware Acceleration"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-007.md",
+      "defaultWorker": "G",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-006"
+      ],
+      "id": "MISSION-007",
+      "objective": "Implement the canonical ontology and portable, signed, permissioned Tool/Skill/Capability OS with MCP, A2A, recipes, plugins, discovery, compilation, testing, evidence, and compatibility.",
+      "phases": [
+        "P7",
+        "P23"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-007.json",
+      "taskCount": 36,
+      "title": "Interoperability, Skills, Tools, and Capability Operating System"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-008.md",
+      "defaultWorker": "B",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002"
+      ],
+      "id": "MISSION-008",
+      "objective": "Build reproducible packaging, SBOM and provenance, signing, notarization, installers, secure updates, rollback, release verification, and synchronized tri-desktop release gates.",
+      "phases": [
+        "P9"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-008.json",
+      "taskCount": 16,
+      "title": "Release Engineering, Supply Chain, Signing, Installers, and Updates"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-009.md",
+      "defaultWorker": "A",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-008"
+      ],
+      "id": "MISSION-009",
+      "objective": "Run the P10 integration checkpoint and later the P20 maximum-capability freeze, alpha, beta, RC, synchronized GA, recovery, support, and release evidence without confusing the early checkpoint with final GA.",
+      "phases": [
+        "P10",
+        "P20"
+      ],
+      "priority": "TERMINAL_PATH",
+      "state": "docs/roadmap/missions/state/MISSION-009.json",
+      "taskCount": 22,
+      "title": "Core Integration, Alpha, Beta, Release Candidate, and Synchronized GA"
+    },
+    {
+      "activeClaim": {
+        "branch": "agent/e/native-parity-readiness",
+        "current": "P11 native parity inventory and conformance readiness; P11-001 blocked by P2-004 and native transport evidence",
+        "exclusivePaths": [
+          "release/evidence/P11-*/**",
+          "release/evidence/P15-*/**",
+          "tool/worker_e*.py",
+          "native/**"
+        ],
+        "head": "825769f639edb5db22b27a222cd5c1c57f4ed775",
+        "mission": "MISSION-010",
+        "pr": 71,
+        "status": "CLAIMED",
+        "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac",
+        "worker": "E"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-010.md",
+      "defaultWorker": "E",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-009"
+      ],
+      "id": "MISSION-010",
+      "objective": "Deliver capability-parity native helpers for Windows, macOS, and Linux, device and peripheral automation, isolation tiers, native application control, remote operation, and honest platform evidence.",
+      "phases": [
+        "P11",
+        "P15"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-010.json",
+      "taskCount": 25,
+      "title": "Native Platform, Device Automation, Isolation, and Remote Operation"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-011.md",
+      "defaultWorker": "H",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-006",
+        "MISSION-010"
+      ],
+      "id": "MISSION-011",
+      "objective": "Implement identity and credential brokerage, universal connectors, OpenAI/Gemini/Claude/local/custom provider orchestration, typed transports, account and privacy constraints, budgets, fallback, and owner-selected routes.",
+      "phases": [
+        "P12",
+        "P21"
+      ],
+      "priority": "HIGH",
+      "state": "docs/roadmap/missions/state/MISSION-011.json",
+      "taskCount": 38,
+      "title": "Identity, Credentials, Universal Connectors, and Multi-provider Orchestration"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-012.md",
+      "defaultWorker": "G",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-006",
+        "MISSION-010"
+      ],
+      "id": "MISSION-012",
+      "objective": "Create a complete application factory that plans, designs, implements, tests, runs, inspects, packages, deploys, monitors, repairs, and documents supported applications rather than producing snippets.",
+      "phases": [
+        "P13"
+      ],
+      "priority": "MEDIUM",
+      "state": "docs/roadmap/missions/state/MISSION-012.json",
+      "taskCount": 14,
+      "title": "Application Factory and Advanced Vibe Coding"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-013.md",
+      "defaultWorker": "F",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-005",
+        "MISSION-006"
+      ],
+      "id": "MISSION-013",
+      "objective": "Build the asset graph and reproducible manufacturing pipelines for documents, PDFs, spreadsheets, presentations, images, vector graphics, audio, video, subtitles, campaigns, social variants, datasets, brand controls, and publishing.",
+      "phases": [
+        "P14"
+      ],
+      "priority": "MEDIUM",
+      "state": "docs/roadmap/missions/state/MISSION-013.json",
+      "taskCount": 14,
+      "title": "Content Manufacturing and Publishing"
+    },
+    {
+      "activeClaim": null,
+      "contract": "docs/roadmap/missions/active/MISSION-014.md",
+      "defaultWorker": "H",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002",
+        "MISSION-003",
+        "MISSION-005",
+        "MISSION-006",
+        "MISSION-010",
+        "MISSION-011"
+      ],
+      "id": "MISSION-014",
+      "objective": "Deliver deployment, cloud infrastructure, fleet and remote nodes, realtime multimodal chat, voice/image/screen/file/browser/terminal/data channels, web/mobile companions, headless nodes, and ecosystem integrations.",
+      "phases": [
+        "P16",
+        "P17",
+        "P19"
+      ],
+      "priority": "MEDIUM",
+      "state": "docs/roadmap/missions/state/MISSION-014.json",
+      "taskCount": 32,
+      "title": "Cloud, Fleet, Realtime Multimodal, Omnichannel, Companions, and Headless Nodes"
+    },
+    {
+      "activeClaim": {
+        "branch": "agent/j/P24-001-roadmap-as-data-adr",
+        "current": "P24-001 ANARCHY adoption-review source repair; product gates pass while the P24 adoption review remains red",
+        "exclusivePaths": [
+          "docs/roadmap/anarchy/coordination/**",
+          "docs/roadmap/anarchy/generated/**",
+          "docs/roadmap/anarchy/migrations/**",
+          "tool/anarchy_*.py",
+          "release/evidence/P24-*/**"
+        ],
+        "head": "2a14b875ff529cfd90348673e8e45b2442663619",
+        "mission": "MISSION-015",
+        "pr": 66,
+        "status": "CLAIMED",
+        "tree": "595346993b4512411f48075a47289333c51b3850",
+        "worker": "J"
+      },
+      "contract": "docs/roadmap/missions/active/MISSION-015.md",
+      "defaultWorker": "J",
+      "entryDependsOn": [
+        "MISSION-001",
+        "MISSION-002"
+      ],
+      "id": "MISSION-015",
+      "objective": "Make the full roadmap executable data, maintain durable transferable missions, validate dependencies and claims, generate bounded context packs, preserve traceability and supersession, and complete the measured restartable no-SQL authority migration without a big bang.",
+      "phases": [
+        "P24"
+      ],
+      "priority": "EXECUTION_CONTROL",
+      "state": "docs/roadmap/missions/state/MISSION-015.json",
+      "taskCount": 12,
+      "title": "Roadmap Integrity, Mission Execution, Traceability, and No-SQL Authority Migration"
+    }
+  ],
+  "roadmapSource": {
+    "lineCount": 11679,
+    "name": "KRISTIN_TOP_TIER_CONSUMER_AI_AGENT_MASTER_ROADMAP_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md",
+    "normalizedPackets": "docs/roadmap/anarchy/phases",
+    "reference": "docs/roadmap/anarchy/reference/MASTER_V3_2_AUTOMATED_DEVELOPMENT_VERIFICATION.md",
+    "sha256": "b9c9cf06e138bcc3231769409c989f2bec1e66b5499e25ab979ddf13c74cd97c",
+    "sizeBytes": 428141
+  },
+  "schemaVersion": 1,
+  "taskCount": 359
+}

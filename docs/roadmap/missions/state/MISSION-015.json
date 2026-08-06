@@ -1,0 +1,14 @@
+{
+  "assignedWorker": "J",
+  "branch": "agent/j/P24-001-roadmap-as-data-adr",
+  "current": "P24-001 ANARCHY adoption-review source repair; product gates pass while the P24 adoption review remains red",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-015",
+  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
+  "observedHead": "2a14b875ff529cfd90348673e8e45b2442663619",
+  "observedTree": "595346993b4512411f48075a47289333c51b3850",
+  "pullRequest": 66,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "title": "Roadmap Integrity, Mission Execution, Traceability, and No-SQL Authority Migration"
+}

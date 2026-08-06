@@ -1,0 +1,14 @@
+{
+  "assignedWorker": null,
+  "branch": null,
+  "current": "Await entry-dependency and ownership evaluation.",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-009",
+  "nextAction": "Evaluate entry dependencies and create a collision-free claim.",
+  "observedHead": null,
+  "observedTree": null,
+  "pullRequest": null,
+  "schemaVersion": 1,
+  "status": "AVAILABLE",
+  "title": "Core Integration, Alpha, Beta, Release Candidate, and Synchronized GA"
+}

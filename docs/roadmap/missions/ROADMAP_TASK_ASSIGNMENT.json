@@ -1,0 +1,4289 @@
+{
+  "schemaVersion": 1,
+  "taskCount": 359,
+  "tasks": [
+    {
+      "dependencies": [],
+      "doneWhen": "A clean checkout can reproduce the baseline report and every unavailable gate is explicitly marked.",
+      "id": "P0-001",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Inventory tree, schemas, tool registry, tests, CI, current failures, and hashes; write release/evidence/baseline/.",
+      "title": "Capture reproducible baseline"
+    },
+    {
+      "dependencies": [
+        "P0-001"
+      ],
+      "doneWhen": "Forgery test is rejected; no runtime path accepts v1 envelope trust.",
+      "id": "P0-002",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Remove or hard-disable authorization and update decisions that use tool/interoperability_v19.py envelope-supplied HMAC material.",
+      "title": "Disable insecure v1 trust decisions"
+    },
+    {
+      "dependencies": [
+        "P0-001"
+      ],
+      "doneWhen": "Ubuntu, Windows, and macOS reach every workflow step and pass.",
+      "id": "P0-003",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Fix formatting and any downstream analyzer, test, validator, and native-build failures.",
+      "title": "Green the current three-OS CI"
+    },
+    {
+      "dependencies": [
+        "P0-003"
+      ],
+      "doneWhen": "Two CI reruns use identical declared inputs.",
+      "id": "P0-004",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Pin Flutter/Dart, Python, Actions by commit SHA, and cache keys; record versions in a toolchain manifest.",
+      "title": "Pin toolchains and GitHub Actions"
+    },
+    {
+      "dependencies": [
+        "P0-001",
+        "P0-002"
+      ],
+      "doneWhen": "README, SECURITY, UI, and release classification agree.",
+      "id": "P0-005",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Update supported version, platform matrix, Owner Mode intent, sandbox truth, interop freeze, and disclosure procedure.",
+      "title": "Rewrite security and support policy"
+    },
+    {
+      "dependencies": [
+        "P0-003"
+      ],
+      "doneWhen": "Protected main cannot merge without required checks/review.",
+      "id": "P0-006",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Add CODEOWNERS, branch protection requirements, PR template, security review labels, and merge policy.",
+      "title": "Protect repository governance"
+    },
+    {
+      "dependencies": [
+        "P0-001"
+      ],
+      "doneWhen": "Dashboard never reports source-marker checks as behavioral proof.",
+      "id": "P0-007",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Reclassify system_test.py and validator token checks; create separate report categories.",
+      "title": "Split source lint from behavioral assurance"
+    },
+    {
+      "dependencies": [
+        "P0-001"
+      ],
+      "doneWhen": "A new AI session can find the next ready task without oral context.",
+      "id": "P0-008",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Add STATUS, ADR, risk, metric, prompt, evidence, and handoff structure.",
+      "title": "Create roadmap control files"
+    },
+    {
+      "dependencies": [
+        "P0-001"
+      ],
+      "doneWhen": "Baseline is versioned and reproducible.",
+      "id": "P0-009",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Record current results for coding, analysis, path safety, crash recovery, browser-absent, and research tasks.",
+      "title": "Establish initial benchmark corpus"
+    },
+    {
+      "dependencies": [
+        "P0-001"
+      ],
+      "doneWhen": "Clean checkout stays clean after standard tests except declared reports.",
+      "id": "P0-010",
+      "mission": "MISSION-001",
+      "phase": "P0",
+      "requiredOutput": "Apply source-tree policy, remove caches such as __pycache__, and update ignore rules.",
+      "title": "Remove committed generated state"
+    },
+    {
+      "dependencies": [
+        "P0-008"
+      ],
+      "doneWhen": "ADRs resolve ownership and do not leave implementation-critical ambiguity.",
+      "id": "P1-001",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Define desktop, owner executor, automation host, research worker, sandbox worker, IPC, and storage boundaries.",
+      "title": "Approve runtime-boundary ADRs"
+    },
+    {
+      "dependencies": [
+        "P1-001"
+      ],
+      "doneWhen": "Round-trip and invalid-policy tests pass in Dart and worker languages.",
+      "id": "P1-002",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Create schema and domain model for chat, project, owner, owner_unattended, and isolated_untrusted modes.",
+      "title": "Define access profile v2"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P1-002"
+      ],
+      "doneWhen": "Worker rejects modified, expired, replayed, and wrong-run grants.",
+      "id": "P1-003",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Bind grants to run, task, actor, tool, paths, process, network, browser profile, secrets, budgets, expiry, and use count.",
+      "title": "Define capability grant v2"
+    },
+    {
+      "dependencies": [
+        "P1-002",
+        "P1-003"
+      ],
+      "doneWhen": "Policy property tests prove deny-by-default and Owner Mode’s intended authority.",
+      "id": "P1-004",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Implement mode resolution, organization/project/user overlays, and explicit widening rules.",
+      "title": "Build deterministic policy engine"
+    },
+    {
+      "dependencies": [
+        "P0-002",
+        "P1-001"
+      ],
+      "doneWhen": "Language-neutral spec and negative vectors approved.",
+      "id": "P1-005",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Adopt Ed25519, RFC 8785 canonical JSON, external keyring, key IDs, intended use, expiry, trust domain, and revocation.",
+      "title": "Specify Signed Manifest v2"
+    },
+    {
+      "dependencies": [
+        "P1-005"
+      ],
+      "doneWhen": "Both languages produce and verify identical vectors and reject mutations.",
+      "id": "P1-006",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Implement Dart/Python signing and verification against shared golden vectors.",
+      "title": "Implement cross-language signing"
+    },
+    {
+      "dependencies": [
+        "P1-006"
+      ],
+      "doneWhen": "Downgrade and mixed-format tests pass.",
+      "id": "P1-007",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Add explicit compatibility policy; v1 never authorizes production trust.",
+      "title": "Migrate or reject v1 envelopes"
+    },
+    {
+      "dependencies": [
+        "P1-005"
+      ],
+      "doneWhen": "ADR and key ceremony runbook approved.",
+      "id": "P1-008",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Define offline root, targets, snapshot, timestamp, delegations, thresholds, rotation, and recovery.",
+      "title": "Design TUF update trust"
+    },
+    {
+      "dependencies": [
+        "P1-005"
+      ],
+      "doneWhen": "No private key is stored in repository or unencrypted settings.",
+      "id": "P1-009",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Use OS keychain or external protected store; separate signing, API, browser, and secret-broker keys.",
+      "title": "Implement key storage and revocation"
+    },
+    {
+      "dependencies": [
+        "P1-006",
+        "P1-009"
+      ],
+      "doneWhen": "Tampering, truncation, reordering, and signer substitution are detected.",
+      "id": "P1-010",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Anchor audit heads with trusted keys and export verification receipts.",
+      "title": "Create append-only signed audit checkpoints"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P1-004"
+      ],
+      "doneWhen": "Every high-risk boundary has an owner and planned test.",
+      "id": "P1-011",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Map trust boundaries and OWASP agentic risks across model, tools, web, memory, MCP/A2A, terminal, and updater.",
+      "title": "Create threat model v2"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P1-003"
+      ],
+      "doneWhen": "Unprivileged unrelated local process cannot invoke a worker.",
+      "id": "P1-012",
+      "mission": "MISSION-001",
+      "phase": "P1",
+      "requiredOutput": "Use named pipes/Unix sockets or loopback with mutual authentication, peer identity, request IDs, limits, and versioning.",
+      "title": "Create local authenticated IPC"
+    },
+    {
+      "dependencies": [
+        "P2-013",
+        "P3-017",
+        "P4-021",
+        "P5-014",
+        "P6-015"
+      ],
+      "doneWhen": "Every mandatory desktop OS is represented, no P0 issue remains, and the replay corpus grows per platform.",
+      "id": "P10-001",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Ship equal Windows, macOS, and Linux internal builds with Owner Mode, terminal, browser, research, and data; capture failures.",
+      "title": "Tri-platform internal alpha"
+    },
+    {
+      "dependencies": [
+        "P9-005",
+        "P9-006",
+        "P9-007",
+        "P9-009",
+        "P10-001"
+      ],
+      "doneWhen": "SLOs and update targets hold independently on all three desktop OSs.",
+      "id": "P10-002",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Equal Windows, macOS, and Linux opt-in cohorts, staged updates, support intake, privacy telemetry, and weekly quality review.",
+      "title": "Tri-platform private beta"
+    },
+    {
+      "dependencies": [
+        "P8-014",
+        "P10-002"
+      ],
+      "doneWhen": "Zero unresolved critical/high.",
+      "id": "P10-003",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Fix audit findings, add regressions, and publish scope/summary.",
+      "title": "External security audit closeout"
+    },
+    {
+      "dependencies": [
+        "P10-003"
+      ],
+      "doneWhen": "RC artifact is immutable except blocker fixes.",
+      "id": "P10-004",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Feature freeze, exact versions, docs, translations, support, and release evidence.",
+      "title": "Release candidate freeze"
+    },
+    {
+      "dependencies": [
+        "P10-004"
+      ],
+      "doneWhen": "Crash, quality, security, and parity thresholds pass independently on every mandatory desktop OS.",
+      "id": "P10-005",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Run continuous Windows, macOS, and Linux long-session, update, rollback, benchmark, and support monitoring.",
+      "title": "Thirty-day synchronized core RC soak"
+    },
+    {
+      "dependencies": [
+        "P9-015",
+        "P9-016",
+        "P10-004"
+      ],
+      "doneWhen": "Owners execute runbooks successfully.",
+      "id": "P10-006",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Exercise leaked key, malicious extension, browser profile leak, sandbox escape, data corruption, and bad model.",
+      "title": "Incident-response exercises"
+    },
+    {
+      "dependencies": [
+        "P10-005",
+        "P10-006"
+      ],
+      "doneWhen": "Signed decision includes Windows, macOS, and Linux; no mandatory desktop OS is removed from the core integration scope.",
+      "id": "P10-007",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Review every gate, accepted risk, cross-platform parity, evidence, support, and rollback.",
+      "title": "Core integration go/no-go review"
+    },
+    {
+      "dependencies": [
+        "P10-007"
+      ],
+      "doneWhen": "No halt threshold is breached.",
+      "id": "P10-008",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Release internal→1%→5%→25%→50%→100% with automatic halt criteria.",
+      "title": "Staged core preview rollout"
+    },
+    {
+      "dependencies": [
+        "P10-008"
+      ],
+      "doneWhen": "Operational calendar has owners and evidence.",
+      "id": "P10-009",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Monthly dependency/model review, quarterly drills, benchmark trend, vulnerability response, and deprecation policy.",
+      "title": "Post-preview operations"
+    },
+    {
+      "dependencies": [
+        "P7-011",
+        "P10-009"
+      ],
+      "doneWhen": "Interop is independently gated from core GA.",
+      "id": "P10-010",
+      "mission": "MISSION-009",
+      "phase": "P10",
+      "requiredOutput": "Promote MCP/A2A/plugins only after dedicated soak and revocation testing.",
+      "title": "Federated ecosystem checkpoint"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P2-004"
+      ],
+      "doneWhen": "No implementation-critical ambiguity remains and no mandatory desktop OS is deferred.",
+      "id": "P11-001",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "ADRs for native hosts, platform adapters, parity semantics, mobile/web truth, architecture matrix",
+      "title": "Approve omni-platform ADR set"
+    },
+    {
+      "dependencies": [
+        "P11-001"
+      ],
+      "doneWhen": "Manifest is generated from tests for Windows, macOS, and Linux.",
+      "id": "P11-002",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Schema, generator, UI, release integration",
+      "title": "Create platform support manifest"
+    },
+    {
+      "dependencies": [
+        "P1-012",
+        "P11-001"
+      ],
+      "doneWhen": "Windows conformance and hostile lifecycle fixtures pass.",
+      "id": "P11-003",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "ConPTY, Job Objects, UIA, credential, window, service, screen baseline",
+      "title": "Implement Windows native host v1"
+    },
+    {
+      "dependencies": [
+        "P1-012",
+        "P11-001"
+      ],
+      "doneWhen": "Signed helper passes macOS fixtures and consent recovery.",
+      "id": "P11-004",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "PTY, process lifecycle, AX, Keychain, NSWorkspace, TCC baseline",
+      "title": "Implement macOS native host v1"
+    },
+    {
+      "dependencies": [
+        "P1-012",
+        "P11-001"
+      ],
+      "doneWhen": "GNOME/KDE and Wayland/X11 declared fixtures pass.",
+      "id": "P11-005",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "PTY, cgroup/systemd, AT-SPI, portals, Secret Service baseline",
+      "title": "Implement Linux native host v1"
+    },
+    {
+      "dependencies": [
+        "P11-003",
+        "P11-004",
+        "P11-005"
+      ],
+      "doneWhen": "Semantic result and error compatibility report is green.",
+      "id": "P11-006",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "One suite against all platform adapters",
+      "title": "Shared native conformance runner"
+    },
+    {
+      "dependencies": [
+        "P11-006"
+      ],
+      "doneWhen": "Deterministic fixture observations pass on all three.",
+      "id": "P11-007",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Window/accessibility/screen observations and hashes",
+      "title": "Native desktop observation v2"
+    },
+    {
+      "dependencies": [
+        "P11-007"
+      ],
+      "doneWhen": "Actions verify postconditions and reject stale targets.",
+      "id": "P11-008",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Structured actions plus fallback ladder",
+      "title": "Native desktop action v2"
+    },
+    {
+      "dependencies": [
+        "P11-006"
+      ],
+      "doneWhen": "Permission, unplug, and data-direction fixtures pass.",
+      "id": "P11-009",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Printers, scanner/camera/mic/device inventory contracts",
+      "title": "Peripheral/device foundation"
+    },
+    {
+      "dependencies": [
+        "P11-008",
+        "P11-009",
+        "P2-013"
+      ],
+      "doneWhen": "No critical parity gap remains for declared Owner Mode capabilities.",
+      "id": "P11-010",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Cross-platform evidence report",
+      "title": "Synchronized native parity gate"
+    },
+    {
+      "dependencies": [
+        "P11-003",
+        "P1-003",
+        "P1-004"
+      ],
+      "doneWhen": "Hostile containment fixtures pass at each advertised Windows assurance tier.",
+      "id": "P11-011",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Restricted/AppContainer tiers plus disposable VM or attested remote-node path",
+      "title": "Windows isolated-untrusted backend"
+    },
+    {
+      "dependencies": [
+        "P11-004",
+        "P1-003",
+        "P1-004"
+      ],
+      "doneWhen": "Hostile containment, teardown, network, mount and consent fixtures pass.",
+      "id": "P11-012",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Virtualization-framework disposable worker plus lower-tier process restriction",
+      "title": "macOS isolated-untrusted backend"
+    },
+    {
+      "dependencies": [
+        "P11-005",
+        "P1-003",
+        "P1-004"
+      ],
+      "doneWhen": "Runtime-detected tiers and hostile containment fixtures pass.",
+      "id": "P11-013",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Namespaces, cgroups, seccomp, Landlock/LSM and microVM/remote high-assurance path",
+      "title": "Linux isolated-untrusted backend"
+    },
+    {
+      "dependencies": [
+        "P11-011",
+        "P11-012",
+        "P11-013"
+      ],
+      "doneWhen": "Filesystem, process, network, credential, IPC, device, resource and kill boundaries pass on all three OSs.",
+      "id": "P11-014",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "One cross-platform containment corpus and assurance report",
+      "title": "Shared isolation conformance and escape suite"
+    },
+    {
+      "dependencies": [
+        "P11-010",
+        "P11-014"
+      ],
+      "doneWhen": "Windows, macOS and Linux each pass Owner Mode parity and the highest declared isolated-untrusted tier with no silent downgrade.",
+      "id": "P11-015",
+      "mission": "MISSION-010",
+      "phase": "P11",
+      "requiredOutput": "Combined platform capability and assurance manifest",
+      "title": "Synchronized Owner-plus-isolation platform gate"
+    },
+    {
+      "dependencies": [
+        "P1-005",
+        "P11-002"
+      ],
+      "doneWhen": "Identity substitution and revocation fixtures pass.",
+      "id": "P12-001",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Human, node, account, publisher, model, connector, signer identities",
+      "title": "Identity domain v3"
+    },
+    {
+      "dependencies": [
+        "P1-009",
+        "P11-003",
+        "P11-004",
+        "P11-005"
+      ],
+      "doneWhen": "Secret CRUD, locked vault, migration, and redaction tests pass.",
+      "id": "P12-002",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Windows DPAPI/Credential, macOS Keychain, Linux Secret Service adapters",
+      "title": "OS-native credential vault adapters"
+    },
+    {
+      "dependencies": [
+        "P12-001",
+        "P12-002",
+        "P1-003"
+      ],
+      "doneWhen": "Wrong run/destination/scope/use/expiry is rejected.",
+      "id": "P12-003",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Short-lived operation-bound handles",
+      "title": "Credential lease service"
+    },
+    {
+      "dependencies": [
+        "P12-002",
+        "P2-001"
+      ],
+      "doneWhen": "Value never reaches model/log/telemetry and unattended calls fail.",
+      "id": "P12-004",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Local interactive reauth flow",
+      "title": "Owner break-glass reveal"
+    },
+    {
+      "dependencies": [
+        "P12-003"
+      ],
+      "doneWhen": "Provider fixtures cover mix-up, redirect, state, rotation, expiry.",
+      "id": "P12-005",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "PKCE, device, service account, refresh, revoke, multi-account",
+      "title": "OAuth account connection framework"
+    },
+    {
+      "dependencies": [
+        "P1-006",
+        "P12-001"
+      ],
+      "doneWhen": "Modified or untrusted connector fails registration.",
+      "id": "P12-006",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Signed schema and registry",
+      "title": "Connector IR and manifest v2"
+    },
+    {
+      "dependencies": [
+        "P12-006",
+        "P12-005"
+      ],
+      "doneWhen": "Reference, auth, callback, upload, and malformed specs pass.",
+      "id": "P12-007",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "3.0/3.1/3.2 parsing, generated operations and fixtures",
+      "title": "OpenAPI 3.x importer"
+    },
+    {
+      "dependencies": [
+        "P12-006",
+        "P12-005"
+      ],
+      "doneWhen": "Query/mutation, custom scalar, complexity and auth fixtures pass.",
+      "id": "P12-008",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Schema import, approved operations, limits",
+      "title": "GraphQL connector"
+    },
+    {
+      "dependencies": [
+        "P12-006",
+        "P12-005"
+      ],
+      "doneWhen": "Deadlines, metadata, status, and binary artifacts pass.",
+      "id": "P12-009",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Descriptor/reflection import, unary/streaming",
+      "title": "gRPC/Protobuf connector"
+    },
+    {
+      "dependencies": [
+        "P12-006"
+      ],
+      "doneWhen": "Shared reliability and security fixtures pass.",
+      "id": "P12-010",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "JSON-RPC, SOAP/WSDL, WebSocket, SSE, webhook, SFTP/SSH baseline",
+      "title": "Generic protocol adapters"
+    },
+    {
+      "dependencies": [
+        "P12-003",
+        "P12-006"
+      ],
+      "doneWhen": "PostgreSQL/MySQL/SQLite/SQL Server fixtures pass.",
+      "id": "P12-011",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "SQL introspection, typed query, transaction and migration contracts",
+      "title": "Database connector foundation"
+    },
+    {
+      "dependencies": [
+        "P12-007",
+        "P12-008",
+        "P12-009",
+        "P12-010"
+      ],
+      "doneWhen": "A third-party sample connector passes without core changes.",
+      "id": "P12-012",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Scaffolder, mock server, record/replay, sign/package",
+      "title": "Connector SDK and conformance kit"
+    },
+    {
+      "dependencies": [
+        "P12-003",
+        "P1-004"
+      ],
+      "doneWhen": "Limits, step-up, idempotency and reconciliation tests pass.",
+      "id": "P12-013",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Publish/send/purchase/deploy/delete policy",
+      "title": "Transaction policy service"
+    },
+    {
+      "dependencies": [
+        "P12-005",
+        "P12-012"
+      ],
+      "doneWhen": "User can inspect exact account and permission for every call.",
+      "id": "P12-014",
+      "mission": "MISSION-011",
+      "phase": "P12",
+      "requiredOutput": "Accounts, scopes, operations, health, logs, revoke",
+      "title": "Connector workspace UI"
+    },
+    {
+      "dependencies": [
+        "P6-004",
+        "P5-006"
+      ],
+      "doneWhen": "Requirement-to-code/test links survive round trips.",
+      "id": "P13-001",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Requirements, architecture, acceptance and lineage model",
+      "title": "Application project/spec schemas"
+    },
+    {
+      "dependencies": [
+        "P12-006"
+      ],
+      "doneWhen": "Changed recipes are detected and versioned upgrades work.",
+      "id": "P13-002",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Signed application recipe manifests",
+      "title": "Recipe registry v2"
+    },
+    {
+      "dependencies": [
+        "P3-012",
+        "P6-003"
+      ],
+      "doneWhen": "Multi-language fixture repos produce correct maps.",
+      "id": "P13-003",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Symbols, dependencies, tests, generated files, impact map",
+      "title": "Repository intelligence v2"
+    },
+    {
+      "dependencies": [
+        "P13-003",
+        "P2-010"
+      ],
+      "doneWhen": "Injected failure restores or marks exact partial state.",
+      "id": "P13-004",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Multi-file patch, checkpoint, conflict, restore",
+      "title": "Code editing transaction engine"
+    },
+    {
+      "dependencies": [
+        "P13-002",
+        "P13-004",
+        "P3-013"
+      ],
+      "doneWhen": "Clean creation/change/test/preview/deploy fixtures pass.",
+      "id": "P13-005",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Static, modern frontend, API+database recipes",
+      "title": "Web full-stack golden recipes"
+    },
+    {
+      "dependencies": [
+        "P13-002",
+        "P13-004",
+        "P12-011"
+      ],
+      "doneWhen": "Build/test/package/health/upgrade fixtures pass.",
+      "id": "P13-006",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "TypeScript, Python, Go, Rust, Java/.NET declared recipes",
+      "title": "Service/API golden recipes"
+    },
+    {
+      "dependencies": [
+        "P13-002",
+        "P11-010"
+      ],
+      "doneWhen": "Shared app builds and smoke tests on declared targets.",
+      "id": "P13-007",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Windows/macOS/Linux/web/mobile project recipe",
+      "title": "Flutter cross-platform app recipe"
+    },
+    {
+      "dependencies": [
+        "P13-002"
+      ],
+      "doneWhen": "Platform CI builds, tests, and emulator/device smoke pass.",
+      "id": "P13-008",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "SwiftUI, Kotlin/Compose, optional React Native recipes",
+      "title": "Native/mobile recipes"
+    },
+    {
+      "dependencies": [
+        "P13-002",
+        "P11-010"
+      ],
+      "doneWhen": "Package and behavior fixtures pass.",
+      "id": "P13-009",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Tauri/Electron/CLI/browser extension recipes",
+      "title": "Desktop/CLI/extension recipes"
+    },
+    {
+      "dependencies": [
+        "P3-015",
+        "P13-004"
+      ],
+      "doneWhen": "Responsive and accessibility fixtures converge.",
+      "id": "P13-010",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Tokens, components, screenshot/semantic diff, repair",
+      "title": "Design-to-code loop"
+    },
+    {
+      "dependencies": [
+        "P13-003",
+        "P8-009"
+      ],
+      "doneWhen": "Hidden bug corpus improves without repeated-loop failure.",
+      "id": "P13-011",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Correlated error/trace/test/source repair loop",
+      "title": "Automated debug and repair"
+    },
+    {
+      "dependencies": [
+        "P13-005",
+        "P13-006"
+      ],
+      "doneWhen": "Generated apps reach verified preview from clean checkout.",
+      "id": "P13-012",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Preview, docs, runbook, rollback bundle",
+      "title": "Application deployment handoff"
+    },
+    {
+      "dependencies": [
+        "P5-004",
+        "P13-003",
+        "P13-010"
+      ],
+      "doneWhen": "End-to-end keyboard workflow passes.",
+      "id": "P13-013",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Integrated editor/runtime/test/evidence UX",
+      "title": "Vibe Coding workspace v2"
+    },
+    {
+      "dependencies": [
+        "P13-005",
+        "P13-013"
+      ],
+      "doneWhen": "Success, regression, cost, latency, and false-completion targets pass.",
+      "id": "P13-014",
+      "mission": "MISSION-012",
+      "phase": "P13",
+      "requiredOutput": "Hidden/public multi-stack corpus",
+      "title": "Application Factory benchmark"
+    },
+    {
+      "dependencies": [
+        "P4-011",
+        "P12-006"
+      ],
+      "doneWhen": "Derived assets reproduce from retained recipes/inputs.",
+      "id": "P14-001",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Schemas, object storage, lineage and versions",
+      "title": "Content project and asset graph"
+    },
+    {
+      "dependencies": [
+        "P6-001",
+        "P14-001"
+      ],
+      "doneWhen": "Two fixture providers per modality pass shared contracts where available.",
+      "id": "P14-002",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Text/image/audio/video generation interfaces",
+      "title": "Provider-neutral generation adapters"
+    },
+    {
+      "dependencies": [
+        "P14-001",
+        "P11-010"
+      ],
+      "doneWhen": "Cross-platform media fixtures produce validated outputs.",
+      "id": "P14-003",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "FFmpeg/image/PDF probe and render jobs",
+      "title": "Deterministic media worker"
+    },
+    {
+      "dependencies": [
+        "P14-002",
+        "P14-003"
+      ],
+      "doneWhen": "Saved project reopens and renders variants.",
+      "id": "P14-004",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Layer/mask/edit/generate/batch/compare",
+      "title": "Image workspace"
+    },
+    {
+      "dependencies": [
+        "P14-002",
+        "P14-003"
+      ],
+      "doneWhen": "Timing, loudness, captions, consent and export tests pass.",
+      "id": "P14-005",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Transcribe/synthesize/mix/render/transcript",
+      "title": "Audio workspace"
+    },
+    {
+      "dependencies": [
+        "P14-002",
+        "P14-003"
+      ],
+      "doneWhen": "Interrupted render resumes and outputs validate.",
+      "id": "P14-006",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Storyboard/timeline/subtitles/dubbing/render queue",
+      "title": "Video workspace"
+    },
+    {
+      "dependencies": [
+        "P14-001"
+      ],
+      "doneWhen": "Rendered page inspection and structure checks pass.",
+      "id": "P14-007",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Editable docs, pagination, accessibility, PDF validation",
+      "title": "Document/PDF pipeline"
+    },
+    {
+      "dependencies": [
+        "P14-001"
+      ],
+      "doneWhen": "Formula lineage/error and reopen tests pass.",
+      "id": "P14-008",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Formulas, models, charts, recalculation and exports",
+      "title": "Spreadsheet pipeline"
+    },
+    {
+      "dependencies": [
+        "P14-001"
+      ],
+      "doneWhen": "Slides render without overflow and remain editable.",
+      "id": "P14-009",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Themes/layouts/notes/render/overflow checks",
+      "title": "Presentation pipeline"
+    },
+    {
+      "dependencies": [
+        "P14-004",
+        "P14-007",
+        "P14-009"
+      ],
+      "doneWhen": "Cross-format brand violations are detected.",
+      "id": "P14-010",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Brand kit, validation and repair",
+      "title": "Brand policy engine"
+    },
+    {
+      "dependencies": [
+        "P12-001",
+        "P14-001"
+      ],
+      "doneWhen": "Restricted asset cannot publish outside policy.",
+      "id": "P14-011",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "License, attribution, voice/likeness consent model",
+      "title": "Rights and consent ledger"
+    },
+    {
+      "dependencies": [
+        "P1-006",
+        "P14-001"
+      ],
+      "doneWhen": "Tamper, missing trust, version and derivation tests pass.",
+      "id": "P14-012",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Create/validate content credentials for supported formats",
+      "title": "C2PA provenance"
+    },
+    {
+      "dependencies": [
+        "P12-012",
+        "P12-013",
+        "P14-010"
+      ],
+      "doneWhen": "Fixture channels publish, edit/unpublish and return receipts.",
+      "id": "P14-013",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "Preview/schedule/publish/reconcile/analytics",
+      "title": "Publishing connector layer"
+    },
+    {
+      "dependencies": [
+        "P14-004",
+        "P14-013"
+      ],
+      "doneWhen": "Three+ variants, rights, brand, accessibility and provenance gates pass.",
+      "id": "P14-014",
+      "mission": "MISSION-013",
+      "phase": "P14",
+      "requiredOutput": "One brief to multi-channel campaign corpus",
+      "title": "Campaign Factory benchmark"
+    },
+    {
+      "dependencies": [
+        "P11-008"
+      ],
+      "doneWhen": "Golden vectors and stale-target tests pass.",
+      "id": "P15-001",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Cross-platform semantic tree and target signatures",
+      "title": "Desktop observation/action v3 schemas"
+    },
+    {
+      "dependencies": [
+        "P15-001"
+      ],
+      "doneWhen": "Native fixture suite passes.",
+      "id": "P15-002",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "UIA events, menus, virtualized controls, multi-display",
+      "title": "Windows advanced automation"
+    },
+    {
+      "dependencies": [
+        "P15-001"
+      ],
+      "doneWhen": "Native fixture suite passes.",
+      "id": "P15-003",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "AX events, menus, Spaces/display/TCC states",
+      "title": "macOS advanced automation"
+    },
+    {
+      "dependencies": [
+        "P15-001"
+      ],
+      "doneWhen": "GNOME/KDE fixture suite passes.",
+      "id": "P15-004",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "AT-SPI events, portal/Wayland/X11 strategies",
+      "title": "Linux advanced automation"
+    },
+    {
+      "dependencies": [
+        "P15-002",
+        "P15-003",
+        "P15-004"
+      ],
+      "doneWhen": "Low-confidence and changed-layout actions pause.",
+      "id": "P15-005",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Confidence, display scaling, region tracking and postconditions",
+      "title": "Visual fallback engine"
+    },
+    {
+      "dependencies": [
+        "P12-012",
+        "P15-001"
+      ],
+      "doneWhen": "Sample IDE/office adapter passes conformance.",
+      "id": "P15-006",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Plugins for app-specific structured actions",
+      "title": "Application adapter SDK"
+    },
+    {
+      "dependencies": [
+        "P11-009"
+      ],
+      "doneWhen": "Permission, disconnect and data evidence pass.",
+      "id": "P15-007",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Print/scan/camera/mic/serial/USB inventory and actions",
+      "title": "Device and peripheral service"
+    },
+    {
+      "dependencies": [
+        "P11-010"
+      ],
+      "doneWhen": "Hidden capture and revoked-permission tests fail safely.",
+      "id": "P15-008",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Visible capture state, regions, devices, privacy masks",
+      "title": "Screen/audio recording service"
+    },
+    {
+      "dependencies": [
+        "P1-012",
+        "P12-001",
+        "P15-001"
+      ],
+      "doneWhen": "Node substitution, disconnect and revoke tests pass.",
+      "id": "P15-009",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Encrypted session, screen/input/file policy, receipts",
+      "title": "Remote desktop trusted-node protocol"
+    },
+    {
+      "dependencies": [
+        "P15-005",
+        "P15-006",
+        "P15-007",
+        "P15-009"
+      ],
+      "doneWhen": "Target success and zero unintended-action threshold pass.",
+      "id": "P15-010",
+      "mission": "MISSION-010",
+      "phase": "P15",
+      "requiredOutput": "Cross-OS real-app and fixture corpus",
+      "title": "Native automation benchmark"
+    },
+    {
+      "dependencies": [
+        "P12-006",
+        "P13-012"
+      ],
+      "doneWhen": "Golden vectors pass across adapters.",
+      "id": "P16-001",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Environment, plan, apply, health, rollback schemas",
+      "title": "Deployment target contracts"
+    },
+    {
+      "dependencies": [
+        "P16-001"
+      ],
+      "doneWhen": "Reproducible image fixture passes.",
+      "id": "P16-002",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Build, scan, SBOM, run, publish",
+      "title": "OCI/container pipeline"
+    },
+    {
+      "dependencies": [
+        "P16-001",
+        "P12-013"
+      ],
+      "doneWhen": "Plan/destroy/change parsing and policy tests pass.",
+      "id": "P16-003",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Terraform/OpenTofu and one additional adapter",
+      "title": "Infrastructure-as-code adapters"
+    },
+    {
+      "dependencies": [
+        "P12-012",
+        "P16-001"
+      ],
+      "doneWhen": "Sandbox accounts pass create/update/delete/reconcile.",
+      "id": "P16-004",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Account/resource/role session adapters",
+      "title": "Cloud provider foundation"
+    },
+    {
+      "dependencies": [
+        "P13-012",
+        "P16-002",
+        "P16-004"
+      ],
+      "doneWhen": "Leak and orphan-resource tests pass.",
+      "id": "P16-005",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Ephemeral URL/data/expiry/teardown",
+      "title": "Preview environment service"
+    },
+    {
+      "dependencies": [
+        "P12-011",
+        "P16-004"
+      ],
+      "doneWhen": "Restore verification passes after injected failure.",
+      "id": "P16-006",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Provision, migrate, backup, restore",
+      "title": "Database deployment and backup"
+    },
+    {
+      "dependencies": [
+        "P16-004"
+      ],
+      "doneWhen": "Propagation/reconciliation and rollback tests pass.",
+      "id": "P16-007",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "DNS plan, certificate, CDN/cache adapters",
+      "title": "DNS/TLS and edge delivery"
+    },
+    {
+      "dependencies": [
+        "P12-013",
+        "P16-004"
+      ],
+      "doneWhen": "Budget overrun fixtures stop before new effects.",
+      "id": "P16-008",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Estimate, reserve, actual cost and halt",
+      "title": "Cost/quota engine"
+    },
+    {
+      "dependencies": [
+        "P12-001",
+        "P1-006"
+      ],
+      "doneWhen": "Unknown/revoked nodes cannot receive work.",
+      "id": "P16-009",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Signed enrollment, capability manifest, revoke",
+      "title": "Node identity and enrollment"
+    },
+    {
+      "dependencies": [
+        "P16-009",
+        "P6-011"
+      ],
+      "doneWhen": "Jobs route to compatible nodes and recover.",
+      "id": "P16-010",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Platform/GPU/locality/data-boundary scheduling",
+      "title": "Fleet scheduler"
+    },
+    {
+      "dependencies": [
+        "P15-009",
+        "P16-009",
+        "P12-013"
+      ],
+      "doneWhen": "Disconnect/revoke/unknown-effect tests pass.",
+      "id": "P16-011",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Broad/scoped remote grants and local kill",
+      "title": "Remote Owner Mode"
+    },
+    {
+      "dependencies": [
+        "P16-002",
+        "P16-011"
+      ],
+      "doneWhen": "Reliability, cost, security and evidence targets pass.",
+      "id": "P16-012",
+      "mission": "MISSION-014",
+      "phase": "P16",
+      "requiredOutput": "Preview→production→rollback and multi-node corpus",
+      "title": "Deployment/fleet benchmark"
+    },
+    {
+      "dependencies": [
+        "P6-004",
+        "P14-001"
+      ],
+      "doneWhen": "Round-trip, redaction and retention tests pass.",
+      "id": "P17-001",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Text/audio/image/video/screen/file/data parts",
+      "title": "Multimodal message schema v2"
+    },
+    {
+      "dependencies": [
+        "P6-011",
+        "P17-001"
+      ],
+      "doneWhen": "Network loss and barge-in fixtures pass.",
+      "id": "P17-002",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Duplex events, interruption, cancellation, tool progress",
+      "title": "Realtime session engine"
+    },
+    {
+      "dependencies": [
+        "P18-003"
+      ],
+      "doneWhen": "Accuracy/latency/privacy benchmark passes.",
+      "id": "P17-003",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Local/cloud streaming transcription",
+      "title": "Speech recognition adapters"
+    },
+    {
+      "dependencies": [
+        "P18-003",
+        "P14-011"
+      ],
+      "doneWhen": "Interrupt, device, consent and cache tests pass.",
+      "id": "P17-004",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Streaming voices and consent metadata",
+      "title": "Speech synthesis adapters"
+    },
+    {
+      "dependencies": [
+        "P15-008",
+        "P17-001"
+      ],
+      "doneWhen": "Revocation and sensitive-region tests pass.",
+      "id": "P17-005",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Visible capture, frame sampling, masks",
+      "title": "Screen/camera live context"
+    },
+    {
+      "dependencies": [
+        "P12-012",
+        "P17-001"
+      ],
+      "doneWhen": "Sample channel passes conformance.",
+      "id": "P17-006",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Messages, threads, attachments, identity and receipts",
+      "title": "Channel gateway SDK"
+    },
+    {
+      "dependencies": [
+        "P17-006",
+        "P12-013"
+      ],
+      "doneWhen": "Threading, retry, send policy and attachment tests pass.",
+      "id": "P17-007",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Declared production connectors",
+      "title": "Work chat/email channels"
+    },
+    {
+      "dependencies": [
+        "P17-006",
+        "P18-009"
+      ],
+      "doneWhen": "Human handoff and grounded answer corpus pass.",
+      "id": "P17-008",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Knowledge, ticket, handoff, SLA, QA",
+      "title": "Customer-support workflows"
+    },
+    {
+      "dependencies": [
+        "P17-002",
+        "P17-005",
+        "P17-006"
+      ],
+      "doneWhen": "Accessibility and hidden-capture checks pass.",
+      "id": "P17-009",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Voice, live context, channel and takeover UX",
+      "title": "Realtime/omnichannel UI"
+    },
+    {
+      "dependencies": [
+        "P17-003",
+        "P17-009"
+      ],
+      "doneWhen": "Category thresholds pass.",
+      "id": "P17-010",
+      "mission": "MISSION-014",
+      "phase": "P17",
+      "requiredOutput": "Latency, quality, interruption and message reliability corpus",
+      "title": "Realtime benchmark"
+    },
+    {
+      "dependencies": [
+        "P6-001"
+      ],
+      "doneWhen": "Invalid and changed descriptors are rejected.",
+      "id": "P18-001",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Multimodal/local/cloud/hardware/license fields",
+      "title": "Model descriptor v3"
+    },
+    {
+      "dependencies": [
+        "P11-002"
+      ],
+      "doneWhen": "Results match native probes on all three desktop OSs.",
+      "id": "P18-002",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "CPU/GPU/NPU/memory/storage benchmark inventory",
+      "title": "Hardware capability detector"
+    },
+    {
+      "dependencies": [
+        "P18-001",
+        "P18-002"
+      ],
+      "doneWhen": "CPU reference runtime passes shared suite.",
+      "id": "P18-003",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Load/generate/stream/cancel/metrics contract",
+      "title": "Local runtime adapter interface"
+    },
+    {
+      "dependencies": [
+        "P18-003"
+      ],
+      "doneWhen": "CPU plus available accelerator fixtures pass.",
+      "id": "P18-004",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Execution-provider discovery and fallback",
+      "title": "ONNX Runtime adapter"
+    },
+    {
+      "dependencies": [
+        "P18-003"
+      ],
+      "doneWhen": "Model load, tool/JSON, cancel and memory limits pass.",
+      "id": "P18-005",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "At least two plugin runtime adapters",
+      "title": "Local LLM runtime adapters"
+    },
+    {
+      "dependencies": [
+        "P18-003",
+        "P17-001"
+      ],
+      "doneWhen": "Data-boundary and quality tests pass.",
+      "id": "P18-006",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Offline transcription/vision baseline",
+      "title": "Local speech/vision adapters"
+    },
+    {
+      "dependencies": [
+        "P18-001"
+      ],
+      "doneWhen": "Corrupt/changed/unlicensed artifacts fail.",
+      "id": "P18-007",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "License, digest, resume, storage, revoke",
+      "title": "Model artifact manager"
+    },
+    {
+      "dependencies": [
+        "P18-001",
+        "P6-014"
+      ],
+      "doneWhen": "Failure and boundary fallback tests pass.",
+      "id": "P18-008",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Cost/latency/privacy/hardware/health routing",
+      "title": "Advanced model router"
+    },
+    {
+      "dependencies": [
+        "P6-005",
+        "P4-013",
+        "P6-010"
+      ],
+      "doneWhen": "Injection and secret exclusion fixtures pass.",
+      "id": "P18-009",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Provenance labels, retrieval, compression and audit",
+      "title": "Context compiler v3"
+    },
+    {
+      "dependencies": [
+        "P18-007"
+      ],
+      "doneWhen": "Adapted model cannot promote without benchmark.",
+      "id": "P18-010",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Dataset/model card/eval/promotion/rollback",
+      "title": "Model adaptation pipeline"
+    },
+    {
+      "dependencies": [
+        "P18-004",
+        "P18-010"
+      ],
+      "doneWhen": "Supported role matrix is generated from results.",
+      "id": "P18-011",
+      "mission": "MISSION-006",
+      "phase": "P18",
+      "requiredOutput": "Code/browser/desktop/research/content/realtime corpus",
+      "title": "Multimodal model benchmark"
+    },
+    {
+      "dependencies": [
+        "P5-004",
+        "P16-009"
+      ],
+      "doneWhen": "Browser security and session tests pass.",
+      "id": "P19-001",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Chat, runs, evidence, approvals, remote tools",
+      "title": "Web control plane"
+    },
+    {
+      "dependencies": [
+        "P17-009",
+        "P16-009"
+      ],
+      "doneWhen": "Device/emulator lifecycle and permission tests pass.",
+      "id": "P19-002",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Chat, capture/share, approvals, notifications, local/remote tools",
+      "title": "Android companion"
+    },
+    {
+      "dependencies": [
+        "P17-009",
+        "P16-009"
+      ],
+      "doneWhen": "Simulator/device and OS-permission tests pass.",
+      "id": "P19-003",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Chat, capture/share, approvals, notifications, local/remote tools",
+      "title": "iOS/iPadOS companion"
+    },
+    {
+      "dependencies": [
+        "P16-009",
+        "P9-003"
+      ],
+      "doneWhen": "Install/update/revoke/kill tests pass.",
+      "id": "P19-004",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Windows/Linux/macOS service packages",
+      "title": "Headless node packages"
+    },
+    {
+      "dependencies": [
+        "P7-009",
+        "P11-002",
+        "P12-006",
+        "P13-002",
+        "P14-002",
+        "P18-001"
+      ],
+      "doneWhen": "One extension of each class passes without core changes.",
+      "id": "P19-005",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Native, connector, content, model and recipe extension points",
+      "title": "Capability/plugin SDK v3"
+    },
+    {
+      "dependencies": [
+        "P7-001",
+        "P19-005"
+      ],
+      "doneWhen": "Conformance suites pass without draft lock-in.",
+      "id": "P19-006",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Stable pinned adapter plus 2026-07-28 adapter after final publication",
+      "title": "MCP version adapters"
+    },
+    {
+      "dependencies": [
+        "P7-005",
+        "P19-005"
+      ],
+      "doneWhen": "Official conformance and adversarial tests pass.",
+      "id": "P19-007",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Version negotiation, tasks, artifacts, auth, delegation",
+      "title": "A2A 1.0 production adapter"
+    },
+    {
+      "dependencies": [
+        "P19-005",
+        "P1-006"
+      ],
+      "doneWhen": "Modified/revoked extensions stop loading.",
+      "id": "P19-008",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Trust, permissions, install/update/revoke and review",
+      "title": "Extension registry and marketplace"
+    },
+    {
+      "dependencies": [
+        "P19-001",
+        "P19-002",
+        "P19-003"
+      ],
+      "doneWhen": "Conflict, revoke and cross-account leakage tests pass.",
+      "id": "P19-009",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Encrypted sync of allowed conversation/run state",
+      "title": "Multi-device continuity"
+    },
+    {
+      "dependencies": [
+        "P19-005",
+        "P19-009"
+      ],
+      "doneWhen": "Third-party implementations can reproduce results.",
+      "id": "P19-010",
+      "mission": "MISSION-014",
+      "phase": "P19",
+      "requiredOutput": "Public fixtures and certification reports",
+      "title": "Ecosystem conformance lab"
+    },
+    {
+      "dependencies": [
+        "P1-002",
+        "P1-004"
+      ],
+      "doneWhen": "User can choose full access and UI never mislabels it as sandboxed.",
+      "id": "P2-001",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Build explicit enablement, persistent indicator, approval policy, data boundary, and disable/reset controls.",
+      "title": "Owner Mode onboarding and settings"
+    },
+    {
+      "dependencies": [
+        "P1-003",
+        "P1-012"
+      ],
+      "doneWhen": "Cross-platform fixtures pass, including symlinks/reparse points and long paths.",
+      "id": "P2-002",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Support absolute paths, drives, shares, hidden files, metadata, search, copy, move, delete, and transactions in Owner Mode.",
+      "title": "Full filesystem service"
+    },
+    {
+      "dependencies": [
+        "P1-003",
+        "P1-012"
+      ],
+      "doneWhen": "Commands run outside projects only in Owner Mode and are fully journaled.",
+      "id": "P2-003",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Execute arbitrary direct processes with cwd/env, output limits, cancellation, and effect records.",
+      "title": "Owner finite command execution"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P1-012"
+      ],
+      "doneWhen": "ADR selects a solution using measured startup, memory, packaging, and reliability.",
+      "id": "P2-004",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Compare TypeScript/node-pty+Playwright, native/Rust PTY+Playwright, and other viable packaging options.",
+      "title": "Automation host technology spike"
+    },
+    {
+      "dependencies": [
+        "P2-004"
+      ],
+      "doneWhen": "Interactive fixtures pass on Windows, macOS, and Linux.",
+      "id": "P2-005",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Implement shell sessions, input, resize, ANSI, attach, detach, reconnect, and transcript.",
+      "title": "Interactive PTY service"
+    },
+    {
+      "dependencies": [
+        "P2-003",
+        "P2-005"
+      ],
+      "doneWhen": "No child remains after kill/timeout in adversarial tests.",
+      "id": "P2-006",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Track stable process identity, descendants, readiness, stop, kill, parent death, and PID reuse.",
+      "title": "Process-tree lifecycle manager"
+    },
+    {
+      "dependencies": [
+        "P2-003"
+      ],
+      "doneWhen": "Fixture installers and dry-run policies pass; real smoke tests run on target images.",
+      "id": "P2-007",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Add package install/remove/update and SDK discovery with structured receipts.",
+      "title": "Package and SDK operations"
+    },
+    {
+      "dependencies": [
+        "P2-003"
+      ],
+      "doneWhen": "Supported operations return honest status and rollback notes.",
+      "id": "P2-008",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Add service status/start/stop and app open/close adapters with platform-specific implementations.",
+      "title": "Service and application control"
+    },
+    {
+      "dependencies": [
+        "P1-003",
+        "P1-012"
+      ],
+      "doneWhen": "Capabilities obey profile and do not leak content into logs.",
+      "id": "P2-009",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Add clipboard read/write, screen capture, active-window metadata, and redaction policy.",
+      "title": "Clipboard and screen capabilities"
+    },
+    {
+      "dependencies": [
+        "P2-002",
+        "P2-003"
+      ],
+      "doneWhen": "Injected failures restore supported file changes and mark non-restorable effects.",
+      "id": "P2-010",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Add file backups, Git checkpoints, restore points where available, and operation receipts.",
+      "title": "Best-effort host snapshots and undo"
+    },
+    {
+      "dependencies": [
+        "P2-005",
+        "P2-006"
+      ],
+      "doneWhen": "Kill works with frozen UI, runaway output, and descendant processes.",
+      "id": "P2-011",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Add UI, tray, keyboard shortcut, and worker watchdog kill paths.",
+      "title": "Emergency pause and kill watchdog"
+    },
+    {
+      "dependencies": [
+        "P2-005",
+        "P2-006"
+      ],
+      "doneWhen": "Keyboard and screen-reader terminal scenarios pass.",
+      "id": "P2-012",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Build tabs, shell/cwd selector, search, save, copy, interrupt, terminate, attach, and run linkage.",
+      "title": "Terminal UX"
+    },
+    {
+      "dependencies": [
+        "P2-002",
+        "P2-003",
+        "P2-006",
+        "P2-011"
+      ],
+      "doneWhen": "Effects are intended, bounded by OS account, observable, cancellable, and recoverable where claimed.",
+      "id": "P2-013",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Test destructive commands, path races, output floods, fork bombs, crashes, and restart.",
+      "title": "Owner Mode adversarial suite"
+    },
+    {
+      "dependencies": [
+        "P2-001",
+        "P2-013"
+      ],
+      "doneWhen": "Guide matches UI and tested behavior.",
+      "id": "P2-014",
+      "mission": "MISSION-001",
+      "phase": "P2",
+      "requiredOutput": "Document privileges, risk, backups, unattended mode, secrets, kill, and recovery.",
+      "title": "Owner Mode operator guide"
+    },
+    {
+      "dependencies": [
+        "P11-015",
+        "P12-014",
+        "P13-014",
+        "P14-014",
+        "P15-010",
+        "P16-012",
+        "P17-010",
+        "P18-011",
+        "P19-010",
+        "P21-024",
+        "P22-018",
+        "P23-024",
+        "P24-012"
+      ],
+      "doneWhen": "No claimed capability, provider route, Gold Skill, consumer promise, or platform behavior lacks evidence.",
+      "id": "P20-001",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Generated support matrix and exact exclusions, including provider/API/browser/local route, consumer experience, tool/skill/capability, roadmap-integrity, and no-SQL storage evidence",
+      "title": "Capability freeze and inventory"
+    },
+    {
+      "dependencies": [
+        "P20-001",
+        "P9-005",
+        "P9-006",
+        "P9-007"
+      ],
+      "doneWhen": "SLOs hold independently on each OS.",
+      "id": "P20-002",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Equal Windows/macOS/Linux cohort and support",
+      "title": "Tri-platform private beta"
+    },
+    {
+      "dependencies": [
+        "P19-001",
+        "P19-002",
+        "P19-003",
+        "P19-004"
+      ],
+      "doneWhen": "Capability truth and remote revoke SLOs hold.",
+      "id": "P20-003",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Companion/node cohort",
+      "title": "Mobile/web/headless beta"
+    },
+    {
+      "dependencies": [
+        "P20-002",
+        "P20-003",
+        "P8-014"
+      ],
+      "doneWhen": "Zero unresolved critical/high findings.",
+      "id": "P20-004",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Owner, credentials, connectors, desktop, content, cloud, fleet audit",
+      "title": "Full external security assessment"
+    },
+    {
+      "dependencies": [
+        "P20-002"
+      ],
+      "doneWhen": "No mandatory desktop capability is missing or silently degraded.",
+      "id": "P20-005",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Per-capability parity report",
+      "title": "Cross-platform parity closeout"
+    },
+    {
+      "dependencies": [
+        "P20-004",
+        "P20-005"
+      ],
+      "doneWhen": "Only blocker fixes may enter.",
+      "id": "P20-006",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Immutable versions, models, connectors, recipes, docs",
+      "title": "Maximum-capability RC freeze"
+    },
+    {
+      "dependencies": [
+        "P20-006"
+      ],
+      "doneWhen": "Every mandatory SLO passes per platform.",
+      "id": "P20-007",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Continuous tri-OS, mobile/web, node, update and benchmark evidence",
+      "title": "Thirty-day synchronized RC soak"
+    },
+    {
+      "dependencies": [
+        "P20-006"
+      ],
+      "doneWhen": "Runbooks succeed and evidence is retained.",
+      "id": "P20-008",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Key, connector, model, plugin, cloud, profile, node, data and bad-update drills",
+      "title": "Disaster and compromise drills"
+    },
+    {
+      "dependencies": [
+        "P20-007"
+      ],
+      "doneWhen": "Required sign-offs are recorded.",
+      "id": "P20-009",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Human approvals and support readiness",
+      "title": "Final legal/privacy/accessibility/support closeout"
+    },
+    {
+      "dependencies": [
+        "P20-007",
+        "P20-008",
+        "P20-009"
+      ],
+      "doneWhen": "Windows, macOS, and Linux all pass; no partial desktop GA.",
+      "id": "P20-010",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Signed owner/release-auditor decision",
+      "title": "Maximum-capability GA decision"
+    },
+    {
+      "dependencies": [
+        "P20-010"
+      ],
+      "doneWhen": "Any platform halt pauses the common rollout.",
+      "id": "P20-011",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Platform-balanced cohorts and automatic halt",
+      "title": "Staged synchronized rollout"
+    },
+    {
+      "dependencies": [
+        "P20-011"
+      ],
+      "doneWhen": "New capability enters only through descriptor, tests, and evidence.",
+      "id": "P20-012",
+      "mission": "MISSION-009",
+      "phase": "P20",
+      "requiredOutput": "Monthly provider/platform/model review and quarterly drills",
+      "title": "Continuous capability evolution"
+    },
+    {
+      "dependencies": [
+        "P3-010",
+        "P12-001",
+        "P18-003"
+      ],
+      "doneWhen": "ADR has no unresolved security or ownership ambiguity.",
+      "id": "P21-001",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Central manager, adapter, transport, routing, artifact, and authority boundaries",
+      "title": "Approve provider-orchestration ADR"
+    },
+    {
+      "dependencies": [
+        "P21-001"
+      ],
+      "doneWhen": "Dart and worker languages pass round-trip/invalid fixtures.",
+      "id": "P21-002",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "ai_provider_descriptor.v1, endpoint capability, account and terms-policy schemas",
+      "title": "Define provider and endpoint schemas"
+    },
+    {
+      "dependencies": [
+        "P21-001",
+        "P21-002"
+      ],
+      "doneWhen": "Cross-language golden vectors and fuzz tests pass.",
+      "id": "P21-003",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Request, streamed event, result, artifact, disclosure, cost, and route-receipt contracts",
+      "title": "Define canonical execution/result schemas"
+    },
+    {
+      "dependencies": [
+        "P21-002",
+        "P21-003"
+      ],
+      "doneWhen": "Unsupported operation cannot be selected.",
+      "id": "P21-004",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Runtime registry, versioning, deprecation, operation matrix, account entitlement overlays",
+      "title": "Build provider capability registry"
+    },
+    {
+      "dependencies": [
+        "P12-004",
+        "P21-002"
+      ],
+      "doneWhen": "Cross-account substitution tests pass.",
+      "id": "P21-005",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "API accounts, browser profiles, local endpoints, health, connect/disconnect/revoke",
+      "title": "Build provider account and session manager"
+    },
+    {
+      "dependencies": [
+        "P21-003",
+        "P6-004"
+      ],
+      "doneWhen": "Corpus including apple/watermelon examples resolves deterministically.",
+      "id": "P21-006",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Parse provider/transport/model/fallback/privacy/budget constraints from language and UI",
+      "title": "Implement intent and constraint compiler"
+    },
+    {
+      "dependencies": [
+        "P21-004",
+        "P21-005",
+        "P21-006"
+      ],
+      "doneWhen": "Explicit routes are never silently overridden.",
+      "id": "P21-007",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Hard filters, ranking, route receipt, health/budget/data checks",
+      "title": "Implement deterministic provider router"
+    },
+    {
+      "dependencies": [
+        "P21-007",
+        "P8-003"
+      ],
+      "doneWhen": "Safety/policy/terms refusals cannot be circumvented.",
+      "id": "P21-008",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Failure taxonomy, same-provider/cross-provider/local fallback, unknown-state handling",
+      "title": "Implement fallback and reconciliation engine"
+    },
+    {
+      "dependencies": [
+        "P21-003",
+        "P21-007"
+      ],
+      "doneWhen": "Hard budgets block pre-dispatch and reconcile final usage.",
+      "id": "P21-009",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "API costs, subscription-unknown usage, local estimates, quotas and ceilings",
+      "title": "Implement external usage and cost ledger"
+    },
+    {
+      "dependencies": [
+        "P21-003",
+        "P12-004"
+      ],
+      "doneWhen": "Local-only and secret-exclusion fixtures pass.",
+      "id": "P21-010",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Exact outbound data slices, labels, retention/account policy and redaction evidence",
+      "title": "Implement provider disclosure manifest"
+    },
+    {
+      "dependencies": [
+        "P21-003",
+        "P21-005"
+      ],
+      "doneWhen": "Official test-account conformance and async artifact fixtures pass.",
+      "id": "P21-011",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Current Responses/text/tool plus declared image/video/audio/files adapters",
+      "title": "Implement OpenAI API adapter"
+    },
+    {
+      "dependencies": [
+        "P21-003",
+        "P21-005"
+      ],
+      "doneWhen": "Official test-account conformance passes for declared operations.",
+      "id": "P21-012",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Current primary text/multimodal/image/video/files/live adapters and attribution handling",
+      "title": "Implement Gemini API adapter"
+    },
+    {
+      "dependencies": [
+        "P21-003",
+        "P21-005"
+      ],
+      "doneWhen": "Official test-account conformance passes and false image/video claims fail.",
+      "id": "P21-013",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Messages/tool/vision/computer-use adapters; honest media capability declaration",
+      "title": "Implement Anthropic API adapter"
+    },
+    {
+      "dependencies": [
+        "P18-003",
+        "P21-003"
+      ],
+      "doneWhen": "CPU reference and at least two runtime adapters pass.",
+      "id": "P21-014",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Same canonical protocol over installed local runtimes and hardware-aware loading",
+      "title": "Implement local-runtime provider adapter"
+    },
+    {
+      "dependencies": [
+        "P19-005",
+        "P21-003"
+      ],
+      "doneWhen": "A self-hosted fixture integrates without coordinator changes.",
+      "id": "P21-015",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Base URL, auth handles, model discovery, capability probes and conformance kit",
+      "title": "Implement custom/OpenAI-compatible adapter SDK"
+    },
+    {
+      "dependencies": [
+        "P3-010",
+        "P3-017",
+        "P21-003",
+        "P21-005"
+      ],
+      "doneWhen": "Mock browser provider suite passes with no coordinate-only dependency.",
+      "id": "P21-016",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Origin/profile/account verification, prompt submission, output capture, takeover, UI-version manifest",
+      "title": "Build provider-browser adapter framework"
+    },
+    {
+      "dependencies": [
+        "P21-016"
+      ],
+      "doneWhen": "Live bounded test and changed-UI failure tests pass.",
+      "id": "P21-017",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Terms-aware ChatGPT profile adapter for declared text/image/file operations",
+      "title": "Implement OpenAI browser adapter"
+    },
+    {
+      "dependencies": [
+        "P21-016"
+      ],
+      "doneWhen": "Live bounded test and changed-UI failure tests pass.",
+      "id": "P21-018",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Terms-aware Gemini profile adapter for declared operations",
+      "title": "Implement Gemini browser adapter"
+    },
+    {
+      "dependencies": [
+        "P21-016"
+      ],
+      "doneWhen": "Live bounded test and changed-UI failure tests pass.",
+      "id": "P21-019",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Terms-aware Claude profile adapter for declared text/code/file operations",
+      "title": "Implement Claude browser adapter"
+    },
+    {
+      "dependencies": [
+        "P14-002",
+        "P21-003"
+      ],
+      "doneWhen": "API/browser/local outputs produce equivalent asset records.",
+      "id": "P21-020",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Text/image/video/audio/file ingestion, hashes, provenance, thumbnails/proxies, parent relationships",
+      "title": "Implement external artifact normalizer"
+    },
+    {
+      "dependencies": [
+        "P21-008",
+        "P21-020",
+        "P6-011"
+      ],
+      "doneWhen": "Crash/restart never creates an unintended duplicate generation.",
+      "id": "P21-021",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Dependencies, polling, restart, cancellation, duplicate prevention, apple→watermelon fixture",
+      "title": "Implement durable sequential and async generation DAGs"
+    },
+    {
+      "dependencies": [
+        "P21-007",
+        "P21-020"
+      ],
+      "doneWhen": "Cost/data bounds and provenance fixtures pass.",
+      "id": "P21-022",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Parallel compare, reviewer, synthesis, best-of-N and bounded debate",
+      "title": "Implement ensembles and cross-provider synthesis"
+    },
+    {
+      "dependencies": [
+        "P5-011",
+        "P21-005",
+        "P21-022"
+      ],
+      "doneWhen": "Fresh user connects a provider and runs local/API/browser examples without manual runtime setup.",
+      "id": "P21-023",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Simple provider chip plus advanced route/account/privacy/cost/fallback controls",
+      "title": "Build provider UX, preferences, onboarding and capability doctor"
+    },
+    {
+      "dependencies": [
+        "P21-001",
+        "P21-023"
+      ],
+      "doneWhen": "Gate S passes with no critical/high finding and no silent routing violation.",
+      "id": "P21-024",
+      "mission": "MISSION-011",
+      "phase": "P21",
+      "requiredOutput": "Tri-OS conformance, medium-machine benchmark, terms review, privacy/cost/security report",
+      "title": "Provider orchestration release gate"
+    },
+    {
+      "dependencies": [
+        "P5-001",
+        "P21-001"
+      ],
+      "doneWhen": "No marketing or UX ambiguity remains.",
+      "id": "P22-001",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Promises, exclusions, Simple/Advanced/Developer modes, support and evidence rules",
+      "title": "Approve consumer product contract ADR"
+    },
+    {
+      "dependencies": [
+        "P22-001",
+        "P8-010"
+      ],
+      "doneWhen": "Metrics can be measured without collecting task content by default.",
+      "id": "P22-002",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Privacy-preserving funnel, success, recovery, hardware and comprehension metrics",
+      "title": "Define consumer metrics and telemetry"
+    },
+    {
+      "dependencies": [
+        "P5-011",
+        "P22-001"
+      ],
+      "doneWhen": "Clean fixtures complete without terminal or developer runtime.",
+      "id": "P22-003",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Cross-platform onboarding, resume, reset and failure recovery",
+      "title": "Implement resumable first-run state machine"
+    },
+    {
+      "dependencies": [
+        "P5-006",
+        "P21-007",
+        "P23-006"
+      ],
+      "doneWhen": "Representative tasks complete without exposing internal architecture.",
+      "id": "P22-004",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "One-composer experience with intelligent defaults and concise route disclosure",
+      "title": "Implement Simple Mode"
+    },
+    {
+      "dependencies": [
+        "P22-004",
+        "P5-010"
+      ],
+      "doneWhen": "Explicit provider/tool/profile choices remain hard constraints.",
+      "id": "P22-005",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Progressive controls, searchable settings, safe mode switching",
+      "title": "Implement Advanced and Developer modes"
+    },
+    {
+      "dependencies": [
+        "P18-002",
+        "P8-011"
+      ],
+      "doneWhen": "Published hardware claims match passing evidence.",
+      "id": "P22-006",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Minimum/recommended/creator tri-OS images and resource tests",
+      "title": "Build hardware certification harness"
+    },
+    {
+      "dependencies": [
+        "P22-001",
+        "P8-003"
+      ],
+      "doneWhen": "User studies meet comprehension target.",
+      "id": "P22-007",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Stable consumer states mapped from subsystem errors",
+      "title": "Build consumer failure translation layer"
+    },
+    {
+      "dependencies": [
+        "P22-003",
+        "P22-007",
+        "P9-009"
+      ],
+      "doneWhen": "Injected failures recover at target rate.",
+      "id": "P22-008",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Detect, explain, repair, verify and rollback known installation/runtime failures",
+      "title": "Implement Repair Mode"
+    },
+    {
+      "dependencies": [
+        "P21-009",
+        "P22-004"
+      ],
+      "doneWhen": "No route is represented as free without evidence.",
+      "id": "P22-009",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Estimates, hard budgets, reconciled use, browser-subscription qualification",
+      "title": "Implement cost and quota center"
+    },
+    {
+      "dependencies": [
+        "P12-004",
+        "P21-005",
+        "P8-010"
+      ],
+      "doneWhen": "Deletion/export fixtures pass and secrets are not reproduced.",
+      "id": "P22-010",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Export, delete, revoke, clear profiles, disclosure history and reset",
+      "title": "Implement data and account control center"
+    },
+    {
+      "dependencies": [
+        "P2-001",
+        "P5-005",
+        "P22-001"
+      ],
+      "doneWhen": "Non-technical study meets comprehension threshold.",
+      "id": "P22-011",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "First-enable education, persistent status, action summaries, kill and disable",
+      "title": "Implement Owner Mode comprehension UX"
+    },
+    {
+      "dependencies": [
+        "P5-012",
+        "P22-004"
+      ],
+      "doneWhen": "Declared language smoke and layout tests pass.",
+      "id": "P22-012",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Locale architecture, string extraction, date/currency, RTL readiness and language matrix",
+      "title": "Complete localization foundation"
+    },
+    {
+      "dependencies": [
+        "P5-012",
+        "P22-004",
+        "P22-003"
+      ],
+      "doneWhen": "Critical flows pass automated and human audit.",
+      "id": "P22-013",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Keyboard, screen reader, scaling, contrast, motion, captions and takeover flows",
+      "title": "Complete accessibility consumer gate"
+    },
+    {
+      "dependencies": [
+        "P8-009",
+        "P22-007",
+        "P22-008"
+      ],
+      "doneWhen": "Seeded secrets and private content are excluded by default.",
+      "id": "P22-014",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Previewable redacted bundle, support code, known issues and status integration",
+      "title": "Implement support and diagnostic bundle"
+    },
+    {
+      "dependencies": [
+        "P22-003",
+        "P22-014"
+      ],
+      "doneWhen": "Primary task, recovery and trust metrics meet targets.",
+      "id": "P22-015",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Balanced cohort, task recordings with consent, findings and fixes",
+      "title": "Run non-technical tri-OS beta"
+    },
+    {
+      "dependencies": [
+        "P9-005",
+        "P9-006",
+        "P9-007",
+        "P22-010"
+      ],
+      "doneWhen": "Clean-machine before/after tests pass.",
+      "id": "P22-016",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Process, helper, cache, profile, model and credential cleanup matrix",
+      "title": "Implement uninstall and local-data removal verification"
+    },
+    {
+      "dependencies": [
+        "P22-002",
+        "P24-004"
+      ],
+      "doneWhen": "Handwritten unsupported claims fail CI.",
+      "id": "P22-017",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "User-facing capability, hardware, privacy and limitation text from evidence",
+      "title": "Consumer claim generator"
+    },
+    {
+      "dependencies": [
+        "P22-001",
+        "P22-017"
+      ],
+      "doneWhen": "Gate T passes with no critical experience, safety or support blocker.",
+      "id": "P22-018",
+      "mission": "MISSION-005",
+      "phase": "P22",
+      "requiredOutput": "Tri-OS report, hardware certification, usability, support, privacy and accessibility evidence",
+      "title": "Consumer productization release gate"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P7-009",
+        "P19-005"
+      ],
+      "doneWhen": "Every subsystem maps without overlap.",
+      "id": "P23-001",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Tool/capability/skill/recipe/plugin/connector/agent/workflow definitions",
+      "title": "Approve execution ontology ADR"
+    },
+    {
+      "dependencies": [
+        "P23-001"
+      ],
+      "doneWhen": "Reference packages round-trip without Kristin lock-in.",
+      "id": "P23-002",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Portable SKILL.md import/export, progressive disclosure and compatibility tests",
+      "title": "Adopt Agent Skills compatibility profile"
+    },
+    {
+      "dependencies": [
+        "P1-006",
+        "P23-002"
+      ],
+      "doneWhen": "Mutation, downgrade and signer-substitution tests fail.",
+      "id": "P23-003",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Digest tree, publisher, permissions, capabilities, dependencies, evals and revocation",
+      "title": "Define signed Skill Manifest v3 and lock"
+    },
+    {
+      "dependencies": [
+        "P23-001",
+        "P11-002",
+        "P12-006",
+        "P21-004"
+      ],
+      "doneWhen": "All built-in capability classes validate.",
+      "id": "P23-004",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Extended semantics, effects, resources, transactions, health and quality",
+      "title": "Define Capability Descriptor v4"
+    },
+    {
+      "dependencies": [
+        "P23-004",
+        "P8-003"
+      ],
+      "doneWhen": "Dart and workers pass golden and fuzz vectors.",
+      "id": "P23-005",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Shared action/effect/idempotency/cancel/reconcile/evidence contract",
+      "title": "Define Tool Contract Standard v1"
+    },
+    {
+      "dependencies": [
+        "P23-004",
+        "P23-005",
+        "P21-007"
+      ],
+      "doneWhen": "Explicit constraints and policy property tests pass.",
+      "id": "P23-006",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Goal→skill→capability→tool/provider graph and route receipts",
+      "title": "Build capability graph and deterministic resolver"
+    },
+    {
+      "dependencies": [
+        "P23-006",
+        "P18-009"
+      ],
+      "doneWhen": "Recall/precision and local-model context budgets pass.",
+      "id": "P23-007",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Progressive metadata retrieval and bounded model tool catalogs",
+      "title": "Implement token-efficient discovery"
+    },
+    {
+      "dependencies": [
+        "P23-002",
+        "P23-003"
+      ],
+      "doneWhen": "Malformed, recursive and path-escape packages fail.",
+      "id": "P23-008",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "YAML/Markdown/resources/scripts validator and safe path rules",
+      "title": "Implement skill parser and validator"
+    },
+    {
+      "dependencies": [
+        "P23-006",
+        "P23-008"
+      ],
+      "doneWhen": "Same locked skill compiles reproducibly.",
+      "id": "P23-009",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Deterministic DAG, grants, locks, checkpoints, takeover, verification and rollback",
+      "title": "Implement skill compiler IR"
+    },
+    {
+      "dependencies": [
+        "P23-009",
+        "P6-011",
+        "P8-003"
+      ],
+      "doneWhen": "Crash and unknown-effect fixtures pass.",
+      "id": "P23-010",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Start/pause/resume/cancel/restart/migrate/reconcile",
+      "title": "Implement durable skill runtime"
+    },
+    {
+      "dependencies": [
+        "P23-009",
+        "P23-010"
+      ],
+      "doneWhen": "Cycle, confused-deputy and budget tests pass.",
+      "id": "P23-011",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Subskill schemas, budget, state, recursion and transaction rules",
+      "title": "Implement safe skill composition"
+    },
+    {
+      "dependencies": [
+        "P23-004",
+        "P19-010",
+        "P21-016"
+      ],
+      "doneWhen": "Broken capability stops routing before user impact threshold.",
+      "id": "P23-012",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Canaries, health states, last-known-good, disable and repair",
+      "title": "Implement tool/skill health service"
+    },
+    {
+      "dependencies": [
+        "P23-005",
+        "P8-003"
+      ],
+      "doneWhen": "Duplicate booking/send/deploy/edit fixtures produce no duplicate effects.",
+      "id": "P23-013",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Prepare/commit/compensate/reconcile and lock manager",
+      "title": "Implement multi-tool transaction and resource locks"
+    },
+    {
+      "dependencies": [
+        "P5-004",
+        "P23-008",
+        "P23-009"
+      ],
+      "doneWhen": "User creates a private tested skill without editing raw files.",
+      "id": "P23-014",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Conversational creation, import, edit, simulate, install and export",
+      "title": "Build Skill Studio basic"
+    },
+    {
+      "dependencies": [
+        "P23-014"
+      ],
+      "doneWhen": "Developer can diagnose compile/runtime failures.",
+      "id": "P23-015",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Visual DAG, permission, provider, test, version and manifest editors",
+      "title": "Build Skill Studio advanced"
+    },
+    {
+      "dependencies": [
+        "P23-014",
+        "P23-010"
+      ],
+      "doneWhen": "Untrusted content cannot auto-install or publish.",
+      "id": "P23-016",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Parameterization, subskill discovery, fixture generation and human approval",
+      "title": "Implement verified-run-to-skill proposal"
+    },
+    {
+      "dependencies": [
+        "P23-003",
+        "P5-007"
+      ],
+      "doneWhen": "New authority cannot activate silently.",
+      "id": "P23-017",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Install/update capability, destination, credential and egress preview",
+      "title": "Implement permission and update-diff UX"
+    },
+    {
+      "dependencies": [
+        "P23-010",
+        "P8-015"
+      ],
+      "doneWhen": "Skill quality reports are reproducible.",
+      "id": "P23-018",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Positive, negative, crash, provider, platform, cost, security and accessibility suites",
+      "title": "Build skill evaluation harness"
+    },
+    {
+      "dependencies": [
+        "P23-018",
+        "P12-014",
+        "P3-018"
+      ],
+      "doneWhen": "Real and fixture beta meets thresholds.",
+      "id": "P23-019",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Gmail/calendar and hotel/travel skills with fixtures",
+      "title": "Build Gold Skill Pack — communication/travel"
+    },
+    {
+      "dependencies": [
+        "P23-018",
+        "P13-014",
+        "P4-021"
+      ],
+      "doneWhen": "Supported recipes meet task and false-completion gates.",
+      "id": "P23-020",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "App, repository, research and dataset skills",
+      "title": "Build Gold Skill Pack — coding/research"
+    },
+    {
+      "dependencies": [
+        "P23-018",
+        "P14-014",
+        "P15-010"
+      ],
+      "doneWhen": "Tri-OS and artifact correctness gates pass.",
+      "id": "P23-021",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Content, desktop and personal productivity skills",
+      "title": "Build Gold Skill Pack — content/computer/productivity"
+    },
+    {
+      "dependencies": [
+        "P19-008",
+        "P23-003",
+        "P23-018"
+      ],
+      "doneWhen": "Modified or revoked skills stop loading.",
+      "id": "P23-022",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Official/private/public registries, review, quality, revoke and rollback",
+      "title": "Build registry and marketplace governance"
+    },
+    {
+      "dependencies": [
+        "P23-011",
+        "P23-022"
+      ],
+      "doneWhen": "Zero unresolved critical/high findings.",
+      "id": "P23-023",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Supply-chain, injection, confused-deputy and authority review",
+      "title": "Run tool/skill security assessment"
+    },
+    {
+      "dependencies": [
+        "P23-001",
+        "P23-023"
+      ],
+      "doneWhen": "Gate U passes on all mandatory desktop OSs and medium hardware.",
+      "id": "P23-024",
+      "mission": "MISSION-007",
+      "phase": "P23",
+      "requiredOutput": "Discovery, compilation, runtime, marketplace, Gold Skill and consumer permission evidence",
+      "title": "Tool/Skill/Capability OS release gate"
+    },
+    {
+      "dependencies": [
+        "P0-008"
+      ],
+      "doneWhen": "No competing roadmap authority remains.",
+      "id": "P24-001",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Authority, file split, manifest, generation and supersession rules",
+      "title": "Approve roadmap-as-data ADR"
+    },
+    {
+      "dependencies": [
+        "P24-001"
+      ],
+      "doneWhen": "Content hashes and cross-links prove no task loss.",
+      "id": "P24-002",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Generated navigation and compatibility MASTER",
+      "title": "Split master roadmap into bounded phase/task files"
+    },
+    {
+      "dependencies": [
+        "P24-001"
+      ],
+      "doneWhen": "Invalid fixture classes fail CI.",
+      "id": "P24-003",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "IDs, dependencies, cycles, gates, status, evidence and supersession validation",
+      "title": "Implement roadmap manifest schema and validator"
+    },
+    {
+      "dependencies": [
+        "P24-003",
+        "P23-006"
+      ],
+      "doneWhen": "Unsupported marketing claim cannot be generated.",
+      "id": "P24-004",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Promise→requirement→capability→test→evidence graph",
+      "title": "Implement requirement/claim traceability"
+    },
+    {
+      "dependencies": [
+        "P1-001",
+        "P24-001"
+      ],
+      "doneWhen": "Human owner approves no-SQL target and rollback.",
+      "id": "P24-005",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Engine evaluation, journal/object/index architecture and migration",
+      "title": "Approve no-SQL local authority ADR"
+    },
+    {
+      "dependencies": [
+        "P24-005"
+      ],
+      "doneWhen": "Reference implementation passes durability suite.",
+      "id": "P24-006",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Transaction, query, watch, migration, backup and corruption interfaces",
+      "title": "Build embedded authority abstraction"
+    },
+    {
+      "dependencies": [
+        "P24-006",
+        "P8-002"
+      ],
+      "doneWhen": "Historical fixtures preserve IDs, events and content hashes.",
+      "id": "P24-007",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Restartable migration, verification and rollback",
+      "title": "Implement SQLite-to-object migration"
+    },
+    {
+      "dependencies": [
+        "P24-006",
+        "P4-013"
+      ],
+      "doneWhen": "Full function survives index deletion and rebuild.",
+      "id": "P24-008",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Rebuildable lexical and optional semantic/graph indexes",
+      "title": "Replace core SQL-specific indexes"
+    },
+    {
+      "dependencies": [
+        "P24-003",
+        "P22-004",
+        "P23-019"
+      ],
+      "doneWhen": "Every slice runs on all mandatory desktop OSs.",
+      "id": "P24-009",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "V1–V9 scenarios and evidence manifests",
+      "title": "Create vertical slice suite"
+    },
+    {
+      "dependencies": [
+        "P24-002",
+        "P24-003"
+      ],
+      "doneWhen": "Local model executes sampled tasks without whole-roadmap context.",
+      "id": "P24-010",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Bounded task bundles and freshness checks",
+      "title": "Generate AI context packs"
+    },
+    {
+      "dependencies": [
+        "P24-003"
+      ],
+      "doneWhen": "Seeded documentation defects fail CI.",
+      "id": "P24-011",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Missing criteria, ambiguous verbs, stale links, uncited standards and duplicate authority checks",
+      "title": "Implement documentation and acceptance lint"
+    },
+    {
+      "dependencies": [
+        "P24-001",
+        "P24-011"
+      ],
+      "doneWhen": "Gate V passes before final capability freeze.",
+      "id": "P24-012",
+      "mission": "MISSION-015",
+      "phase": "P24",
+      "requiredOutput": "Manifest, traceability, no-SQL migration, vertical slices and context-pack report",
+      "title": "Roadmap integrity and storage release gate"
+    },
+    {
+      "dependencies": [
+        "P2-004",
+        "P1-012"
+      ],
+      "doneWhen": "Clean machine launches the bundled worker without a global runtime.",
+      "id": "P3-001",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Pin automation host dependencies and browser binaries; create reproducible packaging.",
+      "title": "Bundle browser automation runtime"
+    },
+    {
+      "dependencies": [
+        "P3-001",
+        "P1-003"
+      ],
+      "doneWhen": "Isolation and lifecycle tests pass.",
+      "id": "P3-002",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Create ephemeral and persistent contexts, pages, profile selection, quotas, and cleanup.",
+      "title": "Browser session service"
+    },
+    {
+      "dependencies": [
+        "P3-002"
+      ],
+      "doneWhen": "Observation hashes are stable on deterministic fixtures.",
+      "id": "P3-003",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Capture URL, title, DOM, accessibility tree, forms, visible text, screenshot, console, and network summary.",
+      "title": "Canonical page observation"
+    },
+    {
+      "dependencies": [
+        "P3-003"
+      ],
+      "doneWhen": "Fixture actions pass without coordinate fallback.",
+      "id": "P3-004",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Implement click, type, fill, select, check, press, scroll, hover, drag, and wait with locator priority.",
+      "title": "Locator and action engine"
+    },
+    {
+      "dependencies": [
+        "P3-003",
+        "P3-004"
+      ],
+      "doneWhen": "Low-confidence actions pause instead of guessing.",
+      "id": "P3-005",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Add screenshot-based target selection only after structured locators fail, with confidence and verification.",
+      "title": "Visual fallback"
+    },
+    {
+      "dependencies": [
+        "P3-002",
+        "P3-004"
+      ],
+      "doneWhen": "Download/upload fixtures pass and paths remain profile-scoped.",
+      "id": "P3-006",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Add controlled downloads, hashes, quarantine, file chooser handling, and upload receipts.",
+      "title": "Downloads and uploads"
+    },
+    {
+      "dependencies": [
+        "P3-002"
+      ],
+      "doneWhen": "Failed browser run exports a bounded replay bundle.",
+      "id": "P3-007",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Capture errors, requests, responses, timing, WebSocket summary, HAR/trace where supported.",
+      "title": "Console, network, and trace capture"
+    },
+    {
+      "dependencies": [
+        "P1-009",
+        "P3-002"
+      ],
+      "doneWhen": "Cross-profile leakage tests pass.",
+      "id": "P3-008",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Protect cookies/storage, support personal/work profiles, export/delete, and no-model-context default.",
+      "title": "Authentication profile storage"
+    },
+    {
+      "dependencies": [
+        "P3-002",
+        "P3-004"
+      ],
+      "doneWhen": "Agent resumes only after re-observation.",
+      "id": "P3-009",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Implement visible control transfer for MFA, CAPTCHA, payment, consent, and ambiguity.",
+      "title": "User takeover state machine"
+    },
+    {
+      "dependencies": [
+        "P3-003",
+        "P3-004"
+      ],
+      "doneWhen": "False-completion fixtures are rejected.",
+      "id": "P3-010",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Require postconditions and independent final verification for web tasks.",
+      "title": "Browser action verification"
+    },
+    {
+      "dependencies": [
+        "P3-002",
+        "P3-007",
+        "P3-009"
+      ],
+      "doneWhen": "Primary browser workflow is keyboard accessible.",
+      "id": "P3-011",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Add tabs, URL, profile, agent/user control, action target, screenshot, extract, and trace.",
+      "title": "Browser workspace UI"
+    },
+    {
+      "dependencies": [
+        "P3-001"
+      ],
+      "doneWhen": "HTML/CSS/JS project can be edited and saved.",
+      "id": "P3-012",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Add file tree, code editor, diagnostics, format, search, diff, and source control hooks.",
+      "title": "Web Studio editor"
+    },
+    {
+      "dependencies": [
+        "P3-012",
+        "P2-006"
+      ],
+      "doneWhen": "Static and framework fixtures preview reliably.",
+      "id": "P3-013",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Support static preview, configured dev server, readiness probe, hot reload, and stop.",
+      "title": "Live preview and development server"
+    },
+    {
+      "dependencies": [
+        "P3-003",
+        "P3-007",
+        "P3-011"
+      ],
+      "doneWhen": "Inspector handles large pages without freezing UI.",
+      "id": "P3-014",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Expose structured page internals and link DOM selection to source when possible.",
+      "title": "DOM, console, network inspector"
+    },
+    {
+      "dependencies": [
+        "P3-013",
+        "P3-014"
+      ],
+      "doneWhen": "Fixture defects are detected with actionable evidence.",
+      "id": "P3-015",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Add viewports, screenshots, diff, accessibility checks, link/form checks.",
+      "title": "Responsive, accessibility, and visual test tools"
+    },
+    {
+      "dependencies": [
+        "P3-001"
+      ],
+      "doneWhen": "Browser CI has no external-network dependency.",
+      "id": "P3-016",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Build local pages for auth, JS render, forms, downloads, uploads, popup, iframe, infinite scroll, injection, and takeover.",
+      "title": "Deterministic browser fixture site"
+    },
+    {
+      "dependencies": [
+        "P3-002",
+        "P3-006",
+        "P3-008",
+        "P3-009",
+        "P3-016"
+      ],
+      "doneWhen": "No unresolved critical/high browser finding.",
+      "id": "P3-017",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Test profile leakage, malicious downloads, prompt injection, tab confusion, redirects, and stale targets.",
+      "title": "Browser security suite"
+    },
+    {
+      "dependencies": [
+        "P3-010",
+        "P3-011"
+      ],
+      "doneWhen": "Recipes run against fixtures and produce receipts.",
+      "id": "P3-018",
+      "mission": "MISSION-003",
+      "phase": "P3",
+      "requiredOutput": "Ship recipes for research, form completion, authenticated download, web testing, and data extraction.",
+      "title": "Browser task recipes"
+    },
+    {
+      "dependencies": [
+        "P1-001"
+      ],
+      "doneWhen": "Two fixture providers pass the same contract.",
+      "id": "P4-001",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Define adapters, normalized results, errors, rate limits, region/language, date/domain filters.",
+      "title": "Search provider interface"
+    },
+    {
+      "dependencies": [
+        "P4-001"
+      ],
+      "doneWhen": "Planner corpus covers current, technical, local, and ambiguous questions.",
+      "id": "P4-002",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Create precision, recall, official-source, freshness, and follow-up queries with bounded stopping.",
+      "title": "Query planner"
+    },
+    {
+      "dependencies": [
+        "P4-001",
+        "P4-002"
+      ],
+      "doneWhen": "Benchmark meets dedupe target.",
+      "id": "P4-003",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Normalize URLs, canonicalize results, detect near duplicates, rank relevance/freshness/source diversity.",
+      "title": "Search deduplication and ranking"
+    },
+    {
+      "dependencies": [
+        "P1-004"
+      ],
+      "doneWhen": "SSRF, decompression, redirect, and timeout tests pass.",
+      "id": "P4-004",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Add redirects, limits, MIME, TLS, URL credentials, address policy, caching, retries, and hashes.",
+      "title": "Safe static fetcher"
+    },
+    {
+      "dependencies": [
+        "P4-004"
+      ],
+      "doneWhen": "Rebinding fixture cannot reach blocked address.",
+      "id": "P4-005",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Close DNS-rebinding gap in restricted modes and revalidate redirects.",
+      "title": "Connection-time address pinning"
+    },
+    {
+      "dependencies": [
+        "P3-002",
+        "P4-004"
+      ],
+      "doneWhen": "Static and rendered outputs are distinguishable.",
+      "id": "P4-006",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Render JavaScript pages in disposable context and return final DOM/evidence.",
+      "title": "Rendered fetcher"
+    },
+    {
+      "dependencies": [
+        "P4-004",
+        "P4-006"
+      ],
+      "doneWhen": "Supported fixture corpus reaches extraction target.",
+      "id": "P4-007",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Extract main text, title, author, dates, headings, lists, links, code, and diagnostics.",
+      "title": "Readable content extraction"
+    },
+    {
+      "dependencies": [
+        "P4-007"
+      ],
+      "doneWhen": "Schema and malformed-data fixtures pass.",
+      "id": "P4-008",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Extract tables, JSON-LD, Open Graph, microdata, forms, and downloadable assets.",
+      "title": "Structured-data extraction"
+    },
+    {
+      "dependencies": [
+        "P4-004",
+        "P4-007"
+      ],
+      "doneWhen": "Crawler respects fixture robots and resumes deterministically.",
+      "id": "P4-009",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Implement bounded crawling, robots rules, rate limits, depth/pages/bytes/time, resume, and dedupe.",
+      "title": "Pagination, sitemap, and crawl frontier"
+    },
+    {
+      "dependencies": [
+        "P4-007"
+      ],
+      "doneWhen": "Source edits do not invalidate historical citation records.",
+      "id": "P4-010",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Link claims to immutable fetched document versions and text/table locators.",
+      "title": "Citation span model"
+    },
+    {
+      "dependencies": [
+        "P4-004",
+        "P4-010"
+      ],
+      "doneWhen": "Duplicate fetch content reuses objects without losing fetch provenance.",
+      "id": "P4-011",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Store raw, rendered, extracted, screenshot, and metadata objects by hash.",
+      "title": "Research content-addressed storage"
+    },
+    {
+      "dependencies": [
+        "P4-001",
+        "P4-011"
+      ],
+      "doneWhen": "Migration, rollback, backup, corruption, and integrity tests pass without a SQL core.",
+      "id": "P4-012",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Add search, fetch, source, extraction, citation, crawl, and dataset objects plus indexes and versioned migrations.",
+      "title": "Web/research embedded-authority migrations"
+    },
+    {
+      "dependencies": [
+        "P4-012"
+      ],
+      "doneWhen": "Search benchmark and index-rebuild tests pass; disabling one index implementation preserves the authority store.",
+      "id": "P4-013",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Index extracted content and metadata with project/profile scoping, incremental update, and full rebuild support.",
+      "title": "Replaceable local lexical search"
+    },
+    {
+      "dependencies": [
+        "P4-013"
+      ],
+      "doneWhen": "Disabling embeddings preserves full product function.",
+      "id": "P4-014",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Add replaceable embedding provider, versioned vectors, and lexical fallback.",
+      "title": "Optional semantic index"
+    },
+    {
+      "dependencies": [
+        "P4-012"
+      ],
+      "doneWhen": "Dataset version is reproducible from stored inputs.",
+      "id": "P4-015",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Define dataset, schema, lineage, transformation recipe, source hashes, and version diff.",
+      "title": "Dataset manifest and versioning"
+    },
+    {
+      "dependencies": [
+        "P4-015"
+      ],
+      "doneWhen": "Transform property tests pass.",
+      "id": "P4-016",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Add select, rename, cast, filter, sort, dedupe, join, normalize, annotate, and validation.",
+      "title": "Dataset transforms"
+    },
+    {
+      "dependencies": [
+        "P4-015",
+        "P4-016"
+      ],
+      "doneWhen": "Exports reopen and validate against manifest.",
+      "id": "P4-017",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Export JSONL, CSV, Markdown, SQLite, and optional Parquet with provenance.",
+      "title": "Dataset exports"
+    },
+    {
+      "dependencies": [
+        "P4-003",
+        "P4-010",
+        "P4-012"
+      ],
+      "doneWhen": "User can inspect every claim’s source.",
+      "id": "P4-018",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Build search, result, source, extraction, citation, crawl, collection, and export views.",
+      "title": "Research workspace UI"
+    },
+    {
+      "dependencies": [
+        "P4-015",
+        "P4-017"
+      ],
+      "doneWhen": "Large fixture dataset remains responsive.",
+      "id": "P4-019",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Build virtualized table, schema, recipes, quality, provenance, versions, and exports.",
+      "title": "Data workspace UI"
+    },
+    {
+      "dependencies": [
+        "P4-011",
+        "P4-012"
+      ],
+      "doneWhen": "Change fixtures generate precise diffs.",
+      "id": "P4-020",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Schedule re-fetch, compare hashes/extractions, notify changes, and preserve versions.",
+      "title": "Freshness and change monitoring"
+    },
+    {
+      "dependencies": [
+        "P4-003",
+        "P4-007",
+        "P4-010"
+      ],
+      "doneWhen": "Release dashboard reports category scores.",
+      "id": "P4-021",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Create hidden/public corpus for search coverage, extraction, citations, disagreement, and freshness.",
+      "title": "Research quality benchmark"
+    },
+    {
+      "dependencies": [
+        "P4-018",
+        "P4-019"
+      ],
+      "doneWhen": "Guide is exercised by scripted onboarding test.",
+      "id": "P4-022",
+      "mission": "MISSION-004",
+      "phase": "P4",
+      "requiredOutput": "Document interactive search, crawling, authenticated pages, citations, datasets, exports, and limitations.",
+      "title": "Research operator guide"
+    },
+    {
+      "dependencies": [
+        "P0-008"
+      ],
+      "doneWhen": "Clickable or coded flow prototype covers primary scenarios.",
+      "id": "P5-001",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Specify navigation, workspaces, jobs-to-be-done, and state transitions.",
+      "title": "Information architecture and UX flows"
+    },
+    {
+      "dependencies": [
+        "P5-001"
+      ],
+      "doneWhen": "Light, dark, high-contrast, and reduced-motion themes pass.",
+      "id": "P5-002",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Define semantic color, type, spacing, elevation, focus, motion, status, and Owner Mode tokens.",
+      "title": "Design token system"
+    },
+    {
+      "dependencies": [
+        "P5-002"
+      ],
+      "doneWhen": "Components have widget, golden, and semantics tests.",
+      "id": "P5-003",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Build buttons, fields, dialogs, split panes, tabs, cards, tables, timelines, badges, empty/error states.",
+      "title": "Reusable component library"
+    },
+    {
+      "dependencies": [
+        "P5-001",
+        "P5-003"
+      ],
+      "doneWhen": "Layouts persist and handle minimum window size.",
+      "id": "P5-004",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Implement resizable left rail, center workspace, right inspector, and bottom activity drawer.",
+      "title": "Three-pane application shell"
+    },
+    {
+      "dependencies": [
+        "P2-011",
+        "P5-004"
+      ],
+      "doneWhen": "Status remains visible across workspaces.",
+      "id": "P5-005",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Display profile, model, active sessions, takeover, network, pause, stop, and emergency kill.",
+      "title": "Global autonomy status and kill"
+    },
+    {
+      "dependencies": [
+        "P5-003",
+        "P5-004"
+      ],
+      "doneWhen": "Composer supports keyboard-only task launch.",
+      "id": "P5-006",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Add attachments, project/profile/model/access, plan-only, run, schedule, criteria, and budget.",
+      "title": "Chat and task composer redesign"
+    },
+    {
+      "dependencies": [
+        "P1-004",
+        "P5-006"
+      ],
+      "doneWhen": "Owner approval policy never is represented accurately.",
+      "id": "P5-007",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Show goals, files, commands, sites, side effects, verification, risk, and profile.",
+      "title": "Plan review and permission UX"
+    },
+    {
+      "dependencies": [
+        "P5-004"
+      ],
+      "doneWhen": "Timeline handles 10k events with filtering.",
+      "id": "P5-008",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Render model, policy, file, terminal, browser, web, evidence, verification, retries, and rollback.",
+      "title": "Unified run timeline"
+    },
+    {
+      "dependencies": [
+        "P5-003"
+      ],
+      "doneWhen": "All supported evidence types reopen from a saved run.",
+      "id": "P5-009",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Add text/binary metadata, image, Markdown, JSON, table, diff, citation, and receipt views.",
+      "title": "Artifact, diff, and evidence viewers"
+    },
+    {
+      "dependencies": [
+        "P5-004"
+      ],
+      "doneWhen": "Primary workflows are keyboard complete.",
+      "id": "P5-010",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Add searchable commands, shortcuts, conflict handling, and discoverability.",
+      "title": "Command palette and keyboard system"
+    },
+    {
+      "dependencies": [
+        "P2-001",
+        "P3-001",
+        "P4-001"
+      ],
+      "doneWhen": "Fresh machine reaches a tested working state.",
+      "id": "P5-011",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Guide model, Owner Mode, browser, terminal, search providers, storage, and diagnostics.",
+      "title": "Onboarding and capability doctor"
+    },
+    {
+      "dependencies": [
+        "P5-003"
+      ],
+      "doneWhen": "Applicable WCAG 2.2 AA checks pass.",
+      "id": "P5-012",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Add semantics, focus, contrast, scaling, reduced motion, target sizes, and manual checklist.",
+      "title": "Accessibility compliance program"
+    },
+    {
+      "dependencies": [
+        "P5-004"
+      ],
+      "doneWhen": "Performance dashboard meets initial targets.",
+      "id": "P5-013",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Instrument startup, frame time, list virtualization, stream throttling, and memory.",
+      "title": "UI performance budgets"
+    },
+    {
+      "dependencies": [
+        "P5-006",
+        "P5-008",
+        "P5-009",
+        "P5-012"
+      ],
+      "doneWhen": "Critical flow change cannot merge without tests.",
+      "id": "P5-014",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Add widget, golden, navigation, semantics, keyboard, and failure-state tests.",
+      "title": "UX regression suite"
+    },
+    {
+      "dependencies": [
+        "P5-011",
+        "P5-014"
+      ],
+      "doneWhen": "No unresolved critical usability blocker before RC.",
+      "id": "P5-015",
+      "mission": "MISSION-005",
+      "phase": "P5",
+      "requiredOutput": "Run scripted sessions with representative users; record findings and fixes.",
+      "title": "Human usability review"
+    },
+    {
+      "dependencies": [
+        "P1-001"
+      ],
+      "doneWhen": "Unknown models start evaluation-only.",
+      "id": "P6-001",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Record provider/model identity, limits, tool profile, data boundary, cost, benchmark, and approved task classes.",
+      "title": "Model registry v2"
+    },
+    {
+      "dependencies": [
+        "P6-001"
+      ],
+      "doneWhen": "Routing decisions are durable and policy constrained.",
+      "id": "P6-002",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Separate planner, executor, verifier, browser observer, extractor, and reviewer roles.",
+      "title": "Role-based model routing"
+    },
+    {
+      "dependencies": [
+        "P6-002",
+        "P1-004"
+      ],
+      "doneWhen": "Adversarial model cannot convert prose into authority.",
+      "id": "P6-003",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Prevent executor from granting scope or self-certifying acceptance criteria.",
+      "title": "Planner/executor/verifier separation"
+    },
+    {
+      "dependencies": [
+        "P1-003"
+      ],
+      "doneWhen": "Cross-provider golden and fuzz tests pass.",
+      "id": "P6-004",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Add terminal, browser, research, data, user takeover, wait, delegate, complete, and fail decisions.",
+      "title": "Unified action protocol v3"
+    },
+    {
+      "dependencies": [
+        "P6-003"
+      ],
+      "doneWhen": "Injection text cannot impersonate system authority.",
+      "id": "P6-005",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Label user, system, project, web, memory, terminal, MCP, A2A, and tool output.",
+      "title": "Context provenance labels"
+    },
+    {
+      "dependencies": [
+        "P6-005"
+      ],
+      "doneWhen": "Direct/indirect injection corpus has zero unauthorized effects.",
+      "id": "P6-006",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Add untrusted-content wrappers, tool-policy separation, destination checks, and exfiltration controls.",
+      "title": "Prompt-injection containment"
+    },
+    {
+      "dependencies": [
+        "P3-010",
+        "P6-004"
+      ],
+      "doneWhen": "Dynamic-page fixtures converge without blind clicking.",
+      "id": "P6-007",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Require observe-action-verify, bounded retries, takeover, and stale-target handling.",
+      "title": "Browser planning policy"
+    },
+    {
+      "dependencies": [
+        "P2-006",
+        "P6-004"
+      ],
+      "doneWhen": "Agent stops loops and verifies command outcomes.",
+      "id": "P6-008",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Distinguish finite/interactive/background commands, readiness, destructive scope, and recovery.",
+      "title": "Terminal planning policy"
+    },
+    {
+      "dependencies": [
+        "P4-010",
+        "P6-005"
+      ],
+      "doneWhen": "Snippet-only or uncited claims fail verification.",
+      "id": "P6-009",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Require fetched evidence, citation coverage, freshness, disagreement, and source type.",
+      "title": "Research answer policy"
+    },
+    {
+      "dependencies": [
+        "P6-005"
+      ],
+      "doneWhen": "Poisoned memory does not enter normal context.",
+      "id": "P6-010",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Quarantine failed/adversarial runs, preserve provenance, add expiry and user pinning.",
+      "title": "Memory admission v2"
+    },
+    {
+      "dependencies": [
+        "P1-012",
+        "P6-004"
+      ],
+      "doneWhen": "Desktop restart can resume supported tasks.",
+      "id": "P6-011",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Support durable wait, resume, polling, mid-flight input, pause, and cancellation.",
+      "title": "Long-running task handles"
+    },
+    {
+      "dependencies": [
+        "P6-003"
+      ],
+      "doneWhen": "Long tasks do not loop indefinitely.",
+      "id": "P6-012",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Use semantic progress, repeated-outcome detection, split, replan, stronger model, user takeover, or fail.",
+      "title": "Strategy escalation and convergence"
+    },
+    {
+      "dependencies": [
+        "P6-003"
+      ],
+      "doneWhen": "Generic evidence cannot satisfy unrelated criteria.",
+      "id": "P6-013",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Map every criterion to current objective evidence and validator.",
+      "title": "Independent acceptance engine"
+    },
+    {
+      "dependencies": [
+        "P6-001",
+        "P6-004"
+      ],
+      "doneWhen": "Support matrix is generated from results.",
+      "id": "P6-014",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Run every supported model through protocol, coding, browser, research, and safety suites.",
+      "title": "Model compatibility test matrix"
+    },
+    {
+      "dependencies": [
+        "P6-013",
+        "P6-014"
+      ],
+      "doneWhen": "Release comparison is reproducible and signed.",
+      "id": "P6-015",
+      "mission": "MISSION-006",
+      "phase": "P6",
+      "requiredOutput": "Report task success, false completion, unauthorized attempts/effects, cost, latency, and recovery.",
+      "title": "Agent benchmark dashboard"
+    },
+    {
+      "dependencies": [
+        "P1-001"
+      ],
+      "doneWhen": "Protocol upgrade cannot silently remove capabilities.",
+      "id": "P7-001",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Support current stable MCP and isolate upcoming/spec-draft changes behind adapters; pin negotiated versions.",
+      "title": "MCP version adapter architecture"
+    },
+    {
+      "dependencies": [
+        "P1-005",
+        "P7-001"
+      ],
+      "doneWhen": "Unregistered or changed server fails trust policy.",
+      "id": "P7-002",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Record publisher, digest, version, transport, tools, resources, prompts, roots, network, secrets, and retention.",
+      "title": "MCP server descriptor and registry"
+    },
+    {
+      "dependencies": [
+        "P7-002",
+        "P1-004"
+      ],
+      "doneWhen": "Lifecycle and process cleanup tests pass.",
+      "id": "P7-003",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Install, enable, start, health-check, stop, update, revoke, and remove servers.",
+      "title": "MCP lifecycle manager"
+    },
+    {
+      "dependencies": [
+        "P7-003"
+      ],
+      "doneWhen": "Mode selection is explicit and auditable.",
+      "id": "P7-004",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Run untrusted servers in isolated workers; Owner Mode may opt into host execution with clear status.",
+      "title": "MCP execution isolation"
+    },
+    {
+      "dependencies": [
+        "P1-005"
+      ],
+      "doneWhen": "Conformance fixtures pass for supported subset.",
+      "id": "P7-005",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Implement Agent Cards, discovery, task/messages/artifacts, version header, auth schemes, streaming, and async tasks.",
+      "title": "A2A 1.0 protocol adapter"
+    },
+    {
+      "dependencies": [
+        "P7-005",
+        "P1-003"
+      ],
+      "doneWhen": "Remote agent cannot widen authority.",
+      "id": "P7-006",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Bind remote agent identity, task, inputs, outputs, network, secrets, deadline, and downstream delegation.",
+      "title": "A2A trust and delegation grants"
+    },
+    {
+      "dependencies": [
+        "P7-006"
+      ],
+      "doneWhen": "Environment control alone cannot execute an arbitrary program.",
+      "id": "P7-007",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Change bridge to resolve a registered agent/worker descriptor instead of raw executable JSON.",
+      "title": "Replace environment-selected A2A executable"
+    },
+    {
+      "dependencies": [
+        "P7-006"
+      ],
+      "doneWhen": "Forged completion and duplicate effect fixtures fail.",
+      "id": "P7-008",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Validate artifacts, progress, cancellation, idempotency, and unknown outcomes.",
+      "title": "A2A evidence and reconciliation"
+    },
+    {
+      "dependencies": [
+        "P1-006"
+      ],
+      "doneWhen": "Unsigned or modified production extension is rejected.",
+      "id": "P7-009",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Define signed publisher identity, code digest, permissions, compatibility, entry point, tests, and revocation.",
+      "title": "Skill and plugin manifest v2"
+    },
+    {
+      "dependencies": [
+        "P7-009"
+      ],
+      "doneWhen": "User sees exact requested capabilities.",
+      "id": "P7-010",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Build install, inspect, enable, update, disable, revoke, and trust UI.",
+      "title": "Extension marketplace/local registry"
+    },
+    {
+      "dependencies": [
+        "P7-003",
+        "P7-008",
+        "P7-010"
+      ],
+      "doneWhen": "No unresolved critical/high finding.",
+      "id": "P7-011",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Test prompt injection, lookalike tools, signer substitution, confused deputy, replay, and cascading failure.",
+      "title": "Interop adversarial suite"
+    },
+    {
+      "dependencies": [
+        "P7-011"
+      ],
+      "doneWhen": "Docs match conformance and UI.",
+      "id": "P7-012",
+      "mission": "MISSION-007",
+      "phase": "P7",
+      "requiredOutput": "Document MCP/A2A versions, trust, isolation, Owner Mode, data retention, and revocation.",
+      "title": "Interop operator documentation"
+    },
+    {
+      "dependencies": [
+        "P0-007"
+      ],
+      "doneWhen": "Reports identify assurance level.",
+      "id": "P8-001",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Separate architecture lint, unit, component, integration, platform, adversarial, benchmark, and release tests.",
+      "title": "Formal test hierarchy"
+    },
+    {
+      "dependencies": [
+        "P2-010",
+        "P4-012"
+      ],
+      "doneWhen": "Every case recovers or becomes explicit unknown.",
+      "id": "P8-002",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Inject disk full, corruption, WAL loss, clock jumps, duplicate completion, cancellation races, and interrupted migrations.",
+      "title": "Workflow chaos expansion"
+    },
+    {
+      "dependencies": [
+        "P1-003"
+      ],
+      "doneWhen": "Unknown external effects are never blindly retried.",
+      "id": "P8-003",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Implement planned, authorized, started, observed, committed, compensated, unknown, and reconciliation-required.",
+      "title": "External-effect state machine"
+    },
+    {
+      "dependencies": [
+        "P2-006"
+      ],
+      "doneWhen": "Kill and recovery targets pass.",
+      "id": "P8-004",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Test hung prompts, binary output, output floods, fork bombs, process escapes, and abrupt worker death.",
+      "title": "Terminal fault-injection suite"
+    },
+    {
+      "dependencies": [
+        "P3-017"
+      ],
+      "doneWhen": "No false completion or profile leakage.",
+      "id": "P8-005",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Test navigation races, stale DOM, popups, downloads, crashes, storage leaks, and worker death.",
+      "title": "Browser fault-injection suite"
+    },
+    {
+      "dependencies": [
+        "P4-021",
+        "P6-006"
+      ],
+      "doneWhen": "No unauthorized effect or unsupported citation.",
+      "id": "P8-006",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Test poisoned pages, malicious metadata, SSRF, rebinding, giant pages, extraction traps, and citation drift.",
+      "title": "Research adversarial suite"
+    },
+    {
+      "dependencies": [
+        "P0-010"
+      ],
+      "doneWhen": "Seeded secrets are detected without printing values.",
+      "id": "P8-007",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Add Git-history scan, entropy, provider detectors, archives, binary metadata, pre-commit, CI, and safe fingerprints.",
+      "title": "Secret scanning v2"
+    },
+    {
+      "dependencies": [
+        "P0-004"
+      ],
+      "doneWhen": "Unapproved dependency cannot reach release.",
+      "id": "P8-008",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Add vulnerability, lockfile, provenance, license, and abandoned-package gates.",
+      "title": "Dependency and license policy"
+    },
+    {
+      "dependencies": [
+        "P1-001"
+      ],
+      "doneWhen": "One run is traceable end to end without project content by default.",
+      "id": "P8-009",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Add correlated traces, metrics, and logs for model, policy, tools, terminal, browser, web, and update.",
+      "title": "OpenTelemetry instrumentation"
+    },
+    {
+      "dependencies": [
+        "P8-009"
+      ],
+      "doneWhen": "Privacy tests and data inventory pass.",
+      "id": "P8-010",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Make telemetry opt-in, redact content, expose preview/export/delete, and document retention.",
+      "title": "Privacy and telemetry controls"
+    },
+    {
+      "dependencies": [
+        "P5-013",
+        "P8-009"
+      ],
+      "doneWhen": "Budgets and leak thresholds pass.",
+      "id": "P8-011",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Measure startup, memory, event throughput, large repos, long terminal/browser sessions, search, datasets, and 24h runs.",
+      "title": "Performance and soak suite"
+    },
+    {
+      "dependencies": [
+        "P1-011"
+      ],
+      "doneWhen": "Every applicable risk has evidence or explicit accepted gap.",
+      "id": "P8-012",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Map tests and controls to OWASP Agentic Top 10 and AI Agent Security guidance.",
+      "title": "Agentic security mapping"
+    },
+    {
+      "dependencies": [
+        "P6-015",
+        "P8-012"
+      ],
+      "doneWhen": "Release package includes current risk register and measurement report.",
+      "id": "P8-013",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Map Govern, Map, Measure, Manage outcomes to product artifacts and owners.",
+      "title": "NIST AI RMF evidence map"
+    },
+    {
+      "dependencies": [
+        "P2-013",
+        "P3-017",
+        "P7-011"
+      ],
+      "doneWhen": "No unresolved critical/high finding.",
+      "id": "P8-014",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Commission review of full-host execution, browser, IPC, signing, updater, MCP/A2A, and prompt injection.",
+      "title": "Independent penetration test"
+    },
+    {
+      "dependencies": [
+        "P8-002",
+        "P8-004",
+        "P8-005",
+        "P8-006"
+      ],
+      "doneWhen": "Regression replay runs in release CI.",
+      "id": "P8-015",
+      "mission": "MISSION-002",
+      "phase": "P8",
+      "requiredOutput": "Minimize every production failure into a permanent deterministic fixture.",
+      "title": "Failure replay corpus"
+    },
+    {
+      "dependencies": [
+        "P0-003",
+        "P8-001"
+      ],
+      "doneWhen": "Failures do not hide downstream evidence and required gates are enforced.",
+      "id": "P9-001",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Split PR, nightly, platform, adversarial, benchmark, and release workflows with artifact retention.",
+      "title": "Redesign CI pipeline"
+    },
+    {
+      "dependencies": [
+        "P3-001",
+        "P4-011"
+      ],
+      "doneWhen": "Validator, scanner, and packager use one tested policy.",
+      "id": "P9-002",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Exclude Playwright, Node, browser profiles, traces, downloads, dataset intermediates, and native build state.",
+      "title": "Extend generated-state policy"
+    },
+    {
+      "dependencies": [
+        "P3-001",
+        "P8-008"
+      ],
+      "doneWhen": "Clean builders resolve identical inputs.",
+      "id": "P9-003",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Lock Flutter/Dart, Python, automation host, browser binaries, native tools, and checksums.",
+      "title": "Reproducible dependency and browser lock"
+    },
+    {
+      "dependencies": [
+        "P9-001",
+        "P9-003"
+      ],
+      "doneWhen": "Consumer can verify artifact to source/workflow.",
+      "id": "P9-004",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Generate source/build SBOMs, GitHub artifact attestations, checksums, and SLSA-aligned provenance.",
+      "title": "SBOM and provenance"
+    },
+    {
+      "dependencies": [
+        "P9-003"
+      ],
+      "doneWhen": "All Windows release tests pass.",
+      "id": "P9-005",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Build installer, code sign, timestamp, verify, install, upgrade, rollback, and uninstall on clean images.",
+      "title": "Windows installer and signing"
+    },
+    {
+      "dependencies": [
+        "P9-003"
+      ],
+      "doneWhen": "All macOS release tests pass.",
+      "id": "P9-006",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Sign nested binaries/helpers, hardened runtime, notarize, staple, verify, install, upgrade, rollback, uninstall.",
+      "title": "macOS signing and notarization"
+    },
+    {
+      "dependencies": [
+        "P9-003"
+      ],
+      "doneWhen": "Supported distributions pass.",
+      "id": "P9-007",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Produce supported signed package/bundle, dependency declarations, install/upgrade/rollback/uninstall tests.",
+      "title": "Linux packages"
+    },
+    {
+      "dependencies": [
+        "P1-008",
+        "P9-004"
+      ],
+      "doneWhen": "Metadata expiry, rollback, freeze, mix-and-match, and compromise tests pass.",
+      "id": "P9-008",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Create offline root, delegated nightly/alpha/beta/stable/emergency targets, snapshot, timestamp, and publication.",
+      "title": "TUF repository and channels"
+    },
+    {
+      "dependencies": [
+        "P9-008"
+      ],
+      "doneWhen": "Injected failure at every stage returns to working version.",
+      "id": "P9-009",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Download, verify, stage, stop workers, backup state, install, health-check, rollback, and report.",
+      "title": "Updater and rollback engine"
+    },
+    {
+      "dependencies": [
+        "P8-002",
+        "P9-009"
+      ],
+      "doneWhen": "No unsupported migration path is offered.",
+      "id": "P9-010",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Test N-2 upgrade, N-1 rollback where supported, forward-only declarations, and backups.",
+      "title": "Database upgrade compatibility"
+    },
+    {
+      "dependencies": [
+        "P9-003",
+        "P9-004"
+      ],
+      "doneWhen": "Payloads match or documented nondeterminism blocks release.",
+      "id": "P9-011",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Build twice on clean builders and compare unsigned payloads; isolate intended signature/timestamp differences.",
+      "title": "Reproducible unsigned payload comparison"
+    },
+    {
+      "dependencies": [
+        "P9-001",
+        "P9-004"
+      ],
+      "doneWhen": "A release cannot be labeled compiled/stable without all evidence.",
+      "id": "P9-012",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Create one release orchestrator that refuses missing gates and exports reports, SBOM, provenance, hashes, and notes.",
+      "title": "Release command and evidence bundle"
+    },
+    {
+      "dependencies": [
+        "P5-011",
+        "P8-010"
+      ],
+      "doneWhen": "Human legal review recorded.",
+      "id": "P9-013",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Finalize support matrix, privacy, retention, third-party notices, license, terms, and Owner Mode disclosure.",
+      "title": "Support, privacy, license, and EULA documents"
+    },
+    {
+      "dependencies": [
+        "P9-004",
+        "P9-012"
+      ],
+      "doneWhen": "Fresh user can verify an artifact independently.",
+      "id": "P9-014",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Publish checksums, signatures, provenance verification, install, update, rollback, and known limits.",
+      "title": "Release website and verification guide"
+    },
+    {
+      "dependencies": [
+        "P9-008",
+        "P9-012"
+      ],
+      "doneWhen": "Runbook succeeds from offline root.",
+      "id": "P9-015",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Simulate targets/timestamp/root compromise, rotate/revoke, issue emergency metadata, and block old artifacts.",
+      "title": "Key compromise drill"
+    },
+    {
+      "dependencies": [
+        "P9-009"
+      ],
+      "doneWhen": "Staged rollout stops automatically.",
+      "id": "P9-016",
+      "mission": "MISSION-008",
+      "phase": "P9",
+      "requiredOutput": "Publish faulty beta fixture, detect, halt rollout, rollback, and preserve state.",
+      "title": "Bad update drill"
+    }
+  ]
+}

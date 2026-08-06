@@ -1,0 +1,18 @@
+{
+  "branch": "agent/d/p3-readiness-fixtures",
+  "current": "P3 browser-runtime readiness source foundation; P3-001 blocked by P2-004 evidence",
+  "exclusivePaths": [
+    "release/evidence/P3-*/**",
+    "tool/worker_d*.py",
+    "lib/product/browser/**",
+    "test/product/browser/**"
+  ],
+  "head": "7eecc840f68ca0dff13ab58c138845593254e390",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-003",
+  "pr": 68,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "tree": "2080824a34956e3b202126a0a9bd61b4d645d338",
+  "worker": "D"
+}
