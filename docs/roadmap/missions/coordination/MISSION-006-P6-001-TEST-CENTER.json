@@ -1,0 +1,33 @@
+{
+  "authorityOwner": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "mission": "MISSION-002",
+    "observedHead": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "observedTree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+    "pullRequest": 65,
+    "worker": "B"
+  },
+  "authorityTransferred": false,
+  "constraints": [
+    "Do not create a second Test Center or result vocabulary.",
+    "Do not alter existing Worker B stable IDs or assurance semantics.",
+    "Do not promote behavior, platform, capability, release, or GA support.",
+    "Worker B exact-commit/tree review is required before integration."
+  ],
+  "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
+  "requestedAt": "2026-08-06T11:42:30Z",
+  "requester": {
+    "branch": "agent/g/mission-006-model-routing",
+    "mission": "MISSION-006",
+    "observedHead": "fc62949503caad11a6edbeb65535d3d3409631f4",
+    "observedTree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+    "pullRequest": 76,
+    "worker": "G"
+  },
+  "schemaVersion": 1,
+  "scope": "Add only the P6-TC-001 Agent Quality & Model Routing module, stable test identity, non-mutating profile, and affected-path mapping for P6-001 model registry validation.",
+  "sharedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "status": "REQUESTED"
+}

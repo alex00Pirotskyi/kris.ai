@@ -1,0 +1,21 @@
+{
+  "blockers": [
+    "P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Imported current worker branch, PR, exact-candidate narrative, blockers, and valid reusable work into mission state."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
+  "observedHead": "fc62949503caad11a6edbeb65535d3d3409631f4",
+  "observedTree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 1,
+  "supersededBy": null,
+  "validation": [
+    "Mission generation and collision validation only; product claims remain unchanged."
+  ],
+  "worker": "G"
+}

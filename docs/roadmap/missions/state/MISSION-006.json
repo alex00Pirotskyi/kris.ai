@@ -1,14 +1,14 @@
 {
-  "assignedWorker": null,
-  "branch": null,
-  "current": "Await entry-dependency and ownership evaluation.",
+  "assignedWorker": "G",
+  "branch": "agent/g/mission-006-model-routing",
+  "current": "P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review.",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-006",
-  "nextAction": "Evaluate entry dependencies and create a collision-free claim.",
-  "observedHead": null,
-  "observedTree": null,
-  "pullRequest": null,
+  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
+  "observedHead": "fc62949503caad11a6edbeb65535d3d3409631f4",
+  "observedTree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+  "pullRequest": 76,
   "schemaVersion": 1,
-  "status": "AVAILABLE",
+  "status": "CLAIMED",
   "title": "Agent Intelligence, Model Routing, Local Models, and Hardware Acceleration"
 }

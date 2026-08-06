@@ -20,7 +20,13 @@ Deliver the agent loop, planning, memory, model/provider routing, safe autonomy,
 
 ## Current repository anchor
 
-- No active claim. The mission is available only when its entry dependencies and ownership checks pass.
+- Worker: `G`
+- Branch: `agent/g/mission-006-model-routing`
+- Draft PR: `#76`
+- Observed head: `fc62949503caad11a6edbeb65535d3d3409631f4`
+- Observed tree: `ef5d5ae584b1d823502bf6f2191ecf4285d36845`
+- Current work: P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review.
+- These are discovery anchors, not permission to skip live-state discovery.
 
 ## P6 — Agent intelligence, model routing, and safe autonomy
 

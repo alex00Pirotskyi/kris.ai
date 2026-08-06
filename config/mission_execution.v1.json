@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-06T10:54:50Z",
+  "generatedAt": "2026-08-06T11:42:30Z",
   "authority": {
     "human": "docs/roadmap/MASTER.md",
     "machine": "docs/roadmap/roadmap.yaml",
@@ -341,6 +341,27 @@
         "lib/product/ux/**",
         "test/product/ux/**",
         "docs/ux/**"
+      ]
+    },
+    {
+      "mission": "MISSION-006",
+      "worker": "G",
+      "branch": "agent/g/mission-006-model-routing",
+      "pr": 76,
+      "head": "fc62949503caad11a6edbeb65535d3d3409631f4",
+      "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+      "status": "CLAIMED",
+      "current": "P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review.",
+      "exclusivePaths": [
+        ".github/workflows/worker-g*.yml",
+        "lib/ai/model/**",
+        "lib/ai/test_center/**",
+        "lib/product/model/**",
+        "lib/settings/model/**",
+        "release/evidence/P6-*/**",
+        "test/ai/model/**",
+        "test/product/model/**",
+        "tool/worker_g*.py"
       ]
     },
     {

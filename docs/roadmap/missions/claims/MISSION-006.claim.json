@@ -1,0 +1,23 @@
+{
+  "branch": "agent/g/mission-006-model-routing",
+  "current": "P6-001 model registry v2 source foundation on the exact Worker B Test Center base; canonical registry extension requires Worker B exact-head review.",
+  "exclusivePaths": [
+    ".github/workflows/worker-g*.yml",
+    "lib/ai/model/**",
+    "lib/ai/test_center/**",
+    "lib/product/model/**",
+    "lib/settings/model/**",
+    "release/evidence/P6-*/**",
+    "test/ai/model/**",
+    "test/product/model/**",
+    "tool/worker_g*.py"
+  ],
+  "head": "fc62949503caad11a6edbeb65535d3d3409631f4",
+  "liveStateMustBeResolved": true,
+  "mission": "MISSION-006",
+  "pr": 76,
+  "schemaVersion": 1,
+  "status": "CLAIMED",
+  "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+  "worker": "G"
+}
