@@ -93,12 +93,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
     }
 
     final recoveryMessage = _state.recoveryMessage;
-    final clearsResolvedExperienceWarning = recoveryMessage != null &&
-        P5PrototypeFixtures.workspaces.any(
-          (definition) =>
-              recoveryMessage ==
-              '${definition.id.label} requires ${definition.minimumLevel.label} mode.',
-        );
+    final clearsResolvedExperienceWarning =
+        _isResolvedExperienceWarning(recoveryMessage, level);
 
     _state = _state.copyWith(
       experienceLevel: level,
@@ -458,6 +454,14 @@ class P5InformationArchitectureController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void showRecoveryMessage(String message) {
+    if (message == _state.recoveryMessage) {
+      return;
+    }
+    _state = _state.copyWith(recoveryMessage: message);
+    notifyListeners();
+  }
+
   void apply(P5PrototypeAction action) {
     switch (action) {
       case P5PrototypeAction.createSampleProject:
@@ -592,6 +596,14 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectWorkspace(P5WorkspaceId.evidence);
         return;
       case P5PrototypeAction.runVerification:
+        if (_state.runState != P5RunPresentationState.completed) {
+          _state = _state.copyWith(
+            recoveryMessage:
+                'Verification can only be requested after a simulated run completes.',
+          );
+          notifyListeners();
+          return;
+        }
         _state = _state.copyWith(
           verificationRequested: true,
           recoveryMessage:
@@ -660,6 +672,26 @@ class P5InformationArchitectureController extends ChangeNotifier {
         .where((candidate) => candidate.id == workspace)
         .firstOrNull;
     return definition != null && definition.minimumLevel.index <= level.index;
+  }
+
+  bool _isResolvedExperienceWarning(
+    String? message,
+    P5ExperienceLevel level,
+  ) {
+    if (message == null) {
+      return false;
+    }
+    for (final definition in P5PrototypeFixtures.workspaces) {
+      if (definition.minimumLevel.index > level.index) {
+        continue;
+      }
+      final base =
+          '${definition.id.label} requires ${definition.minimumLevel.label} mode.';
+      if (message == base || message == '$base Returned to Home / Chat.') {
+        return true;
+      }
+    }
+    return false;
   }
 
   int? _findEligibleHistoryIndex(int direction) {

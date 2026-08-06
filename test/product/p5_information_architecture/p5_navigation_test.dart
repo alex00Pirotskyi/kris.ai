@@ -115,6 +115,11 @@ void main() {
     await tapKey(tester, const Key('complete-run-button'));
     expect(controller.state.runState, P5RunPresentationState.completed);
     expect(reviewButton().onPressed, isNotNull);
+    expect(startButton().onPressed, isNull);
+
+    await tapKey(tester, const Key('review-plan-button'));
+    expect(controller.state.selectedRunId, isNull);
+    expect(controller.state.runState, P5RunPresentationState.ready);
     expect(startButton().onPressed, isNotNull);
     expect(controller.sideEffects.isZero, isTrue);
   });
@@ -204,7 +209,7 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('settings recovery opens the advertised advanced workspaces',
+  testWidgets('advanced recovery destinations require explicit disclosure',
       (tester) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
@@ -216,9 +221,17 @@ void main() {
     await tester.tap(modelsRecovery);
     await tester.pumpAndSettle();
 
-    expect(controller.state.experienceLevel, P5ExperienceLevel.advanced);
+    expect(controller.state.experienceLevel, P5ExperienceLevel.simple);
+    expect(controller.state.workspace, P5WorkspaceId.settingsDiagnostics);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
+    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+    await tester.pumpAndSettle();
+    await tester.tap(modelsRecovery);
+    await tester.pumpAndSettle();
     expect(controller.state.workspace, P5WorkspaceId.modelsProviders);
 
+    controller.changeExperienceLevel(P5ExperienceLevel.simple);
     controller.selectWorkspace(P5WorkspaceId.settingsDiagnostics);
     await tester.pumpAndSettle();
     final capabilityRecovery = find.text('Open capability requirements');
@@ -226,8 +239,58 @@ void main() {
     await tester.tap(capabilityRecovery);
     await tester.pumpAndSettle();
 
-    expect(controller.state.experienceLevel, P5ExperienceLevel.advanced);
+    expect(controller.state.experienceLevel, P5ExperienceLevel.simple);
+    expect(controller.state.workspace, P5WorkspaceId.settingsDiagnostics);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
+    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+    await tester.pumpAndSettle();
+    await tester.tap(capabilityRecovery);
+    await tester.pumpAndSettle();
     expect(controller.state.workspace, P5WorkspaceId.capabilitiesIntegrations);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  testWidgets('permission recovery is honest about later-task ownership',
+      (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    final permissionRecovery = find.text('Review the requested access');
+    await tester.ensureVisible(permissionRecovery);
+    await tester.tap(permissionRecovery);
+    await tester.pumpAndSettle();
+
+    expect(controller.state.experienceLevel, P5ExperienceLevel.simple);
+    expect(controller.state.workspace, P5WorkspaceId.settingsDiagnostics);
+    expect(controller.state.recoveryMessage, contains('not implemented'));
+    expect(controller.state.recoveryMessage, contains('P5-007'));
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
+  testWidgets('failing evidence uses the Evidence workspace without elevation',
+      (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    final evidenceRecovery = find.text('Open failing evidence');
+    await tester.ensureVisible(evidenceRecovery);
+    await tester.tap(evidenceRecovery);
+    await tester.pumpAndSettle();
+
+    expect(controller.state.experienceLevel, P5ExperienceLevel.simple);
+    expect(controller.state.workspace, P5WorkspaceId.settingsDiagnostics);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+
+    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+    await tester.pumpAndSettle();
+    await tester.tap(evidenceRecovery);
+    await tester.pumpAndSettle();
+    expect(controller.state.workspace, P5WorkspaceId.evidence);
     expect(controller.sideEffects.isZero, isTrue);
   });
 
