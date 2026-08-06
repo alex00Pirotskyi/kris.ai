@@ -4,10 +4,10 @@ All Git identities below are discovery anchors and must be re-resolved before wr
 
 | Mission | Executor | Status | Phases | Current |
 |---|---|---|---|---|
-| `MISSION-001` Foundation, Trust, Product Core, and Owner Mode | Worker A | `CLAIMED` | P0, P1, P2 | Frozen reviewed P1/P1A/P2 candidate; moving P8 Test Center base requires registry compatibility, new landing governance, and fresh post-integration review; P2 behavior remains externally blocked |
+| `MISSION-001` Foundation, Trust, Product Core, and Owner Mode | Worker A | `CLAIMED` | P0, P1, P2 | P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked |
 | `MISSION-002` Verification OS, Security, Reliability, and Continuous Certification | Worker B | `CLAIMED` | P8 | Canonical Test Center contracts, exact reviews, certification and integration governance |
 | `MISSION-003` Browser Automation and Web Studio | Worker D | `CLAIMED` | P3 | P3 browser-runtime readiness source foundation; P3-001 blocked by P2-004 evidence |
-| `MISSION-004` Research, Data, Citations, and Knowledge | Worker C | `CLAIMED` | P4 | P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted |
+| `MISSION-004` Research, Data, Citations, and Knowledge | Worker D | `CLAIMED` | P4 | Worker D replacement claim accepted by explicit user transfer; preserve the existing P4-001 source candidate, reconcile PR #62 with current Worker B ancestry, restore exact-head CI and evidence, and do not restart or expand beyond dependency-safe P4 work. |
 | `MISSION-005` Experience Platform and Consumer Productization | Worker F | `CLAIMED` | P5, P22 | P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled |
 | `MISSION-006` Agent Intelligence, Model Routing, Local Models, and Hardware Acceleration | Unassigned | `AVAILABLE` | P6, P18 | Await entry dependencies and claim |
 | `MISSION-007` Interoperability, Skills, Tools, and Capability Operating System | Unassigned | `AVAILABLE` | P7, P23 | Await entry dependencies and claim |

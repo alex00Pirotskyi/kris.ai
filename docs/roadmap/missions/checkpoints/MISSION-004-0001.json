@@ -1,6 +1,6 @@
 {
   "blockers": [
-    "P4-001 existing search-provider foundation; PR currently non-mergeable and must be reconciled, not restarted"
+    "Worker D replacement claim accepted by explicit user transfer; preserve the existing P4-001 source candidate, reconcile PR #62 with current Worker B ancestry, restore exact-head CI and evidence, and do not restart or expand beyond dependency-safe P4 work."
   ],
   "branch": "agent/p4-001-search-provider-foundation",
   "completed": [
@@ -17,5 +17,5 @@
   "validation": [
     "Mission generation and collision validation only; product claims remain unchanged."
   ],
-  "worker": "C"
+  "worker": "D"
 }
