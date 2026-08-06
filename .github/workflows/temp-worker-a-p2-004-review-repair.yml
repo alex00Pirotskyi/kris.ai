@@ -45,10 +45,10 @@ jobs:
           root = pathlib.Path('.').resolve()
           payload_root = root / 'tool/.temp-worker-a-p2-004-review-payload'
           expected_chunks = {
-              'part-00.b64': 'e3387744d929611efdde4d5186d2ab0c3188967c94ecb8b455c7714a560cb33c',
-              'part-01.b64': '4d0df2845ea346f387a88f2282ea91f5ad19f2ebe3f1e584dab13770cb05c074',
-              'part-02.b64': '7a8a7f6295a6e914120e2f26ce3b62014b451d331487cbaa27d6d93688cc0633',
-              'part-03.b64': 'ac9cf7a75c27c2f7857076671ff446d87ea9d1a13e19498747fb217ec948e171',
+              'part-00.b64': '6de3070687fbb5055249b238c511c14a03782840654f0bb910e3ddbf80eb0305',
+              'part-01.b64': '951edcdf63981e51b3610a1657e10db139f440f32a8286a48a3a02d46624f63e',
+              'part-02.b64': 'fdbfe2afbd0148f5cd29e2463178efab975fdffb9c78d23db5e41a9b29003491',
+              'part-03.b64': 'c6c70cfe1cbe30adab030934899bf08285816c934da4d43e74e7c260b884557',
           }
           encoded_parts = []
           for name, expected_sha in expected_chunks.items():
@@ -60,10 +60,10 @@ jobs:
                   raise SystemExit(f'payload chunk digest mismatch: {name}')
               encoded_parts.append(raw.decode('ascii'))
           encoded = ''.join(encoded_parts)
-          if len(encoded) != 19208:
+          if len(encoded) != 18100:
               raise SystemExit(f'unexpected payload length: {len(encoded)}')
           raw_payload = zlib.decompress(base64.b64decode(encoded))
-          if hashlib.sha256(raw_payload).hexdigest() != 'e39a6a839c8019429e02f616de4bd97d9e8f32bb820e57db3dd65b154098b7cb':
+          if hashlib.sha256(raw_payload).hexdigest() != '1dba9b1f796145597044021a03d603dc29a7c712527a7b4db8c7f11f33fa17b0':
               raise SystemExit('payload digest mismatch')
           payload = json.loads(raw_payload.decode('utf-8'))
           if set(payload) != {'files', 'validateFunction', 'boundPaths', 'progressAppendix'}:
@@ -136,7 +136,9 @@ jobs:
           progress_path.write_text(progress, encoding='utf-8')
           PYCODE
           rm -rf 'tool/.temp-worker-a-p2-004-review-payload'
-          rm '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
+          rm -f \
+            '.github/workflows/temp-worker-a-p2-004-review-diagnostic.yml' \
+            '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
       - name: Validate hardened contract
         shell: bash
         run: |
