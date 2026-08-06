@@ -12,6 +12,30 @@ accessibility = accessibility.replace(
     "  int maximumTabs = 30,",
     "  int maximumTabs = 120,",
 )
+old_focus = """    if (target.evaluate().isNotEmpty &&
+        Focus.of(tester.element(target)).hasPrimaryFocus) {
+      return;
+    }
+"""
+new_focus = """    if (target.evaluate().isNotEmpty) {
+      final targetElement = tester.element(target);
+      final focusContext = FocusManager.instance.primaryFocus?.context;
+      var containsPrimaryFocus = focusContext == targetElement;
+      focusContext?.visitAncestorElements((ancestor) {
+        if (ancestor == targetElement) {
+          containsPrimaryFocus = true;
+          return false;
+        }
+        return true;
+      });
+      if (containsPrimaryFocus) {
+        return;
+      }
+    }
+"""
+if old_focus not in accessibility:
+    raise RuntimeError("legacy focus detection block was not found")
+accessibility = accessibility.replace(old_focus, new_focus, 1)
 accessibility = accessibility.replace(
     "    addTearDown(semantics.dispose);\n",
     "",
@@ -43,4 +67,23 @@ verification = verification.replace(
     "find.text(testId)",
     "find.textContaining(testId)",
 )
+old_record = """      expect(
+        find.byKey(const Key('developer-verification-record')),
+        findsOneWidget,
+      );
+"""
+new_record = """      final developerRecord = find.byKey(
+        const Key('developer-verification-record'),
+      );
+      await tester.scrollUntilVisible(
+        developerRecord,
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      expect(developerRecord, findsOneWidget);
+"""
+if old_record not in verification:
+    raise RuntimeError("developer verification record assertion was not found")
+verification = verification.replace(old_record, new_record, 1)
 verification_path.write_text(verification, encoding="utf-8")
