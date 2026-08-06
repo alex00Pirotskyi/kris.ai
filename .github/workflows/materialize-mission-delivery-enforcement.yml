@@ -1,0 +1,109 @@
+name: Materialize Mission Delivery Enforcement
+
+on:
+  push:
+    branches:
+      - agent/mission-delivery-enforcement-v1
+    paths:
+      - '.github/workflows/materialize-mission-delivery-enforcement.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: materialize-mission-delivery-enforcement-v1
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: github.repository == 'alex00Pirotskyi/kris.ai'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/mission-delivery-enforcement-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Require exact triggering head
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+      - name: Reconstruct and verify delivery patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          carrier="${RUNNER_TEMP}/mission-delivery-patch.b64"
+          archive="${RUNNER_TEMP}/mission-delivery-patch.tar.xz"
+          : > "${carrier}"
+          for part in docs/roadmap/missions/materializer/mission-delivery-patch.part*.b64; do
+            cat "${part}" >> "${carrier}"
+          done
+          base64 --decode "${carrier}" > "${archive}"
+          test "$(wc -c < "${archive}")" = 38576
+          printf '%s  %s\n' \
+            8c2c37836aee978f92b3d0f306f8769df4e1ddee6058ff3513cf262053279501 \
+            "${archive}" | sha256sum -c -
+          tar -xJf "${archive}" -C .
+          rm -rf tool/__pycache__
+      - name: Remove one-shot carrier and materializer
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -rf -- \
+            docs/roadmap/missions/materializer \
+            .github/workflows/materialize-mission-delivery-enforcement.yml
+      - name: Validate delivery enforcement source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tool/mission_delivery_control.py \
+            tool/mission_delivery_control_test.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          paths = [
+              Path('config/mission_delivery.v1.json'),
+              Path('schemas/mission_delivery.schema.json'),
+              Path('schemas/mission_delivery_update.schema.json'),
+          ]
+          for path in paths:
+              json.loads(path.read_text(encoding='utf-8'))
+          print(f'MISSION_DELIVERY_JSON_VALID count={len(paths)}')
+          PY
+          python -m unittest -v tool/mission_delivery_control_test.py
+          python tool/mission_delivery_control.py --project . validate
+          python tool/mission_delivery_control.py --project . generate
+      - name: Refresh canonical source manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+      - name: Verify final deterministic tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/mission_delivery_control.py --project . validate
+          python tool/mission_delivery_control.py --project . generate --check
+          python -m unittest -v tool/mission_delivery_control_test.py
+          test ! -e docs/roadmap/missions/materializer
+          test ! -e .github/workflows/materialize-mission-delivery-enforcement.yml
+          test ! -e tool/__pycache__
+          git diff --check
+          test -n "$(git status --porcelain=v1)"
+      - name: Publish focused delivery enforcement candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- .
+          git diff --cached --check
+          git commit -m 'ANARCHY: enforce delivery ownership and collision-safe execution'
+          git push origin HEAD:agent/mission-delivery-enforcement-v1
