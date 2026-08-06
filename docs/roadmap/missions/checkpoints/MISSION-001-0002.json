@@ -1,0 +1,101 @@
+{
+  "blockers": [
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "Worker B PR #65 is exact-head validated and has a complete landing packet, but explicit workstream merge authorization is absent and the PR remains draft and unmerged."
+    },
+    {
+      "class": "WORKER_J_RECONCILIATION_PENDING",
+      "detail": "PR #66 contains the bounded P1/P1A/P2 reconciliation request, but no Worker J decision has been published for the exact Worker A candidate."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "Controlled P2 behavior remains unavailable because the governed p2-controlled environment, signed provisioning/trust inputs, and exact interactive self-hosted Windows, macOS, and Linux runners are not proven available."
+    },
+    {
+      "class": "MISSION_SYSTEM_GOVERNANCE",
+      "detail": "Mission Execution Control runs for the mission-system branch are action_required before job allocation; this is an approval/governance state, not a test failure."
+    }
+  ],
+  "branch": "agent/a/p1-p2-new-roadmap-execution",
+  "classifications": [
+    "WORKER_A_EXACT_CANDIDATE_FROZEN",
+    "TEST_CENTER_INTEGRATION_READY",
+    "PR65_LANDING_PACKET_READY",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "PENDING_WORKER_J_RECONCILIATION",
+    "PENDING_AUTHORIZED_STACKED_INTEGRATION"
+  ],
+  "completed": [
+    "Re-resolved protected main, Worker A branch and PR, exact commit/tree, CI, reviews, dependency state, and mission ownership.",
+    "Confirmed the Worker A exact reviewed candidate remains unchanged and no source repair or no-op commit is justified.",
+    "Confirmed Worker A Test Center Integration, product-gates, and P2 Integration Alignment remain successful on the frozen exact head.",
+    "Confirmed Worker B's exact-SHA PASS artifact and support boundary remain valid for the unchanged Worker A candidate.",
+    "Confirmed PR #65 has a complete exact landing packet and all hosted source/integration checks pass; only governance and authorization remain.",
+    "Confirmed the bounded Worker J reconciliation request exists on PR #66 and no Worker J response has yet been published."
+  ],
+  "evidence": {
+    "p2BehavioralState": "BLOCKED_EXTERNAL",
+    "pr65LandingPacketComment": 5195689882,
+    "workerAReviewArtifact": "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json",
+    "workerAReviewArtifactSha256": "d613497c297e332bab8ea47d3e29e96bc242dc7ed801b9fb57aa439ef93aac4d",
+    "workerAReviewDecision": "PASS",
+    "workerAWorkflows": {
+      "p2IntegrationAlignment": {
+        "conclusion": "success",
+        "runId": 31028254437
+      },
+      "productGates": {
+        "conclusion": "success",
+        "runId": 31028253830
+      },
+      "testCenterIntegration": {
+        "conclusion": "success",
+        "runId": 31028254841
+      }
+    },
+    "workerB": {
+      "branch": "agent/b/test-center-contracts-and-review",
+      "head": "90c574665363140aeb6cf764ab8387714cab88cf",
+      "landingState": "PR65_LANDING_PACKET_READY",
+      "pullRequest": 65,
+      "tree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc"
+    },
+    "workerJ": {
+      "branch": "agent/j/P24-001-roadmap-as-data-adr",
+      "head": "2a14b875ff529cfd90348673e8e45b2442663619",
+      "pullRequest": 66,
+      "reconciliationRequestComment": 5195693340,
+      "reconciliationState": "PENDING",
+      "tree": "595346993b4512411f48075a47289333c51b3850"
+    }
+  },
+  "mission": "MISSION-001",
+  "missionSystem": {
+    "branch": "agent/anarchy-autonomous-worker-missions",
+    "ciState": "ACTION_REQUIRED_BEFORE_JOB_ALLOCATION",
+    "observedHead": "08270a90bc5a4089362de6a0b370b8b394e67b4a",
+    "observedTree": "ef860e3dfab541e2ad44c48ebd24c6aa2d503cf3",
+    "pullRequest": 73
+  },
+  "nextAction": "Obtain Worker J's bounded reconciliation and explicit PR #65 merge authorization. After PR #65 actually lands, retarget draft PR #64 to main, inspect the effective diff and generated manifest, and rerun exact-head CI plus independent review only if the Worker A head/tree or effective source identity changes.",
+  "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
+  "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 64,
+  "schemaVersion": 1,
+  "sequence": 2,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0001.json",
+  "validation": [
+    "Worker A exact-head CI remains green at the frozen reviewed commit/tree.",
+    "Worker B exact-SHA PASS remains valid because Worker A source, manifest, registry, evidence, and workflow identities are unchanged.",
+    "PR #65 hosted source and integration validation is complete; controlled P2 behavior was not executed and is not promoted.",
+    "No ownership collision or Worker A source defect was discovered during live-state reconciliation."
+  ],
+  "worker": "A"
+}
