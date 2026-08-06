@@ -1,0 +1,95 @@
+name: TEMP Worker E P11 Manifest Materializer 493
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-worker-e-p11-manifest-493.yml'
+      - 'release/evidence/P11-001/temp-worker-e-p11-manifest-493.trigger'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-worker-e-p11-manifest-493
+  cancel-in-progress: false
+
+env:
+  TARGET_BRANCH: agent/e/native-parity-readiness
+  EXPECTED_TARGET_HEAD: 493fd49efffba4a2986f4fb17cddc56a91b07254
+  CARRIER_BRANCH: automation/e-p11-manifest-493-9c4e7b21
+
+jobs:
+  materialize:
+    name: materialize-and-validate
+    if: >-
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'automation/e-p11-manifest-493-9c4e7b21' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact Worker E candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.EXPECTED_TARGET_HEAD }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Assert exact remote identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_TARGET_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_TARGET_HEAD}"
+          git fetch origin \
+            agent/a/p1-p2-new-roadmap-execution \
+            agent/j/P24-001-roadmap-as-data-adr
+      - name: Regenerate canonical manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          git diff --check
+          mapfile -t changed < <(git diff --name-only | LC_ALL=C sort)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = 'SOURCE_MANIFEST.sha256'
+      - name: Validate exact final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/worker_e_dependency_binding.py --project .
+          python -m unittest -v tool/worker_e_native_parity_readiness_test.py tool/worker_e_test_center_registration_test.py
+          python tool/worker_e_test_center_registration.py --check --project .
+          python tool/worker_e_native_parity_readiness.py --check --project .
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+      - name: Publish only canonical manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_TARGET_HEAD}"
+          git add SOURCE_MANIFEST.sha256
+          mapfile -t staged < <(git diff --cached --name-only | LC_ALL=C sort)
+          test "${#staged[@]}" -eq 1
+          test "${staged[0]}" = 'SOURCE_MANIFEST.sha256'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(p11): materialize exact source manifest'
+          final_commit="$(git rev-parse HEAD)"
+          final_tree="$(git rev-parse HEAD^{tree})"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_TARGET_HEAD}"
+          git push origin "HEAD:${TARGET_BRANCH}"
+          printf 'FINAL_COMMIT=%s\nFINAL_TREE=%s\n' "${final_commit}" "${final_tree}"
