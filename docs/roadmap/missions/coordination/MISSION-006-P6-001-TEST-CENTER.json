@@ -19,7 +19,7 @@
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
   "currentBlockers": [
     "exact P6 candidate has no allocated exact-head CI run or status",
-    "SOURCE_MANIFEST.sha256 awaits an executable canonical generator on the P6 candidate",
+    "SOURCE_MANIFEST.sha256 requires canonical regeneration for the added P6 source/tests even though Worker G carries no manifest diff relative to Worker B",
     "Worker A source-inventory grant remains pending",
     "Worker B 60490503 repairs transitive predecessor assurance, but exact Worker G review 4878375408 returns REQUEST_CHANGES because release independent-review evidence does not prove reviewer independence",
     "Worker B 60490503 has no exact-head CI and its canonical manifest/evidence are not final-current",
@@ -29,12 +29,21 @@
     "P6-002+ and merge remain unauthorized"
   ],
   "exactCandidate": {
-    "commit": "4515c66f857d61fc415f37e737c6926e716ef3b5",
+    "commit": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
     "independentReviewRequired": true,
     "pullRequest": 76,
     "requiredAuthorityReview": "Worker B",
     "reviewStatus": "PENDING_FINAL_CANDIDATE_VALIDATION",
-    "tree": "b50ce144b685a000fbf71ea7231665367911c4e9"
+    "tree": "d87bc3640ae50b53780eb72b7c333879200e712f"
+  },
+  "integrationState": {
+    "workerBCommit": "604905039aa26952045e69ebe6799ae464144635",
+    "workerBTree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+    "mergeCommit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
+    "mergeTree": "7ff410b5606719a3f627ce6a5eea84eb4f2509dc",
+    "candidateBehindBy": 0,
+    "effectiveDiffContainsTestCenterAuthority": false,
+    "effectiveDiffContainsSourceManifest": false
   },
   "ownerDependencyReview": {
     "reviewedCommit": "604905039aa26952045e69ebe6799ae464144635",
@@ -55,8 +64,8 @@
   "requester": {
     "branch": "agent/g/mission-006-model-routing",
     "mission": "MISSION-006",
-    "observedHead": "4515c66f857d61fc415f37e737c6926e716ef3b5",
-    "observedTree": "b50ce144b685a000fbf71ea7231665367911c4e9",
+    "observedHead": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
+    "observedTree": "d87bc3640ae50b53780eb72b7c333879200e712f",
     "pullRequest": 76,
     "worker": "G",
     "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
