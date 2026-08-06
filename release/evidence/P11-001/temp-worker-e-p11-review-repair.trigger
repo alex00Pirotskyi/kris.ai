@@ -1,0 +1,4 @@
+WORK_EXECUTION_ID=WRK-20260806T203018Z-9c4e7b21
+TARGET=agent/e/native-parity-readiness@825769f639edb5db22b27a222cd5c1c57f4ed775
+OWNER=agent/b/test-center-contracts-and-review@71770c8ced388d83a278d951fd45a07afdec84db
+MODE=NON_INTEGRATION_CARRIER
