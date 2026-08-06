@@ -1,0 +1,75 @@
+name: Worker B P8 Canonical Manifest Materializer
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/worker-b-p8-manifest-materializer.yml'
+      - '.github/workflows/worker-b-p8-001-formal-test-hierarchy.yml'
+      - 'config/test_center*.json'
+      - 'schemas/test_center*.json'
+      - 'tool/test_center*.py'
+      - 'docs/testing/**'
+      - 'release/evidence/TEST_CENTER/**'
+
+permissions:
+  contents: read
+
+jobs:
+  materialize:
+    name: worker-b-p8-materialize-canonical-manifest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.head_ref == 'agent/b/test-center-contracts-and-review' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      HEAD_BRANCH: ${{ github.head_ref }}
+      MATERIALIZER_PATH: .github/workflows/worker-b-p8-manifest-materializer.yml
+    steps:
+      - name: Check out exact Worker B head with branch credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Validate source contracts before publication
+        run: |
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report --project . --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+      - name: Publish only self-removal and canonical source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${HEAD_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+
+          git rm "${MATERIALIZER_PATH}"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          git diff --check
+
+          mapfile -t paths < <(git diff HEAD --name-only | LC_ALL=C sort)
+          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 2
+          test "${paths[0]}" = "${MATERIALIZER_PATH}"
+          test "${paths[1]}" = 'SOURCE_MANIFEST.sha256'
+
+          git add SOURCE_MANIFEST.sha256
+          test "$(git diff --cached --name-only | LC_ALL=C sort | paste -sd, -)" = "${MATERIALIZER_PATH},SOURCE_MANIFEST.sha256"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(p8): materialize clean canonical source manifest'
+          git push origin "HEAD:${HEAD_BRANCH}"
