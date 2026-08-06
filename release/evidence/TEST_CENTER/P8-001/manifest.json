@@ -1,36 +1,41 @@
 {
-  "schemaVersion": "1.0.0",
-  "taskId": "P8-001",
-  "status": "SOURCE_IMPLEMENTED_PENDING_EXACT_CI_AND_INDEPENDENT_REVIEW",
-  "assuranceClaim": "FORMAL_HIERARCHY_SOURCE_CONTRACT",
-  "files": [
-    ".github/workflows/p8-001-formal-test-hierarchy.yml",
-    "config/test_center_assurance_hierarchy.v1.json",
-    "config/test_center_registry.v1.json",
-    "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
-    "release/evidence/TEST_CENTER/P8-001/IMPLEMENTATION.md",
-    "schemas/test_center_assurance_hierarchy.v1.json",
-    "tool/test_center_assurance_hierarchy.py",
-    "tool/test_center_assurance_hierarchy_test.py"
-  ],
-  "stableTestIds": [
-    "tc.p8.formal-test-hierarchy",
-    "tc.p8.formal-test-hierarchy-regressions"
-  ],
-  "requiredPlatforms": [
-    "linux",
-    "macos",
-    "windows"
-  ],
-  "requiredChecks": [
-    "p8-001-ubuntu",
-    "p8-001-windows",
-    "p8-001-macos"
-  ],
-  "independentReviewRequired": true,
-  "supportPromotion": "NONE",
-  "blockers": [
-    "Exact-head tri-platform CI has not yet been bound to this source packet.",
-    "Independent exact-commit/tree review has not yet been recorded."
-  ]
+  "schemaVersion": 1,
+  "roadmapTaskId": "P8-001",
+  "status": "REVIEW_CHANGES_ADDRESSED_PENDING_EXACT_CI_AND_MANIFEST_REFRESH",
+  "reviewedPredecessor": {
+    "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+    "pullRequest": 65,
+    "reviewDecision": "REQUEST_CHANGES",
+    "reviewId": "PRR_kwDOTTSxks8AAAABIn1Efw",
+    "findingsAddressed": [
+      "P8-A-001",
+      "P8-A-002",
+      "P8-A-003"
+    ],
+    "reviewState": "COMMENTED",
+    "reviewDisposition": "REQUEST_CHANGES"
+  },
+  "implementation": {
+    "assuranceExecutionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
+    "actualExecutionFixture": "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+    "actualExecutionValidation": "tool/test_center_assurance_hierarchy.py check-report",
+    "regressionCount": 32,
+    "downstreamMigrationBindingCount": 11,
+    "sourceManifestGenerator": "tool/p1a_refresh_source_manifest.py",
+    "downstreamMigrationSource": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+      "reviewCommentId": 5203350863
+    }
+  },
+  "exactRepairCandidate": null,
+  "exactCi": null,
+  "sourceManifest": {
+    "state": "PENDING_CANONICAL_GENERATOR_ARTIFACT",
+    "path": "SOURCE_MANIFEST.sha256"
+  },
+  "supportImpact": "NO_PROMOTION",
+  "mergeAuthorization": "ABSENT"
 }

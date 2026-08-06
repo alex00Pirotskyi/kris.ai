@@ -1,8 +1,8 @@
 {
   "base": {
     "branch": "agent/b/test-center-contracts-and-review",
-    "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
-    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
+    "commit": "788af8db5891518a2b405d25e8d5b50cb89e8871",
+    "tree": "fe2bd4068d83b652ef988fd11d0de86a0fc9bffd"
   },
   "classification": "SOURCE_FOUNDATION",
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",

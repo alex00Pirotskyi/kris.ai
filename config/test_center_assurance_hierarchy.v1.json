@@ -145,9 +145,14 @@
   ],
   "testBindings": [
     {
-      "testId": "tc.p6.model-registry-v2",
+      "testId": "tc.test-center.contracts",
+      "levelId": "architecture_lint",
+      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation."
+    },
+    {
+      "testId": "tc.test-center.semantic-regressions",
       "levelId": "unit",
-      "rationale": "Exercises deterministic fail-closed registry behavior for identity, limits, tool profile, data boundary, cost, benchmark evidence, and evaluation-only defaults; source evidence remains capped at SOURCE_FOUNDATION."
+      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation."
     },
     {
       "testId": "tc.p8.formal-test-hierarchy",
@@ -157,17 +162,102 @@
     {
       "testId": "tc.p8.formal-test-hierarchy-regressions",
       "levelId": "unit",
-      "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, and report ambiguity."
+      "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, report ambiguity, and invalid actual execution reports."
     },
     {
-      "testId": "tc.test-center.contracts",
-      "levelId": "architecture_lint",
-      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation."
-    },
-    {
-      "testId": "tc.test-center.semantic-regressions",
       "levelId": "unit",
-      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation."
+      "rationale": "Exercises deterministic fail-closed registry behavior for identity, limits, tool profile, data boundary, cost, benchmark evidence, and evaluation-only defaults; source evidence remains capped at SOURCE_FOUNDATION.",
+      "testId": "tc.p6.model-registry-v2"
+    }
+  ],
+  "pendingMigrationBindings": [
+    {
+      "testId": "tc.p1.exit-gate",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P1 exit gate is registered as a source-contract gate; the pending map grants no support."
+    },
+    {
+      "testId": "tc.p1a.exit-gate",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "Current Worker A command uses --source-only; genuine platform certification requires a separate stable identity and real platform evidence."
+    },
+    {
+      "testId": "tc.p2.source-inventory",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 source inventory proves source identity only and grants no behavioral support."
+    },
+    {
+      "testId": "tc.p2.application-composition",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 application composition is a source-contract check and grants no behavioral support."
+    },
+    {
+      "testId": "tc.p2.acceptance-contract",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 acceptance-contract validation is source-only and grants no behavioral support."
+    },
+    {
+      "testId": "tc.p2.evidence-contract",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 evidence-contract validation is source-only and grants no behavioral support."
+    },
+    {
+      "testId": "tc.p2.runner-attestation",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 runner-attestation contract validation is source-only; real runner behavior remains external."
+    },
+    {
+      "testId": "tc.p2.cleanup-contract",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 cleanup-contract validation is source-only; controlled cleanup behavior remains external."
+    },
+    {
+      "testId": "tc.p2.strict-finalizer",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 strict-finalizer validation is source-only; controlled finalization behavior remains external."
+    },
+    {
+      "testId": "tc.worker-a.canonical-integration",
+      "levelId": "architecture_lint",
+      "sourceOnly": true,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "Worker A canonical integration validates source contracts and does not promote support."
+    },
+    {
+      "testId": "tc.p2.behavioral-closure",
+      "levelId": "release",
+      "sourceOnly": false,
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "Reserved post-landing release-level binding for the controlled behavioral closure identity; inactive until real governed evidence exists and grants no release support."
     }
   ],
   "reportContract": {
@@ -184,6 +274,7 @@
       "startedAt",
       "testId"
     ],
+    "executionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
     "unknownLevelPolicy": "FAIL",
     "crossLevelPromotionPolicy": "FORBIDDEN",
     "unexecutedResultStates": [
@@ -192,5 +283,12 @@
       "NOT_IMPLEMENTED"
     ],
     "sourceOnlySupportPromotion": "FORBIDDEN"
+  },
+  "pendingMigrationSource": {
+    "pullRequest": 64,
+    "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+    "reviewCommentId": 5203350863,
+    "integrationState": "FROZEN_EXTERNAL_CANDIDATE"
   }
 }

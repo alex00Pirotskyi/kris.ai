@@ -27,9 +27,12 @@
         "config/test_center_registry.v1.json",
         "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
         "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
         "tool/test_center_assurance_hierarchy.py",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "priority": 15,
       "testIds": [
@@ -150,8 +153,12 @@
         "config/test_center_registry.v1.json",
         "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
         "release/evidence/TEST_CENTER/P8-001/**",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
-        "tool/test_center_assurance_hierarchy.py"
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "argv": [
         "python",
@@ -172,7 +179,11 @@
       "inputPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
         "config/test_center_registry.v1.json",
-        "schemas/test_center_assurance_hierarchy.v1.json"
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [
@@ -188,9 +199,12 @@
       "affectedPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
         "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
         "tool/test_center_assurance_hierarchy.py",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "argv": [
         "python",
@@ -211,9 +225,12 @@
       "inputPaths": [
         "config/test_center_assurance_hierarchy.v1.json",
         "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
         "schemas/test_center_assurance_hierarchy.v1.json",
         "tool/test_center_assurance_hierarchy.py",
-        "tool/test_center_assurance_hierarchy_test.py"
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py"
       ],
       "mutationPolicy": "NON_MUTATING",
       "platforms": [
