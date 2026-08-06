@@ -35,10 +35,12 @@ ModelToolProfile _measuredNoTools() {
 ModelBenchmarkEvidence _benchmark({
   String benchmarkId = 'p6.code-fixture-v1',
   String taskClassId = 'code-generation',
+  String modelDigest = 'sha256:0123456789abcdef',
 }) {
   return ModelBenchmarkEvidence(
     benchmarkId: benchmarkId,
     taskClassId: taskClassId,
+    modelDigest: modelDigest,
     score: 0.91,
     scoreUnit: 'ratio',
     higherIsBetter: true,
@@ -201,6 +203,73 @@ void main() {
                 contains(
                     'task class code-generation has no benchmark evidence'),
               ),
+        ),
+      );
+    });
+
+    test('approval rejects benchmark evidence measured for another artifact', () {
+      expect(
+        () => ModelDefinition.approved(
+          providerId: 'ollama.local',
+          modelId: 'replacement:latest',
+          displayName: 'Replacement',
+          digest: 'sha256:replacement-artifact',
+          parameterSize: '14B',
+          quantization: 'Q4_K_M',
+          limits: _measuredLimits(),
+          toolProfile: _measuredNoTools(),
+          dataBoundary: ModelDataBoundary.localOnly,
+          cost: ModelCostProfile.noDirectCharge(),
+          benchmarks: <ModelBenchmarkEvidence>[
+            _benchmark(modelDigest: 'sha256:old-artifact'),
+          ],
+          approvedTaskClasses: const <String>['code-generation'],
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            allOf(
+              contains('belongs to artifact sha256:old-artifact'),
+              contains('expected sha256:replacement-artifact'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('approved JSON cannot relabel an artifact and retain stale benchmarks',
+        () {
+      final raw = _approvedModel().toJson();
+      raw['digest'] = 'sha256:replacement-artifact';
+
+      expect(
+        () => ModelDefinition.fromJson(raw),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            allOf(
+              contains('belongs to artifact sha256:0123456789abcdef'),
+              contains('expected sha256:replacement-artifact'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('benchmark JSON requires an exact model digest', () {
+      final raw = _benchmark().toJson();
+      raw.remove('modelDigest');
+
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(raw),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('benchmark.modelDigest must be non-empty'),
+          ),
         ),
       );
     });
