@@ -1,0 +1,57 @@
+name: Mission Execution Control
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mission-execution-control.yml'
+      - '.github/workflows/mission-execution-materialize.yml'
+      - 'config/mission_execution.v1.json'
+      - 'tool/mission_control.py'
+      - 'docs/roadmap/anarchy/phases/**'
+      - 'docs/roadmap/missions/**'
+      - 'SOURCE_MANIFEST.sha256'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mission-execution-control.yml'
+      - '.github/workflows/mission-execution-materialize.yml'
+      - 'config/mission_execution.v1.json'
+      - 'tool/mission_control.py'
+      - 'docs/roadmap/anarchy/phases/**'
+      - 'docs/roadmap/missions/**'
+      - 'SOURCE_MANIFEST.sha256'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate-${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Validate mission execution model
+        run: python tool/mission_control.py --project . validate
+      - name: Verify deterministic generated views
+        run: python tool/mission_control.py --project . bootstrap --check
+      - name: Verify canonical source manifest
+        shell: bash
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.before"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.before" SOURCE_MANIFEST.sha256
+      - name: Verify repository whitespace
+        run: git diff --check
+      - name: Verify non-mutation
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"
