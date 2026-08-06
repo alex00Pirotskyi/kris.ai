@@ -1,29 +1,21 @@
-# P8-001 implementation record
+# P8-001 review-repair implementation evidence
 
-## Objective
+This packet addresses the exact Worker A review of commit `22a8ac34cbf9601100f60c4929198f15f3c60e52` / tree `ef5d5ae584b1d823502bf6f2191ecf4285d36845`.
 
-Introduce the formal Test Center hierarchy required by P8-001 while reusing the existing canonical Test Center schema, registry, affected-test selection, exact-candidate evidence model, and certification safeguards.
+## P8-A-001
 
-## Implemented
+A closed `AssuranceExecutionReport` schema now wraps and validates a real canonical `TestExecutionResult`. The validator binds test, module, roadmap task, commit, tree, hierarchy level, proof kind, result state, and support ceiling. Thirty-two regressions include missing, unknown, mismatched, cross-candidate, source-only promotion, unexecuted promotion, above-ceiling, unknown-test, missing-canonical-field, and additional-field cases.
 
-- Added a closed, versioned hierarchy schema and canonical eight-level configuration.
-- Required every canonical stable Test Center ID to bind to exactly one assurance level.
-- Added fail-closed validation for unknown levels, invalid rank/predecessor order, incomplete report fields, missing bindings, and source-only support promotion.
-- Registered deterministic source-contract and regression checks under the existing canonical Test Center.
-- Added a read-only, path-scoped tri-platform workflow for the two canonical P8-001 checks and the existing Test Center contract checks.
-- Preserved separate roadmap, worker-runtime, test-execution, certification, and capability-support domains.
+## P8-A-002
+
+The dedicated workflow now regenerates the root source manifest through the canonical P1A owner and fails closed on a diff. The first repair run uploads the generated manifest so it can be committed without reproducing the repository outside the canonical generator. Exact implementation CI identities are added to `manifest.json` after that run settles.
+
+## P8-A-003
+
+The hierarchy records the exact eleven reviewed Worker A bindings from PR #64 commit `89a15332019c73675a19cdacd7021fae2199d75e` / tree `2ea1f8a7c12c34c71ee75ba06fdf047cf9528223` and review comment `5203350863`. They block integration until promoted to active bindings. `tc.p1a.exit-gate` remains source-only `architecture_lint`; a platform claim requires a separate stable ID and actual platform evidence.
 
 ## Non-claims
 
-This source packet does not claim full P8 completion, behavioral closure, platform support, release support, production readiness, or penetration-test completion. Component, integration, platform, adversarial, benchmark, and release suites remain independently implemented and evidenced by their owning tasks.
+This is source-contract and deterministic fixture evidence only. It does not close controlled P2 behavior, authorize P3, prove native parity, promote support, certify a release, or authorize merge.
 
-## Validation contract
-
-```text
-python tool/test_center_contracts.py check --project .
-python -m unittest -v tool/test_center_contracts_test.py
-python tool/test_center_assurance_hierarchy.py check --project .
-python -m unittest -v tool/test_center_assurance_hierarchy_test.py
-```
-
-The exact final commit/tree and tri-platform workflow run IDs are recorded in the PR checkpoint after GitHub Actions completes. Independent review remains a separate exact-identity gate.
+The semantic validation implementation is isolated in `tool/test_center_assurance_semantics.py`; the CLI remains read-only in `tool/test_center_assurance_hierarchy.py`.

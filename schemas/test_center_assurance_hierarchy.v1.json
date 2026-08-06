@@ -10,6 +10,8 @@
     "roadmapTaskId",
     "levels",
     "testBindings",
+    "pendingMigrationSource",
+    "pendingMigrationBindings",
     "reportContract"
   ],
   "properties": {
@@ -159,11 +161,89 @@
         }
       }
     },
+    "pendingMigrationSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pullRequest",
+        "commit",
+        "tree",
+        "reviewCommentId",
+        "integrationState"
+      ],
+      "properties": {
+        "pullRequest": {
+          "const": 64
+        },
+        "commit": {
+          "const": "89a15332019c73675a19cdacd7021fae2199d75e"
+        },
+        "tree": {
+          "const": "2ea1f8a7c12c34c71ee75ba06fdf047cf9528223"
+        },
+        "reviewCommentId": {
+          "const": 5203350863
+        },
+        "integrationState": {
+          "const": "FROZEN_EXTERNAL_CANDIDATE"
+        }
+      }
+    },
+    "pendingMigrationBindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "testId",
+          "levelId",
+          "sourceOnly",
+          "owningPullRequest",
+          "integrationPolicy",
+          "rationale"
+        ],
+        "properties": {
+          "testId": {
+            "type": "string",
+            "pattern": "^tc\\.[a-z0-9._-]+\\.[a-z0-9._-]+$"
+          },
+          "levelId": {
+            "enum": [
+              "architecture_lint",
+              "unit",
+              "component",
+              "integration",
+              "platform",
+              "adversarial",
+              "benchmark",
+              "release"
+            ]
+          },
+          "sourceOnly": {
+            "type": "boolean"
+          },
+          "owningPullRequest": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "integrationPolicy": {
+            "const": "BLOCK_UNTIL_ACTIVE_BINDING"
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "reportContract": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "requiredFields",
+        "executionReportSchema",
         "unknownLevelPolicy",
         "crossLevelPromotionPolicy",
         "unexecutedResultStates",
@@ -178,6 +258,9 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "executionReportSchema": {
+          "const": "schemas/test_center_assurance_execution_report.v1.json"
         },
         "unknownLevelPolicy": {
           "const": "FAIL"
