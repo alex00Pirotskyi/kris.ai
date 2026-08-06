@@ -1,0 +1,58 @@
+name: P8-001 Formal Test Hierarchy
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/p8-001-formal-test-hierarchy.yml'
+      - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'config/test_center_registry.v1.json'
+      - 'docs/testing/TEST_CENTER_P8_001_HIERARCHY.md'
+      - 'release/evidence/TEST_CENTER/P8-001/**'
+      - 'schemas/test_center.v1.json'
+      - 'schemas/test_center_assurance_hierarchy.v1.json'
+      - 'tool/test_center_contracts.py'
+      - 'tool/test_center_contracts_test.py'
+      - 'tool/test_center_assurance_hierarchy.py'
+      - 'tool/test_center_assurance_hierarchy_test.py'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: p8-001-${{ matrix.lane }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: ubuntu
+            os: ubuntu-24.04
+          - lane: windows
+            os: windows-2025
+          - lane: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Install hash-locked Python test dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Canonical Test Center contracts
+        run: |
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+      - name: P8-001 formal hierarchy
+        run: |
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+      - name: Verify non-mutation
+        shell: bash
+        run: |
+          git diff --check
+          git diff --exit-code

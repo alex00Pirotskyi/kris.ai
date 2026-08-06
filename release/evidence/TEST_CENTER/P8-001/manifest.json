@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "taskId": "P8-001",
+  "status": "SOURCE_IMPLEMENTED_PENDING_EXACT_CI_AND_INDEPENDENT_REVIEW",
+  "assuranceClaim": "FORMAL_HIERARCHY_SOURCE_CONTRACT",
+  "files": [
+    ".github/workflows/p8-001-formal-test-hierarchy.yml",
+    "config/test_center_assurance_hierarchy.v1.json",
+    "config/test_center_registry.v1.json",
+    "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+    "release/evidence/TEST_CENTER/P8-001/IMPLEMENTATION.md",
+    "schemas/test_center_assurance_hierarchy.v1.json",
+    "tool/test_center_assurance_hierarchy.py",
+    "tool/test_center_assurance_hierarchy_test.py"
+  ],
+  "stableTestIds": [
+    "tc.p8.formal-test-hierarchy",
+    "tc.p8.formal-test-hierarchy-regressions"
+  ],
+  "requiredPlatforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "requiredChecks": [
+    "p8-001-ubuntu",
+    "p8-001-windows",
+    "p8-001-macos"
+  ],
+  "independentReviewRequired": true,
+  "supportPromotion": "NONE",
+  "blockers": [
+    "Exact-head tri-platform CI has not yet been bound to this source packet.",
+    "Independent exact-commit/tree review has not yet been recorded."
+  ]
+}

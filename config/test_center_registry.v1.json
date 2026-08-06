@@ -1,1 +1,1736 @@
-{"affectedTestMappings":[{"excludedPaths":["release/evidence/generated/**"],"mappingId":"affected.test-center-contracts","pathPatterns":["config/test_center_registry.v1.json","docs/testing/**","schemas/test_center.v1.json","tool/test_center_contracts.py"],"priority":10,"testIds":["tc.test-center.contracts","tc.test-center.semantic-regressions"]},{"mappingId":"affected.testing-evidence-bridges","pathPatterns":["schemas/assurance_report.v1.json","schemas/project_profile.v2.json","schemas/verification_report.v1.json","tool/assurance_model.py"],"priority":20,"testIds":["tc.test-center.contracts","tc.test-center.semantic-regressions"]},{"mappingId":"affected.p4-001.request","pathPatterns":["services/research_worker/src/search/models.py","schemas/web_search_request.v1.json"],"testIds":["tc.p4-001.request-schema","tc.p4-001.capability-negotiation","tc.p4-001.stable-query-identity","tc.p4-001.fixture-provider-parity"],"priority":200,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.result-page","pathPatterns":["services/research_worker/src/search/models.py","schemas/web_search_page.v1.json"],"testIds":["tc.p4-001.result-schema","tc.p4-001.page-schema","tc.p4-001.stable-result-identity","tc.p4-001.rate-limit-representation","tc.p4-001.partial-failure-representation","tc.p4-001.unfetched-snippet-classification"],"priority":201,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.provider","pathPatterns":["services/research_worker/src/search/provider.py","services/research_worker/src/search/models.py"],"testIds":["tc.p4-001.provider-error-schema","tc.p4-001.capability-negotiation","tc.p4-001.fixture-provider-parity"],"priority":202,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.cursor","pathPatterns":["services/research_worker/src/search/fixture_provider.py"],"testIds":["tc.p4-001.cursor-provider-binding","tc.p4-001.stable-query-identity","tc.p4-001.fixture-provider-parity"],"priority":203,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.security-validation","pathPatterns":["services/research_worker/src/search/validation.py","services/research_worker/test/schema_validator.py"],"testIds":["tc.p4-001.url-fail-closed","tc.p4-001.credential-rejection","tc.p4-001.secret-normalization","tc.p4-001.provider-metadata-isolation"],"priority":204,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.schemas","pathPatterns":["schemas/web_search_*.v1.json"],"testIds":["tc.p4-001.request-schema","tc.p4-001.result-schema","tc.p4-001.page-schema","tc.p4-001.provider-error-schema","tc.p4-001.url-fail-closed"],"priority":205,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.fixtures","pathPatterns":["services/research_worker/src/search/fixture_provider.py","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/**"],"testIds":["tc.p4-001.fixture-provider-parity","tc.p4-001.network-free-determinism","tc.p4-001.unfetched-snippet-classification"],"priority":206,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.workflow","pathPatterns":[".github/workflows/p4-001-search-provider.yml","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py","tool/p4_001_test_center_v1_test.py"],"testIds":["tc.p4-001.request-schema","tc.p4-001.result-schema","tc.p4-001.page-schema","tc.p4-001.provider-error-schema","tc.p4-001.url-fail-closed","tc.p4-001.credential-rejection","tc.p4-001.secret-normalization","tc.p4-001.provider-metadata-isolation","tc.p4-001.stable-query-identity","tc.p4-001.stable-result-identity","tc.p4-001.cursor-provider-binding","tc.p4-001.capability-negotiation","tc.p4-001.rate-limit-representation","tc.p4-001.partial-failure-representation","tc.p4-001.fixture-provider-parity","tc.p4-001.network-free-determinism","tc.p4-001.unfetched-snippet-classification","tc.p4-001.normalized-result-state-preservation"],"priority":207,"excludedPaths":["release/evidence/generated/**"]},{"mappingId":"affected.p4-001.evidence","pathPatterns":["release/evidence/P4-001/**","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md"],"testIds":["tc.p4-001.normalized-result-state-preservation","tc.p4-001.network-free-determinism"],"priority":208,"excludedPaths":["release/evidence/generated/**","release/evidence/P4-001/history/**"]}],"projectTestProfiles":[{"affectedPaths":["config/test_center_registry.v1.json","docs/testing/**","schemas/test_center.v1.json","tool/test_center_contracts.py"],"argv":["python","tool/test_center_contracts.py","check","--project","."],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/worker-b/test-center-contract-validation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.test-center.contracts","timeoutSeconds":60,"workingDirectory":"."},{"affectedPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","tool/test_center_contracts.py","tool/test_center_contracts_test.py"],"argv":["python","-m","unittest","-v","tool/test_center_contracts_test.py"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","RUNNER_ARCH","RUNNER_OS"],"evidenceDestination":"release/evidence/generated/worker-b/test-center-semantic-regressions.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","tool/test_center_contracts.py","tool/test_center_contracts_test.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.test-center.semantic-regressions","timeoutSeconds":120,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.request-schema"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.request-schema.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.request-schema","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.result-schema"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.result-schema.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.result-schema","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.page-schema"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.page-schema.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.page-schema","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.provider-error-schema"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.provider-error-schema.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.provider-error-schema","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.url-fail-closed"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.url-fail-closed.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.url-fail-closed","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.credential-rejection"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.credential-rejection.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.credential-rejection","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.secret-normalization"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.secret-normalization.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.secret-normalization","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.provider-metadata-isolation"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.provider-metadata-isolation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.provider-metadata-isolation","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.stable-query-identity"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.stable-query-identity.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.stable-query-identity","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.stable-result-identity"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.stable-result-identity.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.stable-result-identity","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.cursor-provider-binding"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.cursor-provider-binding.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.cursor-provider-binding","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.capability-negotiation"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.capability-negotiation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.capability-negotiation","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.rate-limit-representation"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.rate-limit-representation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.rate-limit-representation","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.partial-failure-representation"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.partial-failure-representation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.partial-failure-representation","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.fixture-provider-parity"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.fixture-provider-parity.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.fixture-provider-parity","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.network-free-determinism"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.network-free-determinism.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.network-free-determinism","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.unfetched-snippet-classification"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.unfetched-snippet-classification.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.unfetched-snippet-classification","timeoutSeconds":180,"workingDirectory":"."},{"affectedPaths":[".github/workflows/p4-001-search-provider.yml","config/test_center_registry.v1.json","docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md","evals/fixtures/p4_001_search_provider/**","release/evidence/P4-001/**","schemas/web_search_*.v1.json","services/research_worker/**","tool/p4_001_*.py"],"argv":["python","tool/p4_001_search_provider_test.py","--project",".","--test-id","tc.p4-001.normalized-result-state-preservation"],"assuranceClass":"source_contract","environmentAllowlist":["CI","GITHUB_ACTIONS","GITHUB_HEAD_REF","GITHUB_REF_NAME","GITHUB_RUN_ATTEMPT","GITHUB_RUN_ID","PYTHONDONTWRITEBYTECODE","RUNNER_ARCH","RUNNER_NAME","RUNNER_OS"],"evidenceDestination":"release/evidence/P4-001/canonical/test-results/p4-001.normalized-result-state-preservation.json","expectedOutputs":[],"inputPaths":["config/test_center_registry.v1.json","schemas/test_center.v1.json","schemas/web_search_request.v1.json","schemas/web_search_page.v1.json","schemas/web_search_error.v1.json","services/research_worker/src/search/**","services/research_worker/test/**","evals/fixtures/p4_001_search_provider/contract_cases.json","release/evidence/P4-001/test-center-handoff.json","tool/p4_001_search_provider_test.py","tool/p4_001_test_center_v1.py"],"mutationPolicy":"NON_MUTATING","platforms":["linux","macos","windows"],"stableCheckId":"tc.p4-001.normalized-result-state-preservation","timeoutSeconds":180,"workingDirectory":"."}],"registryId":"test-center.canonical-v1","schemaVersion":"1.0.0","testCases":[{"assuranceClass":"source_contract","displayName":"Canonical Test Center contract check","mandatory":true,"moduleId":"tm.test-center","purpose":"Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.","roadmapTaskIds":[],"testId":"tc.test-center.contracts"},{"assuranceClass":"source_contract","displayName":"Test Center semantic regression suite","mandatory":true,"moduleId":"tm.test-center","purpose":"Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.","roadmapTaskIds":[],"testId":"tc.test-center.semantic-regressions"},{"assuranceClass":"source_contract","displayName":"Search request schema","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate the immutable request model, exact request fields, filters, and schema/runtime parity.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.request-schema"},{"assuranceClass":"source_contract","displayName":"Search result schema","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate canonical result serialization and result-envelope schema parity.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.result-schema"},{"assuranceClass":"source_contract","displayName":"Search page schema","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate canonical page serialization, result bounds, and pagination fields.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.page-schema"},{"assuranceClass":"source_contract","displayName":"Provider error schema","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate typed provider errors, retry metadata, diagnostics, and schema parity.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.provider-error-schema"},{"assuranceClass":"source_contract","displayName":"Public result URL validation","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Reject malformed, credential-bearing, local, private, fragmented, and non-canonical result URLs.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.url-fail-closed"},{"assuranceClass":"source_contract","displayName":"Credential rejection","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Prove requests and result URLs expose no credential or authority channel.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.credential-rejection"},{"assuranceClass":"source_contract","displayName":"Secret-key normalization","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Reject normalized secret-bearing keys across provider metadata representations.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.secret-normalization"},{"assuranceClass":"source_contract","displayName":"Provider metadata isolation","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Prevent untrusted provider metadata from redefining canonical authority fields.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.provider-metadata-isolation"},{"assuranceClass":"source_contract","displayName":"Stable query identity","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Prove semantic query identity excludes request and pagination mechanics while including semantic filters.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.stable-query-identity"},{"assuranceClass":"source_contract","displayName":"Stable result identity","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Prove result identity is stable and bound to provider, semantic query, and URL.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.stable-result-identity"},{"assuranceClass":"source_contract","displayName":"Cursor provider and query binding","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate canonical cursor encoding and contract-version, provider, query, and offset binding.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.cursor-provider-binding"},{"assuranceClass":"source_contract","displayName":"Capability negotiation","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate typed provider capabilities and unsupported-filter behavior.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.capability-negotiation"},{"assuranceClass":"source_contract","displayName":"Rate-limit representation","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate typed, bounded rate-limit state and reset timestamps.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.rate-limit-representation"},{"assuranceClass":"source_contract","displayName":"Partial-failure representation","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Validate typed partial-page failure state without discarding surviving results.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.partial-failure-representation"},{"assuranceClass":"source_contract","displayName":"Fixture-provider parity","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Prove two deterministic providers return one canonical contract shape.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.fixture-provider-parity"},{"assuranceClass":"source_contract","displayName":"Network-free determinism","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Deny network access while deterministic fixture-provider verification executes.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.network-free-determinism"},{"assuranceClass":"source_contract","displayName":"Unfetched snippet classification","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Require every search snippet to remain unfetched_snippet_only.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.unfetched-snippet-classification"},{"assuranceClass":"source_contract","displayName":"Result-state preservation","mandatory":true,"moduleId":"tm.p4-001.search-provider-interface","purpose":"Preserve every canonical execution state without upgrading non-PASS results.","roadmapTaskIds":["P4-001"],"testId":"tc.p4-001.normalized-result-state-preservation"}],"testModules":[{"assuranceClasses":["source_contract","behavioral","platform","release"],"displayName":"Canonical Test Center","moduleId":"tm.test-center","owner":"Worker B / shared testing architecture","purpose":"Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."},{"assuranceClasses":["source_contract"],"displayName":"P4-001 Search Provider Interface","moduleId":"tm.p4-001.search-provider-interface","owner":"Worker C / P4-001 source-contract lane","purpose":"Verify the provider-neutral, source-only search contract, strict validation boundary, deterministic fixture adapters, and canonical execution evidence without claiming live search behavior."}],"testingStudioPresentationRecords":[{"assuranceClass":"source_contract","capability":"Canonical Test Center contracts","certificationImpact":"A PASS validates only the shared data contract; it does not certify a product candidate.","currentState":"PASS","displayName":"Development Verification contract","evidenceLinks":[],"lastExactCommitResult":null,"phase":"Shared testing architecture","platformMatrix":{"observed":["linux"],"required":["linux","macos","windows"]},"presentationId":"presentation.test-center.development-verification","purpose":"Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.","requiredNextAction":"Run both stable checks on the exact candidate across the required platform matrix before certification.","staleResultWarning":false,"stateDomain":"TEST_EXECUTION","supportClaimImpact":"No capability or release support claim is inferred from this source-contract PASS.","surface":"DEVELOPMENT_VERIFICATION"},{"assuranceClass":"source_contract","capability":"Provider-neutral search source foundation","certificationImpact":"Source-contract PASS permits only SOURCE_FOUNDATION. It does not establish provider behavior, platform behavior, release support, or production readiness.","currentState":"UNKNOWN","displayName":"P4-001 Search Provider Interface","evidenceLinks":[],"lastExactCommitResult":null,"phase":"P4","platformMatrix":{"observed":[],"required":["linux","macos","windows"]},"presentationId":"presentation.p4-001.search-provider-interface","purpose":"Show canonical source-contract verification, exact-commit staleness, dependency state, evidence, and the boundary between source implementation and unsupported live search behavior.","requiredNextAction":"Run the canonical P4-001 profiles on the exact candidate across linux, macos, and windows, then obtain Worker B and Worker I exact-SHA review plus Worker J no-conflict.","staleResultWarning":true,"stateDomain":"TEST_EXECUTION","supportClaimImpact":"Source contract implemented; live provider behavior, network retrieval, fetch, browser automation, citations, datasets, release support, production readiness, and GA readiness remain unsupported.","surface":"DEVELOPMENT_VERIFICATION"}]}
+{
+  "affectedTestMappings": [
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.test-center-contracts",
+      "pathPatterns": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "priority": 10,
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
+    },
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.p8-formal-test-hierarchy",
+      "pathPatterns": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "priority": 15,
+      "testIds": [
+        "tc.p8.formal-test-hierarchy",
+        "tc.p8.formal-test-hierarchy-regressions"
+      ]
+    },
+    {
+      "mappingId": "affected.testing-evidence-bridges",
+      "pathPatterns": [
+        "schemas/assurance_report.v1.json",
+        "schemas/project_profile.v2.json",
+        "schemas/verification_report.v1.json",
+        "tool/assurance_model.py"
+      ],
+      "priority": 20,
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.request",
+      "pathPatterns": [
+        "services/research_worker/src/search/models.py",
+        "schemas/web_search_request.v1.json"
+      ],
+      "testIds": [
+        "tc.p4-001.request-schema",
+        "tc.p4-001.capability-negotiation",
+        "tc.p4-001.stable-query-identity",
+        "tc.p4-001.fixture-provider-parity"
+      ],
+      "priority": 200,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.result-page",
+      "pathPatterns": [
+        "services/research_worker/src/search/models.py",
+        "schemas/web_search_page.v1.json"
+      ],
+      "testIds": [
+        "tc.p4-001.result-schema",
+        "tc.p4-001.page-schema",
+        "tc.p4-001.stable-result-identity",
+        "tc.p4-001.rate-limit-representation",
+        "tc.p4-001.partial-failure-representation",
+        "tc.p4-001.unfetched-snippet-classification"
+      ],
+      "priority": 201,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.provider",
+      "pathPatterns": [
+        "services/research_worker/src/search/provider.py",
+        "services/research_worker/src/search/models.py"
+      ],
+      "testIds": [
+        "tc.p4-001.provider-error-schema",
+        "tc.p4-001.capability-negotiation",
+        "tc.p4-001.fixture-provider-parity"
+      ],
+      "priority": 202,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.cursor",
+      "pathPatterns": [
+        "services/research_worker/src/search/fixture_provider.py"
+      ],
+      "testIds": [
+        "tc.p4-001.cursor-provider-binding",
+        "tc.p4-001.stable-query-identity",
+        "tc.p4-001.fixture-provider-parity"
+      ],
+      "priority": 203,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.security-validation",
+      "pathPatterns": [
+        "services/research_worker/src/search/validation.py",
+        "services/research_worker/test/schema_validator.py"
+      ],
+      "testIds": [
+        "tc.p4-001.url-fail-closed",
+        "tc.p4-001.credential-rejection",
+        "tc.p4-001.secret-normalization",
+        "tc.p4-001.provider-metadata-isolation"
+      ],
+      "priority": 204,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.schemas",
+      "pathPatterns": [
+        "schemas/web_search_*.v1.json"
+      ],
+      "testIds": [
+        "tc.p4-001.request-schema",
+        "tc.p4-001.result-schema",
+        "tc.p4-001.page-schema",
+        "tc.p4-001.provider-error-schema",
+        "tc.p4-001.url-fail-closed"
+      ],
+      "priority": 205,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.fixtures",
+      "pathPatterns": [
+        "services/research_worker/src/search/fixture_provider.py",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/**"
+      ],
+      "testIds": [
+        "tc.p4-001.fixture-provider-parity",
+        "tc.p4-001.network-free-determinism",
+        "tc.p4-001.unfetched-snippet-classification"
+      ],
+      "priority": 206,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.workflow",
+      "pathPatterns": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py",
+        "tool/p4_001_test_center_v1_test.py"
+      ],
+      "testIds": [
+        "tc.p4-001.request-schema",
+        "tc.p4-001.result-schema",
+        "tc.p4-001.page-schema",
+        "tc.p4-001.provider-error-schema",
+        "tc.p4-001.url-fail-closed",
+        "tc.p4-001.credential-rejection",
+        "tc.p4-001.secret-normalization",
+        "tc.p4-001.provider-metadata-isolation",
+        "tc.p4-001.stable-query-identity",
+        "tc.p4-001.stable-result-identity",
+        "tc.p4-001.cursor-provider-binding",
+        "tc.p4-001.capability-negotiation",
+        "tc.p4-001.rate-limit-representation",
+        "tc.p4-001.partial-failure-representation",
+        "tc.p4-001.fixture-provider-parity",
+        "tc.p4-001.network-free-determinism",
+        "tc.p4-001.unfetched-snippet-classification",
+        "tc.p4-001.normalized-result-state-preservation"
+      ],
+      "priority": 207,
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ]
+    },
+    {
+      "mappingId": "affected.p4-001.evidence",
+      "pathPatterns": [
+        "release/evidence/P4-001/**",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md"
+      ],
+      "testIds": [
+        "tc.p4-001.normalized-result-state-preservation",
+        "tc.p4-001.network-free-determinism"
+      ],
+      "priority": 208,
+      "excludedPaths": [
+        "release/evidence/generated/**",
+        "release/evidence/P4-001/history/**"
+      ]
+    }
+  ],
+  "projectTestProfiles": [
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_contracts.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/worker-b/test-center-contract-validation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.test-center.contracts",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_contracts_test.py"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/test-center-semantic-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.test-center.semantic-regressions",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_assurance_hierarchy.py",
+        "check",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/TEST_CENTER/P8-001/formal-test-hierarchy-validation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p8.formal-test-hierarchy",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-b/p8-001-formal-hierarchy-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p8.formal-test-hierarchy-regressions",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.request-schema"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.request-schema.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.request-schema",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.result-schema"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.result-schema.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.result-schema",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.page-schema"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.page-schema.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.page-schema",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.provider-error-schema"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.provider-error-schema.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.provider-error-schema",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.url-fail-closed"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.url-fail-closed.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.url-fail-closed",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.credential-rejection"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.credential-rejection.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.credential-rejection",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.secret-normalization"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.secret-normalization.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.secret-normalization",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.provider-metadata-isolation"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.provider-metadata-isolation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.provider-metadata-isolation",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.stable-query-identity"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.stable-query-identity.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.stable-query-identity",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.stable-result-identity"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.stable-result-identity.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.stable-result-identity",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.cursor-provider-binding"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.cursor-provider-binding.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.cursor-provider-binding",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.capability-negotiation"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.capability-negotiation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.capability-negotiation",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.rate-limit-representation"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.rate-limit-representation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.rate-limit-representation",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.partial-failure-representation"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.partial-failure-representation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.partial-failure-representation",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.fixture-provider-parity"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.fixture-provider-parity.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.fixture-provider-parity",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.network-free-determinism"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.network-free-determinism.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.network-free-determinism",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.unfetched-snippet-classification"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.unfetched-snippet-classification.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.unfetched-snippet-classification",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        ".github/workflows/p4-001-search-provider.yml",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+        "evals/fixtures/p4_001_search_provider/**",
+        "release/evidence/P4-001/**",
+        "schemas/web_search_*.v1.json",
+        "services/research_worker/**",
+        "tool/p4_001_*.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p4_001_search_provider_test.py",
+        "--project",
+        ".",
+        "--test-id",
+        "tc.p4-001.normalized-result-state-preservation"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "GITHUB_HEAD_REF",
+        "GITHUB_REF_NAME",
+        "GITHUB_RUN_ATTEMPT",
+        "GITHUB_RUN_ID",
+        "PYTHONDONTWRITEBYTECODE",
+        "RUNNER_ARCH",
+        "RUNNER_NAME",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P4-001/canonical/test-results/p4-001.normalized-result-state-preservation.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "schemas/web_search_request.v1.json",
+        "schemas/web_search_page.v1.json",
+        "schemas/web_search_error.v1.json",
+        "services/research_worker/src/search/**",
+        "services/research_worker/test/**",
+        "evals/fixtures/p4_001_search_provider/contract_cases.json",
+        "release/evidence/P4-001/test-center-handoff.json",
+        "tool/p4_001_search_provider_test.py",
+        "tool/p4_001_test_center_v1.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p4-001.normalized-result-state-preservation",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
+    }
+  ],
+  "registryId": "test-center.canonical-v1",
+  "schemaVersion": "1.0.0",
+  "testCases": [
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Canonical Test Center contract check",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.contracts"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Test Center semantic regression suite",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.semantic-regressions"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P8-001 formal Test Center hierarchy",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Enforce the canonical eight-level assurance hierarchy, exact ordering, report fields, fail-closed level handling, and complete stable-test binding coverage.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "P8-001 hierarchy semantic regressions",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, and support-promoting source checks are rejected.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy-regressions"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Search request schema",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate the immutable request model, exact request fields, filters, and schema/runtime parity.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.request-schema"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Search result schema",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate canonical result serialization and result-envelope schema parity.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.result-schema"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Search page schema",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate canonical page serialization, result bounds, and pagination fields.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.page-schema"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Provider error schema",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate typed provider errors, retry metadata, diagnostics, and schema parity.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.provider-error-schema"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Public result URL validation",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Reject malformed, credential-bearing, local, private, fragmented, and non-canonical result URLs.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.url-fail-closed"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Credential rejection",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Prove requests and result URLs expose no credential or authority channel.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.credential-rejection"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Secret-key normalization",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Reject normalized secret-bearing keys across provider metadata representations.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.secret-normalization"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Provider metadata isolation",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Prevent untrusted provider metadata from redefining canonical authority fields.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.provider-metadata-isolation"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Stable query identity",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Prove semantic query identity excludes request and pagination mechanics while including semantic filters.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.stable-query-identity"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Stable result identity",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Prove result identity is stable and bound to provider, semantic query, and URL.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.stable-result-identity"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Cursor provider and query binding",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate canonical cursor encoding and contract-version, provider, query, and offset binding.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.cursor-provider-binding"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Capability negotiation",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate typed provider capabilities and unsupported-filter behavior.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.capability-negotiation"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Rate-limit representation",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate typed, bounded rate-limit state and reset timestamps.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.rate-limit-representation"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Partial-failure representation",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Validate typed partial-page failure state without discarding surviving results.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.partial-failure-representation"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Fixture-provider parity",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Prove two deterministic providers return one canonical contract shape.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.fixture-provider-parity"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Network-free determinism",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Deny network access while deterministic fixture-provider verification executes.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.network-free-determinism"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Unfetched snippet classification",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Require every search snippet to remain unfetched_snippet_only.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.unfetched-snippet-classification"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Result-state preservation",
+      "mandatory": true,
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "purpose": "Preserve every canonical execution state without upgrading non-PASS results.",
+      "roadmapTaskIds": [
+        "P4-001"
+      ],
+      "testId": "tc.p4-001.normalized-result-state-preservation"
+    }
+  ],
+  "testModules": [
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral",
+        "platform",
+        "release"
+      ],
+      "displayName": "Canonical Test Center",
+      "moduleId": "tm.test-center",
+      "owner": "Worker B / shared testing architecture",
+      "purpose": "Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral"
+      ],
+      "displayName": "Reliability, Security & Diagnostics",
+      "moduleId": "tm.reliability-security-diagnostics",
+      "owner": "Worker B / MISSION-002",
+      "purpose": "Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract"
+      ],
+      "displayName": "P4-001 Search Provider Interface",
+      "moduleId": "tm.p4-001.search-provider-interface",
+      "owner": "Worker C / P4-001 source-contract lane",
+      "purpose": "Verify the provider-neutral, source-only search contract, strict validation boundary, deterministic fixture adapters, and canonical execution evidence without claiming live search behavior."
+    }
+  ],
+  "testingStudioPresentationRecords": [
+    {
+      "assuranceClass": "source_contract",
+      "capability": "Canonical Test Center contracts",
+      "certificationImpact": "A PASS validates only the shared data contract; it does not certify a product candidate.",
+      "currentState": "PASS",
+      "displayName": "Development Verification contract",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "Shared testing architecture",
+      "platformMatrix": {
+        "observed": [
+          "linux"
+        ],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.test-center.development-verification",
+      "purpose": "Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.",
+      "requiredNextAction": "Run both stable checks on the exact candidate across the required platform matrix before certification.",
+      "staleResultWarning": false,
+      "stateDomain": "TEST_EXECUTION",
+      "supportClaimImpact": "No capability or release support claim is inferred from this source-contract PASS.",
+      "surface": "DEVELOPMENT_VERIFICATION"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "capability": "Provider-neutral search source foundation",
+      "certificationImpact": "Source-contract PASS permits only SOURCE_FOUNDATION. It does not establish provider behavior, platform behavior, release support, or production readiness.",
+      "currentState": "UNKNOWN",
+      "displayName": "P4-001 Search Provider Interface",
+      "evidenceLinks": [],
+      "lastExactCommitResult": null,
+      "phase": "P4",
+      "platformMatrix": {
+        "observed": [],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
+      "presentationId": "presentation.p4-001.search-provider-interface",
+      "purpose": "Show canonical source-contract verification, exact-commit staleness, dependency state, evidence, and the boundary between source implementation and unsupported live search behavior.",
+      "requiredNextAction": "Run the canonical P4-001 profiles on the exact candidate across linux, macos, and windows, then obtain Worker B and Worker I exact-SHA review plus Worker J no-conflict.",
+      "staleResultWarning": true,
+      "stateDomain": "TEST_EXECUTION",
+      "supportClaimImpact": "Source contract implemented; live provider behavior, network retrieval, fetch, browser automation, citations, datasets, release support, production readiness, and GA readiness remain unsupported.",
+      "surface": "DEVELOPMENT_VERIFICATION"
+    }
+  ]
+}
