@@ -4,35 +4,37 @@
 
 This packet implements only the dependency-satisfied P6-001 registry contract. It adds a deterministic declarative catalog beside the existing runtime Ollama and OpenAI-compatible providers; it does not replace those providers or dispatch a request.
 
-The registry records:
-
-- provider and exact model identity, aliases, digest, parameter size, and quantization;
-- measured or unknown context, output, concurrency, tool-call, and streaming limits;
-- measured, declared, or unknown tool capability profiles;
-- explicit local, customer-managed-endpoint, or third-party-service data boundaries;
-- unknown, no-direct-charge, or metered direct invocation cost metadata;
-- benchmark evidence bound to stable task-class identifiers;
-- task classes approved only when every class has benchmark evidence;
-- credential **reference metadata** only, with unexpected value-bearing fields rejected.
+The registry records provider/model identity, aliases, artifact digest, parameter size, quantization, measured or unknown limits, tool profiles, explicit data boundaries, direct invocation cost metadata, benchmark evidence, approved task classes, and non-secret credential references.
 
 ## Fail-closed invariants
 
 1. A model discovered through the legacy `ModelIdentity` interface but absent from the registry is created only as a non-persistent `evaluation_only` descriptor.
-2. A discovered model with an unregistered provider is rejected because its data boundary cannot be inferred safely.
-3. Approval requires complete measured limits, a measured tool profile, known direct cost metadata, at least one approved task class, and benchmark evidence for every approved class.
-4. Evaluation-only records cannot expose approved task classes.
-5. Provider/model boundary mismatches, duplicate provider/model identities, duplicate aliases, and canonical-ID/alias collisions are rejected.
-6. Credential records accept only `referenceId`, `resolver`, `required`, and `purpose`; secret values are not part of the contract.
-7. Serialization is deterministic: providers, models, aliases, task classes, reasons, credentials, and benchmark records are canonically ordered.
+2. A discovered canonical ID or alias reuses a registered definition only when digest, parameter size, and quantization match exactly.
+3. Any discovered identity drift receives a deterministic quarantine model ID, remains evaluation-only, and cannot pass `requireApproved`.
+4. A discovered model with an unregistered provider is rejected because its data boundary cannot be inferred safely.
+5. Approval requires complete measured limits, a measured tool profile, known cost metadata, and benchmark evidence for every approved task class.
+6. Evaluation-only records cannot expose approved task classes.
+7. Provider/model boundary mismatches, duplicate identities, duplicate aliases, and canonical-ID/alias collisions are rejected.
+8. Credential records accept reference metadata only; secret values are outside the contract.
+9. Serialization and quarantine identities are deterministic.
+
+## Review repair
+
+Independent review of commit `9799768170f13556d3098a07b40be922377f8deb` identified `P6-C-001`: canonical names and aliases could inherit approval without matching artifact identity. The public `model.dart` contract now wraps the immutable registry and quarantines digest, parameter-size, or quantization drift. Dedicated regressions cover all three fields through both canonical IDs and aliases.
+
+`P6-C-002` identified incomplete authority coverage for Worker B Test Center files. Worker G removed every Test Center registry, hierarchy, and Test Center code change from its branch by consuming Worker B head `f14ba34e501972b13cd4310c4869c87e021012da`. P6-TC-001 is now an explicit owner handoff, not an integrated registration claim.
 
 ## Classification and non-claims
 
 Classification: `SOURCE_FOUNDATION` / `evaluation-only by default`.
 
-This packet does not implement P6-002 or later routing behavior, planner/executor/verifier separation, live provider dispatch, prompt-injection containment, model compatibility certification, hardware acceleration, release readiness, or a GA support claim. Runtime tool permission remains governed by existing policy; a model tool profile is evidence, not authority.
+This packet does not implement P6-002 or later routing behavior, live provider dispatch, compatibility certification, hardware acceleration, behavioral support, platform support, release readiness, production readiness, or GA.
 
-## Verification
+## Verification boundary
 
-The focused test module is `test/product/model/model_registry_test.dart`. P6-TC-001 is registered in Worker B's canonical Test Center as `tc.p6.model-registry-v2` with a non-mutating tri-platform Flutter test profile. Repository-level `product-gates` remain the exact-head authority.
+Focused test modules:
 
-The Test Center registry path remains owned by Worker B / MISSION-002. Worker G's central coordination request is `MISSION-006-P6-001-TEST-CENTER`; integration requires Worker B exact-commit/tree review.
+- `test/product/model/model_registry_test.dart`
+- `test/product/model/model_registry_identity_guard_test.dart`
+
+The canonical Test Center remains owned by Worker B / MISSION-002. Coordination request `MISSION-006-P6-001-TEST-CENTER` remains pending. No Test Center registration, hierarchy binding, behavior claim, or platform claim is asserted until Worker B publishes the authority-owned integration and exact review.
