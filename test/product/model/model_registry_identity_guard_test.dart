@@ -36,6 +36,7 @@ ModelDefinition _approvedModel() => ModelDefinition.approved(
         ModelBenchmarkEvidence(
           benchmarkId: 'p6.code-fixture-v1',
           taskClassId: 'code-generation',
+          modelDigest: 'sha256:0123456789abcdef',
           score: 0.91,
           scoreUnit: 'ratio',
           higherIsBetter: true,
