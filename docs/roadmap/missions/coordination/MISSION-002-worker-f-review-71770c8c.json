@@ -1,0 +1,83 @@
+{
+  "candidate": {
+    "baseCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
+    "mission": "MISSION-002",
+    "pullRequest": 65,
+    "task": "P8-001",
+    "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d"
+  },
+  "ci": {
+    "artifactClassification": "NONE",
+    "artifacts": [],
+    "classification": "NOT_RUN",
+    "exactHeadRuns": []
+  },
+  "decision": "REQUEST_CHANGES",
+  "findings": [
+    {
+      "detail": "The custom schema validator accepts minProperties as a supported canonical keyword but never enforces it. TestExecutionResult.toolchain resolves to ToolchainIdentity, whose components object requires minProperties=1. An assurance report can therefore validate with an empty toolchain.components object, bypassing the canonical toolchain-identity requirement.",
+      "findingId": "P8-F-717-001",
+      "paths": [
+        "tool/test_center_assurance_jsonschema.py",
+        "schemas/test_center.v1.json",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Implement minProperties enforcement in the deterministic schema validator and add a negative assurance-report regression proving that empty toolchain.components is rejected.",
+      "severity": "HIGH",
+      "title": "Canonical minProperties constraints are not enforced"
+    },
+    {
+      "detail": "Both date-time paths call datetime.fromisoformat after replacing Z. Python accepts timezone-less values and a space separator, even though the schemas declare JSON Schema date-time. The report validator also does not require report.generatedAt to be at or after the canonical execution end time.",
+      "findingId": "P8-F-717-002",
+      "paths": [
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_contracts.py",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requiredRepair": "Require an RFC3339-compatible timezone-qualified timestamp, normalize comparison to aware datetimes, bind report.generatedAt to the execution interval, and add negative regressions for naive and space-separated timestamps.",
+      "severity": "HIGH",
+      "title": "date-time validation accepts timezone-less and non-RFC3339 timestamps"
+    },
+    {
+      "detail": "Support promotion requires a non-empty canonical evidenceReferences array, but validation only checks immutable=true, candidate commit/tree, and a syntactically valid SHA-256. It does not resolve the evidence URI or verify the digest against durable bytes. A fabricated URI plus arbitrary lowercase digest can satisfy the support-bearing PASS gate.",
+      "findingId": "P8-F-717-003",
+      "paths": [
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py",
+        "schemas/test_center.v1.json"
+      ],
+      "requiredRepair": "Define a deterministic evidence-resolution boundary for repository files or workflow artifacts, verify existence and digest, and add negative regressions for missing URI targets and digest mismatch. Until then, keep requestedSupportImpact=NONE.",
+      "severity": "HIGH",
+      "title": "Support-bearing PASS accepts unresolved evidence references"
+    },
+    {
+      "detail": "The exact head changes the two P8 Python files after the last manifest-controller commit without a corresponding canonical manifest update. GitHub reports no workflow runs for commit 71770c8c, and the manifest publisher creates a new commit without an explicit exact-final validation dispatch bound to that generated head.",
+      "findingId": "P8-F-717-004",
+      "paths": [
+        "SOURCE_MANIFEST.sha256",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml"
+      ],
+      "requiredRepair": "Regenerate SOURCE_MANIFEST.sha256 twice through the canonical generator, publish the exact manifest commit, explicitly trigger and inspect exact final Ubuntu, Windows, macOS, product-gates, and affected integration jobs, then request a fresh review against the resulting commit/tree.",
+      "severity": "HIGH",
+      "title": "Exact candidate manifest and CI are unsettled"
+    }
+  ],
+  "mergeAuthorization": "NONE",
+  "nextAction": "Worker B repairs all findings, materializes the canonical source manifest, settles exact head CI and artifacts, updates PR #65 to the final commit/tree, and requests a new independent exact-candidate review.",
+  "reviewId": "MISSION-002-WORKER-F-REVIEW-71770C8C",
+  "reviewScopes": {
+    "EVIDENCE": "INVALIDATED_AND_REVIEWED",
+    "INTEGRATION": "INVALIDATED_AND_REVIEWED",
+    "SECURITY": "INVALIDATED_AND_REVIEWED",
+    "SOURCE": "INVALIDATED_AND_REVIEWED"
+  },
+  "reviewedAt": "2026-08-06T20:39:00Z",
+  "reviewer": "Worker F",
+  "schemaVersion": 1,
+  "supportImpact": "NO_PROMOTION",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A"
+}
