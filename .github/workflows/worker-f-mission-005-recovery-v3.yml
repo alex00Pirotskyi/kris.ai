@@ -49,12 +49,14 @@ jobs:
         run: |
           set -euo pipefail
           python tool/worker_f_recovery_bootstrap.py
+          python tool/worker_f_recovery_test_patch.py
           rm -f \
             .github/workflows/worker-f-mission-005-recovery-v2.yml \
             .github/workflows/worker-f-mission-005-recovery-v3.yml \
             tool/worker_f_recovery_source.yml \
             tool/worker_f_recovery_patch.py \
-            tool/worker_f_recovery_bootstrap.py
+            tool/worker_f_recovery_bootstrap.py \
+            tool/worker_f_recovery_test_patch.py
       - name: Validate ordinary recovered candidate
         shell: bash
         run: |
