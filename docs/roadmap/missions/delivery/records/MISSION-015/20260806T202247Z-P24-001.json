@@ -1,0 +1,26 @@
+{
+  "branch": "agent/j/P24-001-roadmap-as-data-adr",
+  "commit": "cb5e16c232c7a2309632a3fc0dcccd8d6e9d0bd7",
+  "evidence": [
+    "Protected main 0a4176bcbcb975684c3a590be652c9fffe1ce770 / 641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "Worker J PR #66 clean head cb5e16c232c7a2309632a3fc0dcccd8d6e9d0bd7 / tree 9497333f131ccddcb229aa5b179927aeac8dfd31",
+    "Canonical generated index SHA-256 47c5b2bee6c9ee6563a5fcc7f6565665bfef6eaa6e0f58704c6b6008738c39f4 / Git blob 1ccb619f667a52a9313e282098319d2b3807b3ce",
+    "Canonical source manifest owner python tool/p1a_refresh_source_manifest.py .",
+    "Expected source manifest bytes 128802, lines 1195, SHA-256 bd779a0852c174880cc30f4888eb6975b2ab330a9d00480672e7683a574cd2f8, Git blob e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3",
+    "Temporary mission materializer transport commit b970d7d60960055e08f79be76a95bf9e41b14f13 emitted no executable run",
+    "Materializer restored exactly in 306c8483f65011647393eb8b2828ab7af739cfd0 with workflow blob c7c1abc856ad4eaaf30e54b9835d9313eb05497e",
+    "Mission Execution Materializer run 31127496396 remains pending with zero jobs; run 31126489750 remains queued",
+    "Local gh client is absent and the runtime cannot resolve github.com",
+    "PR #62 remains unchanged since Worker J REQUEST_CHANGES; PR #76 current head ef99ac45702ae2dd40815836d734198a04de325f has no exact-head runs; remaining open candidates are not review-ready"
+  ],
+  "mission": "MISSION-015",
+  "nextAction": "Use a GitHub writer that accepts the verified SOURCE_MANIFEST.sha256 file or an exact complete blob payload. Starting from cb5e16c232c7a2309632a3fc0dcccd8d6e9d0bd7 / 9497333f131ccddcb229aa5b179927aeac8dfd31, commit only SOURCE_MANIFEST.sha256 with SHA-256 bd779a0852c174880cc30f4888eb6975b2ab330a9d00480672e7683a574cd2f8 and Git blob e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3; then require exact-head P24 Ubuntu, Windows, macOS, and product-gates PASS before Worker B and Worker I review.",
+  "pullRequest": 66,
+  "recordedAt": "2026-08-06T20:22:47Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P24-001",
+  "tree": "9497333f131ccddcb229aa5b179927aeac8dfd31",
+  "workExecutionId": "WRK-20260806T201341Z-4f8bb2aa",
+  "worker": "J"
+}
