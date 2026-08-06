@@ -1,0 +1,181 @@
+name: Worker B P8 Manifest Carrier
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/worker-b-p8-manifest-carrier.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-b-p8-manifest-carrier-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+env:
+  TARGET_BRANCH: agent/b/test-center-contracts-and-review
+  SELF_PATH: .github/workflows/worker-b-p8-manifest-carrier.yml
+  EXPECTED_MANIFEST_SHA256: e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f
+  EXPECTED_MANIFEST_ENTRIES: '1124'
+
+jobs:
+  validate-final-tree:
+    name: worker-b-p8-manifest-${{ matrix.lane }}
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'agent/b/test-center-contracts-and-review' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: ubuntu
+            os: ubuntu-24.04
+          - lane: windows
+            os: windows-2025
+          - lane: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out exact Worker B PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Install hash-locked Python test dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Construct exact self-cleaning final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          git rm -- "${SELF_PATH}"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python - <<'PY'
+          import hashlib, os, pathlib
+          manifest = pathlib.Path('SOURCE_MANIFEST.sha256')
+          digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
+          entries = len(manifest.read_text(encoding='utf-8').splitlines())
+          if digest != os.environ['EXPECTED_MANIFEST_SHA256']:
+              raise SystemExit(f'manifest digest mismatch: {digest}')
+          if entries != int(os.environ['EXPECTED_MANIFEST_ENTRIES']):
+              raise SystemExit(f'manifest entry mismatch: {entries}')
+          PY
+          git add SOURCE_MANIFEST.sha256
+          mapfile -t changed < <(git diff --cached --name-only | LC_ALL=C sort)
+          printf 'CHANGED_PATH=%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = '.github/workflows/worker-b-p8-manifest-carrier.yml'
+          test "${changed[1]}" = 'SOURCE_MANIFEST.sha256'
+          git diff --cached --check
+      - name: Canonical Test Center contracts
+        run: |
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+      - name: P8 actual report and hierarchy regressions
+        run: |
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report --project . --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+      - name: Record exact validated tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          manifest = pathlib.Path('SOURCE_MANIFEST.sha256')
+          receipt = {
+              'schemaVersion': 1,
+              'platform': os.environ['RUNNER_OS'],
+              'baseCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+              'validatedTree': subprocess.check_output(['git', 'write-tree'], text=True).strip(),
+              'manifestSha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
+              'manifestEntries': len(manifest.read_text(encoding='utf-8').splitlines()),
+              'canonicalContracts': 'PASS',
+              'p8Regressions': 'PASS',
+              'supportPromotion': 'NONE',
+          }
+          pathlib.Path(os.environ['RUNNER_TEMP'], 'p8-final-tree-receipt.json').write_text(
+              json.dumps(receipt, sort_keys=True, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+          PY
+      - name: Upload final-tree receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: worker-b-p8-final-tree-${{ matrix.lane }}-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/p8-final-tree-receipt.json
+          if-no-files-found: error
+          retention-days: 90
+
+  publish-final-tree:
+    name: worker-b-p8-manifest-publish
+    needs: validate-final-tree
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'agent/b/test-center-contracts-and-review' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact Worker B PR head with branch credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Reconstruct and publish only the validated final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_base="${{ github.event.pull_request.head.sha }}"
+          test "$(git rev-parse HEAD)" = "${expected_base}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${expected_base}"
+          git rm -- "${SELF_PATH}"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python - <<'PY'
+          import hashlib, os, pathlib
+          manifest = pathlib.Path('SOURCE_MANIFEST.sha256')
+          digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
+          entries = len(manifest.read_text(encoding='utf-8').splitlines())
+          if digest != os.environ['EXPECTED_MANIFEST_SHA256']:
+              raise SystemExit(f'unexpected manifest digest: {digest}')
+          if entries != int(os.environ['EXPECTED_MANIFEST_ENTRIES']):
+              raise SystemExit(f'unexpected manifest entries: {entries}')
+          PY
+          git add SOURCE_MANIFEST.sha256
+          mapfile -t changed < <(git diff --cached --name-only | LC_ALL=C sort)
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = '.github/workflows/worker-b-p8-manifest-carrier.yml'
+          test "${changed[1]}" = 'SOURCE_MANIFEST.sha256'
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(p8): materialize ownership-clean source manifest'
+          final_commit="$(git rev-parse HEAD)"
+          final_tree="$(git rev-parse HEAD^{tree})"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${expected_base}"
+          git push origin "HEAD:${TARGET_BRANCH}"
+          printf 'FINAL_COMMIT=%s\nFINAL_TREE=%s\n' "${final_commit}" "${final_tree}"
