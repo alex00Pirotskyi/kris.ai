@@ -78,6 +78,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
           List<P5WorkspaceId>.unmodifiable(sanitizedHistory),
       navigationIndex: sanitizedHistory.length - 1,
       reopenWorkspace: currentWorkspace,
+      recoveryMessage: null,
     );
     notifyListeners();
   }
