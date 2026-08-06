@@ -1,0 +1,35 @@
+{
+  "base": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
+  },
+  "classification": "SOURCE_FOUNDATION",
+  "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
+  "invariants": [
+    "unknown models are evaluation-only",
+    "unknown providers fail closed because data boundary is unknown",
+    "approved task classes require benchmark evidence",
+    "provider and model data boundaries must agree",
+    "credential records contain references and never secret values",
+    "registry serialization is deterministic"
+  ],
+  "mission": "MISSION-006",
+  "nonClaims": [
+    "P6-002 role routing",
+    "runtime provider dispatch",
+    "model compatibility certification",
+    "hardware acceleration",
+    "release readiness",
+    "GA support"
+  ],
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "task": "P6-001",
+  "testCenter": {
+    "authorityMission": "MISSION-002",
+    "stableCheckId": "tc.p6.model-registry-v2",
+    "testCenterTask": "P6-TC-001"
+  },
+  "worker": "G"
+}

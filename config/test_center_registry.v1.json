@@ -50,6 +50,21 @@
         "tc.test-center.contracts",
         "tc.test-center.semantic-regressions"
       ]
+    },
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.p6.model-registry-v2",
+      "pathPatterns": [
+        "lib/product/model/**",
+        "release/evidence/P6-001/**",
+        "test/product/model/**"
+      ],
+      "priority": 18,
+      "testIds": [
+        "tc.p6.model-registry-v2"
+      ]
     }
   ],
   "projectTestProfiles": [
@@ -209,6 +224,43 @@
       "stableCheckId": "tc.p8.formal-test-hierarchy-regressions",
       "timeoutSeconds": 120,
       "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "lib/product/model/**",
+        "release/evidence/P6-001/**",
+        "test/product/model/**"
+      ],
+      "argv": [
+        "flutter",
+        "test",
+        "test/product/model"
+      ],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/generated/worker-g/p6-001-model-registry-v2.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "lib/product/model/model.dart",
+        "lib/product/model/model_registry.dart",
+        "release/evidence/P6-001/source-contract.json",
+        "test/product/model/model_registry_test.dart"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p6.model-registry-v2",
+      "timeoutSeconds": 180,
+      "workingDirectory": "."
     }
   ],
   "registryId": "test-center.canonical-v1",
@@ -253,6 +305,17 @@
         "P8-001"
       ],
       "testId": "tc.p8.formal-test-hierarchy-regressions"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "P6-001 model registry v2 validation",
+      "mandatory": true,
+      "moduleId": "tm.agent-quality-model-routing",
+      "purpose": "Prove deterministic registry identity, fail-closed evaluation defaults, benchmark-backed task approval, data-boundary consistency, and secret-reference-only credential metadata.",
+      "roadmapTaskIds": [
+        "P6-001"
+      ],
+      "testId": "tc.p6.model-registry-v2"
     }
   ],
   "testModules": [
@@ -277,6 +340,15 @@
       "moduleId": "tm.reliability-security-diagnostics",
       "owner": "Worker B / MISSION-002",
       "purpose": "Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."
+    },
+    {
+      "assuranceClasses": [
+        "behavioral"
+      ],
+      "displayName": "Agent Quality & Model Routing",
+      "moduleId": "tm.agent-quality-model-routing",
+      "owner": "Worker G / MISSION-006; Test Center authority Worker B / MISSION-002",
+      "purpose": "Validate P6 model intelligence contracts without granting runtime authority or promoting support."
     }
   ],
   "testingStudioPresentationRecords": [
