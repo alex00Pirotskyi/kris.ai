@@ -3,6 +3,7 @@
   "coordinationId": "MISSION-010-P11-001-TEST-CENTER-OWNER-HANDOFF",
   "status": "OWNER_PUBLICATION_REQUIRED",
   "recordedAt": "2026-08-06T20:30:18Z",
+  "updatedAt": "2026-08-06T21:21:20Z",
   "workExecutionId": "WRK-20260806T203018Z-9c4e7b21",
   "requestingMission": "MISSION-010",
   "requestingWorker": "E",
@@ -12,21 +13,27 @@
   "sourceCandidate": {
     "branch": "agent/e/native-parity-readiness",
     "pullRequest": 71,
-    "commit": "825769f639edb5db22b27a222cd5c1c57f4ed775",
-    "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac"
+    "commit": "c40570919721e651dc6e84956b7f7827aedada05",
+    "tree": "bee2fa0b2ef077d62ed74c9bf9ac7a4a92e42ccd",
+    "sourcePredecessorCommit": "825769f639edb5db22b27a222cd5c1c57f4ed775",
+    "sourcePredecessorTree": "4fd309a006ff4b88c2293b7962c130b5998426ac"
   },
   "currentOwnerAuthority": {
     "branch": "agent/b/test-center-contracts-and-review",
     "pullRequest": 65,
-    "observedCommit": "92ebab6c985685620a025fa85faa157f7eddd6e5",
+    "observedCommit": "467076d6a21ef2c584aa2ba7a4efcf62bf14fd3b",
+    "observedTree": "9ce0d8280b41e17c7fe9b24feba3d22d20ddef1c",
+    "consumedAsSecondParent": true,
     "mustReResolveBeforePublication": true
   },
   "repairDecision": {
     "workerEMayWriteRegistry": false,
     "workerEMayClaimRegistryOwnership": false,
-    "workerEWillRemoveRegistryDiff": true,
-    "workerEWillRetainSpecificationOnly": true,
-    "reason": "The canonical MISSION-010 claim does not own the Test Center registry, and PR #78 remains an unmerged read-only overlay. Worker E will reconcile on the current Worker B tree without carrying a registry modification."
+    "workerERegistryDiffRemoved": true,
+    "workerERetainsSpecificationOnly": true,
+    "workerEDependencyBindingsFailClosed": true,
+    "workerECurrentOwnerAncestryConsumed": true,
+    "reason": "Worker E published an ownership-clean two-parent repair that preserves the exact current MISSION-002 registry and P8 authority bytes."
   },
   "requiredOwnerOperation": {
     "mode": "OWNER_PUBLISHED_UNION",
@@ -43,7 +50,7 @@
       "tc.p11.readiness.claim-boundary",
       "tc.p11.readiness.nonmutation"
     ],
-    "sourceSpecification": "tool/worker_e_test_center_registration.py",
+    "sourceSpecification": "release/evidence/P11-001/test-center-registration-spec.json",
     "evidenceRoot": "release/evidence/P11-001",
     "mustPreserveAllOwnerRegistryRecords": true,
     "mustPreserveCurrentP8HierarchyBindings": true,
@@ -59,6 +66,14 @@
     "invalidateOnOwnerHeadChange": true,
     "invalidateOnWorkerEHeadChange": true
   },
+  "currentValidation": {
+    "localPythonCompilation": "PASS",
+    "dependencyBindingRegressions": "6_OF_6_PASS",
+    "ownerHandoffRegressions": "3_OF_3_PASS",
+    "exactHeadWorkflowRuns": 0,
+    "sourceManifest": "STALE_MISSING_WORKER_E_REPAIR_PATHS",
+    "supportPromotion": "NONE"
+  },
   "boundaries": {
     "p11_001Approved": false,
     "p11_002PlusAuthorized": false,
@@ -68,5 +83,5 @@
     "releaseSupportPromoted": false,
     "mergeAuthorized": false
   },
-  "nextAction": "Worker E removes the registry diff, repairs dependency binding validation, reconciles current Worker B ancestry, and publishes an ownership-clean exact candidate. MISSION-002 then publishes the exact registry union and reviews the final integration candidate."
+  "nextAction": "Run the canonical source-manifest generator twice on c40570919721e651dc6e84956b7f7827aedada05, settle exact-head CI, then MISSION-002 publishes the exact registry union and reviews the final integration candidate."
 }
