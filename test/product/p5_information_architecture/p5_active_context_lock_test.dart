@@ -46,6 +46,37 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  test('unknown deep-link ids cannot clear an active current run', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.apply(P5PrototypeAction.reviewPlan);
+    controller.apply(P5PrototypeAction.startRun);
+
+    controller.deepLink(
+      workspace: P5WorkspaceId.runsActivity,
+      projectId: 'project.missing',
+      runId: 'run.missing',
+    );
+
+    expect(controller.state.selectedProjectId, 'project.kristin-local');
+    expect(controller.state.selectedRunId, 'run.p5-simulated-current');
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(controller.state.recoveryMessage, contains('Deep link context cannot replace'));
+
+    controller.deepLink(
+      workspace: P5WorkspaceId.runsActivity,
+      projectId: 'project.kristin-local',
+      runId: 'run.p5-simulated-current',
+    );
+
+    expect(controller.state.workspace, P5WorkspaceId.runsActivity);
+    expect(controller.state.selectedProjectId, 'project.kristin-local');
+    expect(controller.state.selectedRunId, 'run.p5-simulated-current');
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('paused and stopping runs keep context locked until completion', () {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);

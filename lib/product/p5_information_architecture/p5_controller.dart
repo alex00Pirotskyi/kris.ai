@@ -317,6 +317,28 @@ class P5InformationArchitectureController extends ChangeNotifier {
     String? projectId,
     String? runId,
   }) {
+    if (_runContextLocked) {
+      final changesContext =
+          (projectId != null && projectId != _state.selectedProjectId) ||
+          (runId != null && runId != _state.selectedRunId);
+      if (changesContext) {
+        _state = _state.copyWith(
+          recoveryMessage:
+              'Deep link context cannot replace an active simulated run. Use the run controls first.',
+        );
+        notifyListeners();
+        return;
+      }
+      if (projectId != null || runId != null) {
+        if (!_isWorkspaceEligible(workspace)) {
+          _rejectWorkspace(workspace);
+          return;
+        }
+        selectWorkspace(workspace);
+        return;
+      }
+    }
+
     final project =
         projectId == null ? null : _projectFixture(projectId);
     if (projectId != null && project == null) {
@@ -361,23 +383,6 @@ class P5InformationArchitectureController extends ChangeNotifier {
       );
       notifyListeners();
       return;
-    }
-
-    if (_runContextLocked) {
-      final requestedProjectId = run?.projectId ?? project?.id;
-      final requestedRunId = run?.id;
-      final changesContext =
-          (requestedProjectId != null &&
-              requestedProjectId != _state.selectedProjectId) ||
-          (requestedRunId != null && requestedRunId != _state.selectedRunId);
-      if (changesContext) {
-        _state = _state.copyWith(
-          recoveryMessage:
-              'Deep link context cannot replace an active simulated run. Use the run controls first.',
-        );
-        notifyListeners();
-        return;
-      }
     }
 
     if (run != null) {
