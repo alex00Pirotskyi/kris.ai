@@ -1,0 +1,121 @@
+name: TEMP Worker E P11 Review Repair
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/temp-worker-e-p11-review-repair.yml'
+      - 'release/evidence/P11-001/temp-worker-e-p11-review-repair.trigger'
+      - 'tool/temp_worker_e_p11_review_repair.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-worker-e-p11-review-repair
+  cancel-in-progress: false
+
+env:
+  TARGET_BRANCH: agent/e/native-parity-readiness
+  EXPECTED_TARGET_HEAD: 825769f639edb5db22b27a222cd5c1c57f4ed775
+  OWNER_BRANCH: agent/b/test-center-contracts-and-review
+  EXPECTED_OWNER_HEAD: 71770c8ced388d83a278d951fd45a07afdec84db
+  EXPECTED_OWNER_TREE: aad287d8e91efffe5816a92665e0c84fa3a0ac3d
+  CARRIER_BRANCH: automation/e-p11-review-repair-9c4e7b21
+
+jobs:
+  repair:
+    name: Merge owner ancestry and repair P11 review findings
+    if: >-
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'automation/e-p11-review-repair-9c4e7b21' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact Worker E target
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.EXPECTED_TARGET_HEAD }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Assert remote heads and merge current Test Center owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_TARGET_HEAD}"
+          target_remote="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          owner_remote="$(git ls-remote origin "refs/heads/${OWNER_BRANCH}" | cut -f1)"
+          test "${target_remote}" = "${EXPECTED_TARGET_HEAD}"
+          test "${owner_remote}" = "${EXPECTED_OWNER_HEAD}"
+          git fetch origin \
+            "refs/heads/${OWNER_BRANCH}:refs/remotes/origin/${OWNER_BRANCH}" \
+            "refs/heads/agent/a/p1-p2-new-roadmap-execution:refs/remotes/origin/agent/a/p1-p2-new-roadmap-execution" \
+            "refs/heads/agent/j/P24-001-roadmap-as-data-adr:refs/remotes/origin/agent/j/P24-001-roadmap-as-data-adr" \
+            "refs/heads/${CARRIER_BRANCH}:refs/remotes/origin/${CARRIER_BRANCH}"
+          test "$(git rev-parse "${EXPECTED_OWNER_HEAD}^{tree}")" = "${EXPECTED_OWNER_TREE}"
+          git merge --no-commit --no-ff "${EXPECTED_OWNER_HEAD}" || true
+          mapfile -t conflicts < <(git diff --name-only --diff-filter=U | LC_ALL=C sort)
+          for path in "${conflicts[@]}"; do
+            case "${path}" in
+              SOURCE_MANIFEST.sha256|config/test_center_registry.v1.json)
+                git checkout --theirs -- "${path}"
+                git add -- "${path}"
+                ;;
+              *)
+                echo "unexpected merge conflict: ${path}" >&2
+                exit 1
+                ;;
+            esac
+          done
+          test -z "$(git diff --name-only --diff-filter=U)"
+          git show "refs/remotes/origin/${CARRIER_BRANCH}:tool/temp_worker_e_p11_review_repair.py" > "${RUNNER_TEMP}/repair.py"
+          python "${RUNNER_TEMP}/repair.py"
+
+      - name: Regenerate canonical source manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+
+      - name: Run exact integration validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/worker_e_test_center_registration.py --check --project .
+          python -m unittest -v tool/worker_e_native_parity_readiness_test.py tool/worker_e_test_center_registration_test.py
+          python tool/worker_e_native_parity_readiness.py --check --project .
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+          test -z "$(git diff --name-only --diff-filter=U)"
+
+      - name: Commit and publish exact repaired candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_remote="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          owner_remote="$(git ls-remote origin "refs/heads/${OWNER_BRANCH}" | cut -f1)"
+          test "${target_remote}" = "${EXPECTED_TARGET_HEAD}"
+          test "${owner_remote}" = "${EXPECTED_OWNER_HEAD}"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git diff --cached --check
+          git commit -m 'fix(p11): reconcile owner ancestry and harden dependency truth'
+          final_commit="$(git rev-parse HEAD)"
+          final_tree="$(git rev-parse HEAD^{tree})"
+          git push origin "HEAD:${TARGET_BRANCH}"
+          printf 'FINAL_COMMIT=%s\nFINAL_TREE=%s\n' "${final_commit}" "${final_tree}"
