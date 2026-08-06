@@ -1,0 +1,84 @@
+name: Worker F MISSION-005 source recovery v2
+
+on:
+  push:
+    branches:
+      - agent/f/P5-001-information-architecture
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-f-mission-005-source-recovery-v2
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Reconcile current Worker B ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Worker F MISSION-005 Recovery'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin agent/b/test-center-contracts-and-review
+          git merge --no-ff --no-commit FETCH_HEAD
+      - name: Install governed Python dependencies
+        shell: bash
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Materialize and reconcile P5-001 source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/worker_f_recovery_patch.py
+          rm -f \
+            .github/workflows/worker-f-mission-005-recovery.yml \
+            .github/workflows/worker-f-mission-005-recovery-v2.yml \
+            tool/worker_f_recovery_source.yml \
+            tool/worker_f_recovery_patch.py
+      - name: Validate ordinary recovered candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart format lib/p5_ia_preview.dart lib/product/p5_information_architecture test/product/p5_information_architecture
+          flutter analyze
+          flutter test test/product/p5_information_architecture/
+          python tool/test_center_contracts.py check --project .
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/worker_f_p5_ia.py manifest --project .
+          python tool/worker_f_p5_ia.py manifest --project . --check
+          python tool/worker_f_p5_ia.py check --project .
+          python tool/worker_f_p5_ia_test.py
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/generated_state_guard.py audit --project . --strict
+          python tool/p1a_refresh_source_manifest.py .
+          cp docs/roadmap/SOURCE_MANIFEST.sha256 /tmp/p5-source-manifest
+          python tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/p5-source-manifest docs/roadmap/SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Publish ordinary source candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git commit -m 'P5-001: recover information architecture source candidate'
+          git push origin HEAD:refs/heads/agent/f/P5-001-information-architecture
