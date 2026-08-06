@@ -1,0 +1,223 @@
+name: TEMP Worker D MISSION-004 Checkpoint
+
+on:
+  push:
+    branches:
+      - ci/worker-d-mission004-checkpoint
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-d-mission004-checkpoint
+  cancel-in-progress: false
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ci/worker-d-mission004-checkpoint
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Publish exact MISSION-004 review checkpoint
+        shell: bash
+        env:
+          MISSION_HEAD: d1b48c66091bd469d28b332b4a7a3a16fa8dff03
+          TARGET_BRANCH: agent/anarchy-autonomous-worker-missions
+          P4_HEAD: 1c089c7094a122bb3cfbbc78221f218b3dd7ac0f
+          P4_TREE: 276481693c3da7d56fa3e315018c851e659ddec5
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "$TARGET_BRANCH"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$MISSION_HEAD"
+          git switch -C mission004-checkpoint "$MISSION_HEAD"
+          git config user.name 'Worker D MISSION-004 Checkpoint'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          python - <<'PY'
+          from __future__ import annotations
+
+          import datetime
+          import json
+          import pathlib
+
+          config_path = pathlib.Path('config/mission_execution.v1.json')
+          config = json.loads(config_path.read_text(encoding='utf-8'))
+          matches = [claim for claim in config['activeClaims'] if claim['mission'] == 'MISSION-004']
+          if len(matches) != 1:
+              raise SystemExit(f'expected exactly one MISSION-004 claim, found {len(matches)}')
+          claim = matches[0]
+          expected = {
+              'worker': 'D',
+              'branch': 'agent/p4-001-search-provider-foundation',
+              'pr': 62,
+              'head': '69e44e08395d89da1767c58b84655c289a969f66',
+              'tree': '1114c576fe67d9f9202f7f44c98a0af6e35a915a',
+          }
+          for key, value in expected.items():
+              if claim.get(key) != value:
+                  raise SystemExit(f'stale MISSION-004 claim: {key}={claim.get(key)!r}, expected {value!r}')
+
+          now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
+          config['generatedAt'] = now
+          claim['head'] = '1c089c7094a122bb3cfbbc78221f218b3dd7ac0f'
+          claim['tree'] = '276481693c3da7d56fa3e315018c851e659ddec5'
+          claim['status'] = 'REVIEW'
+          claim['current'] = (
+              'P4-001 exact source/integration candidate is reconciled with current Worker B/P8 ancestry and all '
+              'exact-head CI passes; Worker B and Worker J decisions are pending, Worker I is BLOCKED_EXTERNAL, '
+              'and P4-002 plus merge remain unauthorized.'
+          )
+          config_path.write_text(
+              json.dumps(config, indent=2, ensure_ascii=False) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+
+          checkpoint = {
+              'schemaVersion': 1,
+              'mission': 'MISSION-004',
+              'sequence': 3,
+              'worker': 'D',
+              'status': 'REVIEW',
+              'branch': 'agent/p4-001-search-provider-foundation',
+              'pullRequest': 62,
+              'observedHead': '1c089c7094a122bb3cfbbc78221f218b3dd7ac0f',
+              'observedTree': '276481693c3da7d56fa3e315018c851e659ddec5',
+              'protectedMain': {
+                  'commit': '0a4176bcbcb975684c3a590be652c9fffe1ce770',
+                  'tree': '641e11e63fa84f3a16dc4d74b418778839ce5bc2',
+              },
+              'workerBBase': {
+                  'commit': '22a8ac34cbf9601100f60c4929198f15f3c60e52',
+                  'tree': 'ef5d5ae584b1d823502bf6f2191ecf4285d36845',
+                  'pullRequest': 65,
+              },
+              'candidate': {
+                  'commit': '1c089c7094a122bb3cfbbc78221f218b3dd7ac0f',
+                  'tree': '276481693c3da7d56fa3e315018c851e659ddec5',
+                  'parents': [
+                      '69e44e08395d89da1767c58b84655c289a969f66',
+                      '22a8ac34cbf9601100f60c4929198f15f3c60e52',
+                  ],
+                  'aheadOfWorkerB': 58,
+                  'behindWorkerB': 0,
+                  'mergeable': True,
+                  'draft': True,
+                  'merged': False,
+              },
+              'classifications': [
+                  'MISSION_004_TRANSFER_COMPLETE',
+                  'P4_001_SOURCE_IMPLEMENTATION_COMPLETE',
+                  'P4_001_CANONICAL_TEST_CENTER_RECONCILED',
+                  'P4_001_P8_BINDINGS_COMPLETE',
+                  'P4_001_EXACT_HEAD_CI_PASS',
+                  'P4_001_INDEPENDENT_REVIEW_PENDING',
+                  'WORKER_I_BLOCKED_EXTERNAL',
+                  'P4_002_NOT_STARTED',
+                  'NO_SUPPORT_PROMOTION',
+                  'NO_MERGE_AUTHORIZATION',
+              ],
+              'completed': [
+                  'Durably transferred MISSION-004 from Worker C to Worker D without restarting the valid P4-001 implementation.',
+                  'Created a true two-parent reconciliation candidate preserving the prior P4 candidate and current Worker B/P8 base.',
+                  'Resolved canonical Test Center registry integration with P4 registration exactly once.',
+                  'Added one P8 assurance binding for each of the 18 P4 stable test IDs without promoting support.',
+                  'Regenerated the 1,149-entry root source manifest twice with byte-identical output and zero second-write drift.',
+                  'Passed P4-001, P8-001, P2 Alignment, and product-gates exact-head workflows.',
+                  'Refreshed PR #62 and issued exact Worker B, Worker I, and Worker J review requests.',
+              ],
+              'validation': [
+                  'P4-001 run 31093993286 PASS: Windows 92591464538, Linux 92591464573, manifest 92591464578, macOS 92591464622.',
+                  'P8-001 run 31093993284 PASS: macOS 92591464333, Windows 92591464338, Ubuntu 92591464375.',
+                  'P2 Integration Alignment run 31093993266 PASS: validation job 92591464409; controlled lanes skipped as designed.',
+                  'product-gates run 31093993217 PASS: macOS 92591464334, Ubuntu 92591464337, Windows 92591464415.',
+                  'P4 source evidence reports 24/24 tests and 18/18 stable IDs PASS, zero failures/errors/skips, no observed external network use, and denied runtime network policy.',
+                  'Source manifest has 1,149 entries and byte SHA-256 a9227cfadff96fb239c7db72166aec87f9c40b59b4f95c49e07fe204cc4cbced.',
+                  'PR #62 is open, draft, mergeable, unmerged, ahead 58 and behind 0 relative to exact Worker B base.',
+                  'No force-push, rebase, protected-main merge, live-search behavior, fetch behavior, citation behavior, P4-002 work, or support promotion occurred.',
+              ],
+              'evidence': {
+                  'p4Workflow': {
+                      'run': 31093993286,
+                      'artifacts': [
+                          {'id': 8964658474, 'platform': 'linux', 'digest': 'sha256:522e3d754df1cecd75b0b0b417c6ae0ac3af43af022ce1a88558874577783888'},
+                          {'id': 8964655143, 'platform': 'macos', 'digest': 'sha256:863a49bd541aa164a36d58d58150f9ddc26fbe5c145335187a6498658ac890fc'},
+                          {'id': 8964653761, 'platform': 'windows', 'digest': 'sha256:e6df55823b54ee2245486bb71562b7ca35efa6e1a49dee2cd6fe5ce669d5536c'},
+                          {'id': 8964649566, 'platform': 'source-manifest', 'digest': 'sha256:38a6f21829e468ac9cdb66b472c7126b8a149cb298a0593eef60fd1ddb750d73'},
+                      ],
+                  },
+                  'p8Workflow': {'run': 31093993284},
+                  'p2Alignment': {'run': 31093993266},
+                  'productGates': {
+                      'run': 31093993217,
+                      'artifacts': [
+                          {'id': 8964712373, 'name': 'p0-003-ci-environment-windows', 'digest': 'sha256:e7ba7e22035ee563023cefc19add8d2706427d04bc77692785ecfd00013629fb'},
+                          {'id': 8964711765, 'name': 'p0-004-toolchain-windows', 'digest': 'sha256:06e8a26be8c835b2d1a8fa0e8f4fb8c74bf1a316815f56a318669e1fb3c15d7b'},
+                          {'id': 8964678162, 'name': 'p0-003-ci-environment-ubuntu', 'digest': 'sha256:44c42ddb2ab2c396a2d66220e143831f0a6ba84b64f1125ad40da4b56d9572c1'},
+                          {'id': 8964677650, 'name': 'p0-004-toolchain-ubuntu', 'digest': 'sha256:cb29156e051cafd9ceb9c23144f9dc1b979bbc1b80ab63cc66f9a6ed3245f4a8'},
+                          {'id': 8964677938, 'name': 'p0-003-ci-environment-macos', 'digest': 'sha256:d2c599c3a639e230c51fa343ef8b8b7740da157fcd544596b25ac0b71c0d2686'},
+                          {'id': 8964677378, 'name': 'p0-004-toolchain-macos', 'digest': 'sha256:2803f42d12f605ba5295e6e60f147105b21fa42638baddddde0cb36c82226560'},
+                      ],
+                  },
+                  'reviewRequests': {
+                      'workerBReviewId': 4873833836,
+                      'workerBComment': 5203670639,
+                      'workerIComment': 5203674356,
+                      'workerJComment': 5203678073,
+                  },
+              },
+              'blockers': [
+                  {
+                      'class': 'WORKER_B_EXACT_REVIEW_PENDING',
+                      'detail': 'No independent exact-candidate Test Center/P8/P4 decision has been published for commit 1c089c7094a122bb3cfbbc78221f218b3dd7ac0f.',
+                  },
+                  {
+                      'class': 'WORKER_I_BLOCKED_EXTERNAL',
+                      'detail': 'No active agent/i branch, PR, or verified independent security reviewer mechanism is discoverable.',
+                  },
+                  {
+                      'class': 'WORKER_J_NO_CONFLICT_PENDING',
+                      'detail': 'No exact MISSION-004 no-conflict record has been published for the current candidate.',
+                  },
+                  {
+                      'class': 'WORKER_B_BASE_INDEPENDENT_REVIEW_BLOCKED_EXTERNAL',
+                      'detail': 'The current Worker B/P8 base remains draft and independently review-blocked; Worker D does not alter Worker B-owned governance.',
+                  },
+                  {
+                      'class': 'P4_002_DEPENDENCY_GATE',
+                      'detail': 'P4-002 must not start until P4-001 independent exact-candidate review closes and mission sequencing authorizes continuation.',
+                  },
+                  {
+                      'class': 'NO_MERGE_AUTHORIZATION',
+                      'detail': 'PR #62 remains draft and no integration authorization exists.',
+                  },
+              ],
+              'nextAction': (
+                  'Consume the Worker B exact-candidate decision, Worker J no-conflict record, and any authorized Worker I policy disposition. '
+                  'Repair only proven exact defects, update this mission checkpoint if the candidate changes, and do not start P4-002 or merge PR #62 before those gates close.'
+              ),
+              'supersedes': 'docs/roadmap/missions/checkpoints/MISSION-004-0002.transfer.json',
+              'supersededBy': None,
+          }
+          checkpoint_path = pathlib.Path('docs/roadmap/missions/checkpoints/MISSION-004-0003.json')
+          if checkpoint_path.exists():
+              raise SystemExit('MISSION-004-0003.json already exists')
+          checkpoint_path.write_text(
+              json.dumps(checkpoint, indent=2, sort_keys=True, ensure_ascii=False) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+
+          python -m json.tool config/mission_execution.v1.json >/dev/null
+          python -m json.tool docs/roadmap/missions/checkpoints/MISSION-004-0003.json >/dev/null
+          git diff --check
+          git add -- config/mission_execution.v1.json docs/roadmap/missions/checkpoints/MISSION-004-0003.json
+          git diff --cached --check
+          git commit -m 'mission(MISSION-004): checkpoint exact P4-001 review candidate'
+          git push origin HEAD:"$TARGET_BRANCH"
