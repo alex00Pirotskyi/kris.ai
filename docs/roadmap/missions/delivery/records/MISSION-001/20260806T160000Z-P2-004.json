@@ -1,0 +1,18 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "PR #75",
+    "P2-004 receipt bridge source repair"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "Produce real tri-platform measurements and independently review the technology decision.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T16:00:00Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P2-004",
+  "tree": null,
+  "workExecutionId": "WRK-20260806T160000Z-00000001",
+  "worker": "A"
+}

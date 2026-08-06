@@ -1,0 +1,488 @@
+{
+  "branchLifecycle": {
+    "backupPatterns": [
+      "*-backup*",
+      "*-prestack-*",
+      "validated/*",
+      "validation/*"
+    ],
+    "deleteOnlyWhenNoOpenPr": true,
+    "ephemeralPatterns": [
+      "ci/*",
+      "automation/*",
+      "carrier/*",
+      "temp/*"
+    ],
+    "protectedPatterns": [
+      "main",
+      "agent/anarchy-autonomous-worker-missions"
+    ],
+    "staleDays": 14
+  },
+  "commonGeneratedPaths": [
+    "SOURCE_MANIFEST.sha256",
+    "docs/roadmap/missions/DELIVERY_METRICS.json",
+    "docs/roadmap/missions/DELIVERY_DASHBOARD.md",
+    "docs/roadmap/missions/delivery/records/**"
+  ],
+  "generated": {
+    "dashboard": "docs/roadmap/missions/DELIVERY_DASHBOARD.md",
+    "metrics": "docs/roadmap/missions/DELIVERY_METRICS.json"
+  },
+  "missionPathPolicies": {
+    "MISSION-001": {
+      "namespaces": [
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "authority_service/**"
+        },
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "lib/product/p1*/**"
+        },
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "lib/product/p2*/**"
+        }
+      ],
+      "owned": [
+        "authority_service/**",
+        "lib/product/p1*/**",
+        "lib/product/p2*/**",
+        "tool/p1*.py",
+        "tool/p2*.py",
+        "test/product/p1*/**",
+        "test/product/p2*/**",
+        "release/evidence/P0-*/**",
+        "release/evidence/P1-*/**",
+        "release/evidence/P1A*/**",
+        "release/evidence/P2-*/**",
+        ".github/workflows/p1*.yml",
+        ".github/workflows/p2*.yml",
+        "docs/adr/ADR-0012-p2-automation-host.md",
+        "docs/operations/P2_*"
+      ]
+    },
+    "MISSION-002": {
+      "namespaces": [
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "tool/test_center*.py"
+        }
+      ],
+      "owned": [
+        "config/test_center*.json",
+        "schemas/test_center*.json",
+        "tool/test_center*.py",
+        "docs/testing/**",
+        "release/evidence/TEST_CENTER/**",
+        ".github/workflows/*test-center*.yml",
+        ".github/workflows/worker-b*.yml"
+      ]
+    },
+    "MISSION-003": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/browser/**"
+        },
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "test/product/browser/**"
+        }
+      ],
+      "owned": [
+        "lib/product/browser/**",
+        "test/product/browser/**",
+        "tool/worker_d*.py",
+        "release/evidence/P3-*/**",
+        ".github/workflows/worker-d*.yml"
+      ]
+    },
+    "MISSION-004": {
+      "namespaces": [
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "services/research_worker/**"
+        },
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/research/**"
+        },
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "test/product/research/**"
+        }
+      ],
+      "owned": [
+        "services/research_worker/**",
+        "lib/product/research/**",
+        "test/product/research/**",
+        "tool/p4_001*.py",
+        "schemas/web_search_*.json",
+        "release/evidence/P4-*/**",
+        ".github/workflows/p4-001*.yml"
+      ]
+    },
+    "MISSION-005": {
+      "namespaces": [
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "lib/product/p5_information_architecture/**"
+        }
+      ],
+      "owned": [
+        "lib/product/p5_information_architecture/**",
+        "lib/p5_ia_preview.dart",
+        "test/product/p5_information_architecture/**",
+        "docs/ux/**",
+        "release/evidence/P5-*/**",
+        "release/evidence/P22-*/**",
+        ".github/workflows/worker-f*.yml"
+      ]
+    },
+    "MISSION-006": {
+      "namespaces": [
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "lib/product/model/**"
+        }
+      ],
+      "owned": [
+        "lib/product/model/**",
+        "lib/ai/model/**",
+        "lib/settings/model/**",
+        "test/product/model/**",
+        "test/ai/model/**",
+        "tool/worker_g*.py",
+        "release/evidence/P6-*/**",
+        "release/evidence/P18-*/**",
+        ".github/workflows/worker-g*.yml"
+      ]
+    },
+    "MISSION-007": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/capabilities/**"
+        },
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/skills/**"
+        }
+      ],
+      "owned": [
+        "lib/product/mcp*.dart",
+        "lib/product/skills/**",
+        "lib/product/capabilities/**",
+        "test/product/mcp*/**",
+        "test/product/skills/**",
+        "test/product/capabilities/**",
+        "release/evidence/P7-*/**",
+        "release/evidence/P23-*/**"
+      ]
+    },
+    "MISSION-008": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "packaging/**"
+        }
+      ],
+      "owned": [
+        "packaging/**",
+        "installer/**",
+        "tool/release*.py",
+        "release/evidence/P9-*/**",
+        ".github/workflows/*release*.yml"
+      ]
+    },
+    "MISSION-009": {
+      "namespaces": [],
+      "owned": [
+        "release/evidence/P10-*/**",
+        "release/evidence/P20-*/**",
+        "docs/release/**",
+        ".github/workflows/*ga*.yml"
+      ]
+    },
+    "MISSION-010": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "native/**"
+        }
+      ],
+      "owned": [
+        "native/**",
+        "tool/worker_e*.py",
+        "release/evidence/P11-*/**",
+        "release/evidence/P15-*/**",
+        ".github/workflows/worker-e*.yml"
+      ]
+    },
+    "MISSION-011": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/connectors/**"
+        },
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/identity/**"
+        }
+      ],
+      "owned": [
+        "lib/product/connectors/**",
+        "lib/product/identity/**",
+        "lib/product/providers/**",
+        "test/product/connectors/**",
+        "release/evidence/P12-*/**",
+        "release/evidence/P21-*/**"
+      ]
+    },
+    "MISSION-012": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/application_factory/**"
+        }
+      ],
+      "owned": [
+        "lib/product/application_factory/**",
+        "test/product/application_factory/**",
+        "release/evidence/P13-*/**"
+      ]
+    },
+    "MISSION-013": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/content_factory/**"
+        }
+      ],
+      "owned": [
+        "lib/product/content_factory/**",
+        "test/product/content_factory/**",
+        "release/evidence/P14-*/**"
+      ]
+    },
+    "MISSION-014": {
+      "namespaces": [
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/cloud/**"
+        },
+        {
+          "mode": "RESERVED_FUTURE_NAMESPACE",
+          "pattern": "lib/product/realtime/**"
+        }
+      ],
+      "owned": [
+        "lib/product/cloud/**",
+        "lib/product/realtime/**",
+        "lib/product/companions/**",
+        "test/product/cloud/**",
+        "test/product/realtime/**",
+        "release/evidence/P16-*/**",
+        "release/evidence/P17-*/**",
+        "release/evidence/P19-*/**"
+      ]
+    },
+    "MISSION-015": {
+      "namespaces": [
+        {
+          "mode": "EXISTING_ON_CLAIM_BRANCH",
+          "pattern": "docs/roadmap/missions/**"
+        }
+      ],
+      "owned": [
+        "docs/roadmap/anarchy/**",
+        "docs/roadmap/missions/**",
+        "config/mission_execution.v1.json",
+        "config/mission_delivery.v1.json",
+        "schemas/mission_*.json",
+        "tool/mission_control.py",
+        "tool/mission_delivery_control.py",
+        "tool/mission_delivery_control_test.py",
+        ".github/workflows/mission-*.yml",
+        "release/evidence/P24-*/**"
+      ]
+    }
+  },
+  "missionSystemBranch": "agent/anarchy-autonomous-worker-missions",
+  "policyVersion": "1.0.0",
+  "priorityOrder": {
+    "CRITICAL_PATH": 0,
+    "EXECUTION_CONTROL": 1,
+    "HIGH": 2,
+    "MEDIUM": 3,
+    "TERMINAL_PATH": 4
+  },
+  "recordsRoot": "docs/roadmap/missions/delivery/records",
+  "reviewScopes": {
+    "EVIDENCE": [
+      "release/evidence/**",
+      "docs/roadmap/progress/**",
+      "SOURCE_MANIFEST.sha256"
+    ],
+    "INTEGRATION": [
+      "config/**",
+      "schemas/**",
+      ".github/workflows/**",
+      "SOURCE_MANIFEST.sha256",
+      "docs/roadmap/missions/**"
+    ],
+    "SECURITY": [
+      "authority_service/**",
+      "native/**",
+      "config/*threat*",
+      "config/*credential*",
+      "tool/*security*",
+      "tool/*sandbox*",
+      "schemas/*credential*",
+      ".github/workflows/**"
+    ],
+    "SOURCE": [
+      "lib/**",
+      "services/**",
+      "native/**",
+      "authority_service/**",
+      "tool/**",
+      "test/**",
+      "evals/**"
+    ]
+  },
+  "schemaVersion": 1,
+  "sharedAuthorities": [
+    {
+      "authorityId": "test-center-registry",
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "config/test_center_registry.v1.json"
+      ]
+    },
+    {
+      "authorityId": "test-center-hierarchy",
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "config/test_center_assurance_hierarchy.v1.json"
+      ]
+    },
+    {
+      "authorityId": "test-center-code",
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "tool/test_center*.py"
+      ]
+    },
+    {
+      "authorityId": "test-center-schemas",
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "schemas/test_center*.json"
+      ]
+    },
+    {
+      "authorityId": "source-manifest",
+      "canonicalGenerator": "python tool/p1a_refresh_source_manifest.py .",
+      "ownerMission": "MISSION-001",
+      "ownerReviewRequired": false,
+      "patterns": [
+        "SOURCE_MANIFEST.sha256"
+      ]
+    }
+  ],
+  "sharedPathGrants": [
+    {
+      "coordinationId": "MISSION-004-P4-001-TEST-CENTER",
+      "operations": [
+        "append-module",
+        "append-tests",
+        "append-profiles",
+        "append-mappings",
+        "append-bindings"
+      ],
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "config/test_center_registry.v1.json",
+        "config/test_center_assurance_hierarchy.v1.json"
+      ],
+      "requestingMission": "MISSION-004"
+    },
+    {
+      "coordinationId": "MISSION-005-P5-001-TEST-CENTER",
+      "operations": [
+        "append-module",
+        "append-tests",
+        "append-profiles",
+        "append-mappings",
+        "append-bindings"
+      ],
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "config/test_center_registry.v1.json",
+        "config/test_center_assurance_hierarchy.v1.json"
+      ],
+      "requestingMission": "MISSION-005"
+    },
+    {
+      "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
+      "operations": [
+        "append-module",
+        "append-tests",
+        "append-profiles",
+        "append-mappings",
+        "append-binding",
+        "append-portability-regression"
+      ],
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "config/test_center_registry.v1.json",
+        "config/test_center_assurance_hierarchy.v1.json",
+        "tool/test_center_assurance_hierarchy_test.py"
+      ],
+      "requestingMission": "MISSION-006"
+    },
+    {
+      "coordinationId": "MISSION-010-P11-READINESS-TEST-CENTER",
+      "operations": [
+        "append-module",
+        "append-tests",
+        "append-profiles",
+        "append-mappings",
+        "append-bindings"
+      ],
+      "ownerMission": "MISSION-002",
+      "ownerReviewRequired": true,
+      "patterns": [
+        "config/test_center_registry.v1.json",
+        "config/test_center_assurance_hierarchy.v1.json"
+      ],
+      "requestingMission": "MISSION-010"
+    }
+  ],
+  "statuses": [
+    "NOT_EVALUATED",
+    "DISCOVERY",
+    "IMPLEMENTATION",
+    "VALIDATION",
+    "REVIEW",
+    "BLOCKED",
+    "BLOCKED_EXTERNAL",
+    "ACCEPTED",
+    "MERGED_MAIN",
+    "SUPERSEDED"
+  ],
+  "terminalAcceptedStatuses": [
+    "ACCEPTED",
+    "MERGED_MAIN"
+  ]
+}

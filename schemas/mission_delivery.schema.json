@@ -1,0 +1,96 @@
+{
+  "$id": "https://kristin.local/schemas/mission_delivery.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "branch": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "mergedMainCommit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mission": {
+      "pattern": "^MISSION-[0-9]{3}$"
+    },
+    "nextAction": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "pullRequest": {
+      "minimum": 1,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "recordedAt": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "NOT_EVALUATED",
+        "DISCOVERY",
+        "IMPLEMENTATION",
+        "VALIDATION",
+        "REVIEW",
+        "BLOCKED",
+        "BLOCKED_EXTERNAL",
+        "ACCEPTED",
+        "MERGED_MAIN",
+        "SUPERSEDED"
+      ]
+    },
+    "task": {
+      "pattern": "^P[0-9]+-[0-9]+$"
+    },
+    "tree": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workExecutionId": {
+      "pattern": "^WRK-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$"
+    },
+    "worker": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "mission",
+    "task",
+    "status",
+    "workExecutionId",
+    "worker",
+    "branch",
+    "recordedAt",
+    "nextAction"
+  ],
+  "title": "Kristin mission delivery event",
+  "type": "object"
+}

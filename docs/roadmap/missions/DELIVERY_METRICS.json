@@ -1,0 +1,494 @@
+{
+  "acceptedTaskCount": 0,
+  "blockedTaskCount": 3,
+  "explicitRecordCount": 8,
+  "generatedAt": "DETERMINISTIC_FROM_RECORDS",
+  "implementationTaskCount": 1,
+  "inReviewTaskCount": 4,
+  "mergedMainTaskCount": 0,
+  "missions": [
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 1,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-001",
+      "notEvaluatedTasks": 35,
+      "records": [
+        {
+          "nextAction": "Produce real tri-platform measurements and independently review the technology decision.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T160000Z-P2-004.json",
+          "recordedAt": "2026-08-06T16:00:00Z",
+          "status": "BLOCKED_EXTERNAL",
+          "task": "P2-004"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 1,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 35,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Foundation, Trust, Product Core, and Owner Mode",
+      "totalTasks": 36,
+      "worker": "A"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 1,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-002",
+      "notEvaluatedTasks": 14,
+      "records": [
+        {
+          "nextAction": "Obtain independent exact-candidate review and land the canonical hierarchy before downstream reconciliation.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-002/20260806T160001Z-P8-001.json",
+          "recordedAt": "2026-08-06T16:00:01Z",
+          "status": "REVIEW",
+          "task": "P8-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 14,
+        "REVIEW": 1,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Verification OS, Security, Reliability, and Continuous Certification",
+      "totalTasks": 15,
+      "worker": "B"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 1,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-003",
+      "notEvaluatedTasks": 17,
+      "records": [
+        {
+          "nextAction": "Wait for P2-004 measured decision; preserve readiness source foundation.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-003/20260806T160002Z-P3-001.json",
+          "recordedAt": "2026-08-06T16:00:02Z",
+          "status": "BLOCKED",
+          "task": "P3-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 1,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 17,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Browser Automation and Web Studio",
+      "totalTasks": 18,
+      "worker": "D"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "REVIEW",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 1,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-004",
+      "notEvaluatedTasks": 21,
+      "records": [
+        {
+          "nextAction": "Consume Worker B and Worker J exact-candidate decisions; do not begin P4-002.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-004/20260806T160003Z-P4-001.json",
+          "recordedAt": "2026-08-06T16:00:03Z",
+          "status": "REVIEW",
+          "task": "P4-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 21,
+        "REVIEW": 1,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Research, Data, Citations, and Knowledge",
+      "totalTasks": 22,
+      "worker": "D"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 1,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-005",
+      "notEvaluatedTasks": 32,
+      "records": [
+        {
+          "nextAction": "Settle exact-head CI and independent reviews for the bounded IA prototype.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-005/20260806T160004Z-P5-001.json",
+          "recordedAt": "2026-08-06T16:00:04Z",
+          "status": "REVIEW",
+          "task": "P5-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 32,
+        "REVIEW": 1,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Experience Platform and Consumer Productization",
+      "totalTasks": 33,
+      "worker": "F"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 1,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-006",
+      "notEvaluatedTasks": 25,
+      "records": [
+        {
+          "nextAction": "Settle exact-head CI, Worker B authority review, and independent review.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-006/20260806T160005Z-P6-001.json",
+          "recordedAt": "2026-08-06T16:00:05Z",
+          "status": "IMPLEMENTATION",
+          "task": "P6-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 1,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 25,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Agent Intelligence, Model Routing, Local Models, and Hardware Acceleration",
+      "totalTasks": 26,
+      "worker": "G"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-007",
+      "notEvaluatedTasks": 36,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 36,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Interoperability, Skills, Tools, and Capability Operating System",
+      "totalTasks": 36,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-008",
+      "notEvaluatedTasks": 16,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 16,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Release Engineering, Supply Chain, Signing, Installers, and Updates",
+      "totalTasks": 16,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-009",
+      "notEvaluatedTasks": 22,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 22,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Core Integration, Alpha, Beta, Release Candidate, and Synchronized GA",
+      "totalTasks": 22,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 1,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-010",
+      "notEvaluatedTasks": 24,
+      "records": [
+        {
+          "nextAction": "Obtain P2-004 measured selection and production native transport evidence.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-010/20260806T160006Z-P11-001.json",
+          "recordedAt": "2026-08-06T16:00:06Z",
+          "status": "BLOCKED",
+          "task": "P11-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 1,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 24,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Native Platform, Device Automation, Isolation, and Remote Operation",
+      "totalTasks": 25,
+      "worker": "E"
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-011",
+      "notEvaluatedTasks": 38,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 38,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Identity, Credentials, Universal Connectors, and Multi-provider Orchestration",
+      "totalTasks": 38,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-012",
+      "notEvaluatedTasks": 14,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 14,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Application Factory and Advanced Vibe Coding",
+      "totalTasks": 14,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-013",
+      "notEvaluatedTasks": 14,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 14,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Content Manufacturing and Publishing",
+      "totalTasks": 14,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "UNCLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 0,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-014",
+      "notEvaluatedTasks": 32,
+      "records": [],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 32,
+        "REVIEW": 0,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Cloud, Fleet, Realtime Multimodal, Omnichannel, Companions, and Headless Nodes",
+      "totalTasks": 32,
+      "worker": null
+    },
+    {
+      "acceptedTasks": 0,
+      "blockedTasks": 0,
+      "claimStatus": "CLAIMED",
+      "frontierState": "DERIVE_LIVE_FROM_ROADMAP_INTERLOCKS_AND_CURRENT_RECORDS",
+      "implementationTasks": 0,
+      "inReviewTasks": 1,
+      "mergedMainTasks": 0,
+      "mission": "MISSION-015",
+      "notEvaluatedTasks": 11,
+      "records": [
+        {
+          "nextAction": "Publish canonical source manifest, pass exact-head P24 CI, then request independent review.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-015/20260806T160007Z-P24-001.json",
+          "recordedAt": "2026-08-06T16:00:07Z",
+          "status": "REVIEW",
+          "task": "P24-001"
+        }
+      ],
+      "statusCounts": {
+        "ACCEPTED": 0,
+        "BLOCKED": 0,
+        "BLOCKED_EXTERNAL": 0,
+        "DISCOVERY": 0,
+        "IMPLEMENTATION": 0,
+        "MERGED_MAIN": 0,
+        "NOT_EVALUATED": 11,
+        "REVIEW": 1,
+        "SUPERSEDED": 0,
+        "VALIDATION": 0
+      },
+      "title": "Roadmap Integrity, Mission Execution, Traceability, and No-SQL Authority Migration",
+      "totalTasks": 12,
+      "worker": "J"
+    }
+  ],
+  "notEvaluatedTaskCount": 351,
+  "progressMeaning": "Accepted or merged roadmap tasks only; source presence and CI alone do not count.",
+  "progressPercentage": 0.0,
+  "schemaVersion": 1,
+  "statusCounts": {
+    "ACCEPTED": 0,
+    "BLOCKED": 2,
+    "BLOCKED_EXTERNAL": 1,
+    "IMPLEMENTATION": 1,
+    "MERGED_MAIN": 0,
+    "NOT_EVALUATED": 351,
+    "REVIEW": 4
+  },
+  "taskCount": 359
+}

@@ -1,0 +1,56 @@
+{
+  "$id": "https://kristin.local/schemas/mission_delivery_update.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "artifacts": {
+      "type": "array"
+    },
+    "candidate": {
+      "properties": {
+        "branch": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "tree": {
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      },
+      "required": [
+        "commit",
+        "tree",
+        "branch"
+      ],
+      "type": "object"
+    },
+    "ci": {
+      "type": "array"
+    },
+    "mission": {
+      "pattern": "^MISSION-[0-9]{3}$"
+    },
+    "ownership": {
+      "type": "object"
+    },
+    "reviewImpact": {
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "workExecutionId": {
+      "pattern": "^WRK-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "mission",
+    "workExecutionId",
+    "candidate"
+  ],
+  "title": "Kristin mission delivery enforcement report",
+  "type": "object"
+}
