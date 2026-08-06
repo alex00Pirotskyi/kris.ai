@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - automation/p4-p8-reconcile-800643b
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
