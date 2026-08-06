@@ -6,6 +6,7 @@ on:
       - agent/anarchy-autonomous-worker-missions
       - agent/mission-delivery-enforcement-v1
     paths:
+      - '.github/workflows/mission-delivery-materialize.yml'
       - 'config/mission_delivery.v1.json'
       - 'docs/roadmap/missions/delivery/records/**'
       - 'tool/mission_delivery_*.py'
@@ -15,13 +16,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: mission-delivery-materializer
+  group: mission-delivery-materializer-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   materialize:
     if: github.repository == 'alex00Pirotskyi/kris.ai'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
