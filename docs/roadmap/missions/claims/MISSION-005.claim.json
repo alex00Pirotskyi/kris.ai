@@ -1,6 +1,6 @@
 {
   "branch": "agent/f/P5-001-information-architecture",
-  "current": "P5-001 bounded information architecture and UX prototype; exact ownership grants, reviewed Worker B dependency, canonical manifests, exact CI, and final reviews remain unsettled",
+  "current": "P5-001 product-state repair at exact Worker F head; progressive-disclosure and fixture-identity defects are the next executable source work, while shared-path grants, current Worker B integration, canonical manifests, exact CI, and final reviews remain unsettled",
   "exclusivePaths": [
     "lib/product/p5_information_architecture/**",
     "lib/p5_ia_preview.dart",
@@ -10,12 +10,12 @@
     "release/evidence/P22-*/**",
     ".github/workflows/worker-f*.yml"
   ],
-  "head": "ba74ad56970b00b789e7814548d46abcfdd96394",
+  "head": "83d1848d014f4cdc27972be047c8cfc8f8563303",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-005",
   "pr": 72,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "c971c3210e9925369a97d02858f855467f73e342",
+  "tree": "0d4e03c9fb61937ae785f10885679f47173cf1fd",
   "worker": "F"
 }
