@@ -1,0 +1,33 @@
+{
+  "branch": "agent/g/mission-006-model-routing",
+  "commit": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
+  "evidence": [
+    "Supersedes MISSION-006 delivery record 20260806T220131Z-P6-001.json after a material integration/evidence head change",
+    "P6-001 exact candidate 2bee9843e331f48aaf2dd1f060ad4320274b59a6 / d87bc3640ae50b53780eb72b7c333879200e712f",
+    "Artifact-bound benchmark source repair retained for approved, JSON-ingestion, direct-core, and evaluation-only paths",
+    "True two-parent merge 4166abe8e66b43f4683a3fe9b5e75475adf999e5 consumes Worker B 604905039aa26952045e69ebe6799ae464144635 without force push",
+    "Exact compare against Worker B has behind_by=0 and effective diff excludes SOURCE_MANIFEST.sha256 and every Worker B Test Center authority path",
+    "P6 source/evidence now truthfully records that the inherited root manifest is not current for added P6 source/tests until canonical regeneration",
+    "Exact-head GitHub workflow/status queries for 2bee9843e331f48aaf2dd1f060ad4320274b59a6 returned no runs/statuses",
+    "Worker A source-inventory coordination remains REQUESTED for this exact candidate",
+    "Worker B P8 authority review 4878375408 on 604905039aa26952045e69ebe6799ae464144635 retains REQUEST_CHANGES only for independent-review authenticity plus absent exact-head validation/final manifest"
+  ],
+  "integration": {
+    "baseCommit": "604905039aa26952045e69ebe6799ae464144635",
+    "baseTree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+    "mergeCommit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
+    "candidateBehindBy": 0,
+    "sourceManifestEffectiveDiff": false,
+    "testCenterAuthorityEffectiveDiff": false
+  },
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants/reviews the exact source-inventory append; regenerate SOURCE_MANIFEST.sha256 twice through its canonical owner; execute exact P6/affected CI; Worker B repairs independent-review authenticity, publishes P6-TC-001 and reviews the exact integration; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before these gates pass.",
+  "pullRequest": 76,
+  "recordedAt": "2026-08-06T22:11:48Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P6-001",
+  "tree": "d87bc3640ae50b53780eb72b7c333879200e712f",
+  "workExecutionId": "WRK-20260806T212031Z-a1470e7e",
+  "worker": "G"
+}
