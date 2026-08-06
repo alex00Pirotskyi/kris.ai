@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "sequence": 17,
+  "mission": "MISSION-001",
+  "worker": "A",
+  "status": "BLOCKED",
+  "branch": "agent/a/p1-p2-new-roadmap-execution",
+  "pullRequest": 64,
+  "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
+  "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0016.json",
+  "supersededBy": null,
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_SECURITY_REVIEW_REQUEST_CHANGES",
+    "TEST_CENTER_ENVIRONMENT_ISOLATION_DEFECT_PROVEN",
+    "TEST_CENTER_ENVIRONMENT_ISOLATION_REPAIR_PREPARED",
+    "TEST_CENTER_ENVIRONMENT_ISOLATION_LOCAL_VALIDATION_PASS",
+    "TEST_CENTER_ENVIRONMENT_ISOLATION_PUBLICATION_BLOCKED_BY_PATH_OWNERSHIP",
+    "P2_SOURCE_LOCAL_FRONTIER_EXHAUSTED_BEFORE_SECURITY_REPAIR",
+    "P2_004_OWNER_MEDIATED_TEST_CENTER_UNION_REQUIRED",
+    "P8_001_REQUEST_CHANGES",
+    "P8_001_FROZEN_WORKER_A_PASS_EVIDENCE_MIGRATION_REQUIRED",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "blockers": [
+    {
+      "class": "BLOCKED_BY_PATH_OWNERSHIP",
+      "detail": "PR #78 current policy head 397da142701f27279673c93147d99d61f9ad14a9 still classifies tool/worker_a_test_center_v1.py, tool/worker_a_test_center_v1_test.py, and .github/workflows/worker-a-test-center-integration.yml as UNDECLARED_PATH. Worker A will not publish the prepared repair before exact ownership is assigned."
+    },
+    {
+      "class": "P8_SOURCE_AND_EVIDENCE_REQUEST_CHANGES",
+      "detail": "PR #65 remains blocked by inherited P8 assurance findings and deletion of the immutable Worker A PASS artifact without migration."
+    },
+    {
+      "class": "OWNER_MEDIATED_P2_004_UNION_REQUIRED",
+      "detail": "MISSION-002 has not produced the owner-preserving Test Center union required for the P2-004 trusted measurement sources."
+    },
+    {
+      "class": "CONTROLLED_BEHAVIORAL_INFRASTRUCTURE_ABSENT",
+      "detail": "Real tri-platform measurements, p2-controlled runners, attestations, signed provisioning, approvals, and governed behavioral receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #64, PR #65, PR #75, and PR #78 remain draft and unmerged without a valid authorized integration sequence."
+    }
+  ],
+  "completed": [
+    "Consumed Worker I exact review 4878093100 and proved the Worker A runner executes profile subprocesses with the complete parent environment despite recording only allowlisted environment evidence.",
+    "Prepared a focused four-file security repair from frozen PR #64 without modifying the frozen reviewed branch.",
+    "Implemented a deterministic minimal child environment, complete child-environment attestation, duplicate/wildcard/sensitive allowlist rejection, external controlled HOME/temp roots, file-backed bounded output capture, and sensitive parent-value redaction.",
+    "Added 13 Worker A security regressions covering sentinel exclusion, evidence completeness, platform baselines, allowlist validation, redaction, output bounds, and runner behavior; all pass.",
+    "Passed 18 canonical Test Center regressions, canonical and Worker A check modes, Python compilation, bounded P2 acceptance, all-task assertions, P2-004 receipt contract, representative source profiles, and git diff validation.",
+    "Did not claim the historical unbounded full source suite PASS because it exceeded the local execution window.",
+    "Published exact ownership request MISSION-001-WORKER-A-TEST-CENTER-ENV-OWNERSHIP.json and PR #78 comment 5209188732.",
+    "Committed the encoded patch artifact at e6c0b6d3cb6b249be1ae9712d3bd8804a930407a, validation record at 203bb48b2ee6cb53542f1ecac82383e60b4dd9e1, and validation checksum at feb499ec8448d9f36b604fd3d70c11394a182fdf.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T214012Z-P2-004.json at 65a1dbc392845af7f87c5d547fba0c6c65ee9a56.",
+    "Kept protected main, frozen PR #64, Worker B, Worker J, and PR #75 product branches unchanged."
+  ],
+  "evidence": {
+    "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+    "securityReview": {
+      "githubReviewId": 4878093100,
+      "decision": "REQUEST_CHANGES",
+      "reviewedCommit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "reviewedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "ownershipRequest": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-WORKER-A-TEST-CENTER-ENV-OWNERSHIP.json",
+      "commit": "3032a4abc24a757a746c60cb613b79716839f1be",
+      "comment": 5209188732,
+      "status": "OWNER_POLICY_CHANGE_REQUIRED"
+    },
+    "preparedRepair": {
+      "artifact": "docs/roadmap/missions/coordination/artifacts/MISSION-001/worker-a-test-center-env-isolation.patch.gz.b64",
+      "artifactCommit": "e6c0b6d3cb6b249be1ae9712d3bd8804a930407a",
+      "plainPatchSha256": "3588612c3fc625efaf695a4cf549a4a0c45fb6fa234bea5bd03febddfc6935ac",
+      "encodedSha256": "b2392e34f0a7d3c7d7dac7bb3fd1b7ef955b0cb81e2c499affc5da5ed7aaba86",
+      "validation": "docs/roadmap/missions/coordination/MISSION-001-WORKER-A-TEST-CENTER-ENV-ISOLATION-VALIDATION.json",
+      "validationSha256": "eff0ce6bb239f05fb9225e9835aef2c102642e1964205f40955f9b09a097777e",
+      "validationCommit": "203bb48b2ee6cb53542f1ecac82383e60b4dd9e1",
+      "validationSidecarCommit": "feb499ec8448d9f36b604fd3d70c11394a182fdf"
+    },
+    "deliveryRecord": {
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T214012Z-P2-004.json",
+      "commit": "65a1dbc392845af7f87c5d547fba0c6c65ee9a56"
+    },
+    "deliveryOverlay": {
+      "pullRequest": 78,
+      "commit": "397da142701f27279673c93147d99d61f9ad14a9",
+      "integrated": false
+    }
+  },
+  "validation": [
+    "The live MISSION-001 claim remained unique after every mission-branch write.",
+    "The prepared patch is based on exact frozen PR #64 runner, test, and workflow blobs.",
+    "The repair closes the reviewed parent-environment leak in local source validation without changing product APIs, persistence, wire formats, native interfaces, or Owner Mode policy.",
+    "The final branch manifest and exact-head tri-platform CI remain mandatory after ownership is granted and the patch is published.",
+    "No local/source result was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No technology selection, P3/P11 authorization, support promotion, ready transition, or merge authorization was claimed."
+  ],
+  "nextAction": "MISSION-015 assigns the three exact Worker A Test Center paths to MISSION-001. Worker A creates agent/a/mission-001-test-center-env-isolation from frozen 89a1533, applies the durable patch, regenerates SOURCE_MANIFEST.sha256 twice on the exact branch, runs ownership and scoped review-impact checks, exact-head Ubuntu/Windows/macOS CI and artifacts, then obtains fresh Worker B/J/I review."
+}
