@@ -1,14 +1,37 @@
 {
   "assignedWorker": "A",
+  "blockers": [
+    "PR #65 advanced to substantive P8-001 shared-contract head 22a8ac34cbf9601100f60c4929198f15f3c60e52; its previous landing packet is superseded.",
+    "Worker A and P8-001 both modify config/test_center_registry.v1.json, so post-landing integration will change Worker A's tree and require manifest regeneration, exact-head CI, and fresh independent review.",
+    "Worker J bounded source-transition reconciliation remains pending.",
+    "Explicit stacked-integration authorization remains absent.",
+    "Controlled P2 behavior remains BLOCKED_EXTERNAL."
+  ],
   "branch": "agent/a/p1-p2-new-roadmap-execution",
-  "current": "P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked",
+  "current": "Frozen reviewed P1/P1A/P2 candidate; canonical source integration remains valid at the reviewed SHA while the moving P8 Test Center base requires a new compatibility and landing decision; behavioral closure remains externally blocked",
+  "executionState": "BLOCKED",
+  "latestCheckpoint": "docs/roadmap/missions/checkpoints/MISSION-001-0003.json",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-001",
-  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
+  "nextAction": "Keep Worker A frozen. Settle PR #65 at one exact independently reviewed and authorized P8 candidate and obtain Worker J's bounded reconciliation. After PR #65 lands, combine both canonical registry sets, regenerate SOURCE_MANIFEST.sha256 through its owner, rerun exact-head Worker A CI, and request a fresh Worker B exact-SHA review because the Worker A tree will change.",
   "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
   "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
   "pullRequest": 64,
   "schemaVersion": 1,
+  "sharedContract": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "head": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "pullRequest": 65,
+    "state": "EXACT_HEAD_VALIDATION_AND_INDEPENDENT_REVIEW_PENDING",
+    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
+  },
   "status": "CLAIMED",
-  "title": "Foundation, Trust, Product Core, and Owner Mode"
+  "title": "Foundation, Trust, Product Core, and Owner Mode",
+  "workerJReconciliation": {
+    "head": "2a14b875ff529cfd90348673e8e45b2442663619",
+    "pullRequest": 66,
+    "requestComment": 5203103817,
+    "state": "PENDING",
+    "tree": "595346993b4512411f48075a47289333c51b3850"
+  }
 }
