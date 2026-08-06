@@ -1,22 +1,18 @@
 {
   "branch": "agent/b/test-center-contracts-and-review",
-  "current": "P8-001 formal Test Center assurance hierarchy source implementation and exact-head certification",
+  "current": "Canonical Test Center contracts, exact reviews, certification and integration governance",
   "exclusivePaths": [
-    ".github/workflows/p8-001-formal-test-hierarchy.yml",
-    "config/test_center_assurance_hierarchy.v1.json",
     "config/test_center_registry.v1.json",
     "docs/roadmap/anarchy/reviews/**",
-    "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
-    "release/evidence/TEST_CENTER/**",
-    "schemas/test_center_assurance_hierarchy.v1.json",
-    "tool/test_center*.py"
+    "tool/test_center*.py",
+    "release/evidence/TEST_CENTER/**"
   ],
-  "head": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+  "head": "90c574665363140aeb6cf764ab8387714cab88cf",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-002",
   "pr": 65,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+  "tree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc",
   "worker": "B"
 }
