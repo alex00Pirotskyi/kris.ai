@@ -172,3 +172,5 @@ jobs:
           test -n "$(git status --porcelain=v1)"
           git commit -m "fix(p2-004): harden trusted measurement receipts"
           git push origin "HEAD:$BRANCH"
+
+# retry: corrected-payload-chunk
