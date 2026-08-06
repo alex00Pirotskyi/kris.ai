@@ -1,0 +1,209 @@
+name: Worker G MISSION-006 checkpoint 0002
+
+on:
+  push:
+    branches:
+      - agent/anarchy-autonomous-worker-missions
+    paths:
+      - '.github/workflows/worker-g-mission-006-checkpoint-0002.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-g-mission-006-checkpoint-0002
+  cancel-in-progress: false
+
+jobs:
+  checkpoint:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BRANCH: agent/anarchy-autonomous-worker-missions
+      EXPECTED_PARENT: f0c00142a755c60e059ca46fc65c71f8de4ea954
+      CANDIDATE_HEAD: 0aa6203e89a9b825c575954af54a0c108c79b67a
+      CANDIDATE_TREE: 4b262889edb61ec0c705b289aa29fd0df7c8456c
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/anarchy-autonomous-worker-missions
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Require exact uncontended mission-system head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git fetch origin "${BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${BRANCH})" = "${GITHUB_SHA}"
+      - name: Refresh MISSION-006 claim and generated state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path('config/mission_execution.v1.json')
+          payload = json.loads(path.read_text(encoding='utf-8'))
+          matches = [
+              claim for claim in payload['activeClaims']
+              if claim['mission'] == 'MISSION-006'
+          ]
+          if len(matches) != 1:
+              raise SystemExit(f'expected one MISSION-006 claim, found {len(matches)}')
+          claim = matches[0]
+          if claim['worker'] != 'G' or claim['branch'] != 'agent/g/mission-006-model-routing' or claim['pr'] != 76:
+              raise SystemExit(f'unexpected MISSION-006 ownership: {claim!r}')
+          claim['head'] = os.environ['CANDIDATE_HEAD']
+          claim['tree'] = os.environ['CANDIDATE_TREE']
+          claim['status'] = 'CLAIMED'
+          claim['current'] = (
+              'P6-001 exact candidate repaired the governed Dart source inventory; '
+              'focused model-registry and source-contract tests pass; full '
+              'tri-platform product gates, Worker B Test Center review, and an '
+              'independent exact-commit/tree review remain pending.'
+          )
+          path.write_text(
+              json.dumps(payload, indent=2, ensure_ascii=False) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+          python tool/mission_control.py --project . bootstrap
+      - name: Refresh exact review coordination
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path('docs/roadmap/missions/coordination/MISSION-006-P6-001-TEST-CENTER.json')
+          payload = json.loads(path.read_text(encoding='utf-8'))
+          if payload.get('coordinationId') != 'MISSION-006-P6-001-TEST-CENTER':
+              raise SystemExit('unexpected MISSION-006 coordination identity')
+          payload['requester']['observedHead'] = os.environ['CANDIDATE_HEAD']
+          payload['requester']['observedTree'] = os.environ['CANDIDATE_TREE']
+          payload['status'] = 'REQUESTED'
+          payload['exactCandidate'] = {
+              'commit': os.environ['CANDIDATE_HEAD'],
+              'tree': os.environ['CANDIDATE_TREE'],
+              'pullRequest': 76,
+              'reviewStatus': 'PENDING',
+              'requiredAuthorityReview': 'Worker B',
+              'independentReviewRequired': True,
+          }
+          payload['currentBlockers'] = [
+              'full tri-platform product-gates must pass on the exact candidate',
+              'Worker B must review the exact commit/tree for Test Center authority compatibility',
+              'an independent exact-commit/tree review is not yet recorded',
+              'merge remains unauthorized',
+          ]
+          path.write_text(
+              json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+      - name: Run mission validation and status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/mission_control.py --project . validate | tee "$RUNNER_TEMP/mission-validate.txt"
+          python tool/mission_control.py --project . status | tee "$RUNNER_TEMP/mission-status.txt"
+          grep -F $'MISSION-006\tCLAIMED\tWorker G\tP6,P18' "$RUNNER_TEMP/mission-status.txt"
+      - name: Append MISSION-006 checkpoint 0002
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          from pathlib import Path
+
+          validation_output = Path(os.environ['RUNNER_TEMP'], 'mission-validate.txt').read_text(encoding='utf-8').strip()
+          status_output = Path(os.environ['RUNNER_TEMP'], 'mission-status.txt').read_text(encoding='utf-8')
+          status_line = next(
+              line for line in status_output.splitlines()
+              if line.startswith('MISSION-006\t')
+          )
+          checkpoint = {
+              'schemaVersion': 1,
+              'mission': 'MISSION-006',
+              'sequence': 2,
+              'worker': 'G',
+              'branch': 'agent/g/mission-006-model-routing',
+              'pullRequest': 76,
+              'observedHead': os.environ['CANDIDATE_HEAD'],
+              'observedTree': os.environ['CANDIDATE_TREE'],
+              'completed': [
+                  'Re-resolved protected main, mission-system authority, active claims, PR #76, CI failures, dependencies, coordination, and path ownership.',
+                  'Reused the existing P6-001 model registry implementation and evidence without restarting completed work.',
+                  'Repaired the exact-head governed-source inventory by registering lib/product/model/model.dart and lib/product/model/model_registry.dart.',
+                  'The guarded repair workflow removed itself and refreshed SOURCE_MANIFEST.sha256 deterministically.',
+              ],
+              'validation': [
+                  'Worker G P6-001 source inventory repair workflow run 31102766620 completed successfully.',
+                  'Focused model_registry_test.dart and source_contract_test.dart passed before the repair commit.',
+                  validation_output,
+                  status_line,
+              ],
+              'blockers': [
+                  'Exact-head full tri-platform product-gates are not yet settled.',
+                  'Worker B exact-commit/tree Test Center authority review is pending.',
+                  'No independent exact-commit/tree review is recorded.',
+                  'Mission and repository integration gates do not authorize merge.',
+              ],
+              'nextAction': (
+                  'Inspect all exact-head PR checks for 0aa6203e89a9b825c575954af54a0c108c79b67a, '
+                  'repair only proven regressions, then request Worker B and independent '
+                  'exact-commit/tree review; do not merge.'
+              ),
+              'supersededBy': None,
+          }
+          path = Path('docs/roadmap/missions/checkpoints/MISSION-006-0002.json')
+          if path.exists():
+              raise SystemExit('MISSION-006 checkpoint 0002 already exists')
+          path.write_text(
+              json.dumps(checkpoint, indent=2, ensure_ascii=False, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+      - name: Remove workflow, refresh manifest, and revalidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/worker-g-mission-006-checkpoint-0002.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          python tool/mission_control.py --project . validate
+          python tool/mission_control.py --project . status | grep -F $'MISSION-006\tCLAIMED\tWorker G\tP6,P18'
+          git diff --check
+      - name: Commit exact mission checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${BRANCH})" = "${GITHUB_SHA}"
+          git add -A -- .
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(mission-006): checkpoint exact P6-001 repair candidate'
+          git push origin "HEAD:${BRANCH}"
