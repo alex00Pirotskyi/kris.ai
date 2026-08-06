@@ -25,7 +25,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
       }.contains(_state.runState);
 
   bool get canReviewPlan => !_runLifecycleLocked;
-  bool get canStartRun => !_runLifecycleLocked;
+  bool get canStartRun =>
+      !_runLifecycleLocked && _state.selectedRunId == null;
   bool get canEditTaskDraft => !_runContextLocked;
   bool get canChangeProjectContext => !_runContextLocked;
   bool get canSelectSavedRun => !_runContextLocked;
@@ -146,6 +147,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage: 'Choose a project to continue.',
       );
@@ -160,6 +162,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage:
             'Project "$projectId" was not found. Choose an available project.',
@@ -184,6 +187,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       selectedRunId: null,
       runState: P5RunPresentationState.planReady,
       planReviewed: false,
+      planOnly: false,
       verificationRequested: false,
       recoveryMessage: 'Project context retained across workspaces.',
     );
@@ -212,6 +216,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
             ? P5RunPresentationState.blocked
             : P5RunPresentationState.planReady,
         planReviewed: false,
+        planOnly: false,
+        verificationRequested: false,
         recoveryMessage:
             projectId == null ? 'Choose a project to continue.' : null,
       );
@@ -226,6 +232,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage:
             'Run "$runId" was not found. Choose an available saved run.',
@@ -235,7 +242,10 @@ class P5InformationArchitectureController extends ChangeNotifier {
     }
 
     if (fixture.id == _state.selectedRunId &&
-        fixture.projectId == _state.selectedProjectId) {
+        fixture.projectId == _state.selectedProjectId &&
+        !_state.planReviewed &&
+        !_state.planOnly &&
+        !_state.verificationRequested) {
       return;
     }
 
@@ -243,6 +253,9 @@ class P5InformationArchitectureController extends ChangeNotifier {
       selectedRunId: fixture.id,
       selectedProjectId: fixture.projectId,
       runState: fixture.state,
+      planReviewed: false,
+      planOnly: false,
+      verificationRequested: false,
       recoveryMessage: 'Run context restored without losing project.',
     );
     notifyListeners();
@@ -347,6 +360,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage:
             'Project "$projectId" was not found. Deep link context was not applied.',
@@ -363,6 +377,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage:
             'Run "$runId" was not found. Deep link context was not applied.',
@@ -377,6 +392,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage:
             'Run "${run.id}" does not belong to project "${project.id}". Deep link context was not applied.',
@@ -390,6 +406,9 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedProjectId: run.projectId,
         selectedRunId: run.id,
         runState: run.state,
+        planReviewed: false,
+        planOnly: false,
+        verificationRequested: false,
         recoveryMessage: null,
       );
     } else if (project != null) {
@@ -398,6 +417,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedRunId: null,
         runState: P5RunPresentationState.planReady,
         planReviewed: false,
+        planOnly: false,
         verificationRequested: false,
         recoveryMessage: null,
       );
@@ -463,8 +483,10 @@ class P5InformationArchitectureController extends ChangeNotifier {
           );
         } else {
           _state = _state.copyWith(
+            selectedRunId: null,
             planReviewed: true,
             runState: P5RunPresentationState.ready,
+            verificationRequested: false,
             recoveryMessage: 'Concise plan reviewed. No task has executed.',
           );
         }
@@ -492,10 +514,17 @@ class P5InformationArchitectureController extends ChangeNotifier {
         notifyListeners();
         return;
       case P5PrototypeAction.startRun:
-        if (!canStartRun) {
+        if (_runLifecycleLocked) {
           _state = _state.copyWith(
             recoveryMessage:
                 'Start cannot replace an active or resumable run. Use the run controls first.',
+          );
+          notifyListeners();
+          return;
+        }
+        if (_state.selectedRunId != null) {
+          _state = _state.copyWith(
+            recoveryMessage: 'Review a new plan before starting another run.',
           );
           notifyListeners();
           return;
