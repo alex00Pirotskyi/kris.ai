@@ -16,9 +16,15 @@
   ],
   "coordinationId": "MISSION-006-P6-001-SOURCE-INVENTORY",
   "exactCandidate": {
-    "commit": "4515c66f857d61fc415f37e737c6926e716ef3b5",
+    "commit": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
     "pullRequest": 76,
-    "tree": "b50ce144b685a000fbf71ea7231665367911c4e9"
+    "tree": "d87bc3640ae50b53780eb72b7c333879200e712f"
+  },
+  "integrationBase": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "604905039aa26952045e69ebe6799ae464144635",
+    "tree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+    "candidateBehindBy": 0
   },
   "operations": [
     "append-two-governed-dart-source-paths",
