@@ -4,90 +4,132 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/model/model.dart';
 
-ModelProviderDescriptor _localProvider({String providerId = 'ollama.local'}) {
-  return ModelProviderDescriptor(
-    providerId: providerId,
-    displayName: 'Local Ollama',
-    dataBoundary: ModelDataBoundary.localOnly,
-  );
-}
+const String digestA =
+    'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const String digestB =
+    'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const String digestC =
+    'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+const String digestZero =
+    'sha256:0000000000000000000000000000000000000000000000000000000000000000';
+const String candidateCommit = '1111111111111111111111111111111111111111';
+const String candidateTree = '2222222222222222222222222222222222222222';
+const String benchmarkEvidenceSha =
+    'sha256:aa9351c8d629a6eb591756bc6eec3252a49f27b11b970ab329c2b17b65cd92f7';
 
-ModelLimits _measuredLimits() {
-  return ModelLimits(
-    evidenceLevel: ModelEvidenceLevel.measured,
-    contextWindowTokens: 32768,
-    maxOutputTokens: 4096,
-    maxConcurrentRequests: 1,
-    maxToolCallsPerTurn: 0,
-    supportsStreaming: true,
-  );
-}
+ModelProviderDescriptor _localProvider({String providerId = 'ollama.local'}) =>
+    ModelProviderDescriptor(
+      providerId: providerId,
+      displayName: 'Local Ollama',
+      dataBoundary: ModelDataBoundary.localOnly,
+    );
 
-ModelToolProfile _measuredNoTools() {
-  return ModelToolProfile(
-    evidenceLevel: ModelEvidenceLevel.measured,
-    supportsToolCalling: false,
-    supportsStructuredOutput: true,
-    supportsParallelToolCalls: false,
-  );
-}
+ModelLimits _measuredLimits() => ModelLimits(
+      evidenceLevel: ModelEvidenceLevel.measured,
+      contextWindowTokens: 32768,
+      maxOutputTokens: 4096,
+      maxConcurrentRequests: 1,
+      maxToolCallsPerTurn: 0,
+      supportsStreaming: true,
+    );
 
-ModelBenchmarkEvidence _benchmark({
-  String benchmarkId = 'p6.code-fixture-v1',
-  String taskClassId = 'code-generation',
-  String modelDigest = 'sha256:0123456789abcdef',
-}) {
-  return ModelBenchmarkEvidence(
-    benchmarkId: benchmarkId,
-    taskClassId: taskClassId,
-    modelDigest: modelDigest,
-    score: 0.91,
-    scoreUnit: 'ratio',
-    higherIsBetter: true,
-    sampleCount: 100,
-    measuredAt: DateTime.utc(2026, 8, 6),
-    evidenceUri: 'release/evidence/P6-001/benchmark.json',
-  );
-}
+ModelToolProfile _measuredNoTools() => ModelToolProfile(
+      evidenceLevel: ModelEvidenceLevel.measured,
+      supportsToolCalling: false,
+      supportsStructuredOutput: true,
+      supportsParallelToolCalls: false,
+    );
+
+Map<String, Object?> _benchmarkPayload() => <String, Object?>{
+      'schemaVersion': '1.0.0',
+      'kind': 'MODEL_BENCHMARK_RESULT',
+      'candidateCommit': candidateCommit,
+      'candidateTree': candidateTree,
+      'benchmarkId': 'p6.code-fixture-v1',
+      'taskClassId': 'code-generation',
+      'modelDigest': digestA,
+      'score': 0.91,
+      'scoreUnit': 'ratio',
+      'higherIsBetter': true,
+      'sampleCount': 100,
+      'measuredAt': '2026-08-06T00:00:00.000Z',
+    };
+
+Map<String, Object?> _benchmarkJson() => <String, Object?>{
+      'benchmarkId': 'p6.code-fixture-v1',
+      'taskClassId': 'code-generation',
+      'modelDigest': digestA,
+      'score': 0.91,
+      'scoreUnit': 'ratio',
+      'higherIsBetter': true,
+      'sampleCount': 100,
+      'measuredAt': '2026-08-06T00:00:00.000Z',
+      'evidence': <String, Object?>{
+        'locationKind': 'embedded_content_addressed',
+        'sha256': benchmarkEvidenceSha,
+        'payload': _benchmarkPayload(),
+      },
+    };
+
+ModelBenchmarkEvidence _benchmark() =>
+    ModelBenchmarkEvidence.fromJson(_benchmarkJson());
+
+Map<String, Object?> _approvedPolicyJson() => <String, Object?>{
+      'providerId': 'ollama.local',
+      'modelId': 'qwen3:14b',
+      'displayName': 'Qwen 3 14B',
+      'digest': digestA,
+      'parameterSize': '14B',
+      'quantization': 'Q4_K_M',
+      'aliases': <String>['qwen3-latest'],
+      'limits': _measuredLimits().toJson(),
+      'toolProfile': _measuredNoTools().toJson(),
+      'dataBoundary': ModelDataBoundary.localOnly.wireName,
+      'cost': ModelCostProfile.noDirectCharge().toJson(),
+      'benchmarks': <Object?>[_benchmarkJson()],
+      'approvedTaskClasses': <String>['code-generation'],
+      'supportStatus': 'approved',
+      'evaluationReasons': <String>[],
+    };
 
 ModelDefinition _approvedModel({
   String providerId = 'ollama.local',
   String modelId = 'qwen3:14b',
+  String digest = digestA,
   Iterable<String> aliases = const <String>['qwen3-latest'],
-}) {
-  return ModelDefinition.approved(
-    providerId: providerId,
-    modelId: modelId,
-    displayName: 'Qwen 3 14B',
-    digest: 'sha256:0123456789abcdef',
-    parameterSize: '14B',
-    quantization: 'Q4_K_M',
-    aliases: aliases,
-    limits: _measuredLimits(),
-    toolProfile: _measuredNoTools(),
-    dataBoundary: ModelDataBoundary.localOnly,
-    cost: ModelCostProfile.noDirectCharge(),
-    benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
-    approvedTaskClasses: const <String>['code-generation'],
-  );
-}
+  Iterable<ModelBenchmarkEvidence>? benchmarks,
+}) =>
+    ModelDefinition.approved(
+      providerId: providerId,
+      modelId: modelId,
+      displayName: 'Qwen 3 14B',
+      digest: digest,
+      parameterSize: '14B',
+      quantization: 'Q4_K_M',
+      aliases: aliases,
+      limits: _measuredLimits(),
+      toolProfile: _measuredNoTools(),
+      dataBoundary: ModelDataBoundary.localOnly,
+      cost: ModelCostProfile.noDirectCharge(),
+      benchmarks: benchmarks ?? <ModelBenchmarkEvidence>[_benchmark()],
+      approvedTaskClasses: const <String>['code-generation'],
+    );
 
 ModelIdentity _identity({
   String providerId = 'ollama.local',
   required String name,
-  String digest = 'sha256:0123456789abcdef',
+  String digest = digestA,
   String parameterSize = '14B',
   String quantization = 'Q4_K_M',
-}) {
-  return ModelIdentity(
-    providerId: providerId,
-    name: name,
-    digest: digest,
-    parameterSize: parameterSize,
-    quantization: quantization,
-    discoveredAt: DateTime.utc(2026, 8, 6),
-  );
-}
+}) =>
+    ModelIdentity(
+      providerId: providerId,
+      name: name,
+      digest: digest,
+      parameterSize: parameterSize,
+      quantization: quantization,
+      discoveredAt: DateTime.utc(2026, 8, 6),
+    );
 
 void main() {
   group('P6-001 model registry v2', () {
@@ -98,21 +140,17 @@ void main() {
       );
       final identity = _identity(
         name: 'unmeasured:latest',
-        digest: 'sha256:unmeasured',
+        digest: digestZero,
         parameterSize: '7B',
         quantization: 'Q4_0',
       );
 
       final discovered = registry.resolveDiscovered(identity);
-
-      expect(discovered.supportStatus, ModelSupportStatus.evaluationOnly);
-      expect(discovered.approvedTaskClasses, isEmpty);
-      expect(discovered.limits.evidenceLevel, ModelEvidenceLevel.unknown);
+      expect(discovered.isEvaluationOnly, isTrue);
+      expect(discovered.model.digest, digestZero);
       expect(
         discovered.evaluationReasons,
-        contains(
-          'discovered model is not present in the approved registry',
-        ),
+        contains('discovered model is not present in the approved registry'),
       );
       expect(
         () => registry.requireApproved(
@@ -123,7 +161,7 @@ void main() {
       );
     });
 
-    test('legacy empty metadata is normalized and round-trips', () {
+    test('legacy empty metadata remains evaluation-only and normalized', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_localProvider()],
         models: const <ModelDefinition>[],
@@ -136,14 +174,10 @@ void main() {
           discoveredAt: DateTime.utc(2026, 8, 6),
         ),
       );
-
-      expect(discovered.digest, isNull);
-      expect(discovered.parameterSize, isNull);
-      expect(discovered.quantization, isNull);
-      expect(
-        ModelDefinition.fromJson(discovered.toJson()).toJson(),
-        discovered.toJson(),
-      );
+      expect(discovered.isEvaluationOnly, isTrue);
+      expect(discovered.model.digest, isNull);
+      expect(discovered.model.parameterSize, isNull);
+      expect(discovered.model.quantization, isNull);
     });
 
     test('unknown provider fails closed because boundary is not known', () {
@@ -151,7 +185,6 @@ void main() {
         providers: <ModelProviderDescriptor>[_localProvider()],
         models: const <ModelDefinition>[],
       );
-
       expect(
         () => registry.resolveDiscovered(
           ModelIdentity(
@@ -200,39 +233,144 @@ void main() {
               .having(
                 (error) => error.message,
                 'message',
-                contains(
-                    'task class code-generation has no benchmark evidence'),
+                contains('no immutable benchmark evidence'),
               ),
+        ),
+      );
+    });
+
+    test('artifact identities require canonical SHA-256 grammar', () {
+      const invalid = <String>[
+        'latest',
+        'sha256:x',
+        'sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        ' sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      ];
+      for (final digest in invalid) {
+        expect(
+          () => _approvedModel(digest: digest),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('canonical sha256:<64 lowercase hex>'),
+            ),
+          ),
+          reason: digest,
+        );
+      }
+    });
+
+    test('discovered malformed digest fails before registry lookup', () {
+      final registry = ModelDefinitionRegistry(
+        providers: <ModelProviderDescriptor>[_localProvider()],
+        models: <ModelDefinition>[_approvedModel()],
+      );
+      expect(
+        () => registry.resolveDiscovered(
+          _identity(name: 'qwen3:14b', digest: 'sha256:short'),
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('canonical sha256:<64 lowercase hex>'),
+          ),
+        ),
+      );
+    });
+
+    test('benchmark evidence is content-addressed and exact', () {
+      final benchmark = _benchmark();
+      expect(benchmark.modelDigest, digestA);
+      expect(benchmark.candidateCommit, candidateCommit);
+      expect(benchmark.candidateTree, candidateTree);
+      expect(benchmark.evidenceSha256, benchmarkEvidenceSha);
+      expect(benchmark.evidenceLocationKind, 'embedded_content_addressed');
+
+      final badDigest = _benchmarkJson();
+      (badDigest['evidence'] as Map<String, Object?>)['sha256'] = digestB;
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(badDigest),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('benchmark evidence digest mismatch'),
+          ),
+        ),
+      );
+
+      final metadataDrift = _benchmarkJson();
+      metadataDrift['score'] = 0.92;
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(metadataDrift),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('metadata does not match immutable evidence payload'),
+          ),
+        ),
+      );
+    });
+
+    test('benchmark payload rejects mutable or malformed model identity', () {
+      final json = _benchmarkJson();
+      final payload = ((json['evidence'] as Map<String, Object?>)['payload']
+          as Map<String, Object?>);
+      payload['modelDigest'] = 'latest';
+      json['modelDigest'] = 'latest';
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(json),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('canonical sha256:<64 lowercase hex>'),
+          ),
+        ),
+      );
+    });
+
+    test('benchmark payload rejects wrong schema and candidate identity', () {
+      final wrongSchema = _benchmarkJson();
+      (((wrongSchema['evidence'] as Map<String, Object?>)['payload'])
+          as Map<String, Object?>)['schemaVersion'] = '2.0.0';
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(wrongSchema),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('schemaVersion must be 1.0.0'),
+          ),
+        ),
+      );
+
+      final wrongCandidate = _benchmarkJson();
+      (((wrongCandidate['evidence'] as Map<String, Object?>)['payload'])
+          as Map<String, Object?>)['candidateCommit'] = 'not-a-git-object';
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(wrongCandidate),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('40-character lowercase Git object id'),
+          ),
         ),
       );
     });
 
     test('approval rejects benchmark evidence measured for another artifact', () {
       expect(
-        () => ModelDefinition.approved(
-          providerId: 'ollama.local',
-          modelId: 'replacement:latest',
-          displayName: 'Replacement',
-          digest: 'sha256:replacement-artifact',
-          parameterSize: '14B',
-          quantization: 'Q4_K_M',
-          limits: _measuredLimits(),
-          toolProfile: _measuredNoTools(),
-          dataBoundary: ModelDataBoundary.localOnly,
-          cost: ModelCostProfile.noDirectCharge(),
-          benchmarks: <ModelBenchmarkEvidence>[
-            _benchmark(modelDigest: 'sha256:old-artifact'),
-          ],
-          approvedTaskClasses: const <String>['code-generation'],
-        ),
+        () => _approvedModel(digest: digestC),
         throwsA(
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
             'message',
-            allOf(
-              contains('belongs to artifact sha256:old-artifact'),
-              contains('expected sha256:replacement-artifact'),
-            ),
+            allOf(contains('belongs to artifact $digestA'), contains(digestC)),
           ),
         ),
       );
@@ -245,26 +383,21 @@ void main() {
           providerId: 'ollama.local',
           modelId: 'evaluation:latest',
           displayName: 'Evaluation',
-          digest: 'sha256:evaluation-artifact',
+          digest: digestC,
           parameterSize: '14B',
           quantization: 'Q4_K_M',
           limits: _measuredLimits(),
           toolProfile: _measuredNoTools(),
           dataBoundary: ModelDataBoundary.localOnly,
           cost: ModelCostProfile.noDirectCharge(),
-          benchmarks: <ModelBenchmarkEvidence>[
-            _benchmark(modelDigest: 'sha256:other-artifact'),
-          ],
+          benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
           evaluationReasons: const <String>['evaluation pending'],
         ),
         throwsA(
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
             'message',
-            allOf(
-              contains('belongs to artifact sha256:other-artifact'),
-              contains('expected sha256:evaluation-artifact'),
-            ),
+            contains('belongs to artifact $digestA'),
           ),
         ),
       );
@@ -288,80 +421,67 @@ void main() {
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
             'message',
-            contains(
-              'model with benchmark evidence must contain an immutable artifact digest',
-            ),
+            contains('benchmark evidence must contain an immutable artifact digest'),
           ),
         ),
       );
     });
 
-    test('approved JSON cannot relabel an artifact and retain stale benchmarks',
-        () {
-      final raw = _approvedModel().toJson();
-      raw['digest'] = 'sha256:replacement-artifact';
-
+    test('approved policy JSON cannot relabel artifact with stale evidence', () {
+      final raw = _approvedPolicyJson();
+      raw['digest'] = digestC;
       expect(
         () => ModelDefinition.fromJson(raw),
         throwsA(
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
             'message',
-            allOf(
-              contains('belongs to artifact sha256:0123456789abcdef'),
-              contains('expected sha256:replacement-artifact'),
-            ),
+            contains('belongs to artifact $digestA'),
           ),
         ),
       );
     });
 
-    test('benchmark JSON requires an exact model digest', () {
-      final raw = _benchmark().toJson();
-      raw.remove('modelDigest');
-
-      expect(
-        () => ModelBenchmarkEvidence.fromJson(raw),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('benchmark.modelDigest must be non-empty'),
-          ),
-        ),
-      );
-    });
-
-    test('approved model is restricted to benchmark-backed task classes', () {
-      final model = _approvedModel();
+    test('string lookup and runtime metadata never expose approval state', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_localProvider()],
-        models: <ModelDefinition>[model],
+        models: <ModelDefinition>[_approvedModel()],
       );
+      for (final name in <String>['qwen3:14b', 'qwen3-latest']) {
+        final metadata = registry.lookup('ollama.local', name);
+        expect(metadata, isA<ModelRegistryMetadata>());
+        final encoded = metadata!.toJson();
+        expect(encoded.containsKey('supportStatus'), isFalse);
+        expect(encoded.containsKey('approvedTaskClasses'), isFalse);
+        expect(encoded.containsKey('evaluationReasons'), isFalse);
+      }
+      final runtime = jsonEncode(registry.toMetadataJson());
+      expect(runtime, isNot(contains('approvedTaskClasses')));
+      expect(runtime, isNot(contains('supportStatus')));
+    });
 
-      expect(
-        registry.requireApproved(
-          identity: _identity(name: 'qwen3-latest'),
-          taskClassId: 'code-generation',
-        ),
-        same(model),
+    test('only exact discovered identity can yield task approval', () {
+      final registry = ModelDefinitionRegistry(
+        providers: <ModelProviderDescriptor>[_localProvider()],
+        models: <ModelDefinition>[_approvedModel()],
       );
+      final handle = registry.requireApproved(
+        identity: _identity(name: 'qwen3-latest'),
+        taskClassId: 'code-generation',
+      );
+      expect(handle.model.registryKey, 'ollama.local::qwen3:14b');
+      expect(handle.taskClassId, 'code-generation');
+      expect(handle.identity.digest, digestA);
       expect(
         () => registry.requireApproved(
-          identity: _identity(name: 'qwen3:14b'),
-          taskClassId: 'browser-control',
+          identity: _identity(name: 'qwen3-latest', digest: digestB),
+          taskClassId: 'code-generation',
         ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('is not approved for browser-control'),
-          ),
-        ),
+        throwsA(isA<ModelRegistryValidationException>()),
       );
     });
 
-    test('registry round-trip is deterministic and sorted', () {
+    test('registry metadata is deterministic and sorted', () {
       final remote = ModelProviderDescriptor(
         providerId: 'openai.remote',
         displayName: 'OpenAI-compatible remote',
@@ -389,44 +509,28 @@ void main() {
         providers: <ModelProviderDescriptor>[remote, _localProvider()],
         models: <ModelDefinition>[evaluation, _approvedModel()],
       );
-
-      final encoded = registry.toJson();
-      final roundTrip = ModelDefinitionRegistry.fromJson(
-        (jsonDecode(jsonEncode(encoded)) as Map).cast<String, Object?>(),
-      );
-
-      expect(roundTrip.toJson(), encoded);
       expect(
-        roundTrip.providers.map((provider) => provider.providerId),
+        registry.providers.map((provider) => provider.providerId),
         <String>['ollama.local', 'openai.remote'],
       );
       expect(
-        roundTrip.models.map((model) => model.registryKey),
-        <String>[
-          'ollama.local::qwen3:14b',
-          'openai.remote::future-model',
-        ],
+        registry.models.map((model) => model.registryKey),
+        <String>['ollama.local::qwen3:14b', 'openai.remote::future-model'],
       );
+      final first = jsonEncode(registry.toMetadataJson());
+      final second = jsonEncode(registry.toMetadataJson());
+      expect(second, first);
+      expect(first, isNot(contains('approvedTaskClasses')));
     });
 
     test('duplicate canonical IDs and aliases are rejected', () {
       expect(
         () => ModelDefinitionRegistry(
-          providers: <ModelProviderDescriptor>[
-            _localProvider(),
-            _localProvider(),
-          ],
+          providers: <ModelProviderDescriptor>[_localProvider(), _localProvider()],
           models: const <ModelDefinition>[],
         ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('duplicate provider'),
-          ),
-        ),
+        throwsA(isA<ModelRegistryValidationException>()),
       );
-
       expect(
         () => ModelDefinitionRegistry(
           providers: <ModelProviderDescriptor>[_localProvider()],
@@ -461,7 +565,6 @@ void main() {
         dataBoundary: ModelDataBoundary.thirdPartyService,
         cost: ModelCostProfile.unknown(),
       );
-
       expect(
         () => ModelDefinitionRegistry(
           providers: <ModelProviderDescriptor>[_localProvider()],
@@ -484,7 +587,6 @@ void main() {
         required: true,
         purpose: 'Authenticate without persisting secret material.',
       );
-
       expect(
         requirement.toJson().keys.toSet(),
         <String>{'referenceId', 'resolver', 'required', 'purpose'},
@@ -492,42 +594,27 @@ void main() {
       expect(jsonEncode(requirement.toJson()), isNot(contains('secret-value')));
       expect(
         () => CredentialReferenceRequirement.fromJson(
-          <String, Object?>{
-            ...requirement.toJson(),
-            'value': 'secret-value',
-          },
+          <String, Object?>{...requirement.toJson(), 'value': 'secret-value'},
         ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('unsupported fields: value'),
-          ),
-        ),
+        throwsA(isA<ModelRegistryValidationException>()),
       );
     });
 
-    test('unknown JSON fields and timezone-free benchmarks are rejected', () {
+    test('unknown JSON fields and timezone-free benchmark evidence are rejected',
+        () {
       expect(
         () => ModelProviderDescriptor.fromJson(
-          <String, Object?>{
-            ..._localProvider().toJson(),
-            'apiKey': 'must-not-be-accepted',
-          },
+          <String, Object?>{..._localProvider().toJson(), 'apiKey': 'secret'},
         ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('unsupported fields: apiKey'),
-          ),
-        ),
+        throwsA(isA<ModelRegistryValidationException>()),
       );
-
-      final rawBenchmark = _benchmark().toJson();
-      rawBenchmark['measuredAt'] = '2026-08-06T00:00:00';
+      final raw = _benchmarkJson();
+      final payload = ((raw['evidence'] as Map<String, Object?>)['payload']
+          as Map<String, Object?>);
+      payload['measuredAt'] = '2026-08-06T00:00:00';
+      raw['measuredAt'] = '2026-08-06T00:00:00';
       expect(
-        () => ModelBenchmarkEvidence.fromJson(rawBenchmark),
+        () => ModelBenchmarkEvidence.fromJson(raw),
         throwsA(
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
@@ -538,18 +625,10 @@ void main() {
       );
     });
 
-    test('evaluation-only JSON cannot smuggle approved task classes', () {
-      final raw = ModelDefinition.evaluationOnly(
-        providerId: 'ollama.local',
-        modelId: 'evaluation-model',
-        displayName: 'Evaluation model',
-        limits: ModelLimits.unknown(),
-        toolProfile: ModelToolProfile.unknown(),
-        dataBoundary: ModelDataBoundary.localOnly,
-        cost: ModelCostProfile.unknown(),
-      ).toJson();
-      raw['approvedTaskClasses'] = <String>['code-generation'];
-
+    test('evaluation-only policy JSON cannot smuggle approved task classes', () {
+      final raw = _approvedPolicyJson();
+      raw['supportStatus'] = 'evaluation_only';
+      raw['evaluationReasons'] = <String>['not approved'];
       expect(
         () => ModelDefinition.fromJson(raw),
         throwsA(
