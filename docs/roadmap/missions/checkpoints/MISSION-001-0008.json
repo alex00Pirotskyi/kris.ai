@@ -1,0 +1,153 @@
+{
+  "blockers": [
+    {
+      "class": "PENDING_EXACT_INDEPENDENT_REVIEW",
+      "detail": "PR #75 exact candidate 197bfa89a18c0ccf5186b51c9af0c3bfa3216acc / f0cfd0b1bb4dc436ec6b75c45d3dc0a4127b0812 has complete exact-head source CI but no independent Worker B or Worker I decision."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane startup, memory, packaging, reliability, detach/reconnect, or process-tree receipts exist for all three platforms; ADR-0012 remains provisional and no technology is selected."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "The p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variable set, signed provisioning/trust inputs, and approvals remain absent; controlled P2 behavior and aggregate certification remain unavailable."
+    },
+    {
+      "class": "P8_CONTRACT_REVIEW_REQUEST_CHANGES",
+      "detail": "Worker A downstream review 4873602175 still requests P8 assurance-report contract and exact-evidence repairs for candidate 22a8ac34cbf9601100f60c4929198f15f3c60e52 / ef5d5ae584b1d823502bf6f2191ecf4285d36845."
+    },
+    {
+      "class": "WORKER_J_RECONCILIATION_PENDING",
+      "detail": "No Worker J bounded source-transition decision has been published for the frozen Worker A parent candidate or this P2-004 child repair."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, and PR #64 remain draft and unmerged without current integration authorization."
+    }
+  ],
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "classifications": [
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_004_MEASUREMENT_RECEIPT_BRIDGE_REPAIRED",
+    "P2_004_EXACT_SOURCE_CI_PASS",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "PENDING_EXACT_INDEPENDENT_REVIEW",
+    "P8_INDEPENDENT_REVIEW_REQUEST_CHANGES",
+    "PENDING_WORKER_J_RECONCILIATION",
+    "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "completed": [
+    "Re-resolved protected main, Worker A, Worker B/P8, Worker J, mission-control, environment, runner, variable, PR, review, and exact workflow state.",
+    "Found a concrete P2-004 source defect: the sanitized task environment omitted all three governed technology candidate receipt paths, making valid measurement receipts unreachable by the validator.",
+    "Found a second P2-004 source-contract defect: the committed candidate receipt template contained one round while the validator requires exactly three independently evidenced rounds.",
+    "Created focused child branch agent/a/p2-004-measurement-contract-repair from the exact frozen Worker A parent without modifying PR #64 or invalidating its exact review.",
+    "Added fail-closed and positive end-to-end regression coverage through the real P2-004 task runner, canonical Test Center input binding, a three-round template, tri-platform source workflow, progress documentation, and a canonical source-manifest refresh.",
+    "Removed the temporary materializer and temporary workflow from the final child tree before exact-head validation.",
+    "Opened draft PR #75 with an exact eight-file aggregate diff and preserved all completion, support, technology-selection, P2 behavior, P3, and P11 boundaries.",
+    "Completed exact-head P2-004 source CI, P2 integration alignment, and full product gates successfully on Ubuntu, Windows, and macOS.",
+    "Published exact independent review request 5204142851 on PR #75 and parent coordination record 5204145723 on PR #64."
+  ],
+  "evidence": {
+    "childCandidate": {
+      "branch": "agent/a/p2-004-measurement-contract-repair",
+      "changedFiles": 8,
+      "commit": "197bfa89a18c0ccf5186b51c9af0c3bfa3216acc",
+      "deletions": 8,
+      "additions": 562,
+      "pullRequest": 75,
+      "tree": "f0cfd0b1bb4dc436ec6b75c45d3dc0a4127b0812"
+    },
+    "exactHeadRuns": [
+      {
+        "conclusion": "PASS",
+        "jobs": {
+          "macos-15": 92602858822,
+          "ubuntu-24.04": 92602858633,
+          "windows-2025": 92602858622
+        },
+        "name": "Worker A P2-004 Measurement Contract",
+        "runId": 31097483820
+      },
+      {
+        "conclusion": "PASS",
+        "jobs": {
+          "validation": 92602859194
+        },
+        "name": "P2 Integration Alignment",
+        "runId": 31097484073
+      },
+      {
+        "conclusion": "PASS",
+        "jobs": {
+          "macos": 92602861596,
+          "ubuntu": 92602861555,
+          "windows": 92602861573
+        },
+        "name": "product-gates",
+        "runId": 31097484949
+      }
+    ],
+    "historicalPreparationRuns": [
+      {
+        "conclusion": "PASS",
+        "name": "Transparent repair materialization and validation",
+        "runId": 31096812723
+      },
+      {
+        "conclusion": "PASS",
+        "name": "Validated repair publication",
+        "runId": 31097251926
+      }
+    ],
+    "missionBranchInput": "fe6cb8480424020495967e0950e45d376e0f53e2",
+    "parentCandidate": {
+      "branch": "agent/a/p1-p2-new-roadmap-execution",
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "pullRequest": 64,
+      "reviewArtifact": "docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json",
+      "reviewDecision": "PASS",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "parentCoordinationComment": 5204145723,
+    "reviewRequestComment": 5204142851,
+    "workerB": {
+      "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+      "pullRequest": 65,
+      "reviewDecision": "REQUEST_CHANGES",
+      "reviewId": 4873602175,
+      "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
+    },
+    "workerJ": {
+      "commit": "2a14b875ff529cfd90348673e8e45b2442663619",
+      "pullRequest": 66,
+      "reconciliationRequestComment": 5203103817
+    }
+  },
+  "mission": "MISSION-001",
+  "nextAction": "Keep the frozen PR #64 parent unchanged. Obtain an independent exact-SHA Worker B and security-focused Worker I decision for PR #75. If and only if the child is approved and stacked integration is explicitly authorized, integrate the source repair without claiming P2-004 measured completion. Real exact-SHA tri-platform candidate measurements, aggregation, review, and roadmap reconciliation remain a separate prerequisite before any technology selection or P3/P11 authorization.",
+  "observedHead": "197bfa89a18c0ccf5186b51c9af0c3bfa3216acc",
+  "observedTree": "f0cfd0b1bb4dc436ec6b75c45d3dc0a4127b0812",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 75,
+  "schemaVersion": 1,
+  "sequence": 8,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0007.json",
+  "validation": [
+    "The child branch is seven commits ahead and zero behind the exact frozen parent; the aggregate PR diff contains only the eight intended permanent files.",
+    "The temporary source materializer and temporary workflow are absent from the final child tree and the canonical source manifest was refreshed through its owner.",
+    "The focused P2-004 workflow proves missing-receipt fail-closed behavior, complete synthetic contract traversal, canonical Test Center binding, source-manifest currency, and non-mutation on Ubuntu, Windows, and macOS.",
+    "P2 Integration Alignment and full product gates pass at the exact child head on all required hosted platforms.",
+    "No product automation-host technology, controlled P2 behavior, capability support, platform support, release support, roadmap authority, P3 implementation, or P11 implementation is selected, certified, or promoted."
+  ],
+  "worker": "A"
+}
