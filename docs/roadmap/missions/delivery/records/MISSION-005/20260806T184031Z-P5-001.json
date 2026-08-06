@@ -1,0 +1,21 @@
+{
+  "branch": "agent/f/P5-001-information-architecture",
+  "commit": "0e27d120aa00f35c7c6bdf99fb1d3a8d0ee35b33",
+  "evidence": [
+    "PR #72",
+    "docs/roadmap/missions/checkpoints/MISSION-005-0003.json",
+    "Worker F run 31107508357: tree-equivalent tri-platform PASS",
+    "Exact-head workflow runs for 0e27d120aa00f35c7c6bdf99fb1d3a8d0ee35b33: NONE",
+    "Current Worker B base 800643bb5898a80ee3843f83f7657411183a9e6a / tree 912aaa98d095561354397c4bc30f520dd235db4c"
+  ],
+  "mission": "MISSION-005",
+  "nextAction": "Generate and validate the exact PR #72 merge candidate against current Worker B, regenerate SOURCE_MANIFEST.sha256 only with the canonical generator, then settle exact Worker F, P8, product-gates, and P2 alignment CI.",
+  "pullRequest": 72,
+  "recordedAt": "2026-08-06T18:40:31Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P5-001",
+  "tree": "c971c3210e9925369a97d02858f855467f73e342",
+  "workExecutionId": "WRK-20260806T181344Z-77157857",
+  "worker": "F"
+}
