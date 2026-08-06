@@ -70,15 +70,17 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     children: <Widget>[
                       FilledButton.icon(
                         key: const Key('review-plan-button'),
-                        onPressed: () =>
-                            controller.apply(P5PrototypeAction.reviewPlan),
+                        onPressed: controller.canReviewPlan
+                            ? () => controller.apply(P5PrototypeAction.reviewPlan)
+                            : null,
                         icon: const Icon(Icons.fact_check_outlined),
                         label: const Text('Review concise plan'),
                       ),
                       OutlinedButton.icon(
                         key: const Key('start-run-button'),
-                        onPressed: () =>
-                            controller.apply(P5PrototypeAction.startRun),
+                        onPressed: controller.canStartRun
+                            ? () => controller.apply(P5PrototypeAction.startRun)
+                            : null,
                         icon: const Icon(Icons.play_arrow),
                         label: const Text('Start simulated run'),
                       ),

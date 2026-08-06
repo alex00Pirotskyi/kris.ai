@@ -88,6 +88,37 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  testWidgets('plan and start controls cannot replace an active run',
+      (tester) async {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    await tapKey(tester, const Key('review-plan-button'));
+    await tapKey(tester, const Key('start-run-button'));
+
+    FilledButton reviewButton() =>
+        tester.widget<FilledButton>(find.byKey(const Key('review-plan-button')));
+    OutlinedButton startButton() =>
+        tester.widget<OutlinedButton>(find.byKey(const Key('start-run-button')));
+
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(reviewButton().onPressed, isNull);
+    expect(startButton().onPressed, isNull);
+
+    await tapKey(tester, const Key('pause-run-button'));
+    expect(controller.state.runState, P5RunPresentationState.paused);
+    expect(reviewButton().onPressed, isNull);
+    expect(startButton().onPressed, isNull);
+
+    await tapKey(tester, const Key('resume-run-button'));
+    await tapKey(tester, const Key('complete-run-button'));
+    expect(controller.state.runState, P5RunPresentationState.completed);
+    expect(reviewButton().onPressed, isNotNull);
+    expect(startButton().onPressed, isNotNull);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('current simulated run does not fabricate a saved timeline',
       (tester) async {
     final controller = P5InformationArchitectureController();

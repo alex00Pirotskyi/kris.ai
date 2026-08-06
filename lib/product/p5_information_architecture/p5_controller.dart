@@ -24,6 +24,16 @@ class P5InformationArchitectureController extends ChangeNotifier {
         P5RunPresentationState.blocked,
       }.contains(_state.runState);
 
+  bool get canReviewPlan => !_runLifecycleLocked;
+  bool get canStartRun => !_runLifecycleLocked;
+
+  bool get _runLifecycleLocked => const <P5RunPresentationState>{
+        P5RunPresentationState.running,
+        P5RunPresentationState.paused,
+        P5RunPresentationState.stopping,
+        P5RunPresentationState.interrupted,
+      }.contains(_state.runState);
+
   List<P5WorkspaceDefinition> get visibleWorkspaces {
     return P5PrototypeFixtures.workspaces.where((definition) {
       if (definition.id.isFutureCapability) {
@@ -375,6 +385,14 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectProject(null);
         return;
       case P5PrototypeAction.reviewPlan:
+        if (!canReviewPlan) {
+          _state = _state.copyWith(
+            recoveryMessage:
+                'Plan review cannot replace an active or resumable run. Use the run controls first.',
+          );
+          notifyListeners();
+          return;
+        }
         if (_state.selectedProjectId == null ||
             _state.taskDraft.trim().isEmpty) {
           _state = _state.copyWith(
@@ -412,6 +430,14 @@ class P5InformationArchitectureController extends ChangeNotifier {
         notifyListeners();
         return;
       case P5PrototypeAction.startRun:
+        if (!canStartRun) {
+          _state = _state.copyWith(
+            recoveryMessage:
+                'Start cannot replace an active or resumable run. Use the run controls first.',
+          );
+          notifyListeners();
+          return;
+        }
         if (!_state.planReviewed) {
           _state = _state.copyWith(
             runState: P5RunPresentationState.blocked,

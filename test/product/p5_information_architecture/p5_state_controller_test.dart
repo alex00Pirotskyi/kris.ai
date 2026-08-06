@@ -292,6 +292,34 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  test('plan and start actions cannot replace active or resumable run state', () {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+
+    controller.apply(P5PrototypeAction.reviewPlan);
+    controller.apply(P5PrototypeAction.startRun);
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(controller.canReviewPlan, isFalse);
+    expect(controller.canStartRun, isFalse);
+
+    controller.apply(P5PrototypeAction.reviewPlan);
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(controller.state.recoveryMessage, contains('cannot replace'));
+
+    controller.apply(P5PrototypeAction.pauseRun);
+    expect(controller.state.runState, P5RunPresentationState.paused);
+    controller.apply(P5PrototypeAction.startRun);
+    expect(controller.state.runState, P5RunPresentationState.paused);
+    expect(controller.state.recoveryMessage, contains('cannot replace'));
+
+    controller.selectRun('run.p5-existing-001');
+    expect(controller.state.runState, P5RunPresentationState.interrupted);
+    controller.apply(P5PrototypeAction.reviewPlan);
+    expect(controller.state.runState, P5RunPresentationState.interrupted);
+    expect(controller.state.recoveryMessage, contains('cannot replace'));
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   test('plan-only changes are fail-closed once a run exists', () {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
