@@ -145,14 +145,9 @@
   ],
   "testBindings": [
     {
-      "testId": "tc.test-center.contracts",
-      "levelId": "architecture_lint",
-      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation."
-    },
-    {
-      "testId": "tc.test-center.semantic-regressions",
+      "testId": "tc.p6.model-registry-v2",
       "levelId": "unit",
-      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation."
+      "rationale": "Exercises deterministic fail-closed registry behavior for identity, limits, tool profile, data boundary, cost, benchmark evidence, and evaluation-only defaults; source evidence remains capped at SOURCE_FOUNDATION."
     },
     {
       "testId": "tc.p8.formal-test-hierarchy",
@@ -163,6 +158,16 @@
       "testId": "tc.p8.formal-test-hierarchy-regressions",
       "levelId": "unit",
       "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, and report ambiguity."
+    },
+    {
+      "testId": "tc.test-center.contracts",
+      "levelId": "architecture_lint",
+      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation."
+    },
+    {
+      "testId": "tc.test-center.semantic-regressions",
+      "levelId": "unit",
+      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation."
     }
   ],
   "reportContract": {

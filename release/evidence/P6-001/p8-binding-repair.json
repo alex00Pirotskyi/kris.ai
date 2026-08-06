@@ -1,0 +1,27 @@
+{
+  "authorityMission": "MISSION-002",
+  "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
+  "failedCandidate": {
+    "commit": "29436cbaa3512c1696b77fde8bfac656a74372df",
+    "failure": "every canonical Test Center ID needs one hierarchy binding; missing=['tc.p6.model-registry-v2']",
+    "tree": "93bdeef167bc7d9b16a840f59edbc8220524d6b7",
+    "workflowRun": 31100733622
+  },
+  "mission": "MISSION-006",
+  "nonClaims": [
+    "component assurance",
+    "integration assurance",
+    "platform assurance",
+    "benchmark certification",
+    "release assurance",
+    "support promotion"
+  ],
+  "repair": {
+    "levelId": "unit",
+    "rationale": "Exercises deterministic fail-closed registry behavior for identity, limits, tool profile, data boundary, cost, benchmark evidence, and evaluation-only defaults; source evidence remains capped at SOURCE_FOUNDATION.",
+    "supportClaimCeiling": "SOURCE_FOUNDATION",
+    "testId": "tc.p6.model-registry-v2"
+  },
+  "schemaVersion": 1,
+  "task": "P6-001"
+}
