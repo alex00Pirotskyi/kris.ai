@@ -100,6 +100,19 @@ jobs:
           repo = os.environ['REPO']
           token = os.environ['GH_TOKEN']
           api = f'https://api.github.com/repos/{repo}'
+          clean_base_tree = 'b8105ec18cc4feac33df325250aada84956719b2'
+          skipped_exact = {
+              'tool/worker_f_recovery_source.yml',
+              'tool/worker_f_recovery_patch.py',
+              'tool/worker_f_recovery_bootstrap.py',
+              'tool/worker_f_recovery_test_patch.py',
+              'tool/worker_f_recovery_manifest_patch.py',
+              'tool/worker_f_p5_ia_template.py',
+              'tool/worker_f_p5_ia_workflow_template.yml',
+          }
+
+          def skip(path: str) -> bool:
+              return path.startswith('.github/workflows/') or path in skipped_exact
 
           def request(method: str, path: str, payload=None):
               body = None
@@ -123,9 +136,6 @@ jobs:
           merge_parent = subprocess.check_output(
               ['git', 'rev-parse', 'MERGE_HEAD'], text=True
           ).strip()
-          base_tree = subprocess.check_output(
-              ['git', 'show', '-s', '--format=%T', 'HEAD'], text=True
-          ).strip()
           status = subprocess.check_output(
               ['git', 'diff', '--cached', '--name-status', '-z', 'HEAD']
           )
@@ -139,6 +149,8 @@ jobs:
                   old_path = fields[index].decode('utf-8')
                   new_path = fields[index + 1].decode('utf-8')
                   index += 2
+                  if skip(old_path) or skip(new_path):
+                      continue
                   elements.append({
                       'path': old_path,
                       'mode': '100644',
@@ -149,6 +161,8 @@ jobs:
               else:
                   path = fields[index].decode('utf-8')
                   index += 1
+                  if skip(path):
+                      continue
               if code.startswith('D'):
                   elements.append({
                       'path': path,
@@ -176,7 +190,7 @@ jobs:
               })
 
           tree = request('POST', 'git/trees', {
-              'base_tree': base_tree,
+              'base_tree': clean_base_tree,
               'tree': elements,
           })
           commit = request('POST', 'git/commits', {
