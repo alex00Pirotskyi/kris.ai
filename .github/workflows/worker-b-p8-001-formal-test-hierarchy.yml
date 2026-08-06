@@ -21,6 +21,27 @@ on:
       - 'tool/test_center_assurance_semantics.py'
       - 'tool/test_center_assurance_hierarchy.py'
       - 'tool/test_center_assurance_hierarchy_test.py'
+  push:
+    branches:
+      - 'agent/b/test-center-contracts-and-review'
+    paths:
+      - '.github/workflows/worker-b-p8-001-formal-test-hierarchy.yml'
+      - 'SOURCE_MANIFEST.sha256'
+      - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'config/test_center_registry.v1.json'
+      - 'docs/testing/TEST_CENTER_P8_001_HIERARCHY.md'
+      - 'release/evidence/TEST_CENTER/P8-001/**'
+      - 'schemas/test_center.v1.json'
+      - 'schemas/test_center_assurance_execution_report.v1.json'
+      - 'schemas/test_center_assurance_hierarchy.v1.json'
+      - 'tool/p1a_refresh_source_manifest.py'
+      - 'tool/source_tree_policy.py'
+      - 'tool/test_center_contracts.py'
+      - 'tool/test_center_contracts_test.py'
+      - 'tool/test_center_assurance_jsonschema.py'
+      - 'tool/test_center_assurance_semantics.py'
+      - 'tool/test_center_assurance_hierarchy.py'
+      - 'tool/test_center_assurance_hierarchy_test.py'
 
 permissions:
   contents: read
@@ -102,22 +123,24 @@ jobs:
   publish-source-manifest:
     name: p8-001-publish-source-manifest
     if: >-
-      github.event_name == 'pull_request' &&
-      github.head_ref == 'agent/b/test-center-contracts-and-review' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      (github.event_name == 'pull_request' &&
+       github.head_ref == 'agent/b/test-center-contracts-and-review' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/agent/b/test-center-contracts-and-review')
     permissions:
       contents: write
     runs-on: ubuntu-24.04
     env:
-      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
-      HEAD_BRANCH: ${{ github.head_ref }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      HEAD_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - name: Check out exact Worker B head with branch credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
           persist-credentials: true
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
