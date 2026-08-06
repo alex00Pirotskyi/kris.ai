@@ -1,0 +1,45 @@
+{
+  "blockers": [
+    "GitHub allocated no workflow run or check suite for exact product head d862147d4f8fa061c55e47edfa91113bb2dde425, nor for validation-only new-SHA PRs #80, #81, and #82; exact-head CI is BLOCKED_EXTERNAL, not PASS or FAIL.",
+    "No Dart or Flutter toolchain and no mountable repository archive are available in this execution environment, so focused or full local test execution cannot be claimed.",
+    "SOURCE_MANIFEST.sha256 remains the last valid committed but stale product-candidate manifest. The canonical owner baseline was independently reconstructed exactly, and the P6 candidate manifest was derived, but the connected transport cannot publish the 121273-byte file safely and Actions will not execute its canonical generator.",
+    "test/product/source_contract_test.dart remains outside Worker G exclusive ownership. Coordination MISSION-006-P6-001-SOURCE-INVENTORY is REQUESTED from Worker A and has no recorded grant or rejection.",
+    "P6-TC-001 remains OWNER_HANDOFF_PENDING. Worker B has not published the authority-owned Test Center registration or reviewed the current exact candidate.",
+    "The prior independent review is invalidated by later source, test, evidence, base, and manifest-state changes; fresh independent SOURCE, EVIDENCE, and INTEGRATION review is required after ownership, manifest, and CI settle.",
+    "PR #78 remains open, draft, unmerged, and under blocking delivery-control findings, so no delivery record, ownership PASS, dashboard promotion, or integrated delivery-gate claim can be made from it.",
+    "Validation branches validation/g-p6-001-85135ef-base, validation/g-p6-001-d6d348a-run1, and validation/g-p6-001-0b0b5c2-run2 remain cleanup candidates because the connected GitHub surface exposes no branch-deletion operation.",
+    "P6-002+, P18 implementation, support promotion, and merge remain unauthorized."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Generated WORK_EXECUTION_ID WRK-20260806T195224Z-da9c199a and resumed Worker G's sole active MISSION-006 claim.",
+    "Re-resolved protected main, the canonical mission branch, PR #78 overlay, PR #76, Worker B ancestry, reviews, coordination requests, workflow state, and ownership boundaries.",
+    "Hardened P6-C-001 beyond the first repair: deterministic quarantine identity generation now uses model-ID-safe base64url encoding rather than fixed-width integer arithmetic.",
+    "Added public-facade regressions that reject production import, export, or part directives targeting model_registry.dart through relative or package URI forms.",
+    "Preserved the identity-drift regressions for digest, parameter size, and quantization through canonical IDs and aliases; mismatched discoveries remain evaluation-only and cannot use the quarantined ID with requireApproved.",
+    "Preserved P6-C-002 repair: the Worker G diff contains no Test Center registry, hierarchy, schema, or Test Center code path and current Worker B ancestry remains the PR base.",
+    "Created validation-only PRs #80, #81, and #82, including new empty commit identities with exact source trees, to force fresh pull_request events; GitHub allocated zero runs, and every validation PR was closed without merge.",
+    "Downloaded historical Worker B artifact 8969196936 and independently reproduced the ownership-clean f14ba34 source manifest exactly: 1124 entries, 120143 bytes, SHA-256 e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f.",
+    "Derived the exact current P6 manifest without publishing it: 1134 entries, 121273 bytes, SHA-256 165c948ab2384dbceca57a9d91c9e9f6b9bc1eea74412e1ae156da371013bb83.",
+    "Attempted one large text manifest transport, detected corrupted copied rows immediately, and restored the previous exact product tree through non-force commit 0b43a8abf18347ce39231dbe02c96cd5f4ef7503. No false current-manifest claim remains.",
+    "Published release/evidence/P6-001/source-manifest-reconstruction.json so the canonical owner can reproduce the verified baseline and complete the final generator publication without repeating forensic work."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker A must grant or publish the exact source-inventory append, an executable canonical environment must regenerate and publish SOURCE_MANIFEST.sha256, and GitHub must allocate focused plus full exact-head CI for d862147d4f8fa061c55e47edfa91113bb2dde425. Then Worker B publishes P6-TC-001 and reviews the integrated exact candidate, followed by a fresh genuinely independent review. Do not merge or begin P6-002.",
+  "observedHead": "d862147d4f8fa061c55e47edfa91113bb2dde425",
+  "observedTree": "4629e6711f5fd1c35657da884d343c7fd193863b",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 5,
+  "supersededBy": null,
+  "validation": [
+    "Current exact-head workflow query for d862147d4f8fa061c55e47edfa91113bb2dde425 returned zero workflow runs.",
+    "Historical green P2/P8/product-gates runs for 9799768170f13556d3098a07b40be922377f8deb are retained only as historical evidence and do not certify the current source tree.",
+    "Current product diff relative to Worker B f14ba34 consists of SOURCE_MANIFEST.sha256, lib/product/model/**, release/evidence/P6-001/**, test/product/model/**, and test/product/source_contract_test.dart; no Worker B Test Center authority path is changed.",
+    "Historical source-manifest artifact archive SHA-256: 532ae308cf61be9cbcb17a264b02eb4deddf2a76ef4d01d2b579e8a8321238f1; artifact manifest SHA-256: bb06ded33e21620fe018835e829f36d2900ec2ce012e630d142f3b2115dd0851.",
+    "The reconstructed owner baseline entry count, byte count, and SHA-256 match Worker B checkpoint MISSION-002-0004 exactly.",
+    "No local test PASS, behavioral support, platform support, release support, production readiness, or GA claim is made."
+  ],
+  "worker": "G",
+  "workExecutionId": "WRK-20260806T195224Z-da9c199a"
+}
