@@ -1,0 +1,63 @@
+{
+  "artifactHash": "ec58e32dc982d6e3ce97bd32409211afd9fc2bbdeb4f1632212603471275a017",
+  "candidate": {
+    "baseBranch": "agent/b/test-center-contracts-and-review",
+    "baseCommit": "90c574665363140aeb6cf764ab8387714cab88cf",
+    "commit": "7eecc840f68ca0dff13ab58c138845593254e390",
+    "stage1Commit": "e7dee26404a11f076206251f619bfc3f9078753c",
+    "stage1Tree": "27a2d09ed4ed1d61775a74bccd6eac5aa4b739c6",
+    "tree": "2080824a34956e3b202126a0a9bd61b4d645d338"
+  },
+  "claimBoundary": {
+    "behaviorSupportClaimed": false,
+    "browserRuntimeClaimed": false,
+    "gaClaimed": false,
+    "mergeAuthorized": false,
+    "platformSupportClaimed": false,
+    "productionClaimed": false,
+    "releaseSupportClaimed": false,
+    "sourceOnly": true
+  },
+  "commandsAndEvidence": [
+    "Reviewed all 14 PR #68 changed paths and complete patch.",
+    "Inspected Worker D validator, regressions, dependency status, runtime candidate matrix, fixture specification, packaging readiness contract, claim boundary, evidence manifest, Test Center registration, workflow, and source manifest.",
+    "Verified Stage 2 workflow runs 31029884183, 31029884035, and 31029884073 are concluded success.",
+    "Inspected Stage 2 jobs 92387585342, 92387585445, and 92387585477.",
+    "Inspected Ubuntu Stage 1 job log 92378362265 and Ubuntu Stage 2 job log 92387585477, including exact checkout commits."
+  ],
+  "decision": "REQUEST_CHANGES",
+  "findings": [
+    {
+      "detail": "The Worker D workflow does not set actions/checkout ref to the pull-request head SHA and does not assert git rev-parse HEAD against the claimed source candidate. Stage 1 run 31027132933 is recorded as evidence for e7dee26404a11f076206251f619bfc3f9078753c / 27a2d09ed4ed1d61775a74bccd6eac5aa4b739c6, but Ubuntu job 92378362265 checked out synthetic merge commit 8bfce846a24c188c25dfe15ea02606567e9d2270. Stage 2 run 31029884183 is recorded for 7eecc840f68ca0dff13ab58c138845593254e390 / 2080824a34956e3b202126a0a9bd61b4d645d338, but Ubuntu job 92387585477 checked out synthetic merge commit 40aaf8dc784c50f9111704e8751f5f4bb2398002. The run metadata head_sha is the source SHA, but the tested Git tree is not the claimed source tree. Therefore the source-exact validation and evidence binding claims are not established.",
+      "disposition": "OPEN",
+      "id": "J-P3-001-001",
+      "requiredChanges": [
+        "Change the bounded validation workflow to derive CANDIDATE_SHA from github.event.pull_request.head.sha (or github.sha for push/workflow_dispatch).",
+        "Pass ref: ${{ env.CANDIDATE_SHA }} to actions/checkout and assert git rev-parse HEAD equals CANDIDATE_SHA.",
+        "Record and verify the actual checked-out tree against the claimed candidate tree.",
+        "Run tri-platform source validation on the exact branch commit without rewriting frozen Stage 1/Stage 2 history; use a new validation/evidence candidate when needed.",
+        "Refresh evidence that currently binds the source SHA/tree to the synthetic-merge runs, regenerate governed manifest state through canonical owners, and request a fresh Worker J review."
+      ],
+      "severity": "HIGH",
+      "title": "Exact-source CI evidence is bound to source SHAs but executed synthetic merge commits"
+    }
+  ],
+  "mission": "MISSION-003",
+  "pullRequest": 68,
+  "recordType": "IndependentReview",
+  "recordedAtUtc": "2026-08-06T20:00:49Z",
+  "reviewId": "MISSION-003-WORKER-J-7eecc840",
+  "reviewType": "EXACT_CANDIDATE_TRACEABILITY_AND_NO_CONFLICT",
+  "reviewerRole": "Worker J",
+  "schemaVersion": 1,
+  "task": "P3-001 readiness source foundation",
+  "verifiedStrengths": [
+    "P3-001 remains explicitly blocked by P1-012 review and P2-004 measurement/architecture dependencies.",
+    "No browser runtime, sessions, actions, profiles, downloads, uploads, Web Studio, platform support, release, production, or GA support is claimed.",
+    "Fixture specifications are deterministic, bounded, local-only, and deny external network access.",
+    "Runtime candidates remain unselected and measurements remain SOURCE_DERIVED, BLOCKED, or NOT_RUN rather than promoted.",
+    "Canonical Test Center result domains, PARTIAL certification, SOURCE_FOUNDATION support, and supportPromotion=false are preserved.",
+    "The validator is non-mutating and rejects identity placeholders, checksum drift, duplicate identities, and claim inflation."
+  ],
+  "workExecutionId": "WRK-20260806T195501Z-5dbbcca5"
+}
