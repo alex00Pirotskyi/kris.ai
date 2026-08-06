@@ -1,3 +1,4 @@
+# One-shot ownership-clean materializer; deletes itself before generating the final manifest.
 name: Worker B P8 Canonical Manifest Materializer
 
 on:
