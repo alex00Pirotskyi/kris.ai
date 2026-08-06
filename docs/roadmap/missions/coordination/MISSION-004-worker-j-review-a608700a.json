@@ -1,0 +1,93 @@
+{
+  "artifactHash": "96ca04fc2a6a4614242dc4a26152d051d9b18918279538153e8549efc9cefcb9",
+  "candidate": {
+    "baseBranch": "agent/b/test-center-contracts-and-review",
+    "baseCommit": "800643bb5898a80ee3843f83f7657411183a9e6a",
+    "commit": "a608700a908042fedf18c8431402551da6853f7d",
+    "tree": "e0e98e78032b8c8acef18a7331ee3c629f7f2297"
+  },
+  "claimBoundary": {
+    "behaviorSupportClaimed": false,
+    "citationClaimed": false,
+    "fetchClaimed": false,
+    "liveSearchClaimed": false,
+    "mergeAuthorized": false,
+    "platformSupportClaimed": false,
+    "releaseSupportClaimed": false,
+    "sourceOnly": true
+  },
+  "commandsAndEvidence": [
+    "Reviewed complete PR #62 patch and all 31 changed paths.",
+    "Inspected exact candidate source models, validation, provider interface, deterministic fixture provider, schemas, fixtures, regressions, Test Center adapter, registry/hierarchy integration, workflow, evidence, and source manifest.",
+    "Verified exact-head workflow conclusions: P4-001 31111510288 PASS; P8-001 31111510851 PASS; P2 Integration Alignment 31111510067 PASS; product-gates 31111512065 PASS.",
+    "Inspected P4-001 jobs 92650191333, 92650191348, 92650191351, 92650191419 and artifacts 8971870474, 8971869709, 8971866327, 8971865293.",
+    "Downloaded and inspected Linux canonical artifact 8971870474."
+  ],
+  "decision": "REQUEST_CHANGES",
+  "filesReviewed": [
+    ".github/workflows/p4-001-search-provider.yml",
+    "SOURCE_MANIFEST.sha256",
+    "config/test_center_assurance_hierarchy.v1.json",
+    "config/test_center_registry.v1.json",
+    "docs/roadmap/progress/2026-08-05-p4-001-search-provider-foundation.md",
+    "evals/fixtures/p4_001_search_provider/contract_cases.json",
+    "release/evidence/P4-001/IMPLEMENTATION.md",
+    "release/evidence/P4-001/history/test-center-handoff.provisional.0.1.1.json",
+    "release/evidence/P4-001/manifest.json",
+    "release/evidence/P4-001/test-center-handoff.json",
+    "release/evidence/P4-001/test-results.json",
+    "schemas/web_search_error.v1.json",
+    "schemas/web_search_page.v1.json",
+    "schemas/web_search_request.v1.json",
+    "services/research_worker/__init__.py",
+    "services/research_worker/src/__init__.py",
+    "services/research_worker/src/search/__init__.py",
+    "services/research_worker/src/search/fixture_provider.py",
+    "services/research_worker/src/search/models.py",
+    "services/research_worker/src/search/provider.py",
+    "services/research_worker/src/search/validation.py",
+    "services/research_worker/test/__init__.py",
+    "services/research_worker/test/schema_validator.py",
+    "services/research_worker/test/support.py",
+    "services/research_worker/test/test_contract_models.py",
+    "services/research_worker/test/test_contract_regressions.py",
+    "services/research_worker/test/test_fixture_provider.py",
+    "services/research_worker/test/test_normalized_result_adapter.py",
+    "tool/p4_001_search_provider_test.py",
+    "tool/p4_001_test_center_v1.py",
+    "tool/p4_001_test_center_v1_test.py"
+  ],
+  "findings": [
+    {
+      "detail": "P4-001 requires date filters and the request schema supports freshness modes any, after, before, and between. Both deterministic fixture providers advertise supports_freshness=true and accept bounded freshness requests, but DeterministicFixtureSearchProvider._matches() filters only language, country, domains, and query text. It never evaluates request.freshness against entry.published_at. The fixture corpus exercises only mode=any, and regressions cover unsupported freshness capability but not supported freshness semantics. Consequently, a provider can claim freshness support while returning out-of-range or undated results, so the stated P4-001 source-contract completion criterion is not met.",
+      "disposition": "OPEN",
+      "id": "J-P4-001-001",
+      "requiredChanges": [
+        "Define deterministic boundary semantics for after, before, and between.",
+        "Apply bounded freshness filtering to published_at; explicitly define behavior for null published_at.",
+        "Add fixture cases and regressions for all modes, equality boundaries, null dates, and both fixture providers.",
+        "Register or map canonical Test Center coverage for supported freshness-filter behavior.",
+        "Regenerate affected registry/hierarchy/evidence/generated state and SOURCE_MANIFEST.sha256 through canonical owners.",
+        "Rerun the full exact-head matrix and request a fresh Worker J review."
+      ],
+      "severity": "HIGH",
+      "title": "Advertised freshness filtering is accepted but not applied"
+    }
+  ],
+  "mission": "MISSION-004",
+  "pullRequest": 62,
+  "recordType": "IndependentReview",
+  "recordedAtUtc": "2026-08-06T18:44:36Z",
+  "reviewId": "MISSION-004-WORKER-J-a608700a",
+  "reviewType": "NO_CONFLICT_AND_SOURCE_CONTRACT_COMPLETENESS",
+  "reviewerRole": "Worker J",
+  "schemaVersion": 1,
+  "task": "P4-001",
+  "verifiedStrengths": [
+    "Provider-neutral models, typed errors, rate limits, partial failures, stable identities, cursor binding, secret rejection, provider-metadata authority isolation, and public-URL validation are fail-closed.",
+    "The fixture providers are deterministic and network-free.",
+    "Canonical Test Center state domains and source-only support ceilings are preserved without behavior/support inflation.",
+    "Exact-head CI and artifact binding are otherwise complete and green."
+  ],
+  "workExecutionId": "WRK-20260806T181323Z-842bd586"
+}
