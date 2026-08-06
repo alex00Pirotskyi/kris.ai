@@ -9,56 +9,50 @@
     "receiptCommit": "af68bf5e0dd60113ccf29c24140830214f238729",
     "receiptTree": "fb859967cc9e210480308cac38be6b6da79251e0"
   },
+  "latestAuthorityBase": {
+    "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
+    "newOrChangedPathsSinceVerifiedBaseline": [
+      {
+        "gitBlob": "b9e50a1f3bf780e0d6318f2904b82219297e8cee",
+        "path": ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml"
+      },
+      {
+        "gitBlob": "4b6f4b7fb926b52838c398c2ab1923b384ff3af2",
+        "path": "tool/test_center_assurance_hierarchy_test.py"
+      },
+      {
+        "gitBlob": "a1bb52005c533da39acb7b26d67b661dca8f300b",
+        "path": "tool/test_center_assurance_semantics.py"
+      }
+    ],
+    "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d"
+  },
   "mission": "MISSION-006",
   "ownerCleanBaseline": {
     "byteCount": 120143,
     "commit": "f14ba34e501972b13cd4310c4869c87e021012da",
-    "deltaFromArtifact": [
-      {
-        "operation": "remove",
-        "path": ".github/workflows/p8-001-formal-test-hierarchy.yml"
-      },
-      {
-        "operation": "add",
-        "path": ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml",
-        "sha256": "300105d49a85d0398ea1fb57c840bcd7aacf85e1a2e729bfcd1a204d8481b46c"
-      },
-      {
-        "operation": "update",
-        "path": ".github/workflows/pr14-current-main-reconciliation.yml",
-        "sha256": "62c6d41d83e64ba052069577831155874c14c903b3854884aae8aa9c4f1ea96f"
-      },
-      {
-        "operation": "update",
-        "path": "config/branch_hygiene.json",
-        "sha256": "ba91c22ff3d3edc3e61f2e83d1f43c71aeabb3f0f975cd177d09a917ed576c02"
-      },
-      {
-        "operation": "remove",
-        "path": "release/evidence/worker-b/test-center-contract-validation.json"
-      }
-    ],
     "entryCount": 1124,
     "manifestSha256": "e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f",
     "tree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
     "verified": true
   },
-  "p6ReconstructionBeforeThisEvidence": {
-    "byteCount": 121147,
-    "entryCount": 1133,
-    "manifestSha256": "18aac84001e9d6a2a65bb156284fa53ed418c0c34c2014bac6ddcf74f7e32a1c",
-    "status": "LOCALLY_RECONSTRUCTED_NOT_PUBLISHED"
+  "priorP6Reconstruction": {
+    "byteCount": 121273,
+    "entryCount": 1134,
+    "manifestSha256": "165c948ab2384dbceca57a9d91c9e9f6b9bc1eea74412e1ae156da371013bb83",
+    "status": "SUPERSEDED_BY_LATEST_AUTHORITY_BASE"
   },
   "publicationBoundary": {
     "canonicalGenerator": "python tool/p1a_refresh_source_manifest.py .",
-    "reason": "The connector has no local-file upload primitive and GitHub Actions allocated no run; the exact reconstructed bytes were not republished through transcription.",
+    "latestManifestReconstructionStatus": "REQUIRES_CANONICAL_GENERATOR",
+    "reason": "Worker B advanced after the verified f14 baseline. The current authority blobs are identified exactly, but no executable canonical environment or safe large-file upload transport is available and GitHub Actions allocated no run.",
     "repositoryManifestClaimedCurrent": false,
     "unsafeLargeTextTransportAttemptReverted": true
   },
   "schemaVersion": 1,
   "sourceCandidateBeforeEvidence": {
-    "commit": "55b7cb5b20ae327d94952261db8362f1e631ae3d",
-    "tree": "e2940e29716e3741a5b6ab5c18bf24cba027d26d"
+    "commit": "ee604be62c42b2118ae1e10d3233cb6bcd362f2c",
+    "tree": "1e0c79cb632c878e800124d902c03aa31e06192b"
   },
   "task": "P6-001",
   "workExecutionId": "WRK-20260806T195224Z-da9c199a"
