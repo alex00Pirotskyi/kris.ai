@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "mission": "MISSION-003",
+  "requestedWorker": "C",
+  "currentClaimedWorker": "D",
+  "requestSource": "Repository owner instruction received 2026-08-06",
+  "status": "TRANSFER_REQUESTED",
+  "currentMissionBranch": "agent/d/p3-readiness-fixtures",
+  "currentPullRequest": 68,
+  "currentHead": "7eecc840f68ca0dff13ab58c138845593254e390",
+  "currentTree": "2080824a34956e3b202126a0a9bd61b4d645d338",
+  "missionSystemCommit": "39610c15e91440527e9a2722f1dd3bb63ffd6487",
+  "missionSystemTree": "4f3fc1c16d006c5a79e4eebf50ea16d5f16b4c12",
+  "requiredCurrentExecutorAction": [
+    "Record a final Worker D checkpoint bound to the current exact head/tree.",
+    "Change MISSION-003 state from CLAIMED to YIELDED or TRANSFERRED.",
+    "Remove or supersede the active Worker D claim.",
+    "Name the exact continuation point and any preserved blockers."
+  ],
+  "replacementWorkerActionAfterTransfer": [
+    "Re-resolve protected main, PR #68, exact head/tree, CI, reviews, dependencies, and ownership.",
+    "Create a new Worker C claim only after mission collision validation passes.",
+    "Reuse Stage 1 and Stage 2 evidence without restarting valid work."
+  ],
+  "preservedClassification": {
+    "readiness": "P3_READINESS_SOURCE_REVIEW_READY",
+    "p3_001": "BLOCKED_BY_DEPENDENCY",
+    "browserRuntime": "NOT_IMPLEMENTED",
+    "capabilitySupport": "SOURCE_FOUNDATION",
+    "certification": "PARTIAL"
+  },
+  "blockers": [
+    "ACTIVE_WORKER_D_CLAIM",
+    "P2-004_MISSING_EVIDENCE",
+    "WORKER_B_FORMAL_REVIEW_PENDING",
+    "WORKER_I_BLOCKED_EXTERNAL",
+    "WORKER_J_NO_CONFLICT_PENDING"
+  ],
+  "sourceChangesAuthorized": false,
+  "exclusivePathsTouched": false,
+  "roadmapAuthorityChanged": false
+}
