@@ -1,7 +1,9 @@
 {
   "branch": "agent/e/native-parity-readiness",
-  "current": "P11 native parity inventory and conformance readiness; P11-001 blocked by P2-004 and native transport evidence",
+  "current": "P11 native parity inventory and conformance readiness; repairing dependency truth and reconciling current Test Center ancestry while P11-001 remains blocked by P2-004 and native transport evidence",
   "exclusivePaths": [
+    ".github/workflows/worker-e-native-parity-readiness.yml",
+    "docs/roadmap/progress/2026-08-05-p11-native-parity-readiness.md",
     "release/evidence/P11-*/**",
     "release/evidence/P15-*/**",
     "tool/worker_e*.py",
