@@ -474,11 +474,13 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectWorkspace(P5WorkspaceId.verificationCenter);
         return;
       case P5PrototypeAction.retryInterruptedRun:
-        _state = _state.copyWith(
-          runState: P5RunPresentationState.running,
-          recoveryMessage: 'Interrupted run restored from the saved fixture.',
+        _setRunState(
+          expected: const <P5RunPresentationState>{
+            P5RunPresentationState.interrupted,
+          },
+          next: P5RunPresentationState.running,
+          message: 'Interrupted run restored from the saved fixture.',
         );
-        notifyListeners();
         return;
       case P5PrototypeAction.restoreModelFixture:
         _state = _state.copyWith(
