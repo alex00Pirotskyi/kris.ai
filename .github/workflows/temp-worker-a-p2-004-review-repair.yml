@@ -6,6 +6,7 @@ on:
       - agent/a/p2-004-measurement-contract-repair
     paths:
       - '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
+      - 'tool/.temp-worker-a-p2-004-review-payload/materialize.py'
   workflow_dispatch:
 
 permissions:
@@ -31,114 +32,14 @@ jobs:
         shell: bash
         env:
           EXPECTED_SHA: ${{ github.sha }}
-        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-      - name: Reconstruct and apply bounded review repair
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test -z "$(git status --porcelain=v1)"
+      - name: Materialize bounded exact-review repair
         shell: bash
         run: |
-          python - <<'PYCODE'
-          import base64
-          import hashlib
-          import json
-          import pathlib
-          import zlib
-
-          root = pathlib.Path('.').resolve()
-          payload_root = root / 'tool/.temp-worker-a-p2-004-review-payload'
-          expected_chunks = {
-              'part-00.b64': '6de3070687fbb5055249b238c511c14a03782840654f0bb910e3ddbf80eb0305',
-              'part-01.b64': '951edcdf63981e51b3610a1657e10db139f440f32a8286a48a3a02d46624f63e',
-              'part-02.b64': 'fdbfe2afbd0148f5cd29e2463178efab975fdffb9c78d23db5e41a9b29003491',
-              'part-03.b64': 'c6c70cfe1cbe30adab030934899bf08285816c934da4d43e74e7c260b884557',
-          }
-          encoded_parts = []
-          for name, expected_sha in expected_chunks.items():
-              path = payload_root / name
-              if not path.is_file():
-                  raise SystemExit(f'missing payload chunk: {name}')
-              raw = path.read_bytes()
-              if hashlib.sha256(raw).hexdigest() != expected_sha:
-                  raise SystemExit(f'payload chunk digest mismatch: {name}')
-              encoded_parts.append(raw.decode('ascii'))
-          encoded = ''.join(encoded_parts)
-          if len(encoded) != 18100:
-              raise SystemExit(f'unexpected payload length: {len(encoded)}')
-          raw_payload = zlib.decompress(base64.b64decode(encoded))
-          if hashlib.sha256(raw_payload).hexdigest() != '1dba9b1f796145597044021a03d603dc29a7c712527a7b4db8c7f11f33fa17b0':
-              raise SystemExit('payload digest mismatch')
-          payload = json.loads(raw_payload.decode('utf-8'))
-          if set(payload) != {'files', 'validateFunction', 'boundPaths', 'progressAppendix'}:
-              raise SystemExit('unexpected payload shape')
-
-          for relative, content in payload['files'].items():
-              path = root / relative
-              path.parent.mkdir(parents=True, exist_ok=True)
-              path.write_text(content, encoding='utf-8')
-
-          runner_path = root / 'tool/p2_task_platform_assertions.py'
-          runner = runner_path.read_text(encoding='utf-8')
-          marker = '        "KRISTIN_P2_TECH_DART_RECEIPT",\n'
-          additions = (
-              marker
-              + '        "KRISTIN_P2_TECH_AUTHORIZED_ROOT",\n'
-              + '        "KRISTIN_P2_TECH_TRUST_MANIFEST",\n'
-              + '        "KRISTIN_P2_TECH_TRUST_MANIFEST_SHA256",\n'
-              + '        "KRISTIN_P2_TECH_SESSION_ID",\n'
-              + '        "KRISTIN_P2_TECH_NONCE",\n'
-          )
-          if runner.count(marker) != 1:
-              raise SystemExit('unexpected P2 receipt allowlist marker count')
-          if 'KRISTIN_P2_TECH_AUTHORIZED_ROOT' not in runner:
-              runner = runner.replace(marker, additions, 1)
-          start = runner.index('def validate_technology_spike(data: dict) -> dict:')
-          end = runner.index('\n\ndef main() -> int:', start)
-          runner = runner[:start] + payload['validateFunction'].rstrip() + runner[end:]
-          runner_path.write_text(runner, encoding='utf-8')
-
-          registry_path = root / 'config/test_center_registry.v1.json'
-          registry = json.loads(registry_path.read_text(encoding='utf-8'))
-          mapping = next(
-              (
-                  row
-                  for row in registry.get('affectedTestMappings', [])
-                  if isinstance(row, dict)
-                  and row.get('mappingId') == 'affected.p2.owner-mode-source'
-              ),
-              None,
-          )
-          if not isinstance(mapping, dict):
-              raise SystemExit('affected.p2.owner-mode-source mapping missing')
-          mapping_paths = mapping.setdefault('pathPatterns', [])
-          for relative in payload['boundPaths']:
-              if relative not in mapping_paths:
-                  mapping_paths.append(relative)
-          profile = next(
-              (
-                  row
-                  for row in registry.get('projectTestProfiles', [])
-                  if isinstance(row, dict)
-                  and row.get('stableCheckId') == 'tc.p2.acceptance-contract'
-              ),
-              None,
-          )
-          if not isinstance(profile, dict):
-              raise SystemExit('tc.p2.acceptance-contract profile missing')
-          for field in ('affectedPaths', 'inputPaths'):
-              values = profile.setdefault(field, [])
-              for relative in payload['boundPaths']:
-                  if relative not in values:
-                      values.append(relative)
-          registry_path.write_text(json.dumps(registry, indent=2) + '\n', encoding='utf-8')
-
-          progress_path = root / 'docs/roadmap/progress/2026-08-06-worker-a-p2-004-measurement-contract-repair.md'
-          progress = progress_path.read_text(encoding='utf-8')
-          if '## Exact-review hardening' not in progress:
-              progress += payload['progressAppendix']
-          progress_path.write_text(progress, encoding='utf-8')
-          PYCODE
-          rm -rf 'tool/.temp-worker-a-p2-004-review-payload'
-          rm -f \
-            '.github/workflows/temp-worker-a-p2-004-review-diagnostic.yml' \
-            '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
+          python tool/.temp-worker-a-p2-004-review-payload/materialize.py \
+            --project .
       - name: Validate hardened contract
         shell: bash
         run: |
@@ -147,16 +48,21 @@ jobs:
             tool/p2_technology_spike_contract_test.py \
             tool/p2_task_platform_assertions.py
           python tool/p2_technology_spike_contract_test.py --project .
-          python tool/p2_task_assertion_cli_test.py --project . --max-command-seconds 15
+          python tool/p2_task_assertion_cli_test.py \
+            --project . \
+            --max-command-seconds 15
           python tool/test_center_contracts.py check --project .
           python -m unittest -v tool/worker_a_test_center_v1_test.py
       - name: Refresh canonical source manifest
         shell: bash
         run: |
           python tool/p1a_refresh_source_manifest.py .
-          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.after-first-refresh"
+          cp SOURCE_MANIFEST.sha256 \
+            "$RUNNER_TEMP/SOURCE_MANIFEST.after-first-refresh"
           python tool/p1a_refresh_source_manifest.py .
-          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.after-first-refresh" SOURCE_MANIFEST.sha256
+          cmp \
+            "$RUNNER_TEMP/SOURCE_MANIFEST.after-first-refresh" \
+            SOURCE_MANIFEST.sha256
           git diff --check
       - name: Publish final review-repair commit
         shell: bash
@@ -167,10 +73,10 @@ jobs:
           git fetch origin "$BRANCH"
           test "$(git rev-parse "origin/$BRANCH")" = "$CARRIER_SHA"
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           test -n "$(git status --porcelain=v1)"
-          git commit -m "fix(p2-004): harden trusted measurement receipts"
+          git commit -m \
+            "fix(p2-004): harden trusted measurement receipts"
           git push origin "HEAD:$BRANCH"
-
-# retry: corrected-payload-chunk
