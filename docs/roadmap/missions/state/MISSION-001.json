@@ -1,40 +1,14 @@
 {
   "assignedWorker": "A",
-  "blockers": [
-    "P8 exact source CI passes, but independent downstream review 4873602175 requests changes because assuranceLevel is not machine-connected to actual normalized execution reports.",
-    "P8 exact-candidate evidence remains stale and requires a new evidence-packaging commit, exact-head CI, and fresh review.",
-    "Worker A and P8 both modify config/test_center_registry.v1.json; post-landing integration requires 11 explicit hierarchy bindings and changes Worker A's tree.",
-    "Worker J bounded source-transition reconciliation remains pending.",
-    "Explicit stacked-integration authorization remains absent.",
-    "Controlled P2 behavior remains BLOCKED_EXTERNAL."
-  ],
   "branch": "agent/a/p1-p2-new-roadmap-execution",
-  "current": "Frozen independently reviewed P1/P1A/P2 candidate; P8 shared-contract source CI passes but exact independent review requests contract and evidence repairs; Worker J reconciliation and controlled P2 behavior remain pending",
-  "executionState": "BLOCKED",
-  "latestCheckpoint": "docs/roadmap/missions/checkpoints/MISSION-001-0006.json",
+  "current": "P1/P1A/P2 canonical Test Center integration; behavioral closure remains externally blocked",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-001",
-  "nextAction": "Keep Worker A frozen. Worker B must repair P8-A-001 and P8-A-002, rerun exact-head CI, and obtain a fresh exact-SHA review. Worker J must publish the bounded source reconciliation. Only after an authorized reviewed P8 landing may Worker A combine registry and hierarchy bindings, regenerate SOURCE_MANIFEST.sha256, rerun exact-head CI, and obtain a fresh Worker B review for the changed Worker A tree.",
+  "nextAction": "Re-resolve live Git/PR/CI state, then continue the highest-priority dependency-satisfied task without restarting valid work.",
   "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
   "observedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
   "pullRequest": 64,
   "schemaVersion": 1,
-  "sharedContract": {
-    "branch": "agent/b/test-center-contracts-and-review",
-    "head": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
-    "pullRequest": 65,
-    "reviewDecision": "REQUEST_CHANGES",
-    "reviewId": 4873602175,
-    "state": "EXACT_SOURCE_CI_PASS_CONTRACT_AND_EVIDENCE_REPAIR_REQUIRED",
-    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845"
-  },
   "status": "CLAIMED",
-  "title": "Foundation, Trust, Product Core, and Owner Mode",
-  "workerJReconciliation": {
-    "head": "2a14b875ff529cfd90348673e8e45b2442663619",
-    "pullRequest": 66,
-    "requestComment": 5203103817,
-    "state": "PENDING",
-    "tree": "595346993b4512411f48075a47289333c51b3850"
-  }
+  "title": "Foundation, Trust, Product Core, and Owner Mode"
 }
