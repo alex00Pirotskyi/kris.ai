@@ -105,6 +105,38 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  testWidgets('keyboard shortcuts respect progressive disclosure',
+      (tester) async {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+    await _pump(tester, controller);
+
+    expect(find.byKey(const Key('workspace-nav-evidence')), findsNothing);
+
+    await _pressChord(
+      tester,
+      modifier: LogicalKeyboardKey.altLeft,
+      key: LogicalKeyboardKey.digit7,
+    );
+
+    expect(controller.state.workspace, P5WorkspaceId.homeChat);
+    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+    expect(controller.sideEffects.isZero, isTrue);
+
+    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('workspace-nav-evidence')), findsOneWidget);
+
+    await _pressChord(
+      tester,
+      modifier: LogicalKeyboardKey.altLeft,
+      key: LogicalKeyboardKey.digit7,
+    );
+
+    expect(controller.state.workspace, P5WorkspaceId.evidence);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets('primary navigation and state semantics are announced',
       (tester) async {
     final controller = P5InformationArchitectureController()
