@@ -6,6 +6,14 @@ on:
       - agent/j/P24-001-roadmap-as-data-adr
     paths:
       - .github/workflows/p24-manifest-publish-once.yml
+  pull_request:
+    branches:
+      - agent/anarchy-execution-os
+    types:
+      - reopened
+      - synchronize
+    paths:
+      - .github/workflows/p24-manifest-publish-once.yml
 
 permissions:
   contents: write
@@ -17,11 +25,11 @@ concurrency:
 
 jobs:
   publish:
-    if: startsWith(github.event.head_commit.message, 'P24-001: stage manifest publisher')
+    if: github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'P24-001: stage manifest publisher')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      EXPECTED_PARENT: d9863b69ff8507246cdf2c024599c29ed4210534
+      EXPECTED_SOURCE_PARENT: d9863b69ff8507246cdf2c024599c29ed4210534
       ARTIFACT_ID: '8968427181'
       EXPECTED_SHA256: bd779a0852c174880cc30f4888eb6975b2ab330a9d00480672e7683a574cd2f8
       EXPECTED_BLOB: e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3
@@ -47,9 +55,13 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git branch --show-current)" = 'agent/j/P24-001-roadmap-as-data-adr'
-          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+          git merge-base --is-ancestor "$EXPECTED_SOURCE_PARENT" HEAD
           test -f "$PUBLISHER_PATH"
           test -z "$(git status --porcelain=v1)"
+          mapfile -t staging_paths < <(git diff --name-only "$EXPECTED_SOURCE_PARENT" HEAD | LC_ALL=C sort)
+          printf 'STAGING_PATH=%s\n' "${staging_paths[@]}"
+          test "${#staging_paths[@]}" -eq 1
+          test "${staging_paths[0]}" = "$PUBLISHER_PATH"
 
           artifact_zip="$RUNNER_TEMP/p24-artifact.zip"
           artifact_dir="$RUNNER_TEMP/p24-artifact"
@@ -101,11 +113,10 @@ jobs:
 
           rm -f "$PUBLISHER_PATH"
           git diff --check
-          mapfile -t changed < <(git status --short | sed -E 's/^.. //' | LC_ALL=C sort)
-          printf 'CHANGED_PATH=%s\n' "${changed[@]}"
-          test "${#changed[@]}" -eq 2
-          test "${changed[0]}" = '.github/workflows/p24-manifest-publish-once.yml'
-          test "${changed[1]}" = 'SOURCE_MANIFEST.sha256'
+          mapfile -t final_paths < <(git diff --name-only "$EXPECTED_SOURCE_PARENT" | LC_ALL=C sort)
+          printf 'FINAL_PATH=%s\n' "${final_paths[@]}"
+          test "${#final_paths[@]}" -eq 1
+          test "${final_paths[0]}" = 'SOURCE_MANIFEST.sha256'
 
       - name: Commit and push manifest-only closure
         shell: bash
@@ -118,7 +129,9 @@ jobs:
           git commit -m 'P24-001: commit deterministic source manifest closure'
           final_commit="$(git rev-parse HEAD)"
           final_tree="$(git rev-parse HEAD^{tree})"
-          test "$(git rev-parse HEAD^)" != "$EXPECTED_PARENT"
+          mapfile -t committed_paths < <(git diff --name-only "$EXPECTED_SOURCE_PARENT" HEAD | LC_ALL=C sort)
+          test "${#committed_paths[@]}" -eq 1
+          test "${committed_paths[0]}" = 'SOURCE_MANIFEST.sha256'
           git push origin "HEAD:agent/j/P24-001-roadmap-as-data-adr"
           test "$(git ls-remote origin refs/heads/agent/j/P24-001-roadmap-as-data-adr | awk '{print $1}')" = "$final_commit"
           echo "P24_FINAL_COMMIT=$final_commit"
