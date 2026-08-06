@@ -2,6 +2,7 @@
 """P8-001 assurance hierarchy and execution-report semantics."""
 from __future__ import annotations
 
+import json
 import re
 from collections import Counter
 from pathlib import Path
@@ -25,21 +26,21 @@ CLASS_LEVELS = {
 }
 WORKER_A_SOURCE = {
     "pullRequest": 64, "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
-    "tree": "2ea1f8a7c12c34c71ee75ba06fdf047cf9528223", "reviewCommentId": 5203350863,
+    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb", "reviewCommentId": 5203350863,
     "integrationState": "FROZEN_EXTERNAL_CANDIDATE",
 }
 WORKER_A_BINDINGS = {
-    "tc.p1a.source-integrity": ("architecture_lint", True),
-    "tc.p1a.schema-validation": ("architecture_lint", True),
-    "tc.p1a.registry-validation": ("architecture_lint", True),
-    "tc.p1a.profile-conformance": ("architecture_lint", True),
-    "tc.p1a.platform.native-windows": ("platform", False),
-    "tc.p1a.platform.native-linux": ("platform", False),
-    "tc.p1a.platform.native-macos": ("platform", False),
-    "tc.p1a.minimum-quality-floor": ("release", False),
-    "tc.p1a.operational-validation": ("component", False),
-    "tc.p1a.product-exit-gate": ("release", False),
+    "tc.p1.exit-gate": ("architecture_lint", True),
     "tc.p1a.exit-gate": ("architecture_lint", True),
+    "tc.p2.source-inventory": ("architecture_lint", True),
+    "tc.p2.application-composition": ("architecture_lint", True),
+    "tc.p2.acceptance-contract": ("architecture_lint", True),
+    "tc.p2.evidence-contract": ("architecture_lint", True),
+    "tc.p2.runner-attestation": ("architecture_lint", True),
+    "tc.p2.cleanup-contract": ("architecture_lint", True),
+    "tc.p2.strict-finalizer": ("architecture_lint", True),
+    "tc.worker-a.canonical-integration": ("architecture_lint", True),
+    "tc.p2.behavioral-closure": ("release", False),
 }
 
 class HierarchyError(ValueError):

@@ -41,7 +41,7 @@ DOC=[
 ('missing migration',lambda v:v['pendingMigrationBindings'].pop()),('duplicate migration',dup(('pendingMigrationBindings',))),
 ('active overlap',put(('pendingMigrationBindings',0,'testId'),'tc.test-center.contracts')),
 ('Worker A identity drift',put(('pendingMigrationSource','commit'),'0'*40)),
-('Worker A level drift',pending('tc.p1a.operational-validation',levelId='integration')),
+('Worker A level drift',pending('tc.p2.behavioral-closure',levelId='integration')),
 ('p1a exit gate platform',pending('tc.p1a.exit-gate',levelId='platform')),('unreviewed Worker A ID',extra)]
 REP=[
 ('missing assuranceLevel',pop(('assuranceLevel',))),('unknown assuranceLevel',put(('assuranceLevel',),'smoke')),

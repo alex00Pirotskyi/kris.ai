@@ -7,13 +7,13 @@
     },
     {
       "path": "config/test_center_assurance_hierarchy.v1.json",
-      "sha256": "ab727ffbb1c4a09d4b5be68d3d5642294db20998099e8e1d2cc7bcc6c3e042a9",
-      "sizeBytes": 12148
+      "sha256": "eccfc4246ce3368abfa00763a549164ad2873fbc4c3bc7f1ec5cb817896206d0",
+      "sizeBytes": 12324
     },
     {
       "path": "config/test_center_registry.v1.json",
-      "sha256": "c950cc51a57ad850bebd116440a5bc0e73220a268fd6169f0cf463cd2f55fec5",
-      "sizeBytes": 32748
+      "sha256": "ce902279753c5a60847565acbd7f2fc8a1cc13a09f23cb275150285c5dc02537",
+      "sizeBytes": 33779
     },
     {
       "path": "docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md",
