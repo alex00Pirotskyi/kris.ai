@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "recordType": "NO_ELIGIBLE_WORK",
+  "worker": "C",
+  "assignmentStartedAt": "2026-08-06T12:35:40Z",
+  "observedProtectedMain": {
+    "head": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "observedMissionSystem": {
+    "branch": "agent/anarchy-autonomous-worker-missions",
+    "head": "1fda9531b52a75a0f8b0e55d7e86c0a0c9ac47a9",
+    "tree": "319a64c4cab913df7e3f85dd2b698c77e16068c5"
+  },
+  "missionControlExecution": {
+    "validate": "BLOCKED_EXTERNAL_NO_REPOSITORY_COMMAND_RUNNER",
+    "status": "BLOCKED_EXTERNAL_NO_REPOSITORY_COMMAND_RUNNER",
+    "reason": "The connected execution surface exposed repository-native GitHub reads and writes but no usable checkout or command runner. Selection was therefore resolved from the exact generated registry, dashboard, claims, state, checkpoints, coordination records, dependency graph, interlocks, PR metadata, reviews, and CI state. No validation success was fabricated."
+  },
+  "workerClaimState": {
+    "activeClaimForWorkerC": null,
+    "claimCreated": false,
+    "missionStateChanged": false,
+    "sourcePathsTouched": false
+  },
+  "selection": {
+    "validExistingClaim": "NONE",
+    "formalTransferNamingWorkerC": "NONE",
+    "transferRequests": [
+      {
+        "mission": "MISSION-003",
+        "state": "TRANSFER_REQUESTED",
+        "currentWorker": "D",
+        "replacementWorker": "C",
+        "blockingReason": "Worker D has not recorded YIELDED or TRANSFERRED and its active claim remains in force."
+      }
+    ],
+    "transferredAway": [
+      {
+        "mission": "MISSION-004",
+        "fromWorker": "C",
+        "toWorker": "D",
+        "state": "TRANSFER_ACCEPTED",
+        "blockingReason": "Worker D holds the active review claim on PR #62."
+      }
+    ],
+    "unclaimedMissionDecision": "NONE_AUTHORIZED",
+    "unclaimedMissionBlockers": [
+      "MISSION-007 depends on active, incomplete MISSION-006 in addition to MISSION-001 and MISSION-002.",
+      "MISSION-008 depends on active, incomplete MISSION-001 and MISSION-002.",
+      "MISSION-009 depends on MISSION-008 and other incomplete entry work.",
+      "MISSION-011 and MISSION-012 depend on active, incomplete MISSION-006 and MISSION-010.",
+      "MISSION-013 and MISSION-014 retain unsatisfied entry dependencies and task interlocks.",
+      "AVAILABLE was not treated as implementation authorization."
+    ],
+    "independentReviewDecision": "NONE_READY_AND_COLLISION_FREE",
+    "reviewCandidates": [
+      {
+        "pr": 75,
+        "head": "04ed1a9010e41ab5e771f2ab4971d62b62749bf2",
+        "tree": "7db257cd65aa2e4ff9a6ca2463112d1a998ee46a",
+        "classification": "TEMPORARY_REPAIR_CARRIER",
+        "reason": "A temporary workflow remains in the tree, the focused materialization/source gate failed, Worker E already recorded REQUEST_CHANGES, and no clean final candidate has been published."
+      },
+      {
+        "pr": 76,
+        "head": "eeaff70de294ea22c4e2f2dc3b53f826f50b0ed7",
+        "classification": "IMPLEMENTATION_IN_PROGRESS",
+        "reason": "No exact-head workflow runs or explicit review request were present at observation time."
+      },
+      {
+        "pr": 62,
+        "head": "1c089c7094a122bb3cfbbc78221f218b3dd7ac0f",
+        "tree": "276481693c3da7d56fa3e315018c851e659ddec5",
+        "classification": "NAMED_REVIEWS_PENDING",
+        "reason": "MISSION-004 is actively claimed by Worker D and the remaining decisions are specifically Worker B and Worker J; a duplicate Worker C review would not satisfy those gates."
+      },
+      {
+        "pr": 68,
+        "head": "7eecc840f68ca0dff13ab58c138845593254e390",
+        "tree": "2080824a34956e3b202126a0a9bd61b4d645d338",
+        "classification": "ACTIVE_WORKER_D_CLAIM",
+        "reason": "MISSION-003 transfer to Worker C is not complete and P3-001 remains dependency-blocked."
+      },
+      {
+        "pr": 65,
+        "head": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+        "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+        "classification": "KNOWN_REQUEST_CHANGES_PENDING_REPAIR",
+        "reason": "The current packet already carries unresolved P8-A-001, P8-A-002, and P8-A-003 findings; no repaired fresh exact candidate was published."
+      }
+    ]
+  },
+  "generatedViewConflict": {
+    "path": "docs/roadmap/missions/START_HERE.md",
+    "observation": "The generated resume hint still says Worker C should resume MISSION-004, while the active claim, registry, dashboard, state, and accepted transfer assign MISSION-004 to Worker D.",
+    "decision": "The active claim and accepted transfer were treated as authoritative for collision safety; the stale resume hint was not followed."
+  },
+  "decision": "NO_ELIGIBLE_WORK",
+  "preservedBoundaries": {
+    "MISSION-003": "ACTIVE_WORKER_D_CLAIM_AND_TRANSFER_INCOMPLETE",
+    "MISSION-004": "TRANSFERRED_TO_WORKER_D_REVIEW_PENDING",
+    "P2-004": "BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P3_P11Authorization": "NONE",
+    "supportImpact": "NO_PROMOTION"
+  },
+  "nextEligibleTriggers": [
+    "Worker D formally yields or transfers MISSION-003 to Worker C and supersedes its active claim.",
+    "A mission is formally reassigned to Worker C with satisfied entry dependencies and a collision-free first task.",
+    "PR #75 publishes a clean non-temporary exact candidate with settled focused CI and requests fresh review.",
+    "A clean exact-SHA candidate requests a Worker C review that satisfies a real outstanding gate without duplicating a named reviewer."
+  ]
+}
