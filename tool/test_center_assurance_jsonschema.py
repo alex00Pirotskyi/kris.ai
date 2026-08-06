@@ -11,8 +11,26 @@ class SchemaValidationError(ValueError):
     pass
 
 
+RFC3339_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
+
+
 def _fail(message: str) -> None:
     raise SchemaValidationError(message)
+
+
+def parse_rfc3339(value: str, path: str = "$") -> datetime:
+    if not isinstance(value, str) or RFC3339_RE.fullmatch(value) is None:
+        _fail(f"{path} is not an RFC3339 date-time")
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise SchemaValidationError(f"{path} is not an RFC3339 date-time") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        _fail(f"{path} must include a timezone offset")
+    return parsed
 
 
 def _object(value: Any, path: str) -> dict[str, Any]:
@@ -58,6 +76,11 @@ def validate_instance(value: Any, schema: dict[str, Any], *, root: dict[str, Any
     if expected == "object":
         if not isinstance(value, dict):
             _fail(f"{path} must be an object")
+        min_properties = int(schema.get("minProperties", 0))
+        if len(value) < min_properties:
+            _fail(f"{path} has too few properties")
+        if "maxProperties" in schema and len(value) > int(schema["maxProperties"]):
+            _fail(f"{path} has too many properties")
         required = schema.get("required", [])
         missing = [name for name in required if name not in value]
         if missing:
@@ -98,10 +121,7 @@ def validate_instance(value: Any, schema: dict[str, Any], *, root: dict[str, Any
         if pattern and re.fullmatch(str(pattern), value) is None:
             _fail(f"{path} does not match {pattern}")
         if schema.get("format") == "date-time":
-            try:
-                datetime.fromisoformat(value.replace("Z", "+00:00"))
-            except ValueError as exc:
-                raise SchemaValidationError(f"{path} is not a date-time") from exc
+            parse_rfc3339(value, path)
     elif expected == "integer":
         if not isinstance(value, int) or isinstance(value, bool):
             _fail(f"{path} must be an integer")
