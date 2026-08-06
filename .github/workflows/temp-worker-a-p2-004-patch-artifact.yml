@@ -1,0 +1,51 @@
+name: TEMP Worker A P2-004 Patch Artifact
+
+on:
+  push:
+    branches:
+      - agent/a/p2-004-measurement-contract-repair
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-worker-a-p2-004-patch-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Materialize bounded repair
+        shell: bash
+        run: python tool/_temp_materialize_p2_004_patch.py
+      - name: Validate P2-004 contract repair
+        shell: bash
+        run: |
+          python tool/p2_task_assertion_cli_test.py --project . --max-command-seconds 15
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/worker_a_test_center_v1_test.py
+          git diff --check
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: worker-a-p2-004-patch-${{ github.run_id }}
+          path: |
+            SOURCE_MANIFEST.sha256
+            tool/p2_task_platform_assertions.py
+            tool/p2_task_assertion_cli_test.py
+            tool/p2_technology_spike_contract_test.py
+            docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json
+            config/test_center_registry.v1.json
+            .github/workflows/worker-a-p2-004-measurement-contract.yml
+            docs/roadmap/progress/2026-08-06-worker-a-p2-004-measurement-contract-repair.md
+          if-no-files-found: error
+          retention-days: 7
