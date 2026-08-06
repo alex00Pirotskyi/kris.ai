@@ -1,11 +1,11 @@
 name: Worker B P8 Manifest Carrier
 
 on:
-  pull_request:
+  push:
     branches:
       - agent/b/test-center-contracts-and-review
     paths:
-      - release/evidence/TEST_CENTER/P8-001/manifest-carrier.trigger
+      - .github/workflows/worker-b-p8-manifest-carrier.yml
 
 permissions:
   contents: read
@@ -16,7 +16,6 @@ concurrency:
 
 env:
   TARGET_BRANCH: agent/b/test-center-contracts-and-review
-  CARRIER_BRANCH: agent/b/p8-cleanup-safety-anchor
   SELF_PATH: .github/workflows/worker-b-p8-manifest-carrier.yml
   EXPECTED_MANIFEST_SHA256: e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f
   EXPECTED_MANIFEST_ENTRIES: '1124'
@@ -25,9 +24,9 @@ jobs:
   validate-final-tree:
     name: worker-b-p8-manifest-${{ matrix.lane }}
     if: >-
-      github.event.pull_request.base.ref == 'agent/b/test-center-contracts-and-review' &&
-      github.event.pull_request.head.ref == 'agent/b/p8-cleanup-safety-anchor' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/agent/b/test-center-contracts-and-review' &&
+      github.repository == 'alex00Pirotskyi/kris.ai'
     strategy:
       fail-fast: false
       matrix:
@@ -40,10 +39,10 @@ jobs:
             os: macos-15
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Check out exact target base
+      - name: Check out exact pushed Worker B head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
       - name: Set up Python
@@ -56,7 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.base.sha }}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
           git rm -- "${SELF_PATH}"
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
@@ -67,12 +66,10 @@ jobs:
           manifest = pathlib.Path('SOURCE_MANIFEST.sha256')
           digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
           entries = len(manifest.read_text(encoding='utf-8').splitlines())
-          expected_digest = os.environ['EXPECTED_MANIFEST_SHA256']
-          expected_entries = int(os.environ['EXPECTED_MANIFEST_ENTRIES'])
-          if digest != expected_digest:
-              raise SystemExit(f'manifest digest mismatch: {digest} != {expected_digest}')
-          if entries != expected_entries:
-              raise SystemExit(f'manifest entry mismatch: {entries} != {expected_entries}')
+          if digest != os.environ['EXPECTED_MANIFEST_SHA256']:
+              raise SystemExit(f'manifest digest mismatch: {digest}')
+          if entries != int(os.environ['EXPECTED_MANIFEST_ENTRIES']):
+              raise SystemExit(f'manifest entry mismatch: {entries}')
           PY
           git add SOURCE_MANIFEST.sha256
           mapfile -t changed < <(git diff --cached --name-only | LC_ALL=C sort)
@@ -94,7 +91,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tree="$(git write-tree)"
           python - <<'PY'
           import hashlib, json, os, pathlib, subprocess
           manifest = pathlib.Path('SOURCE_MANIFEST.sha256')
@@ -114,11 +110,10 @@ jobs:
               encoding='utf-8',
           )
           PY
-          echo "VALIDATED_TREE=${tree}"
       - name: Upload final-tree receipt
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: worker-b-p8-final-tree-${{ matrix.lane }}-${{ github.event.pull_request.base.sha }}
+          name: worker-b-p8-final-tree-${{ matrix.lane }}-${{ github.sha }}
           path: ${{ runner.temp }}/p8-final-tree-receipt.json
           if-no-files-found: error
           retention-days: 90
@@ -127,17 +122,17 @@ jobs:
     name: worker-b-p8-manifest-publish
     needs: validate-final-tree
     if: >-
-      github.event.pull_request.base.ref == 'agent/b/test-center-contracts-and-review' &&
-      github.event.pull_request.head.ref == 'agent/b/p8-cleanup-safety-anchor' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/agent/b/test-center-contracts-and-review' &&
+      github.repository == 'alex00Pirotskyi/kris.ai'
     permissions:
       contents: write
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out exact target base with branch credentials
+      - name: Check out exact pushed Worker B head with branch credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: true
       - name: Set up Python
@@ -148,7 +143,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected_base="${{ github.event.pull_request.base.sha }}"
+          expected_base="${GITHUB_SHA}"
           test "$(git rev-parse HEAD)" = "${expected_base}"
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
           test "${remote_head}" = "${expected_base}"
