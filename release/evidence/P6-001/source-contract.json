@@ -1,8 +1,8 @@
 {
   "base": {
     "branch": "agent/b/test-center-contracts-and-review",
-    "commit": "71770c8ced388d83a278d951fd45a07afdec84db",
-    "tree": "aad287d8e91efffe5816a92665e0c84fa3a0ac3d"
+    "commit": "604905039aa26952045e69ebe6799ae464144635",
+    "tree": "b5070956963404b4d9f5f8875db40d06bc093b4c"
   },
   "classification": "SOURCE_FOUNDATION",
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
@@ -14,12 +14,27 @@
     "identity drift receives a deterministic evaluation-only quarantine identity",
     "quarantine identity encoding is deterministic and uses only model-ID-safe base64url characters",
     "artifact identity validation is enforced inside the single exported ModelDefinitionRegistry and cannot be bypassed by direct imports",
+    "requireApproved requires the actual discovered ModelIdentity rather than string-only provider/model lookup",
     "a quarantined identity cannot pass requireApproved",
-    "approved task classes require benchmark evidence",
+    "benchmark evidence carries the exact model artifact digest it measured",
+    "approved models reject benchmark evidence measured for a different artifact digest",
+    "JSON cannot relabel a model digest and retain benchmark evidence measured for another artifact",
+    "evaluation-only records reject benchmark evidence measured for another artifact",
+    "benchmark-bearing evaluation-only records require their own immutable model artifact digest",
+    "approved task classes require benchmark evidence for every approved task class",
     "provider and model data boundaries must agree",
     "credential records contain references and never secret values",
-    "registry serialization is deterministic"
+    "registry serialization and quarantine identities are deterministic"
   ],
+  "integration": {
+    "mergeCommit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
+    "mergeTree": "7ff410b5606719a3f627ce6a5eea84eb4f2509dc",
+    "parentWorkerG": "4515c66f857d61fc415f37e737c6926e716ef3b5",
+    "parentWorkerB": "604905039aa26952045e69ebe6799ae464144635",
+    "workerBBehindBy": 0,
+    "effectiveDiffExcludesSourceManifest": true,
+    "effectiveDiffExcludesTestCenterAuthority": true
+  },
   "mission": "MISSION-006",
   "nonClaims": [
     "integrated Test Center registration",
@@ -34,9 +49,14 @@
   "pullRequest": 76,
   "reviewRepairs": [
     "P6-C-001",
-    "P6-C-002"
+    "P6-C-002",
+    "P6-BENCHMARK-ARTIFACT-BINDING"
   ],
   "schemaVersion": 1,
+  "sourceMilestone": {
+    "commit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
+    "tree": "7ff410b5606719a3f627ce6a5eea84eb4f2509dc"
+  },
   "task": "P6-001",
   "testCenter": {
     "authorityMission": "MISSION-002",
@@ -49,6 +69,12 @@
     "test/product/model/model_registry_identity_guard_test.dart",
     "test/product/model/model_registry_public_contract_test.dart"
   ],
+  "validation": {
+    "dartOrFlutterExecutedForCurrentSource": false,
+    "exactHeadCiAllocatedForSourceMilestone": false,
+    "historicalCiPromoted": false,
+    "sourceManifestClaimedCurrent": false
+  },
   "worker": "G",
-  "workExecutionId": "WRK-20260806T195224Z-da9c199a"
+  "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
 }
