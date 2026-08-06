@@ -1,0 +1,114 @@
+{
+  "blockers": [
+    {
+      "class": "BLOCKED_BY_COORDINATION",
+      "detail": "PR #78's read-only delivery-control overlay assigns config/test_center_registry.v1.json to MISSION-002. No machine-readable MISSION-002 grant currently authorizes MISSION-001 to publish validated registry blob 380da65e82c5f22b96d5057e7da218a8c99d4882 for clean tree 6b821b719f23cb981653334c10a2215346771f08. Grant request 5208181850 is durable on PR #65."
+    },
+    {
+      "class": "BLOCKED_BY_PATH_OWNERSHIP",
+      "detail": "The validated clean tree modifies .github/workflows/worker-a-p2-004-measurement-contract.yml, but the current delivery overlay declares MISSION-001 workflow ownership only for p1*.yml and p2*.yml. The workflow must move into owned scope or receive an explicit coordination grant, then the source manifest and exact validation must be refreshed."
+    },
+    {
+      "class": "VALIDATED_TREE_NOT_PUBLISHED",
+      "detail": "The exact clean candidate exists in workflow artifact 8970093356 as local commit 6cf6640484547f071c4f120f5b96d44cab5d41a4 / tree 6b821b719f23cb981653334c10a2215346771f08, but Worker A correctly did not advance PR #75 while shared-authority and ownership gates remain unresolved."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane candidate measurements and receipts exist for Windows, macOS, and Linux. No automation-host technology may be selected."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "The p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning and trust inputs, approvals, and controlled behavior receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, and PR #64 remain draft and unmerged without a currently valid authorized integration sequence."
+    }
+  ],
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "classifications": [
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_004_TRUSTED_RECEIPT_CONTRACT_HARDENED",
+    "P2_004_CLEAN_TREE_VALIDATED_NOT_PUBLISHED",
+    "BLOCKED_BY_COORDINATION",
+    "BLOCKED_BY_PATH_OWNERSHIP",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "completed": [
+    "Resolved the newest autonomous-worker prompt from open PR #78 and used it strictly as a read-only execution-control overlay because it is absent from protected main and the canonical mission branch.",
+    "Generated work execution ID WRK-20260806T181420Z-f3daaff9 and resolved the existing unique MISSION-001 claim to Worker A without creating a competing claim.",
+    "Re-resolved protected main, the canonical mission branch, PR #78, PR #75, PR #65, PR #64, exact heads and trees, workflow evidence, mission ownership, and shared authority policy.",
+    "Retrieved and cryptographically inventoried the durable clean-tree export from workflow run 31107230047, job 92635442027, artifact 8970093356.",
+    "Confirmed the exported clean candidate removes every temporary workflow and payload carrier and binds the exact local commit 6cf6640484547f071c4f120f5b96d44cab5d41a4 to tree 6b821b719f23cb981653334c10a2215346771f08.",
+    "Confirmed the export had passed trusted receipt positive and adversarial regressions, the real P2 task runner, canonical Test Center validation, Worker A Test Center regression, two byte-identical canonical source-manifest generations, and git diff validation before export.",
+    "Published bounded MISSION-002 shared Test Center authority request 5208181850 on PR #65 for exact registry blob 380da65e82c5f22b96d5057e7da218a8c99d4882 and exact tree 6b821b719f23cb981653334c10a2215346771f08.",
+    "Published exact clean-tree evidence and ownership-blocker handoff 5208184543 on PR #75 without advancing the branch, requesting review, force-pushing, or weakening completion boundaries."
+  ],
+  "evidence": {
+    "cleanCandidate": {
+      "artifactApiDigest": "sha256:2618e9ab32df248d5f32cb6de60a42569ac07b559c05df22180bf5b14d497c26",
+      "artifactId": 8970093356,
+      "artifactName": "worker-a-p2-004-materialized-139ce09e",
+      "bundleSha256": "bb137d6d7e632eec18b68a6d356ca593dd71a1bcf0429a4268b74421794ff547",
+      "carrierCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "commit": "6cf6640484547f071c4f120f5b96d44cab5d41a4",
+      "jobId": 92635442027,
+      "patchSha256": "45eac991526e9b1eca33d7d9a05a649c0f4e5bbb7db0ed523a3d91f82d8db788",
+      "runId": 31107230047,
+      "sourceManifestEntries": 1130,
+      "tree": "6b821b719f23cb981653334c10a2215346771f08",
+      "treeArchiveSha256": "7694d45002717aaabe51df5bb75c885770b55e1b6be13faf50ab0296e96a5fea",
+      "zipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b"
+    },
+    "coordination": {
+      "pr65GrantRequestComment": 5208181850,
+      "pr75CleanTreeHandoffComment": 5208184543,
+      "requestedRegistryBlob": "380da65e82c5f22b96d5057e7da218a8c99d4882"
+    },
+    "deliveryOverlay": {
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false,
+      "pullRequest": 78,
+      "tree": "73e8ffa78db5938fd2dae8b498c4d008005ee1d1"
+    },
+    "missionDiscovery": {
+      "commit": "b9218912af5053674c2665b1ea1316e1b91ce67e",
+      "tree": "d3e2a6b2a2e73d8e7e91fbef222a3080677535a9"
+    },
+    "parentCandidate": {
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "pullRequest": 64,
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "workExecutionId": "WRK-20260806T181420Z-f3daaff9"
+  },
+  "mission": "MISSION-001",
+  "nextAction": "Keep PR #64 frozen. Obtain the exact MISSION-002 grant for the Test Center registry and reconcile the focused workflow into MISSION-001-owned p2*.yml scope or obtain an explicit grant. Then rematerialize from the clean candidate, regenerate SOURCE_MANIFEST.sha256 twice through the canonical owner, publish a non-forced fast-forward PR #75 head, inspect exact-head CI and artifacts, and request a fresh independent exact-SHA review. Do not select a technology or promote P2 behavior without real tri-platform evidence.",
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 75,
+  "schemaVersion": 1,
+  "sequence": 9,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0008.json",
+  "validation": [
+    "The PR #78 delivery prompt is not integrated into protected main or the canonical mission branch and was therefore used only as a read-only overlay, as required.",
+    "The unique existing MISSION-001 claim remains Worker A's; no claim race or competing ownership was created.",
+    "The validated clean tree and local commit exist durably in artifact 8970093356 and all temporary carrier files are absent from that exported tree.",
+    "The branch ref remains at carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a because publishing the exact clean tree would currently violate recorded shared-authority and workflow path ownership gates.",
+    "No Worker A parent source, roadmap authority, controlled P2 behavior, technology selection, P3/P11 implementation, capability support, platform support, release support, production readiness, or GA readiness was changed or promoted."
+  ],
+  "worker": "A"
+}
