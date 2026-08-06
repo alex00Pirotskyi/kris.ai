@@ -1,0 +1,166 @@
+name: TEMP Worker A P2-004 Review Repair
+
+on:
+  push:
+    branches:
+      - agent/a/p2-004-measurement-contract-repair
+    paths:
+      - '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-worker-a-p2-004-review-repair
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version-file: config/p2.python-version
+          check-latest: false
+      - name: Assert carrier identity
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Apply bounded review repair
+        shell: bash
+        run: |
+          python - <<'PYCODE'
+          import base64
+          import json
+          import pathlib
+
+          root = pathlib.Path('.').resolve()
+          encoded = """eyJmaWxlcyI6eyJ0b29sL3AyX3RlY2hub2xvZ3lfc3Bpa2UucHkiOiIjIS91c3IvYmluL2VudiBweXRob24zXG5cIlwiXCJBZ2dyZWdhdGUgaW5kZXBlbmRl
+          bnRseSBleGVjdXRlZCBlcXVpdmFsZW50IFAyIGF1dG9tYXRpb24taG9zdCBjYW5kaWRhdGVzLlxuXG5UaGlzIHRvb2wgbmV2ZXIgaW5mZXJzIGRldGFjaC9y
+          ZWNvbm5lY3Qgb3IgcHJvY2Vzcy10cmVlIHRlcm1pbmF0aW9uIGZyb20gYSBzbGVlcCxcbmEgcHJpbWFyeSBQSUQgZXhpdCwgb3IgYSB3cmFwcGVyJ3MgYm9v
+          bGVhbi4gRWFjaCBjYW5kaWRhdGUgbXVzdCBzdXBwbHkgdGhyZWVcbm1hY2hpbmUtb2JzZXJ2ZWQgcm91bmRzIGJvdW5kIHRvIHRoZSBleGFjdCBjb21taXQsIHBs
+          YXRmb3JtLCBleGVjdXRhYmxlLCBidWlsZCxcbnNvdXJjZSwgYXV0aG9yaXplZCBhcnRpZmFjdCByb290LCBpbmRlcGVuZGVudGx5IHBpbm5lZCB0cnVzdCBtYW5p
+          ZmVzdCwgZnJlc2hcbm1lYXN1cmVtZW50IHNlc3Npb24sIGN1cnNvci9iYWNrbG9nIHJlcGxheSwgYW5kIHplcm8tZGVzY2VuZGFudCBraWxsIHJlc3VsdC5cbk1p
+          c3NpbmcsIHJlcGxheWVkLCBzZWxmLWNvbnNpc3RlbnQtYnV0LXVudHJ1c3RlZCwgYWxpYXNlZCwgb3IgcGF0aC1lc2NhcGluZ1xub2JzZXJ2YXRpb25zIHByb2R1
+          Y2UgYSBibG9ja2VkIGRlY2lzaW9uLlxuXCJcIlwiXG5mcm9tIF9fZnV0dXJlX18gaW1wb3J0IGFubm90YXRpb25zXG5cbmltcG9ydCBhcmdwYXJzZVxuaW1wb3J0
+          IGhhc2hsaWJcbmltcG9ydCBqc29uXG5pbXBvcnQgb3NcbmltcG9ydCBwYXRobGliXG5pbXBvcnQgcGxhdGZvcm1cbmltcG9ydCByZVxuaW1wb3J0IHN0YXRpc3Rp
+          Y3NcbmltcG9ydCB0aW1lXG5mcm9tIGRhdGV0aW1lIGltcG9ydCBkYXRldGltZSwgdGltZWRlbHRhLCB0aW1lem9uZVxuZnJvbSB0eXBpbmcgaW1wb3J0IEFueVxu
+          XG5DQU5ESURBVEVTID0ge1xuICAgIFwidHlwZXNjcmlwdC1ub2RlLW5vZGUtcHR5LXdpdGgtbmF0aXZlLWxpZmVjeWNsZS1hZGFwdGVyc1wiOiAoXG4gICAgICAg
+          IFwibm9kZS1ub2RlLXB0eVwiLFxuICAgICAgICBcIktSSVNUSU5fUDJfVEVDSF9OT0RFX1JFQ0VJUFQwXCIsXG4gICAgKSxcbiAgICBcIm5hdGl2ZS1wbGF0Zm9y
+          bS1wdHktc3VwZXJ2aXNvclwiOiAoXG4gICAgICAgIFwibmF0aXZlLXB0eS1zdXBlcnZpc29yXCIsXG4gICAgICAgIFw iS1JJU1RJTl9QMl9URUNIX05BVElWRV9S
+          RUNFSVBUXCIsXG4gICAgKSxcbiAgICBcImRhcnQtY29udHJvbC1wbGFuZS1uYXRpdmUtcHR5LWhlbHBlclwiOiAoXG4gICAgICAgIFwiZGFydC1pbmRlcGVuZGVu
+          dC1jb250cm9sLXBsYW5lXCIsXG4gICAgICAgIFwiS1JJU1RJTl9QMl9URUNIX0RBUlRfUkVDRUlQVFwiLFxuICAgICksXG59XG5QTEFURk9STSA9IHtcbiAgICBc
+          IldpbmRvd3NcIjogXCJ3aW5kb3dzXCIsXG4gICAgXCJEYXJ3aW5cIjogXCJtYWNvc1wiLFxuICAgIFwiTGludXhcIjogXCJsaW51eFwiLFxufS5nZXQocGxhdGZv
+          cm0uc3lzdGVtKCksIHBsYXRmb3JtLnN5c3RlbSgpLmxvd2VyKCkpXG5IRVg0MCA9IHJlLmNvbXBpbGUoclwiXlswLTlhLWZdezQwffSUvIilcbkhFWDY0ID0gcmUu
+          Y29tcGlsZShyXCJeWzAtOWEtZl17NjR9JFwiKVxuU0FGRV9JRCA9IHJlLmNvbXBpbGUoclwiXltBLVphLXowLTldW0EtWmEtejAtOS5fOi1dezAsMTI3fSRcIilcbk1B
+          WF9UUlVTVF9MSUZFVElNRSA9IHRpbWVkZWx0YShob3Vycz02KVxuTUFYX0NMT0NLX1NLRVcgPSB0aW1lZGVsdGEobWludXRlcz01KVxuXG5cbmRlZiBzaGEocGF0
+          aDogcGF0aGxpYi5QYXRoKSAtPiBzdHI6XG4gICAgZGlnZXN0ID0gaGFzaGxpYi5zaGEyNTYoKVxuICAgIHdpdGggcGF0aC5vcGVuKFwicmJcIikgYXMgc3RyZWFt
+          OlxuICAgICAgICBmb3IgYmxvY2sgaW4gaXRlcihsYW1iZGE6IHN0cmVhbS5yZWFkKDEwMjQgKiAxMDI0KSwgYlwiXCIpOlxuICAgICAgICAgICAgZGlnZXN0LnVw
+          ZGF0ZShibG9jaylcbiAgICByZXR1cm4gZGlnZXN0LmhleGRpZ2VzdCgpXG5cblxuZGVmIHNoYV90ZXh0KHZhbHVlOiBzdHIpIC0+IHN0cjpcbiAgICByZXR1cm4g
+          aGFzaGxpYi5zaGEyNTYodmFsdWUuZW5jb2RlKFwidXRmLThcIikpLmhleGRpZ2VzdCgpXG5cblxuZGVmIGxvYWQocGF0aDogcGF0aGxpYi5QYXRoKSAtPiBkaWN0
+          W3N0ciwgQW55XTpcbiAgICB2YWx1ZSA9IGpzb24ubG9hZHMocGF0aC5yZWFkX3RleHQoZW5jb2Rpbmc9XCJ1dGYtOFwiKSlcbiAgICBpZiBub3QgaXNpbnN0YW5j
+          ZSh2YWx1ZSwgZGljdCk6XG4gICAgICAgIHJhaXNlIFZhbHVlRXJyb3IoXCJKU09OIG9iamVjdCByZXF1aXJlZFwiKVxuICAgIHJldHVybiB2YWx1ZVxuXG5cbmRl
+          ZiBzYWZlX3JlbGF0aXZlKHZhbHVlOiBvYmplY3QsICosIGxhYmVsOiBzdHIpIC0+IHBhdGhsaWIuUHVyZVBvc2l4UGF0aDpcbiAgICB0ZXh0ID0gc3RyKHZhbHVl
+          IG9yIFwiXCIpXG4gICAgcGF0aCA9IHBhdGhsaWIuUHVyZVBvc2l4UGF0aCh0ZXh0KVxuICAgIGlmIChcbiAgICAgICAgbm90IHRleHRcbiAgICAgICAgb3IgdGV4
+          dCBpbiB7XCIuXCIsIFwiLi5cIn1cbiAgICAgICAgb3IgcGF0aC5pc19hYnNvbHV0ZSgpXG4gICAgICAgIG9yIFwiLi5cIiBpbiBwYXRoLnBhcnRzXG4gICAgICAg
+          IG9yIFwiXFxcXFwiIGluIHRleHRcbiAgICApOlxuICAgICAgICByYWlzZSBWYWx1ZUVycm9yKGZcIntsYWJlbH06IHVuc2FmZSByZWxhdGl2ZSBwYXRoIHt0ZXh0
+          IXJ9XCIpXG4gICAgcmV0dXJuIHBhdGhcb...TRUNCATED_FOR_BREVITY..."""
+          payload = json.loads(base64.b64decode(''.join(encoded.split())).decode('utf-8'))
+          for relative, content in payload['files'].items():
+              path = root / relative
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_text(content, encoding='utf-8')
+
+          runner_path = root / 'tool/p2_task_platform_assertions.py'
+          runner = runner_path.read_text(encoding='utf-8')
+          marker = '        "KRISTIN_P2_TECH_DART_RECEIPT",\n'
+          additions = (
+              marker
+              + '        "KRISTIN_P2_TECH_AUTHORIZED_ROOT",\n'
+              + '        "KRISTIN_P2_TECH_TRUST_MANIFEST",\n'
+              + '        "KRISTIN_P2_TECH_TRUST_MANIFEST_SHA256",\n'
+              + '        "KRISTIN_P2_TECH_SESSION_ID",\n'
+              + '        "KRISTIN_P2_TECH_NONCE",\n'
+          )
+          if runner.count(marker) != 1:
+              raise SystemExit('unexpected P2 receipt allowlist marker count')
+          if 'KRISTIN_P2_TECH_AUTHORIZED_ROOT' not in runner:
+              runner = runner.replace(marker, additions, 1)
+          start = runner.index('def validate_technology_spike(data: dict) -> dict:')
+          end = runner.index('\n\ndef main() -> int:', start)
+          runner = runner[:start] + payload['validateFunction'].rstrip() + runner[end:]
+          runner_path.write_text(runner, encoding='utf-8')
+
+          registry_path = root / 'config/test_center_registry.v1.json'
+          registry = json.loads(registry_path.read_text(encoding='utf-8'))
+          mapping = next(
+              (row for row in registry.get('affectedTestMappings', [])
+               if isinstance(row, dict) and row.get('mappingId') == 'affected.p2.owner-mode-source'),
+              None,
+          )
+          if not isinstance(mapping, dict):
+              raise SystemExit('affected.p2.owner-mode-source mapping missing')
+          mapping_paths = mapping.setdefault('pathPatterns', [])
+          for relative in payload['boundPaths']:
+              if relative not in mapping_paths:
+                  mapping_paths.append(relative)
+          profile = next(
+              (row for row in registry.get('projectTestProfiles', [])
+               if isinstance(row, dict) and row.get('stableCheckId') == 'tc.p2.acceptance-contract'),
+              None,
+          )
+          if not isinstance(profile, dict):
+              raise SystemExit('tc.p2.acceptance-contract profile missing')
+          for field in ('affectedPaths', 'inputPaths'):
+              values = profile.setdefault(field, [])
+              for relative in payload['boundPaths']:
+                  if relative not in values:
+                      values.append(relative)
+          registry_path.write_text(json.dumps(registry, indent=2) + '\n', encoding='utf-8')
+
+          progress_path = root / 'docs/roadmap/progress/2026-08-06-worker-a-p2-004-measurement-contract-repair.md'
+          progress = progress_path.read_text(encoding='utf-8')
+          if '## Exact-review hardening' not in progress:
+              progress += payload['progressAppendix']
+          progress_path.write_text(progress, encoding='utf-8')
+          PYCODE
+          rm '.github/workflows/temp-worker-a-p2-004-review-repair.yml'
+      - name: Validate hardened contract
+        shell: bash
+        run: |
+          python -m py_compile \
+            tool/p2_technology_spike.py \
+            tool/p2_technology_spike_contract_test.py \
+            tool/p2_task_platform_assertions.py
+          python tool/p2_technology_spike_contract_test.py --project .
+          python tool/p2_task_assertion_cli_test.py --project . --max-command-seconds 15
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/worker_a_test_center_v1_test.py
+      - name: Refresh canonical source manifest
+        shell: bash
+        run: |
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.after-first-refresh"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.after-first-refresh" SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Publish final review-repair commit
+        shell: bash
+        env:
+          CARRIER_SHA: ${{ github.sha }}
+          BRANCH: agent/a/p2-004-measurement-contract-repair
+        run: |
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse "origin/$BRANCH")" = "$CARRIER_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          test -n "$(git status --porcelain=v1)"
+          git commit -m "fix(p2-004): harden trusted measurement receipts"
+          git push origin "HEAD:$BRANCH"
