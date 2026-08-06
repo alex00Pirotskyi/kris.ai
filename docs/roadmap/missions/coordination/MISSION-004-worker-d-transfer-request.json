@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mission": "MISSION-004",
+  "requestedWorker": "D",
+  "previousWorker": "C",
+  "authorizedBy": "explicit user instruction",
+  "authorizedAt": "2026-08-06T09:15:09Z",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "pullRequest": 62,
+  "observedHead": "69e44e08395d89da1767c58b84655c289a969f66",
+  "observedTree": "1114c576fe67d9f9202f7f44c98a0af6e35a915a",
+  "scope": "Transfer the existing P4-001 mission without restarting valid implementation or evidence.",
+  "constraints": [
+    "Preserve Worker D MISSION-003 ownership.",
+    "Do not modify P4 source until the generated MISSION-004 claim names Worker D.",
+    "Do not merge PR #62 without recorded integration authorization."
+  ]
+}
