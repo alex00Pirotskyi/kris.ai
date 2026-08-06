@@ -1,21 +1,19 @@
 {
   "branch": "agent/f/P5-001-information-architecture",
-  "current": "P5-001 dependency-safe product-state repair is frozen at e11fcff4b0abdfb83faf07680b5c95d739dd918f / 096ad3cc1ca93ff72f6f8c0d572878a685aca4ad; known P5 state and recovery defects are repaired, the ungranted source-inventory delta is removed, and remaining publication gates are external ownership/P8/manifests/exact-CI/review dependencies",
+  "current": "P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled",
   "exclusivePaths": [
-    "lib/product/p5_information_architecture/**",
-    "lib/p5_ia_preview.dart",
-    "test/product/p5_information_architecture/**",
-    "docs/ux/**",
     "release/evidence/P5-*/**",
     "release/evidence/P22-*/**",
-    ".github/workflows/worker-f*.yml"
+    "lib/product/ux/**",
+    "test/product/ux/**",
+    "docs/ux/**"
   ],
-  "head": "e11fcff4b0abdfb83faf07680b5c95d739dd918f",
+  "head": "fd89a66925b90c75448ef33583349b90ca88531b",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-005",
   "pr": 72,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "096ad3cc1ca93ff72f6f8c0d572878a685aca4ad",
+  "tree": null,
   "worker": "F"
 }
