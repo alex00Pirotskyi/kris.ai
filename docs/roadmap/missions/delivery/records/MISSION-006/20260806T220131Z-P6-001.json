@@ -1,0 +1,23 @@
+{
+  "branch": "agent/g/mission-006-model-routing",
+  "commit": "4515c66f857d61fc415f37e737c6926e716ef3b5",
+  "evidence": [
+    "Supersedes MISSION-006 delivery record 20260806T215136Z-P6-001.json after a material product-test head change",
+    "P6-001 exact candidate 4515c66f857d61fc415f37e737c6926e716ef3b5 / b50ce144b685a000fbf71ea7231665367911c4e9",
+    "Artifact-bound benchmark source repair retained: approved/evaluation records reject benchmark evidence from another model digest",
+    "Additional evaluation-only regressions reject cross-artifact benchmark attachment and benchmark-bearing records without model artifact identity",
+    "Exact-head GitHub workflow query for 4515c66f857d61fc415f37e737c6926e716ef3b5 returned no runs",
+    "Worker A source-inventory coordination remains REQUESTED for this exact candidate",
+    "Worker B P8 authority review 4878375408 on 604905039aa26952045e69ebe6799ae464144635 retains REQUEST_CHANGES only for independent-review authenticity plus absent exact-head validation/final manifest"
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants/reviews the exact source-inventory append; regenerate SOURCE_MANIFEST.sha256 twice through its canonical owner; execute exact P6/affected CI; Worker B repairs independent-review authenticity, publishes P6-TC-001 and reviews the exact integration; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before these gates pass.",
+  "pullRequest": 76,
+  "recordedAt": "2026-08-06T22:01:31Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P6-001",
+  "tree": "b50ce144b685a000fbf71ea7231665367911c4e9",
+  "workExecutionId": "WRK-20260806T212031Z-a1470e7e",
+  "worker": "G"
+}
