@@ -36,6 +36,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                   TextField(
                     key: const Key('task-input'),
                     controller: _taskController,
+                    enabled: controller.canEditTaskDraft,
                     autofocus: true,
                     minLines: 3,
                     maxLines: 6,
@@ -233,7 +234,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     trailing: project.id == state.selectedProjectId
                         ? const Icon(Icons.check_circle)
                         : null,
-                    onTap: () => controller.selectProject(project.id),
+                    onTap: controller.canChangeProjectContext
+                        ? () => controller.selectProject(project.id)
+                        : null,
                   ),
                 ),
               const Divider(height: 1),
@@ -242,7 +245,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                 leading: const Icon(Icons.remove_circle_outline),
                 title: const Text('Preview no-project state'),
                 subtitle: const Text('Presentation fixture only'),
-                onTap: () => controller.apply(P5PrototypeAction.clearProject),
+                onTap: controller.canChangeProjectContext
+                    ? () => controller.apply(P5PrototypeAction.clearProject)
+                    : null,
               ),
             ],
           ),
@@ -283,7 +288,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     subtitle:
                         Text('${run.updatedAtLabel} • ${run.state.label}'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => controller.selectRun(run.id),
+                    onTap: controller.canSelectSavedRun
+                        ? () => controller.selectRun(run.id)
+                        : null,
                   ),
                 ),
             ],
