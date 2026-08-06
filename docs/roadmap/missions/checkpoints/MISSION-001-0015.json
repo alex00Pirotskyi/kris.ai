@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "sequence": 15,
+  "mission": "MISSION-001",
+  "worker": "A",
+  "status": "BLOCKED",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "pullRequest": 75,
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0014.json",
+  "supersededBy": null,
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "P2_SOURCE_LOCAL_FRONTIER_EXHAUSTED",
+    "P2_004_OWNER_MEDIATED_TEST_CENTER_UNION_REQUIRED",
+    "P8_001_CURRENT_HEAD_REQUEST_CHANGES",
+    "P8_001_CI_TRIGGER_REPAIR_PUBLISHED",
+    "P8_001_EXACT_HEAD_CI_STILL_NOT_EXECUTED",
+    "P8_001_ALL_SOURCE_FINDINGS_UNRESOLVED",
+    "P8_001_SOURCE_MANIFEST_STALE",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_ADDITIONAL_PROVEN_WORKER_A_SOURCE_DEFECT",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "blockers": [
+    {
+      "class": "P8_SOURCE_CONTRACT_REQUEST_CHANGES",
+      "detail": "PR #65 exact head a60284ca55a06dcdba13d2048bcfdd69e88db450 / 4b4401b33aebf8adaa5bf250e695ff756c3e8099 changes only the P8 workflow trigger. All predecessor-result, required-evidence, minProperties, RFC3339/time-ordering, durable evidence-resolution, and manifest findings remain unresolved."
+    },
+    {
+      "class": "P8_EXACT_CI_NOT_EXECUTED",
+      "detail": "The new push trigger produced zero GitHub workflow runs at review time."
+    },
+    {
+      "class": "OWNER_MEDIATED_UNION_REQUIRED",
+      "detail": "MISSION-002 has not produced the owner-preserving Test Center union required for P2-004."
+    },
+    {
+      "class": "P2_CONTROLLED_BEHAVIOR_EXTERNAL",
+      "detail": "Real tri-platform measurements, p2-controlled infrastructure, interactive self-hosted runners, exact attestations, signed provisioning, approvals, and controlled behavior receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, PR #64, and PR #78 remain draft and unmerged without authorization."
+    }
+  ],
+  "completed": [
+    "Re-resolved PR #65 after checkpoint MISSION-001-0014 and detected head movement from 71770c8ced388d83a278d951fd45a07afdec84db to a60284ca55a06dcdba13d2048bcfdd69e88db450.",
+    "Inspected the exact delta and confirmed it changes only .github/workflows/worker-b-p8-001-formal-test-hierarchy.yml to add push triggering and manifest publication on mission-branch pushes.",
+    "Confirmed no assurance schema, hierarchy, semantics, canonical contract, evidence model, or regression repair was included.",
+    "Confirmed GitHub allocated zero exact-head workflow runs for the new candidate at review time.",
+    "Published exact GitHub review 4878170527 with technical disposition REQUEST_CHANGES bound to a60284ca55a06dcdba13d2048bcfdd69e88db450 / 4b4401b33aebf8adaa5bf250e695ff756c3e8099.",
+    "Committed compact review rebind docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-a60284ca.json with SHA-256 7db8750ce03152501c35d34449ccfa0b0b19a088a14040920121216d5ed5b9e2.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T210126Z-P2-004.json at 721119bc1b15ead46ed0bd63ecf52f80644d42de / 140ef6a338eefe88e4ebc982f74fa936e1cbe52f.",
+    "Preserved the exhausted P2 source frontier and all no-promotion/no-merge boundaries."
+  ],
+  "evidence": {
+    "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+    "sourceCarrier": {
+      "pullRequest": 75,
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "sourceFrontier": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json",
+      "sha256": "edc9b6af5d86d779292374098c374c6783ed27edc23e0d519bf4a34c2810c320",
+      "classification": "NO_ADDITIONAL_PROVEN_SOURCE_DEFECT"
+    },
+    "currentOwnerCandidate": {
+      "pullRequest": 65,
+      "commit": "a60284ca55a06dcdba13d2048bcfdd69e88db450",
+      "tree": "4b4401b33aebf8adaa5bf250e695ff756c3e8099",
+      "parentCommit": "71770c8ced388d83a278d951fd45a07afdec84db",
+      "delta": "CI_TRIGGER_ONLY",
+      "workflowRuns": []
+    },
+    "currentReview": {
+      "githubReviewId": 4878170527,
+      "decision": "REQUEST_CHANGES",
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-a60284ca.json",
+      "artifactSha256": "7db8750ce03152501c35d34449ccfa0b0b19a088a14040920121216d5ed5b9e2",
+      "artifactCommit": "7ee1c8cc86631ed93b921f272d2bcf760e10176e",
+      "sidecarCommit": "bf1c055c0521e4d8e389829c93a9f226cd97453e"
+    },
+    "deliveryRecord": {
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T210126Z-P2-004.json",
+      "commit": "721119bc1b15ead46ed0bd63ecf52f80644d42de",
+      "tree": "140ef6a338eefe88e4ebc982f74fa936e1cbe52f"
+    }
+  },
+  "validation": [
+    "The live MISSION-001 claim remained unique.",
+    "The P8 workflow trigger change does not repair or invalidate the exact source findings; they remain applicable to the current candidate.",
+    "No exact-head workflow, check, status, or artifact was available for a60284ca55a06dcdba13d2048bcfdd69e88db450 at review time.",
+    "All fourteen P2 source/local gates remain PASS on the durable exact-tree artifact, with no additional Worker A source task executable.",
+    "No local/source result was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No technology selection, P3/P11 authorization, support promotion, or merge authorization was claimed."
+  ],
+  "nextAction": "Worker B repairs all inherited P8 source findings, regenerates SOURCE_MANIFEST.sha256 twice, obtains exact-head Ubuntu/Windows/macOS CI and artifacts, and requests fresh review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes only against that exact union."
+}
