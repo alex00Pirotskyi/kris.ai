@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "sequence": 16,
+  "mission": "MISSION-001",
+  "worker": "A",
+  "status": "BLOCKED",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "pullRequest": 75,
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0015.json",
+  "supersededBy": null,
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "P2_SOURCE_LOCAL_FRONTIER_EXHAUSTED",
+    "P2_ALL_FOURTEEN_SOURCE_LOCAL_GATES_PASS",
+    "P2_001_THROUGH_P2_013_CONTROLLED_ASSERTIONS_BLOCKED",
+    "P2_014_GUIDE_CONSISTENCY_PASS_NO_PROMOTION",
+    "P2_004_SOURCE_REPAIR_VALIDATED_IN_DURABLE_ARTIFACT",
+    "P2_004_OWNER_MEDIATED_TEST_CENTER_UNION_REQUIRED",
+    "P8_001_CURRENT_HEAD_REQUEST_CHANGES",
+    "P8_001_INHERITED_SOURCE_FINDINGS_UNRESOLVED",
+    "P8_001_FROZEN_WORKER_A_PASS_EVIDENCE_DELETED_WITHOUT_MIGRATION",
+    "P8_001_EXACT_HEAD_CI_NOT_EXECUTED",
+    "P8_001_SOURCE_MANIFEST_STALE",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_ADDITIONAL_PROVEN_WORKER_A_SOURCE_DEFECT",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "blockers": [
+    {
+      "class": "P8_SOURCE_CONTRACT_REQUEST_CHANGES",
+      "detail": "PR #65 exact candidate bd45bf6b1da0665a33a50b334b9dce2441965e62 / 8de9cdd793b570e5ae2d17b189b5b4c26002514c leaves predecessor-result, typed required-evidence, minProperties, RFC3339/time-ordering, durable evidence-resolution, source-manifest, and exact-CI findings unresolved."
+    },
+    {
+      "class": "P8_REVIEW_EVIDENCE_MIGRATION_REQUIRED",
+      "detail": "Commit 151d4555ddb7cd7a9928ca28389c7636a88fd6d9 removes docs/roadmap/anarchy/reviews/WORKER_B_A_REVIEW_89a1533.json and its SHA-256 sidecar. The complete immutable PASS artifact does not exist on protected main, the Worker A branch, or the canonical mission branch and must be migrated before deletion."
+    },
+    {
+      "class": "P8_EXACT_CI_NOT_EXECUTED",
+      "detail": "GitHub reports zero workflow runs for bd45bf6b1da0665a33a50b334b9dce2441965e62."
+    },
+    {
+      "class": "OWNER_MEDIATED_UNION_REQUIRED",
+      "detail": "MISSION-002 has not produced the owner-preserving Test Center union required to bind the trusted P2-004 sources into tc.p2.acceptance-contract while preserving current P8 authority."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane startup, memory, packaging, reliability, detach/reconnect, and process-tree measurements exist for Windows, macOS, and Linux."
+    },
+    {
+      "class": "CONTROLLED_BEHAVIORAL_INFRASTRUCTURE_ABSENT",
+      "detail": "P2-001 through P2-013 correctly remain blocked without the p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning/trust inputs, approvals, and governed receipts."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, PR #64, and PR #78 remain draft and unmerged without a valid authorized integration sequence."
+    }
+  ],
+  "completed": [
+    "Continued beyond the P2 source-frontier milestone and repeatedly re-resolved the actively moving PR #65 exact head.",
+    "Preserved the durable P2 source-frontier report proving all fourteen P2 source/local gates pass while P2-001 through P2-013 remain truthfully blocked without controlled evidence.",
+    "Reviewed current PR #65 head bd45bf6b1da0665a33a50b334b9dce2441965e62 / 8de9cdd793b570e5ae2d17b189b5b4c26002514c and confirmed the workflow/carrier commits do not repair inherited assurance source findings.",
+    "Found the candidate deletes the only committed immutable Worker A exact PASS artifact and sidecar without migration to protected main, Worker A, or canonical mission authority.",
+    "Published GitHub review 4878193392 with technical disposition REQUEST_CHANGES bound to the exact current PR #65 candidate.",
+    "Committed review artifact docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-bd45bf6b.json and checksum da517693c868e2c8a632e70fafe00569cdf6ee195d5edcc1ab622ad5542af339.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T210915Z-P2-004.json at f1f1e8f1fb0dcc9db3b242c0c9b991a55296f01a / b1a80f34f7834ee55178bb8d368fd1dc34a2b310.",
+    "Kept PR #64 frozen, PR #75 unadvanced, and all behavior, platform, support, technology-selection, downstream, and merge boundaries intact."
+  ],
+  "evidence": {
+    "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+    "parentCandidate": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "sourceCarrier": {
+      "pullRequest": 75,
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "sourceFrontier": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json",
+      "artifactSha256": "edc9b6af5d86d779292374098c374c6783ed27edc23e0d519bf4a34c2810c320",
+      "exportedTree": "6b821b719f23cb981653334c10a2215346771f08",
+      "sourceLocalGatePassCount": 14,
+      "controlledBlockedCount": 13,
+      "guideConsistencyPassCount": 1,
+      "sourceManifestEntries": 1130,
+      "sourceManifestSha256": "f6cf74a1b47fa36bf115089ef1dafeefeccd93ce114f0dcaedb6e99fed3e0804",
+      "repositoryMutationCheck": "PASS_CLEAN"
+    },
+    "currentOwnerCandidate": {
+      "pullRequest": 65,
+      "commit": "bd45bf6b1da0665a33a50b334b9dce2441965e62",
+      "tree": "8de9cdd793b570e5ae2d17b189b5b4c26002514c",
+      "workflowRuns": []
+    },
+    "currentReview": {
+      "githubReviewId": 4878193392,
+      "decision": "REQUEST_CHANGES",
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-bd45bf6b.json",
+      "artifactSha256": "da517693c868e2c8a632e70fafe00569cdf6ee195d5edcc1ab622ad5542af339",
+      "artifactCommit": "bb0cffb1226e70c1ddc82e5e492c46042f13f079",
+      "sidecarCommit": "9d4be5b0a43a4d0d6a06c32224ed05ecf32f0005"
+    },
+    "ownerUnion": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json",
+      "status": "OWNER_INTEGRATION_REQUIRED"
+    },
+    "deliveryRecord": {
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T210915Z-P2-004.json",
+      "commit": "f1f1e8f1fb0dcc9db3b242c0c9b991a55296f01a",
+      "tree": "b1a80f34f7834ee55178bb8d368fd1dc34a2b310"
+    },
+    "deliveryOverlay": {
+      "pullRequest": 78,
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false
+    }
+  },
+  "validation": [
+    "The live MISSION-001 claim remained unique after every mission-branch write.",
+    "All fourteen P2 source/local gates pass on the durable exact-tree artifact; no additional Worker A source task is executable.",
+    "The current P8 workflow/carrier changes do not repair inherited source findings and no exact-head run exists.",
+    "The frozen Worker A PASS artifact deletion is not a safe ownership cleanup unless the immutable review body and sidecar are first migrated and digest-verified.",
+    "No product source, product branch ref, protected-main identity, frozen Worker A parent, or valid review identity was rewritten by Worker A.",
+    "No local/source result was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No automation-host technology, controlled P2 behavior, capability support, platform support, release support, roadmap authority, P3 implementation, P11 implementation, or merge authorization was claimed."
+  ],
+  "nextAction": "Worker B restores or migrates the frozen Worker A PASS artifact and sidecar, repairs all inherited P8 source findings, regenerates SOURCE_MANIFEST.sha256 twice, settles exact-head Ubuntu/Windows/macOS CI and artifacts, and obtains fresh review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes only against that exact union."
+}
