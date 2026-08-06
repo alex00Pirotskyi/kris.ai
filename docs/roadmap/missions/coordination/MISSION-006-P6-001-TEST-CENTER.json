@@ -9,43 +9,42 @@
   },
   "authorityTransferred": false,
   "constraints": [
-    "Worker G branch contains no effective config/test_center*.json, schemas/test_center*.json, or tool/test_center*.py diff relative to current Worker B head.",
+    "Worker G branch contains no effective Test Center authority-file diff relative to current Worker B head.",
     "Worker B must publish any canonical P6-TC-001 module, stable ID, profile, mapping, and hierarchy binding on the authority branch.",
     "Do not create a second Test Center or result vocabulary.",
-    "Do not alter existing Worker B stable IDs or assurance semantics.",
     "Do not promote behavior, platform, capability, release, or GA support.",
     "Worker B exact-commit/tree review is required before integration."
   ],
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
   "currentBlockers": [
     "final candidate has no allocated exact-head CI run",
-    "SOURCE_MANIFEST.sha256 awaits executable canonical generator transport",
+    "SOURCE_MANIFEST.sha256 awaits an executable canonical generator",
     "Worker A source-inventory grant remains pending",
-    "Worker B must publish and review the authority-owned Test Center integration",
-    "a fresh genuinely independent exact-candidate review is required",
-    "PR #78 delivery enforcement remains open, draft, unmerged, and overlay-only",
+    "Worker B must publish and review P6-TC-001",
+    "fresh independent exact-candidate review is required",
+    "PR #78 remains overlay-only",
     "P6-002+ and merge remain unauthorized"
   ],
   "exactCandidate": {
-    "commit": "a6b44fdb2e99509fa1c32e8f1066bbd9648816ca",
+    "commit": "9c4a37eaea43592eaf3b2a5c6bf464e763b8a8f6",
     "independentReviewRequired": true,
     "pullRequest": 76,
     "requiredAuthorityReview": "Worker B",
     "reviewStatus": "PENDING_FINAL_CANDIDATE_VALIDATION",
-    "tree": "f586cc6cd14cad486c47bb426ccf98a4550b1d9a"
+    "tree": "cce99b82bef2baa565860db7b69f734972848815"
   },
   "requestedAt": "2026-08-06T11:42:30Z",
   "requester": {
     "branch": "agent/g/mission-006-model-routing",
     "mission": "MISSION-006",
-    "observedHead": "a6b44fdb2e99509fa1c32e8f1066bbd9648816ca",
-    "observedTree": "f586cc6cd14cad486c47bb426ccf98a4550b1d9a",
+    "observedHead": "9c4a37eaea43592eaf3b2a5c6bf464e763b8a8f6",
+    "observedTree": "cce99b82bef2baa565860db7b69f734972848815",
     "pullRequest": 76,
     "worker": "G",
     "workExecutionId": "WRK-20260806T195224Z-da9c199a"
   },
   "schemaVersion": 1,
-  "scope": "Worker B publishes P6-TC-001 for the hardened source-only model registry v2 candidate after ownership, manifest, and exact CI settle; Worker G supplies focused test paths and evidence but does not edit Test Center authority.",
+  "scope": "Worker B publishes P6-TC-001 for the single fail-closed core registry after ownership, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
   "sharedPaths": [],
   "status": "OWNER_HANDOFF_PENDING"
 }
