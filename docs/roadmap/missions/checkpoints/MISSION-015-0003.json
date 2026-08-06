@@ -1,0 +1,34 @@
+{
+  "blockers": [
+    "The exact canonical SOURCE_MANIFEST.sha256 remains unavailable to the connected GitHub write surface as file-backed content. The verified file is 128802 bytes, 1195 lines, SHA-256 bd779a0852c174880cc30f4888eb6975b2ab330a9d00480672e7683a574cd2f8, Git blob e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3.",
+    "GitHub contents-API commits and PR close/reopen events did not emit a run for the newly added one-shot publisher workflow. The workflow was removed and PR #66 was restored to the clean validated tree.",
+    "P24 exact-head enforcement and Worker B/Worker I review remain blocked until a file-capable writer publishes the manifest-only closure and required CI is green."
+  ],
+  "branch": "agent/j/P24-001-roadmap-as-data-adr",
+  "completed": [
+    "Resolved the repository-owned unified worker prompt from open draft PR #78 as a read-only execution-control overlay; the prompt is not integrated into protected main or the canonical mission branch.",
+    "Generated execution identity WRK-20260806T181323Z-842bd586 and resumed the existing valid Worker J MISSION-015 claim rather than creating a competing claim.",
+    "Re-resolved protected main, canonical mission-system branch, PR #78, PR #66, Worker J branch, source-manifest ownership, exact prior CI, and generated artifact identities.",
+    "Attempted a self-removing generator-verifying publisher on PR #66. Direct contents-API commits d23b287bef855528197cb9f3811790c56dd4d44c and 943277e45bbd40ca9e3d9a3873ac52611b525cd1 produced no Actions or check runs; closing and reopening PR #66 also produced no run for the new workflow.",
+    "Removed the temporary publisher in commit 1598e5f406f8ce74775730a94b36efb731b0192e. The final Worker J tree is restored to 9497333f131ccddcb229aa5b179927aeac8dfd31, identical to the validated generated-index tree.",
+    "Kept PR #66 open, draft, and unmerged; no roadmap authority, task completion, capability support, certification, release, production, GA, or adoption state was promoted."
+  ],
+  "mission": "MISSION-015",
+  "nextAction": "Using a file-capable GitHub writer, re-resolve PR #66 at commit 1598e5f406f8ce74775730a94b36efb731b0192e / tree 9497333f131ccddcb229aa5b179927aeac8dfd31; write only the generator-produced SOURCE_MANIFEST.sha256 bytes with SHA-256 bd779a0852c174880cc30f4888eb6975b2ab330a9d00480672e7683a574cd2f8 and Git blob e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3; rerun P24 Ubuntu/Windows/macOS and product-gates; then request Worker B and Worker I exact-SHA reviews.",
+  "observedHead": "1598e5f406f8ce74775730a94b36efb731b0192e",
+  "observedTree": "9497333f131ccddcb229aa5b179927aeac8dfd31",
+  "pullRequest": 66,
+  "recordedAtUtc": "2026-08-06T18:25:00Z",
+  "schemaVersion": 1,
+  "sequence": 3,
+  "supersededBy": null,
+  "validation": [
+    "Mission selection followed the existing-claim priority rule and the active MISSION-015 claim remained unique.",
+    "SOURCE_MANIFEST.sha256 remains owned by python tool/p1a_refresh_source_manifest.py .; no manual hash edit was made.",
+    "Temporary workflow cleanup restored the exact pre-attempt tree; PR #66 contains no publisher workflow or carrier file.",
+    "The PR #78 delivery-control overlay was used read-only and was not claimed or modified.",
+    "No merge, force-push, rebase, authority promotion, support promotion, certification claim, release claim, production claim, or GA claim occurred."
+  ],
+  "workExecutionId": "WRK-20260806T181323Z-842bd586",
+  "worker": "J"
+}
