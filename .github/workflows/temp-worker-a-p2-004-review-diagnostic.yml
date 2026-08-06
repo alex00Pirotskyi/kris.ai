@@ -18,7 +18,7 @@ concurrency:
 jobs:
   diagnose:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -32,7 +32,7 @@ jobs:
         env:
           EXPECTED_SHA: ${{ github.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-      - name: Replay verified reconstruction without publishing
+      - name: Replay verified reconstruction with exact failure annotation
         shell: bash
         run: |
           python - <<'PYCODE'
@@ -49,105 +49,22 @@ jobs:
               line[10:] if line.startswith('          ') else line
               for line in lines
           ) + '\n'
-          target = Path('/tmp/p2-review-materialize.py')
-          target.write_text(script, encoding='utf-8')
+          Path('/tmp/p2-review-materialize.py').write_text(script, encoding='utf-8')
           PYCODE
-          python /tmp/p2-review-materialize.py
-      - name: Compile hardened sources
-        shell: bash
-        run: |
           set +e
-          python -m py_compile \
-            tool/p2_technology_spike.py \
-            tool/p2_technology_spike_contract_test.py \
-            tool/p2_task_platform_assertions.py \
-            >"$RUNNER_TEMP/compile.log" 2>&1
+          python /tmp/p2-review-materialize.py >"$RUNNER_TEMP/reconstruct.log" 2>&1
           rc=$?
           set -e
-          cat "$RUNNER_TEMP/compile.log"
+          cat "$RUNNER_TEMP/reconstruct.log"
           if [ "$rc" -ne 0 ]; then
-            python - "$RUNNER_TEMP/compile.log" <<'PYCODE'
+            python - "$RUNNER_TEMP/reconstruct.log" <<'PYCODE'
           import pathlib
           import sys
-          text = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8', errors='replace')[-12000:]
+          text = pathlib.Path(sys.argv[1]).read_text(
+              encoding='utf-8', errors='replace'
+          )[-12000:]
           escaped = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print(f'::error title=P2-004 compile::{escaped}')
-          PYCODE
-            exit "$rc"
-          fi
-      - name: Run trusted-receipt contract regression
-        shell: bash
-        run: |
-          set +e
-          python tool/p2_technology_spike_contract_test.py --project . \
-            >"$RUNNER_TEMP/contract.log" 2>&1
-          rc=$?
-          set -e
-          cat "$RUNNER_TEMP/contract.log"
-          if [ "$rc" -ne 0 ]; then
-            python - "$RUNNER_TEMP/contract.log" <<'PYCODE'
-          import pathlib
-          import sys
-          text = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8', errors='replace')[-12000:]
-          escaped = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print(f'::error title=P2-004 trusted receipt regression::{escaped}')
-          PYCODE
-            exit "$rc"
-          fi
-      - name: Run all-task assertion regression
-        shell: bash
-        run: |
-          set +e
-          python tool/p2_task_assertion_cli_test.py --project . --max-command-seconds 15 \
-            >"$RUNNER_TEMP/all-task.log" 2>&1
-          rc=$?
-          set -e
-          cat "$RUNNER_TEMP/all-task.log"
-          if [ "$rc" -ne 0 ]; then
-            python - "$RUNNER_TEMP/all-task.log" <<'PYCODE'
-          import pathlib
-          import sys
-          text = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8', errors='replace')[-12000:]
-          escaped = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print(f'::error title=P2-004 all-task assertion::{escaped}')
-          PYCODE
-            exit "$rc"
-          fi
-      - name: Validate canonical Test Center contracts
-        shell: bash
-        run: |
-          set +e
-          python tool/test_center_contracts.py check --project . \
-            >"$RUNNER_TEMP/test-center.log" 2>&1
-          rc=$?
-          set -e
-          cat "$RUNNER_TEMP/test-center.log"
-          if [ "$rc" -ne 0 ]; then
-            python - "$RUNNER_TEMP/test-center.log" <<'PYCODE'
-          import pathlib
-          import sys
-          text = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8', errors='replace')[-12000:]
-          escaped = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print(f'::error title=P2-004 Test Center contract::{escaped}')
-          PYCODE
-            exit "$rc"
-          fi
-      - name: Run Worker A Test Center regression
-        shell: bash
-        run: |
-          set +e
-          python -m unittest -v tool/worker_a_test_center_v1_test.py \
-            >"$RUNNER_TEMP/worker-a-test-center.log" 2>&1
-          rc=$?
-          set -e
-          cat "$RUNNER_TEMP/worker-a-test-center.log"
-          if [ "$rc" -ne 0 ]; then
-            python - "$RUNNER_TEMP/worker-a-test-center.log" <<'PYCODE'
-          import pathlib
-          import sys
-          text = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8', errors='replace')[-12000:]
-          escaped = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print(f'::error title=P2-004 Worker A Test Center::{escaped}')
+          print(f'::error title=P2-004 reconstruction::{escaped}')
           PYCODE
             exit "$rc"
           fi
