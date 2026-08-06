@@ -81,18 +81,19 @@ jobs:
           set -euo pipefail
           python tool/test_center_contracts.py check --project .
           python tool/test_center_assurance_hierarchy.py check --project .
-          python tool/worker_f_p5_ia.py manifest --project . --check
-          python tool/worker_f_p5_ia.py check --project .
-          python tool/worker_f_p5_ia_test.py
+          python test/product/p5_information_architecture/worker_f_p5_ia.py manifest --project . --check
+          python test/product/p5_information_architecture/worker_f_p5_ia.py check --project .
+          python test/product/p5_information_architecture/worker_f_p5_ia_test.py
           python - <<'PY'
           import subprocess
+          checker='test/product/p5_information_architecture/worker_f_p5_ia.py'
           forward=subprocess.check_output([
-              'python','tool/worker_f_p5_ia.py','select','--project','.',
+              'python',checker,'select','--project','.',
               'lib/product/p5_information_architecture/p5_models.dart',
               'test/product/p5_information_architecture/p5_accessibility_test.dart',
           ],text=True).strip()
           reverse=subprocess.check_output([
-              'python','tool/worker_f_p5_ia.py','select','--project','.',
+              'python',checker,'select','--project','.',
               'test/product/p5_information_architecture/p5_accessibility_test.dart',
               'lib/product/p5_information_architecture/p5_models.dart',
           ],text=True).strip()

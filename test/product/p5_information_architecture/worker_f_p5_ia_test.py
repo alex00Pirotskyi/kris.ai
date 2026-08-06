@@ -21,7 +21,7 @@ REQUIRED_TEST_IDS = {
 
 
 def main() -> int:
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[3]
     required = [
         root / "lib/p5_ia_preview.dart",
         root / "lib/product/p5_information_architecture/p5_models.dart",

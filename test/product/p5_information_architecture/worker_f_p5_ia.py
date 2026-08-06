@@ -91,12 +91,10 @@ def worker_f_files(project: Path) -> list[Path]:
         project / ".github/workflows/worker-f-p5-001-information-architecture.yml",
         project / "config/test_center_registry.v1.json",
         project / "config/test_center_assurance_hierarchy.v1.json",
-        project / "docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md",
-        project / "docs/roadmap/progress/2026-08-06-mission-005-p5-001-recovery.md",
         project / "docs/ux/P5-001_INFORMATION_ARCHITECTURE.md",
         project / "lib/p5_ia_preview.dart",
-        project / "tool/worker_f_p5_ia.py",
-        project / "tool/worker_f_p5_ia_test.py",
+        project / "test/product/p5_information_architecture/worker_f_p5_ia.py",
+        project / "test/product/p5_information_architecture/worker_f_p5_ia_test.py",
     ]
     files = [path for path in explicit if path.is_file()]
     for base in (
@@ -263,7 +261,9 @@ def validate_source_boundary(project: Path) -> None:
                     f"forbidden side-effect token {token!r} in {path.relative_to(project)}"
                 )
 
-    checker = (project / "tool/worker_f_p5_ia.py").resolve()
+    checker = (
+        project / "test/product/p5_information_architecture/worker_f_p5_ia.py"
+    ).resolve()
     for path in worker_f_files(project):
         if path.resolve() == checker:
             continue
