@@ -1,0 +1,25 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "PR #65 exact head a60284ca55a06dcdba13d2048bcfdd69e88db450 / 4b4401b33aebf8adaa5bf250e695ff756c3e8099",
+    "PR #65 delta is CI-trigger-only after 71770c8ced388d83a278d951fd45a07afdec84db",
+    "GitHub review 4878170527 technical disposition REQUEST_CHANGES",
+    "Review artifact docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-a60284ca.json",
+    "Review artifact SHA-256 7db8750ce03152501c35d34449ccfa0b0b19a088a14040920121216d5ed5b9e2",
+    "All findings in MISSION-001-worker-a-pr65-review-71770c8c.json remain unresolved",
+    "Exact-head workflow runs: NONE at review time",
+    "P2 source frontier docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json",
+    "PR #75 source frontier handoff comment 5209082151"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "Worker B repairs the inherited P8-001 source findings, materializes the canonical manifest, settles exact-head CI/artifacts, and obtains fresh review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes only against that exact union.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T21:01:26Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P2-004",
+  "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+  "worker": "A"
+}
