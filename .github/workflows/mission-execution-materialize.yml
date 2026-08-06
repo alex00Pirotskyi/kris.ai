@@ -67,16 +67,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A -- \
-            SOURCE_MANIFEST.sha256 \
-            docs/roadmap/missions \
-            docs/roadmap/anarchy/materializer \
-            docs/roadmap/anarchy/materializer-v2 \
-            docs/roadmap/missions-bootstrap \
-            docs/roadmap/anarchy/workers/prompts \
-            docs/roadmap/anarchy/AUTONOMOUS_WORKER_EXECUTION.md \
-            tool/temp_anarchy_mission_materializer.py \
-            tool/temp_anarchy_mission_materializer_v2.py
+          git add -A -- .
           git diff --cached --check
           git commit -m 'ANARCHY: materialize protected mission execution OS'
           git push origin HEAD:agent/anarchy-autonomous-worker-missions
