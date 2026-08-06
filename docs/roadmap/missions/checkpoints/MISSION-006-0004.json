@@ -1,0 +1,39 @@
+{
+  "blockers": [
+    "GitHub allocated no exact-head workflow run for repaired candidate 85135efc0ddf3d7732c21c0c8e4074d0fb1c43ad after direct branch updates and PR reopen; CI status is BLOCKED_EXTERNAL, not PASS or FAIL.",
+    "SOURCE_MANIFEST.sha256 is stale for the repaired candidate and may be refreshed only by python tool/p1a_refresh_source_manifest.py . through an executable canonical environment.",
+    "test/product/source_contract_test.dart is a required global Dart source inventory edit but is outside the current Worker G exclusive-path list; exact ownership remains BLOCKED_BY_CONTRACT until the canonical claim is expanded or an owner coordination grant is published.",
+    "P6-TC-001 is an owner handoff only; Worker B has not published the canonical Test Center registration or exact authority review.",
+    "The prior independent review is invalidated by the source and evidence changes; a fresh genuinely independent exact-candidate review is required.",
+    "PR #78 remains open, draft, unmerged, action-required, and under blocking delivery-control findings; its ownership and delivery outputs remain overlay-only.",
+    "P6-002+, support promotion, and merge remain unauthorized."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Generated WORK_EXECUTION_ID WRK-20260806T191746Z-15c6e8b5 and resumed Worker G's sole MISSION-006 claim.",
+    "Re-resolved protected main, canonical mission branch, PR #78 overlay, Worker B head, PR #76, exact CI history, reviews, claims, and coordination.",
+    "Consumed Worker B head f14ba34e501972b13cd4310c4869c87e021012da through merge commit be8d610aa14d4148bf519662545e83d4f96f7c8a while restoring every Worker B-owned Test Center path to the owner version.",
+    "Repaired P6-C-001 by exposing a fail-closed public registry facade that compares digest, parameter size, and quantization before canonical-ID or alias approval reuse.",
+    "Added deterministic quarantine identities and regressions for digest, parameter-size, and quantization drift through both canonical IDs and aliases; quarantined identities cannot pass requireApproved.",
+    "Resolved P6-C-002 on the Worker G branch by removing all Test Center registry, hierarchy, and Test Center code diffs and converting evidence to a pending Worker B owner handoff.",
+    "Removed the unrelated release-validator expansion and its Worker G regression rather than broadening task scope.",
+    "Attempted a canonical narrow claim expansion through an exact-parent self-removing workflow; GitHub allocated no run, so the unused carrier was removed and no expansion was claimed."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Provide executable canonical generator transport or an exact claim/grant for test/product/source_contract_test.dart, refresh SOURCE_MANIFEST.sha256 through its owner, run focused and full exact-head CI for 85135efc0ddf3d7732c21c0c8e4074d0fb1c43ad, then request Worker B owner review and a fresh independent review. Do not merge or begin P6-002.",
+  "observedHead": "85135efc0ddf3d7732c21c0c8e4074d0fb1c43ad",
+  "observedTree": "cbba7fc5d7a1b2a020e49d4fb6b44af38e042732",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 4,
+  "supersededBy": null,
+  "validation": [
+    "Previous exact candidate 9799768170f13556d3098a07b40be922377f8deb passed P2 run 31108017750, P8 run 31108017702, and product-gates run 31108017755, but those results do not certify this changed candidate.",
+    "Current PR diff contains no config/test_center*.json or tool/test_center*.py paths.",
+    "Current PR diff is limited to SOURCE_MANIFEST.sha256, lib/product/model/**, release/evidence/P6-001/**, test/product/model/**, and test/product/source_contract_test.dart.",
+    "No workflow run or commit status exists for repaired head 85135efc0ddf3d7732c21c0c8e4074d0fb1c43ad.",
+    "No local Dart or Flutter toolchain is available in the execution environment; no local test claim is made."
+  ],
+  "worker": "G",
+  "workExecutionId": "WRK-20260806T191746Z-15c6e8b5"
+}
