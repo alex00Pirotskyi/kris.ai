@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
+      - 'docs/roadmap/missions/checkpoints/**'
+      - 'docs/roadmap/missions/coordination/**'
       - 'tool/mission_control.py'
   workflow_dispatch:
 
