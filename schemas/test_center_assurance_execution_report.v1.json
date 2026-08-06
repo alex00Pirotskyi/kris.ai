@@ -60,10 +60,24 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["assuranceLevel", "executionResult"],
+        "required": ["assuranceLevel", "executionResult", "evidenceBindings"],
         "properties": {
           "assuranceLevel": {"enum": ["architecture_lint", "unit", "component", "integration", "platform", "adversarial", "benchmark", "release"]},
-          "executionResult": {"$ref": "test_center.v1.json#/$defs/TestExecutionResult"}
+          "executionResult": {"$ref": "test_center.v1.json#/$defs/TestExecutionResult"},
+          "evidenceBindings": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["category", "evidenceId"],
+              "properties": {
+                "category": {"type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"},
+                "evidenceId": {"type": "string", "pattern": "^evidence\\.[a-z0-9._-]+$"}
+              }
+            }
+          }
         }
       }
     }

@@ -66,6 +66,59 @@ def validate_documents(
     )
 
 
+def _validate_predecessor_evidence_bindings(
+    report: dict[str, Any], hierarchy: dict[str, Any]
+) -> dict[str, Any]:
+    levels = {item["levelId"]: item for item in hierarchy["levels"]}
+    verified: list[dict[str, Any]] = []
+    for predecessor in report["predecessorResults"]:
+        level_id = predecessor["assuranceLevel"]
+        level = levels[level_id]
+        bindings = predecessor["evidenceBindings"]
+        categories = [item["category"] for item in bindings]
+        evidence_ids = [item["evidenceId"] for item in bindings]
+        canonical_ids = [
+            item["evidenceId"]
+            for item in predecessor["executionResult"].get("evidenceReferences", [])
+        ]
+        if len(categories) != len(set(categories)):
+            raise HierarchyError(
+                f"predecessor {level_id} contains duplicate evidence categories"
+            )
+        if len(evidence_ids) != len(set(evidence_ids)):
+            raise HierarchyError(
+                f"predecessor {level_id} reuses one evidence object across categories"
+            )
+        if len(canonical_ids) != len(set(canonical_ids)):
+            raise HierarchyError(
+                f"predecessor {level_id} contains duplicate canonical evidence IDs"
+            )
+        required = set(level["requiredEvidence"])
+        actual = set(categories)
+        if actual != required:
+            raise HierarchyError(
+                f"predecessor {level_id} evidence categories do not exactly satisfy "
+                f"level requirements; missing={sorted(required - actual)}, "
+                f"extra={sorted(actual - required)}"
+            )
+        if set(evidence_ids) != set(canonical_ids):
+            raise HierarchyError(
+                f"predecessor {level_id} evidence bindings do not exactly cover "
+                "canonical evidence objects"
+            )
+        verified.append(
+            {
+                "assuranceLevel": level_id,
+                "requiredEvidence": sorted(required),
+                "evidenceObjectCount": len(evidence_ids),
+            }
+        )
+    return {
+        "predecessorEvidenceProofs": verified,
+        "predecessorEvidenceProofCount": len(verified),
+    }
+
+
 def validate_assurance_execution_report(
     report: dict[str, Any],
     *,
@@ -76,7 +129,7 @@ def validate_assurance_execution_report(
     project: Path | None = None,
 ) -> dict[str, Any]:
     """Keep existing callers valid while enforcing durable proof resolution."""
-    return _validate_enforced_report(
+    validated = _validate_enforced_report(
         report,
         report_schema=report_schema,
         canonical_schema=canonical_schema,
@@ -84,6 +137,10 @@ def validate_assurance_execution_report(
         registry=registry,
         project=(project or DEFAULT_PROJECT),
     )
+    return {
+        **validated,
+        **_validate_predecessor_evidence_bindings(report, hierarchy),
+    }
 
 
 def project_documents(project: Path) -> tuple[dict[str, Any], ...]:
