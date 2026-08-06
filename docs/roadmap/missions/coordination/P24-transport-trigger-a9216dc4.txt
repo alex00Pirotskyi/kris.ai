@@ -1,0 +1,4 @@
+WORK_EXECUTION_ID=WRK-20260806T191553Z-a9216dc4
+TARGET_BRANCH=agent/j/P24-001-roadmap-as-data-adr
+EXPECTED_BASE=452a702efc4f5d572981660921ab08ae5927dc36
+PURPOSE=ephemeral synchronize trigger only
