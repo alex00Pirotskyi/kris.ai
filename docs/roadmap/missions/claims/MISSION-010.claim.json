@@ -1,6 +1,6 @@
 {
   "branch": "agent/e/native-parity-readiness",
-  "current": "P11 native readiness review repair published; exact dependency truth and Worker B ancestry reconciled while source-manifest materialization, Test Center owner publication, P2-004, native transports, and independent security review remain blocked",
+  "current": "P11 native readiness review repair published and latest Worker B P8 enforcement reconciled; source-manifest materialization, Test Center owner publication, P2-004, native transports, and independent security review remain blocked",
   "exclusivePaths": [
     ".github/workflows/worker-e-native-parity-readiness.yml",
     "docs/roadmap/progress/2026-08-05-p11-native-parity-readiness.md",
@@ -9,12 +9,12 @@
     "tool/worker_e*.py",
     "native/**"
   ],
-  "head": "c40570919721e651dc6e84956b7f7827aedada05",
+  "head": "493fd49efffba4a2986f4fb17cddc56a91b07254",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-010",
   "pr": 71,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "bee2fa0b2ef077d62ed74c9bf9ac7a4a92e42ccd",
+  "tree": "974bd068ac57777b35397b92fa127156fa33c4f7",
   "worker": "E"
 }
