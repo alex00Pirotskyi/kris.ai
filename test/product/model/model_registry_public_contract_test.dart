@@ -22,6 +22,7 @@ ModelToolProfile _tools() => ModelToolProfile(
 ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence(
       benchmarkId: 'p6.code-fixture-v1',
       taskClassId: 'code-generation',
+      modelDigest: 'sha256:registered',
       score: 1,
       scoreUnit: 'ratio',
       higherIsBetter: true,
@@ -101,6 +102,7 @@ void main() {
               direct.ModelBenchmarkEvidence(
                 benchmarkId: 'p6.code-fixture-v1',
                 taskClassId: 'code-generation',
+                modelDigest: 'sha256:registered',
                 score: 1,
                 scoreUnit: 'ratio',
                 higherIsBetter: true,
@@ -129,6 +131,59 @@ void main() {
         expect(resolved.approvedTaskClasses, isEmpty);
         expect(resolved.modelId, startsWith('$name:identity-mismatch:'));
       }
+    });
+
+    test('direct core import rejects cross-artifact benchmark evidence', () {
+      expect(
+        () => direct.ModelDefinition.approved(
+          providerId: 'ollama.local',
+          modelId: 'replacement:latest',
+          displayName: 'Replacement',
+          digest: 'sha256:replacement',
+          parameterSize: '14B',
+          quantization: 'Q4_K_M',
+          limits: direct.ModelLimits(
+            evidenceLevel: direct.ModelEvidenceLevel.measured,
+            contextWindowTokens: 32768,
+            maxOutputTokens: 4096,
+            maxConcurrentRequests: 1,
+            maxToolCallsPerTurn: 0,
+            supportsStreaming: true,
+          ),
+          toolProfile: direct.ModelToolProfile(
+            evidenceLevel: direct.ModelEvidenceLevel.measured,
+            supportsToolCalling: false,
+            supportsStructuredOutput: true,
+            supportsParallelToolCalls: false,
+          ),
+          dataBoundary: direct.ModelDataBoundary.localOnly,
+          cost: direct.ModelCostProfile.noDirectCharge(),
+          benchmarks: <direct.ModelBenchmarkEvidence>[
+            direct.ModelBenchmarkEvidence(
+              benchmarkId: 'p6.code-fixture-v1',
+              taskClassId: 'code-generation',
+              modelDigest: 'sha256:registered',
+              score: 1,
+              scoreUnit: 'ratio',
+              higherIsBetter: true,
+              sampleCount: 1,
+              measuredAt: DateTime.utc(2026, 8, 6),
+              evidenceUri: 'release/evidence/P6-001/benchmark.json',
+            ),
+          ],
+          approvedTaskClasses: const <String>['code-generation'],
+        ),
+        throwsA(
+          isA<direct.ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            allOf(
+              contains('belongs to artifact sha256:registered'),
+              contains('expected sha256:replacement'),
+            ),
+          ),
+        ),
+      );
     });
 
     test('approved records require an immutable artifact digest', () {
