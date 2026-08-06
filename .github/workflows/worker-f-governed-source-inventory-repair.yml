@@ -48,16 +48,17 @@ jobs:
           path=Path('test/product/source_contract_test.dart')
           text=path.read_text(encoding='utf-8')
           anchor="        'lib/main.dart',\n"
-          additions="""        'lib/p5_ia_preview.dart',
-        'lib/product/p5_information_architecture/p5_components.dart',
-        'lib/product/p5_information_architecture/p5_controller.dart',
-        'lib/product/p5_information_architecture/p5_fixtures.dart',
-        'lib/product/p5_information_architecture/p5_models.dart',
-        'lib/product/p5_information_architecture/p5_prototype.dart',
-        'lib/product/p5_information_architecture/p5_support_workspaces.dart',
-        'lib/product/p5_information_architecture/p5_task_workspaces.dart',
-        'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
-"""
+          additions=''.join((
+              "        'lib/p5_ia_preview.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_components.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_controller.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_fixtures.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_models.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_prototype.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_support_workspaces.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_task_workspaces.dart',\n",
+              "        'lib/product/p5_information_architecture/p5_verification_workspaces.dart',\n",
+          ))
           if additions in text:
               raise RuntimeError('P5 governed source entries already exist')
           if text.count(anchor) != 1:
