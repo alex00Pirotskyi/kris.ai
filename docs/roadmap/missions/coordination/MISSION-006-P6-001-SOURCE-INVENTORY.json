@@ -16,9 +16,9 @@
   ],
   "coordinationId": "MISSION-006-P6-001-SOURCE-INVENTORY",
   "exactCandidate": {
-    "commit": "570c20eab481e121fe91c41e336a38ec82d593c2",
+    "commit": "5e4253144815cf1d7e31d0af68f71086de325ba3",
     "pullRequest": 76,
-    "tree": "553e81386a5989f8c2cc364b83d64e718e882b39"
+    "tree": "32202b0b1d2776f79a22ba31ee387cb97d4f979b"
   },
   "operations": [
     "append-two-governed-dart-source-paths",
@@ -31,7 +31,7 @@
     "mission": "MISSION-006",
     "pullRequest": 76,
     "worker": "G",
-    "workExecutionId": "WRK-20260806T204210Z-568c05c2"
+    "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
   },
   "schemaVersion": 1,
   "sharedPaths": [
