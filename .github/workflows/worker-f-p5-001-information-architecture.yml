@@ -59,6 +59,31 @@ jobs:
       - name: Resolve Flutter dependencies
         shell: bash
         run: flutter pub get
+      - name: Materialize canonical Dart formatting
+        shell: bash
+        run: >-
+          dart format
+          lib/p5_ia_preview.dart
+          lib/product/p5_information_architecture
+          test/product/p5_information_architecture
+      - name: Verify formatter idempotence
+        shell: bash
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          lib/p5_ia_preview.dart
+          lib/product/p5_information_architecture
+          test/product/p5_information_architecture
+      - name: Upload canonical formatted P5 source and tests
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p5-001-formatted-source-${{ github.sha }}
+          path: |
+            lib/p5_ia_preview.dart
+            lib/product/p5_information_architecture
+            test/product/p5_information_architecture
+          if-no-files-found: error
+          retention-days: 30
       - name: Validate authority and dependency boundary
         shell: bash
         run: |
@@ -122,13 +147,6 @@ jobs:
             ${{ runner.temp }}/p5-manifest-receipt.json
           if-no-files-found: error
           retention-days: 30
-      - name: Check scoped Dart formatting
-        shell: bash
-        run: >-
-          dart format --output=none --set-exit-if-changed
-          lib/p5_ia_preview.dart
-          lib/product/p5_information_architecture
-          test/product/p5_information_architecture
       - name: Analyze Flutter source
         shell: bash
         run: flutter analyze
@@ -191,11 +209,16 @@ jobs:
           set -euo pipefail
           python tool/generated_state_guard.py audit --project . --strict
           git diff --check
-      - name: Verify committed generated artifacts
+      - name: Verify committed generated artifacts and formatting
         shell: bash
         run: |
           set -euo pipefail
-          git diff --exit-code -- release/evidence/P5-001/manifest.json SOURCE_MANIFEST.sha256
+          git diff --exit-code -- \
+            lib/p5_ia_preview.dart \
+            lib/product/p5_information_architecture \
+            test/product/p5_information_architecture \
+            release/evidence/P5-001/manifest.json \
+            SOURCE_MANIFEST.sha256
       - name: Verify final non-mutation hygiene
         shell: bash
         run: |
