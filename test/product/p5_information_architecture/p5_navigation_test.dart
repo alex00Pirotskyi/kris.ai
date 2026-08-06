@@ -51,6 +51,22 @@ void main() {
     expect(controller.state.verificationRequested, isTrue);
     expect(controller.sideEffects.isZero, isTrue);
   });
+  testWidgets('plan-only control is disabled after a run starts', (tester) async {
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    CheckboxListTile planOnlyTile() =>
+        tester.widget<CheckboxListTile>(find.byKey(const Key('plan-only-toggle')));
+
+    expect(planOnlyTile().onChanged, isNotNull);
+    await tapKey(tester, const Key('review-plan-button'));
+    await tapKey(tester, const Key('start-run-button'));
+
+    expect(controller.state.runState, P5RunPresentationState.running);
+    expect(planOnlyTile().onChanged, isNull);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
   testWidgets('existing run retains project and run context', (tester) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.runsActivity);

@@ -58,8 +58,10 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       subtitle: const Text(
                         'Review the plan without presenting an execution state.',
                       ),
-                      onChanged: (_) =>
-                          controller.apply(P5PrototypeAction.choosePlanOnly),
+                      onChanged: controller.canChangePlanOnly
+                          ? (_) => controller
+                              .apply(P5PrototypeAction.choosePlanOnly)
+                          : null,
                     ),
                   ),
                   Wrap(

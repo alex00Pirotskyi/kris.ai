@@ -116,17 +116,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          affected_tests="$RUNNER_TEMP/p5-affected-shipped-shell-tests.txt"
+          find test -type f \( \
+            -iname '*p2_app_shell*test.dart' -o \
+            -iname '*p2_owner*test.dart' -o \
+            -iname '*chat_studio*test.dart' \
+          \) -print | sort > "$affected_tests"
           while IFS= read -r test_path; do
             if [[ -n "$test_path" ]]; then
               flutter test "$test_path"
             fi
-          done < <(
-            find test -type f \(
-              -iname '*p2_app_shell*test.dart' -o
-              -iname '*p2_owner*test.dart' -o
-              -iname '*chat_studio*test.dart'
-            \) | sort
-          )
+          done < "$affected_tests"
       - name: Verify source-manifest idempotence
         shell: bash
         run: |
