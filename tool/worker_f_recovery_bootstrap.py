@@ -6,6 +6,7 @@ import runpy
 import sys
 import textwrap
 import types
+from pathlib import Path
 
 
 def safe_load(text: str):
@@ -40,6 +41,14 @@ def safe_load(text: str):
         }
     }
 
+
+patch_path = Path("tool/worker_f_recovery_patch.py")
+patch_text = patch_path.read_text(encoding="utf-8").replace(
+    '"326462d4db7c9ec895c7f9dbf09de84fa83b8895": "3c8d9d7ad78bd47970c4742f55a355e0768ea718",',
+    '"326462d4db7c9ec895c7f9dbf09de84fa83b8895": "3c8d9d7ad78bd47970c4742f55a355e0768ea718",\n'
+    '    "d581f21fb7b36ca9938cb55f24052df36df8475f": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",',
+)
+patch_path.write_text(patch_text, encoding="utf-8")
 
 yaml_module = types.ModuleType("yaml")
 yaml_module.safe_load = safe_load
