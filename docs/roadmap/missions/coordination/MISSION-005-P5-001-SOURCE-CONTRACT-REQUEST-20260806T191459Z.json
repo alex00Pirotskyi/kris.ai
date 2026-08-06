@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "coordinationId": "MISSION-005-P5-001-SOURCE-CONTRACT",
+  "status": "REQUESTED",
+  "workExecutionId": "WRK-20260806T191459Z-5C0A9E2D",
+  "recordedAt": "2026-08-06T19:22:00Z",
+  "requestingMission": "MISSION-005",
+  "requestingWorker": "F",
+  "task": "P5-001",
+  "branch": "agent/f/P5-001-information-architecture",
+  "pullRequest": 72,
+  "sourceHead": "0e27d120aa00f35c7c6bdf99fb1d3a8d0ee35b33",
+  "sourceTree": "c971c3210e9925369a97d02858f855467f73e342",
+  "dependencyMission": "MISSION-002",
+  "dependencyHead": "f14ba34e501972b13cd4310c4869c87e021012da",
+  "dependencyTree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+  "requestedOwnerMission": "MISSION-001",
+  "requestedPolicyOwnerMission": "MISSION-015",
+  "requestedPath": "test/product/source_contract_test.dart",
+  "requestedOperation": "append-governed-library-source-inventory",
+  "requestedGrant": {
+    "requestingMission": "MISSION-005",
+    "ownerMission": "MISSION-001",
+    "patterns": [
+      "test/product/source_contract_test.dart"
+    ],
+    "operations": [
+      "append-p5-governed-library-paths"
+    ],
+    "ownerReviewRequired": true
+  },
+  "requiredEntries": [
+    "lib/p5_ia_preview.dart",
+    "lib/product/p5_information_architecture/p5_components.dart",
+    "lib/product/p5_information_architecture/p5_controller.dart",
+    "lib/product/p5_information_architecture/p5_fixtures.dart",
+    "lib/product/p5_information_architecture/p5_models.dart",
+    "lib/product/p5_information_architecture/p5_prototype.dart",
+    "lib/product/p5_information_architecture/p5_support_workspaces.dart",
+    "lib/product/p5_information_architecture/p5_task_workspaces.dart",
+    "lib/product/p5_information_architecture/p5_verification_workspaces.dart"
+  ],
+  "rationale": "The governed source-contract test uses an exact analyzer-visible library inventory. P5-001 adds the listed library files, so product-gates require the inventory-only append. The live PR #78 delivery overlay classifies this path as UNDECLARED_PATH for MISSION-005 and contains no applicable grant.",
+  "scopeBoundary": [
+    "No production entry-point integration.",
+    "No ProductRuntime, Owner Mode, persistence, API, wire-format, native, network, credential, file-write, or process-execution change.",
+    "No behavior, platform, release, production, consumer, or GA support claim.",
+    "Only exact P5 library path literals may be appended to the existing expected source set.",
+    "Worker A or the policy owner must review the final exact candidate before acceptance."
+  ],
+  "otherOwnershipRepairs": [
+    "Remove docs/roadmap/progress P5 files from the product candidate because MISSION-005 does not own that namespace.",
+    "Restore Worker B versions of tool/test_center_assurance_hierarchy_test.py and tool/test_center_assurance_semantics.py.",
+    "Relocate tool/worker_f_p5_ia.py and tool/worker_f_p5_ia_test.py into test/product/p5_information_architecture before exact publication, or grant those exact paths explicitly."
+  ],
+  "blockingEffect": "P5-001 cannot publish an ownership-authorized exact merge candidate or request final review until this request is granted or the implementation is restructured to eliminate the path.",
+  "resolution": null
+}
