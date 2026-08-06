@@ -2,8 +2,8 @@
   "authorityOwner": {
     "branch": "agent/b/test-center-contracts-and-review",
     "mission": "MISSION-002",
-    "observedHead": "a60284ca55a06dcdba13d2048bcfdd69e88db450",
-    "observedTree": "4b4401b33aebf8adaa5bf250e695ff756c3e8099",
+    "observedHead": "b5528a2bf9d3fbf3841d2373a87c1f4a84ff741c",
+    "observedTree": "e865fd6f85215d0290874995443ba6a23688139d",
     "pullRequest": 65,
     "worker": "B"
   },
@@ -11,6 +11,7 @@
   "constraints": [
     "Worker G branch contains no effective Test Center authority-file diff relative to the consumed Worker B source authority.",
     "Worker B must publish any canonical P6-TC-001 module, stable ID, profile, mapping, and hierarchy binding on the authority branch.",
+    "P6-TC-001 must cover exact model identity and artifact-bound benchmark evidence; benchmark results for one digest must not approve another digest.",
     "Do not create a second Test Center or result vocabulary.",
     "Do not promote behavior, platform, capability, release, or GA support.",
     "Worker B exact-commit/tree review is required before integration."
@@ -20,31 +21,32 @@
     "exact candidate has no allocated exact-head CI run or status",
     "SOURCE_MANIFEST.sha256 awaits an executable canonical generator",
     "Worker A source-inventory grant remains pending",
+    "Worker B P8 authority head has live REQUEST_CHANGES findings and no exact-head CI",
     "Worker B must publish and review P6-TC-001",
     "fresh independent exact-candidate review is required after validation settles",
     "PR #78 remains overlay-only",
     "P6-002+ and merge remain unauthorized"
   ],
   "exactCandidate": {
-    "commit": "570c20eab481e121fe91c41e336a38ec82d593c2",
+    "commit": "5e4253144815cf1d7e31d0af68f71086de325ba3",
     "independentReviewRequired": true,
     "pullRequest": 76,
     "requiredAuthorityReview": "Worker B",
     "reviewStatus": "PENDING_FINAL_CANDIDATE_VALIDATION",
-    "tree": "553e81386a5989f8c2cc364b83d64e718e882b39"
+    "tree": "32202b0b1d2776f79a22ba31ee387cb97d4f979b"
   },
   "requestedAt": "2026-08-06T11:42:30Z",
   "requester": {
     "branch": "agent/g/mission-006-model-routing",
     "mission": "MISSION-006",
-    "observedHead": "570c20eab481e121fe91c41e336a38ec82d593c2",
-    "observedTree": "553e81386a5989f8c2cc364b83d64e718e882b39",
+    "observedHead": "5e4253144815cf1d7e31d0af68f71086de325ba3",
+    "observedTree": "32202b0b1d2776f79a22ba31ee387cb97d4f979b",
     "pullRequest": 76,
     "worker": "G",
-    "workExecutionId": "WRK-20260806T204210Z-568c05c2"
+    "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
   },
   "schemaVersion": 1,
-  "scope": "Worker B publishes P6-TC-001 for the single fail-closed identity-bound core registry after ownership, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
+  "scope": "Worker B publishes P6-TC-001 for the fail-closed identity-bound model registry including exact benchmark-to-artifact digest binding after ownership, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
   "sharedPaths": [],
   "status": "OWNER_HANDOFF_PENDING"
 }
