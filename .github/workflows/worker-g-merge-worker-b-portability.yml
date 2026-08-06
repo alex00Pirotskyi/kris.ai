@@ -1,0 +1,165 @@
+name: Worker G merge Worker B portability repair
+
+on:
+  push:
+    branches:
+      - agent/g/mission-006-model-routing
+    paths:
+      - '.github/workflows/worker-g-merge-worker-b-portability.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: worker-g-merge-worker-b-portability
+  cancel-in-progress: false
+
+jobs:
+  merge-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      WORKER_G_BRANCH: agent/g/mission-006-model-routing
+      WORKER_B_BRANCH: agent/b/test-center-contracts-and-review
+      EXPECTED_G_PARENT: c9a1c02f231a4e3b7881df20a3433494b2e41a4b
+      EXPECTED_B_HEAD: af68bf5e0dd60113ccf29c24140830214f238729
+      EXPECTED_B_TREE: fb859967cc9e210480308cac38be6b6da79251e0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/g/mission-006-model-routing
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Require exact uncontended heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_G_PARENT}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git fetch origin "${WORKER_G_BRANCH}" "${WORKER_B_BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_G_BRANCH})" = "${GITHUB_SHA}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_B_BRANCH})" = "${EXPECTED_B_HEAD}"
+          test "$(git rev-parse ${EXPECTED_B_HEAD}^{tree})" = "${EXPECTED_B_TREE}"
+      - name: Merge Worker B portability authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          set +e
+          git merge --no-commit --no-ff "refs/remotes/origin/${WORKER_B_BRANCH}"
+          merge_rc=$?
+          set -e
+          if [ "${merge_rc}" -gt 1 ]; then
+            echo "unexpected git merge exit code ${merge_rc}" >&2
+            exit "${merge_rc}"
+          fi
+          mapfile -t conflicts < <(git diff --name-only --diff-filter=U)
+          printf 'Merge conflicts (%s):\n' "${#conflicts[@]}"
+          printf '  %s\n' "${conflicts[@]:-}"
+          for path in "${conflicts[@]}"; do
+            case "${path}" in
+              SOURCE_MANIFEST.sha256|tool/test_center_assurance_semantics.py)
+                git checkout --theirs -- "${path}"
+                git add -- "${path}"
+                ;;
+              *)
+                echo "unexpected merge conflict: ${path}" >&2
+                exit 1
+                ;;
+            esac
+          done
+          test -z "$(git diff --name-only --diff-filter=U)"
+      - name: Bind P6 evidence to latest Worker B base
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          path = Path('release/evidence/P6-001/source-contract.json')
+          payload = json.loads(path.read_text(encoding='utf-8'))
+          payload['base'] = {
+              'branch': os.environ['WORKER_B_BRANCH'],
+              'commit': os.environ['EXPECTED_B_HEAD'],
+              'tree': os.environ['EXPECTED_B_TREE'],
+          }
+          path.write_text(
+              json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+          git add -- release/evidence/P6-001/source-contract.json
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Validate P8 portability authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report \
+            --project . \
+            --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          grep -F 'REPORT_SCHEMA.as_posix()' tool/test_center_assurance_semantics.py
+          grep -F 'test_windows_schema_path_is_canonical' tool/test_center_assurance_hierarchy_test.py
+          grep -F 'ref: ${{ github.event.pull_request.head.sha || github.sha }}' .github/workflows/p8-001-formal-test-hierarchy.yml
+      - name: Validate P6 and governed source inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/dart_format_scope.py --check
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/model/model_registry_test.dart \
+            test/product/source_contract_test.dart
+      - name: Remove workflow and refresh canonical source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/worker-g-merge-worker-b-portability.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          git add -- SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Revalidate final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/test_center_contracts.py check --project .
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/model/model_registry_test.dart \
+            test/product/source_contract_test.dart
+          git diff --cached --check
+      - name: Commit and push true merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${WORKER_G_BRANCH}" "${WORKER_B_BRANCH}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_G_BRANCH})" = "${GITHUB_SHA}"
+          test "$(git rev-parse refs/remotes/origin/${WORKER_B_BRANCH})" = "${EXPECTED_B_HEAD}"
+          git add -A -- .
+          git diff --cached --check
+          git commit -m 'merge(p6-001): synchronize Worker B portability repair'
+          test "$(git rev-list --parents -n 1 HEAD | awk '{print NF}')" -eq 3
+          git push origin "HEAD:${WORKER_G_BRANCH}"
