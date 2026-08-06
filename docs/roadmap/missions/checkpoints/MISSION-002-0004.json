@@ -1,0 +1,40 @@
+{
+  "blockers": [
+    "SOURCE_MANIFEST.sha256 is stale after the ownership cleanup. The exact expected canonical output was reconstructed as 1124 entries / 120143 bytes / SHA-256 e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f, but the available connector has no reliable large-file upload or workflow-dispatch operation.",
+    "GitHub reports zero workflow runs for exact current head f14ba34e501972b13cd4310c4869c87e021012da; connector-authored updates and a close/reopen event did not emit a check suite, so historical green runs cannot certify the candidate.",
+    "Fresh independent review is intentionally not requested until the manifest is current and exact-head CI settles. The only submitted review is historical and valid only for 22a8ac34cbf9601100f60c4929198f15f3c60e52 / ef5d5ae584b1d823502bf6f2191ecf4285d36845.",
+    "PR #65 remains draft and has no explicit integration authorization.",
+    "PR #78 remains open and unmerged; its delivery system is used only as a read-only execution-control overlay and is not claimed as integrated.",
+    "Accidental branch agent/b/p8-cleanup-safety-anchor has no PR and requires deletion when a non-force branch-deletion operation is available."
+  ],
+  "branch": "agent/b/test-center-contracts-and-review",
+  "completed": [
+    "Generated execution identity WRK-20260806T183708Z-6e9b43b3 and resumed the unique active Worker B / MISSION-002 claim.",
+    "Re-resolved protected main, PR #78 overlay authority, the mission-system branch, PR #65, current branch identity, reviews, threads, workflow runs, and changed files.",
+    "Preserved and completed the P8-A-001 actual assurance-report binding repair with a closed report schema linked to canonical TestExecutionResult evidence.",
+    "Preserved 32 deterministic negative regressions, exact Worker A migration bindings, and the Windows path-portability repair.",
+    "Removed unrelated PR14 and branch-hygiene changes, removed the undeclared legacy Worker B receipt, removed temporary manifest materializers, and moved the permanent workflow into the declared Worker B namespace.",
+    "Reduced PR #65 to 30 changed paths, all MISSION-002-owned or common generator-owned under the PR #78 delivery-policy overlay; no shared coordination grant was consumed.",
+    "Updated PR #65 title and body to bind current commit/tree, truthful blockers, invalidated review scopes, support boundaries, and the exact continuation point.",
+    "Kept PR #65 open, draft, unmerged, without ready-for-review transition, auto-merge, support promotion, or merge."
+  ],
+  "mission": "MISSION-002",
+  "nextAction": "Materialize the reconstructed canonical manifest on the ownership-clean exact branch, obtain exact-head GitHub Actions results and artifacts, rerun ownership/review-impact checks, then request fresh independent SOURCE/SECURITY/EVIDENCE/INTEGRATION review. Do not merge or promote support before those gates pass.",
+  "observedHead": "f14ba34e501972b13cd4310c4869c87e021012da",
+  "observedTree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+  "pullRequest": 65,
+  "schemaVersion": 1,
+  "sequence": 4,
+  "supersededBy": null,
+  "validation": [
+    "Historical repair-loop run 31105170010: Ubuntu, Windows, and macOS passed canonical Test Center contracts, 18 existing semantic regressions, actual assurance-report validation, 32 P8 regressions, and byte-identical double manifest generation; each lane failed only because the committed manifest was stale.",
+    "Historical exact artifact 8969196936 archive SHA-256: 532ae308cf61be9cbcb17a264b02eb4deddf2a76ef4d01d2b579e8a8321238f1.",
+    "Current exact candidate: f14ba34e501972b13cd4310c4869c87e021012da / tree 1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2.",
+    "Current PR #65 changed-file inventory: 30 paths; ownership classification PASS by overlay policy inspection (MISSION_OWNED or GENERATOR_OWNED only).",
+    "Current exact-head Actions query: total_count=0; exact-head CI classification BLOCKED_EXTERNAL.",
+    "Submitted reviews: one historical COMMENTED/REQUEST_CHANGES review bound to superseded 22a8ac34... identity; current review scopes SOURCE, SECURITY, EVIDENCE, and INTEGRATION are invalidated.",
+    "Inline review threads: 0.",
+    "Expected ownership-clean canonical manifest: 1124 entries, 120143 bytes, SHA-256 e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f; not yet committed and not claimed as materialized."
+  ],
+  "worker": "B"
+}

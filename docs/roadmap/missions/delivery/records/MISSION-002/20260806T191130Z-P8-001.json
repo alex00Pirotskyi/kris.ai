@@ -1,0 +1,22 @@
+{
+  "branch": "agent/b/test-center-contracts-and-review",
+  "commit": "f14ba34e501972b13cd4310c4869c87e021012da",
+  "evidence": [
+    "PR #65 exact candidate f14ba34e501972b13cd4310c4869c87e021012da / 1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+    "PR #65 ownership-clean inventory: 30 MISSION-002-owned or generator-owned paths",
+    "P8 repair-loop run 31105170010",
+    "GitHub Actions artifact 8969196936 sha256:532ae308cf61be9cbcb17a264b02eb4deddf2a76ef4d01d2b579e8a8321238f1",
+    "Expected canonical manifest: entries=1124 bytes=120143 sha256:e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f",
+    "Current exact-head workflow query: total_count=0"
+  ],
+  "mission": "MISSION-002",
+  "nextAction": "Materialize the canonical manifest on the ownership-clean branch, trigger and inspect exact-head CI, rerun ownership and review-impact checks, then request fresh independent review.",
+  "pullRequest": 65,
+  "recordedAt": "2026-08-06T19:11:30Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P8-001",
+  "tree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+  "workExecutionId": "WRK-20260806T183708Z-6e9b43b3",
+  "worker": "B"
+}
