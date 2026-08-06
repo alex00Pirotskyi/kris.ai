@@ -6,8 +6,13 @@ import '../domain.dart';
 final RegExp _providerIdPattern = RegExp(r'^[a-z0-9][a-z0-9._-]*$');
 final RegExp _modelIdPattern = RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:/+-]*$');
 final RegExp _stableIdPattern = RegExp(r'^[a-z0-9][a-z0-9._-]*$');
+final RegExp _sha256DigestPattern = RegExp(r'^sha256:[0-9a-f]{64}$');
+final RegExp _gitObjectIdPattern = RegExp(r'^[0-9a-f]{40}$');
 
-/// Validation failure for the declarative P6-001 model registry contract.
+const String _benchmarkEvidenceSchemaVersion = '1.0.0';
+const String _benchmarkEvidenceKind = 'MODEL_BENCHMARK_RESULT';
+const String _benchmarkEvidenceLocationKind = 'embedded_content_addressed';
+
 class ModelRegistryValidationException implements Exception {
   const ModelRegistryValidationException(this.message);
 
@@ -17,22 +22,19 @@ class ModelRegistryValidationException implements Exception {
   String toString() => 'ModelRegistryValidationException: $message';
 }
 
-/// Registry support is deliberately binary until later P6 tasks add measured
-/// compatibility and promotion workflows.
 enum ModelSupportStatus { evaluationOnly, approved }
 
-/// Where model input leaves the Kristin process boundary.
 enum ModelDataBoundary {
   localOnly,
   customerManagedEndpoint,
   thirdPartyService,
 }
 
-/// Strength of the evidence behind a declared limit or capability profile.
 enum ModelEvidenceLevel { unknown, declared, measured }
 
-/// Direct model invocation cost classification.
 enum ModelCostKind { unknown, noDirectCharge, metered }
+
+enum ModelResolutionDisposition { registeredIdentity, evaluationOnly }
 
 extension ModelSupportStatusWireName on ModelSupportStatus {
   String get wireName => switch (this) {
@@ -132,10 +134,14 @@ String _requiredString(
   if (value is! String || value.trim().isEmpty) {
     throw ModelRegistryValidationException('$path.$key must be non-empty');
   }
-  return value.trim();
+  return value;
 }
 
-String? _optionalString(Map<String, Object?> json, String key, String path) {
+String? _optionalString(
+  Map<String, Object?> json,
+  String key,
+  String path,
+) {
   final value = json[key];
   if (value == null) {
     return null;
@@ -145,7 +151,7 @@ String? _optionalString(Map<String, Object?> json, String key, String path) {
       '$path.$key must be null or non-empty',
     );
   }
-  return value.trim();
+  return value;
 }
 
 int? _optionalInt(Map<String, Object?> json, String key, String path) {
@@ -170,6 +176,14 @@ double? _optionalDouble(Map<String, Object?> json, String key, String path) {
   return value.toDouble();
 }
 
+bool _requiredBool(Map<String, Object?> json, String key, String path) {
+  final value = json[key];
+  if (value is! bool) {
+    throw ModelRegistryValidationException('$path.$key must be a boolean');
+  }
+  return value;
+}
+
 void _rejectUnknownKeys(
   Map<String, Object?> json,
   Set<String> allowed,
@@ -182,47 +196,6 @@ void _rejectUnknownKeys(
       '$path contains unsupported fields: ${unknown.join(', ')}',
     );
   }
-}
-
-bool _requiredBool(Map<String, Object?> json, String key, String path) {
-  final value = json[key];
-  if (value is! bool) {
-    throw ModelRegistryValidationException('$path.$key must be a boolean');
-  }
-  return value;
-}
-
-List<String> _canonicalIds(
-  Iterable<String> values, {
-  required String path,
-  RegExp? pattern,
-}) {
-  final result = <String>{};
-  for (final raw in values) {
-    final value = raw.trim();
-    if (value.isEmpty || (pattern != null && !pattern.hasMatch(value))) {
-      throw ModelRegistryValidationException('$path contains invalid id $raw');
-    }
-    if (!result.add(value)) {
-      throw ModelRegistryValidationException('$path contains duplicate $value');
-    }
-  }
-  return List<String>.unmodifiable(result.toList()..sort());
-}
-
-List<String> _canonicalStrings(
-  Iterable<String> values, {
-  required String path,
-}) {
-  final result = <String>{};
-  for (final raw in values) {
-    final value = raw.trim();
-    if (value.isEmpty) {
-      throw ModelRegistryValidationException('$path contains an empty value');
-    }
-    result.add(value);
-  }
-  return List<String>.unmodifiable(result.toList()..sort());
 }
 
 List<String> _stringList(
@@ -240,15 +213,308 @@ List<String> _stringList(
   }).toList(growable: false);
 }
 
+List<String> _canonicalIds(
+  Iterable<String> values, {
+  required String path,
+  RegExp? pattern,
+}) {
+  final result = <String>{};
+  for (final raw in values) {
+    if (raw != raw.trim() ||
+        raw.isEmpty ||
+        (pattern != null && !pattern.hasMatch(raw))) {
+      throw ModelRegistryValidationException('$path contains invalid id $raw');
+    }
+    if (!result.add(raw)) {
+      throw ModelRegistryValidationException('$path contains duplicate $raw');
+    }
+  }
+  return List<String>.unmodifiable(result.toList()..sort());
+}
+
+List<String> _canonicalStrings(
+  Iterable<String> values, {
+  required String path,
+}) {
+  final result = <String>{};
+  for (final raw in values) {
+    if (raw != raw.trim() || raw.isEmpty) {
+      throw ModelRegistryValidationException('$path contains an empty value');
+    }
+    result.add(raw);
+  }
+  return List<String>.unmodifiable(result.toList()..sort());
+}
+
 void _validateStableId(String value, String path) {
-  if (!_stableIdPattern.hasMatch(value)) {
+  if (value != value.trim() || !_stableIdPattern.hasMatch(value)) {
     throw ModelRegistryValidationException('$path has invalid id $value');
   }
 }
 
 String? _nonBlankOrNull(String? value) {
-  final normalized = value?.trim();
-  return normalized == null || normalized.isEmpty ? null : normalized;
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  if (value != value.trim()) {
+    throw const ModelRegistryValidationException(
+      'identity metadata must not contain surrounding whitespace',
+    );
+  }
+  return value;
+}
+
+String? _canonicalSha256OrNull(String? value, String path) {
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  if (value != value.trim() || !_sha256DigestPattern.hasMatch(value)) {
+    throw ModelRegistryValidationException(
+      '$path must be canonical sha256:<64 lowercase hex>',
+    );
+  }
+  return value;
+}
+
+String _canonicalSha256(String value, String path) {
+  final canonical = _canonicalSha256OrNull(value, path);
+  if (canonical == null) {
+    throw ModelRegistryValidationException(
+      '$path must be canonical sha256:<64 lowercase hex>',
+    );
+  }
+  return canonical;
+}
+
+String _canonicalGitObjectId(String value, String path) {
+  if (value != value.trim() || !_gitObjectIdPattern.hasMatch(value)) {
+    throw ModelRegistryValidationException(
+      '$path must be a 40-character lowercase Git object id',
+    );
+  }
+  return value;
+}
+
+Object? _canonicalizeJson(Object? value, String path) {
+  if (value == null || value is String || value is bool) {
+    return value;
+  }
+  if (value is num) {
+    if (!value.isFinite) {
+      throw ModelRegistryValidationException('$path contains non-finite number');
+    }
+    return value;
+  }
+  if (value is List) {
+    return List<Object?>.unmodifiable(
+      value
+          .asMap()
+          .entries
+          .map((entry) => _canonicalizeJson(entry.value, '$path[${entry.key}]'))
+          .toList(growable: false),
+    );
+  }
+  if (value is Map) {
+    final keys = value.keys.map((key) {
+      if (key is! String) {
+        throw ModelRegistryValidationException(
+          '$path contains a non-string object key',
+        );
+      }
+      return key;
+    }).toList()
+      ..sort();
+    final result = SplayTreeMap<String, Object?>();
+    for (final key in keys) {
+      result[key] = _canonicalizeJson(value[key], '$path.$key');
+    }
+    return result;
+  }
+  throw ModelRegistryValidationException(
+    '$path contains unsupported JSON value ${value.runtimeType}',
+  );
+}
+
+String _canonicalJson(Map<String, Object?> value, String path) {
+  final canonical = _canonicalizeJson(value, path);
+  return jsonEncode(canonical);
+}
+
+const List<int> _sha256K = <int>[
+  0x428a2f98,
+  0x71374491,
+  0xb5c0fbcf,
+  0xe9b5dba5,
+  0x3956c25b,
+  0x59f111f1,
+  0x923f82a4,
+  0xab1c5ed5,
+  0xd807aa98,
+  0x12835b01,
+  0x243185be,
+  0x550c7dc3,
+  0x72be5d74,
+  0x80deb1fe,
+  0x9bdc06a7,
+  0xc19bf174,
+  0xe49b69c1,
+  0xefbe4786,
+  0x0fc19dc6,
+  0x240ca1cc,
+  0x2de92c6f,
+  0x4a7484aa,
+  0x5cb0a9dc,
+  0x76f988da,
+  0x983e5152,
+  0xa831c66d,
+  0xb00327c8,
+  0xbf597fc7,
+  0xc6e00bf3,
+  0xd5a79147,
+  0x06ca6351,
+  0x14292967,
+  0x27b70a85,
+  0x2e1b2138,
+  0x4d2c6dfc,
+  0x53380d13,
+  0x650a7354,
+  0x766a0abb,
+  0x81c2c92e,
+  0x92722c85,
+  0xa2bfe8a1,
+  0xa81a664b,
+  0xc24b8b70,
+  0xc76c51a3,
+  0xd192e819,
+  0xd6990624,
+  0xf40e3585,
+  0x106aa070,
+  0x19a4c116,
+  0x1e376c08,
+  0x2748774c,
+  0x34b0bcb5,
+  0x391c0cb3,
+  0x4ed8aa4a,
+  0x5b9cca4f,
+  0x682e6ff3,
+  0x748f82ee,
+  0x78a5636f,
+  0x84c87814,
+  0x8cc70208,
+  0x90befffa,
+  0xa4506ceb,
+  0xbef9a3f7,
+  0xc67178f2,
+];
+
+int _rotr32(int value, int shift) {
+  const mask = 0xffffffff;
+  final normalized = value & mask;
+  return ((normalized >> shift) | ((normalized << (32 - shift)) & mask)) &
+      mask;
+}
+
+String _sha256Digest(List<int> input) {
+  const mask = 0xffffffff;
+  final bytes = <int>[...input];
+  final bitLength = input.length * 8;
+  bytes.add(0x80);
+  while (bytes.length % 64 != 56) {
+    bytes.add(0);
+  }
+  for (var shift = 56; shift >= 0; shift -= 8) {
+    bytes.add((bitLength >> shift) & 0xff);
+  }
+
+  var h0 = 0x6a09e667;
+  var h1 = 0xbb67ae85;
+  var h2 = 0x3c6ef372;
+  var h3 = 0xa54ff53a;
+  var h4 = 0x510e527f;
+  var h5 = 0x9b05688c;
+  var h6 = 0x1f83d9ab;
+  var h7 = 0x5be0cd19;
+
+  for (var offset = 0; offset < bytes.length; offset += 64) {
+    final w = List<int>.filled(64, 0);
+    for (var index = 0; index < 16; index++) {
+      final base = offset + index * 4;
+      w[index] = ((bytes[base] << 24) |
+              (bytes[base + 1] << 16) |
+              (bytes[base + 2] << 8) |
+              bytes[base + 3]) &
+          mask;
+    }
+    for (var index = 16; index < 64; index++) {
+      final s0 = _rotr32(w[index - 15], 7) ^
+          _rotr32(w[index - 15], 18) ^
+          (w[index - 15] >> 3);
+      final s1 = _rotr32(w[index - 2], 17) ^
+          _rotr32(w[index - 2], 19) ^
+          (w[index - 2] >> 10);
+      w[index] =
+          (w[index - 16] + s0 + w[index - 7] + s1) & mask;
+    }
+
+    var a = h0;
+    var b = h1;
+    var c = h2;
+    var d = h3;
+    var e = h4;
+    var f = h5;
+    var g = h6;
+    var h = h7;
+
+    for (var index = 0; index < 64; index++) {
+      final s1 = _rotr32(e, 6) ^ _rotr32(e, 11) ^ _rotr32(e, 25);
+      final ch = (e & f) ^ (((~e) & mask) & g);
+      final temp1 = (h + s1 + ch + _sha256K[index] + w[index]) & mask;
+      final s0 = _rotr32(a, 2) ^ _rotr32(a, 13) ^ _rotr32(a, 22);
+      final maj = (a & b) ^ (a & c) ^ (b & c);
+      final temp2 = (s0 + maj) & mask;
+
+      h = g;
+      g = f;
+      f = e;
+      e = (d + temp1) & mask;
+      d = c;
+      c = b;
+      b = a;
+      a = (temp1 + temp2) & mask;
+    }
+
+    h0 = (h0 + a) & mask;
+    h1 = (h1 + b) & mask;
+    h2 = (h2 + c) & mask;
+    h3 = (h3 + d) & mask;
+    h4 = (h4 + e) & mask;
+    h5 = (h5 + f) & mask;
+    h6 = (h6 + g) & mask;
+    h7 = (h7 + h) & mask;
+  }
+
+  final buffer = StringBuffer('sha256:');
+  for (final word in <int>[h0, h1, h2, h3, h4, h5, h6, h7]) {
+    buffer.write(word.toRadixString(16).padLeft(8, '0'));
+  }
+  return buffer.toString();
+}
+
+DateTime _parseUtcTimestamp(String raw, String path) {
+  DateTime value;
+  try {
+    value = DateTime.parse(raw);
+  } on FormatException {
+    throw ModelRegistryValidationException(
+      '$path must be an ISO-8601 timestamp',
+    );
+  }
+  if (!value.isUtc) {
+    throw ModelRegistryValidationException(
+      '$path must include a UTC offset',
+    );
+  }
+  return value.toUtc();
 }
 
 void _validateDiscoveredIdentity(ModelIdentity identity) {
@@ -264,11 +530,14 @@ void _validateDiscoveredIdentity(ModelIdentity identity) {
       'discovered model has invalid model id ${identity.name}',
     );
   }
+  _canonicalSha256OrNull(identity.digest, 'discovered.digest');
+  _nonBlankOrNull(identity.parameterSize);
+  _nonBlankOrNull(identity.quantization);
 }
 
 String _identityFingerprint(ModelIdentity identity) {
   final canonical = jsonEncode(<String, Object?>{
-    'digest': _nonBlankOrNull(identity.digest),
+    'digest': _canonicalSha256OrNull(identity.digest, 'discovered.digest'),
     'name': identity.name,
     'parameterSize': _nonBlankOrNull(identity.parameterSize),
     'providerId': identity.providerId,
@@ -282,7 +551,8 @@ List<String> _identityMismatches(
   ModelIdentity discovered,
 ) {
   final mismatches = <String>[];
-  if (registered.digest != _nonBlankOrNull(discovered.digest)) {
+  if (registered.digest !=
+      _canonicalSha256OrNull(discovered.digest, 'discovered.digest')) {
     mismatches.add('digest');
   }
   if (registered.parameterSize != _nonBlankOrNull(discovered.parameterSize)) {
@@ -294,7 +564,6 @@ List<String> _identityMismatches(
   return mismatches;
 }
 
-/// Token, concurrency, and streaming limits for one exact model identity.
 class ModelLimits {
   ModelLimits({
     required this.evidenceLevel,
@@ -330,27 +599,15 @@ class ModelLimits {
         json['evidenceLevel'],
         'limits.evidenceLevel',
       ),
-      contextWindowTokens: _optionalInt(
-        json,
-        'contextWindowTokens',
-        'limits',
-      ),
+      contextWindowTokens:
+          _optionalInt(json, 'contextWindowTokens', 'limits'),
       maxOutputTokens: _optionalInt(json, 'maxOutputTokens', 'limits'),
-      maxConcurrentRequests: _optionalInt(
-        json,
-        'maxConcurrentRequests',
-        'limits',
-      ),
-      maxToolCallsPerTurn: _optionalInt(
-        json,
-        'maxToolCallsPerTurn',
-        'limits',
-      ),
-      supportsStreaming: _requiredBool(
-        json,
-        'supportsStreaming',
-        'limits',
-      ),
+      maxConcurrentRequests:
+          _optionalInt(json, 'maxConcurrentRequests', 'limits'),
+      maxToolCallsPerTurn:
+          _optionalInt(json, 'maxToolCallsPerTurn', 'limits'),
+      supportsStreaming:
+          _requiredBool(json, 'supportsStreaming', 'limits'),
     );
   }
 
@@ -413,8 +670,6 @@ class ModelLimits {
       };
 }
 
-/// Tool-call capability profile. This is capability evidence, not permission to
-/// invoke a tool; later policy layers remain authoritative for permissions.
 class ModelToolProfile {
   ModelToolProfile({
     required this.evidenceLevel,
@@ -454,26 +709,14 @@ class ModelToolProfile {
         json['evidenceLevel'],
         'toolProfile.evidenceLevel',
       ),
-      supportsToolCalling: _requiredBool(
-        json,
-        'supportsToolCalling',
-        'toolProfile',
-      ),
-      supportsStructuredOutput: _requiredBool(
-        json,
-        'supportsStructuredOutput',
-        'toolProfile',
-      ),
-      supportsParallelToolCalls: _requiredBool(
-        json,
-        'supportsParallelToolCalls',
-        'toolProfile',
-      ),
-      supportedToolClasses: _stringList(
-        json,
-        'supportedToolClasses',
-        'toolProfile',
-      ),
+      supportsToolCalling:
+          _requiredBool(json, 'supportsToolCalling', 'toolProfile'),
+      supportsStructuredOutput:
+          _requiredBool(json, 'supportsStructuredOutput', 'toolProfile'),
+      supportsParallelToolCalls:
+          _requiredBool(json, 'supportsParallelToolCalls', 'toolProfile'),
+      supportedToolClasses:
+          _stringList(json, 'supportedToolClasses', 'toolProfile'),
     );
   }
 
@@ -513,8 +756,6 @@ class ModelToolProfile {
       };
 }
 
-/// Direct invocation price metadata. Hardware, energy, and operational costs
-/// remain outside P6-001 and are not inferred from no-direct-charge models.
 class ModelCostProfile {
   ModelCostProfile({
     required this.kind,
@@ -570,16 +811,10 @@ class ModelCostProfile {
     return ModelCostProfile(
       kind: _parseCostKind(json['kind'], 'cost.kind'),
       currencyCode: _optionalString(json, 'currencyCode', 'cost'),
-      inputPerMillionTokens: _optionalDouble(
-        json,
-        'inputPerMillionTokens',
-        'cost',
-      ),
-      outputPerMillionTokens: _optionalDouble(
-        json,
-        'outputPerMillionTokens',
-        'cost',
-      ),
+      inputPerMillionTokens:
+          _optionalDouble(json, 'inputPerMillionTokens', 'cost'),
+      outputPerMillionTokens:
+          _optionalDouble(json, 'outputPerMillionTokens', 'cost'),
       perRequest: _optionalDouble(json, 'perRequest', 'cost'),
       estimated: _requiredBool(json, 'estimated', 'cost'),
     );
@@ -600,8 +835,9 @@ class ModelCostProfile {
       outputPerMillionTokens,
       perRequest,
     ];
-    if (prices
-        .any((price) => price != null && (!price.isFinite || price < 0))) {
+    if (prices.any(
+      (price) => price != null && (!price.isFinite || price < 0),
+    )) {
       throw const ModelRegistryValidationException(
         'cost values must be finite and non-negative',
       );
@@ -641,10 +877,8 @@ class ModelCostProfile {
       };
 }
 
-/// Repository- or harness-backed measurement for one task class and exact
-/// model artifact. Benchmark evidence is never transferable across digests.
 class ModelBenchmarkEvidence {
-  ModelBenchmarkEvidence({
+  ModelBenchmarkEvidence._({
     required this.benchmarkId,
     required this.taskClassId,
     required this.modelDigest,
@@ -652,10 +886,146 @@ class ModelBenchmarkEvidence {
     required this.scoreUnit,
     required this.higherIsBetter,
     required this.sampleCount,
-    required DateTime measuredAt,
-    required this.evidenceUri,
-  }) : measuredAt = measuredAt.toUtc() {
-    _validate();
+    required this.measuredAt,
+    required this.candidateCommit,
+    required this.candidateTree,
+    required this.evidenceSha256,
+    required this.evidencePayloadJson,
+  });
+
+  factory ModelBenchmarkEvidence._fromEvidencePayload({
+    required Map<String, Object?> payload,
+  }) {
+    final canonicalPayload =
+        _canonicalJson(payload, 'benchmark.evidence.payload');
+    final parsed = (jsonDecode(canonicalPayload) as Map)
+        .cast<String, Object?>();
+    _rejectUnknownKeys(
+      parsed,
+      const <String>{
+        'schemaVersion',
+        'kind',
+        'candidateCommit',
+        'candidateTree',
+        'benchmarkId',
+        'taskClassId',
+        'modelDigest',
+        'score',
+        'scoreUnit',
+        'higherIsBetter',
+        'sampleCount',
+        'measuredAt',
+      },
+      'benchmark.evidence.payload',
+    );
+    if (_requiredString(
+          parsed,
+          'schemaVersion',
+          'benchmark.evidence.payload',
+        ) !=
+        _benchmarkEvidenceSchemaVersion) {
+      throw const ModelRegistryValidationException(
+        'benchmark evidence schemaVersion must be 1.0.0',
+      );
+    }
+    if (_requiredString(parsed, 'kind', 'benchmark.evidence.payload') !=
+        _benchmarkEvidenceKind) {
+      throw const ModelRegistryValidationException(
+        'benchmark evidence kind must be MODEL_BENCHMARK_RESULT',
+      );
+    }
+    final benchmarkId = _requiredString(
+      parsed,
+      'benchmarkId',
+      'benchmark.evidence.payload',
+    );
+    final taskClassId = _requiredString(
+      parsed,
+      'taskClassId',
+      'benchmark.evidence.payload',
+    );
+    _validateStableId(benchmarkId, 'benchmark.benchmarkId');
+    _validateStableId(taskClassId, 'benchmark.taskClassId');
+    final modelDigest = _canonicalSha256(
+      _requiredString(
+        parsed,
+        'modelDigest',
+        'benchmark.evidence.payload',
+      ),
+      'benchmark.modelDigest',
+    );
+    final score = _optionalDouble(
+      parsed,
+      'score',
+      'benchmark.evidence.payload',
+    );
+    final sampleCount = _optionalInt(
+      parsed,
+      'sampleCount',
+      'benchmark.evidence.payload',
+    );
+    if (score == null || !score.isFinite) {
+      throw const ModelRegistryValidationException(
+        'benchmark.score must be finite',
+      );
+    }
+    if (sampleCount == null || sampleCount <= 0) {
+      throw const ModelRegistryValidationException(
+        'benchmark.sampleCount must be positive',
+      );
+    }
+    final scoreUnit = _requiredString(
+      parsed,
+      'scoreUnit',
+      'benchmark.evidence.payload',
+    );
+    if (scoreUnit != scoreUnit.trim()) {
+      throw const ModelRegistryValidationException(
+        'benchmark.scoreUnit must be canonical',
+      );
+    }
+    final measuredAt = _parseUtcTimestamp(
+      _requiredString(
+        parsed,
+        'measuredAt',
+        'benchmark.evidence.payload',
+      ),
+      'benchmark.measuredAt',
+    );
+    final candidateCommit = _canonicalGitObjectId(
+      _requiredString(
+        parsed,
+        'candidateCommit',
+        'benchmark.evidence.payload',
+      ),
+      'benchmark.candidateCommit',
+    );
+    final candidateTree = _canonicalGitObjectId(
+      _requiredString(
+        parsed,
+        'candidateTree',
+        'benchmark.evidence.payload',
+      ),
+      'benchmark.candidateTree',
+    );
+    return ModelBenchmarkEvidence._(
+      benchmarkId: benchmarkId,
+      taskClassId: taskClassId,
+      modelDigest: modelDigest,
+      score: score,
+      scoreUnit: scoreUnit,
+      higherIsBetter: _requiredBool(
+        parsed,
+        'higherIsBetter',
+        'benchmark.evidence.payload',
+      ),
+      sampleCount: sampleCount,
+      measuredAt: measuredAt,
+      candidateCommit: candidateCommit,
+      candidateTree: candidateTree,
+      evidenceSha256: _sha256Digest(utf8.encode(canonicalPayload)),
+      evidencePayloadJson: canonicalPayload,
+    );
   }
 
   factory ModelBenchmarkEvidence.fromJson(Map<String, Object?> json) {
@@ -670,42 +1040,71 @@ class ModelBenchmarkEvidence {
         'higherIsBetter',
         'sampleCount',
         'measuredAt',
-        'evidenceUri',
+        'evidence',
       },
       'benchmark',
     );
-    final measuredAtRaw = _requiredString(json, 'measuredAt', 'benchmark');
-    final DateTime measuredAt;
-    try {
-      measuredAt = DateTime.parse(measuredAtRaw);
-    } on FormatException {
+    final evidence = _objectMap(json['evidence'], 'benchmark.evidence');
+    _rejectUnknownKeys(
+      evidence,
+      const <String>{
+        'locationKind',
+        'sha256',
+        'payload',
+      },
+      'benchmark.evidence',
+    );
+    if (_requiredString(
+          evidence,
+          'locationKind',
+          'benchmark.evidence',
+        ) !=
+        _benchmarkEvidenceLocationKind) {
       throw const ModelRegistryValidationException(
-        'benchmark.measuredAt must be an ISO-8601 timestamp',
+        'benchmark.evidence.locationKind must be embedded_content_addressed',
       );
     }
-    if (!measuredAt.isUtc) {
-      throw const ModelRegistryValidationException(
-        'benchmark.measuredAt must include a UTC offset',
+    final expectedSha = _canonicalSha256(
+      _requiredString(evidence, 'sha256', 'benchmark.evidence'),
+      'benchmark.evidence.sha256',
+    );
+    final payload =
+        _objectMap(evidence['payload'], 'benchmark.evidence.payload');
+    final verified =
+        ModelBenchmarkEvidence._fromEvidencePayload(payload: payload);
+    if (verified.evidenceSha256 != expectedSha) {
+      throw ModelRegistryValidationException(
+        'benchmark evidence digest mismatch: expected $expectedSha, '
+        'computed ${verified.evidenceSha256}',
       );
     }
+
+    final measuredAt = _parseUtcTimestamp(
+      _requiredString(json, 'measuredAt', 'benchmark'),
+      'benchmark.measuredAt',
+    );
     final score = _optionalDouble(json, 'score', 'benchmark');
     final sampleCount = _optionalInt(json, 'sampleCount', 'benchmark');
-    if (score == null || sampleCount == null) {
+    final topLevelMatches =
+        _requiredString(json, 'benchmarkId', 'benchmark') ==
+            verified.benchmarkId &&
+        _requiredString(json, 'taskClassId', 'benchmark') ==
+            verified.taskClassId &&
+        _requiredString(json, 'modelDigest', 'benchmark') ==
+            verified.modelDigest &&
+        score == verified.score &&
+        _requiredString(json, 'scoreUnit', 'benchmark') ==
+            verified.scoreUnit &&
+        _requiredBool(json, 'higherIsBetter', 'benchmark') ==
+            verified.higherIsBetter &&
+        sampleCount == verified.sampleCount &&
+        measuredAt == verified.measuredAt;
+    if (!topLevelMatches) {
       throw const ModelRegistryValidationException(
-        'benchmark score and sampleCount are required',
+        'benchmark metadata does not match immutable evidence payload',
       );
     }
-    return ModelBenchmarkEvidence(
-      benchmarkId: _requiredString(json, 'benchmarkId', 'benchmark'),
-      taskClassId: _requiredString(json, 'taskClassId', 'benchmark'),
-      modelDigest: _requiredString(json, 'modelDigest', 'benchmark'),
-      score: score,
-      scoreUnit: _requiredString(json, 'scoreUnit', 'benchmark'),
-      higherIsBetter: _requiredBool(json, 'higherIsBetter', 'benchmark'),
-      sampleCount: sampleCount,
-      measuredAt: measuredAt,
-      evidenceUri: _requiredString(json, 'evidenceUri', 'benchmark'),
-    );
+    return verified;
   }
 
   final String benchmarkId;
@@ -716,37 +1115,12 @@ class ModelBenchmarkEvidence {
   final bool higherIsBetter;
   final int sampleCount;
   final DateTime measuredAt;
-  final String evidenceUri;
+  final String candidateCommit;
+  final String candidateTree;
+  final String evidenceSha256;
+  final String evidencePayloadJson;
 
-  void _validate() {
-    _validateStableId(benchmarkId, 'benchmark.benchmarkId');
-    _validateStableId(taskClassId, 'benchmark.taskClassId');
-    if (modelDigest.trim().isEmpty) {
-      throw const ModelRegistryValidationException(
-        'benchmark.modelDigest must be non-empty',
-      );
-    }
-    if (!score.isFinite) {
-      throw const ModelRegistryValidationException(
-        'benchmark.score must be finite',
-      );
-    }
-    if (scoreUnit.trim().isEmpty) {
-      throw const ModelRegistryValidationException(
-        'benchmark.scoreUnit must be non-empty',
-      );
-    }
-    if (sampleCount <= 0) {
-      throw const ModelRegistryValidationException(
-        'benchmark.sampleCount must be positive',
-      );
-    }
-    if (evidenceUri.trim().isEmpty) {
-      throw const ModelRegistryValidationException(
-        'benchmark.evidenceUri must be non-empty',
-      );
-    }
-  }
+  String get evidenceLocationKind => _benchmarkEvidenceLocationKind;
 
   Map<String, Object?> toJson() => <String, Object?>{
         'benchmarkId': benchmarkId,
@@ -757,11 +1131,14 @@ class ModelBenchmarkEvidence {
         'higherIsBetter': higherIsBetter,
         'sampleCount': sampleCount,
         'measuredAt': measuredAt.toIso8601String(),
-        'evidenceUri': evidenceUri,
+        'evidence': <String, Object?>{
+          'locationKind': _benchmarkEvidenceLocationKind,
+          'sha256': evidenceSha256,
+          'payload': jsonDecode(evidencePayloadJson),
+        },
       };
 }
 
-/// Non-secret metadata describing which vault reference a provider expects.
 class CredentialReferenceRequirement {
   CredentialReferenceRequirement({
     required this.referenceId,
@@ -771,7 +1148,7 @@ class CredentialReferenceRequirement {
   }) {
     _validateStableId(referenceId, 'credential.referenceId');
     _validateStableId(resolver, 'credential.resolver');
-    if (purpose.trim().isEmpty) {
+    if (purpose != purpose.trim() || purpose.isEmpty) {
       throw const ModelRegistryValidationException(
         'credential.purpose must be non-empty',
       );
@@ -807,8 +1184,6 @@ class CredentialReferenceRequirement {
       };
 }
 
-/// Registered provider instance. A provider ID represents one concrete data
-/// boundary; deployments with different boundaries use different provider IDs.
 class ModelProviderDescriptor {
   ModelProviderDescriptor({
     required this.providerId,
@@ -820,14 +1195,17 @@ class ModelProviderDescriptor {
             List<CredentialReferenceRequirement>.unmodifiable(
           credentialRequirements.toList()
             ..sort(
-                (left, right) => left.referenceId.compareTo(right.referenceId)),
+              (left, right) =>
+                  left.referenceId.compareTo(right.referenceId),
+            ),
         ) {
-    if (!_providerIdPattern.hasMatch(providerId)) {
+    if (providerId != providerId.trim() ||
+        !_providerIdPattern.hasMatch(providerId)) {
       throw ModelRegistryValidationException(
         'provider.providerId has invalid id $providerId',
       );
     }
-    if (displayName.trim().isEmpty) {
+    if (displayName != displayName.trim() || displayName.isEmpty) {
       throw const ModelRegistryValidationException(
         'provider.displayName must be non-empty',
       );
@@ -857,10 +1235,8 @@ class ModelProviderDescriptor {
     return ModelProviderDescriptor(
       providerId: _requiredString(json, 'providerId', 'provider'),
       displayName: _requiredString(json, 'displayName', 'provider'),
-      dataBoundary: _parseDataBoundary(
-        json['dataBoundary'],
-        'provider.dataBoundary',
-      ),
+      dataBoundary:
+          _parseDataBoundary(json['dataBoundary'], 'provider.dataBoundary'),
       credentialRequirements: _objectList(
         json['credentialRequirements'] ?? const <Object?>[],
         'provider.credentialRequirements',
@@ -887,8 +1263,6 @@ class ModelProviderDescriptor {
       };
 }
 
-/// Immutable v2 model record. Evaluation-only records can carry measurements,
-/// but only [approved] can expose approved task classes.
 class ModelDefinition {
   ModelDefinition._({
     required this.providerId,
@@ -903,10 +1277,11 @@ class ModelDefinition {
     required this.dataBoundary,
     required this.cost,
     required this.benchmarks,
-    required this.approvedTaskClasses,
-    required this.supportStatus,
+    required List<String> approvedTaskClasses,
+    required ModelSupportStatus supportStatus,
     required this.evaluationReasons,
-  }) {
+  })  : _approvedTaskClasses = approvedTaskClasses,
+        _supportStatus = supportStatus {
     _validateIdentity();
   }
 
@@ -926,6 +1301,8 @@ class ModelDefinition {
         const <ModelBenchmarkEvidence>[],
     Iterable<String> evaluationReasons = const <String>[],
   }) {
+    final canonicalDigest =
+        _canonicalSha256OrNull(digest, 'model.digest');
     final canonicalReasons = _canonicalStrings(
       evaluationReasons,
       path: 'model.evaluationReasons',
@@ -937,7 +1314,7 @@ class ModelDefinition {
       providerId: providerId,
       modelId: modelId,
       displayName: displayName,
-      digest: _nonBlankOrNull(digest),
+      digest: canonicalDigest,
       parameterSize: _nonBlankOrNull(parameterSize),
       quantization: _nonBlankOrNull(quantization),
       aliases: _canonicalIds(
@@ -971,14 +1348,19 @@ class ModelDefinition {
     required Iterable<ModelBenchmarkEvidence> benchmarks,
     required Iterable<String> approvedTaskClasses,
   }) {
-    final canonicalDigest = _nonBlankOrNull(digest);
+    final blockers = <String>[];
+    String? canonicalDigest;
+    try {
+      canonicalDigest = _canonicalSha256OrNull(digest, 'model.digest');
+    } on ModelRegistryValidationException catch (error) {
+      blockers.add(error.message);
+    }
     final canonicalBenchmarks = _canonicalBenchmarks(benchmarks);
     final canonicalTaskClasses = _canonicalIds(
       approvedTaskClasses,
       path: 'model.approvedTaskClasses',
       pattern: _stableIdPattern,
     );
-    final blockers = <String>[];
     if (canonicalDigest == null) {
       blockers.add('artifact digest is required for approval');
     }
@@ -993,6 +1375,17 @@ class ModelDefinition {
         }
       }
     }
+    if (canonicalBenchmarks.isNotEmpty) {
+      final candidateCommits =
+          canonicalBenchmarks.map((item) => item.candidateCommit).toSet();
+      final candidateTrees =
+          canonicalBenchmarks.map((item) => item.candidateTree).toSet();
+      if (candidateCommits.length != 1 || candidateTrees.length != 1) {
+        blockers.add(
+          'benchmark evidence must bind one exact candidate commit/tree',
+        );
+      }
+    }
     if (!limits.isCompleteForApproval) {
       blockers.add('limits are not measured and complete');
     }
@@ -1002,7 +1395,9 @@ class ModelDefinition {
     if (limits.isCompleteForApproval && toolProfile.isMeasured) {
       final maxToolCalls = limits.maxToolCallsPerTurn!;
       if (toolProfile.supportsToolCalling && maxToolCalls == 0) {
-        blockers.add('tool calling is enabled but the tool-call limit is zero');
+        blockers.add(
+          'tool calling is enabled but the tool-call limit is zero',
+        );
       }
       if (!toolProfile.supportsToolCalling && maxToolCalls != 0) {
         blockers.add(
@@ -1020,7 +1415,9 @@ class ModelDefinition {
         canonicalBenchmarks.map((benchmark) => benchmark.taskClassId).toSet();
     for (final taskClassId in canonicalTaskClasses) {
       if (!measuredTaskClasses.contains(taskClassId)) {
-        blockers.add('task class $taskClassId has no benchmark evidence');
+        blockers.add(
+          'task class $taskClassId has no immutable benchmark evidence',
+        );
       }
     }
     if (blockers.isNotEmpty) {
@@ -1060,7 +1457,10 @@ class ModelDefinition {
         providerId: identity.providerId,
         modelId: identity.name,
         displayName: identity.name,
-        digest: _nonBlankOrNull(identity.digest),
+        digest: _canonicalSha256OrNull(
+          identity.digest,
+          'discovered.digest',
+        ),
         parameterSize: _nonBlankOrNull(identity.parameterSize),
         quantization: _nonBlankOrNull(identity.quantization),
         limits: ModelLimits.unknown(),
@@ -1095,10 +1495,8 @@ class ModelDefinition {
       },
       'model',
     );
-    final supportStatus = _parseSupportStatus(
-      json['supportStatus'],
-      'model.supportStatus',
-    );
+    final supportStatus =
+        _parseSupportStatus(json['supportStatus'], 'model.supportStatus');
     final benchmarks = _objectList(
       json['benchmarks'] ?? const <Object?>[],
       'model.benchmarks',
@@ -1121,24 +1519,16 @@ class ModelDefinition {
       toolProfile: ModelToolProfile.fromJson(
         _objectMap(json['toolProfile'], 'model.toolProfile'),
       ),
-      dataBoundary: _parseDataBoundary(
-        json['dataBoundary'],
-        'model.dataBoundary',
-      ),
+      dataBoundary:
+          _parseDataBoundary(json['dataBoundary'], 'model.dataBoundary'),
       cost: ModelCostProfile.fromJson(
         _objectMap(json['cost'], 'model.cost'),
       ),
     );
-    final approvedTaskClasses = _stringList(
-      json,
-      'approvedTaskClasses',
-      'model',
-    );
-    final evaluationReasons = _stringList(
-      json,
-      'evaluationReasons',
-      'model',
-    );
+    final approvedTaskClasses =
+        _stringList(json, 'approvedTaskClasses', 'model');
+    final evaluationReasons =
+        _stringList(json, 'evaluationReasons', 'model');
     if (supportStatus == ModelSupportStatus.evaluationOnly &&
         approvedTaskClasses.isNotEmpty) {
       throw const ModelRegistryValidationException(
@@ -1197,15 +1587,15 @@ class ModelDefinition {
   final ModelDataBoundary dataBoundary;
   final ModelCostProfile cost;
   final List<ModelBenchmarkEvidence> benchmarks;
-  final List<String> approvedTaskClasses;
-  final ModelSupportStatus supportStatus;
   final List<String> evaluationReasons;
+  final List<String> _approvedTaskClasses;
+  final ModelSupportStatus _supportStatus;
 
   String get registryKey => '$providerId::$modelId';
 
-  bool isApprovedFor(String taskClassId) =>
-      supportStatus == ModelSupportStatus.approved &&
-      approvedTaskClasses.contains(taskClassId);
+  bool _isApprovedFor(String taskClassId) =>
+      _supportStatus == ModelSupportStatus.approved &&
+      _approvedTaskClasses.contains(taskClassId);
 
   static List<ModelBenchmarkEvidence> _canonicalBenchmarks(
     Iterable<ModelBenchmarkEvidence> values,
@@ -1231,17 +1621,18 @@ class ModelDefinition {
   }
 
   void _validateIdentity() {
-    if (!_providerIdPattern.hasMatch(providerId)) {
+    if (providerId != providerId.trim() ||
+        !_providerIdPattern.hasMatch(providerId)) {
       throw ModelRegistryValidationException(
         'model.providerId has invalid id $providerId',
       );
     }
-    if (!_modelIdPattern.hasMatch(modelId)) {
+    if (modelId != modelId.trim() || !_modelIdPattern.hasMatch(modelId)) {
       throw ModelRegistryValidationException(
         'model.modelId has invalid id $modelId',
       );
     }
-    if (displayName.trim().isEmpty) {
+    if (displayName != displayName.trim() || displayName.isEmpty) {
       throw const ModelRegistryValidationException(
         'model.displayName must be non-empty',
       );
@@ -1267,24 +1658,57 @@ class ModelDefinition {
         );
       }
     }
-    if (supportStatus == ModelSupportStatus.evaluationOnly &&
-        approvedTaskClasses.isNotEmpty) {
+    if (_supportStatus == ModelSupportStatus.evaluationOnly &&
+        _approvedTaskClasses.isNotEmpty) {
       throw const ModelRegistryValidationException(
         'evaluation-only model cannot expose approved task classes',
       );
     }
-    if (supportStatus == ModelSupportStatus.approved && digest == null) {
+    if (_supportStatus == ModelSupportStatus.approved && digest == null) {
       throw const ModelRegistryValidationException(
         'approved model must contain an immutable artifact digest',
       );
     }
-    if (supportStatus == ModelSupportStatus.approved &&
+    if (_supportStatus == ModelSupportStatus.approved &&
         evaluationReasons.isNotEmpty) {
       throw const ModelRegistryValidationException(
         'approved model cannot contain evaluation-only reasons',
       );
     }
   }
+
+
+}
+
+class ModelRegistryMetadata {
+  ModelRegistryMetadata._(ModelDefinition definition)
+      : providerId = definition.providerId,
+        modelId = definition.modelId,
+        displayName = definition.displayName,
+        digest = definition.digest,
+        parameterSize = definition.parameterSize,
+        quantization = definition.quantization,
+        aliases = definition.aliases,
+        limits = definition.limits,
+        toolProfile = definition.toolProfile,
+        dataBoundary = definition.dataBoundary,
+        cost = definition.cost,
+        benchmarks = definition.benchmarks;
+
+  final String providerId;
+  final String modelId;
+  final String displayName;
+  final String? digest;
+  final String? parameterSize;
+  final String? quantization;
+  final List<String> aliases;
+  final ModelLimits limits;
+  final ModelToolProfile toolProfile;
+  final ModelDataBoundary dataBoundary;
+  final ModelCostProfile cost;
+  final List<ModelBenchmarkEvidence> benchmarks;
+
+  String get registryKey => '$providerId::$modelId';
 
   Map<String, Object?> toJson() => <String, Object?>{
         'providerId': providerId,
@@ -1298,20 +1722,37 @@ class ModelDefinition {
         'toolProfile': toolProfile.toJson(),
         'dataBoundary': dataBoundary.wireName,
         'cost': cost.toJson(),
-        'benchmarks': benchmarks
-            .map((benchmark) => benchmark.toJson())
-            .toList(growable: false),
-        'approvedTaskClasses': approvedTaskClasses,
-        'supportStatus': supportStatus.wireName,
-        'evaluationReasons': evaluationReasons,
+        'benchmarks': benchmarks.map((item) => item.toJson()).toList(),
       };
 }
 
-/// Deterministic provider/model catalog. Runtime routing is intentionally out
-/// of scope; this object only validates identity and approval metadata.
-///
-/// Discovery and approval are fail-closed in this core class. Direct imports of
-/// this file therefore cannot bypass artifact identity validation.
+class ResolvedModel {
+  ResolvedModel._({
+    required this.model,
+    required this.disposition,
+    required this.evaluationReasons,
+  });
+
+  final ModelRegistryMetadata model;
+  final ModelResolutionDisposition disposition;
+  final List<String> evaluationReasons;
+
+  bool get isEvaluationOnly =>
+      disposition == ModelResolutionDisposition.evaluationOnly;
+}
+
+class ApprovedModelHandle {
+  ApprovedModelHandle._({
+    required this.model,
+    required this.identity,
+    required this.taskClassId,
+  });
+
+  final ModelRegistryMetadata model;
+  final ModelIdentity identity;
+  final String taskClassId;
+}
+
 class ModelDefinitionRegistry {
   ModelDefinitionRegistry({
     required Iterable<ModelProviderDescriptor> providers,
@@ -1383,8 +1824,7 @@ class ModelDefinitionRegistry {
       const <String>{'schemaVersion', 'providers', 'models'},
       'registry',
     );
-    final schemaVersion = json['schemaVersion'];
-    if (schemaVersion != 2) {
+    if (json['schemaVersion'] != 2) {
       throw const ModelRegistryValidationException(
         'model registry schemaVersion must be 2',
       );
@@ -1410,22 +1850,36 @@ class ModelDefinitionRegistry {
   List<ModelProviderDescriptor> get providers =>
       List<ModelProviderDescriptor>.unmodifiable(_providers.values);
 
-  List<ModelDefinition> get models =>
-      List<ModelDefinition>.unmodifiable(_models.values);
+  List<ModelRegistryMetadata> get models =>
+      List<ModelRegistryMetadata>.unmodifiable(
+        _models.values.map(ModelRegistryMetadata._),
+      );
 
   ModelProviderDescriptor? provider(String providerId) =>
       _providers[providerId];
 
-  ModelDefinition? lookup(String providerId, String modelIdOrAlias) {
+  ModelDefinition? _lookupDefinition(
+    String providerId,
+    String modelIdOrAlias,
+  ) {
     final key = '$providerId::$modelIdOrAlias';
     return _models[key] ?? _aliases[key];
   }
 
-  /// Reuses a registered record only when its artifact identity still matches.
-  /// Any drift is quarantined as a non-persistent evaluation-only descriptor.
-  ModelDefinition resolveDiscovered(ModelIdentity identity) {
+  /// Metadata lookup is non-authoritative. It intentionally omits approval
+  /// status, approved task classes, and approval predicates.
+  ModelRegistryMetadata? lookup(
+    String providerId,
+    String modelIdOrAlias,
+  ) {
+    final definition = _lookupDefinition(providerId, modelIdOrAlias);
+    return definition == null ? null : ModelRegistryMetadata._(definition);
+  }
+
+  ModelDefinition _resolveDiscoveredDefinition(ModelIdentity identity) {
     _validateDiscoveredIdentity(identity);
-    final existing = lookup(identity.providerId, identity.name);
+    final existing =
+        _lookupDefinition(identity.providerId, identity.name);
     if (existing != null) {
       final mismatches = _identityMismatches(existing, identity);
       if (mismatches.isEmpty) {
@@ -1433,7 +1887,7 @@ class ModelDefinitionRegistry {
       }
       final quarantineModelId =
           '${identity.name}:identity-mismatch:${_identityFingerprint(identity)}';
-      if (lookup(identity.providerId, quarantineModelId) != null) {
+      if (_lookupDefinition(identity.providerId, quarantineModelId) != null) {
         throw ModelRegistryValidationException(
           'discovered model ${identity.exactId} identity quarantine collides '
           'with a registered model',
@@ -1443,7 +1897,10 @@ class ModelDefinitionRegistry {
         providerId: identity.providerId,
         modelId: quarantineModelId,
         displayName: identity.name,
-        digest: _nonBlankOrNull(identity.digest),
+        digest: _canonicalSha256OrNull(
+          identity.digest,
+          'discovered.digest',
+        ),
         parameterSize: _nonBlankOrNull(identity.parameterSize),
         quantization: _nonBlankOrNull(identity.quantization),
         limits: ModelLimits.unknown(),
@@ -1453,8 +1910,8 @@ class ModelDefinitionRegistry {
         evaluationReasons: <String>[
           'discovered identity does not match registered '
               '${existing.registryKey}: ${mismatches.join(', ')}',
-          'approval is blocked until the exact artifact identity is registered '
-              'and measured',
+          'approval is blocked until the exact artifact identity is '
+              'registered and measured',
         ],
       );
     }
@@ -1472,28 +1929,43 @@ class ModelDefinitionRegistry {
     );
   }
 
-  /// Requires approval for the exact model artifact that was actually
-  /// discovered. String-only registry lookup is never sufficient to authorize
-  /// an artifact because aliases and mutable tags can be reused.
-  ModelDefinition requireApproved({
+  ResolvedModel resolveDiscovered(ModelIdentity identity) {
+    final definition = _resolveDiscoveredDefinition(identity);
+    return ResolvedModel._(
+      model: ModelRegistryMetadata._(definition),
+      disposition: definition._supportStatus == ModelSupportStatus.evaluationOnly
+          ? ModelResolutionDisposition.evaluationOnly
+          : ModelResolutionDisposition.registeredIdentity,
+      evaluationReasons: List<String>.unmodifiable(definition.evaluationReasons),
+    );
+  }
+
+  /// The only authorization-capable registry API. Metadata lookup and
+  /// serialization never return an approval decision.
+  ApprovedModelHandle requireApproved({
     required ModelIdentity identity,
     required String taskClassId,
   }) {
     _validateStableId(taskClassId, 'taskClassId');
-    final model = resolveDiscovered(identity);
-    if (!model.isApprovedFor(taskClassId)) {
+    final model = _resolveDiscoveredDefinition(identity);
+    if (!model._isApprovedFor(taskClassId)) {
       throw ModelRegistryValidationException(
         'model ${model.registryKey} is not approved for $taskClassId',
       );
     }
-    return model;
+    return ApprovedModelHandle._(
+      model: ModelRegistryMetadata._(model),
+      identity: identity,
+      taskClassId: taskClassId,
+    );
   }
 
-  Map<String, Object?> toJson() => <String, Object?>{
+  /// Non-authoritative runtime metadata only. Approval policy is deliberately
+  /// not serializable through the runtime registry API.
+  Map<String, Object?> toMetadataJson() => <String, Object?>{
         'schemaVersion': 2,
-        'providers': providers
-            .map((provider) => provider.toJson())
-            .toList(growable: false),
-        'models': models.map((model) => model.toJson()).toList(growable: false),
+        'providers':
+            providers.map((provider) => provider.toJson()).toList(),
+        'models': models.map((model) => model.toJson()).toList(),
       };
 }
