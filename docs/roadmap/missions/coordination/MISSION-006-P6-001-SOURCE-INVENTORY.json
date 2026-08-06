@@ -16,9 +16,9 @@
   ],
   "coordinationId": "MISSION-006-P6-001-SOURCE-INVENTORY",
   "exactCandidate": {
-    "commit": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
+    "commit": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
     "pullRequest": 76,
-    "tree": "d87bc3640ae50b53780eb72b7c333879200e712f"
+    "tree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3"
   },
   "integrationBase": {
     "branch": "agent/b/test-center-contracts-and-review",
@@ -37,13 +37,17 @@
     "mission": "MISSION-006",
     "pullRequest": 76,
     "worker": "G",
-    "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
+    "workExecutionId": "WRK-20260806T223554Z-6d2a4f1c"
   },
   "schemaVersion": 1,
   "sharedPaths": [
     "test/product/source_contract_test.dart",
     "SOURCE_MANIFEST.sha256"
   ],
+  "sourceMilestone": {
+    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
+    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+  },
   "status": "REQUESTED",
   "supportBoundary": "SOURCE_FOUNDATION_ONLY"
 }

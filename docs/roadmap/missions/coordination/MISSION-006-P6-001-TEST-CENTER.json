@@ -11,7 +11,10 @@
   "constraints": [
     "Worker G branch contains no effective Test Center authority-file diff relative to the consumed Worker B source authority.",
     "Worker B must publish any canonical P6-TC-001 module, stable ID, profile, mapping, and hierarchy binding on the authority branch.",
-    "P6-TC-001 must cover exact model identity and artifact-bound benchmark evidence for approved and evaluation-only records; benchmark results for one digest must not attach to another digest.",
+    "P6-TC-001 must prove raw string lookup cannot expose approval state and only exact discovered ModelIdentity can yield task approval.",
+    "P6-TC-001 must prove registered, discovered, and benchmark artifact identities reject non-canonical SHA-256 values.",
+    "P6-TC-001 must verify content-addressed benchmark evidence digest/schema/candidate/model binding and reject fabricated or drifted benchmark metadata.",
+    "P6-TC-001 must retain approved/evaluation cross-artifact benchmark rejection.",
     "Do not create a second Test Center or result vocabulary.",
     "Do not promote behavior, platform, capability, release, or GA support.",
     "Worker B exact-commit/tree review is required before integration."
@@ -19,22 +22,22 @@
   "coordinationId": "MISSION-006-P6-001-TEST-CENTER",
   "currentBlockers": [
     "exact P6 candidate has no allocated exact-head CI run or status",
-    "SOURCE_MANIFEST.sha256 requires canonical regeneration for the added P6 source/tests even though Worker G carries no manifest diff relative to Worker B",
+    "SOURCE_MANIFEST.sha256 requires canonical regeneration for the current P6 source/tests even though Worker G carries no manifest diff relative to Worker B",
     "Worker A source-inventory grant remains pending",
-    "Worker B 60490503 repairs transitive predecessor assurance, but exact Worker G review 4878375408 returns REQUEST_CHANGES because release independent-review evidence does not prove reviewer independence",
-    "Worker B 60490503 has no exact-head CI and its canonical manifest/evidence are not final-current",
-    "Worker B must repair review-authenticity semantics, publish P6-TC-001, and review the exact P6 integration candidate",
-    "fresh independent P6 exact-candidate review is required after validation settles",
+    "all prior P6 SOURCE/SECURITY reviews are superseded by product trust-root repair milestone 954f231fa28a22c85e0be3a76205cc31635f6466 and fresh exact review is required after execution settles",
+    "Worker B 60490503 remains under REQUEST_CHANGES because release independent-review evidence does not prove reviewer independence and exact-head CI/final manifest are absent",
+    "Worker B must repair its authority lane, publish P6-TC-001, and review the exact P6 integration candidate",
+    "fresh genuinely independent P6 exact-candidate review is required after validation settles",
     "PR #78 remains overlay-only",
     "P6-002+ and merge remain unauthorized"
   ],
   "exactCandidate": {
-    "commit": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
+    "commit": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
     "independentReviewRequired": true,
     "pullRequest": 76,
     "requiredAuthorityReview": "Worker B",
     "reviewStatus": "PENDING_FINAL_CANDIDATE_VALIDATION",
-    "tree": "d87bc3640ae50b53780eb72b7c333879200e712f"
+    "tree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3"
   },
   "integrationState": {
     "workerBCommit": "604905039aa26952045e69ebe6799ae464144635",
@@ -50,11 +53,6 @@
     "reviewedTree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
     "reviewId": 4878375408,
     "technicalDecision": "REQUEST_CHANGES",
-    "repairedFindings": [
-      "predecessor-subject-lineage-substitution",
-      "evidence-category-to-content-kind-binding",
-      "transitive-predecessor-assurance"
-    ],
     "remainingFindings": [
       "independent-review-evidence-does-not-prove-reviewer-independence",
       "exact-head-ci-and-final-manifest-are-absent"
@@ -64,14 +62,18 @@
   "requester": {
     "branch": "agent/g/mission-006-model-routing",
     "mission": "MISSION-006",
-    "observedHead": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
-    "observedTree": "d87bc3640ae50b53780eb72b7c333879200e712f",
+    "observedHead": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
+    "observedTree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3",
     "pullRequest": 76,
     "worker": "G",
-    "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
+    "workExecutionId": "WRK-20260806T223554Z-6d2a4f1c"
   },
   "schemaVersion": 1,
-  "scope": "Worker B publishes P6-TC-001 for the fail-closed identity-bound model registry including approved/evaluation benchmark-to-artifact digest binding after ownership, review-authenticity semantics, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
+  "scope": "Worker B publishes P6-TC-001 for the fail-closed model registry covering identity-bound approval, non-authoritative metadata lookup, canonical artifact digests, content-addressed benchmark evidence, and approved/evaluation cross-artifact rejection after ownership, manifest, and exact CI settle; Worker G does not edit Test Center authority.",
   "sharedPaths": [],
+  "sourceMilestone": {
+    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
+    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+  },
   "status": "OWNER_HANDOFF_PENDING"
 }
