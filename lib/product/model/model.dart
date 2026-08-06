@@ -130,10 +130,5 @@ String _identityFingerprint(ModelIdentity identity) {
     'providerId': identity.providerId.trim(),
     'quantization': _normalized(identity.quantization),
   });
-  var hash = 0xcbf29ce484222325;
-  for (final byte in utf8.encode(canonical)) {
-    hash ^= byte;
-    hash = (hash * 0x100000001b3) & 0xffffffffffffffff;
-  }
-  return hash.toRadixString(16).padLeft(16, '0');
+  return base64UrlEncode(utf8.encode(canonical)).replaceAll('=', '');
 }
