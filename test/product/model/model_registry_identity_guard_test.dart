@@ -79,6 +79,13 @@ void main() {
         registry.resolveDiscovered(_identity(name: 'qwen3-latest')),
         same(approved),
       );
+      expect(
+        registry.requireApproved(
+          identity: _identity(name: 'qwen3-latest'),
+          taskClassId: 'code-generation',
+        ),
+        same(approved),
+      );
     });
 
     for (final lookupName in <String>['qwen3:14b', 'qwen3-latest']) {
@@ -154,15 +161,14 @@ void _expectQuarantined({
   );
   expect(
     () => registry.requireApproved(
-      providerId: resolved.providerId,
-      modelIdOrAlias: resolved.modelId,
+      identity: identity,
       taskClassId: 'code-generation',
     ),
     throwsA(
       isA<ModelRegistryValidationException>().having(
         (error) => error.message,
         'message',
-        contains('is not registered'),
+        contains('is not approved for code-generation'),
       ),
     ),
   );
