@@ -35,7 +35,7 @@ Missing, unknown, mismatched, cross-candidate, source-promoting, unexecuted-prom
 
 ## Downstream integration contract
 
-`pendingMigrationSource` freezes Worker A PR #64 at commit `89a15332019c73675a19cdacd7021fae2199d75e` / tree `2ea1f8a7c12c34c71ee75ba06fdf047cf9528223`, and `pendingMigrationBindings` records its exact eleven reviewed stable IDs. They are not active bindings until those IDs enter the canonical registry. Integration fails if a pending ID appears without being promoted to exactly one active binding.
+`pendingMigrationSource` freezes Worker A PR #64 at commit `89a15332019c73675a19cdacd7021fae2199d75e` / tree `2ea1f8a718a69dba0120a4f98acb78053d6cebfb`, and `pendingMigrationBindings` records its exact eleven reviewed stable IDs. They are not active bindings until those IDs enter the canonical registry. Integration fails if a pending ID appears without being promoted to exactly one active binding.
 
 `tc.p1a.exit-gate` is explicitly `architecture_lint` and `sourceOnly: true` because its current command uses `--source-only`. A future real platform certification must use a separate stable identity and real platform evidence. No source result is promoted to platform support.
 

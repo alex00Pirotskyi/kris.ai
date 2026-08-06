@@ -12,7 +12,7 @@ The dedicated workflow now regenerates the root source manifest through the cano
 
 ## P8-A-003
 
-The hierarchy records the exact eleven reviewed Worker A bindings from PR #64 commit `89a15332019c73675a19cdacd7021fae2199d75e` / tree `2ea1f8a7c12c34c71ee75ba06fdf047cf9528223` and review comment `5203350863`. They block integration until promoted to active bindings. `tc.p1a.exit-gate` remains source-only `architecture_lint`; a platform claim requires a separate stable ID and actual platform evidence.
+The hierarchy records the exact eleven reviewed Worker A bindings from PR #64 commit `89a15332019c73675a19cdacd7021fae2199d75e` / tree `2ea1f8a718a69dba0120a4f98acb78053d6cebfb` and review comment `5203350863`. They block integration until promoted to active bindings. `tc.p1a.exit-gate` remains source-only `architecture_lint`; a platform claim requires a separate stable ID and actual platform evidence.
 
 ## Non-claims
 
