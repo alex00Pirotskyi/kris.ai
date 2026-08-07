@@ -1,14 +1,17 @@
 {
+  "activeSemaphoreId": "SEM-P7-001-LAND-MAIN-SQUASH-C0DECAFE",
   "allowedPaths": [
     "lib/product/mcp*.dart",
     "test/product/mcp*/**",
     "release/evidence/P7-*/**"
   ],
+  "assignedWorker": "ELASTIC-c0decafe",
   "baseCommit": "ec5086210a778b8a1be51f22b9cd81f735956034",
   "baseTree": "33bea41e73a68b30f1f17f09323824d81a6419d1",
   "createdAt": "2026-08-07T17:56:00Z",
   "createdBy": "SYSTEM-P7-LANDING-POLICY-RECONCILIATION",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Land exact finalized Product PR #96 through the repository's enabled squash-merge policy after exact pre-landing tri-platform CI. Treat the resulting protected-main squash commit as the landed source commit, then require exact post-landing main product-gates before recording LANDED_MAIN. Preserve the pre-landing candidate ec5086210a778b8a1be51f22b9cd81f735956034 as provenance evidence only. Do not promote P7-001 ACCEPTED, behavioral/platform/release support, certification, production readiness, or GA.",
@@ -22,9 +25,9 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "supersedes": "WO-P7-001-LAND-MAIN-C0DECAFE",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T17:56:00Z",
+  "updatedAt": "2026-08-07T17:57:00Z",
   "workOrderId": "WO-P7-001-LAND-MAIN-SQUASH-C0DECAFE"
 }
