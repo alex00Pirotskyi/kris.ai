@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import fnmatch
 import json
 import pathlib
 import re
@@ -68,8 +69,64 @@ def prefixes_overlap(left: str, right: str) -> bool:
     return bool(a and b and (a == b or a.startswith(b + "/") or b.startswith(a + "/")))
 
 
+def _has_glob(value: str) -> bool:
+    return any(token in value for token in ("*", "?", "["))
+
+
+def _concrete_path_matches_pattern(path: str, pattern: str) -> bool:
+    """Match one concrete repository path against a segment-safe glob pattern.
+
+    ``fnmatch`` is applied one path segment at a time so ``*`` cannot cross a
+    directory boundary. A segment that is exactly ``**`` may consume zero or
+    more complete path segments. This matches the repository ownership syntax
+    without turning basename globs such as ``tool/test_center*.py`` into the
+    unrelated directory prefix ``tool/test_center/**``.
+    """
+    path_parts = normalize_path(path).split("/")
+    pattern_parts = normalize_path(pattern).split("/")
+    memo: dict[tuple[int, int], bool] = {}
+
+    def match(path_index: int, pattern_index: int) -> bool:
+        key = (path_index, pattern_index)
+        if key in memo:
+            return memo[key]
+        if pattern_index == len(pattern_parts):
+            result = path_index == len(path_parts)
+        else:
+            token = pattern_parts[pattern_index]
+            if token == "**":
+                if pattern_index == len(pattern_parts) - 1:
+                    result = True
+                else:
+                    result = any(
+                        match(next_index, pattern_index + 1)
+                        for next_index in range(path_index, len(path_parts) + 1)
+                    )
+            elif path_index >= len(path_parts):
+                result = False
+            else:
+                result = fnmatch.fnmatchcase(path_parts[path_index], token) and match(
+                    path_index + 1, pattern_index + 1
+                )
+        memo[key] = result
+        return result
+
+    return match(0, 0)
+
+
 def pattern_within(child: str, parent: str) -> bool:
-    cfx, pfx = static_prefix(child), static_prefix(parent)
+    child_normalized = normalize_path(child)
+    parent_normalized = normalize_path(parent)
+    # Concrete paths are the common authorization case. Match them against the
+    # actual parent glob rather than approximating the glob as a directory
+    # prefix. This is fail-closed across path separators.
+    if not _has_glob(child_normalized):
+        return _concrete_path_matches_pattern(child_normalized, parent_normalized)
+    # Pattern-vs-pattern containment remains deliberately conservative. Exact
+    # equality is safe; otherwise retain the historical static-prefix rule.
+    if child_normalized == parent_normalized:
+        return True
+    cfx, pfx = static_prefix(child_normalized), static_prefix(parent_normalized)
     return bool(cfx and pfx and (cfx == pfx or cfx.startswith(pfx + "/")))
 
 
