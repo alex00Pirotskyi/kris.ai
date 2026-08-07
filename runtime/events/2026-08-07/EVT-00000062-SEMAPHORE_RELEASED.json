@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000062-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "helperHead": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+    "helperPr": 111,
+    "nextStatus": "HELPER_READY",
+    "p4SourceRun": 31210919481,
+    "productGatesRun": 31210919450,
+    "semaphoreId": "SEM-P4-001-SAFE-SEARCH-4A9C2D1E"
+  },
+  "recordedAt": "2026-08-07T19:30:00Z",
+  "runtimeGeneration": 62,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190800Z-4a9c2d1e",
+  "workOrderId": "WO-P4-001-SAFE-SEARCH-4A9C2D1E"
+}
