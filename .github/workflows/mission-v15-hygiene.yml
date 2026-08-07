@@ -1,0 +1,49 @@
+name: Mission V1.5 Hygiene
+
+on:
+  pull_request:
+    paths:
+      - 'config/mission_v15_hygiene.v1.json'
+      - 'tool/mission_v15_hygiene.py'
+      - 'tool/mission_runtime_model.py'
+      - 'runtime/**'
+  workflow_dispatch:
+    inputs:
+      runtime_ref:
+        description: Mission runtime branch
+        required: false
+        default: agent/mission-runtime
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Fetch all branches and runtime
+        shell: bash
+        run: |
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
+          git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
+      - name: Audit branch growth and runtime hygiene
+        shell: bash
+        run: |
+          python tool/mission_v15_hygiene.py \
+            --repository-project . \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --config config/mission_v15_hygiene.v1.json \
+            --output "$RUNNER_TEMP/hygiene.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-v15-hygiene
+          path: ${{ runner.temp }}/hygiene.json
