@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/mission_runtime_event.schema.json",
+  "title": "Kris Mission Execution 1.5 Runtime Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "runtimeGeneration", "recordedAt", "workExecutionId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "eventId": {"type": "string", "minLength": 1},
+    "eventType": {"enum": ["WORK_ORDER_READY", "WORK_ORDER_RESERVED", "WORK_ORDER_STARTED", "WORK_ORDER_DONE", "SEMAPHORE_ACQUIRED", "SEMAPHORE_RELEASED", "HELPER_READY", "CI_FAILED", "CI_PASSED", "REVIEW_REQUESTED", "REVIEW_CHANGES", "REVIEW_PASS", "INTEGRATION_STARTED", "INTEGRATION_DONE", "PRODUCT_PR_READY", "LANDED_MAIN", "BLOCKER_CLEARED", "OWNER_ACTION_REQUIRED", "INCIDENT_OPENED", "INCIDENT_RESOLVED"]},
+    "runtimeGeneration": {"type": "integer", "minimum": 0},
+    "recordedAt": {"type": "string", "format": "date-time"},
+    "workExecutionId": {"type": "string", "pattern": "^WRK-[0-9]{8}T[0-9]{6}Z-[0-9a-fA-F]{8}$"},
+    "workOrderId": {"type": ["string", "null"]},
+    "mission": {"type": ["string", "null"]},
+    "payload": {"type": "object"}
+  }
+}
