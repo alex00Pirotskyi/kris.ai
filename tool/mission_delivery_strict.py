@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Strict delivery checks layered over the backward-compatible delivery CLI.
+"""Strict delivery, source-landing and runtime-ownership checks.
 
-Historical non-terminal bookkeeping remains readable so stronger controls can be
-adopted without rewriting history. Strict provenance is mandatory for future
-ACCEPTED / MERGED_MAIN claims.
+Historical non-terminal bookkeeping remains readable. Future accepted records
+and Mission Execution 1.5 source-landing/review receipts are fail-closed.
 """
 from __future__ import annotations
 
@@ -27,11 +26,19 @@ from mission_delivery_lib import (
     write_json,
 )
 from mission_delivery_checks import classify_changed_paths
-from mission_runtime_control import active_leases, durable_claims
+from mission_runtime_control import (
+    active_leases,
+    durable_claims,
+    matching_helper_leases,
+    verify_candidate_ancestry,
+)
 
 RFC3339_UTC = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+GIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 ACCEPTED = {"ACCEPTED", "MERGED_MAIN"}
+SOURCE_LANDING = {"NOT_LANDED", "HELPER", "PRODUCT_PR", "LANDED_MAIN"}
+REVIEW_TIERS = {"R0", "R1", "R2"}
 
 
 def strict_time(value: str) -> dt.datetime:
@@ -79,7 +86,6 @@ def git_tree(project: pathlib.Path, commit: str) -> str:
 
 
 def latest_records_compat(project: pathlib.Path, model: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Load latest task records without re-validating legacy non-terminal shape."""
     latest: dict[str, dict[str, Any]] = {}
     for path in record_files(project, model):
         record = read_json(path)
@@ -94,6 +100,81 @@ def latest_records_compat(project: pathlib.Path, model: dict[str, Any]) -> dict[
     return latest
 
 
+def validate_review_receipt(
+    review: dict[str, Any],
+    *,
+    candidate_commit: str,
+    record_path: pathlib.Path,
+) -> None:
+    """Validate explicit v1.5 review identity namespaces and tier semantics."""
+    if review.get("candidateCommit") != candidate_commit or review.get("decision") != "PASS":
+        raise DeliveryError(f"{record_path}: exact-candidate PASS reviewReceipt required")
+
+    tier = review.get("reviewTier")
+    if tier is None:
+        raise DeliveryError(f"{record_path}: reviewReceipt.reviewTier required (R0/R1/R2)")
+    if tier not in REVIEW_TIERS:
+        raise DeliveryError(f"{record_path}: invalid review tier {tier!r}")
+
+    worker_identity = review.get("reviewerWorkerIdentity")
+    github_identity = review.get("reviewerGitHubIdentity")
+    context_id = review.get("reviewContextId")
+    author_contexts = review.get("authoringContextIds")
+    implementer_contexts = review.get("implementerAuthoringContextIds")
+    if not isinstance(worker_identity, str) or not worker_identity:
+        raise DeliveryError(f"{record_path}: reviewerWorkerIdentity required")
+    if not isinstance(context_id, str) or not context_id:
+        raise DeliveryError(f"{record_path}: reviewContextId required")
+    if not isinstance(author_contexts, list) or not all(isinstance(x, str) for x in author_contexts):
+        raise DeliveryError(f"{record_path}: authoringContextIds must be a string array")
+    if not isinstance(implementer_contexts, list) or not all(
+        isinstance(x, str) for x in implementer_contexts
+    ):
+        raise DeliveryError(
+            f"{record_path}: implementerAuthoringContextIds must be a string array"
+        )
+
+    if tier == "R0":
+        raise DeliveryError(f"{record_path}: R0 builder check cannot satisfy accepted state")
+
+    overlap = sorted(set(author_contexts) & set(implementer_contexts))
+    if tier == "R1":
+        if context_id in implementer_contexts or overlap:
+            raise DeliveryError(
+                f"{record_path}: R1 review context is contaminated by implementer authoring context"
+            )
+    elif tier == "R2":
+        implementer_github = review.get("implementerGitHubIdentity")
+        if (
+            not isinstance(github_identity, str)
+            or not github_identity
+            or not isinstance(implementer_github, str)
+            or not implementer_github
+            or github_identity == implementer_github
+        ):
+            raise DeliveryError(
+                f"{record_path}: R2 requires distinct reviewer/implementer GitHub identities"
+            )
+
+
+def validate_source_landing(project: pathlib.Path, record: dict[str, Any], record_path: pathlib.Path) -> None:
+    source_landing = record.get("sourceLanding")
+    if source_landing is None:
+        return
+    if source_landing not in SOURCE_LANDING:
+        raise DeliveryError(f"{record_path}: unsupported sourceLanding {source_landing!r}")
+    if source_landing != "LANDED_MAIN":
+        return
+    commit = record.get("commit")
+    merged_main = record.get("mergedMainCommit")
+    if not isinstance(commit, str) or not GIT_SHA.fullmatch(commit):
+        raise DeliveryError(f"{record_path}: LANDED_MAIN requires exact source commit")
+    if not isinstance(merged_main, str) or not GIT_SHA.fullmatch(merged_main):
+        raise DeliveryError(f"{record_path}: LANDED_MAIN requires mergedMainCommit")
+    run_git(project, "cat-file", "-e", f"{merged_main}^{{commit}}")
+    run_git(project, "merge-base", "--is-ancestor", commit, merged_main)
+
+
 def validate_accepted_records(project: pathlib.Path) -> None:
     model = load_model(project)
     latest = latest_records_compat(project, model)
@@ -103,11 +184,9 @@ def validate_accepted_records(project: pathlib.Path) -> None:
         recorded = strict_time(record.get("recordedAt"))
         if recorded > future_limit:
             raise DeliveryError(f"{path.relative_to(project)}: future-dated delivery record")
+        validate_source_landing(project, record, path)
         status = record.get("status")
         if status not in ACCEPTED:
-            # Historical non-terminal records predate strict provenance and may
-            # retain old Work ID/evidence formats. They are grandfathered as
-            # bookkeeping only and can never become acceptance proof.
             continue
         validate_record(record, model, path.relative_to(project).as_posix())
         for dependency in model["tasks"][record["task"]].get("dependencies", []):
@@ -126,14 +205,15 @@ def validate_accepted_records(project: pathlib.Path) -> None:
             verify_evidence(project, item, path)
         ci = record.get("ciReceipt")
         review = record.get("reviewReceipt")
-        if not isinstance(ci, dict) or ci.get("candidateCommit") != commit or ci.get("result") != "PASS":
+        if (
+            not isinstance(ci, dict)
+            or ci.get("candidateCommit") != commit
+            or ci.get("result") != "PASS"
+        ):
             raise DeliveryError(f"{path.relative_to(project)}: exact-candidate PASS ciReceipt required")
-        if not isinstance(review, dict) or review.get("candidateCommit") != commit or review.get("decision") != "PASS":
-            raise DeliveryError(f"{path.relative_to(project)}: exact-candidate PASS reviewReceipt required")
-        reviewer = review.get("reviewerIdentity")
-        implementer = record.get("worker")
-        if not reviewer or reviewer == implementer:
-            raise DeliveryError(f"{path.relative_to(project)}: independent reviewer identity required")
+        if not isinstance(review, dict):
+            raise DeliveryError(f"{path.relative_to(project)}: structured reviewReceipt required")
+        validate_review_receipt(review, candidate_commit=commit, record_path=path)
         if status == "MERGED_MAIN":
             merged = record.get("mergedMainCommit")
             if not merged:
@@ -151,12 +231,16 @@ def merge_base_paths(project: pathlib.Path, base: str, head: str) -> tuple[str, 
         f"{merge_base}..{head}",
         "--",
     )
-    return merge_base, [line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()]
+    return merge_base, [
+        line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()
+    ]
 
 
 def infer_runtime_mission(project: pathlib.Path, head_branch: str, event: dict[str, Any]) -> str:
     claims = durable_claims(project)
-    branch_matches = [mission for mission, claim in claims.items() if claim.get("branch") == head_branch]
+    branch_matches = [
+        mission for mission, claim in claims.items() if claim.get("branch") == head_branch
+    ]
     if len(branch_matches) == 1:
         return branch_matches[0]
     body = (event.get("pull_request") or {}).get("body") or ""
@@ -184,16 +268,24 @@ def strict_ownership(
     result = classify_changed_paths(mission, changed, model)
     claim = claims.get(mission)
     owner_branch = claim is not None and claim.get("branch") == head_branch
-    helper = next(
-        (
-            lease
-            for lease in leases
-            if lease.get("branch") == head_branch and lease.get("mission") == mission
-        ),
-        None,
-    )
+    helpers = matching_helper_leases(leases, mission, head_branch)
     runtime_violations: list[str] = []
-    if owner_branch:
+
+    if len(helpers) > 1:
+        runtime_violations.append("AMBIGUOUS_MULTIPLE_HELPER_LEASES_FOR_BRANCH")
+        helper = None
+    else:
+        helper = helpers[0] if helpers else None
+
+    if helper is not None:
+        try:
+            verify_candidate_ancestry(project, helper["baseCommit"], head)
+        except ValueError as exc:
+            runtime_violations.append(f"HELPER_BASE_ANCESTRY_INVALID:{exc}")
+        for path in changed:
+            if not matches_any(path, helper["allowedPaths"]):
+                runtime_violations.append(f"OUTSIDE_HELPER_LEASE:{path}")
+    elif owner_branch:
         if claim.get("head") != head:
             runtime_violations.append(f"CLAIM_HEAD_STALE:{claim.get('head')}!=HEAD:{head}")
         claim_scope = claim.get("exclusivePaths") or model["config"]["missionPathPolicies"][mission]["owned"]
@@ -205,26 +297,33 @@ def strict_ownership(
             for pattern in grant.get("patterns", [])
         ]
         for path in changed:
-            if not (matches_any(path, claim_scope) or matches_any(path, generated) or matches_any(path, shared)):
+            if not (
+                matches_any(path, claim_scope)
+                or matches_any(path, generated)
+                or matches_any(path, shared)
+            ):
                 runtime_violations.append(f"OUTSIDE_CURRENT_CLAIM:{path}")
-    elif helper is not None:
-        for path in changed:
-            if not matches_any(path, helper["allowedPaths"]):
-                runtime_violations.append(f"OUTSIDE_HELPER_LEASE:{path}")
     else:
         runtime_violations.append("NO_CURRENT_MISSION_CLAIM_OR_HELPER_LEASE_FOR_BRANCH")
+
     result.update(
         {
             "mergeBase": merge_base,
             "head": head,
             "headBranch": head_branch,
-            "runtimeLock": "MISSION_CLAIM" if owner_branch else ("HELPER_LEASE" if helper else "NONE"),
+            "runtimeLock": (
+                "HELPER_LEASE"
+                if helper
+                else ("MISSION_CLAIM" if owner_branch else "NONE")
+            ),
             "helperLeaseId": helper.get("leaseId") if helper else None,
             "runtimeViolations": runtime_violations,
         }
     )
     result["authorized"] = bool(result.get("authorized")) and not runtime_violations
-    result["violations"] = sorted(set(result.get("violations", []) + runtime_violations))
+    result["violations"] = sorted(
+        set(result.get("violations", []) + runtime_violations)
+    )
     return result
 
 
@@ -232,7 +331,15 @@ def append_only(project: pathlib.Path, base: str, head: str) -> None:
     model = load_model(project)
     root = model["config"]["recordsRoot"]
     merge_base = run_git(project, "merge-base", base, head)
-    output = run_git(project, "diff", "--name-status", f"{merge_base}..{head}", "--", root, check=False)
+    output = run_git(
+        project,
+        "diff",
+        "--name-status",
+        f"{merge_base}..{head}",
+        "--",
+        root,
+        check=False,
+    )
     violations = []
     for line in output.splitlines():
         if not line.strip():
@@ -241,7 +348,9 @@ def append_only(project: pathlib.Path, base: str, head: str) -> None:
         if not status.startswith("A"):
             violations.append(line)
     if violations:
-        raise DeliveryError("delivery history is append-only; non-add changes: " + "; ".join(violations))
+        raise DeliveryError(
+            "delivery history is append-only; non-add changes: " + "; ".join(violations)
+        )
 
 
 def main() -> int:
