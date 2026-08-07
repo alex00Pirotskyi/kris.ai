@@ -11,25 +11,28 @@
   "createdBy": "SYSTEM-P7-LANDING-POLICY-RECONCILIATION",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "SYSTEM-P7-PROTECTED-MAIN-SQUASH-MERGED",
+  "lastActor": "SYSTEM-P7-LANDED-MAIN-POST-CI-PASS",
   "maxChildWorkOrders": 0,
   "mergedMainCommit": "eddf1fdac3dd3412358a576e45b82e99528cfed4",
   "mergeMethod": "squash",
   "mission": "MISSION-007",
   "objective": "Land exact finalized Product PR #96 through the repository's enabled squash-merge policy after exact pre-landing tri-platform CI. Treat the resulting protected-main squash commit as the landed source commit, then require exact post-landing main product-gates before recording LANDED_MAIN. Preserve the pre-landing candidate ec5086210a778b8a1be51f22b9cd81f735956034 as provenance evidence only. Do not promote P7-001 ACCEPTED, behavioral/platform/release support, certification, production readiness, or GA.",
   "parentProductPr": 96,
+  "postLandingProductGatesRun": 31205307906,
+  "preLandingProductGatesRun": 31203644993,
   "priority": 100,
   "requestedRole": "INTEGRATOR",
   "requiredTests": [
     "pre-landing product-gates workflow_dispatch run 31203644993 exact head ec5086210a778b8a1be51f22b9cd81f735956034 SUCCESS on Ubuntu/macOS/Windows",
     "SOURCE_MANIFEST.sha256 finalized deterministically on pre-landing candidate",
-    "post-landing product-gates on exact protected-main squash commit SUCCESS on Ubuntu/macOS/Windows"
+    "post-landing product-gates run 31205307906 exact protected-main commit eddf1fdac3dd3412358a576e45b82e99528cfed4 SUCCESS on Ubuntu/macOS/Windows"
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "sourceLanding": "LANDED_MAIN",
+  "status": "LANDED",
   "supersedes": "WO-P7-001-LAND-MAIN-C0DECAFE",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T18:06:00Z",
+  "updatedAt": "2026-08-07T18:20:00Z",
   "workOrderId": "WO-P7-001-LAND-MAIN-SQUASH-C0DECAFE"
 }
