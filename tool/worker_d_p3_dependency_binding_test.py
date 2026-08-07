@@ -162,6 +162,37 @@ class DependencyBindingTests(unittest.TestCase):
             )
         )
 
+    def test_dependency_commit_must_belong_to_worker_a_lineage(self):
+        mutated = copy.deepcopy(dependency_document())
+        unrelated_commit = "7eecc840f68ca0dff13ab58c138845593254e390"
+        unrelated_tree = MODULE._git(ROOT, "rev-parse", f"{unrelated_commit}^{{tree}}")
+        item = dependency(mutated, "P1-012")
+        item["implementation"] = {
+            "commit": unrelated_commit,
+            "tree": unrelated_tree,
+        }
+        errors = MODULE.validate_document(ROOT, mutated)
+        self.assertTrue(
+            any(
+                "P1-012 implementation is outside repository.workerADependencyCandidate lineage"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_p2_implementation_must_equal_worker_a_dependency_candidate(self):
+        mutated = copy.deepcopy(dependency_document())
+        p1 = dependency(mutated, "P1-012")["implementation"]
+        dependency(mutated, "P2-004")["implementation"] = copy.deepcopy(p1)
+        errors = MODULE.validate_document(ROOT, mutated)
+        self.assertTrue(
+            any(
+                "P2-004 implementation must equal repository.workerADependencyCandidate"
+                in error
+                for error in errors
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
