@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000098-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "runtimeGeneration": 98,
+  "recordedAt": "2026-08-07T21:13:30Z",
+  "workExecutionId": "WRK-20260807T200508Z-9c41e2af",
+  "workOrderId": "WO-P11-001-RECONCILE-TEST-CENTER-9C41E2AF",
+  "mission": "MISSION-010",
+  "payload": {
+    "canonicalProductPr": 71,
+    "previousProductHead": "762b037fc824e2d6b3c9e26d65193ddfcf2b8cc3",
+    "integratedProductHead": "74d650577229b98e6d82de4695efe5e43661fbc0",
+    "integratedProductTree": "9a71a7eb9f040ffb920e2a05c7f14dac7b8e250e",
+    "integrationMethod": "two-parent-main-reconciliation",
+    "dependencyMainHead": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+    "semaphoreId": "SEM-P11-001-TEST-CENTER-RECON-9C41E2AF",
+    "nextStatus": "VALIDATING",
+    "supportPromotion": "NONE"
+  }
+}

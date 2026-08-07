@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P11-001-TEST-CENTER-RECON-9C41E2AF",
   "allowedPaths": [
     "tool/worker_e*.py",
     "release/evidence/P11-*/**",
@@ -28,8 +27,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:54:30Z",
+  "updatedAt": "2026-08-07T21:13:30Z",
   "workOrderId": "WO-P11-001-RECONCILE-TEST-CENTER-9C41E2AF"
 }
