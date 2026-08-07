@@ -68,6 +68,17 @@ def audit(
         for branch in branches
         if fnmatch.fnmatchcase(branch, config.get("helperPattern", "agent/help/*"))
     )
+    tx_prefix = migration.get("runtimeTransactionBranchPrefix", "runtime/tx/")
+    transaction_branches = sorted(
+        branch for branch in branches if branch.startswith(tx_prefix)
+    )
+    grandfathered_transactions = set(
+        migration.get("grandfatheredRuntimeTransactionBranches", [])
+    )
+    new_transaction_branches = sorted(
+        branch for branch in transaction_branches if branch not in grandfathered_transactions
+    )
+
     violations: list[str] = []
     if len(branches) > migration["maxTotalBranchesDuringMigration"]:
         violations.append(
@@ -80,6 +91,15 @@ def audit(
     if len(helpers) > migration["maxActiveHelperBranches"]:
         violations.append(
             f"HELPER_BRANCH_BUDGET:{len(helpers)}>{migration['maxActiveHelperBranches']}"
+        )
+    if len(transaction_branches) > migration["maxRuntimeTransactionBranchesDuringMigration"]:
+        violations.append(
+            "RUNTIME_TRANSACTION_BRANCH_GROWTH:"
+            f"{len(transaction_branches)}>{migration['maxRuntimeTransactionBranchesDuringMigration']}"
+        )
+    if new_transaction_branches:
+        violations.append(
+            "NEW_RUNTIME_TRANSACTION_BRANCHES:" + ",".join(new_transaction_branches)
         )
 
     state = validate_runtime_state(runtime_project)
@@ -99,6 +119,10 @@ def audit(
         "legacyDebtBranches": debt,
         "helperBranchCount": len(helpers),
         "helperBranches": helpers,
+        "runtimeTransactionBranchCount": len(transaction_branches),
+        "runtimeTransactionBranches": transaction_branches,
+        "grandfatheredRuntimeTransactionBranches": sorted(grandfathered_transactions),
+        "newRuntimeTransactionBranches": new_transaction_branches,
         "runtimeGeneration": state["meta"]["runtimeGeneration"],
         "workOrderCount": len(state["workOrders"]),
         "activeSemaphoreCount": len(state["activeSemaphores"]),
