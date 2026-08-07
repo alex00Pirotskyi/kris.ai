@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P7-001-SOURCE-INVENTORY-529719B5",
   "allowedPaths": [
     "test/product/source_contract_test.dart"
   ],
+  "assignedWorker": "Elastic-529719b5",
   "baseCommit": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
   "baseTree": "da8b5505b35c0517b566bdefa1446ff1bc88e5dd",
   "createdAt": "2026-08-07T14:33:20Z",
   "createdBy": "Elastic-529719b5",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Append lib/product/mcp_protocol.dart to the governed analyzer-visible source inventory so exact helper PR #98 can pass the full Flutter suite without modifying or removing any existing source-inventory entry.",
@@ -21,8 +24,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T14:33:20Z",
+  "updatedAt": "2026-08-07T14:35:45Z",
   "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5"
 }

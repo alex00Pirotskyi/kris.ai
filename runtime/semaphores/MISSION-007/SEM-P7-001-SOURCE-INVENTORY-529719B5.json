@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "authorityId": "source-inventory",
+  "baseCommit": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
+  "baseTree": "da8b5505b35c0517b566bdefa1446ff1bc88e5dd",
+  "branch": "agent/help/elastic-529719b5/mission-007/p7-source-inventory",
+  "createdAt": "2026-08-07T14:35:45Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-07T18:35:45Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-007",
+  "productPr": null,
+  "refreshedAt": "2026-08-07T14:35:45Z",
+  "resourceId": null,
+  "runtimeGeneration": 8,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-SOURCE-INVENTORY-529719B5",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5",
+  "workerIdentity": "Elastic-529719b5"
+}
