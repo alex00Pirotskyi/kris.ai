@@ -13,10 +13,10 @@
     "lib/product/mcp_protocol.dart",
     "test/product/mcp/mcp_protocol_test.dart"
   ],
-  "status": "ACTIVE",
+  "status": "YIELDED",
   "createdAt": "2026-08-07T11:02:45Z",
-  "refreshedAt": "2026-08-07T11:02:45Z",
+  "refreshedAt": "2026-08-07T11:40:00Z",
   "expiresAt": "2026-08-07T15:02:45Z",
   "parentClaimHead": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
-  "nextAction": "Implement the MCP 2026-07-28 reserved _meta prefix grammar and focused regressions only; preserve the owner version/tool-catalog runtime work and do not modify owner integration/shared paths."
+  "nextAction": "Yielded after the MISSION-007 owner branch advanced to c55e2882b0ec04807c526d70bd56c85f3d6bb84d and independently modified both leased paths while the durable claim still named 22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232. Helper PR #97 remains at 73d9660e4950c044b731c308d41118270cdbb736 with reserved-prefix, canonical-format, ProductException-import, and typed-map repairs. Its integration-tree CI passed format and then exposed one remaining prefer_null_aware_operators lint in the owner-derived cursor code. Reacquire only after durable claim and live owner head are reconciled and after resolving the owner/helper same-path delta without force-push or history rewrite."
 }
