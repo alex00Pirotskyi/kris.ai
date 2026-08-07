@@ -17,10 +17,10 @@
     "tool/worker_d_p3_manifest_binding.py",
     "tool/worker_d_p3_manifest_binding_test.py"
   ],
-  "status": "ACTIVE",
+  "status": "COMPLETE",
   "createdAt": "2026-08-07T11:39:07Z",
-  "refreshedAt": "2026-08-07T11:39:07Z",
+  "refreshedAt": "2026-08-07T12:11:45Z",
   "expiresAt": "2026-08-07T15:39:07Z",
   "parentClaimHead": "7eecc840f68ca0dff13ab58c138845593254e390",
-  "nextAction": "Repair PR #93 immutable artifact provenance and dependency semantic evidence binding only; preserve Worker D runtime/readiness semantics, do not implement P3 browser runtime, and do not edit shared Test Center or root manifest authority."
+  "nextAction": "Worker D integration owner should inspect/consume draft PR #99 at exact helper head 6603228019497ee1de683d4c69bdc9a3fa8ed925 / tree 066327eaa4eb98337a516344964ab8f8a1d45843. Exact product-gates run 31176496748 is PASS on Windows/macOS/Ubuntu including native builds. Worker-D readiness run 31176496813 passes immutable artifact/dependency owner-lineage guards, readiness, canonical Test Center and affected-selection on all three OS, then fails only owner-controlled SOURCE_MANIFEST.sha256 currency. Regenerate/review the root manifest through the proper source-manifest authority before owner integration; preserve P2-004 blocking truth and do not claim P3 browser runtime/support."
 }
