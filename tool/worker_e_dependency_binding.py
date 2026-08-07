@@ -134,6 +134,51 @@ def _verify_evidence_bindings(
     return verified
 
 
+def _verify_review_requirement(
+    name: str,
+    row: Mapping[str, Any],
+    artifact: Mapping[str, Any],
+) -> None:
+    requirement = row.get("reviewRequirement")
+    if not isinstance(requirement, Mapping):
+        raise DependencyBindingError(f"{name} immutable review lacks explicit reviewRequirement")
+    expected_fields = {
+        "recordType",
+        "reviewType",
+        "mission",
+        "task",
+        "pullRequest",
+        "requiredScope",
+    }
+    if set(requirement) != expected_fields:
+        raise DependencyBindingError(f"{name} reviewRequirement fields are not closed")
+    if requirement.get("recordType") != "IndependentReview":
+        raise DependencyBindingError(f"{name} reviewRequirement has unsupported recordType")
+    for field in ("reviewType", "mission", "task"):
+        value = requirement.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise DependencyBindingError(f"{name} reviewRequirement.{field} must be non-empty")
+    pull_request = requirement.get("pullRequest")
+    if not isinstance(pull_request, int) or isinstance(pull_request, bool) or pull_request <= 0:
+        raise DependencyBindingError(f"{name} reviewRequirement.pullRequest must be a positive integer")
+    required_scope = requirement.get("requiredScope")
+    if not isinstance(required_scope, Mapping) or not required_scope:
+        raise DependencyBindingError(f"{name} reviewRequirement.requiredScope must be a non-empty object")
+    if any(not isinstance(value, bool) for value in required_scope.values()):
+        raise DependencyBindingError(f"{name} reviewRequirement.requiredScope values must be booleans")
+
+    for field in ("recordType", "reviewType", "mission", "task", "pullRequest"):
+        if artifact.get(field) != requirement.get(field):
+            raise DependencyBindingError(
+                f"{name} review artifact {field} does not satisfy declared review requirement"
+            )
+    artifact_scope = artifact.get("scope")
+    if not isinstance(artifact_scope, Mapping):
+        raise DependencyBindingError(f"{name} review artifact lacks scope")
+    if dict(artifact_scope) != dict(required_scope):
+        raise DependencyBindingError(f"{name} review artifact scope does not satisfy declared review requirement")
+
+
 def _verify_review_artifact(
     project: Path,
     name: str,
@@ -162,6 +207,7 @@ def _verify_review_artifact(
         raise DependencyBindingError(f"{name} review artifact reviewer role mismatch")
     if artifact.get("decision") != row.get("decision"):
         raise DependencyBindingError(f"{name} review artifact decision mismatch")
+    _verify_review_requirement(name, row, artifact)
 
 
 def _resolve_live_ref(project: Path, ref: str) -> str:
