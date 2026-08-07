@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "workOrderId": "WO-P5-001-INTEGRATE-94",
+  "mission": "MISSION-005",
+  "roadmapTask": "P5-001",
+  "parentProductPr": 72,
+  "priority": 96,
+  "type": "INTEGRATION",
+  "objective": "Consume the bounded P5 helper #94 into canonical Product PR #72, preserve the tri-platform-tested behavior, carry forward unaffected review scopes where machine proof permits, and close/delete the helper lifecycle.",
+  "requestedRole": "INTEGRATOR",
+  "allowedPaths": ["lib/product/p5_information_architecture/**", "lib/p5_ia_preview.dart", "test/product/p5_information_architecture/**", "release/evidence/P5-*/**", ".github/workflows/worker-f*.yml"],
+  "baseCommit": "67586763bb055faab76e4994184da78f77bd9810",
+  "baseTree": "b7d91180dffd221680f73a09730c00cc7d07860c",
+  "dependencyRequirements": [],
+  "requiredTests": ["P5 information-architecture suite", "affected shipped-shell tests"],
+  "maxChildWorkOrders": 1,
+  "status": "READY",
+  "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
+  "createdAt": "2026-08-07T12:15:00Z"
+}
