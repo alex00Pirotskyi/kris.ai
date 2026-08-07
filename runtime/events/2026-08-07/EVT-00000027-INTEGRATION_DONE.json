@@ -1,0 +1,23 @@
+{
+  "eventId": "EVT-00000027-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "mission": "MISSION-007",
+  "payload": {
+    "helperPr": 107,
+    "helperHead": "bde2f6b1b911e23190fd9ea34839199133a89c05",
+    "canonicalProductPr": 96,
+    "previousProductHead": "ea0e2ca0868c0334a7dd3c2c3cf326211f464389",
+    "integratedProductHead": "308f8a449594bbe90cf0ff6089fe5f7c13378ab0",
+    "integrationMethod": "squash",
+    "semaphoreId": "SEM-P7-001-INTEGRATE-107-C0DECAFE",
+    "sourceInventoryWorkOrder": "WO-P7-001-SOURCE-INVENTORY-EA0E2CA",
+    "sourceInventoryState": "LANDED",
+    "validationState": "VALIDATING",
+    "remainingBlocker": "tool/validate_release.py maintains a separate stale active-Dart allowlist; no ACCEPTED/support/release/production/GA claim is made."
+  },
+  "recordedAt": "2026-08-07T16:14:00Z",
+  "runtimeGeneration": 27,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T161400Z-c0decafe",
+  "workOrderId": "WO-P7-001-INTEGRATE-107-C0DECAFE"
+}
