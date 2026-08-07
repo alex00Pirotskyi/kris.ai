@@ -1,12 +1,16 @@
 {
+  "activeSemaphoreId": "SEM-P7-001-RELEASE-VALIDATOR-C0DECAFE",
   "allowedPaths": [
     "tool/validate_release.py"
   ],
+  "assignedWorker": "ELASTIC-c0decafe",
   "baseCommit": "308f8a449594bbe90cf0ff6089fe5f7c13378ab0",
   "baseTree": "3b8a8474d5ac7c9c73d2e6aab8759207d8a97a8e",
   "createdAt": "2026-08-07T16:28:00Z",
   "createdBy": "SYSTEM-P7-RELEASE-VALIDATOR-BLOCKER",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
+  "lastActor": "ELASTIC-c0decafe",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Repair the legacy release validator once so shipped lib/** Dart source is governed by the canonical source-contract inventory and test/** Dart files are not misclassified as shipped runtime source. Apply only the bounded deterministic v1.5 release-validator source-policy transform; do not make arbitrary release policy changes.",
@@ -19,8 +23,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T16:28:00Z",
+  "updatedAt": "2026-08-07T16:31:00Z",
   "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE"
 }

@@ -1,0 +1,13 @@
+{
+  "authorityId": "release-validator-source-policy",
+  "commandId": "CMD-P7-001-RELEASE-VALIDATOR-C0DECAFE-29",
+  "createdAt": "2026-08-07T16:31:00Z",
+  "expectedRuntimeGeneration": 29,
+  "note": "Apply only the bounded governed-library release-validator source-policy migration; no arbitrary release-policy changes.",
+  "operation": "UPDATE_RELEASE_VALIDATOR_SOURCE_POLICY_V1",
+  "requestingMission": "MISSION-007",
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-RELEASE-VALIDATOR-C0DECAFE",
+  "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE",
+  "workerIdentity": "ELASTIC-c0decafe"
+}

@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "tool/validate_release.py"
+  ],
+  "authorityId": "release-validator-source-policy",
+  "baseCommit": "308f8a449594bbe90cf0ff6089fe5f7c13378ab0",
+  "baseTree": "3b8a8474d5ac7c9c73d2e6aab8759207d8a97a8e",
+  "branch": "agent/help/elastic-c0decafe/mission-007/p7-release-validator-policy",
+  "createdAt": "2026-08-07T16:31:00Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-07T20:31:00Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-007",
+  "productPr": null,
+  "refreshedAt": "2026-08-07T16:31:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 29,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-RELEASE-VALIDATOR-C0DECAFE",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE",
+  "workerIdentity": "ELASTIC-c0decafe"
+}

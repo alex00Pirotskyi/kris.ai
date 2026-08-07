@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000029-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-007",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "AUTHORITY",
+    "semaphoreId": "SEM-P7-001-RELEASE-VALIDATOR-C0DECAFE",
+    "workerIdentity": "ELASTIC-c0decafe"
+  },
+  "recordedAt": "2026-08-07T16:31:00Z",
+  "runtimeGeneration": 29,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T163100Z-c0decafe",
+  "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE"
+}
