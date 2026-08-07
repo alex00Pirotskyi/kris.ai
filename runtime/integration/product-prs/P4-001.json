@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "task": "P4-001",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "captain": "D",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "observedHead": "a608700a908042fedf18c8431402551da6853f7d",
+  "status": "ACTIVE",
+  "observedAt": "2026-08-07T12:06:00Z"
+}
