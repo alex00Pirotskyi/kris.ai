@@ -1,10 +1,13 @@
 {
+  "activeSemaphoreId": "SEM-P8-001-LAND-MAIN-SQUASH-4F6A2C91",
   "allowedPaths": ["config/test_center*.json","schemas/test_center*.json","tool/test_center*.py","docs/testing/**","release/evidence/TEST_CENTER/**",".github/workflows/worker-b*.yml"],
+  "assignedWorker": "ELASTIC-4f6a2c91",
   "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
   "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
   "createdAt": "2026-08-07T20:47:00Z",
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Land exact finalized P8-001 Product PR #65 through enabled squash policy; preserve f23316535b8042662250ec63005817e72da581d0 as provenance; require exact post-main product-gates before LANDED_MAIN; no ACCEPTED/support/certification/release/production/GA promotion.",
@@ -14,8 +17,8 @@
   "requiredTests": ["P8 run 31215811536 SUCCESS tri-OS with committed manifest equality/non-mutation","product-gates 31215806810 SUCCESS tri-OS","R1 exact-current SOURCE/SECURITY/PRODUCT_TEST review 4886392211 PASS","resulting main squash commit exact post-landing product-gates PASS before LANDED_MAIN"],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:47:00Z",
+  "updatedAt": "2026-08-07T20:48:00Z",
   "workOrderId": "WO-P8-001-LAND-MAIN-SQUASH-4F6A2C91"
 }

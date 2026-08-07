@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "agent/b/test-center-contracts-and-review",
+  "createdAt": "2026-08-07T20:48:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T00:48:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-002",
+  "productPr": 65,
+  "refreshedAt": "2026-08-07T20:48:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 92,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P8-001-LAND-MAIN-SQUASH-4F6A2C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P8-001-LAND-MAIN-SQUASH-4F6A2C91",
+  "workerIdentity": "ELASTIC-4f6a2c91"
+}
