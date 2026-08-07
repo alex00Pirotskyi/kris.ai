@@ -6,7 +6,6 @@
     "tool/worker_d_p3_dependency_binding.py",
     "tool/worker_d_p3_dependency_binding_test.py"
   ],
-  "activeSemaphoreId": "SEM-P3-TRUST-CLOSURE-6B4E91D2",
   "assignedWorker": "ELASTIC-6b4e91d2",
   "baseCommit": "3dc067564a813dfc63fdda0291df4411b9c2edf7",
   "baseTree": "2b9f704c466c85cf343ac5941b24a401216ad911",
@@ -30,8 +29,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-07T20:40:00Z",
+  "updatedAt": "2026-08-07T21:00:00Z",
   "workOrderId": "WO-P3-READINESS-TRUST-CLOSURE-6B4E91D2"
 }

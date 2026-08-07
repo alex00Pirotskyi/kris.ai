@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000097-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P3-TRUST-CLOSURE-6B4E91D2"
+  },
+  "recordedAt": "2026-08-07T21:00:00Z",
+  "runtimeGeneration": 97,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200543Z-6b4e91d2",
+  "workOrderId": "WO-P3-READINESS-TRUST-CLOSURE-6B4E91D2"
+}
