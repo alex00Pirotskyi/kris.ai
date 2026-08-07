@@ -30,11 +30,27 @@ jobs:
             platform: windows
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ env.CANDIDATE_SHA }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Assert exact source candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_sha=$(git rev-parse HEAD)
+          test "$actual_sha" = "$CANDIDATE_SHA"
+          actual_tree=$(git rev-parse 'HEAD^{tree}')
+          candidate_tree=$(git rev-parse "${CANDIDATE_SHA}^{tree}")
+          test "$actual_tree" = "$candidate_tree"
+          {
+            echo "candidate_sha=$actual_sha"
+            echo "candidate_tree=$actual_tree"
+          } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version-file: config/p2.python-version
@@ -51,16 +67,21 @@ jobs:
           A=$(python tool/test_center_contracts.py select-affected --project . release/evidence/P3-001/fixture-specification.json tool/worker_d_p3_readiness.py)
           B=$(python tool/test_center_contracts.py select-affected --project . tool/worker_d_p3_readiness.py release/evidence/P3-001/fixture-specification.json)
           test "$A" = "$B"
-      - name: Source manifest owner is deterministic
+      - name: Source manifest owner is deterministic and committed current
         shell: bash
         run: |
+          set -euo pipefail
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest-committed"
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest-first"
           python tool/p1a_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/manifest-first" SOURCE_MANIFEST.sha256
+          cmp "$RUNNER_TEMP/manifest-committed" "$RUNNER_TEMP/manifest-first"
+          git diff --exit-code -- SOURCE_MANIFEST.sha256
       - name: Generated-state and non-mutation check
         shell: bash
         run: |
+          set -euo pipefail
           python tool/source_tree_policy.py check --project .
           git diff --check
-          test -z "$(git status --porcelain | grep -v '^ M SOURCE_MANIFEST.sha256$' || true)"
+          test -z "$(git status --porcelain)"
