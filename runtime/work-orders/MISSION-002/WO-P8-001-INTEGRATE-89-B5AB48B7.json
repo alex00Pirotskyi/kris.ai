@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml",
+    "tool/test_center_contracts_test.py",
+    "tool/test_center_assurance_hierarchy_test.py",
+    "tool/test_center_assurance_enforcement_test.py",
+    "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-machine-result.json"
+  ],
+  "baseCommit": "604905039aa26952045e69ebe6799ae464144635",
+  "baseTree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+  "createdAt": "2026-08-07T14:43:30Z",
+  "createdBy": "ELASTIC-b5ab48b7",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-002",
+  "objective": "Integrate exact green bounded helper PR #89 into canonical P8 Product PR #65, preserving current Test Center semantics and helper-head CI correction, then validate the exact owner candidate. This does not close broader P8 security/evidence, support, acceptance, release, production, or GA gates.",
+  "parentProductPr": 65,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "tool/test_center_contracts_test.py",
+    "tool/test_center_assurance_hierarchy_test.py",
+    "tool/test_center_assurance_enforcement_test.py"
+  ],
+  "roadmapTask": "P8-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-07T14:43:30Z",
+  "workOrderId": "WO-P8-001-INTEGRATE-89-B5AB48B7"
+}
