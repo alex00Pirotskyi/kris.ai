@@ -1,0 +1,27 @@
+{
+  "allowedPaths": [
+    "services/research_worker/src/search/fixture_provider.py",
+    "services/research_worker/test/test_fixture_provider.py"
+  ],
+  "baseCommit": "fceea9a561dad8ff57f398c8be2f5fe27ad48f25",
+  "baseTree": "95470ca13088976d1d3331913a89527d99648954",
+  "createdAt": "2026-08-07T19:08:00Z",
+  "createdBy": "ELASTIC-4a9c2d1e",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Repair the P4-001 deterministic fixture provider so advertised safe-search modes are enforced fail-closed before pagination, with monotonic off/moderate/strict semantics and focused two-provider regressions, without touching shared Test Center authority or claiming live-search support.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "BUILDER",
+  "requiredTests": [
+    "services/research_worker/test/test_fixture_provider.py",
+    "tool/p4_001_search_provider_test.py"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-07T19:08:00Z",
+  "workOrderId": "WO-P4-001-SAFE-SEARCH-4A9C2D1E"
+}

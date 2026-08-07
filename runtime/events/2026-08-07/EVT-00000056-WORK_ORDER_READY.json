@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000056-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "BUILDER",
+    "type": "PRODUCT_DEFECT_REPAIR"
+  },
+  "recordedAt": "2026-08-07T19:08:00Z",
+  "runtimeGeneration": 56,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190800Z-4a9c2d1e",
+  "workOrderId": "WO-P4-001-SAFE-SEARCH-4A9C2D1E"
+}
