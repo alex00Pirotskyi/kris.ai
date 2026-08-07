@@ -1,7 +1,7 @@
 {
   "activeSemaphoreId": "SEM-P5-001-CI-SANITIZER-C0DE5001",
   "allowedPaths": [
-    ".github/workflows/ci.yml"
+    "lib/product/p5_information_architecture/**"
   ],
   "assignedWorker": "SANITIZER-V2",
   "baseCommit": "af26c2948a42c16603b179b7d79ed47aa91b5296",
@@ -10,7 +10,7 @@
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "SANITIZER-V2:RESERVED_EXACT_CI",
+  "lastActor": "SANITIZER-V2:CORRECTED_MISSION_SCOPE",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Dispatch and bind the existing repository product-gates workflow to exact canonical P5-001 Product PR #72 head af26c2948a42c16603b179b7d79ed47aa91b5296 without source mutation, trigger commits, PR churn, or support promotion.",
@@ -27,6 +27,6 @@
   "schemaVersion": 1,
   "status": "INTEGRATING",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-07T18:51:00Z",
+  "updatedAt": "2026-08-07T18:55:00Z",
   "workOrderId": "WO-P5-001-EXACT-CI-SANITIZER"
 }

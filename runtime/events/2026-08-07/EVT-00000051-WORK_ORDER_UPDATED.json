@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000051-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "allowedPathsCorrected": [
+      "lib/product/p5_information_architecture/**"
+    ],
+    "reason": "Exact CI relay rejected the initial global workflow path because CI Work Order allowedPaths must remain within mission/shared authority policy; the active INTEGRATION semaphore remains zero-write."
+  },
+  "recordedAt": "2026-08-07T18:55:00Z",
+  "runtimeGeneration": 51,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T185100Z-c0de5001",
+  "workOrderId": "WO-P5-001-EXACT-CI-SANITIZER"
+}
