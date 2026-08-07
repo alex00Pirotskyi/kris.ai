@@ -1,0 +1,50 @@
+name: Mission V1.5 Runtime Invariants
+
+on:
+  pull_request:
+    paths:
+      - 'tool/mission_runtime_control.py'
+      - 'tool/mission_delivery_strict.py'
+      - 'tool/mission_v15_regression_test.py'
+      - 'schemas/mission_*'
+      - 'docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-invariants:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Assert exact source head
+        shell: bash
+        run: |
+          expected='${{ github.event.pull_request.head.sha || github.sha }}'
+          test "$(git rev-parse HEAD)" = "$expected"
+      - name: Compile mission controls
+        run: >-
+          python -m py_compile
+          tool/mission_runtime_control.py
+          tool/mission_delivery_strict.py
+          tool/mission_v15_regression_test.py
+      - name: Run v1.5 negative regressions
+        run: python tool/mission_v15_regression_test.py
+      - name: Validate live runtime
+        run: python tool/mission_runtime_control.py --project . validate
+      - name: Validate strict delivery
+        run: python tool/mission_delivery_strict.py --project . validate
+      - name: Verify non-mutation
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"
