@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000002-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "runtimeGeneration": 2,
+  "recordedAt": "2026-08-07T13:42:30Z",
+  "workExecutionId": "WRK-20260807T134230Z-P5RECON",
+  "workOrderId": "WO-P5-001-INTEGRATE-94",
+  "mission": "MISSION-005",
+  "payload": {
+    "helperPr": 94,
+    "canonicalProductPr": 72,
+    "previousProductHead": "67586763bb055faab76e4994184da78f77bd9810",
+    "integratedProductHead": "af26c2948a42c16603b179b7d79ed47aa91b5296",
+    "integratedProductTree": "3d0c11bad811c2c76332ea75e79f9bd2a7ae37c9",
+    "integrationMethod": "squash",
+    "reservationDurability": "MISSING",
+    "migrationException": "The P5 helper was consumed into the canonical Product PR while the prepared runtime reservation/release transactions did not durably reach agent/mission-runtime. Repository state is authoritative; no semaphore receipt is fabricated. This post-hoc migration reconciliation moves the Work Order to exact-head validation before the 10-worker v1.5 launch."
+  }
+}
