@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000018-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "actor": "SYSTEM-CONNECTOR-RELAY-REPAIR",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-07T15:30:00Z",
+  "runtimeGeneration": 18,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T153000Z-c0decafe",
+  "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5"
+}
