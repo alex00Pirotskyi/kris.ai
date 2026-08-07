@@ -3,6 +3,7 @@ name: Mission V1.5 Runtime Invariants
 on:
   pull_request:
     paths:
+      - '.github/workflows/mission-v15-connector-authority-relay.yml'
       - 'tool/mission_runtime_control.py'
       - 'tool/mission_runtime_model.py'
       - 'tool/mission_orchestrator.py'
@@ -10,6 +11,7 @@ on:
       - 'tool/mission_review_carry_forward.py'
       - 'tool/mission_v15_authority_append.py'
       - 'tool/mission_v15_authority_test.py'
+      - 'tool/mission_v15_connector_authority_apply.py'
       - 'tool/mission_v15_governance_drift.py'
       - 'tool/mission_v15_helper_validate.py'
       - 'tool/mission_v15_hygiene.py'
@@ -22,6 +24,8 @@ on:
       - 'schemas/mission_*'
       - 'config/mission_v15_*.json'
       - 'docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md'
+      - 'docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md'
+      - 'docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md'
   workflow_dispatch:
 
 permissions:
@@ -57,6 +61,7 @@ jobs:
           tool/mission_review_carry_forward.py
           tool/mission_v15_authority_append.py
           tool/mission_v15_authority_test.py
+          tool/mission_v15_connector_authority_apply.py
           tool/mission_v15_governance_drift.py
           tool/mission_v15_helper_validate.py
           tool/mission_v15_hygiene.py
