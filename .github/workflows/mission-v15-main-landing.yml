@@ -1,0 +1,52 @@
+name: Mission V1.5 Main Landing
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      main_sha:
+        description: Exact protected-main commit to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  landing-truth:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.main_sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Assert exact protected-main identity
+        shell: bash
+        run: |
+          expected='${{ github.event.inputs.main_sha || github.sha }}'
+          test "$(git rev-parse HEAD)" = "$expected"
+      - name: Validate strict delivery and source landing truth
+        shell: bash
+        run: |
+          python tool/mission_delivery_strict.py --project . validate
+          python tool/mission_v15_landing_gate.py \
+            --project . \
+            --main-commit '${{ github.event.inputs.main_sha || github.sha }}' \
+            --output "$RUNNER_TEMP/landing-truth.json"
+      - name: Verify canonical source manifest
+        shell: bash
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.before"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.before" SOURCE_MANIFEST.sha256
+      - name: Verify non-mutation
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-v15-main-landing-${{ github.event.inputs.main_sha || github.sha }}
+          path: ${{ runner.temp }}/landing-truth.json
