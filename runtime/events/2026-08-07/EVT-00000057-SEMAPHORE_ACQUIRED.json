@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000057-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "BUILDER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P4-001-SAFE-SEARCH-4A9C2D1E",
+    "workerIdentity": "ELASTIC-4a9c2d1e"
+  },
+  "recordedAt": "2026-08-07T19:13:00Z",
+  "runtimeGeneration": 57,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190800Z-4a9c2d1e",
+  "workOrderId": "WO-P4-001-SAFE-SEARCH-4A9C2D1E"
+}
