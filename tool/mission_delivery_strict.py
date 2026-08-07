@@ -25,7 +25,7 @@ from mission_delivery_lib import (
     validate_record,
     write_json,
 )
-from mission_delivery_checks import classify_changed_paths
+from mission_delivery_checks import classify_changed_paths, git_changed_paths, review_impact
 from mission_runtime_control import (
     active_leases,
     durable_claims,
@@ -100,13 +100,59 @@ def latest_records_compat(project: pathlib.Path, model: dict[str, Any]) -> dict[
     return latest
 
 
+def _validate_review_carry_forward(
+    project: pathlib.Path,
+    model: dict[str, Any],
+    review: dict[str, Any],
+    candidate_commit: str,
+    record_path: pathlib.Path,
+) -> None:
+    carried_from = review.get("carriedFromCommit")
+    if carried_from is None:
+        return
+    if not isinstance(carried_from, str) or not GIT_SHA.fullmatch(carried_from):
+        raise DeliveryError(f"{record_path}: invalid carriedFromCommit")
+    proof = review.get("carryForwardProof")
+    if not isinstance(proof, dict):
+        raise DeliveryError(f"{record_path}: carryForwardProof required")
+    if proof.get("base") != carried_from or proof.get("head") != candidate_commit:
+        raise DeliveryError(f"{record_path}: carry-forward base/head mismatch")
+    scopes = sorted(set(review.get("scopes") or []))
+    if not scopes:
+        raise DeliveryError(f"{record_path}: carried review scopes required")
+    if sorted(set(proof.get("reviewedScopes") or [])) != scopes:
+        raise DeliveryError(f"{record_path}: carry-forward reviewedScopes mismatch")
+    try:
+        run_git(project, "cat-file", "-e", f"{carried_from}^{{commit}}")
+        run_git(project, "merge-base", "--is-ancestor", carried_from, candidate_commit)
+    except DeliveryError as exc:
+        raise DeliveryError(
+            f"{record_path}: carried review base is not an ancestor of candidate"
+        ) from exc
+    changed = git_changed_paths(project, carried_from, candidate_commit)
+    impact = review_impact(changed, model)
+    if proof.get("classification") != impact["classification"]:
+        raise DeliveryError(f"{record_path}: carry-forward classification mismatch")
+    if sorted(proof.get("invalidatedScopes") or []) != sorted(impact["invalidatedScopes"]):
+        raise DeliveryError(f"{record_path}: carry-forward invalidatedScopes mismatch")
+    if sorted(proof.get("changedPaths") or []) != sorted(impact["changedPaths"]):
+        raise DeliveryError(f"{record_path}: carry-forward changedPaths mismatch")
+    invalidated_carried = sorted(set(scopes) & set(impact["invalidatedScopes"]))
+    if invalidated_carried:
+        raise DeliveryError(
+            f"{record_path}: carried review invalidated for scopes {invalidated_carried}"
+        )
+
+
 def validate_review_receipt(
     review: dict[str, Any],
     *,
     candidate_commit: str,
     record_path: pathlib.Path,
+    project: pathlib.Path | None = None,
+    model: dict[str, Any] | None = None,
 ) -> None:
-    """Validate explicit v1.5 review identity namespaces and tier semantics."""
+    """Validate explicit v1.5 review identity, tier and carry-forward semantics."""
     if review.get("candidateCommit") != candidate_commit or review.get("decision") != "PASS":
         raise DeliveryError(f"{record_path}: exact-candidate PASS reviewReceipt required")
 
@@ -134,6 +180,11 @@ def validate_review_receipt(
             f"{record_path}: implementerAuthoringContextIds must be a string array"
         )
 
+    if project is not None:
+        actual_tree = git_tree(project, candidate_commit)
+        if review.get("candidateTree") != actual_tree:
+            raise DeliveryError(f"{record_path}: review candidateCommit/candidateTree mismatch")
+
     if tier == "R0":
         raise DeliveryError(f"{record_path}: R0 builder check cannot satisfy accepted state")
 
@@ -155,6 +206,11 @@ def validate_review_receipt(
             raise DeliveryError(
                 f"{record_path}: R2 requires distinct reviewer/implementer GitHub identities"
             )
+
+    if review.get("carriedFromCommit") is not None:
+        if project is None or model is None:
+            raise DeliveryError(f"{record_path}: project/model required for carried review validation")
+        _validate_review_carry_forward(project, model, review, candidate_commit, record_path)
 
 
 def validate_source_landing(project: pathlib.Path, record: dict[str, Any], record_path: pathlib.Path) -> None:
@@ -213,7 +269,13 @@ def validate_accepted_records(project: pathlib.Path) -> None:
             raise DeliveryError(f"{path.relative_to(project)}: exact-candidate PASS ciReceipt required")
         if not isinstance(review, dict):
             raise DeliveryError(f"{path.relative_to(project)}: structured reviewReceipt required")
-        validate_review_receipt(review, candidate_commit=commit, record_path=path)
+        validate_review_receipt(
+            review,
+            candidate_commit=commit,
+            record_path=path,
+            project=project,
+            model=model,
+        )
         if status == "MERGED_MAIN":
             merged = record.get("mergedMainCommit")
             if not merged:

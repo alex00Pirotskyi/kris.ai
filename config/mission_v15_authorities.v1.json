@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "authorities": {
+    "test-center-registry": {
+      "ownerMission": "MISSION-002",
+      "path": "config/test_center_registry.v1.json",
+      "mode": "APPEND_SAFE_JSON",
+      "eligibleRequestingMissions": ["MISSION-004", "MISSION-005", "MISSION-006", "MISSION-010"],
+      "collections": {
+        "affectedTestMappings": "mappingId",
+        "projectTestProfiles": "stableCheckId",
+        "testCases": "testId",
+        "testModules": "moduleId",
+        "testingStudioPresentationRecords": "presentationId"
+      }
+    },
+    "test-center-hierarchy": {
+      "ownerMission": "MISSION-002",
+      "path": "config/test_center_assurance_hierarchy.v1.json",
+      "mode": "APPEND_SAFE_JSON",
+      "eligibleRequestingMissions": ["MISSION-004", "MISSION-005", "MISSION-006", "MISSION-010"],
+      "collections": {
+        "testBindings": "testId"
+      }
+    },
+    "source-inventory": {
+      "ownerMission": "MISSION-001",
+      "path": "test/product/source_contract_test.dart",
+      "mode": "APPEND_SAFE_DART_SET",
+      "eligibleRequestingMissions": ["MISSION-003", "MISSION-005", "MISSION-006", "MISSION-007", "MISSION-011", "MISSION-012", "MISSION-013", "MISSION-014"],
+      "setStartMarker": "const expected = <String>{",
+      "pathPrefix": "lib/"
+    }
+  }
+}
