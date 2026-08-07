@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": ".github/workflows/worker-d-p3-readiness.yml",
-      "sha256": "f3587101ff441a0daaf9f292738d079fc39bf17d5bb192d509039763731ba1a3"
+      "sha256": "1997bae51ec85293f541055286a88b2a6bcd8950954cb3d9e8486f816b40a59c"
     },
     {
       "path": "config/test_center_registry.v1.json",
