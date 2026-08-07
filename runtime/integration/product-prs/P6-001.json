@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "task": "P6-001",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "captain": "G",
+  "branch": "agent/g/mission-006-model-routing",
+  "observedHead": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "status": "ACTIVE",
+  "observedAt": "2026-08-07T12:06:00Z"
+}
