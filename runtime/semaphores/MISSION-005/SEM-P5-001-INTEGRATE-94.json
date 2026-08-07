@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-INTEGRATE-94",
+  "kind": "INTEGRATION",
+  "workOrderId": "WO-P5-001-INTEGRATE-94",
+  "mission": "MISSION-005",
+  "workerIdentity": "Integrator-002",
+  "executionRole": "INTEGRATOR",
+  "branch": "agent/f/P5-001-information-architecture",
+  "productPr": 72,
+  "authorityId": null,
+  "resourceId": null,
+  "baseCommit": "67586763bb055faab76e4994184da78f77bd9810",
+  "baseTree": "b7d91180dffd221680f73a09730c00cc7d07860c",
+  "allowedPaths": ["lib/product/p5_information_architecture/**", "lib/p5_ia_preview.dart", "test/product/p5_information_architecture/**", "release/evidence/P5-*/**", ".github/workflows/worker-f*.yml"],
+  "createdAt": "2026-08-07T13:25:00Z",
+  "refreshedAt": "2026-08-07T13:25:00Z",
+  "expiresAt": "2026-08-07T17:25:00Z",
+  "runtimeGeneration": 2,
+  "status": "ACTIVE"
+}
