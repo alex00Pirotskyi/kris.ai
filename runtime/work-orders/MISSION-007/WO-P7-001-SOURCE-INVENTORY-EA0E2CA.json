@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "workOrderId": "WO-P7-001-SOURCE-INVENTORY-EA0E2CA",
+  "mission": "MISSION-007",
+  "roadmapTask": "P7-001",
+  "parentProductPr": 96,
+  "priority": 100,
+  "type": "AUTHORITY_UPDATE",
+  "objective": "Append lib/product/mcp_protocol.dart to the governed analyzer-visible source inventory on the current canonical P7 base while preserving every existing source-inventory entry.",
+  "requestedRole": "AUTHORITY_OWNER",
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "baseCommit": "ea0e2ca0868c0334a7dd3c2c3cf326211f464389",
+  "baseTree": "bec9f1344fb71ee7caeeea7d327cfb0c455f29f8",
+  "dependencyRequirements": [],
+  "requiredTests": [
+    "test/product/source_contract_test.dart",
+    "test/product/mcp/mcp_protocol_test.dart",
+    "test/product/mcp/mcp_opaque_cursor_regression_test.dart"
+  ],
+  "maxChildWorkOrders": 0,
+  "status": "READY",
+  "createdBy": "SYSTEM-PRODUCT-RUNTIME-DIVERGENCE-REPAIR",
+  "createdAt": "2026-08-07T15:48:00Z",
+  "updatedAt": "2026-08-07T15:48:00Z",
+  "parentWorkOrderId": "WO-P7-001-PROTOCOL-CLOSURE",
+  "supersedes": "WO-P7-001-SOURCE-INVENTORY-529719B5"
+}
