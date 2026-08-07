@@ -5,6 +5,7 @@ on:
     branches:
       - agent/anarchy-autonomous-worker-missions
       - agent/mission-delivery-enforcement-v1
+      - agent/mission-execution-v15-gold
     paths:
       - '.github/workflows/mission-delivery-materialize.yml'
       - 'config/mission_delivery.v1.json'
