@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000037-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-007",
+  "payload": {
+    "newObservedProductHead": "ec5086210a778b8a1be51f22b9cd81f735956034",
+    "nextStatus": "VALIDATING",
+    "previousObservedProductHead": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
+    "semaphoreId": "SEM-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
+  },
+  "recordedAt": "2026-08-07T17:21:00Z",
+  "runtimeGeneration": 37,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T172100Z-c0decafe",
+  "workOrderId": "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
+}
