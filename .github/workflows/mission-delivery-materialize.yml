@@ -10,6 +10,8 @@ on:
       - 'config/mission_delivery.v1.json'
       - 'docs/roadmap/missions/delivery/records/**'
       - 'tool/mission_delivery_*.py'
+      - 'tool/mission_materialize_safe.py'
+      - 'tool/mission_runtime_control.py'
   workflow_dispatch:
 
 permissions:
@@ -35,13 +37,28 @@ jobs:
       - name: Require exact triggering head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-      - name: Validate and materialize delivery records
+      - name: Validate durable runtime and delivery source
         shell: bash
         run: |
           set -euo pipefail
-          python tool/mission_control.py --project . validate
+          python -m py_compile \
+            tool/mission_control.py \
+            tool/mission_materialize_safe.py \
+            tool/mission_runtime_control.py \
+            tool/mission_delivery_lib.py \
+            tool/mission_delivery_checks.py \
+            tool/mission_delivery_live.py \
+            tool/mission_delivery_control.py \
+            tool/mission_delivery_strict.py \
+            tool/mission_delivery_control_test.py
+          python tool/mission_materialize_safe.py --project . validate
+          python tool/mission_runtime_control.py --project . validate
           python -m unittest -v tool/mission_delivery_control_test.py
-          python tool/mission_delivery_control.py --project . validate
+          python tool/mission_delivery_strict.py --project . validate
+      - name: Materialize delivery metrics
+        shell: bash
+        run: |
+          set -euo pipefail
           python tool/mission_delivery_control.py --project . generate
           python tool/mission_delivery_control.py --project . generate --check
       - name: Refresh source manifest twice
