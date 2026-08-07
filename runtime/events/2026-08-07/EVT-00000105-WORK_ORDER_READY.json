@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000105-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-003",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "DEFECT_HUNTER",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-07T21:38:00Z",
+  "runtimeGeneration": 105,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200720Z-6c8e41f3",
+  "workOrderId": "WO-P3-PACKAGING-BINDING-6C8E41F3"
+}
