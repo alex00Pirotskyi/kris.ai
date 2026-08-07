@@ -11,12 +11,12 @@
   "helperWorker": "J",
   "leaseId": "HLP-M007-J-P7PROTOFIX-115400",
   "mission": "MISSION-007",
-  "nextAction": "Carry forward the valid yielded PR #97 reserved-metadata/ProductException import hardening into current owner source, repair tools/list opaque cursor and strict tool-name parsing, and verify with the focused J regression file. Do not modify any other MISSION-007 path.",
+  "nextAction": "Yielded after product-gates proved the existing owner MCP protocol test also requires the ProductException import/cursor expectation repair. Continue only through a fresh lease that explicitly includes that third test path.",
   "ownerWorker": "I",
   "parentClaimHead": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
-  "refreshedAt": "2026-08-07T11:55:00Z",
+  "refreshedAt": "2026-08-07T12:04:30Z",
   "schemaVersion": 1,
-  "status": "ACTIVE",
+  "status": "YIELDED",
   "task": "P7-001",
   "workExecutionId": "WRK-20260807T103000Z-c8a31f7d"
 }
