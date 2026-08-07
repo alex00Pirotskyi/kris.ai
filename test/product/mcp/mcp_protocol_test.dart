@@ -100,38 +100,6 @@ void main() {
   });
 
   group('version and capability floors', () {
-    test('modern discovery requires the explicitly pinned revision', () {
-      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
-      expect(
-        () => adapter.validateModernDiscovery(
-          <String, dynamic>{
-            'supportedVersions': <String>['2025-11-25'],
-            'capabilities': <String, dynamic>{
-              'tools': <String, dynamic>{},
-            },
-          },
-          requiredCapabilities: const <String>{'tools'},
-        ),
-        throwsA(isA<ProductException>()),
-      );
-    });
-
-    test('modern discovery rejects silent removal of required tools', () {
-      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
-      expect(
-        () => adapter.validateModernDiscovery(
-          <String, dynamic>{
-            'supportedVersions': <String>['2026-07-28'],
-            'capabilities': <String, dynamic>{
-              'resources': <String, dynamic>{},
-            },
-          },
-          requiredCapabilities: const <String>{'tools'},
-        ),
-        throwsA(isA<ProductException>()),
-      );
-    });
-
     test('legacy initialize cannot silently negotiate a different revision', () {
       final adapter = McpProtocolRegistry.requireStable('2025-11-25');
       expect(
@@ -148,20 +116,127 @@ void main() {
       );
     });
 
-    test('valid modern discovery returns the negotiated capability set', () {
+    test('legacy initialize rejects removal of the tools capability', () {
+      final adapter = McpProtocolRegistry.requireStable('2025-11-25');
+      expect(
+        () => adapter.validateLegacyInitialize(
+          <String, dynamic>{
+            'protocolVersion': '2025-11-25',
+            'capabilities': <String, dynamic>{
+              'resources': <String, dynamic>{},
+            },
+          },
+          requiredCapabilities: const <String>{'tools'},
+        ),
+        throwsA(isA<ProductException>()),
+      );
+    });
+
+    test('optional modern discovery still validates an explicit pin when used', () {
       final adapter = McpProtocolRegistry.requireStable('2026-07-28');
       final capabilities = adapter.validateModernDiscovery(
         <String, dynamic>{
-          'supportedVersions': <String>['2026-07-28', '2025-11-25'],
+          'supportedVersions': <String>['2026-07-28'],
           'capabilities': <String, dynamic>{
             'tools': <String, dynamic>{'listChanged': true},
-            'resources': <String, dynamic>{},
           },
         },
         requiredCapabilities: const <String>{'tools'},
       );
 
-      expect(capabilities, containsAll(<String>['tools', 'resources']));
+      expect(capabilities, contains('tools'));
+      expect(
+        () => adapter.validateModernDiscovery(
+          <String, dynamic>{
+            'supportedVersions': <String>['2025-11-25'],
+            'capabilities': <String, dynamic>{
+              'tools': <String, dynamic>{},
+            },
+          },
+          requiredCapabilities: const <String>{'tools'},
+        ),
+        throwsA(isA<ProductException>()),
+      );
+    });
+  });
+
+  group('trusted tool catalog', () {
+    test('parses paginated tools/list pages without requiring discovery', () {
+      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+      final page = adapter.parseToolCatalogPage(
+        <String, dynamic>{
+          'tools': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'name': 'search',
+              'inputSchema': <String, dynamic>{'type': 'object'},
+            },
+            <String, dynamic>{
+              'name': 'read_file',
+              'inputSchema': <String, dynamic>{'type': 'object'},
+            },
+          ],
+          'nextCursor': 'page-2',
+        },
+      );
+
+      expect(page.toolNames, <String>{'search', 'read_file'});
+      expect(page.nextCursor, 'page-2');
+    });
+
+    test('missing trusted tool is rejected after catalog accumulation', () {
+      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+      expect(
+        () => adapter.validateRequiredTools(
+          <String>{'search'},
+          <String>{'search', 'read_file'},
+        ),
+        throwsA(isA<ProductException>()),
+      );
+    });
+
+    test('duplicate and malformed tool entries fail closed', () {
+      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+      expect(
+        () => adapter.parseToolCatalogPage(
+          <String, dynamic>{
+            'tools': <Map<String, dynamic>>[
+              <String, dynamic>{'name': 'search'},
+              <String, dynamic>{'name': 'search'},
+            ],
+          },
+        ),
+        throwsA(isA<ProductException>()),
+      );
+      expect(
+        () => adapter.parseToolCatalogPage(
+          <String, dynamic>{
+            'tools': <Map<String, dynamic>>[
+              <String, dynamic>{'name': ''},
+            ],
+          },
+        ),
+        throwsA(isA<ProductException>()),
+      );
+      expect(
+        () => adapter.parseToolCatalogPage(
+          <String, dynamic>{
+            'tools': const <Map<String, dynamic>>[],
+            'nextCursor': '',
+          },
+        ),
+        throwsA(isA<ProductException>()),
+      );
+    });
+
+    test('complete trusted tool set is accepted', () {
+      final adapter = McpProtocolRegistry.requireStable('2024-11-05');
+      expect(
+        () => adapter.validateRequiredTools(
+          <String>{'search', 'read_file', 'write_file'},
+          <String>{'search', 'read_file'},
+        ),
+        returnsNormally,
+      );
     });
   });
 }
