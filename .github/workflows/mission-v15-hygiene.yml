@@ -6,7 +6,15 @@ on:
       - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_v15_hygiene.py'
       - 'tool/mission_v15_live_runtime_audit.py'
+      - 'tool/mission_v15_runtime_atomicity.py'
       - 'tool/mission_runtime_model.py'
+      - 'docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md'
+      - 'docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md'
+      - 'runtime/**'
+  push:
+    branches:
+      - agent/mission-runtime
+    paths:
       - 'runtime/**'
   workflow_dispatch:
     inputs:
@@ -44,16 +52,24 @@ jobs:
             --runtime-project "$RUNNER_TEMP/mission-runtime" \
             --config config/mission_v15_hygiene.v1.json \
             --output "$RUNNER_TEMP/hygiene.json"
-      - name: Reject stale READY Work Order bases
+      - name: Reject runtime and Product PR divergence
         shell: bash
         run: |
           python tool/mission_v15_live_runtime_audit.py \
             --repository-project . \
             --runtime-project "$RUNNER_TEMP/mission-runtime" \
             --output "$RUNNER_TEMP/live-runtime.json"
+      - name: Audit runtime generation atomicity
+        shell: bash
+        run: |
+          python tool/mission_v15_runtime_atomicity.py \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --config config/mission_v15_hygiene.v1.json \
+            --output "$RUNNER_TEMP/runtime-atomicity.json"
       - uses: actions/upload-artifact@v4
         with:
           name: mission-v15-hygiene
           path: |
             ${{ runner.temp }}/hygiene.json
             ${{ runner.temp }}/live-runtime.json
+            ${{ runner.temp }}/runtime-atomicity.json
