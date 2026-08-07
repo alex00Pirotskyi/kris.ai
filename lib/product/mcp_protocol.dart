@@ -188,7 +188,8 @@ class McpProtocolAdapter {
     Set<String> availableTools,
     Set<String> requiredTools,
   ) {
-    final missing = requiredTools.difference(availableTools).toList()..sort();
+    final missing = requiredTools.difference(availableTools).toList()
+      ..sort();
     if (missing.isNotEmpty) {
       throw ProductException(
         'mcp_tool_removed',
