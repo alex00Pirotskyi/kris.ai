@@ -16,6 +16,8 @@ on:
       - 'tool/mission_v15_connector_json_authority_test.py'
       - 'tool/mission_v15_exact_product_ci_dispatch.py'
       - 'tool/mission_v15_exact_product_ci_dispatch_test.py'
+      - 'tool/mission_v15_legacy_branch_reap.py'
+      - 'tool/mission_v15_legacy_branch_reap_test.py'
       - 'tool/mission_v15_release_validator_policy_apply.py'
       - 'tool/mission_v15_release_validator_policy_test.py'
       - 'tool/mission_v15_source_manifest_release_apply.py'
@@ -78,6 +80,8 @@ jobs:
           tool/mission_v15_connector_json_authority_test.py
           tool/mission_v15_exact_product_ci_dispatch.py
           tool/mission_v15_exact_product_ci_dispatch_test.py
+          tool/mission_v15_legacy_branch_reap.py
+          tool/mission_v15_legacy_branch_reap_test.py
           tool/mission_v15_release_validator_policy_apply.py
           tool/mission_v15_release_validator_policy_test.py
           tool/mission_v15_source_manifest_release_apply.py
@@ -103,6 +107,8 @@ jobs:
         run: python tool/mission_v15_connector_json_authority_test.py
       - name: Run exact Product PR CI dispatch regressions
         run: python tool/mission_v15_exact_product_ci_dispatch_test.py
+      - name: Run legacy branch reaper regressions
+        run: python tool/mission_v15_legacy_branch_reap_test.py
       - name: Run release-validator policy regressions
         run: python tool/mission_v15_release_validator_policy_test.py
       - name: Run source-manifest RELEASE regressions
