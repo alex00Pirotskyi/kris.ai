@@ -4,19 +4,85 @@ on:
   push:
     branches:
       - agent/e/native-parity-readiness
+  pull_request:
+    branches:
+      - agent/e/native-parity-readiness
+    paths:
+      - '.github/workflows/worker-e-native-parity-readiness.yml'
+      - 'SOURCE_MANIFEST.sha256'
+      - 'release/evidence/P11-001/**'
+      - 'tool/worker_e_*.py'
+      - 'config/test_center_registry.v1.json'
+      - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'tool/test_center*.py'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: worker-e-native-parity-readiness-${{ github.ref }}
+  group: worker-e-native-parity-readiness-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: false
 
 jobs:
+  helper-source-validate:
+    if: github.event_name == 'pull_request'
+    name: helper-source-${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {platform: linux, os: ubuntu-24.04}
+          - {platform: windows, os: windows-2025}
+          - {platform: macos, os: macos-15}
+    runs-on: ${{ matrix.os }}
+    env:
+      CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Check out exact helper candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Fetch immutable dependency snapshots
+        shell: bash
+        run: |
+          git fetch origin \
+            agent/a/p1-p2-new-roadmap-execution \
+            agent/j/P24-001-roadmap-as-data-adr
+      - name: Require exact helper identity
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${CANDIDATE_SHA}"
+      - name: Verify Worker E dependency and handoff source
+        shell: bash
+        run: |
+          python tool/worker_e_dependency_binding.py --project .
+          python -m unittest -v \
+            tool/worker_e_native_parity_readiness_test.py \
+            tool/worker_e_test_center_registration_test.py
+          python tool/worker_e_test_center_registration.py --check --project .
+      - name: Validate canonical Test Center and P8
+        shell: bash
+        run: |
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+      - name: Verify repository non-mutation
+        shell: bash
+        run: |
+          git diff --check
+          git diff --exit-code
+          test -z "$(git status --porcelain=v1)"
+
   materialize:
     name: materialize-governed-worker-e-evidence
-    if: github.ref == 'refs/heads/agent/e/native-parity-readiness'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/agent/e/native-parity-readiness'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -108,6 +174,7 @@ jobs:
   validate:
     name: source-verification-${{ matrix.platform }}
     needs: materialize
+    if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:
