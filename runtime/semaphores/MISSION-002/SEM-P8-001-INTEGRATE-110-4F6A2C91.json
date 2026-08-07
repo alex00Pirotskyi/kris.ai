@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
+    "tool/test_center_assurance_enforcement.py",
+    "tool/test_center_assurance_enforcement_test.py",
+    "tool/test_center_assurance_hierarchy_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "26ef06cf0c55badd55733d2f901d110a3f6a2737",
+  "baseTree": "53e05ce1b285602c5244348f060cf20b9bde60a3",
+  "branch": "agent/b/test-center-contracts-and-review",
+  "createdAt": "2026-08-07T20:07:30Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T00:07:30Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-002",
+  "productPr": 65,
+  "refreshedAt": "2026-08-07T20:07:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 74,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P8-001-INTEGRATE-110-4F6A2C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91",
+  "workerIdentity": "ELASTIC-4f6a2c91"
+}

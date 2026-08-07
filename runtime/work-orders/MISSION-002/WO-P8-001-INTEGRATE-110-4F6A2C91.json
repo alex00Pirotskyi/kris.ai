@@ -1,15 +1,18 @@
 {
+  "activeSemaphoreId": "SEM-P8-001-INTEGRATE-110-4F6A2C91",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
     "tool/test_center_assurance_enforcement_test.py",
     "tool/test_center_assurance_hierarchy_test.py"
   ],
+  "assignedWorker": "ELASTIC-4f6a2c91",
   "baseCommit": "26ef06cf0c55badd55733d2f901d110a3f6a2737",
   "baseTree": "53e05ce1b285602c5244348f060cf20b9bde60a3",
   "createdAt": "2026-08-07T20:03:15Z",
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Consume exact P8 assurance-trust helper PR #110 at 9dc1d430e801d7ef100adff3d6b87d2ee3b0850e into canonical Product PR #65 without byte drift, preserve authoritative support-scope/evidence-lineage repairs, rerun exact P8/product validation, and defer shared root-manifest finalization to the controlled finalization boundary. No P8 acceptance or support promotion.",
@@ -24,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:03:15Z",
+  "updatedAt": "2026-08-07T20:07:30Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }
