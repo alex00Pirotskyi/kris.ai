@@ -1,32 +1,28 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-CI-SANITIZER-C0DE5001",
   "allowedPaths": [
     "lib/product/p5_information_architecture/**"
   ],
-  "assignedWorker": "SANITIZER-V2",
   "baseCommit": "af26c2948a42c16603b179b7d79ed47aa91b5296",
   "baseTree": "3d0c11bad811c2c76332ea75e79f9bd2a7ae37c9",
   "createdAt": "2026-08-07T18:51:00Z",
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
-  "executionRole": "CI_REPAIR",
-  "lastActor": "SANITIZER-V2:CORRECTED_MISSION_SCOPE",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
-  "objective": "Dispatch and bind the existing repository product-gates workflow to exact canonical P5-001 Product PR #72 head af26c2948a42c16603b179b7d79ed47aa91b5296 without source mutation, trigger commits, PR churn, or support promotion.",
+  "objective": "Exact P5-001 product-gates workflow_dispatch run 31209205553 is allocated on canonical Product PR #72 head af26c2948a42c16603b179b7d79ed47aa91b5296. Validate that exact run; do not infer acceptance/support from CI and do not mutate Product source merely to retrigger checks.",
   "parentProductPr": 72,
   "priority": 97,
   "requestedRole": "CI_REPAIR",
   "requiredTests": [
-    "exact product-gates workflow_dispatch run bound to af26c2948a42c16603b179b7d79ed47aa91b5296",
+    "exact product-gates workflow_dispatch run 31209205553 bound to af26c2948a42c16603b179b7d79ed47aa91b5296",
     "validate-ubuntu",
     "validate-windows",
     "validate-macos"
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-07T18:55:00Z",
+  "updatedAt": "2026-08-07T18:57:00Z",
   "workOrderId": "WO-P5-001-EXACT-CI-SANITIZER"
 }

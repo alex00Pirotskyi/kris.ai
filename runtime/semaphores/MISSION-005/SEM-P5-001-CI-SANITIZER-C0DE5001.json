@@ -15,7 +15,7 @@
   "runtimeGeneration": 50,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P5-001-CI-SANITIZER-C0DE5001",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P5-001-EXACT-CI-SANITIZER",
   "workerIdentity": "SANITIZER-V2"
 }
