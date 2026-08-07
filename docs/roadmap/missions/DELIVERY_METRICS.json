@@ -1,11 +1,11 @@
 {
   "acceptedTaskCount": 0,
   "blockedTaskCount": 5,
-  "explicitRecordCount": 6,
+  "explicitRecordCount": 7,
   "generatedAt": "DETERMINISTIC_FROM_RECORDS",
   "implementationTaskCount": 0,
-  "inReviewTaskCount": 0,
-  "landedMainTaskCount": 0,
+  "inReviewTaskCount": 1,
+  "landedMainTaskCount": 1,
   "legacyOtherTaskCount": 1,
   "mergedMainTaskCount": 0,
   "missions": [
@@ -271,17 +271,27 @@
       "claimStatus": "UNCLAIMED",
       "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
-      "inReviewTasks": 0,
-      "landedMainTasks": 0,
+      "inReviewTasks": 1,
+      "landedMainTasks": 1,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-007",
-      "notEvaluatedTasks": 36,
-      "records": [],
+      "notEvaluatedTasks": 35,
+      "records": [
+        {
+          "nextAction": "Remain in REVIEW. Complete the remaining independent review and roadmap acceptance/certification gates separately. Do not infer behavioral, platform, certification, release-support, production-readiness, or GA support from this source landing.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-007/20260807T182200Z-P7-001.json",
+          "recordedAt": "2026-08-07T18:22:00Z",
+          "sourceLanding": "LANDED_MAIN",
+          "sourceLandingRecordPath": "docs/roadmap/missions/delivery/records/MISSION-007/20260807T182200Z-P7-001.json",
+          "status": "REVIEW",
+          "task": "P7-001"
+        }
+      ],
       "sourceLandingCounts": {
         "HELPER": 0,
-        "LANDED_MAIN": 0,
-        "NOT_LANDED": 36,
+        "LANDED_MAIN": 1,
+        "NOT_LANDED": 35,
         "PRODUCT_PR": 0
       },
       "statusCounts": {
@@ -292,8 +302,8 @@
         "IMPLEMENTATION": 0,
         "LEGACY_OTHER": 0,
         "MERGED_MAIN": 0,
-        "NOT_EVALUATED": 36,
-        "REVIEW": 0,
+        "NOT_EVALUATED": 35,
+        "REVIEW": 1,
         "SUPERSEDED": 0,
         "VALIDATION": 0
       },
@@ -611,15 +621,15 @@
       "worker": "J"
     }
   ],
-  "notEvaluatedTaskCount": 353,
+  "notEvaluatedTaskCount": 352,
   "progressMeaning": "Accepted progress counts only strict-provenance ACCEPTED/MERGED_MAIN. LANDED_MAIN is an orthogonal source-delivery metric and never implies acceptance, certification, platform or release support.",
   "progressPercentage": 0.0,
   "schemaVersion": 2,
   "sourceLandingCounts": {
-    "LANDED_MAIN": 0,
-    "NOT_LANDED": 359
+    "LANDED_MAIN": 1,
+    "NOT_LANDED": 358
   },
-  "sourceLandingPercentage": 0.0,
+  "sourceLandingPercentage": 0.28,
   "statusCounts": {
     "ACCEPTED": 0,
     "BLOCKED": 2,
@@ -627,8 +637,8 @@
     "IMPLEMENTATION": 0,
     "LEGACY_OTHER": 1,
     "MERGED_MAIN": 0,
-    "NOT_EVALUATED": 353,
-    "REVIEW": 0
+    "NOT_EVALUATED": 352,
+    "REVIEW": 1
   },
   "taskCount": 359
 }

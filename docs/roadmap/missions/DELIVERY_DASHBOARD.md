@@ -5,15 +5,15 @@ This dashboard counts the latest append-only delivery state per roadmap task and
 ## Portfolio
 
 - Roadmap tasks: **359**
-- Source landed on protected main: **0**
+- Source landed on protected main: **1**
 - Accepted: **0**
 - Merged/accepted terminal state: **0**
 - In implementation: **0**
-- In review: **0**
+- In review: **1**
 - Blocked: **5**
 - Legacy other status: **1**
-- Not evaluated: **353**
-- Source landing progress: **0.00%**
+- Not evaluated: **352**
+- Source landing progress: **0.28%**
 - Accepted progress: **0.00%**
 
 | Mission | Worker | Claim | Landed main | Accepted / total | Terminal merged | Impl | Review | Blocked | Legacy | Not evaluated |
@@ -24,7 +24,7 @@ This dashboard counts the latest append-only delivery state per roadmap task and
 | `MISSION-004` Research, Data, Citations, and Knowledge | Worker D | `REVIEW` | 0 | 0 / 22 | 0 | 0 | 0 | 0 | 0 | 22 |
 | `MISSION-005` Experience Platform and Consumer Productization | Worker F | `CLAIMED` | 0 | 0 / 33 | 0 | 0 | 0 | 1 | 0 | 32 |
 | `MISSION-006` Agent Intelligence, Model Routing, Local Models, and Hardware Acceleration | Worker G | `CLAIMED` | 0 | 0 / 26 | 0 | 0 | 0 | 1 | 0 | 25 |
-| `MISSION-007` Interoperability, Skills, Tools, and Capability Operating System | Unassigned | `UNCLAIMED` | 0 | 0 / 36 | 0 | 0 | 0 | 0 | 0 | 36 |
+| `MISSION-007` Interoperability, Skills, Tools, and Capability Operating System | Unassigned | `UNCLAIMED` | 1 | 0 / 36 | 0 | 0 | 1 | 0 | 0 | 35 |
 | `MISSION-008` Release Engineering, Supply Chain, Signing, Installers, and Updates | Unassigned | `UNCLAIMED` | 0 | 0 / 16 | 0 | 0 | 0 | 0 | 0 | 16 |
 | `MISSION-009` Core Integration, Alpha, Beta, Release Candidate, and Synchronized GA | Unassigned | `UNCLAIMED` | 0 | 0 / 22 | 0 | 0 | 0 | 0 | 0 | 22 |
 | `MISSION-010` Native Platform, Device Automation, Isolation, and Remote Operation | Worker E | `CLAIMED` | 0 | 0 / 25 | 0 | 0 | 0 | 0 | 1 | 24 |
