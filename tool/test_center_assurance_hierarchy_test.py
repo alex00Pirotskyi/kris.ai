@@ -79,7 +79,7 @@ class AssuranceHierarchyTest(unittest.TestCase):
         for binding in hierarchy["testBindings"]:
             if binding["testId"]==current_test_id: binding["levelId"]="component"
             if binding["testId"]=="tc.p8.formal-test-hierarchy": binding["levelId"]="unit"
-        report["assuranceLevel"]="component"; report["hierarchyBinding"]["levelId"]="component"; report["requestedSupportImpact"]="BEHAVIOR_SUPPORTED"
+        report["assuranceLevel"]="component"; report["hierarchyBinding"]["levelId"]="component"; report["requestedSupportImpact"]="BEHAVIOR_SUPPORTED"; report["executionResult"]["resultId"]="result.p8-001.component-linux"
         component_id="evidence.p8-001.component-pass.fixture"; component=report["executionResult"]["evidenceReferences"][2]; component.update(evidenceId=component_id,uri=COMPONENT_FIXTURE,sha256=COMPONENT_FIXTURE_SHA256); report["evidenceReferences"][2]=component_id; report["evidenceBindings"][2].update(category="component_fixture",evidenceId=component_id)
         predecessor=copy.deepcopy(self.report_fixture["executionResult"]); predecessor["testId"]="tc.p8.formal-test-hierarchy"
         report["predecessorResults"]=[{"assuranceLevel":"unit","executionResult":predecessor,"evidenceBindings":copy.deepcopy(self.report_fixture["evidenceBindings"]),"predecessorResults":[]}]
@@ -127,11 +127,11 @@ class AssuranceHierarchyTest(unittest.TestCase):
 
     def test_current_evidence_category_swap_is_rejected(self):
         report=copy.deepcopy(self.report_fixture); first=report["evidenceBindings"][0]["evidenceId"]; report["evidenceBindings"][0]["evidenceId"]=report["evidenceBindings"][1]["evidenceId"]; report["evidenceBindings"][1]["evidenceId"]=first
-        with self.assertRaisesRegex(H.HierarchyError,"evidence kind mismatch"): self.validate_report(report)
+        with self.assertRaisesRegex(H.HierarchyError,"evidence for exact_candidate_identity"): self.validate_report(report)
 
     def test_predecessor_evidence_category_swap_is_rejected(self):
         report,hierarchy=self.component_report_with_unit_predecessor(); bindings=report["predecessorResults"][0]["evidenceBindings"]; first=bindings[0]["evidenceId"]; bindings[0]["evidenceId"]=bindings[1]["evidenceId"]; bindings[1]["evidenceId"]=first
-        with self.assertRaisesRegex(H.HierarchyError,"evidence kind mismatch"): self.validate_report(report,hierarchy=hierarchy)
+        with self.assertRaisesRegex(H.HierarchyError,"evidence for exact_candidate_identity"): self.validate_report(report,hierarchy=hierarchy)
 
     def test_predecessor_missing_required_evidence_category_is_rejected(self):
         report,hierarchy=self.component_report_with_unit_predecessor(); report["predecessorResults"][0]["evidenceBindings"].pop()
