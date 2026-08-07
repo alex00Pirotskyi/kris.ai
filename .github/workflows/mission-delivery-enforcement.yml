@@ -26,29 +26,41 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
           check-latest: false
-      - name: Compile delivery control
+      - name: Require exact source head
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "${HEAD_SHA}"
+      - name: Compile mission controls
         run: >-
           python -m py_compile
+          tool/mission_control.py
+          tool/mission_materialize_safe.py
+          tool/mission_runtime_control.py
           tool/mission_delivery_lib.py
           tool/mission_delivery_checks.py
           tool/mission_delivery_live.py
           tool/mission_delivery_control.py
+          tool/mission_delivery_strict.py
           tool/mission_delivery_control_test.py
       - name: Run delivery regressions
         run: python -m unittest -v tool/mission_delivery_control_test.py
-      - name: Validate mission and delivery control planes
+      - name: Validate durable runtime and delivery control
         shell: bash
         run: |
           set -euo pipefail
-          python tool/mission_control.py --project . validate
-          python tool/mission_delivery_control.py --project . validate
-          python tool/mission_delivery_control.py --project . generate --check
+          python tool/mission_materialize_safe.py --project . validate
+          python tool/mission_runtime_control.py --project . validate
+          python tool/mission_delivery_strict.py --project . validate
+          python tool/mission_materialize_safe.py --project . materialize --check
       - name: Verify canonical source manifest and non-mutation
         shell: bash
         run: |
@@ -73,13 +85,25 @@ jobs:
         with:
           python-version: '3.12.10'
           check-latest: false
-      - name: Ensure exact base exists
+      - name: Require exact source head and base
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${HEAD_SHA}"
           git cat-file -e "${BASE_SHA}^{commit}" || git fetch --no-tags origin "${BASE_SHA}"
+      - name: Enforce append-only delivery history
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python tool/mission_delivery_strict.py --project . append-only \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}"
       - name: Enforce actual changed-file ownership
         shell: bash
         env:
