@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P4-001-SOURCE-MANIFEST-6C8E41F3-G97",
+  "createdAt": "2026-08-07T21:05:00Z",
+  "expectedProductHead": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+  "expectedRuntimeGeneration": 97,
+  "note": "Materialize only SOURCE_MANIFEST.sha256 on exact canonical P4 Product PR #62 head under active RELEASE semaphore; preserve product source bytes and promote no acceptance/support/release/production/GA state.",
+  "operation": "MATERIALIZE_SOURCE_MANIFEST_V1",
+  "productPr": 62,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-MANIFEST-6C8E41F3",
+  "workerIdentity": "ELASTIC-6c8e41f3",
+  "workOrderId": "WO-P4-001-MANIFEST-FINALIZE-6C8E41F3"
+}
