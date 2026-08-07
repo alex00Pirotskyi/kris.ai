@@ -39,43 +39,36 @@ class ManifestBindingTests(unittest.TestCase):
             any("testedSourceCandidate.tree mismatch" in error for error in errors)
         )
 
-    def test_workflow_is_verified_from_immutable_packaging_commit(self):
+    def test_stage2_packaging_candidate_is_exact_and_descends_from_tested_source(self):
         manifest = manifest_document()
-        workflow = next(
-            artifact
-            for artifact in manifest["artifacts"]
-            if artifact["path"] == ".github/workflows/worker-d-p3-readiness.yml"
-        )
-        commit, tree = MODULE.PACKAGING_ARTIFACT_BINDINGS[workflow["path"]]
-        self.assertNotEqual(commit, manifest["testedSourceCandidate"]["commit"])
+        commit, tree = MODULE.PACKAGING_CANDIDATE
         self.assertEqual(tree, MODULE._git(ROOT, "rev-parse", f"{commit}^{{tree}}"))
+        self.assertNotEqual(commit, manifest["testedSourceCandidate"]["commit"])
         self.assertEqual([], MODULE.validate_manifest_document(ROOT, manifest))
 
-    def test_new_workflow_bytes_cannot_be_relabelled_as_stage1_bytes(self):
+    def test_packaging_bytes_cannot_be_relabelled_as_stage1_bytes(self):
         manifest = manifest_document()
-        with mock.patch.object(MODULE, "PACKAGING_ARTIFACT_BINDINGS", {}):
-            errors = MODULE.validate_manifest_document(ROOT, manifest)
-        self.assertTrue(
-            any(
-                ".github/workflows/worker-d-p3-readiness.yml" in error
-                and "digest mismatch" in error
-                for error in errors
-            )
-        )
-
-    def test_packaging_binding_tree_is_verified(self):
-        manifest = manifest_document()
-        workflow_path = ".github/workflows/worker-d-p3-readiness.yml"
-        commit, _ = MODULE.PACKAGING_ARTIFACT_BINDINGS[workflow_path]
+        tested = manifest["testedSourceCandidate"]
         with mock.patch.object(
             MODULE,
-            "PACKAGING_ARTIFACT_BINDINGS",
-            {workflow_path: (commit, "0" * 40)},
+            "PACKAGING_CANDIDATE",
+            (tested["commit"], tested["tree"]),
+        ):
+            errors = MODULE.validate_manifest_document(ROOT, manifest)
+        self.assertTrue(any("digest mismatch" in error for error in errors))
+
+    def test_packaging_candidate_tree_is_verified(self):
+        manifest = manifest_document()
+        commit, _ = MODULE.PACKAGING_CANDIDATE
+        with mock.patch.object(
+            MODULE,
+            "PACKAGING_CANDIDATE",
+            (commit, "0" * 40),
         ):
             errors = MODULE.validate_manifest_document(ROOT, manifest)
         self.assertTrue(
             any(
-                "packaging artifact" in error and "tree mismatch" in error
+                "published evidencePackagingCandidate.tree mismatch" in error
                 for error in errors
             )
         )

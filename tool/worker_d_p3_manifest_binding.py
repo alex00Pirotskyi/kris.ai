@@ -27,12 +27,10 @@ EXPECTED_ARTIFACT_PATHS = frozenset({
     "tool/worker_d_p3_readiness.py",
     "tool/worker_d_p3_readiness_test.py",
 })
-PACKAGING_ARTIFACT_BINDINGS = {
-    ".github/workflows/worker-d-p3-readiness.yml": (
-        "548d1f0230e1ddb2e27aee07799058dca1bf893c",
-        "ee25ca99e078dc49ffcd92098cceeecca56aaf17",
-    ),
-}
+PACKAGING_CANDIDATE = (
+    "3dc067564a813dfc63fdda0291df4411b9c2edf7",
+    "2b9f704c466c85cf343ac5941b24a401216ad911",
+)
 
 
 def _safe_relative_path(value: object) -> str | None:
@@ -116,27 +114,48 @@ def validate_manifest_document(root: Path, manifest: dict[str, Any]) -> list[str
         "testedSourceCandidate",
         errors,
     )
-    packaging = manifest.get("evidencePackagingCandidate")
-    if not isinstance(packaging, dict):
+    packaging_record = manifest.get("evidencePackagingCandidate")
+    if not isinstance(packaging_record, dict):
         errors.append("evidencePackagingCandidate must be an object")
     elif (
-        packaging.get("binding") != "EXTERNAL_AFTER_PUBLICATION"
-        or packaging.get("commit") is not None
-        or packaging.get("tree") is not None
+        packaging_record.get("binding") != "EXTERNAL_AFTER_PUBLICATION"
+        or packaging_record.get("commit") is not None
+        or packaging_record.get("tree") is not None
     ):
         errors.append(
             "evidencePackagingCandidate must remain externally bound without "
             "a self-referential package commit/tree"
         )
 
+    candidate_errors: list[str] = []
+    packaging = _resolve_candidate(
+        root,
+        {"commit": PACKAGING_CANDIDATE[0], "tree": PACKAGING_CANDIDATE[1]},
+        "published evidencePackagingCandidate",
+        candidate_errors,
+    )
+    errors.extend(candidate_errors)
+    if tested is not None and packaging is not None and not candidate_errors:
+        ancestor = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", tested[0], packaging[0]],
+            cwd=root,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if ancestor.returncode != 0:
+            errors.append(
+                "published evidencePackagingCandidate must descend from "
+                "testedSourceCandidate"
+            )
+
     artifacts = manifest.get("artifacts")
     if not isinstance(artifacts, list):
         return [*errors, "manifest artifacts must be an array"]
-    if tested is None:
+    if packaging is None or candidate_errors:
         return errors
 
     observed: set[str] = set()
-    resolved_candidates: dict[tuple[str, str], bool] = {tested: True}
     for index, artifact in enumerate(artifacts):
         label = f"manifest artifacts[{index}]"
         if not isinstance(artifact, dict):
@@ -162,24 +181,8 @@ def validate_manifest_document(root: Path, manifest: dict[str, Any]) -> list[str
             errors.append(f"manifest artifact digest invalid {relative}")
             continue
 
-        candidate = PACKAGING_ARTIFACT_BINDINGS.get(relative, tested)
-        if candidate != tested and candidate not in resolved_candidates:
-            candidate_errors: list[str] = []
-            resolved = _resolve_candidate(
-                root,
-                {"commit": candidate[0], "tree": candidate[1]},
-                f"packaging artifact {relative}",
-                candidate_errors,
-            )
-            resolved_candidates[candidate] = (
-                resolved is not None and not candidate_errors
-            )
-            errors.extend(candidate_errors)
-        if not resolved_candidates.get(candidate, False):
-            continue
-
         try:
-            data = _git_blob_bytes(root, candidate[0], relative)
+            data = _git_blob_bytes(root, packaging[0], relative)
         except (
             OSError,
             subprocess.CalledProcessError,
@@ -190,15 +193,11 @@ def validate_manifest_document(root: Path, manifest: dict[str, Any]) -> list[str
             continue
         actual_digest = hashlib.sha256(data).hexdigest()
         if actual_digest != expected_digest:
-            binding_kind = (
-                "packaging candidate"
-                if relative in PACKAGING_ARTIFACT_BINDINGS
-                else "tested source candidate"
-            )
             errors.append(
                 "manifest artifact digest mismatch "
-                f"{relative} at immutable {binding_kind} {candidate[0]} / "
-                f"{candidate[1]}: expected {expected_digest}, computed {actual_digest}"
+                f"{relative} at immutable Stage-2 packaging candidate "
+                f"{packaging[0]} / {packaging[1]}: expected {expected_digest}, "
+                f"computed {actual_digest}"
             )
 
     missing = sorted(EXPECTED_ARTIFACT_PATHS - observed)
