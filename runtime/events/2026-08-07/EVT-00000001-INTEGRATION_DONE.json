@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000001-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "runtimeGeneration": 1,
+  "recordedAt": "2026-08-07T13:10:00Z",
+  "workExecutionId": "WRK-20260807T125900Z-15a50001",
+  "workOrderId": "WO-P4-001-INTEGRATE-92",
+  "mission": "MISSION-004",
+  "payload": {
+    "helperPr": 92,
+    "canonicalProductPr": 62,
+    "previousProductHead": "a608700a908042fedf18c8431402551da6853f7d",
+    "integratedProductHead": "fceea9a5d9a2a79428713f2fe0cd0723528bab99",
+    "integratedProductTree": "95470ca13088976d1d3331913a89527d99648954",
+    "integrationMethod": "squash",
+    "reservationDurability": "MISSING",
+    "migrationException": "The intended generation-1 reservation transaction was isolated correctly but its first target-branch merge did not persist despite a connector success response. Repository state was treated as authoritative; no semaphore receipt is fabricated. The helper integration is recorded post hoc and the Work Order proceeds to exact-head validation."
+  }
+}
