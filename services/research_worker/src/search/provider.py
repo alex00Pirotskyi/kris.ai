@@ -40,6 +40,11 @@ def validate_page_for_request(
 
 
 class SearchProvider(abc.ABC):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if 'search' in cls.__dict__:
+            raise TypeError('SearchProvider subclasses must implement _search; search is the request-correlation gate')
+
     @property
     @abc.abstractmethod
     def capabilities(self) -> SearchProviderCapabilities:
