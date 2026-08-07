@@ -43,32 +43,35 @@ void main() {
   });
 
   group('modern request envelope', () {
-    test('stamps protocol identity and client capabilities on every request', () {
-      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
-      final params = adapter.decorateRequestParams(
-        <String, dynamic>{
-          'name': 'search',
-          'arguments': <String, dynamic>{'query': 'mcp'},
-        },
-        clientName: 'Kristin Local Agent',
-        clientVersion: '1.9.0+190',
-        clientCapabilities: const <String, dynamic>{},
-      );
+    test(
+      'stamps protocol identity and client capabilities on every request',
+      () {
+        final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+        final params = adapter.decorateRequestParams(
+          <String, dynamic>{
+            'name': 'search',
+            'arguments': <String, dynamic>{'query': 'mcp'},
+          },
+          clientName: 'Kristin Local Agent',
+          clientVersion: '1.9.0+190',
+          clientCapabilities: const <String, dynamic>{},
+        );
 
-      final meta = params['_meta'] as Map<String, dynamic>;
-      expect(meta['io.modelcontextprotocol/protocolVersion'], '2026-07-28');
-      expect(
-        meta['io.modelcontextprotocol/clientInfo'],
-        <String, dynamic>{
-          'name': 'Kristin Local Agent',
-          'version': '1.9.0+190',
-        },
-      );
-      expect(
-        meta['io.modelcontextprotocol/clientCapabilities'],
-        <String, dynamic>{},
-      );
-    });
+        final meta = params['_meta'] as Map<String, dynamic>;
+        expect(meta['io.modelcontextprotocol/protocolVersion'], '2026-07-28');
+        expect(
+          meta['io.modelcontextprotocol/clientInfo'],
+          <String, dynamic>{
+            'name': 'Kristin Local Agent',
+            'version': '1.9.0+190',
+          },
+        );
+        expect(
+          meta['io.modelcontextprotocol/clientCapabilities'],
+          <String, dynamic>{},
+        );
+      },
+    );
 
     test('callers cannot override reserved protocol metadata', () {
       final adapter = McpProtocolRegistry.requireStable('2026-07-28');
@@ -86,35 +89,41 @@ void main() {
       );
     });
 
-    test('legacy requests remain byte-shape compatible without modern meta', () {
-      final adapter = McpProtocolRegistry.requireStable('2024-11-05');
-      final params = adapter.decorateRequestParams(
-        <String, dynamic>{'name': 'search'},
-        clientName: 'Kristin Local Agent',
-        clientVersion: '1.9.0+190',
-      );
+    test(
+      'legacy requests remain byte-shape compatible without modern meta',
+      () {
+        final adapter = McpProtocolRegistry.requireStable('2024-11-05');
+        final params = adapter.decorateRequestParams(
+          <String, dynamic>{'name': 'search'},
+          clientName: 'Kristin Local Agent',
+          clientVersion: '1.9.0+190',
+        );
 
-      expect(params, <String, dynamic>{'name': 'search'});
-      expect(params.containsKey('_meta'), isFalse);
-    });
+        expect(params, <String, dynamic>{'name': 'search'});
+        expect(params.containsKey('_meta'), isFalse);
+      },
+    );
   });
 
   group('version and capability floors', () {
-    test('legacy initialize cannot silently negotiate a different revision', () {
-      final adapter = McpProtocolRegistry.requireStable('2025-11-25');
-      expect(
-        () => adapter.validateLegacyInitialize(
-          <String, dynamic>{
-            'protocolVersion': '2025-06-18',
-            'capabilities': <String, dynamic>{
-              'tools': <String, dynamic>{},
+    test(
+      'legacy initialize cannot silently negotiate a different revision',
+      () {
+        final adapter = McpProtocolRegistry.requireStable('2025-11-25');
+        expect(
+          () => adapter.validateLegacyInitialize(
+            <String, dynamic>{
+              'protocolVersion': '2025-06-18',
+              'capabilities': <String, dynamic>{
+                'tools': <String, dynamic>{},
+              },
             },
-          },
-          requiredCapabilities: const <String>{'tools'},
-        ),
-        throwsA(isA<ProductException>()),
-      );
-    });
+            requiredCapabilities: const <String>{'tools'},
+          ),
+          throwsA(isA<ProductException>()),
+        );
+      },
+    );
 
     test('legacy initialize rejects removal of the tools capability', () {
       final adapter = McpProtocolRegistry.requireStable('2025-11-25');
@@ -132,32 +141,35 @@ void main() {
       );
     });
 
-    test('optional modern discovery still validates an explicit pin when used', () {
-      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
-      final capabilities = adapter.validateModernDiscovery(
-        <String, dynamic>{
-          'supportedVersions': <String>['2026-07-28'],
-          'capabilities': <String, dynamic>{
-            'tools': <String, dynamic>{'listChanged': true},
-          },
-        },
-        requiredCapabilities: const <String>{'tools'},
-      );
-
-      expect(capabilities, contains('tools'));
-      expect(
-        () => adapter.validateModernDiscovery(
+    test(
+      'optional modern discovery still validates an explicit pin when used',
+      () {
+        final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+        final capabilities = adapter.validateModernDiscovery(
           <String, dynamic>{
-            'supportedVersions': <String>['2025-11-25'],
+            'supportedVersions': <String>['2026-07-28'],
             'capabilities': <String, dynamic>{
-              'tools': <String, dynamic>{},
+              'tools': <String, dynamic>{'listChanged': true},
             },
           },
           requiredCapabilities: const <String>{'tools'},
-        ),
-        throwsA(isA<ProductException>()),
-      );
-    });
+        );
+
+        expect(capabilities, contains('tools'));
+        expect(
+          () => adapter.validateModernDiscovery(
+            <String, dynamic>{
+              'supportedVersions': <String>['2025-11-25'],
+              'capabilities': <String, dynamic>{
+                'tools': <String, dynamic>{},
+              },
+            },
+            requiredCapabilities: const <String>{'tools'},
+          ),
+          throwsA(isA<ProductException>()),
+        );
+      },
+    );
   });
 
   group('trusted tool catalog', () {

@@ -225,7 +225,8 @@ class McpProtocolAdapter {
     }
 
     final available = capabilities.keys.toSet();
-    final missing = requiredCapabilities.difference(available).toList()..sort();
+    final missing = requiredCapabilities.difference(available).toList()
+      ..sort();
     if (missing.isNotEmpty) {
       throw ProductException(
         'mcp_capability_removed',
