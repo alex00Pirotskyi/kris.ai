@@ -12,6 +12,8 @@ on:
       - 'tool/mission_v15_authority_append.py'
       - 'tool/mission_v15_authority_test.py'
       - 'tool/mission_v15_connector_authority_apply.py'
+      - 'tool/mission_v15_connector_json_authority_apply.py'
+      - 'tool/mission_v15_connector_json_authority_test.py'
       - 'tool/mission_v15_release_validator_policy_apply.py'
       - 'tool/mission_v15_release_validator_policy_test.py'
       - 'tool/mission_v15_source_manifest_release_apply.py'
@@ -70,6 +72,8 @@ jobs:
           tool/mission_v15_authority_append.py
           tool/mission_v15_authority_test.py
           tool/mission_v15_connector_authority_apply.py
+          tool/mission_v15_connector_json_authority_apply.py
+          tool/mission_v15_connector_json_authority_test.py
           tool/mission_v15_release_validator_policy_apply.py
           tool/mission_v15_release_validator_policy_test.py
           tool/mission_v15_source_manifest_release_apply.py
@@ -91,6 +95,8 @@ jobs:
         run: python tool/mission_v15_regression_test.py
       - name: Run shared-authority adversarial regressions
         run: python tool/mission_v15_authority_test.py
+      - name: Run explicit JSON authority regressions
+        run: python tool/mission_v15_connector_json_authority_test.py
       - name: Run release-validator policy regressions
         run: python tool/mission_v15_release_validator_policy_test.py
       - name: Run source-manifest RELEASE regressions
