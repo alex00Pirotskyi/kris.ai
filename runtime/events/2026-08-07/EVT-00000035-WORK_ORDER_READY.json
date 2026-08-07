@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000035-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "RELEASE_FINALIZER",
+    "type": "RELEASE_FINALIZATION",
+    "productPr": 96,
+    "expectedProductHead": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
+    "resourceId": "SOURCE_MANIFEST.sha256"
+  },
+  "recordedAt": "2026-08-07T17:12:00Z",
+  "runtimeGeneration": 35,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T171200Z-c0decafe",
+  "workOrderId": "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
+}
