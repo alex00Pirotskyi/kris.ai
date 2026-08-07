@@ -20,10 +20,11 @@
     "test/product/mcp/mcp_opaque_cursor_regression_test.dart"
   ],
   "maxChildWorkOrders": 0,
-  "status": "READY",
+  "status": "HELPER_READY",
   "createdBy": "SYSTEM-PRODUCT-RUNTIME-DIVERGENCE-REPAIR",
   "createdAt": "2026-08-07T15:48:00Z",
-  "updatedAt": "2026-08-07T15:48:00Z",
+  "updatedAt": "2026-08-07T15:59:00Z",
   "parentWorkOrderId": "WO-P7-001-PROTOCOL-CLOSURE",
-  "supersedes": "WO-P7-001-SOURCE-INVENTORY-529719B5"
+  "supersedes": "WO-P7-001-SOURCE-INVENTORY-529719B5",
+  "lastActor": "SYSTEM-P7-SOURCE-INVENTORY-ADOPTION"
 }
