@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P7-001-SOURCE-INVENTORY-529719B5",
   "allowedPaths": [
     "test/product/source_contract_test.dart"
   ],
@@ -24,8 +23,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "BLOCKED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T14:35:45Z",
+  "updatedAt": "2026-08-07T14:50:36Z",
   "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5"
 }
