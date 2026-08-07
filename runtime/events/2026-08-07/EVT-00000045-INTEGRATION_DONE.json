@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000045-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "mission": "MISSION-007",
+  "payload": {
+    "mergeMethod": "squash",
+    "mergedMainCommit": "eddf1fdac3dd3412358a576e45b82e99528cfed4",
+    "nextStatus": "VALIDATING",
+    "preLandingCandidateCommit": "ec5086210a778b8a1be51f22b9cd81f735956034",
+    "semaphoreId": "SEM-P7-001-LAND-MAIN-SQUASH-C0DECAFE",
+    "sourceLandingRecorded": false
+  },
+  "recordedAt": "2026-08-07T18:06:00Z",
+  "runtimeGeneration": 45,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T180600Z-c0decafe",
+  "workOrderId": "WO-P7-001-LAND-MAIN-SQUASH-C0DECAFE"
+}
