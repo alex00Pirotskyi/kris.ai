@@ -58,7 +58,7 @@ jobs:
   validate:
     name: p8-001-${{ matrix.lane }}
     env:
-      VALIDATION_REF: ${{ (github.event_name == 'pull_request' && github.base_ref == 'agent/b/test-center-contracts-and-review' && github.event.pull_request.base.sha) || github.event.pull_request.head.sha || github.sha }}
+      VALIDATION_REF: ${{ (github.event_name == 'pull_request' && github.base_ref == 'agent/b/test-center-contracts-and-review' && github.head_ref == 'agent/b/p8-cleanup-safety-anchor' && github.event.pull_request.base.sha) || github.event.pull_request.head.sha || github.sha }}
     strategy:
       fail-fast: false
       matrix:
