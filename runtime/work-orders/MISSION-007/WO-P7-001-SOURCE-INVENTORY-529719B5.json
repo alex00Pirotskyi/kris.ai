@@ -3,6 +3,7 @@
     "test/product/source_contract_test.dart"
   ],
   "assignedWorker": "Elastic-529719b5",
+  "activeSemaphoreId": "SEM-P7-001-SOURCE-INVENTORY-RELAY-19",
   "baseCommit": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
   "baseTree": "da8b5505b35c0517b566bdefa1446ff1bc88e5dd",
   "createdAt": "2026-08-07T14:33:20Z",
@@ -24,8 +25,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T15:30:00Z",
+  "updatedAt": "2026-08-07T15:33:00Z",
   "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5"
 }
