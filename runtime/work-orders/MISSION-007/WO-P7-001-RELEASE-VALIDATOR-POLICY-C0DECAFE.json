@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P7-001-RELEASE-VALIDATOR-C0DECAFE",
   "allowedPaths": [
     "tool/validate_release.py"
   ],
@@ -23,8 +22,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T16:31:00Z",
+  "updatedAt": "2026-08-07T16:40:00Z",
   "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE"
 }

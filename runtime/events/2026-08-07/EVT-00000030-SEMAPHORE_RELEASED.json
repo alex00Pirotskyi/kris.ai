@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000030-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-007",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "reason": "Bounded release-validator relay applied exactly one helper commit at 330a71c7038395b12128b0724b4f12229635427d; relay validate_release.py --skip-tests proof passed, PR #100 transform/atomicity regressions are green, and PR #108 product gates have passed format/analyze/full Flutter/architecture-security on all platforms while Windows native release build completes independently.",
+    "semaphoreId": "SEM-P7-001-RELEASE-VALIDATOR-C0DECAFE"
+  },
+  "recordedAt": "2026-08-07T16:40:00Z",
+  "runtimeGeneration": 30,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T164000Z-c0decafe",
+  "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE"
+}
