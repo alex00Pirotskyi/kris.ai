@@ -12,25 +12,25 @@
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
-  "lastActor": "ELASTIC-7f4a9c21",
+  "lastActor": "ELASTIC-4f6a2c91:INTEGRATED_INTO_PR65",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
-  "objective": "P8 assurance trust helper PR #110 is frozen at 9c6baed5b23939eaa2767abaa1adb126a33655b5. Exact product-gates run 31208243734 PASS. P8 formal hierarchy run 31208243731 passes the source/test/trust semantics on Ubuntu, macOS, and Windows and is red only at the intentionally deferred committed root-manifest comparison. Fresh context-independent R1 integration/security review is still absent. Do not mutate helper source unless a new reviewed defect is proven; canonical manifest finalization occurs only after helper consumption on Product PR #65.",
+  "objective": "Repair P8 assurance provenance and support-matrix trust fail-open classes, including exact Git binding, fail-closed independent-review handling, repository-authoritative required platform/capability scope, and exact-candidate platform predecessor proof linkage.",
   "parentProductPr": 65,
   "priority": 98,
   "requestedRole": "DEFECT_HUNTER",
   "requiredTests": [
     "P8 independent-review self-declaration fails closed",
-    "P8 support-matrix empty/duplicate/unsupported coverage fails closed",
+    "P8 support-matrix repository-authoritative scope fails closed on self-declaration drift",
     "P8 support-bearing evidence absent from candidate Git tree fails closed",
-    "P8 synthetic component-lineage support evidence fails closed",
-    "exact helper product-gates 31208243734 PASS",
-    "fresh R1 exact-helper SOURCE/SECURITY/INTEGRATION review pending"
+    "P8 synthetic/non-exact platform proof fails closed",
+    "exact helper product-gates 31212460960 SUCCESS",
+    "fresh R1 exact-helper SOURCE/SECURITY/ASSURANCE_PROVENANCE review PASS"
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "REVIEW",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-07T20:01:00Z",
+  "updatedAt": "2026-08-07T20:10:15Z",
   "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
 }
