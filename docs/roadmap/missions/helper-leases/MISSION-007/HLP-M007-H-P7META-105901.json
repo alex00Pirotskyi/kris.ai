@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "leaseId": "HLP-M007-H-P7META-105901",
+  "mission": "MISSION-007",
+  "task": "P7-001",
+  "ownerWorker": "I",
+  "helperWorker": "H",
+  "workExecutionId": "WRK-20260807T103839Z-b7e4c291",
+  "branch": "agent/help/h/mission-007/mcp-reserved-meta-prefix",
+  "baseCommit": "6a4185416ca8d9114d713cfd1549a2d3b94e18f6",
+  "baseTree": "3bc09adfbda555416a85470f569e10ed95917c2c",
+  "allowedPaths": [
+    "lib/product/mcp_protocol.dart",
+    "test/product/mcp/mcp_protocol_test.dart"
+  ],
+  "status": "ACTIVE",
+  "createdAt": "2026-08-07T10:59:01Z",
+  "refreshedAt": "2026-08-07T10:59:01Z",
+  "expiresAt": "2026-08-07T14:59:01Z",
+  "parentClaimHead": "6a4185416ca8d9114d713cfd1549a2d3b94e18f6",
+  "nextAction": "Repair MCP 2026-07-28 reserved _meta prefix validation to reject every protocol-reserved second-label namespace and add focused regression coverage; do not modify owner integration or shared authority paths."
+}
