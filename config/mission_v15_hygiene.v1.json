@@ -15,6 +15,11 @@
       "runtime/tx/p11-integrate-95-gen4"
     ]
   },
+  "runtimeAtomicity": {
+    "enforceFromGeneration": 12,
+    "runtimePathPrefix": "runtime/",
+    "eventPathPrefix": "runtime/events/"
+  },
   "target": {
     "longLivedCanonicalBranches": 15,
     "activeHelperBranches": 20,
