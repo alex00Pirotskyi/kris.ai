@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "leaseId": "HLP-M007-H-P7META-110245",
+  "mission": "MISSION-007",
+  "task": "P7-001",
+  "ownerWorker": "I",
+  "helperWorker": "H",
+  "workExecutionId": "WRK-20260807T103839Z-b7e4c291",
+  "branch": "agent/help/h/mission-007/mcp-reserved-meta-prefix-v2",
+  "baseCommit": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
+  "baseTree": "00f19eb3d73c0961bd43b880e429eb7cbfa02bf7",
+  "allowedPaths": [
+    "lib/product/mcp_protocol.dart",
+    "test/product/mcp/mcp_protocol_test.dart"
+  ],
+  "status": "ACTIVE",
+  "createdAt": "2026-08-07T11:02:45Z",
+  "refreshedAt": "2026-08-07T11:02:45Z",
+  "expiresAt": "2026-08-07T15:02:45Z",
+  "parentClaimHead": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
+  "nextAction": "Implement the MCP 2026-07-28 reserved _meta prefix grammar and focused regressions only; preserve the owner version/tool-catalog runtime work and do not modify owner integration/shared paths."
+}
