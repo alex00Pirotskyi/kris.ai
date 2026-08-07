@@ -2,7 +2,8 @@
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
-    "tool/test_center_assurance_enforcement_test.py"
+    "tool/test_center_assurance_enforcement_test.py",
+    "tool/test_center_assurance_hierarchy_test.py"
   ],
   "authorityId": null,
   "baseCommit": "26ef06cf0c55badd55733d2f901d110a3f6a2737",
@@ -10,13 +11,13 @@
   "branch": "agent/help/sanitizer/mission-002/p8-assurance-trust-closure",
   "createdAt": "2026-08-07T18:32:00Z",
   "executionRole": "DEFECT_HUNTER",
-  "expiresAt": "2026-08-07T19:32:00Z",
+  "expiresAt": "2026-08-07T19:39:00Z",
   "kind": "WRITE",
   "mission": "MISSION-002",
   "productPr": 65,
-  "refreshedAt": "2026-08-07T18:32:00Z",
+  "refreshedAt": "2026-08-07T18:39:00Z",
   "resourceId": null,
-  "runtimeGeneration": 48,
+  "runtimeGeneration": 49,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P8-001-WRITE-SANITIZER-A8B7C6D5",
   "status": "ACTIVE",

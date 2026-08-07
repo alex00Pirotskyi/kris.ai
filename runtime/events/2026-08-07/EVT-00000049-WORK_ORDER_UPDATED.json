@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000049-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-002",
+  "payload": {
+    "allowedPathsAdded": [
+      "tool/test_center_assurance_hierarchy_test.py"
+    ],
+    "reason": "Exact P8 tri-platform CI exposed a pre-existing synthetic component-lineage positive fixture using non-existent candidate Git identities after support-bearing evidence became Git-bound.",
+    "semaphoreId": "SEM-P8-001-WRITE-SANITIZER-A8B7C6D5"
+  },
+  "recordedAt": "2026-08-07T18:39:00Z",
+  "runtimeGeneration": 49,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T182700Z-a8b7c6d5",
+  "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
+}
