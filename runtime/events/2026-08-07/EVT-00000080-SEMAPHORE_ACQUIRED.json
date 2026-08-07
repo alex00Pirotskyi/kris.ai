@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000080-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "AUTHORITY",
+    "semaphoreId": "SEM-P5-001-SOURCE-INVENTORY-7F3A2C91",
+    "workerIdentity": "ELASTIC-7f3a2c91"
+  },
+  "recordedAt": "2026-08-07T20:17:00Z",
+  "runtimeGeneration": 80,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190738Z-7f3a2c91",
+  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-7F3A2C91"
+}
