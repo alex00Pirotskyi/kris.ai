@@ -1,94 +1,124 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
-import tempfile
 import unittest
-from hashlib import sha256
 from pathlib import Path
+from unittest import mock
 
 MODULE_PATH = Path(__file__).with_name("worker_d_p3_manifest_binding.py")
-SPEC = importlib.util.spec_from_file_location("worker_d_p3_manifest_binding", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location(
+    "worker_d_p3_manifest_binding",
+    MODULE_PATH,
+)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def manifest_document() -> dict:
+    return json.loads((ROOT / MODULE.MANIFEST_PATH).read_text(encoding="utf-8"))
+
+
 class ManifestBindingTests(unittest.TestCase):
-    def copy_bound_tree(self, destination: Path) -> dict:
-        manifest_source = ROOT / MODULE.MANIFEST_PATH
-        manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
-        manifest_target = destination / MODULE.MANIFEST_PATH
-        manifest_target.parent.mkdir(parents=True, exist_ok=True)
-        manifest_target.write_bytes(manifest_source.read_bytes())
-        for artifact in manifest["artifacts"]:
-            rel = artifact["path"]
-            source = ROOT / rel
-            target = destination / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(source.read_bytes())
-        return manifest
-
-    def write_manifest(self, destination: Path, manifest: dict) -> None:
-        path = destination / MODULE.MANIFEST_PATH
-        path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
-
     def test_repository_bindings_pass(self):
         self.assertEqual([], MODULE.validate(ROOT))
 
-    def test_bound_file_byte_drift_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            self.copy_bound_tree(root)
-            target = root / "release/evidence/P3-001/claim-boundary.json"
-            target.write_bytes(target.read_bytes() + b"\n")
-            self.assertTrue(any("digest mismatch" in e for e in MODULE.validate(root)))
-
     def test_recorded_hash_drift_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            manifest["artifacts"][0]["sha256"] = "0" * 64
-            self.write_manifest(root, manifest)
-            self.assertTrue(any("digest mismatch" in e for e in MODULE.validate(root)))
+        mutated = copy.deepcopy(manifest_document())
+        mutated["artifacts"][0]["sha256"] = "0" * 64
+        errors = MODULE.validate_manifest_document(ROOT, mutated)
+        self.assertTrue(any("digest mismatch" in error for error in errors))
+
+    def test_tested_candidate_tree_mismatch_fails(self):
+        mutated = copy.deepcopy(manifest_document())
+        mutated["testedSourceCandidate"]["tree"] = "0" * 40
+        errors = MODULE.validate_manifest_document(ROOT, mutated)
+        self.assertTrue(
+            any("testedSourceCandidate.tree mismatch" in error for error in errors)
+        )
+
+    def test_workflow_is_verified_from_immutable_packaging_commit(self):
+        manifest = manifest_document()
+        workflow = next(
+            artifact
+            for artifact in manifest["artifacts"]
+            if artifact["path"] == ".github/workflows/worker-d-p3-readiness.yml"
+        )
+        commit, tree = MODULE.PACKAGING_ARTIFACT_BINDINGS[workflow["path"]]
+        self.assertNotEqual(commit, manifest["testedSourceCandidate"]["commit"])
+        self.assertEqual(tree, MODULE._git(ROOT, "rev-parse", f"{commit}^{{tree}}"))
+        self.assertEqual([], MODULE.validate_manifest_document(ROOT, manifest))
+
+    def test_new_workflow_bytes_cannot_be_relabelled_as_stage1_bytes(self):
+        manifest = manifest_document()
+        with mock.patch.object(MODULE, "PACKAGING_ARTIFACT_BINDINGS", {}):
+            errors = MODULE.validate_manifest_document(ROOT, manifest)
+        self.assertTrue(
+            any(
+                ".github/workflows/worker-d-p3-readiness.yml" in error
+                and "digest mismatch" in error
+                for error in errors
+            )
+        )
+
+    def test_packaging_binding_tree_is_verified(self):
+        manifest = manifest_document()
+        workflow_path = ".github/workflows/worker-d-p3-readiness.yml"
+        commit, _ = MODULE.PACKAGING_ARTIFACT_BINDINGS[workflow_path]
+        with mock.patch.object(
+            MODULE,
+            "PACKAGING_ARTIFACT_BINDINGS",
+            {workflow_path: (commit, "0" * 40)},
+        ):
+            errors = MODULE.validate_manifest_document(ROOT, manifest)
+        self.assertTrue(
+            any(
+                "packaging artifact" in error and "tree mismatch" in error
+                for error in errors
+            )
+        )
 
     def test_duplicate_binding_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            manifest["artifacts"].append(dict(manifest["artifacts"][0]))
-            self.write_manifest(root, manifest)
-            self.assertTrue(any("duplicate manifest artifact path" in e for e in MODULE.validate(root)))
+        mutated = copy.deepcopy(manifest_document())
+        mutated["artifacts"].append(copy.deepcopy(mutated["artifacts"][0]))
+        errors = MODULE.validate_manifest_document(ROOT, mutated)
+        self.assertTrue(
+            any("duplicate manifest artifact path" in error for error in errors)
+        )
 
     def test_missing_binding_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            removed = manifest["artifacts"].pop()
-            self.write_manifest(root, manifest)
-            errors = MODULE.validate(root)
-            self.assertTrue(any("manifest artifact bindings missing" in e and removed["path"] in e for e in errors))
+        mutated = copy.deepcopy(manifest_document())
+        removed = mutated["artifacts"].pop()
+        errors = MODULE.validate_manifest_document(ROOT, mutated)
+        self.assertTrue(
+            any(
+                "manifest artifact bindings missing" in error
+                and removed["path"] in error
+                for error in errors
+            )
+        )
 
     def test_unexpected_binding_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            extra_rel = "tool/worker_d_p3_unexpected.py"
-            extra = root / extra_rel
-            extra.parent.mkdir(parents=True, exist_ok=True)
-            extra.write_text("print('unexpected')\n", encoding="utf-8")
-            manifest["artifacts"].append({"path": extra_rel, "sha256": sha256(extra.read_bytes()).hexdigest()})
-            self.write_manifest(root, manifest)
-            errors = MODULE.validate(root)
-            self.assertTrue(any("manifest artifact bindings unexpected" in e and extra_rel in e for e in errors))
+        mutated = copy.deepcopy(manifest_document())
+        extra = copy.deepcopy(mutated["artifacts"][1])
+        extra["path"] = "tool/worker_d_p3_unexpected.py"
+        mutated["artifacts"].append(extra)
+        errors = MODULE.validate_manifest_document(ROOT, mutated)
+        self.assertTrue(
+            any(
+                "manifest artifact bindings unexpected" in error
+                and extra["path"] in error
+                for error in errors
+            )
+        )
 
     def test_unsafe_binding_path_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            manifest["artifacts"][0]["path"] = "../escape"
-            self.write_manifest(root, manifest)
-            self.assertTrue(any("unsafe path" in e for e in MODULE.validate(root)))
+        mutated = copy.deepcopy(manifest_document())
+        mutated["artifacts"][0]["path"] = "../escape"
+        errors = MODULE.validate_manifest_document(ROOT, mutated)
+        self.assertTrue(any("unsafe path" in error for error in errors))
 
 
 if __name__ == "__main__":
