@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/mission_helper_lease.schema.json",
+  "title": "Kristin mission helper lease",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "leaseId",
+    "mission",
+    "task",
+    "ownerWorker",
+    "helperWorker",
+    "workExecutionId",
+    "branch",
+    "baseCommit",
+    "baseTree",
+    "allowedPaths",
+    "status",
+    "createdAt",
+    "refreshedAt",
+    "expiresAt",
+    "parentClaimHead",
+    "nextAction"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "leaseId": {"type": "string", "pattern": "^HLP-[A-Z0-9][A-Z0-9._-]{5,79}$"},
+    "mission": {"type": "string", "pattern": "^MISSION-[0-9]{3}$"},
+    "task": {"type": "string", "pattern": "^P[0-9]+-[0-9]+$"},
+    "ownerWorker": {"type": "string", "minLength": 1},
+    "helperWorker": {"type": "string", "minLength": 1},
+    "workExecutionId": {"type": "string", "pattern": "^WRK-[0-9]{8}T[0-9]{6}Z-[0-9a-fA-F]{8}$"},
+    "branch": {"type": "string", "minLength": 1},
+    "baseCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "baseTree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "allowedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "status": {"enum": ["ACTIVE", "YIELDED", "COMPLETE", "EXPIRED"]},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "refreshedAt": {"type": "string", "format": "date-time"},
+    "expiresAt": {"type": "string", "format": "date-time"},
+    "parentClaimHead": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+    "nextAction": {"type": "string", "minLength": 1}
+  }
+}
