@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare Mission Execution 1.5 runtime bases with live fetched Git refs."""
+"""Compare Mission Execution 1.5 runtime state with live fetched Git refs."""
 from __future__ import annotations
 
 import argparse
@@ -24,8 +24,18 @@ def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> di
     state = validate_runtime_state(runtime_project)
     products = []
     violations: list[str] = []
+    active_semaphores = state["activeSemaphores"]
     for pr, product in sorted(state["productPrs"].items()):
         live_head = live_branch_head(repository_project, product["branch"])
+        observed_head = product.get("observedHead")
+        if product.get("status") in {"ACTIVE", "REVIEW", "LANDING"}:
+            if not observed_head:
+                violations.append(f"PRODUCT_PR_OBSERVATION_MISSING:PR{pr}:{product['branch']}")
+            elif observed_head != live_head:
+                violations.append(
+                    f"PRODUCT_RUNTIME_DIVERGENCE:PR{pr}:{observed_head}!=LIVE:{live_head}"
+                )
+
         work = sorted(
             (
                 item
@@ -34,11 +44,44 @@ def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> di
             ),
             key=lambda item: item["workOrderId"],
         )
+        integration_semaphores = sorted(
+            (
+                item
+                for item in active_semaphores
+                if item.get("kind") == "INTEGRATION" and item.get("productPr") == pr
+            ),
+            key=lambda item: item["semaphoreId"],
+        )
+        integrating_work = [item for item in work if item["status"] == "INTEGRATING"]
+        if integrating_work and len(integration_semaphores) != 1:
+            violations.append(
+                f"INTEGRATION_SEMAPHORE_CARDINALITY:PR{pr}:"
+                f"WORK={','.join(item['workOrderId'] for item in integrating_work)}:"
+                f"SEMAPHORES={','.join(item['semaphoreId'] for item in integration_semaphores) or 'NONE'}"
+            )
+        if integration_semaphores and not integrating_work:
+            violations.append(
+                f"ORPHAN_INTEGRATION_SEMAPHORE:PR{pr}:"
+                + ",".join(item["semaphoreId"] for item in integration_semaphores)
+            )
+        if len(integrating_work) > 1:
+            violations.append(
+                f"MULTIPLE_INTEGRATING_WORK_ORDERS:PR{pr}:"
+                + ",".join(item["workOrderId"] for item in integrating_work)
+            )
+        for item in integrating_work:
+            matching = [
+                sem
+                for sem in integration_semaphores
+                if sem.get("workOrderId") == item["workOrderId"]
+            ]
+            if len(matching) != 1:
+                violations.append(
+                    f"INTEGRATION_WORK_ORDER_SEMAPHORE_MISMATCH:{item['workOrderId']}:PR{pr}"
+                )
+
         stale_ready = []
         for item in work:
-            # READY/RESERVED work must be based on the current canonical branch.
-            # Once a worker owns an active semaphore, the immutable reservation
-            # governs candidate ancestry and the owner branch may move separately.
             if item["status"] in {"READY", "RESERVED"} and item["baseCommit"] != live_head:
                 stale_ready.append(item["workOrderId"])
                 violations.append(
@@ -50,9 +93,14 @@ def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> di
                 "task": product["task"],
                 "mission": product["mission"],
                 "branch": product["branch"],
-                "observedHead": product.get("observedHead"),
+                "status": product.get("status"),
+                "observedHead": observed_head,
                 "liveHead": live_head,
                 "activeWorkOrders": [item["workOrderId"] for item in work],
+                "integratingWorkOrders": [item["workOrderId"] for item in integrating_work],
+                "activeIntegrationSemaphores": [
+                    item["semaphoreId"] for item in integration_semaphores
+                ],
                 "staleReadyWorkOrders": stale_ready,
             }
         )
