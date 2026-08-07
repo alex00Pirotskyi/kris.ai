@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-BRANCH-CAPACITY-REAP-3E7A9C42-02",
   "allowedPaths": [
     "release/evidence/P6-*/**"
   ],
+  "assignedWorker": "ELASTIC-3e7a9c42",
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
   "createdAt": "2026-08-07T20:30:00Z",
   "createdBy": "ELASTIC-3e7a9c42",
   "dependencyRequirements": [],
+  "executionRole": "INCIDENT_RESPONDER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Finish restoring Mission Execution 1.5 branch capacity to the configured migration ceiling by deleting the exact stale validation snapshot validation/g-p6-001-d6d348a-run1 at its reviewed SHA, without changing P6 Product source, canonical branches, active worker branches, landing state, acceptance, support, or release claims.",
@@ -22,8 +25,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-07T20:30:00Z",
+  "updatedAt": "2026-08-07T20:31:00Z",
   "workOrderId": "WO-BRANCH-CAPACITY-REAP-3E7A9C42-02"
 }
