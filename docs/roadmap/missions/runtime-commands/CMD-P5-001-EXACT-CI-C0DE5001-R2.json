@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P5-001-EXACT-CI-C0DE5001-R2",
+  "createdAt": "2026-08-07T18:56:00Z",
+  "expectedProductHead": "af26c2948a42c16603b179b7d79ed47aa91b5296",
+  "expectedRuntimeGeneration": 51,
+  "note": "Retry after correcting CI Work Order allowedPaths to MISSION-005-owned scope; zero-write INTEGRATION semaphore unchanged.",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "productPr": 72,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-CI-SANITIZER-C0DE5001",
+  "workOrderId": "WO-P5-001-EXACT-CI-SANITIZER",
+  "workerIdentity": "SANITIZER-V2"
+}
