@@ -1,14 +1,17 @@
 {
+  "activeSemaphoreId": "SEM-P7-001-INT-B5AB48B7",
   "allowedPaths": [
     "lib/product/mcp_protocol.dart",
     "test/product/mcp/mcp_protocol_test.dart",
     "test/product/mcp/mcp_opaque_cursor_regression_test.dart"
   ],
+  "assignedWorker": "ELASTIC-b5ab48b7",
   "baseCommit": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
   "baseTree": "da8b5505b35c0517b566bdefa1446ff1bc88e5dd",
   "createdAt": "2026-08-07T15:12:00Z",
   "createdBy": "ELASTIC-b5ab48b7",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Integrate exact reviewed helper PR #98 into canonical P7 Product PR #96, preserving opaque cursor/tool-name semantics and reserved metadata behavior. Keep source-inventory authority, exact-current CI, support, acceptance, release, production and GA truth fail-closed.",
@@ -22,8 +25,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T15:12:00Z",
+  "updatedAt": "2026-08-07T15:16:00Z",
   "workOrderId": "WO-P7-001-INTEGRATE-98-B5AB48B7"
 }
