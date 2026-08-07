@@ -1,0 +1,14 @@
+{
+  "commandId": "CMD-BRANCH-CAPACITY-REAP-3E7A9C42-02-G88",
+  "createdAt": "2026-08-07T20:33:00Z",
+  "expectedRuntimeGeneration": 88,
+  "expectedTargetHead": "d6d348a8adcc4d60f597fa09c63ee02c97c9d3df",
+  "note": "Finish restoring Mission Execution 1.5 branch capacity to the configured migration ceiling by deleting one exact stale P6 validation snapshot under the active zero-write semaphore.",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "productPr": 76,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-3E7A9C42-02",
+  "targetBranch": "validation/g-p6-001-d6d348a-run1",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-3E7A9C42-02",
+  "workerIdentity": "ELASTIC-3e7a9c42"
+}
