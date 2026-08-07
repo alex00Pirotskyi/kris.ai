@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000003-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "runtimeGeneration": 3,
+  "recordedAt": "2026-08-07T13:40:00Z",
+  "workExecutionId": "WRK-20260807T132500Z-15a50002",
+  "workOrderId": "WO-P5-001-INTEGRATE-94",
+  "mission": "MISSION-005",
+  "payload": {
+    "semaphoreId": "SEM-P5-001-INTEGRATE-94",
+    "nextStatus": "VALIDATING",
+    "helperPr": 94,
+    "canonicalProductPr": 72,
+    "integrationMethod": "squash"
+  }
+}
