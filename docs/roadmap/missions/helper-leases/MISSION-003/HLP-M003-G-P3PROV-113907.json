@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "leaseId": "HLP-M003-G-P3PROV-113907",
+  "mission": "MISSION-003",
+  "task": "P3-001",
+  "ownerWorker": "D",
+  "helperWorker": "G",
+  "workExecutionId": "WRK-20260807T113907Z-6f3a2c91",
+  "branch": "agent/help/g/mission-003/p3-immutable-provenance",
+  "baseCommit": "3dc067564a813dfc63fdda0291df4411b9c2edf7",
+  "baseTree": "2b9f704c466c85cf343ac5941b24a401216ad911",
+  "allowedPaths": [
+    "release/evidence/P3-001/dependency-status.json",
+    "release/evidence/P3-001/manifest.json",
+    "tool/worker_d_p3_dependency_binding.py",
+    "tool/worker_d_p3_dependency_binding_test.py",
+    "tool/worker_d_p3_manifest_binding.py",
+    "tool/worker_d_p3_manifest_binding_test.py"
+  ],
+  "status": "ACTIVE",
+  "createdAt": "2026-08-07T11:39:07Z",
+  "refreshedAt": "2026-08-07T11:39:07Z",
+  "expiresAt": "2026-08-07T15:39:07Z",
+  "parentClaimHead": "7eecc840f68ca0dff13ab58c138845593254e390",
+  "nextAction": "Repair PR #93 immutable artifact provenance and dependency semantic evidence binding only; preserve Worker D runtime/readiness semantics, do not implement P3 browser runtime, and do not edit shared Test Center or root manifest authority."
+}
