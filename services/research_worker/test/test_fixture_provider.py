@@ -14,6 +14,10 @@ from services.research_worker.src.search import (
     SearchRequest,
     SearchResult,
 )
+from services.research_worker.src.search.fixture_provider import (
+    DeterministicFixtureSearchProvider,
+    FixtureCatalogEntry,
+)
 from services.research_worker.test.support import load_contract_state
 
 _FIXED_RETRIEVED_AT = "2026-08-05T00:00:00Z"
@@ -103,6 +107,67 @@ class FixtureProviderContractTest(unittest.TestCase):
             key=lambda error: list(error.absolute_path),
         )
         self.assertEqual([], [error.message for error in errors])
+
+    def _freshness_providers(self):
+        entries = (
+            FixtureCatalogEntry(
+                title="Day one",
+                url="https://example.com/day-1",
+                snippet="freshness fixture",
+                published_at="2026-01-01T00:00:00Z",
+                language="en",
+                country="US",
+                provider_metadata={},
+            ),
+            FixtureCatalogEntry(
+                title="Day two",
+                url="https://example.com/day-2",
+                snippet="freshness fixture",
+                published_at="2026-01-02T00:00:00Z",
+                language="en",
+                country="US",
+                provider_metadata={},
+            ),
+            FixtureCatalogEntry(
+                title="Day three",
+                url="https://example.com/day-3",
+                snippet="freshness fixture",
+                published_at="2026-01-03T00:00:00Z",
+                language="en",
+                country="US",
+                provider_metadata={},
+            ),
+            FixtureCatalogEntry(
+                title="Undated",
+                url="https://example.com/undated",
+                snippet="freshness fixture",
+                published_at=None,
+                language="en",
+                country="US",
+                provider_metadata={},
+            ),
+        )
+        return (
+            DeterministicFixtureSearchProvider(
+                provider_id="freshness_alpha",
+                entries=entries,
+                supports_domain_exclude=True,
+            ),
+            DeterministicFixtureSearchProvider(
+                provider_id="freshness_beta",
+                entries=entries,
+                supports_domain_exclude=False,
+            ),
+        )
+
+    def _freshness_results(self, provider, *, mode, after=None, before=None):
+        request = SearchRequest(
+            request_id=f"req_freshness_{provider.capabilities.provider_id}_{mode}",
+            query="fixture:all",
+            limit=10,
+            freshness={"mode": mode, "after": after, "before": before},
+        )
+        return [result.published_at for result in provider.search(request).results]
 
     def test_every_fixture_case_is_unique_and_executed(self) -> None:
         cases = self.fixture["cases"]
@@ -248,6 +313,47 @@ class FixtureProviderContractTest(unittest.TestCase):
 
                 def _search(self, request):
                     raise AssertionError("unused")
+
+    def test_freshness_modes_and_equality_boundaries_on_two_providers(self) -> None:
+        for provider in self._freshness_providers():
+            with self.subTest(provider=provider.capabilities.provider_id, mode="any"):
+                self.assertEqual(
+                    [
+                        "2026-01-01T00:00:00Z",
+                        "2026-01-02T00:00:00Z",
+                        "2026-01-03T00:00:00Z",
+                        None,
+                    ],
+                    self._freshness_results(provider, mode="any"),
+                )
+            with self.subTest(provider=provider.capabilities.provider_id, mode="after"):
+                self.assertEqual(
+                    ["2026-01-03T00:00:00Z"],
+                    self._freshness_results(
+                        provider,
+                        mode="after",
+                        after="2026-01-02T00:00:00Z",
+                    ),
+                )
+            with self.subTest(provider=provider.capabilities.provider_id, mode="before"):
+                self.assertEqual(
+                    ["2026-01-01T00:00:00Z"],
+                    self._freshness_results(
+                        provider,
+                        mode="before",
+                        before="2026-01-02T00:00:00Z",
+                    ),
+                )
+            with self.subTest(provider=provider.capabilities.provider_id, mode="between"):
+                self.assertEqual(
+                    ["2026-01-02T00:00:00Z"],
+                    self._freshness_results(
+                        provider,
+                        mode="between",
+                        after="2026-01-01T00:00:00Z",
+                        before="2026-01-03T00:00:00Z",
+                    ),
+                )
 
 
 if __name__ == "__main__":
