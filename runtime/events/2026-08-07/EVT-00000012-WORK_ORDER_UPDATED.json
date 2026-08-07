@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000012-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "ELASTIC-e168f3bb",
+    "blocker": "CANONICAL_TEST_CENTER_AFFECTED_SELECTION_REGRESSION",
+    "failingTest": "tool.test_center_contracts_test.TestCenterContractsTest.test_affected_test_selection_determinism",
+    "generatedCandidate": "762b037fc824e2d6b3c9e26d65193ddfcf2b8cc3",
+    "nextStatus": "BLOCKED",
+    "workerEFocusedRegressions": "PASS_ON_LINUX_WINDOWS_MACOS",
+    "workflowRunId": 31187198262
+  },
+  "recordedAt": "2026-08-07T14:49:00Z",
+  "runtimeGeneration": 12,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T140311Z-e168f3bb",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
+}

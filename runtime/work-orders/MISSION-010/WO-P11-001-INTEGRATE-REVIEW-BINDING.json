@@ -12,6 +12,7 @@
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "ELASTIC-e168f3bb",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-010",
   "objective": "Integrate the bounded P11 immutable-review purpose/scope repair into canonical Product PR #71, collapse superseded helper variants to one consumed source state, rerun Worker E dependency/readiness regressions, and retain R2 native/security review as an external high-risk gate.",
@@ -24,8 +25,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "BLOCKED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T14:26:00Z",
+  "updatedAt": "2026-08-07T14:49:00Z",
   "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }
