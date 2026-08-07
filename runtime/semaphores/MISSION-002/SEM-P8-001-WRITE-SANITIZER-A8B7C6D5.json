@@ -20,7 +20,7 @@
   "runtimeGeneration": 49,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P8-001-WRITE-SANITIZER-A8B7C6D5",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER",
   "workerIdentity": "SANITIZER-V2"
 }

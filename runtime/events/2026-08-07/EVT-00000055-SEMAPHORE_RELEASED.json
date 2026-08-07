@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000055-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-002",
+  "payload": {
+    "helperHead": "9c6baed5b23939eaa2767abaa1adb126a33655b5",
+    "nextStatus": "VALIDATING",
+    "productGatesRunId": 31208243734,
+    "reviewState": "R1_PENDING",
+    "semaphoreId": "SEM-P8-001-WRITE-SANITIZER-A8B7C6D5",
+    "workerIdentity": "SANITIZER-V2"
+  },
+  "recordedAt": "2026-08-07T19:05:00Z",
+  "runtimeGeneration": 55,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T182700Z-a8b7c6d5",
+  "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
+}
