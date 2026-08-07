@@ -60,8 +60,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                         'Review the plan without presenting an execution state.',
                       ),
                       onChanged: controller.canChangePlanOnly
-                          ? (_) => controller
-                              .apply(P5PrototypeAction.choosePlanOnly)
+                          ? (_) => controller.apply(
+                              P5PrototypeAction.choosePlanOnly,
+                            )
                           : null,
                     ),
                   ),
@@ -72,7 +73,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       FilledButton.icon(
                         key: const Key('review-plan-button'),
                         onPressed: controller.canReviewPlan
-                            ? () => controller.apply(P5PrototypeAction.reviewPlan)
+                            ? () =>
+                                  controller.apply(P5PrototypeAction.reviewPlan)
                             : null,
                         icon: const Icon(Icons.fact_check_outlined),
                         label: const Text('Review concise plan'),
@@ -285,8 +287,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     selected: run.id == state.selectedRunId,
                     leading: const Icon(Icons.play_circle_outline),
                     title: Text(run.title),
-                    subtitle:
-                        Text('${run.updatedAtLabel} • ${run.state.label}'),
+                    subtitle: Text(
+                      '${run.updatedAtLabel} • ${run.state.label}',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: controller.canSelectSavedRun
                         ? () => controller.selectRun(run.id)
@@ -324,8 +327,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       if (state.runState == P5RunPresentationState.interrupted)
                         OutlinedButton.icon(
                           key: const Key('resume-existing-run-button'),
-                          onPressed: () => controller
-                              .apply(P5PrototypeAction.retryInterruptedRun),
+                          onPressed: () => controller.apply(
+                            P5PrototypeAction.retryInterruptedRun,
+                          ),
                           icon: const Icon(Icons.replay),
                           label: const Text('Resume fixture'),
                         ),

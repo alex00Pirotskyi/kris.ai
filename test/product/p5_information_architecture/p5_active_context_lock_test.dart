@@ -21,19 +21,28 @@ void main() {
     controller.updateTaskDraft('Replace active task context');
     expect(controller.state.taskDraft, originalTask);
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('Task context cannot change'));
+    expect(
+      controller.state.recoveryMessage,
+      contains('Task context cannot change'),
+    );
 
     controller.selectProject('project.sample-notes');
     expect(controller.state.selectedProjectId, 'project.kristin-local');
     expect(controller.state.selectedRunId, 'run.p5-simulated-current');
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('Project context cannot change'));
+    expect(
+      controller.state.recoveryMessage,
+      contains('Project context cannot change'),
+    );
 
     controller.selectRun('run.p5-existing-001');
     expect(controller.state.selectedProjectId, 'project.kristin-local');
     expect(controller.state.selectedRunId, 'run.p5-simulated-current');
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('Run context cannot change'));
+    expect(
+      controller.state.recoveryMessage,
+      contains('Run context cannot change'),
+    );
 
     controller.deepLink(
       workspace: P5WorkspaceId.runsActivity,
@@ -42,7 +51,10 @@ void main() {
     expect(controller.state.selectedProjectId, 'project.kristin-local');
     expect(controller.state.selectedRunId, 'run.p5-simulated-current');
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('Deep link context cannot replace'));
+    expect(
+      controller.state.recoveryMessage,
+      contains('Deep link context cannot replace'),
+    );
     expect(controller.sideEffects.isZero, isTrue);
   });
 
@@ -62,7 +74,10 @@ void main() {
     expect(controller.state.selectedProjectId, 'project.kristin-local');
     expect(controller.state.selectedRunId, 'run.p5-simulated-current');
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('Deep link context cannot replace'));
+    expect(
+      controller.state.recoveryMessage,
+      contains('Deep link context cannot replace'),
+    );
 
     controller.deepLink(
       workspace: P5WorkspaceId.runsActivity,
@@ -104,21 +119,24 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('interrupted saved run remains browsable but not startable as a new task', () {
-    final controller = P5InformationArchitectureController();
-    addTearDown(controller.dispose);
+  test(
+    'interrupted saved run remains browsable but not startable as a new task',
+    () {
+      final controller = P5InformationArchitectureController();
+      addTearDown(controller.dispose);
 
-    controller.selectRun('run.p5-existing-001');
-    expect(controller.state.runState, P5RunPresentationState.interrupted);
-    expect(controller.canEditTaskDraft, isTrue);
-    expect(controller.canChangeProjectContext, isTrue);
-    expect(controller.canSelectSavedRun, isTrue);
-    expect(controller.canReviewPlan, isFalse);
-    expect(controller.canStartRun, isFalse);
+      controller.selectRun('run.p5-existing-001');
+      expect(controller.state.runState, P5RunPresentationState.interrupted);
+      expect(controller.canEditTaskDraft, isTrue);
+      expect(controller.canChangeProjectContext, isTrue);
+      expect(controller.canSelectSavedRun, isTrue);
+      expect(controller.canReviewPlan, isFalse);
+      expect(controller.canStartRun, isFalse);
 
-    controller.selectRun('run.p5-complete-001');
-    expect(controller.state.selectedRunId, 'run.p5-complete-001');
-    expect(controller.state.runState, P5RunPresentationState.completed);
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      controller.selectRun('run.p5-complete-001');
+      expect(controller.state.selectedRunId, 'run.p5-complete-001');
+      expect(controller.state.runState, P5RunPresentationState.completed);
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 }

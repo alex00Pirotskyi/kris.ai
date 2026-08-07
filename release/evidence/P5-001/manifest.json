@@ -2,8 +2,8 @@
   "artifacts": [
     {
       "path": ".github/workflows/worker-f-p5-001-information-architecture.yml",
-      "sha256": "3d9ca6d56567c94c8bc03e656c5bd0fe3302148b4addc6f99878f43082e38f80",
-      "sizeBytes": 5694
+      "sha256": "91dce43d13afffda5d5a27c491798c3f8d7e0af5486c39f529f3920761b0deb5",
+      "sizeBytes": 9840
     },
     {
       "path": "config/test_center_assurance_hierarchy.v1.json",
@@ -14,16 +14,6 @@
       "path": "config/test_center_registry.v1.json",
       "sha256": "ce902279753c5a60847565acbd7f2fc8a1cc13a09f23cb275150285c5dc02537",
       "sizeBytes": 33779
-    },
-    {
-      "path": "docs/roadmap/progress/2026-08-05-p5-001-information-architecture.md",
-      "sha256": "0bd2108d00ad63e5e6a913c056342040cd9db9fb8df0893cbd76aa8d6e9b2d69",
-      "sizeBytes": 100
-    },
-    {
-      "path": "docs/roadmap/progress/2026-08-06-mission-005-p5-001-recovery.md",
-      "sha256": "849f1243277c1e0220d1b867cd7697367202b8a01373eeedbc32f83ad51ed0ac",
-      "sizeBytes": 980
     },
     {
       "path": "docs/ux/P5-001_INFORMATION_ARCHITECTURE.md",
@@ -42,8 +32,8 @@
     },
     {
       "path": "lib/product/p5_information_architecture/p5_controller.dart",
-      "sha256": "d0ece94aa917a77f2f542d0e758b6192cd0a4b5a48f12e54436ad22aa316623b",
-      "sizeBytes": 10117
+      "sha256": "958c8f6f36f830547f05b88dcbbffe2e001e371fba4cf9293bb720a25e4306d0",
+      "sizeBytes": 22808
     },
     {
       "path": "lib/product/p5_information_architecture/p5_fixtures.dart",
@@ -62,13 +52,13 @@
     },
     {
       "path": "lib/product/p5_information_architecture/p5_support_workspaces.dart",
-      "sha256": "1051a1450201bc8e162ce9c02de92c3119c223746c2ef782ce7f405b2a81ded4",
-      "sizeBytes": 7847
+      "sha256": "54c318d5ac6becf7ba83a52f02b9039dd7962c3211a2b857c59bb71e2a599b9f",
+      "sizeBytes": 8615
     },
     {
       "path": "lib/product/p5_information_architecture/p5_task_workspaces.dart",
-      "sha256": "bbce8c50b2a8cb7009f304257d4c973afaf91aee59d2488d6fcd464662dc4e92",
-      "sizeBytes": 13695
+      "sha256": "8b69141c83d613b7cddecfe6b40a9a0d7ab04e5957d3456dc4fce66e74eb7969",
+      "sizeBytes": 17210
     },
     {
       "path": "lib/product/p5_information_architecture/p5_verification_workspaces.dart",
@@ -122,13 +112,33 @@
     },
     {
       "path": "test/product/p5_information_architecture/p5_accessibility_test.dart",
-      "sha256": "e7427a17fe06bfbfe1d8499505a1a857da3d7fb7659eefbee78ac691a618ce99",
-      "sizeBytes": 4805
+      "sha256": "d86d2191a95e7ffa3fefdac83b878276e9a9e2262714b5b58856fc96461ee86e",
+      "sizeBytes": 5851
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_active_context_lock_test.dart",
+      "sha256": "89eef72e05bfabcdcb89db4bc055858d454e53be3b684275d6d33a7911cbc48f",
+      "sizeBytes": 5796
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_active_context_widget_test.dart",
+      "sha256": "95ce3eb428c9a04f74513ed09d92cf9f4d76188d11730d62ccc7be0893054bac",
+      "sizeBytes": 3104
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_completed_run_new_plan_test.dart",
+      "sha256": "191ae686e250e37e0fe2cb3dbb982ec0827fb84ce7c6bf5cfb47759425f124ff",
+      "sizeBytes": 3824
+    },
+    {
+      "path": "test/product/p5_information_architecture/p5_experience_warning_lifecycle_test.dart",
+      "sha256": "0f150a7ec904236ecde3a6e4756a8e8c25966dfecff3755111819a48f68276da",
+      "sizeBytes": 1819
     },
     {
       "path": "test/product/p5_information_architecture/p5_navigation_test.dart",
-      "sha256": "eb37e8ae0a6d3427581aadc54c03607048aafde15fabcc01581f7a32c407bc0b",
-      "sizeBytes": 4447
+      "sha256": "f8de7aa9bfb06fe7fef801b47bdb6d57f7e608d7ac249b8a2064d9cc1378b06d",
+      "sizeBytes": 14566
     },
     {
       "path": "test/product/p5_information_architecture/p5_source_boundary_test.dart",
@@ -137,22 +147,27 @@
     },
     {
       "path": "test/product/p5_information_architecture/p5_state_controller_test.dart",
-      "sha256": "71284f8847bf368f20b89c3761025c373541f326f907a3de07fb547df3606624",
-      "sizeBytes": 3845
+      "sha256": "3c24fa3f18a0a4911bcc942f56bd05f53c92e6f085c92e0df0270a050db2aad3",
+      "sizeBytes": 17750
     },
     {
       "path": "test/product/p5_information_architecture/p5_verification_center_test.dart",
-      "sha256": "1b7d0842bb51fe93cfdd7fe931dd20bb91474bd8061778f916b1c9e1290b4453",
-      "sizeBytes": 3952
+      "sha256": "3335a53293323b2c0ee182a239855d7801744431689f4d4b5edca51f8dd14889",
+      "sizeBytes": 4083
     },
     {
-      "path": "tool/worker_f_p5_ia.py",
-      "sha256": "b042c26579c4840f8b8314bc606d6e0dde53a0266d7ff00d3955ce0fbdbba62a",
-      "sizeBytes": 13789
+      "path": "test/product/p5_information_architecture/p5_verification_guard_test.dart",
+      "sha256": "239c583344bd4b3ad1e00cd941d8cd62ca5b9f66660d92b7b259b9abef1eb77e",
+      "sizeBytes": 2633
     },
     {
-      "path": "tool/worker_f_p5_ia_test.py",
-      "sha256": "ae29f7739af74674f522f4b66c77c100821df156b8fa2662283d62d82b6ae01d",
+      "path": "test/product/p5_information_architecture/worker_f_p5_ia.py",
+      "sha256": "e7c6fbc7a3ee7ab9da2be286fa79326ee17a07d460d03aaf840b11cd444d5a92",
+      "sizeBytes": 13737
+    },
+    {
+      "path": "test/product/p5_information_architecture/worker_f_p5_ia_test.py",
+      "sha256": "9216fd047d5d6be11b6a665da7940688eebcd62ea0f71fb6fc9f2fb1fc1bb252",
       "sizeBytes": 3944
     }
   ],
