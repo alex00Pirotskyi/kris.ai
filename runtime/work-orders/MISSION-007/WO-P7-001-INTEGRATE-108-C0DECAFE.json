@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    "tool/validate_release.py"
+  ],
+  "baseCommit": "308f8a449594bbe90cf0ff6089fe5f7c13378ab0",
+  "baseTree": "3b8a8474d5ac7c9c73d2e6aab8759207d8a97a8e",
+  "createdAt": "2026-08-07T16:52:00Z",
+  "createdBy": "SYSTEM-P7-PR108-INTEGRATION-HANDOFF",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-007",
+  "objective": "Integrate exact helper PR #108 at 330a71c7038395b12128b0724b4f12229635427d into canonical Product PR #96 from exact base 308f8a449594bbe90cf0ff6089fe5f7c13378ab0. Preserve the bounded governed-library release-validator policy repair and its tri-platform product-gates proof. Do not promote ACCEPTED, support, release, production, GA, or protected-main landing.",
+  "parentProductPr": 96,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "product-gates run 31198205342",
+    "python tool/validate_release.py --skip-tests"
+  ],
+  "roadmapTask": "P7-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-07T16:52:00Z",
+  "workOrderId": "WO-P7-001-INTEGRATE-108-C0DECAFE"
+}
