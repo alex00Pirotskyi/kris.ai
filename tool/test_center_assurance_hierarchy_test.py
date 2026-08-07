@@ -15,6 +15,8 @@ import test_center_assurance_hierarchy as H  # noqa: E402
 FIXTURE = Path("release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json")
 COMPONENT_FIXTURE = "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-fixture.json"
 COMPONENT_FIXTURE_SHA256 = "779714fd586b2896c39056dd541a5be80512b240bd147a72b67d60f59702164a"
+COMPONENT_RESULT_FIXTURE = "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-machine-result.json"
+COMPONENT_RESULT_FIXTURE_SHA256 = "68a1720c473c4d3188181dde18e9fe8df572d8236e0ab105c2edfcb9da19aee3"
 
 
 def at(value, path):
@@ -79,7 +81,8 @@ class AssuranceHierarchyTest(unittest.TestCase):
         for binding in hierarchy["testBindings"]:
             if binding["testId"]==current_test_id: binding["levelId"]="component"
             if binding["testId"]=="tc.p8.formal-test-hierarchy": binding["levelId"]="unit"
-        report["assuranceLevel"]="component"; report["hierarchyBinding"]["levelId"]="component"; report["requestedSupportImpact"]="BEHAVIOR_SUPPORTED"
+        report["assuranceLevel"]="component"; report["hierarchyBinding"]["levelId"]="component"; report["requestedSupportImpact"]="BEHAVIOR_SUPPORTED"; report["executionResult"]["resultId"]="result.p8-001.component-linux"
+        result_id="evidence.p8-001.component-pass.result"; result_evidence=report["executionResult"]["evidenceReferences"][1]; result_evidence.update(evidenceId=result_id,uri=COMPONENT_RESULT_FIXTURE,sha256=COMPONENT_RESULT_FIXTURE_SHA256); report["evidenceReferences"][1]=result_id; report["evidenceBindings"][1]["evidenceId"]=result_id
         component_id="evidence.p8-001.component-pass.fixture"; component=report["executionResult"]["evidenceReferences"][2]; component.update(evidenceId=component_id,uri=COMPONENT_FIXTURE,sha256=COMPONENT_FIXTURE_SHA256); report["evidenceReferences"][2]=component_id; report["evidenceBindings"][2].update(category="component_fixture",evidenceId=component_id)
         predecessor=copy.deepcopy(self.report_fixture["executionResult"]); predecessor["testId"]="tc.p8.formal-test-hierarchy"
         report["predecessorResults"]=[{"assuranceLevel":"unit","executionResult":predecessor,"evidenceBindings":copy.deepcopy(self.report_fixture["evidenceBindings"]),"predecessorResults":[]}]
@@ -118,8 +121,9 @@ class AssuranceHierarchyTest(unittest.TestCase):
         profiles={item["stableCheckId"]:item for item in self.registry["projectTestProfiles"]}; formal=profiles["tc.p8.formal-test-hierarchy"]; regressions=profiles["tc.p8.formal-test-hierarchy-regressions"]
         self.assertTrue({"config/test_center_assurance_report_contract.v1.json","schemas/test_center_assurance_report_contract.v1.json","tool/test_center_assurance_enforcement.py"}.issubset(set(formal["inputPaths"]))); self.assertEqual(regressions["argv"],["python","-m","unittest","-v","tool/test_center_assurance_hierarchy_test.py","tool/test_center_assurance_enforcement_test.py"]); self.assertTrue(required_paths.issubset(set(regressions["affectedPaths"])))
 
-    def test_component_accepts_explicit_same_lineage_unit_predecessor(self):
-        report,hierarchy=self.component_report_with_unit_predecessor(); validated=self.validate_report(report,hierarchy=hierarchy); self.assertEqual(validated["predecessorEvidenceProofCount"],1); self.assertEqual(validated["predecessorEvidenceProofs"][0]["lineageId"],"p8.formal-test-hierarchy")
+    def test_component_synthetic_support_evidence_fails_closed_without_git_candidate(self):
+        report,hierarchy=self.component_report_with_unit_predecessor()
+        with self.assertRaisesRegex(H.HierarchyError,"Git evidence binding failed"): self.validate_report(report,hierarchy=hierarchy)
 
     def test_component_rejects_unrelated_same_candidate_unit_predecessor(self):
         report,hierarchy=self.component_report_with_unit_predecessor(); predecessor=report["predecessorResults"][0]["executionResult"]; predecessor["testId"]="tc.test-center.semantic-regressions"; predecessor["moduleId"]="tm.test-center"; predecessor["roadmapTaskIds"]=[]
@@ -127,11 +131,11 @@ class AssuranceHierarchyTest(unittest.TestCase):
 
     def test_current_evidence_category_swap_is_rejected(self):
         report=copy.deepcopy(self.report_fixture); first=report["evidenceBindings"][0]["evidenceId"]; report["evidenceBindings"][0]["evidenceId"]=report["evidenceBindings"][1]["evidenceId"]; report["evidenceBindings"][1]["evidenceId"]=first
-        with self.assertRaisesRegex(H.HierarchyError,"evidence kind mismatch"): self.validate_report(report)
+        with self.assertRaisesRegex(H.HierarchyError,"evidence for exact_candidate_identity"): self.validate_report(report)
 
     def test_predecessor_evidence_category_swap_is_rejected(self):
         report,hierarchy=self.component_report_with_unit_predecessor(); bindings=report["predecessorResults"][0]["evidenceBindings"]; first=bindings[0]["evidenceId"]; bindings[0]["evidenceId"]=bindings[1]["evidenceId"]; bindings[1]["evidenceId"]=first
-        with self.assertRaisesRegex(H.HierarchyError,"evidence kind mismatch"): self.validate_report(report,hierarchy=hierarchy)
+        with self.assertRaisesRegex(H.HierarchyError,"evidence for exact_candidate_identity"): self.validate_report(report,hierarchy=hierarchy)
 
     def test_predecessor_missing_required_evidence_category_is_rejected(self):
         report,hierarchy=self.component_report_with_unit_predecessor(); report["predecessorResults"][0]["evidenceBindings"].pop()
