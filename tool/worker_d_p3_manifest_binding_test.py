@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from hashlib import sha256
@@ -14,81 +16,155 @@ SPEC.loader.exec_module(MODULE)
 ROOT = Path(__file__).resolve().parents[1]
 
 
-class ManifestBindingTests(unittest.TestCase):
-    def copy_bound_tree(self, destination: Path) -> dict:
-        manifest_source = ROOT / MODULE.MANIFEST_PATH
-        manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
-        manifest_target = destination / MODULE.MANIFEST_PATH
-        manifest_target.parent.mkdir(parents=True, exist_ok=True)
-        manifest_target.write_bytes(manifest_source.read_bytes())
-        for artifact in manifest["artifacts"]:
-            rel = artifact["path"]
-            source = ROOT / rel
-            target = destination / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(source.read_bytes())
-        return manifest
+def _run(root: Path, *args: str) -> str:
+    return subprocess.run(
+        list(args),
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    ).stdout.strip()
 
-    def write_manifest(self, destination: Path, manifest: dict) -> None:
-        path = destination / MODULE.MANIFEST_PATH
-        path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+class ManifestBindingTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._temp = tempfile.TemporaryDirectory()
+        self.root = Path(self._temp.name)
+        _run(self.root, "git", "init", "-q")
+        _run(self.root, "git", "config", "user.email", "p3-test@example.invalid")
+        _run(self.root, "git", "config", "user.name", "P3 Test")
+        self.manifest = self._seed_repository()
+
+    def tearDown(self) -> None:
+        self._temp.cleanup()
+
+    def _write_manifest(self, manifest: dict) -> None:
+        path = self.root / MODULE.MANIFEST_PATH
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(manifest, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+
+    def _seed_repository(self) -> dict:
+        artifacts = []
+        for index, rel in enumerate(sorted(MODULE.EXPECTED_ARTIFACT_PATHS)):
+            target = self.root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            payload = f"artifact-{index}:{rel}\n".encode()
+            target.write_bytes(payload)
+            artifacts.append({"path": rel, "sha256": sha256(payload).hexdigest()})
+        self._write_manifest(
+            {
+                "artifacts": artifacts,
+                "testedSourceCandidate": {"commit": "0" * 40, "tree": "0" * 40},
+                "evidencePackagingCandidate": {
+                    "binding": MODULE.PACKAGING_BINDING,
+                    "classification": "STAGE_2_EVIDENCE_PACKAGING",
+                    "commit": "0" * 40,
+                    "tree": "0" * 40,
+                },
+            }
+        )
+        _run(self.root, "git", "add", ".")
+        _run(self.root, "git", "commit", "-qm", "stage1")
+        stage1 = _run(self.root, "git", "rev-parse", "HEAD")
+        stage1_tree = _run(self.root, "git", "rev-parse", "HEAD^{tree}")
+        _run(self.root, "git", "commit", "--allow-empty", "-qm", "stage2")
+        stage2 = _run(self.root, "git", "rev-parse", "HEAD")
+        stage2_tree = _run(self.root, "git", "rev-parse", "HEAD^{tree}")
+        manifest = json.loads((self.root / MODULE.MANIFEST_PATH).read_text(encoding="utf-8"))
+        manifest["testedSourceCandidate"] = {"commit": stage1, "tree": stage1_tree}
+        manifest["evidencePackagingCandidate"].update(
+            {"commit": stage2, "tree": stage2_tree}
+        )
+        self._write_manifest(manifest)
+        _run(self.root, "git", "add", MODULE.MANIFEST_PATH)
+        _run(self.root, "git", "commit", "-qm", "bind immutable packaging candidate")
+        return manifest
 
     def test_repository_bindings_pass(self):
         self.assertEqual([], MODULE.validate(ROOT))
 
-    def test_bound_file_byte_drift_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            self.copy_bound_tree(root)
-            target = root / "release/evidence/P3-001/claim-boundary.json"
-            target.write_bytes(target.read_bytes() + b"\n")
-            self.assertTrue(any("digest mismatch" in e for e in MODULE.validate(root)))
+    def test_synthetic_immutable_bindings_pass(self):
+        self.assertEqual([], MODULE.validate(self.root))
+
+    def test_current_head_artifact_drift_requires_explicit_rebind(self):
+        target = self.root / sorted(MODULE.EXPECTED_ARTIFACT_PATHS)[0]
+        target.write_bytes(target.read_bytes() + b"head-drift\n")
+        _run(self.root, "git", "add", str(target.relative_to(self.root)))
+        _run(self.root, "git", "commit", "-qm", "mutate manifested artifact")
+        errors = MODULE.validate(self.root)
+        self.assertTrue(any("drifted after frozen packaging candidate" in e for e in errors))
+
+    def test_working_tree_bytes_do_not_rebind_frozen_git_evidence(self):
+        target = self.root / sorted(MODULE.EXPECTED_ARTIFACT_PATHS)[0]
+        target.write_bytes(target.read_bytes() + b"uncommitted-drift\n")
+        self.assertEqual([], MODULE.validate(self.root))
 
     def test_recorded_hash_drift_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            manifest["artifacts"][0]["sha256"] = "0" * 64
-            self.write_manifest(root, manifest)
-            self.assertTrue(any("digest mismatch" in e for e in MODULE.validate(root)))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["artifacts"][0]["sha256"] = "0" * 64
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(any("digest mismatch" in e for e in errors))
+
+    def test_packaging_tree_drift_fails(self):
+        manifest = copy.deepcopy(self.manifest)
+        manifest["evidencePackagingCandidate"]["tree"] = "0" * 40
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(any("evidencePackagingCandidate.tree mismatch" in e for e in errors))
+
+    def test_unknown_packaging_binding_fails(self):
+        manifest = copy.deepcopy(self.manifest)
+        manifest["evidencePackagingCandidate"]["binding"] = "SELF_DECLARED"
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(any("binding must be IMMUTABLE_GIT_CANDIDATE" in e for e in errors))
 
     def test_duplicate_binding_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            manifest["artifacts"].append(dict(manifest["artifacts"][0]))
-            self.write_manifest(root, manifest)
-            self.assertTrue(any("duplicate manifest artifact path" in e for e in MODULE.validate(root)))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["artifacts"].append(dict(manifest["artifacts"][0]))
+        self._write_manifest(manifest)
+        self.assertTrue(
+            any("duplicate manifest artifact path" in e for e in MODULE.validate(self.root))
+        )
 
     def test_missing_binding_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            removed = manifest["artifacts"].pop()
-            self.write_manifest(root, manifest)
-            errors = MODULE.validate(root)
-            self.assertTrue(any("manifest artifact bindings missing" in e and removed["path"] in e for e in errors))
+        manifest = copy.deepcopy(self.manifest)
+        removed = manifest["artifacts"].pop()
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(
+            any(
+                "manifest artifact bindings missing" in e and removed["path"] in e
+                for e in errors
+            )
+        )
 
     def test_unexpected_binding_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            extra_rel = "tool/worker_d_p3_unexpected.py"
-            extra = root / extra_rel
-            extra.parent.mkdir(parents=True, exist_ok=True)
-            extra.write_text("print('unexpected')\n", encoding="utf-8")
-            manifest["artifacts"].append({"path": extra_rel, "sha256": sha256(extra.read_bytes()).hexdigest()})
-            self.write_manifest(root, manifest)
-            errors = MODULE.validate(root)
-            self.assertTrue(any("manifest artifact bindings unexpected" in e and extra_rel in e for e in errors))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["artifacts"].append(
+            {"path": "tool/worker_d_p3_unexpected.py", "sha256": "0" * 64}
+        )
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(
+            any(
+                "manifest artifact bindings unexpected" in e
+                and "tool/worker_d_p3_unexpected.py" in e
+                for e in errors
+            )
+        )
 
     def test_unsafe_binding_path_fails(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            manifest = self.copy_bound_tree(root)
-            manifest["artifacts"][0]["path"] = "../escape"
-            self.write_manifest(root, manifest)
-            self.assertTrue(any("unsafe path" in e for e in MODULE.validate(root)))
+        manifest = copy.deepcopy(self.manifest)
+        manifest["artifacts"][0]["path"] = "../escape"
+        self._write_manifest(manifest)
+        self.assertTrue(any("unsafe path" in e for e in MODULE.validate(self.root)))
 
 
 if __name__ == "__main__":
