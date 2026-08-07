@@ -13,6 +13,7 @@
   "createdBy": "ELASTIC-6b4e91d2",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
+  "lastActor": "ELASTIC-6c8e41f3",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Repair the two exact R1 trust findings on existing P3 helper PR #93 without creating a new branch: bind the P3 manifested artifact set to an immutable Stage-2 packaging commit/tree instead of mutable checkout bytes, and bind P1-012/P2-004 dependency status, review, test, and measurement claims to immutable repository evidence at their declared dependency commits. Preserve P3-001 as dependency-blocked; do not implement browser runtime or promote support.",
@@ -29,8 +30,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "SUPERSEDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-07T21:00:00Z",
+  "updatedAt": "2026-08-07T21:33:00Z",
   "workOrderId": "WO-P3-READINESS-TRUST-CLOSURE-6B4E91D2"
 }

@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000104-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "actor": "ELASTIC-6c8e41f3",
+    "nextStatus": "SUPERSEDED"
+  },
+  "recordedAt": "2026-08-07T21:33:00Z",
+  "runtimeGeneration": 104,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200720Z-6c8e41f3",
+  "workOrderId": "WO-P3-READINESS-TRUST-CLOSURE-6B4E91D2"
+}
