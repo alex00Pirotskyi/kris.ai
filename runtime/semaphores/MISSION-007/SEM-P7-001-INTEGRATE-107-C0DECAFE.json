@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "ea0e2ca0868c0334a7dd3c2c3cf326211f464389",
+  "baseTree": "bec9f1344fb71ee7caeeea7d327cfb0c455f29f8",
+  "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
+  "createdAt": "2026-08-07T16:10:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-07T20:10:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-007",
+  "productPr": 96,
+  "refreshedAt": "2026-08-07T16:10:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 26,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-INTEGRATE-107-C0DECAFE",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P7-001-INTEGRATE-107-C0DECAFE",
+  "workerIdentity": "ELASTIC-c0decafe"
+}

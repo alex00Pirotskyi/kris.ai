@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000026-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-007",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P7-001-INTEGRATE-107-C0DECAFE",
+    "workerIdentity": "ELASTIC-c0decafe"
+  },
+  "recordedAt": "2026-08-07T16:10:00Z",
+  "runtimeGeneration": 26,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T161000Z-c0decafe",
+  "workOrderId": "WO-P7-001-INTEGRATE-107-C0DECAFE"
+}

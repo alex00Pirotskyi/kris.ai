@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P7-001-INTEGRATE-107-C0DECAFE",
   "allowedPaths": [
     "test/product/source_contract_test.dart"
   ],
+  "assignedWorker": "ELASTIC-c0decafe",
   "baseCommit": "ea0e2ca0868c0334a7dd3c2c3cf326211f464389",
   "baseTree": "bec9f1344fb71ee7caeeea7d327cfb0c455f29f8",
   "createdAt": "2026-08-07T16:09:00Z",
   "createdBy": "SYSTEM-P7-SOURCE-INVENTORY-INTEGRATION-HANDOFF",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Integrate exact append-safe source-inventory helper PR #107 at bde2f6b1b911e23190fd9ea34839199133a89c05 into canonical Product PR #96 from exact base ea0e2ca0868c0334a7dd3c2c3cf326211f464389. Preserve the one-line governed source registration and keep the separate legacy validate_release.py allowlist blocker fail-closed.",
@@ -20,8 +23,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T16:09:00Z",
+  "updatedAt": "2026-08-07T16:10:00Z",
   "workOrderId": "WO-P7-001-INTEGRATE-107-C0DECAFE"
 }
