@@ -1,4 +1,4 @@
-import 'domain.dart';
+import 'storage_security.dart';
 
 const String mcpCurrentStableProtocolVersion = '2026-07-28';
 const String mcpLegacyProtocolVersion = '2024-11-05';
@@ -49,9 +49,8 @@ class McpProtocolAdapter {
     final meta = rawMeta == null
         ? <String, dynamic>{}
         : _stringKeyedMap(rawMeta, code: 'mcp_request_meta_invalid');
-    final reserved = meta.keys
-        .where((key) => key.startsWith('io.modelcontextprotocol/'))
-        .toList(growable: false);
+    final reserved =
+        meta.keys.where(_isReservedMcpMetaKey).toList(growable: false);
     if (reserved.isNotEmpty) {
       throw ProductException(
         'mcp_reserved_meta_rejected',
@@ -64,8 +63,9 @@ class McpProtocolAdapter {
       'name': clientName,
       'version': clientVersion,
     };
-    meta['io.modelcontextprotocol/clientCapabilities'] =
-        <String, dynamic>{...clientCapabilities};
+    meta['io.modelcontextprotocol/clientCapabilities'] = <String, dynamic>{
+      ...clientCapabilities
+    };
     decorated['_meta'] = meta;
     return decorated;
   }
@@ -154,28 +154,32 @@ class McpProtocolAdapter {
     final names = <String>{};
     for (final rawTool in rawTools) {
       final tool = _stringKeyedMap(rawTool, code: 'mcp_tool_catalog_invalid');
-      final name = tool['name']?.toString().trim() ?? '';
-      if (name.isEmpty) {
+      final rawName = tool['name'];
+      if (rawName is! String || rawName.isEmpty) {
         throw ProductException(
           'mcp_tool_catalog_invalid',
-          'MCP tools/list returned a tool without a name.',
+          'MCP tools/list returned a tool without a valid string name.',
         );
       }
-      if (!names.add(name)) {
+      if (!names.add(rawName)) {
         throw ProductException(
           'mcp_tool_catalog_invalid',
           'MCP tools/list returned a duplicate tool name.',
-          details: <String, dynamic>{'tool': name},
+          details: <String, dynamic>{'tool': rawName},
         );
       }
     }
 
     final rawCursor = result['nextCursor'];
-    final nextCursor = rawCursor == null ? null : rawCursor.toString().trim();
-    if (rawCursor != null && nextCursor!.isEmpty) {
+    String? nextCursor;
+    if (rawCursor == null) {
+      nextCursor = null;
+    } else if (rawCursor is String) {
+      nextCursor = rawCursor;
+    } else {
       throw ProductException(
         'mcp_tool_catalog_invalid',
-        'MCP tools/list returned an empty pagination cursor.',
+        'MCP tools/list returned a non-string pagination cursor.',
       );
     }
     return McpToolCatalogPage(
@@ -188,8 +192,7 @@ class McpProtocolAdapter {
     Set<String> availableTools,
     Set<String> requiredTools,
   ) {
-    final missing = requiredTools.difference(availableTools).toList()
-      ..sort();
+    final missing = requiredTools.difference(availableTools).toList()..sort();
     if (missing.isNotEmpty) {
       throw ProductException(
         'mcp_tool_removed',
@@ -226,8 +229,7 @@ class McpProtocolAdapter {
     }
 
     final available = capabilities.keys.toSet();
-    final missing = requiredCapabilities.difference(available).toList()
-      ..sort();
+    final missing = requiredCapabilities.difference(available).toList()..sort();
     if (missing.isNotEmpty) {
       throw ProductException(
         'mcp_capability_removed',
@@ -307,6 +309,19 @@ class McpProtocolRegistry {
       },
     );
   }
+}
+
+bool _isReservedMcpMetaKey(String key) {
+  final separator = key.indexOf('/');
+  if (separator <= 0) {
+    return false;
+  }
+  final labels = key.substring(0, separator).split('.');
+  if (labels.length < 2) {
+    return false;
+  }
+  final secondLabel = labels[1].toLowerCase();
+  return secondLabel == 'modelcontextprotocol' || secondLabel == 'mcp';
 }
 
 Map<String, dynamic> _stringKeyedMap(
