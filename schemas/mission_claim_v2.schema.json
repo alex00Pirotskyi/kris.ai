@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/mission_claim_v2.schema.json",
+  "title": "Kris Mission Execution 1.5 Mission Claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mission", "captainWorker", "status", "integrationAuthority", "priority", "currentProductPrs", "runtimeGeneration", "updatedAt"],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "mission": {"type": "string", "pattern": "^MISSION-[0-9]{3}$"},
+    "captainWorker": {"type": "string", "minLength": 1},
+    "status": {"enum": ["ACTIVE", "PAUSED", "YIELDED", "COMPLETE"]},
+    "integrationAuthority": {"type": "string", "minLength": 1},
+    "priority": {"enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]},
+    "currentProductPrs": {"type": "array", "uniqueItems": true, "items": {"type": "integer", "minimum": 1}},
+    "runtimeGeneration": {"type": "integer", "minimum": 0},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}
