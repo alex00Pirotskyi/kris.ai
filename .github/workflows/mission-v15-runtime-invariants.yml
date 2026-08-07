@@ -14,6 +14,8 @@ on:
       - 'tool/mission_v15_connector_authority_apply.py'
       - 'tool/mission_v15_release_validator_policy_apply.py'
       - 'tool/mission_v15_release_validator_policy_test.py'
+      - 'tool/mission_v15_source_manifest_release_apply.py'
+      - 'tool/mission_v15_source_manifest_release_test.py'
       - 'tool/mission_v15_runtime_atomicity.py'
       - 'tool/mission_v15_runtime_atomicity_test.py'
       - 'tool/mission_v15_governance_drift.py'
@@ -70,6 +72,8 @@ jobs:
           tool/mission_v15_connector_authority_apply.py
           tool/mission_v15_release_validator_policy_apply.py
           tool/mission_v15_release_validator_policy_test.py
+          tool/mission_v15_source_manifest_release_apply.py
+          tool/mission_v15_source_manifest_release_test.py
           tool/mission_v15_runtime_atomicity.py
           tool/mission_v15_runtime_atomicity_test.py
           tool/mission_v15_governance_drift.py
@@ -89,6 +93,8 @@ jobs:
         run: python tool/mission_v15_authority_test.py
       - name: Run release-validator policy regressions
         run: python tool/mission_v15_release_validator_policy_test.py
+      - name: Run source-manifest RELEASE regressions
+        run: python tool/mission_v15_source_manifest_release_test.py
       - name: Run runtime atomicity regressions
         run: python tool/mission_v15_runtime_atomicity_test.py
       - name: Run source-landing semantic regressions
