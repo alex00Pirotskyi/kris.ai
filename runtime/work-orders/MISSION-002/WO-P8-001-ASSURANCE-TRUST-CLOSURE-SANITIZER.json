@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P8-001-SUPPORT-MATRIX-7F4A9C21",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
@@ -30,8 +29,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-07T19:25:00Z",
+  "updatedAt": "2026-08-07T20:01:00Z",
   "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
 }

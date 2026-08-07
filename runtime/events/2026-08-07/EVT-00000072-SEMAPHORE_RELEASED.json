@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000072-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-002",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P8-001-SUPPORT-MATRIX-7F4A9C21"
+  },
+  "recordedAt": "2026-08-07T20:01:00Z",
+  "runtimeGeneration": 72,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T191324Z-7f4a9c21",
+  "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
+}
