@@ -4,8 +4,11 @@ on:
   pull_request:
     paths:
       - 'tool/mission_runtime_control.py'
+      - 'tool/mission_runtime_model.py'
+      - 'tool/mission_orchestrator.py'
       - 'tool/mission_delivery_strict.py'
       - 'tool/mission_v15_regression_test.py'
+      - 'tool/mission_v15_scale_test.py'
       - 'schemas/mission_*'
       - 'docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md'
   workflow_dispatch:
@@ -37,11 +40,16 @@ jobs:
         run: >-
           python -m py_compile
           tool/mission_runtime_control.py
+          tool/mission_runtime_model.py
+          tool/mission_orchestrator.py
           tool/mission_delivery_strict.py
           tool/mission_v15_regression_test.py
+          tool/mission_v15_scale_test.py
       - name: Run v1.5 negative regressions
         run: python tool/mission_v15_regression_test.py
-      - name: Validate live runtime
+      - name: Run v1.5 concurrency/dispatch regressions
+        run: python tool/mission_v15_scale_test.py
+      - name: Validate live legacy runtime compatibility
         run: python tool/mission_runtime_control.py --project . validate
       - name: Validate strict delivery
         run: python tool/mission_delivery_strict.py --project . validate
