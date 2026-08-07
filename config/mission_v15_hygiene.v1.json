@@ -4,13 +4,23 @@
     "observedTotalBranchesAtCutoverStart": 56,
     "maxTotalBranchesDuringMigration": 60,
     "maxLegacyDebtBranchesDuringMigration": 25,
-    "maxActiveHelperBranches": 20
+    "maxActiveHelperBranches": 20,
+    "maxRuntimeTransactionBranchesDuringMigration": 5,
+    "runtimeTransactionBranchPrefix": "runtime/tx/",
+    "grandfatheredRuntimeTransactionBranches": [
+      "runtime/tx/p4-integrate-92-gen1",
+      "runtime/tx/p4-integrate-92-gen2",
+      "runtime/tx/p5-integrate-94-gen2",
+      "runtime/tx/p5-integrate-94-gen3",
+      "runtime/tx/p11-integrate-95-gen4"
+    ]
   },
   "target": {
     "longLivedCanonicalBranches": 15,
     "activeHelperBranches": 20,
     "temporaryValidationBranches": 5,
-    "legacyDebtBranches": 0
+    "legacyDebtBranches": 0,
+    "runtimeTransactionBranches": 0
   },
   "legacyDebtPatterns": [
     "*-backup*",
