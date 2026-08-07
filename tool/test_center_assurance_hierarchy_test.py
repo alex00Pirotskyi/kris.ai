@@ -121,8 +121,9 @@ class AssuranceHierarchyTest(unittest.TestCase):
         profiles={item["stableCheckId"]:item for item in self.registry["projectTestProfiles"]}; formal=profiles["tc.p8.formal-test-hierarchy"]; regressions=profiles["tc.p8.formal-test-hierarchy-regressions"]
         self.assertTrue({"config/test_center_assurance_report_contract.v1.json","schemas/test_center_assurance_report_contract.v1.json","tool/test_center_assurance_enforcement.py"}.issubset(set(formal["inputPaths"]))); self.assertEqual(regressions["argv"],["python","-m","unittest","-v","tool/test_center_assurance_hierarchy_test.py","tool/test_center_assurance_enforcement_test.py"]); self.assertTrue(required_paths.issubset(set(regressions["affectedPaths"])))
 
-    def test_component_accepts_explicit_same_lineage_unit_predecessor(self):
-        report,hierarchy=self.component_report_with_unit_predecessor(); validated=self.validate_report(report,hierarchy=hierarchy); self.assertEqual(validated["predecessorEvidenceProofCount"],1); self.assertEqual(validated["predecessorEvidenceProofs"][0]["lineageId"],"p8.formal-test-hierarchy")
+    def test_component_synthetic_support_evidence_fails_closed_without_git_candidate(self):
+        report,hierarchy=self.component_report_with_unit_predecessor()
+        with self.assertRaisesRegex(H.HierarchyError,"Git evidence binding failed"): self.validate_report(report,hierarchy=hierarchy)
 
     def test_component_rejects_unrelated_same_candidate_unit_predecessor(self):
         report,hierarchy=self.component_report_with_unit_predecessor(); predecessor=report["predecessorResults"][0]["executionResult"]; predecessor["testId"]="tc.test-center.semantic-regressions"; predecessor["moduleId"]="tm.test-center"; predecessor["roadmapTaskIds"]=[]
