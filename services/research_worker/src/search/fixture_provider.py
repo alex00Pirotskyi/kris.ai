@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 from .models import CONTRACT_VERSION, SearchPage, SearchPartialFailure, SearchProviderCapabilities, SearchProviderError, SearchRateLimit, SearchRequest, SearchResult, stable_result_id
 from .provider import SearchProvider, SearchProviderException
-from .validation import SearchContractError, canonical_json, require_exact_keys
+from .validation import SearchContractError, canonical_json, require_exact_keys, require_utc
 _FIXED_RETRIEVED_AT = '2026-08-05T00:00:00Z'
 _FIXED_RESET_AT = '2026-08-05T00:05:00Z'
 _CURSOR_PREFIX = 'p4c1.'
@@ -34,7 +34,7 @@ class DeterministicFixtureSearchProvider(SearchProvider):
     def capabilities(self):
         return self._capabilities
 
-    def search(self, request: SearchRequest) -> SearchPage:
+    def _search(self, request: SearchRequest) -> SearchPage:
         self._validate_supported_request(request)
         if request.query == 'fixture:throttle':
             raise SearchProviderException(SearchProviderError(request.request_id, self.capabilities.provider_id, 'throttled', True, 'Fixture provider is rate limited.', 1000, 'fixture_throttle'))
@@ -69,10 +69,30 @@ class DeterministicFixtureSearchProvider(SearchProvider):
     def _unsupported(self, request, diagnostic_code):
         return SearchProviderError(request.request_id, self.capabilities.provider_id, 'unsupported_filter', False, 'The fixture provider does not support this filter.', None, diagnostic_code)
 
+    def _matches_freshness(self, entry: FixtureCatalogEntry, request: SearchRequest) -> bool:
+        freshness = request.freshness
+        if freshness is None or freshness['mode'] == 'any':
+            return True
+        if entry.published_at is None:
+            return False
+        published = require_utc(entry.published_at, 'published_at')
+        mode = freshness['mode']
+        if mode == 'after':
+            return published > require_utc(freshness['after'], 'freshness.after')
+        if mode == 'before':
+            return published < require_utc(freshness['before'], 'freshness.before')
+        if mode == 'between':
+            after = require_utc(freshness['after'], 'freshness.after')
+            before = require_utc(freshness['before'], 'freshness.before')
+            return after < published < before
+        raise SearchContractError('freshness.mode is unsupported')
+
     def _matches(self, entry, request):
         if request.language and entry.language != request.language:
             return False
         if request.country and entry.country != request.country:
+            return False
+        if not self._matches_freshness(entry, request):
             return False
         domains = request.domains or {'include': (), 'exclude': ()}
         hostname = (urllib.parse.urlsplit(entry.url).hostname or '').lower()
