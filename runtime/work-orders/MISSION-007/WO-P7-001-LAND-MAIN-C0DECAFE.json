@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "lib/product/mcp*.dart",
+    "test/product/mcp*/**",
+    "release/evidence/P7-*/**"
+  ],
+  "baseCommit": "ec5086210a778b8a1be51f22b9cd81f735956034",
+  "baseTree": "33bea41e73a68b30f1f17f09323824d81a6419d1",
+  "createdAt": "2026-08-07T17:48:00Z",
+  "createdBy": "SYSTEM-P7-PROTECTED-MAIN-LANDING",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-007",
+  "objective": "Land exact finalized canonical Product PR #96 head ec5086210a778b8a1be51f22b9cd81f735956034 into protected main as source-only delivery using a merge commit so the exact source head remains an ancestor of mergedMainCommit. Do not modify product source, do not squash, and do not promote P7-001 ACCEPTED, behavioral/platform/release support, production readiness, certification, or GA.",
+  "parentProductPr": 96,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "product-gates workflow_dispatch run 31203644993 exact head ec5086210a778b8a1be51f22b9cd81f735956034",
+    "validate-ubuntu SUCCESS",
+    "validate-windows SUCCESS",
+    "validate-macos SUCCESS",
+    "SOURCE_MANIFEST.sha256 finalized deterministically"
+  ],
+  "roadmapTask": "P7-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-07T17:48:00Z",
+  "workOrderId": "WO-P7-001-LAND-MAIN-C0DECAFE"
+}
