@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Runtime coordination primitives for autonomous mission workers.
+"""Runtime claim/helper coordination for autonomous mission workers.
 
-Mission claims remain integration/leadership locks. Helper leases are bounded
-write locks inside a claimed mission and are intentionally narrower than the
-mission's maximum path policy. This module is local/deterministic; a worker must
-publish a newly created lease to the canonical mission branch with a normal
-fast-forward update, re-fetch that branch, and validate again before editing.
-That publish/re-fetch step is the repository compare-and-swap boundary.
+A mission claim is the leadership/integration lock. A helper lease is a bounded
+write lock for one task on a separate branch. Helper leases are constrained by
+the mission delivery policy (the mission's maximum repository authority), never
+by another mission and never beyond their explicit allowedPaths.
+
+This tool is deterministic and local. Creation is only a proposal until the
+lease file is committed to the canonical mission-system branch with a normal
+fast-forward update, that branch is re-fetched, and validation passes again.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
-import fnmatch
 import json
 import pathlib
 import re
 import sys
-from typing import Any, Iterable
+from typing import Any
 
 from mission_delivery_lib import load_latest_records, load_model, normalize_path
 
@@ -25,9 +26,9 @@ ROOT = pathlib.Path("docs/roadmap/missions")
 CLAIMS = ROOT / "claims"
 LEASES = ROOT / "helper-leases"
 LEASE_ID_RE = re.compile(r"^HLP-[A-Z0-9][A-Z0-9._-]{5,79}$")
-ACTIVE_LEASE_STATES = {"ACTIVE"}
-FINAL_LEASE_STATES = {"YIELDED", "COMPLETE", "EXPIRED"}
-ACCEPTED_TASK_STATES = {"ACCEPTED", "MERGED_MAIN"}
+ACTIVE = {"ACTIVE"}
+FINAL = {"YIELDED", "COMPLETE", "EXPIRED"}
+ACCEPTED = {"ACCEPTED", "MERGED_MAIN"}
 
 
 def utc_now() -> dt.datetime:
@@ -40,7 +41,7 @@ def iso(value: dt.datetime) -> str:
 
 def parse_time(value: str) -> dt.datetime:
     if not isinstance(value, str) or not value.endswith("Z"):
-        raise ValueError(f"timestamp must be timezone-qualified UTC RFC3339: {value!r}")
+        raise ValueError(f"timestamp must be UTC RFC3339: {value!r}")
     parsed = dt.datetime.fromisoformat(value[:-1] + "+00:00")
     if parsed.tzinfo is None:
         raise ValueError(f"timestamp missing timezone: {value!r}")
@@ -66,34 +67,24 @@ def prefixes_overlap(left: str, right: str) -> bool:
 
 
 def pattern_within(child: str, parent: str) -> bool:
-    child = normalize_path(child)
-    parent = normalize_path(parent)
-    pfx = static_prefix(parent)
-    cfx = static_prefix(child)
-    if not pfx or not cfx:
-        return False
-    if not (cfx == pfx or cfx.startswith(pfx + "/")):
-        return False
-    # Exact child paths and narrower glob patterns are acceptable when they
-    # live under the parent's static namespace. A helper lease can only narrow
-    # authority, never widen it.
-    return True
+    cfx, pfx = static_prefix(child), static_prefix(parent)
+    return bool(cfx and pfx and (cfx == pfx or cfx.startswith(pfx + "/")))
 
 
 def durable_claims(project: pathlib.Path) -> dict[str, dict[str, Any]]:
     root = project / CLAIMS
-    claims: dict[str, dict[str, Any]] = {}
+    result: dict[str, dict[str, Any]] = {}
     if not root.is_dir():
-        return claims
+        return result
     for path in sorted(root.glob("MISSION-*.claim.json")):
-        value = read_json(path)
-        mission = value.get("mission")
-        if not isinstance(mission, str) or mission in claims:
+        claim = read_json(path)
+        mission = claim.get("mission")
+        if not isinstance(mission, str) or mission in result:
             raise ValueError(f"invalid or duplicate durable claim: {path}")
-        if not value.get("worker") or not value.get("branch"):
+        if not claim.get("worker") or not claim.get("branch"):
             raise ValueError(f"durable claim missing worker/branch: {path}")
-        claims[mission] = value
-    return claims
+        result[mission] = claim
+    return result
 
 
 def lease_files(project: pathlib.Path) -> list[pathlib.Path]:
@@ -102,64 +93,51 @@ def lease_files(project: pathlib.Path) -> list[pathlib.Path]:
 
 
 def load_leases(project: pathlib.Path) -> list[dict[str, Any]]:
-    values: list[dict[str, Any]] = []
+    leases = []
     for path in lease_files(project):
         value = read_json(path)
         value["_path"] = path.relative_to(project).as_posix()
-        values.append(value)
-    return values
+        leases.append(value)
+    return leases
 
 
-def mission_owned_patterns(model: dict[str, Any], mission: str) -> list[str]:
+def mission_maximum_patterns(model: dict[str, Any], mission: str) -> list[str]:
     return list(model["config"]["missionPathPolicies"][mission]["owned"])
 
 
-def claim_patterns(claim: dict[str, Any], model: dict[str, Any]) -> list[str]:
-    explicit = claim.get("exclusivePaths") or []
-    if explicit:
-        return list(explicit)
-    return mission_owned_patterns(model, claim["mission"])
-
-
 def validate_lease(lease: dict[str, Any], model: dict[str, Any], claims: dict[str, dict[str, Any]]) -> None:
-    required = [
+    required = {
         "schemaVersion", "leaseId", "mission", "task", "ownerWorker", "helperWorker",
         "workExecutionId", "branch", "baseCommit", "baseTree", "allowedPaths", "status",
         "createdAt", "refreshedAt", "expiresAt", "parentClaimHead", "nextAction",
-    ]
-    missing = [key for key in required if key not in lease]
+    }
+    missing = sorted(required - set(lease))
     if missing:
         raise ValueError(f"helper lease missing fields: {missing}")
-    if lease["schemaVersion"] != 1:
-        raise ValueError("helper lease schemaVersion must be 1")
-    if not LEASE_ID_RE.fullmatch(str(lease["leaseId"])):
-        raise ValueError(f"invalid helper lease id: {lease['leaseId']}")
-    mission = lease["mission"]
+    if lease["schemaVersion"] != 1 or not LEASE_ID_RE.fullmatch(str(lease["leaseId"])):
+        raise ValueError("invalid helper lease schema/id")
+    mission, task = lease["mission"], lease["task"]
     if mission not in model["missions"]:
         raise ValueError(f"unknown helper mission: {mission}")
-    task = lease["task"]
     if task not in model["tasks"] or model["tasks"][task].get("mission") != mission:
         raise ValueError(f"helper task {task} does not belong to {mission}")
     claim = claims.get(mission)
     if claim is None:
         raise ValueError(f"helper lease requires an active durable mission claim: {mission}")
     if lease["ownerWorker"] != claim.get("worker"):
-        raise ValueError(f"helper ownerWorker does not match durable claim owner for {mission}")
+        raise ValueError(f"helper owner does not match durable claim owner for {mission}")
     if lease["parentClaimHead"] != claim.get("head"):
         raise ValueError(f"helper lease is stale relative to durable claim head for {mission}")
-    status = lease["status"]
-    if status not in ACTIVE_LEASE_STATES | FINAL_LEASE_STATES:
-        raise ValueError(f"unsupported helper lease status: {status}")
+    if lease["status"] not in ACTIVE | FINAL:
+        raise ValueError(f"unsupported helper lease status: {lease['status']}")
     allowed = lease.get("allowedPaths") or []
     if not allowed:
         raise ValueError("helper lease allowedPaths must be non-empty")
-    maxima = claim_patterns(claim, model)
+    maxima = mission_maximum_patterns(model, mission)
     for path in allowed:
         if not any(pattern_within(path, maximum) for maximum in maxima):
-            raise ValueError(f"helper path widens mission claim: {path}")
-    created = parse_time(lease["createdAt"])
-    refreshed = parse_time(lease["refreshedAt"])
-    expires = parse_time(lease["expiresAt"])
+            raise ValueError(f"helper path exceeds mission policy: {path}")
+    created, refreshed, expires = map(parse_time, (lease["createdAt"], lease["refreshedAt"], lease["expiresAt"]))
     if refreshed < created or expires <= refreshed:
         raise ValueError("helper lease timestamp ordering is invalid")
 
@@ -178,9 +156,7 @@ def active_leases(project: pathlib.Path, model: dict[str, Any], claims: dict[str
             for a in left["allowedPaths"]:
                 for b in right["allowedPaths"]:
                     if prefixes_overlap(a, b):
-                        raise ValueError(
-                            f"active helper lease collision: {left['leaseId']} {a} vs {right['leaseId']} {b}"
-                        )
+                        raise ValueError(f"active helper collision: {left['leaseId']} {a} vs {right['leaseId']} {b}")
     return active
 
 
@@ -201,7 +177,8 @@ def helper_path(project: pathlib.Path, mission: str, lease_id: str) -> pathlib.P
 def create_helper(project: pathlib.Path, args: argparse.Namespace) -> pathlib.Path:
     runtime = validate_runtime(project)
     model, claims = runtime["model"], runtime["claims"]
-    if args.mission not in claims:
+    claim = claims.get(args.mission)
+    if claim is None:
         raise ValueError(f"mission is not durably claimed: {args.mission}")
     if args.task not in model["tasks"] or model["tasks"][args.task].get("mission") != args.mission:
         raise ValueError(f"task {args.task} does not belong to {args.mission}")
@@ -209,7 +186,6 @@ def create_helper(project: pathlib.Path, args: argparse.Namespace) -> pathlib.Pa
     if target.exists():
         raise ValueError(f"helper lease already exists: {target.relative_to(project)}")
     now = utc_now()
-    claim = claims[args.mission]
     lease = {
         "schemaVersion": 1,
         "leaseId": args.lease_id,
@@ -236,9 +212,7 @@ def create_helper(project: pathlib.Path, args: argparse.Namespace) -> pathlib.Pa
         for left in lease["allowedPaths"]:
             for right in existing["allowedPaths"]:
                 if prefixes_overlap(left, right):
-                    raise ValueError(
-                        f"requested helper path collides with {existing['leaseId']}: {left} vs {right}"
-                    )
+                    raise ValueError(f"requested helper path collides with {existing['leaseId']}: {left} vs {right}")
     write_json(target, lease)
     return target
 
@@ -249,10 +223,8 @@ def mutate_helper(project: pathlib.Path, args: argparse.Namespace, status: str |
     if not target.is_file():
         raise ValueError(f"helper lease not found: {target.relative_to(project)}")
     lease = read_json(target)
-    if lease.get("helperWorker") != args.helper_worker:
-        raise ValueError("only the recorded helperWorker may mutate its lease")
-    if lease.get("status") != "ACTIVE":
-        raise ValueError(f"helper lease is not active: {lease.get('status')}")
+    if lease.get("helperWorker") != args.helper_worker or lease.get("status") != "ACTIVE":
+        raise ValueError("helper lease mutation rejected")
     now = utc_now()
     lease["refreshedAt"] = iso(now)
     if status is None:
@@ -271,39 +243,36 @@ def frontier(project: pathlib.Path) -> dict[str, Any]:
     model, claims, leases = runtime["model"], runtime["claims"], runtime["leases"]
     latest = load_latest_records(project, model)
     priorities = model["config"].get("priorityOrder", {})
-    rows: list[dict[str, Any]] = []
-    leased_tasks = {(lease["mission"], lease["task"]) for lease in leases}
+    leased = {(lease["mission"], lease["task"]) for lease in leases}
+    rows = []
     for task in model["tasks"].values():
         mission = task["mission"]
         record = latest.get(task["id"], {})
-        state = record.get("status", "NOT_EVALUATED")
-        if state in ACCEPTED_TASK_STATES:
+        status = record.get("status", "NOT_EVALUATED")
+        if status in ACCEPTED:
             continue
-        deps = task.get("dependencies", [])
-        missing = [dep for dep in deps if latest.get(dep, {}).get("status") not in ACCEPTED_TASK_STATES]
+        missing = [dep for dep in task.get("dependencies", []) if latest.get(dep, {}).get("status") not in ACCEPTED]
         if missing:
             continue
-        mission_meta = model["missions"][mission]
-        claimed = mission in claims
-        helper_busy = (mission, task["id"]) in leased_tasks
-        rows.append(
-            {
-                "mission": mission,
-                "task": task["id"],
-                "title": task.get("title"),
-                "status": state,
-                "claimed": claimed,
-                "claimWorker": claims.get(mission, {}).get("worker"),
-                "helperLeaseActive": helper_busy,
-                "action": "HELPER_CANDIDATE" if claimed and not helper_busy else ("MISSION_CLAIM_CANDIDATE" if not claimed else "OWNER_CONTINUE"),
-                "priority": mission_meta.get("priority"),
-                "priorityOrder": priorities.get(mission_meta.get("priority"), 999),
-            }
-        )
+        claim = claims.get(mission)
+        helper_busy = (mission, task["id"]) in leased
+        priority = model["missions"][mission].get("priority")
+        rows.append({
+            "mission": mission,
+            "task": task["id"],
+            "title": task.get("title"),
+            "status": status,
+            "claimed": bool(claim),
+            "claimWorker": claim.get("worker") if claim else None,
+            "helperLeaseActive": helper_busy,
+            "action": "HELPER_CANDIDATE" if claim and not helper_busy else ("MISSION_CLAIM_CANDIDATE" if not claim else "OWNER_CONTINUE"),
+            "priority": priority,
+            "priorityOrder": priorities.get(priority, 999),
+        })
     rows.sort(key=lambda row: (row["priorityOrder"], row["mission"], row["task"]))
     return {
         "schemaVersion": 1,
-        "meaning": "Dependency-satisfied roadmap tasks from durable records. Live Git/CI/ownership must still be re-resolved before writing.",
+        "meaning": "Dependency-satisfied roadmap tasks from durable records; live Git/CI/ownership still must be re-resolved before writes.",
         "activeClaimCount": len(claims),
         "activeHelperLeaseCount": len(leases),
         "candidateCount": len(rows),
@@ -317,7 +286,6 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate")
     sub.add_parser("next-work")
-
     create = sub.add_parser("helper-create")
     create.add_argument("--lease-id", required=True)
     create.add_argument("--mission", required=True)
@@ -330,7 +298,6 @@ def main() -> int:
     create.add_argument("--allowed-path", action="append", required=True)
     create.add_argument("--hours", type=int, default=4)
     create.add_argument("--next-action", required=True)
-
     for name in ("helper-heartbeat", "helper-yield", "helper-complete"):
         item = sub.add_parser(name)
         item.add_argument("--lease-id", required=True)
@@ -338,16 +305,12 @@ def main() -> int:
         item.add_argument("--helper-worker", required=True)
         item.add_argument("--hours", type=int, default=4)
         item.add_argument("--next-action", default="Re-resolve live state and continue the highest-priority safe action.")
-
     args = parser.parse_args()
     project = pathlib.Path(args.project).resolve()
     try:
         if args.command == "validate":
             runtime = validate_runtime(project)
-            print(
-                "MISSION_RUNTIME_VALID "
-                f"claims={len(runtime['claims'])} active_helper_leases={len(runtime['leases'])}"
-            )
+            print(f"MISSION_RUNTIME_VALID claims={len(runtime['claims'])} active_helper_leases={len(runtime['leases'])}")
         elif args.command == "next-work":
             print(json.dumps(frontier(project), indent=2, sort_keys=True))
         elif args.command == "helper-create":
