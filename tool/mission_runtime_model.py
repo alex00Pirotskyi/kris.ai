@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Mission Execution 1.5 mutable runtime model.
 
-The existing ``mission_runtime_control.py`` remains the compatibility surface
-for v1 helper leases while this module owns the v1.5 Work Order/semaphore/event
-runtime. It reuses roadmap/delivery helpers and does not duplicate acceptance
-truth.
+This module is the canonical v1.5 runtime library for head-decoupled Mission
+Claims, canonical Product PRs, Work Orders, scoped semaphores, delegation,
+backpressure, events, recovery and deterministic dispatch. It reuses the
+existing roadmap/delivery model instead of creating another acceptance stack.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import json
 import pathlib
 from typing import Any
 
-from mission_delivery_lib import DeliveryError, load_latest_records, load_model
+from mission_delivery_lib import load_latest_records, load_model
 from mission_runtime_control import (
     ACCEPTED,
     mission_maximum_patterns,
@@ -29,6 +29,7 @@ WORK_ORDERS = RUNTIME / "work-orders"
 SEMAPHORES = RUNTIME / "semaphores"
 EVENTS = RUNTIME / "events"
 PRODUCT_PRS = RUNTIME / "integration/product-prs"
+AUTHORITY_CONFIG = pathlib.Path("config/mission_v15_authorities.v1.json")
 
 WORK_ORDER_STATES = {
     "CREATED", "READY", "RESERVED", "IN_PROGRESS", "HELPER_READY",
@@ -119,6 +120,19 @@ def meta(project: pathlib.Path) -> dict[str, Any]:
     return value
 
 
+def authority_config(project: pathlib.Path) -> dict[str, Any]:
+    path = project / AUTHORITY_CONFIG
+    if not path.is_file():
+        # Bootstrap compatibility until the control-plane sync lands on the
+        # dedicated runtime branch. No shared authority can be acquired while
+        # this file is absent.
+        return {"schemaVersion": 1, "authorities": {}}
+    value = read_json(path)
+    if value.get("schemaVersion") != 1 or not isinstance(value.get("authorities"), dict):
+        raise ValueError("invalid Mission Execution 1.5 authority configuration")
+    return value
+
+
 def claim_files(project: pathlib.Path) -> list[pathlib.Path]:
     root = project / CLAIMS
     return sorted(root.glob("MISSION-*.json")) if root.is_dir() else []
@@ -155,7 +169,7 @@ def load_claims(project: pathlib.Path, model: dict[str, Any]) -> dict[str, dict[
             raise ValueError(f"Mission Claim v2 captain required: {path}")
         if item.get("integrationAuthority") != captain:
             raise ValueError(
-                f"Mission Claim v2 integrationAuthority must equal captain during v1.5 migration: {path}"
+                f"Mission Claim v2 integrationAuthority must equal captain during migration: {path}"
             )
         if item.get("priority") not in CLAIM_PRIORITIES:
             raise ValueError(f"invalid Mission Claim v2 priority: {path}")
@@ -222,6 +236,50 @@ def validate_claim_product_prs(
                 raise ValueError(f"Mission Claim v2 {mission} references non-canonical Product PR #{pr}")
 
 
+def _authority_for_mission(
+    project: pathlib.Path,
+    authority_id: str,
+    mission: str,
+) -> dict[str, Any]:
+    authority = authority_config(project)["authorities"].get(authority_id)
+    if not isinstance(authority, dict):
+        raise ValueError(f"unknown v1.5 shared authority {authority_id}")
+    eligible = authority.get("eligibleRequestingMissions", [])
+    if mission != authority.get("ownerMission") and mission not in eligible:
+        raise ValueError(f"{mission} is not eligible for shared authority {authority_id}")
+    return authority
+
+
+def _authority_patterns_for_mission(project: pathlib.Path, mission: str) -> list[str]:
+    patterns: list[str] = []
+    for authority_id, authority in authority_config(project)["authorities"].items():
+        eligible = authority.get("eligibleRequestingMissions", [])
+        if mission == authority.get("ownerMission") or mission in eligible:
+            path = authority.get("path")
+            if isinstance(path, str) and path:
+                patterns.append(path)
+    return patterns
+
+
+def _path_allowed_for_work_order(
+    project: pathlib.Path,
+    model: dict[str, Any],
+    mission: str,
+    work_type: str,
+    path: str,
+) -> bool:
+    if any(pattern_within(path, maximum) for maximum in mission_maximum_patterns(model, mission)):
+        return True
+    if work_type == "AUTHORITY_UPDATE":
+        return any(pattern_within(path, pattern) for pattern in _authority_patterns_for_mission(project, mission))
+    if work_type == "RELEASE_FINALIZATION":
+        return any(
+            pattern_within(path, pattern)
+            for pattern in model["config"].get("commonGeneratedPaths", [])
+        )
+    return False
+
+
 def _dependency_satisfied(
     requirement: dict[str, Any],
     latest: dict[str, dict[str, Any]],
@@ -284,10 +342,11 @@ def validate_work_order(
     if product is None or product.get("task") != task or product.get("mission") != mission:
         raise ValueError(f"Work Order parentProductPr {pr} is not canonical for {task}")
     allowed = item.get("allowedPaths") or []
-    maxima = mission_maximum_patterns(model, mission)
+    if not allowed:
+        raise ValueError("Work Order allowedPaths must be non-empty")
     for path in allowed:
-        if not any(pattern_within(path, maximum) for maximum in maxima):
-            raise ValueError(f"Work Order path exceeds mission policy: {path}")
+        if not _path_allowed_for_work_order(project, model, mission, item["type"], path):
+            raise ValueError(f"Work Order path exceeds mission/shared authority policy: {path}")
     verify_git_base(project, item["baseCommit"], item["baseTree"])
     parent_id = item.get("parentWorkOrderId")
     if parent_id is not None and not isinstance(parent_id, str):
@@ -299,10 +358,7 @@ def validate_work_order(
             raise ValueError(f"unknown Work Order dependency {requirement['task']}")
         if requirement["level"] not in DEPENDENCY_LEVELS:
             raise ValueError(f"unsupported dependency level {requirement['level']}")
-        if (
-            item["status"] in ACTIVE_WORK
-            and not _dependency_satisfied(requirement, latest)
-        ):
+        if item["status"] in ACTIVE_WORK and not _dependency_satisfied(requirement, latest):
             raise ValueError(
                 f"Work Order {item['workOrderId']} dependency not satisfied: "
                 f"{requirement['task']}@{requirement['level']}"
@@ -325,7 +381,9 @@ def validate_delegation_graph(work_orders: dict[str, dict[str, Any]]) -> None:
             or parent["roadmapTask"] != item["roadmapTask"]
             or parent["parentProductPr"] != item["parentProductPr"]
         ):
-            raise ValueError(f"delegated Work Order {work_id} must remain in parent mission/task/Product PR")
+            raise ValueError(
+                f"delegated Work Order {work_id} must remain in parent mission/task/Product PR"
+            )
         seen = {work_id}
         cursor = parent
         while cursor.get("parentWorkOrderId"):
@@ -345,7 +403,8 @@ def validate_delegation_graph(work_orders: dict[str, dict[str, Any]]) -> None:
         ]
         if len(children) > int(parent.get("maxChildWorkOrders", 0)):
             raise ValueError(
-                f"Work Order {work_id} child budget exceeded: {len(children)} > {parent.get('maxChildWorkOrders')}"
+                f"Work Order {work_id} child budget exceeded: "
+                f"{len(children)} > {parent.get('maxChildWorkOrders')}"
             )
 
 
@@ -413,15 +472,37 @@ def validate_semaphore(
         for path in item["allowedPaths"]:
             if not any(pattern_within(path, allowed) for allowed in work["allowedPaths"]):
                 raise ValueError(f"WRITE semaphore path exceeds Work Order scope: {path}")
-    if item["kind"] == "INTEGRATION":
+    elif item["kind"] == "INTEGRATION":
         if item.get("productPr") != work["parentProductPr"]:
             raise ValueError("INTEGRATION semaphore must bind Work Order canonical Product PR")
         if item.get("branch") not in {None, product["branch"]}:
             raise ValueError("INTEGRATION semaphore branch must be canonical Product PR branch")
-    if item["kind"] == "AUTHORITY" and not item.get("authorityId"):
-        raise ValueError("AUTHORITY semaphore requires authorityId")
-    if item["kind"] == "RELEASE" and not item.get("resourceId"):
-        raise ValueError("RELEASE semaphore requires resourceId")
+    elif item["kind"] == "AUTHORITY":
+        authority_id = item.get("authorityId")
+        if not isinstance(authority_id, str) or not authority_id:
+            raise ValueError("AUTHORITY semaphore requires authorityId")
+        authority = _authority_for_mission(project, authority_id, work["mission"])
+        branch = item.get("branch")
+        if not isinstance(branch, str) or not branch:
+            raise ValueError("AUTHORITY semaphore requires a dedicated helper branch")
+        if branch == product["branch"]:
+            raise ValueError("AUTHORITY semaphore cannot use canonical Product PR branch")
+        authority_path = authority["path"]
+        if not item.get("allowedPaths"):
+            raise ValueError("AUTHORITY semaphore requires authority allowedPaths")
+        for path in item["allowedPaths"]:
+            if not pattern_within(path, authority_path):
+                raise ValueError(
+                    f"AUTHORITY semaphore path {path} exceeds authority {authority_id} path {authority_path}"
+                )
+            if not any(pattern_within(path, allowed) for allowed in work["allowedPaths"]):
+                raise ValueError(f"AUTHORITY semaphore path exceeds Work Order scope: {path}")
+    elif item["kind"] == "RELEASE":
+        if not item.get("resourceId"):
+            raise ValueError("RELEASE semaphore requires resourceId")
+        for path in item.get("allowedPaths") or []:
+            if not any(pattern_within(path, allowed) for allowed in work["allowedPaths"]):
+                raise ValueError(f"RELEASE semaphore path exceeds Work Order scope: {path}")
     created, refreshed, expires = map(
         parse_time,
         (item["createdAt"], item["refreshedAt"], item["expiresAt"]),
@@ -446,11 +527,11 @@ def load_semaphores(
         validate_semaphore(project, item, work_orders, product_prs)
         all_items.append(item)
         if _active(item, now):
-            if item["kind"] == "WRITE":
+            if item["kind"] in {"WRITE", "AUTHORITY"}:
                 branch = item["branch"]
                 if branch in branches:
                     raise ValueError(
-                        f"active WRITE branch reused: {branch} "
+                        f"active helper branch reused: {branch} "
                         f"({branches[branch]}, {item['semaphoreId']})"
                     )
                 branches[branch] = item["semaphoreId"]
@@ -490,6 +571,7 @@ def validate_runtime_state(project: pathlib.Path) -> dict[str, Any]:
         "workOrders": work_orders,
         "semaphores": all_sems,
         "activeSemaphores": active,
+        "authorities": authority_config(project)["authorities"],
     }
 
 
@@ -597,13 +679,17 @@ def create_work_order(
             or parent["roadmapTask"] != work_order["roadmapTask"]
             or parent["parentProductPr"] != work_order["parentProductPr"]
         ):
-            raise ValueError("delegated Work Order must remain within parent mission/task/Product PR")
+            raise ValueError(
+                "delegated Work Order must remain within parent mission/task/Product PR"
+            )
     active_build, helper_ready = _wip_counts(
         state["workOrders"], work_order["parentProductPr"]
     )
     if work_order["type"] in BUILD_TYPES:
         if helper_ready >= HELPER_READY_LIMIT:
-            raise ValueError("Product PR integration backpressure: two helpers are already waiting")
+            raise ValueError(
+                "Product PR integration backpressure: two helpers are already waiting"
+            )
         if active_build >= ACTIVE_BUILD_LIMIT:
             raise ValueError("Product PR active build WIP limit reached")
     write_json(_work_order_path(project, work_order), work_order)
@@ -645,11 +731,10 @@ def transition_work_order(
     work = state["workOrders"].get(work_order_id)
     if work is None:
         raise ValueError(f"unknown Work Order {work_order_id}")
-    if any(
-        sem["workOrderId"] == work_order_id
-        for sem in state["activeSemaphores"]
-    ):
-        raise ValueError("cannot transition Work Order directly while an active semaphore exists")
+    if any(sem["workOrderId"] == work_order_id for sem in state["activeSemaphores"]):
+        raise ValueError(
+            "cannot transition Work Order directly while an active semaphore exists"
+        )
     item = {k: v for k, v in work.items() if k != "_path"}
     item["status"] = next_status
     item["updatedAt"] = iso(utc_now())
@@ -703,18 +788,22 @@ def acquire_semaphore(
         raise ValueError(f"unknown Work Order {work_order_id}")
     if work["status"] not in {"READY", "IN_PROGRESS"}:
         raise ValueError(f"Work Order not reservable from status {work['status']}")
+    if kind == "AUTHORITY" and work["type"] != "AUTHORITY_UPDATE":
+        raise ValueError("AUTHORITY semaphore requires AUTHORITY_UPDATE Work Order")
+    if kind == "RELEASE" and work["type"] != "RELEASE_FINALIZATION":
+        raise ValueError("RELEASE semaphore requires RELEASE_FINALIZATION Work Order")
     if (
         execution_role != work["requestedRole"]
         and execution_role
         not in {"INTEGRATOR", "TESTER", "REVIEWER", "SECURITY_REVIEWER", "AUDITOR"}
     ):
         raise ValueError(
-            f"execution role {execution_role} does not satisfy requested role {work['requestedRole']}"
+            f"execution role {execution_role} does not satisfy requested role "
+            f"{work['requestedRole']}"
         )
     now = utc_now()
     product = state["productPrs"][work["parentProductPr"]]
-    if kind == "WRITE" and branch == product["branch"]:
-        raise ValueError("WRITE semaphore cannot use canonical Product PR branch")
+    effective_branch = product["branch"] if kind == "INTEGRATION" else branch
     item = {
         "schemaVersion": 1,
         "semaphoreId": semaphore_id,
@@ -723,7 +812,7 @@ def acquire_semaphore(
         "mission": work["mission"],
         "workerIdentity": worker_identity,
         "executionRole": execution_role,
-        "branch": product["branch"] if kind == "INTEGRATION" else branch,
+        "branch": effective_branch,
         "productPr": work["parentProductPr"] if kind == "INTEGRATION" else None,
         "authorityId": authority_id,
         "resourceId": resource_id,
@@ -742,20 +831,20 @@ def acquire_semaphore(
             raise ValueError(
                 f"requested semaphore collides with {existing['semaphoreId']}"
             )
-    work = {k: v for k, v in work.items() if k != "_path"}
-    work["status"] = "INTEGRATING" if kind == "INTEGRATION" else "IN_PROGRESS"
-    work["assignedWorker"] = worker_identity
-    work["executionRole"] = execution_role
-    work["activeSemaphoreId"] = semaphore_id
-    work["updatedAt"] = iso(now)
-    write_json(_work_order_path(project, work), work)
+    clean_work = {k: v for k, v in work.items() if k != "_path"}
+    clean_work["status"] = "INTEGRATING" if kind == "INTEGRATION" else "IN_PROGRESS"
+    clean_work["assignedWorker"] = worker_identity
+    clean_work["executionRole"] = execution_role
+    clean_work["activeSemaphoreId"] = semaphore_id
+    clean_work["updatedAt"] = iso(now)
+    write_json(_work_order_path(project, clean_work), clean_work)
     write_json(_semaphore_path(project, item), item)
     generation = _bump_generation(
         project,
         runtime_meta,
         event_type="SEMAPHORE_ACQUIRED",
         work_execution_id=work_execution_id,
-        mission=work["mission"],
+        mission=clean_work["mission"],
         work_order_id=work_order_id,
         payload={
             "semaphoreId": semaphore_id,
@@ -932,16 +1021,25 @@ def dispatch_score(
         "RELEASE_FINALIZATION": 390,
     }.get(work["type"], 0)
     score = type_weight + int(work.get("priority", 0))
-    if work["type"] in BUILD_TYPES and helper_ready_by_pr.get(work["parentProductPr"], 0) >= HELPER_READY_LIMIT:
+    if (
+        work["type"] in BUILD_TYPES
+        and helper_ready_by_pr.get(work["parentProductPr"], 0) >= HELPER_READY_LIMIT
+    ):
         return -10_000
     if worker_identity:
         if work["mission"] in WORKER_MISSION_EXPERTISE.get(worker_identity, set()):
             score += 30
-        if worker_identity == "H" and work["type"] in {"PRODUCT_DEFECT_REPAIR", "CI_REPAIR", "BLOCKER_REMOVAL"}:
+        if worker_identity == "H" and work["type"] in {
+            "PRODUCT_DEFECT_REPAIR", "CI_REPAIR", "BLOCKER_REMOVAL"
+        }:
             score += 25
-        if worker_identity == "I" and work["type"] in {"REVIEW", "SECURITY_REVIEW", "INTEGRATION"}:
+        if worker_identity == "I" and work["type"] in {
+            "REVIEW", "SECURITY_REVIEW", "INTEGRATION"
+        }:
             score += 25
-        if worker_identity == "J" and work["type"] in {"REVIEW", "AUTHORITY_UPDATE", "BLOCKER_REMOVAL"}:
+        if worker_identity == "J" and work["type"] in {
+            "REVIEW", "AUTHORITY_UPDATE", "BLOCKER_REMOVAL"
+        }:
             score += 15
     return score
 
