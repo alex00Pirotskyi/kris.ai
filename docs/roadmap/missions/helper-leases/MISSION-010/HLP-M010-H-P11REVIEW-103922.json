@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "release/evidence/P11-001/dependency-status.json",
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py"
+  ],
+  "baseCommit": "8dbe9063e37714dad959573bd2441286265c9402",
+  "baseTree": "ae0d24152ddd93f002627b9bc21d8d567908dd7f",
+  "branch": "agent/help/h/mission-010/p11-review-requirement-binding",
+  "createdAt": "2026-08-07T10:39:22Z",
+  "expiresAt": "2026-08-07T14:39:22Z",
+  "helperWorker": "H",
+  "leaseId": "HLP-M010-H-P11REVIEW-103922",
+  "mission": "MISSION-010",
+  "nextAction": "Bind immutable Worker J review snapshots to the exact expected review type, mission, pull request, and required scope flags; add fail-closed regressions for wrong review purpose without changing native runtime or Test Center authority.",
+  "ownerWorker": "E",
+  "parentClaimHead": "8dbe9063e37714dad959573bd2441286265c9402",
+  "refreshedAt": "2026-08-07T10:39:22Z",
+  "schemaVersion": 1,
+  "status": "ACTIVE",
+  "task": "P11-001",
+  "workExecutionId": "WRK-20260807T081242Z-7c78e0ea"
+}
