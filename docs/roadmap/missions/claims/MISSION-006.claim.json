@@ -1,6 +1,6 @@
 {
   "branch": "agent/g/mission-006-model-routing",
-  "current": "P6-001 live candidate 17eed9bb16c25b8de80b69bd8a0be7eed323173a / 4da3e4e9d122926a67a04f4d2aae26edde3d02c3 retains the fail-closed registry trust-root repairs. PR-context product-gates run 31130713121 reached the governed Dart-format gate on all three OS lanes and failed because four P6 Dart files are not canonically formatted; analyzer/tests/native gates were therefore skipped. Worker A source-inventory approval, canonical manifest regeneration, Worker B Test Center publication/review, exact-source-head CI, and genuinely independent review remain pending.",
+  "current": "P6-001 exact candidate eb669431927338e4ae7be3df647d57bc728dfde5 / 7bee181b9655da0207c5c5a059fa330a5a2a3c57 closes the benchmark execution-provenance defect: caller-authored/content-hash-only evidence cannot authorize approved task classes; approval requires an out-of-band repository-authorized commit/tree mapping plus protected-key Ed25519 execution receipt. Bounded run 31173032211 passed canonical formatting, full analyzer and all three focused model-registry suites before creating the final commit/tree. Formal exact-head product-gates run 31173109180 is BLOCKED_EXTERNAL with action_required and zero jobs because github-actions[bot] triggered it. Worker A source-inventory/manifest authority, Worker B P6-TC-001/Test Center authority repair, canonical manifest, and genuinely independent review remain pending.",
   "exclusivePaths": [
     ".github/workflows/worker-g*.yml",
     "lib/ai/model/**",
@@ -12,12 +12,12 @@
     "test/product/model/**",
     "tool/worker_g*.py"
   ],
-  "head": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
+  "head": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-006",
   "pr": 76,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3",
+  "tree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
   "worker": "G"
 }
