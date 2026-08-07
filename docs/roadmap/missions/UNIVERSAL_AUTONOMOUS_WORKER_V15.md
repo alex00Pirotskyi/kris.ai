@@ -64,6 +64,7 @@ A worker may change role many times during one execution, but only one role is o
 Supported roles include:
 
 - `CAPTAIN`
+- `DISPATCHER`
 - `BUILDER`
 - `TESTER`
 - `DEFECT_HUNTER`
