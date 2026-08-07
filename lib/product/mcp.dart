@@ -94,7 +94,7 @@ class McpTrustService {
     required String executablePath,
     required List<String> arguments,
     required Set<String> allowedTools,
-    String protocolVersion = mcpCurrentStableProtocolVersion,
+    String protocolVersion = mcpLegacyProtocolVersion,
     Duration validity = const Duration(days: 30),
   }) async {
     final protocol = McpProtocolRegistry.requireStable(protocolVersion);
@@ -281,23 +281,23 @@ class McpTrustService {
           const <String, dynamic>{},
         );
       } else {
-        final discovered = await session.request(
-          'server/discover',
-          const <String, dynamic>{},
-          timeout: timeout,
-        );
-        capabilities = protocol.validateModernDiscovery(
-          discovered,
-          requiredCapabilities: const <String>{'tools'},
-        );
+        capabilities = const <String>{'tools'};
       }
 
+      final availableTools = await _verifyTrustedTools(
+        session,
+        protocol,
+        trust.allowedTools,
+        timeout,
+      );
       final sortedCapabilities = capabilities.toList()..sort();
+      final sortedTools = availableTools.toList()..sort();
       await audit.append('mcp.protocol_negotiated', trust.id, <String, dynamic>{
         'trustId': trust.id,
         'protocolVersion': protocol.version,
         'era': protocol.era.name,
         'capabilities': sortedCapabilities,
+        'trustedToolsPresent': sortedTools,
       });
       return session;
     } catch (_) {
@@ -305,6 +305,58 @@ class McpTrustService {
       await session.close();
       rethrow;
     }
+  }
+
+  Future<Set<String>> _verifyTrustedTools(
+    _McpSession session,
+    McpProtocolAdapter protocol,
+    Set<String> requiredTools,
+    Duration timeout,
+  ) async {
+    const maxPages = 128;
+    final available = <String>{};
+    final seenCursors = <String>{};
+    String? cursor;
+
+    for (var pageIndex = 0; pageIndex < maxPages; pageIndex++) {
+      final result = await session.request(
+        'tools/list',
+        <String, dynamic>{
+          if (cursor != null) 'cursor': cursor,
+        },
+        timeout: timeout,
+      );
+      final page = protocol.parseToolCatalogPage(result);
+      for (final name in page.toolNames) {
+        if (!available.add(name)) {
+          throw ProductException(
+            'mcp_tool_catalog_invalid',
+            'MCP tools/list repeated a tool name across pages.',
+            details: <String, dynamic>{'tool': name},
+          );
+        }
+      }
+
+      final nextCursor = page.nextCursor;
+      if (nextCursor == null) {
+        protocol.validateRequiredTools(available, requiredTools);
+        return Set<String>.unmodifiable(available);
+      }
+      if (!seenCursors.add(nextCursor)) {
+        throw ProductException(
+          'mcp_tool_catalog_invalid',
+          'MCP tools/list pagination cursor repeated.',
+          details: <String, dynamic>{'cursor': nextCursor},
+        );
+      }
+      cursor = nextCursor;
+    }
+
+    throw ProductException(
+      'mcp_tool_catalog_too_many_pages',
+      'MCP tools/list exceeded the bounded pagination limit.',
+      details: const <String, dynamic>{'maxPages': maxPages},
+    );
   }
 
   Future<void> close(String trustId) async {
