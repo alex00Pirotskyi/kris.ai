@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P4-001-EXACT-CI-C0DE4001",
+  "createdAt": "2026-08-07T19:01:00Z",
+  "expectedProductHead": "fceea9a561dad8ff57f398c8be2f5fe27ad48f25",
+  "expectedRuntimeGeneration": 53,
+  "note": "SANITIZER V2 exact-current P4 product-gates dispatch without source mutation or integrator takeover.",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "productPr": 62,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-CI-SANITIZER-C0DE4001",
+  "workOrderId": "WO-P4-001-EXACT-CI-SANITIZER",
+  "workerIdentity": "SANITIZER-V2"
+}
