@@ -60,6 +60,10 @@ jobs:
         run: python -m unittest -v tool/worker_d_p3_manifest_binding_test.py
       - name: P3 evidence artifact bindings
         run: python tool/worker_d_p3_manifest_binding.py --check --project .
+      - name: P3 dependency Git-binding unit tests
+        run: python -m unittest -v tool/worker_d_p3_dependency_binding_test.py
+      - name: P3 dependency Git bindings
+        run: python tool/worker_d_p3_dependency_binding.py --check --project .
       - name: Worker D unit tests
         run: python -m unittest -v tool/worker_d_p3_readiness_test.py
       - name: Worker D non-mutating check
