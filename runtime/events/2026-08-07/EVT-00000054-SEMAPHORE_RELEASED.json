@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000054-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P4-001-CI-SANITIZER-C0DE4001",
+    "workerIdentity": "SANITIZER-V2",
+    "workflowRunId": 31209651005
+  },
+  "recordedAt": "2026-08-07T19:03:00Z",
+  "runtimeGeneration": 54,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190000Z-c0de4001",
+  "workOrderId": "WO-P4-001-EXACT-CI-SANITIZER"
+}
