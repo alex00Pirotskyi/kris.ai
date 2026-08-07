@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000016-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "parentWorkOrderId": "WO-P7-001-PROTOCOL-CLOSURE",
+    "requestedRole": "INTEGRATOR",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-07T15:12:00Z",
+  "runtimeGeneration": 16,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T141056Z-b5ab48b7",
+  "workOrderId": "WO-P7-001-INTEGRATE-98-B5AB48B7"
+}
