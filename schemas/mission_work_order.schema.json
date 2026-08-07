@@ -28,6 +28,9 @@
     "assignedWorker": {"type": ["string", "null"]},
     "executionRole": {"type": ["string", "null"]},
     "activeSemaphoreId": {"type": ["string", "null"]},
+    "parentWorkOrderId": {"type": ["string", "null"]},
+    "runtimeGeneration": {"type": ["integer", "null"], "minimum": 0},
+    "lastActor": {"type": ["string", "null"]},
     "supersedes": {"type": ["string", "null"]},
     "supersededBy": {"type": ["string", "null"]}
   }
