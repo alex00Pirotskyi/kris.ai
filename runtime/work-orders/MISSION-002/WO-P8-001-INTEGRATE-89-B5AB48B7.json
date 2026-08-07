@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P8-001-INT-B5AB48B7",
   "allowedPaths": [
     ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml",
     "tool/test_center_contracts_test.py",
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T14:46:00Z",
+  "updatedAt": "2026-08-07T14:58:00Z",
   "workOrderId": "WO-P8-001-INTEGRATE-89-B5AB48B7"
 }
