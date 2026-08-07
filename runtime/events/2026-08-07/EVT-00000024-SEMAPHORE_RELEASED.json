@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000024-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-007",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "reason": "PR #98 was already consumed into canonical Product PR #96 and runtime observedHead was reconciled to ea0e2ca0868c0334a7dd3c2c3cf326211f464389 in generation 20; this obsolete integration reservation is released so the next helper can be integrated under a fresh exact-base semaphore.",
+    "semaphoreId": "SEM-P7-001-INT-B5AB48B7"
+  },
+  "recordedAt": "2026-08-07T16:02:00Z",
+  "runtimeGeneration": 24,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T160200Z-c0decafe",
+  "workOrderId": "WO-P7-001-INTEGRATE-98-B5AB48B7"
+}
