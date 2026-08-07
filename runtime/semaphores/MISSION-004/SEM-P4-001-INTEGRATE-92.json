@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-INTEGRATE-92",
+  "kind": "INTEGRATION",
+  "workOrderId": "WO-P4-001-INTEGRATE-92",
+  "mission": "MISSION-004",
+  "workerIdentity": "Integrator-001",
+  "executionRole": "INTEGRATOR",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "productPr": 62,
+  "authorityId": null,
+  "resourceId": null,
+  "baseCommit": "a608700a908042fedf18c8431402551da6853f7d",
+  "baseTree": "e0e98e78032b8c8acef18a7331ee3c629f7f2297",
+  "allowedPaths": ["services/research_worker/**", "release/evidence/P4-*/**", ".github/workflows/p4-001*.yml"],
+  "createdAt": "2026-08-07T12:59:00Z",
+  "refreshedAt": "2026-08-07T12:59:00Z",
+  "expiresAt": "2026-08-07T16:59:00Z",
+  "runtimeGeneration": 1,
+  "status": "ACTIVE"
+}
