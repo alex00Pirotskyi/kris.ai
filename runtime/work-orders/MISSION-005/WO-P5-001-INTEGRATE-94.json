@@ -14,7 +14,7 @@
   "dependencyRequirements": [],
   "requiredTests": ["P5 information-architecture suite", "affected shipped-shell tests"],
   "maxChildWorkOrders": 1,
-  "status": "READY",
+  "status": "VALIDATING",
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
   "createdAt": "2026-08-07T12:15:00Z"
 }
