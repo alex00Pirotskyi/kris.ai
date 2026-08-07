@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/mcp_protocol.dart';
+import 'package:kristin_local_agent/product/storage_security.dart';
 
 void main() {
   group('MCP protocol registry', () {
