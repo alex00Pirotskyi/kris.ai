@@ -43,7 +43,8 @@ void main() {
   });
 
   group('modern request envelope', () {
-    test('stamps protocol identity and client capabilities on every request', () {
+    test('stamps protocol identity and client capabilities on every request',
+        () {
       final adapter = McpProtocolRegistry.requireStable('2026-07-28');
       final params = adapter.decorateRequestParams(
         <String, dynamic>{
@@ -114,7 +115,8 @@ void main() {
       expect(meta['io.modelcontextprotocol/protocolVersion'], '2026-07-28');
     });
 
-    test('legacy requests remain byte-shape compatible without modern meta', () {
+    test('legacy requests remain byte-shape compatible without modern meta',
+        () {
       final adapter = McpProtocolRegistry.requireStable('2024-11-05');
       final params = adapter.decorateRequestParams(
         <String, dynamic>{'name': 'search'},
@@ -128,7 +130,8 @@ void main() {
   });
 
   group('version and capability floors', () {
-    test('legacy initialize cannot silently negotiate a different revision', () {
+    test('legacy initialize cannot silently negotiate a different revision',
+        () {
       final adapter = McpProtocolRegistry.requireStable('2025-11-25');
       expect(
         () => adapter.validateLegacyInitialize(
@@ -160,7 +163,8 @@ void main() {
       );
     });
 
-    test('optional modern discovery still validates an explicit pin when used', () {
+    test('optional modern discovery still validates an explicit pin when used',
+        () {
       final adapter = McpProtocolRegistry.requireStable('2026-07-28');
       final capabilities = adapter.validateModernDiscovery(
         <String, dynamic>{
