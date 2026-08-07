@@ -26,7 +26,11 @@ from mission_delivery_live import *
 V15_CONTROL_BRANCH = "agent/mission-execution-v15-gold"
 V15_CONTROL_PATTERNS = (
     ".github/workflows/mission-*.yml",
+    "SOURCE_MANIFEST.sha256",
     "config/mission_v15_*.json",
+    "docs/roadmap/missions/DELIVERY_DASHBOARD.md",
+    "docs/roadmap/missions/DELIVERY_METRICS.json",
+    "docs/roadmap/missions/delivery/records/**",
     "docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md",
     "docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md",
     "docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md",
@@ -67,6 +71,8 @@ def validate_control_model(project: pathlib.Path) -> dict[str, Any]:
         if status in statuses:
             validate_record(record, model, path.relative_to(project).as_posix())
             continue
+        # Fail closed unless this is an explicitly non-terminal historical
+        # record with its own deliveryState proving no acceptance/main merge.
         delivery = record.get("deliveryState")
         legacy_non_terminal = (
             status is None
