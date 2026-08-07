@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "migration": {
+    "observedTotalBranchesAtCutoverStart": 56,
+    "maxTotalBranchesDuringMigration": 60,
+    "maxLegacyDebtBranchesDuringMigration": 25,
+    "maxActiveHelperBranches": 20
+  },
+  "target": {
+    "longLivedCanonicalBranches": 15,
+    "activeHelperBranches": 20,
+    "temporaryValidationBranches": 5,
+    "legacyDebtBranches": 0
+  },
+  "legacyDebtPatterns": [
+    "*-backup*",
+    "*-prestack-*",
+    "automation/*",
+    "ci/*",
+    "temp/*",
+    "validated/*",
+    "validation/*"
+  ],
+  "helperPattern": "agent/help/*"
+}
