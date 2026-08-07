@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "lib/product/p5_information_architecture/p5_controller.dart",
+    "lib/product/p5_information_architecture/p5_task_workspaces.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "af26c2948a42c16603b179b7d79ed47aa91b5296",
+  "baseTree": "3d0c11bad811c2c76332ea75e79f9bd2a7ae37c9",
+  "branch": "agent/help/elastic-7f3a2c91/mission-005/p5-format",
+  "createdAt": "2026-08-07T19:21:00Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-07T23:21:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-07T19:21:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 59,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-FORMAT-7F3A2C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-FORMAT-7F3A2C91",
+  "workerIdentity": "ELASTIC-7f3a2c91"
+}
