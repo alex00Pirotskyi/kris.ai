@@ -135,11 +135,72 @@ Product/helper commits may use normal connector file/Git operations only after t
 
 For concurrent canonical Product PR integration, exact-head protection is mandatory. Re-resolve the target branch immediately before publication and use a non-force expected-head-safe operation. If the target moves, recompute rather than overwriting it.
 
+### Runner-backed append-safe authority relay
+
+A connector-only worker MUST NOT reconstruct a large shared-authority file from a truncated API response or hand-author a replacement snapshot.
+
+When all of the following are true:
+
+- the Work Order type is `AUTHORITY_UPDATE`;
+- the Work Order is `IN_PROGRESS`;
+- one matching ACTIVE `AUTHORITY` semaphore is durably present;
+- the configured authority mode is `APPEND_SAFE_DART_SET`;
+- the requested append path is owned by the requesting mission;
+- the connector cannot safely edit the full authority file locally;
+
+use the runner-backed relay instead.
+
+Create exactly one immutable JSON command file on `agent/mission-runtime` at:
+
+`docs/roadmap/missions/runtime-commands/<commandId>.json`
+
+Creating this command file with the Contents API is permitted because the command is a non-authoritative request outside `runtime/**`; it does not change runtimeGeneration or create authority by itself.
+
+Command schema:
+
+```json
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-<unique-id>",
+  "operation": "APPEND_SAFE_DART_SET",
+  "expectedRuntimeGeneration": 123,
+  "workOrderId": "WO-...",
+  "semaphoreId": "SEM-...",
+  "workerIdentity": "Elastic-...",
+  "authorityId": "source-inventory",
+  "requestingMission": "MISSION-007",
+  "appendPath": "lib/product/example.dart"
+}
+```
+
+The workflow `.github/workflows/mission-v15-connector-authority-relay.yml` executes `tool/mission_v15_connector_authority_apply.py` on a GitHub runner with a real full checkout.
+
+The relay fails closed unless the live runtime generation, Work Order, active semaphore, mission, worker identity, authority ID, exact allowed authority path, helper branch ancestry, baseCommit/baseTree, requesting-mission eligibility and append-path ownership all match.
+
+The relay:
+
+1. requires the dedicated authority helper's governed authority file to still equal the reserved base bytes;
+2. appends exactly one path inside the configured Dart set;
+3. preserves every existing entry and every byte outside the governed set;
+4. requires `git diff --check` and exactly one changed authority file;
+5. commits the helper candidate locally;
+6. runs the existing append-safe authority verifier against the reserved base;
+7. pushes the helper branch non-force;
+8. verifies the remote helper head equals the candidate.
+
+It accepts no arbitrary shell command, patch text, schema mutation, foreign-row edit or arbitrary file path.
+
+After the relay, re-read the helper branch and runtime. Then continue normal focused tests, helper PR/CI, Work Order transition and semaphore release. The relay does not itself mark the Work Order complete or promote support.
+
+If the command's expected generation became stale before execution, the relay fails. Re-resolve runtime and submit a new unique command; never mutate the old command file.
+
 ## Failure classification
 
 Do **not** report `NO_LOCAL_EXECUTABLE_WORK` merely because local Git is unavailable.
 
 If LOCAL_GIT is unavailable but CONNECTOR_CAS primitives exist, continue with CONNECTOR_CAS.
+
+If an append-safe large shared-authority mutation is blocked only by connector full-file editing, use the runner-backed authority relay after acquiring the correct semaphore.
 
 Only report:
 
@@ -147,4 +208,4 @@ Only report:
 
 when neither transport can produce and verify one coherent non-force CAS runtime generation.
 
-If no Work Order can be safely executed even with an available transport, report `NO_EXECUTABLE_WORK`, not `NO_LOCAL_EXECUTABLE_WORK`.
+If no Work Order can be safely executed even with the available runtime and authority transports, report `NO_EXECUTABLE_WORK`, not `NO_LOCAL_EXECUTABLE_WORK`.
