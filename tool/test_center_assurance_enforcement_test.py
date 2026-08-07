@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -10,11 +12,28 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "tool"))
 
-from test_center_assurance_enforcement import HierarchyError, validate_assurance_execution_report, validate_documents  # noqa: E402
+from test_center_assurance_enforcement import (  # noqa: E402
+    HierarchyError,
+    _resolve_evidence,
+    _validate_independent_review_document,
+    _validate_support_matrix_document,
+    validate_assurance_execution_report,
+    validate_documents,
+)
 
 
 def load(path: str) -> dict:
     return json.loads((PROJECT / path).read_text(encoding="utf-8"))
+
+
+def git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args],
+        cwd=PROJECT,
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+    ).stdout.strip()
 
 
 class AssuranceEnforcementTest(unittest.TestCase):
@@ -38,7 +57,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
         self.assertEqual(self.validate_documents()["status"], "PASS")
         result = self.validate_report(self.report)
         self.assertEqual(result["status"], "PASS")
-        self.assertEqual(result["evidenceResolution"], "REPOSITORY_RELATIVE_SHA256_AND_TYPED_JSON")
+        self.assertEqual(result["evidenceResolution"], "REPOSITORY_RELATIVE_SHA256_TYPED_JSON_AND_GIT_BOUND_SUPPORT_EVIDENCE")
         self.assertEqual(result["predecessorLevelsVerified"], [])
         self.assertEqual(result["predecessorProofMode"], "RECURSIVE_EXACT_CANDIDATE_LINEAGE")
 
@@ -104,6 +123,82 @@ class AssuranceEnforcementTest(unittest.TestCase):
     def test_report_schema_required_field_missing_from_contract_rejected(self) -> None:
         contract = copy.deepcopy(self.contract); index = contract["reportRequiredTopLevelFields"].index("evidenceBindings"); contract["reportRequiredTopLevelFields"][index] = "notARequiredField"
         with self.assertRaisesRegex(HierarchyError, "required fields and mapping contract drifted"): self.validate_documents(contract=contract)
+
+    def test_independent_review_self_declaration_fails_closed(self) -> None:
+        document = {
+            "schemaVersion": "1.0.0",
+            "kind": "INDEPENDENT_REVIEW",
+            "reviewedCommit": "a" * 40,
+            "reviewedTree": "b" * 40,
+            "decision": "PASS",
+            "reviewerGitHubIdentity": "self-declared-reviewer",
+        }
+        with self.assertRaisesRegex(HierarchyError, "repository-authoritative external review provenance"):
+            _validate_independent_review_document(document)
+
+    def test_support_matrix_requires_complete_unique_supported_coverage(self) -> None:
+        document = {
+            "schemaVersion": "1.0.0",
+            "kind": "SUPPORT_MATRIX",
+            "candidateCommit": "a" * 40,
+            "candidateTree": "b" * 40,
+            "status": "PASS",
+            "requiredPlatforms": ["windows", "macos"],
+            "requiredCapabilities": ["owner-mode", "process-supervision"],
+            "matrix": [
+                {"platform": platform, "capability": capability, "supportState": "SUPPORTED"}
+                for platform in ("windows", "macos")
+                for capability in ("owner-mode", "process-supervision")
+            ],
+        }
+        _validate_support_matrix_document(document)
+
+        empty = copy.deepcopy(document); empty["matrix"] = []
+        with self.assertRaisesRegex(HierarchyError, "non-empty matrix"):
+            _validate_support_matrix_document(empty)
+
+        duplicate = copy.deepcopy(document); duplicate["matrix"].append(copy.deepcopy(duplicate["matrix"][0]))
+        with self.assertRaisesRegex(HierarchyError, "duplicates platform/capability"):
+            _validate_support_matrix_document(duplicate)
+
+        blocked = copy.deepcopy(document); blocked["matrix"][0]["supportState"] = "BLOCKED"
+        with self.assertRaisesRegex(HierarchyError, "non-supported required coverage"):
+            _validate_support_matrix_document(blocked)
+
+    def test_support_bearing_evidence_requires_exact_candidate_git_blob(self) -> None:
+        head = git("rev-parse", "HEAD")
+        tree = git("rev-parse", "HEAD^{tree}")
+        uri = "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-candidate-identity.json"
+        payload = (PROJECT / uri).read_bytes()
+        evidence = {
+            "evidenceId": "evidence.test.git-bound",
+            "uri": uri,
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "immutable": True,
+            "commit": head,
+            "tree": tree,
+        }
+        resolved, exact = _resolve_evidence(
+            PROJECT,
+            evidence,
+            candidate_commit=head,
+            candidate_tree=tree,
+            require_git_binding=True,
+        )
+        self.assertEqual(resolved, (PROJECT / uri).resolve())
+        self.assertEqual(exact, payload)
+
+        fake = copy.deepcopy(evidence)
+        fake["commit"] = "1" * 40
+        fake["tree"] = "2" * 40
+        with self.assertRaisesRegex(HierarchyError, "Git evidence binding failed"):
+            _resolve_evidence(
+                PROJECT,
+                fake,
+                candidate_commit=fake["commit"],
+                candidate_tree=fake["tree"],
+                require_git_binding=True,
+            )
 
 
 if __name__ == "__main__": unittest.main()
