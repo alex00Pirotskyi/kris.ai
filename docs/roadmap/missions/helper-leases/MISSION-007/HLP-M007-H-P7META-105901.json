@@ -13,10 +13,10 @@
     "lib/product/mcp_protocol.dart",
     "test/product/mcp/mcp_protocol_test.dart"
   ],
-  "status": "ACTIVE",
+  "status": "YIELDED",
   "createdAt": "2026-08-07T10:59:01Z",
-  "refreshedAt": "2026-08-07T10:59:01Z",
+  "refreshedAt": "2026-08-07T11:00:38Z",
   "expiresAt": "2026-08-07T14:59:01Z",
   "parentClaimHead": "6a4185416ca8d9114d713cfd1549a2d3b94e18f6",
-  "nextAction": "Repair MCP 2026-07-28 reserved _meta prefix validation to reject every protocol-reserved second-label namespace and add focused regression coverage; do not modify owner integration or shared authority paths."
+  "nextAction": "Lease yielded without product writes because the MISSION-007 owner branch advanced to 89aab0e4d212cd8faf3bab4cb1b8ef0b78d7c470 after reservation while the durable claim still names 6a4185416ca8d9114d713cfd1549a2d3b94e18f6. Reacquire only after durable claim and live owner identity are reconciled; reserved-prefix review finding remains open."
 }
