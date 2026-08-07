@@ -16,9 +16,9 @@
   ],
   "coordinationId": "MISSION-006-P6-001-SOURCE-INVENTORY",
   "exactCandidate": {
-    "commit": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
+    "commit": "eb669431927338e4ae7be3df647d57bc728dfde5",
     "pullRequest": 76,
-    "tree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3"
+    "tree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57"
   },
   "integrationBase": {
     "branch": "agent/b/test-center-contracts-and-review",
@@ -45,8 +45,8 @@
     "SOURCE_MANIFEST.sha256"
   ],
   "sourceMilestone": {
-    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
-    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+    "commit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+    "tree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57"
   },
   "status": "REQUESTED",
   "supportBoundary": "SOURCE_FOUNDATION_ONLY"
