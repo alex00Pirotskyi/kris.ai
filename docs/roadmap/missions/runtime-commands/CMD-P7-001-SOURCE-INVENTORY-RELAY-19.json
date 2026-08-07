@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P7-001-SOURCE-INVENTORY-RELAY-19",
+  "operation": "APPEND_SAFE_DART_SET",
+  "expectedRuntimeGeneration": 19,
+  "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5",
+  "semaphoreId": "SEM-P7-001-SOURCE-INVENTORY-RELAY-19",
+  "workerIdentity": "Elastic-529719b5",
+  "authorityId": "source-inventory",
+  "requestingMission": "MISSION-007",
+  "appendPath": "lib/product/mcp_protocol.dart"
+}
