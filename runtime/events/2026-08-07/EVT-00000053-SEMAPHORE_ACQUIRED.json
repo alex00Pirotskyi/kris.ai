@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000053-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P4-001-CI-SANITIZER-C0DE4001",
+    "workerIdentity": "SANITIZER-V2"
+  },
+  "recordedAt": "2026-08-07T19:00:00Z",
+  "runtimeGeneration": 53,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190000Z-c0de4001",
+  "workOrderId": "WO-P4-001-EXACT-CI-SANITIZER"
+}
