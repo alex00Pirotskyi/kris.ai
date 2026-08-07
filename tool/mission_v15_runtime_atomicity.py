@@ -9,7 +9,13 @@ must represent exactly one coherent generation transition:
 * runtime/meta.json changes in the same commit;
 * exactly one immutable runtime event is added in the same commit;
 * the event generation matches runtime/meta.json;
-* the generation commit contains no non-runtime files.
+* no unrelated non-runtime files are present;
+* at most one newly-added connector command may travel in the same commit, and
+  only when its immutable command envelope is bound to that exact generation.
+
+The connector command exception is intentional: an AUTHORITY semaphore and the
+command that exercises it must become durable atomically, so there is never an
+unlocked-command window. Arbitrary docs/control/product paths remain forbidden.
 
 Commits that do not touch ``runtime/**`` are control/documentation sync and are
 not runtime-generation transitions.
@@ -22,6 +28,8 @@ import pathlib
 import subprocess
 import sys
 from typing import Any
+
+DEFAULT_COMMAND_PREFIX = "docs/roadmap/missions/runtime-commands/"
 
 
 def run_git(project: pathlib.Path, *args: str, check: bool = True) -> str:
@@ -72,10 +80,48 @@ def changed_entries(project: pathlib.Path, parent: str, commit: str) -> list[tup
         parts = line.split("\t")
         status = parts[0]
         # Renames/copies contain old and new path. Treat the destination as the
-        # changed path and preserve the full status so event mutation is rejected.
+        # changed path and preserve the full status so envelope mutation fails.
         path = parts[-1]
         result.append((status, path))
     return result
+
+
+def validate_command_document(
+    *,
+    status: str,
+    path: str,
+    command: dict[str, Any] | None,
+    generation: int,
+) -> list[str]:
+    violations: list[str] = []
+    if status != "A":
+        violations.append(f"COMMAND_ENVELOPE_NOT_IMMUTABLE_ADD:{status}:{path}")
+        return violations
+    if command is None:
+        violations.append(f"COMMAND_ENVELOPE_NOT_READABLE:{path}")
+        return violations
+    if command.get("schemaVersion") != 1:
+        violations.append(f"COMMAND_ENVELOPE_SCHEMA_VERSION_INVALID:{path}")
+    expected_generation = command.get("expectedRuntimeGeneration")
+    if expected_generation != generation:
+        violations.append(
+            f"COMMAND_ENVELOPE_GENERATION_MISMATCH:{path}:{expected_generation}!={generation}"
+        )
+    command_id = command.get("commandId")
+    if not isinstance(command_id, str) or not command_id:
+        violations.append(f"COMMAND_ENVELOPE_ID_MISSING:{path}")
+    elif pathlib.PurePosixPath(path).stem != command_id:
+        violations.append(
+            f"COMMAND_ENVELOPE_FILENAME_ID_MISMATCH:{pathlib.PurePosixPath(path).stem}!={command_id}"
+        )
+    operation = command.get("operation")
+    if not isinstance(operation, str) or not operation:
+        violations.append(f"COMMAND_ENVELOPE_OPERATION_MISSING:{path}")
+    for key in ("workOrderId", "semaphoreId", "workerIdentity"):
+        value = command.get(key)
+        if not isinstance(value, str) or not value:
+            violations.append(f"COMMAND_ENVELOPE_{key.upper()}_MISSING:{path}")
+    return violations
 
 
 def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str, Any]:
@@ -84,6 +130,7 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
     enforce_from = int(atomicity.get("enforceFromGeneration", 12))
     runtime_prefix = str(atomicity.get("runtimePathPrefix", "runtime/"))
     event_prefix = str(atomicity.get("eventPathPrefix", "runtime/events/"))
+    command_prefix = str(atomicity.get("commandPathPrefix", DEFAULT_COMMAND_PREFIX))
 
     commits = run_git(runtime_project, "rev-list", "--first-parent", "--reverse", "HEAD").splitlines()
     violations: list[str] = []
@@ -123,9 +170,38 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
         if "runtime/meta.json" not in runtime_paths:
             commit_violations.append("RUNTIME_CHANGE_WITHOUT_META")
 
-        non_runtime = sorted(path for _, path in entries if not path.startswith(runtime_prefix))
-        if non_runtime:
-            commit_violations.append("GENERATION_COMMIT_HAS_NON_RUNTIME_PATHS:" + ",".join(non_runtime))
+        non_runtime_entries = [
+            (status, path) for status, path in entries if not path.startswith(runtime_prefix)
+        ]
+        command_entries = [
+            (status, path)
+            for status, path in non_runtime_entries
+            if path.startswith(command_prefix) and path.endswith(".json")
+        ]
+        unrelated_non_runtime = sorted(
+            path
+            for _, path in non_runtime_entries
+            if not (path.startswith(command_prefix) and path.endswith(".json"))
+        )
+        if unrelated_non_runtime:
+            commit_violations.append(
+                "GENERATION_COMMIT_HAS_NON_RUNTIME_PATHS:" + ",".join(unrelated_non_runtime)
+            )
+        if len(command_entries) > 1:
+            commit_violations.append(
+                f"GENERATION_COMMAND_ENVELOPE_ATOMICITY:count={len(command_entries)}"
+            )
+        elif len(command_entries) == 1:
+            status, command_path = command_entries[0]
+            command = show_json(runtime_project, commit, command_path)
+            commit_violations.extend(
+                validate_command_document(
+                    status=status,
+                    path=command_path,
+                    command=command,
+                    generation=generation,
+                )
+            )
 
         event_entries = [(status, path) for status, path in runtime_entries if path.startswith(event_prefix)]
         added_events = [(status, path) for status, path in event_entries if status == "A"]
@@ -160,6 +236,7 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
                 "runtimeGeneration": generation,
                 "parentRuntimeGeneration": parent_generation,
                 "changedRuntimePaths": sorted(runtime_paths),
+                "commandEnvelopePaths": sorted(path for _, path in command_entries),
                 "violations": commit_violations,
             }
         )
@@ -168,6 +245,7 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
     result = {
         "schemaVersion": 1,
         "enforceFromGeneration": enforce_from,
+        "commandPathPrefix": command_prefix,
         "auditedTransitions": audited,
         "violations": violations,
         "pass": not violations,
