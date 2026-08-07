@@ -10,6 +10,8 @@ on:
       - 'docs/roadmap/missions/checkpoints/**'
       - 'docs/roadmap/missions/coordination/**'
       - 'tool/mission_control.py'
+      - 'tool/mission_live_materializer.py'
+      - 'tool/mission_live_materializer_test.py'
   workflow_dispatch:
 
 permissions:
@@ -34,8 +36,10 @@ jobs:
       - name: Require exact branch head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-      - name: Materialize deterministic mission views
-        run: python tool/mission_control.py --project . bootstrap
+      - name: Verify durable live-memory regressions
+        run: python -m unittest -v tool/mission_live_materializer_test.py
+      - name: Materialize deterministic mission views from durable live memory
+        run: python tool/mission_live_materializer.py --project . --write
       - name: Fail closed on generated live claim or state mutation
         shell: bash
         run: |
@@ -65,11 +69,8 @@ jobs:
             docs/roadmap/v32-source-import \
             tool/temp_anarchy_mission_materializer.py \
             tool/temp_anarchy_mission_materializer_v2.py
-      - name: Validate generated mission model
-        shell: bash
-        run: |
-          python tool/mission_control.py --project . validate
-          python tool/mission_control.py --project . bootstrap --check
+      - name: Validate deterministic live mission views
+        run: python tool/mission_live_materializer.py --project . --check
       - name: Refresh canonical source manifest twice
         shell: bash
         run: |
