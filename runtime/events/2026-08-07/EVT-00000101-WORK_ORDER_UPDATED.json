@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000101-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "runtimeGeneration": 101,
+  "recordedAt": "2026-08-07T21:20:30Z",
+  "workExecutionId": "WRK-20260807T200508Z-9c41e2af",
+  "workOrderId": "WO-P11-001-RECONCILE-TEST-CENTER-9C41E2AF",
+  "mission": "MISSION-010",
+  "payload": {
+    "previousObservedHead": "74d650577229b98e6d82de4695efe5e43661fbc0",
+    "observedHead": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+    "observedTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+    "parentIntegratedHead": "74d650577229b98e6d82de4695efe5e43661fbc0",
+    "reason": "governed-evidence-manifest-materialization",
+    "workOrderStatus": "VALIDATING",
+    "supportPromotion": "NONE"
+  }
+}
