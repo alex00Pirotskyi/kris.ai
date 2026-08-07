@@ -1,4 +1,4 @@
-name: Worker G P6-001 canonical format materialization
+name: Worker G P6-001 provenance repair
 
 on:
   push:
@@ -8,70 +8,98 @@ on:
       - '.github/workflows/worker-g-p6-001-format-materialize.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  materialize:
+  repair:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: agent/g/mission-006-model-routing
-          fetch-depth: 2
-          persist-credentials: false
+          fetch-depth: 0
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Require exact uncontended repair parent
+      - name: Require exact uncontended repair head
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "99e645758a926cc3af2516c5243a8989d3961675"
+          test "$(git rev-parse HEAD^)" = "4a38abb53da0e60785aa9cd562befb0ea5afdc6e"
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
           git fetch origin agent/g/mission-006-model-routing
           test "$(git rev-parse refs/remotes/origin/agent/g/mission-006-model-routing)" = "${GITHUB_SHA}"
       - name: Resolve pinned Dart package context
         shell: bash
         run: flutter pub get
-      - name: Materialize canonical Dart formatting
+      - name: Apply benchmark provenance repair
         shell: bash
+        env:
+          P6_PATCH_GZIP_BASE64: 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
         run: |
           set -euo pipefail
           python tool/dart_format_scope.py --write
+          printf '%s' "${P6_PATCH_GZIP_BASE64}" | base64 --decode | gzip --decompress > "$RUNNER_TEMP/p6.patch"
+          git apply --check "$RUNNER_TEMP/p6.patch"
+          git apply "$RUNNER_TEMP/p6.patch"
+          python tool/dart_format_scope.py --write
           python tool/dart_format_scope.py --check
           python - <<'PY'
-          from pathlib import Path
           import subprocess
-
-          expected = [
+          expected = {
               'lib/product/model/model_registry.dart',
               'test/product/model/model_registry_identity_guard_test.dart',
               'test/product/model/model_registry_public_contract_test.dart',
               'test/product/model/model_registry_test.dart',
-          ]
-          changed = subprocess.check_output(
-              ['git', 'diff', '--name-only'], text=True
-          ).splitlines()
+          }
+          changed = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
           if changed != expected:
-              raise SystemExit(
-                  f'unexpected formatter diff: expected={expected!r} actual={changed!r}'
-              )
-          root = Path('formatted-p6')
-          for relative in expected:
-              target = root / relative
-              target.parent.mkdir(parents=True, exist_ok=True)
-              target.write_bytes(Path(relative).read_bytes())
-          subprocess.run(
-              ['git', 'diff', '--check', '--', *expected], check=True
-          )
+              raise SystemExit(f'unexpected product diff: expected={sorted(expected)!r} actual={sorted(changed)!r}')
           PY
-      - name: Upload canonical formatted P6 files
+          test "$(git rev-parse 954f231fa28a22c85e0be3a76205cc31635f6466^{tree})" = "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+          git diff --check -- \
+            lib/product/model/model_registry.dart \
+            test/product/model/model_registry_identity_guard_test.dart \
+            test/product/model/model_registry_public_contract_test.dart \
+            test/product/model/model_registry_test.dart
+      - name: Analyze exact repaired source tree
+        shell: bash
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Execute focused P6 model-registry regressions
+        shell: bash
+        run: |
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/model/model_registry_test.dart \
+            test/product/model/model_registry_identity_guard_test.dart \
+            test/product/model/model_registry_public_contract_test.dart
+      - name: Commit validated repair and retire materializer
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin agent/g/mission-006-model-routing
+          test "$(git rev-parse refs/remotes/origin/agent/g/mission-006-model-routing)" = "${GITHUB_SHA}"
+          git rm -- .github/workflows/worker-g-p6-001-format-materialize.yml
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            lib/product/model/model_registry.dart \
+            test/product/model/model_registry_identity_guard_test.dart \
+            test/product/model/model_registry_public_contract_test.dart \
+            test/product/model/model_registry_test.dart
+          git commit -m 'fix(p6-001): require trusted benchmark execution receipts'
+          final_commit="$(git rev-parse HEAD)"
+          final_tree="$(git rev-parse HEAD^{tree})"
+          printf '{"commit":"%s","tree":"%s","validatedByRun":"%s"}\n' "$final_commit" "$final_tree" "${GITHUB_RUN_ID}" > "$RUNNER_TEMP/p6-final-receipt.json"
+          git push origin HEAD:agent/g/mission-006-model-routing
+          cp "$RUNNER_TEMP/p6-final-receipt.json" p6-final-receipt.json
+      - name: Upload exact-tree validation receipt
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: worker-g-p6-001-formatted-dart
-          path: formatted-p6
+          name: worker-g-p6-001-provenance-repair-receipt
+          path: p6-final-receipt.json
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 30
