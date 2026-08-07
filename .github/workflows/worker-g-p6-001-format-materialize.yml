@@ -29,10 +29,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "17eed9bb16c25b8de80b69bd8a0be7eed323173a"
+          test "$(git rev-parse HEAD^)" = "99e645758a926cc3af2516c5243a8989d3961675"
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
           git fetch origin agent/g/mission-006-model-routing
           test "$(git rev-parse refs/remotes/origin/agent/g/mission-006-model-routing)" = "${GITHUB_SHA}"
+      - name: Resolve pinned Dart package context
+        shell: bash
+        run: flutter pub get
       - name: Materialize canonical Dart formatting
         shell: bash
         run: |
