@@ -37,24 +37,26 @@ jobs:
       - name: Require exact triggering head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-      - name: Validate durable runtime and delivery source
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m py_compile \
-            tool/mission_control.py \
-            tool/mission_materialize_safe.py \
-            tool/mission_runtime_control.py \
-            tool/mission_delivery_lib.py \
-            tool/mission_delivery_checks.py \
-            tool/mission_delivery_live.py \
-            tool/mission_delivery_control.py \
-            tool/mission_delivery_strict.py \
-            tool/mission_delivery_control_test.py
-          python tool/mission_materialize_safe.py --project . validate
-          python tool/mission_runtime_control.py --project . validate
-          python -m unittest -v tool/mission_delivery_control_test.py
-          python tool/mission_delivery_strict.py --project . validate
+      - name: Compile mission controls
+        run: >-
+          python -m py_compile
+          tool/mission_control.py
+          tool/mission_materialize_safe.py
+          tool/mission_runtime_control.py
+          tool/mission_delivery_lib.py
+          tool/mission_delivery_checks.py
+          tool/mission_delivery_live.py
+          tool/mission_delivery_control.py
+          tool/mission_delivery_strict.py
+          tool/mission_delivery_control_test.py
+      - name: Validate durable-claim materializer
+        run: python tool/mission_materialize_safe.py --project . validate
+      - name: Validate helper runtime
+        run: python tool/mission_runtime_control.py --project . validate
+      - name: Run legacy delivery regressions
+        run: python -m unittest -v tool/mission_delivery_control_test.py
+      - name: Validate strict delivery provenance
+        run: python tool/mission_delivery_strict.py --project . validate
       - name: Materialize delivery metrics
         shell: bash
         run: |
