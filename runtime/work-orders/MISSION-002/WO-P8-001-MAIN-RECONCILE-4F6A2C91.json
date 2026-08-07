@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P8-001-MAIN-RECONCILE-4F6A2C91",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
@@ -13,6 +12,7 @@
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "ELASTIC-4f6a2c91:REBASE_MAIN_PR113",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Reconcile exact current protected-main P7 source landing eddf1fdac3dd3412358a576e45b82e99528cfed4 into canonical P8 Product PR #65 using repository-enabled rebase integration on existing branches only. Import protected-main bytes without manual cross-mission edits, preserve the finalized P8 assurance repair, rerun exact current P8/product validation, and do not promote P8 acceptance or support.",
@@ -20,16 +20,15 @@
   "priority": 100,
   "requestedRole": "INTEGRATOR",
   "requiredTests": [
-    "protected main remains eddf1fdac3dd3412358a576e45b82e99528cfed4 before reconciliation",
-    "canonical P8 remains 53c34bc1586a9e473721fa8f4c5339a8e5f8e947 before reconciliation",
-    "reverse main-to-P8 PR is conflict-free and merged with rebase policy",
-    "P8 assurance repair remains present after reconciliation",
+    "reverse main-to-P8 PR #113 merged conflict-free with rebase policy",
+    "P8 assurance repair files unchanged by reconciliation",
+    "resulting P8 head f23316535b8042662250ec63005817e72da581d0",
     "exact current P8/product validation executes on resulting candidate"
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:24:30Z",
+  "updatedAt": "2026-08-07T20:27:30Z",
   "workOrderId": "WO-P8-001-MAIN-RECONCILE-4F6A2C91"
 }
