@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000060-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "WRK-20260807T190752Z-2540eacf:R1_SUPPORT_MATRIX_REQUEST_CHANGES",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-07T19:22:58Z",
+  "runtimeGeneration": 60,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190752Z-2540eacf",
+  "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
+}

@@ -10,6 +10,7 @@
   "createdAt": "2026-08-07T18:27:00Z",
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
+  "lastActor": "WRK-20260807T190752Z-2540eacf:R1_SUPPORT_MATRIX_REQUEST_CHANGES",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "P8 assurance trust helper PR #110 is frozen at 9c6baed5b23939eaa2767abaa1adb126a33655b5. Exact product-gates run 31208243734 PASS. P8 formal hierarchy run 31208243731 passes the source/test/trust semantics on Ubuntu, macOS, and Windows and is red only at the intentionally deferred committed root-manifest comparison. Fresh context-independent R1 integration/security review is still absent. Do not mutate helper source unless a new reviewed defect is proven; canonical manifest finalization occurs only after helper consumption on Product PR #65.",
@@ -26,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "READY",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-07T19:05:00Z",
+  "updatedAt": "2026-08-07T19:22:58Z",
   "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
 }
