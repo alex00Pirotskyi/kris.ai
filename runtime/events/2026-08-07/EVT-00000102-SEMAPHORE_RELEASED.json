@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000102-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "BLOCKED",
+    "semaphoreId": "SEM-P4-001-MANIFEST-6C8E41F3"
+  },
+  "recordedAt": "2026-08-07T21:23:00Z",
+  "runtimeGeneration": 102,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200720Z-6c8e41f3",
+  "workOrderId": "WO-P4-001-MANIFEST-FINALIZE-6C8E41F3"
+}
