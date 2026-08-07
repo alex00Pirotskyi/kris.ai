@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000003-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "runtimeGeneration": 3,
+  "recordedAt": "2026-08-07T13:53:00Z",
+  "workExecutionId": "WRK-20260807T135300Z-c0ffee03",
+  "workOrderId": "WO-P4-001-INTEGRATE-92",
+  "mission": "MISSION-004",
+  "payload": {
+    "correctionType": "CANONICAL_PRODUCT_HEAD_OBSERVATION",
+    "correctsEventId": "EVT-00000001-INTEGRATION_DONE",
+    "previousRecordedHead": "fceea9a5d9a2a79428713f2fe0cd0723528bab99",
+    "repositoryAuthoritativeHead": "fceea9a561dad8ff57f398c8be2f5fe27ad48f25",
+    "repositoryAuthoritativeTree": "95470ca13088976d1d3331913a89527d99648954",
+    "reason": "The live-runtime divergence guard detected that the earlier migration event recorded an incorrect exact P4 commit string. The historical event is retained unchanged; this append-only correction and the canonical Product PR observation restore repository-authoritative identity."
+  }
+}
