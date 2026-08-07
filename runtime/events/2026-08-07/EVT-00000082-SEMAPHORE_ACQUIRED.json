@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000082-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "executionRole": "INCIDENT_RESPONDER",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-3E7A9C42",
+    "workerIdentity": "ELASTIC-3e7a9c42"
+  },
+  "recordedAt": "2026-08-07T20:20:31Z",
+  "runtimeGeneration": 82,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200314Z-3e7a9c42",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-2540EACF"
+}
