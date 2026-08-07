@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P7-001-SOURCE-MANIFEST-C0DECAFE-36",
+  "createdAt": "2026-08-07T17:13:00Z",
+  "expectedProductHead": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
+  "expectedRuntimeGeneration": 36,
+  "note": "Materialize only SOURCE_MANIFEST.sha256 on exact canonical P7 Product PR #96 head after tri-platform exact-current product-gates PASS; do not alter product source or promote acceptance/support state.",
+  "operation": "MATERIALIZE_SOURCE_MANIFEST_V1",
+  "productPr": 96,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE",
+  "workerIdentity": "ELASTIC-c0decafe",
+  "workOrderId": "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
+}

@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
+  "assignedWorker": "ELASTIC-c0decafe",
   "baseCommit": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
   "baseTree": "0959839b4315a5f38ba80df520776da865c2be63",
   "createdAt": "2026-08-07T17:12:00Z",
   "createdBy": "SYSTEM-P7-LANDING-FINALIZER",
   "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Materialize the canonical deterministic SOURCE_MANIFEST.sha256 on exact canonical Product PR #96 head 5d3e62bbedb1f700fbc0cfc76704cca5fc067a21 as the final generated-file preparation for protected-main source landing. Change no product source and promote no ACCEPTED, support, release, production, or GA status.",
@@ -20,8 +23,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-07T17:12:00Z",
+  "updatedAt": "2026-08-07T17:13:00Z",
   "workOrderId": "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
 }

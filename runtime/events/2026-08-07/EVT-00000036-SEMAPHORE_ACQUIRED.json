@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000036-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-007",
+  "payload": {
+    "executionRole": "RELEASE_FINALIZER",
+    "kind": "RELEASE",
+    "semaphoreId": "SEM-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE",
+    "workerIdentity": "ELASTIC-c0decafe"
+  },
+  "recordedAt": "2026-08-07T17:13:00Z",
+  "runtimeGeneration": 36,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T171300Z-c0decafe",
+  "workOrderId": "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
+}

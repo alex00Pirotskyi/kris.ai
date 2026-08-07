@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
+  "baseTree": "0959839b4315a5f38ba80df520776da865c2be63",
+  "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
+  "createdAt": "2026-08-07T17:13:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-07T21:13:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-007",
+  "productPr": null,
+  "refreshedAt": "2026-08-07T17:13:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 36,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE",
+  "workerIdentity": "ELASTIC-c0decafe"
+}
