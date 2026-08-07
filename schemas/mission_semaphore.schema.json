@@ -29,7 +29,7 @@
   "allOf": [
     {"if": {"properties": {"kind": {"const": "WRITE"}}}, "then": {"required": ["branch"], "properties": {"allowedPaths": {"minItems": 1}}}},
     {"if": {"properties": {"kind": {"const": "INTEGRATION"}}}, "then": {"required": ["productPr"]}},
-    {"if": {"properties": {"kind": {"const": "AUTHORITY"}}}, "then": {"required": ["authorityId"]}},
+    {"if": {"properties": {"kind": {"const": "AUTHORITY"}}}, "then": {"required": ["authorityId", "branch"], "properties": {"allowedPaths": {"minItems": 1}}}},
     {"if": {"properties": {"kind": {"const": "RELEASE"}}}, "then": {"required": ["resourceId"]}}
   ]
 }
