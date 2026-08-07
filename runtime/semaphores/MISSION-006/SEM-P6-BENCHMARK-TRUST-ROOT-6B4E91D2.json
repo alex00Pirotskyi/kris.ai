@@ -1,6 +1,7 @@
 {
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
     "test/product/model/model_registry_test.dart",
     "test/product/model/model_registry_public_contract_test.dart"
   ],
@@ -10,13 +11,13 @@
   "branch": "agent/help/elastic-6b4e91d2/mission-006/p6-benchmark-trust-root",
   "createdAt": "2026-08-07T21:19:00Z",
   "executionRole": "DEFECT_HUNTER",
-  "expiresAt": "2026-08-08T01:19:00Z",
+  "expiresAt": "2026-08-08T01:30:00Z",
   "kind": "WRITE",
   "mission": "MISSION-006",
   "productPr": 76,
-  "refreshedAt": "2026-08-07T21:19:00Z",
+  "refreshedAt": "2026-08-07T21:30:00Z",
   "resourceId": null,
-  "runtimeGeneration": 100,
+  "runtimeGeneration": 103,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P6-BENCHMARK-TRUST-ROOT-6B4E91D2",
   "status": "ACTIVE",

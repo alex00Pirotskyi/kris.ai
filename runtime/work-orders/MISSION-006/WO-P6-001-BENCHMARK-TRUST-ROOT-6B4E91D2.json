@@ -1,6 +1,7 @@
 {
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
     "test/product/model/model_registry_test.dart",
     "test/product/model/model_registry_public_contract_test.dart"
   ],
@@ -23,6 +24,7 @@
     "caller-supplied key registry/candidate map cannot grant task approval",
     "approved JSON fails closed without host-controlled benchmark authority",
     "evaluation-only model and benchmark metadata flows remain valid",
+    "identity mismatch quarantine remains deterministic without public approval authority",
     "direct public contract exposes no caller-constructible approval-bearing benchmark trust path",
     "exact helper Worker G P6-001 source validation and product-gates"
   ],
@@ -30,6 +32,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-07T21:19:00Z",
+  "updatedAt": "2026-08-07T21:30:00Z",
   "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
 }

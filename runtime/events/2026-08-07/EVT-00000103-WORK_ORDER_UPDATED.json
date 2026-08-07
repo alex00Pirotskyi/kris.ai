@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000103-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-006",
+  "payload": {
+    "correctionType": "ACTIVE_SCOPE_EXPANSION",
+    "addedAllowedPath": "test/product/model/model_registry_identity_guard_test.dart",
+    "reason": "Canonical P6 identity-guard tests exercise the same caller-constructible benchmark trust context being closed by this defect repair. The path must be updated with the source contract so exact P6 validation remains truthful; no unrelated scope is added."
+  },
+  "recordedAt": "2026-08-07T21:30:00Z",
+  "runtimeGeneration": 103,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200543Z-6b4e91d2",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}
