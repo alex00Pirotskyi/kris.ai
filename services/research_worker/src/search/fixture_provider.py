@@ -24,6 +24,11 @@ class FixtureCatalogEntry:
     language: str
     country: str
     provider_metadata: Mapping[str, Any]
+    safety_tier: str = 'strict'
+
+    def __post_init__(self):
+        if self.safety_tier not in {'strict', 'moderate', 'off'}:
+            raise SearchContractError('fixture safety_tier is unsupported')
 
 class DeterministicFixtureSearchProvider(SearchProvider):
     def __init__(self, *, provider_id: str, entries: Sequence[FixtureCatalogEntry], supports_domain_exclude: bool, supports_freshness: bool=True, supports_safe_search: bool=True):
@@ -87,10 +92,22 @@ class DeterministicFixtureSearchProvider(SearchProvider):
             return after < published < before
         raise SearchContractError('freshness.mode is unsupported')
 
+    def _matches_safe_search(self, entry: FixtureCatalogEntry, request: SearchRequest) -> bool:
+        mode = request.safe_search
+        if mode == 'off':
+            return True
+        if mode == 'moderate':
+            return entry.safety_tier in {'strict', 'moderate'}
+        if mode == 'strict':
+            return entry.safety_tier == 'strict'
+        raise SearchContractError('safe_search is unsupported')
+
     def _matches(self, entry, request):
         if request.language and entry.language != request.language:
             return False
         if request.country and entry.country != request.country:
+            return False
+        if not self._matches_safe_search(entry, request):
             return False
         if not self._matches_freshness(entry, request):
             return False
