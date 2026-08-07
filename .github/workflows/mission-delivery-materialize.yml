@@ -15,6 +15,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -73,10 +74,12 @@ jobs:
           python tool/p1a_refresh_source_manifest.py .
           cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
           git diff --check
-      - name: Publish generated delivery views
+      - id: publish
+        name: Publish generated delivery views
         shell: bash
         run: |
           set -euo pipefail
+          echo 'published=false' >> "$GITHUB_OUTPUT"
           if test -z "$(git status --porcelain=v1)"; then
             echo "Delivery views and source manifest are already current."
             exit 0
@@ -89,4 +92,29 @@ jobs:
             SOURCE_MANIFEST.sha256
           git diff --cached --check
           git commit -m 'ANARCHY: materialize mission delivery metrics'
+          published_sha="$(git rev-parse HEAD)"
           git push origin HEAD:${{ github.ref_name }}
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "published_sha=${published_sha}" >> "$GITHUB_OUTPUT"
+      - name: Dispatch exact published-head validation
+        if: steps.publish.outputs.published == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+          EXPECTED_SHA: ${{ steps.publish.outputs.published_sha }}
+        run: |
+          set -euo pipefail
+          remote_sha="$(git ls-remote origin "refs/heads/${REF_NAME}" | cut -f1)"
+          test "${remote_sha}" = "${EXPECTED_SHA}"
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows"
+          for workflow in mission-delivery-enforcement.yml ci.yml; do
+            curl --fail-with-body --silent --show-error \
+              -X POST \
+              -H 'Accept: application/vnd.github+json' \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "${api}/${workflow}/dispatches" \
+              -d "{\"ref\":\"${REF_NAME}\"}"
+          done
+          echo "Dispatched exact-head validation for ${EXPECTED_SHA}."
