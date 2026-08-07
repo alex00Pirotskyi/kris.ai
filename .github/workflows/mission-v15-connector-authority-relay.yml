@@ -1,0 +1,63 @@
+name: Mission V1.5 Connector Authority Relay
+
+on:
+  push:
+    branches:
+      - agent/mission-runtime
+    paths:
+      - 'docs/roadmap/missions/runtime-commands/*.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mission-v15-connector-authority-relay
+  cancel-in-progress: false
+
+jobs:
+  apply-authority-command:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/mission-runtime
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Fetch live branches and refresh runtime head
+        shell: bash
+        run: |
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          git reset --hard refs/remotes/origin/agent/mission-runtime
+      - name: Resolve the immutable connector command
+        id: command
+        shell: bash
+        env:
+          EVENT_BEFORE: ${{ github.event.before }}
+          EVENT_AFTER: ${{ github.sha }}
+        run: |
+          mapfile -t commands < <(
+            git diff-tree --no-commit-id --name-only --diff-filter=A -r "$EVENT_BEFORE" "$EVENT_AFTER" -- \
+              'docs/roadmap/missions/runtime-commands/*.json'
+          )
+          if [ "${#commands[@]}" -ne 1 ]; then
+            echo "expected exactly one newly-added connector command, found ${#commands[@]}" >&2
+            printf '%s\n' "${commands[@]}" >&2
+            exit 1
+          fi
+          command="${commands[0]}"
+          test -f "$command"
+          echo "path=$command" >> "$GITHUB_OUTPUT"
+      - name: Apply append-safe authority command
+        shell: bash
+        run: |
+          python tool/mission_v15_connector_authority_apply.py \
+            --project . \
+            --command '${{ steps.command.outputs.path }}' \
+            --output "$RUNNER_TEMP/connector-authority-result.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-v15-connector-authority-result
+          path: ${{ runner.temp }}/connector-authority-result.json
