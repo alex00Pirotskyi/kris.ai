@@ -1,0 +1,27 @@
+{
+  "allowedPaths": [
+    "services/research_worker/src/search/fixture_provider.py",
+    "services/research_worker/test/test_fixture_provider.py"
+  ],
+  "baseCommit": "fceea9a561dad8ff57f398c8be2f5fe27ad48f25",
+  "baseTree": "95470ca13088976d1d3331913a89527d99648954",
+  "createdAt": "2026-08-07T19:33:00Z",
+  "createdBy": "ELASTIC-4a9c2d1e",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Consume exact helper PR #111 into canonical P4-001 Product PR #62 without source-byte drift, preserve the safe-search repair, rerun exact canonical P4/product validation, and close the helper lifecycle without promoting P4 acceptance or support.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "canonical P4 source tests",
+    "product-gates Linux/macOS/Windows"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-07T19:33:00Z",
+  "workOrderId": "WO-P4-001-INTEGRATE-111-4A9C2D1E"
+}
