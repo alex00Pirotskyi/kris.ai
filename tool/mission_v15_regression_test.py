@@ -21,6 +21,7 @@ from mission_runtime_control import (
 )
 from mission_delivery_lib import DeliveryError
 from mission_delivery_strict import validate_review_receipt
+from mission_v15_connector_authority_apply import _append_dart_set_entry
 
 
 def git(root: pathlib.Path, *args: str) -> str:
@@ -93,6 +94,46 @@ class RuntimeGitBindingTests(unittest.TestCase):
                 "release/evidence/P5-*/**",
             )
         )
+
+
+class ConnectorAuthorityMutationTests(unittest.TestCase):
+    def test_append_preserves_all_bytes_outside_governed_set(self) -> None:
+        source = (
+            "prefix\n"
+            "const expected = <String>{\n"
+            "  'lib/a.dart',\n"
+            "  'lib/b.dart',\n"
+            "};\n"
+            "suffix\n"
+        )
+        updated, changed = _append_dart_set_entry(
+            source,
+            marker="const expected = <String>{",
+            value="lib/c.dart",
+        )
+        self.assertTrue(changed)
+        self.assertEqual(
+            updated,
+            (
+                "prefix\n"
+                "const expected = <String>{\n"
+                "  'lib/a.dart',\n"
+                "  'lib/b.dart',\n"
+                "  'lib/c.dart',\n"
+                "};\n"
+                "suffix\n"
+            ),
+        )
+
+    def test_append_is_idempotent_when_entry_already_exists(self) -> None:
+        source = "const expected = <String>{\n  'lib/a.dart',\n};\n"
+        updated, changed = _append_dart_set_entry(
+            source,
+            marker="const expected = <String>{",
+            value="lib/a.dart",
+        )
+        self.assertFalse(changed)
+        self.assertEqual(updated, source)
 
 
 class ReviewIdentityTests(unittest.TestCase):
