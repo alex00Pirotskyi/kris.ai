@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "workOrderId": "WO-P4-001-INTEGRATE-92",
+  "mission": "MISSION-004",
+  "roadmapTask": "P4-001",
+  "parentProductPr": 62,
+  "priority": 99,
+  "type": "INTEGRATION",
+  "objective": "Consume the bounded P4 helper #92 into canonical Product PR #62, preserve request/query/provider correlation and freshness fixes, rerun the affected P4 gates, then close/delete the consumed helper lifecycle without claiming P4 acceptance.",
+  "requestedRole": "INTEGRATOR",
+  "allowedPaths": ["services/research_worker/**", "release/evidence/P4-*/**", ".github/workflows/p4-001*.yml"],
+  "baseCommit": "a608700a908042fedf18c8431402551da6853f7d",
+  "baseTree": "e0e98e78032b8c8acef18a7331ee3c629f7f2297",
+  "dependencyRequirements": [],
+  "requiredTests": ["canonical P4 source tests", "canonical Test Center affected P4 checks"],
+  "maxChildWorkOrders": 1,
+  "status": "READY",
+  "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
+  "createdAt": "2026-08-07T12:15:00Z"
+}
