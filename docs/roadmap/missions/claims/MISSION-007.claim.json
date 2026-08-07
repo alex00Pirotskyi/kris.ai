@@ -1,6 +1,6 @@
 {
   "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
-  "current": "P7-001 MCP version adapter architecture: pin supported protocol versions, isolate draft/upcoming adapters, and prevent negotiated upgrades from silently removing capabilities.",
+  "current": "P7-001 runtime-connected MCP version adapter implemented with current-stable and historical protocol eras; exact PR #96 CI is running and merge/review gates remain unresolved.",
   "exclusivePaths": [
     "lib/product/mcp*.dart",
     "lib/product/skills/**",
@@ -11,12 +11,13 @@
     "release/evidence/P7-*/**",
     "release/evidence/P23-*/**"
   ],
-  "head": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+  "head": "6a4185416ca8d9114d713cfd1549a2d3b94e18f6",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-007",
+  "pr": 96,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+  "tree": "3bc09adfbda555416a85470f569e10ed95917c2c",
   "worker": "I",
   "workExecutionId": "WRK-20260807T103221Z-5aee6ba5"
 }
