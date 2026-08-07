@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P7-001-LAND-MAIN-C0DECAFE",
   "allowedPaths": [
     "lib/product/mcp*.dart",
     "test/product/mcp*/**",
@@ -12,6 +11,7 @@
   "createdBy": "SYSTEM-P7-PROTECTED-MAIN-LANDING",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "SYSTEM-P7-LANDING-POLICY-RECONCILIATION",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Land exact finalized canonical Product PR #96 head ec5086210a778b8a1be51f22b9cd81f735956034 into protected main as source-only delivery using a merge commit so the exact source head remains an ancestor of mergedMainCommit. Do not modify product source, do not squash, and do not promote P7-001 ACCEPTED, behavioral/platform/release support, production readiness, certification, or GA.",
@@ -27,8 +27,9 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "SUPERSEDED",
+  "supersededBy": "WO-P7-001-LAND-MAIN-SQUASH-C0DECAFE",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T17:49:00Z",
+  "updatedAt": "2026-08-07T17:56:00Z",
   "workOrderId": "WO-P7-001-LAND-MAIN-C0DECAFE"
 }

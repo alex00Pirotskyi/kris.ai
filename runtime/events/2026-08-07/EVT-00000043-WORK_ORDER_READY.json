@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000043-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "repositoryMergePolicy": {
+      "allowMergeCommit": false,
+      "allowRebaseMerge": true,
+      "allowSquashMerge": true
+    },
+    "requestedRole": "INTEGRATOR",
+    "supersedes": "WO-P7-001-LAND-MAIN-C0DECAFE",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-07T17:56:00Z",
+  "runtimeGeneration": 43,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T175600Z-c0decafe",
+  "workOrderId": "WO-P7-001-LAND-MAIN-SQUASH-C0DECAFE"
+}
