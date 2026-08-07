@@ -49,9 +49,8 @@ class McpProtocolAdapter {
     final meta = rawMeta == null
         ? <String, dynamic>{}
         : _stringKeyedMap(rawMeta, code: 'mcp_request_meta_invalid');
-    final reserved = meta.keys
-        .where(_isReservedMcpMetaKey)
-        .toList(growable: false);
+    final reserved =
+        meta.keys.where(_isReservedMcpMetaKey).toList(growable: false);
     if (reserved.isNotEmpty) {
       throw ProductException(
         'mcp_reserved_meta_rejected',
@@ -64,8 +63,9 @@ class McpProtocolAdapter {
       'name': clientName,
       'version': clientVersion,
     };
-    meta['io.modelcontextprotocol/clientCapabilities'] =
-        <String, dynamic>{...clientCapabilities};
+    meta['io.modelcontextprotocol/clientCapabilities'] = <String, dynamic>{
+      ...clientCapabilities
+    };
     decorated['_meta'] = meta;
     return decorated;
   }
