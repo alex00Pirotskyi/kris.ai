@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-g*.yml",
+    "lib/product/model/**",
+    "release/evidence/P6-*/**",
+    "test/product/model/**"
+  ],
+  "authorityId": null,
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "branch": "agent/g/mission-006-model-routing",
+  "createdAt": "2026-08-07T14:00:35Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-07T18:00:35Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "refreshedAt": "2026-08-07T14:00:35Z",
+  "resourceId": null,
+  "runtimeGeneration": 4,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-LANDING-8634D003",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-LANDING",
+  "workerIdentity": "Elastic-8634d003"
+}
