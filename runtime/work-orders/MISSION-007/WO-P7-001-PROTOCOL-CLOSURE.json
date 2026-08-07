@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "workOrderId": "WO-P7-001-PROTOCOL-CLOSURE",
+  "mission": "MISSION-007",
+  "roadmapTask": "P7-001",
+  "parentProductPr": 96,
+  "priority": 100,
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "objective": "Close the remaining P7 MCP protocol defects on canonical Product PR #96, including exact opaque cursor/tool-name semantics, consume the reserved-metadata helper #97 when compatible, rerun focused protocol tests, and hand a single canonical candidate to integration.",
+  "requestedRole": "BUILDER",
+  "allowedPaths": ["lib/product/mcp*.dart", "test/product/mcp*/**", "release/evidence/P7-*/**"],
+  "baseCommit": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
+  "baseTree": "da8b5505b35c0517b566bdefa1446ff1bc88e5dd",
+  "dependencyRequirements": [],
+  "requiredTests": ["test/product/mcp/mcp_protocol_test.dart"],
+  "maxChildWorkOrders": 2,
+  "status": "READY",
+  "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
+  "createdAt": "2026-08-07T12:15:00Z"
+}
