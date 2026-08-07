@@ -23,6 +23,8 @@ EXPECTED_ARTIFACT_PATHS = frozenset(
         "release/evidence/P3-001/packaging-readiness-contract.json",
         "release/evidence/P3-001/runtime-candidate-matrix.json",
         "release/evidence/P3-001/test-center-registration.json",
+        "tool/worker_d_p3_dependency_binding.py",
+        "tool/worker_d_p3_dependency_binding_test.py",
         "tool/worker_d_p3_manifest_binding.py",
         "tool/worker_d_p3_manifest_binding_test.py",
         "tool/worker_d_p3_readiness.py",
