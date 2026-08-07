@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-d-p3-readiness.yml"
+  ],
+  "baseCommit": "11a922f5b7f608affb219296b597d8d165bfc55a",
+  "baseTree": "d4aa2e3247ff357c7c9ac46b66a0aab8dfa4622d",
+  "branch": "agent/help/i/mission-003/p3-trust-bindings-v2",
+  "createdAt": "2026-08-07T09:18:30Z",
+  "expiresAt": "2026-08-07T13:18:30Z",
+  "helperWorker": "I",
+  "leaseId": "HLP-M003-I-P3FLOW-0918",
+  "mission": "MISSION-003",
+  "nextAction": "Wire the P3 evidence-byte and dependency commit-tree validators into Worker D's permanent readiness workflow, validate the exact helper head, and hand off to Worker D.",
+  "ownerWorker": "D",
+  "parentClaimHead": "7eecc840f68ca0dff13ab58c138845593254e390",
+  "refreshedAt": "2026-08-07T09:18:30Z",
+  "schemaVersion": 1,
+  "status": "ACTIVE",
+  "task": "P3-001",
+  "workExecutionId": "WRK-20260807T080304Z-049fa6b4"
+}
