@@ -5,7 +5,7 @@ import 'p5_models.dart';
 
 class P5InformationArchitectureController extends ChangeNotifier {
   P5InformationArchitectureController({P5PresentationState? initialState})
-      : _state = initialState ?? P5PrototypeFixtures.initialState();
+    : _state = initialState ?? P5PrototypeFixtures.initialState();
 
   P5PresentationState _state;
   P5PresentationState get state => _state;
@@ -25,35 +25,33 @@ class P5InformationArchitectureController extends ChangeNotifier {
       }.contains(_state.runState);
 
   bool get canReviewPlan => !_runLifecycleLocked;
-  bool get canStartRun =>
-      !_runLifecycleLocked && _state.selectedRunId == null;
+  bool get canStartRun => !_runLifecycleLocked && _state.selectedRunId == null;
   bool get canEditTaskDraft => !_runContextLocked;
   bool get canChangeProjectContext => !_runContextLocked;
   bool get canSelectSavedRun => !_runContextLocked;
 
   bool get _runLifecycleLocked => const <P5RunPresentationState>{
-        P5RunPresentationState.running,
-        P5RunPresentationState.paused,
-        P5RunPresentationState.stopping,
-        P5RunPresentationState.interrupted,
-      }.contains(_state.runState);
+    P5RunPresentationState.running,
+    P5RunPresentationState.paused,
+    P5RunPresentationState.stopping,
+    P5RunPresentationState.interrupted,
+  }.contains(_state.runState);
 
   bool get _runContextLocked => const <P5RunPresentationState>{
-        P5RunPresentationState.running,
-        P5RunPresentationState.paused,
-        P5RunPresentationState.stopping,
-      }.contains(_state.runState);
+    P5RunPresentationState.running,
+    P5RunPresentationState.paused,
+    P5RunPresentationState.stopping,
+  }.contains(_state.runState);
 
   List<P5WorkspaceDefinition> get visibleWorkspaces {
-    return P5PrototypeFixtures.workspaces.where((definition) {
-      if (definition.id.isFutureCapability) {
-        return false;
-      }
-      return _isWorkspaceEligibleAt(
-        definition.id,
-        _state.experienceLevel,
-      );
-    }).toList(growable: false);
+    return P5PrototypeFixtures.workspaces
+        .where((definition) {
+          if (definition.id.isFutureCapability) {
+            return false;
+          }
+          return _isWorkspaceEligibleAt(definition.id, _state.experienceLevel);
+        })
+        .toList(growable: false);
   }
 
   void changeExperienceLevel(P5ExperienceLevel level) {
@@ -71,9 +69,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         experienceLevel: level,
         workspace: P5WorkspaceId.homeChat,
-        navigationHistory: const <P5WorkspaceId>[
-          P5WorkspaceId.homeChat,
-        ],
+        navigationHistory: const <P5WorkspaceId>[P5WorkspaceId.homeChat],
         navigationIndex: 0,
         reopenWorkspace: P5WorkspaceId.homeChat,
         recoveryMessage:
@@ -87,23 +83,22 @@ class P5InformationArchitectureController extends ChangeNotifier {
         .take(_state.navigationIndex + 1)
         .where((workspace) => _isWorkspaceEligibleAt(workspace, level))
         .toList(growable: true);
-    if (sanitizedHistory.isEmpty ||
-        sanitizedHistory.last != currentWorkspace) {
+    if (sanitizedHistory.isEmpty || sanitizedHistory.last != currentWorkspace) {
       sanitizedHistory.add(currentWorkspace);
     }
 
     final recoveryMessage = _state.recoveryMessage;
-    final clearsResolvedExperienceWarning =
-        _isResolvedExperienceWarning(recoveryMessage, level);
+    final clearsResolvedExperienceWarning = _isResolvedExperienceWarning(
+      recoveryMessage,
+      level,
+    );
 
     _state = _state.copyWith(
       experienceLevel: level,
-      navigationHistory:
-          List<P5WorkspaceId>.unmodifiable(sanitizedHistory),
+      navigationHistory: List<P5WorkspaceId>.unmodifiable(sanitizedHistory),
       navigationIndex: sanitizedHistory.length - 1,
       reopenWorkspace: currentWorkspace,
-      recoveryMessage:
-          clearsResolvedExperienceWarning ? null : recoveryMessage,
+      recoveryMessage: clearsResolvedExperienceWarning ? null : recoveryMessage,
     );
     notifyListeners();
   }
@@ -168,7 +163,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
     }
 
     if (fixture.id == _state.selectedProjectId) {
-      final recoverableBlockedState = _state.selectedRunId == null &&
+      final recoverableBlockedState =
+          _state.selectedRunId == null &&
           const <P5RunPresentationState>{
             P5RunPresentationState.blocked,
             P5RunPresentationState.error,
@@ -214,8 +210,9 @@ class P5InformationArchitectureController extends ChangeNotifier {
         planReviewed: false,
         planOnly: false,
         verificationRequested: false,
-        recoveryMessage:
-            projectId == null ? 'Choose a project to continue.' : null,
+        recoveryMessage: projectId == null
+            ? 'Choose a project to continue.'
+            : null,
       );
       notifyListeners();
       return;
@@ -265,10 +262,11 @@ class P5InformationArchitectureController extends ChangeNotifier {
     if (_state.workspace == workspace) {
       return;
     }
-    final history = _state.navigationHistory
-        .take(_state.navigationIndex + 1)
-        .toList(growable: true)
-      ..add(workspace);
+    final history =
+        _state.navigationHistory
+            .take(_state.navigationIndex + 1)
+            .toList(growable: true)
+          ..add(workspace);
     _state = _state.copyWith(
       workspace: workspace,
       navigationHistory: List<P5WorkspaceId>.unmodifiable(history),
@@ -348,8 +346,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       }
     }
 
-    final project =
-        projectId == null ? null : _projectFixture(projectId);
+    final project = projectId == null ? null : _projectFixture(projectId);
     if (projectId != null && project == null) {
       _state = _state.copyWith(
         selectedProjectId: null,
@@ -436,8 +433,9 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state.workspaceStates,
     )..[workspace] = next;
     _state = _state.copyWith(
-      workspaceStates:
-          Map<P5WorkspaceId, P5WorkspaceState>.unmodifiable(states),
+      workspaceStates: Map<P5WorkspaceId, P5WorkspaceState>.unmodifiable(
+        states,
+      ),
     );
     notifyListeners();
   }
@@ -511,8 +509,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
           runState: nextPlanOnly
               ? P5RunPresentationState.planOnly
               : (_state.planReviewed
-                  ? P5RunPresentationState.ready
-                  : P5RunPresentationState.planReady),
+                    ? P5RunPresentationState.ready
+                    : P5RunPresentationState.planReady),
           recoveryMessage: 'Plan-only changes presentation, not authority.',
         );
         notifyListeners();
@@ -674,10 +672,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
     return definition != null && definition.minimumLevel.index <= level.index;
   }
 
-  bool _isResolvedExperienceWarning(
-    String? message,
-    P5ExperienceLevel level,
-  ) {
+  bool _isResolvedExperienceWarning(String? message, P5ExperienceLevel level) {
     if (message == null) {
       return false;
     }

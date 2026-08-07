@@ -17,8 +17,9 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('active run context controls are disabled in the UI',
-      (tester) async {
+  testWidgets('active run context controls are disabled in the UI', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     controller.apply(P5PrototypeAction.reviewPlan);
@@ -26,7 +27,9 @@ void main() {
 
     await _pump(tester, controller);
 
-    final taskField = tester.widget<TextField>(find.byKey(const Key('task-input')));
+    final taskField = tester.widget<TextField>(
+      find.byKey(const Key('task-input')),
+    );
     expect(taskField.enabled, isFalse);
 
     controller.selectWorkspace(P5WorkspaceId.projects);
@@ -50,8 +53,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('context controls unlock after simulated run completion',
-      (tester) async {
+  testWidgets('context controls unlock after simulated run completion', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     controller.apply(P5PrototypeAction.reviewPlan);
@@ -60,7 +64,9 @@ void main() {
 
     await _pump(tester, controller);
 
-    final taskField = tester.widget<TextField>(find.byKey(const Key('task-input')));
+    final taskField = tester.widget<TextField>(
+      find.byKey(const Key('task-input')),
+    );
     expect(taskField.enabled, isTrue);
 
     controller.selectWorkspace(P5WorkspaceId.projects);

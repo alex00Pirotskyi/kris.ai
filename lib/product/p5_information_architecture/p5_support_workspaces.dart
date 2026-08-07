@@ -105,7 +105,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                     children: <Widget>[
                       Text('Experience level'),
                       Text(
-                          'No authority, permission, or runtime behavior changes.'),
+                        'No authority, permission, or runtime behavior changes.',
+                      ),
                     ],
                   ),
                 ),
@@ -152,8 +153,9 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                     controller.selectRun('run.p5-existing-001');
                     controller.apply(P5PrototypeAction.retryInterruptedRun);
                   } else if (failure.id == 'failure.offline') {
-                    controller
-                        .apply(P5PrototypeAction.acknowledgeOfflineFixture);
+                    controller.apply(
+                      P5PrototypeAction.acknowledgeOfflineFixture,
+                    );
                   } else if (failure.id == 'failure.permission-denied') {
                     controller.showRecoveryMessage(
                       'Permission review is not implemented in P5-001. P5-007 is required before requested access can be reviewed.',
@@ -165,7 +167,9 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                   } else if (failure.id == 'failure.test-fail') {
                     controller.selectWorkspace(P5WorkspaceId.evidence);
                   } else {
-                    controller.selectWorkspace(P5WorkspaceId.verificationCenter);
+                    controller.selectWorkspace(
+                      P5WorkspaceId.verificationCenter,
+                    );
                   }
                 },
                 child: Text(failure.recoveryAction),
@@ -206,8 +210,9 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             message:
                 '${capability.reason}\nRequired next: ${capability.nextRequirement}',
             actionLabel: 'Back to Capabilities',
-            onAction: () => controller
-                .selectWorkspace(P5WorkspaceId.capabilitiesIntegrations),
+            onAction: () => controller.selectWorkspace(
+              P5WorkspaceId.capabilitiesIntegrations,
+            ),
           ),
         ),
       ],

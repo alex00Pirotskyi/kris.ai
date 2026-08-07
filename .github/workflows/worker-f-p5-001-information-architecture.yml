@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - agent/f/P5-001-information-architecture
+      - 'agent/help/*/mission-005/**'
   pull_request:
     branches:
       - agent/b/test-center-contracts-and-review
+      - agent/f/P5-001-information-architecture
   workflow_dispatch:
 
 permissions:
