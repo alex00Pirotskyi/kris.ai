@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "release/evidence/P11-001/dependency-status.json",
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "8dbe9063e37714dad959573bd2441286265c9402",
+  "baseTree": "ae0d24152ddd93f002627b9bc21d8d567908dd7f",
+  "branch": "agent/e/native-parity-readiness",
+  "createdAt": "2026-08-07T14:16:31Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-07T18:16:31Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-010",
+  "productPr": 71,
+  "refreshedAt": "2026-08-07T14:16:31Z",
+  "resourceId": null,
+  "runtimeGeneration": 5,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P11-001-INT-e168f3bb",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING",
+  "workerIdentity": "ELASTIC-e168f3bb"
+}

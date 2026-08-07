@@ -1,20 +1,32 @@
 {
-  "schemaVersion": 1,
-  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING",
-  "mission": "MISSION-010",
-  "roadmapTask": "P11-001",
-  "parentProductPr": 71,
-  "priority": 94,
-  "type": "INTEGRATION",
-  "objective": "Integrate the bounded P11 immutable-review purpose/scope repair into canonical Product PR #71, collapse superseded helper variants to one consumed source state, rerun Worker E dependency/readiness regressions, and retain R2 native/security review as an external high-risk gate.",
-  "requestedRole": "INTEGRATOR",
-  "allowedPaths": ["tool/worker_e*.py", "release/evidence/P11-*/**", ".github/workflows/worker-e*.yml", "native/**"],
+  "activeSemaphoreId": "SEM-P11-001-INT-e168f3bb",
+  "allowedPaths": [
+    "tool/worker_e*.py",
+    "release/evidence/P11-*/**",
+    ".github/workflows/worker-e*.yml",
+    "native/**"
+  ],
+  "assignedWorker": "ELASTIC-e168f3bb",
   "baseCommit": "8dbe9063e37714dad959573bd2441286265c9402",
   "baseTree": "ae0d24152ddd93f002627b9bc21d8d567908dd7f",
-  "dependencyRequirements": [],
-  "requiredTests": ["Worker E dependency binding regressions", "Worker E native parity readiness regressions"],
-  "maxChildWorkOrders": 1,
-  "status": "READY",
+  "createdAt": "2026-08-07T12:15:00Z",
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
-  "createdAt": "2026-08-07T12:15:00Z"
+  "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-010",
+  "objective": "Integrate the bounded P11 immutable-review purpose/scope repair into canonical Product PR #71, collapse superseded helper variants to one consumed source state, rerun Worker E dependency/readiness regressions, and retain R2 native/security review as an external high-risk gate.",
+  "parentProductPr": 71,
+  "priority": 94,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "Worker E dependency binding regressions",
+    "Worker E native parity readiness regressions"
+  ],
+  "roadmapTask": "P11-001",
+  "schemaVersion": 1,
+  "status": "INTEGRATING",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-07T14:16:31Z",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }

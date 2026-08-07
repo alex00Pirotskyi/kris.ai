@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000005-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-010",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P11-001-INT-e168f3bb",
+    "workerIdentity": "ELASTIC-e168f3bb"
+  },
+  "recordedAt": "2026-08-07T14:16:31Z",
+  "runtimeGeneration": 5,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T140311Z-e168f3bb",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
+}
