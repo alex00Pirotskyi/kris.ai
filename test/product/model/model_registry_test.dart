@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
+import 'package:kristin_local_agent/product/key_registry_v2.dart';
 import 'package:kristin_local_agent/product/model/model.dart';
 
 const String digestA =
@@ -12,10 +13,19 @@ const String digestC =
     'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
 const String digestZero =
     'sha256:0000000000000000000000000000000000000000000000000000000000000000';
-const String candidateCommit = '1111111111111111111111111111111111111111';
-const String candidateTree = '2222222222222222222222222222222222222222';
+const String candidateCommit = '954f231fa28a22c85e0be3a76205cc31635f6466';
+const String candidateTree = '34aa8b80adc34255ca04986c2368759a05a3dfc9';
+const String benchmarkExecutionId = 'p6-fixture-run-001';
 const String benchmarkEvidenceSha =
-    'sha256:aa9351c8d629a6eb591756bc6eec3252a49f27b11b970ab329c2b17b65cd92f7';
+    'sha256:97567a8820af860646654e4f4f3a5dab01c62eeea9a51ff3c22aa04099a46a5c';
+const String forgedScoreEvidenceSha =
+    'sha256:48a38c39c570979ec02f0c4b718a5f3c554400a300d356979d959fb9a1f97d12';
+const String benchmarkAuthorityKeyId = 'p6-benchmark-test';
+const String benchmarkAuthorityPublicKey =
+    '03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8';
+const String benchmarkAuthoritySignature =
+    '3e620ee2d983baa3b1c450020c676fb50c2824c33d335ab6266a0311334e074c'
+    'ddf694726663b106c024eec83e5aebd796af11d2edfb07ba59445c276e949d06';
 
 ModelProviderDescriptor _localProvider({String providerId = 'ollama.local'}) =>
     ModelProviderDescriptor(
@@ -45,6 +55,7 @@ Map<String, Object?> _benchmarkPayload() => <String, Object?>{
       'kind': 'MODEL_BENCHMARK_RESULT',
       'candidateCommit': candidateCommit,
       'candidateTree': candidateTree,
+      'executionId': benchmarkExecutionId,
       'benchmarkId': 'p6.code-fixture-v1',
       'taskClassId': 'code-generation',
       'modelDigest': digestA,
@@ -64,15 +75,51 @@ Map<String, Object?> _benchmarkJson() => <String, Object?>{
       'higherIsBetter': true,
       'sampleCount': 100,
       'measuredAt': '2026-08-06T00:00:00.000Z',
+      'executionId': benchmarkExecutionId,
       'evidence': <String, Object?>{
         'locationKind': 'embedded_content_addressed',
         'sha256': benchmarkEvidenceSha,
         'payload': _benchmarkPayload(),
+        'authority': <String, Object?>{
+          'kind': 'ed25519_protected_key',
+          'keyId': benchmarkAuthorityKeyId,
+          'signature': benchmarkAuthoritySignature,
+        },
       },
     };
 
-ModelBenchmarkEvidence _benchmark() =>
-    ModelBenchmarkEvidence.fromJson(_benchmarkJson());
+ModelBenchmarkTrustContext _benchmarkTrust({
+  Map<String, String>? candidateTreesByCommit,
+  String keyId = benchmarkAuthorityKeyId,
+  String purpose = ModelBenchmarkTrustContext.signerPurpose,
+  String trustDomain = ModelBenchmarkTrustContext.trustDomain,
+  bool revoked = false,
+}) {
+  final keys = ProtectedKeyRegistryV2();
+  keys.register(
+    ProtectedKeyHandleV2(
+      keyId: keyId,
+      purpose: purpose,
+      provider: 'ephemeral_test',
+      reference: 'test://p6-benchmark-authority',
+      publicKeyHex: benchmarkAuthorityPublicKey,
+      trustDomain: trustDomain,
+    ),
+  );
+  if (revoked) {
+    keys.revoke(keyId);
+  }
+  return ModelBenchmarkTrustContext(
+    trustedKeys: keys,
+    candidateTreesByCommit: candidateTreesByCommit ??
+        const <String, String>{candidateCommit: candidateTree},
+  );
+}
+
+ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence.fromJson(
+      _benchmarkJson(),
+      trustContext: _benchmarkTrust(),
+    );
 
 Map<String, Object?> _approvedPolicyJson() => <String, Object?>{
       'providerId': 'ollama.local',
@@ -204,7 +251,8 @@ void main() {
       );
     });
 
-    test('approval requires digest, measured limits, cost, and benchmark evidence',
+    test(
+        'approval requires digest, measured limits, cost, and benchmark evidence',
         () {
       expect(
         () => ModelDefinition.approved(
@@ -233,7 +281,7 @@ void main() {
               .having(
                 (error) => error.message,
                 'message',
-                contains('no immutable benchmark evidence'),
+                contains('no trusted benchmark execution receipt'),
               ),
         ),
       );
@@ -287,6 +335,8 @@ void main() {
       expect(benchmark.candidateTree, candidateTree);
       expect(benchmark.evidenceSha256, benchmarkEvidenceSha);
       expect(benchmark.evidenceLocationKind, 'embedded_content_addressed');
+      expect(benchmark.executionId, benchmarkExecutionId);
+      expect(benchmark.hasTrustedExecutionReceipt, isTrue);
 
       final badDigest = _benchmarkJson();
       (badDigest['evidence'] as Map<String, Object?>)['sha256'] = digestB;
@@ -310,6 +360,100 @@ void main() {
             (error) => error.message,
             'message',
             contains('metadata does not match immutable evidence payload'),
+          ),
+        ),
+      );
+    });
+
+    test('self-authored benchmark metadata cannot grant task approval', () {
+      final raw = _benchmarkJson();
+      (raw['evidence'] as Map<String, Object?>).remove('authority');
+      final metadataOnly = ModelBenchmarkEvidence.fromJson(raw);
+      expect(metadataOnly.hasTrustedExecutionReceipt, isFalse);
+      expect(
+        () => _approvedModel(
+          benchmarks: <ModelBenchmarkEvidence>[metadataOnly],
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('no trusted execution authority'),
+          ),
+        ),
+      );
+    });
+
+    test('trusted benchmark authority binds repository commit and tree', () {
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(
+          _benchmarkJson(),
+          trustContext: _benchmarkTrust(
+            candidateTreesByCommit: const <String, String>{},
+          ),
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('candidate commit $candidateCommit is not trusted'),
+          ),
+        ),
+      );
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(
+          _benchmarkJson(),
+          trustContext: _benchmarkTrust(
+            candidateTreesByCommit: const <String, String>{
+              candidateCommit: '3333333333333333333333333333333333333333',
+            },
+          ),
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('does not match trusted tree'),
+          ),
+        ),
+      );
+    });
+
+    test('trusted benchmark authority rejects unknown signer and forged score',
+        () {
+      final unknownSigner = _benchmarkJson();
+      final authority = ((unknownSigner['evidence']
+          as Map<String, Object?>)['authority'] as Map<String, Object?>);
+      authority['keyId'] = 'unknown-benchmark-key';
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(
+          unknownSigner,
+          trustContext: _benchmarkTrust(),
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('authority key is not trusted'),
+          ),
+        ),
+      );
+
+      final forgedScore = _benchmarkJson();
+      forgedScore['score'] = 0.99;
+      final evidence = forgedScore['evidence'] as Map<String, Object?>;
+      (evidence['payload'] as Map<String, Object?>)['score'] = 0.99;
+      evidence['sha256'] = forgedScoreEvidenceSha;
+      expect(
+        () => ModelBenchmarkEvidence.fromJson(
+          forgedScore,
+          trustContext: _benchmarkTrust(),
+        ),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('authority signature is invalid'),
           ),
         ),
       );
@@ -363,7 +507,8 @@ void main() {
       );
     });
 
-    test('approval rejects benchmark evidence measured for another artifact', () {
+    test('approval rejects benchmark evidence measured for another artifact',
+        () {
       expect(
         () => _approvedModel(digest: digestC),
         throwsA(
@@ -376,7 +521,8 @@ void main() {
       );
     });
 
-    test('evaluation-only model rejects benchmark evidence from another artifact',
+    test(
+        'evaluation-only model rejects benchmark evidence from another artifact',
         () {
       expect(
         () => ModelDefinition.evaluationOnly(
@@ -421,17 +567,53 @@ void main() {
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
             'message',
-            contains('benchmark evidence must contain an immutable artifact digest'),
+            contains(
+                'benchmark evidence must contain an immutable artifact digest'),
           ),
         ),
       );
     });
 
-    test('approved policy JSON cannot relabel artifact with stale evidence', () {
+    test('approved JSON requires out-of-band benchmark trust', () {
+      expect(
+        () => ModelDefinition.fromJson(_approvedPolicyJson()),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('no trusted execution authority'),
+          ),
+        ),
+      );
+      final approved = ModelDefinition.fromJson(
+        _approvedPolicyJson(),
+        benchmarkTrust: _benchmarkTrust(),
+      );
+      final registry = ModelDefinitionRegistry(
+        providers: <ModelProviderDescriptor>[_localProvider()],
+        models: <ModelDefinition>[approved],
+      );
+      expect(
+        registry
+            .requireApproved(
+              identity: _identity(name: 'qwen3:14b'),
+              taskClassId: 'code-generation',
+            )
+            .model
+            .registryKey,
+        'ollama.local::qwen3:14b',
+      );
+    });
+
+    test('approved policy JSON cannot relabel artifact with stale evidence',
+        () {
       final raw = _approvedPolicyJson();
       raw['digest'] = digestC;
       expect(
-        () => ModelDefinition.fromJson(raw),
+        () => ModelDefinition.fromJson(
+          raw,
+          benchmarkTrust: _benchmarkTrust(),
+        ),
         throwsA(
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
@@ -526,7 +708,10 @@ void main() {
     test('duplicate canonical IDs and aliases are rejected', () {
       expect(
         () => ModelDefinitionRegistry(
-          providers: <ModelProviderDescriptor>[_localProvider(), _localProvider()],
+          providers: <ModelProviderDescriptor>[
+            _localProvider(),
+            _localProvider()
+          ],
           models: const <ModelDefinition>[],
         ),
         throwsA(isA<ModelRegistryValidationException>()),
@@ -600,7 +785,8 @@ void main() {
       );
     });
 
-    test('unknown JSON fields and timezone-free benchmark evidence are rejected',
+    test(
+        'unknown JSON fields and timezone-free benchmark evidence are rejected',
         () {
       expect(
         () => ModelProviderDescriptor.fromJson(
@@ -625,7 +811,8 @@ void main() {
       );
     });
 
-    test('evaluation-only policy JSON cannot smuggle approved task classes', () {
+    test('evaluation-only policy JSON cannot smuggle approved task classes',
+        () {
       final raw = _approvedPolicyJson();
       raw['supportStatus'] = 'evaluation_only';
       raw['evaluationReasons'] = <String>['not approved'];

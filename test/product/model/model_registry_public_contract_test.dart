@@ -2,15 +2,26 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
+import 'package:kristin_local_agent/product/key_registry_v2.dart';
 import 'package:kristin_local_agent/product/model/model.dart';
-import 'package:kristin_local_agent/product/model/model_registry.dart' as direct;
+import 'package:kristin_local_agent/product/model/model_registry.dart'
+    as direct;
 
 const String digestA =
     'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const String digestB =
     'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const String candidateCommit = '954f231fa28a22c85e0be3a76205cc31635f6466';
+const String candidateTree = '34aa8b80adc34255ca04986c2368759a05a3dfc9';
+const String benchmarkExecutionId = 'p6-fixture-run-001';
 const String benchmarkEvidenceSha =
-    'sha256:aa9351c8d629a6eb591756bc6eec3252a49f27b11b970ab329c2b17b65cd92f7';
+    'sha256:97567a8820af860646654e4f4f3a5dab01c62eeea9a51ff3c22aa04099a46a5c';
+const String benchmarkAuthorityKeyId = 'p6-benchmark-test';
+const String benchmarkAuthorityPublicKey =
+    '03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8';
+const String benchmarkAuthoritySignature =
+    '3e620ee2d983baa3b1c450020c676fb50c2824c33d335ab6266a0311334e074c'
+    'ddf694726663b106c024eec83e5aebd796af11d2edfb07ba59445c276e949d06';
 
 ModelLimits _limits() => ModelLimits(
       evidenceLevel: ModelEvidenceLevel.measured,
@@ -37,14 +48,16 @@ Map<String, Object?> _benchmarkJson() => <String, Object?>{
       'higherIsBetter': true,
       'sampleCount': 100,
       'measuredAt': '2026-08-06T00:00:00.000Z',
+      'executionId': benchmarkExecutionId,
       'evidence': <String, Object?>{
         'locationKind': 'embedded_content_addressed',
         'sha256': benchmarkEvidenceSha,
         'payload': <String, Object?>{
           'schemaVersion': '1.0.0',
           'kind': 'MODEL_BENCHMARK_RESULT',
-          'candidateCommit': '1111111111111111111111111111111111111111',
-          'candidateTree': '2222222222222222222222222222222222222222',
+          'candidateCommit': candidateCommit,
+          'candidateTree': candidateTree,
+          'executionId': benchmarkExecutionId,
           'benchmarkId': 'p6.code-fixture-v1',
           'taskClassId': 'code-generation',
           'modelDigest': digestA,
@@ -54,14 +67,54 @@ Map<String, Object?> _benchmarkJson() => <String, Object?>{
           'sampleCount': 100,
           'measuredAt': '2026-08-06T00:00:00.000Z',
         },
+        'authority': <String, Object?>{
+          'kind': 'ed25519_protected_key',
+          'keyId': benchmarkAuthorityKeyId,
+          'signature': benchmarkAuthoritySignature,
+        },
       },
     };
 
-direct.ModelBenchmarkEvidence _directBenchmark() =>
-    direct.ModelBenchmarkEvidence.fromJson(_benchmarkJson());
+ProtectedKeyRegistryV2 _trustedKeys() {
+  final keys = ProtectedKeyRegistryV2();
+  keys.register(
+    const ProtectedKeyHandleV2(
+      keyId: benchmarkAuthorityKeyId,
+      purpose: ModelBenchmarkTrustContext.signerPurpose,
+      provider: 'ephemeral_test',
+      reference: 'test://p6-benchmark-authority',
+      publicKeyHex: benchmarkAuthorityPublicKey,
+      trustDomain: ModelBenchmarkTrustContext.trustDomain,
+    ),
+  );
+  return keys;
+}
 
-ModelBenchmarkEvidence _benchmark() =>
-    ModelBenchmarkEvidence.fromJson(_benchmarkJson());
+direct.ModelBenchmarkTrustContext _directTrust() =>
+    direct.ModelBenchmarkTrustContext(
+      trustedKeys: _trustedKeys(),
+      candidateTreesByCommit: const <String, String>{
+        candidateCommit: candidateTree,
+      },
+    );
+
+ModelBenchmarkTrustContext _trust() => ModelBenchmarkTrustContext(
+      trustedKeys: _trustedKeys(),
+      candidateTreesByCommit: const <String, String>{
+        candidateCommit: candidateTree,
+      },
+    );
+
+direct.ModelBenchmarkEvidence _directBenchmark() =>
+    direct.ModelBenchmarkEvidence.fromJson(
+      _benchmarkJson(),
+      trustContext: _directTrust(),
+    );
+
+ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence.fromJson(
+      _benchmarkJson(),
+      trustContext: _trust(),
+    );
 
 ModelProviderDescriptor _provider() => ModelProviderDescriptor(
       providerId: 'ollama.local',
@@ -238,6 +291,47 @@ void main() {
             (error) => error.message,
             'message',
             contains('canonical sha256:<64 lowercase hex>'),
+          ),
+        ),
+      );
+    });
+
+    test('direct core import cannot turn self-authored evidence into approval',
+        () {
+      final raw = _benchmarkJson();
+      (raw['evidence'] as Map<String, Object?>).remove('authority');
+      final untrusted = direct.ModelBenchmarkEvidence.fromJson(raw);
+      expect(untrusted.hasTrustedExecutionReceipt, isFalse);
+      expect(
+        () => direct.ModelDefinition.approved(
+          providerId: 'ollama.local',
+          modelId: 'self-authored',
+          displayName: 'Self-authored',
+          digest: digestA,
+          limits: direct.ModelLimits(
+            evidenceLevel: direct.ModelEvidenceLevel.measured,
+            contextWindowTokens: 4096,
+            maxOutputTokens: 1024,
+            maxConcurrentRequests: 1,
+            maxToolCallsPerTurn: 0,
+            supportsStreaming: false,
+          ),
+          toolProfile: direct.ModelToolProfile(
+            evidenceLevel: direct.ModelEvidenceLevel.measured,
+            supportsToolCalling: false,
+            supportsStructuredOutput: false,
+            supportsParallelToolCalls: false,
+          ),
+          dataBoundary: direct.ModelDataBoundary.localOnly,
+          cost: direct.ModelCostProfile.noDirectCharge(),
+          benchmarks: <direct.ModelBenchmarkEvidence>[untrusted],
+          approvedTaskClasses: const <String>['code-generation'],
+        ),
+        throwsA(
+          isA<direct.ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('no trusted execution authority'),
           ),
         ),
       );

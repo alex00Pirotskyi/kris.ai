@@ -2,16 +2,21 @@ import 'dart:collection';
 import 'dart:convert';
 
 import '../domain.dart';
+import '../key_registry_v2.dart';
+import '../signed_manifest_v2.dart';
 
 final RegExp _providerIdPattern = RegExp(r'^[a-z0-9][a-z0-9._-]*$');
 final RegExp _modelIdPattern = RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:/+-]*$');
 final RegExp _stableIdPattern = RegExp(r'^[a-z0-9][a-z0-9._-]*$');
 final RegExp _sha256DigestPattern = RegExp(r'^sha256:[0-9a-f]{64}$');
 final RegExp _gitObjectIdPattern = RegExp(r'^[0-9a-f]{40}$');
+final RegExp _ed25519SignaturePattern = RegExp(r'^[0-9a-f]{128}$');
 
 const String _benchmarkEvidenceSchemaVersion = '1.0.0';
 const String _benchmarkEvidenceKind = 'MODEL_BENCHMARK_RESULT';
 const String _benchmarkEvidenceLocationKind = 'embedded_content_addressed';
+const String _benchmarkEvidenceAuthorityKind = 'ed25519_protected_key';
+const String _benchmarkEvidenceSigningDomain = 'KRIS.MODEL_BENCHMARK_RESULT.v1';
 
 class ModelRegistryValidationException implements Exception {
   const ModelRegistryValidationException(this.message);
@@ -301,7 +306,8 @@ Object? _canonicalizeJson(Object? value, String path) {
   }
   if (value is num) {
     if (!value.isFinite) {
-      throw ModelRegistryValidationException('$path contains non-finite number');
+      throw ModelRegistryValidationException(
+          '$path contains non-finite number');
     }
     return value;
   }
@@ -410,8 +416,7 @@ const List<int> _sha256K = <int>[
 int _rotr32(int value, int shift) {
   const mask = 0xffffffff;
   final normalized = value & mask;
-  return ((normalized >> shift) | ((normalized << (32 - shift)) & mask)) &
-      mask;
+  return ((normalized >> shift) | ((normalized << (32 - shift)) & mask)) & mask;
 }
 
 String _sha256Digest(List<int> input) {
@@ -452,8 +457,7 @@ String _sha256Digest(List<int> input) {
       final s1 = _rotr32(w[index - 2], 17) ^
           _rotr32(w[index - 2], 19) ^
           (w[index - 2] >> 10);
-      w[index] =
-          (w[index - 16] + s0 + w[index - 7] + s1) & mask;
+      w[index] = (w[index - 16] + s0 + w[index - 7] + s1) & mask;
     }
 
     var a = h0;
@@ -599,15 +603,12 @@ class ModelLimits {
         json['evidenceLevel'],
         'limits.evidenceLevel',
       ),
-      contextWindowTokens:
-          _optionalInt(json, 'contextWindowTokens', 'limits'),
+      contextWindowTokens: _optionalInt(json, 'contextWindowTokens', 'limits'),
       maxOutputTokens: _optionalInt(json, 'maxOutputTokens', 'limits'),
       maxConcurrentRequests:
           _optionalInt(json, 'maxConcurrentRequests', 'limits'),
-      maxToolCallsPerTurn:
-          _optionalInt(json, 'maxToolCallsPerTurn', 'limits'),
-      supportsStreaming:
-          _requiredBool(json, 'supportsStreaming', 'limits'),
+      maxToolCallsPerTurn: _optionalInt(json, 'maxToolCallsPerTurn', 'limits'),
+      supportsStreaming: _requiredBool(json, 'supportsStreaming', 'limits'),
     );
   }
 
@@ -877,6 +878,94 @@ class ModelCostProfile {
       };
 }
 
+/// Out-of-band authority for benchmark execution receipts.
+///
+/// This object is deliberately absent from registry JSON. Its candidate map must
+/// come from repository-verified commit/tree identities, and its protected-key
+/// registry must come from the host trust configuration rather than benchmark
+/// payload data.
+final class ModelBenchmarkTrustContext {
+  ModelBenchmarkTrustContext({
+    required ProtectedKeyRegistryV2 trustedKeys,
+    required Map<String, String> candidateTreesByCommit,
+  })  : _trustedKeys = trustedKeys,
+        _candidateTreesByCommit = UnmodifiableMapView<String, String>(
+          SplayTreeMap<String, String>.from(candidateTreesByCommit),
+        ) {
+    for (final entry in _candidateTreesByCommit.entries) {
+      _canonicalGitObjectId(entry.key, 'benchmarkTrust.candidateCommit');
+      _canonicalGitObjectId(entry.value, 'benchmarkTrust.candidateTree');
+    }
+  }
+
+  static const String signerPurpose = 'model_benchmark_result';
+  static const String trustDomain = 'kris.model-benchmark.v1';
+
+  final ProtectedKeyRegistryV2 _trustedKeys;
+  final Map<String, String> _candidateTreesByCommit;
+
+  void _verifyReceipt({
+    required String candidateCommit,
+    required String candidateTree,
+    required String authorityKeyId,
+    required String authoritySignatureHex,
+    required String canonicalPayload,
+  }) {
+    final trustedTree = _candidateTreesByCommit[candidateCommit];
+    if (trustedTree == null) {
+      throw ModelRegistryValidationException(
+        'benchmark candidate commit $candidateCommit is not trusted by '
+        'repository authority',
+      );
+    }
+    if (trustedTree != candidateTree) {
+      throw ModelRegistryValidationException(
+        'benchmark candidate tree $candidateTree does not match trusted tree '
+        '$trustedTree for commit $candidateCommit',
+      );
+    }
+    _validateStableId(authorityKeyId, 'benchmark.evidence.authority.keyId');
+    if (!_ed25519SignaturePattern.hasMatch(authoritySignatureHex)) {
+      throw const ModelRegistryValidationException(
+        'benchmark evidence authority signature must be 64-byte lowercase hex',
+      );
+    }
+
+    ProtectedKeyHandleV2 key;
+    try {
+      key = _trustedKeys.resolve(
+        authorityKeyId,
+        purpose: signerPurpose,
+        trustDomain: trustDomain,
+      );
+    } on FormatException catch (error) {
+      throw ModelRegistryValidationException(
+        'benchmark evidence authority key is not trusted: ${error.message}',
+      );
+    }
+
+    final message = utf8.encode(
+      '$_benchmarkEvidenceSigningDomain\u0000$authorityKeyId\u0000'
+      '$canonicalPayload',
+    );
+    bool verified;
+    try {
+      verified = Ed25519Reference.verify(
+        hexToBytesV2(key.publicKeyHex),
+        message,
+        hexToBytesV2(authoritySignatureHex),
+      );
+    } on FormatException {
+      verified = false;
+    }
+    if (!verified) {
+      throw const ModelRegistryValidationException(
+        'benchmark evidence authority signature is invalid',
+      );
+    }
+  }
+}
+
 class ModelBenchmarkEvidence {
   ModelBenchmarkEvidence._({
     required this.benchmarkId,
@@ -889,17 +978,21 @@ class ModelBenchmarkEvidence {
     required this.measuredAt,
     required this.candidateCommit,
     required this.candidateTree,
+    required this.executionId,
     required this.evidenceSha256,
     required this.evidencePayloadJson,
-  });
+    required this.authorityKeyId,
+    required this.authoritySignatureHex,
+    required bool trustedExecutionReceipt,
+  }) : _trustedExecutionReceipt = trustedExecutionReceipt;
 
   factory ModelBenchmarkEvidence._fromEvidencePayload({
     required Map<String, Object?> payload,
   }) {
     final canonicalPayload =
         _canonicalJson(payload, 'benchmark.evidence.payload');
-    final parsed = (jsonDecode(canonicalPayload) as Map)
-        .cast<String, Object?>();
+    final parsed =
+        (jsonDecode(canonicalPayload) as Map).cast<String, Object?>();
     _rejectUnknownKeys(
       parsed,
       const <String>{
@@ -907,6 +1000,7 @@ class ModelBenchmarkEvidence {
         'kind',
         'candidateCommit',
         'candidateTree',
+        'executionId',
         'benchmarkId',
         'taskClassId',
         'modelDigest',
@@ -1008,6 +1102,12 @@ class ModelBenchmarkEvidence {
       ),
       'benchmark.candidateTree',
     );
+    final executionId = _requiredString(
+      parsed,
+      'executionId',
+      'benchmark.evidence.payload',
+    );
+    _validateStableId(executionId, 'benchmark.executionId');
     return ModelBenchmarkEvidence._(
       benchmarkId: benchmarkId,
       taskClassId: taskClassId,
@@ -1023,12 +1123,19 @@ class ModelBenchmarkEvidence {
       measuredAt: measuredAt,
       candidateCommit: candidateCommit,
       candidateTree: candidateTree,
+      executionId: executionId,
       evidenceSha256: _sha256Digest(utf8.encode(canonicalPayload)),
       evidencePayloadJson: canonicalPayload,
+      authorityKeyId: null,
+      authoritySignatureHex: null,
+      trustedExecutionReceipt: false,
     );
   }
 
-  factory ModelBenchmarkEvidence.fromJson(Map<String, Object?> json) {
+  factory ModelBenchmarkEvidence.fromJson(
+    Map<String, Object?> json, {
+    ModelBenchmarkTrustContext? trustContext,
+  }) {
     _rejectUnknownKeys(
       json,
       const <String>{
@@ -1040,6 +1147,7 @@ class ModelBenchmarkEvidence {
         'higherIsBetter',
         'sampleCount',
         'measuredAt',
+        'executionId',
         'evidence',
       },
       'benchmark',
@@ -1051,6 +1159,7 @@ class ModelBenchmarkEvidence {
         'locationKind',
         'sha256',
         'payload',
+        'authority',
       },
       'benchmark.evidence',
     );
@@ -1085,26 +1194,99 @@ class ModelBenchmarkEvidence {
     );
     final score = _optionalDouble(json, 'score', 'benchmark');
     final sampleCount = _optionalInt(json, 'sampleCount', 'benchmark');
-    final topLevelMatches =
-        _requiredString(json, 'benchmarkId', 'benchmark') ==
+    final topLevelMatches = _requiredString(json, 'benchmarkId', 'benchmark') ==
             verified.benchmarkId &&
         _requiredString(json, 'taskClassId', 'benchmark') ==
             verified.taskClassId &&
         _requiredString(json, 'modelDigest', 'benchmark') ==
             verified.modelDigest &&
         score == verified.score &&
-        _requiredString(json, 'scoreUnit', 'benchmark') ==
-            verified.scoreUnit &&
+        _requiredString(json, 'scoreUnit', 'benchmark') == verified.scoreUnit &&
         _requiredBool(json, 'higherIsBetter', 'benchmark') ==
             verified.higherIsBetter &&
         sampleCount == verified.sampleCount &&
-        measuredAt == verified.measuredAt;
+        measuredAt == verified.measuredAt &&
+        _requiredString(json, 'executionId', 'benchmark') ==
+            verified.executionId;
     if (!topLevelMatches) {
       throw const ModelRegistryValidationException(
         'benchmark metadata does not match immutable evidence payload',
       );
     }
-    return verified;
+
+    String? authorityKeyId;
+    String? authoritySignatureHex;
+    var trustedExecutionReceipt = false;
+    final rawAuthority = evidence['authority'];
+    if (rawAuthority != null) {
+      final authority = _objectMap(
+        rawAuthority,
+        'benchmark.evidence.authority',
+      );
+      _rejectUnknownKeys(
+        authority,
+        const <String>{'kind', 'keyId', 'signature'},
+        'benchmark.evidence.authority',
+      );
+      if (_requiredString(
+            authority,
+            'kind',
+            'benchmark.evidence.authority',
+          ) !=
+          _benchmarkEvidenceAuthorityKind) {
+        throw const ModelRegistryValidationException(
+          'benchmark evidence authority kind must be ed25519_protected_key',
+        );
+      }
+      authorityKeyId = _requiredString(
+        authority,
+        'keyId',
+        'benchmark.evidence.authority',
+      );
+      _validateStableId(
+        authorityKeyId,
+        'benchmark.evidence.authority.keyId',
+      );
+      authoritySignatureHex = _requiredString(
+        authority,
+        'signature',
+        'benchmark.evidence.authority',
+      );
+      if (!_ed25519SignaturePattern.hasMatch(authoritySignatureHex)) {
+        throw const ModelRegistryValidationException(
+          'benchmark evidence authority signature must be 64-byte lowercase hex',
+        );
+      }
+      if (trustContext != null) {
+        trustContext._verifyReceipt(
+          candidateCommit: verified.candidateCommit,
+          candidateTree: verified.candidateTree,
+          authorityKeyId: authorityKeyId,
+          authoritySignatureHex: authoritySignatureHex,
+          canonicalPayload: verified.evidencePayloadJson,
+        );
+        trustedExecutionReceipt = true;
+      }
+    }
+
+    return ModelBenchmarkEvidence._(
+      benchmarkId: verified.benchmarkId,
+      taskClassId: verified.taskClassId,
+      modelDigest: verified.modelDigest,
+      score: verified.score,
+      scoreUnit: verified.scoreUnit,
+      higherIsBetter: verified.higherIsBetter,
+      sampleCount: verified.sampleCount,
+      measuredAt: verified.measuredAt,
+      candidateCommit: verified.candidateCommit,
+      candidateTree: verified.candidateTree,
+      executionId: verified.executionId,
+      evidenceSha256: verified.evidenceSha256,
+      evidencePayloadJson: verified.evidencePayloadJson,
+      authorityKeyId: authorityKeyId,
+      authoritySignatureHex: authoritySignatureHex,
+      trustedExecutionReceipt: trustedExecutionReceipt,
+    );
   }
 
   final String benchmarkId;
@@ -1117,8 +1299,14 @@ class ModelBenchmarkEvidence {
   final DateTime measuredAt;
   final String candidateCommit;
   final String candidateTree;
+  final String executionId;
   final String evidenceSha256;
   final String evidencePayloadJson;
+  final String? authorityKeyId;
+  final String? authoritySignatureHex;
+  final bool _trustedExecutionReceipt;
+
+  bool get hasTrustedExecutionReceipt => _trustedExecutionReceipt;
 
   String get evidenceLocationKind => _benchmarkEvidenceLocationKind;
 
@@ -1131,10 +1319,17 @@ class ModelBenchmarkEvidence {
         'higherIsBetter': higherIsBetter,
         'sampleCount': sampleCount,
         'measuredAt': measuredAt.toIso8601String(),
+        'executionId': executionId,
         'evidence': <String, Object?>{
           'locationKind': _benchmarkEvidenceLocationKind,
           'sha256': evidenceSha256,
           'payload': jsonDecode(evidencePayloadJson),
+          if (authorityKeyId != null && authoritySignatureHex != null)
+            'authority': <String, Object?>{
+              'kind': _benchmarkEvidenceAuthorityKind,
+              'keyId': authorityKeyId,
+              'signature': authoritySignatureHex,
+            },
         },
       };
 }
@@ -1195,8 +1390,7 @@ class ModelProviderDescriptor {
             List<CredentialReferenceRequirement>.unmodifiable(
           credentialRequirements.toList()
             ..sort(
-              (left, right) =>
-                  left.referenceId.compareTo(right.referenceId),
+              (left, right) => left.referenceId.compareTo(right.referenceId),
             ),
         ) {
     if (providerId != providerId.trim() ||
@@ -1301,8 +1495,7 @@ class ModelDefinition {
         const <ModelBenchmarkEvidence>[],
     Iterable<String> evaluationReasons = const <String>[],
   }) {
-    final canonicalDigest =
-        _canonicalSha256OrNull(digest, 'model.digest');
+    final canonicalDigest = _canonicalSha256OrNull(digest, 'model.digest');
     final canonicalReasons = _canonicalStrings(
       evaluationReasons,
       path: 'model.evaluationReasons',
@@ -1375,6 +1568,14 @@ class ModelDefinition {
         }
       }
     }
+    for (final benchmark in canonicalBenchmarks) {
+      if (!benchmark.hasTrustedExecutionReceipt) {
+        blockers.add(
+          'benchmark ${benchmark.benchmarkId}::${benchmark.taskClassId} has '
+          'no trusted execution authority',
+        );
+      }
+    }
     if (canonicalBenchmarks.isNotEmpty) {
       final candidateCommits =
           canonicalBenchmarks.map((item) => item.candidateCommit).toSet();
@@ -1411,12 +1612,14 @@ class ModelDefinition {
     if (canonicalTaskClasses.isEmpty) {
       blockers.add('approved task classes are empty');
     }
-    final measuredTaskClasses =
-        canonicalBenchmarks.map((benchmark) => benchmark.taskClassId).toSet();
+    final trustedTaskClasses = canonicalBenchmarks
+        .where((benchmark) => benchmark.hasTrustedExecutionReceipt)
+        .map((benchmark) => benchmark.taskClassId)
+        .toSet();
     for (final taskClassId in canonicalTaskClasses) {
-      if (!measuredTaskClasses.contains(taskClassId)) {
+      if (!trustedTaskClasses.contains(taskClassId)) {
         blockers.add(
-          'task class $taskClassId has no immutable benchmark evidence',
+          'task class $taskClassId has no trusted benchmark execution receipt',
         );
       }
     }
@@ -1473,7 +1676,10 @@ class ModelDefinition {
         ],
       );
 
-  factory ModelDefinition.fromJson(Map<String, Object?> json) {
+  factory ModelDefinition.fromJson(
+    Map<String, Object?> json, {
+    ModelBenchmarkTrustContext? benchmarkTrust,
+  }) {
     _rejectUnknownKeys(
       json,
       const <String>{
@@ -1503,6 +1709,7 @@ class ModelDefinition {
     ).map(
       (raw) => ModelBenchmarkEvidence.fromJson(
         _objectMap(raw, 'model.benchmarks[]'),
+        trustContext: benchmarkTrust,
       ),
     );
     final common = (
@@ -1527,8 +1734,7 @@ class ModelDefinition {
     );
     final approvedTaskClasses =
         _stringList(json, 'approvedTaskClasses', 'model');
-    final evaluationReasons =
-        _stringList(json, 'evaluationReasons', 'model');
+    final evaluationReasons = _stringList(json, 'evaluationReasons', 'model');
     if (supportStatus == ModelSupportStatus.evaluationOnly &&
         approvedTaskClasses.isNotEmpty) {
       throw const ModelRegistryValidationException(
@@ -1676,8 +1882,6 @@ class ModelDefinition {
       );
     }
   }
-
-
 }
 
 class ModelRegistryMetadata {
@@ -1818,7 +2022,10 @@ class ModelDefinitionRegistry {
     );
   }
 
-  factory ModelDefinitionRegistry.fromJson(Map<String, Object?> json) {
+  factory ModelDefinitionRegistry.fromJson(
+    Map<String, Object?> json, {
+    ModelBenchmarkTrustContext? benchmarkTrust,
+  }) {
     _rejectUnknownKeys(
       json,
       const <String>{'schemaVersion', 'providers', 'models'},
@@ -1838,6 +2045,7 @@ class ModelDefinitionRegistry {
       models: _objectList(json['models'], 'registry.models').map(
         (raw) => ModelDefinition.fromJson(
           _objectMap(raw, 'registry.models[]'),
+          benchmarkTrust: benchmarkTrust,
         ),
       ),
     );
@@ -1878,8 +2086,7 @@ class ModelDefinitionRegistry {
 
   ModelDefinition _resolveDiscoveredDefinition(ModelIdentity identity) {
     _validateDiscoveredIdentity(identity);
-    final existing =
-        _lookupDefinition(identity.providerId, identity.name);
+    final existing = _lookupDefinition(identity.providerId, identity.name);
     if (existing != null) {
       final mismatches = _identityMismatches(existing, identity);
       if (mismatches.isEmpty) {
@@ -1933,10 +2140,12 @@ class ModelDefinitionRegistry {
     final definition = _resolveDiscoveredDefinition(identity);
     return ResolvedModel._(
       model: ModelRegistryMetadata._(definition),
-      disposition: definition._supportStatus == ModelSupportStatus.evaluationOnly
-          ? ModelResolutionDisposition.evaluationOnly
-          : ModelResolutionDisposition.registeredIdentity,
-      evaluationReasons: List<String>.unmodifiable(definition.evaluationReasons),
+      disposition:
+          definition._supportStatus == ModelSupportStatus.evaluationOnly
+              ? ModelResolutionDisposition.evaluationOnly
+              : ModelResolutionDisposition.registeredIdentity,
+      evaluationReasons:
+          List<String>.unmodifiable(definition.evaluationReasons),
     );
   }
 
@@ -1964,8 +2173,7 @@ class ModelDefinitionRegistry {
   /// not serializable through the runtime registry API.
   Map<String, Object?> toMetadataJson() => <String, Object?>{
         'schemaVersion': 2,
-        'providers':
-            providers.map((provider) => provider.toJson()).toList(),
+        'providers': providers.map((provider) => provider.toJson()).toList(),
         'models': models.map((model) => model.toJson()).toList(),
       };
 }
