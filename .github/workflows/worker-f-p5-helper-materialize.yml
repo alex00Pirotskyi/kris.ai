@@ -87,8 +87,7 @@ jobs:
             release/evidence/P5-001/manifest.json \
             test/product/p5_information_architecture/p5_active_context_lock_test.dart \
             test/product/p5_information_architecture/p5_active_context_widget_test.dart \
-            test/product/p5_information_architecture/p5_experience_warning_lifecycle_test.dart \
-            .github/workflows/worker-f-p5-helper-materialize.yml
+            test/product/p5_information_architecture/p5_experience_warning_lifecycle_test.dart
           git diff --cached --check
           git fetch origin agent/help/i/mission-005/p5-helper-ci-exact-head
           test "$(git rev-parse origin/agent/help/i/mission-005/p5-helper-ci-exact-head)" = "${GITHUB_SHA}"
