@@ -13,8 +13,10 @@
         "release/evidence/P2-*/**"
       ],
       "head": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-001",
       "pr": 64,
+      "schemaVersion": 1,
       "status": "CLAIMED",
       "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
       "worker": "A"
@@ -29,8 +31,10 @@
         "release/evidence/TEST_CENTER/**"
       ],
       "head": "90c574665363140aeb6cf764ab8387714cab88cf",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-002",
       "pr": 65,
+      "schemaVersion": 1,
       "status": "CLAIMED",
       "tree": "438fe3f710c0fed32106ee6acdc138f4e4c6accc",
       "worker": "B"
@@ -45,8 +49,10 @@
         "test/product/browser/**"
       ],
       "head": "7eecc840f68ca0dff13ab58c138845593254e390",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-003",
       "pr": 68,
+      "schemaVersion": 1,
       "status": "CLAIMED",
       "tree": "2080824a34956e3b202126a0a9bd61b4d645d338",
       "worker": "D"
@@ -61,27 +67,33 @@
         "test/product/research/**"
       ],
       "head": "1c089c7094a122bb3cfbbc78221f218b3dd7ac0f",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-004",
       "pr": 62,
+      "schemaVersion": 1,
       "status": "REVIEW",
       "tree": "276481693c3da7d56fa3e315018c851e659ddec5",
       "worker": "D"
     },
     {
       "branch": "agent/f/P5-001-information-architecture",
-      "current": "P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled",
+      "current": "P5-001 product lifecycle and fail-closed behavior repairs are active at the live Worker F candidate; exact CI, source-inventory ownership, current P8 integration, manifest, and independent-review gates remain unresolved",
       "exclusivePaths": [
+        "lib/product/p5_information_architecture/**",
+        "lib/p5_ia_preview.dart",
+        "test/product/p5_information_architecture/**",
+        "docs/ux/**",
         "release/evidence/P5-*/**",
         "release/evidence/P22-*/**",
-        "lib/product/ux/**",
-        "test/product/ux/**",
-        "docs/ux/**"
+        ".github/workflows/worker-f*.yml"
       ],
-      "head": "fd89a66925b90c75448ef33583349b90ca88531b",
+      "head": "67586763bb055faab76e4994184da78f77bd9810",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-005",
       "pr": 72,
+      "schemaVersion": 1,
       "status": "CLAIMED",
-      "tree": null,
+      "tree": "b7d91180dffd221680f73a09730c00cc7d07860c",
       "worker": "F"
     },
     {
@@ -99,8 +111,10 @@
         "tool/worker_g*.py"
       ],
       "head": "0aa6203e89a9b825c575954af54a0c108c79b67a",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-006",
       "pr": 76,
+      "schemaVersion": 1,
       "status": "CLAIMED",
       "tree": "4b262889edb61ec0c705b289aa29fd0df7c8456c",
       "worker": "G"
@@ -115,8 +129,10 @@
         "native/**"
       ],
       "head": "825769f639edb5db22b27a222cd5c1c57f4ed775",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-010",
       "pr": 71,
+      "schemaVersion": 1,
       "status": "CLAIMED",
       "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac",
       "worker": "E"
@@ -132,8 +148,10 @@
         "release/evidence/P24-*/**"
       ],
       "head": "2a14b875ff529cfd90348673e8e45b2442663619",
+      "liveStateMustBeResolved": true,
       "mission": "MISSION-015",
       "pr": 66,
+      "schemaVersion": 1,
       "status": "CLAIMED",
       "tree": "595346993b4512411f48075a47289333c51b3850",
       "worker": "J"

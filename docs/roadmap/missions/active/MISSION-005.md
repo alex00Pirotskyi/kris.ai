@@ -23,9 +23,9 @@ Create the information architecture, Simple Mode, advanced workspaces, Verificat
 - Worker: `F`
 - Branch: `agent/f/P5-001-information-architecture`
 - Draft PR: `#72`
-- Observed head: `fd89a66925b90c75448ef33583349b90ca88531b`
-- Observed tree: `UNRESOLVED`
-- Current work: P5-001 bounded information architecture and UX prototype; exact tri-platform handoff remains unsettled
+- Observed head: `67586763bb055faab76e4994184da78f77bd9810`
+- Observed tree: `b7d91180dffd221680f73a09730c00cc7d07860c`
+- Current work: P5-001 product lifecycle and fail-closed behavior repairs are active at the live Worker F candidate; exact CI, source-inventory ownership, current P8 integration, manifest, and independent-review gates remain unresolved
 - These are discovery anchors, not permission to skip live-state discovery.
 
 ## P5 — UX/UI redesign and accessibility
