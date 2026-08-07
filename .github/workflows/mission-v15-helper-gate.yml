@@ -1,0 +1,53 @@
+name: Mission V1.5 Helper Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  helper-scope:
+    if: startsWith(github.head_ref, 'agent/help/')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Assert exact helper head
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+      - name: Validate runtime and lease invariants
+        run: python tool/mission_runtime_control.py --project . validate
+      - name: Strict ownership
+        env:
+          EVENT_JSON: ${{ github.event_path }}
+        shell: bash
+        run: |
+          python tool/mission_delivery_strict.py --project . ownership \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --head-branch "${{ github.head_ref }}" \
+            --event-path "$EVENT_JSON"
+      - name: Generate source manifest twice without requiring committed equality
+        shell: bash
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/committed-manifest"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/generated-first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/generated-first" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/generated-source-manifest.sha256"
+          cp "$RUNNER_TEMP/committed-manifest" SOURCE_MANIFEST.sha256
+      - name: Verify helper gate is non-mutating
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-manifest-candidate-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/generated-source-manifest.sha256
