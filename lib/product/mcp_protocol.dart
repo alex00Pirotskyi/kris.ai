@@ -8,6 +8,16 @@ enum McpProtocolEra {
   modernStateless,
 }
 
+class McpToolCatalogPage {
+  const McpToolCatalogPage({
+    required this.toolNames,
+    required this.nextCursor,
+  });
+
+  final Set<String> toolNames;
+  final String? nextCursor;
+}
+
 /// A protocol revision adapter isolates wire-era behavior from MCP product code.
 ///
 /// Only revisions explicitly listed by [McpProtocolRegistry] are accepted by
@@ -88,6 +98,11 @@ class McpProtocolAdapter {
     );
   }
 
+  /// Validates an optional modern `server/discover` response.
+  ///
+  /// Discovery is not required by the 2026-07-28 protocol. Runtime code must
+  /// never make successful discovery a prerequisite for a pinned modern
+  /// connection; the mandatory feature endpoint is the authoritative proof.
   Set<String> validateModernDiscovery(
     Map<String, dynamic> result, {
     Set<String> requiredCapabilities = const <String>{},
@@ -125,6 +140,65 @@ class McpProtocolAdapter {
       result['capabilities'],
       requiredCapabilities: requiredCapabilities,
     );
+  }
+
+  McpToolCatalogPage parseToolCatalogPage(Map<String, dynamic> result) {
+    final rawTools = result['tools'];
+    if (rawTools is! List) {
+      throw ProductException(
+        'mcp_tool_catalog_invalid',
+        'MCP tools/list response did not contain a tool array.',
+      );
+    }
+
+    final names = <String>{};
+    for (final rawTool in rawTools) {
+      final tool = _stringKeyedMap(rawTool, code: 'mcp_tool_catalog_invalid');
+      final name = tool['name']?.toString().trim() ?? '';
+      if (name.isEmpty) {
+        throw ProductException(
+          'mcp_tool_catalog_invalid',
+          'MCP tools/list returned a tool without a name.',
+        );
+      }
+      if (!names.add(name)) {
+        throw ProductException(
+          'mcp_tool_catalog_invalid',
+          'MCP tools/list returned a duplicate tool name.',
+          details: <String, dynamic>{'tool': name},
+        );
+      }
+    }
+
+    final rawCursor = result['nextCursor'];
+    final nextCursor = rawCursor == null ? null : rawCursor.toString().trim();
+    if (rawCursor != null && nextCursor!.isEmpty) {
+      throw ProductException(
+        'mcp_tool_catalog_invalid',
+        'MCP tools/list returned an empty pagination cursor.',
+      );
+    }
+    return McpToolCatalogPage(
+      toolNames: Set<String>.unmodifiable(names),
+      nextCursor: nextCursor,
+    );
+  }
+
+  void validateRequiredTools(
+    Set<String> availableTools,
+    Set<String> requiredTools,
+  ) {
+    final missing = requiredTools.difference(availableTools).toList()..sort();
+    if (missing.isNotEmpty) {
+      throw ProductException(
+        'mcp_tool_removed',
+        'The MCP server no longer exposes tools required by this trust.',
+        details: <String, dynamic>{
+          'protocolVersion': version,
+          'missing': missing,
+        },
+      );
+    }
   }
 
   Set<String> _validateCapabilityFloor(
