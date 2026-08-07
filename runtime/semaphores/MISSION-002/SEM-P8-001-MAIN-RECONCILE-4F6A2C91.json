@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "53c34bc1586a9e473721fa8f4c5339a8e5f8e947",
+  "baseTree": "92eecae1e0ab0cb06a1ff3a19825d813b01939bc",
+  "branch": "agent/b/test-center-contracts-and-review",
+  "createdAt": "2026-08-07T20:24:30Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T00:24:30Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-002",
+  "productPr": 65,
+  "refreshedAt": "2026-08-07T20:24:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 83,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P8-001-MAIN-RECONCILE-4F6A2C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P8-001-MAIN-RECONCILE-4F6A2C91",
+  "workerIdentity": "ELASTIC-4f6a2c91"
+}
