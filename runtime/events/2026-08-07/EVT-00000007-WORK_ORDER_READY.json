@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000007-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "parentWorkOrderId": "WO-P7-001-PROTOCOL-CLOSURE",
+    "requestedRole": "AUTHORITY_OWNER",
+    "type": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-07T14:33:20Z",
+  "runtimeGeneration": 7,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T140853Z-529719b5",
+  "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5"
+}
