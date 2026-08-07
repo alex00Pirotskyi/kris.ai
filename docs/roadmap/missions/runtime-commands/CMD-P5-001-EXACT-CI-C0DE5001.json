@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P5-001-EXACT-CI-C0DE5001",
+  "createdAt": "2026-08-07T18:52:00Z",
+  "expectedProductHead": "af26c2948a42c16603b179b7d79ed47aa91b5296",
+  "expectedRuntimeGeneration": 50,
+  "note": "SANITIZER V2 exact-current P5 product-gates dispatch without source mutation or trigger commits.",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "productPr": 72,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-CI-SANITIZER-C0DE5001",
+  "workOrderId": "WO-P5-001-EXACT-CI-SANITIZER",
+  "workerIdentity": "SANITIZER-V2"
+}
