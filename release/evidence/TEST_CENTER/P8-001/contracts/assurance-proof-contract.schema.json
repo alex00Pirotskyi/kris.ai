@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.kristin/schemas/test_center_assurance_proof_contract.v1.json",
+  "title": "Kristin Test Center assurance proof contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "hierarchyId", "evidenceContracts", "lineageBindings"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "contractId": {"const": "test-center.assurance-proof-contract-v1"},
+    "hierarchyId": {"const": "test-center.assurance-hierarchy-v1"},
+    "evidenceContracts": {
+      "type": "array",
+      "minItems": 14,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "mediaType", "jsonKind", "requiredJsonFields", "valueBindings", "requiredConstants"],
+        "properties": {
+          "category": {"type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"},
+          "mediaType": {"const": "application/json"},
+          "jsonKind": {"type": "string", "pattern": "^[A-Z0-9]+(?:_[A-Z0-9]+)*$"},
+          "requiredJsonFields": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"}},
+          "valueBindings": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"}},
+          "requiredConstants": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "lineageBindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["testId", "lineageId"],
+        "properties": {
+          "testId": {"type": "string", "pattern": "^tc\\.[a-z0-9._-]+\\.[a-z0-9._-]+$"},
+          "lineageId": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}
+        }
+      }
+    }
+  }
+}
