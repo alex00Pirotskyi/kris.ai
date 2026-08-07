@@ -1,0 +1,29 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+  "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
+  "createdAt": "2026-08-07T20:50:00Z",
+  "createdBy": "WRK-20260807T200720Z-6c8e41f3",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Materialize the canonical SOURCE_MANIFEST.sha256 for exact P4-001 Product PR #62 head 3d11ef075559df2543cf56cf096dd26357cf3a37 from exact workflow artifact 9006631963, preserving product source bytes and making no acceptance/support promotion; then rerun exact current P4/product validation.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "artifact 9006631963 binds candidate commit 3d11ef075559df2543cf56cf096dd26357cf3a37 and tree b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
+    "canonical manifest generation is idempotent and changes only SOURCE_MANIFEST.sha256",
+    "exact P4 canonical Linux/macOS/Windows source jobs in run 31210919481 PASS",
+    "exact product-gates run 31210919450 SUCCESS",
+    "exact current Product PR validation after manifest materialization"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-07T20:50:00Z",
+  "workOrderId": "WO-P4-001-MANIFEST-FINALIZE-6C8E41F3"
+}
