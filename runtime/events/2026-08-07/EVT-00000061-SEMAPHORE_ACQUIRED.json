@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000061-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-002",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P8-001-SUPPORT-MATRIX-7F4A9C21",
+    "workerIdentity": "ELASTIC-7f4a9c21"
+  },
+  "recordedAt": "2026-08-07T19:25:00Z",
+  "runtimeGeneration": 61,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T191324Z-7f4a9c21",
+  "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
+}
