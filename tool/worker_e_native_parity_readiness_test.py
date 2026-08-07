@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -104,13 +105,23 @@ class DependencyBindingTest(unittest.TestCase):
         with self.assertRaises(binding.DependencyBindingError):
             binding.verify_binding(self.root, "workerA", row)
 
-    def test_immutable_review_binds_reviewed_candidate(self):
+    def test_immutable_review_binds_reviewed_candidate_and_purpose(self):
         reviewed_commit = self.commit
         reviewed_tree = self.tree
         artifact = {
             "candidate": {"commit": reviewed_commit, "tree": reviewed_tree},
             "reviewerRole": "Worker J",
             "decision": "PASS",
+            "reviewType": "NO_CONFLICT_AND_ACTIVATION_STATE",
+            "mission": "MISSION-010",
+            "pullRequest": 71,
+            "task": "P11-001 native readiness source foundation",
+            "scope": {
+                "activationState": True,
+                "crossWorkerPathConflict": True,
+                "nativeBehaviorSecurityReview": False,
+                "testCenterOwnerReview": False,
+            },
         }
         (self.root / "review.json").write_text(json.dumps(artifact, sort_keys=True) + "\n")
         snapshot_commit, snapshot_tree = self.commit_all("review artifact")
@@ -127,11 +138,40 @@ class DependencyBindingTest(unittest.TestCase):
             "reviewedTree": reviewed_tree,
             "reviewerRole": "Worker J",
             "decision": "PASS",
+            "expectedReview": {
+                "reviewType": "NO_CONFLICT_AND_ACTIVATION_STATE",
+                "mission": "MISSION-010",
+                "task": "P11-001 native readiness source foundation",
+                "pullRequest": 71,
+                "requiredScope": {
+                    "activationState": True,
+                    "crossWorkerPathConflict": True,
+                    "nativeBehaviorSecurityReview": False,
+                    "testCenterOwnerReview": False,
+                },
+            },
         }
         binding.verify_binding(self.root, "workerJ", row)
-        row["reviewedCommit"] = snapshot_commit
+
+        wrong_candidate = copy.deepcopy(row)
+        wrong_candidate["reviewedCommit"] = snapshot_commit
         with self.assertRaisesRegex(binding.DependencyBindingError, "candidate does not match"):
-            binding.verify_binding(self.root, "workerJ", row)
+            binding.verify_binding(self.root, "workerJ", wrong_candidate)
+
+        wrong_type = copy.deepcopy(row)
+        wrong_type["expectedReview"]["reviewType"] = "NATIVE_SECURITY"
+        with self.assertRaisesRegex(binding.DependencyBindingError, "review type mismatch"):
+            binding.verify_binding(self.root, "workerJ", wrong_type)
+
+        wrong_scope = copy.deepcopy(row)
+        wrong_scope["expectedReview"]["requiredScope"]["nativeBehaviorSecurityReview"] = True
+        with self.assertRaisesRegex(binding.DependencyBindingError, "review scope mismatch"):
+            binding.verify_binding(self.root, "workerJ", wrong_scope)
+
+        missing_requirement = copy.deepcopy(row)
+        del missing_requirement["expectedReview"]
+        with self.assertRaisesRegex(binding.DependencyBindingError, "lacks expected review requirement"):
+            binding.verify_binding(self.root, "workerJ", missing_requirement)
 
     def test_live_head_resolves_real_ref_and_detects_ref_move(self):
         subprocess.run(["git", "-C", str(self.root), "branch", "candidate", self.commit], check=True)
