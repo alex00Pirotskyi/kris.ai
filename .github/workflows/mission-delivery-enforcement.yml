@@ -45,31 +45,50 @@ jobs:
           tool/mission_control.py
           tool/mission_materialize_safe.py
           tool/mission_runtime_control.py
+          tool/mission_runtime_model.py
+          tool/mission_orchestrator.py
           tool/mission_delivery_lib.py
           tool/mission_delivery_checks.py
           tool/mission_delivery_live.py
           tool/mission_delivery_control.py
           tool/mission_delivery_strict.py
           tool/mission_delivery_control_test.py
+          tool/mission_v15_regression_test.py
       - name: Run delivery regressions
-        run: python -m unittest -v tool/mission_delivery_control_test.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest -v tool/mission_delivery_control_test.py
+          python tool/mission_v15_regression_test.py
       - name: Validate durable runtime and delivery control
         shell: bash
         run: |
           set -euo pipefail
           python tool/mission_materialize_safe.py --project . validate
           python tool/mission_runtime_control.py --project . validate
+          python tool/mission_delivery_control.py --project . validate
           python tool/mission_delivery_strict.py --project . validate
           python tool/mission_materialize_safe.py --project . materialize --check
-      - name: Verify canonical source manifest and non-mutation
+      - name: Generate canonical source-manifest candidate twice
         shell: bash
         run: |
           set -euo pipefail
-          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.before.sha256"
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.committed.sha256"
           python tool/p1a_refresh_source_manifest.py .
-          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.before.sha256" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.candidate.sha256"
+          cp "${RUNNER_TEMP}/SOURCE_MANIFEST.committed.sha256" SOURCE_MANIFEST.sha256
           git diff --check
           test -z "$(git status --porcelain=v1)"
+      - name: Upload exact manifest candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mission-delivery-manifest-${{ matrix.platform }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/SOURCE_MANIFEST.candidate.sha256
+          if-no-files-found: error
+          retention-days: 30
 
   ownership:
     if: github.event_name == 'pull_request'
