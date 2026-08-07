@@ -13,9 +13,7 @@ MANIFEST_PATH = "release/evidence/P3-001/manifest.json"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_OBJECT_RE = re.compile(r"^[0-9a-f]{40}$")
 PACKAGING_BINDING = "IMMUTABLE_GIT_CANDIDATE"
-EXTERNAL_PACKAGING_BINDING = "EXTERNAL_AFTER_PUBLICATION"
-FROZEN_PACKAGING_COMMIT = "548d1f0230e1ddb2e27aee07799058dca1bf893c"
-FROZEN_PACKAGING_TREE = "ee25ca99e078dc49ffcd92098cceeecca56aaf17"
+PACKAGING_CLASSIFICATION = "STAGE_2_EVIDENCE_PACKAGING"
 EXPECTED_ARTIFACT_PATHS = frozenset(
     {
         ".github/workflows/worker-d-p3-readiness.yml",
@@ -94,9 +92,13 @@ def _candidate(
     if not isinstance(tree, str) or GIT_OBJECT_RE.fullmatch(tree) is None:
         errors.append(f"{label}.tree must be a 40-character lowercase Git object id")
         return None
-    if require_binding and value.get("binding") != PACKAGING_BINDING:
-        errors.append(f"{label}.binding must be {PACKAGING_BINDING}")
-        return None
+    if require_binding:
+        if value.get("binding") != PACKAGING_BINDING:
+            errors.append(f"{label}.binding must be {PACKAGING_BINDING}")
+            return None
+        if value.get("classification") != PACKAGING_CLASSIFICATION:
+            errors.append(f"{label}.classification must be {PACKAGING_CLASSIFICATION}")
+            return None
     return commit, tree
 
 
@@ -138,29 +140,12 @@ def validate(root: Path) -> list[str]:
         "testedSourceCandidate",
         errors,
     )
-    packaging_record = manifest.get("evidencePackagingCandidate")
-    packaging: tuple[str, str] | None
-    if (
-        isinstance(packaging_record, dict)
-        and packaging_record.get("binding") == EXTERNAL_PACKAGING_BINDING
-    ):
-        if (
-            packaging_record.get("classification") != "STAGE_2_EVIDENCE_PACKAGING"
-            or packaging_record.get("commit") is not None
-            or packaging_record.get("tree") is not None
-        ):
-            errors.append(
-                "external evidencePackagingCandidate must remain the canonical "
-                "null Stage-2 slot"
-            )
-        packaging = (FROZEN_PACKAGING_COMMIT, FROZEN_PACKAGING_TREE)
-    else:
-        packaging = _candidate(
-            packaging_record,
-            "evidencePackagingCandidate",
-            errors,
-            require_binding=True,
-        )
+    packaging = _candidate(
+        manifest.get("evidencePackagingCandidate"),
+        "evidencePackagingCandidate",
+        errors,
+        require_binding=True,
+    )
     if tested is not None:
         _verify_candidate(root, tested, "testedSourceCandidate", errors)
     if packaging is not None:

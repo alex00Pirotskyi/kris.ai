@@ -62,10 +62,10 @@
     "P3-001_BLOCKED_BY_DEPENDENCY"
   ],
   "evidencePackagingCandidate": {
-    "binding": "EXTERNAL_AFTER_PUBLICATION",
+    "binding": "IMMUTABLE_GIT_CANDIDATE",
     "classification": "STAGE_2_EVIDENCE_PACKAGING",
-    "commit": null,
-    "tree": null
+    "commit": "548d1f0230e1ddb2e27aee07799058dca1bf893c",
+    "tree": "ee25ca99e078dc49ffcd92098cceeecca56aaf17"
   },
   "evidencePackagingClassification": "STAGE_2_EVIDENCE_CANDIDATE",
   "generatedAt": "2026-08-05T17:07:31Z",

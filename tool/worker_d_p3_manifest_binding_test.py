@@ -62,7 +62,7 @@ class ManifestBindingTests(unittest.TestCase):
                 "testedSourceCandidate": {"commit": "0" * 40, "tree": "0" * 40},
                 "evidencePackagingCandidate": {
                     "binding": MODULE.PACKAGING_BINDING,
-                    "classification": "STAGE_2_EVIDENCE_PACKAGING",
+                    "classification": MODULE.PACKAGING_CLASSIFICATION,
                     "commit": "0" * 40,
                     "tree": "0" * 40,
                 },
@@ -117,6 +117,32 @@ class ManifestBindingTests(unittest.TestCase):
         self._write_manifest(manifest)
         errors = MODULE.validate(self.root)
         self.assertTrue(any("evidencePackagingCandidate.tree mismatch" in e for e in errors))
+
+    def test_external_null_packaging_slot_fails_closed(self):
+        manifest = copy.deepcopy(self.manifest)
+        manifest["evidencePackagingCandidate"] = {
+            "binding": "EXTERNAL_AFTER_PUBLICATION",
+            "classification": MODULE.PACKAGING_CLASSIFICATION,
+            "commit": None,
+            "tree": None,
+        }
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(
+            any("evidencePackagingCandidate.commit must be a 40-character" in e for e in errors)
+        )
+
+    def test_packaging_classification_drift_fails(self):
+        manifest = copy.deepcopy(self.manifest)
+        manifest["evidencePackagingCandidate"]["classification"] = "SELF_DECLARED"
+        self._write_manifest(manifest)
+        errors = MODULE.validate(self.root)
+        self.assertTrue(
+            any(
+                "classification must be STAGE_2_EVIDENCE_PACKAGING" in e
+                for e in errors
+            )
+        )
 
     def test_unknown_packaging_binding_fails(self):
         manifest = copy.deepcopy(self.manifest)
