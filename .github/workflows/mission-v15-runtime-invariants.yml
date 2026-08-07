@@ -12,6 +12,8 @@ on:
       - 'tool/mission_v15_authority_append.py'
       - 'tool/mission_v15_authority_test.py'
       - 'tool/mission_v15_connector_authority_apply.py'
+      - 'tool/mission_v15_release_validator_policy_apply.py'
+      - 'tool/mission_v15_release_validator_policy_test.py'
       - 'tool/mission_v15_governance_drift.py'
       - 'tool/mission_v15_helper_validate.py'
       - 'tool/mission_v15_hygiene.py'
@@ -64,6 +66,8 @@ jobs:
           tool/mission_v15_authority_append.py
           tool/mission_v15_authority_test.py
           tool/mission_v15_connector_authority_apply.py
+          tool/mission_v15_release_validator_policy_apply.py
+          tool/mission_v15_release_validator_policy_test.py
           tool/mission_v15_governance_drift.py
           tool/mission_v15_helper_validate.py
           tool/mission_v15_hygiene.py
@@ -79,6 +83,8 @@ jobs:
         run: python tool/mission_v15_regression_test.py
       - name: Run shared-authority adversarial regressions
         run: python tool/mission_v15_authority_test.py
+      - name: Run release-validator policy regressions
+        run: python tool/mission_v15_release_validator_policy_test.py
       - name: Run source-landing semantic regressions
         run: python tool/mission_v15_landing_test.py
       - name: Run concurrency/dispatch regressions
