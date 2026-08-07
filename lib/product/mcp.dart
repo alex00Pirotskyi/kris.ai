@@ -5,6 +5,7 @@ import 'dart:io';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'durable_workflow.dart';
+import 'mcp_protocol.dart';
 import 'repository.dart';
 import 'storage_security.dart';
 
@@ -60,7 +61,8 @@ class McpTrustRecord {
         executableHash: json['executableHash']?.toString() ?? '',
         arguments: stringList(json['arguments']),
         allowedTools: stringList(json['allowedTools']).toSet(),
-        protocolVersion: json['protocolVersion']?.toString() ?? '2024-11-05',
+        protocolVersion:
+            json['protocolVersion']?.toString() ?? mcpLegacyProtocolVersion,
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
         expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
         revokedAt:
@@ -92,9 +94,10 @@ class McpTrustService {
     required String executablePath,
     required List<String> arguments,
     required Set<String> allowedTools,
-    String protocolVersion = '2024-11-05',
+    String protocolVersion = mcpCurrentStableProtocolVersion,
     Duration validity = const Duration(days: 30),
   }) async {
+    final protocol = McpProtocolRegistry.requireStable(protocolVersion);
     final executable = File(executablePath).absolute;
     if (!await executable.exists()) {
       throw ProductException(
@@ -126,7 +129,7 @@ class McpTrustService {
       executableHash: Sha256.hex(await File(canonical).readAsBytes()),
       arguments: List<String>.unmodifiable(arguments),
       allowedTools: Set<String>.unmodifiable(allowedTools),
-      protocolVersion: protocolVersion.trim(),
+      protocolVersion: protocol.version,
       createdAt: now,
       expiresAt: now.add(validity),
     );
@@ -137,6 +140,7 @@ class McpTrustService {
       'label': record.label,
       'executableHash': record.executableHash,
       'allowedTools': record.allowedTools.toList(),
+      'protocolVersion': record.protocolVersion,
       'expiresAt': record.expiresAt.toIso8601String(),
     });
     return record;
@@ -220,6 +224,7 @@ class McpTrustService {
       'projectId': projectId,
       'trustId': trust.id,
       'tool': tool,
+      'protocolVersion': trust.protocolVersion,
       'arguments': redactor.redactJson(arguments),
       'responseHash': Sha256.text(canonicalJson(redactor.redactJson(response))),
     });
@@ -240,6 +245,7 @@ class McpTrustService {
     if (existing != null && existing.running) {
       return existing;
     }
+    final protocol = McpProtocolRegistry.requireStable(trust.protocolVersion);
     final process = await Process.start(
       trust.executablePath,
       trust.arguments,
@@ -248,33 +254,57 @@ class McpTrustService {
       runInShell: false,
       mode: ProcessStartMode.normal,
     );
-    final session = _McpSession(process, redactor);
+    final session = _McpSession(process, redactor, protocol);
     _sessions[trust.id] = session;
     process.exitCode.then((_) => _sessions.remove(trust.id));
-    final initialized = await session.request(
-        'initialize',
-        <String, dynamic>{
-          'protocolVersion': trust.protocolVersion,
-          'capabilities': <String, dynamic>{},
-          'clientInfo': <String, String>{
-            'name': 'Kristin Local Agent',
-            'version': kristinVersion,
-          },
-        },
-        timeout: timeout);
-    if (initialized['protocolVersion'] == null) {
-      await session.close();
+
+    try {
+      late final Set<String> capabilities;
+      if (protocol.usesInitialize) {
+        final initialized = await session.request(
+            'initialize',
+            <String, dynamic>{
+              'protocolVersion': protocol.version,
+              'capabilities': <String, dynamic>{},
+              'clientInfo': <String, String>{
+                'name': 'Kristin Local Agent',
+                'version': kristinVersion,
+              },
+            },
+            timeout: timeout);
+        capabilities = protocol.validateLegacyInitialize(
+          initialized,
+          requiredCapabilities: const <String>{'tools'},
+        );
+        await session.notify(
+          'notifications/initialized',
+          const <String, dynamic>{},
+        );
+      } else {
+        final discovered = await session.request(
+          'server/discover',
+          const <String, dynamic>{},
+          timeout: timeout,
+        );
+        capabilities = protocol.validateModernDiscovery(
+          discovered,
+          requiredCapabilities: const <String>{'tools'},
+        );
+      }
+
+      final sortedCapabilities = capabilities.toList()..sort();
+      await audit.append('mcp.protocol_negotiated', trust.id, <String, dynamic>{
+        'trustId': trust.id,
+        'protocolVersion': protocol.version,
+        'era': protocol.era.name,
+        'capabilities': sortedCapabilities,
+      });
+      return session;
+    } catch (_) {
       _sessions.remove(trust.id);
-      throw ProductException(
-        'mcp_initialize_invalid',
-        'MCP server returned an invalid initialize result.',
-      );
+      await session.close();
+      rethrow;
     }
-    await session.notify(
-      'notifications/initialized',
-      const <String, dynamic>{},
-    );
-    return session;
   }
 
   Future<void> close(String trustId) async {
@@ -318,7 +348,7 @@ class McpTrustService {
 }
 
 class _McpSession {
-  _McpSession(this.process, this.redactor) {
+  _McpSession(this.process, this.redactor, this.protocol) {
     _stdoutSubscription = process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -341,6 +371,7 @@ class _McpSession {
 
   final Process process;
   final SecretRedactor redactor;
+  final McpProtocolAdapter protocol;
   final Map<int, Completer<Map<String, dynamic>>> _pending =
       <int, Completer<Map<String, dynamic>>>{};
   final StringBuffer _stderr = StringBuffer();
@@ -366,10 +397,15 @@ class _McpSession {
       'jsonrpc': '2.0',
       'id': id,
       'method': method,
-      'params': params,
+      'params': protocol.decorateRequestParams(
+        params,
+        clientName: 'Kristin Local Agent',
+        clientVersion: kristinVersion,
+      ),
     };
     final encoded = jsonEncode(message);
     if (utf8.encode(encoded).length > 1024 * 1024) {
+      _pending.remove(id);
       throw ProductException(
         'mcp_request_too_large',
         'MCP request exceeds 1 MiB.',
@@ -393,7 +429,11 @@ class _McpSession {
       jsonEncode(<String, dynamic>{
         'jsonrpc': '2.0',
         'method': method,
-        'params': params,
+        'params': protocol.decorateRequestParams(
+          params,
+          clientName: 'Kristin Local Agent',
+          clientVersion: kristinVersion,
+        ),
       }),
     );
     await process.stdin.flush();
