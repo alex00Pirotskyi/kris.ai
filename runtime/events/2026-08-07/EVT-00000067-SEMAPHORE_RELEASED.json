@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000067-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-005",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P5-001-FORMAT-7F3A2C91"
+  },
+  "recordedAt": "2026-08-07T19:45:30Z",
+  "runtimeGeneration": 67,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T190738Z-7f3a2c91",
+  "workOrderId": "WO-P5-001-FORMAT-7F3A2C91"
+}
