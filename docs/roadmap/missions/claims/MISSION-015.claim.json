@@ -8,12 +8,12 @@
     "tool/anarchy_*.py",
     "release/evidence/P24-*/**"
   ],
-  "head": "b3cc73a07780993eac7b72e9d1c20013897a08e8",
+  "head": "2a14b875ff529cfd90348673e8e45b2442663619",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-015",
   "pr": 66,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "f36a17af9138531289b8696b6a5cbd1c283bf7a7",
+  "tree": "595346993b4512411f48075a47289333c51b3850",
   "worker": "J"
 }

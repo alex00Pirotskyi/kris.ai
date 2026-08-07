@@ -1,6 +1,6 @@
 {
   "branch": "agent/g/mission-006-model-routing",
-  "current": "P6-001 exact candidate eb669431927338e4ae7be3df647d57bc728dfde5 / 7bee181b9655da0207c5c5a059fa330a5a2a3c57 closes the benchmark execution-provenance defect: caller-authored/content-hash-only evidence cannot authorize approved task classes; approval requires an out-of-band repository-authorized commit/tree mapping plus protected-key Ed25519 execution receipt. Bounded run 31173032211 passed canonical formatting, full analyzer and all three focused model-registry suites before creating the final commit/tree. Formal exact-head product-gates run 31173109180 is BLOCKED_EXTERNAL with action_required and zero jobs because github-actions[bot] triggered it. Worker A source-inventory/manifest authority, Worker B P6-TC-001/Test Center authority repair, canonical manifest, and genuinely independent review remain pending.",
+  "current": "P6-001 exact candidate repaired the governed Dart source inventory; focused model-registry and source-contract tests pass; full tri-platform product gates, Worker B Test Center review, and an independent exact-commit/tree review remain pending.",
   "exclusivePaths": [
     ".github/workflows/worker-g*.yml",
     "lib/ai/model/**",
@@ -12,12 +12,12 @@
     "test/product/model/**",
     "tool/worker_g*.py"
   ],
-  "head": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "head": "0aa6203e89a9b825c575954af54a0c108c79b67a",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-006",
   "pr": 76,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "tree": "4b262889edb61ec0c705b289aa29fd0df7c8456c",
   "worker": "G"
 }

@@ -430,6 +430,7 @@ ea7c158d0a0c965c8707a91062842c5551958158fdebd5b3498ca45c0b59932b  docs/roadmap/m
 94413c29f4f041e95409dea6a989742ab2468f10c45190382a9b3d58646d2a36  docs/roadmap/missions/claims/MISSION-004.claim.json
 07d49c6677d892b8e608ce7f1c74f17176b202cb18eb8dd6ea80bbfe28ffd577  docs/roadmap/missions/claims/MISSION-005.claim.json
 97309a32f6693c17a98798f9583c8a1ba0d85422f3bfa168acbc71d587918649  docs/roadmap/missions/claims/MISSION-006.claim.json
+e1c4709d5260df632979f4749aa2d26f758292ea3126994668b7cf5aa37e447e  docs/roadmap/missions/claims/MISSION-007.claim.json
 bf43a9aed1ece1b20859022b992e891e4ad7e46292d116fe54c829b2630d2baa  docs/roadmap/missions/claims/MISSION-010.claim.json
 9c94bec166a97734dcdb1678f3d6270af92ed77c6399b056017b8ab9af4d3682  docs/roadmap/missions/claims/MISSION-015.claim.json
 571d8ff335ac741397c717715cfcba7668c6fa50c274d1cc1bea156721cf93b3  docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json
@@ -460,7 +461,7 @@ d069da05fbe30e6c3246a62a5896bb9de1f42aef3ea9c02fb895471707c037eb  docs/roadmap/m
 2404a4a6a30bf798a363f716d326c70e070375467d3522f60cabc2d1b685d4df  docs/roadmap/missions/coordination/MISSION-005-MATERIALIZER-CLAIM-REGRESSION-20260806T231743Z.json
 c285e20d31e8601ba2cd799388d33740eeb494961954beb4d300ff757704793f  docs/roadmap/missions/coordination/MISSION-005-P5-001-SOURCE-CONTRACT-REQUEST-20260806T191459Z.json
 d9e5c44668ce7173c31a0aa345db59ec75546a76ca3e5fa3549c94fad85acb1b  docs/roadmap/missions/coordination/MISSION-005-P5-001-WORKER-F-VALIDATOR-PATH-REQUEST-20260806T201211Z.json
-bd90ed1ce369800694d273f6043946018302fab52f356b803d865077daca2724  docs/roadmap/missions/coordination/MISSION-006-P6-001-SOURCE-INVENTORY.json
+738899211980c88426d76f9cface8b63662c2478cb38ee45098ece60f759ef14  docs/roadmap/missions/coordination/MISSION-006-P6-001-SOURCE-INVENTORY.json
 f5eb88b4ccc0f47d707d162e543ffd5ca7324cc694e32e9153a210c56385c50f  docs/roadmap/missions/coordination/MISSION-006-P6-001-TEST-CENTER.json
 0acc626e2705437d53d9eceb9c70840bf059f09375072271fcd0dc333d782f9b  docs/roadmap/missions/coordination/MISSION-010-P11-001-TEST-CENTER-OWNER-HANDOFF.json
 94f1b5873187de4679f91ad391e14cf3f8e1c4dba584da584b22a16f9b437b7a  docs/roadmap/missions/coordination/MISSION-010-worker-j-review-825769f6.json
@@ -488,6 +489,14 @@ d0d6dd1fd479c1adbb02fa97c16836aa14ce0e14a3f97be8be6d53d5c39c03b9  docs/roadmap/m
 3667ffccd243340a269864b1d4f10570a647abf7d85aed52186f93dca6404aad  docs/roadmap/missions/delivery/records/P5-001/20260806T204800Z-WRK-20260806T201211Z-19E2373A.json
 b3cecff5379956631e3b54c251968ac7da8a1e5240a0f93c80b84c91c2f9717c  docs/roadmap/missions/delivery/records/P5-001/20260806T224249Z-WRK-20260806T201211Z-19E2373A.json
 035a538d11cc01751588328a345c4b7d9e2e3d293b39bdfd653972b184716ed0  docs/roadmap/missions/delivery/records/P5-001/20260806T231743Z-WRK-20260806T201211Z-19E2373A.json
+c30e794f1e1585eb91bec6e83d383941ff004420e9e9facae5f6336ea980c4c1  docs/roadmap/missions/helper-leases/MISSION-003/HLP-M003-I-P3FLOW-0918.json
+22bad41d9204863c94e6ddb9ddf95e9c9fd84bb0bed0a0b1a70bdf209b6a49ba  docs/roadmap/missions/helper-leases/MISSION-003/HLP-M003-I-P3MANIFEST-5E91C2A7.json
+de231de95c3271152e29cb824d512a910f40ab3f84224729fc3dd871c84e5b33  docs/roadmap/missions/helper-leases/MISSION-003/HLP-M003-I-P3TRUST-080304.json
+403c3703fbe8324ed98670369414639a9136ccf4bf6da3cdc2574d56ce83f27d  docs/roadmap/missions/helper-leases/MISSION-005/HLP-M005-I-P5CI-103314.json
+9e06a7d05e3ee72e5d8b56407ad6957b05cc786033905a5596804cbd0e8a32ab  docs/roadmap/missions/helper-leases/MISSION-005/HLP-M005-I-P5MAT-104305.json
+ad1feac768d7bf092a3dcad764de4bacb4dafeea726742fcb771c2935558f129  docs/roadmap/missions/helper-leases/MISSION-007/HLP-M007-H-P7META-105901.json
+6e023cca4487ff6f877ece7988919fb217c22998ffdd9ec0e21e5490c1f5b1f3  docs/roadmap/missions/helper-leases/MISSION-007/HLP-M007-H-P7META-110245.json
+3001647e275ab6e40b6cecfa99cc9d9d63fd870ebc6b7441ae467cb7a37eaaec  docs/roadmap/missions/helper-leases/MISSION-010/HLP-M010-H-P11REVIEW-103922.json
 6de99f1e8f3f852788ac68ccc63541be398aedadec267124a882c85566f98225  docs/roadmap/missions/schemas/mission_checkpoint.schema.json
 18a13bded982d1cd0b8fb1ca3ba5a1e623de94dd3dbd678dde8b1b5741d0a9f2  docs/roadmap/missions/schemas/mission_claim.schema.json
 e26b56b50fbf18cb09b4c46f6676ce0546f482edf0dcd9c0a9820d3b74ac034c  docs/roadmap/missions/schemas/mission_registry.schema.json

@@ -1,15 +1,14 @@
 {
-  "assignedWorker": "I",
-  "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
-  "current": "P7-001 current-stable/historical MCP adapter is runtime-connected; optional discovery was repaired and trusted tools/list continuity is enforced. Exact PR #96 CI is running.",
+  "assignedWorker": null,
+  "branch": null,
+  "current": "Await entry-dependency and ownership evaluation.",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-007",
-  "nextAction": "Inspect exact-head CI for 22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232, repair any source/test defects, then settle exact review/integration gates before advancing P7.",
-  "observedHead": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
-  "observedTree": "00f19eb3d73c0961bd43b880e429eb7cbfa02bf7",
-  "pullRequest": 96,
+  "nextAction": "Evaluate entry dependencies and create a collision-free claim.",
+  "observedHead": null,
+  "observedTree": null,
+  "pullRequest": null,
   "schemaVersion": 1,
-  "status": "CLAIMED",
-  "title": "Interoperability, Skills, Tools, and Capability Operating System",
-  "workExecutionId": "WRK-20260807T103221Z-5aee6ba5"
+  "status": "AVAILABLE",
+  "title": "Interoperability, Skills, Tools, and Capability Operating System"
 }

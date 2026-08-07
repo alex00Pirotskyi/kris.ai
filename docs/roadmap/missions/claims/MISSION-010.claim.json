@@ -7,12 +7,12 @@
     "tool/worker_e*.py",
     "native/**"
   ],
-  "head": "8dbe9063e37714dad959573bd2441286265c9402",
+  "head": "825769f639edb5db22b27a222cd5c1c57f4ed775",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-010",
   "pr": 71,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "ae0d24152ddd93f002627b9bc21d8d567908dd7f",
+  "tree": "4fd309a006ff4b88c2293b7962c130b5998426ac",
   "worker": "E"
 }
