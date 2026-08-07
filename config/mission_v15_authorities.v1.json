@@ -30,6 +30,12 @@
       "eligibleRequestingMissions": ["MISSION-003", "MISSION-005", "MISSION-006", "MISSION-007", "MISSION-011", "MISSION-012", "MISSION-013", "MISSION-014"],
       "setStartMarker": "const expected = <String>{",
       "pathPrefix": "lib/"
+    },
+    "release-validator-source-policy": {
+      "ownerMission": "MISSION-008",
+      "path": "tool/validate_release.py",
+      "mode": "BOUNDED_RELEASE_VALIDATOR_SOURCE_POLICY_V1",
+      "eligibleRequestingMissions": ["MISSION-007"]
     }
   }
 }
