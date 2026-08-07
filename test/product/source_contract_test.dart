@@ -201,6 +201,7 @@ void main() {
         'lib/product/p2_runtime_resource_resolver.dart',
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
+        'lib/product/mcp_protocol.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))
