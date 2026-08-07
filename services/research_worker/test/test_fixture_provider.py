@@ -169,6 +169,62 @@ class FixtureProviderContractTest(unittest.TestCase):
         )
         return [result.published_at for result in provider.search(request).results]
 
+    def _safe_search_providers(self):
+        entries = (
+            FixtureCatalogEntry(
+                title="Off only",
+                url="https://example.com/off-only",
+                snippet="safe-search fixture",
+                published_at=None,
+                language="en",
+                country="US",
+                provider_metadata={},
+                safety_tier="off",
+            ),
+            FixtureCatalogEntry(
+                title="Moderate safe",
+                url="https://example.com/moderate-safe",
+                snippet="safe-search fixture",
+                published_at=None,
+                language="en",
+                country="US",
+                provider_metadata={},
+                safety_tier="moderate",
+            ),
+            FixtureCatalogEntry(
+                title="Strict safe",
+                url="https://example.com/strict-safe",
+                snippet="safe-search fixture",
+                published_at=None,
+                language="en",
+                country="US",
+                provider_metadata={},
+                safety_tier="strict",
+            ),
+        )
+        return (
+            DeterministicFixtureSearchProvider(
+                provider_id="safe_alpha",
+                entries=entries,
+                supports_domain_exclude=True,
+            ),
+            DeterministicFixtureSearchProvider(
+                provider_id="safe_beta",
+                entries=entries,
+                supports_domain_exclude=False,
+            ),
+        )
+
+    def _safe_search_titles(self, provider, *, mode, limit=10):
+        request = SearchRequest(
+            request_id=f"req_safe_{provider.capabilities.provider_id}_{mode}_{limit}",
+            query="fixture:all",
+            limit=limit,
+            safe_search=mode,
+        )
+        page = provider.search(request)
+        return page, [result.title for result in page.results]
+
     def test_every_fixture_case_is_unique_and_executed(self) -> None:
         cases = self.fixture["cases"]
         ids = [case["id"] for case in cases]
@@ -313,6 +369,47 @@ class FixtureProviderContractTest(unittest.TestCase):
 
                 def _search(self, request):
                     raise AssertionError("unused")
+
+    def test_safe_search_modes_are_monotonic_and_precede_pagination(self) -> None:
+        expected = {
+            "off": ["Off only", "Moderate safe", "Strict safe"],
+            "moderate": ["Moderate safe", "Strict safe"],
+            "strict": ["Strict safe"],
+        }
+        for provider in self._safe_search_providers():
+            for mode, titles in expected.items():
+                with self.subTest(provider=provider.capabilities.provider_id, mode=mode):
+                    page, actual = self._safe_search_titles(provider, mode=mode)
+                    self.assertEqual(titles, actual)
+                    self.assertEqual(
+                        list(range(1, len(actual) + 1)),
+                        [result.provider_rank for result in page.results],
+                    )
+            with self.subTest(
+                provider=provider.capabilities.provider_id,
+                mode="strict-before-pagination",
+            ):
+                page, titles = self._safe_search_titles(
+                    provider,
+                    mode="strict",
+                    limit=1,
+                )
+                self.assertEqual(["Strict safe"], titles)
+                self.assertEqual([1], [result.provider_rank for result in page.results])
+                self.assertIsNone(page.next_cursor)
+
+    def test_fixture_entry_rejects_unknown_safety_tier(self) -> None:
+        with self.assertRaisesRegex(SearchContractError, "safety_tier"):
+            FixtureCatalogEntry(
+                title="Unknown safety",
+                url="https://example.com/unknown-safety",
+                snippet="safe-search fixture",
+                published_at=None,
+                language="en",
+                country="US",
+                provider_metadata={},
+                safety_tier="unknown",
+            )
 
     def test_freshness_modes_and_equality_boundaries_on_two_providers(self) -> None:
         for provider in self._freshness_providers():
