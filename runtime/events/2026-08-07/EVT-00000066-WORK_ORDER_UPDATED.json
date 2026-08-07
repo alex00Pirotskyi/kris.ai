@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000066-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-4f6a2c91:INTEGRATED_INTO_PR62",
+    "nextStatus": "REVIEW"
+  },
+  "recordedAt": "2026-08-07T19:39:58Z",
+  "runtimeGeneration": 66,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T191235Z-4f6a2c91",
+  "workOrderId": "WO-P4-001-SAFE-SEARCH-4A9C2D1E"
+}
