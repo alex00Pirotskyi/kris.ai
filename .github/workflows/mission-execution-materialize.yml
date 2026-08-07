@@ -36,6 +36,22 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
       - name: Materialize deterministic mission views
         run: python tool/mission_control.py --project . bootstrap
+      - name: Fail closed on generated live claim or state mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          live_state_changes="$(git diff --name-only -- \
+            docs/roadmap/missions/claims \
+            docs/roadmap/missions/state)"
+          if test -n "${live_state_changes}"; then
+            echo "Mission materializer attempted to rewrite durable live claim/state memory:" >&2
+            printf '%s\n' "${live_state_changes}" >&2
+            echo "Claim/state changes must be committed explicitly by the owning mission or a recorded transfer before materialization." >&2
+            git diff -- \
+              docs/roadmap/missions/claims \
+              docs/roadmap/missions/state >&2
+            exit 1
+          fi
       - name: Remove superseded prompt and transport artifacts
         shell: bash
         run: |
