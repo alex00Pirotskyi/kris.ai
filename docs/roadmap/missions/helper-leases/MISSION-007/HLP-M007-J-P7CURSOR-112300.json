@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [
+    "test/product/mcp/mcp_opaque_cursor_regression_test.dart"
+  ],
+  "baseCommit": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
+  "baseTree": "00f19eb3d73c0961bd43b880e429eb7cbfa02bf7",
+  "branch": "agent/help/j/mission-007/mcp-opaque-cursor-regression",
+  "createdAt": "2026-08-07T11:25:48Z",
+  "expiresAt": "2026-08-07T15:25:48Z",
+  "helperWorker": "J",
+  "leaseId": "HLP-M007-J-P7CURSOR-112300",
+  "mission": "MISSION-007",
+  "nextAction": "Add a focused regression test for opaque tools/list cursor preservation and strict tool-name typing only; do not modify mcp_protocol.dart while HLP-M007-H-P7META-110245 is active.",
+  "ownerWorker": "I",
+  "parentClaimHead": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
+  "refreshedAt": "2026-08-07T11:25:48Z",
+  "schemaVersion": 1,
+  "status": "ACTIVE",
+  "task": "P7-001",
+  "workExecutionId": "WRK-20260807T103000Z-c8a31f7d"
+}
