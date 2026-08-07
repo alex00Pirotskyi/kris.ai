@@ -1,6 +1,6 @@
 {
   "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
-  "current": "P7-001 product semantics are unchanged from the repaired MCP adapter; formatting-only CI repair is now exact candidate c55e2882b0ec04807c526d70bd56c85f3d6bb84d.",
+  "current": "P7-001 product semantics are unchanged; exact candidate e0d7ab3afc4b4601080adec88c9ec4db8b280480 contains the final one-line formatter normalization isolated by Ubuntu CI.",
   "exclusivePaths": [
     "lib/product/mcp*.dart",
     "lib/product/skills/**",
@@ -11,13 +11,13 @@
     "release/evidence/P7-*/**",
     "release/evidence/P23-*/**"
   ],
-  "head": "c55e2882b0ec04807c526d70bd56c85f3d6bb84d",
+  "head": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-007",
   "pr": 96,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "7195cacd18925c4b9917e54613395f897e0d4afd",
+  "tree": "da8b5505b35c0517b566bdefa1446ff1bc88e5dd",
   "worker": "I",
   "workExecutionId": "WRK-20260807T103221Z-5aee6ba5"
 }
