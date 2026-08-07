@@ -25,6 +25,9 @@ on:
 permissions:
   contents: read
 
+env:
+  MISSION_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   validate:
     name: validate-${{ matrix.os }}
@@ -36,7 +39,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.MISSION_CANDIDATE_SHA }}
           fetch-depth: 0
+      - name: Require exact source candidate
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${MISSION_CANDIDATE_SHA}"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.10'
