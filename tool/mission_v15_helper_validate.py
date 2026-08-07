@@ -10,6 +10,7 @@ import sys
 from mission_delivery_lib import matches_any, run_git
 from mission_runtime_control import verify_candidate_ancestry
 from mission_runtime_model import validate_runtime_state
+from mission_v15_authority_append import verify_authority
 
 
 def changed_paths(project: pathlib.Path, base: str, head: str) -> tuple[str, list[str]]:
@@ -22,7 +23,11 @@ def changed_paths(project: pathlib.Path, base: str, head: str) -> tuple[str, lis
         f"{merge_base}..{head}",
         "--",
     )
-    return merge_base, [line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()]
+    return merge_base, [
+        line.strip().replace("\\", "/")
+        for line in output.splitlines()
+        if line.strip()
+    ]
 
 
 def validate_helper(
@@ -39,44 +44,68 @@ def validate_helper(
     actual_tree = run_git(repository_project, "rev-parse", f"{candidate_commit}^{{tree}}")
     if actual_tree != candidate_tree:
         raise ValueError(
-            f"helper candidate commit/tree mismatch: {candidate_commit} -> {actual_tree}, supplied {candidate_tree}"
+            f"helper candidate commit/tree mismatch: {candidate_commit} -> "
+            f"{actual_tree}, supplied {candidate_tree}"
         )
 
     matches = [
         sem
         for sem in state["activeSemaphores"]
-        if sem.get("kind") == "WRITE" and sem.get("branch") == head_branch
+        if sem.get("kind") in {"WRITE", "AUTHORITY"}
+        and sem.get("branch") == head_branch
     ]
     if len(matches) != 1:
         raise ValueError(
-            f"helper branch must match exactly one active WRITE semaphore: {head_branch}, matches={len(matches)}"
+            "helper branch must match exactly one active WRITE/AUTHORITY "
+            f"semaphore: {head_branch}, matches={len(matches)}"
         )
     sem = matches[0]
     work = state["workOrders"][sem["workOrderId"]]
     product = state["productPrs"][work["parentProductPr"]]
     if product["branch"] != base_branch:
         raise ValueError(
-            f"helper PR base {base_branch} is not canonical Product PR branch {product['branch']}"
+            f"helper PR base {base_branch} is not canonical Product PR branch "
+            f"{product['branch']}"
         )
     if sem["mission"] != work["mission"] or product["mission"] != work["mission"]:
         raise ValueError("helper mission/Work Order/Product PR binding mismatch")
     if sem["baseCommit"] != work["baseCommit"] or sem["baseTree"] != work["baseTree"]:
-        raise ValueError("WRITE semaphore must preserve exact Work Order base commit/tree")
+        raise ValueError("helper semaphore must preserve exact Work Order base commit/tree")
     verify_candidate_ancestry(repository_project, sem["baseCommit"], candidate_commit)
-    merge_base, paths = changed_paths(repository_project, sem["baseCommit"], candidate_commit)
+    merge_base, paths = changed_paths(
+        repository_project,
+        sem["baseCommit"],
+        candidate_commit,
+    )
     violations = [path for path in paths if not matches_any(path, sem["allowedPaths"])]
     if violations:
         raise ValueError(
-            "helper changed paths outside WRITE semaphore: " + ", ".join(sorted(violations))
+            "helper changed paths outside semaphore: "
+            + ", ".join(sorted(violations))
         )
+
+    authority_result = None
+    if sem["kind"] == "AUTHORITY":
+        config_path = runtime_project / "config/mission_v15_authorities.v1.json"
+        authority_result = verify_authority(
+            repository_project,
+            config_path=config_path,
+            authority_id=sem["authorityId"],
+            requesting_mission=work["mission"],
+            base_commit=sem["baseCommit"],
+            head_commit=candidate_commit,
+        )
+
     return {
         "schemaVersion": 1,
         "runtimeGeneration": state["meta"]["runtimeGeneration"],
         "workOrderId": work["workOrderId"],
+        "workOrderType": work["type"],
         "mission": work["mission"],
         "roadmapTask": work["roadmapTask"],
         "productPr": work["parentProductPr"],
         "semaphoreId": sem["semaphoreId"],
+        "semaphoreKind": sem["kind"],
         "helperBranch": head_branch,
         "canonicalProductBranch": base_branch,
         "reservedBaseCommit": sem["baseCommit"],
@@ -85,6 +114,7 @@ def validate_helper(
         "candidateTree": candidate_tree,
         "changedPaths": paths,
         "allowedPaths": sem["allowedPaths"],
+        "authorityResult": authority_result,
         "authorized": True,
     }
 
