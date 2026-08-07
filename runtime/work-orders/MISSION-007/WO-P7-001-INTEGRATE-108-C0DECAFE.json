@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P7-001-INTEGRATE-108-C0DECAFE",
   "allowedPaths": [
     "tool/validate_release.py"
   ],
@@ -10,6 +9,7 @@
   "createdBy": "SYSTEM-P7-PR108-INTEGRATION-HANDOFF",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "SYSTEM-P7-PR108-INTEGRATED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Integrate exact helper PR #108 at 330a71c7038395b12128b0724b4f12229635427d into canonical Product PR #96 from exact base 308f8a449594bbe90cf0ff6089fe5f7c13378ab0. Preserve the bounded governed-library release-validator policy repair and its tri-platform product-gates proof. Do not promote ACCEPTED, support, release, production, GA, or protected-main landing.",
@@ -22,8 +22,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T16:54:00Z",
+  "updatedAt": "2026-08-07T16:56:00Z",
   "workOrderId": "WO-P7-001-INTEGRATE-108-C0DECAFE"
 }

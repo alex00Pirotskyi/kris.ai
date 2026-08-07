@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000033-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "mission": "MISSION-007",
+  "payload": {
+    "helperHead": "330a71c7038395b12128b0724b4f12229635427d",
+    "helperWorkOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE",
+    "integrationWorkOrderId": "WO-P7-001-INTEGRATE-108-C0DECAFE",
+    "mergedHelperPr": 108,
+    "newObservedHead": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
+    "previousObservedHead": "308f8a449594bbe90cf0ff6089fe5f7c13378ab0",
+    "productPr": 96,
+    "releasedSemaphoreId": "SEM-P7-001-INTEGRATE-108-C0DECAFE"
+  },
+  "recordedAt": "2026-08-07T16:56:00Z",
+  "runtimeGeneration": 33,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T165600Z-c0decafe",
+  "workOrderId": "WO-P7-001-INTEGRATE-108-C0DECAFE"
+}

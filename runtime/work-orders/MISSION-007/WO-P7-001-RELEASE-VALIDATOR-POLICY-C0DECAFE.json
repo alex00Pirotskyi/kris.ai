@@ -9,7 +9,7 @@
   "createdBy": "SYSTEM-P7-RELEASE-VALIDATOR-BLOCKER",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "ELASTIC-c0decafe",
+  "lastActor": "SYSTEM-P7-PR108-INTEGRATED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Repair the legacy release validator once so shipped lib/** Dart source is governed by the canonical source-contract inventory and test/** Dart files are not misclassified as shipped runtime source. Apply only the bounded deterministic v1.5 release-validator source-policy transform; do not make arbitrary release policy changes.",
@@ -22,8 +22,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "LANDED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-07T16:40:00Z",
+  "updatedAt": "2026-08-07T16:56:00Z",
   "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE"
 }
