@@ -17,6 +17,7 @@ REPORT_CONTRACT = Path("config/test_center_assurance_report_contract.v1.json")
 PROOF_CONTRACT_SCHEMA = Path("release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.schema.json")
 PROOF_CONTRACT = Path("release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json")
 SUPPORT_STATES = {"SUPPORTED", "UNSUPPORTED", "BLOCKED"}
+SUPPORT_REQUIREMENT_ID = "test-center.registry-profile-platform-lineage-v1"
 
 
 def fail(message: str) -> None:
@@ -117,6 +118,12 @@ def validate_proof_contract(contract_schema: dict[str, Any], contract: dict[str,
     required_categories = {category for level in hierarchy["levels"] for category in level["requiredEvidence"]}
     if set(categories) != required_categories:
         fail(f"assurance proof contract evidence catalog does not exactly cover hierarchy; missing={sorted(required_categories-set(categories))}, extra={sorted(set(categories)-required_categories)}")
+    support_contract = next(item for item in evidence if item["category"] == "support_matrix")
+    required_support_fields = {"supportRequirementId", "requiredPlatforms", "requiredCapabilities", "matrix"}
+    if not required_support_fields.issubset(set(support_contract["requiredJsonFields"])):
+        fail("support_matrix proof contract does not require authoritative scope and proof linkage fields")
+    if support_contract["requiredConstants"].get("supportRequirementId") != SUPPORT_REQUIREMENT_ID:
+        fail("support_matrix proof contract requirement identity drifted")
     lineages = contract["lineageBindings"]
     lineage_ids = [item["testId"] for item in lineages]
     if len(lineage_ids) != len(set(lineage_ids)):
@@ -201,7 +208,74 @@ def _dot_value(value: Mapping[str, Any], path: str) -> Any:
     return current
 
 
-def _validate_support_matrix_document(document: Mapping[str, Any]) -> None:
+def _repository_support_requirement(result: Mapping[str, Any], registry: Mapping[str, Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    test_id = result.get("testId")
+    if not isinstance(test_id, str) or not test_id:
+        fail("release support requirement requires a canonical stable test identity")
+    profiles = [item for item in registry.get("projectTestProfiles", []) if item.get("stableCheckId") == test_id]
+    if len(profiles) != 1:
+        fail(f"release support requirement must resolve exactly one canonical Test Center profile for {test_id}")
+    cases = [item for item in registry.get("testCases", []) if item.get("testId") == test_id]
+    if len(cases) != 1 or cases[0].get("mandatory") is not True:
+        fail(f"release support requirement must bind one mandatory canonical test case for {test_id}")
+    platforms = profiles[0].get("platforms")
+    if not isinstance(platforms, list) or not platforms or not all(isinstance(value, str) and value for value in platforms):
+        fail(f"release support requirement has invalid canonical platform scope for {test_id}")
+    if len(platforms) != len(set(platforms)) or "any" in platforms:
+        fail(f"release support requirement requires unique concrete canonical platforms for {test_id}")
+    # Until the canonical Test Center exposes a first-class product capability
+    # policy, the only capability this release report may certify is its own
+    # repository-registered stable test identity. Evidence cannot self-select a
+    # broader or narrower product capability set.
+    return tuple(platforms), (test_id,)
+
+
+def _collect_platform_proofs(
+    predecessors: list[Mapping[str, Any]],
+    *,
+    subject_test_id: str,
+    lineages: Mapping[str, str],
+    candidate_commit: str,
+    candidate_tree: str,
+) -> dict[tuple[str, str], str]:
+    subject_lineage = lineages.get(subject_test_id)
+    if subject_lineage is None:
+        fail(f"release support requirement lacks canonical lineage for {subject_test_id}")
+    proofs: dict[tuple[str, str], str] = {}
+
+    def visit(items: list[Mapping[str, Any]]) -> None:
+        for item in items:
+            result = item["executionResult"]
+            if item["assuranceLevel"] == "platform":
+                if result["resultState"] != "PASS" or result["commit"] != candidate_commit or result["tree"] != candidate_tree:
+                    fail("support_matrix platform proof is not a PASS for the exact candidate")
+                if lineages.get(result["testId"]) != subject_lineage:
+                    fail(f"support_matrix platform proof belongs to unrelated assurance lineage: {result['testId']}")
+                platform = result["platform"]
+                if not isinstance(platform, str) or not platform or platform == "any":
+                    fail("support_matrix platform proof must identify one concrete platform")
+                pair = (platform, subject_test_id)
+                if pair in proofs:
+                    fail(f"support_matrix has duplicate exact-candidate platform proof for {platform}/{subject_test_id}")
+                proofs[pair] = result["resultId"]
+            children = item.get("predecessorResults", [])
+            if not isinstance(children, list):
+                fail("support_matrix predecessor proof tree is malformed")
+            visit(children)
+
+    visit(predecessors)
+    return proofs
+
+
+def _validate_support_matrix_document(
+    document: Mapping[str, Any],
+    *,
+    required_platforms: tuple[str, ...],
+    required_capabilities: tuple[str, ...],
+    platform_proofs: Mapping[tuple[str, str], str],
+) -> None:
+    if document.get("supportRequirementId") != SUPPORT_REQUIREMENT_ID:
+        fail("support_matrix supportRequirementId does not match repository-authoritative requirement")
     platforms = document.get("requiredPlatforms")
     capabilities = document.get("requiredCapabilities")
     matrix = document.get("matrix")
@@ -209,23 +283,28 @@ def _validate_support_matrix_document(document: Mapping[str, Any]) -> None:
         fail("support_matrix requires a non-empty requiredPlatforms string array")
     if len(platforms) != len(set(platforms)):
         fail("support_matrix requiredPlatforms contains duplicates")
+    if set(platforms) != set(required_platforms) or len(platforms) != len(required_platforms):
+        fail("support_matrix requiredPlatforms do not exactly match repository-authoritative requirement")
     if not isinstance(capabilities, list) or not capabilities or not all(isinstance(value, str) and value for value in capabilities):
         fail("support_matrix requires a non-empty requiredCapabilities string array")
     if len(capabilities) != len(set(capabilities)):
         fail("support_matrix requiredCapabilities contains duplicates")
+    if set(capabilities) != set(required_capabilities) or len(capabilities) != len(required_capabilities):
+        fail("support_matrix requiredCapabilities do not exactly match repository-authoritative requirement")
     if not isinstance(matrix, list) or not matrix:
         fail("support_matrix requires a non-empty matrix")
 
-    expected = {(platform, capability) for platform in platforms for capability in capabilities}
+    expected = {(platform, capability) for platform in required_platforms for capability in required_capabilities}
     actual: set[tuple[str, str]] = set()
     for index, entry in enumerate(matrix):
-        if not isinstance(entry, Mapping) or set(entry) != {"platform", "capability", "supportState"}:
-            fail(f"support_matrix matrix[{index}] must contain exactly platform/capability/supportState")
+        if not isinstance(entry, Mapping) or set(entry) != {"platform", "capability", "supportState", "proofResultId"}:
+            fail(f"support_matrix matrix[{index}] must contain exactly platform/capability/supportState/proofResultId")
         platform = entry["platform"]
         capability = entry["capability"]
         state = entry["supportState"]
-        if platform not in platforms or capability not in capabilities:
-            fail(f"support_matrix matrix[{index}] references undeclared coverage")
+        proof_result_id = entry["proofResultId"]
+        if platform not in required_platforms or capability not in required_capabilities:
+            fail(f"support_matrix matrix[{index}] references unauthorized coverage")
         if state not in SUPPORT_STATES:
             fail(f"support_matrix matrix[{index}] has invalid supportState {state!r}")
         pair = (platform, capability)
@@ -234,10 +313,16 @@ def _validate_support_matrix_document(document: Mapping[str, Any]) -> None:
         actual.add(pair)
         if state != "SUPPORTED":
             fail(f"release support_matrix has non-supported required coverage: {platform}/{capability}={state}")
+        expected_proof = platform_proofs.get(pair)
+        if expected_proof is None or proof_result_id != expected_proof:
+            fail(f"support_matrix {platform}/{capability} lacks corresponding exact-candidate platform proof")
     if actual != expected:
         missing = sorted(expected - actual)
         extra = sorted(actual - expected)
-        fail(f"support_matrix does not exactly cover required platform/capability matrix; missing={missing}, extra={extra}")
+        fail(f"support_matrix does not exactly cover repository-authoritative platform/capability matrix; missing={missing}, extra={extra}")
+    extra_proofs = sorted(set(platform_proofs) - expected)
+    if extra_proofs:
+        fail(f"support_matrix exact-candidate platform proofs exceed repository-authoritative scope: {extra_proofs}")
 
 
 def _validate_independent_review_document(document: Mapping[str, Any]) -> None:
@@ -257,6 +342,7 @@ def _validate_evidence_semantics(
     proof_contract: Mapping[str, Any],
     *,
     require_git_binding: bool = False,
+    support_requirement: Mapping[str, Any] | None = None,
 ) -> None:
     contracts = {item["category"]: item for item in proof_contract["evidenceContracts"]}
     if category not in contracts:
@@ -290,12 +376,19 @@ def _validate_evidence_semantics(
         if _dot_value(document, evidence_field) != expected:
             fail(f"evidence semantic constant mismatch for {category}.{evidence_field}")
     if category == "support_matrix":
-        _validate_support_matrix_document(document)
+        if support_requirement is None:
+            fail("support_matrix requires repository-authoritative support requirement context")
+        _validate_support_matrix_document(
+            document,
+            required_platforms=tuple(support_requirement["requiredPlatforms"]),
+            required_capabilities=tuple(support_requirement["requiredCapabilities"]),
+            platform_proofs=support_requirement["platformProofs"],
+        )
     if category == "independent_review":
         _validate_independent_review_document(document)
 
 
-def _validate_typed_evidence(*, result: Mapping[str, Any], bindings: list[Mapping[str, Any]], required_categories: set[str], project: Path, proof_contract: Mapping[str, Any], label: str, require_git_binding: bool = False) -> list[str]:
+def _validate_typed_evidence(*, result: Mapping[str, Any], bindings: list[Mapping[str, Any]], required_categories: set[str], project: Path, proof_contract: Mapping[str, Any], label: str, require_git_binding: bool = False, support_requirement: Mapping[str, Any] | None = None) -> list[str]:
     canonical = result.get("evidenceReferences", [])
     canonical_by_id = {item["evidenceId"]: item for item in canonical}
     categories = [item["category"] for item in bindings]
@@ -317,6 +410,7 @@ def _validate_typed_evidence(*, result: Mapping[str, Any], bindings: list[Mappin
             result,
             proof_contract,
             require_git_binding=require_git_binding,
+            support_requirement=support_requirement,
         )
     return sorted(required_categories)
 
@@ -399,6 +493,20 @@ def validate_assurance_execution_report(report: dict[str, Any], *, report_schema
         candidate_tree=report["candidateTree"],
         seen_result_ids={report["executionResult"]["resultId"]},
     )
+    support_requirement: Mapping[str, Any] | None = None
+    if report["assuranceLevel"] == "release":
+        required_platforms, required_capabilities = _repository_support_requirement(report["executionResult"], registry)
+        support_requirement = {
+            "requiredPlatforms": required_platforms,
+            "requiredCapabilities": required_capabilities,
+            "platformProofs": _collect_platform_proofs(
+                report["predecessorResults"],
+                subject_test_id=report["executionResult"]["testId"],
+                lineages=lineages,
+                candidate_commit=report["candidateCommit"],
+                candidate_tree=report["candidateTree"],
+            ),
+        }
     require_git_binding = level["supportClaimCeiling"] not in {"NONE", "SOURCE_FOUNDATION"}
-    current_evidence = _validate_typed_evidence(result=report["executionResult"], bindings=report["evidenceBindings"], required_categories=set(level["requiredEvidence"]), project=project, proof_contract=proof_contract, label="assurance report", require_git_binding=require_git_binding)
+    current_evidence = _validate_typed_evidence(result=report["executionResult"], bindings=report["evidenceBindings"], required_categories=set(level["requiredEvidence"]), project=project, proof_contract=proof_contract, label="assurance report", require_git_binding=require_git_binding, support_requirement=support_requirement)
     return {**base,"predecessorLevelsVerified":sorted(level["requiredPredecessorLevels"]),"predecessorEvidenceProofs":predecessors,"predecessorEvidenceProofCount":len(predecessors),"requiredEvidenceVerified":current_evidence,"evidenceResolution":"REPOSITORY_RELATIVE_SHA256_TYPED_JSON_AND_GIT_BOUND_SUPPORT_EVIDENCE","predecessorProofMode":"RECURSIVE_EXACT_CANDIDATE_LINEAGE"}

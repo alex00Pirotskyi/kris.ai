@@ -13,7 +13,9 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "tool"))
 
 from test_center_assurance_enforcement import (  # noqa: E402
+    SUPPORT_REQUIREMENT_ID,
     HierarchyError,
+    _repository_support_requirement,
     _resolve_evidence,
     _validate_independent_review_document,
     _validate_support_matrix_document,
@@ -45,6 +47,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
         self.registry = load("config/test_center_registry.v1.json")
         self.contract_schema = load("schemas/test_center_assurance_report_contract.v1.json")
         self.contract = load("config/test_center_assurance_report_contract.v1.json")
+        self.proof_contract = load("release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json")
         self.report = load("release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json")
 
     def validate_documents(self, **overrides) -> dict:
@@ -136,34 +139,82 @@ class AssuranceEnforcementTest(unittest.TestCase):
         with self.assertRaisesRegex(HierarchyError, "repository-authoritative external review provenance"):
             _validate_independent_review_document(document)
 
-    def test_support_matrix_requires_complete_unique_supported_coverage(self) -> None:
+    def test_support_requirement_comes_from_canonical_registry(self) -> None:
+        result = self.report["executionResult"]
+        platforms, capabilities = _repository_support_requirement(result, self.registry)
+        self.assertEqual(platforms, ("linux", "macos", "windows"))
+        self.assertEqual(capabilities, (result["testId"],))
+        support_contract = next(item for item in self.proof_contract["evidenceContracts"] if item["category"] == "support_matrix")
+        self.assertEqual(support_contract["requiredConstants"]["supportRequirementId"], SUPPORT_REQUIREMENT_ID)
+        self.assertTrue({"supportRequirementId", "requiredPlatforms", "requiredCapabilities", "matrix"}.issubset(set(support_contract["requiredJsonFields"])))
+
+    def test_support_matrix_requires_authoritative_scope_and_exact_platform_proofs(self) -> None:
+        required_platforms = ("windows", "macos")
+        required_capabilities = ("owner-mode", "process-supervision")
+        platform_proofs = {
+            (platform, capability): f"result.platform.{platform}.{capability}"
+            for platform in required_platforms
+            for capability in required_capabilities
+        }
         document = {
             "schemaVersion": "1.0.0",
             "kind": "SUPPORT_MATRIX",
             "candidateCommit": "a" * 40,
             "candidateTree": "b" * 40,
             "status": "PASS",
-            "requiredPlatforms": ["windows", "macos"],
-            "requiredCapabilities": ["owner-mode", "process-supervision"],
+            "supportRequirementId": SUPPORT_REQUIREMENT_ID,
+            "requiredPlatforms": list(required_platforms),
+            "requiredCapabilities": list(required_capabilities),
             "matrix": [
-                {"platform": platform, "capability": capability, "supportState": "SUPPORTED"}
-                for platform in ("windows", "macos")
-                for capability in ("owner-mode", "process-supervision")
+                {
+                    "platform": platform,
+                    "capability": capability,
+                    "supportState": "SUPPORTED",
+                    "proofResultId": platform_proofs[(platform, capability)],
+                }
+                for platform in required_platforms
+                for capability in required_capabilities
             ],
         }
-        _validate_support_matrix_document(document)
+        _validate_support_matrix_document(
+            document,
+            required_platforms=required_platforms,
+            required_capabilities=required_capabilities,
+            platform_proofs=platform_proofs,
+        )
 
         empty = copy.deepcopy(document); empty["matrix"] = []
         with self.assertRaisesRegex(HierarchyError, "non-empty matrix"):
-            _validate_support_matrix_document(empty)
+            _validate_support_matrix_document(empty, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
 
         duplicate = copy.deepcopy(document); duplicate["matrix"].append(copy.deepcopy(duplicate["matrix"][0]))
         with self.assertRaisesRegex(HierarchyError, "duplicates platform/capability"):
-            _validate_support_matrix_document(duplicate)
+            _validate_support_matrix_document(duplicate, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
 
         blocked = copy.deepcopy(document); blocked["matrix"][0]["supportState"] = "BLOCKED"
         with self.assertRaisesRegex(HierarchyError, "non-supported required coverage"):
-            _validate_support_matrix_document(blocked)
+            _validate_support_matrix_document(blocked, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
+
+        narrow = copy.deepcopy(document); narrow["requiredPlatforms"] = ["windows"]; narrow["matrix"] = [entry for entry in narrow["matrix"] if entry["platform"] == "windows"]
+        with self.assertRaisesRegex(HierarchyError, "requiredPlatforms do not exactly match repository-authoritative requirement"):
+            _validate_support_matrix_document(narrow, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
+
+        omitted_capability = copy.deepcopy(document); omitted_capability["requiredCapabilities"] = ["owner-mode"]; omitted_capability["matrix"] = [entry for entry in omitted_capability["matrix"] if entry["capability"] == "owner-mode"]
+        with self.assertRaisesRegex(HierarchyError, "requiredCapabilities do not exactly match repository-authoritative requirement"):
+            _validate_support_matrix_document(omitted_capability, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
+
+        extra = copy.deepcopy(document); extra["requiredPlatforms"].append("linux")
+        extra["matrix"].extend({"platform":"linux","capability":capability,"supportState":"SUPPORTED","proofResultId":f"result.platform.linux.{capability}"} for capability in required_capabilities)
+        with self.assertRaisesRegex(HierarchyError, "requiredPlatforms do not exactly match repository-authoritative requirement"):
+            _validate_support_matrix_document(extra, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
+
+        missing_proof = copy.deepcopy(document); missing_proof["matrix"][0]["proofResultId"] = "result.platform.unrelated"
+        with self.assertRaisesRegex(HierarchyError, "lacks corresponding exact-candidate platform proof"):
+            _validate_support_matrix_document(missing_proof, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
+
+        wrong_requirement = copy.deepcopy(document); wrong_requirement["supportRequirementId"] = "self-declared"
+        with self.assertRaisesRegex(HierarchyError, "supportRequirementId does not match repository-authoritative requirement"):
+            _validate_support_matrix_document(wrong_requirement, required_platforms=required_platforms, required_capabilities=required_capabilities, platform_proofs=platform_proofs)
 
     def test_support_bearing_evidence_requires_exact_candidate_git_blob(self) -> None:
         head = git("rev-parse", "HEAD")
