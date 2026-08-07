@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "762b037fc824e2d6b3c9e26d65193ddfcf2b8cc3",
+  "baseTree": "2b55e52e0a3001d560ec56912d518a6dee80f07b",
+  "branch": "agent/e/native-parity-readiness",
+  "createdAt": "2026-08-07T20:54:30Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T00:54:30Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-010",
+  "productPr": 71,
+  "refreshedAt": "2026-08-07T20:54:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 95,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P11-001-TEST-CENTER-RECON-9C41E2AF",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P11-001-RECONCILE-TEST-CENTER-9C41E2AF",
+  "workerIdentity": "ELASTIC-9c41e2af"
+}
