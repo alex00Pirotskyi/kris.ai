@@ -13,7 +13,12 @@ TOOL = THIS.parent
 if str(TOOL) not in sys.path:
     sys.path.insert(0, str(TOOL))
 
-from mission_runtime_control import prefixes_overlap, verify_candidate_ancestry, verify_git_base
+from mission_runtime_control import (
+    pattern_within,
+    prefixes_overlap,
+    verify_candidate_ancestry,
+    verify_git_base,
+)
 from mission_delivery_lib import DeliveryError
 from mission_delivery_strict import validate_review_receipt
 
@@ -64,6 +69,30 @@ class RuntimeGitBindingTests(unittest.TestCase):
     def test_path_overlap_is_scoped(self) -> None:
         self.assertTrue(prefixes_overlap("lib/product/model/**", "lib/product/model/a.dart"))
         self.assertFalse(prefixes_overlap("lib/product/model/**", "test/product/model/**"))
+
+    def test_concrete_file_matches_basename_glob_policy(self) -> None:
+        self.assertTrue(
+            pattern_within(
+                "tool/test_center_contracts_test.py",
+                "tool/test_center*.py",
+            )
+        )
+
+    def test_basename_glob_does_not_cross_directory_boundary(self) -> None:
+        self.assertFalse(
+            pattern_within(
+                "tool/test_center/contract.py",
+                "tool/test_center*.py",
+            )
+        )
+
+    def test_recursive_evidence_glob_matches_concrete_descendant(self) -> None:
+        self.assertTrue(
+            pattern_within(
+                "release/evidence/P5-001/sub/result.json",
+                "release/evidence/P5-*/**",
+            )
+        )
 
 
 class ReviewIdentityTests(unittest.TestCase):
