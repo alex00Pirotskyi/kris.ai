@@ -30,3 +30,18 @@ _SOURCE = _LOADER._load_tracked_parts(
     _EXPECTED_PARTS,
 )
 exec(compile(_SOURCE, __file__, "exec"), globals(), globals())
+
+_SECURITY_PATH = Path(__file__).with_name("anarchy_part_loader_test.py")
+_SECURITY_SPEC = importlib.util.spec_from_file_location(
+    "_p24_part_loader_security_tests",
+    _SECURITY_PATH,
+)
+if _SECURITY_SPEC is None or _SECURITY_SPEC.loader is None:
+    raise RuntimeError(f"cannot load P24 loader security regressions from {_SECURITY_PATH}")
+_SECURITY = importlib.util.module_from_spec(_SECURITY_SPEC)
+sys.modules[_SECURITY_SPEC.name] = _SECURITY
+_SECURITY_SPEC.loader.exec_module(_SECURITY)
+AnarchyPartLoaderSecurityTest = _SECURITY.AnarchyPartLoaderSecurityTest
+AnarchyEvidenceClassificationSecurityTest = (
+    _SECURITY.AnarchyEvidenceClassificationSecurityTest
+)
