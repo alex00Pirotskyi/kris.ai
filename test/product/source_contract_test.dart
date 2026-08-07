@@ -146,6 +146,7 @@ void main() {
         'lib/product/interoperability_v19.dart',
         'lib/product/knowledge_memory_v2.dart',
         'lib/product/mcp.dart',
+        'lib/product/mcp_protocol.dart',
         'lib/product/models_research.dart',
         'lib/product/planning_runtime.dart',
         'lib/product/product_runtime.dart',
@@ -668,7 +669,7 @@ void main() {
       expect(planning, contains('questions == 0'));
       expect(planning, isNot(contains('questions.isEmpty')));
       expect(api, contains("headers.value('origin')"));
-      expect(api, isNot(contains('HttpHeaders.originHeader')));
+      expect(api, isNot(contains('HttpHeaders.originHeader'));
       expect(ui, contains('CardThemeData('));
       expect(ui, isNot(contains('cardTheme: const CardTheme(')));
 
@@ -1300,6 +1301,9 @@ void main() {
         models,
         contains('defaultLoadTimeout = const Duration(minutes: 8)'),
       );
+      expect(models, contains('defaultLoadRetries = 1'));
+      expect(models, contains('defaultLoadRetries = 1'));
+      expect(models, contains('defaultLoadTimeout = const Duration(minutes: 8)'));
       expect(models, contains('defaultLoadRetries = 1'));
       expect(models, contains('_closeOnCancellation'));
       expect(models, contains('_remainingUntil'));
