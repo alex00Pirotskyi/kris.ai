@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: mission-v15-connector-authority-relay
@@ -61,7 +62,7 @@ jobs:
           PY
           )"
           case "$operation" in
-            APPEND_SAFE_DART_SET|APPEND_SAFE_JSON_IDENTITIES_V1|UPDATE_RELEASE_VALIDATOR_SOURCE_POLICY_V1|MATERIALIZE_SOURCE_MANIFEST_V1) ;;
+            APPEND_SAFE_DART_SET|APPEND_SAFE_JSON_IDENTITIES_V1|UPDATE_RELEASE_VALIDATOR_SOURCE_POLICY_V1|MATERIALIZE_SOURCE_MANIFEST_V1|DISPATCH_EXACT_PRODUCT_GATES_V1) ;;
             *) echo "unsupported connector authority operation: $operation" >&2; exit 1 ;;
           esac
           echo "path=$command" >> "$GITHUB_OUTPUT"
@@ -98,6 +99,91 @@ jobs:
             --project . \
             --command '${{ steps.command.outputs.path }}' \
             --output "$RUNNER_TEMP/connector-authority-result.json"
+      - name: Validate bounded exact Product PR CI dispatch
+        if: steps.command.outputs.operation == 'DISPATCH_EXACT_PRODUCT_GATES_V1'
+        shell: bash
+        run: |
+          python tool/mission_v15_exact_product_ci_dispatch.py \
+            --project . \
+            --command '${{ steps.command.outputs.path }}' \
+            --output "$RUNNER_TEMP/connector-authority-result.json"
+      - name: Dispatch and bind exact product-gates run
+        if: steps.command.outputs.operation == 'DISPATCH_EXACT_PRODUCT_GATES_V1'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RESULT_PATH: ${{ runner.temp }}/connector-authority-result.json
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import time
+          import urllib.parse
+          import urllib.request
+
+          result_path = pathlib.Path(os.environ['RESULT_PATH'])
+          result = json.loads(result_path.read_text(encoding='utf-8'))
+          repository = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GITHUB_TOKEN']
+          workflow = result['workflowFile']
+          branch = result['productBranch']
+          expected_head = result['productHead']
+          api_root = f"https://api.github.com/repos/{repository}"
+          headers = {
+              'Accept': 'application/vnd.github+json',
+              'Authorization': f'Bearer {token}',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'User-Agent': 'kris-mission-v15-exact-ci-dispatch',
+          }
+
+          payload = json.dumps({'ref': branch}).encode('utf-8')
+          request = urllib.request.Request(
+              f"{api_root}/actions/workflows/{urllib.parse.quote(workflow, safe='')}/dispatches",
+              data=payload,
+              headers={**headers, 'Content-Type': 'application/json'},
+              method='POST',
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              if response.status not in (200, 201, 204):
+                  raise RuntimeError(f'workflow dispatch returned HTTP {response.status}')
+
+          query = urllib.parse.urlencode({
+              'event': 'workflow_dispatch',
+              'branch': branch,
+              'per_page': 30,
+          })
+          allocated = None
+          for _ in range(30):
+              list_request = urllib.request.Request(
+                  f"{api_root}/actions/workflows/{urllib.parse.quote(workflow, safe='')}/runs?{query}",
+                  headers=headers,
+              )
+              with urllib.request.urlopen(list_request, timeout=30) as response:
+                  payload = json.loads(response.read().decode('utf-8'))
+              for run in payload.get('workflow_runs', []):
+                  if run.get('event') == 'workflow_dispatch' and run.get('head_sha') == expected_head:
+                      allocated = run
+                      break
+              if allocated is not None:
+                  break
+              time.sleep(2)
+          if allocated is None:
+              raise RuntimeError(
+                  f'workflow_dispatch did not allocate an exact-head run for {expected_head}'
+              )
+
+          result['dispatchedRunId'] = allocated['id']
+          result['dispatchedRunHead'] = allocated['head_sha']
+          result['dispatchedRunEvent'] = allocated['event']
+          result['dispatchedRunStatus'] = allocated['status']
+          result_path.write_text(
+              json.dumps(result, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: mission-v15-connector-authority-result
