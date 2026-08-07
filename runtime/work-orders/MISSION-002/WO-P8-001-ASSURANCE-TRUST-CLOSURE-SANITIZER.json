@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
+    "tool/test_center_assurance_enforcement.py",
+    "tool/test_center_assurance_enforcement_test.py"
+  ],
+  "baseCommit": "26ef06cf0c55badd55733d2f901d110a3f6a2737",
+  "baseTree": "53e05ce1b285602c5244348f060cf20b9bde60a3",
+  "createdAt": "2026-08-07T18:27:00Z",
+  "createdBy": "SANITIZER-V2",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-002",
+  "objective": "Close the remaining P8-001 fail-open assurance trust defects on the exact canonical Product head: prevent self-declared independent-review evidence from satisfying release assurance until repository-authoritative external provenance exists; require support-matrix evidence to prove explicit non-empty unique platform/capability coverage; and require behavior/platform/release support-bearing repository evidence to resolve from the exact candidate Git tree rather than mutable working-tree bytes. Preserve SOURCE_FOUNDATION behavior and do not promote support, certification, release, production, or GA.",
+  "parentProductPr": 65,
+  "priority": 98,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "P8 independent-review self-declaration fails closed",
+    "P8 support-matrix empty/duplicate/unsupported coverage fails closed",
+    "P8 support-bearing evidence absent from candidate Git tree fails closed",
+    "P8 existing lower-level source/unit assurance regression suite remains green",
+    "exact helper and canonical Product candidate CI/review after integration"
+  ],
+  "roadmapTask": "P8-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-07T18:27:00Z",
+  "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
+}
