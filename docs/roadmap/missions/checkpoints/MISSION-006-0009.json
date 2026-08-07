@@ -1,0 +1,44 @@
+{
+  "blockers": [
+    "GitHub allocated no workflow run or commit status for exact Worker G head 5e4253144815cf1d7e31d0af68f71086de325ba3.",
+    "No local Dart or Flutter toolchain/repository checkout is available; no test PASS is claimed for the changed P6 source.",
+    "SOURCE_MANIFEST.sha256 is stale after product/test changes and must be regenerated only by python tool/p1a_refresh_source_manifest.py . in an executable canonical environment.",
+    "test/product/source_contract_test.dart remains outside Worker G ownership; MISSION-006-P6-001-SOURCE-INVENTORY remains REQUESTED from Worker A for this exact candidate.",
+    "P6-TC-001 remains OWNER_HANDOFF_PENDING. Worker B head b5528a2bf9d3fbf3841d2373a87c1f4a84ff741c has exact REQUEST_CHANGES findings for predecessor lineage and evidence-category semantic binding and no exact-head CI.",
+    "Fresh independent P6 SOURCE/EVIDENCE/INTEGRATION review is required after ownership, manifest, Test Center authority, and exact-head CI settle.",
+    "PR #78 remains open and unmerged; its delivery controls are read-only overlay authority only.",
+    "P6-002 and P18-001 depend on P6-001 and must not begin while P6-001 remains unaccepted/unintegrated.",
+    "Merge and behavior/platform/release/production/GA promotion remain unauthorized."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Generated WORK_EXECUTION_ID WRK-20260806T212031Z-a1470e7e and resumed the unique Worker G MISSION-006 claim.",
+    "Re-resolved protected main, canonical mission branch, PR #78, current Worker G/Worker A/Worker B state, exact owner requests, CI, reviews, dependencies, and ownership.",
+    "Found and repaired a P6-001 product defect: benchmark evidence was task-class-bound but not artifact-bound, so approval could reuse measurements from a different model digest.",
+    "Added required modelDigest to ModelBenchmarkEvidence JSON and constructors and reject empty benchmark artifact identity.",
+    "ModelDefinition.approved now rejects every benchmark whose modelDigest differs from the exact approved model digest.",
+    "ModelDefinition identity validation now rejects benchmark-bearing records without a model digest and rejects benchmark evidence attached to a different artifact, including evaluation-only records.",
+    "Added regressions for direct construction with stale benchmark evidence, JSON model-digest relabeling with stale benchmarks, missing benchmark modelDigest, and direct-core-import bypass attempts.",
+    "Updated all existing P6 benchmark constructors to bind the measured artifact digest; exact old-to-new delta changes only lib/product/model/model_registry.dart and the three Worker G model-registry test modules.",
+    "Rebound Worker A source-inventory and Worker B P6-TC-001 owner handoffs to exact candidate 5e4253144815cf1d7e31d0af68f71086de325ba3 / 32202b0b1d2776f79a22ba31ee387cb97d4f979b without widening shared authority.",
+    "Inspected Worker B exact current review state and did not duplicate an already-existing exact REQUEST_CHANGES review."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants/reviews the exact source-inventory append; canonical SOURCE_MANIFEST.sha256 is regenerated twice; exact P6 and affected CI executes for 5e4253144815cf1d7e31d0af68f71086de325ba3; Worker B repairs its current P8 review findings, publishes P6-TC-001 including benchmark-to-artifact digest coverage, and performs exact owner review; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before these gates pass.",
+  "observedHead": "5e4253144815cf1d7e31d0af68f71086de325ba3",
+  "observedTree": "32202b0b1d2776f79a22ba31ee387cb97d4f979b",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 9,
+  "supersededBy": null,
+  "validation": [
+    "Old head 570c20eab481e121fe91c41e336a38ec82d593c2 to new head 5e4253144815cf1d7e31d0af68f71086de325ba3 is a four-commit fast-forward changing only four Worker G-owned model source/test files.",
+    "Every ModelBenchmarkEvidence constructor visible in the current PR patch supplies modelDigest.",
+    "PR #76 effective changed-file list contains no Worker B Test Center authority path.",
+    "Exact head 5e4253144815cf1d7e31d0af68f71086de325ba3 has zero allocated workflow runs and zero commit statuses.",
+    "Historical green runs do not certify this changed source.",
+    "No behavioral, platform, release, production, or GA support claim is made."
+  ],
+  "worker": "G",
+  "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
+}

@@ -1,0 +1,23 @@
+{
+  "branch": "agent/g/mission-006-model-routing",
+  "commit": "5e4253144815cf1d7e31d0af68f71086de325ba3",
+  "evidence": [
+    "P6-001 exact source candidate 5e4253144815cf1d7e31d0af68f71086de325ba3 / 32202b0b1d2776f79a22ba31ee387cb97d4f979b",
+    "Product repair: ModelBenchmarkEvidence now requires modelDigest and approval rejects benchmark evidence measured for another artifact digest",
+    "Regression coverage added for cross-artifact direct construction, model-digest JSON relabeling, missing benchmark modelDigest, and direct-core import bypass",
+    "Old-to-new P6 delta changes only lib/product/model/model_registry.dart and three Worker G model-registry test modules",
+    "Exact-head GitHub workflow query for 5e4253144815cf1d7e31d0af68f71086de325ba3 returned no runs and no commit statuses",
+    "Worker A source-inventory coordination remains REQUESTED for the exact P6 candidate",
+    "Worker B P8 authority exact review 4878375408 on 604905039aa26952045e69ebe6799ae464144635 repairs recursive predecessor assurance but still REQUEST_CHANGES for independent-review authenticity and exact-head validation"
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants/reviews the exact source-inventory append; regenerate SOURCE_MANIFEST.sha256 twice through its canonical owner; execute exact P6/affected CI; Worker B repairs review-authenticity semantics, publishes P6-TC-001 and reviews the exact integration; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before these gates pass.",
+  "pullRequest": 76,
+  "recordedAt": "2026-08-06T21:51:36Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P6-001",
+  "tree": "32202b0b1d2776f79a22ba31ee387cb97d4f979b",
+  "workExecutionId": "WRK-20260806T212031Z-a1470e7e",
+  "worker": "G"
+}

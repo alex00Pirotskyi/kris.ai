@@ -1,0 +1,24 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "PR #75 carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a / deb88c2aea8f47af76de6c9e00c9fdd4bb20a143 remains intentionally not review-ready",
+    "Durable clean export: workflow run 31107230047, job 92635442027, artifact 8970093356",
+    "Ownership-aligned complete target remains d9fdd8fafb597e453bc8f358935ae8fe4ab4dd2a / d4526dc84554ecd1d77beefeff63b044e92a174f",
+    "Exact shared registry request: PR #65 comment 5208181850 for blob b4ec5f5eaea363263920ff81dcba2dd174b56df1",
+    "Latest MISSION-002 continuation comment 5208498830 records shared grants: none",
+    "Source-only split generated SOURCE_MANIFEST.sha256 twice with 1130 entries but failed closed: P2-004 contract sources are not bound into Test Center inputs",
+    "PR #75 fail-closed continuation comment 5208564549",
+    "PR #65 coordination revalidation comment 5208566551"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "MISSION-002 must publish the exact bounded grant for registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 and full target tree d4526dc84554ecd1d77beefeff63b044e92a174f. Then reconstruct and publish the complete ownership-aligned candidate by non-forced fast-forward, inspect exact-head CI and artifacts, rerun ownership and review-impact checks, and request a fresh independent exact-candidate review.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T19:28:44Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P2-004",
+  "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "workExecutionId": "WRK-20260806T191526Z-89c76579",
+  "worker": "A"
+}

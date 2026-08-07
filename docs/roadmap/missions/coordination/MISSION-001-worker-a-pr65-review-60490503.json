@@ -1,0 +1,89 @@
+{
+  "candidate": {
+    "baseCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "baseTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "604905039aa26952045e69ebe6799ae464144635",
+    "tree": "b5070956963404b4d9f5f8875db40d06bc093b4c"
+  },
+  "ci": {
+    "artifacts": [],
+    "classification": "NOT_RUN",
+    "workflowRuns": []
+  },
+  "closedFindings": [
+    "strict RFC3339 and timezone validation",
+    "minProperties enforcement",
+    "generatedAt ordering",
+    "typed required evidence coverage and digest resolution",
+    "recursive exact-candidate predecessor ancestry"
+  ],
+  "decision": "REQUEST_CHANGES",
+  "github": {
+    "reviewId": 4878382841,
+    "submissionConstraint": "The connected GitHub identity is also the PR author.",
+    "submissionState": "COMMENTED"
+  },
+  "remainingFindings": [
+    {
+      "findingId": "P8-A-604-001",
+      "severity": "HIGH",
+      "title": "Independent review evidence does not prove reviewer independence",
+      "requiredRepair": "Bind review evidence to reviewer identity, provider/review ID, submitted time, author/reviewer separation, and a trusted GitHub or signed attestation source."
+    },
+    {
+      "findingId": "P8-A-604-002",
+      "severity": "HIGH",
+      "title": "Support matrix lacks platform and capability semantics",
+      "requiredRepair": "Require exact mandatory platform/capability/version coverage, evidence links, unsupported states, and duplicate/missing-row rejection."
+    },
+    {
+      "findingId": "P8-A-604-003",
+      "severity": "HIGH",
+      "title": "Evidence immutability and candidate-tree membership are self-asserted",
+      "requiredRepair": "Resolve repository evidence through the candidate Git tree to exact blob identity or validate a trusted immutable external artifact; reject untracked and wrong-tree evidence."
+    },
+    {
+      "findingId": "P8-A-604-004",
+      "severity": "HIGH",
+      "title": "Frozen Worker A PASS artifact remains deleted without migration",
+      "requiredRepair": "Restore or migrate the complete immutable review body and sidecar to an authorized append-only path and verify the historical digest."
+    },
+    {
+      "findingId": "P8-A-604-005",
+      "severity": "HIGH",
+      "title": "Exact-head CI and canonical manifest are unsettled",
+      "requiredRepair": "Regenerate the canonical manifest twice and settle exact-head Ubuntu/Windows/macOS CI and artifacts."
+    },
+    {
+      "findingId": "P8-A-604-006",
+      "severity": "MEDIUM",
+      "title": "Manifest publication is not gated on validation success",
+      "requiredRepair": "Make manifest publication depend on successful completion of the full validation matrix and exact expected-head checks."
+    },
+    {
+      "findingId": "P8-A-604-007",
+      "severity": "MEDIUM",
+      "title": "Deep-chain regression coverage is incomplete",
+      "requiredRepair": "Add a valid deep release chain and negative cases for missing intermediate ancestry, duplicate nested receipts, and cross-branch reuse."
+    },
+    {
+      "findingId": "P8-A-604-008",
+      "severity": "MEDIUM",
+      "title": "MISSION-001 owner-preserving P2-004 union remains absent",
+      "requiredRepair": "After the P8 candidate is stable, publish the owner-preserving tc.p2.acceptance-contract union."
+    }
+  ],
+  "mergeAuthorization": "NONE",
+  "nextAction": "Worker B repairs the remaining evidence provenance and release support contracts, migrates immutable review evidence, gates manifest publication, expands deep-chain regressions, regenerates the manifest, settles exact-head CI/artifacts, and requests fresh review. MISSION-002 then publishes the P2-004 owner union.",
+  "pullRequest": 65,
+  "reviewId": "MISSION-001-WORKER-A-PR65-REVIEW-60490503",
+  "reviewedAt": "2026-08-06T21:52:40Z",
+  "reviewedMission": "MISSION-002",
+  "reviewer": "Worker A",
+  "reviewingMission": "MISSION-001",
+  "schemaVersion": 1,
+  "supportImpact": "NO_PROMOTION",
+  "task": "P8-001",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72"
+}

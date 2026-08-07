@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "sequence": 12,
+  "mission": "MISSION-001",
+  "worker": "A",
+  "status": "BLOCKED",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "pullRequest": 75,
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0011.json",
+  "supersededBy": null,
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "classifications": [
+    "WORKER_A_EXISTING_CLAIM_RESUMED",
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_004_SOURCE_REPAIR_VALIDATED_IN_DURABLE_ARTIFACT",
+    "P2_004_PREVIOUS_EXACT_REGISTRY_TARGET_SUPERSEDED",
+    "P2_004_OWNER_MEDIATED_TEST_CENTER_UNION_REQUIRED",
+    "P2_004_TARGET_NOT_PUBLISHED",
+    "BLOCKED_BY_COORDINATION",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "DELIVERY_OVERLAY_NOT_INTEGRATED",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "blockers": [
+    {
+      "class": "OWNER_MEDIATED_UNION_REQUIRED",
+      "detail": "The current MISSION-002 authority registry blob ba785d79d282b54f5990b0003e24721ae7f6a984 contains current P8 hierarchy mappings, profiles, test cases, and module records. The superseded Worker A blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 lacks those owner records and cannot safely replace the registry."
+    },
+    {
+      "class": "VALIDATED_SOURCE_NOT_PUBLISHED",
+      "detail": "The trusted P2-004 source repair is durable in workflow artifact 8970093356, but the remote PR #75 head remains carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a because the canonical Test Center union does not yet exist."
+    },
+    {
+      "class": "DELIVERY_OVERLAY_NOT_INTEGRATED",
+      "detail": "PR #78 remains open, draft, unmerged, and non-mergeable. Its unified prompt is used only as a read-only control overlay."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane startup, memory, packaging, reliability, detach/reconnect, and process-tree measurements exist for Windows, macOS, and Linux."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "The p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning/trust inputs, approvals, and controlled behavior receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, and PR #64 remain draft and unmerged without a currently valid authorized integration sequence."
+    }
+  ],
+  "completed": [
+    "Generated unique work execution identity WRK-20260806T194440Z-4b9c2e71 and resolved Worker A from the live unique MISSION-001 claim.",
+    "Re-resolved protected main, the canonical mission branch, PR #78, PR #64, PR #65, PR #75, current branch heads, current comments, and the latest MISSION-001 checkpoint.",
+    "Confirmed the newest unified worker prompt remains present only on PR #78 branch agent/mission-delivery-enforcement-v1 and consumed it strictly as a read-only overlay.",
+    "Compared the superseded Worker A registry target against current MISSION-002 registry authority and found that exact replacement would discard current P8 hierarchy records.",
+    "Created machine-readable coordination artifact docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json at d3ab49a32fdb3594d2b3133ceaf476fa9bddb18a / 3b28a3ce5be5bbd8bf26231b9e553e89bb83f140.",
+    "Marked PR #65 comment 5208181850 superseded and withdrew the unsafe exact-blob grant request.",
+    "Published PR #75 coordination correction comment 5208703513 and refreshed the PR body to require owner-mediated union integration.",
+    "Appended delivery record docs/roadmap/missions/delivery/records/MISSION-001/20260806T195330Z-P2-004.json at 0de9f5f00db9e46de5b554fea29cae960425ac5e / a4a09ae1976b1083d76d81aa7a41e1e14d5ae61a.",
+    "Kept PR #75 remote head unchanged and did not publish a registry replacement that would erase MISSION-002 authority data."
+  ],
+  "evidence": {
+    "workExecutionId": "WRK-20260806T194440Z-4b9c2e71",
+    "parentCandidate": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "sourceCarrier": {
+      "pullRequest": 75,
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "validatedSourceArtifact": {
+      "runId": 31107230047,
+      "jobId": 92635442027,
+      "artifactId": 8970093356,
+      "artifactName": "worker-a-p2-004-materialized-139ce09e",
+      "zipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b",
+      "cleanTree": "6b821b719f23cb981653334c10a2215346771f08"
+    },
+    "supersededTarget": {
+      "commit": "d9fdd8fafb597e453bc8f358935ae8fe4ab4dd2a",
+      "tree": "d4526dc84554ecd1d77beefeff63b044e92a174f",
+      "registryBlob": "b4ec5f5eaea363263920ff81dcba2dd174b56df1",
+      "disposition": "SUPERSEDED_UNSAFE_REPLACEMENT"
+    },
+    "currentOwnerAuthority": {
+      "pullRequest": 65,
+      "commit": "f14ba34e501972b13cd4310c4869c87e021012da",
+      "tree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+      "registryBlob": "ba785d79d282b54f5990b0003e24721ae7f6a984",
+      "requiredPreservedMapping": "affected.p8-formal-test-hierarchy",
+      "requiredPreservedStableIds": [
+        "tc.p8.formal-test-hierarchy",
+        "tc.p8.formal-test-hierarchy-regressions"
+      ]
+    },
+    "coordination": {
+      "artifact": "docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json",
+      "commit": "d3ab49a32fdb3594d2b3133ceaf476fa9bddb18a",
+      "tree": "3b28a3ce5be5bbd8bf26231b9e553e89bb83f140",
+      "supersededRequestComment": 5208181850,
+      "pr75CorrectionComment": 5208703513
+    },
+    "deliveryRecord": {
+      "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T195330Z-P2-004.json",
+      "commit": "0de9f5f00db9e46de5b554fea29cae960425ac5e",
+      "tree": "a4a09ae1976b1083d76d81aa7a41e1e14d5ae61a"
+    },
+    "deliveryOverlay": {
+      "pullRequest": 78,
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false
+    }
+  },
+  "validation": [
+    "The live MISSION-001 claim remained unique after every mission-branch write.",
+    "The superseded Worker A registry set contains Worker A P1/P1A/P2 stable profiles but not the current P8 hierarchy records present in owner registry blob ba785d79d282b54f5990b0003e24721ae7f6a984.",
+    "The old exact grant was withdrawn rather than allowing an owner-authority regression.",
+    "No product source, product branch ref, protected-main identity, frozen Worker A parent, or review identity changed.",
+    "No source or hosted check was promoted into behavioral, platform, release, production, or GA evidence.",
+    "No automation-host technology, controlled P2 behavior, capability support, platform support, release support, roadmap authority, P3 implementation, P11 implementation, or merge authorization was claimed."
+  ],
+  "nextAction": "MISSION-002 must publish and validate an owner-preserving union registry candidate, or issue a new exact grant only after that union exists. Worker A then rebuilds the complete P2-004 candidate against the exact owner registry, regenerates SOURCE_MANIFEST.sha256 twice, runs ownership and scoped review-impact checks, publishes by non-forced fast-forward, inspects exact-head CI and artifacts, and requests fresh independent review."
+}

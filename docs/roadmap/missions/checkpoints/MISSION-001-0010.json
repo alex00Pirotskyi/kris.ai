@@ -1,0 +1,118 @@
+{
+  "blockers": [
+    {
+      "class": "BLOCKED_BY_COORDINATION",
+      "detail": "The ownership-aligned P2-004 candidate requires one shared-authority edit in config/test_center_registry.v1.json. MISSION-002 grant request 5208181850 now binds exact registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 to exact target tree d4526dc84554ecd1d77beefeff63b044e92a174f. Worker A will not publish before that grant exists."
+    },
+    {
+      "class": "VALIDATED_TREE_NOT_PUBLISHED",
+      "detail": "The exact ownership-aligned candidate is local commit d9fdd8fafb597e453bc8f358935ae8fe4ab4dd2a / tree d4526dc84554ecd1d77beefeff63b044e92a174f. PR #75 remains at carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a pending the shared authority grant."
+    },
+    {
+      "class": "P2_004_MISSING_TRI_PLATFORM_MEASUREMENTS",
+      "detail": "No real exact-SHA Node/node-pty, native PTY supervisor, and Dart-control-plane measurements and receipts exist for Windows, macOS, and Linux. ADR-0012 remains provisional and no automation-host technology is selected."
+    },
+    {
+      "class": "BLOCKED_EXTERNAL",
+      "detail": "The p2-controlled environment, interactive self-hosted Windows/macOS/Linux runners, exact runner/session variables, signed provisioning and trust inputs, approvals, and controlled behavior receipts remain absent."
+    },
+    {
+      "class": "PENDING_AUTHORIZED_STACKED_INTEGRATION",
+      "detail": "PR #75, PR #65, and PR #64 remain draft and unmerged without a currently valid authorized integration sequence."
+    }
+  ],
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "classifications": [
+    "WORKER_A_PARENT_EXACT_CANDIDATE_FROZEN",
+    "WORKER_A_PARENT_REVIEW_VALID_FOR_FROZEN_SHA",
+    "P2_004_TRUSTED_RECEIPT_CONTRACT_HARDENED",
+    "P2_004_OWNERSHIP_ALIGNED_TARGET_VALIDATED",
+    "P2_004_TARGET_NOT_PUBLISHED",
+    "BLOCKED_BY_COORDINATION",
+    "P2_004_MEASURED_DECISION_BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "P2_BEHAVIORAL_CLOSURE_BLOCKED_EXTERNAL",
+    "NO_TECHNOLOGY_SELECTION",
+    "NO_SUPPORT_PROMOTION",
+    "NO_MERGE_AUTHORIZATION",
+    "NO_P3_OR_P11_AUTHORIZATION"
+  ],
+  "completed": [
+    "Consumed PR #78's newest repository prompt as a read-only execution-control overlay and preserved the existing unique Worker A MISSION-001 claim.",
+    "Reconstructed the durable clean-tree export byte-exactly and proved its baseline tree equals 6b821b719f23cb981653334c10a2215346771f08.",
+    "Moved the focused workflow from .github/workflows/worker-a-p2-004-measurement-contract.yml to MISSION-001-owned .github/workflows/p2-004-measurement-contract.yml.",
+    "Moved the implementation note from docs/roadmap/progress/2026-08-06-worker-a-p2-004-measurement-contract-repair.md to MISSION-001-owned docs/operations/P2_004_MEASUREMENT_CONTRACT_REPAIR.md.",
+    "Updated the canonical Test Center binding and regression references to the owned workflow path without introducing a second registry, schema, test authority, or result vocabulary.",
+    "Regenerated SOURCE_MANIFEST.sha256 twice through tool/p1a_refresh_source_manifest.py and proved byte-identical output with 1130 entries.",
+    "Passed the trusted measurement positive/adversarial contract, real all-task P2 assertion CLI, canonical Test Center contracts, Worker A Test Center regressions, Python compilation, and git diff validation on the exact ownership-aligned target.",
+    "Updated MISSION-002 grant request 5208181850 to exact registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 and exact target tree d4526dc84554ecd1d77beefeff63b044e92a174f.",
+    "Published PR #75 ownership-aligned validation handoff 5208249517 and kept the branch carrier unadvanced until the shared authority grant exists."
+  ],
+  "evidence": {
+    "coordination": {
+      "pr65GrantRequestComment": 5208181850,
+      "pr75InitialCleanTreeHandoffComment": 5208184543,
+      "pr75OwnershipAlignedHandoffComment": 5208249517
+    },
+    "deliveryOverlay": {
+      "branch": "agent/mission-delivery-enforcement-v1",
+      "commit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+      "integrated": false,
+      "pullRequest": 78,
+      "tree": "73e8ffa78db5938fd2dae8b498c4d008005ee1d1"
+    },
+    "ownershipAlignedTarget": {
+      "commit": "d9fdd8fafb597e453bc8f358935ae8fe4ab4dd2a",
+      "documentationBlob": "b150089f49da9ba975f1b4523ffb9c7145bcdbaa",
+      "manifestBlob": "0c25257cd5f94c92873516be325ddda51f3b367a",
+      "manifestEntries": 1130,
+      "manifestSha256": "98f9729bcdd10594b9a26a9aa2a88e68b2e20a8a51a272e37ccc910f1d93e96c",
+      "registryBlob": "b4ec5f5eaea363263920ff81dcba2dd174b56df1",
+      "registrySha256": "d8696f964f6b179e6186b8b0d7a78a9b1e77f7d6bb87fae82f5b14b8dbcffcdb",
+      "regressionBlob": "1f6f2caa4e5ae93f9c0500ed3b3c807931006098",
+      "tree": "d4526dc84554ecd1d77beefeff63b044e92a174f",
+      "workflowBlob": "dbd7a19079c6cf7014b28fd4c2c67ba254a0a7d5"
+    },
+    "parentCandidate": {
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "pullRequest": 64,
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+    },
+    "sourceCarrier": {
+      "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+      "pullRequest": 75,
+      "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143"
+    },
+    "validatedExport": {
+      "artifactApiDigest": "sha256:2618e9ab32df248d5f32cb6de60a42569ac07b559c05df22180bf5b14d497c26",
+      "artifactId": 8970093356,
+      "artifactName": "worker-a-p2-004-materialized-139ce09e",
+      "baselineTree": "6b821b719f23cb981653334c10a2215346771f08",
+      "jobId": 92635442027,
+      "runId": 31107230047,
+      "zipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b"
+    },
+    "workExecutionId": "WRK-20260806T181420Z-f3daaff9"
+  },
+  "mission": "MISSION-001",
+  "nextAction": "Obtain the exact MISSION-002 grant for registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 and target tree d4526dc84554ecd1d77beefeff63b044e92a174f. Then publish the ownership-aligned candidate by a non-forced fast-forward, re-resolve the exact remote commit/tree, run exact-head CI and changed-file ownership validation, retrieve artifacts, and request a fresh independent exact-SHA review. Keep PR #64 frozen and preserve P2 behavior, technology-selection, P3/P11, and support boundaries.",
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "observedTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "protectedMain": {
+    "commit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "tree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "pullRequest": 75,
+  "schemaVersion": 1,
+  "sequence": 10,
+  "status": "BLOCKED",
+  "supersededBy": null,
+  "supersedes": "docs/roadmap/missions/checkpoints/MISSION-001-0009.json",
+  "validation": [
+    "The exact exported baseline was reconstructed without Git attribute normalization and matched tree 6b821b719f23cb981653334c10a2215346771f08.",
+    "All non-shared net changed paths in target tree d4526dc84554ecd1d77beefeff63b044e92a174f fall inside MISSION-001 owned patterns or the common generated SOURCE_MANIFEST path.",
+    "The sole shared path is config/test_center_registry.v1.json and its exact MISSION-002 grant remains pending.",
+    "The source branch remains at carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a, so no ungranted shared-authority edit has been published.",
+    "No roadmap authority, controlled P2 behavior, technology selection, platform support, release support, production readiness, GA readiness, P3 implementation, or P11 implementation was promoted."
+  ],
+  "worker": "A"
+}

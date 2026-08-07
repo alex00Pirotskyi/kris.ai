@@ -1,0 +1,41 @@
+{
+  "blockers": [
+    "No workflow run or check suite exists for exact head 9c4a37eaea43592eaf3b2a5c6bf464e763b8a8f6.",
+    "No local Dart or Flutter toolchain or mountable repository archive is available; no local PASS is claimed.",
+    "SOURCE_MANIFEST.sha256 remains stale and requires python tool/p1a_refresh_source_manifest.py . in an executable canonical environment.",
+    "test/product/source_contract_test.dart remains outside Worker G ownership; Worker A grant MISSION-006-P6-001-SOURCE-INVENTORY is still REQUESTED.",
+    "P6-TC-001 remains OWNER_HANDOFF_PENDING and requires Worker B publication and exact review.",
+    "Fresh independent SOURCE, EVIDENCE, and INTEGRATION review is required after ownership, manifest, and CI settle.",
+    "PR #78 remains open, draft, unmerged, and overlay-only; no delivery record, ownership PASS, dashboard promotion, or merge authorization is claimed.",
+    "P6-002+, P18 implementation, support promotion, and merge remain unauthorized."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Generated WORK_EXECUTION_ID WRK-20260806T195224Z-da9c199a and resumed the sole Worker G MISSION-006 claim.",
+    "Repaired P6-C-001 inside the single exported ModelDefinitionRegistry so direct imports cannot bypass artifact identity validation.",
+    "Canonical IDs and aliases now reuse approval only when digest, parameter size, and quantization match exactly; approved definitions require an immutable digest.",
+    "Identity drift receives a deterministic model-ID-safe base64url quarantine identity and remains evaluation-only.",
+    "Added regressions for canonical and alias drift, invalid discovered IDs, deterministic quarantine, approval rejection, and import/export/part bypass forms.",
+    "Preserved P6-C-002 repair by consuming current Worker B head 71770c8ced388d83a278d951fd45a07afdec84db and removing all effective Test Center authority-file differences.",
+    "Downloaded artifact 8969196936 and exactly reconstructed the f14 owner-clean manifest baseline: 1124 entries, 120143 bytes, SHA-256 e32b36f1f13d80ebd1614ecf243506f732048dddec80659b3cad1ea7dbbdd10f.",
+    "Detected and fully reverted an unsafe large-text manifest publication; no corrupted or falsely current manifest remains.",
+    "Created and closed validation PRs #80, #81, and #82 after GitHub allocated no workflow execution, including for new empty commit identities with exact source trees.",
+    "Updated P6 evidence, PR #76, Worker A source-inventory coordination, and Worker B Test Center handoff to the single core registry design."
+  ],
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants the exact source-inventory append; a canonical environment regenerates SOURCE_MANIFEST.sha256; GitHub executes focused and full exact-head CI for 9c4a37eaea43592eaf3b2a5c6bf464e763b8a8f6; Worker B then publishes P6-TC-001 and reviews the integrated candidate; finally obtain fresh independent review. Do not merge or begin P6-002.",
+  "observedHead": "9c4a37eaea43592eaf3b2a5c6bf464e763b8a8f6",
+  "observedTree": "cce99b82bef2baa565860db7b69f734972848815",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 7,
+  "supersededBy": null,
+  "validation": [
+    "Current Worker B base is 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d.",
+    "The effective diff contains no Test Center authority path relative to current Worker B.",
+    "Historical green runs for 9799768170f13556d3098a07b40be922377f8deb do not certify this changed candidate.",
+    "No behavioral, platform, release, production, or GA support claim is made."
+  ],
+  "worker": "G",
+  "workExecutionId": "WRK-20260806T195224Z-da9c199a"
+}

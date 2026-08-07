@@ -1,0 +1,26 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "Protected main 0a4176bcbcb975684c3a590be652c9fffe1ce770 / 641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "PR #75 remote carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a / deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "Durable source artifact run 31107230047 job 92635442027 artifact 8970093356 ZIP sha256:a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b",
+    "Current MISSION-002 candidate f14ba34e501972b13cd4310c4869c87e021012da / 1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+    "Current MISSION-002 registry blob ba785d79d282b54f5990b0003e24721ae7f6a984 contains current P8 hierarchy records",
+    "Superseded Worker A registry blob b4ec5f5eaea363263920ff81dcba2dd174b56df1 lacks current P8 hierarchy records and must not replace owner authority",
+    "Coordination artifact docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json at d3ab49a32fdb3594d2b3133ceaf476fa9bddb18a / 3b28a3ce5be5bbd8bf26231b9e553e89bb83f140",
+    "PR #65 superseded request comment 5208181850",
+    "PR #75 coordination correction comment 5208703513",
+    "Source-only split failed closed: P2-004 contract sources are not bound into Test Center inputs"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "MISSION-002 must publish and validate an owner-preserving union registry candidate, or issue a new exact grant only after that union exists. Worker A then rebuilds the complete P2-004 candidate against the exact union registry, regenerates SOURCE_MANIFEST.sha256 twice, runs ownership and scoped review-impact checks, publishes by non-forced fast-forward, inspects exact-head CI and artifacts, and requests fresh independent review.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T19:53:30Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P2-004",
+  "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "workExecutionId": "WRK-20260806T194440Z-4b9c2e71",
+  "worker": "A"
+}

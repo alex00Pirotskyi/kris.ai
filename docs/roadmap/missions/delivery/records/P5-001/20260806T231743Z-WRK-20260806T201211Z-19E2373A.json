@@ -1,0 +1,25 @@
+{
+  "branch": "agent/f/P5-001-information-architecture",
+  "commit": "256cf730a283743c7d2bad60bcd91b0e46ed990f",
+  "evidence": [
+    "PR #72 exact source head 256cf730a283743c7d2bad60bcd91b0e46ed990f / tree e74fcf31c8948bdf66ef3ae172cfdb24b89f3be6",
+    "Checkpoint docs/roadmap/missions/checkpoints/MISSION-005-0007.json",
+    "Source-inventory coordination MISSION-005-P5-001-SOURCE-CONTRACT: REQUESTED / resolution null",
+    "Materializer regression coordination MISSION-005-MATERIALIZER-CLAIM-REGRESSION-20260806T231743Z: REQUESTED",
+    "Worker B/P8 live dependency 604905039aa26952045e69ebe6799ae464144635 / b5070956963404b4d9f5f8875db40d06bc093b4c: REQUEST_CHANGES",
+    "Worker F exact-head workflow runs for 256cf730a283743c7d2bad60bcd91b0e46ed990f: NONE",
+    "Product repairs committed: progressive-disclosure enforcement, fixture-identity validation, active-context locks, completed-run detachment, saved/current run truth, retry guard, verification lifecycle guard, deterministic recovery routing, honest permission limitation, disclosure-warning lifecycle",
+    "Ungrantable global source-inventory delta removed; Worker F validators relocated to claimed P5 tests; live Worker B helper blobs preserved byte-identically"
+  ],
+  "mergedMainCommit": null,
+  "mission": "MISSION-005",
+  "nextAction": "Resolve MISSION-001 source-inventory ownership, Worker B/P8 exact REQUEST_CHANGES, and MISSION-015 materializer stale-state regression. Then construct the ownership-clean P5/P8 union, regenerate P5/root manifests canonically, settle exact P5/P8/product/P2 CI and review-impact, and request fresh independent review.",
+  "pullRequest": 72,
+  "recordedAt": "2026-08-06T23:17:43Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P5-001",
+  "tree": "e74fcf31c8948bdf66ef3ae172cfdb24b89f3be6",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A",
+  "worker": "F"
+}

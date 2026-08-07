@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "mission": "MISSION-005",
+  "task": "P5-001",
+  "status": "BLOCKED_EXTERNAL",
+  "workExecutionId": "WRK-20260806T191459Z-5C0A9E2D",
+  "worker": "F",
+  "branch": "agent/f/P5-001-information-architecture",
+  "pullRequest": 72,
+  "commit": "0e27d120aa00f35c7c6bdf99fb1d3a8d0ee35b33",
+  "tree": "c971c3210e9925369a97d02858f855467f73e342",
+  "evidence": [
+    "docs/roadmap/missions/checkpoints/MISSION-005-0004.json",
+    "docs/roadmap/missions/coordination/MISSION-005-P5-001-SOURCE-CONTRACT-REQUEST-20260806T191459Z.json",
+    "PR #72 current source candidate",
+    "PR #65 live dependency f14ba34e501972b13cd4310c4869c87e021012da / 1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+    "Worker A coordination comment 5208556517",
+    "Historical tree-equivalent Worker F run 31107508357"
+  ],
+  "nextAction": "Obtain an explicit inventory-only grant for test/product/source_contract_test.dart or restructure P5 to eliminate the path; then clean undeclared paths, merge the live Worker B dependency, canonically regenerate manifests, publish through an event-emitting path, settle exact CI, and request independent reviews.",
+  "mergedMainCommit": null,
+  "recordedAt": "2026-08-06T19:24:00Z"
+}

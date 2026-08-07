@@ -1,0 +1,42 @@
+{
+  "blockers": [
+    "MISSION-005-P5-001-SOURCE-CONTRACT remains REQUESTED with resolution=null. MISSION-001 has not published the nine P5 analyzer-visible library entries in test/product/source_contract_test.dart, and the live PR #78 grant table does not grant MISSION-005 that path.",
+    "Worker B/P8 remains at exact head 604905039aa26952045e69ebe6799ae464144635 / tree b5070956963404b4d9f5f8875db40d06bc093b4c with technical REQUEST_CHANGES and no exact-head workflow run. Current review blockers include repository-authoritative independent-review provenance/authenticity plus evidence/support-matrix contract closure.",
+    "Worker F exact head 256cf730a283743c7d2bad60bcd91b0e46ed990f has no GitHub Actions workflow run or exact-head artifact. Connector-authored writes do not emit the required canonical event, the execution container cannot resolve github.com, and CI carrier/no-op/reopen churn is prohibited.",
+    "P5 evidence manifest and root SOURCE_MANIFEST.sha256 are stale after substantive product/test repairs and must be regenerated only by canonical tools on the final ownership-clean P5/P8 union; the root generator must produce byte-identical output twice.",
+    "Automated mission materializer commit 52dc244d0d9e42d9d862cf9790a252945141904e rewrote the canonical MISSION-005 claim/state from the newer live Worker F identity back to stale fd89a66925b90c75448ef33583349b90ca88531b / 9d9caf5ff13ace5d1d0f9cad9871ac7381412ed8 and obsolete lib/product/ux/** ownership. The prompt remains absent from the canonical mission branch, so PR #78 is still unmerged read-only control; MISSION-015 must repair the materializer source/provenance before generated claim/state can be trusted.",
+    "Fresh scoped source/integration and genuinely independent review remain required after the final owner-clean union, canonical manifests, and exact CI settle."
+  ],
+  "branch": "agent/f/P5-001-information-architecture",
+  "completed": [
+    "Resumed the unique Worker F MISSION-005 lane under WORK_EXECUTION_ID WRK-20260806T201211Z-19E2373A and repeatedly re-resolved live heads before publication; every Worker F branch write was fast-forward-only and stale race candidates were discarded without force-push.",
+    "Retained and extended substantive P5 product repairs: plan-only can no longer overwrite a started run; progressive-disclosure eligibility is enforced across direct selection, deep links, history, reopen, keyboard, action navigation and downgrade; unknown/mismatched project/run identities fail closed.",
+    "Made active run context fail closed: task editing, project changes, saved-run changes and contextual deep-link replacement cannot overwrite running/paused/stopping presentation state; review/start controls share controller predicates.",
+    "Separated current simulated-run presentation from saved-run fixture detail; removed fabricated saved timelines; saved-run resume is exposed and accepted only for interrupted fixtures; completed/saved run identity must be detached by a fresh plan before a new Start.",
+    "Reset stale plan-only/plan-reviewed/verification flags when selecting or deep-linking a saved run so old planning state cannot contaminate restored fixture context.",
+    "Made verification lifecycle fail closed: direct verification requests are rejected unless the simulated run is completed; plan-ready, running and blocked requests cannot set verificationRequested or navigate as though valid.",
+    "Made recovery actions deterministic and truthful: interrupted-run recovery selects the known interrupted fixture first; Advanced recovery destinations require an explicit disclosure-level change rather than silently elevating Simple mode; permission review remains honestly NOT_IMPLEMENTED pending P5-007; failing evidence targets the Evidence workspace; resolved disclosure warnings clear while unrelated recovery errors survive level changes.",
+    "Removed the ungranted test/product/source_contract_test.dart delta, removed obsolete progress-path records, relocated Worker F validators into the claimed P5 test namespace, and verified Worker B assurance helper blobs in the P5 tree are byte-identical to live Worker B 604905039aa26952045e69ebe6799ae464144635.",
+    "Preserved the approved shared-authority boundary: P5 Test Center registry/hierarchy records are append-only under grant MISSION-005-P5-001-TEST-CENTER; no Worker B tool ownership or global source-inventory grant is asserted.",
+    "Detected the mission materializer stale-state regression after automated commit 52dc244d0d9e42d9d862cf9790a252945141904e and prepared restoration of the live MISSION-005 claim/state rather than allowing stale generated ownership to become authority.",
+    "Preserved the presentation-only/no-side-effect boundary. No ProductRuntime, P2 runtime, Owner Mode authority, persistence, public API, wire/storage format, credential, network, filesystem, process, browser, search, native or device behavior was added."
+  ],
+  "mission": "MISSION-005",
+  "nextAction": "Re-resolve the three owner-controlled gates: MISSION-001 source-inventory disposition, Worker B/P8 acceptance/exact CI, and MISSION-015 materializer claim/state provenance. After all three are safe, create one true ownership-clean two-parent P5/P8 integration candidate preserving live Worker B authority bytes and only granted P5 append records; regenerate P5 evidence and SOURCE_MANIFEST.sha256 canonically; run ownership/review-impact and exact P5/P8/product/P2 CI; then request fresh independent exact-candidate review.",
+  "observedHead": "256cf730a283743c7d2bad60bcd91b0e46ed990f",
+  "observedTree": "e74fcf31c8948bdf66ef3ae172cfdb24b89f3be6",
+  "pullRequest": 72,
+  "schemaVersion": 1,
+  "sequence": 7,
+  "supersededBy": null,
+  "validation": [
+    "Exact current product source and behavior regressions are committed on MISSION-005-owned paths, but no test PASS is claimed for 256cf730a283743c7d2bad60bcd91b0e46ed990f because local repository execution is unavailable and GitHub reports zero exact-head runs.",
+    "Historical Worker F run 31107508357 remains supporting older-tree evidence only and does not certify current source.",
+    "Current PR changed-file review confirms test/product/source_contract_test.dart, docs/roadmap/progress/**, and tool/worker_f_p5_ia*.py are no longer in the Worker F PR delta.",
+    "Current Worker B helper blob identities match Worker F for tool/test_center_assurance_hierarchy_test.py (9727abb1d6a40e5d86c7fe303ae493bebad1556e) and tool/test_center_assurance_semantics.py (a1bb52005c533da39acb7b26d67b661dca8f300b); their PR-file listing is ancestry/integration noise rather than a current byte-level fork.",
+    "The canonical mission branch still does not contain docs/roadmap/missions/UNIFIED_AUTONOMOUS_WORKER_PROMPT.md, so PR #78 remains the read-only execution-control overlay and is not claimed integrated.",
+    "Capability support remains SOURCE_FOUNDATION; certification NOT_EVALUATED; behavioral/platform/release/accessibility/consumer/production/GA support is not established."
+  ],
+  "worker": "F",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A"
+}

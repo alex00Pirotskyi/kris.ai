@@ -1,0 +1,58 @@
+{
+  "candidate": {
+    "baseCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "baseTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "a60284ca55a06dcdba13d2048bcfdd69e88db450",
+    "parentCommit": "71770c8ced388d83a278d951fd45a07afdec84db",
+    "tree": "4b4401b33aebf8adaa5bf250e695ff756c3e8099"
+  },
+  "ci": {
+    "artifacts": [],
+    "checkRuns": [],
+    "classification": "NOT_RUN",
+    "workflowRuns": []
+  },
+  "decision": "REQUEST_CHANGES",
+  "delta": {
+    "changedPaths": [
+      ".github/workflows/worker-b-p8-001-formal-test-hierarchy.yml"
+    ],
+    "classification": "CI_TRIGGER_ONLY",
+    "sourceSemanticChanges": false
+  },
+  "github": {
+    "reviewId": 4878170527,
+    "submissionConstraint": "The connected GitHub identity is also the PR author.",
+    "submissionState": "COMMENTED"
+  },
+  "inheritedFindings": {
+    "artifact": "docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-71770c8c.json",
+    "disposition": "ALL_UNRESOLVED",
+    "findingIds": [
+      "P8-A-717-001",
+      "P8-A-717-002",
+      "P8-A-717-003",
+      "P8-A-717-004",
+      "P8-A-717-005",
+      "P8-A-717-006",
+      "P8-A-717-007",
+      "P8-A-717-008"
+    ],
+    "sha256": "0a329928ff3a214fb952aece3e024f7e8bb7a3feeb6bfea2c632353708f293f2"
+  },
+  "manifestState": "STALE",
+  "mergeAuthorization": "NONE",
+  "nextAction": "Worker B repairs the inherited source findings, materializes the canonical manifest, obtains exact-head CI/artifacts, and requests fresh review before producing the owner-preserving P2-004 Test Center union.",
+  "ownerUnionState": "NOT_IMPLEMENTED",
+  "pullRequest": 65,
+  "reviewId": "MISSION-001-WORKER-A-PR65-REVIEW-A60284CA",
+  "reviewedAt": "2026-08-06T21:00:28Z",
+  "reviewedMission": "MISSION-002",
+  "reviewer": "Worker A",
+  "reviewingMission": "MISSION-001",
+  "schemaVersion": 1,
+  "supportImpact": "NO_PROMOTION",
+  "task": "P8-001",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72"
+}

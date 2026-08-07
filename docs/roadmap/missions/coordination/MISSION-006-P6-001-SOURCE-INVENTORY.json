@@ -1,0 +1,53 @@
+{
+  "authorityOwner": {
+    "branch": "agent/a/p1-p2-new-roadmap-execution",
+    "mission": "MISSION-001",
+    "observedHead": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "pullRequest": 64,
+    "worker": "A"
+  },
+  "authorityTransferred": false,
+  "constraints": [
+    "Grant only test/product/source_contract_test.dart.",
+    "Permit only adding lib/product/model/model.dart and lib/product/model/model_registry.dart to the analyzer-visible inventory.",
+    "Do not transfer broader P1/P2, architecture, test, release, or manifest authority.",
+    "SOURCE_MANIFEST.sha256 must be refreshed only by python tool/p1a_refresh_source_manifest.py .",
+    "Worker A owner review is required before integration."
+  ],
+  "coordinationId": "MISSION-006-P6-001-SOURCE-INVENTORY",
+  "exactCandidate": {
+    "commit": "17eed9bb16c25b8de80b69bd8a0be7eed323173a",
+    "pullRequest": 76,
+    "tree": "4da3e4e9d122926a67a04f4d2aae26edde3d02c3"
+  },
+  "integrationBase": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "604905039aa26952045e69ebe6799ae464144635",
+    "tree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+    "candidateBehindBy": 0
+  },
+  "operations": [
+    "append-two-governed-dart-source-paths",
+    "review-source-inventory-diff",
+    "run-canonical-source-manifest-generator"
+  ],
+  "requestedAt": "2026-08-06T19:44:30Z",
+  "requester": {
+    "branch": "agent/g/mission-006-model-routing",
+    "mission": "MISSION-006",
+    "pullRequest": 76,
+    "worker": "G",
+    "workExecutionId": "WRK-20260806T223554Z-6d2a4f1c"
+  },
+  "schemaVersion": 1,
+  "sharedPaths": [
+    "test/product/source_contract_test.dart",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "sourceMilestone": {
+    "commit": "954f231fa28a22c85e0be3a76205cc31635f6466",
+    "tree": "34aa8b80adc34255ca04986c2368759a05a3dfc9"
+  },
+  "status": "REQUESTED",
+  "supportBoundary": "SOURCE_FOUNDATION_ONLY"
+}

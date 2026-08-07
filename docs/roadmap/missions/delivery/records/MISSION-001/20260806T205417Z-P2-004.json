@@ -1,0 +1,27 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "Protected main 0a4176bcbcb975684c3a590be652c9fffe1ce770 / 641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "PR #75 carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a / deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "Durable exact-tree artifact 8970093356 exported tree 6b821b719f23cb981653334c10a2215346771f08",
+    "Source frontier docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json",
+    "Source frontier SHA-256 edc9b6af5d86d779292374098c374c6783ed27edc23e0d519bf4a34c2810c320",
+    "All P2-001 through P2-014 source/local gates PASS",
+    "Uncontrolled task assertions P2-001 through P2-013 BLOCKED; P2-014 guide consistency PASSED",
+    "P2-004 trusted receipt integrity/freshness/uniqueness/containment contract PASS",
+    "SOURCE_MANIFEST regenerated twice byte-identically: 1130 entries, SHA-256 f6cf74a1b47fa36bf115089ef1dafeefeccd93ce114f0dcaedb6e99fed3e0804",
+    "Repository mutation checks PASS clean",
+    "Current PR #65 exact downstream review 4878098718 REQUEST_CHANGES"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "No additional proven source defect remains in the durable P2 snapshot. Worker B must repair and validate P8-001, then MISSION-002 must publish the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes against that exact union. Real controlled Windows/macOS/Linux measurements and behavior remain external prerequisites.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T20:54:17Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED_EXTERNAL",
+  "task": "P2-004",
+  "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+  "worker": "A"
+}

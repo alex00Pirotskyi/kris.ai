@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "coordinationId": "MISSION-001-P2-004-TEST-CENTER-OWNER-UNION",
+  "status": "OWNER_INTEGRATION_REQUIRED",
+  "recordedAt": "2026-08-06T19:49:30Z",
+  "workExecutionId": "WRK-20260806T194440Z-4b9c2e71",
+  "requestingMission": "MISSION-001",
+  "requestingWorker": "A",
+  "ownerMission": "MISSION-002",
+  "ownerWorker": "B",
+  "authorityPath": "config/test_center_registry.v1.json",
+  "source": {
+    "branch": "agent/a/p2-004-measurement-contract-repair",
+    "pullRequest": 75,
+    "remoteCarrierCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+    "remoteCarrierTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "validatedCompleteCommit": "d9fdd8fafb597e453bc8f358935ae8fe4ab4dd2a",
+    "validatedCompleteTree": "d4526dc84554ecd1d77beefeff63b044e92a174f",
+    "artifactRun": 31107230047,
+    "artifactJob": 92635442027,
+    "artifactId": 8970093356,
+    "artifactZipSha256": "a16d16f214edd1f737099108643cc75986098ef523b7d5287d42e9ef5cb8383b"
+  },
+  "discovery": {
+    "protectedMainCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "protectedMainTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "missionSystemCommit": "8bc3e67ef881327a8726e9ae9d21172883d4a52d",
+    "missionSystemTree": "b74f61f57c9cdca51026b18709703f64a2a9d886",
+    "deliveryOverlayCommit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+    "deliveryOverlayIntegrated": false,
+    "ownerBranch": "agent/b/test-center-contracts-and-review",
+    "ownerPullRequest": 65,
+    "ownerCommit": "f14ba34e501972b13cd4310c4869c87e021012da",
+    "ownerTree": "1fab61a7afd0d595a371ac33c1ba8dea28d4c9d2",
+    "ownerRegistryBlob": "ba785d79d282b54f5990b0003e24721ae7f6a984"
+  },
+  "supersededRequest": {
+    "comment": 5208181850,
+    "requestedRegistryBlob": "b4ec5f5eaea363263920ff81dcba2dd174b56df1",
+    "requestedTargetTree": "d4526dc84554ecd1d77beefeff63b044e92a174f",
+    "disposition": "SUPERSEDED_UNSAFE_REPLACEMENT",
+    "reason": "The requested blob was produced from the Worker A registry set and does not contain the current MISSION-002 P8 hierarchy mappings, profiles, test cases, and module records. Granting that exact replacement after the owner branch moved would discard current Test Center authority data."
+  },
+  "compatibilityFinding": {
+    "proposedRegistryContainsCurrentP8StableIds": false,
+    "ownerRegistryContainsCurrentP8StableIds": true,
+    "ownerStableIdsThatMustBePreserved": [
+      "tc.p8.formal-test-hierarchy",
+      "tc.p8.formal-test-hierarchy-regressions"
+    ],
+    "ownerMappingThatMustBePreserved": "affected.p8-formal-test-hierarchy",
+    "decision": "DO_NOT_GRANT_OR_PUBLISH_THE_SUPERSEDED_EXACT_BLOB"
+  },
+  "requiredOwnerOperation": {
+    "mode": "OWNER_MEDIATED_UNION",
+    "stableTestId": "tc.p2.acceptance-contract",
+    "newStableTestIds": [],
+    "affectedMapping": "affected.p2.owner-mode-source",
+    "addAffectedPaths": [
+      ".github/workflows/p2-004-measurement-contract.yml",
+      "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+      "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
+      "tool/p2_task_platform_assertions.py",
+      "tool/p2_technology_spike.py",
+      "tool/p2_technology_spike_contract_test.py"
+    ],
+    "extendProfileAffectedPaths": [
+      ".github/workflows/p2-004-measurement-contract.yml",
+      "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+      "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
+      "tool/p2_task_platform_assertions.py",
+      "tool/p2_technology_spike.py",
+      "tool/p2_technology_spike_contract_test.py"
+    ],
+    "extendProfileInputPaths": [
+      ".github/workflows/p2-004-measurement-contract.yml",
+      "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+      "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
+      "tool/p2_task_platform_assertions.py",
+      "tool/p2_technology_spike.py",
+      "tool/p2_technology_spike_contract_test.py"
+    ],
+    "mustPreserveAllOwnerRegistryRecords": true,
+    "mustPreserveWorkerARegistryRecordsAtStackReconciliation": true,
+    "mustRegenerateSourceManifest": true,
+    "mustRunCanonicalTestCenterContracts": true,
+    "mustRunP8HierarchyValidation": true,
+    "mustRunWorkerAP2AcceptanceRegression": true
+  },
+  "publicationRule": {
+    "workerAMayReplaceOwnerRegistryDirectly": false,
+    "workerAMayPublishBeforeOwnerUnionOrFutureExactGrant": false,
+    "futureGrantMustBindExactUnionRegistryBlobAndExactCandidateTree": true,
+    "invalidateOnOwnerHeadChange": true,
+    "invalidateOnWorkerATargetChange": true
+  },
+  "boundaries": {
+    "p2MeasuredDecision": "BLOCKED_BY_MISSING_TRI_PLATFORM_MEASUREMENTS",
+    "p2Behavior": "BLOCKED_EXTERNAL",
+    "technologySelected": false,
+    "platformSupportPromoted": false,
+    "releaseSupportPromoted": false,
+    "p3Authorized": false,
+    "p11Authorized": false,
+    "mergeAuthorized": false
+  },
+  "nextAction": "MISSION-002 must publish and validate an owner-preserving union registry candidate, or issue a new exact grant only after that union exists. Worker A then reconstructs the complete P2-004 candidate against the exact owner registry, regenerates SOURCE_MANIFEST.sha256 twice, runs ownership and scoped review-impact checks, publishes by non-forced fast-forward, inspects exact-head CI and artifacts, and requests fresh independent review."
+}

@@ -1,0 +1,26 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "Protected main 0a4176bcbcb975684c3a590be652c9fffe1ce770 / 641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "PR #75 carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a / deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "PR #65 exact candidate 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d",
+    "GitHub downstream review 4878098718 technical disposition REQUEST_CHANGES",
+    "Review artifact docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-71770c8c.json",
+    "Review artifact SHA-256 0a329928ff3a214fb952aece3e024f7e8bb7a3feeb6bfea2c632353708f293f2",
+    "Worker F exact review docs/roadmap/missions/coordination/MISSION-002-worker-f-review-71770c8c.json SHA-256 f0e785b1f01b07f4c4c85d37296838b9672db0a033693931f36dc80f24e583f4",
+    "GitHub exact-head workflow runs: NONE",
+    "GitHub exact-head check runs: NONE",
+    "Owner-union artifact docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "Worker B repairs the exact P8-001 predecessor, required-evidence, schema, timestamp, evidence-resolution, manifest, and CI findings and obtains fresh exact-candidate review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes the P2-004 candidate only against that exact union, with fresh ownership, review-impact, CI, artifacts, and review.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T20:47:23Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P2-004",
+  "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+  "worker": "A"
+}

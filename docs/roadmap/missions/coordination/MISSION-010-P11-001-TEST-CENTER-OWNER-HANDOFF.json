@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "coordinationId": "MISSION-010-P11-001-TEST-CENTER-OWNER-HANDOFF",
+  "status": "OWNER_PUBLICATION_REQUIRED",
+  "recordedAt": "2026-08-06T20:30:18Z",
+  "updatedAt": "2026-08-06T21:31:15Z",
+  "workExecutionId": "WRK-20260806T203018Z-9c4e7b21",
+  "requestingMission": "MISSION-010",
+  "requestingWorker": "E",
+  "ownerMission": "MISSION-002",
+  "ownerWorker": "B",
+  "authorityPath": "config/test_center_registry.v1.json",
+  "sourceCandidate": {
+    "branch": "agent/e/native-parity-readiness",
+    "pullRequest": 71,
+    "commit": "493fd49efffba4a2986f4fb17cddc56a91b07254",
+    "tree": "974bd068ac57777b35397b92fa127156fa33c4f7",
+    "sourcePredecessorCommit": "c40570919721e651dc6e84956b7f7827aedada05",
+    "sourcePredecessorTree": "bee2fa0b2ef077d62ed74c9bf9ac7a4a92e42ccd"
+  },
+  "currentOwnerAuthority": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "pullRequest": 65,
+    "observedCommit": "b5528a2bf9d3fbf3841d2373a87c1f4a84ff741c",
+    "observedTree": "e865fd6f85215d0290874995443ba6a23688139d",
+    "consumedAsSecondParent": true,
+    "mustReResolveBeforePublication": true
+  },
+  "repairDecision": {
+    "workerEMayWriteRegistry": false,
+    "workerEMayClaimRegistryOwnership": false,
+    "workerERegistryDiffRemoved": true,
+    "workerERetainsSpecificationOnly": true,
+    "workerEDependencyBindingsFailClosed": true,
+    "workerELatestOwnerAncestryConsumed": true,
+    "reason": "Worker E published an ownership-clean two-parent repair that preserves the latest MISSION-002 typed evidence, registry, hierarchy, and P8 authority bytes."
+  },
+  "requiredOwnerOperation": {
+    "mode": "OWNER_PUBLISHED_UNION",
+    "moduleId": "tm.p11-readiness",
+    "stableTestIds": [
+      "tc.p11.readiness.dependency-status",
+      "tc.p11.readiness.native-capability-inventory",
+      "tc.p11.readiness.platform-gap-matrix",
+      "tc.p11.readiness.semantic-conformance",
+      "tc.p11.readiness.fixture-catalog",
+      "tc.p11.readiness.no-silent-fallback",
+      "tc.p11.readiness.isolation-inventory",
+      "tc.p11.readiness.device-contracts",
+      "tc.p11.readiness.claim-boundary",
+      "tc.p11.readiness.nonmutation"
+    ],
+    "sourceSpecification": "release/evidence/P11-001/test-center-registration-spec.json",
+    "evidenceRoot": "release/evidence/P11-001",
+    "mustPreserveAllOwnerRegistryRecords": true,
+    "mustPreserveCurrentP8HierarchyBindings": true,
+    "mustRunCanonicalTestCenterContracts": true,
+    "mustRunP8HierarchyValidation": true,
+    "mustRegenerateSourceManifest": true,
+    "mustBindExactWorkerEIntegrationTree": true
+  },
+  "publicationRule": {
+    "workerERegistryMutationAllowed": false,
+    "ownerPublicationRequiredBeforeFinalIntegration": true,
+    "ownerReviewRequired": true,
+    "invalidateOnOwnerHeadChange": true,
+    "invalidateOnWorkerEHeadChange": true
+  },
+  "currentValidation": {
+    "localPythonCompilation": "PASS",
+    "dependencyBindingRegressions": "6_OF_6_PASS",
+    "ownerHandoffRegressions": "3_OF_3_PASS",
+    "exactHeadWorkflowRuns": 0,
+    "sourceManifest": "STALE_MISSING_WORKER_E_REPAIR_PATHS",
+    "supportPromotion": "NONE"
+  },
+  "boundaries": {
+    "p11_001Approved": false,
+    "p11_002PlusAuthorized": false,
+    "p15Authorized": false,
+    "nativeBehaviorSupported": false,
+    "platformSupportPromoted": false,
+    "releaseSupportPromoted": false,
+    "mergeAuthorized": false
+  },
+  "nextAction": "Run the canonical source-manifest generator twice on 493fd49efffba4a2986f4fb17cddc56a91b07254, settle exact-head CI, then MISSION-002 publishes the exact registry union and reviews the final integration candidate."
+}

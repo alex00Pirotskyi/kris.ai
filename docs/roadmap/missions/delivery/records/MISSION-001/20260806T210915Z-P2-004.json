@@ -1,0 +1,27 @@
+{
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "commit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "evidence": [
+    "Protected main 0a4176bcbcb975684c3a590be652c9fffe1ce770 / 641e11e63fa84f3a16dc4d74b418778839ce5bc2",
+    "PR #75 carrier 139ce09edceaab2c9b24bb3119c4e8c324c02e0a / deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "P2 source frontier docs/roadmap/missions/coordination/MISSION-001-P2-SOURCE-FRONTIER-6B821B7.json SHA-256 edc9b6af5d86d779292374098c374c6783ed27edc23e0d519bf4a34c2810c320",
+    "PR #65 exact candidate bd45bf6b1da0665a33a50b334b9dce2441965e62 / 8de9cdd793b570e5ae2d17b189b5b4c26002514c",
+    "GitHub review 4878193392 technical disposition REQUEST_CHANGES",
+    "Review artifact docs/roadmap/missions/coordination/MISSION-001-worker-a-pr65-review-bd45bf6b.json",
+    "Review artifact SHA-256 da517693c868e2c8a632e70fafe00569cdf6ee195d5edcc1ab622ad5542af339",
+    "Frozen Worker A PASS artifact WORKER_B_A_REVIEW_89a1533.json is deleted by PR #65 without migration to protected main, Worker A, or mission-system authority",
+    "Inherited P8 predecessor/evidence/schema/time/evidence-resolution findings remain unresolved",
+    "GitHub exact-head workflow runs for bd45bf6b1da0665a33a50b334b9dce2441965e62: NONE",
+    "Owner-union artifact docs/roadmap/missions/coordination/MISSION-001-P2-004-TEST-CENTER-OWNER-UNION.json remains OWNER_INTEGRATION_REQUIRED"
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "Worker B restores or migrates the frozen Worker A PASS artifact and sidecar to an authorized append-only path, repairs all inherited P8 source findings, regenerates SOURCE_MANIFEST.sha256 twice, settles exact-head Ubuntu/Windows/macOS CI and artifacts, and obtains fresh review. MISSION-002 then publishes the owner-preserving P2-004 Test Center union. Worker A rebuilds and publishes only against that exact union.",
+  "pullRequest": 75,
+  "recordedAt": "2026-08-06T21:09:15Z",
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "task": "P2-004",
+  "tree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+  "worker": "A"
+}

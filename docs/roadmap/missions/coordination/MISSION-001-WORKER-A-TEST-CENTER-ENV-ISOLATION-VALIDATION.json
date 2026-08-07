@@ -1,0 +1,106 @@
+{
+  "base": {
+    "branch": "agent/a/p1-p2-new-roadmap-execution",
+    "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "pullRequest": 64,
+    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
+  },
+  "implementation": [
+    "Build a minimal deterministic child environment rather than copying the parent environment.",
+    "Attest every child-visible environment variable in the TestExecutionResult environment digest.",
+    "Reject duplicate, wildcard, invalid, and security-sensitive environment allowlist entries.",
+    "Use deterministic external HOME and temporary roots to avoid recursive repository fixture copies.",
+    "Use file-backed output capture so descendants cannot keep a parent stdout pipe open indefinitely.",
+    "Redact sensitive parent values not present in the child and bound persisted output to 1 MiB."
+  ],
+  "mission": "MISSION-001",
+  "nextAction": "MISSION-015 assigns the three exact paths to MISSION-001. Worker A then reconstructs the patch on a focused child branch from 89a1533, regenerates the final branch source manifest twice, runs changed-file ownership and review-impact checks, exact-head Ubuntu/macOS/Windows CI, and fresh Worker B/J/I review.",
+  "ownership": {
+    "currentClassification": "UNDECLARED_PATH",
+    "integrated": false,
+    "overlayCommit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+    "overlayPullRequest": 78,
+    "requestArtifact": "docs/roadmap/missions/coordination/MISSION-001-WORKER-A-TEST-CENTER-ENV-OWNERSHIP.json",
+    "requestComment": 5209188732,
+    "requestCommit": "3032a4abc24a757a746c60cb613b79716839f1be",
+    "requiredExactPaths": [
+      "tool/worker_a_test_center_v1.py",
+      "tool/worker_a_test_center_v1_test.py",
+      ".github/workflows/worker-a-test-center-integration.yml"
+    ]
+  },
+  "patch": {
+    "artifactCommit": "e6c0b6d3cb6b249be1ae9712d3bd8804a930407a",
+    "artifactPath": "docs/roadmap/missions/coordination/artifacts/MISSION-001/worker-a-test-center-env-isolation.patch.gz.b64",
+    "changedFiles": [
+      ".github/workflows/worker-a-test-center-integration.yml",
+      "docs/operations/P2_TEST_CENTER_ENVIRONMENT_ISOLATION.md",
+      "tool/worker_a_test_center_v1.py",
+      "tool/worker_a_test_center_v1_test.py"
+    ],
+    "deletions": 25,
+    "encodedBytes": 7816,
+    "encodedSha256": "b2392e34f0a7d3c7d7dac7bb3fd1b7ef955b0cb81e2c499affc5da5ed7aaba86",
+    "insertions": 358,
+    "plainBytes": 19355,
+    "plainLines": 479,
+    "plainSha256": "3588612c3fc625efaf695a4cf549a4a0c45fb6fa234bea5bd03febddfc6935ac",
+    "resultBlobs": {
+      ".github/workflows/worker-a-test-center-integration.yml": "7de0074feca4fadfd89d62d60ae5c92c2b484c5c",
+      "docs/operations/P2_TEST_CENTER_ENVIRONMENT_ISOLATION.md": "c14c348b9921d6e86f654c3c16f191f0b0b0c831",
+      "tool/worker_a_test_center_v1.py": "409d76a758349236346c42e935c3aa2be6acacc0",
+      "tool/worker_a_test_center_v1_test.py": "a743b0fcd704c49365fe509615fc2e9740c1df1c"
+    }
+  },
+  "publicationState": "BLOCKED_BY_PATH_OWNERSHIP",
+  "schemaVersion": 1,
+  "securityFinding": {
+    "githubReviewId": 4878093100,
+    "severity": "HIGH",
+    "summary": "Profile environmentAllowlist was recorded in evidence but subprocess execution inherited the complete parent environment through os.environ.copy()."
+  },
+  "status": "SOURCE_REPAIR_PREPARED_AND_LOCALLY_VALIDATED",
+  "supportBoundary": "Source security repair only. No behavioral, platform, capability, release, production, GA, P3, P11, ready, or merge promotion.",
+  "validation": {
+    "boundedP2AcceptanceProfile": "PASS",
+    "canonicalCheckMode": "PASS",
+    "canonicalTestCenterRegressions": {
+      "failed": 0,
+      "passed": 18,
+      "status": "PASS"
+    },
+    "fullHistoricalUnboundedSourceSuite": "NOT_COMPLETED_WITHIN_LOCAL_EXECUTION_WINDOW",
+    "gitDiffCheck": "PASS",
+    "p2AllTaskAssertions": "PASS_WITH_P2_001_THROUGH_P2_013_BLOCKED_AND_P2_014_PASSED",
+    "p2TechnologyReceiptContract": "PASS",
+    "pythonCompilation": "PASS",
+    "representativeProfiles": {
+      "tc.p1.exit-gate": "PASS",
+      "tc.p1a.exit-gate": "PASS",
+      "tc.p2.application-composition": "PASS",
+      "tc.p2.cleanup-contract": "PASS",
+      "tc.p2.evidence-contract": "PASS",
+      "tc.p2.runner-attestation": "PASS",
+      "tc.p2.source-inventory": "PASS",
+      "tc.p2.strict-finalizer": "PASS",
+      "tc.test-center.contracts": "PASS",
+      "tc.test-center.semantic-regressions": "PASS",
+      "tc.worker-a.canonical-integration": "PASS"
+    },
+    "sourceManifest": {
+      "classification": "LOCAL_ARTIFACT_VALIDATION_ONLY_NOT_FINAL_BRANCH_MANIFEST",
+      "entries": 1131,
+      "sha256": "fb9b374b5a327198ac14e9e77e52d1197413ed1e87ee50356db8d25508a41a19",
+      "twoWriteByteIdentical": true
+    },
+    "workerACheckMode": "PASS",
+    "workerAUnitRegressions": {
+      "failed": 0,
+      "passed": 13,
+      "status": "PASS"
+    }
+  },
+  "validationId": "MISSION-001-WORKER-A-TEST-CENTER-ENV-ISOLATION",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72",
+  "worker": "A"
+}

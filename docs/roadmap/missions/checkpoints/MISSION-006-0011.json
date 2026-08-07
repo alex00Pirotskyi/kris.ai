@@ -1,0 +1,53 @@
+{
+  "blockers": [
+    "GitHub allocated no workflow run or commit status for exact Worker G head 2bee9843e331f48aaf2dd1f060ad4320274b59a6.",
+    "No local Dart or Flutter toolchain/repository checkout is available; no test PASS is claimed for the changed P6 source/tests.",
+    "SOURCE_MANIFEST.sha256 is inherited from Worker B with no Worker G manifest diff, but remains stale for the added P6 source/tests and must be regenerated only by python tool/p1a_refresh_source_manifest.py . in an executable canonical environment.",
+    "test/product/source_contract_test.dart remains outside Worker G ownership; MISSION-006-P6-001-SOURCE-INVENTORY remains REQUESTED from Worker A for this exact candidate.",
+    "P6-TC-001 remains OWNER_HANDOFF_PENDING. Worker B exact head 604905039aa26952045e69ebe6799ae464144635 is REQUEST_CHANGES under review 4878375408 because release independent-review evidence does not prove reviewer independence; exact-head CI/final manifest are also absent.",
+    "Fresh independent P6 SOURCE/EVIDENCE/INTEGRATION review is required after ownership, manifest, Test Center authority, and exact-head CI settle.",
+    "GitHub PR #76 currently reports mergeable=false even though exact compare against Worker B 604905039aa26952045e69ebe6799ae464144635 has merge base equal to that Worker B commit and behind_by=0; no source-level base conflict is identified by the compare.",
+    "PR #78 remains open and unmerged; its delivery controls are read-only overlay authority only.",
+    "P6-002 and P18-001 depend on P6-001 and must not begin while P6-001 remains unaccepted/unintegrated.",
+    "Merge and behavior/platform/release/production/GA promotion remain unauthorized."
+  ],
+  "branch": "agent/g/mission-006-model-routing",
+  "completed": [
+    "Resumed the unique Worker G MISSION-006 claim under WORK_EXECUTION_ID WRK-20260806T212031Z-a1470e7e.",
+    "Repaired P6-001 benchmark evidence so every benchmark is bound to the exact model artifact digest and cannot be reused across replacement artifacts.",
+    "Added approved, JSON-ingestion, direct-core, and evaluation-only regressions for cross-artifact benchmark reuse and missing benchmark artifact identity.",
+    "Preserved prior exact discovery/approval guards for digest, parameter size, quantization, aliases, malformed IDs, unknown providers and deterministic quarantine.",
+    "Performed exact Worker G dependency reviews of Worker B P8; subject lineage, typed evidence semantics and recursive/transitive predecessor proof are repaired, while independent-review authenticity remains fail-open.",
+    "Removed the avoidable stacked-base divergence by publishing true two-parent merge 4166abe8e66b43f4683a3fe9b5e75475adf999e5 with Worker G parent 4515c66f857d61fc415f37e737c6926e716ef3b5 and Worker B parent 604905039aa26952045e69ebe6799ae464144635.",
+    "Built that merge from Worker B's exact tree and overlaid only the eleven P6/global-inventory files, deliberately inheriting Worker B's root manifest rather than carrying a stale Worker G manifest.",
+    "Verified the final evidence head remains behind_by=0 relative to Worker B and its effective diff contains no SOURCE_MANIFEST.sha256 or Worker B Test Center authority path.",
+    "Batched P6 source-contract, README, and manifest-state evidence around the integration milestone without claiming unexecuted validation.",
+    "Rebound Worker A source-inventory and Worker B Test Center owner handoffs to exact candidate 2bee9843e331f48aaf2dd1f060ad4320274b59a6 / d87bc3640ae50b53780eb72b7c333879200e712f without widening authority."
+  ],
+  "integration": {
+    "workerBCommit": "604905039aa26952045e69ebe6799ae464144635",
+    "workerBTree": "b5070956963404b4d9f5f8875db40d06bc093b4c",
+    "mergeCommit": "4166abe8e66b43f4683a3fe9b5e75475adf999e5",
+    "mergeTree": "7ff410b5606719a3f627ce6a5eea84eb4f2509dc",
+    "finalCandidateBehindBy": 0,
+    "effectiveDiffContainsSourceManifest": false,
+    "effectiveDiffContainsTestCenterAuthority": false
+  },
+  "mission": "MISSION-006",
+  "nextAction": "Worker A grants/reviews the exact source-inventory append; regenerate SOURCE_MANIFEST.sha256 twice; execute exact P6 and affected CI for 2bee9843e331f48aaf2dd1f060ad4320274b59a6; Worker B repairs independent-review authenticity, publishes P6-TC-001 with approved/evaluation benchmark-to-artifact digest coverage, and performs exact owner review; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before those gates pass.",
+  "observedHead": "2bee9843e331f48aaf2dd1f060ad4320274b59a6",
+  "observedTree": "d87bc3640ae50b53780eb72b7c333879200e712f",
+  "pullRequest": 76,
+  "schemaVersion": 1,
+  "sequence": 11,
+  "supersededBy": null,
+  "validation": [
+    "Exact compare Worker B 604905039aa26952045e69ebe6799ae464144635 -> Worker G 2bee9843e331f48aaf2dd1f060ad4320274b59a6: status ahead, behind_by=0, merge base 604905039aa26952045e69ebe6799ae464144635.",
+    "Effective diff has eleven files: two P6 model sources, five P6 evidence files, three P6 model tests, and test/product/source_contract_test.dart.",
+    "Exact P6 head has zero allocated workflow runs and zero commit statuses.",
+    "Historical green runs do not certify this changed candidate.",
+    "No behavioral, platform, release, production, or GA support claim is made."
+  ],
+  "worker": "G",
+  "workExecutionId": "WRK-20260806T212031Z-a1470e7e"
+}

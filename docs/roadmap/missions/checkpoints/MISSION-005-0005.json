@@ -1,0 +1,38 @@
+{
+  "blockers": [
+    "MISSION-005 still lacks an accepted exact-path grant or owner-approved alternative for test/product/source_contract_test.dart, which must enumerate the nine P5 analyzer-visible library files for the governed source inventory.",
+    "The inherited Worker F validator paths tool/worker_f_p5_ia.py and tool/worker_f_p5_ia_test.py are outside the PR #78 MISSION-005 path policy. Relocation into test/product/p5_information_architecture/** is ownership-safe because the Test Center profiles invoke Flutter tests only, but any published relocation still requires P5 evidence-manifest and canonical source-manifest regeneration.",
+    "Worker B dependency PR #65 is not ready for stacking. Exact candidate 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d received Worker F REQUEST_CHANGES with four HIGH findings and has no exact-head workflow run or artifact.",
+    "Worker F exact head ba74ad56970b00b789e7814548d46abcfdd96394 has no workflow run. The default branch does not contain the Worker F verifier, direct connector writes do not emit a usable exact validation event, and registered historical controllers bind stale run SHAs or historical source payloads.",
+    "Historical Worker F run 31107508357 is tree-equivalent evidence only. Its affected shipped-shell discovery step logged a find syntax error while the job still concluded success, so that step requires a fail-closed workflow repair in the final candidate.",
+    "PR #78 remains open and unmerged. Its delivery policy is a read-only overlay, its exact workflows require approval, and no integrated delivery-control PASS is claimed."
+  ],
+  "branch": "agent/f/P5-001-information-architecture",
+  "completed": [
+    "Generated WORK_EXECUTION_ID WRK-20260806T201211Z-19E2373A and resumed the unique active Worker F MISSION-005 claim.",
+    "Re-resolved protected main, PR #78, the canonical mission branch, Worker F PR #72, Worker B PR #65, exact heads and trees, CI, reviews, ownership policy, grants, and blockers.",
+    "Published the source-contract ownership request to PR #78 and retained the durable canonical coordination record MISSION-005-P5-001-SOURCE-CONTRACT-REQUEST-20260806T191459Z.",
+    "Published supplemental exact-path disposition request MISSION-005-P5-001-WORKER-F-VALIDATOR-PATH-REQUEST-20260806T201211Z and notified PR #78 and Worker B PR #65.",
+    "Created a read-only live-stack diagnostic carrier, proved that it could not execute from the conflicted PR/default-workflow context, and removed it. Final Worker F commit ba74ad56970b00b789e7814548d46abcfdd96394 restores the previously validated ordinary tree c971c3210e9925369a97d02858f855467f73e342 with no temporary carrier.",
+    "Performed an independent exact-candidate review of Worker B PR #65 at 71770c8ced388d83a278d951fd45a07afdec84db / aad287d8e91efffe5816a92665e0c84fa3a0ac3d and returned REQUEST_CHANGES.",
+    "Published immutable review artifact docs/roadmap/missions/coordination/MISSION-002-worker-f-review-71770c8c.json and checksum f0e785b1f01b07f4c4c85d37296838b9672db0a033693931f36dc80f24e583f4, then posted PR #65 comment 5208980503.",
+    "Preserved source, behavior, platform, release, production, accessibility, consumer-readiness, and GA claim boundaries; no merge or support promotion was performed."
+  ],
+  "mission": "MISSION-005",
+  "nextAction": "After the exact source-inventory path disposition is accepted and Worker B publishes a repaired, manifest-current, exact-CI candidate that clears review, create an ownership-clean two-parent Worker F stack; remove progress-path records, relocate Worker F validators, restore Worker B Test Center helpers, append only granted P5 registry and hierarchy records, repair fail-closed affected-test discovery, regenerate both manifests twice through canonical tools, run ownership and review-impact, publish through an event-emitting path, and settle exact CI before final independent review.",
+  "observedHead": "ba74ad56970b00b789e7814548d46abcfdd96394",
+  "observedTree": "c971c3210e9925369a97d02858f855467f73e342",
+  "pullRequest": 72,
+  "schemaVersion": 1,
+  "sequence": 5,
+  "supersededBy": null,
+  "validation": [
+    "Worker F tree-equivalent validation: run 31107508357 PASS on Ubuntu 92636394409, Windows 92636394384, and macOS 92636394584 for tree c971c3210e9925369a97d02858f855467f73e342.",
+    "Historical affected-shell discovery: suspicious success because find reported an invalid expression and the workflow did not fail.",
+    "Worker F exact-head validation for ba74ad56970b00b789e7814548d46abcfdd96394: NOT RUN; artifact NONE.",
+    "Worker B exact-head validation for reviewed 71770c8ced388d83a278d951fd45a07afdec84db: NOT RUN; artifact NONE; decision REQUEST_CHANGES.",
+    "Capability support remains SOURCE_FOUNDATION; certification NOT_EVALUATED; platform/release/production/GA support not established."
+  ],
+  "worker": "F",
+  "workExecutionId": "WRK-20260806T201211Z-19E2373A"
+}

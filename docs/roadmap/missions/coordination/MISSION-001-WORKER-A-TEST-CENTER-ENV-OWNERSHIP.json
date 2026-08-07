@@ -1,0 +1,60 @@
+{
+  "authority": {
+    "ownerMission": "MISSION-015",
+    "ownerWorker": "J",
+    "policyBranch": "agent/mission-delivery-enforcement-v1",
+    "policyCommit": "ef18bdf4562ddff499af85f797accf5c77a94710",
+    "policyIntegrated": false,
+    "policyPath": "config/mission_delivery.v1.json"
+  },
+  "coordinationId": "MISSION-001-WORKER-A-TEST-CENTER-ENV-OWNERSHIP",
+  "currentClassification": {
+    ".github/workflows/worker-a-test-center-integration.yml": "UNDECLARED_PATH",
+    "tool/worker_a_test_center_v1.py": "UNDECLARED_PATH",
+    "tool/worker_a_test_center_v1_test.py": "UNDECLARED_PATH"
+  },
+  "discovery": {
+    "missionSystemCommit": "a95b94cc8b8c64ec50c4f93cf73028e51b535e49",
+    "missionSystemTree": "12a7e6ea28b6c90bb2ee6d07ae251e0386cbd8da",
+    "protectedMainCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770",
+    "protectedMainTree": "641e11e63fa84f3a16dc4d74b418778839ce5bc2"
+  },
+  "finding": {
+    "githubReviewId": 4878093100,
+    "reviewedCommit": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "reviewedTree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+    "severity": "HIGH",
+    "summary": "Worker A Test Center profiles declare environmentAllowlist, but run_profile executes subprocesses with os.environ.copy(). Undeclared credentials and secrets can influence execution and leak into uploaded logs while the evidence digest records only allowlisted variables."
+  },
+  "mission": "MISSION-001",
+  "nextAction": "MISSION-015 adds the three exact paths to MISSION-001 owned paths, validates delivery control, and records the policy identity. Worker A then publishes the already prepared focused security repair from the frozen PR #64 base, runs ownership/review-impact checks, exact-head CI, and fresh Worker B/J/I review.",
+  "plannedBranch": "agent/a/mission-001-test-center-env-isolation",
+  "plannedRepair": {
+    "baseline": "Use a documented minimal cross-platform child environment with controlled HOME/temp paths, deterministic Python encoding, inherited executable-resolution variables, and Windows process-launch variables only where required.",
+    "environmentEvidence": "Digest and record every variable visible to the child, including baseline and explicitly allowed values.",
+    "negativeRegressions": [
+      "undeclared sentinel secret is absent in the child",
+      "every visible child variable is represented in environment evidence",
+      "Linux, macOS, and Windows baseline differences are deterministic",
+      "sensitive output is redacted before artifact persistence",
+      "duplicate, wildcard, and security-sensitive allowlist expansion is rejected"
+    ],
+    "outputBoundary": "Redact known parent sensitive values and bound captured output before writing evidence logs."
+  },
+  "pullRequest": 64,
+  "request": {
+    "operation": "ASSIGN_EXACT_PATH_OWNERSHIP",
+    "ownedByMission": "MISSION-001",
+    "paths": [
+      "tool/worker_a_test_center_v1.py",
+      "tool/worker_a_test_center_v1_test.py",
+      ".github/workflows/worker-a-test-center-integration.yml"
+    ],
+    "scopeRule": "Exact paths only; do not grant tool/worker_a*.py or .github/workflows/worker-a*.yml broadly."
+  },
+  "requestingWorker": "A",
+  "schemaVersion": 1,
+  "status": "OWNER_POLICY_CHANGE_REQUIRED",
+  "supportBoundary": "Source security repair only. No P2 behavior, platform, capability, release, production, GA, P3, P11, ready, or merge promotion.",
+  "workExecutionId": "WRK-20260806T203125Z-c4e19a72"
+}
