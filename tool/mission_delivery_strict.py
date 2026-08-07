@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Strict delivery checks layered over the backward-compatible delivery CLI."""
+"""Strict delivery checks layered over the backward-compatible delivery CLI.
+
+Historical non-terminal bookkeeping remains readable so stronger controls can be
+adopted without rewriting history. Strict provenance is mandatory for future
+ACCEPTED / MERGED_MAIN claims.
+"""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +18,6 @@ from typing import Any
 
 from mission_delivery_lib import (
     DeliveryError,
-    load_latest_records,
     load_model,
     matches_any,
     read_json,
@@ -50,7 +54,12 @@ def verify_evidence(project: pathlib.Path, item: Any, record_path: pathlib.Path)
     path_value = item.get("path")
     expected = item.get("sha256")
     kind = item.get("kind")
-    if not isinstance(path_value, str) or not path_value or pathlib.PurePosixPath(path_value).is_absolute() or ".." in pathlib.PurePosixPath(path_value).parts:
+    if (
+        not isinstance(path_value, str)
+        or not path_value
+        or pathlib.PurePosixPath(path_value).is_absolute()
+        or ".." in pathlib.PurePosixPath(path_value).parts
+    ):
         raise DeliveryError(f"{record_path}: unsafe evidence path {path_value!r}")
     if not isinstance(expected, str) or not SHA256.fullmatch(expected):
         raise DeliveryError(f"{record_path}: invalid evidence sha256")
@@ -69,18 +78,38 @@ def git_tree(project: pathlib.Path, commit: str) -> str:
     return run_git(project, "rev-parse", f"{commit}^{{tree}}")
 
 
-def validate_accepted_records(project: pathlib.Path) -> None:
-    model = load_model(project)
-    latest = load_latest_records(project, model)
-    now = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=5)
+def latest_records_compat(project: pathlib.Path, model: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Load latest task records without re-validating legacy non-terminal shape."""
+    latest: dict[str, dict[str, Any]] = {}
     for path in record_files(project, model):
         record = read_json(path)
-        validate_record(record, model, path.relative_to(project).as_posix())
-        recorded = strict_time(record["recordedAt"])
-        if recorded > now:
+        task = record.get("task")
+        recorded = record.get("recordedAt")
+        if not isinstance(task, str) or task not in model["tasks"]:
+            raise DeliveryError(f"{path.relative_to(project)}: unknown/missing task")
+        strict_time(recorded)
+        previous = latest.get(task)
+        if previous is None or recorded > previous.get("recordedAt", ""):
+            latest[task] = record
+    return latest
+
+
+def validate_accepted_records(project: pathlib.Path) -> None:
+    model = load_model(project)
+    latest = latest_records_compat(project, model)
+    future_limit = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=5)
+    for path in record_files(project, model):
+        record = read_json(path)
+        recorded = strict_time(record.get("recordedAt"))
+        if recorded > future_limit:
             raise DeliveryError(f"{path.relative_to(project)}: future-dated delivery record")
-        if record.get("status") not in ACCEPTED:
+        status = record.get("status")
+        if status not in ACCEPTED:
+            # Historical non-terminal records predate strict provenance and may
+            # retain old Work ID/evidence formats. They are grandfathered as
+            # bookkeeping only and can never become acceptance proof.
             continue
+        validate_record(record, model, path.relative_to(project).as_posix())
         for dependency in model["tasks"][record["task"]].get("dependencies", []):
             if latest.get(dependency, {}).get("status") not in ACCEPTED:
                 raise DeliveryError(
@@ -105,7 +134,7 @@ def validate_accepted_records(project: pathlib.Path) -> None:
         implementer = record.get("worker")
         if not reviewer or reviewer == implementer:
             raise DeliveryError(f"{path.relative_to(project)}: independent reviewer identity required")
-        if record["status"] == "MERGED_MAIN":
+        if status == "MERGED_MAIN":
             merged = record.get("mergedMainCommit")
             if not merged:
                 raise DeliveryError(f"{path.relative_to(project)}: mergedMainCommit required")
@@ -114,7 +143,14 @@ def validate_accepted_records(project: pathlib.Path) -> None:
 
 def merge_base_paths(project: pathlib.Path, base: str, head: str) -> tuple[str, list[str]]:
     merge_base = run_git(project, "merge-base", base, head)
-    output = run_git(project, "diff", "--name-only", "--diff-filter=ACDMRTUXB", f"{merge_base}..{head}", "--")
+    output = run_git(
+        project,
+        "diff",
+        "--name-only",
+        "--diff-filter=ACDMRTUXB",
+        f"{merge_base}..{head}",
+        "--",
+    )
     return merge_base, [line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()]
 
 
@@ -132,7 +168,13 @@ def infer_runtime_mission(project: pathlib.Path, head_branch: str, event: dict[s
     return unique[0]
 
 
-def strict_ownership(project: pathlib.Path, base: str, head: str, head_branch: str, event_path: pathlib.Path | None) -> dict[str, Any]:
+def strict_ownership(
+    project: pathlib.Path,
+    base: str,
+    head: str,
+    head_branch: str,
+    event_path: pathlib.Path | None,
+) -> dict[str, Any]:
     model = load_model(project)
     claims = durable_claims(project)
     leases = active_leases(project, model, claims)
@@ -142,13 +184,18 @@ def strict_ownership(project: pathlib.Path, base: str, head: str, head_branch: s
     result = classify_changed_paths(mission, changed, model)
     claim = claims.get(mission)
     owner_branch = claim is not None and claim.get("branch") == head_branch
-    helper = next((lease for lease in leases if lease.get("branch") == head_branch and lease.get("mission") == mission), None)
+    helper = next(
+        (
+            lease
+            for lease in leases
+            if lease.get("branch") == head_branch and lease.get("mission") == mission
+        ),
+        None,
+    )
     runtime_violations: list[str] = []
     if owner_branch:
         if claim.get("head") != head:
-            runtime_violations.append(
-                f"CLAIM_HEAD_STALE:{claim.get('head')}!=HEAD:{head}"
-            )
+            runtime_violations.append(f"CLAIM_HEAD_STALE:{claim.get('head')}!=HEAD:{head}")
         claim_scope = claim.get("exclusivePaths") or model["config"]["missionPathPolicies"][mission]["owned"]
         generated = model["config"].get("commonGeneratedPaths", [])
         shared = [
@@ -222,7 +269,10 @@ def main() -> int:
             print("MISSION_DELIVERY_APPEND_ONLY_VALID")
         elif args.command == "ownership":
             result = strict_ownership(
-                project, args.base, args.head, args.head_branch,
+                project,
+                args.base,
+                args.head,
+                args.head_branch,
                 pathlib.Path(args.event_path) if args.event_path else None,
             )
             if args.output:
