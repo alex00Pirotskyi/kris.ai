@@ -208,7 +208,12 @@ class TestCenterContractsTest(unittest.TestCase):
         )
         self.assertEqual(
             tc.select_affected_tests(paths_a, mappings_a),
-            ["tc.test-center.contracts", "tc.test-center.semantic-regressions"],
+            [
+                "tc.p8.formal-test-hierarchy",
+                "tc.p8.formal-test-hierarchy-regressions",
+                "tc.test-center.contracts",
+                "tc.test-center.semantic-regressions",
+            ],
         )
 
     def test_result_normalization(self) -> None:

@@ -92,7 +92,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
 
     def test_wrong_candidate_predecessor_rejected(self) -> None:
         report, hierarchy = self._component_report_and_hierarchy(); predecessor = copy.deepcopy(report["executionResult"])
-        predecessor["testId"] = "tc.test-center.semantic-regressions"; predecessor["moduleId"] = "tm.test-center"; predecessor["roadmapTaskIds"] = []; predecessor["commit"] = "3" * 40; predecessor["tree"] = "4" * 40
+        predecessor["resultId"] = "result.p8-001.wrong-candidate-unit-linux"; predecessor["testId"] = "tc.test-center.semantic-regressions"; predecessor["moduleId"] = "tm.test-center"; predecessor["roadmapTaskIds"] = []; predecessor["commit"] = "3" * 40; predecessor["tree"] = "4" * 40
         for evidence in predecessor["evidenceReferences"]: evidence["commit"] = predecessor["commit"]; evidence["tree"] = predecessor["tree"]
         report["predecessorResults"] = [{"assuranceLevel":"unit","executionResult":predecessor,"evidenceBindings":copy.deepcopy(self.report["evidenceBindings"]),"predecessorResults":[]}]
         with self.assertRaisesRegex(HierarchyError, "another candidate"): self.validate_report(report, hierarchy=hierarchy)
@@ -102,7 +102,7 @@ class AssuranceEnforcementTest(unittest.TestCase):
         with self.assertRaisesRegex(HierarchyError, "absent from closed schema"): self.validate_documents(contract=contract)
 
     def test_report_schema_required_field_missing_from_contract_rejected(self) -> None:
-        contract = copy.deepcopy(self.contract); contract["reportRequiredTopLevelFields"].remove("evidenceBindings")
+        contract = copy.deepcopy(self.contract); index = contract["reportRequiredTopLevelFields"].index("evidenceBindings"); contract["reportRequiredTopLevelFields"][index] = "notARequiredField"
         with self.assertRaisesRegex(HierarchyError, "required fields and mapping contract drifted"): self.validate_documents(contract=contract)
 
 
