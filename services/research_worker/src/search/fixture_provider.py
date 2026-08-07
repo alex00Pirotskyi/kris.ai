@@ -34,7 +34,7 @@ class DeterministicFixtureSearchProvider(SearchProvider):
     def capabilities(self):
         return self._capabilities
 
-    def search(self, request: SearchRequest) -> SearchPage:
+    def _search(self, request: SearchRequest) -> SearchPage:
         self._validate_supported_request(request)
         if request.query == 'fixture:throttle':
             raise SearchProviderException(SearchProviderError(request.request_id, self.capabilities.provider_id, 'throttled', True, 'Fixture provider is rate limited.', 1000, 'fixture_throttle'))
