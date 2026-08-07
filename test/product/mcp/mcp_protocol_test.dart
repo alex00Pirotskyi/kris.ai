@@ -70,20 +70,48 @@ void main() {
       );
     });
 
-    test('callers cannot override reserved protocol metadata', () {
+    test('callers cannot override any MCP-reserved metadata prefix', () {
       final adapter = McpProtocolRegistry.requireStable('2026-07-28');
-      expect(
-        () => adapter.decorateRequestParams(
-          <String, dynamic>{
-            '_meta': <String, dynamic>{
-              'io.modelcontextprotocol/protocolVersion': '2099-01-01',
+      for (final key in <String>[
+        'io.modelcontextprotocol/protocolVersion',
+        'dev.mcp/securityContext',
+        'org.modelcontextprotocol.api/feature',
+        'com.mcp.tools/override',
+      ]) {
+        expect(
+          () => adapter.decorateRequestParams(
+            <String, dynamic>{
+              '_meta': <String, dynamic>{key: 'caller-controlled'},
             },
+            clientName: 'Kristin Local Agent',
+            clientVersion: '1.9.0+190',
+          ),
+          throwsA(isA<ProductException>()),
+          reason: '$key is reserved by MCP',
+        );
+      }
+    });
+
+    test('ordinary application metadata remains available to callers', () {
+      final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+      final params = adapter.decorateRequestParams(
+        <String, dynamic>{
+          '_meta': <String, dynamic>{
+            'com.example.mcp/context': 'allowed',
+            'com.example/context': <String, dynamic>{'trace': true},
           },
-          clientName: 'Kristin Local Agent',
-          clientVersion: '1.9.0+190',
-        ),
-        throwsA(isA<ProductException>()),
+        },
+        clientName: 'Kristin Local Agent',
+        clientVersion: '1.9.0+190',
       );
+
+      final meta = params['_meta'] as Map<String, dynamic>;
+      expect(meta['com.example.mcp/context'], 'allowed');
+      expect(
+        meta['com.example/context'],
+        <String, dynamic>{'trace': true},
+      );
+      expect(meta['io.modelcontextprotocol/protocolVersion'], '2026-07-28');
     });
 
     test('legacy requests remain byte-shape compatible without modern meta', () {
