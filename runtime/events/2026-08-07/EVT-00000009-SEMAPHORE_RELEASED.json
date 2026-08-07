@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000009-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-006",
+  "payload": {
+    "nextStatus": "BLOCKED",
+    "semaphoreId": "SEM-P6-001-LANDING-8634D003"
+  },
+  "recordedAt": "2026-08-07T14:38:00Z",
+  "runtimeGeneration": 9,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T140035Z-8634d003",
+  "workOrderId": "WO-P6-001-LANDING"
+}

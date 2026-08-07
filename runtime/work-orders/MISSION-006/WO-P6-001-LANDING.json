@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-001-LANDING-8634D003",
   "allowedPaths": [
     "lib/product/model/**",
     "test/product/model/**",
@@ -26,8 +25,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "BLOCKED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T14:00:35Z",
+  "updatedAt": "2026-08-07T14:38:00Z",
   "workOrderId": "WO-P6-001-LANDING"
 }
