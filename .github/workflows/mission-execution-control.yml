@@ -7,6 +7,8 @@ on:
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
       - 'tool/mission_control.py'
+      - 'tool/mission_live_materializer.py'
+      - 'tool/mission_live_materializer_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
       - 'SOURCE_MANIFEST.sha256'
@@ -17,6 +19,8 @@ on:
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
       - 'tool/mission_control.py'
+      - 'tool/mission_live_materializer.py'
+      - 'tool/mission_live_materializer_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
       - 'SOURCE_MANIFEST.sha256'
@@ -47,10 +51,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.10'
-      - name: Validate mission execution model
-        run: python tool/mission_control.py --project . validate
-      - name: Verify deterministic generated views
-        run: python tool/mission_control.py --project . bootstrap --check
+      - name: Verify durable live-memory regressions
+        run: python -m unittest -v tool/mission_live_materializer_test.py
+      - name: Validate deterministic live mission views
+        run: python tool/mission_live_materializer.py --project . --check
       - name: Verify canonical source manifest
         shell: bash
         run: |
