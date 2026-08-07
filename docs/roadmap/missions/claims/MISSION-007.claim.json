@@ -1,6 +1,6 @@
 {
   "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
-  "current": "P7-001 MCP version adapter repaired to keep modern discovery optional and to verify the full trusted tools/list surface; exact PR #96 CI is running for the repaired candidate.",
+  "current": "P7-001 product semantics are unchanged from the repaired MCP adapter; formatting-only CI repair is now exact candidate c55e2882b0ec04807c526d70bd56c85f3d6bb84d.",
   "exclusivePaths": [
     "lib/product/mcp*.dart",
     "lib/product/skills/**",
@@ -11,13 +11,13 @@
     "release/evidence/P7-*/**",
     "release/evidence/P23-*/**"
   ],
-  "head": "22f7fce19bbf77afe0c0ec5e6d6ccf1087d2a232",
+  "head": "c55e2882b0ec04807c526d70bd56c85f3d6bb84d",
   "liveStateMustBeResolved": true,
   "mission": "MISSION-007",
   "pr": 96,
   "schemaVersion": 1,
   "status": "CLAIMED",
-  "tree": "00f19eb3d73c0961bd43b880e429eb7cbfa02bf7",
+  "tree": "7195cacd18925c4b9917e54613395f897e0d4afd",
   "worker": "I",
   "workExecutionId": "WRK-20260807T103221Z-5aee6ba5"
 }
