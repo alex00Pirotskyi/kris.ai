@@ -1,14 +1,18 @@
 {
+  "activeSemaphoreId": "SEM-P8-001-WRITE-SANITIZER-A8B7C6D5",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
     "tool/test_center_assurance_enforcement_test.py"
   ],
+  "assignedWorker": "SANITIZER-V2",
   "baseCommit": "26ef06cf0c55badd55733d2f901d110a3f6a2737",
   "baseTree": "53e05ce1b285602c5244348f060cf20b9bde60a3",
   "createdAt": "2026-08-07T18:27:00Z",
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
+  "executionRole": "DEFECT_HUNTER",
+  "lastActor": "SANITIZER-V2:RESERVED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Close the remaining P8-001 fail-open assurance trust defects on the exact canonical Product head: prevent self-declared independent-review evidence from satisfying release assurance until repository-authoritative external provenance exists; require support-matrix evidence to prove explicit non-empty unique platform/capability coverage; and require behavior/platform/release support-bearing repository evidence to resolve from the exact candidate Git tree rather than mutable working-tree bytes. Preserve SOURCE_FOUNDATION behavior and do not promote support, certification, release, production, or GA.",
@@ -24,8 +28,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-07T18:27:00Z",
+  "updatedAt": "2026-08-07T18:32:00Z",
   "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
 }
