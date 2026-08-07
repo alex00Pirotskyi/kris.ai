@@ -50,7 +50,7 @@ class McpProtocolAdapter {
         ? <String, dynamic>{}
         : _stringKeyedMap(rawMeta, code: 'mcp_request_meta_invalid');
     final reserved = meta.keys
-        .where((key) => key.startsWith('io.modelcontextprotocol/'))
+        .where(_isReservedMcpMetaKey)
         .toList(growable: false);
     if (reserved.isNotEmpty) {
       throw ProductException(
@@ -305,6 +305,19 @@ class McpProtocolRegistry {
       },
     );
   }
+}
+
+bool _isReservedMcpMetaKey(String key) {
+  final separator = key.indexOf('/');
+  if (separator <= 0) {
+    return false;
+  }
+  final labels = key.substring(0, separator).split('.');
+  if (labels.length < 2) {
+    return false;
+  }
+  final secondLabel = labels[1].toLowerCase();
+  return secondLabel == 'modelcontextprotocol' || secondLabel == 'mcp';
 }
 
 Map<String, dynamic> _stringKeyedMap(
