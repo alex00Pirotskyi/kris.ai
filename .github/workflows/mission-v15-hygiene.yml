@@ -5,6 +5,7 @@ on:
     paths:
       - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_v15_hygiene.py'
+      - 'tool/mission_v15_live_runtime_audit.py'
       - 'tool/mission_runtime_model.py'
       - 'runtime/**'
   workflow_dispatch:
@@ -43,7 +44,16 @@ jobs:
             --runtime-project "$RUNNER_TEMP/mission-runtime" \
             --config config/mission_v15_hygiene.v1.json \
             --output "$RUNNER_TEMP/hygiene.json"
+      - name: Reject stale READY Work Order bases
+        shell: bash
+        run: |
+          python tool/mission_v15_live_runtime_audit.py \
+            --repository-project . \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --output "$RUNNER_TEMP/live-runtime.json"
       - uses: actions/upload-artifact@v4
         with:
           name: mission-v15-hygiene
-          path: ${{ runner.temp }}/hygiene.json
+          path: |
+            ${{ runner.temp }}/hygiene.json
+            ${{ runner.temp }}/live-runtime.json
