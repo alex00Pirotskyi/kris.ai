@@ -243,9 +243,13 @@ def apply_command(project: pathlib.Path, command_path: pathlib.Path) -> dict[str
                 f"mission-v15: append {append_path} to {command['authorityId']}",
             )
             candidate = _git(worktree, "rev-parse", "HEAD")
+            # Product/helper history intentionally does not carry Mission 1.5
+            # control-plane configuration. Validate the candidate Git objects
+            # through the shared repository object database while loading the
+            # authority/model policy from the runtime checkout.
             verify_authority(
-                worktree,
-                config_path=worktree / "config/mission_v15_authorities.v1.json",
+                project,
+                config_path=project / "config/mission_v15_authorities.v1.json",
                 authority_id=command["authorityId"],
                 requesting_mission=command["requestingMission"],
                 base_commit=work["baseCommit"],
