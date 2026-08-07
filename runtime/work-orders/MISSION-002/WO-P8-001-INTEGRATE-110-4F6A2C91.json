@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P8-001-INTEGRATE-110-4F6A2C91",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:07:30Z",
+  "updatedAt": "2026-08-07T20:09:00Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }
