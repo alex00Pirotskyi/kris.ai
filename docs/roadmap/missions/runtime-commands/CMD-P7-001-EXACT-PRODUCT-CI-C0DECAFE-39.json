@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P7-001-EXACT-PRODUCT-CI-C0DECAFE-39",
+  "createdAt": "2026-08-07T17:40:00Z",
+  "expectedProductHead": "ec5086210a778b8a1be51f22b9cd81f735956034",
+  "expectedRuntimeGeneration": 39,
+  "note": "Dispatch the existing ci.yml workflow on the exact manifest-finalized canonical P7 Product PR #96 head. Do not create or modify any product/source/test/generated file and do not count a run unless its workflow_dispatch head_sha equals the expected Product head.",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "productPr": 96,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P7-001-EXACT-PRODUCT-CI-C0DECAFE",
+  "workerIdentity": "ELASTIC-c0decafe",
+  "workOrderId": "WO-P7-001-EXACT-PRODUCT-CI-C0DECAFE"
+}

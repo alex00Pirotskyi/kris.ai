@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000039-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-007",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P7-001-EXACT-PRODUCT-CI-C0DECAFE",
+    "workerIdentity": "ELASTIC-c0decafe"
+  },
+  "recordedAt": "2026-08-07T17:40:00Z",
+  "runtimeGeneration": 39,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T174000Z-c0decafe",
+  "workOrderId": "WO-P7-001-EXACT-PRODUCT-CI-C0DECAFE"
+}
