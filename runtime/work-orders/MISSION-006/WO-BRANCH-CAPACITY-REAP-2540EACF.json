@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-BRANCH-CAPACITY-REAP-3E7A9C42",
   "allowedPaths": [
     "release/evidence/P6-*/**"
   ],
@@ -25,8 +24,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-07T20:20:31Z",
+  "updatedAt": "2026-08-07T20:28:15Z",
   "workOrderId": "WO-BRANCH-CAPACITY-REAP-2540EACF"
 }
