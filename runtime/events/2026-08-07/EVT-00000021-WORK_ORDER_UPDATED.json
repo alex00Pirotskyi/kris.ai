@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000021-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-007",
+  "payload": {
+    "actor": "SYSTEM-P7-EXTERNAL-INTEGRATION-RECONCILIATION",
+    "nextStatus": "VALIDATING",
+    "reason": "PR #98 was consumed into canonical P7 outside this Work Order; product head was reconciled in generation 20."
+  },
+  "recordedAt": "2026-08-07T15:46:00Z",
+  "runtimeGeneration": 21,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T154600Z-c0decafe",
+  "workOrderId": "WO-P7-001-PROTOCOL-CLOSURE"
+}
