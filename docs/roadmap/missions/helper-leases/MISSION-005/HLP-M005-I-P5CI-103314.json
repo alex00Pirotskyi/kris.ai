@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-f-p5-001-information-architecture.yml"
+  ],
+  "baseCommit": "67586763bb055faab76e4994184da78f77bd9810",
+  "baseTree": "b7d91180dffd221680f73a09730c00cc7d07860c",
+  "branch": "agent/help/i/mission-005/p5-helper-ci-exact-head",
+  "createdAt": "2026-08-07T10:33:14Z",
+  "expiresAt": "2026-08-07T14:33:14Z",
+  "helperWorker": "I",
+  "leaseId": "HLP-M005-I-P5CI-103314",
+  "mission": "MISSION-005",
+  "nextAction": "Repair the Worker F P5-001 workflow so bounded helper branches can execute exact-source tri-platform verification, then inspect resulting CI and hand the bounded repair to Worker F without changing P5 product semantics.",
+  "ownerWorker": "F",
+  "parentClaimHead": "67586763bb055faab76e4994184da78f77bd9810",
+  "refreshedAt": "2026-08-07T10:33:14Z",
+  "schemaVersion": 1,
+  "status": "ACTIVE",
+  "task": "P5-001",
+  "workExecutionId": "WRK-20260807T103314Z-6f2c9a41"
+}
