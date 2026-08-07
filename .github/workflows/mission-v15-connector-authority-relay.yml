@@ -61,7 +61,7 @@ jobs:
           PY
           )"
           case "$operation" in
-            APPEND_SAFE_DART_SET|UPDATE_RELEASE_VALIDATOR_SOURCE_POLICY_V1) ;;
+            APPEND_SAFE_DART_SET|UPDATE_RELEASE_VALIDATOR_SOURCE_POLICY_V1|MATERIALIZE_SOURCE_MANIFEST_V1) ;;
             *) echo "unsupported connector authority operation: $operation" >&2; exit 1 ;;
           esac
           echo "path=$command" >> "$GITHUB_OUTPUT"
@@ -79,6 +79,14 @@ jobs:
         shell: bash
         run: |
           python tool/mission_v15_release_validator_policy_apply.py \
+            --project . \
+            --command '${{ steps.command.outputs.path }}' \
+            --output "$RUNNER_TEMP/connector-authority-result.json"
+      - name: Materialize exact Product PR source manifest
+        if: steps.command.outputs.operation == 'MATERIALIZE_SOURCE_MANIFEST_V1'
+        shell: bash
+        run: |
+          python tool/mission_v15_source_manifest_release_apply.py \
             --project . \
             --command '${{ steps.command.outputs.path }}' \
             --output "$RUNNER_TEMP/connector-authority-result.json"
