@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000015-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "ELASTIC-b5ab48b7:EXACT_CURRENT_CI_ACTION_REQUIRED_ZERO_JOBS",
+    "nextStatus": "BLOCKED"
+  },
+  "recordedAt": "2026-08-07T15:01:00Z",
+  "runtimeGeneration": 15,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T141056Z-b5ab48b7",
+  "workOrderId": "WO-P8-001-INTEGRATE-89-B5AB48B7"
+}
