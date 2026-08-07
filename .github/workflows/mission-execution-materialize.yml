@@ -7,9 +7,13 @@ on:
     paths:
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
+      - 'docs/roadmap/missions/claims/**'
       - 'docs/roadmap/missions/checkpoints/**'
       - 'docs/roadmap/missions/coordination/**'
+      - 'docs/roadmap/missions/helper-leases/**'
       - 'tool/mission_control.py'
+      - 'tool/mission_materialize_safe.py'
+      - 'tool/mission_runtime_control.py'
   workflow_dispatch:
 
 permissions:
@@ -34,8 +38,17 @@ jobs:
       - name: Require exact branch head
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-      - name: Materialize deterministic mission views
-        run: python tool/mission_control.py --project . bootstrap
+      - name: Validate durable runtime ownership
+        shell: bash
+        run: |
+          python -m py_compile \
+            tool/mission_control.py \
+            tool/mission_materialize_safe.py \
+            tool/mission_runtime_control.py
+          python tool/mission_materialize_safe.py --project . validate
+          python tool/mission_runtime_control.py --project . validate
+      - name: Materialize static views from durable claims
+        run: python tool/mission_materialize_safe.py --project . materialize
       - name: Remove superseded prompt and transport artifacts
         shell: bash
         run: |
@@ -49,11 +62,11 @@ jobs:
             docs/roadmap/v32-source-import \
             tool/temp_anarchy_mission_materializer.py \
             tool/temp_anarchy_mission_materializer_v2.py
-      - name: Validate generated mission model
+      - name: Verify safe materialization is deterministic
         shell: bash
         run: |
-          python tool/mission_control.py --project . validate
-          python tool/mission_control.py --project . bootstrap --check
+          python tool/mission_materialize_safe.py --project . materialize --check
+          python tool/mission_runtime_control.py --project . validate
       - name: Refresh canonical source manifest twice
         shell: bash
         run: |
@@ -65,13 +78,19 @@ jobs:
         shell: bash
         run: |
           git diff --check
-          test -n "$(git status --porcelain=v1)"
-      - name: Publish generated mission system
+          if test -z "$(git status --porcelain=v1)"; then
+            echo 'No materialized change required.'
+            exit 0
+          fi
+      - name: Publish generated mission views
         shell: bash
         run: |
+          if test -z "$(git status --porcelain=v1)"; then
+            exit 0
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A -- .
           git diff --cached --check
-          git commit -m 'ANARCHY: materialize protected mission execution OS'
+          git commit -m 'ANARCHY: materialize mission views from durable claims'
           git push origin HEAD:agent/anarchy-autonomous-worker-missions
