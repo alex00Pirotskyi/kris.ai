@@ -23,6 +23,20 @@ from mission_delivery_lib import *
 from mission_delivery_checks import *
 from mission_delivery_live import *
 
+V15_CONTROL_BRANCH = "agent/mission-execution-v15-gold"
+V15_CONTROL_PATTERNS = (
+    ".github/workflows/mission-*.yml",
+    "config/mission_v15_*.json",
+    "docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md",
+    "docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md",
+    "schemas/mission_*.json",
+    "tool/mission_delivery_*.py",
+    "tool/mission_orchestrator.py",
+    "tool/mission_review_carry_forward.py",
+    "tool/mission_runtime_*.py",
+    "tool/mission_v15_*.py",
+)
+
 
 def validate_control_model(project: pathlib.Path) -> dict[str, Any]:
     """Load delivery policy while grandfathering known non-terminal v1 records.
@@ -85,6 +99,41 @@ def infer_mission(head_branch: str, pr_body: str, model: dict[str, Any]) -> str:
     return unique[0]
 
 
+def classify_v15_control_plane_paths(changed_paths: Iterable[str]) -> dict[str, Any]:
+    """Fail closed for the temporary Mission Execution 1.5 control candidate.
+
+    The v1 delivery ownership checker is mission-centric. PR #100 is the
+    explicitly designated control-plane candidate, not a Product PR or a
+    Mission Captain branch, so forcing it through product-mission inference
+    either fails spuriously or would require broadening a product mission's
+    authority. Keep this migration exception branch-bound and path-closed.
+    """
+    rows = []
+    violations = []
+    for raw in sorted(set(changed_paths)):
+        path = normalize_path(raw)
+        authorized = matches_any(path, V15_CONTROL_PATTERNS)
+        rows.append(
+            {
+                "path": path,
+                "category": "V15_CONTROL_PLANE" if authorized else "UNDECLARED_PATH",
+                "reason": None if authorized else "outside closed Mission Execution 1.5 control-plane scope",
+            }
+        )
+        if not authorized:
+            violations.append(path)
+    return {
+        "mission": None,
+        "controlPlane": "MISSION_EXECUTION_V15",
+        "changedPathCount": len(rows),
+        "authorized": not violations,
+        "violations": violations,
+        "requiredOwnerReviews": [],
+        "coordinationIds": [],
+        "paths": rows,
+    }
+
+
 def load_event(path: pathlib.Path | None) -> dict[str, Any]:
     if path is None:
         return {}
@@ -109,18 +158,23 @@ def command_ownership(project: pathlib.Path, args: argparse.Namespace) -> None:
         pr = event.get("pull_request", {})
         head_branch = head_branch or pr.get("head", {}).get("ref")
         pr_body = pr.get("body") or ""
-    if not mission:
-        if not head_branch:
-            raise DeliveryError("mission or head branch is required")
-        mission = infer_mission(head_branch, pr_body, model)
     changed = git_changed_paths(project, args.base, args.head)
-    result = classify_changed_paths(mission, changed, model)
+    if head_branch == V15_CONTROL_BRANCH and not mission:
+        result = classify_v15_control_plane_paths(changed)
+        namespace = []
+    else:
+        if not mission:
+            if not head_branch:
+                raise DeliveryError("mission or head branch is required")
+            mission = infer_mission(head_branch, pr_body, model)
+        result = classify_changed_paths(mission, changed, model)
+        namespace = namespace_diagnostics(project, mission, model)
     result.update(
         {
             "base": args.base,
             "head": args.head,
             "headBranch": head_branch,
-            "namespaceDiagnostics": namespace_diagnostics(project, mission, model),
+            "namespaceDiagnostics": namespace,
         }
     )
     if args.output:
@@ -177,7 +231,6 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project", default=".")
     sub = parser.add_subparsers(dest="command", required=True)
-
     sub.add_parser("validate")
     work_id_parser = sub.add_parser("work-id")
 
