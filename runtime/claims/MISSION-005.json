@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "mission": "MISSION-005",
+  "captainWorker": "F",
+  "status": "ACTIVE",
+  "integrationAuthority": "F",
+  "priority": "HIGH",
+  "currentProductPrs": [72],
+  "runtimeGeneration": 0,
+  "updatedAt": "2026-08-07T12:20:00Z"
+}
