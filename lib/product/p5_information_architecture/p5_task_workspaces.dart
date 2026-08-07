@@ -23,8 +23,9 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
             message:
                 'The prototype keeps every task inside an explicit local project context.',
             actionLabel: 'Choose sample project',
-            onAction: () =>
-                controller.apply(P5PrototypeAction.createSampleProject),
+            onAction: () => controller.apply(
+              P5PrototypeAction.createSampleProject,
+            ),
           )
         else ...<Widget>[
           Card(
