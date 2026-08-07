@@ -1,0 +1,29 @@
+{
+  "allowedPaths": [
+    "release/evidence/P6-*/**"
+  ],
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "createdAt": "2026-08-07T19:51:00Z",
+  "createdBy": "WRK-20260807T190752Z-2540eacf",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Restore Mission Execution 1.5 branch capacity by deleting one exact configured legacy-debt branch through the governed exact-SHA reaper, without changing P6 product source, landing state, acceptance, support, or any active worker branch.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "INCIDENT_RESPONDER",
+  "requiredTests": [
+    "target branch matches configured legacyDebtPatterns",
+    "target has no open PR and is not protected/default/canonical/actively locked",
+    "exact target SHA is unchanged at deletion",
+    "post-delete ref absence is verified",
+    "branch count moves toward maxTotalBranchesDuringMigration"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-07T19:51:00Z",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-2540EACF"
+}
