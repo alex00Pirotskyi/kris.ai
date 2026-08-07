@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "task": "P2-004",
+  "mission": "MISSION-001",
+  "productPr": 75,
+  "captain": "A",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "observedHead": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "status": "ACTIVE",
+  "observedAt": "2026-08-07T12:20:00Z"
+}
