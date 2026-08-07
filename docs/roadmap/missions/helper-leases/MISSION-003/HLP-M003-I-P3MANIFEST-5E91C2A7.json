@@ -10,12 +10,12 @@
   "helperWorker": "I",
   "leaseId": "HLP-M003-I-P3MANIFEST-5E91C2A7",
   "mission": "MISSION-003",
-  "nextAction": "Repair the stale Worker D workflow SHA-256 binding in the P3 evidence manifest, rerun exact PR #93 readiness CI, and leave root SOURCE_MANIFEST materialization to its canonical owner/integration path.",
+  "nextAction": "Worker D may consume PR #93 helper head 3dc067564a813dfc63fdda0291df4411b9c2edf7. Exact Windows readiness run 31171488732 proves the repaired P3 artifact and dependency Git bindings plus Worker D/Test Center checks; only canonical root SOURCE_MANIFEST.sha256 currency remains outside this lease. Linux/macOS exact lanes may settle independently; any further P3 manifest/source/workflow write requires a new live helper lease.",
   "ownerWorker": "D",
   "parentClaimHead": "7eecc840f68ca0dff13ab58c138845593254e390",
-  "refreshedAt": "2026-08-07T10:44:00Z",
+  "refreshedAt": "2026-08-07T10:49:00Z",
   "schemaVersion": 1,
-  "status": "ACTIVE",
+  "status": "COMPLETE",
   "task": "P3-001",
   "workExecutionId": "WRK-20260807T102833Z-5e91c2a7"
 }
