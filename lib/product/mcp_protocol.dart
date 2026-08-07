@@ -1,4 +1,4 @@
-import 'domain.dart';
+import 'storage_security.dart';
 
 const String mcpCurrentStableProtocolVersion = '2026-07-28';
 const String mcpLegacyProtocolVersion = '2024-11-05';
@@ -327,12 +327,9 @@ Map<String, dynamic> _stringKeyedMap(
   if (value is! Map) {
     throw ProductException(code, 'Expected a JSON object.');
   }
-  final result = <String, dynamic>{};
-  for (final entry in value.entries) {
-    if (entry.key is! String) {
-      throw ProductException(code, 'Expected JSON object keys to be strings.');
-    }
-    result[entry.key as String] = entry.value;
+  try {
+    return Map<String, dynamic>.from(value);
+  } on TypeError {
+    throw ProductException(code, 'Expected JSON object keys to be strings.');
   }
-  return result;
 }
