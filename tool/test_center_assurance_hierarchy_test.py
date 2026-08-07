@@ -15,6 +15,8 @@ import test_center_assurance_hierarchy as H  # noqa: E402
 FIXTURE = Path("release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json")
 COMPONENT_FIXTURE = "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-fixture.json"
 COMPONENT_FIXTURE_SHA256 = "779714fd586b2896c39056dd541a5be80512b240bd147a72b67d60f59702164a"
+COMPONENT_RESULT_FIXTURE = "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-machine-result.json"
+COMPONENT_RESULT_FIXTURE_SHA256 = "68a1720c473c4d3188181dde18e9fe8df572d8236e0ab105c2edfcb9da19aee3"
 
 
 def at(value, path):
@@ -80,6 +82,7 @@ class AssuranceHierarchyTest(unittest.TestCase):
             if binding["testId"]==current_test_id: binding["levelId"]="component"
             if binding["testId"]=="tc.p8.formal-test-hierarchy": binding["levelId"]="unit"
         report["assuranceLevel"]="component"; report["hierarchyBinding"]["levelId"]="component"; report["requestedSupportImpact"]="BEHAVIOR_SUPPORTED"; report["executionResult"]["resultId"]="result.p8-001.component-linux"
+        result_id="evidence.p8-001.component-pass.result"; result_evidence=report["executionResult"]["evidenceReferences"][1]; result_evidence.update(evidenceId=result_id,uri=COMPONENT_RESULT_FIXTURE,sha256=COMPONENT_RESULT_FIXTURE_SHA256); report["evidenceReferences"][1]=result_id; report["evidenceBindings"][1]["evidenceId"]=result_id
         component_id="evidence.p8-001.component-pass.fixture"; component=report["executionResult"]["evidenceReferences"][2]; component.update(evidenceId=component_id,uri=COMPONENT_FIXTURE,sha256=COMPONENT_FIXTURE_SHA256); report["evidenceReferences"][2]=component_id; report["evidenceBindings"][2].update(category="component_fixture",evidenceId=component_id)
         predecessor=copy.deepcopy(self.report_fixture["executionResult"]); predecessor["testId"]="tc.p8.formal-test-hierarchy"
         report["predecessorResults"]=[{"assuranceLevel":"unit","executionResult":predecessor,"evidenceBindings":copy.deepcopy(self.report_fixture["evidenceBindings"]),"predecessorResults":[]}]
