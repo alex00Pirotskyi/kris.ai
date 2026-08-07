@@ -48,6 +48,7 @@ jobs:
           tool/mission_delivery_live.py
           tool/mission_delivery_control.py
           tool/mission_delivery_strict.py
+          tool/mission_delivery_metrics_safe.py
           tool/mission_delivery_control_test.py
       - name: Validate durable-claim materializer
         run: python tool/mission_materialize_safe.py --project . validate
@@ -61,8 +62,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python tool/mission_delivery_control.py --project . generate
-          python tool/mission_delivery_control.py --project . generate --check
+          python tool/mission_delivery_metrics_safe.py --project .
+          python tool/mission_delivery_metrics_safe.py --project . --check
       - name: Refresh source manifest twice
         shell: bash
         run: |
