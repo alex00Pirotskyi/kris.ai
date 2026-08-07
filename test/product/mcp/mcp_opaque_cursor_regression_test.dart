@@ -67,4 +67,49 @@ void main() {
       expect(page.toolNames, <String>{name});
     });
   });
+
+  group('MCP reserved metadata contract', () {
+    final adapter = McpProtocolRegistry.requireStable('2026-07-28');
+
+    test('rejects all reserved MCP DNS-label families', () {
+      for (final key in <String>[
+        'io.modelcontextprotocol/protocolVersion',
+        'dev.mcp/securityContext',
+        'org.modelcontextprotocol.api/feature',
+        'com.mcp.tools/override',
+      ]) {
+        expect(
+          () => adapter.decorateRequestParams(
+            <String, dynamic>{
+              '_meta': <String, dynamic>{key: 'caller-controlled'},
+            },
+            clientName: 'Kristin Local Agent',
+            clientVersion: '1.9.0+190',
+          ),
+          throwsA(isA<ProductException>()),
+          reason: '$key is reserved by MCP',
+        );
+      }
+    });
+
+    test('preserves application-owned metadata outside reserved families', () {
+      final params = adapter.decorateRequestParams(
+        <String, dynamic>{
+          '_meta': <String, dynamic>{
+            'com.example.mcp/context': 'allowed',
+            'com.example/context': <String, dynamic>{'trace': true},
+          },
+        },
+        clientName: 'Kristin Local Agent',
+        clientVersion: '1.9.0+190',
+      );
+
+      final meta = params['_meta'] as Map<String, dynamic>;
+      expect(meta['com.example.mcp/context'], 'allowed');
+      expect(
+        meta['com.example/context'],
+        <String, dynamic>{'trace': true},
+      );
+    });
+  });
 }
