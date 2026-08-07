@@ -8,7 +8,9 @@ on:
     paths:
       - '.github/workflows/mission-delivery-materialize.yml'
       - 'config/mission_delivery.v1.json'
+      - 'docs/roadmap/missions/claims/**'
       - 'docs/roadmap/missions/delivery/records/**'
+      - 'docs/roadmap/missions/helper-leases/**'
       - 'tool/mission_delivery_*.py'
       - 'tool/mission_materialize_safe.py'
       - 'tool/mission_runtime_control.py'
@@ -51,14 +53,20 @@ jobs:
           tool/mission_delivery_strict.py
           tool/mission_delivery_metrics_safe.py
           tool/mission_delivery_control_test.py
-      - name: Validate durable-claim materializer
-        run: python tool/mission_materialize_safe.py --project . validate
-      - name: Validate helper runtime
-        run: python tool/mission_runtime_control.py --project . validate
-      - name: Run legacy delivery regressions
-        run: python -m unittest -v tool/mission_delivery_control_test.py
-      - name: Validate strict delivery provenance
-        run: python tool/mission_delivery_strict.py --project . validate
+      - name: Validate durable runtime controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/mission_materialize_safe.py --project . validate
+          python tool/mission_runtime_control.py --project . validate
+          python -m unittest -v tool/mission_delivery_control_test.py
+          python tool/mission_delivery_strict.py --project . validate
+      - name: Materialize static mission views from durable claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/mission_materialize_safe.py --project . materialize
+          python tool/mission_materialize_safe.py --project . materialize --check
       - name: Materialize delivery metrics
         shell: bash
         run: |
@@ -75,23 +83,23 @@ jobs:
           cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
           git diff --check
       - id: publish
-        name: Publish generated delivery views
+        name: Publish generated mission views
         shell: bash
         run: |
           set -euo pipefail
           echo 'published=false' >> "$GITHUB_OUTPUT"
           if test -z "$(git status --porcelain=v1)"; then
-            echo "Delivery views and source manifest are already current."
+            echo "Mission views and source manifest are already current."
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- \
-            docs/roadmap/missions/DELIVERY_METRICS.json \
-            docs/roadmap/missions/DELIVERY_DASHBOARD.md \
-            SOURCE_MANIFEST.sha256
+          # The safe materializer never writes mutable claims/state/checkpoints/helper leases.
+          # Staging docs/roadmap/missions therefore publishes only derived static/delivery views
+          # produced in this clean checkout.
+          git add -A -- docs/roadmap/missions SOURCE_MANIFEST.sha256
           git diff --cached --check
-          git commit -m 'ANARCHY: materialize mission delivery metrics'
+          git commit -m 'ANARCHY: materialize mission views from durable runtime state'
           published_sha="$(git rev-parse HEAD)"
           git push origin HEAD:${{ github.ref_name }}
           echo "published=true" >> "$GITHUB_OUTPUT"
