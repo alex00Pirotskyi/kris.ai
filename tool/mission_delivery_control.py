@@ -27,6 +27,7 @@ V15_CONTROL_BRANCH = "agent/mission-execution-v15-gold"
 V15_CONTROL_PATTERNS = (
     ".github/workflows/mission-*.yml",
     "config/mission_v15_*.json",
+    "docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md",
     "docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md",
     "docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md",
     "schemas/mission_*.json",
