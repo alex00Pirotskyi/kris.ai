@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000078-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "SYSTEM-P8-SOURCE-MANIFEST-FINALIZED",
+    "nextStatus": "VALIDATING",
+    "observedProductHead": "53c34bc1586a9e473721fa8f4c5339a8e5f8e947"
+  },
+  "recordedAt": "2026-08-07T20:14:30Z",
+  "runtimeGeneration": 78,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T191235Z-4f6a2c91",
+  "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
+}

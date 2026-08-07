@@ -12,9 +12,10 @@
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "SYSTEM-P8-SOURCE-MANIFEST-FINALIZED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
-  "objective": "Consume exact P8 assurance-trust helper PR #110 at 9dc1d430e801d7ef100adff3d6b87d2ee3b0850e into canonical Product PR #65 without byte drift, preserve authoritative support-scope/evidence-lineage repairs, rerun exact P8/product validation, and defer shared root-manifest finalization to the controlled finalization boundary. No P8 acceptance or support promotion.",
+  "objective": "Consume exact P8 assurance-trust helper PR #110 into canonical Product PR #65 without byte drift, preserve authoritative support-scope/evidence-lineage repairs, materialize the canonical source manifest, and rerun exact current P8/product validation. No P8 acceptance or support promotion.",
   "parentProductPr": 65,
   "priority": 100,
   "requestedRole": "INTEGRATOR",
@@ -22,12 +23,13 @@
     "exact helper product-gates 31212460960 SUCCESS",
     "P8 canonical Test Center/hierarchy enforcement Linux/macOS/Windows source gates PASS in run 31212464847",
     "fresh R1 authoritative support-scope/evidence-linkage review PASS",
-    "exact current Product PR validation after integration"
+    "canonical source manifest materialized on commit 53c34bc1586a9e473721fa8f4c5339a8e5f8e947",
+    "exact current Product PR validation after finalization"
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
   "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:09:00Z",
+  "updatedAt": "2026-08-07T20:14:30Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }
