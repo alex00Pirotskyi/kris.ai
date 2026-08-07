@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000020-INCIDENT_RESOLVED",
+  "eventType": "INCIDENT_RESOLVED",
+  "mission": "MISSION-007",
+  "payload": {
+    "incident": "PRODUCT_RUNTIME_DIVERGENCE",
+    "oldObservedHead": "e0d7ab3afc4b4601080adec88c9ec4db8b280480",
+    "liveObservedHead": "ea0e2ca0868c0334a7dd3c2c3cf326211f464389",
+    "releasedSemaphoreId": "SEM-P7-001-SOURCE-INVENTORY-RELAY-19",
+    "supersededWorkOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5",
+    "replacementWorkOrderId": "WO-P7-001-SOURCE-INVENTORY-EA0E2CA"
+  },
+  "recordedAt": "2026-08-07T15:44:00Z",
+  "runtimeGeneration": 20,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T154400Z-c0decafe",
+  "workOrderId": "WO-P7-001-SOURCE-INVENTORY-529719B5"
+}
