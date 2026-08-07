@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000028-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "AUTHORITY_OWNER",
+    "type": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-07T16:28:00Z",
+  "runtimeGeneration": 28,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T162800Z-c0decafe",
+  "workOrderId": "WO-P7-001-RELEASE-VALIDATOR-POLICY-C0DECAFE"
+}
