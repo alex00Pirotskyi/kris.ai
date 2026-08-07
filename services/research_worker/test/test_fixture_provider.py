@@ -4,8 +4,92 @@ import socket
 import unittest
 from unittest import mock
 
-from services.research_worker.src.search import SearchProviderException, SearchRequest
+from services.research_worker.src.search import (
+    SearchContractError,
+    SearchPage,
+    SearchProvider,
+    SearchProviderCapabilities,
+    SearchProviderException,
+    SearchRateLimit,
+    SearchRequest,
+    SearchResult,
+)
 from services.research_worker.test.support import load_contract_state
+
+_FIXED_RETRIEVED_AT = "2026-08-05T00:00:00Z"
+
+
+class AdversarialSearchProvider(SearchProvider):
+    """Schema-valid pages used to prove the public provider gate fails closed."""
+
+    def __init__(self, mode: str):
+        self.mode = mode
+        self._capabilities = SearchProviderCapabilities(
+            provider_id="fixture_adversarial",
+            max_page_size=25,
+        )
+
+    @property
+    def capabilities(self) -> SearchProviderCapabilities:
+        return self._capabilities
+
+    def _result(
+        self,
+        request: SearchRequest,
+        *,
+        index: int,
+        query_id: str,
+        provider_id: str,
+    ) -> SearchResult:
+        return SearchResult(
+            result_id=f"res_adversarial_{index}",
+            provider_id=provider_id,
+            provider_rank=index,
+            title=f"Adversarial result {index}",
+            url=f"https://example.com/result-{index}",
+            display_url=f"https://example.com/result-{index}",
+            snippet="deterministic correlation fixture",
+            published_at=None,
+            query_id=query_id,
+            retrieved_at=_FIXED_RETRIEVED_AT,
+            provider_metadata={},
+        )
+
+    def _search(self, request: SearchRequest) -> SearchPage:
+        page_request_id = (
+            "req_foreign" if self.mode == "wrong_request" else request.request_id
+        )
+        page_provider_id = (
+            "fixture_foreign"
+            if self.mode == "wrong_provider"
+            else self.capabilities.provider_id
+        )
+        count = 2 if self.mode in {"over_limit", "mixed_query"} else 1
+        results = []
+        for index in range(1, count + 1):
+            query_id = request.query_id
+            if self.mode == "wrong_query":
+                query_id = "qry_foreign"
+            elif self.mode == "mixed_query" and index == count:
+                query_id = "qry_foreign"
+            results.append(
+                self._result(
+                    request,
+                    index=index,
+                    query_id=query_id,
+                    provider_id=page_provider_id,
+                )
+            )
+        return SearchPage(
+            request_id=page_request_id,
+            provider_id=page_provider_id,
+            provider_request_id="provider_req_adversarial",
+            results=tuple(results),
+            next_cursor=None,
+            rate_limit=SearchRateLimit(None, None, None),
+            partial_failure=None,
+            retrieved_at=_FIXED_RETRIEVED_AT,
+        )
 
 
 class FixtureProviderContractTest(unittest.TestCase):
@@ -106,6 +190,64 @@ class FixtureProviderContractTest(unittest.TestCase):
         self.assertEqual("fixture_alpha", error.provider_id)
         self.assertEqual("invalid_request", error.code)
         self.validate("error", error.to_dict())
+
+    def test_provider_boundary_rejects_wrong_page_request_id(self) -> None:
+        request = SearchRequest(request_id="req_expected", query="fixture:all")
+        with self.assertRaisesRegex(
+            SearchContractError,
+            "page request identity does not match originating request",
+        ):
+            AdversarialSearchProvider("wrong_request").search(request)
+
+    def test_provider_boundary_rejects_consistent_foreign_query_id(self) -> None:
+        request = SearchRequest(request_id="req_expected", query="fixture:all")
+        with self.assertRaisesRegex(
+            SearchContractError,
+            "result query identity does not match originating request",
+        ):
+            AdversarialSearchProvider("wrong_query").search(request)
+
+    def test_provider_boundary_rejects_page_above_request_limit(self) -> None:
+        request = SearchRequest(
+            request_id="req_expected",
+            query="fixture:all",
+            limit=1,
+        )
+        with self.assertRaisesRegex(
+            SearchContractError,
+            "page result count exceeds originating request limit",
+        ):
+            AdversarialSearchProvider("over_limit").search(request)
+
+    def test_provider_boundary_rejects_provider_identity_drift(self) -> None:
+        request = SearchRequest(request_id="req_expected", query="fixture:all")
+        with self.assertRaisesRegex(
+            SearchContractError,
+            "page provider identity does not match provider capabilities",
+        ):
+            AdversarialSearchProvider("wrong_provider").search(request)
+
+    def test_page_model_rejects_mixed_query_injection(self) -> None:
+        request = SearchRequest(
+            request_id="req_expected",
+            query="fixture:all",
+            limit=2,
+        )
+        with self.assertRaisesRegex(SearchContractError, "multiple query identities"):
+            AdversarialSearchProvider("mixed_query").search(request)
+
+    def test_provider_subclass_cannot_override_public_search_gate(self) -> None:
+        with self.assertRaisesRegex(TypeError, "must implement _search"):
+            class UnsafeProvider(SearchProvider):
+                @property
+                def capabilities(self):
+                    return SearchProviderCapabilities(provider_id="unsafe")
+
+                def search(self, request):
+                    raise AssertionError("unsafe override")
+
+                def _search(self, request):
+                    raise AssertionError("unused")
 
 
 if __name__ == "__main__":
