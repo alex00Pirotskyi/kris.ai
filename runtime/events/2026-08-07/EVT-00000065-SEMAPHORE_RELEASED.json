@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000065-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P4-001-INTEGRATE-111-4F6A2C91"
+  },
+  "recordedAt": "2026-08-07T19:37:00Z",
+  "runtimeGeneration": 65,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T191235Z-4f6a2c91",
+  "workOrderId": "WO-P4-001-INTEGRATE-111-4A9C2D1E"
+}
