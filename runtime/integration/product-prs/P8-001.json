@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "task": "P8-001",
+  "mission": "MISSION-002",
+  "productPr": 65,
+  "captain": "B",
+  "branch": "agent/b/test-center-contracts-and-review",
+  "observedHead": "604905039aa26952045e69ebe6799ae464144635",
+  "status": "ACTIVE",
+  "observedAt": "2026-08-07T12:20:00Z"
+}
