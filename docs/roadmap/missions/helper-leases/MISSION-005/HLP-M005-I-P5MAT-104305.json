@@ -1,0 +1,28 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-f-p5-helper-materialize.yml",
+    "lib/product/p5_information_architecture/p5_controller.dart",
+    "lib/product/p5_information_architecture/p5_support_workspaces.dart",
+    "lib/product/p5_information_architecture/p5_task_workspaces.dart",
+    "release/evidence/P5-001/manifest.json",
+    "test/product/p5_information_architecture/p5_active_context_lock_test.dart",
+    "test/product/p5_information_architecture/p5_active_context_widget_test.dart",
+    "test/product/p5_information_architecture/p5_experience_warning_lifecycle_test.dart"
+  ],
+  "baseCommit": "64308efc694732d562015168708d2cf5956ad5aa",
+  "baseTree": "5c043435dcc0e43494496c54d1650b2060898a5a",
+  "branch": "agent/help/i/mission-005/p5-helper-ci-exact-head",
+  "createdAt": "2026-08-07T10:43:05Z",
+  "expiresAt": "2026-08-07T14:43:05Z",
+  "helperWorker": "I",
+  "leaseId": "HLP-M005-I-P5MAT-104305",
+  "mission": "MISSION-005",
+  "nextAction": "Use one bounded self-removing Worker F materializer to apply canonical Dart formatting to the six CI-proven files and regenerate only release/evidence/P5-001/manifest.json; do not edit SOURCE_MANIFEST.sha256.",
+  "ownerWorker": "F",
+  "parentClaimHead": "67586763bb055faab76e4994184da78f77bd9810",
+  "refreshedAt": "2026-08-07T10:43:05Z",
+  "schemaVersion": 1,
+  "status": "ACTIVE",
+  "task": "P5-001",
+  "workExecutionId": "WRK-20260807T103314Z-6f2c9a41"
+}
