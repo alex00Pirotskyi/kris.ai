@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P7-001-EXACT-PRODUCT-CI-C0DECAFE",
   "allowedPaths": [
     "release/evidence/P7-*/**"
   ],
@@ -10,6 +9,7 @@
   "createdBy": "SYSTEM-P7-EXACT-CI-REPAIR",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
+  "lastActor": "SYSTEM-P7-EXACT-FINALIZED-CI-PASS",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-007",
   "objective": "Allocate and execute the existing ci.yml product-gates workflow on exact finalized canonical Product PR #96 head ec5086210a778b8a1be51f22b9cd81f735956034 without any source, test, generated-file, marker, no-op, or trigger commit. Freeze the canonical Product PR with a zero-write INTEGRATION semaphore while the workflow_dispatch run is allocated and bind the run back to the exact head before it may count as evidence.",
@@ -24,8 +24,8 @@
   ],
   "roadmapTask": "P7-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-07T17:40:00Z",
+  "updatedAt": "2026-08-07T17:45:00Z",
   "workOrderId": "WO-P7-001-EXACT-PRODUCT-CI-C0DECAFE"
 }

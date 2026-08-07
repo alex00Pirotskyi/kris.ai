@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000040-CI_PASSED",
+  "eventType": "CI_PASSED",
+  "mission": "MISSION-007",
+  "payload": {
+    "candidateCommit": "ec5086210a778b8a1be51f22b9cd81f735956034",
+    "candidateTree": "33bea41e73a68b30f1f17f09323824d81a6419d1",
+    "productGatesRunId": 31202918335,
+    "productPr": 96,
+    "releasedSemaphoreId": "SEM-P7-001-EXACT-PRODUCT-CI-C0DECAFE",
+    "transitionedToLanded": [
+      "WO-P7-001-EXACT-PRODUCT-CI-C0DECAFE",
+      "WO-P7-001-SOURCE-MANIFEST-RELEASE-C0DECAFE"
+    ],
+    "parentStatus": "REVIEW"
+  },
+  "recordedAt": "2026-08-07T17:45:00Z",
+  "runtimeGeneration": 40,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T174500Z-c0decafe",
+  "workOrderId": "WO-P7-001-EXACT-PRODUCT-CI-C0DECAFE"
+}
