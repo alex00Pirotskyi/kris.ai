@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P11-001-INT-e168f3bb",
   "allowedPaths": [
     "tool/worker_e*.py",
     "release/evidence/P11-*/**",
@@ -25,8 +24,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T14:16:31Z",
+  "updatedAt": "2026-08-07T14:26:00Z",
   "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }

@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000006-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-010",
+  "payload": {
+    "integratedHelperPr": 95,
+    "integrationMethod": "squash",
+    "nextStatus": "VALIDATING",
+    "observedHead": "762b037fc824e2d6b3c9e26d65193ddfcf2b8cc3",
+    "productPr": 71,
+    "semaphoreId": "SEM-P11-001-INT-e168f3bb"
+  },
+  "recordedAt": "2026-08-07T14:26:00Z",
+  "runtimeGeneration": 6,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T140311Z-e168f3bb",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
+}
