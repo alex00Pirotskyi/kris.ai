@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "services/research_worker/src/search/fixture_provider.py",
+    "services/research_worker/test/test_fixture_provider.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "fceea9a561dad8ff57f398c8be2f5fe27ad48f25",
+  "baseTree": "95470ca13088976d1d3331913a89527d99648954",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "createdAt": "2026-08-07T19:35:05Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-07T23:35:05Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-07T19:35:05Z",
+  "resourceId": null,
+  "runtimeGeneration": 64,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-INTEGRATE-111-4F6A2C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-INTEGRATE-111-4A9C2D1E",
+  "workerIdentity": "ELASTIC-4f6a2c91"
+}
