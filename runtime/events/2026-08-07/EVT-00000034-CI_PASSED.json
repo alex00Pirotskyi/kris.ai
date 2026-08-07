@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000034-CI_PASSED",
+  "eventType": "CI_PASSED",
+  "mission": "MISSION-007",
+  "payload": {
+    "candidateCommit": "5d3e62bbedb1f700fbc0cfc76704cca5fc067a21",
+    "candidateTree": "0959839b4315a5f38ba80df520776da865c2be63",
+    "productPr": 96,
+    "productGatesRunId": 31199769011,
+    "transitionedToLanded": [
+      "WO-P7-001-INTEGRATE-98-B5AB48B7",
+      "WO-P7-001-INTEGRATE-107-C0DECAFE",
+      "WO-P7-001-INTEGRATE-108-C0DECAFE"
+    ],
+    "transitionedToReview": "WO-P7-001-PROTOCOL-CLOSURE"
+  },
+  "recordedAt": "2026-08-07T17:02:00Z",
+  "runtimeGeneration": 34,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T170200Z-c0decafe",
+  "workOrderId": "WO-P7-001-PROTOCOL-CLOSURE"
+}
