@@ -39,6 +39,7 @@ GIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 ACCEPTED = {"ACCEPTED", "MERGED_MAIN"}
 SOURCE_LANDING = {"NOT_LANDED", "HELPER", "PRODUCT_PR", "LANDED_MAIN"}
 REVIEW_TIERS = {"R0", "R1", "R2"}
+LINEAR_LANDING_MODE = "TREE_EQUIVALENT_LINEAR"
 
 
 def strict_time(value: str) -> dt.datetime:
@@ -213,6 +214,59 @@ def validate_review_receipt(
         _validate_review_carry_forward(project, model, review, candidate_commit, record_path)
 
 
+def _validate_tree_equivalent_linear_landing(
+    project: pathlib.Path,
+    record: dict[str, Any],
+    record_path: pathlib.Path,
+    *,
+    source_commit: str,
+    merged_main: str,
+) -> None:
+    proof = record.get("sourceLandingProof")
+    if not isinstance(proof, dict):
+        raise DeliveryError(
+            f"{record_path}: {LINEAR_LANDING_MODE} requires sourceLandingProof"
+        )
+    if set(proof) != {"mode", "landingBaseCommit", "mergedMainTree"}:
+        raise DeliveryError(
+            f"{record_path}: sourceLandingProof must contain only mode, landingBaseCommit, mergedMainTree"
+        )
+    if proof.get("mode") != LINEAR_LANDING_MODE:
+        raise DeliveryError(
+            f"{record_path}: unsupported sourceLandingProof mode {proof.get('mode')!r}"
+        )
+    landing_base = proof.get("landingBaseCommit")
+    merged_tree = proof.get("mergedMainTree")
+    source_tree = record.get("tree")
+    for label, value in (
+        ("landingBaseCommit", landing_base),
+        ("mergedMainTree", merged_tree),
+        ("tree", source_tree),
+    ):
+        if not isinstance(value, str) or not GIT_SHA.fullmatch(value):
+            raise DeliveryError(f"{record_path}: invalid linear landing {label}")
+
+    actual_source_tree = git_tree(project, source_commit)
+    if source_tree != actual_source_tree:
+        raise DeliveryError(
+            f"{record_path}: linear landing source commit/tree mismatch"
+        )
+    actual_merged_tree = git_tree(project, merged_main)
+    if merged_tree != actual_merged_tree or merged_tree != actual_source_tree:
+        raise DeliveryError(
+            f"{record_path}: linear landing requires exact source/main tree equivalence"
+        )
+
+    run_git(project, "cat-file", "-e", f"{landing_base}^{{commit}}")
+    run_git(project, "merge-base", "--is-ancestor", landing_base, source_commit)
+    parent_line = run_git(project, "rev-list", "--parents", "-n", "1", merged_main)
+    parents = parent_line.split()
+    if len(parents) != 2 or parents[1] != landing_base:
+        raise DeliveryError(
+            f"{record_path}: linear landing mergedMainCommit must have exactly landingBaseCommit as parent"
+        )
+
+
 def validate_source_landing(project: pathlib.Path, record: dict[str, Any], record_path: pathlib.Path) -> None:
     source_landing = record.get("sourceLanding")
     if source_landing is None:
@@ -228,7 +282,18 @@ def validate_source_landing(project: pathlib.Path, record: dict[str, Any], recor
     if not isinstance(merged_main, str) or not GIT_SHA.fullmatch(merged_main):
         raise DeliveryError(f"{record_path}: LANDED_MAIN requires mergedMainCommit")
     run_git(project, "cat-file", "-e", f"{merged_main}^{{commit}}")
-    run_git(project, "merge-base", "--is-ancestor", commit, merged_main)
+
+    proof = record.get("sourceLandingProof")
+    if proof is None:
+        run_git(project, "merge-base", "--is-ancestor", commit, merged_main)
+        return
+    _validate_tree_equivalent_linear_landing(
+        project,
+        record,
+        record_path,
+        source_commit=commit,
+        merged_main=merged_main,
+    )
 
 
 def validate_accepted_records(project: pathlib.Path) -> None:
@@ -280,7 +345,8 @@ def validate_accepted_records(project: pathlib.Path) -> None:
             merged = record.get("mergedMainCommit")
             if not merged:
                 raise DeliveryError(f"{path.relative_to(project)}: mergedMainCommit required")
-            run_git(project, "merge-base", "--is-ancestor", commit, merged)
+            if record.get("sourceLanding") != "LANDED_MAIN":
+                run_git(project, "merge-base", "--is-ancestor", commit, merged)
 
 
 def merge_base_paths(project: pathlib.Path, base: str, head: str) -> tuple[str, list[str]]:
