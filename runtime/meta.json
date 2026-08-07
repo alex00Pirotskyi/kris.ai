@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "runtimeGeneration": 0,
+  "controlPlanePr": 100,
+  "controlPlaneBranch": "agent/mission-execution-v15-gold",
+  "createdAt": "2026-08-07T12:06:00Z",
+  "purpose": "Mutable Mission Execution 1.5 coordination state. Product branches read this branch but never merge routine runtime commits."
+}
