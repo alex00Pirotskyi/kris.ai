@@ -163,6 +163,51 @@ def _verify_review_artifact(
     if artifact.get("decision") != row.get("decision"):
         raise DependencyBindingError(f"{name} review artifact decision mismatch")
 
+    expected_review = row.get("expectedReview")
+    if not isinstance(expected_review, Mapping):
+        raise DependencyBindingError(f"{name} review binding lacks expected review requirement")
+    expected_keys = {"reviewType", "mission", "task", "pullRequest", "requiredScope"}
+    if set(expected_review) != expected_keys:
+        raise DependencyBindingError(f"{name} expected review requirement has unsupported fields")
+    expected_review_type = expected_review.get("reviewType")
+    expected_mission = expected_review.get("mission")
+    expected_task = expected_review.get("task")
+    expected_pr = expected_review.get("pullRequest")
+    required_scope = expected_review.get("requiredScope")
+    if not isinstance(expected_review_type, str) or not expected_review_type.strip():
+        raise DependencyBindingError(f"{name} expected review type is invalid")
+    if not isinstance(expected_mission, str) or not expected_mission.strip():
+        raise DependencyBindingError(f"{name} expected review mission is invalid")
+    if not isinstance(expected_task, str) or not expected_task.strip():
+        raise DependencyBindingError(f"{name} expected review task is invalid")
+    if not isinstance(expected_pr, int) or isinstance(expected_pr, bool) or expected_pr <= 0:
+        raise DependencyBindingError(f"{name} expected review pull request is invalid")
+    if not isinstance(required_scope, Mapping) or not required_scope:
+        raise DependencyBindingError(f"{name} expected review scope is invalid")
+
+    if artifact.get("reviewType") != expected_review_type:
+        raise DependencyBindingError(f"{name} review artifact review type mismatch")
+    if artifact.get("mission") != expected_mission:
+        raise DependencyBindingError(f"{name} review artifact mission mismatch")
+    if artifact.get("task") != expected_task:
+        raise DependencyBindingError(f"{name} review artifact task mismatch")
+    if artifact.get("pullRequest") != expected_pr:
+        raise DependencyBindingError(f"{name} review artifact pull request mismatch")
+    artifact_scope = artifact.get("scope")
+    if not isinstance(artifact_scope, Mapping):
+        raise DependencyBindingError(f"{name} review artifact lacks review scope")
+    for flag, expected_value in required_scope.items():
+        if (
+            not isinstance(flag, str)
+            or not flag
+            or not isinstance(expected_value, bool)
+        ):
+            raise DependencyBindingError(f"{name} expected review scope is invalid")
+        if artifact_scope.get(flag) is not expected_value:
+            raise DependencyBindingError(
+                f"{name} review artifact review scope mismatch: {flag}"
+            )
+
 
 def _resolve_live_ref(project: Path, ref: str) -> str:
     if not SAFE_REF.fullmatch(ref) or ".." in ref or ref.endswith("/"):
