@@ -1,0 +1,32 @@
+{
+  "allowedPaths": [
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart"
+  ],
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "createdAt": "2026-08-07T21:17:00Z",
+  "createdBy": "ELASTIC-6b4e91d2",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Close the exact-reviewed P6-001 benchmark trust-root vulnerability: public callers must not be able to construct a key registry/candidate map and convert self-supplied signed benchmark metadata into approval-bearing trusted execution receipts. Preserve content-addressed benchmark metadata and evaluation-only flows, fail closed on approval until a genuine host-controlled benchmark authority provider exists, and do not land historical PR #76 directly to main.",
+  "parentProductPr": 76,
+  "priority": 99,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "public benchmark JSON remains content-addressed but never caller-promoted to trusted execution",
+    "caller-supplied key registry/candidate map cannot grant task approval",
+    "approved JSON fails closed without host-controlled benchmark authority",
+    "evaluation-only model and benchmark metadata flows remain valid",
+    "direct public contract exposes no caller-constructible approval-bearing benchmark trust path",
+    "exact helper Worker G P6-001 source validation and product-gates"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-07T21:17:00Z",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}

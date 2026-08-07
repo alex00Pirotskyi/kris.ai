@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000099-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-006",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "DEFECT_HUNTER",
+    "type": "PRODUCT_DEFECT_REPAIR"
+  },
+  "recordedAt": "2026-08-07T21:17:00Z",
+  "runtimeGeneration": 99,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200543Z-6b4e91d2",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}
