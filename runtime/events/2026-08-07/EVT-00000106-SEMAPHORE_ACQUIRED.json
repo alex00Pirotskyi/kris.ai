@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000106-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P3-PACKAGING-BINDING-6C8E41F3",
+    "workerIdentity": "ELASTIC-6c8e41f3"
+  },
+  "recordedAt": "2026-08-07T21:40:00Z",
+  "runtimeGeneration": 106,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T200720Z-6c8e41f3",
+  "workOrderId": "WO-P3-PACKAGING-BINDING-6C8E41F3"
+}
