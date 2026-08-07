@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000025-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-007",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INTEGRATOR",
+    "type": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-07T16:09:00Z",
+  "runtimeGeneration": 25,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260807T160900Z-c0decafe",
+  "workOrderId": "WO-P7-001-INTEGRATE-107-C0DECAFE"
+}
