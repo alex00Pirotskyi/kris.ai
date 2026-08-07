@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/mission_product_pr.schema.json",
+  "title": "Kris Mission Execution 1.5 Canonical Product PR",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "task", "mission", "productPr", "captain", "branch", "status"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "task": {"type": "string", "pattern": "^P[0-9]+-[0-9]+$"},
+    "mission": {"type": "string", "pattern": "^MISSION-[0-9]{3}$"},
+    "productPr": {"type": "integer", "minimum": 1},
+    "captain": {"type": "string", "minLength": 1},
+    "branch": {"type": "string", "minLength": 1},
+    "observedHead": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+    "status": {"enum": ["ACTIVE", "REVIEW", "LANDING", "LANDED", "PAUSED", "SUPERSEDED"]},
+    "observedAt": {"type": ["string", "null"], "format": "date-time"}
+  }
+}
