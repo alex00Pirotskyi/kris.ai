@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1",
   "allowedPaths": [
     ".github/workflows/worker-f-p5-001-information-architecture.yml",
     "docs/ux/**",
@@ -29,8 +28,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T10:19:00Z",
+  "updatedAt": "2026-08-08T10:29:00Z",
   "workOrderId": "WO-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1"
 }
