@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+    "tool/p2_task_assertion_cli_test.py",
+    "tool/p2_task_platform_assertions.py",
+    "tool/p2_technology_spike_contract_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "baseTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "branch": "agent/help/elastic-9f3c72a1/mission-001/p2-004-decisive-closure",
+  "createdAt": "2026-08-08T09:12:00Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-08T13:12:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T09:12:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 117,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-DECISIVE-CLOSURE-9F3C72A1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
+  "workerIdentity": "ELASTIC-9f3c72a1"
+}

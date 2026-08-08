@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000117-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P2-004-DECISIVE-CLOSURE-9F3C72A1",
+    "workerIdentity": "ELASTIC-9f3c72a1"
+  },
+  "recordedAt": "2026-08-08T09:12:00Z",
+  "runtimeGeneration": 117,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090016Z-9f3c72a1",
+  "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
+}
