@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000140-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-006",
+  "payload": {
+    "actor": "ELASTIC-b450571c:STALE_BLOCKER:PATCH_CAPABLE_CONNECTOR_CAS_AVAILABLE:RED_REGRESSION=a5a919477d63812e3c569e3baf3699b46d207eda",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-08T10:38:00Z",
+  "runtimeGeneration": 140,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095218Z-3a375f9b",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}
