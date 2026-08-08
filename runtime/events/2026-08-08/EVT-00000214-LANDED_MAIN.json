@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000214-LANDED_MAIN",
+  "eventType": "LANDED_MAIN",
+  "mission": "MISSION-002",
+  "payload": {
+    "accepted": false,
+    "mergeMethod": "squash",
+    "mergedMainCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+    "postLandingProductGatesRun": 31217250634,
+    "preLandingCandidateCommit": "f23316535b8042662250ec63005817e72da581d0",
+    "preLandingProductGatesRun": 31215806810,
+    "sourceCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+    "supportPromotion": false
+  },
+  "recordedAt": "2026-08-08T20:27:00Z",
+  "runtimeGeneration": 214,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T202000Z-7e41c9a2",
+  "workOrderId": "WO-P8-001-LAND-MAIN-SQUASH-4F6A2C91"
+}
