@@ -244,9 +244,13 @@ jobs:
               pathlib.Path(os.environ['RUNNER_TEMP'], 'mission-v15-branch-reap-receipt.json').read_text(encoding='utf-8')
           )
           result['branchHygieneReceipt'] = receipt
-          result['deleted'] = receipt.get('status') == 'success' and receipt.get('afterBranchCount', 0) < receipt.get('beforeBranchCount', 0)
+          confirmed_absent = set(receipt.get('confirmedAbsent', []))
+          result['deleted'] = (
+              receipt.get('status') == 'success'
+              and result['targetBranch'] in confirmed_absent
+          )
           if not result['deleted']:
-              raise SystemExit('exact legacy-debt branch was not proven deleted')
+              raise SystemExit('exact legacy-debt branch was not proven absent')
           result_path.write_text(
               json.dumps(result, indent=2, sort_keys=True) + '\n',
               encoding='utf-8',
