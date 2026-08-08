@@ -171,11 +171,16 @@ def prepare_reap(project: pathlib.Path, command_path: pathlib.Path) -> dict[str,
     patterns = hygiene.get("legacyDebtPatterns")
     if not isinstance(patterns, list) or not all(isinstance(item, str) for item in patterns):
         raise ValueError("Mission v1.5 hygiene legacyDebtPatterns are invalid")
-    grandfathered = hygiene.get("grandfatheredRuntimeTxBranches", [])
+    migration = hygiene.get("migration")
+    if not isinstance(migration, dict):
+        raise ValueError("Mission v1.5 hygiene migration policy is invalid")
+    grandfathered = migration.get("grandfatheredRuntimeTransactionBranches", [])
     if not isinstance(grandfathered, list) or not all(
         isinstance(item, str) and item for item in grandfathered
     ):
-        raise ValueError("Mission v1.5 hygiene grandfatheredRuntimeTxBranches are invalid")
+        raise ValueError(
+            "Mission v1.5 hygiene migration.grandfatheredRuntimeTransactionBranches are invalid"
+        )
     cleanup_class = cleanup_class_for(target, patterns, grandfathered)
 
     remote = _git(project, "ls-remote", "origin", f"refs/heads/{target}").split()
