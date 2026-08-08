@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000127-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "correctionType": "STALE_READY_CANONICAL_BASE_REBIND",
+    "helperReviewTargetCommit": "62496ef95d146939fd320bdbc9efca91f7f702bb",
+    "newBaseCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+    "newBaseTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+    "previousBaseCommit": "62496ef95d146939fd320bdbc9efca91f7f702bb",
+    "reason": "mission_v15_live_runtime_audit requires READY work with parentProductPr 75 to base on the live canonical Product branch. The helper #115 review target remains unchanged in the Work Order objective; no P2 implementation or review ownership is taken."
+  },
+  "recordedAt": "2026-08-08T09:57:00Z",
+  "runtimeGeneration": 127,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P2-004-HELPER-115-R1-9F3C72A1"
+}
