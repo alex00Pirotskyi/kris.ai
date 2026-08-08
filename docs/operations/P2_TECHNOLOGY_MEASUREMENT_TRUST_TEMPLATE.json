@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1.0.0",
+  "manifestType": "p2-technology-measurement-trust-v1",
+  "platform": "REPLACE_windows_OR_macos_OR_linux",
+  "commitSha": "REPLACE_EXACT_40_HEX",
+  "measurementSessionId": "REPLACE_EXPECTED_SESSION_ID",
+  "workflowRunId": "REPLACE_EXPECTED_WORKFLOW_RUN_ID",
+  "workflowRunAttempt": 1,
+  "nonce": "REPLACE_EXPECTED_64_HEX_NONCE",
+  "issuedAt": "REPLACE_RECENT_UTC_TIMESTAMP",
+  "expiresAt": "REPLACE_LATER_UTC_TIMESTAMP_WITHIN_6_HOURS",
+  "candidateReceipts": [
+    {
+      "candidateId": "typescript-node-node-pty-with-native-lifecycle-adapters",
+      "receiptPath": "typescript-node-node-pty-with-native-lifecycle-adapters/receipt.json",
+      "receiptSha256": "REPLACE_UNIQUE_64_HEX",
+      "artifactRoot": "typescript-node-node-pty-with-native-lifecycle-adapters/artifacts",
+      "rounds": [
+        {
+          "roundId": 1,
+          "observationId": "REPLACE_UNIQUE_typescript-node-node-pty-with-native-lifecycle-adapters_ROUND_1",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_1",
+          "evidencePath": "typescript-node-node-pty-with-native-lifecycle-adapters/artifacts/round-1.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        },
+        {
+          "roundId": 2,
+          "observationId": "REPLACE_UNIQUE_typescript-node-node-pty-with-native-lifecycle-adapters_ROUND_2",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_2",
+          "evidencePath": "typescript-node-node-pty-with-native-lifecycle-adapters/artifacts/round-2.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        },
+        {
+          "roundId": 3,
+          "observationId": "REPLACE_UNIQUE_typescript-node-node-pty-with-native-lifecycle-adapters_ROUND_3",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_3",
+          "evidencePath": "typescript-node-node-pty-with-native-lifecycle-adapters/artifacts/round-3.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        }
+      ]
+    },
+    {
+      "candidateId": "native-platform-pty-supervisor",
+      "receiptPath": "native-platform-pty-supervisor/receipt.json",
+      "receiptSha256": "REPLACE_UNIQUE_64_HEX",
+      "artifactRoot": "native-platform-pty-supervisor/artifacts",
+      "rounds": [
+        {
+          "roundId": 1,
+          "observationId": "REPLACE_UNIQUE_native-platform-pty-supervisor_ROUND_1",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_1",
+          "evidencePath": "native-platform-pty-supervisor/artifacts/round-1.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        },
+        {
+          "roundId": 2,
+          "observationId": "REPLACE_UNIQUE_native-platform-pty-supervisor_ROUND_2",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_2",
+          "evidencePath": "native-platform-pty-supervisor/artifacts/round-2.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        },
+        {
+          "roundId": 3,
+          "observationId": "REPLACE_UNIQUE_native-platform-pty-supervisor_ROUND_3",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_3",
+          "evidencePath": "native-platform-pty-supervisor/artifacts/round-3.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        }
+      ]
+    },
+    {
+      "candidateId": "dart-control-plane-native-pty-helper",
+      "receiptPath": "dart-control-plane-native-pty-helper/receipt.json",
+      "receiptSha256": "REPLACE_UNIQUE_64_HEX",
+      "artifactRoot": "dart-control-plane-native-pty-helper/artifacts",
+      "rounds": [
+        {
+          "roundId": 1,
+          "observationId": "REPLACE_UNIQUE_dart-control-plane-native-pty-helper_ROUND_1",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_1",
+          "evidencePath": "dart-control-plane-native-pty-helper/artifacts/round-1.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        },
+        {
+          "roundId": 2,
+          "observationId": "REPLACE_UNIQUE_dart-control-plane-native-pty-helper_ROUND_2",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_2",
+          "evidencePath": "dart-control-plane-native-pty-helper/artifacts/round-2.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        },
+        {
+          "roundId": 3,
+          "observationId": "REPLACE_UNIQUE_dart-control-plane-native-pty-helper_ROUND_3",
+          "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_3",
+          "evidencePath": "dart-control-plane-native-pty-helper/artifacts/round-3.json",
+          "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
+        }
+      ]
+    }
+  ]
+}

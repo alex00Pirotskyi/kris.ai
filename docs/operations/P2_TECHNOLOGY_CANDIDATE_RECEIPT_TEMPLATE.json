@@ -8,17 +8,23 @@
   "status": "passed",
   "sourceOnly": false,
   "independentlyExecuted": true,
+  "measurementSessionId": "REPLACE_EXPECTED_SESSION_ID",
+  "workflowRunId": "REPLACE_EXPECTED_WORKFLOW_RUN_ID",
+  "workflowRunAttempt": 1,
+  "nonce": "REPLACE_EXPECTED_64_HEX_NONCE",
   "sourceTreeSha256": "REPLACE_64_HEX",
   "implementationSha256": "REPLACE_64_HEX",
   "executableSha256": "REPLACE_64_HEX",
   "buildReceiptSha256": "REPLACE_64_HEX",
   "packagingReceiptSha256": "REPLACE_64_HEX",
-  "artifactRoot": "ABSOLUTE_ARTIFACT_DIRECTORY",
+  "artifactRoot": "ABSOLUTE_DIRECTORY_UNDER_AUTHORIZED_ROOT",
   "independentControlPlaneImplementation": "REQUIRED_TRUE_FOR_DART_CANDIDATE",
   "delegatedProbeReceiptSha256": null,
   "rounds": [
     {
       "roundId": 1,
+      "observationId": "REPLACE_UNIQUE_OBSERVATION_ID_ROUND_1",
+      "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_1",
       "status": "passed",
       "coldStartMs": 1,
       "steadyRssKiB": 1,
@@ -51,10 +57,12 @@
         "zeroSurvivingDescendants": true
       },
       "evidencePath": "round-1.json",
-      "evidenceSha256": "REPLACE_64_HEX"
+      "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
     },
     {
       "roundId": 2,
+      "observationId": "REPLACE_UNIQUE_OBSERVATION_ID_ROUND_2",
+      "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_2",
       "status": "passed",
       "coldStartMs": 1,
       "steadyRssKiB": 1,
@@ -87,10 +95,12 @@
         "zeroSurvivingDescendants": true
       },
       "evidencePath": "round-2.json",
-      "evidenceSha256": "REPLACE_64_HEX"
+      "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
     },
     {
       "roundId": 3,
+      "observationId": "REPLACE_UNIQUE_OBSERVATION_ID_ROUND_3",
+      "observedAt": "REPLACE_FRESH_UTC_TIMESTAMP_ROUND_3",
       "status": "passed",
       "coldStartMs": 1,
       "steadyRssKiB": 1,
@@ -123,7 +133,7 @@
         "zeroSurvivingDescendants": true
       },
       "evidencePath": "round-3.json",
-      "evidenceSha256": "REPLACE_64_HEX"
+      "evidenceSha256": "REPLACE_UNIQUE_64_HEX"
     }
   ],
   "packaging": {
