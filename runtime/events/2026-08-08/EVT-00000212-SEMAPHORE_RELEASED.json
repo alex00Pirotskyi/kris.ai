@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000212-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "semaphoreId": "SEM-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2",
+    "nextStatus": "BLOCKED",
+    "reason": "exact target branch deleted; live branch count remains 62 > 60 and additional bounded cleanup is required"
+  },
+  "recordedAt": "2026-08-08T18:49:00Z",
+  "runtimeGeneration": 212,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T174049Z-7c4e91b2",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2"
+}
