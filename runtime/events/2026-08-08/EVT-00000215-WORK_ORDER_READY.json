@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000215-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INCIDENT_RESPONDER",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-08T20:36:00Z",
+  "runtimeGeneration": 215,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T202000Z-7e41c9a2",
+  "workOrderId": "WO-MV15-PROBE-REF-CLEANUP-7E41C9A2"
+}
