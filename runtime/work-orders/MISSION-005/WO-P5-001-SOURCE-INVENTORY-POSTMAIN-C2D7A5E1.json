@@ -1,6 +1,9 @@
 {
-  "allowedPaths": ["test/product/source_contract_test.dart"],
-  "assignedWorker": "ELASTIC-c2d7a5e1",
+  "activeSemaphoreId": "SEM-P5-001-SOURCE-INVENTORY-A6F03C19",
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "assignedWorker": "ELASTIC-a6f03c19",
   "baseCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
   "baseTree": "43a26a58cd28aba0a2bcb154898b956bbb98b061",
   "createdAt": "2026-08-08T10:30:00Z",
@@ -20,8 +23,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T12:45:39Z",
+  "updatedAt": "2026-08-08T17:27:22Z",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
 }
