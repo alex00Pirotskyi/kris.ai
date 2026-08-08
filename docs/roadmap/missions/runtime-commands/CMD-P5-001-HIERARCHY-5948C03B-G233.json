@@ -1,0 +1,28 @@
+{
+  "appendIdentities": {
+    "testBindings": [
+      "tc.p5-001.navigation.primary-workspaces",
+      "tc.p5-001.flow.simple-task",
+      "tc.p5-001.flow.existing-run",
+      "tc.p5-001.flow.owner-mode",
+      "tc.p5-001.flow.verification-center",
+      "tc.p5-001.state.transitions",
+      "tc.p5-001.mode.progressive-disclosure",
+      "tc.p5-001.capability.honest-unavailable",
+      "tc.p5-001.keyboard.primary-flow",
+      "tc.p5-001.semantics.primary-flow"
+    ]
+  },
+  "authorityId": "test-center-hierarchy",
+  "commandId": "CMD-P5-001-HIERARCHY-5948C03B-G233",
+  "createdAt": "2026-08-08T22:53:00Z",
+  "expectedRuntimeGeneration": 233,
+  "note": "Restore only the ten exact P5-001 unit-level assurance bindings on top of the governed P5 registry helper; preserve all newer P8 and other hierarchy identities.",
+  "operation": "APPEND_SAFE_JSON_IDENTITIES_V1",
+  "requestingMission": "MISSION-005",
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-TEST-CENTER-HIERARCHY-5948C03B",
+  "sourceCommit": "67586763bb055faab76e4994184da78f77bd9810",
+  "workOrderId": "WO-P5-001-TEST-CENTER-HIERARCHY-5948C03B",
+  "workerIdentity": "ELASTIC-gpt-5948c03b"
+}
