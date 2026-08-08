@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "authorityId": "test-center-registry",
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "agent/help/elastic-b450571c/mission-002/p2-test-center-binding",
+  "createdAt": "2026-08-08T12:32:05Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-08T16:32:05Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-002",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T12:32:05Z",
+  "resourceId": null,
+  "runtimeGeneration": 158,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-TEST-CENTER-BINDING-B450571C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-TEST-CENTER-BINDING-B450571C",
+  "workerIdentity": "ELASTIC-b450571c"
+}
