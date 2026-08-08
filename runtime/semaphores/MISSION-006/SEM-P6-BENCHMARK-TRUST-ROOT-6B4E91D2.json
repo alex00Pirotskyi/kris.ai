@@ -1,10 +1,5 @@
 {
-  "allowedPaths": [
-    "lib/product/model/model_registry.dart",
-    "test/product/model/model_registry_identity_guard_test.dart",
-    "test/product/model/model_registry_test.dart",
-    "test/product/model/model_registry_public_contract_test.dart"
-  ],
+  "allowedPaths": ["lib/product/model/model_registry.dart", "test/product/model/model_registry_identity_guard_test.dart", "test/product/model/model_registry_test.dart", "test/product/model/model_registry_public_contract_test.dart"],
   "authorityId": null,
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
@@ -20,7 +15,7 @@
   "runtimeGeneration": 103,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P6-BENCHMARK-TRUST-ROOT-6B4E91D2",
-  "status": "ACTIVE",
+  "status": "EXPIRED",
   "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2",
   "workerIdentity": "ELASTIC-6b4e91d2"
 }

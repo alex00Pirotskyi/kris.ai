@@ -1,7 +1,5 @@
 {
-  "allowedPaths": [
-    "test/product/source_contract_test.dart"
-  ],
+  "allowedPaths": ["test/product/source_contract_test.dart"],
   "authorityId": "source-inventory",
   "baseCommit": "53693ca66b37015a015294a4f729138caeb20482",
   "baseTree": "2e070917c814f8eb8e350649c68e542599d56034",
@@ -17,7 +15,7 @@
   "runtimeGeneration": 80,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P5-001-SOURCE-INVENTORY-7F3A2C91",
-  "status": "ACTIVE",
+  "status": "EXPIRED",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-7F3A2C91",
   "workerIdentity": "ELASTIC-7f3a2c91"
 }

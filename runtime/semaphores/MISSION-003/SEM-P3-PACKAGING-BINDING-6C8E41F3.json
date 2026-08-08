@@ -1,9 +1,5 @@
 {
-  "allowedPaths": [
-    "release/evidence/P3-001/manifest.json",
-    "tool/worker_d_p3_manifest_binding.py",
-    "tool/worker_d_p3_manifest_binding_test.py"
-  ],
+  "allowedPaths": ["release/evidence/P3-001/manifest.json", "tool/worker_d_p3_manifest_binding.py", "tool/worker_d_p3_manifest_binding_test.py"],
   "authorityId": null,
   "baseCommit": "f0fb01bfb17ebb452c5c3639a152eb49f8636042",
   "baseTree": "2e72668a8faa91ca706abb2e13c68e7eef1ffe38",
@@ -19,7 +15,7 @@
   "runtimeGeneration": 106,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P3-PACKAGING-BINDING-6C8E41F3",
-  "status": "ACTIVE",
+  "status": "EXPIRED",
   "workOrderId": "WO-P3-PACKAGING-BINDING-6C8E41F3",
   "workerIdentity": "ELASTIC-6c8e41f3"
 }

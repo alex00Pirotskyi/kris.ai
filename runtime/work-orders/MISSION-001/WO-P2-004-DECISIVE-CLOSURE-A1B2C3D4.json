@@ -1,0 +1,20 @@
+{
+  "allowedPaths": ["tool/p2_task_platform_assertions.py", "tool/p2_task_assertion_cli_test.py", "tool/p2_technology_spike_contract_test.py", "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json"],
+  "baseCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "baseTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "createdAt": "2026-08-08T06:53:12Z",
+  "createdBy": "WRK-20260808T065312Z-a1b2c3d4",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 2,
+  "mission": "MISSION-001",
+  "objective": "Decisively close the repository-controlled part of P2-004 so P3-001 can stop accumulating readiness-only work: extract the validated measurement-contract source/test logic from the temporary carrier into a clean exact candidate, preserve current Test Center/P8 authority rather than replacing its registry, remove or exclude temporary carrier payloads from the integration candidate, run the governed measurement-contract tests, and reduce any remaining blocker to the real tri-platform controlled measurement campaign. If the required interactive/self-hosted/signing environment is unavailable, record that boundary explicitly as EXTERNAL_HARD instead of creating more provenance layers. Do not claim P2-004 accepted until the roadmap measurement requirements are actually satisfied.",
+  "parentProductPr": 75,
+  "priority": 100,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": ["python tool/p2_technology_spike_contract_test.py", "python tool/p2_task_assertion_cli_test.py", "P2-004 candidate contains no temporary review payload as integration source", "current P8/Test Center authority is preserved; no stale registry replacement", "exact-current product-gates on the clean candidate", "real Windows/macOS/Linux measurement receipts or explicit EXTERNAL_HARD boundary"],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
+}
