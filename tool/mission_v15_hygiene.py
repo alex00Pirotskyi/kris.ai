@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Mission Execution 1.5 branch/runtime hygiene gate."""
+"""Mission Execution 1.5 branch/runtime hygiene gate.
+
+Branch count is hygiene pressure, not a global execution mutex. Generic audit
+reports soft/hard capacity state but only enforces the hard ceiling when the
+caller explicitly asks to create a new branch. Correctness hazards such as new
+runtime transaction branches and expired ACTIVE semaphores remain fail-closed.
+"""
 from __future__ import annotations
 
 import argparse
@@ -30,10 +36,77 @@ def _matches(branch: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(branch, pattern) for pattern in patterns)
 
 
+def _positive_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise ValueError(f"{label} must be a positive integer")
+    return value
+
+
+def classify_branch_capacity(
+    config: dict,
+    *,
+    total_branch_count: int,
+    legacy_debt_count: int,
+    helper_branch_count: int,
+) -> dict:
+    migration = config["migration"]
+    capacity = config.get("branchCapacity") or {}
+    soft_target = _positive_int(
+        capacity.get(
+            "softTotalBranchTarget",
+            migration.get("maxTotalBranchesDuringMigration", 60),
+        ),
+        "branchCapacity.softTotalBranchTarget",
+    )
+    hard_ceiling = _positive_int(
+        capacity.get(
+            "hardNewBranchCreationCeiling",
+            migration.get("maxTotalBranchesDuringMigration", 60),
+        ),
+        "branchCapacity.hardNewBranchCreationCeiling",
+    )
+    if hard_ceiling <= soft_target:
+        raise ValueError(
+            "branchCapacity.hardNewBranchCreationCeiling must exceed "
+            "softTotalBranchTarget"
+        )
+
+    warnings: list[str] = []
+    if total_branch_count > soft_target:
+        warnings.append(
+            f"TOTAL_BRANCH_SOFT_TARGET:{total_branch_count}>{soft_target}"
+        )
+    legacy_limit = _positive_int(
+        migration["maxLegacyDebtBranchesDuringMigration"],
+        "migration.maxLegacyDebtBranchesDuringMigration",
+    )
+    if legacy_debt_count > legacy_limit:
+        warnings.append(
+            f"LEGACY_DEBT_PRESSURE:{legacy_debt_count}>{legacy_limit}"
+        )
+    helper_limit = _positive_int(
+        migration["maxActiveHelperBranches"],
+        "migration.maxActiveHelperBranches",
+    )
+    if helper_branch_count > helper_limit:
+        warnings.append(
+            f"HELPER_BRANCH_PRESSURE:{helper_branch_count}>{helper_limit}"
+        )
+
+    return {
+        "softTotalBranchTarget": soft_target,
+        "hardNewBranchCreationCeiling": hard_ceiling,
+        "newBranchCreationBlocked": total_branch_count >= hard_ceiling,
+        "warnings": warnings,
+    }
+
+
 def audit(
     repository_project: pathlib.Path,
     runtime_project: pathlib.Path,
     config_path: pathlib.Path,
+    *,
+    check_new_branch_capacity: bool = False,
 ) -> dict:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if config.get("schemaVersion") != 1:
@@ -79,18 +152,18 @@ def audit(
         branch for branch in transaction_branches if branch not in grandfathered_transactions
     )
 
+    capacity = classify_branch_capacity(
+        config,
+        total_branch_count=len(branches),
+        legacy_debt_count=len(debt),
+        helper_branch_count=len(helpers),
+    )
+
     violations: list[str] = []
-    if len(branches) > migration["maxTotalBranchesDuringMigration"]:
+    if check_new_branch_capacity and capacity["newBranchCreationBlocked"]:
         violations.append(
-            f"TOTAL_BRANCH_BUDGET:{len(branches)}>{migration['maxTotalBranchesDuringMigration']}"
-        )
-    if len(debt) > migration["maxLegacyDebtBranchesDuringMigration"]:
-        violations.append(
-            f"LEGACY_DEBT_GROWTH:{len(debt)}>{migration['maxLegacyDebtBranchesDuringMigration']}"
-        )
-    if len(helpers) > migration["maxActiveHelperBranches"]:
-        violations.append(
-            f"HELPER_BRANCH_BUDGET:{len(helpers)}>{migration['maxActiveHelperBranches']}"
+            "NEW_BRANCH_CREATION_CEILING:"
+            f"{len(branches)}>={capacity['hardNewBranchCreationCeiling']}"
         )
     if len(transaction_branches) > migration["maxRuntimeTransactionBranchesDuringMigration"]:
         violations.append(
@@ -127,6 +200,9 @@ def audit(
         "workOrderCount": len(state["workOrders"]),
         "activeSemaphoreCount": len(state["activeSemaphores"]),
         "expiredActiveSemaphores": expired_active,
+        "branchCapacity": capacity,
+        "capacityWarnings": capacity["warnings"],
+        "newBranchCapacityEnforced": check_new_branch_capacity,
         "target": config["target"],
         "violations": violations,
         "pass": not violations,
@@ -141,6 +217,15 @@ def main() -> int:
     parser.add_argument("--repository-project", default=".")
     parser.add_argument("--runtime-project", required=True)
     parser.add_argument("--config", default="config/mission_v15_hygiene.v1.json")
+    parser.add_argument(
+        "--check-new-branch-capacity",
+        action="store_true",
+        help=(
+            "Enforce the hard total-branch ceiling for an operation that would "
+            "create a new remote branch. Generic hygiene audits intentionally "
+            "do not turn branch count into a global execution mutex."
+        ),
+    )
     parser.add_argument("--output")
     args = parser.parse_args()
     try:
@@ -148,6 +233,7 @@ def main() -> int:
             pathlib.Path(args.repository_project).resolve(),
             pathlib.Path(args.runtime_project).resolve(),
             pathlib.Path(args.config).resolve(),
+            check_new_branch_capacity=args.check_new_branch_capacity,
         )
         text = json.dumps(result, indent=2, sort_keys=True) + "\n"
         if args.output:
