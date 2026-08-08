@@ -1,0 +1,34 @@
+{
+  "allowedPaths": [
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
+    "test/product/model/model_registry_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart"
+  ],
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "createdAt": "2026-08-08T23:08:30Z",
+  "createdBy": "ELASTIC-c4e91a7f",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Consume exact reviewed helper PR #118 head a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614 into canonical P6 Product PR #76 at eb669431927338e4ae7be3df647d57bc728dfde5 without byte drift. Preserve the bounded caller-controlled benchmark trust-root repair and its exact R1 PASS, close the helper after canonical consumption, then run exact-current canonical P6 validation. Do not treat historical stacked PR #76 as a direct protected-main landing vehicle and do not promote P6 acceptance, behavior, platform, release, production, or GA support.",
+  "parentProductPr": 76,
+  "parentWorkOrderId": null,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "helper PR #118 exact head a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614 remains mergeable against canonical P6 base eb669431927338e4ae7be3df647d57bc728dfde5",
+    "R1 exact-scope PASS reviews remain bound to a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614",
+    "canonical integration preserves the exact helper four-file repair without byte drift",
+    "exact canonical P6 product-gates and focused model registry validation after integration",
+    "inherited historical P6 ancestry/release-inventory failures are classified separately for clean-current-main reconciliation",
+    "no acceptance/support/release/production/GA promotion"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-08T23:08:30Z",
+  "workOrderId": "WO-P6-001-INTEGRATE-118-C4E91A7F"
+}
