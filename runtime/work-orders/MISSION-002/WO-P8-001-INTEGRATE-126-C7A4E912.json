@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P8-001-INTEGRATE-126-C7A4E912",
   "allowedPaths": [
     "tool/test_center_assurance_semantics.py",
     "tool/test_center_assurance_hierarchy_test.py"
@@ -28,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T23:36:00Z",
+  "updatedAt": "2026-08-08T23:40:30Z",
   "workOrderId": "WO-P8-001-INTEGRATE-126-C7A4E912"
 }
