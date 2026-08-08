@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P2-BRANCH-SLOT-VALIDATION-A7C4D2F1-G153",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 153,
+  "workOrderId": "WO-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1",
+  "semaphoreId": "SEM-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1",
+  "workerIdentity": "ELASTIC-a7c4d2f1",
+  "productPr": 75,
+  "targetBranch": "validation/v71r12-repair-success-30913519385",
+  "expectedTargetHead": "b11d208e224350c51048633987eb2d5d00f8d398",
+  "createdAt": "2026-08-08T11:55:00Z",
+  "note": "Free one exact governed branch slot for the required P2-004 Test Center authority helper; no product or authority bytes are changed by this command."
+}
