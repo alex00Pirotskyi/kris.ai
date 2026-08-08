@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-TEST-CENTER-HIERARCHY-5948C03B",
   "allowedPaths": [
     "config/test_center_assurance_hierarchy.v1.json"
   ],
+  "assignedWorker": "ELASTIC-gpt-5948c03b",
   "baseCommit": "53c2681010985de8e4239a702e5dfd1ec17aee0a",
   "baseTree": "9ee67859d5ef9f6b586dc092c88d5e44830b8bee",
   "createdAt": "2026-08-08T22:51:00Z",
   "createdBy": "ELASTIC-gpt-5948c03b",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Restore the ten exact P5-001 Test Center assurance bindings required by the canonical P5 validator using append-safe shared hierarchy authority only. Append only the P5-owned testBindings for the ten tc.p5-001.* stable test IDs from trusted P5 source commit 67586763bb055faab76e4994184da78f77bd9810, each at levelId unit, on top of the governed registry helper 53c2681010985de8e4239a702e5dfd1ec17aee0a. Preserve all newer P8 and other hierarchy records and do not promote acceptance, certification, support, release, production, or GA state.",
@@ -23,8 +26,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T22:51:00Z",
+  "updatedAt": "2026-08-08T22:52:00Z",
   "workOrderId": "WO-P5-001-TEST-CENTER-HIERARCHY-5948C03B"
 }
