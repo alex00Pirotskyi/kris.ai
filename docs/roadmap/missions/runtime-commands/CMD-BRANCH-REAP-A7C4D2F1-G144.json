@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-BRANCH-REAP-A7C4D2F1-G144",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 144,
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-A7C4D2F1",
+  "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-A7C4D2F1",
+  "workerIdentity": "ELASTIC-a7c4d2f1",
+  "productPr": 76,
+  "targetBranch": "validation/g-p6-001-0b0b5c2-run2",
+  "expectedTargetHead": "0b0b5c2fa1b6f99d4f68bc5d29097d979e07a66a",
+  "createdAt": "2026-08-08T10:52:00Z",
+  "note": "Exact one-branch legacy failure-snapshot reap to restore the Mission Execution 1.5 60-branch migration ceiling; no product or evidence mutation."
+}
