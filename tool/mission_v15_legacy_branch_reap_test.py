@@ -11,7 +11,7 @@ TOOL = THIS.parent
 if str(TOOL) not in sys.path:
     sys.path.insert(0, str(TOOL))
 
-from mission_v15_legacy_branch_reap import cleanup_class_for, validate_command_shape
+from mission_v15_legacy_branch_reap import cleanup_class_for, read_json, validate_command_shape
 
 
 class LegacyBranchReapCommandTests(unittest.TestCase):
@@ -92,6 +92,23 @@ class LegacyBranchReapCommandTests(unittest.TestCase):
                 "runtime/tx/not-grandfathered",
                 ["validation/*", "automation/*"],
                 [branch],
+            )
+
+    def test_live_hygiene_policy_contains_exact_nested_runtime_tx_allowlist(self) -> None:
+        config = read_json(TOOL.parent / "config" / "mission_v15_hygiene.v1.json")
+        migration = config["migration"]
+        grandfathered = migration["grandfatheredRuntimeTransactionBranches"]
+        branch = "runtime/tx/p4-integrate-92-gen1"
+        self.assertIn(branch, grandfathered)
+        self.assertEqual(
+            cleanup_class_for(branch, config["legacyDebtPatterns"], grandfathered),
+            "superseded-repair",
+        )
+        with self.assertRaises(ValueError):
+            cleanup_class_for(
+                "runtime/tx/not-grandfathered",
+                config["legacyDebtPatterns"],
+                grandfathered,
             )
 
     def test_relay_uses_branch_hygiene_success_receipt(self) -> None:
