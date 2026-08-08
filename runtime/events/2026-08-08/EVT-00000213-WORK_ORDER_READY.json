@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000213-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INCIDENT_RESPONDER",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-08T18:52:00Z",
+  "runtimeGeneration": 213,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T174049Z-7c4e91b2",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
+}
