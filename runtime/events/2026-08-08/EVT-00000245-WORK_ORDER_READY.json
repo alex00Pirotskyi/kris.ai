@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000245-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INTEGRATOR",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-08T23:15:20Z",
+  "runtimeGeneration": 245,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222509Z-5a7d3c91",
+  "workOrderId": "WO-P4-001-INTEGRATE-PROOF-124-5A7D3C91"
+}
