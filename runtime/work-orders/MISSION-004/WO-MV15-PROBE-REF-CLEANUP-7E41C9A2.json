@@ -1,14 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-MV15-PROBE-REF-CLEANUP-7E41C9A2",
   "allowedPaths": [
     "release/evidence/P4-*/**"
   ],
-  "assignedWorker": null,
+  "assignedWorker": "ELASTIC-GPT-7E41C9A2",
   "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
   "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
   "createdAt": "2026-08-08T20:36:00Z",
   "createdBy": "WRK-20260808T202000Z-7e41c9a2",
   "dependencyRequirements": [],
-  "executionRole": null,
+  "executionRole": "INCIDENT_RESPONDER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Remove exactly the three unintended remote probe refs THIS_MUST_NOT_BE_CREATED@f358414914eccde04aff165fd76d9114fcee0ca2, bad_probe_again@f358414914eccde04aff165fd76d9114fcee0ca2, and noop_should_not_exist@f627581c985fe08dd5336de4d67516b4b2692099. Use only the repository-owned exact-SHA branch reaper after verifying each ref is still unprotected, non-default, non-canonical, not an open-PR head, and not referenced by an ACTIVE semaphore. Make no Product source change and do not delete any other ref.",
@@ -25,8 +26,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T20:36:00Z",
+  "updatedAt": "2026-08-08T20:41:00Z",
   "workOrderId": "WO-MV15-PROBE-REF-CLEANUP-7E41C9A2"
 }

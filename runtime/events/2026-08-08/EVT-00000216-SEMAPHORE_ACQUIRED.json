@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000216-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "INCIDENT_RESPONDER",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-MV15-PROBE-REF-CLEANUP-7E41C9A2",
+    "workerIdentity": "ELASTIC-GPT-7E41C9A2"
+  },
+  "recordedAt": "2026-08-08T20:41:00Z",
+  "runtimeGeneration": 216,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T202000Z-7e41c9a2",
+  "workOrderId": "WO-MV15-PROBE-REF-CLEANUP-7E41C9A2"
+}
