@@ -1,0 +1,33 @@
+{
+  "allowedPaths": [
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
+    "test/product/model/model_registry_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart"
+  ],
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "createdAt": "2026-08-08T12:08:00Z",
+  "createdBy": "ELASTIC-b450571c",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Perform a fresh context-independent exact-head R1 technical/security review of P6-001 helper PR #118 at commit a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614. Verify that public caller-supplied benchmark keys/candidate mappings cannot create approval-bearing trusted execution, content-addressed/evaluation-only flows remain valid, and the four-file repair does not weaken identity quarantine. Treat product-gates run 31256124828 truthfully: full Flutter tests pass on Windows/Linux/macOS, while the later architecture gate fails only because historical P6 ancestry carries a pre-governed validate_release.py that protected main has already superseded. Do not claim P6 acceptance/support or certify the historical PR #76 as a main landing vehicle.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "exact helper PR #118 head a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614 and four-file diff binding",
+    "caller-supplied keys and candidate mappings cannot grant trusted benchmark execution or model approval",
+    "content-addressed benchmark metadata and evaluation-only flows remain valid",
+    "identity mismatch quarantine remains fail-closed",
+    "product-gates 31256124828 full Flutter tests PASS on Windows/Linux/macOS and release-validator ancestry failure is classified separately",
+    "protected-main governed validate_release.py supersedes the historical P6 release allowlist in a future clean-current-main candidate",
+    "no P6 acceptance, support, release, production, GA, or direct historical PR #76 landing claim"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "workOrderId": "WO-P6-001-HELPER-118-R1-B450571C"
+}
