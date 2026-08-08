@@ -215,25 +215,38 @@ def validate_documents(
             "every canonical Test Center ID needs one hierarchy binding; "
             f"duplicates={duplicates}, missing={missing}, extra={extra}"
         )
+    binding_by_id = {item["testId"]: item for item in bindings}
+    worker_a_ids = set(WORKER_A_BINDINGS)
+    migrated_worker_a_ids = set(binding_ids) & worker_a_ids
+    for test_id in migrated_worker_a_ids:
+        expected_level, _ = WORKER_A_BINDINGS[test_id]
+        if binding_by_id[test_id]["levelId"] != expected_level:
+            fail(f"{test_id} migrated hierarchy level drifted")
     pending = hierarchy["pendingMigrationBindings"]
     pending_ids = [item["testId"] for item in pending]
+    if len(pending_ids) != len(set(pending_ids)):
+        fail("Worker A downstream migration binding set contains duplicates")
     if set(pending_ids) & set(binding_ids):
         fail("pending migration bindings overlap active bindings")
     if set(pending_ids) & case_ids:
         fail("pending migration IDs entered the canonical registry without active bindings")
-    if len(pending_ids) != len(set(pending_ids)) or set(pending_ids) != set(
-        WORKER_A_BINDINGS
-    ):
-        fail("Worker A downstream migration binding set is incomplete")
+    expected_pending_ids = worker_a_ids - migrated_worker_a_ids
+    if set(pending_ids) != expected_pending_ids:
+        fail(
+            "Worker A downstream migration bindings do not exactly cover "
+            "unmigrated reviewed IDs"
+        )
     if hierarchy["pendingMigrationSource"] != WORKER_A_SOURCE:
         fail("Worker A downstream migration source identity drifted")
-    for item in pending:
+    pending_by_id = {item["testId"]: item for item in pending}
+    for test_id in expected_pending_ids:
+        item = pending_by_id[test_id]
         if item["sourceOnly"] and item["levelId"] != "architecture_lint":
             fail(
                 f"source-only pending binding cannot claim {item['levelId']}: "
                 f"{item['testId']}"
             )
-        expected = WORKER_A_BINDINGS[item["testId"]]
+        expected = WORKER_A_BINDINGS[test_id]
         if (
             (item["levelId"], item["sourceOnly"]) != expected
             or item["integrationPolicy"] != "BLOCK_UNTIL_ACTIVE_BINDING"
