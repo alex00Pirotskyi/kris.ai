@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "release/evidence/P4-*/**"
+  ],
+  "authorityId": null,
+  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
+  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
+  "branch": "agent/local-qwen/elastic-qwen-c4db2329/mission-004/wo-p4-001-branch-capacity-proof3-7c4e91b-9ef6756a",
+  "createdAt": "2026-08-08T22:34:46Z",
+  "executionRole": "INCIDENT_RESPONDER",
+  "expiresAt": "2026-08-09T00:34:46Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T22:34:46Z",
+  "resourceId": null,
+  "runtimeGeneration": 223,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P4-001-9EF6756A",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2",
+  "workerIdentity": "ELASTIC-QWEN-C4DB2329"
+}

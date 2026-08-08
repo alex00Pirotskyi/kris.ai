@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000223-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "INCIDENT_RESPONDER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-QWEN-P4-001-9EF6756A",
+    "workerIdentity": "ELASTIC-QWEN-C4DB2329"
+  },
+  "recordedAt": "2026-08-08T22:34:46Z",
+  "runtimeGeneration": 223,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T223437Z-9209e94f",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
+}
