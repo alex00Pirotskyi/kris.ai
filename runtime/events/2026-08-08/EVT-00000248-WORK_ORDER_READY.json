@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000248-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-91B4E7C2",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-08T23:22:00Z",
+  "runtimeGeneration": 248,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222253Z-91b4e7c2",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
