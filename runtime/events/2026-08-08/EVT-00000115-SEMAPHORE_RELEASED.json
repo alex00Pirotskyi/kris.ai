@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000115-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-006",
+  "payload": {
+    "nextStatus": "LANDED",
+    "semaphoreId": "SEM-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4"
+  },
+  "recordedAt": "2026-08-08T08:47:00Z",
+  "runtimeGeneration": 115,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T084700Z-5e7c2a19",
+  "workOrderId": "WO-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4"
+}

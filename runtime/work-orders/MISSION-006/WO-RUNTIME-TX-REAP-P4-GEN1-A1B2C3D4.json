@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4",
   "allowedPaths": ["release/evidence/P6-*/**"],
   "assignedWorker": "ELASTIC-a1b2c3d4",
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
@@ -17,8 +16,8 @@
   "requiredTests": ["target matches runtime/tx/* legacy debt pattern", "target has no open PR and is not protected/default/canonical/actively locked", "target remains exactly 1343d0cb05026fbc1628244913a6d6e04510359d", "post-delete ref absence verified", "branch count drops below migration ceiling"],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T07:50:00Z",
+  "updatedAt": "2026-08-08T08:47:00Z",
   "workOrderId": "WO-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4"
 }
