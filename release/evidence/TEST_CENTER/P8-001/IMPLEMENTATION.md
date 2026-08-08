@@ -19,3 +19,7 @@ The hierarchy records the exact eleven reviewed Worker A bindings from PR #64 co
 This is source-contract and deterministic fixture evidence only. It does not close controlled P2 behavior, authorize P3, prove native parity, promote support, certify a release, or authorize merge.
 
 The semantic validation implementation is isolated in `tool/test_center_assurance_semantics.py`; the CLI remains read-only in `tool/test_center_assurance_hierarchy.py`.
+
+## First published repair run
+
+Implementation candidate `788af8db5891518a2b405d25e8d5b50cb89e8871` / tree `fe2bd4068d83b652ef988fd11d0de86a0fc9bffd` ran as workflow `31104232582`. Ubuntu and macOS passed the canonical contracts, actual assurance report, regressions, and byte-identical double manifest generation before failing on the intentionally stale committed manifest. Windows found a repository-relative path separator defect before manifest generation. The follow-up uses `Path.as_posix()` and checks out the exact PR head instead of the synthetic merge commit. Artifact `8968803777` has archive SHA-256 `77091700bce0e9e704bbe9a593d4340326f3826e24c8ecbc15e7ab5e7f1fcbf5` and contains two byte-identical 1,125-entry manifests with SHA-256 `1656ae06aba143cf83a85c5a48bc2bae3f01fbfe9ed21c53ac1b7a78a77cc2a7`.

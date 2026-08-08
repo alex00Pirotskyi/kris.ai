@@ -1,131 +1,137 @@
 {
+  "schemaVersion": "1.0.0",
   "hierarchyId": "test-center.assurance-hierarchy-v1",
+  "roadmapTaskId": "P8-001",
   "levels": [
     {
-      "description": "Static architecture, policy, schema, manifest, and source-contract checks. A pass proves only that reviewed source satisfies declared invariants.",
-      "displayName": "Architecture lint",
-      "executionScope": "STATIC",
       "levelId": "architecture_lint",
-      "proofKind": "SOURCE_ONLY",
       "rank": 10,
+      "displayName": "Architecture lint",
+      "proofKind": "SOURCE_ONLY",
+      "executionScope": "STATIC",
+      "requiredPredecessorLevels": [],
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result"
       ],
-      "requiredPredecessorLevels": [],
-      "supportClaimCeiling": "NONE"
+      "supportClaimCeiling": "NONE",
+      "description": "Static architecture, policy, schema, manifest, and source-contract checks. A pass proves only that reviewed source satisfies declared invariants."
     },
     {
-      "description": "Deterministic behavior of one function, class, or isolated module without external process, platform, or network claims.",
-      "displayName": "Unit",
-      "executionScope": "PROCESS_LOCAL",
       "levelId": "unit",
-      "proofKind": "BEHAVIORAL",
       "rank": 20,
+      "displayName": "Unit",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "PROCESS_LOCAL",
+      "requiredPredecessorLevels": [],
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
         "deterministic_fixture"
       ],
-      "requiredPredecessorLevels": [],
-      "supportClaimCeiling": "SOURCE_FOUNDATION"
+      "supportClaimCeiling": "SOURCE_FOUNDATION",
+      "description": "Deterministic behavior of one function, class, or isolated module without external process, platform, or network claims."
     },
     {
-      "description": "Behavior across a bounded component boundary with real serialization, persistence, IPC, or adapter contracts where applicable.",
-      "displayName": "Component",
-      "executionScope": "COMPONENT_BOUNDARY",
       "levelId": "component",
-      "proofKind": "BEHAVIORAL",
       "rank": 30,
+      "displayName": "Component",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "COMPONENT_BOUNDARY",
+      "requiredPredecessorLevels": [
+        "unit"
+      ],
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
         "component_fixture"
       ],
-      "requiredPredecessorLevels": [
-        "unit"
-      ],
-      "supportClaimCeiling": "BEHAVIOR_SUPPORTED"
+      "supportClaimCeiling": "BEHAVIOR_SUPPORTED",
+      "description": "Behavior across a bounded component boundary with real serialization, persistence, IPC, or adapter contracts where applicable."
     },
     {
-      "description": "End-to-end behavior across multiple production components with durable state, cleanup, and failure visibility.",
-      "displayName": "Integration",
-      "executionScope": "MULTI_COMPONENT",
       "levelId": "integration",
-      "proofKind": "BEHAVIORAL",
       "rank": 40,
+      "displayName": "Integration",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "MULTI_COMPONENT",
+      "requiredPredecessorLevels": [
+        "component"
+      ],
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
         "integration_fixture",
         "cleanup_receipt"
       ],
-      "requiredPredecessorLevels": [
-        "component"
-      ],
-      "supportClaimCeiling": "BEHAVIOR_SUPPORTED"
+      "supportClaimCeiling": "BEHAVIOR_SUPPORTED",
+      "description": "End-to-end behavior across multiple production components with durable state, cleanup, and failure visibility."
     },
     {
-      "description": "Real behavior on a named mandatory platform. Source inspection, emulation, or another operating system cannot substitute.",
-      "displayName": "Platform",
-      "executionScope": "NATIVE_PLATFORM",
       "levelId": "platform",
-      "proofKind": "PLATFORM",
       "rank": 50,
+      "displayName": "Platform",
+      "proofKind": "PLATFORM",
+      "executionScope": "NATIVE_PLATFORM",
+      "requiredPredecessorLevels": [
+        "integration"
+      ],
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
         "native_platform_receipt",
         "cleanup_receipt"
       ],
+      "supportClaimCeiling": "PLATFORM_SUPPORTED",
+      "description": "Real behavior on a named mandatory platform. Source inspection, emulation, or another operating system cannot substitute."
+    },
+    {
+      "levelId": "adversarial",
+      "rank": 60,
+      "displayName": "Adversarial",
+      "proofKind": "BEHAVIORAL",
+      "executionScope": "HOSTILE_INPUT",
       "requiredPredecessorLevels": [
         "integration"
       ],
-      "supportClaimCeiling": "PLATFORM_SUPPORTED"
-    },
-    {
-      "description": "Fault injection, hostile inputs, abuse cases, race conditions, and security-negative behavior with explicit recovery or unknown state.",
-      "displayName": "Adversarial",
-      "executionScope": "HOSTILE_INPUT",
-      "levelId": "adversarial",
-      "proofKind": "BEHAVIORAL",
-      "rank": 60,
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
         "seeded_attack_fixture",
         "recovery_receipt"
       ],
+      "supportClaimCeiling": "PLATFORM_SUPPORTED",
+      "description": "Fault injection, hostile inputs, abuse cases, race conditions, and security-negative behavior with explicit recovery or unknown state."
+    },
+    {
+      "levelId": "benchmark",
+      "rank": 70,
+      "displayName": "Benchmark",
+      "proofKind": "BENCHMARK",
+      "executionScope": "MEASURED_WORKLOAD",
       "requiredPredecessorLevels": [
         "integration"
       ],
-      "supportClaimCeiling": "PLATFORM_SUPPORTED"
-    },
-    {
-      "description": "Versioned reproducible performance, quality, throughput, resource, or agent-evaluation measurement with declared environment identity.",
-      "displayName": "Benchmark",
-      "executionScope": "MEASURED_WORKLOAD",
-      "levelId": "benchmark",
-      "proofKind": "BENCHMARK",
-      "rank": 70,
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
         "versioned_corpus",
         "environment_identity"
       ],
-      "requiredPredecessorLevels": [
-        "integration"
-      ],
-      "supportClaimCeiling": "BEHAVIOR_SUPPORTED"
+      "supportClaimCeiling": "BEHAVIOR_SUPPORTED",
+      "description": "Versioned reproducible performance, quality, throughput, resource, or agent-evaluation measurement with declared environment identity."
     },
     {
-      "description": "Certification of an exact release candidate after all applicable lower assurance evidence, independent review, and support-policy gates.",
-      "displayName": "Release",
-      "executionScope": "RELEASE_CANDIDATE",
       "levelId": "release",
-      "proofKind": "RELEASE",
       "rank": 80,
+      "displayName": "Release",
+      "proofKind": "RELEASE",
+      "executionScope": "RELEASE_CANDIDATE",
+      "requiredPredecessorLevels": [
+        "platform",
+        "adversarial",
+        "benchmark"
+      ],
       "requiredEvidence": [
         "exact_candidate_identity",
         "machine_readable_result",
@@ -133,114 +139,123 @@
         "independent_review",
         "support_matrix"
       ],
-      "requiredPredecessorLevels": [
-        "platform",
-        "adversarial",
-        "benchmark"
-      ],
-      "supportClaimCeiling": "RELEASE_SUPPORTED"
+      "supportClaimCeiling": "RELEASE_SUPPORTED",
+      "description": "Certification of an exact release candidate after all applicable lower assurance evidence, independent review, and support-policy gates."
+    }
+  ],
+  "testBindings": [
+    {
+      "testId": "tc.test-center.contracts",
+      "levelId": "architecture_lint",
+      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation."
+    },
+    {
+      "testId": "tc.test-center.semantic-regressions",
+      "levelId": "unit",
+      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation."
+    },
+    {
+      "testId": "tc.p8.formal-test-hierarchy",
+      "levelId": "architecture_lint",
+      "rationale": "Validates the P8-001 hierarchy, exact level ordering, report contract, and complete canonical Test Center binding coverage."
+    },
+    {
+      "testId": "tc.p8.formal-test-hierarchy-regressions",
+      "levelId": "unit",
+      "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, report ambiguity, and invalid actual execution reports."
     }
   ],
   "pendingMigrationBindings": [
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p1.exit-gate",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P1 exit gate is registered as a source-contract gate; the pending map grants no support.",
       "sourceOnly": true,
-      "testId": "tc.p1.exit-gate"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P1 exit gate is registered as a source-contract gate; the pending map grants no support."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p1a.exit-gate",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "Current Worker A command uses --source-only; genuine platform certification requires a separate stable identity and real platform evidence.",
       "sourceOnly": true,
-      "testId": "tc.p1a.exit-gate"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "Current Worker A command uses --source-only; genuine platform certification requires a separate stable identity and real platform evidence."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.source-inventory",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 source inventory proves source identity only and grants no behavioral support.",
       "sourceOnly": true,
-      "testId": "tc.p2.source-inventory"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 source inventory proves source identity only and grants no behavioral support."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.application-composition",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 application composition is a source-contract check and grants no behavioral support.",
       "sourceOnly": true,
-      "testId": "tc.p2.application-composition"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 application composition is a source-contract check and grants no behavioral support."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.acceptance-contract",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 acceptance-contract validation is source-only and grants no behavioral support.",
       "sourceOnly": true,
-      "testId": "tc.p2.acceptance-contract"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 acceptance-contract validation is source-only and grants no behavioral support."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.evidence-contract",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 evidence-contract validation is source-only and grants no behavioral support.",
       "sourceOnly": true,
-      "testId": "tc.p2.evidence-contract"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 evidence-contract validation is source-only and grants no behavioral support."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.runner-attestation",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 runner-attestation contract validation is source-only; real runner behavior remains external.",
       "sourceOnly": true,
-      "testId": "tc.p2.runner-attestation"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 runner-attestation contract validation is source-only; real runner behavior remains external."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.cleanup-contract",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 cleanup-contract validation is source-only; controlled cleanup behavior remains external.",
       "sourceOnly": true,
-      "testId": "tc.p2.cleanup-contract"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 cleanup-contract validation is source-only; controlled cleanup behavior remains external."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.strict-finalizer",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "P2 strict-finalizer validation is source-only; controlled finalization behavior remains external.",
       "sourceOnly": true,
-      "testId": "tc.p2.strict-finalizer"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "P2 strict-finalizer validation is source-only; controlled finalization behavior remains external."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.worker-a.canonical-integration",
       "levelId": "architecture_lint",
-      "owningPullRequest": 64,
-      "rationale": "Worker A canonical integration validates source contracts and does not promote support.",
       "sourceOnly": true,
-      "testId": "tc.worker-a.canonical-integration"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "Worker A canonical integration validates source contracts and does not promote support."
     },
     {
-      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "testId": "tc.p2.behavioral-closure",
       "levelId": "release",
-      "owningPullRequest": 64,
-      "rationale": "Reserved post-landing release-level binding for the controlled behavioral closure identity; inactive until real governed evidence exists and grants no release support.",
       "sourceOnly": false,
-      "testId": "tc.p2.behavioral-closure"
+      "owningPullRequest": 64,
+      "integrationPolicy": "BLOCK_UNTIL_ACTIVE_BINDING",
+      "rationale": "Reserved post-landing release-level binding for the controlled behavioral closure identity; inactive until real governed evidence exists and grants no release support."
     }
   ],
-  "pendingMigrationSource": {
-    "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
-    "integrationState": "FROZEN_EXTERNAL_CANDIDATE",
-    "pullRequest": 64,
-    "reviewCommentId": 5203350863,
-    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb"
-  },
   "reportContract": {
-    "crossLevelPromotionPolicy": "FORBIDDEN",
-    "executionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
     "requiredFields": [
       "assuranceLevel",
       "candidateCommit",
@@ -254,86 +269,21 @@
       "startedAt",
       "testId"
     ],
-    "sourceOnlySupportPromotion": "FORBIDDEN",
+    "executionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
+    "unknownLevelPolicy": "FAIL",
+    "crossLevelPromotionPolicy": "FORBIDDEN",
     "unexecutedResultStates": [
       "BLOCKED",
       "SKIPPED",
       "NOT_IMPLEMENTED"
     ],
-    "unknownLevelPolicy": "FAIL"
+    "sourceOnlySupportPromotion": "FORBIDDEN"
   },
-  "roadmapTaskId": "P8-001",
-  "schemaVersion": "1.0.0",
-  "testBindings": [
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.capability.honest-unavailable"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.existing-run"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.owner-mode"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.simple-task"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.verification-center"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.keyboard.primary-flow"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.mode.progressive-disclosure"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.navigation.primary-workspaces"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.semantics.primary-flow"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.state.transitions"
-    },
-    {
-      "levelId": "architecture_lint",
-      "rationale": "Validates the P8-001 hierarchy, exact level ordering, report contract, and complete canonical Test Center binding coverage.",
-      "testId": "tc.p8.formal-test-hierarchy"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, report ambiguity, and invalid actual execution reports.",
-      "testId": "tc.p8.formal-test-hierarchy-regressions"
-    },
-    {
-      "levelId": "architecture_lint",
-      "rationale": "Validates source schemas, registry identity, non-mutating argv, evidence binding, and state-domain separation.",
-      "testId": "tc.test-center.contracts"
-    },
-    {
-      "levelId": "unit",
-      "rationale": "Executes deterministic negative and regression cases for the Test Center contract implementation.",
-      "testId": "tc.test-center.semantic-regressions"
-    }
-  ]
+  "pendingMigrationSource": {
+    "pullRequest": 64,
+    "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+    "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+    "reviewCommentId": 5203350863,
+    "integrationState": "FROZEN_EXTERNAL_CANDIDATE"
+  }
 }

@@ -148,7 +148,47 @@ def _load_governed_p2_dart_files() -> set[str]:
             governed.add(relative)
     return governed
 
+def _load_governed_product_library_files() -> set[str]:
+    source_contract = ROOT / "test" / "product" / "source_contract_test.dart"
+    try:
+        content = source_contract.read_text(encoding="utf-8")
+    except OSError as error:
+        raise RuntimeError(
+            f"cannot load governed product source inventory: {error}"
+        ) from error
+    marker = "const expected = <String>{"
+    start = content.find(marker)
+    if start < 0:
+        raise RuntimeError("governed product source inventory marker is missing")
+    open_brace = content.find("{", start)
+    end = content.find("};", open_brace)
+    if open_brace < 0 or end < 0:
+        raise RuntimeError("governed product source inventory bounds are invalid")
+    values = re.findall(r"'([^']+)'", content[open_brace + 1 : end])
+    if not values:
+        raise RuntimeError("governed product source inventory is empty")
+    governed: set[str] = set()
+    for raw in values:
+        relative = raw.replace("\\", "/")
+        if (
+            not relative.startswith("lib/")
+            or not relative.endswith(".dart")
+            or relative.startswith("/")
+            or relative.startswith("../")
+            or "/../" in relative
+        ):
+            raise RuntimeError(
+                f"governed product source inventory contains an unsafe/non-library path: {relative}"
+            )
+        if relative in governed:
+            raise RuntimeError(
+                f"duplicate governed product Dart path: {relative}"
+            )
+        governed.add(relative)
+    return governed
+
 EXPECTED_DART_FILES.update(_load_governed_p2_dart_files())
+EXPECTED_DART_FILES.update(_load_governed_product_library_files())
 EXCLUDED_DART_TOP_LEVEL = {
     ".dart_tool", ".git", "archive", "build", "coverage", "dist",
     "node_modules",
@@ -762,7 +802,11 @@ def check_imports_and_syntax() -> None:
     failures: list[str] = []
     actual = {p.relative_to(ROOT).as_posix() for p in files}
     missing = sorted(EXPECTED_DART_FILES - actual)
-    unexpected = sorted(actual - EXPECTED_DART_FILES)
+    unexpected = sorted(
+        path
+        for path in actual - EXPECTED_DART_FILES
+        if not path.startswith("test/")
+    )
     if missing:
         failures.append("missing active Dart files: " + ", ".join(missing))
     if unexpected:

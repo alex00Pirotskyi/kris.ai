@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.kristin/schemas/test_center_assurance_report_contract.v1.json",
+  "title": "Kristin Test Center assurance report mapping contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "hierarchyId",
+    "executionReportSchema",
+    "hierarchyRequiredFieldMappings",
+    "reportRequiredTopLevelFields"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "contractId": {"const": "test-center.assurance-report-contract-v1"},
+    "hierarchyId": {"const": "test-center.assurance-hierarchy-v1"},
+    "executionReportSchema": {"const": "schemas/test_center_assurance_execution_report.v1.json"},
+    "hierarchyRequiredFieldMappings": {
+      "type": "object",
+      "minProperties": 11,
+      "additionalProperties": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"}
+    },
+    "reportRequiredTopLevelFields": {
+      "type": "array",
+      "minItems": 12,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"}
+    }
+  }
+}

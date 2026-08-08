@@ -126,15 +126,6 @@ void main() {
     test('only the governed library source is analyzer-visible', () {
       const expected = <String>{
         'lib/main.dart',
-        'lib/p5_ia_preview.dart',
-        'lib/product/p5_information_architecture/p5_components.dart',
-        'lib/product/p5_information_architecture/p5_controller.dart',
-        'lib/product/p5_information_architecture/p5_fixtures.dart',
-        'lib/product/p5_information_architecture/p5_models.dart',
-        'lib/product/p5_information_architecture/p5_prototype.dart',
-        'lib/product/p5_information_architecture/p5_support_workspaces.dart',
-        'lib/product/p5_information_architecture/p5_task_workspaces.dart',
-        'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
         'lib/product/agent_decision.dart',
         'lib/product/agent_protocol.dart',
         'lib/product/api_server.dart',
@@ -210,6 +201,7 @@ void main() {
         'lib/product/p2_runtime_resource_resolver.dart',
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
+        'lib/product/mcp_protocol.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))
