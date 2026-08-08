@@ -1,0 +1,73 @@
+{
+  "appendIdentities": {
+    "affectedTestMappings": [
+      "affected.p4-001.request",
+      "affected.p4-001.result-page",
+      "affected.p4-001.provider",
+      "affected.p4-001.cursor",
+      "affected.p4-001.security-validation",
+      "affected.p4-001.schemas",
+      "affected.p4-001.fixtures",
+      "affected.p4-001.workflow",
+      "affected.p4-001.evidence"
+    ],
+    "projectTestProfiles": [
+      "tc.p4-001.request-schema",
+      "tc.p4-001.result-schema",
+      "tc.p4-001.page-schema",
+      "tc.p4-001.provider-error-schema",
+      "tc.p4-001.url-fail-closed",
+      "tc.p4-001.credential-rejection",
+      "tc.p4-001.secret-normalization",
+      "tc.p4-001.provider-metadata-isolation",
+      "tc.p4-001.stable-query-identity",
+      "tc.p4-001.stable-result-identity",
+      "tc.p4-001.cursor-provider-binding",
+      "tc.p4-001.capability-negotiation",
+      "tc.p4-001.rate-limit-representation",
+      "tc.p4-001.partial-failure-representation",
+      "tc.p4-001.fixture-provider-parity",
+      "tc.p4-001.network-free-determinism",
+      "tc.p4-001.unfetched-snippet-classification",
+      "tc.p4-001.normalized-result-state-preservation"
+    ],
+    "testCases": [
+      "tc.p4-001.request-schema",
+      "tc.p4-001.result-schema",
+      "tc.p4-001.page-schema",
+      "tc.p4-001.provider-error-schema",
+      "tc.p4-001.url-fail-closed",
+      "tc.p4-001.credential-rejection",
+      "tc.p4-001.secret-normalization",
+      "tc.p4-001.provider-metadata-isolation",
+      "tc.p4-001.stable-query-identity",
+      "tc.p4-001.stable-result-identity",
+      "tc.p4-001.cursor-provider-binding",
+      "tc.p4-001.capability-negotiation",
+      "tc.p4-001.rate-limit-representation",
+      "tc.p4-001.partial-failure-representation",
+      "tc.p4-001.fixture-provider-parity",
+      "tc.p4-001.network-free-determinism",
+      "tc.p4-001.unfetched-snippet-classification",
+      "tc.p4-001.normalized-result-state-preservation"
+    ],
+    "testModules": [
+      "tm.p4-001.search-provider-interface"
+    ],
+    "testingStudioPresentationRecords": [
+      "presentation.p4-001.search-provider-interface"
+    ]
+  },
+  "authorityId": "test-center-registry",
+  "commandId": "P4-001-TEST-CENTER-APPEND-20F13462-G178",
+  "createdAt": "2026-08-08T17:20:48Z",
+  "expectedRuntimeGeneration": 178,
+  "note": "Append only canonical P4-001 Test Center identities from the last exact green P4 registry source into the current P8-preserving registry; no support/acceptance promotion.",
+  "operation": "APPEND_SAFE_JSON_IDENTITIES_V1",
+  "requestingMission": "MISSION-004",
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-20F13462",
+  "sourceCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+  "workerIdentity": "ELASTIC-20f13462"
+}
