@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000146-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
+    "requestedRole": "INTEGRATOR",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-08T11:18:00Z",
+  "runtimeGeneration": 146,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-P2-004-INTEGRATE-115-A7C4D2F1"
+}

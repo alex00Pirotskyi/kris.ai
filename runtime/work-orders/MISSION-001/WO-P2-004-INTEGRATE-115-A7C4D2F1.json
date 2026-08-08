@@ -1,0 +1,39 @@
+{
+  "allowedPaths": [
+    "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+    "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
+    "tool/p2_task_platform_assertions.py",
+    "tool/p2_technology_spike.py",
+    "tool/p2_technology_spike_contract_test.py"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "baseTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "createdAt": "2026-08-08T11:18:00Z",
+  "createdBy": "ELASTIC-a7c4d2f1",
+  "dependencyRequirements": [],
+  "executionRole": null,
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Integrate exact green helper PR #115 head 62496ef95d146939fd320bdbc9efca91f7f702bb into canonical P2-004 Product PR #75 at exact base 139ce09edceaab2c9b24bb3119c4e8c324c02e0a after fresh bounded R1 review 4888620804. Preserve exactly the five reviewed source/contract files, consume no temporary carrier/Test Center/root-manifest payload, reconcile the new Product PR head/tree immediately in runtime, rerun exact-current product-gates, and leave the real Windows/macOS/Linux controlled measurement campaign fail-closed as the remaining boundary. Do not promote P2-004 acceptance or authorize P3.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "helper PR #115 remains exact head 62496ef95d146939fd320bdbc9efca91f7f702bb and five-file scope",
+    "fresh R1 review 4888620804 remains bound to exact helper head",
+    "helper product-gates run 31251023028 Windows/macOS/Ubuntu SUCCESS",
+    "expected-head guarded helper integration into canonical Product PR #75",
+    "runtime Product PR #75 observedHead/observedTree reconciled immediately after integration",
+    "exact-current canonical Product PR product-gates after integration",
+    "real controlled tri-platform measurement remains NOT_EVALUATED/EXTERNAL_HARD unless actually executed",
+    "no P2 ACCEPTED, P3 authorization, platform/support/release/GA promotion"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-08T11:18:00Z",
+  "workOrderId": "WO-P2-004-INTEGRATE-115-A7C4D2F1"
+}
