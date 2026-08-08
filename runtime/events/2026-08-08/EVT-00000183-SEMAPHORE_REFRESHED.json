@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000183-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-004",
+  "payload": {
+    "semaphoreId": "SEM-QWEN-P4-001-D53C2A79"
+  },
+  "recordedAt": "2026-08-08T17:35:54Z",
+  "runtimeGeneration": 183,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T172351Z-13173221",
+  "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C"
+}
