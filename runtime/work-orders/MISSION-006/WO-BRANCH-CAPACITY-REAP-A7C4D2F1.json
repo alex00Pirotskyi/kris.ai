@@ -1,0 +1,31 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": ["release/evidence/P6-*/**"],
+  "assignedWorker": null,
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "createdAt": "2026-08-08T10:47:00Z",
+  "createdBy": "ELASTIC-a7c4d2f1",
+  "dependencyRequirements": [],
+  "executionRole": null,
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Restore Mission Execution 1.5 branch capacity from 61 to the configured 60-branch migration ceiling by deleting exactly legacy failure snapshot validation/g-p6-001-0b0b5c2-run2 at reviewed SHA 0b0b5c2fa1b6f99d4f68bc5d29097d979e07a66a through the governed exact-SHA branch reaper. Do not touch the active P6 trust-root helper, active P5 authority helper, canonical Product branches, product source, evidence state, acceptance, or support claims.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "INCIDENT_RESPONDER",
+  "requiredTests": [
+    "target matches configured validation/* legacyDebtPatterns",
+    "target has no open PR and is not protected/default/canonical/actively locked",
+    "target remains exactly 0b0b5c2fa1b6f99d4f68bc5d29097d979e07a66a at deletion",
+    "post-delete ref absence is verified",
+    "branch count returns to maxTotalBranchesDuringMigration=60 or lower",
+    "fresh Mission V1.5 Hygiene doctor proceeds after cleanup"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-08T10:47:00Z",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-A7C4D2F1"
+}

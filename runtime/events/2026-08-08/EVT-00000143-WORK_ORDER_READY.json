@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000143-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-006",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INCIDENT_RESPONDER",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-08T10:47:00Z",
+  "runtimeGeneration": 143,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-A7C4D2F1"
+}
