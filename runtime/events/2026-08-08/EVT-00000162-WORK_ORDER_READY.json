@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000162-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "DEFECT_HUNTER",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-08T13:00:00Z",
+  "runtimeGeneration": 162,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095218Z-3a375f9b",
+  "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C"
+}

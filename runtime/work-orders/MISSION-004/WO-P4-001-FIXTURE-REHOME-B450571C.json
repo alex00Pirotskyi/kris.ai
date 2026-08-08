@@ -1,0 +1,30 @@
+{
+  "allowedPaths": [
+    "services/research_worker/test/support.py",
+    "services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json",
+    "tool/p4_001_search_provider_test.py"
+  ],
+  "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+  "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
+  "createdAt": "2026-08-08T13:00:00Z",
+  "createdBy": "ELASTIC-b450571c",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Remove the exact P4-001 deterministic-fixture path-policy blocker without expanding Mission Execution policy. Copy evals/fixtures/p4_001_search_provider/contract_cases.json byte-identically into the MISSION-004-owned services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json path, point P4 test support and the P4 source-gate REQUIRED inventory at the owned fixture, and make no production behavior, shared Test Center, evidence, root-manifest, acceptance, support, release, production, or GA change. The historical evals fixture remains historical ancestry and must not be required by the clean-current-main P4 landing candidate.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "new services fixture bytes are identical to historical evals/fixtures/p4_001_search_provider/contract_cases.json",
+    "services/research_worker/test/support.py loads only the MISSION-004-owned services fixture path",
+    "tool/p4_001_search_provider_test.py requires the owned services fixture and no longer requires the evals fixture",
+    "P4 fixture/provider full source suite passes on exact helper head",
+    "no production behavior or shared-authority bytes change"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C"
+}
