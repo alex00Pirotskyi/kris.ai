@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P11-001-EXACT-CI-EA05391B-G230",
+  "createdAt": "2026-08-08T22:50:00Z",
+  "expectedProductHead": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "expectedRuntimeGeneration": 230,
+  "note": "Dispatch repository ci.yml on the exact current P11-001 canonical Product PR head without Product source mutation; bind all conclusions to this SHA and make no support/acceptance promotion.",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "productPr": 71,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-GPT-P11-001-EXACT-CI-EA05391B",
+  "workOrderId": "WO-P11-001-EXACT-CI-EA05391B",
+  "workerIdentity": "ELASTIC-GPT-EA05391B"
+}
