@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P4-001-INTEGRATE-PROOF-124-5A7D3C91",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
@@ -10,6 +9,7 @@
   "createdBy": "ELASTIC-5a7d3c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "ELASTIC-5a7d3c91:MERGED_PR_124:d8390a07abe43bde6f4f1e606cd09507f4622502",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Consume exact reviewed proof-lineage helper PR #124 head 6e2fe5bde02e7a5f8d1b5330e0ef253059c1a986 into released P4 Test Center hierarchy helper branch agent/help/elastic-20f13462/mission-002/p4-test-center-hierarchy at exact base d20a7abde48a217301097eb6e0eed722af3b495a. Change only the assurance proof-contract path, preserve registry/hierarchy bytes, then re-run canonical Test Center hierarchy/enforcement validation. Do not promote support, acceptance, release, production, or GA state.",
@@ -26,8 +26,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T23:17:10Z",
+  "updatedAt": "2026-08-08T23:22:00Z",
   "workOrderId": "WO-P4-001-INTEGRATE-PROOF-124-5A7D3C91"
 }
