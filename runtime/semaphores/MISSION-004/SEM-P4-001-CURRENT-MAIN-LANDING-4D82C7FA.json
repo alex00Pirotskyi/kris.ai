@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+  "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "createdAt": "2026-08-08T09:08:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T13:08:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-08T09:08:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 116,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-CURRENT-MAIN-LANDING-4D82C7FA",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+  "workerIdentity": "ELASTIC-4d82c7fa"
+}
