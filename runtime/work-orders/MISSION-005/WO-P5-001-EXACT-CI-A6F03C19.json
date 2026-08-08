@@ -1,0 +1,28 @@
+{
+  "allowedPaths": [
+    "lib/product/p5_information_architecture/**"
+  ],
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "createdAt": "2026-08-08T18:36:00Z",
+  "createdBy": "WRK-20260808T165753Z-a6f03c19",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Dispatch and validate an exact canonical product-gates run for Product PR #72 head b9be61899ab0792c7e194299324e7cb53c494f20 after the governed nine-entry P5 source-inventory authority integration. Do not mutate Product source merely to trigger CI and do not promote support/acceptance from CI alone.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "exact ci.yml workflow_dispatch bound to b9be61899ab0792c7e194299324e7cb53c494f20",
+    "validate-ubuntu",
+    "validate-windows",
+    "validate-macos"
+  ],
+  "roadmapTask": "P5-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-08T18:36:00Z",
+  "workOrderId": "WO-P5-001-EXACT-CI-A6F03C19"
+}
