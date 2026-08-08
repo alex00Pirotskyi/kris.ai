@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-BRANCH-REAP-P5-TEMP-B1C2D3E4",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 108,
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-B1C2D3E4",
+  "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-B1C2D3E4",
+  "workerIdentity": "ELASTIC-b1c2d3e4",
+  "productPr": 76,
+  "targetBranch": "temp/worker-f-p5-001-reconcile-77157857",
+  "expectedTargetHead": "46fa777880e8a1a1327ec69d70a63bbcbad88f52",
+  "createdAt": "2026-08-08T07:10:55Z",
+  "note": "Reclaim one exact stale temporary branch after restoring the missing canonical P8 Product branch; no product source mutation."
+}

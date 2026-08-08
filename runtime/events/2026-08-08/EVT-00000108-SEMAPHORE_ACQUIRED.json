@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000108-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "executionRole": "INCIDENT_RESPONDER",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-B1C2D3E4",
+    "targetBranch": "temp/worker-f-p5-001-reconcile-77157857",
+    "workerIdentity": "ELASTIC-b1c2d3e4"
+  },
+  "recordedAt": "2026-08-08T07:10:55Z",
+  "runtimeGeneration": 108,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T071055Z-b1c2d3e4",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-B1C2D3E4"
+}
