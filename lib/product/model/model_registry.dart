@@ -878,12 +878,14 @@ class ModelCostProfile {
       };
 }
 
-/// Out-of-band authority for benchmark execution receipts.
+/// Caller-supplied verification inputs for benchmark execution receipts.
 ///
-/// This object is deliberately absent from registry JSON. Its candidate map must
-/// come from repository-verified commit/tree identities, and its protected-key
-/// registry must come from the host trust configuration rather than benchmark
-/// payload data.
+/// This object is deliberately absent from registry JSON. It can prove that a
+/// payload is internally consistent with the supplied key registry and candidate
+/// map, but it is not a host-controlled benchmark authority and therefore can
+/// never promote benchmark evidence into approval-bearing execution trust. A
+/// future trusted path must receive an opaque capability from the real host or
+/// repository authority rather than keys or commit/tree mappings from callers.
 final class ModelBenchmarkTrustContext {
   ModelBenchmarkTrustContext({
     required ProtectedKeyRegistryV2 trustedKeys,
@@ -1216,7 +1218,7 @@ class ModelBenchmarkEvidence {
 
     String? authorityKeyId;
     String? authoritySignatureHex;
-    var trustedExecutionReceipt = false;
+    const trustedExecutionReceipt = false;
     final rawAuthority = evidence['authority'];
     if (rawAuthority != null) {
       final authority = _objectMap(
@@ -1265,7 +1267,9 @@ class ModelBenchmarkEvidence {
           authoritySignatureHex: authoritySignatureHex,
           canonicalPayload: verified.evidencePayloadJson,
         );
-        trustedExecutionReceipt = true;
+        // Verification through a caller-created context is validation only. It
+        // cannot mint approval-bearing trust; only a future opaque capability
+        // from the host-controlled benchmark authority may do that.
       }
     }
 
