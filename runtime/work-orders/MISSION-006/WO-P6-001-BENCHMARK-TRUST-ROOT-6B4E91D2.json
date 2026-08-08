@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-BENCHMARK-TRUST-ROOT-01FCA06E",
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
     "test/product/model/model_registry_identity_guard_test.dart",
@@ -13,6 +12,7 @@
   "createdBy": "ELASTIC-6b4e91d2",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
+  "lastActor": "ELASTIC-01fca06e:MECHANICALLY_REMOVABLE:PATCH_CAPABLE_SOURCE_TRANSPORT_REQUIRED:RED_REGRESSION=a5a919477d63812e3c569e3baf3699b46d207eda",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Close the exact-reviewed P6-001 benchmark trust-root vulnerability: public callers must not be able to construct a key registry/candidate map and convert self-supplied signed benchmark metadata into approval-bearing trusted execution receipts. Preserve content-addressed benchmark metadata and evaluation-only flows, fail closed on approval until a genuine host-controlled benchmark authority provider exists, and do not land historical PR #76 directly to main.",
@@ -30,8 +30,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "BLOCKED",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-08T09:39:00Z",
+  "updatedAt": "2026-08-08T10:00:00Z",
   "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
 }
