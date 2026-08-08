@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000188-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-002",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "AUTHORITY",
+    "semaphoreId": "SEM-P4-001-HIERARCHY-20F13462",
+    "workerIdentity": "ELASTIC-20f13462"
+  },
+  "recordedAt": "2026-08-08T17:44:00Z",
+  "runtimeGeneration": 188,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T170212Z-e5eb8e85",
+  "workOrderId": "WO-P4-001-HIERARCHY-20F13462"
+}

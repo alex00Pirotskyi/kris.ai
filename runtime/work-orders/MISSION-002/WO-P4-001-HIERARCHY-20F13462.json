@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-HIERARCHY-20F13462",
   "allowedPaths": [
     "config/test_center_assurance_hierarchy.v1.json"
   ],
+  "assignedWorker": "ELASTIC-20f13462",
   "baseCommit": "f8cf56da45a5c373666237ab13d02f9e763a1591",
   "baseTree": "764b264c8c6a45b675a7864ec478e57aca20c3b3",
   "createdAt": "2026-08-08T17:38:30Z",
   "createdBy": "ELASTIC-20f13462",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "As MISSION-002 owner of test-center-hierarchy, append exactly one source-only assurance binding for each of the 18 canonical P4-001 Test Center IDs introduced by the authorized P4 registry helper. Bind each source_contract P4 test to architecture_lint, preserve all existing P8 hierarchy and pending migration records, reject conflicts, and restore exact P8 formal-hierarchy compatibility without promoting behavior, platform, release, acceptance, production, or GA support.",
@@ -24,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T17:38:30Z",
+  "updatedAt": "2026-08-08T17:44:00Z",
   "workOrderId": "WO-P4-001-HIERARCHY-20F13462"
 }

@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/test_center_assurance_hierarchy.v1.json"
+  ],
+  "authorityId": "test-center-hierarchy",
+  "baseCommit": "f8cf56da45a5c373666237ab13d02f9e763a1591",
+  "baseTree": "764b264c8c6a45b675a7864ec478e57aca20c3b3",
+  "branch": "agent/help/elastic-20f13462/mission-002/p4-test-center-hierarchy",
+  "createdAt": "2026-08-08T17:44:00Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-08T19:44:00Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-002",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T17:44:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 188,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-HIERARCHY-20F13462",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-HIERARCHY-20F13462",
+  "workerIdentity": "ELASTIC-20f13462"
+}
