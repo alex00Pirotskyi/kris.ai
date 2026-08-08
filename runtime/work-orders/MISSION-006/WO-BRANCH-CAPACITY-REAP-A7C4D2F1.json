@@ -1,13 +1,13 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-BRANCH-CAPACITY-REAP-A7C4D2F1",
   "allowedPaths": ["release/evidence/P6-*/**"],
-  "assignedWorker": null,
+  "assignedWorker": "ELASTIC-a7c4d2f1",
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
   "createdAt": "2026-08-08T10:47:00Z",
   "createdBy": "ELASTIC-a7c4d2f1",
   "dependencyRequirements": [],
-  "executionRole": null,
+  "executionRole": "INCIDENT_RESPONDER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Restore Mission Execution 1.5 branch capacity from 61 to the configured 60-branch migration ceiling by deleting exactly legacy failure snapshot validation/g-p6-001-0b0b5c2-run2 at reviewed SHA 0b0b5c2fa1b6f99d4f68bc5d29097d979e07a66a through the governed exact-SHA branch reaper. Do not touch the active P6 trust-root helper, active P5 authority helper, canonical Product branches, product source, evidence state, acceptance, or support claims.",
@@ -24,8 +24,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T10:47:00Z",
+  "updatedAt": "2026-08-08T10:51:00Z",
   "workOrderId": "WO-BRANCH-CAPACITY-REAP-A7C4D2F1"
 }
