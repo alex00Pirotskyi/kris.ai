@@ -11,6 +11,7 @@ HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
 sys.path.insert(0, str(HERE))
 import test_center_assurance_hierarchy as H  # noqa: E402
+import test_center_assurance_semantics as S  # noqa: E402
 
 FIXTURE = Path("release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json")
 COMPONENT_FIXTURE = "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-fixture.json"
@@ -73,7 +74,15 @@ class AssuranceHierarchyTest(unittest.TestCase):
         self.hierarchy_schema=H.load(PROJECT/H.HIERARCHY_SCHEMA); self.report_schema=H.load(PROJECT/H.REPORT_SCHEMA); self.canonical_schema=H.load(PROJECT/H.CANONICAL_SCHEMA); self.hierarchy=H.load(PROJECT/H.HIERARCHY); self.registry=H.load(PROJECT/H.REGISTRY); self.proof_contract=H.load(PROJECT/H.PROOF_CONTRACT); self.report_fixture=H.load(PROJECT/FIXTURE)
 
     def validate_documents(self,value): return H.validate_documents(self.hierarchy_schema,self.report_schema,value,self.registry)
+    def validate_documents_with_registry(self,value,registry): return H.validate_documents(self.hierarchy_schema,self.report_schema,value,registry)
     def validate_report(self,value,*,hierarchy=None,proof_contract=None): return H.validate_assurance_execution_report(value,report_schema=self.report_schema,canonical_schema=self.canonical_schema,hierarchy=hierarchy or self.hierarchy,registry=self.registry,project=PROJECT,proof_contract=proof_contract or self.proof_contract)
+
+    def migrate_worker_a_binding(self,test_id,*,level_id=None,keep_pending=False):
+        hierarchy=copy.deepcopy(self.hierarchy); registry=copy.deepcopy(self.registry); expected_level,_=S.WORKER_A_BINDINGS[test_id]
+        if not keep_pending: hierarchy["pendingMigrationBindings"]=[item for item in hierarchy["pendingMigrationBindings"] if item["testId"]!=test_id]
+        hierarchy["testBindings"].append({"testId":test_id,"levelId":level_id or expected_level,"rationale":"Reviewed Worker-A binding migrated into active Test Center authority."})
+        registry["testCases"].append({"testId":test_id}); registry["projectTestProfiles"].append({"stableCheckId":test_id})
+        return hierarchy,registry
 
     def component_report_with_unit_predecessor(self):
         report=copy.deepcopy(self.report_fixture); hierarchy=copy.deepcopy(self.hierarchy)
@@ -115,6 +124,20 @@ class AssuranceHierarchyTest(unittest.TestCase):
         for name,mutation in REPORT_REGRESSIONS:
             with self.subTest(report=name),self.assertRaises(H.HierarchyError): value=copy.deepcopy(self.report_fixture); mutation(value); self.validate_report(value)
         with tempfile.TemporaryDirectory() as directory,self.assertRaises(H.HierarchyError): H.write_report(Path(directory),Path("../outside.json"),H.validate_project(PROJECT))
+
+    def test_accepts_reviewed_worker_a_migration_to_matching_active_binding(self):
+        hierarchy,registry=self.migrate_worker_a_binding("tc.p2.acceptance-contract")
+        report=self.validate_documents_with_registry(hierarchy,registry)
+        self.assertEqual(report["bindingCount"],len(self.hierarchy["testBindings"])+1)
+        self.assertEqual(report["pendingMigrationBindingCount"],len(S.WORKER_A_BINDINGS)-1)
+
+    def test_rejects_reviewed_worker_a_migration_at_wrong_active_level(self):
+        hierarchy,registry=self.migrate_worker_a_binding("tc.p2.acceptance-contract",level_id="unit")
+        with self.assertRaisesRegex(H.HierarchyError,"migrated hierarchy level drifted"): self.validate_documents_with_registry(hierarchy,registry)
+
+    def test_rejects_worker_a_binding_left_pending_after_activation(self):
+        hierarchy,registry=self.migrate_worker_a_binding("tc.p2.acceptance-contract",keep_pending=True)
+        with self.assertRaisesRegex(H.HierarchyError,"overlap active bindings"): self.validate_documents_with_registry(hierarchy,registry)
 
     def test_canonical_registry_runs_enforcement_layer(self):
         mapping=next(item for item in self.registry["affectedTestMappings"] if item["mappingId"]=="affected.p8-formal-test-hierarchy"); required_paths={"config/test_center_assurance_report_contract.v1.json","schemas/test_center_assurance_report_contract.v1.json","tool/test_center_assurance_enforcement.py","tool/test_center_assurance_enforcement_test.py"}; self.assertTrue(required_paths.issubset(set(mapping["pathPatterns"])))
