@@ -1,0 +1,28 @@
+{
+  "allowedPaths": [
+    "release/evidence/P5-001/branch-capacity-cleanup-2.json"
+  ],
+  "baseCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
+  "baseTree": "43a26a58cd28aba0a2bcb154898b956bbb98b061",
+  "createdAt": "2026-08-08T18:00:15Z",
+  "createdBy": "WRK-20260808T165753Z-a6f03c19",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Remove the exact obsolete legacy branch automation/e-p11-direct-stage-9c4e7b21 at 38867df253b4353a3c1027aed1ab42e8316d477f using the repository-owned exact-SHA branch reaper, only after verifying no open PR, no protection, no canonical Product or active semaphore ownership, to free one branch-capacity slot required by the already-reserved P5-001 source-inventory helper. Make no Product source change.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "target branch exact head remains 38867df253b4353a3c1027aed1ab42e8316d477f",
+    "target is not an open PR head",
+    "mission_v15_legacy_branch_reap and branch_hygiene preflight PASS",
+    "post-delete target ref absent and total branch count below migration maximum"
+  ],
+  "roadmapTask": "P5-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-08T18:00:15Z",
+  "workOrderId": "WO-P5-001-BRANCH-CAPACITY-2-A6F03C19"
+}
