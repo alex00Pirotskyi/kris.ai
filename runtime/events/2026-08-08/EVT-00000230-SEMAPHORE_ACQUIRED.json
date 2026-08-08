@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000230-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-010",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-GPT-P11-001-EXACT-CI-EA05391B",
+    "workerIdentity": "ELASTIC-GPT-EA05391B"
+  },
+  "recordedAt": "2026-08-08T22:49:00Z",
+  "runtimeGeneration": 230,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222633Z-ea05391b",
+  "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
+}

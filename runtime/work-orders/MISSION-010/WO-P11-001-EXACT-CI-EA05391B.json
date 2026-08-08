@@ -1,0 +1,31 @@
+{
+  "activeSemaphoreId": "SEM-GPT-P11-001-EXACT-CI-EA05391B",
+  "allowedPaths": [],
+  "assignedWorker": "ELASTIC-GPT-EA05391B",
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "createdAt": "2026-08-08T22:49:00Z",
+  "createdBy": "ELASTIC-GPT-EA05391B",
+  "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-010",
+  "objective": "Dispatch and validate exact-current canonical product-gates for P11-001 Product PR #71 head 1383b8c4dff657020eb6873d01d370ffbfb30b72 without mutating Product source. Bind the workflow_dispatch run to this exact head, inspect all three required desktop lanes, and classify any failure truthfully. Do not infer native parity, acceptance, support, release, production, or GA from hosted source CI.",
+  "parentProductPr": 71,
+  "priority": 93,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "exact ci.yml workflow_dispatch bound to 1383b8c4dff657020eb6873d01d370ffbfb30b72",
+    "validate-ubuntu",
+    "validate-windows",
+    "validate-macos",
+    "no Product source mutation solely to obtain CI",
+    "no acceptance/platform/release/production/GA promotion"
+  ],
+  "roadmapTask": "P11-001",
+  "schemaVersion": 1,
+  "status": "INTEGRATING",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-08T22:49:00Z",
+  "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
+}

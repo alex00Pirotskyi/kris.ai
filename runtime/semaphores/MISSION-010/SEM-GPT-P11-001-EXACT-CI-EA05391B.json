@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "branch": "agent/e/native-parity-readiness",
+  "createdAt": "2026-08-08T22:49:00Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-08T23:49:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-010",
+  "productPr": 71,
+  "refreshedAt": "2026-08-08T22:49:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 230,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-GPT-P11-001-EXACT-CI-EA05391B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P11-001-EXACT-CI-EA05391B",
+  "workerIdentity": "ELASTIC-GPT-EA05391B"
+}
