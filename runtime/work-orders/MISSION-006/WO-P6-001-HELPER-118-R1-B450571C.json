@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P6-001-192EDD81",
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
     "test/product/model/model_registry_identity_guard_test.dart",
@@ -30,8 +29,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "READY",
   "type": "REVIEW",
-  "updatedAt": "2026-08-08T15:36:04Z",
+  "updatedAt": "2026-08-08T16:06:48Z",
   "workOrderId": "WO-P6-001-HELPER-118-R1-B450571C"
 }
