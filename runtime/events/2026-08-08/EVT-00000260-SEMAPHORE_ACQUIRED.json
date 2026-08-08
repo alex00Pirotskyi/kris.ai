@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000260-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "RELEASE_FINALIZER",
+    "kind": "RELEASE",
+    "semaphoreId": "SEM-P4-001-CLEAN-MANIFEST-GPT-91B4E7C2",
+    "workerIdentity": "ELASTIC-GPT-91B4E7C2"
+  },
+  "recordedAt": "2026-08-08T23:49:00Z",
+  "runtimeGeneration": 260,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222253Z-91b4e7c2",
+  "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
+}
