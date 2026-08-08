@@ -1,0 +1,12 @@
+{
+  "eventId": "EVT-00000110-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "payload": {
+    "correction": "Preserve historical P8 semaphore refreshedAt at its last in-lease heartbeat while retaining RELEASED status; cleanup occurred after expiry and is recorded by generation-109 event rather than rewriting the lease heartbeat.",
+    "semaphoreId": "SEM-P8-001-LAND-MAIN-SQUASH-4F6A2C91"
+  },
+  "recordedAt": "2026-08-08T07:30:00Z",
+  "runtimeGeneration": 110,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T073000Z-a1b2c3d4"
+}
