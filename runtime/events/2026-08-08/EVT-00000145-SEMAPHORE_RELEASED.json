@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000145-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-006",
+  "payload": {
+    "nextStatus": "LANDED",
+    "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-A7C4D2F1"
+  },
+  "recordedAt": "2026-08-08T10:56:00Z",
+  "runtimeGeneration": 145,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-BRANCH-CAPACITY-REAP-A7C4D2F1"
+}
