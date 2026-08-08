@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000120-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "correctionType": "ACTIVE_SCOPE_EXPANSION",
+    "addedAllowedPaths": [
+      "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
+      "tool/p2_technology_spike.py"
+    ],
+    "reason": "Exact materialized P2-004 artifact 8970093356 proves these two MISSION-001-owned files are required by the governed measurement-contract regression; temporary workflows, shared Test Center authority, root manifest, progress prose and carrier payloads remain excluded."
+  },
+  "recordedAt": "2026-08-08T09:27:00Z",
+  "runtimeGeneration": 120,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090016Z-9f3c72a1",
+  "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
+}
