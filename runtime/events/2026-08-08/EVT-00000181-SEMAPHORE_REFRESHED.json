@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000181-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-004",
+  "payload": {
+    "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-20F13462"
+  },
+  "recordedAt": "2026-08-08T17:25:15Z",
+  "runtimeGeneration": 181,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T170212Z-e5eb8e85",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+}
