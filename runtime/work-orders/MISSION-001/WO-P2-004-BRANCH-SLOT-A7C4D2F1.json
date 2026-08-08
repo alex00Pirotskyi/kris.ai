@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-BRANCH-SLOT-A7C4D2F1",
   "allowedPaths": [
     "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
     "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
@@ -16,20 +15,19 @@
   "executionRole": "INCIDENT_RESPONDER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
-  "objective": "Free exactly one governed branch-capacity slot needed for the dedicated P2-004 Test Center authority helper by deleting disposable legacy debt temp-worker-f-noop-discard at exact SHA 750895ab550faa4af697ea8aad8c6e9ca0b8539a. The target matches configured temp/* legacy debt, is unprotected, and has no open PR. Do not touch canonical Product PR #75, active P4/P5/P6 helper branches, Test Center bytes, product source, acceptance, or support state.",
+  "objective": "Free exactly one governed branch-capacity slot needed for the dedicated P2-004 Test Center authority helper by deleting disposable legacy debt temp-worker-f-noop-discard at exact SHA 750895ab550faa4af697ea8aad8c6e9ca0b8539a. The target was rejected by the repository reaper because it does not match configured legacy-debt patterns. No deletion occurred. Do not retarget this frozen Work Order.",
   "parentProductPr": 75,
   "priority": 100,
   "requestedRole": "INCIDENT_RESPONDER",
   "requiredTests": [
-    "target remains exact SHA 750895ab550faa4af697ea8aad8c6e9ca0b8539a at deletion",
-    "repository reaper confirms no open PR, protection, canonical role, or active lock",
-    "post-delete ref is absent",
-    "branch count falls below maxTotalBranchesDuringMigration=60 before P2 authority branch creation"
+    "repository relay run 31255353788 rejected before deletion",
+    "target branch remains present at exact SHA 750895ab550faa4af697ea8aad8c6e9ca0b8539a",
+    "no product or authority bytes changed"
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "BLOCKED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T11:32:00Z",
+  "updatedAt": "2026-08-08T11:46:00Z",
   "workOrderId": "WO-P2-004-BRANCH-SLOT-A7C4D2F1"
 }
