@@ -6,7 +6,6 @@
     "release/evidence/P4-*/**",
     ".github/workflows/p4-001*.yml"
   ],
-  "activeSemaphoreId": "SEM-P4-001-CURRENT-MAIN-LANDING-4D82C7FA",
   "assignedWorker": "ELASTIC-4d82c7fa",
   "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
   "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
@@ -31,8 +30,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T10:34:00Z",
+  "updatedAt": "2026-08-08T12:45:39Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }

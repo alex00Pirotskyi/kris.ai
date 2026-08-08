@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000160-SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-P4-001-CLEAN-MANIFEST-4D82C7FA",
+      "SEM-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+      "SEM-P4-001-CURRENT-MAIN-LANDING-4D82C7FA",
+      "SEM-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
+    ]
+  },
+  "recordedAt": "2026-08-08T12:45:39Z",
+  "runtimeGeneration": 160,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T124539Z-9c4e71a2",
+  "workOrderId": null
+}

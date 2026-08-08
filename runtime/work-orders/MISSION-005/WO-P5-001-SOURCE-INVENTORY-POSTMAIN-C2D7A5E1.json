@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1",
   "allowedPaths": ["test/product/source_contract_test.dart"],
   "assignedWorker": "ELASTIC-c2d7a5e1",
   "baseCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
@@ -21,8 +20,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T10:32:00Z",
+  "updatedAt": "2026-08-08T12:45:39Z",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
 }
