@@ -1,0 +1,28 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-f-p5-001-information-architecture.yml",
+    "docs/ux/**",
+    "lib/p5_ia_preview.dart",
+    "lib/product/p5_information_architecture/**",
+    "release/evidence/P5-*/**",
+    "test/product/p5_information_architecture/**"
+  ],
+  "authorityId": null,
+  "baseCommit": "7a250e620f0c9875f96c49b0bfe149afddbe4e18",
+  "baseTree": "9f3c9a7ac856757d831734bebfd830f9840904fe",
+  "branch": "agent/f/P5-001-information-architecture",
+  "createdAt": "2026-08-08T10:19:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T14:19:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-005",
+  "productPr": 72,
+  "refreshedAt": "2026-08-08T10:19:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 133,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1",
+  "workerIdentity": "ELASTIC-c2d7a5e1"
+}

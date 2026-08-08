@@ -1,4 +1,5 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1",
   "allowedPaths": [
     ".github/workflows/worker-f-p5-001-information-architecture.yml",
     "docs/ux/**",
@@ -7,11 +8,13 @@
     "release/evidence/P5-*/**",
     "test/product/p5_information_architecture/**"
   ],
+  "assignedWorker": "ELASTIC-c2d7a5e1",
   "baseCommit": "7a250e620f0c9875f96c49b0bfe149afddbe4e18",
   "baseTree": "9f3c9a7ac856757d831734bebfd830f9840904fe",
   "createdAt": "2026-08-08T10:18:00Z",
   "createdBy": "ELASTIC-c2d7a5e1",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-005",
   "objective": "Reconcile canonical P5-001 Product PR #72 onto exact protected main de00002ad01b19ab4ef4ced531d19a320a66b5c3 without creating a replacement Product PR. Preserve current-main P8/Test Center and other shared-authority bytes, carry forward only current P5-owned product source/tests/evidence/workflow plus already-authorized source-inventory state, eliminate stale inherited Worker-B/P8 ancestry from the effective diff, and prepare an exact-current P5 candidate for separately authorized Test Center union, generated-artifact finalization, tri-platform validation, and protected-main landing. Do not implement P5-002+ or promote support.",
@@ -26,8 +29,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T10:18:00Z",
+  "updatedAt": "2026-08-08T10:19:00Z",
   "workOrderId": "WO-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1"
 }

@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000133-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1",
+    "workerIdentity": "ELASTIC-c2d7a5e1"
+  },
+  "recordedAt": "2026-08-08T10:19:00Z",
+  "runtimeGeneration": 133,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T101800Z-c2d7a5e1",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1"
+}
