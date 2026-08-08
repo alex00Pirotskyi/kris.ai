@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000211-WORK_ORDER_REPAIRED",
+  "eventType": "WORK_ORDER_REPAIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "repair": "remove invalid cross-mission parentWorkOrderId",
+    "semaphoreId": "SEM-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2"
+  },
+  "recordedAt": "2026-08-08T18:42:00Z",
+  "runtimeGeneration": 211,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T174049Z-7c4e91b2",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2"
+}
