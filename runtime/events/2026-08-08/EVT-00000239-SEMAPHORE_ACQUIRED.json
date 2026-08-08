@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000239-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-002",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P8-001-PENDING-MIGRATION-5948C03B",
+    "workerIdentity": "ELASTIC-gpt-5948c03b"
+  },
+  "recordedAt": "2026-08-08T23:05:30Z",
+  "runtimeGeneration": 239,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T223048Z-5948c03b",
+  "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2"
+}

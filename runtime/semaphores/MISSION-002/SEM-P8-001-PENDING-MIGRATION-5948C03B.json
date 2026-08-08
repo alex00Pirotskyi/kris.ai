@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "tool/test_center_assurance_semantics.py",
+    "tool/test_center_assurance_hierarchy_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "agent/help/elastic-gpt-5948c03b/mission-002/p8-pending-migration",
+  "createdAt": "2026-08-08T23:05:30Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-09T00:05:30Z",
+  "kind": "WRITE",
+  "mission": "MISSION-002",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T23:05:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 239,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P8-001-PENDING-MIGRATION-5948C03B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2",
+  "workerIdentity": "ELASTIC-gpt-5948c03b"
+}
