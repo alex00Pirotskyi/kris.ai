@@ -10,7 +10,8 @@ Eligibility is deliberately narrow:
 * exact current runtime generation;
 * INTEGRATING ``BLOCKER_REMOVAL`` Work Order;
 * matching zero-write Product-PR INTEGRATION semaphore;
-* target matches the configured Mission v1.5 legacy-debt patterns;
+* target matches the configured Mission v1.5 legacy-debt patterns or is one
+  exact configured grandfathered runtime-transaction branch;
 * target is not main, the runtime/control branch, a canonical Product PR
   branch, or a branch held by any active semaphore;
 * exact target ref exists at the command's reviewed SHA.
@@ -87,8 +88,13 @@ def validate_command_shape(command: dict[str, Any], command_path: pathlib.Path) 
             raise ValueError(f"{key} must be non-empty")
 
 
-def cleanup_class_for(branch: str, patterns: list[str]) -> str:
-    if not any(fnmatch.fnmatchcase(branch, pattern) for pattern in patterns):
+def cleanup_class_for(
+    branch: str,
+    patterns: list[str],
+    exact_grandfathered_branches: list[str] | None = None,
+) -> str:
+    exact = set(exact_grandfathered_branches or [])
+    if not any(fnmatch.fnmatchcase(branch, pattern) for pattern in patterns) and branch not in exact:
         raise ValueError(f"target branch is not configured Mission v1.5 legacy debt: {branch}")
     if branch.startswith(("validation/", "validated/")):
         return "failure-snapshot"
@@ -165,7 +171,12 @@ def prepare_reap(project: pathlib.Path, command_path: pathlib.Path) -> dict[str,
     patterns = hygiene.get("legacyDebtPatterns")
     if not isinstance(patterns, list) or not all(isinstance(item, str) for item in patterns):
         raise ValueError("Mission v1.5 hygiene legacyDebtPatterns are invalid")
-    cleanup_class = cleanup_class_for(target, patterns)
+    grandfathered = hygiene.get("grandfatheredRuntimeTxBranches", [])
+    if not isinstance(grandfathered, list) or not all(
+        isinstance(item, str) and item for item in grandfathered
+    ):
+        raise ValueError("Mission v1.5 hygiene grandfatheredRuntimeTxBranches are invalid")
+    cleanup_class = cleanup_class_for(target, patterns, grandfathered)
 
     remote = _git(project, "ls-remote", "origin", f"refs/heads/{target}").split()
     if len(remote) < 2:

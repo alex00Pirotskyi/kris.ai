@@ -75,6 +75,32 @@ class LegacyBranchReapCommandTests(unittest.TestCase):
             "superseded-repair",
         )
 
+    def test_runtime_tx_requires_exact_grandfathering(self) -> None:
+        branch = "runtime/tx/p4-integrate-92-gen1"
+        with self.assertRaises(ValueError):
+            cleanup_class_for(branch, ["validation/*", "automation/*"])
+        self.assertEqual(
+            cleanup_class_for(
+                branch,
+                ["validation/*", "automation/*"],
+                [branch],
+            ),
+            "superseded-repair",
+        )
+        with self.assertRaises(ValueError):
+            cleanup_class_for(
+                "runtime/tx/not-grandfathered",
+                ["validation/*", "automation/*"],
+                [branch],
+            )
+
+    def test_relay_uses_branch_hygiene_success_receipt(self) -> None:
+        workflow = (
+            TOOL.parent / ".github" / "workflows" / "mission-v15-connector-authority-relay.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("receipt.get('status') == 'success'", workflow)
+        self.assertNotIn("receipt.get('status') == 'complete'", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
