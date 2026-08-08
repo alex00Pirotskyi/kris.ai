@@ -1,8 +1,9 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-20F13462",
   "allowedPaths": [
     "config/test_center_registry.v1.json"
   ],
-  "assignedWorker": "ELASTIC-4d82c7fa",
+  "assignedWorker": "ELASTIC-20f13462",
   "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
   "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
   "createdAt": "2026-08-08T09:15:00Z",
@@ -24,8 +25,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T15:25:03Z",
+  "updatedAt": "2026-08-08T17:15:39Z",
   "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
 }

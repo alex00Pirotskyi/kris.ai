@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "authorityId": "test-center-registry",
+  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
+  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
+  "branch": "agent/help/elastic-20f13462/mission-004/p4-test-center-registry",
+  "createdAt": "2026-08-08T17:15:39Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-08T19:15:39Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T17:15:39Z",
+  "resourceId": null,
+  "runtimeGeneration": 177,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-20F13462",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+  "workerIdentity": "ELASTIC-20f13462"
+}

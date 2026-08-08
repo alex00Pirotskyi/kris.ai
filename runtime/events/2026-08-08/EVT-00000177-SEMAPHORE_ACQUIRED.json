@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000177-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "AUTHORITY",
+    "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-20F13462",
+    "workerIdentity": "ELASTIC-20f13462"
+  },
+  "recordedAt": "2026-08-08T17:15:39Z",
+  "runtimeGeneration": 177,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T170212Z-e5eb8e85",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+}
