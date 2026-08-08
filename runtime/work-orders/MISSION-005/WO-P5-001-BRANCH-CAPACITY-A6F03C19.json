@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-BRANCH-CAPACITY-A6F03C19",
   "allowedPaths": [
     "release/evidence/P5-001/branch-capacity-cleanup.json"
   ],
@@ -24,8 +23,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T17:46:30Z",
+  "updatedAt": "2026-08-08T17:51:30Z",
   "workOrderId": "WO-P5-001-BRANCH-CAPACITY-A6F03C19"
 }
