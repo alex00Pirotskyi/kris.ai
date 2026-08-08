@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000241-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-002",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P4-001-PROOF-LINEAGE-GPT-91B4E7C2"
+  },
+  "recordedAt": "2026-08-08T23:08:00Z",
+  "runtimeGeneration": 241,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222253Z-91b4e7c2",
+  "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462"
+}

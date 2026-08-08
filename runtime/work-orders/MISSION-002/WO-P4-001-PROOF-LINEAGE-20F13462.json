@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P4-001-PROOF-LINEAGE-GPT-91B4E7C2",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-08T22:35:28Z",
+  "updatedAt": "2026-08-08T23:08:00Z",
   "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462"
 }
