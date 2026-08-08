@@ -1,6 +1,8 @@
 {
   "activeSemaphoreId": "SEM-GPT-P11-001-EXACT-CI-EA05391B",
-  "allowedPaths": [],
+  "allowedPaths": [
+    "tool/worker_e*.py"
+  ],
   "assignedWorker": "ELASTIC-GPT-EA05391B",
   "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
   "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
@@ -26,6 +28,6 @@
   "schemaVersion": 1,
   "status": "INTEGRATING",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-08T22:49:00Z",
+  "updatedAt": "2026-08-08T22:52:00Z",
   "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
 }

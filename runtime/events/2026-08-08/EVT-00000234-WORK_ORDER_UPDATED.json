@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000234-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-010",
+  "payload": {
+    "correction": "Declare the bounded MISSION-010 source namespace required by runtime Work Order validation while retaining a read-only Product-PR-scoped INTEGRATION semaphore for exact CI dispatch.",
+    "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
+  },
+  "recordedAt": "2026-08-08T22:55:00Z",
+  "runtimeGeneration": 234,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222633Z-ea05391b",
+  "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
+}
