@@ -1,0 +1,27 @@
+{
+  "eventId": "EVT-00000109-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "payload": {
+    "branchReap": {
+      "afterBranchCount": 60,
+      "beforeBranchCount": 61,
+      "deletedBranch": "temp/worker-f-p5-001-reconcile-77157857",
+      "expectedHead": "46fa777880e8a1a1327ec69d70a63bbcbad88f52",
+      "relayRun": 31245761925,
+      "relayWrapperConclusion": "FAILURE_AFTER_SUCCESSFUL_DELETE",
+      "repositoryBranchAbsentVerified": true
+    },
+    "closedWorkOrders": ["WO-BRANCH-CAPACITY-REAP-B1C2D3E4", "WO-P8-001-LAND-MAIN-SQUASH-4F6A2C91"],
+    "p8Landing": {
+      "mainCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+      "postMainProductGatesConclusion": "SUCCESS",
+      "postMainProductGatesRun": 31217250634,
+      "sourceLanding": "LANDED_MAIN"
+    },
+    "releasedSemaphores": ["SEM-BRANCH-CAPACITY-REAP-B1C2D3E4", "SEM-P8-001-LAND-MAIN-SQUASH-4F6A2C91"]
+  },
+  "recordedAt": "2026-08-08T07:22:00Z",
+  "runtimeGeneration": 109,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T072200Z-a1b2c3d4"
+}

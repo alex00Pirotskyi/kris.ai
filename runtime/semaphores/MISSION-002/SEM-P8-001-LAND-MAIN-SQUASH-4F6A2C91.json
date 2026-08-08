@@ -10,12 +10,12 @@
   "kind": "INTEGRATION",
   "mission": "MISSION-002",
   "productPr": 65,
-  "refreshedAt": "2026-08-07T20:48:00Z",
+  "refreshedAt": "2026-08-08T07:22:00Z",
   "resourceId": null,
   "runtimeGeneration": 92,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P8-001-LAND-MAIN-SQUASH-4F6A2C91",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P8-001-LAND-MAIN-SQUASH-4F6A2C91",
   "workerIdentity": "ELASTIC-4f6a2c91"
 }

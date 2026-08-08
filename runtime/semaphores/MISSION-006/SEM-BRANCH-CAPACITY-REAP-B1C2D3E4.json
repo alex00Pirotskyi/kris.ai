@@ -10,12 +10,12 @@
   "kind": "INTEGRATION",
   "mission": "MISSION-006",
   "productPr": 76,
-  "refreshedAt": "2026-08-08T07:10:55Z",
+  "refreshedAt": "2026-08-08T07:22:00Z",
   "resourceId": null,
   "runtimeGeneration": 108,
   "schemaVersion": 1,
   "semaphoreId": "SEM-BRANCH-CAPACITY-REAP-B1C2D3E4",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-BRANCH-CAPACITY-REAP-B1C2D3E4",
   "workerIdentity": "ELASTIC-b1c2d3e4"
 }
