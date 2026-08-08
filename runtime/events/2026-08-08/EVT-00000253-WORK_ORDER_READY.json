@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000253-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INTEGRATOR",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-08T23:34:00Z",
+  "runtimeGeneration": 253,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222944Z-c7a4e912",
+  "workOrderId": "WO-P8-001-INTEGRATE-126-C7A4E912"
+}

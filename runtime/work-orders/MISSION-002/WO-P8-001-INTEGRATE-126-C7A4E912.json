@@ -1,0 +1,32 @@
+{
+  "allowedPaths": [
+    "tool/test_center_assurance_semantics.py",
+    "tool/test_center_assurance_hierarchy_test.py"
+  ],
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "createdAt": "2026-08-08T23:34:00Z",
+  "createdBy": "WRK-20260808T222944Z-c7a4e912",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-002",
+  "objective": "Integrate exact reviewed P8 pending-migration helper PR #126 head 60d0f1785ed052b50f0d131ef3685c5ca6000435 into canonical Product PR #65 branch agent/b/test-center-contracts-and-review at exact base f23316535b8042662250ec63005817e72da581d0. Preserve exactly the two reviewed files, re-run exact canonical P8/Test Center and product gates on the new canonical head, close the helper transport after successful integration, and do not promote acceptance/support/release/production/GA state.",
+  "parentProductPr": 65,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "PR #126 exact reviewed head remains 60d0f1785ed052b50f0d131ef3685c5ca6000435",
+    "canonical P8 Product PR branch remains exact base f23316535b8042662250ec63005817e72da581d0 before merge",
+    "effective integration changes exactly tool/test_center_assurance_semantics.py and tool/test_center_assurance_hierarchy_test.py",
+    "python tool/test_center_assurance_hierarchy.py check --project . PASS",
+    "python -m unittest -v tool/test_center_assurance_hierarchy_test.py PASS",
+    "exact canonical Product CI after integration",
+    "no support/acceptance/certification/release/production/GA promotion"
+  ],
+  "roadmapTask": "P8-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-08T23:34:00Z",
+  "workOrderId": "WO-P8-001-INTEGRATE-126-C7A4E912"
+}
