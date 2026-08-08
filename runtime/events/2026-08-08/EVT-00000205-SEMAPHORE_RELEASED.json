@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000205-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-005",
+  "payload": {
+    "nextStatus": "READY",
+    "semaphoreId": "SEM-P5-001-SOURCE-INVENTORY-A6F03C19"
+  },
+  "recordedAt": "2026-08-08T18:22:30Z",
+  "runtimeGeneration": 205,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T165753Z-a6f03c19",
+  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
+}
