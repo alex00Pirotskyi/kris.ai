@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-PROOF-LINEAGE-20F13462",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
+  "assignedWorker": "ELASTIC-20f13462",
   "baseCommit": "d20a7abde48a217301097eb6e0eed722af3b495a",
   "baseTree": "8a0d2365993b19e360f039971243e54dd581c082",
   "createdAt": "2026-08-08T18:09:00Z",
   "createdBy": "ELASTIC-20f13462",
   "dependencyRequirements": [],
+  "executionRole": "DEFECT_HUNTER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Repair the exact P8 assurance proof-contract coverage defect exposed by the authorized P4 Test Center registry/hierarchy candidate: append exactly one lineageBinding for each of the 18 active tc.p4-001.* source-contract test identities, bind them to the single P4-001 search-provider lineage, preserve every existing evidence contract and lineage binding, and restore exact P8 formal hierarchy validation without behavior/platform/release/support/acceptance promotion.",
@@ -24,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-08T18:09:00Z",
+  "updatedAt": "2026-08-08T18:11:00Z",
   "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462"
 }
