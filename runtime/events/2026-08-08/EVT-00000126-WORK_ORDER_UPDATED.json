@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000126-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "correctionType": "AUTHORITY_BRANCH_REBIND",
+    "branch": "agent/help/elastic-4f6a2c91/mission-004/p4-safe-search",
+    "previousBranch": "integration/p4-001-current-main-4d82c7fa",
+    "reason": "Branch budget is 60/60. This existing P4-local branch has no pull request, no active runtime semaphore, and contains already-consumed P4 bytes. Rebinding the one-path Test Center AUTHORITY semaphore avoids creating branch 61 while preserving the exact allowed resource."
+  },
+  "recordedAt": "2026-08-08T09:52:00Z",
+  "runtimeGeneration": 126,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+}
