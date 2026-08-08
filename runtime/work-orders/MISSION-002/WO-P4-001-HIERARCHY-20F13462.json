@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "config/test_center_assurance_hierarchy.v1.json"
+  ],
+  "baseCommit": "f8cf56da45a5c373666237ab13d02f9e763a1591",
+  "baseTree": "764b264c8c6a45b675a7864ec478e57aca20c3b3",
+  "createdAt": "2026-08-08T17:38:30Z",
+  "createdBy": "ELASTIC-20f13462",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-002",
+  "objective": "As MISSION-002 owner of test-center-hierarchy, append exactly one source-only assurance binding for each of the 18 canonical P4-001 Test Center IDs introduced by the authorized P4 registry helper. Bind each source_contract P4 test to architecture_lint, preserve all existing P8 hierarchy and pending migration records, reject conflicts, and restore exact P8 formal-hierarchy compatibility without promoting behavior, platform, release, acceptance, production, or GA support.",
+  "parentProductPr": 65,
+  "parentWorkOrderId": null,
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "exactly 18 P4-001 testBindings are appended and all pre-existing hierarchy records are preserved",
+    "each tc.p4-001.* source_contract identity binds to architecture_lint exactly once",
+    "python tool/test_center_assurance_hierarchy.py check --project . PASS",
+    "python -m unittest -v tool/test_center_assurance_hierarchy_test.py tool/test_center_assurance_enforcement_test.py PASS",
+    "canonical Test Center contracts PASS",
+    "no behavior/platform/release/support/acceptance promotion"
+  ],
+  "roadmapTask": "P8-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-08T17:38:30Z",
+  "workOrderId": "WO-P4-001-HIERARCHY-20F13462"
+}
