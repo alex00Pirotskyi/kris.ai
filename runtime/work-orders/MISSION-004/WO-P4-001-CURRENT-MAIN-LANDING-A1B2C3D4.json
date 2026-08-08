@@ -1,6 +1,11 @@
 {
-  "activeSemaphoreId": "SEM-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
-  "allowedPaths": ["services/research_worker/**", "tool/p4_001*.py", "schemas/web_search_*.json", "release/evidence/P4-*/**", ".github/workflows/p4-001*.yml"],
+  "allowedPaths": [
+    "services/research_worker/**",
+    "tool/p4_001*.py",
+    "schemas/web_search_*.json",
+    "release/evidence/P4-*/**",
+    ".github/workflows/p4-001*.yml"
+  ],
   "assignedWorker": "ELASTIC-a1b2c3d4",
   "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
   "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
@@ -15,11 +20,18 @@
   "parentProductPr": 62,
   "priority": 100,
   "requestedRole": "INTEGRATOR",
-  "requiredTests": ["effective current-main diff contains only P4-owned product/test/evidence plus explicitly authorized shared authority", "P4 Search Provider exact-current tri-platform PASS", "product-gates exact-current tri-platform PASS", "canonical Test Center/P8 compatibility PASS", "deterministic SOURCE_MANIFEST finalization", "post-main exact product-gates before LANDED_MAIN"],
+  "requiredTests": [
+    "effective current-main diff contains only P4-owned product/test/evidence plus explicitly authorized shared authority",
+    "P4 Search Provider exact-current tri-platform PASS",
+    "product-gates exact-current tri-platform PASS",
+    "canonical Test Center/P8 compatibility PASS",
+    "deterministic SOURCE_MANIFEST finalization",
+    "post-main exact product-gates before LANDED_MAIN"
+  ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T07:43:00Z",
+  "updatedAt": "2026-08-08T08:37:32Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }
