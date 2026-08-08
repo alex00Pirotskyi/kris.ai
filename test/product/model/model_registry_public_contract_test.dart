@@ -186,8 +186,8 @@ void main() {
     });
 
     test('public source documents the host-controlled trust boundary', () {
-      final source = File('lib/product/model/model_registry.dart')
-          .readAsStringSync();
+      final source =
+          File('lib/product/model/model_registry.dart').readAsStringSync();
       expect(source, contains('host-controlled benchmark authority'));
       expect(
         source,

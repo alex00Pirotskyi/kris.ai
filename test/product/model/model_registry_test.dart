@@ -444,7 +444,8 @@ void main() {
       );
     });
 
-    test('caller benchmark verification rejects unknown signer and forged score',
+    test(
+        'caller benchmark verification rejects unknown signer and forged score',
         () {
       final unknownSigner = _benchmarkJson();
       final authority = ((unknownSigner['evidence']
