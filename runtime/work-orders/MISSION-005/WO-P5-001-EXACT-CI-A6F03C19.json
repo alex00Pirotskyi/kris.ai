@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P5-001-F6503F88",
   "allowedPaths": [
     "lib/product/p5_information_architecture/**"
   ],
+  "assignedWorker": "ELASTIC-QWEN-FFFAF973",
   "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
   "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
   "createdAt": "2026-08-08T18:36:00Z",
   "createdBy": "WRK-20260808T165753Z-a6f03c19",
   "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Dispatch and validate an exact canonical product-gates run for Product PR #72 head b9be61899ab0792c7e194299324e7cb53c494f20 after the governed nine-entry P5 source-inventory authority integration. Do not mutate Product source merely to trigger CI and do not promote support/acceptance from CI alone.",
@@ -21,8 +24,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-08T18:36:00Z",
+  "updatedAt": "2026-08-08T22:15:11Z",
   "workOrderId": "WO-P5-001-EXACT-CI-A6F03C19"
 }
