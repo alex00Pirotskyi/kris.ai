@@ -1,0 +1,29 @@
+{
+  "activeSemaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+  "allowedPaths": ["config/test_center_registry.v1.json"],
+  "assignedWorker": "ELASTIC-4d82c7fa",
+  "baseCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "createdAt": "2026-08-08T09:15:00Z",
+  "createdBy": "ELASTIC-4d82c7fa",
+  "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_HELPER",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "On the short-lived current-main P4 landing candidate, preserve every current protected-main Test Center record and union only the canonical P4-001 module, stable test cases, project profiles, and affected mappings from exact P4 Product head 3d11ef075559df2543cf56cf096dd26357cf3a37. Do not import historical P8/Test Center bytes wholesale and do not promote support or acceptance.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "AUTHORITY_HELPER",
+  "requiredTests": [
+    "current-main Test Center entries are byte/semantic preserved except deterministic list union",
+    "P4-001 module/test/profile/mapping identities are present exactly once",
+    "canonical Test Center contract validation PASS",
+    "P4-001 Test Center adapter check PASS"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "AUTHORITY_FINALIZATION",
+  "updatedAt": "2026-08-08T09:15:00Z",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+}

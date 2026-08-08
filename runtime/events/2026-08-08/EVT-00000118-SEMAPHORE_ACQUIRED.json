@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000118-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "authorityId": "shared-test-center-current-main-union",
+    "branch": "integration/p4-001-current-main-4d82c7fa",
+    "kind": "WRITE",
+    "parentWorkOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+    "resourceId": "config/test_center_registry.v1.json",
+    "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+    "workerIdentity": "ELASTIC-4d82c7fa"
+  },
+  "recordedAt": "2026-08-08T09:16:00Z",
+  "runtimeGeneration": 118,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+}

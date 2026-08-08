@@ -1,0 +1,21 @@
+{
+  "allowedPaths": ["config/test_center_registry.v1.json"],
+  "authorityId": "shared-test-center-current-main-union",
+  "baseCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "integration/p4-001-current-main-4d82c7fa",
+  "createdAt": "2026-08-08T09:16:00Z",
+  "executionRole": "AUTHORITY_HELPER",
+  "expiresAt": "2026-08-08T13:16:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-08T09:16:00Z",
+  "resourceId": "config/test_center_registry.v1.json",
+  "runtimeGeneration": 118,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+  "workerIdentity": "ELASTIC-4d82c7fa"
+}
