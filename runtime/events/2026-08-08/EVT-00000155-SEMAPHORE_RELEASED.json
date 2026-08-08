@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000155-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-006",
+  "payload": {
+    "nextStatus": "REVIEW",
+    "semaphoreId": "SEM-P6-BENCHMARK-TRUST-ROOT-B450571C"
+  },
+  "recordedAt": "2026-08-08T12:04:30Z",
+  "runtimeGeneration": 155,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095218Z-3a375f9b",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}

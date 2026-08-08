@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-BENCHMARK-TRUST-ROOT-B450571C",
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
     "test/product/model/model_registry_identity_guard_test.dart",
@@ -31,8 +30,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "REVIEW",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-08T10:43:00Z",
+  "updatedAt": "2026-08-08T12:04:30Z",
   "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
 }
