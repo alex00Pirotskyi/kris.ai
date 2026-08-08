@@ -1,15 +1,18 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P6-001-192EDD81",
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
     "test/product/model/model_registry_identity_guard_test.dart",
     "test/product/model/model_registry_test.dart",
     "test/product/model/model_registry_public_contract_test.dart"
   ],
+  "assignedWorker": "ELASTIC-QWEN-550FF434",
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
   "createdAt": "2026-08-08T12:08:00Z",
   "createdBy": "ELASTIC-b450571c",
   "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Perform a fresh context-independent exact-head R1 technical/security review of P6-001 helper PR #118 at commit a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614. Verify that public caller-supplied benchmark keys/candidate mappings cannot create approval-bearing trusted execution, content-addressed/evaluation-only flows remain valid, and the four-file repair does not weaken identity quarantine. Treat product-gates run 31256124828 truthfully: full Flutter tests pass on Windows/Linux/macOS, while the later architecture gate fails only because historical P6 ancestry carries a pre-governed validate_release.py that protected main has already superseded. Do not claim P6 acceptance/support or certify the historical PR #76 as a main landing vehicle.",
@@ -27,7 +30,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "REVIEW",
+  "updatedAt": "2026-08-08T15:36:04Z",
   "workOrderId": "WO-P6-001-HELPER-118-R1-B450571C"
 }
