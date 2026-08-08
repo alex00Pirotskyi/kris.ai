@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000192-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-002",
+  "payload": {
+    "semaphoreId": "SEM-P4-001-HIERARCHY-20F13462"
+  },
+  "recordedAt": "2026-08-08T17:53:00Z",
+  "runtimeGeneration": 192,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T170212Z-e5eb8e85",
+  "workOrderId": "WO-P4-001-HIERARCHY-20F13462"
+}
