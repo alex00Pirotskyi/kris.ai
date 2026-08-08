@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000208-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2",
+    "workerIdentity": "ELASTIC-GPT-7C4E91B2"
+  },
+  "recordedAt": "2026-08-08T18:31:00Z",
+  "runtimeGeneration": 208,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T174049Z-7c4e91b2",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2"
+}
