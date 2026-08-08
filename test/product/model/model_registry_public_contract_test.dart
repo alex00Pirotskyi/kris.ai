@@ -77,7 +77,7 @@ ModelBenchmarkTrustContext _callerSuppliedTrust() {
     const ProtectedKeyHandleV2(
       keyId: benchmarkAuthorityKeyId,
       purpose: ModelBenchmarkTrustContext.signerPurpose,
-      provider: 'caller_supplied',
+      provider: 'ephemeral_test',
       reference: 'caller://self-authored-benchmark-key',
       publicKeyHex: benchmarkAuthorityPublicKey,
       trustDomain: ModelBenchmarkTrustContext.trustDomain,
