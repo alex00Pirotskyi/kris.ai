@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000240-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-006",
+  "payload": {
+    "nextStatus": "LANDED",
+    "semaphoreId": "SEM-P6-001-HELPER-118-R1-7E4B91C2"
+  },
+  "recordedAt": "2026-08-08T23:06:00Z",
+  "runtimeGeneration": 240,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222338Z-7e4b91c2",
+  "workOrderId": "WO-P6-001-HELPER-118-R1-B450571C"
+}

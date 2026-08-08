@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-001-HELPER-118-R1-7E4B91C2",
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
     "test/product/model/model_registry_identity_guard_test.dart",
@@ -30,8 +29,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "REVIEW",
-  "updatedAt": "2026-08-08T22:34:00Z",
+  "updatedAt": "2026-08-08T23:06:00Z",
   "workOrderId": "WO-P6-001-HELPER-118-R1-B450571C"
 }
