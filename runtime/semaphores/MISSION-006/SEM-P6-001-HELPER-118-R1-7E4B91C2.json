@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart",
+    "test/product/model/model_registry_test.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "branch": "agent/g/mission-006-model-routing",
+  "createdAt": "2026-08-08T22:37:00Z",
+  "executionRole": "REVIEWER",
+  "expiresAt": "2026-08-09T02:37:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "refreshedAt": "2026-08-08T22:37:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 225,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-HELPER-118-R1-7E4B91C2",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-HELPER-118-R1-B450571C",
+  "workerIdentity": "ELASTIC-7e4b91c2"
+}
