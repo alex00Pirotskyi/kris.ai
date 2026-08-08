@@ -17,6 +17,12 @@ The connector command exception is intentional: an AUTHORITY semaphore and the
 command that exercises it must become durable atomically, so there is never an
 unlocked-command window. Arbitrary docs/control/product paths remain forbidden.
 
+A single exact historical split-generation pair may be configured for immutable
+history that was accidentally published as adjacent event-only and state-only
+commits. The compatibility exception is accepted only when both full commit
+SHAs, their adjacency, generation numbers, changed-path shapes, and event/state
+binding all match. It never relaxes any other runtime generation.
+
 Commits that do not touch ``runtime/**`` are control/documentation sync and are
 not runtime-generation transitions.
 """
@@ -124,6 +130,164 @@ def validate_command_document(
     return violations
 
 
+def _require_full_sha(value: Any, label: str) -> str:
+    if (
+        not isinstance(value, str)
+        or len(value) != 40
+        or value.lower() != value
+        or any(ch not in "0123456789abcdef" for ch in value)
+    ):
+        raise ValueError(f"HISTORICAL_SPLIT_{label}_INVALID")
+    return value
+
+
+def validate_historical_split_generation_pair(
+    *,
+    runtime_project: pathlib.Path,
+    commits: list[str],
+    atomicity: dict[str, Any],
+    runtime_prefix: str,
+    event_prefix: str,
+    enforce_from: int,
+) -> tuple[set[str], dict[str, Any] | None]:
+    configured = atomicity.get("historicalSplitGenerationPair")
+    if configured is None:
+        return set(), None
+    if not isinstance(configured, dict):
+        raise ValueError("HISTORICAL_SPLIT_CONFIG_NOT_OBJECT")
+
+    required_keys = {"eventOnlyCommit", "stateOnlyCommit", "runtimeGeneration"}
+    if set(configured) != required_keys:
+        raise ValueError(
+            "HISTORICAL_SPLIT_CONFIG_KEYS_INVALID:"
+            + ",".join(sorted(set(configured) ^ required_keys))
+        )
+
+    event_commit = _require_full_sha(configured.get("eventOnlyCommit"), "EVENT_COMMIT")
+    state_commit = _require_full_sha(configured.get("stateOnlyCommit"), "STATE_COMMIT")
+    generation_value = configured.get("runtimeGeneration")
+    if (
+        isinstance(generation_value, bool)
+        or not isinstance(generation_value, int)
+        or generation_value < enforce_from
+    ):
+        raise ValueError("HISTORICAL_SPLIT_GENERATION_INVALID")
+    generation = generation_value
+
+    try:
+        event_index = commits.index(event_commit)
+        state_index = commits.index(state_commit)
+    except ValueError as exc:
+        raise ValueError("HISTORICAL_SPLIT_COMMIT_NOT_IN_FIRST_PARENT_HISTORY") from exc
+    if state_index != event_index + 1:
+        raise ValueError("HISTORICAL_SPLIT_COMMITS_NOT_ADJACENT")
+
+    event_parent_record = run_git(
+        runtime_project, "rev-list", "--parents", "-n", "1", event_commit
+    ).split()
+    state_parent_record = run_git(
+        runtime_project, "rev-list", "--parents", "-n", "1", state_commit
+    ).split()
+    if len(event_parent_record) < 2:
+        raise ValueError("HISTORICAL_SPLIT_EVENT_PARENT_MISSING")
+    if len(state_parent_record) < 2 or state_parent_record[1] != event_commit:
+        raise ValueError("HISTORICAL_SPLIT_STATE_PARENT_MISMATCH")
+    event_parent = event_parent_record[1]
+
+    parent_meta = show_json(runtime_project, event_parent, "runtime/meta.json")
+    event_meta = show_json(runtime_project, event_commit, "runtime/meta.json")
+    state_meta = show_json(runtime_project, state_commit, "runtime/meta.json")
+    if parent_meta is None or event_meta is None or state_meta is None:
+        raise ValueError("HISTORICAL_SPLIT_RUNTIME_META_MISSING")
+    parent_generation = int(parent_meta.get("runtimeGeneration", -1))
+    event_meta_generation = int(event_meta.get("runtimeGeneration", -1))
+    state_generation = int(state_meta.get("runtimeGeneration", -1))
+    if parent_generation != generation - 1:
+        raise ValueError(
+            f"HISTORICAL_SPLIT_PARENT_GENERATION_MISMATCH:{parent_generation}!={generation - 1}"
+        )
+    if event_meta_generation != generation - 1:
+        raise ValueError(
+            f"HISTORICAL_SPLIT_EVENT_META_GENERATION_MISMATCH:{event_meta_generation}!={generation - 1}"
+        )
+    if state_generation != generation:
+        raise ValueError(
+            f"HISTORICAL_SPLIT_STATE_GENERATION_MISMATCH:{state_generation}!={generation}"
+        )
+
+    event_entries = changed_entries(runtime_project, event_parent, event_commit)
+    event_runtime_entries = [
+        (status, path) for status, path in event_entries if path.startswith(runtime_prefix)
+    ]
+    event_non_runtime_entries = [
+        path for _, path in event_entries if not path.startswith(runtime_prefix)
+    ]
+    if event_non_runtime_entries:
+        raise ValueError(
+            "HISTORICAL_SPLIT_EVENT_HAS_NON_RUNTIME_PATHS:"
+            + ",".join(sorted(event_non_runtime_entries))
+        )
+    if len(event_runtime_entries) != 1:
+        raise ValueError(
+            f"HISTORICAL_SPLIT_EVENT_RUNTIME_PATH_COUNT:{len(event_runtime_entries)}"
+        )
+    event_status, event_path = event_runtime_entries[0]
+    if event_status != "A" or not event_path.startswith(event_prefix) or not event_path.endswith(".json"):
+        raise ValueError(
+            f"HISTORICAL_SPLIT_EVENT_PATH_INVALID:{event_status}:{event_path}"
+        )
+    event = show_json(runtime_project, event_commit, event_path)
+    if event is None:
+        raise ValueError("HISTORICAL_SPLIT_EVENT_NOT_READABLE")
+    if event.get("schemaVersion") != 1:
+        raise ValueError("HISTORICAL_SPLIT_EVENT_SCHEMA_VERSION_INVALID")
+    if int(event.get("runtimeGeneration", -1)) != generation:
+        raise ValueError(
+            f"HISTORICAL_SPLIT_EVENT_GENERATION_MISMATCH:{event.get('runtimeGeneration')}!={generation}"
+        )
+    event_id = event.get("eventId")
+    if not isinstance(event_id, str) or pathlib.PurePosixPath(event_path).stem != event_id:
+        raise ValueError("HISTORICAL_SPLIT_EVENT_ID_MISMATCH")
+    work_order_id = event.get("workOrderId")
+    if not isinstance(work_order_id, str) or not work_order_id:
+        raise ValueError("HISTORICAL_SPLIT_EVENT_WORK_ORDER_ID_MISSING")
+
+    state_entries = changed_entries(runtime_project, event_commit, state_commit)
+    state_runtime_entries = [
+        (status, path) for status, path in state_entries if path.startswith(runtime_prefix)
+    ]
+    state_non_runtime_entries = [
+        path for _, path in state_entries if not path.startswith(runtime_prefix)
+    ]
+    if state_non_runtime_entries:
+        raise ValueError(
+            "HISTORICAL_SPLIT_STATE_HAS_NON_RUNTIME_PATHS:"
+            + ",".join(sorted(state_non_runtime_entries))
+        )
+    state_runtime_paths = {path for _, path in state_runtime_entries}
+    if "runtime/meta.json" not in state_runtime_paths:
+        raise ValueError("HISTORICAL_SPLIT_STATE_META_MISSING")
+    if any(path.startswith(event_prefix) for _, path in state_runtime_entries):
+        raise ValueError("HISTORICAL_SPLIT_STATE_CONTAINS_EVENT")
+    expected_work_order_suffix = f"/{work_order_id}.json"
+    if not any(
+        path.startswith("runtime/work-orders/") and path.endswith(expected_work_order_suffix)
+        for _, path in state_runtime_entries
+    ):
+        raise ValueError("HISTORICAL_SPLIT_STATE_WORK_ORDER_BINDING_MISSING")
+    if len(state_runtime_paths - {"runtime/meta.json"}) < 1:
+        raise ValueError("HISTORICAL_SPLIT_STATE_MUTATION_MISSING")
+
+    normalized = {
+        "eventOnlyCommit": event_commit,
+        "stateOnlyCommit": state_commit,
+        "runtimeGeneration": generation,
+        "eventPath": event_path,
+        "workOrderId": work_order_id,
+    }
+    return {event_commit, state_commit}, normalized
+
+
 def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str, Any]:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     atomicity = config.get("runtimeAtomicity") or {}
@@ -133,6 +297,14 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
     command_prefix = str(atomicity.get("commandPathPrefix", DEFAULT_COMMAND_PREFIX))
 
     commits = run_git(runtime_project, "rev-list", "--first-parent", "--reverse", "HEAD").splitlines()
+    historical_split_commits, historical_split = validate_historical_split_generation_pair(
+        runtime_project=runtime_project,
+        commits=commits,
+        atomicity=atomicity,
+        runtime_prefix=runtime_prefix,
+        event_prefix=event_prefix,
+        enforce_from=enforce_from,
+    )
     violations: list[str] = []
     audited: list[dict[str, Any]] = []
 
@@ -157,6 +329,23 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
         parent_generation = (
             int(parent_meta.get("runtimeGeneration", -1)) if parent_meta is not None else None
         )
+        runtime_paths = {path for _, path in runtime_entries}
+
+        if commit in historical_split_commits:
+            audited.append(
+                {
+                    "commit": commit,
+                    "parent": parent,
+                    "runtimeGeneration": generation,
+                    "parentRuntimeGeneration": parent_generation,
+                    "changedRuntimePaths": sorted(runtime_paths),
+                    "commandEnvelopePaths": [],
+                    "historicalSplitGenerationPair": True,
+                    "violations": [],
+                }
+            )
+            continue
+
         commit_violations: list[str] = []
 
         if parent_generation is None:
@@ -166,7 +355,6 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
                 f"GENERATION_NOT_SINGLE_STEP:{parent_generation}->{generation}"
             )
 
-        runtime_paths = {path for _, path in runtime_entries}
         if "runtime/meta.json" not in runtime_paths:
             commit_violations.append("RUNTIME_CHANGE_WITHOUT_META")
 
@@ -246,6 +434,7 @@ def audit(runtime_project: pathlib.Path, config_path: pathlib.Path) -> dict[str,
         "schemaVersion": 1,
         "enforceFromGeneration": enforce_from,
         "commandPathPrefix": command_prefix,
+        "historicalSplitGenerationPair": historical_split,
         "auditedTransitions": audited,
         "violations": violations,
         "pass": not violations,

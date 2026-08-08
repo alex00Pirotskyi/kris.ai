@@ -18,7 +18,12 @@
   "runtimeAtomicity": {
     "enforceFromGeneration": 12,
     "runtimePathPrefix": "runtime/",
-    "eventPathPrefix": "runtime/events/"
+    "eventPathPrefix": "runtime/events/",
+    "historicalSplitGenerationPair": {
+      "eventOnlyCommit": "27f71098961b0400060250143abdb43c9cd197fb",
+      "stateOnlyCommit": "fe702e35c9305ad7e4640c39f75b7c3e31f31bb3",
+      "runtimeGeneration": 131
+    }
   },
   "target": {
     "longLivedCanonicalBranches": 15,
