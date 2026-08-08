@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000161-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "reason": "rebind ghost-reaped READY child Work Orders to live canonical P4 head",
+    "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+    "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
+    "workOrderIds": [
+      "WO-P4-001-CLEAN-MANIFEST-4D82C7FA",
+      "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+    ]
+  },
+  "recordedAt": "2026-08-08T12:53:47Z",
+  "runtimeGeneration": 161,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T125347Z-7b1e4c90",
+  "workOrderId": null
+}

@@ -1,8 +1,8 @@
 {
   "allowedPaths": ["config/test_center_registry.v1.json"],
   "assignedWorker": "ELASTIC-4d82c7fa",
-  "baseCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
-  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+  "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
   "createdAt": "2026-08-08T09:15:00Z",
   "createdBy": "ELASTIC-4d82c7fa",
   "dependencyRequirements": [],
@@ -24,6 +24,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T12:45:39Z",
+  "updatedAt": "2026-08-08T12:53:47Z",
   "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
 }
