@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P8-001-PENDING-MIGRATION-5948C03B",
   "allowedPaths": [
     "tool/test_center_assurance_semantics.py",
     "tool/test_center_assurance_hierarchy_test.py"
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T23:05:30Z",
+  "updatedAt": "2026-08-08T23:13:30Z",
   "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2"
 }

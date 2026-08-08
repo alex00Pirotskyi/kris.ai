@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000244-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-002",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P8-001-PENDING-MIGRATION-5948C03B"
+  },
+  "recordedAt": "2026-08-08T23:14:00Z",
+  "runtimeGeneration": 244,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T223048Z-5948c03b",
+  "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2"
+}
