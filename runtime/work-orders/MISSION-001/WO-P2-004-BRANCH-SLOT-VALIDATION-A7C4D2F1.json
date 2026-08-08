@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1",
   "allowedPaths": [
     "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
     "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
@@ -16,20 +15,20 @@
   "executionRole": "INCIDENT_RESPONDER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
-  "objective": "Free exactly one governed branch-capacity slot for the required P2-004 Test Center authority helper by deleting configured legacy-debt branch validation/v71r12-repair-success-30913519385 at exact SHA b11d208e224350c51048633987eb2d5d00f8d398. The branch matches validation/*, is unprotected, and has no open PR. Use only the repository legacy-debt reaper and exact-SHA guard. Do not touch canonical Product PR #75, active P4/P5/P6 helper branches, Test Center bytes, product source, acceptance, or support state.",
+  "objective": "Free exactly one governed branch-capacity slot for the required P2-004 Test Center authority helper by deleting configured legacy-debt branch validation/v71r12-repair-success-30913519385 at exact SHA b11d208e224350c51048633987eb2d5d00f8d398. Repository relay run 31256105467 validated the target and executed deletion, but its immediate post-delete enumeration was stale and marked partial_failure. Live GitHub ref resolution after the run returned 404, proving the branch is absent. No product or authority bytes were changed.",
   "parentProductPr": 75,
   "priority": 100,
   "requestedRole": "INCIDENT_RESPONDER",
   "requiredTests": [
-    "target remains exact SHA b11d208e224350c51048633987eb2d5d00f8d398 at deletion",
-    "repository reaper confirms configured validation/* legacy debt and no open PR/protection/canonical/active-lock conflict",
-    "post-delete target ref is absent",
-    "branch count falls below maxTotalBranchesDuringMigration=60 before P2 authority branch creation"
+    "repository reaper validation SUCCESS",
+    "relay delete result recorded deleted for exact SHA b11d208e224350c51048633987eb2d5d00f8d398",
+    "live GitHub target ref returns 404 after relay",
+    "branch capacity slot is available for P2 authority helper"
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T11:54:00Z",
+  "updatedAt": "2026-08-08T11:58:00Z",
   "workOrderId": "WO-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1"
 }

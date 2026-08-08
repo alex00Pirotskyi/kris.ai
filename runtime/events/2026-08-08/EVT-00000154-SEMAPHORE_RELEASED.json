@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000154-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "nextStatus": "LANDED",
+    "semaphoreId": "SEM-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1"
+  },
+  "recordedAt": "2026-08-08T11:58:00Z",
+  "runtimeGeneration": 154,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1"
+}
