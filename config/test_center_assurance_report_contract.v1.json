@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "contractId": "test-center.assurance-report-contract-v1",
+  "hierarchyId": "test-center.assurance-hierarchy-v1",
+  "executionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
+  "hierarchyRequiredFieldMappings": {
+    "assuranceLevel": "assuranceLevel",
+    "candidateCommit": "candidateCommit",
+    "candidateTree": "candidateTree",
+    "durationMillis": "executionResult.durationMillis",
+    "endedAt": "executionResult.endedAt",
+    "evidenceReferences": "evidenceReferences",
+    "moduleId": "executionResult.moduleId",
+    "platform": "executionResult.platform",
+    "resultState": "executionResult.resultState",
+    "startedAt": "executionResult.startedAt",
+    "testId": "executionResult.testId"
+  },
+  "reportRequiredTopLevelFields": [
+    "schemaVersion",
+    "reportId",
+    "generatedAt",
+    "candidateCommit",
+    "candidateTree",
+    "executionResult",
+    "assuranceLevel",
+    "hierarchyBinding",
+    "requestedSupportImpact",
+    "evidenceReferences",
+    "evidenceBindings",
+    "predecessorResults"
+  ]
+}

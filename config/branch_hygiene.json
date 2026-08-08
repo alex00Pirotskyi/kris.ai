@@ -225,6 +225,10 @@
       "reason": "Retained P2 integration/evidence lineage until owner-risk closure is landed."
     },
     {
+      "name": "merge/p1-p2-owner-risk-qa-preview",
+      "reason": "Active governed P1/P2 landing target; must remain until protected landing completes."
+    },
+    {
       "name": "validated/v71r12-p1-p2-final",
       "reason": "Exact tri-platform validated application candidate anchor."
     },
