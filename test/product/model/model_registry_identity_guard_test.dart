@@ -84,7 +84,7 @@ ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence.fromJson(
       trustContext: _benchmarkTrust(),
     );
 
-ModelDefinition _approvedModel() => ModelDefinition.approved(
+ModelDefinition _registeredModel() => ModelDefinition.evaluationOnly(
       providerId: 'ollama.local',
       modelId: 'qwen3:14b',
       displayName: 'Qwen 3 14B',
@@ -109,7 +109,9 @@ ModelDefinition _approvedModel() => ModelDefinition.approved(
       dataBoundary: ModelDataBoundary.localOnly,
       cost: ModelCostProfile.noDirectCharge(),
       benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
-      approvedTaskClasses: const <String>['code-generation'],
+      evaluationReasons: const <String>[
+        'host-controlled benchmark authority is not configured',
+      ],
     );
 
 ModelIdentity _identity({
@@ -130,21 +132,30 @@ ModelIdentity _identity({
 void main() {
   group('P6-001 discovered identity guard', () {
     test(
-        'exact canonical and alias identities resolve without granting by lookup',
+        'exact canonical and alias identities stay registered but fail closed for approval',
         () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_provider()],
-        models: <ModelDefinition>[_approvedModel()],
+        models: <ModelDefinition>[_registeredModel()],
       );
       for (final name in <String>['qwen3:14b', 'qwen3-latest']) {
-        final resolved = registry.resolveDiscovered(_identity(name: name));
-        expect(resolved.isEvaluationOnly, isFalse);
+        final identity = _identity(name: name);
+        final resolved = registry.resolveDiscovered(identity);
+        expect(resolved.isEvaluationOnly, isTrue);
         expect(resolved.model.registryKey, 'ollama.local::qwen3:14b');
-        final handle = registry.requireApproved(
-          identity: _identity(name: name),
-          taskClassId: 'code-generation',
+        expect(
+          () => registry.requireApproved(
+            identity: identity,
+            taskClassId: 'code-generation',
+          ),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('is not approved for code-generation'),
+            ),
+          ),
         );
-        expect(handle.model.registryKey, 'ollama.local::qwen3:14b');
       }
     });
 
@@ -183,7 +194,7 @@ void main() {
     test('quarantine identity is deterministic for repeated discovery', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_provider()],
-        models: <ModelDefinition>[_approvedModel()],
+        models: <ModelDefinition>[_registeredModel()],
       );
       final identity = _identity(name: 'qwen3-latest', digest: digestB);
       final first = registry.resolveDiscovered(identity);
@@ -202,7 +213,7 @@ void _expectQuarantined({
 }) {
   final registry = ModelDefinitionRegistry(
     providers: <ModelProviderDescriptor>[_provider()],
-    models: <ModelDefinition>[_approvedModel()],
+    models: <ModelDefinition>[_registeredModel()],
   );
   final resolved = registry.resolveDiscovered(identity);
   expect(resolved.isEvaluationOnly, isTrue);

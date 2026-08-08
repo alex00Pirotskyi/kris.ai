@@ -162,6 +162,31 @@ ModelDefinition _approvedModel({
       approvedTaskClasses: const <String>['code-generation'],
     );
 
+ModelDefinition _registeredModel({
+  String providerId = 'ollama.local',
+  String modelId = 'qwen3:14b',
+  String digest = digestA,
+  Iterable<String> aliases = const <String>['qwen3-latest'],
+  Iterable<ModelBenchmarkEvidence>? benchmarks,
+}) =>
+    ModelDefinition.evaluationOnly(
+      providerId: providerId,
+      modelId: modelId,
+      displayName: 'Qwen 3 14B',
+      digest: digest,
+      parameterSize: '14B',
+      quantization: 'Q4_K_M',
+      aliases: aliases,
+      limits: _measuredLimits(),
+      toolProfile: _measuredNoTools(),
+      dataBoundary: ModelDataBoundary.localOnly,
+      cost: ModelCostProfile.noDirectCharge(),
+      benchmarks: benchmarks ?? <ModelBenchmarkEvidence>[_benchmark()],
+      evaluationReasons: const <String>[
+        'host-controlled benchmark authority is not configured',
+      ],
+    );
+
 ModelIdentity _identity({
   String providerId = 'ollama.local',
   required String name,
@@ -312,7 +337,7 @@ void main() {
     test('discovered malformed digest fails before registry lookup', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_localProvider()],
-        models: <ModelDefinition>[_approvedModel()],
+        models: <ModelDefinition>[_registeredModel()],
       );
       expect(
         () => registry.resolveDiscovered(
@@ -328,7 +353,7 @@ void main() {
       );
     });
 
-    test('benchmark evidence is content-addressed and exact', () {
+    test('benchmark evidence is content-addressed and validation-only', () {
       final benchmark = _benchmark();
       expect(benchmark.modelDigest, digestA);
       expect(benchmark.candidateCommit, candidateCommit);
@@ -336,7 +361,7 @@ void main() {
       expect(benchmark.evidenceSha256, benchmarkEvidenceSha);
       expect(benchmark.evidenceLocationKind, 'embedded_content_addressed');
       expect(benchmark.executionId, benchmarkExecutionId);
-      expect(benchmark.hasTrustedExecutionReceipt, isTrue);
+      expect(benchmark.hasTrustedExecutionReceipt, isFalse);
 
       final badDigest = _benchmarkJson();
       (badDigest['evidence'] as Map<String, Object?>)['sha256'] = digestB;
@@ -384,7 +409,7 @@ void main() {
       );
     });
 
-    test('trusted benchmark authority binds repository commit and tree', () {
+    test('caller benchmark verification binds repository commit and tree', () {
       expect(
         () => ModelBenchmarkEvidence.fromJson(
           _benchmarkJson(),
@@ -419,7 +444,8 @@ void main() {
       );
     });
 
-    test('trusted benchmark authority rejects unknown signer and forged score',
+    test(
+        'caller benchmark verification rejects unknown signer and forged score',
         () {
       final unknownSigner = _benchmarkJson();
       final authority = ((unknownSigner['evidence']
@@ -574,35 +600,25 @@ void main() {
       );
     });
 
-    test('approved JSON requires out-of-band benchmark trust', () {
-      expect(
-        () => ModelDefinition.fromJson(_approvedPolicyJson()),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('no trusted execution authority'),
+    test('approved JSON stays fail-closed with caller benchmark trust', () {
+      for (final benchmarkTrust in <ModelBenchmarkTrustContext?>[
+        null,
+        _benchmarkTrust(),
+      ]) {
+        expect(
+          () => ModelDefinition.fromJson(
+            _approvedPolicyJson(),
+            benchmarkTrust: benchmarkTrust,
           ),
-        ),
-      );
-      final approved = ModelDefinition.fromJson(
-        _approvedPolicyJson(),
-        benchmarkTrust: _benchmarkTrust(),
-      );
-      final registry = ModelDefinitionRegistry(
-        providers: <ModelProviderDescriptor>[_localProvider()],
-        models: <ModelDefinition>[approved],
-      );
-      expect(
-        registry
-            .requireApproved(
-              identity: _identity(name: 'qwen3:14b'),
-              taskClassId: 'code-generation',
-            )
-            .model
-            .registryKey,
-        'ollama.local::qwen3:14b',
-      );
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('no trusted execution authority'),
+            ),
+          ),
+        );
+      }
     });
 
     test('approved policy JSON cannot relabel artifact with stale evidence',
@@ -627,7 +643,7 @@ void main() {
     test('string lookup and runtime metadata never expose approval state', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_localProvider()],
-        models: <ModelDefinition>[_approvedModel()],
+        models: <ModelDefinition>[_registeredModel()],
       );
       for (final name in <String>['qwen3:14b', 'qwen3-latest']) {
         final metadata = registry.lookup('ollama.local', name);
@@ -642,24 +658,28 @@ void main() {
       expect(runtime, isNot(contains('supportStatus')));
     });
 
-    test('only exact discovered identity can yield task approval', () {
+    test('exact discovered identity remains registered but not approved', () {
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[_localProvider()],
-        models: <ModelDefinition>[_approvedModel()],
+        models: <ModelDefinition>[_registeredModel()],
       );
-      final handle = registry.requireApproved(
-        identity: _identity(name: 'qwen3-latest'),
-        taskClassId: 'code-generation',
+      final resolved = registry.resolveDiscovered(
+        _identity(name: 'qwen3-latest'),
       );
-      expect(handle.model.registryKey, 'ollama.local::qwen3:14b');
-      expect(handle.taskClassId, 'code-generation');
-      expect(handle.identity.digest, digestA);
+      expect(resolved.model.registryKey, 'ollama.local::qwen3:14b');
+      expect(resolved.isEvaluationOnly, isTrue);
       expect(
         () => registry.requireApproved(
-          identity: _identity(name: 'qwen3-latest', digest: digestB),
+          identity: _identity(name: 'qwen3-latest'),
           taskClassId: 'code-generation',
         ),
-        throwsA(isA<ModelRegistryValidationException>()),
+        throwsA(
+          isA<ModelRegistryValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('is not approved for code-generation'),
+          ),
+        ),
       );
     });
 
@@ -689,7 +709,7 @@ void main() {
       );
       final registry = ModelDefinitionRegistry(
         providers: <ModelProviderDescriptor>[remote, _localProvider()],
-        models: <ModelDefinition>[evaluation, _approvedModel()],
+        models: <ModelDefinition>[evaluation, _registeredModel()],
       );
       expect(
         registry.providers.map((provider) => provider.providerId),
@@ -720,11 +740,11 @@ void main() {
         () => ModelDefinitionRegistry(
           providers: <ModelProviderDescriptor>[_localProvider()],
           models: <ModelDefinition>[
-            _approvedModel(
+            _registeredModel(
               modelId: 'qwen3:14b',
               aliases: const <String>['shared-alias'],
             ),
-            _approvedModel(
+            _registeredModel(
               modelId: 'qwen3:8b',
               aliases: const <String>['shared-alias'],
             ),
