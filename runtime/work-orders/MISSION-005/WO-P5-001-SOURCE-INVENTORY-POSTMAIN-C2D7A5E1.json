@@ -1,10 +1,13 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1",
   "allowedPaths": ["test/product/source_contract_test.dart"],
+  "assignedWorker": "ELASTIC-c2d7a5e1",
   "baseCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
   "baseTree": "43a26a58cd28aba0a2bcb154898b956bbb98b061",
   "createdAt": "2026-08-08T10:30:00Z",
   "createdBy": "ELASTIC-c2d7a5e1",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Append exactly the nine P5-001 analyzer-visible library paths to the governed source inventory on reconciled canonical Product PR #72 head 6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b. Preserve every current protected-main inventory entry including lib/product/mcp_protocol.dart, make no product-behavior/Test Center/root-manifest change, and prove the resulting inventory is the current-main superset plus exactly the nine P5 paths.",
@@ -18,8 +21,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T10:30:00Z",
+  "updatedAt": "2026-08-08T10:32:00Z",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
 }
