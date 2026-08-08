@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000194-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-004",
+  "payload": {
+    "semaphoreId": "SEM-QWEN-P4-001-7F0B007E"
+  },
+  "recordedAt": "2026-08-08T17:58:44Z",
+  "runtimeGeneration": 194,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T174822Z-2647fd55",
+  "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
+}

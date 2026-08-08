@@ -3,7 +3,7 @@
   "controlPlanePr": 100,
   "createdAt": "2026-08-07T12:06:00Z",
   "purpose": "Mutable Mission Execution 1.5 coordination state. Runtime coordination authority lives here; product source does not.",
-  "runtimeGeneration": 193,
+  "runtimeGeneration": 194,
   "schemaVersion": 1,
-  "updatedAt": "2026-08-08T17:56:00Z"
+  "updatedAt": "2026-08-08T17:58:44Z"
 }
