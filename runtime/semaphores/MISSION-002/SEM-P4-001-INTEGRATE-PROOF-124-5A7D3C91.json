@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "d20a7abde48a217301097eb6e0eed722af3b495a",
+  "baseTree": "8a0d2365993b19e360f039971243e54dd581c082",
+  "branch": "agent/help/elastic-20f13462/mission-002/p4-test-center-hierarchy",
+  "createdAt": "2026-08-08T23:17:10Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-09T03:17:10Z",
+  "kind": "WRITE",
+  "mission": "MISSION-002",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T23:17:10Z",
+  "resourceId": null,
+  "runtimeGeneration": 246,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-INTEGRATE-PROOF-124-5A7D3C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-INTEGRATE-PROOF-124-5A7D3C91",
+  "workerIdentity": "ELASTIC-5a7d3c91"
+}
