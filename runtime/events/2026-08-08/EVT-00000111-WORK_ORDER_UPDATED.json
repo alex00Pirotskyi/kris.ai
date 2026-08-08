@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000111-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "payload": {
+    "repair": "Close the explicit supersession chain required by Mission V1.5 hygiene.",
+    "supersededWorkOrder": "WO-P3-READINESS-TRUST-CLOSURE-6B4E91D2",
+    "successorWorkOrder": "WO-P3-PACKAGING-BINDING-6C8E41F3"
+  },
+  "recordedAt": "2026-08-08T07:35:00Z",
+  "runtimeGeneration": 111,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T073500Z-a1b2c3d4"
+}

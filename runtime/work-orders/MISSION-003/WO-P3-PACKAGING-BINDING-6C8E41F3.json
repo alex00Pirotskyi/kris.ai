@@ -18,7 +18,8 @@
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
   "status": "BLOCKED",
+  "supersedes": "WO-P3-READINESS-TRUST-CLOSURE-6B4E91D2",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T06:53:12Z",
+  "updatedAt": "2026-08-08T07:35:00Z",
   "workOrderId": "WO-P3-PACKAGING-BINDING-6C8E41F3"
 }
