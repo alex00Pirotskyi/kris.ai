@@ -7,15 +7,16 @@
   "createdAt": "2026-08-08T09:15:00Z",
   "createdBy": "ELASTIC-4d82c7fa",
   "dependencyRequirements": [],
-  "executionRole": "AUTHORITY_HELPER",
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
-  "objective": "On the short-lived current-main P4 landing candidate, preserve every current protected-main Test Center record and union only the canonical P4-001 module, stable test cases, project profiles, and affected mappings from exact P4 Product head 3d11ef075559df2543cf56cf096dd26357cf3a37. Do not import historical P8/Test Center bytes wholesale and do not promote support or acceptance.",
+  "objective": "On the short-lived current-main P4 landing candidate, preserve every current protected-main Test Center record and append only the canonical P4-001 module, stable test cases, project profiles, and affected mappings from exact P4 Product head 3d11ef075559df2543cf56cf096dd26357cf3a37 under shared authority test-center-registry. Do not import historical P8/Test Center bytes wholesale and do not promote support or acceptance.",
   "parentProductPr": 62,
+  "parentWorkOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
   "priority": 100,
-  "requestedRole": "AUTHORITY_HELPER",
+  "requestedRole": "AUTHORITY_OWNER",
   "requiredTests": [
-    "current-main Test Center entries are byte/semantic preserved except deterministic list union",
+    "current-main Test Center entries are preserved and P4 records are append-safe",
     "P4-001 module/test/profile/mapping identities are present exactly once",
     "canonical Test Center contract validation PASS",
     "P4-001 Test Center adapter check PASS"
@@ -23,7 +24,7 @@
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
-  "type": "AUTHORITY_FINALIZATION",
-  "updatedAt": "2026-08-08T09:15:00Z",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-08T09:22:00Z",
   "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
 }

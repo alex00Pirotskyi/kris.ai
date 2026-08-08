@@ -6,12 +6,13 @@
   "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
   "createdAt": "2026-08-08T09:18:00Z",
   "createdBy": "ELASTIC-4d82c7fa",
-  "dependencyRequirements": ["WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"],
+  "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Materialize only the canonical SOURCE_MANIFEST.sha256 after the exact current-main P4 source/Test Center composition is complete. Generate twice byte-identically through tool/p1a_refresh_source_manifest.py, preserve product behavior, and make no acceptance/support promotion.",
   "parentProductPr": 62,
+  "parentWorkOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
   "priority": 100,
   "requestedRole": "RELEASE_FINALIZER",
   "requiredTests": [
@@ -24,6 +25,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-08T09:18:00Z",
+  "updatedAt": "2026-08-08T09:22:00Z",
   "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
 }

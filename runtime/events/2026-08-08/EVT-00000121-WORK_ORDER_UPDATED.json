@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000121-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "correctionType": "RUNTIME_TYPE_ROLE_AND_SEMAPHORE_KIND_REPAIR",
+    "correctedWorkOrders": [
+      "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+      "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
+    ],
+    "reason": "Generation 118 hygiene rejected the Test Center child type/role before any product mutation. Shared Test Center is corrected to AUTHORITY_UPDATE/AUTHORITY_OWNER with AUTHORITY semaphore test-center-registry; source manifest is corrected to RELEASE_FINALIZATION/RELEASE_FINALIZER with RELEASE semaphore; both are linked to the parent P4 landing Work Order."
+  },
+  "recordedAt": "2026-08-08T09:30:00Z",
+  "runtimeGeneration": 121,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
