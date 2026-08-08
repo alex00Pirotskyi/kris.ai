@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "agent/help/elastic-gpt-91b4e7c2/mission-002/p4-proof-lineage",
+  "createdAt": "2026-08-08T22:35:28Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-09T02:35:28Z",
+  "kind": "WRITE",
+  "mission": "MISSION-002",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T22:35:28Z",
+  "resourceId": null,
+  "runtimeGeneration": 224,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-PROOF-LINEAGE-GPT-91B4E7C2",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462",
+  "workerIdentity": "ELASTIC-GPT-91B4E7C2"
+}
