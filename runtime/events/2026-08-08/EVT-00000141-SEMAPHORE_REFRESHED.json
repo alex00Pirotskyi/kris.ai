@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000141-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-004",
+  "payload": {
+    "correctionType": "RUNTIME_INTEGRITY_REPAIR",
+    "semaphoreId": "SEM-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+    "restoredBranch": "agent/help/elastic-4f6a2c91/mission-004/p4-safe-search",
+    "reason": "Generation 135 rebound an AUTHORITY semaphore to canonical Product PR branch agent/p4-001-search-provider-foundation. Mission Execution 1.5 requires AUTHORITY semaphores to use a dedicated helper branch; restore the existing dedicated P4 authority branch without changing worker ownership or product source."
+  },
+  "recordedAt": "2026-08-08T10:41:00Z",
+  "runtimeGeneration": 141,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
+}
