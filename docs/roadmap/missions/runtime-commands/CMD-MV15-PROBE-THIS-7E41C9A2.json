@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-MV15-PROBE-THIS-7E41C9A2",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 216,
+  "workOrderId": "WO-MV15-PROBE-REF-CLEANUP-7E41C9A2",
+  "semaphoreId": "SEM-MV15-PROBE-REF-CLEANUP-7E41C9A2",
+  "workerIdentity": "ELASTIC-GPT-7E41C9A2",
+  "productPr": 62,
+  "targetBranch": "THIS_MUST_NOT_BE_CREATED",
+  "expectedTargetHead": "f358414914eccde04aff165fd76d9114fcee0ca2",
+  "createdAt": "2026-08-08T20:43:00Z",
+  "note": "Exact incident cleanup for a negative-control probe ref that escaped branch-creation enforcement."
+}
