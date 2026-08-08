@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000119-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "authorityId": "canonical-source-manifest-finalizer",
+    "branch": "integration/p4-001-current-main-4d82c7fa",
+    "kind": "WRITE",
+    "parentWorkOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+    "resourceId": "SOURCE_MANIFEST.sha256",
+    "semaphoreId": "SEM-P4-001-CLEAN-MANIFEST-4D82C7FA",
+    "workerIdentity": "ELASTIC-4d82c7fa"
+  },
+  "recordedAt": "2026-08-08T09:18:00Z",
+  "runtimeGeneration": 119,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
+}

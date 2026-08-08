@@ -1,0 +1,21 @@
+{
+  "allowedPaths": ["SOURCE_MANIFEST.sha256"],
+  "authorityId": "canonical-source-manifest-finalizer",
+  "baseCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "integration/p4-001-current-main-4d82c7fa",
+  "createdAt": "2026-08-08T09:18:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-08T13:18:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-08T09:18:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 119,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-CLEAN-MANIFEST-4D82C7FA",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA",
+  "workerIdentity": "ELASTIC-4d82c7fa"
+}
