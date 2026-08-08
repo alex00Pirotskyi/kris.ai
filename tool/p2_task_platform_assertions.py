@@ -94,6 +94,11 @@ def sanitized_environment(extra: dict[str, str] | None = None) -> dict[str, str]
         "KRISTIN_P2_TECH_NODE_RECEIPT",
         "KRISTIN_P2_TECH_NATIVE_RECEIPT",
         "KRISTIN_P2_TECH_DART_RECEIPT",
+        "KRISTIN_P2_TECH_AUTHORIZED_ROOT",
+        "KRISTIN_P2_TECH_TRUST_MANIFEST",
+        "KRISTIN_P2_TECH_TRUST_MANIFEST_SHA256",
+        "KRISTIN_P2_TECH_SESSION_ID",
+        "KRISTIN_P2_TECH_NONCE",
         "GITHUB_RUN_ID", "GITHUB_JOB", "RUNNER_NAME",
                 "KRISTIN_P2_APPLICATION_COMPOSITION_EVIDENCE",
         "KRISTIN_P2_TOOLCHAIN_EXTENSION_FINGERPRINT",
@@ -439,12 +444,32 @@ def validate_technology_spike(data: dict) -> dict:
         or data.get("commitSha") != os.environ.get("KRISTIN_P2_COMMIT_SHA")
     ):
         return {"status": "malformed", "reason": "technology_spike_identity"}
+    trust = data.get("trust")
+    try:
+        expected_attempt = int(os.environ.get("GITHUB_RUN_ATTEMPT", "0"))
+    except ValueError:
+        expected_attempt = 0
+    if (
+        not isinstance(trust, dict)
+        or not _nonempty_hex(trust.get("manifestSha256"))
+        or not str(trust.get("measurementSessionId", "")).strip()
+        or trust.get("measurementSessionId") != os.environ.get("KRISTIN_P2_TECH_SESSION_ID")
+        or trust.get("workflowRunId") != os.environ.get("GITHUB_RUN_ID")
+        or trust.get("workflowRunAttempt") != expected_attempt
+        or not _nonempty_hex(trust.get("nonceSha256"))
+        or not str(trust.get("issuedAt", "")).endswith("Z")
+        or not str(trust.get("expiresAt", "")).endswith("Z")
+    ):
+        return {"status": "blocked", "reason": "technology_spike_trust_binding"}
     candidates = data.get("candidates")
     if not isinstance(candidates, list) or [row.get("id") for row in candidates if isinstance(row, dict)] != required_ids:
         return {"status": "blocked", "reason": "technology_spike_candidate_set"}
     if data.get("blockedCandidates") != []:
         return {"status": "blocked", "reason": "technology_spike_blocked_candidates"}
     implementations = set()
+    observation_ids = set()
+    evidence_paths = set()
+    evidence_digests = set()
     for row in candidates:
         if not isinstance(row, dict) or row.get("status") != "passed" or len(row.get("rounds", [])) != 3:
             return {"status": "blocked", "reason": "technology_candidate_not_measured", "candidate": row.get("id") if isinstance(row, dict) else None}
@@ -457,6 +482,22 @@ def validate_technology_spike(data: dict) -> dict:
         for round_row in row.get("rounds", []):
             if not isinstance(round_row, dict) or round_row.get("status") != "passed":
                 return {"status": "blocked", "reason": "technology_round_incomplete", "candidate": row.get("id")}
+            observation_id = str(round_row.get("observationId", ""))
+            evidence_path = str(round_row.get("evidencePath", ""))
+            evidence_digest = round_row.get("evidenceSha256")
+            if (
+                not observation_id
+                or observation_id in observation_ids
+                or not str(round_row.get("observedAt", "")).endswith("Z")
+                or not evidence_path
+                or evidence_path in evidence_paths
+                or not _nonempty_hex(evidence_digest)
+                or evidence_digest in evidence_digests
+            ):
+                return {"status": "blocked", "reason": "technology_round_trusted_identity", "candidate": row.get("id")}
+            observation_ids.add(observation_id)
+            evidence_paths.add(evidence_path)
+            evidence_digests.add(evidence_digest)
             detach = round_row.get("detachReconnect")
             tree = round_row.get("processTree")
             if not isinstance(detach, dict) or not isinstance(tree, dict):
@@ -467,11 +508,18 @@ def validate_technology_spike(data: dict) -> dict:
                 return {"status": "blocked", "reason": "technology_descendant_kill_not_proved", "candidate": row.get("id")}
     if len(implementations) != 3:
         return {"status": "blocked", "reason": "technology_candidates_not_independent"}
+    if len(observation_ids) != 9 or len(evidence_paths) != 9 or len(evidence_digests) != 9:
+        return {"status": "blocked", "reason": "technology_round_identities_not_independent"}
     decision = data.get("decision")
     if not isinstance(decision, dict) or decision.get("status") != "platform_measurement_complete" or decision.get("selected") not in required_ids or decision.get("requiresTriOsAggregation") is not True:
         return {"status": "blocked", "reason": "technology_decision_incomplete"}
-    return {"status": "passed", "selected": decision["selected"], "measuredCandidates": required_ids}
-
+    return {
+        "status": "passed",
+        "selected": decision["selected"],
+        "measuredCandidates": required_ids,
+        "trustManifestSha256": trust["manifestSha256"],
+        "measurementSessionId": trust["measurementSessionId"],
+    }
 
 def main() -> int:
     parser = argparse.ArgumentParser()
