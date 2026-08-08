@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000252-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "Elastic-GPT-c7a4e912:R1_PASS:4890036898:CI_PASS:31283440313",
+    "nextStatus": "HELPER_READY"
+  },
+  "recordedAt": "2026-08-08T23:31:30Z",
+  "runtimeGeneration": 252,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222944Z-c7a4e912",
+  "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2"
+}
