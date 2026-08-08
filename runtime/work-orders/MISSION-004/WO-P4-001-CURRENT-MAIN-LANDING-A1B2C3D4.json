@@ -3,7 +3,6 @@
     "services/research_worker/**",
     "tool/p4_001*.py",
     "schemas/web_search_*.json",
-    "evals/fixtures/p4_001_search_provider/**",
     "release/evidence/P4-*/**",
     ".github/workflows/p4-001*.yml"
   ],
@@ -18,13 +17,13 @@
   "lastActor": "ELASTIC-4d82c7fa",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-004",
-  "objective": "Make P4-001 the next protected-main source landing. Reconcile the existing canonical P4 Product branch onto current protected main without creating another long-lived Product PR or importing stale P8 authority. Preserve current-main P8/Test Center bytes, carry forward only current P4-owned source/tests/evidence plus its canonical network-free fixture and separately authorized P4 Test Center/source-manifest authority, eliminate obsolete ancestry from the effective landing diff, then run exact-current P4/product tri-platform validation, controlled finalization, and protected-main landing. Do not start P4-002+.",
+  "objective": "Make P4-001 the next protected-main source landing. Reconcile the existing canonical P4 Product branch onto current protected main without creating another long-lived Product PR or importing stale P8 authority. Preserve current-main P8/Test Center bytes, carry forward only currently authorized P4-owned source/tests/evidence plus separately authorized P4 Test Center/source-manifest authority, eliminate obsolete ancestry from the effective landing diff, then run exact-current P4/product tri-platform validation, controlled finalization, and protected-main landing. The required deterministic fixture remains a separately tracked control-plane path-policy blocker until MISSION-004 ownership policy authorizes it. Do not start P4-002+.",
   "parentProductPr": 62,
   "priority": 100,
   "requestedRole": "INTEGRATOR",
   "requiredTests": [
-    "effective current-main diff contains only P4-owned product/test/evidence/fixture plus explicitly authorized shared authority",
-    "P4 Search Provider exact-current tri-platform PASS",
+    "effective current-main diff contains only runtime-authorized P4 product/test/evidence plus explicitly authorized shared authority",
+    "P4 Search Provider exact-current tri-platform PASS after fixture path policy is repaired",
     "product-gates exact-current tri-platform PASS",
     "canonical Test Center/P8 compatibility PASS",
     "deterministic SOURCE_MANIFEST finalization",
@@ -34,6 +33,6 @@
   "schemaVersion": 1,
   "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T10:05:00Z",
+  "updatedAt": "2026-08-08T10:34:00Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }
