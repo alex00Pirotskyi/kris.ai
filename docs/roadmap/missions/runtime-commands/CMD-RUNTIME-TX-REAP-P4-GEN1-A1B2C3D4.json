@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 113,
+  "workOrderId": "WO-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4",
+  "semaphoreId": "SEM-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4",
+  "workerIdentity": "ELASTIC-a1b2c3d4",
+  "productPr": 76,
+  "targetBranch": "runtime/tx/p4-integrate-92-gen1",
+  "expectedTargetHead": "1343d0cb05026fbc1628244913a6d6e04510359d",
+  "createdAt": "2026-08-08T07:50:00Z",
+  "note": "Reclaim one obsolete pre-CAS runtime transaction branch for the clean P4 landing candidate; no product mutation."
+}

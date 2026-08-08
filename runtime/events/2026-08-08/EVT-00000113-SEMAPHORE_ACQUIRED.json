@@ -1,0 +1,11 @@
+{
+  "eventId": "EVT-00000113-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {"executionRole":"INCIDENT_RESPONDER","kind":"INTEGRATION","semaphoreId":"SEM-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4","targetBranch":"runtime/tx/p4-integrate-92-gen1","workerIdentity":"ELASTIC-a1b2c3d4"},
+  "recordedAt": "2026-08-08T07:50:00Z",
+  "runtimeGeneration": 113,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T075000Z-a1b2c3d4",
+  "workOrderId": "WO-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4"
+}

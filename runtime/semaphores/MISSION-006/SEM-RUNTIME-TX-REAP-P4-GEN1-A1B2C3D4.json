@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "branch": "agent/g/mission-006-model-routing",
+  "createdAt": "2026-08-08T07:50:00Z",
+  "executionRole": "INCIDENT_RESPONDER",
+  "expiresAt": "2026-08-08T11:50:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "refreshedAt": "2026-08-08T07:50:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 113,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-RUNTIME-TX-REAP-P4-GEN1-A1B2C3D4",
+  "workerIdentity": "ELASTIC-a1b2c3d4"
+}
