@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
+  "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
+  "branch": "agent/g/mission-006-model-routing",
+  "createdAt": "2026-08-08T23:39:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-09T03:39:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "refreshedAt": "2026-08-08T23:39:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 255,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-INTEGRATE-118-C4E91A7F",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-INTEGRATE-118-C4E91A7F",
+  "workerIdentity": "ELASTIC-c4e91a7f"
+}

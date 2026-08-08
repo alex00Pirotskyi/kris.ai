@@ -1,15 +1,18 @@
 {
+  "activeSemaphoreId": "SEM-P6-001-INTEGRATE-118-C4E91A7F",
   "allowedPaths": [
     "lib/product/model/model_registry.dart",
     "test/product/model/model_registry_identity_guard_test.dart",
     "test/product/model/model_registry_test.dart",
     "test/product/model/model_registry_public_contract_test.dart"
   ],
+  "assignedWorker": "ELASTIC-c4e91a7f",
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
   "createdAt": "2026-08-08T23:08:30Z",
   "createdBy": "ELASTIC-c4e91a7f",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Consume exact reviewed helper PR #118 head a9ad6e9171fd8fd43ae1605fb0d87fad30ad1614 into canonical P6 Product PR #76 at eb669431927338e4ae7be3df647d57bc728dfde5 without byte drift. Preserve the bounded caller-controlled benchmark trust-root repair and its exact R1 PASS, close the helper after canonical consumption, then run exact-current canonical P6 validation. Do not treat historical stacked PR #76 as a direct protected-main landing vehicle and do not promote P6 acceptance, behavior, platform, release, production, or GA support.",
@@ -27,8 +30,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-08T23:08:30Z",
+  "updatedAt": "2026-08-08T23:34:00Z",
   "workOrderId": "WO-P6-001-INTEGRATE-118-C4E91A7F"
 }
