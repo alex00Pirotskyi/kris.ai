@@ -1,10 +1,14 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
   "allowedPaths": ["services/research_worker/**", "tool/p4_001*.py", "schemas/web_search_*.json", "release/evidence/P4-*/**", ".github/workflows/p4-001*.yml"],
+  "assignedWorker": "ELASTIC-a1b2c3d4",
   "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
   "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
   "createdAt": "2026-08-08T06:53:12Z",
   "createdBy": "WRK-20260808T065312Z-a1b2c3d4",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
+  "lastActor": "ELASTIC-a1b2c3d4",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-004",
   "objective": "Make P4-001 the next protected-main source landing. Reconcile the existing canonical P4 Product branch onto current protected main without creating another long-lived Product PR or importing stale P8 authority. Preserve current-main P8/Test Center bytes, carry forward only current P4-owned source/tests/evidence plus separately authorized P4 Test Center/source-manifest authority, eliminate obsolete ancestry from the effective landing diff, then run exact-current P4/product tri-platform validation, controlled finalization, and protected-main landing. Do not start P4-002+.",
@@ -14,7 +18,8 @@
   "requiredTests": ["effective current-main diff contains only P4-owned product/test/evidence plus explicitly authorized shared authority", "P4 Search Provider exact-current tri-platform PASS", "product-gates exact-current tri-platform PASS", "canonical Test Center/P8 compatibility PASS", "deterministic SOURCE_MANIFEST finalization", "post-main exact product-gates before LANDED_MAIN"],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
+  "updatedAt": "2026-08-08T07:43:00Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }

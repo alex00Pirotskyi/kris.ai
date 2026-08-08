@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000112-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "mainHead": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+    "productHead": "3d11ef075559df2543cf56cf096dd26357cf3a37",
+    "semaphoreId": "SEM-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+    "strategy": "REVERSE_MAIN_TO_CANONICAL_PRODUCT_BRANCH_RECONCILIATION",
+    "workerIdentity": "ELASTIC-a1b2c3d4"
+  },
+  "recordedAt": "2026-08-08T07:43:00Z",
+  "runtimeGeneration": 112,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T074300Z-a1b2c3d4",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
