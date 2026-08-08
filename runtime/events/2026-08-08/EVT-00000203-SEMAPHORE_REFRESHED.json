@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000203-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-005",
+  "payload": {
+    "semaphoreId": "SEM-P5-001-SOURCE-INVENTORY-A6F03C19"
+  },
+  "recordedAt": "2026-08-08T18:17:30Z",
+  "runtimeGeneration": 203,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T165753Z-a6f03c19",
+  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
+}
