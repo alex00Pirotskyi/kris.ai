@@ -10,8 +10,8 @@ Eligibility is deliberately narrow:
 * exact current runtime generation;
 * INTEGRATING ``BLOCKER_REMOVAL`` Work Order;
 * matching zero-write Product-PR INTEGRATION semaphore;
-* target matches the configured Mission v1.5 legacy-debt patterns or is one
-  exact configured grandfathered runtime-transaction branch;
+* target matches configured Mission v1.5 legacy debt, one exact configured
+  grandfathered runtime-transaction branch, or one exact incident-cleanup ref;
 * target is not main, the runtime/control branch, a canonical Product PR
   branch, or a branch held by any active semaphore;
 * exact target ref exists at the command's reviewed SHA.
@@ -92,12 +92,21 @@ def cleanup_class_for(
     branch: str,
     patterns: list[str],
     exact_grandfathered_branches: list[str] | None = None,
+    exact_incident_cleanup_branches: list[str] | None = None,
 ) -> str:
-    exact = set(exact_grandfathered_branches or [])
-    if not any(fnmatch.fnmatchcase(branch, pattern) for pattern in patterns) and branch not in exact:
-        raise ValueError(f"target branch is not configured Mission v1.5 legacy debt: {branch}")
+    grandfathered = set(exact_grandfathered_branches or [])
+    incident = set(exact_incident_cleanup_branches or [])
+    if (
+        not any(fnmatch.fnmatchcase(branch, pattern) for pattern in patterns)
+        and branch not in grandfathered
+        and branch not in incident
+    ):
+        raise ValueError(f"target branch is not configured Mission v1.5 cleanup debt: {branch}")
     if branch.startswith(("validation/", "validated/")):
         return "failure-snapshot"
+    # Incident probe refs are intentionally mapped to the existing bounded
+    # superseded-repair cleanup class so the downstream executor needs no
+    # broader deletion authority.
     return "superseded-repair"
 
 
@@ -181,7 +190,12 @@ def prepare_reap(project: pathlib.Path, command_path: pathlib.Path) -> dict[str,
         raise ValueError(
             "Mission v1.5 hygiene migration.grandfatheredRuntimeTransactionBranches are invalid"
         )
-    cleanup_class = cleanup_class_for(target, patterns, grandfathered)
+    incident = hygiene.get("incidentCleanupExactBranches", [])
+    if not isinstance(incident, list) or not all(
+        isinstance(item, str) and item for item in incident
+    ):
+        raise ValueError("Mission v1.5 hygiene incidentCleanupExactBranches are invalid")
+    cleanup_class = cleanup_class_for(target, patterns, grandfathered, incident)
 
     remote = _git(project, "ls-remote", "origin", f"refs/heads/{target}").split()
     if len(remote) < 2:

@@ -22,6 +22,8 @@ from mission_runtime_control import (
 from mission_delivery_lib import DeliveryError
 from mission_delivery_strict import validate_review_receipt
 from mission_v15_connector_authority_apply import _append_dart_set_entry
+from mission_v15_hygiene import classify_branch_capacity
+from mission_v15_legacy_branch_reap import cleanup_class_for
 
 
 def git(root: pathlib.Path, *args: str) -> str:
@@ -134,6 +136,70 @@ class ConnectorAuthorityMutationTests(unittest.TestCase):
         )
         self.assertFalse(changed)
         self.assertEqual(updated, source)
+
+
+class BranchCapacityRegressionTests(unittest.TestCase):
+    def policy(self) -> dict:
+        return {
+            "migration": {
+                "maxTotalBranchesDuringMigration": 150,
+                "maxLegacyDebtBranchesDuringMigration": 25,
+                "maxActiveHelperBranches": 20,
+            },
+            "branchCapacity": {
+                "softTotalBranchTarget": 80,
+                "hardNewBranchCreationCeiling": 150,
+            },
+        }
+
+    def test_ordinary_execution_is_not_blocked_by_old_sixty_branch_threshold(self) -> None:
+        capacity = classify_branch_capacity(
+            self.policy(),
+            total_branch_count=62,
+            legacy_debt_count=10,
+            helper_branch_count=12,
+        )
+        self.assertFalse(capacity["newBranchCreationBlocked"])
+        self.assertEqual(capacity["warnings"], [])
+
+    def test_soft_pressure_is_reported_without_becoming_creation_block(self) -> None:
+        capacity = classify_branch_capacity(
+            self.policy(),
+            total_branch_count=81,
+            legacy_debt_count=26,
+            helper_branch_count=21,
+        )
+        self.assertFalse(capacity["newBranchCreationBlocked"])
+        self.assertIn("TOTAL_BRANCH_SOFT_TARGET:81>80", capacity["warnings"])
+        self.assertIn("LEGACY_DEBT_PRESSURE:26>25", capacity["warnings"])
+        self.assertIn("HELPER_BRANCH_PRESSURE:21>20", capacity["warnings"])
+
+    def test_hard_ceiling_blocks_new_branch_creation(self) -> None:
+        capacity = classify_branch_capacity(
+            self.policy(),
+            total_branch_count=150,
+            legacy_debt_count=10,
+            helper_branch_count=12,
+        )
+        self.assertTrue(capacity["newBranchCreationBlocked"])
+
+    def test_exact_incident_probe_is_cleanup_eligible_without_wildcarding_root(self) -> None:
+        self.assertEqual(
+            cleanup_class_for(
+                "THIS_MUST_NOT_BE_CREATED",
+                ["ci/*", "validation/*"],
+                [],
+                ["THIS_MUST_NOT_BE_CREATED"],
+            ),
+            "superseded-repair",
+        )
+        with self.assertRaises(ValueError):
+            cleanup_class_for(
+                "another_unapproved_root_ref",
+                ["ci/*", "validation/*"],
+                [],
+                ["THIS_MUST_NOT_BE_CREATED"],
+            )
 
 
 class ReviewIdentityTests(unittest.TestCase):

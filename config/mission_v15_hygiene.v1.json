@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "migration": {
     "observedTotalBranchesAtCutoverStart": 56,
-    "maxTotalBranchesDuringMigration": 60,
+    "maxTotalBranchesDuringMigration": 150,
     "maxLegacyDebtBranchesDuringMigration": 25,
     "maxActiveHelperBranches": 20,
     "maxRuntimeTransactionBranchesDuringMigration": 5,
@@ -15,6 +15,17 @@
       "runtime/tx/p11-integrate-95-gen4"
     ]
   },
+  "branchCapacity": {
+    "softTotalBranchTarget": 80,
+    "hardNewBranchCreationCeiling": 150,
+    "enforcementScope": "NEW_BRANCH_CREATION_ONLY",
+    "genericPreflight": "REPORT_CAPACITY_DO_NOT_BLOCK_UNRELATED_EXECUTION"
+  },
+  "incidentCleanupExactBranches": [
+    "THIS_MUST_NOT_BE_CREATED",
+    "bad_probe_again",
+    "noop_should_not_exist"
+  ],
   "runtimeAtomicity": {
     "enforceFromGeneration": 12,
     "runtimePathPrefix": "runtime/",
