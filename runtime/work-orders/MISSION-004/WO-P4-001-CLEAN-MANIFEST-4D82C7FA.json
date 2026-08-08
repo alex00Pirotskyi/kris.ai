@@ -1,8 +1,10 @@
 {
-  "allowedPaths": ["SOURCE_MANIFEST.sha256"],
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
   "assignedWorker": "ELASTIC-4d82c7fa",
-  "baseCommit": "3d11ef075559df2543cf56cf096dd26357cf3a37",
-  "baseTree": "b43e4e2e42a62b5f3b0d0fad5ab9deb986b4e27a",
+  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
+  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
   "createdAt": "2026-08-08T09:18:00Z",
   "createdBy": "ELASTIC-4d82c7fa",
   "dependencyRequirements": [],
@@ -24,6 +26,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-08T12:53:47Z",
+  "updatedAt": "2026-08-08T15:25:03Z",
   "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
 }
