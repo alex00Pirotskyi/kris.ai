@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json",
+    "services/research_worker/test/support.py",
+    "tool/p4_001_search_provider_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
+  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
+  "branch": "agent/local-qwen/elastic-qwen-58e89365/mission-004/wo-p4-001-fixture-rehome-b450571c-d53c2a79",
+  "createdAt": "2026-08-08T17:23:59Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-08T19:23:59Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T17:23:59Z",
+  "resourceId": null,
+  "runtimeGeneration": 180,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P4-001-D53C2A79",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C",
+  "workerIdentity": "ELASTIC-QWEN-58E89365"
+}
