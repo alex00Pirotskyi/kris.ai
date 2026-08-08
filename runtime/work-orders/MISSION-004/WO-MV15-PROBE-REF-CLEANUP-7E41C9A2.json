@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-MV15-PROBE-REF-CLEANUP-7E41C9A2",
   "allowedPaths": [
     "release/evidence/P4-*/**"
   ],
@@ -26,8 +25,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T20:41:00Z",
+  "updatedAt": "2026-08-08T20:53:00Z",
   "workOrderId": "WO-MV15-PROBE-REF-CLEANUP-7E41C9A2"
 }

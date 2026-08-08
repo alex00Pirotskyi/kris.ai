@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000217-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "LANDED",
+    "semaphoreId": "SEM-MV15-PROBE-REF-CLEANUP-7E41C9A2"
+  },
+  "recordedAt": "2026-08-08T20:53:00Z",
+  "runtimeGeneration": 217,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T202000Z-7e41c9a2",
+  "workOrderId": "WO-MV15-PROBE-REF-CLEANUP-7E41C9A2"
+}
