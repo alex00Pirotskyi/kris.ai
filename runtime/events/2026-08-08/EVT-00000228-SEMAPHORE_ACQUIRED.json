@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000228-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "AUTHORITY",
+    "semaphoreId": "SEM-P5-001-TEST-CENTER-REGISTRY-5948C03B",
+    "workerIdentity": "ELASTIC-gpt-5948c03b"
+  },
+  "recordedAt": "2026-08-08T22:45:30Z",
+  "runtimeGeneration": 228,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T223048Z-5948c03b",
+  "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B"
+}

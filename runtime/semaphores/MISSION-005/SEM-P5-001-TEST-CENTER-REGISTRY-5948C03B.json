@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "authorityId": "test-center-registry",
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "branch": "agent/help/elastic-gpt-5948c03b/mission-005/p5-test-center-registry",
+  "createdAt": "2026-08-08T22:45:30Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-08T23:45:30Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T22:45:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 228,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-TEST-CENTER-REGISTRY-5948C03B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B",
+  "workerIdentity": "ELASTIC-gpt-5948c03b"
+}

@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-TEST-CENTER-REGISTRY-5948C03B",
   "allowedPaths": [
     "config/test_center_registry.v1.json"
   ],
+  "assignedWorker": "ELASTIC-gpt-5948c03b",
   "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
   "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
   "createdAt": "2026-08-08T22:42:45Z",
   "createdBy": "ELASTIC-gpt-5948c03b",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Restore the exact P5-001 Test Center registry identities required by the canonical P5 validator using append-safe shared authority only. Copy only the missing P5-owned module, ten stable test cases, ten matching non-mutating profiles, and ten affected-test mappings from trusted P5 source commit 67586763bb055faab76e4994184da78f77bd9810 onto the exact current P5 canonical base, preserving all newer Test Center records and semantics. No Product behavior, acceptance, certification, support, release, production, or GA promotion.",
@@ -23,8 +26,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T22:42:45Z",
+  "updatedAt": "2026-08-08T22:45:30Z",
   "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B"
 }
