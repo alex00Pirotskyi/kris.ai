@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000243-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-006",
+  "payload": {
+    "actor": "ELASTIC-7e4b91c2:R1_REVIEW_4889976554",
+    "nextStatus": "HELPER_READY"
+  },
+  "recordedAt": "2026-08-08T23:13:00Z",
+  "runtimeGeneration": 243,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222338Z-7e4b91c2",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}
