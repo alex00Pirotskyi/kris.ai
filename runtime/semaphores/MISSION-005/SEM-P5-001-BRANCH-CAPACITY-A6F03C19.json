@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
+  "baseTree": "43a26a58cd28aba0a2bcb154898b956bbb98b061",
+  "branch": "agent/f/P5-001-information-architecture",
+  "createdAt": "2026-08-08T17:46:30Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-08T21:46:30Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-005",
+  "productPr": 72,
+  "refreshedAt": "2026-08-08T17:46:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 189,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-BRANCH-CAPACITY-A6F03C19",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-BRANCH-CAPACITY-A6F03C19",
+  "workerIdentity": "ELASTIC-a6f03c19"
+}
