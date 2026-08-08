@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000226-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "BLOCKED",
+    "semaphoreId": "SEM-P4-001-FIXTURE-REHOME-5D7A3C91"
+  },
+  "recordedAt": "2026-08-08T22:41:00Z",
+  "runtimeGeneration": 226,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222200Z-5d7a3c91",
+  "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C"
+}
