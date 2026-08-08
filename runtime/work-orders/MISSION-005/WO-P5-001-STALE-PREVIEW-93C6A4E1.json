@@ -22,8 +22,11 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-08T22:53:00Z",
-  "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
+  "updatedAt": "2026-08-08T23:11:00Z",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1",
+  "assignedWorker": "ELASTIC-7d41b6a2",
+  "executionRole": "CI_REPAIR",
+  "activeSemaphoreId": "SEM-P5-001-STALE-PREVIEW-7D41B6A2"
 }

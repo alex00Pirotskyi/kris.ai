@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000242-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P5-001-STALE-PREVIEW-7D41B6A2",
+    "workerIdentity": "ELASTIC-7d41b6a2"
+  },
+  "recordedAt": "2026-08-08T23:11:00Z",
+  "runtimeGeneration": 242,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222229Z-7d41b6a2",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
+}
