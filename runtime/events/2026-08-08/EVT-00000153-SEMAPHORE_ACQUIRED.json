@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000153-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "INCIDENT_RESPONDER",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1",
+    "workerIdentity": "ELASTIC-a7c4d2f1"
+  },
+  "recordedAt": "2026-08-08T11:54:00Z",
+  "runtimeGeneration": 153,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-P2-004-BRANCH-SLOT-VALIDATION-A7C4D2F1"
+}
