@@ -1,13 +1,13 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-P5-001-SOURCE-INVENTORY-C2D7A5E1",
   "allowedPaths": ["test/product/source_contract_test.dart"],
-  "assignedWorker": null,
+  "assignedWorker": "ELASTIC-c2d7a5e1",
   "baseCommit": "53693ca66b37015a015294a4f729138caeb20482",
   "baseTree": "2e070917c814f8eb8e350649c68e542599d56034",
   "createdAt": "2026-08-07T20:12:00Z",
   "createdBy": "ELASTIC-7f3a2c91",
   "dependencyRequirements": [],
-  "executionRole": null,
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Append exactly the nine P5-001 analyzer-visible library paths from canonical Product PR #72 to the governed source inventory so the exact global source-contract test matches the current 85-file P5 source tree; preserve every existing inventory entry and make no product-behavior or root-manifest change.",
@@ -17,8 +17,8 @@
   "requiredTests": ["flutter test --no-pub test/product/source_contract_test.dart", "exact Product PR product-gates after authority integration"],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T06:53:12Z",
+  "updatedAt": "2026-08-08T10:03:00Z",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-7F3A2C91"
 }
