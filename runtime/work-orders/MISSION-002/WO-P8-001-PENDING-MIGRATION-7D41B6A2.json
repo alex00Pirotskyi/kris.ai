@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "tool/test_center_assurance_semantics.py",
+    "tool/test_center_assurance_hierarchy_test.py"
+  ],
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "createdAt": "2026-08-08T22:57:00Z",
+  "createdBy": "ELASTIC-7d41b6a2",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-002",
+  "objective": "Remove the P8 Test Center migration deadlock that currently makes every reviewed Worker-A pending binding permanently unmigratable. Preserve fail-closed one-to-one registry/hierarchy coverage while allowing a Worker-A test ID to transition from pendingMigrationBindings to an exact active testBinding only when the migrated active level matches the immutable WORKER_A_BINDINGS contract. Keep the remaining pending set complete, reject overlap/unknown/mismatched migration, and do not alter support, acceptance, certification, release, production or GA semantics. This is a cross-portfolio blocker removal required before tc.p2.acceptance-contract can enter governed Test Center authority.",
+  "parentProductPr": 65,
+  "priority": 100,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "python -m unittest -v tool/test_center_assurance_hierarchy_test.py",
+    "python tool/test_center_assurance_hierarchy.py check --project .",
+    "regression: one reviewed Worker-A source-contract ID may move pending to matching active architecture_lint binding",
+    "regression: remaining pending IDs equal exactly WORKER_A_BINDINGS minus migrated active Worker-A IDs",
+    "regression: active/pending overlap, unknown Worker-A IDs, missing Worker-A IDs, and migrated level mismatch fail closed",
+    "no support/acceptance/certification/release/production/GA promotion"
+  ],
+  "roadmapTask": "P8-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-08T22:57:00Z",
+  "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2"
+}

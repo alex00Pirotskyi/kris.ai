@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000237-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "DEFECT_HUNTER",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-08T23:01:15Z",
+  "runtimeGeneration": 237,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222229Z-7d41b6a2",
+  "workOrderId": "WO-P8-001-PENDING-MIGRATION-7D41B6A2"
+}
