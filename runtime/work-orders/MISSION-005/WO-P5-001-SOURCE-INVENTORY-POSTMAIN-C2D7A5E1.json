@@ -1,11 +1,10 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-SOURCE-INVENTORY-INTEGRATE-A6F03C19",
   "allowedPaths": [
     "test/product/source_contract_test.dart"
   ],
   "assignedWorker": "ELASTIC-a6f03c19",
-  "baseCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
-  "baseTree": "43a26a58cd28aba0a2bcb154898b956bbb98b061",
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
   "createdAt": "2026-08-08T10:30:00Z",
   "createdBy": "ELASTIC-c2d7a5e1",
   "dependencyRequirements": [],
@@ -23,8 +22,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T18:26:00Z",
+  "updatedAt": "2026-08-08T18:31:00Z",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
 }

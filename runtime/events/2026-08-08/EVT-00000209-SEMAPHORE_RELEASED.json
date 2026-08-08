@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000209-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-005",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P5-001-SOURCE-INVENTORY-INTEGRATE-A6F03C19",
+    "productPr": 72,
+    "observedHead": "b9be61899ab0792c7e194299324e7cb53c494f20"
+  },
+  "recordedAt": "2026-08-08T18:34:00Z",
+  "runtimeGeneration": 209,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T165753Z-a6f03c19",
+  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
+}
