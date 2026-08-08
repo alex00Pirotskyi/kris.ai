@@ -10,7 +10,7 @@
   "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
-  "objective": "On the current-main P4 landing candidate, preserve every current protected-main Test Center record and append only the canonical P4-001 module, stable test cases, project profiles, and affected mappings from exact P4 Product head 3d11ef075559df2543cf56cf096dd26357cf3a37 under shared authority test-center-registry. Reuse the released P4-local helper branch agent/help/elastic-4f6a2c91/mission-004/p4-safe-search to avoid exceeding the 60-branch budget. Do not import historical P8/Test Center bytes wholesale and do not promote support or acceptance.",
+  "objective": "On the canonical P4 Product branch during current-main reconciliation, preserve every protected-main Test Center record and append only the canonical P4-001 module, stable test cases, project profiles, affected mappings, and presentation record from exact P4 source. The final union must preserve current P8 assurance-report/enforcement entries, use shared authority test-center-registry, and make no support or acceptance promotion.",
   "parentProductPr": 62,
   "parentWorkOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
   "priority": 100,
@@ -25,6 +25,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T09:52:00Z",
+  "updatedAt": "2026-08-08T10:05:00Z",
   "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
 }

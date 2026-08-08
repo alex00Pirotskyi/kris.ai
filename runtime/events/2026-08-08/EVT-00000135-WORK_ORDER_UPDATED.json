@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000135-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "correctionType": "CLEAN_P4_EXECUTION_SCOPE_REBIND",
+    "addedOwnedPath": "evals/fixtures/p4_001_search_provider/**",
+    "authorityBranch": "agent/p4-001-search-provider-foundation",
+    "manifestBranch": "agent/p4-001-search-provider-foundation",
+    "reason": "The exact P4 manifest identifies contract_cases.json as a required P4-owned deterministic fixture absent from protected main. Both separately authorized shared writes are rebound to the canonical P4 Product branch so the existing P4 workflow can reconcile current main without creating branch 61 or using a separate carrier."
+  },
+  "recordedAt": "2026-08-08T10:27:00Z",
+  "runtimeGeneration": 135,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
