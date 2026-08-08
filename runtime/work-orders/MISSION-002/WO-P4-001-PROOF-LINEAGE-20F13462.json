@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
+  ],
+  "baseCommit": "d20a7abde48a217301097eb6e0eed722af3b495a",
+  "baseTree": "8a0d2365993b19e360f039971243e54dd581c082",
+  "createdAt": "2026-08-08T18:09:00Z",
+  "createdBy": "ELASTIC-20f13462",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-002",
+  "objective": "Repair the exact P8 assurance proof-contract coverage defect exposed by the authorized P4 Test Center registry/hierarchy candidate: append exactly one lineageBinding for each of the 18 active tc.p4-001.* source-contract test identities, bind them to the single P4-001 search-provider lineage, preserve every existing evidence contract and lineage binding, and restore exact P8 formal hierarchy validation without behavior/platform/release/support/acceptance promotion.",
+  "parentProductPr": 65,
+  "parentWorkOrderId": null,
+  "priority": 100,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "assurance-proof-contract lineageBindings exactly cover all active hierarchy test IDs",
+    "existing four Test Center/P8 lineage bindings are preserved unchanged",
+    "all 18 tc.p4-001.* identities bind exactly once to p4-001.search-provider-interface",
+    "python tool/test_center_assurance_hierarchy.py check --project . PASS",
+    "python -m unittest -v tool/test_center_assurance_hierarchy_test.py tool/test_center_assurance_enforcement_test.py PASS",
+    "no behavior/platform/release/support/acceptance promotion"
+  ],
+  "roadmapTask": "P8-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-08T18:09:00Z",
+  "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462"
+}

@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000200-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "DEFECT_HUNTER",
+    "type": "PRODUCT_DEFECT_REPAIR"
+  },
+  "recordedAt": "2026-08-08T18:09:00Z",
+  "runtimeGeneration": 200,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T170212Z-e5eb8e85",
+  "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462"
+}
