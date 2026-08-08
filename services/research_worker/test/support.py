@@ -11,7 +11,7 @@ from services.research_worker.src.search.fixture_provider import (
 from services.research_worker.test.schema_validator import ContractSchemaValidator
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-FIXTURE_PATH = ROOT / "evals/fixtures/p4_001_search_provider/contract_cases.json"
+FIXTURE_PATH = ROOT / "services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json"
 SCHEMA_PATHS = {
     "request": ROOT / "schemas/web_search_request.v1.json",
     "page": ROOT / "schemas/web_search_page.v1.json",

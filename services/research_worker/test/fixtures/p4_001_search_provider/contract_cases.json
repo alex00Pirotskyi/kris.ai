@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "1.0.0",
+  "taskId": "P4-001",
+  "catalog": [
+    {
+      "title": "Kristin Search Provider Contract",
+      "url": "https://docs.example.org/search/provider-contract",
+      "snippet": "Official technical documentation for provider-neutral search contracts.",
+      "publishedAt": "2026-07-20T00:00:00Z",
+      "language": "en",
+      "country": "US",
+      "providerMetadata": {"sourceClass": "official_documentation", "fixtureOrdinal": 1}
+    },
+    {
+      "title": "Kristin Search Contract Examples",
+      "url": "https://examples.example.org/search/contracts",
+      "snippet": "Deterministic examples for search pagination and normalized results.",
+      "publishedAt": "2026-07-21T00:00:00Z",
+      "language": "en",
+      "country": "US",
+      "providerMetadata": {"sourceClass": "fixture", "fixtureOrdinal": 2}
+    },
+    {
+      "title": "Hợp đồng nhà cung cấp tìm kiếm",
+      "url": "https://docs.example.vn/tim-kiem/hop-dong",
+      "snippet": "Tài liệu kỹ thuật chính thức cho giao diện tìm kiếm trung lập.",
+      "publishedAt": "2026-07-22T00:00:00Z",
+      "language": "vi",
+      "country": "VN",
+      "providerMetadata": {"sourceClass": "official_documentation", "fixtureOrdinal": 3}
+    },
+    {
+      "title": "Контракт пошукового провайдера",
+      "url": "https://docs.example.ua/search/provider-contract",
+      "snippet": "Офіційна технічна документація для нейтрального пошуку.",
+      "publishedAt": "2026-07-23T00:00:00Z",
+      "language": "uk",
+      "country": "UA",
+      "providerMetadata": {"sourceClass": "official_documentation", "fixtureOrdinal": 4}
+    }
+  ],
+  "cases": [
+    {
+      "id": "basic_parity",
+      "kind": "page",
+      "providers": ["fixture_alpha", "fixture_beta"],
+      "request": {
+        "schemaVersion": "1.0.0",
+        "requestId": "req_basic",
+        "query": "search contract",
+        "limit": 2,
+        "cursor": null,
+        "language": "en",
+        "country": "US",
+        "safeSearch": "moderate",
+        "freshness": null,
+        "domains": null
+      }
+    },
+    {
+      "id": "pagination",
+      "kind": "pagination",
+      "providers": ["fixture_alpha", "fixture_beta"],
+      "request": {
+        "schemaVersion": "1.0.0",
+        "requestId": "req_page",
+        "query": "fixture:all",
+        "limit": 2,
+        "cursor": null,
+        "language": null,
+        "country": null,
+        "safeSearch": "strict",
+        "freshness": {"mode": "any", "after": null, "before": null},
+        "domains": null
+      }
+    },
+    {
+      "id": "partial_failure",
+      "kind": "partial",
+      "providers": ["fixture_alpha", "fixture_beta"],
+      "request": {
+        "schemaVersion": "1.0.0",
+        "requestId": "req_partial",
+        "query": "fixture:partial",
+        "limit": 2,
+        "cursor": null,
+        "language": null,
+        "country": null,
+        "safeSearch": "moderate",
+        "freshness": null,
+        "domains": null
+      }
+    },
+    {
+      "id": "throttled",
+      "kind": "error",
+      "expectedCode": "throttled",
+      "providers": ["fixture_alpha", "fixture_beta"],
+      "request": {
+        "schemaVersion": "1.0.0",
+        "requestId": "req_throttle",
+        "query": "fixture:throttle",
+        "limit": 2,
+        "cursor": null,
+        "language": null,
+        "country": null,
+        "safeSearch": "moderate",
+        "freshness": null,
+        "domains": null
+      }
+    },
+    {
+      "id": "unsupported_exclude",
+      "kind": "provider_specific_error",
+      "provider": "fixture_beta",
+      "expectedCode": "unsupported_filter",
+      "request": {
+        "schemaVersion": "1.0.0",
+        "requestId": "req_exclude",
+        "query": "fixture:all",
+        "limit": 2,
+        "cursor": null,
+        "language": null,
+        "country": null,
+        "safeSearch": "moderate",
+        "freshness": null,
+        "domains": {"include": [], "exclude": ["examples.example.org"]}
+      }
+    },
+    {
+      "id": "domain_include",
+      "kind": "page",
+      "providers": ["fixture_alpha", "fixture_beta"],
+      "request": {
+        "schemaVersion": "1.0.0",
+        "requestId": "req_domain",
+        "query": "fixture:all",
+        "limit": 10,
+        "cursor": null,
+        "language": "en",
+        "country": "US",
+        "safeSearch": "moderate",
+        "freshness": null,
+        "domains": {"include": ["docs.example.org"], "exclude": []}
+      }
+    }
+  ],
+  "negativeRequests": [
+    {
+      "id": "unknown_field",
+      "mutation": {"unexpected": true}
+    },
+    {
+      "id": "raw_authorization",
+      "mutation": {"authorization": "Bearer forbidden"}
+    },
+    {
+      "id": "invalid_limit",
+      "replace": {"limit": 0}
+    },
+    {
+      "id": "ip_domain_filter",
+      "replace": {"domains": {"include": ["127.0.0.1"], "exclude": []}}
+    }
+  ]
+}

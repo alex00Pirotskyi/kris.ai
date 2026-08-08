@@ -35,7 +35,7 @@ REQUIRED = (
     "services/research_worker/test/test_fixture_provider.py",
     "services/research_worker/test/test_contract_regressions.py",
     "services/research_worker/test/test_normalized_result_adapter.py",
-    "evals/fixtures/p4_001_search_provider/contract_cases.json",
+    "services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json",
     "release/evidence/P4-001/history/test-center-handoff.provisional.0.1.1.json",
     "release/evidence/P4-001/test-center-handoff.json",
     "tool/p4_001_test_center_v1.py",
