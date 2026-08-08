@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "agent/b/test-center-contracts-and-review",
+  "createdAt": "2026-08-08T23:36:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-09T03:36:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-002",
+  "productPr": 65,
+  "refreshedAt": "2026-08-08T23:36:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 254,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P8-001-INTEGRATE-126-C7A4E912",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P8-001-INTEGRATE-126-C7A4E912",
+  "workerIdentity": "Elastic-GPT-c7a4e912"
+}
