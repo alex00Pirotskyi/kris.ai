@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P4-BRANCH-REAP-PROOF-7C4E91B2-209",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 209,
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2",
+  "semaphoreId": "SEM-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2",
+  "workerIdentity": "ELASTIC-GPT-7C4E91B2",
+  "productPr": 62,
+  "targetBranch": "validated/v71r12-p1-p2-final",
+  "expectedTargetHead": "7e02d2d4651d0871c4bf6c5a5b69cd7e5ad5927",
+  "createdAt": "2026-08-08T18:35:00Z",
+  "note": "Free one exact configured legacy-debt branch slot for the actively reserved P4 proof-lineage repair; no Product source mutation."
+}
