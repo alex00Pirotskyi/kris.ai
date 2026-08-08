@@ -1,0 +1,35 @@
+{
+  "allowedPaths": [
+    "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
+    "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
+    "tool/p2_task_platform_assertions.py",
+    "tool/p2_technology_spike.py",
+    "tool/p2_technology_spike_contract_test.py"
+  ],
+  "baseCommit": "62496ef95d146939fd320bdbc9efca91f7f702bb",
+  "baseTree": "d2d62617ff2dcb6e670bc04612c0d4b97dd8f84a",
+  "createdAt": "2026-08-08T09:44:00Z",
+  "createdBy": "ELASTIC-9f3c72a1",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Perform a fresh context-independent exact-head R1 technical/security review of P2-004 helper PR #115 at commit 62496ef95d146939fd320bdbc9efca91f7f702bb. Verify that the five ordinary-source files faithfully extract the hardened trusted-measurement contract from artifact 8970093356, close the prior receipt-integrity/freshness/containment/replay findings, preserve fail-closed source-only behavior, and make no P2 acceptance, P3 authorization, platform/support, or shared Test Center authority claim. The authoring execution WRK-20260808T090016Z-9f3c72a1 is ineligible to satisfy this R1 itself.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "exact helper commit/tree and five-file diff binding",
+    "prior P2-004 review findings re-evaluated against published ordinary source",
+    "artifact 8970093356 provenance and hardened-contract PASS evidence verified",
+    "fresh exact-head product-gates result inspected",
+    "remaining Test Center authority and real tri-platform measurement boundaries remain explicit",
+    "no acceptance/support/P3 authorization overclaim"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-08T09:44:00Z",
+  "workOrderId": "WO-P2-004-HELPER-115-R1-9F3C72A1"
+}

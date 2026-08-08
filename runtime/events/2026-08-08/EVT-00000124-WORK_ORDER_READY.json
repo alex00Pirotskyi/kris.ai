@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000124-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
+    "requestedRole": "REVIEWER",
+    "type": "REVIEW"
+  },
+  "recordedAt": "2026-08-08T09:44:00Z",
+  "runtimeGeneration": 124,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090016Z-9f3c72a1",
+  "workOrderId": "WO-P2-004-HELPER-115-R1-9F3C72A1"
+}
