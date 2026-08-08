@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json",
+    "services/research_worker/test/support.py",
+    "tool/p4_001_search_provider_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
+  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
+  "branch": "agent/help/elastic-5d7a3c91/mission-004/p4-fixture-rehome",
+  "createdAt": "2026-08-08T22:27:00Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-09T02:27:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-08T22:27:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 221,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-FIXTURE-REHOME-5D7A3C91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C",
+  "workerIdentity": "ELASTIC-5d7a3c91"
+}
