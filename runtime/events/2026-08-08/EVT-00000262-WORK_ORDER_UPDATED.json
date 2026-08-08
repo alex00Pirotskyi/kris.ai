@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000262-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "ELASTIC-c4e91a7f:P8_PRODUCT_RUNTIME_RECONCILE",
+    "nextStatus": "VALIDATING",
+    "observedProductHead": "38584381f4e3e726f8e5a97cc8d8361f0e144761"
+  },
+  "recordedAt": "2026-08-08T23:57:30Z",
+  "runtimeGeneration": 262,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T222236Z-c4e91a7f",
+  "workOrderId": "WO-P8-001-INTEGRATE-126-C7A4E912"
+}
