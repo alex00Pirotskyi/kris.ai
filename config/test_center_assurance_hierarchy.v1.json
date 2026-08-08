@@ -163,6 +163,56 @@
       "testId": "tc.p8.formal-test-hierarchy-regressions",
       "levelId": "unit",
       "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, report ambiguity, and invalid actual execution reports."
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.navigation.primary-workspaces"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.flow.simple-task"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.flow.existing-run"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.flow.owner-mode"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.flow.verification-center"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.state.transitions"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.mode.progressive-disclosure"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.capability.honest-unavailable"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.keyboard.primary-flow"
+    },
+    {
+      "levelId": "unit",
+      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
+      "testId": "tc.p5-001.semantics.primary-flow"
     }
   ],
   "pendingMigrationBindings": [
