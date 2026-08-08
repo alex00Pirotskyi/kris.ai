@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P4-001-D53C2A79",
   "allowedPaths": [
     "services/research_worker/test/support.py",
     "services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json",
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T17:23:59Z",
+  "updatedAt": "2026-08-08T22:15:00Z",
   "workOrderId": "WO-P4-001-FIXTURE-REHOME-B450571C"
 }

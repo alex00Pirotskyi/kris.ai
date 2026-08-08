@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000218-SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-P4-001-PROOF-LINEAGE-20F13462",
+      "SEM-QWEN-P4-001-B2861719",
+      "SEM-QWEN-P4-001-D53C2A79",
+      "SEM-QWEN-P6-001-E93A54D8"
+    ]
+  },
+  "recordedAt": "2026-08-08T22:15:00Z",
+  "runtimeGeneration": 218,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T221459Z-b679e1bc",
+  "workOrderId": null
+}
