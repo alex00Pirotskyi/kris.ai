@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000232-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-005",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "AUTHORITY_OWNER",
+    "type": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-08T22:51:00Z",
+  "runtimeGeneration": 232,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T223048Z-5948c03b",
+  "workOrderId": "WO-P5-001-TEST-CENTER-HIERARCHY-5948C03B"
+}
