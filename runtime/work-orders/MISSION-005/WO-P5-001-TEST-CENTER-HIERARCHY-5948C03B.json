@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-TEST-CENTER-HIERARCHY-5948C03B",
   "allowedPaths": [
     "config/test_center_assurance_hierarchy.v1.json"
   ],
@@ -26,8 +25,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "BLOCKED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T22:52:00Z",
+  "updatedAt": "2026-08-08T23:03:30Z",
   "workOrderId": "WO-P5-001-TEST-CENTER-HIERARCHY-5948C03B"
 }
