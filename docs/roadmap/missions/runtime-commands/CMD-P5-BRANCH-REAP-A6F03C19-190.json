@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P5-BRANCH-REAP-A6F03C19-190",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 190,
+  "workOrderId": "WO-P5-001-BRANCH-CAPACITY-A6F03C19",
+  "semaphoreId": "SEM-P5-001-BRANCH-CAPACITY-A6F03C19",
+  "workerIdentity": "ELASTIC-a6f03c19",
+  "productPr": 72,
+  "targetBranch": "automation/p4-p8-reconcile-800643b",
+  "expectedTargetHead": "7a8e1bfac7879b2158543a2ba759c6669584e59f",
+  "createdAt": "2026-08-08T17:50:00Z",
+  "note": "Free one exact legacy-debt branch slot required for the reserved P5-001 source-inventory authority helper; no Product source deletion."
+}
