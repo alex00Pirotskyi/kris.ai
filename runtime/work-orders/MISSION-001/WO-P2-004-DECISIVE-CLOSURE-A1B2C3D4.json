@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-DECISIVE-CLOSURE-9F3C72A1",
   "allowedPaths": [
     "tool/p2_task_platform_assertions.py",
     "tool/p2_task_assertion_cli_test.py",
@@ -31,8 +30,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "REVIEW",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T09:22:00Z",
+  "updatedAt": "2026-08-08T09:49:00Z",
   "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
 }

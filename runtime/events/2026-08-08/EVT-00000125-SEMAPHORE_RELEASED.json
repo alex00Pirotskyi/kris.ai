@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000125-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "semaphoreId": "SEM-P2-004-DECISIVE-CLOSURE-9F3C72A1",
+    "nextStatus": "REVIEW"
+  },
+  "recordedAt": "2026-08-08T09:49:00Z",
+  "runtimeGeneration": 125,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090016Z-9f3c72a1",
+  "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
+}
