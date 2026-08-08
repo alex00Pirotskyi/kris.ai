@@ -2,7 +2,6 @@
   "allowedPaths": [
     "config/test_center_registry.v1.json"
   ],
-  "activeSemaphoreId": "SEM-P2-004-TEST-CENTER-BINDING-B450571C",
   "assignedWorker": "ELASTIC-b450571c",
   "baseCommit": "f23316535b8042662250ec63005817e72da581d0",
   "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
@@ -10,6 +9,7 @@
   "createdBy": "ELASTIC-b450571c",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
+  "lastActor": "ELASTIC-b450571c:CANCELLED:BASE_REGISTRY_HAS_NO_TC_P2_ACCEPTANCE_CONTRACT",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Remove the exact-current P2-004 Test Center binding blocker as MISSION-002 registry authority owner. In existing profile tc.p2.acceptance-contract, append only docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json to both affectedPaths and inputPaths, preserving every existing Test Center identity and all other bytes/semantics. Validate canonical Test Center contracts and prove the P2-004 hardened measurement-contract regression no longer fails its Test Center binding check. This is shared-authority maintenance only; do not alter P8 product behavior, P2 acceptance, support, release, production, or GA state.",
@@ -26,8 +26,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "CANCELLED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T12:32:05Z",
+  "updatedAt": "2026-08-08T12:40:00Z",
   "workOrderId": "WO-P2-004-TEST-CENTER-BINDING-B450571C"
 }
