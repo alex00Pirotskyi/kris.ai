@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "139ce09edceaab2c9b24bb3119c4e8c324c02e0a",
+  "baseTree": "deb88c2aea8f47af76de6c9e00c9fdd4bb20a143",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "createdAt": "2026-08-08T10:08:00Z",
+  "executionRole": "REVIEWER",
+  "expiresAt": "2026-08-08T14:08:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-001",
+  "productPr": 75,
+  "refreshedAt": "2026-08-08T10:08:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 130,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-HELPER-115-R1-A7C4D2F1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-HELPER-115-R1-9F3C72A1",
+  "workerIdentity": "ELASTIC-a7c4d2f1"
+}

@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000130-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "REVIEWER",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P2-004-HELPER-115-R1-A7C4D2F1",
+    "workerIdentity": "ELASTIC-a7c4d2f1"
+  },
+  "recordedAt": "2026-08-08T10:08:00Z",
+  "runtimeGeneration": 130,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T095459Z-a7c4d2f1",
+  "workOrderId": "WO-P2-004-HELPER-115-R1-9F3C72A1"
+}
