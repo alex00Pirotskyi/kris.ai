@@ -1,0 +1,30 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "createdAt": "2026-08-08T22:42:45Z",
+  "createdBy": "ELASTIC-gpt-5948c03b",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Restore the exact P5-001 Test Center registry identities required by the canonical P5 validator using append-safe shared authority only. Copy only the missing P5-owned module, ten stable test cases, ten matching non-mutating profiles, and ten affected-test mappings from trusted P5 source commit 67586763bb055faab76e4994184da78f77bd9810 onto the exact current P5 canonical base, preserving all newer Test Center records and semantics. No Product behavior, acceptance, certification, support, release, production, or GA promotion.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "python tool/test_center_contracts.py check --project .",
+    "python -m unittest -v tool/test_center_contracts_test.py",
+    "python test/product/p5_information_architecture/worker_f_p5_ia.py check --project .",
+    "effective authority diff is exactly config/test_center_registry.v1.json and contains only explicit P5-owned appended identities",
+    "preserve all existing non-P5 Test Center identities",
+    "no acceptance/support/release/production/GA promotion"
+  ],
+  "roadmapTask": "P5-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-08T22:42:45Z",
+  "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B"
+}
