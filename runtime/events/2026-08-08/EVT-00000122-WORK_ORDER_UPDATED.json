@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000122-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "correctionType": "INTEGRATION_STATE_ALIGNMENT",
+    "previousStatus": "IN_PROGRESS",
+    "newStatus": "INTEGRATING",
+    "reason": "An ACTIVE INTEGRATION semaphore for Product PR #62 must have exactly one matching INTEGRATING Work Order under mission_v15_live_runtime_audit. No product, branch, semaphore scope, or candidate identity changes."
+  },
+  "recordedAt": "2026-08-08T09:35:00Z",
+  "runtimeGeneration": 122,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090051Z-4d82c7fa",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
