@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000123-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P6-BENCHMARK-TRUST-ROOT-01FCA06E",
+    "workerIdentity": "ELASTIC-01fca06e"
+  },
+  "recordedAt": "2026-08-08T09:39:00Z",
+  "runtimeGeneration": 123,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T090215Z-d22a6cd8",
+  "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
+}
