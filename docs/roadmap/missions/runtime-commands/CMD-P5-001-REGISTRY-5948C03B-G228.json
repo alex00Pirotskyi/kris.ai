@@ -1,0 +1,55 @@
+{
+  "appendIdentities": {
+    "affectedTestMappings": [
+      "affected.p5-001.01",
+      "affected.p5-001.02",
+      "affected.p5-001.03",
+      "affected.p5-001.04",
+      "affected.p5-001.05",
+      "affected.p5-001.06",
+      "affected.p5-001.07",
+      "affected.p5-001.08",
+      "affected.p5-001.09",
+      "affected.p5-001.10"
+    ],
+    "projectTestProfiles": [
+      "tc.p5-001.navigation.primary-workspaces",
+      "tc.p5-001.flow.simple-task",
+      "tc.p5-001.flow.existing-run",
+      "tc.p5-001.flow.owner-mode",
+      "tc.p5-001.flow.verification-center",
+      "tc.p5-001.state.transitions",
+      "tc.p5-001.mode.progressive-disclosure",
+      "tc.p5-001.capability.honest-unavailable",
+      "tc.p5-001.keyboard.primary-flow",
+      "tc.p5-001.semantics.primary-flow"
+    ],
+    "testCases": [
+      "tc.p5-001.navigation.primary-workspaces",
+      "tc.p5-001.flow.simple-task",
+      "tc.p5-001.flow.existing-run",
+      "tc.p5-001.flow.owner-mode",
+      "tc.p5-001.flow.verification-center",
+      "tc.p5-001.state.transitions",
+      "tc.p5-001.mode.progressive-disclosure",
+      "tc.p5-001.capability.honest-unavailable",
+      "tc.p5-001.keyboard.primary-flow",
+      "tc.p5-001.semantics.primary-flow"
+    ],
+    "testModules": [
+      "tm.p5-information-architecture"
+    ]
+  },
+  "authorityId": "test-center-registry",
+  "commandId": "CMD-P5-001-REGISTRY-5948C03B-G228",
+  "createdAt": "2026-08-08T22:47:00Z",
+  "expectedRuntimeGeneration": 228,
+  "note": "Restore only explicit P5-001 Test Center identities onto the current canonical P5 authority base; preserve all newer identities and semantics.",
+  "operation": "APPEND_SAFE_JSON_IDENTITIES_V1",
+  "requestingMission": "MISSION-005",
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-TEST-CENTER-REGISTRY-5948C03B",
+  "sourceCommit": "67586763bb055faab76e4994184da78f77bd9810",
+  "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B",
+  "workerIdentity": "ELASTIC-gpt-5948c03b"
+}
