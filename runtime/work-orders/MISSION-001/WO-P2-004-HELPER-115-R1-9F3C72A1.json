@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-HELPER-115-R1-A7C4D2F1",
   "allowedPaths": [
     "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
     "docs/operations/P2_TECHNOLOGY_MEASUREMENT_TRUST_TEMPLATE.json",
@@ -31,8 +30,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "REVIEW",
-  "updatedAt": "2026-08-08T10:08:00Z",
+  "updatedAt": "2026-08-08T10:21:00Z",
   "workOrderId": "WO-P2-004-HELPER-115-R1-9F3C72A1"
 }
