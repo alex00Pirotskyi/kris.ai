@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00000261-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-004",
+  "payload": {
+    "semaphoreId": "SEM-QWEN-P4-001-9EF6756A"
+  },
+  "recordedAt": "2026-08-08T23:56:35Z",
+  "runtimeGeneration": 261,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260808T223437Z-9209e94f",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
+}
