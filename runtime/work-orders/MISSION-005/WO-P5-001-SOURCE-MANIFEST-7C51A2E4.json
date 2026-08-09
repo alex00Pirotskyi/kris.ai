@@ -1,0 +1,30 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "baseCommit": "44945f3655a938ed376e5aa663a4568610a4b9b8",
+  "baseTree": "b7dbd0c5175cc1203071464d83720d8fca143667",
+  "createdAt": "2026-08-09T20:10:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Materialize the canonical deterministic SOURCE_MANIFEST.sha256 on exact canonical Product PR #72 head 44945f3655a938ed376e5aa663a4568610a4b9b8 after the governed P5-001 Test Center registry, hierarchy, and proof-lineage stack was integrated. Use only canonical generator-equivalent bytes already proven byte-identical by exact-head Worker F CI. Change no Product source and promote no ACCEPTED, certification, behavior/platform/release support, production readiness, or GA status.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "exact-head Worker F source-manifest receipt commit 44945f3655a938ed376e5aa663a4568610a4b9b8 tree b7dbd0c5175cc1203071464d83720d8fca143667 byteIdentical true",
+    "canonical generated SOURCE_MANIFEST.sha256 SHA-256 18b2cc92a2e880d2cea499841f8739a33802cb128716978bb846dbc9f95b71d1",
+    "effective release commit changes exactly SOURCE_MANIFEST.sha256",
+    "exact-head Worker F P5-001 tri-platform validation after materialization",
+    "exact-head Worker B P8 Test Center contracts and hierarchy/enforcement validation after materialization",
+    "no acceptance/support/release/production/GA promotion"
+  ],
+  "roadmapTask": "P5-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-09T20:10:00Z",
+  "workOrderId": "WO-P5-001-SOURCE-MANIFEST-7C51A2E4"
+}
