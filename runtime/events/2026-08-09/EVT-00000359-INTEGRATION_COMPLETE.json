@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000359-INTEGRATION_COMPLETE",
+  "eventType": "INTEGRATION_COMPLETE",
+  "mission": "MISSION-005",
+  "payload": {
+    "helperHead": "44945f3655a938ed376e5aa663a4568610a4b9b8",
+    "helperPr": 133,
+    "previousProductHead": "b9be61899ab0792c7e194299324e7cb53c494f20",
+    "productHead": "44945f3655a938ed376e5aa663a4568610a4b9b8",
+    "productPr": 72,
+    "semaphoreId": "SEM-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4",
+    "sourceManifestFinalizationRequired": true
+  },
+  "recordedAt": "2026-08-09T19:53:00Z",
+  "runtimeGeneration": 359,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4"
+}
