@@ -10,12 +10,12 @@
   "kind": "INTEGRATION",
   "mission": "MISSION-001",
   "productPr": 75,
-  "refreshedAt": "2026-08-09T10:40:14Z",
+  "refreshedAt": "2026-08-09T10:59:00Z",
   "resourceId": null,
-  "runtimeGeneration": 313,
+  "runtimeGeneration": 315,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P2-004-INTEGRATE-SELECTION-44AE364B",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
   "workerIdentity": "ELASTIC-GPT-44AE364B"
 }

@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000315-P2_004_INTEGRATION_LANDED",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "ELASTIC-GPT-44AE364B",
+    "landedMainCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+    "landedMainTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+    "postMainProductGatesRun": 31309419985,
+    "releasedSemaphoreId": "SEM-P2-004-INTEGRATE-SELECTION-44AE364B",
+    "status": "LANDED"
+  },
+  "recordedAt": "2026-08-09T10:59:00Z",
+  "runtimeGeneration": 315,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
+}

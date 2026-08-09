@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-INTEGRATE-SELECTION-44AE364B",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "tool/p2_004_technology_selection.py",
     "tool/p2_004_technology_selection_test.py",
@@ -36,8 +36,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-09T10:40:14Z",
+  "updatedAt": "2026-08-09T10:59:00Z",
   "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
 }
