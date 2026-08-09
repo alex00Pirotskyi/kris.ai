@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000314-PRODUCT_PR_RECONCILED",
+  "eventType": "PRODUCT_PR_RECONCILED",
+  "mission": "MISSION-001",
+  "payload": {
+    "branch": "agent/a/p2-004-measurement-contract-repair",
+    "observedHead": "da35625cfc4a94440f508ba290d167d26651542b",
+    "observedTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+    "productPr": 75
+  },
+  "recordedAt": "2026-08-09T10:44:10Z",
+  "runtimeGeneration": 314,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
+}

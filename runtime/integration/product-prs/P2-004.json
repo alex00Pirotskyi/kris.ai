@@ -5,7 +5,8 @@
   "productPr": 75,
   "captain": "A",
   "branch": "agent/a/p2-004-measurement-contract-repair",
-  "observedHead": "f8a1555fe0b9ffb58c71fb53155e1aa33328b2fc",
+  "observedHead": "da35625cfc4a94440f508ba290d167d26651542b",
+  "observedTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
   "status": "ACTIVE",
-  "observedAt": "2026-08-08T11:24:00Z"
+  "observedAt": "2026-08-09T10:44:10Z"
 }
