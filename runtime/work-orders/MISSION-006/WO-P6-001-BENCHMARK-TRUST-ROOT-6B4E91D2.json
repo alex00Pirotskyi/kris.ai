@@ -12,7 +12,7 @@
   "createdBy": "ELASTIC-6b4e91d2",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
-  "lastActor": "ELASTIC-7e4b91c2:R1_REVIEW_4889976554",
+  "lastActor": "ELASTIC-GPT-C73E9A51:PR118_MERGED:62f1e14ac39eb354aa04430d1d44c62a71103d8c",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Close the exact-reviewed P6-001 benchmark trust-root vulnerability: public callers must not be able to construct a key registry/candidate map and convert self-supplied signed benchmark metadata into approval-bearing trusted execution receipts. Preserve content-addressed benchmark metadata and evaluation-only flows, fail closed on approval until a genuine host-controlled benchmark authority provider exists, and do not land historical PR #76 directly to main.",
@@ -30,8 +30,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "LANDED",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-08T23:13:00Z",
+  "updatedAt": "2026-08-09T08:51:00Z",
   "workOrderId": "WO-P6-001-BENCHMARK-TRUST-ROOT-6B4E91D2"
 }
