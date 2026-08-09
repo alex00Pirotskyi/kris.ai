@@ -3,8 +3,8 @@
     "SOURCE_MANIFEST.sha256"
   ],
   "assignedWorker": "ELASTIC-GPT-91B4E7C2",
-  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
-  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
+  "baseCommit": "bff09fb233d49299c2bb9cfb6234ef0eb2e1e4b5",
+  "baseTree": "4ac58c848de26eb50d3763eb0ef4161deba9fabb",
   "createdAt": "2026-08-08T09:18:00Z",
   "createdBy": "ELASTIC-4d82c7fa",
   "dependencyRequirements": [],
@@ -26,6 +26,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-09T00:00:00Z",
+  "updatedAt": "2026-08-09T02:37:54Z",
   "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
 }

@@ -3,8 +3,8 @@
     "release/evidence/P4-*/**"
   ],
   "assignedWorker": "ELASTIC-QWEN-C4DB2329",
-  "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
-  "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
+  "baseCommit": "bff09fb233d49299c2bb9cfb6234ef0eb2e1e4b5",
+  "baseTree": "4ac58c848de26eb50d3763eb0ef4161deba9fabb",
   "createdAt": "2026-08-08T18:52:00Z",
   "createdBy": "WRK-20260808T174049Z-7c4e91b2",
   "dependencyRequirements": [],
@@ -28,6 +28,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-09T02:36:50Z",
+  "updatedAt": "2026-08-09T02:37:54Z",
   "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
 }

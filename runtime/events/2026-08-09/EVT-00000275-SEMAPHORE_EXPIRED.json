@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000275-SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-GPT-P11-001-EXACT-CI-EA05391B"
+    ]
+  },
+  "recordedAt": "2026-08-09T02:37:54Z",
+  "runtimeGeneration": 275,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T023753Z-61e2363f",
+  "workOrderId": null
+}

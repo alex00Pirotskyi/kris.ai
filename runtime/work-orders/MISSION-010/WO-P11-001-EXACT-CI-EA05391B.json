@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-GPT-P11-001-EXACT-CI-EA05391B",
   "allowedPaths": [
     "tool/worker_e*.py"
   ],
@@ -26,8 +25,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "READY",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-08T22:52:00Z",
+  "updatedAt": "2026-08-09T02:37:54Z",
   "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
 }
