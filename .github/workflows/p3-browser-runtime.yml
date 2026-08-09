@@ -1,0 +1,54 @@
+name: P3 Browser Runtime
+
+on:
+  push:
+    branches:
+      - 'agent/c/mission-003-browser-runtime'
+    paths:
+      - '.github/workflows/p3-browser-runtime.yml'
+      - 'lib/product/browser/**'
+      - 'test/product/browser/**'
+      - 'automation_host/**'
+      - 'config/p3.browser-runtime-lock.json'
+      - 'tool/p3_stage_browser_runtime_bundle.py'
+      - 'tool/p3_stage_browser_runtime_bundle_test.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/p3-browser-runtime.yml'
+      - 'lib/product/browser/**'
+      - 'test/product/browser/**'
+      - 'automation_host/**'
+      - 'config/p3.browser-runtime-lock.json'
+      - 'tool/p3_stage_browser_runtime_bundle.py'
+      - 'tool/p3_stage_browser_runtime_bundle_test.py'
+
+permissions:
+  contents: read
+
+jobs:
+  parent-format-oracle:
+    name: parent-format-oracle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Print exact Dart formatter diff for P3 parent sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/browser/browser_runtime_bundle.dart \
+            lib/product/browser/browser_runtime_process.dart \
+            test/product/browser/browser_runtime_bundle_test.dart
+          git diff -- \
+            lib/product/browser/browser_runtime_bundle.dart \
+            lib/product/browser/browser_runtime_process.dart \
+            test/product/browser/browser_runtime_bundle_test.dart
