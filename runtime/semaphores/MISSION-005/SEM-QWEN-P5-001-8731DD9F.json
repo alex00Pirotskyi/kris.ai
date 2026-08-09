@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "lib/p5_ia_preview.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "branch": "agent/local-qwen/elastic-qwen-4ffd4d88/mission-005/wo-p5-001-stale-preview-93c6a4e1-8731dd9f",
+  "createdAt": "2026-08-09T06:45:21Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-09T08:45:21Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-09T06:45:21Z",
+  "resourceId": null,
+  "runtimeGeneration": 283,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P5-001-8731DD9F",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1",
+  "workerIdentity": "ELASTIC-QWEN-4FFD4D88"
+}

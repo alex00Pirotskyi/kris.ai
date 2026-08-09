@@ -1,8 +1,9 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P5-001-8731DD9F",
   "allowedPaths": [
     "lib/p5_ia_preview.dart"
   ],
-  "assignedWorker": "ELASTIC-7d41b6a2",
+  "assignedWorker": "ELASTIC-QWEN-4FFD4D88",
   "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
   "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
   "createdAt": "2026-08-08T22:53:00Z",
@@ -24,8 +25,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-09T03:11:03Z",
+  "updatedAt": "2026-08-09T06:45:21Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
 }
