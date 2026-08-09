@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000328-CONTROL_POLICY_SYNC",
+  "eventType": "CONTROL_POLICY_SYNC",
+  "mission": "MISSION-003",
+  "payload": {
+    "configPath": "config/mission_delivery.v1.json",
+    "controlHead": "b41d34ffc3be4cf131d480ed8d85285822d68937",
+    "reason": "Synchronize the bounded P3-001 browser-runtime authority paths already carried by the active Work Order and semaphore. No Product source or acceptance/support state changes."
+  },
+  "recordedAt": "2026-08-09T16:43:00Z",
+  "runtimeGeneration": 328,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T164300Z-p3policy",
+  "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
+}
