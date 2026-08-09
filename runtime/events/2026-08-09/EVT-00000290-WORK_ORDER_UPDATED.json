@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000290-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "ELASTIC-GPT-C73E9A51",
+    "nextStatus": "SUPERSEDED",
+    "reason": "The historical hard-60 global branch-capacity blocker is obsolete under the live NEW_BRANCH_CREATION_ONLY branch-capacity policy."
+  },
+  "recordedAt": "2026-08-09T08:42:00Z",
+  "runtimeGeneration": 290,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T084200Z-c73e9a51",
+  "workOrderId": "WO-P2-004-BRANCH-SLOT-A7C4D2F1"
+}

@@ -13,6 +13,7 @@
   "createdBy": "ELASTIC-a7c4d2f1",
   "dependencyRequirements": [],
   "executionRole": "INCIDENT_RESPONDER",
+  "lastActor": "ELASTIC-GPT-C73E9A51",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
   "objective": "Free exactly one governed branch-capacity slot needed for the dedicated P2-004 Test Center authority helper by deleting disposable legacy debt temp-worker-f-noop-discard at exact SHA 750895ab550faa4af697ea8aad8c6e9ca0b8539a. The target was rejected by the repository reaper because it does not match configured legacy-debt patterns. No deletion occurred. Do not retarget this frozen Work Order.",
@@ -26,8 +27,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "SUPERSEDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T11:46:00Z",
+  "updatedAt": "2026-08-09T08:42:00Z",
   "workOrderId": "WO-P2-004-BRANCH-SLOT-A7C4D2F1"
 }
