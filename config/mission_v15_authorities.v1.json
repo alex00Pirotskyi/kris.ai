@@ -23,6 +23,15 @@
         "testBindings": "testId"
       }
     },
+    "test-center-proof-lineage": {
+      "ownerMission": "MISSION-002",
+      "path": "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
+      "mode": "APPEND_SAFE_JSON",
+      "eligibleRequestingMissions": ["MISSION-004", "MISSION-005", "MISSION-006", "MISSION-010"],
+      "collections": {
+        "lineageBindings": "testId"
+      }
+    },
     "source-inventory": {
       "ownerMission": "MISSION-001",
       "path": "test/product/source_contract_test.dart",

@@ -7,12 +7,14 @@ on:
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
       - 'config/mission_delivery.v1.json'
+      - 'config/mission_v15_authorities.v1.json'
       - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_control.py'
       - 'tool/mission_materialize_safe.py'
       - 'tool/mission_runtime_control.py'
       - 'tool/mission_runtime_model.py'
       - 'tool/mission_orchestrator.py'
+      - 'tool/mission_v15_authority_config_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
       - 'schemas/mission_*.json'
@@ -24,8 +26,10 @@ on:
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
       - 'config/mission_delivery.v1.json'
+      - 'config/mission_v15_authorities.v1.json'
       - 'tool/mission_control.py'
       - 'tool/mission_materialize_safe.py'
+      - 'tool/mission_v15_authority_config_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
       - 'schemas/mission_*.json'
@@ -56,6 +60,8 @@ jobs:
         run: |
           expected='${{ github.event.pull_request.head.sha || github.sha }}'
           test "$(git rev-parse HEAD)" = "$expected"
+      - name: Validate shared-authority configuration
+        run: python -m unittest -v tool/mission_v15_authority_config_test.py
       - name: Validate static topology with durable runtime overlay
         run: python tool/mission_materialize_safe.py --project . validate
       - name: Verify deterministic safe static views

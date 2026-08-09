@@ -3,6 +3,7 @@ name: Mission V1.5 Hygiene
 on:
   pull_request:
     paths:
+      - 'config/mission_v15_authorities.v1.json'
       - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_v15_hygiene.py'
       - 'tool/mission_v15_live_runtime_audit.py'
