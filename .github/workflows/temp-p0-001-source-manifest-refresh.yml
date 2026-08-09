@@ -1,0 +1,52 @@
+name: TEMP P0-001 Source Manifest Refresh
+
+on:
+  push:
+    branches:
+      - 'agent/help/elastic-gpt-44ae364b/p0-001-source-manifest-refresh'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Replace exactly three stale P2-004 hashes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('SOURCE_MANIFEST.sha256')
+          text = p.read_text(encoding='utf-8')
+          replacements = {
+              '8a75d6009c80437d2abbf96f4223907cdba13ea9c861df315bc35f804a89d59e  docs/adr/ADR-0012-p2-automation-host.md':
+              'd368bddf06838d72d30ceff918e16af8859c4a2dd8006116b83a2c70accf41b6  docs/adr/ADR-0012-p2-automation-host.md',
+              'c9c9261d9f1f5bda1ccdcf786f1d2088858cf8ca176b61390931f2466aa970ed  release/evidence/P2-004/IMPLEMENTATION.md':
+              'ef28cde197242aed69b8945bd083f2c73269fd365dc6584e38ccf5579dcc8325  release/evidence/P2-004/IMPLEMENTATION.md',
+              'e691408302b361551a8f2e77a873d543c96a909a1f20a1d6c2c3ab1deaf81ada  release/evidence/P2-004/manifest.json':
+              '4a9212ba67c41df6e07bec210f6362ff50dbd15cf6822afaad1523873a58dd20  release/evidence/P2-004/manifest.json',
+          }
+          for old, new in replacements.items():
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected exactly one match for {old!r}, found {count}')
+              text = text.replace(old, new)
+          p.write_text(text, encoding='utf-8')
+          PY
+          git diff -- SOURCE_MANIFEST.sha256
+          test "$(git diff --numstat -- SOURCE_MANIFEST.sha256)" = $'3\t3\tSOURCE_MANIFEST.sha256'
+      - name: Remove temporary workflow and commit bounded result
+        shell: bash
+        run: |
+          rm .github/workflows/temp-p0-001-source-manifest-refresh.yml
+          git config user.name 'mission-runtime-bot'
+          git config user.email 'mission-runtime-bot@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256 .github/workflows/temp-p0-001-source-manifest-refresh.yml
+          git commit -m 'chore: refresh P2-004 source manifest hashes'
+          git push origin HEAD:agent/help/elastic-gpt-44ae364b/p0-001-source-manifest-refresh
