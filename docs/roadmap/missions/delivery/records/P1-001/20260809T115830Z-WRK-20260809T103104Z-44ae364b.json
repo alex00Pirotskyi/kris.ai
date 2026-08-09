@@ -26,15 +26,15 @@
     "candidateTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
     "decision": "PASS",
     "implementerAuthoringContextIds": [
-      "LEGACY-PRE-V15:P0-008"
+      "LEGACY-PRE-V15:P1-001"
     ],
-    "reviewContextId": "WRK-20260809T103104Z-44AE364B:acceptance-review:P0-008",
+    "reviewContextId": "WRK-20260809T103104Z-44ae364b:acceptance-review:P1-001",
     "reviewTier": "R1",
     "reviewerWorkerIdentity": "ELASTIC-GPT-44AE364B"
   },
   "schemaVersion": 1,
   "status": "ACCEPTED",
-  "task": "P0-008",
+  "task": "P1-001",
   "tree": "6fb1261ca415bcacbe127310a362405508bed5c9",
-  "workExecutionId": "WRK-20260809T103104Z-44AE364B"
+  "workExecutionId": "WRK-20260809T103104Z-44ae364b"
 }
