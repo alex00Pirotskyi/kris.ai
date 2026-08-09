@@ -3,8 +3,8 @@
     "lib/product/browser/**",
     "test/product/browser/**"
   ],
-  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
-  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "baseCommit": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
+  "baseTree": "9740a907937550bf5283a551a3776c83f76cde25",
   "branch": "agent/c/mission-003-browser-runtime",
   "childWorkOrders": [
     "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
@@ -39,6 +39,6 @@
   "status": "READY",
   "supersededReadinessPr": 68,
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-09T16:47:00Z",
+  "updatedAt": "2026-08-09T16:57:00Z",
   "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
 }

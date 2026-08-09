@@ -1,0 +1,21 @@
+{
+  "details": {
+    "activeProductPr": 131,
+    "branch": "agent/c/mission-003-browser-runtime",
+    "head": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
+    "headTree": "9740a907937550bf5283a551a3776c83f76cde25",
+    "previousHead": "a68a0790e12b24c831cb7fbca734c4deea471280",
+    "rebasedReadyWorkOrders": [
+      "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+      "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
+    ]
+  },
+  "eventId": "EVT-00000330-P3_PRODUCT_PR_RECONCILED",
+  "eventType": "PRODUCT_PR_RECONCILED",
+  "mission": "MISSION-003",
+  "recordedAt": "2026-08-09T16:57:00Z",
+  "runtimeGeneration": 330,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T165700Z-P3-LIVE-RECONCILE",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}
