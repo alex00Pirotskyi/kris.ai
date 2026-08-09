@@ -1,0 +1,29 @@
+{
+  "allowedPaths": [
+    "services/research_worker/**"
+  ],
+  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "createdAt": "2026-08-09T09:15:00Z",
+  "createdBy": "WRK-20260809T084200Z-c73e9a51",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Dispatch and validate exact canonical product-gates for P4-001 head 4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378 after deterministic SOURCE_MANIFEST finalization. Do not mutate Product source merely to trigger CI. Hold only a zero-write INTEGRATION semaphore while GitHub allocates the workflow_dispatch run, prove the run head equals the exact Product head, and validate Ubuntu, Windows and macOS conclusions. No acceptance/support promotion.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "exact ci.yml workflow_dispatch bound to 4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+    "validate-ubuntu SUCCESS",
+    "validate-windows SUCCESS",
+    "validate-macos SUCCESS",
+    "no Product source mutation"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-09T09:15:00Z",
+  "workOrderId": "WO-P4-001-EXACT-CI-C73E9A51"
+}
