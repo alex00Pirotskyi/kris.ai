@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000321-P0_001_FORMAL_CLOSURE_LANDED",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "artifactDigest": "sha256:72022af69fcd2aeb8577dc11084c31ec2eaf63504e82dbdf4e5867464be380bd",
+    "artifactId": 9037435870,
+    "exactMainCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+    "runId": 31311227913,
+    "sourceManifestVerified": "1126/1126",
+    "releasedSemaphoreId": "SEM-P0-001-FORMAL-CLOSURE-R2-44AE364B",
+    "status": "LANDED"
+  },
+  "recordedAt": "2026-08-09T11:38:30Z",
+  "runtimeGeneration": 321,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
+}
