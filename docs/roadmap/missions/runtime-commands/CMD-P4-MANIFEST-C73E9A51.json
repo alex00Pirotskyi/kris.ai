@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P4-MANIFEST-C73E9A51",
+  "operation": "MATERIALIZE_SOURCE_MANIFEST_V1",
+  "expectedRuntimeGeneration": 294,
+  "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA",
+  "semaphoreId": "SEM-P4-001-CLEAN-MANIFEST-C73E9A51",
+  "workerIdentity": "ELASTIC-GPT-C73E9A51",
+  "productPr": 62,
+  "expectedProductHead": "bff09fb233d49299c2bb9cfb6234ef0eb2e1e4b5",
+  "createdAt": "2026-08-09T09:07:00Z",
+  "note": "Idle-window P4 RELEASE finalization after runtime ghost cleanup; exact candidate only."
+}
