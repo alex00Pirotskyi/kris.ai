@@ -13,12 +13,12 @@
   "kind": "WRITE",
   "mission": "MISSION-001",
   "productPr": null,
-  "refreshedAt": "2026-08-09T11:21:40Z",
+  "refreshedAt": "2026-08-09T11:34:00Z",
   "resourceId": "SOURCE_MANIFEST.sha256",
-  "runtimeGeneration": 318,
+  "runtimeGeneration": 319,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
   "workerIdentity": "ELASTIC-GPT-44AE364B"
 }

@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000319-P0_001_MANIFEST_LANDED",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "landedMainCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+    "landedMainTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+    "productGatesRun": 31310700941,
+    "releasedSemaphoreId": "SEM-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
+    "resumedWorkOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
+  },
+  "recordedAt": "2026-08-09T11:34:00Z",
+  "runtimeGeneration": 319,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B"
+}

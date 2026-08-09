@@ -7,8 +7,8 @@
     "tasks/completed/P0-001.md"
   ],
   "assignedWorker": "ELASTIC-GPT-44AE364B",
-  "baseCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
-  "baseTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
   "createdAt": "2026-08-09T11:14:30Z",
   "createdBy": "WRK-20260809T103104Z-44AE364B",
   "dependencyRequirements": [
@@ -18,7 +18,7 @@
   "lastActor": "ELASTIC-GPT-44AE364B",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
-  "objective": "Close the real historical P0-001 formal-acceptance gap without rebuilding completed Product work. Against exact protected main, obtain a machine-observed clean-checkout baseline run equivalent to the previously required command `python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates --strict`, proving source-manifest integrity and all bounded safe gates. The first exact run proved all three bounded safe gates PASS and exposed only three P2-004 source-manifest hash mismatches. Resume immediately after the bounded shared-authority refresh lands.",
+  "objective": "Close the real historical P0-001 formal-acceptance gap without rebuilding completed Product work. Against exact protected main, obtain a machine-observed clean-checkout baseline run equivalent to the previously required command `python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates --strict`, proving source-manifest integrity and all bounded safe gates. Candidate closure run 31310783845 passed on the exact tree now landed as protected main commit 521ecab1f2831206da98a282df51d8094230bc99; rerun against the landed SHA before terminal closure.",
   "parentProductPr": null,
   "parentWorkOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
   "priority": 100,
@@ -31,8 +31,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "READY",
   "type": "IMPLEMENTATION",
-  "updatedAt": "2026-08-09T11:19:30Z",
+  "updatedAt": "2026-08-09T11:34:00Z",
   "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
 }

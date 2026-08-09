@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256",
     ".github/workflows/temp-p0-001-source-manifest-refresh.yml"
@@ -28,8 +28,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "LANDED",
   "type": "IMPLEMENTATION",
-  "updatedAt": "2026-08-09T11:21:40Z",
+  "updatedAt": "2026-08-09T11:34:00Z",
   "workOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B"
 }
