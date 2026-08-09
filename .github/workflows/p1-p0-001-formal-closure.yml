@@ -1,0 +1,41 @@
+name: P0-001 Formal Closure Validation
+
+on:
+  push:
+    branches:
+      - 'agent/help/elastic-gpt-44ae364b/p0-001-formal-closure'
+
+permissions:
+  contents: read
+
+jobs:
+  formal-closure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: 2c8499f4b0b56276c29e5bfde821478836074041
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Run exact P0-001 formal closure command
+        shell: bash
+        run: python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates --strict
+      - name: Print closure receipt
+        shell: bash
+        run: |
+          cat release/evidence/baseline/execution.json
+          cat release/evidence/baseline/EXECUTION.md
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p0-001-formal-closure-${{ github.run_id }}
+          path: |
+            release/evidence/baseline/execution.json
+            release/evidence/baseline/EXECUTION.md
+            release/evidence/baseline/baseline.json
+            release/evidence/baseline/BASELINE.md
+          if-no-files-found: error
+          retention-days: 30
