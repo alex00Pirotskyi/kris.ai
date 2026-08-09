@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P4-EXACT-CI-C73E9A51",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "expectedRuntimeGeneration": 297,
+  "workOrderId": "WO-P4-001-EXACT-CI-C73E9A51",
+  "semaphoreId": "SEM-P4-001-EXACT-CI-C73E9A51",
+  "workerIdentity": "ELASTIC-GPT-C73E9A51",
+  "productPr": 62,
+  "expectedProductHead": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "createdAt": "2026-08-09T09:18:00Z",
+  "note": "Exact product-gates after P4 deterministic source-manifest finalization; zero-write CI allocation only."
+}
