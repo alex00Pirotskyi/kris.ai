@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-EXACT-SPECIALIZED-C73E9A51",
   "allowedPaths": [
     "services/research_worker/**"
   ],
+  "assignedWorker": "ELASTIC-GPT-C73E9A51",
   "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
   "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
   "createdAt": "2026-08-09T09:44:00Z",
   "createdBy": "WRK-20260809T084200Z-c73e9a51",
   "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Dispatch and validate the existing p4-001-search-provider.yml workflow on exact canonical P4-001 head 4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378 through the bounded allowlisted connector path. Do not mutate Product source. Hold only a zero-write INTEGRATION semaphore until GitHub allocates the exact-head workflow_dispatch run, then validate canonical linux/macos/windows source lanes and committed source-manifest equality. No acceptance/support promotion.",
@@ -23,8 +26,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-09T09:44:00Z",
+  "updatedAt": "2026-08-09T09:45:00Z",
   "workOrderId": "WO-P4-001-EXACT-SPECIALIZED-C73E9A51"
 }
