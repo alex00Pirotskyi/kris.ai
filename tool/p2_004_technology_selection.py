@@ -66,6 +66,14 @@ def git_head(project: pathlib.Path) -> str:
     return value
 
 
+def file_sha256(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def tree_fingerprint(paths: list[pathlib.Path]) -> str:
     digest = hashlib.sha256()
     for path in sorted(paths, key=lambda item: item.as_posix()):
@@ -178,10 +186,35 @@ Future<void> main() async {
 '''
 
 
+def ensure_macos_node_pty_spawn_helper(project: pathlib.Path) -> list[str]:
+    """Restore executable bits on node-pty macOS prebuilt spawn helpers.
+
+    node-pty 1.1.0 can arrive with a non-executable darwin spawn-helper. The
+    technology spike records this deterministic packaging repair instead of
+    silently converting the first observed failure into a pass.
+    """
+    if PLATFORM != "macos":
+        return []
+    root = project / "automation_host" / "node_modules" / "node-pty"
+    repaired: list[str] = []
+    if not root.exists():
+        return repaired
+    for helper in sorted(root.rglob("spawn-helper")):
+        if not helper.is_file():
+            continue
+        mode = helper.stat().st_mode
+        if mode & 0o111:
+            continue
+        helper.chmod(mode | 0o111)
+        repaired.append(helper.relative_to(project).as_posix())
+    return repaired
+
+
 def node_round(project: pathlib.Path, round_id: int) -> dict[str, Any]:
     node = shutil.which("node")
     if not node:
         return {"roundId": round_id, "status": "unavailable", "realPtyBehavior": False}
+    packaging_repairs = ensure_macos_node_pty_spawn_helper(project)
     with tempfile.TemporaryDirectory(prefix="p2-node-selection-") as tmp:
         script = pathlib.Path(tmp) / "probe.mjs"
         script.write_text(NODE_PROBE, encoding="utf-8")
@@ -200,6 +233,8 @@ def node_round(project: pathlib.Path, round_id: int) -> dict[str, Any]:
         "startupMs": round(elapsed, 3),
         "rssBytes": int(payload.get("rssBytes") or 0),
         "resizeExercised": bool(payload.get("resizeExercised")),
+        "packagingRepairApplied": bool(packaging_repairs),
+        "packagingRepairs": packaging_repairs,
         "stderrTail": result.stderr[-2000:] if result.returncode else "",
     }
 
@@ -350,6 +385,7 @@ def measure(project: pathlib.Path) -> dict[str, Any]:
                 "implementationSha256": tree_fingerprint(node_files),
                 "summary": summarize(node_rounds, package_size_bytes=node_package),
                 "selectionEligible": all(row.get("status") == "passed" and row.get("realPtyBehavior") is True for row in node_rounds),
+                "packagingRepairRequired": any(bool(row.get("packagingRepairApplied")) for row in node_rounds),
             },
             NATIVE: {
                 "candidateId": NATIVE,
@@ -419,6 +455,7 @@ def aggregate(records: list[dict[str, Any]]) -> dict[str, Any]:
             "basis": [
                 "real node-pty PTY launch/input/output/resize passed in three rounds on Windows, macOS and Linux",
                 "startup, resident-memory and package footprint were measured on each target OS",
+                "macOS node-pty 1.1.0 spawn-helper execute-bit repair is recorded when required and must be resolved in packaging before downstream certification",
                 "native-only alternative lacks an independent Windows supervisor prototype in this spike",
                 "Dart control plane remains viable only with a native PTY helper and therefore adds a second implementation boundary",
             ],
