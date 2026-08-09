@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000345-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-002",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-QWEN-P8-001-04DC0D56",
+    "workerIdentity": "ELASTIC-QWEN-F7151DCD"
+  },
+  "recordedAt": "2026-08-09T17:35:36Z",
+  "runtimeGeneration": 345,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T173526Z-76681d8c",
+  "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
+}
