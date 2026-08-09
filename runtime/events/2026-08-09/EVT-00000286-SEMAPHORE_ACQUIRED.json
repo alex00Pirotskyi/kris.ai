@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000286-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "branch": "agent/help/elastic-gpt-6e91a2f4/mission-001/p2-004-technology-selection",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P2-004-TECH-SELECTION-6E91A2F4"
+  },
+  "recordedAt": "2026-08-09T07:02:00Z",
+  "runtimeGeneration": 286,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T065200Z-6e91a2f4",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4"
+}

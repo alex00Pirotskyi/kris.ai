@@ -1,0 +1,28 @@
+{
+  "allowedPaths": [
+    "tool/p2_004_technology_selection.py",
+    "tool/p2_004_technology_selection_test.py",
+    ".github/workflows/p2-004-technology-selection.yml",
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/IMPLEMENTATION.md",
+    "release/evidence/P2-004/manifest.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "branch": "agent/help/elastic-gpt-6e91a2f4/mission-001/p2-004-technology-selection",
+  "createdAt": "2026-08-09T07:02:00Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-09T11:02:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-09T07:02:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 286,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-TECH-SELECTION-6E91A2F4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+  "workerIdentity": "ELASTIC-GPT-6E91A2F4"
+}
