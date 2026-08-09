@@ -92,13 +92,17 @@ final class P3BrowserRuntimeLaunchPlan {
     final stateDirectory = _argumentValue('--state-directory');
     if (!_isAbsolute(browserExecutable) ||
         !File(browserExecutable).existsSync()) {
-      throw const P3BrowserRuntimeException('bundled_browser_executable_required');
+      throw const P3BrowserRuntimeException(
+        'bundled_browser_executable_required',
+      );
     }
     if (!_isAbsolute(browserRoot) || !Directory(browserRoot).existsSync()) {
       throw const P3BrowserRuntimeException('bundled_browser_root_required');
     }
     if (!_isAbsolute(runtimeManifest) || !File(runtimeManifest).existsSync()) {
-      throw const P3BrowserRuntimeException('browser_runtime_manifest_required');
+      throw const P3BrowserRuntimeException(
+        'browser_runtime_manifest_required',
+      );
     }
     if (!_isAbsolute(stateDirectory) ||
         !Directory(stateDirectory).existsSync()) {
@@ -109,12 +113,16 @@ final class P3BrowserRuntimeLaunchPlan {
       throw const P3BrowserRuntimeException('browser_probe_protocol_invalid');
     }
     if (environment.keys.toSet().difference(<String>{
-      'KRISTIN_P3_RUNTIME_MANIFEST_SHA256',
-      'KRISTIN_P3_RUNTIME_BUILD_SHA256',
-      'KRISTIN_P3_BROWSER_REVISION',
-    }).isNotEmpty ||
-        environment.values.any((value) => value.isEmpty || value.contains('\u0000'))) {
-      throw const P3BrowserRuntimeException('browser_runtime_environment_invalid');
+          'KRISTIN_P3_RUNTIME_MANIFEST_SHA256',
+          'KRISTIN_P3_RUNTIME_BUILD_SHA256',
+          'KRISTIN_P3_BROWSER_REVISION',
+        }).isNotEmpty ||
+        environment.values.any(
+          (value) => value.isEmpty || value.contains('\u0000'),
+        )) {
+      throw const P3BrowserRuntimeException(
+        'browser_runtime_environment_invalid',
+      );
     }
   }
 
@@ -193,11 +201,7 @@ final class P3BrowserRuntimeReady {
 
 /// Supervised P3-001 probe process. Browser sessions/actions remain P3-002+.
 final class P3BrowserRuntimeProcess {
-  P3BrowserRuntimeProcess._(
-    this._process,
-    this.resources,
-    this.launchPlan,
-  );
+  P3BrowserRuntimeProcess._(this._process, this.resources, this.launchPlan);
 
   static Future<P3BrowserRuntimeProcess> start({
     required P3BrowserRuntimeResourceSet resources,
@@ -265,13 +269,18 @@ final class P3BrowserRuntimeProcess {
         _process.kill();
       }
     });
-    unawaited(_process.exitCode.then((code) {
-      if (!_closing && !_ready.isCompleted) {
-        _completeReadyError(
-          P3BrowserRuntimeException('browser_worker_exited_before_ready', '$code'),
-        );
-      }
-    }));
+    unawaited(
+      _process.exitCode.then((code) {
+        if (!_closing && !_ready.isCompleted) {
+          _completeReadyError(
+            P3BrowserRuntimeException(
+              'browser_worker_exited_before_ready',
+              '$code',
+            ),
+          );
+        }
+      }),
+    );
     try {
       _readyValue = await _ready.future.timeout(launchPlan.startupTimeout);
     } on TimeoutException {
@@ -291,7 +300,10 @@ final class P3BrowserRuntimeProcess {
       );
     } catch (error) {
       _completeReadyError(
-        P3BrowserRuntimeException('browser_worker_ready_decode_failed', '$error'),
+        P3BrowserRuntimeException(
+          'browser_worker_ready_decode_failed',
+          '$error',
+        ),
       );
     }
   }

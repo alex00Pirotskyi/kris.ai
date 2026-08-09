@@ -5,7 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
 import 'package:kristin_local_agent/product/crypto_utils.dart';
 
-String _hex(String value, int length) => List<String>.filled(length, value).join();
+String _hex(String value, int length) =>
+    List<String>.filled(length, value).join();
 
 Future<Directory> _writeBundle(
   Directory dataRoot, {
@@ -42,9 +43,12 @@ Future<Directory> _writeBundle(
   ).writeAsString('browser-resource\n');
 
   final automationHostTree =
-      await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(worker.parent.parent);
-  final browserTree =
-      await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(browser.parent);
+      await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
+        worker.parent.parent,
+      );
+  final browserTree = await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
+    browser.parent,
+  );
   final packageLockSha = Sha256.hex(await packageLock.readAsBytes());
   final manifest = <String, Object?>{
     'schemaVersion': '1.0.0',
@@ -108,55 +112,60 @@ Future<Directory> _writeBundle(
 }
 
 void main() {
-  test('resolves exact application-owned browser bundle without global runtime',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-browser-bundle-');
-    addTearDown(() => temp.delete(recursive: true));
-    final root = await _writeBundle(temp);
-    final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
-      applicationDataRoot: temp.absolute,
-      executablePath: '${temp.path}${Platform.pathSeparator}app'
-          '${Platform.pathSeparator}kristin',
-    );
+  test(
+    'resolves exact application-owned browser bundle without global runtime',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-browser-bundle-');
+      addTearDown(() => temp.delete(recursive: true));
+      final root = await _writeBundle(temp);
+      final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
+        applicationDataRoot: temp.absolute,
+        executablePath:
+            '${temp.path}${Platform.pathSeparator}app'
+            '${Platform.pathSeparator}kristin',
+      );
 
-    final resources = await resolver.resolve();
+      final resources = await resolver.resolve();
 
-    expect(resources.root.path, root.absolute.path);
-    expect(resources.nodeVersion, '24.18.0');
-    expect(resources.browserEngine, 'chromium');
-    expect(resources.browserRevision, 'chromium-test-revision');
-    expect(File(resources.nodeExecutable).existsSync(), isTrue);
-    expect(File(resources.browserExecutable).existsSync(), isTrue);
-    expect(resources.provenance['applicationOwned'], isTrue);
-    expect(resources.provenance['globalRuntimeRequired'], isFalse);
-    expect(resources.provenance['networkInstallRequired'], isFalse);
-  });
+      expect(resources.root.path, root.absolute.path);
+      expect(resources.nodeVersion, '24.18.0');
+      expect(resources.browserEngine, 'chromium');
+      expect(resources.browserRevision, 'chromium-test-revision');
+      expect(File(resources.nodeExecutable).existsSync(), isTrue);
+      expect(File(resources.browserExecutable).existsSync(), isTrue);
+      expect(resources.provenance['applicationOwned'], isTrue);
+      expect(resources.provenance['globalRuntimeRequired'], isFalse);
+      expect(resources.provenance['networkInstallRequired'], isFalse);
+    },
+  );
 
-  test('rejects a tampered worker even when manifest identity is unchanged',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-browser-tamper-');
-    addTearDown(() => temp.delete(recursive: true));
-    final root = await _writeBundle(temp);
-    final worker = File(
-      '${root.path}${Platform.pathSeparator}automation_host'
-      '${Platform.pathSeparator}src${Platform.pathSeparator}browser-runtime.mjs',
-    );
-    await worker.writeAsString('// tampered\n', mode: FileMode.append);
-    final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
-      applicationDataRoot: temp.absolute,
-    );
+  test(
+    'rejects a tampered worker even when manifest identity is unchanged',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-browser-tamper-');
+      addTearDown(() => temp.delete(recursive: true));
+      final root = await _writeBundle(temp);
+      final worker = File(
+        '${root.path}${Platform.pathSeparator}automation_host'
+        '${Platform.pathSeparator}src${Platform.pathSeparator}browser-runtime.mjs',
+      );
+      await worker.writeAsString('// tampered\n', mode: FileMode.append);
+      final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
+        applicationDataRoot: temp.absolute,
+      );
 
-    expect(
-      resolver.resolve(),
-      throwsA(
-        isA<StateError>().having(
-          (error) => '$error',
-          'error',
-          contains('p3_runtime_resource_digest_mismatch:browserWorker'),
+      expect(
+        resolver.resolve(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => '$error',
+            'error',
+            contains('p3_runtime_resource_digest_mismatch:browserWorker'),
+          ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   test('rejects a manifest that permits global runtime fallback', () async {
     final temp = await Directory.systemTemp.createTemp('p3-browser-global-');

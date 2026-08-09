@@ -56,26 +56,26 @@ final class P3BrowserRuntimeResourceSet {
   final String packageLockSha256;
 
   Map<String, Object?> get provenance => <String, Object?>{
-        'resolver': 'P3ApplicationOwnedBrowserRuntimeResolver',
-        'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
-        'applicationOwned': true,
-        'globalRuntimeRequired': false,
-        'networkInstallRequired': false,
-        'sourceCommit': sourceCommit,
-        'sourceTree': sourceTree,
-        'runtimeBuildSha256': runtimeBuildSha256,
-        'manifestSha256': manifestSha256,
-        'nodeVersion': nodeVersion,
-        'automationHostPackageVersion': automationHostPackageVersion,
-        'browserEngine': browserEngine,
-        'browserRevision': browserRevision,
-        'nodeExecutableSha256': nodeExecutableSha256,
-        'workerScriptSha256': workerScriptSha256,
-        'browserExecutableSha256': browserExecutableSha256,
-        'browserRootTreeSha256': browserRootTreeSha256,
-        'packageLockSha256': packageLockSha256,
-        'rootPathSha256': Sha256.text(root.absolute.path),
-      };
+    'resolver': 'P3ApplicationOwnedBrowserRuntimeResolver',
+    'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
+    'applicationOwned': true,
+    'globalRuntimeRequired': false,
+    'networkInstallRequired': false,
+    'sourceCommit': sourceCommit,
+    'sourceTree': sourceTree,
+    'runtimeBuildSha256': runtimeBuildSha256,
+    'manifestSha256': manifestSha256,
+    'nodeVersion': nodeVersion,
+    'automationHostPackageVersion': automationHostPackageVersion,
+    'browserEngine': browserEngine,
+    'browserRevision': browserRevision,
+    'nodeExecutableSha256': nodeExecutableSha256,
+    'workerScriptSha256': workerScriptSha256,
+    'browserExecutableSha256': browserExecutableSha256,
+    'browserRootTreeSha256': browserRootTreeSha256,
+    'packageLockSha256': packageLockSha256,
+    'rootPathSha256': Sha256.text(root.absolute.path),
+  };
 }
 
 /// Resolves only a packaged P3 browser runtime owned by the application.
@@ -159,8 +159,10 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
     final runtimeBuildSha256 = _hex(identity, 'runtimeBuildSha256', 64);
     final packageLockSha256 = _hex(identity, 'packageLockSha256', 64);
     final nodeVersion = _requiredText(identity, 'nodeVersion');
-    final automationHostPackageVersion =
-        _requiredText(identity, 'automationHostPackageVersion');
+    final automationHostPackageVersion = _requiredText(
+      identity,
+      'automationHostPackageVersion',
+    );
     final browserEngine = _requiredText(identity, 'browserEngine');
     final browserRevision = _requiredText(identity, 'browserRevision');
     if (browserEngine != 'chromium') {
@@ -175,7 +177,11 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
       'automationHostRoot',
     );
     final browser = await _fileResource(root, resources, 'browserExecutable');
-    final browserRoot = await _directoryResource(root, resources, 'browserRoot');
+    final browserRoot = await _directoryResource(
+      root,
+      resources,
+      'browserRoot',
+    );
     final packageLock = await _fileResource(root, resources, 'packageLock');
     if (packageLock.sha256 != packageLockSha256) {
       throw StateError('p3_package_lock_identity_mismatch');
@@ -284,10 +290,9 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
       }
       if (entity is! File) continue;
       final absolute = entity.absolute.path;
-      final relative = absolute.substring(root.length + 1).replaceAll(
-            Platform.pathSeparator,
-            '/',
-          );
+      final relative = absolute
+          .substring(root.length + 1)
+          .replaceAll(Platform.pathSeparator, '/');
       rows.add('$relative\u0000${Sha256.hex(await entity.readAsBytes())}');
     }
     rows.sort();
@@ -312,7 +317,9 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
         value.startsWith(r'\\') ||
         RegExp(r'^[A-Za-z]:').hasMatch(value) ||
         value.contains('\\') ||
-        value.split('/').any((part) => part.isEmpty || part == '.' || part == '..')) {
+        value
+            .split('/')
+            .any((part) => part.isEmpty || part == '.' || part == '..')) {
       throw StateError('p3_runtime_resource_path_invalid:$key');
     }
     return value;
