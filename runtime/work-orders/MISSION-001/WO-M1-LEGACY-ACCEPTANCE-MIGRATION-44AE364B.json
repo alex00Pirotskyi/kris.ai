@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "docs/roadmap/missions/delivery/records/P0-001/**",
     "docs/roadmap/missions/delivery/records/P0-008/**",
@@ -8,8 +8,7 @@
     "docs/roadmap/missions/delivery/records/P1-003/**",
     "docs/roadmap/missions/delivery/records/P1-012/**",
     "docs/roadmap/missions/delivery/records/P2-004/**",
-    "runtime/acceptance-evidence/MISSION-001/**",
-    ".github/workflows/p1-v15-delivery-acceptance-validation.yml"
+    "runtime/acceptance-evidence/MISSION-001/**"
   ],
   "assignedWorker": "ELASTIC-GPT-44AE364B",
   "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
@@ -21,7 +20,7 @@
   "lastActor": "ELASTIC-GPT-44AE364B",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
-  "objective": "Perform the bounded Mission Execution 1.5 delivery-state migration required to unlock P3-001. Create strict append-only ACCEPTED records only for the proven dependency chain P0-001 -> P0-008 -> P1-001 -> P1-002 -> P1-003 -> P1-012 -> P2-004. Bind legacy tasks to current protected-main commit 521ecab1f2831206da98a282df51d8094230bc99 and exact current tri-platform Product CI; bind P2-004 to its reviewed/landed technology-selection commit with immutable R1 and landing receipts. Do not accept any unrelated roadmap task, do not certify P2-005/P2-006, and do not imply release/support/GA status.",
+  "objective": "Perform the bounded Mission Execution 1.5 delivery-state migration required to unlock P3-001. Strict helper validation run 31312796936 passed exact Git-object binding, exact seven-task scope, accepted-record validation, and append-only history for P0-001 -> P0-008 -> P1-001 -> P1-002 -> P1-003 -> P1-012 -> P2-004. Publish only those validated records/evidence to runtime. P2-005/P2-006 remain uncertified and no release/support/GA status is promoted.",
   "parentProductPr": 75,
   "parentWorkOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
   "priority": 100,
@@ -37,8 +36,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "LANDED",
   "type": "REVIEW",
-  "updatedAt": "2026-08-09T11:58:00Z",
+  "updatedAt": "2026-08-09T12:16:00Z",
   "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B"
 }

@@ -1,0 +1,40 @@
+{
+  "ciReceipt": {
+    "candidateCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+    "result": "PASS",
+    "runId": 31310998304,
+    "workflow": "product-gates"
+  },
+  "commit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "evidence": [
+    {
+      "kind": "V15_LEGACY_ACCEPTANCE_CHAIN_EVIDENCE",
+      "path": "runtime/acceptance-evidence/MISSION-001/20260809-p0-p1-legacy-chain.json",
+      "sha256": "cb1fd97e88f0b144b18c30d74b026e0261ace0f9c99a036eb16feaad9f67f18a"
+    }
+  ],
+  "migration": {
+    "kind": "LEGACY_PRE_V15_ACCEPTANCE_IMPORT",
+    "productSourceChanged": false,
+    "releaseSupportGaPromotion": false
+  },
+  "mission": "MISSION-001",
+  "recordedAt": "2026-08-09T11:58:30Z",
+  "reviewReceipt": {
+    "authoringContextIds": [],
+    "candidateCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+    "candidateTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+    "decision": "PASS",
+    "implementerAuthoringContextIds": [
+      "LEGACY-PRE-V15:P1-001"
+    ],
+    "reviewContextId": "WRK-20260809T103104Z-44ae364b:acceptance-review:P1-001",
+    "reviewTier": "R1",
+    "reviewerWorkerIdentity": "ELASTIC-GPT-44AE364B"
+  },
+  "schemaVersion": 1,
+  "status": "ACCEPTED",
+  "task": "P1-001",
+  "tree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "workExecutionId": "WRK-20260809T103104Z-44ae364b"
+}

@@ -1,0 +1,44 @@
+{
+  "candidateCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "candidateTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "independentR1": {
+    "authoringExecution": "WRK-20260809T065200Z-6e91a2f4",
+    "result": "PASS",
+    "reviewContextId": "WRK-20260809T103104Z-44AE364B",
+    "reviewerWorkerIdentity": "ELASTIC-GPT-44AE364B",
+    "runtimeEvent": "runtime/events/2026-08-09/EVT-00000311-WORK_ORDER_DONE.json",
+    "workOrder": "WO-P2-004-TECH-SELECTION-R1-6E91A2F4"
+  },
+  "kind": "V15_P2_004_ACCEPTANCE_EVIDENCE",
+  "landing": {
+    "landedMainCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+    "landedMainTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+    "postMainProductGatesRun": 31309419985,
+    "result": "PASS",
+    "runtimeEvent": "runtime/events/2026-08-09/EVT-00000315-P2_004_INTEGRATION_LANDED.json"
+  },
+  "mission": "MISSION-001",
+  "schemaVersion": 1,
+  "selection": {
+    "macosPackagingRepairRequired": true,
+    "measurementRunId": 31301030782,
+    "platforms": {
+      "aggregate": "PASS",
+      "linux": "PASS",
+      "macos": "PASS",
+      "windows": "PASS"
+    },
+    "reviewedHelperCommit": "e8e85a4ffa744f9118f4dc6e04b563e7ee521aae",
+    "reviewedHelperTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+    "selectedCandidate": "typescript-node-node-pty-with-native-lifecycle-adapters",
+    "windowsMedianStartupMs": 5158.999
+  },
+  "task": "P2-004",
+  "truthBoundary": {
+    "p2_005Certified": false,
+    "p2_006Certified": false,
+    "p3BehaviorImplemented": false,
+    "releaseSupportGaPromotion": false,
+    "technologySelectionAccepted": true
+  }
+}

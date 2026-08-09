@@ -1,0 +1,31 @@
+{
+  "eventId": "EVT-00000324-DELIVERY_ACCEPTANCE_MIGRATION_LANDED",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "acceptedTasks": [
+      "P0-001",
+      "P0-008",
+      "P1-001",
+      "P1-002",
+      "P1-003",
+      "P1-012",
+      "P2-004"
+    ],
+    "deliveryWorkExecutionId": "WRK-20260809T103104Z-44ae364b",
+    "helperCommit": "604ae2aef79c6ec2ae3ff91fe70d3bdcb13e8553",
+    "p2_004AcceptanceBoundary": "technology-selection-only",
+    "p2_005Certified": false,
+    "p2_006Certified": false,
+    "p3BehaviorImplemented": false,
+    "releaseSupportGaPromotion": false,
+    "releasedSemaphoreId": "SEM-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B",
+    "status": "LANDED",
+    "strictValidationRun": 31312796936
+  },
+  "recordedAt": "2026-08-09T12:16:00Z",
+  "runtimeGeneration": 324,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B"
+}
