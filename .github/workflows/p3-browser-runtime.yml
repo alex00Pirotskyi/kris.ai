@@ -40,25 +40,51 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Print exact Dart formatter diff for P3 parent sources
+      - name: Print exact Dart formatter diff for all P3 parent sources
         shell: bash
         run: |
           set -euo pipefail
-          dart format \
-            lib/product/browser/browser_runtime_bundle.dart \
-            lib/product/browser/browser_runtime_process.dart \
-            test/product/browser/browser_runtime_bundle_test.dart
-          git diff -- \
-            lib/product/browser/browser_runtime_bundle.dart \
-            lib/product/browser/browser_runtime_process.dart \
-            test/product/browser/browser_runtime_bundle_test.dart
+          dart format lib/product/browser/*.dart test/product/browser/*.dart
+          git diff -- lib/product/browser test/product/browser
       - name: Preserve exact formatter-owned parent files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: p3-parent-dart-format-${{ github.run_id }}
           path: |
-            lib/product/browser/browser_runtime_bundle.dart
-            lib/product/browser/browser_runtime_process.dart
-            test/product/browser/browser_runtime_bundle_test.dart
+            lib/product/browser/*.dart
+            test/product/browser/*.dart
+          if-no-files-found: error
+          retention-days: 7
+
+  node-lock-oracle:
+    name: node-lock-oracle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+      - name: Generate exact P3 automation-host package closure
+        shell: bash
+        working-directory: automation_host
+        run: |
+          set -euo pipefail
+          npm version 2.0.0-p3.1 --no-git-tag-version --allow-same-version
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --save-exact playwright-core@1.61.1
+          node -e "const p=require('./package.json'); if(p.version!=='2.0.0-p3.1'||p.dependencies['playwright-core']!=='1.61.1'||p.dependencies['node-pty']!=='1.1.0') process.exit(1)"
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm ls --all --json
+          git diff -- package.json package-lock.json
+      - name: Preserve npm-generated package closure
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p3-automation-host-lock-${{ github.run_id }}
+          path: |
+            automation_host/package.json
+            automation_host/package-lock.json
           if-no-files-found: error
           retention-days: 7
