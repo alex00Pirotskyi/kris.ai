@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000357-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-005",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INTEGRATOR",
+    "type": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-09T19:42:00Z",
+  "runtimeGeneration": 357,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4"
+}
