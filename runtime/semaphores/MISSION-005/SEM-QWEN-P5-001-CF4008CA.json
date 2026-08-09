@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "lib/product/p5_information_architecture/**"
+  ],
+  "authorityId": null,
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "branch": "agent/local-qwen/elastic-qwen-8c160279/mission-005/wo-p5-001-exact-ci-a6f03c19-cf4008ca",
+  "createdAt": "2026-08-09T06:18:55Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-09T08:18:55Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-09T06:18:55Z",
+  "resourceId": null,
+  "runtimeGeneration": 278,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P5-001-CF4008CA",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-EXACT-CI-A6F03C19",
+  "workerIdentity": "ELASTIC-QWEN-8C160279"
+}
