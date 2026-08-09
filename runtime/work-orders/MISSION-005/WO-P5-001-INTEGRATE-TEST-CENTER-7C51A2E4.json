@@ -1,14 +1,18 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4",
   "allowedPaths": [
     "config/test_center_assurance_hierarchy.v1.json",
     "config/test_center_registry.v1.json",
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
   "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
   "createdAt": "2026-08-09T19:42:00Z",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:INTEGRATE_TEST_CENTER_STACK",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Integrate the already-validated P5-001 Test Center registry, assurance hierarchy, and proof-lineage append-safe authority stack from helper PR #133 into canonical Product PR #72. Scope is exactly the three configured shared-authority files. Preserve all existing non-P5 records and semantics. Keep SOURCE_MANIFEST.sha256 finalization as a separate RELEASE boundary and do not promote acceptance, certification, behavior/platform/release support, production readiness, or GA.",
@@ -24,8 +28,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-09T19:42:00Z",
+  "updatedAt": "2026-08-09T19:49:00Z",
   "workOrderId": "WO-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4"
 }

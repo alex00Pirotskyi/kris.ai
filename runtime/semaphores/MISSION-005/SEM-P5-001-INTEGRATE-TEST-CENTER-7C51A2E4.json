@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "config/test_center_assurance_hierarchy.v1.json",
+    "config/test_center_registry.v1.json",
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "branch": "agent/f/P5-001-information-architecture",
+  "createdAt": "2026-08-09T19:49:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-09T21:49:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-005",
+  "productPr": 72,
+  "refreshedAt": "2026-08-09T19:49:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 358,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
