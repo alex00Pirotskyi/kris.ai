@@ -13,15 +13,15 @@ final class P3BrowserRuntimeProbeResult {
   final Map<String, Object?> bundleProvenance;
 
   Map<String, Object?> get provenance => <String, Object?>{
-        ...bundleProvenance,
-        'probeWorkerPid': ready.pid,
-        'probeBrowserPid': ready.browserPid,
-        'browserEngine': ready.browserEngine,
-        'browserVersion': ready.browserVersion,
-        'browserRevision': ready.browserRevision,
-        'protocol': ready.protocol,
-        'p3_002SessionServiceImplemented': false,
-      };
+    ...bundleProvenance,
+    'probeWorkerPid': ready.pid,
+    'probeBrowserPid': ready.browserPid,
+    'browserEngine': ready.browserEngine,
+    'browserVersion': ready.browserVersion,
+    'browserRevision': ready.browserRevision,
+    'protocol': ready.protocol,
+    'p3_002SessionServiceImplemented': false,
+  };
 }
 
 /// Application-side P3-001 entry point.
@@ -34,9 +34,9 @@ final class P3BrowserRuntimeService {
     required Directory applicationDataRoot,
     String? executablePath,
   }) : _resolver = P3ApplicationOwnedBrowserRuntimeResolver(
-          applicationDataRoot: applicationDataRoot,
-          executablePath: executablePath,
-        );
+         applicationDataRoot: applicationDataRoot,
+         executablePath: executablePath,
+       );
 
   P3BrowserRuntimeService.withResolver(this._resolver);
 
