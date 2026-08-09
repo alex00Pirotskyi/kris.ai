@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000277-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-5C4A1D72",
+    "correction": "Reconciled canonical P4 Product PR #62 from stale runtime head 0ea342b105768a197190867ddaf763e5378a3d98 to live integrated head bff09fb233d49299c2bb9cfb6234ef0eb2e1e4b5 and superseded the obsolete branch-capacity-to-59 blocker after Mission Execution 1.5 moved to soft hygiene target 80 / hard new-branch creation ceiling 150.",
+    "nextStatus": "SUPERSEDED",
+    "observedHead": "bff09fb233d49299c2bb9cfb6234ef0eb2e1e4b5",
+    "productPr": 62,
+    "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
+  },
+  "recordedAt": "2026-08-09T06:16:00Z",
+  "runtimeGeneration": 277,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T061600Z-5c4a1d72",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
+}

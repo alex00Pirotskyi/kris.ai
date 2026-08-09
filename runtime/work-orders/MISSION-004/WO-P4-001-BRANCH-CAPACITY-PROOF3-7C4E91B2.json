@@ -9,6 +9,7 @@
   "createdBy": "WRK-20260808T174049Z-7c4e91b2",
   "dependencyRequirements": [],
   "executionRole": "INCIDENT_RESPONDER",
+  "lastActor": "ELASTIC-GPT-5C4A1D72",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Free three exact Mission Execution 1.5 branch-capacity slots required for the actively reserved P4 proof-lineage helper by deleting only these configured ci/* legacy-debt refs if they still match their exact reviewed SHAs and remain unprotected, non-canonical, without open PRs, and without ACTIVE semaphore ownership: ci/worker-d-mission004-checkpoint@a9447e36ff9eee970b76dc97c2c4a135a878cefe; ci/worker-d-mission004-reconcile@378f94ec8d321de7cd75fcd6c128600535a6fc55; ci/worker-d-stage2-evidence-binding@383ea7798e163b1cbc322f0e731bcd93a3640e97. Use only the repository-owned exact-SHA reaper. Make no Product source change.",
@@ -26,8 +27,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "SUPERSEDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-09T02:37:54Z",
+  "updatedAt": "2026-08-09T06:16:00Z",
   "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
 }
