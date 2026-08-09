@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000309-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "READY",
+    "semaphoreId": "SEM-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+  },
+  "recordedAt": "2026-08-09T10:27:30Z",
+  "runtimeGeneration": 309,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T084200Z-c73e9a51",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
