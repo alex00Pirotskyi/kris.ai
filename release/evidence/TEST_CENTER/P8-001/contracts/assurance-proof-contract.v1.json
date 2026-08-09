@@ -22,6 +22,16 @@
     {"testId":"tc.test-center.contracts","lineageId":"test-center.contracts"},
     {"testId":"tc.test-center.semantic-regressions","lineageId":"test-center.contracts"},
     {"testId":"tc.p8.formal-test-hierarchy","lineageId":"p8.formal-test-hierarchy"},
-    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"}
+    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"},
+    {"testId":"tc.p5.active-context-widget","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.context-lock","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.experience-warning-lifecycle","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.keyboard-flow","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.no-side-effects","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.support-workspace-metadata","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.support-workspaces","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.task-workspace-metadata","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.task-workspace","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5.theme","lineageId":"p5.information-architecture"}
   ]
 }
