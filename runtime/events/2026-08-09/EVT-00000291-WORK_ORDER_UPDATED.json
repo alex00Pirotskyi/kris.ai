@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000291-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-C73E9A51",
+    "nextStatus": "SUPERSEDED",
+    "reason": "The historical 60-branch migration ceiling blocker is obsolete under the live soft-80/hard-150 NEW_BRANCH_CREATION_ONLY capacity policy."
+  },
+  "recordedAt": "2026-08-09T08:46:00Z",
+  "runtimeGeneration": 291,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T084200Z-c73e9a51",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF-7C4E91B2"
+}
