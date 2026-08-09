@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000306-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-C73E9A51",
+    "nextStatus": "LANDED",
+    "productPr": 62,
+    "exactProductHead": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+    "workflowFile": "p4-001-search-provider.yml",
+    "specializedRunId": 31306783137,
+    "sourceManifest": "success",
+    "canonicalLinux": "success",
+    "canonicalMacos": "success",
+    "canonicalWindows": "success"
+  },
+  "recordedAt": "2026-08-09T09:52:00Z",
+  "runtimeGeneration": 306,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T084200Z-c73e9a51",
+  "workOrderId": "WO-P4-001-EXACT-SPECIALIZED-C73E9A51"
+}
