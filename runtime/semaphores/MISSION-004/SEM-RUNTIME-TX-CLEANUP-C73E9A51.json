@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "createdAt": "2026-08-09T09:23:00Z",
+  "executionRole": "INCIDENT_RESPONDER",
+  "expiresAt": "2026-08-09T10:23:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-09T09:23:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 300,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-RUNTIME-TX-CLEANUP-C73E9A51",
+  "status": "ACTIVE",
+  "workOrderId": "WO-RUNTIME-TX-CLEANUP-C73E9A51",
+  "workerIdentity": "ELASTIC-GPT-C73E9A51"
+}
