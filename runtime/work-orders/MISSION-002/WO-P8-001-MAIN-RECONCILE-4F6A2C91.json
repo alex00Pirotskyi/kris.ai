@@ -6,13 +6,13 @@
     "tool/test_center_assurance_hierarchy_test.py"
   ],
   "assignedWorker": "ELASTIC-4f6a2c91",
-  "baseCommit": "53c34bc1586a9e473721fa8f4c5339a8e5f8e947",
-  "baseTree": "92eecae1e0ab0cb06a1ff3a19825d813b01939bc",
+  "baseCommit": "38584381f4e3e726f8e5a97cc8d8361f0e144761",
+  "baseTree": "a5d0d060d3c76e4a45d7c2b338e276d8dd576034",
   "createdAt": "2026-08-07T20:20:30Z",
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "ELASTIC-4f6a2c91:REBASE_MAIN_PR113",
+  "lastActor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Reconcile exact current protected-main P7 source landing eddf1fdac3dd3412358a576e45b82e99528cfed4 into canonical P8 Product PR #65 using repository-enabled rebase integration on existing branches only. Import protected-main bytes without manual cross-mission edits, preserve the finalized P8 assurance repair, rerun exact current P8/product validation, and do not promote P8 acceptance or support.",
@@ -27,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:27:30Z",
+  "updatedAt": "2026-08-09T17:27:52Z",
   "workOrderId": "WO-P8-001-MAIN-RECONCILE-4F6A2C91"
 }

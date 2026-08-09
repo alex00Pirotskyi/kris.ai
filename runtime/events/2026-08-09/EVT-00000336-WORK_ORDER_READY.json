@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000336-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-09T17:27:52Z",
+  "runtimeGeneration": 336,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T172746Z-9b291a6d",
+  "workOrderId": "WO-P8-001-MAIN-RECONCILE-4F6A2C91"
+}
