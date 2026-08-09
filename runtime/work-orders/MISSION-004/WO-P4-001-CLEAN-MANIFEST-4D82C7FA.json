@@ -1,8 +1,9 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-CLEAN-MANIFEST-C73E9A51",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
-  "assignedWorker": "ELASTIC-GPT-91B4E7C2",
+  "assignedWorker": "ELASTIC-GPT-C73E9A51",
   "baseCommit": "bff09fb233d49299c2bb9cfb6234ef0eb2e1e4b5",
   "baseTree": "4ac58c848de26eb50d3763eb0ef4161deba9fabb",
   "createdAt": "2026-08-08T09:18:00Z",
@@ -24,8 +25,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-09T02:37:54Z",
+  "updatedAt": "2026-08-09T09:06:00Z",
   "workOrderId": "WO-P4-001-CLEAN-MANIFEST-4D82C7FA"
 }
