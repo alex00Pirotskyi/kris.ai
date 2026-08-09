@@ -94,6 +94,14 @@
       "owned": [
         "lib/product/browser/**",
         "test/product/browser/**",
+        "automation_host/package.json",
+        "automation_host/package-lock.json",
+        "automation_host/src/browser-runtime.mjs",
+        "automation_host/src/browser-runtime.test.mjs",
+        "config/p3.browser-runtime-lock.json",
+        "tool/p3_stage_browser_runtime_bundle.py",
+        "tool/p3_stage_browser_runtime_bundle_test.py",
+        ".github/workflows/p3-browser-runtime.yml",
         "tool/worker_d*.py",
         "release/evidence/P3-*/**",
         ".github/workflows/worker-d*.yml"
