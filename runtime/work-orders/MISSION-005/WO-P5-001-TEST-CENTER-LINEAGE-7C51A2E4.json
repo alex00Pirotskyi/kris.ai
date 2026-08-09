@@ -1,4 +1,5 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-TEST-CENTER-LINEAGE-R2-7C51A2E4",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
@@ -26,8 +27,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-09T19:34:00Z",
+  "updatedAt": "2026-08-09T19:35:00Z",
   "workOrderId": "WO-P5-001-TEST-CENTER-LINEAGE-7C51A2E4"
 }
