@@ -15,12 +15,12 @@
   "kind": "WRITE",
   "mission": "MISSION-001",
   "productPr": null,
-  "refreshedAt": "2026-08-09T11:14:30Z",
+  "refreshedAt": "2026-08-09T11:19:30Z",
   "resourceId": null,
-  "runtimeGeneration": 316,
+  "runtimeGeneration": 317,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P0-001-FORMAL-CLOSURE-44AE364B",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B",
   "workerIdentity": "ELASTIC-GPT-44AE364B"
 }

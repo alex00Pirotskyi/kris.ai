@@ -1,0 +1,35 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256",
+    ".github/workflows/temp-p0-001-source-manifest-refresh.yml"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "baseTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "createdAt": "2026-08-09T11:19:30Z",
+  "createdBy": "WRK-20260809T103104Z-44AE364B",
+  "dependencyRequirements": [],
+  "executionRole": "IMPLEMENTER",
+  "lastActor": "ELASTIC-GPT-44AE364B",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Repair exactly the three SOURCE_MANIFEST.sha256 entries proven stale by P0-001 exact validation run 31310439513 after the reviewed P2-004 landing: docs/adr/ADR-0012-p2-automation-host.md, release/evidence/P2-004/IMPLEMENTATION.md, and release/evidence/P2-004/manifest.json. Change no other manifest entry or Product file. Land the one-file effective diff through protected-main PR gates, then hand control back to WO-P0-001-FORMAL-CLOSURE-44AE364B for the unchanged exact closure command.",
+  "parentProductPr": null,
+  "parentWorkOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B",
+  "priority": 100,
+  "requestedRole": "IMPLEMENTER",
+  "requiredTests": [
+    "effective main diff is exactly SOURCE_MANIFEST.sha256",
+    "exactly three hash entries change and paths are the three P2-004 mismatches from run 31310439513",
+    "new hashes equal machine-observed actual hashes d368bddf06838d72d30ceff918e16af8859c4a2dd8006116b83a2c70accf41b6, ef28cde197242aed69b8945bd083f2c73269fd365dc6584e38ccf5579dcc8325, 4a9212ba67c41df6e07bec210f6362ff50dbd15cf6822afaad1523873a58dd20",
+    "temporary refresh workflow is absent from the final candidate tree",
+    "protected-main required Product gates pass before landing"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "IMPLEMENTATION",
+  "updatedAt": "2026-08-09T11:19:30Z",
+  "workOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B"
+}

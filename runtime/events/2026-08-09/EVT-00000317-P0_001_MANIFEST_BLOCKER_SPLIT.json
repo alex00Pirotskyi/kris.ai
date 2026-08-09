@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000317-P0_001_MANIFEST_BLOCKER_SPLIT",
+  "eventType": "WORK_ORDER_BLOCKED",
+  "mission": "MISSION-001",
+  "payload": {
+    "blockedWorkOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B",
+    "blockerWorkOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
+    "releasedSemaphoreId": "SEM-P0-001-FORMAL-CLOSURE-44AE364B",
+    "reason": "exact run 31310439513 proved all safe gates pass; only three P2-004 source-manifest hashes are stale"
+  },
+  "recordedAt": "2026-08-09T11:19:30Z",
+  "runtimeGeneration": 317,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
+}
