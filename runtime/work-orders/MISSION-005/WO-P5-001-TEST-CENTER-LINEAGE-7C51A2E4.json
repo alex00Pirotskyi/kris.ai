@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P5-001-TEST-CENTER-LINEAGE-7C51A2E4",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
   "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
   "createdAt": "2026-08-09T19:24:00Z",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Append exactly the ten active P5-001 Test Center test IDs to the assurance proof contract lineageBindings under append-safe shared authority, using one stable lineage id for the P5 information-architecture module. Preserve every existing lineage binding and all evidence-contract semantics. This repairs the exact P8 assurance enforcement failure exposed by the governed P5 registry/hierarchy transport and does not promote acceptance, behavior/platform/release support, certification, production readiness, or GA.",
@@ -23,8 +26,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-09T19:24:00Z",
+  "updatedAt": "2026-08-09T19:26:00Z",
   "workOrderId": "WO-P5-001-TEST-CENTER-LINEAGE-7C51A2E4"
 }
