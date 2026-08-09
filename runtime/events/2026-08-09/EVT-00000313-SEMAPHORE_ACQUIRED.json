@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000313-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P2-004-INTEGRATE-SELECTION-44AE364B",
+    "workerIdentity": "ELASTIC-GPT-44AE364B"
+  },
+  "recordedAt": "2026-08-09T10:40:14Z",
+  "runtimeGeneration": 313,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
+}

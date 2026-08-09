@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "f8a1555fe0b9ffb58c71fb53155e1aa33328b2fc",
+  "baseTree": "d2d62617ff2dcb6e670bc04612c0d4b97dd8f84a",
+  "branch": "agent/a/p2-004-measurement-contract-repair",
+  "createdAt": "2026-08-09T10:40:14Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-09T14:40:14Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-001",
+  "productPr": 75,
+  "refreshedAt": "2026-08-09T10:40:14Z",
+  "resourceId": null,
+  "runtimeGeneration": 313,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-INTEGRATE-SELECTION-44AE364B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
+  "workerIdentity": "ELASTIC-GPT-44AE364B"
+}
