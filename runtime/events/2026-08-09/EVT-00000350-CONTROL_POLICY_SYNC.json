@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000350-CONTROL_POLICY_SYNC",
+  "eventType": "CONTROL_POLICY_SYNC",
+  "mission": null,
+  "payload": {
+    "controlPlaneCommit": "8a45929f343aa1cff43dd109c16127857194e71e",
+    "authorityId": "test-center-proof-lineage",
+    "path": "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
+    "mode": "APPEND_SAFE_JSON",
+    "collections": {
+      "lineageBindings": "testId"
+    }
+  },
+  "recordedAt": "2026-08-09T19:20:00Z",
+  "runtimeGeneration": 350,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": null
+}
