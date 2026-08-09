@@ -1,0 +1,37 @@
+{
+  "activeSemaphoreId": "SEM-P0-001-FORMAL-CLOSURE-44AE364B",
+  "allowedPaths": [
+    ".github/workflows/p1-p0-001-formal-closure.yml",
+    "release/evidence/P0-001/**",
+    "release/evidence/baseline/**",
+    "tasks/completed/P0-001.md"
+  ],
+  "assignedWorker": "ELASTIC-GPT-44AE364B",
+  "baseCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "baseTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "createdAt": "2026-08-09T11:14:30Z",
+  "createdBy": "WRK-20260809T103104Z-44AE364B",
+  "dependencyRequirements": [],
+  "executionRole": "IMPLEMENTER",
+  "lastActor": "ELASTIC-GPT-44AE364B",
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-001",
+  "objective": "Close the real historical P0-001 formal-acceptance gap without rebuilding completed Product work. Against exact protected-main commit 2c8499f4b0b56276c29e5bfde821478836074041, obtain a machine-observed clean-checkout baseline run equivalent to the previously required command `python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates --strict`, proving source-manifest integrity and all bounded safe gates. Use a temporary validation harness only if necessary; do not land that harness. Preserve the prior independent P0-001 review's required closure condition, record truthful evidence, and do not claim P0-001 acceptance unless the exact formal gap is closed.",
+  "parentProductPr": null,
+  "parentWorkOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
+  "priority": 100,
+  "requestedRole": "IMPLEMENTER",
+  "requiredTests": [
+    "protected main remains 2c8499f4b0b56276c29e5bfde821478836074041 for the validation source checkout",
+    "capture_baseline manifest-mode verify reports sourceManifestIntegrity passed with no missing or mismatched entries",
+    "runSafeGates true and safe gate status PASS for system_test.py, workflow_kernel_test.py, and validate_release.py --skip-sdk",
+    "no temporary validation workflow is merged to protected main",
+    "prior P0-001 independent review closure condition is satisfied before acceptance evidence changes"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "IMPLEMENTATION",
+  "updatedAt": "2026-08-09T11:14:30Z",
+  "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
+}

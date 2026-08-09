@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000316-P0_001_FORMAL_CLOSURE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "IMPLEMENTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P0-001-FORMAL-CLOSURE-44AE364B",
+    "workerIdentity": "ELASTIC-GPT-44AE364B"
+  },
+  "recordedAt": "2026-08-09T11:14:30Z",
+  "runtimeGeneration": 316,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
+}

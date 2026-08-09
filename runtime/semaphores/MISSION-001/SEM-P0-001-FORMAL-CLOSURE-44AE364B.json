@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    ".github/workflows/p1-p0-001-formal-closure.yml",
+    "release/evidence/P0-001/**",
+    "release/evidence/baseline/**",
+    "tasks/completed/P0-001.md"
+  ],
+  "authorityId": null,
+  "baseCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "baseTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "branch": "agent/help/elastic-gpt-44ae364b/p0-001-formal-closure",
+  "createdAt": "2026-08-09T11:14:30Z",
+  "executionRole": "IMPLEMENTER",
+  "expiresAt": "2026-08-09T15:14:30Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-09T11:14:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 316,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P0-001-FORMAL-CLOSURE-44AE364B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B",
+  "workerIdentity": "ELASTIC-GPT-44AE364B"
+}
