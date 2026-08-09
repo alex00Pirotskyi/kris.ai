@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000327-P3_NODE_BROWSER_BUNDLE_ACQUIRED",
+  "eventType": "WORK_ACQUIRED",
+  "mission": "MISSION-003",
+  "recordedAt": "2026-08-09T12:46:00Z",
+  "runtimeGeneration": 327,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
+  "details": {
+    "parentWorkOrder": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+    "productPr": 131,
+    "branch": "agent/c/mission-003-browser-runtime",
+    "semaphoreId": "SEM-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
+    "nestedWithParentBuilder": true
+  }
+}
