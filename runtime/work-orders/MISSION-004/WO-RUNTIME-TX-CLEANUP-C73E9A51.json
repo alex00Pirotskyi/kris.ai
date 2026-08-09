@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-RUNTIME-TX-CLEANUP-C73E9A51",
   "allowedPaths": [
     "release/evidence/P4-*/**"
   ],
@@ -10,6 +9,7 @@
   "createdBy": "WRK-20260809T084200Z-c73e9a51",
   "dependencyRequirements": [],
   "executionRole": "INCIDENT_RESPONDER",
+  "lastActor": "ELASTIC-GPT-C73E9A51:RUNTIME_TX_REFS_REAPED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Remove the four remaining configured grandfathered Mission Execution runtime transaction refs while the fleet is idle: runtime/tx/p11-integrate-95-gen4@90bedb91549ea8744622abf45282e45fd0fb51c0, runtime/tx/p4-integrate-92-gen2@34f97109f89460db5681a3fee092017ba0e3ca36, runtime/tx/p5-integrate-94-gen2@5263440921451d2a25b040a9dfbf928ffcf5ee22, and runtime/tx/p5-integrate-94-gen3@d622f554eafac929e316b8bfeef443d9c1c51beb. Use only the repository-owned exact-SHA legacy branch reaper. Delete no canonical Product branch, open-PR head, protected branch, or active-semaphore branch. Make no Product source changes.",
@@ -26,8 +26,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-09T09:23:00Z",
+  "updatedAt": "2026-08-09T09:32:00Z",
   "workOrderId": "WO-RUNTIME-TX-CLEANUP-C73E9A51"
 }
