@@ -1,0 +1,40 @@
+{
+  "allowedPaths": [
+    "tool/p2_004_technology_selection.py",
+    "tool/p2_004_technology_selection_test.py",
+    ".github/workflows/p2-004-technology-selection.yml",
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/IMPLEMENTATION.md",
+    "release/evidence/P2-004/manifest.json"
+  ],
+  "baseCommit": "f8a1555fe0b9ffb58c71fb53155e1aa33328b2fc",
+  "baseTree": "d2d62617ff2dcb6e670bc04612c0d4b97dd8f84a",
+  "createdAt": "2026-08-09T07:46:00Z",
+  "createdBy": "WRK-20260809T065200Z-6e91a2f4",
+  "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "After independent R1 PASS for helper PR #128 exact reviewed head, integrate the measured P2-004 selection into canonical Product PR #75 without importing its contaminated carrier tree. Re-resolve protected main and PR #75 immediately before execution. Construct one fast-forward canonical commit whose parent is the exact live #75 head but whose tree is exact current protected-main tree plus only the six reviewed P2-004 files from helper #128. Prove the effective main-to-candidate diff is exactly those six files, preserve current-main authority bytes, update runtime Product PR #75 observed head/tree immediately, close the consumed helper lifecycle, run exact-current P2-004 selection/product gates, and do not promote P2-004 acceptance until all landing/review requirements are satisfied.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "WO-P2-004-TECH-SELECTION-R1-6E91A2F4 is LANDED with PASS bound to exact helper head",
+    "helper PR #128 head/tree remain exactly the reviewed identities or review is repeated",
+    "canonical PR #75 live head equals expected integration parent immediately before non-force update",
+    "candidate tree equals exact current protected-main tree plus only six reviewed P2-004 files",
+    "effective protected-main diff contains no temporary carrier/review workflow payload",
+    "exact-current P2-004 Technology Selection Windows/macOS/Linux/aggregate PASS",
+    "exact-current product-gates Windows/macOS/Linux PASS",
+    "runtime Product PR #75 observedHead/observedTree reconciled atomically after integration",
+    "no P2-005/P2-006/P3 behavior/release/support/GA promotion"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "CREATED",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-09T07:46:00Z",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
+}

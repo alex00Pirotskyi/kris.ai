@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000289-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+    "requestedRole": "INTEGRATOR",
+    "requiresReviewWorkOrder": "WO-P2-004-TECH-SELECTION-R1-6E91A2F4",
+    "status": "CREATED",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-09T07:46:00Z",
+  "runtimeGeneration": 289,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T065200Z-6e91a2f4",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
+}
