@@ -1,0 +1,42 @@
+{
+  "ciReceipt": {
+    "candidateCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+    "result": "PASS",
+    "runId": 31309419985,
+    "workflow": "product-gates"
+  },
+  "commit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "evidence": [
+    {
+      "kind": "V15_P2_004_ACCEPTANCE_EVIDENCE",
+      "path": "runtime/acceptance-evidence/MISSION-001/20260809-p2-004-selection.json",
+      "sha256": "fbb979d8947f9d29294e6e457097025723cb115b51564647bc8c23e2d2d5269c"
+    }
+  ],
+  "mission": "MISSION-001",
+  "recordedAt": "2026-08-09T11:58:30Z",
+  "reviewReceipt": {
+    "authoringContextIds": [],
+    "candidateCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+    "candidateTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+    "decision": "PASS",
+    "implementerAuthoringContextIds": [
+      "WRK-20260809T065200Z-6e91a2f4"
+    ],
+    "reviewContextId": "WRK-20260809T103104Z-44AE364B:acceptance-review:P2-004",
+    "reviewTier": "R1",
+    "reviewerWorkerIdentity": "ELASTIC-GPT-44AE364B"
+  },
+  "schemaVersion": 1,
+  "status": "ACCEPTED",
+  "task": "P2-004",
+  "tree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "truthBoundary": {
+    "p2_005Certified": false,
+    "p2_006Certified": false,
+    "p3BehaviorImplemented": false,
+    "releaseSupportGaPromotion": false,
+    "technologySelectionOnly": true
+  },
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B"
+}

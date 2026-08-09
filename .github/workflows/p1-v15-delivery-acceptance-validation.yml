@@ -1,0 +1,67 @@
+name: P1 V15 Delivery Acceptance Validation
+
+on:
+  push:
+    branches:
+      - 'agent/help/elastic-gpt-44ae364b/delivery-acceptance-migration'
+
+permissions:
+  contents: read
+
+jobs:
+  strict-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Fetch exact protected-main candidate objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          git cat-file -e 521ecab1f2831206da98a282df51d8094230bc99^{commit}
+          git cat-file -e 2c8499f4b0b56276c29e5bfde821478836074041^{commit}
+          test "$(git rev-parse 521ecab1f2831206da98a282df51d8094230bc99^{tree})" = "6fb1261ca415bcacbe127310a362405508bed5c9"
+          test "$(git rev-parse 2c8499f4b0b56276c29e5bfde821478836074041^{tree})" = "94e237375c8924f5b4c063243af7075f10fbd50e"
+      - name: Prove bounded seven-record migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          import subprocess
+          expected = {
+              "P0-001", "P0-008", "P1-001", "P1-002",
+              "P1-003", "P1-012", "P2-004",
+          }
+          base = "f4b3c8c415c28ae0d0e3728e21d01087a87dfa93"
+          out = subprocess.check_output(
+              ["git", "diff", "--name-only", f"{base}..HEAD", "--",
+               "docs/roadmap/missions/delivery/records"],
+              text=True,
+          )
+          paths = [p for p in out.splitlines() if p.strip()]
+          tasks = {pathlib.PurePosixPath(p).parent.name for p in paths}
+          assert tasks == expected, (tasks, expected)
+          assert len(paths) == 7, paths
+          print("BOUNDED_ACCEPTANCE_RECORD_SET_PASS")
+          PY
+      - name: Strict accepted-record validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/mission_delivery_strict.py --project . validate
+      - name: Append-only delivery history
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/mission_delivery_strict.py --project . append-only \
+            --base f4b3c8c415c28ae0d0e3728e21d01087a87dfa93 \
+            --head "$(git rev-parse HEAD)"

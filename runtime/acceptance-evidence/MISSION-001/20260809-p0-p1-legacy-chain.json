@@ -1,0 +1,56 @@
+{
+  "candidateCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "candidateTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "currentMainProductGates": {
+    "platforms": {
+      "macos": "PASS",
+      "ubuntu": "PASS",
+      "windows": "PASS"
+    },
+    "result": "PASS",
+    "runId": 31310998304,
+    "scope": [
+      "P0-008 roadmap control",
+      "P1-001 runtime boundaries",
+      "P1-002 access profile",
+      "P1-003 capability grant",
+      "P1 full trust closure",
+      "Flutter analyze/test",
+      "architecture/security",
+      "native release builds"
+    ],
+    "workflow": "product-gates"
+  },
+  "kind": "V15_LEGACY_ACCEPTANCE_CHAIN_EVIDENCE",
+  "migrationBoundary": {
+    "legacyTasksWereCompletedBeforeMissionExecution15": true,
+    "noProductSourceChangedByMigration": true,
+    "recordsAddedOnlyToRepresentExistingAcceptedProductTruth": true,
+    "releaseSupportGaPromotion": false,
+    "unrelatedRoadmapTasksAccepted": false
+  },
+  "mission": "MISSION-001",
+  "p0FormalClosure": {
+    "artifactDigest": "sha256:72022af69fcd2aeb8577dc11084c31ec2eaf63504e82dbdf4e5867464be380bd",
+    "artifactId": 9037435870,
+    "blockingFailures": 0,
+    "result": "PASS",
+    "runId": 31311227913,
+    "safeGates": {
+      "durable_workflow_kernel": "PASS",
+      "offline_system_contracts": "PASS",
+      "source_release_validation": "PASS"
+    },
+    "sourceManifestIntegrity": "1126/1126",
+    "workflow": "P0-001 Formal Closure Validation"
+  },
+  "schemaVersion": 1,
+  "taskAssertions": {
+    "P0-001": "historical independent review closure condition is now machine-observed PASS on exact protected main",
+    "P0-008": "current strict roadmap-control gate passes on exact protected main",
+    "P1-001": "current runtime-boundary contract passes on exact protected main",
+    "P1-002": "current access-profile-v2 contract passes on exact protected main",
+    "P1-003": "current capability-grant-v2 contract passes on exact protected main",
+    "P1-012": "current full P1 exit gate and local authenticated IPC contract pass on exact protected main"
+  }
+}
