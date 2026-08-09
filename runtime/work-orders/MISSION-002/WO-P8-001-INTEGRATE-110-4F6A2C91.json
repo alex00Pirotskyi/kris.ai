@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P8-001-6FDF1C29",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
@@ -29,8 +28,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-09T17:29:52Z",
+  "updatedAt": "2026-08-09T17:30:02Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }
