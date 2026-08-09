@@ -12,7 +12,7 @@
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
-  "lastActor": "ELASTIC-4f6a2c91:INTEGRATED_INTO_PR65",
+  "lastActor": "SYSTEM:P8_LIFECYCLE_RECONCILE:PR110_MERGED_INTO_PR65",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Repair P8 assurance provenance and support-matrix trust fail-open classes, including exact Git binding, fail-closed independent-review handling, repository-authoritative required platform/capability scope, and exact-candidate platform predecessor proof linkage.",
@@ -29,8 +29,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "REVIEW",
+  "status": "LANDED",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-07T20:10:15Z",
+  "updatedAt": "2026-08-09T17:50:00Z",
   "workOrderId": "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER"
 }

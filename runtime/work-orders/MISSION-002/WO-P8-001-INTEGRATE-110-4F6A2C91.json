@@ -12,7 +12,7 @@
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
+  "lastActor": "SYSTEM:P8_LIFECYCLE_RECONCILE:PR110_ALREADY_MERGED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Consume exact P8 assurance-trust helper PR #110 into canonical Product PR #65 without byte drift, preserve authoritative support-scope/evidence-lineage repairs, materialize the canonical source manifest, and rerun exact current P8/product validation. No P8 acceptance or support promotion.",
@@ -28,8 +28,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "LANDED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-09T17:40:06Z",
+  "updatedAt": "2026-08-09T17:50:00Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }

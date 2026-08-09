@@ -1,0 +1,27 @@
+{
+  "eventId": "EVT-00000349-P8_LIFECYCLE_RECONCILED",
+  "eventType": "P8_LIFECYCLE_RECONCILED",
+  "mission": "MISSION-002",
+  "payload": {
+    "canonicalProductPr": 65,
+    "canonicalProductBranch": "agent/b/test-center-contracts-and-review",
+    "canonicalProductHead": "38584381f4e3e726f8e5a97cc8d8361f0e144761",
+    "protectedMain": "521ecab1f2831206da98a282df51d8094230bc99",
+    "completedPullRequests": [89, 110, 113, 126],
+    "terminalizedWorkOrders": [
+      "WO-P8-001-INTEGRATE-89-B5AB48B7",
+      "WO-P8-001-ASSURANCE-TRUST-CLOSURE-SANITIZER",
+      "WO-P8-001-INTEGRATE-110-4F6A2C91",
+      "WO-P8-001-MAIN-RECONCILE-4F6A2C91",
+      "WO-P8-001-PENDING-MIGRATION-7D41B6A2",
+      "WO-P8-001-INTEGRATE-126-C7A4E912"
+    ],
+    "remainingProductBranchDivergence": true,
+    "truthBoundary": "Completed helper/integration transports are terminalized. Current P8 Product branch remains active and diverged from protected main; no acceptance/support/release/production/GA promotion is implied."
+  },
+  "recordedAt": "2026-08-09T17:50:00Z",
+  "runtimeGeneration": 349,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T175000Z-b7e4c921",
+  "workOrderId": null
+}

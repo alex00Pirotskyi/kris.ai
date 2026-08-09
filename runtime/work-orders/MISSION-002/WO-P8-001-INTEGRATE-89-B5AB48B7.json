@@ -13,7 +13,7 @@
   "createdBy": "ELASTIC-b5ab48b7",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "ELASTIC-b5ab48b7:EXACT_CURRENT_CI_ACTION_REQUIRED_ZERO_JOBS",
+  "lastActor": "SYSTEM:P8_LIFECYCLE_RECONCILE:PR89_MERGED_AND_PR65_LANDED",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-002",
   "objective": "Integrate exact green bounded helper PR #89 into canonical P8 Product PR #65, preserving current Test Center semantics and helper-head CI correction, then validate the exact owner candidate. This does not close broader P8 security/evidence, support, acceptance, release, production, or GA gates.",
@@ -27,8 +27,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "LANDED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T15:01:00Z",
+  "updatedAt": "2026-08-09T17:50:00Z",
   "workOrderId": "WO-P8-001-INTEGRATE-89-B5AB48B7"
 }
