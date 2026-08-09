@@ -2,14 +2,21 @@
 """Validate a bounded Mission Execution 1.5 exact Product PR CI dispatch.
 
 This module does not execute arbitrary commands and does not mutate product
-source. It may only authorize dispatch of the repository's existing ``ci.yml``
-workflow for the exact observed head of one canonical Product PR while a live
-Product-PR-scoped INTEGRATION semaphore is held by a CI_REPAIR Work Order.
+source. It authorizes only the repository's existing allowlisted read-only
+Product validation workflows for the exact observed head of one canonical
+Product PR while a live Product-PR-scoped INTEGRATION semaphore is held by a
+CI_REPAIR Work Order.
 
 The active INTEGRATION semaphore is intentionally required even though this
 operation performs no merge. It freezes the canonical Product PR head while
 GitHub allocates the workflow_dispatch run, so the resulting run can be bound
 back to ``expectedProductHead`` without a source-history trigger commit.
+
+Backward compatibility: commands that omit ``workflowFile`` continue to
+dispatch ``ci.yml`` exactly as before. The optional workflow override is
+deliberately allowlisted and exists only to remove a measured Product-delivery
+blocker where a specialized workflow supports workflow_dispatch but connector
+workers cannot invoke arbitrary Actions workflows directly.
 """
 from __future__ import annotations
 
@@ -25,7 +32,11 @@ from mission_runtime_model import validate_runtime_state
 
 COMMAND_SCHEMA_VERSION = 1
 OPERATION = "DISPATCH_EXACT_PRODUCT_GATES_V1"
-WORKFLOW_FILE = "ci.yml"
+DEFAULT_WORKFLOW_FILE = "ci.yml"
+ALLOWED_WORKFLOW_FILES = {
+    DEFAULT_WORKFLOW_FILE,
+    "p4-001-search-provider.yml",
+}
 
 
 def read_json(path: pathlib.Path) -> dict[str, Any]:
@@ -47,7 +58,7 @@ def validate_command_shape(command: dict[str, Any], command_path: pathlib.Path) 
         "productPr",
         "expectedProductHead",
     }
-    optional = {"createdAt", "note"}
+    optional = {"createdAt", "note", "workflowFile"}
     missing = sorted(required - set(command))
     extra = sorted(set(command) - required - optional)
     if missing:
@@ -74,6 +85,12 @@ def validate_command_shape(command: dict[str, Any], command_path: pathlib.Path) 
     for key in ("workOrderId", "semaphoreId", "workerIdentity"):
         if not isinstance(command.get(key), str) or not command[key]:
             raise ValueError(f"{key} must be non-empty")
+    workflow_file = command.get("workflowFile", DEFAULT_WORKFLOW_FILE)
+    if not isinstance(workflow_file, str) or workflow_file not in ALLOWED_WORKFLOW_FILES:
+        raise ValueError(
+            "workflowFile must be one of the exact allowlisted Product validation workflows: "
+            + ", ".join(sorted(ALLOWED_WORKFLOW_FILES))
+        )
 
 
 def _git(project: pathlib.Path, *args: str) -> str:
@@ -143,6 +160,19 @@ def prepare_dispatch(project: pathlib.Path, command_path: pathlib.Path) -> dict[
             f"Product PR head moved: expected {command['expectedProductHead']}, actual {remote_head}"
         )
 
+    workflow_file = command.get("workflowFile", DEFAULT_WORKFLOW_FILE)
+    workflow_path = f".github/workflows/{workflow_file}"
+    try:
+        workflow_text = _git(project, "show", f"{remote_head}:{workflow_path}")
+    except Exception as exc:
+        raise ValueError(
+            f"allowlisted Product workflow does not exist at exact Product head: {workflow_path}"
+        ) from exc
+    if "workflow_dispatch:" not in workflow_text:
+        raise ValueError(
+            f"allowlisted Product workflow has no workflow_dispatch trigger: {workflow_path}"
+        )
+
     return {
         "schemaVersion": 1,
         "commandId": command["commandId"],
@@ -153,7 +183,7 @@ def prepare_dispatch(project: pathlib.Path, command_path: pathlib.Path) -> dict[
         "productPr": command["productPr"],
         "productBranch": branch,
         "productHead": remote_head,
-        "workflowFile": WORKFLOW_FILE,
+        "workflowFile": workflow_file,
     }
 
 
