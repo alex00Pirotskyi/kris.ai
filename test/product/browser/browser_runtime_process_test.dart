@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_process.dart';
 
-String _hex(String value, int length) => List<String>.filled(length, value).join();
+String _hex(String value, int length) =>
+    List<String>.filled(length, value).join();
 
 Future<P3BrowserRuntimeResourceSet> _resources(Directory root) async {
   final node = File('${root.path}${Platform.pathSeparator}node-bin');
@@ -78,14 +79,14 @@ void main() {
     });
   });
 
-  test('ready handshake is bound to exact browser revision and executable',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-ready-');
-    addTearDown(() => temp.delete(recursive: true));
-    final resources = await _resources(temp.absolute);
+  test(
+    'ready handshake is bound to exact browser revision and executable',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-ready-');
+      addTearDown(() => temp.delete(recursive: true));
+      final resources = await _resources(temp.absolute);
 
-    final ready = P3BrowserRuntimeReady.fromJson(
-      <String, Object?>{
+      final ready = P3BrowserRuntimeReady.fromJson(<String, Object?>{
         'type': 'ready',
         'schemaVersion': '1.0.0',
         'pid': 101,
@@ -95,17 +96,14 @@ void main() {
         'browserRevision': resources.browserRevision,
         'browserExecutableSha256': resources.browserExecutableSha256,
         'protocol': 'stdio-json-v1',
-      },
-      resources: resources,
-    );
+      }, resources: resources);
 
-    expect(ready.pid, 101);
-    expect(ready.browserPid, 202);
-    expect(ready.browserRevision, resources.browserRevision);
+      expect(ready.pid, 101);
+      expect(ready.browserPid, 202);
+      expect(ready.browserRevision, resources.browserRevision);
 
-    expect(
-      () => P3BrowserRuntimeReady.fromJson(
-        <String, Object?>{
+      expect(
+        () => P3BrowserRuntimeReady.fromJson(<String, Object?>{
           'type': 'ready',
           'schemaVersion': '1.0.0',
           'pid': 101,
@@ -115,34 +113,35 @@ void main() {
           'browserRevision': 'different-revision',
           'browserExecutableSha256': resources.browserExecutableSha256,
           'protocol': 'stdio-json-v1',
-        },
-        resources: resources,
-      ),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-  });
+        }, resources: resources),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+    },
+  );
 
-  test('probe plan rejects a missing bundled node instead of falling back',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-missing-node-');
-    addTearDown(() => temp.delete(recursive: true));
-    final resources = await _resources(temp.absolute);
-    await File(resources.nodeExecutable).delete();
-    final state = Directory('${temp.path}${Platform.pathSeparator}state');
-    await state.create();
+  test(
+    'probe plan rejects a missing bundled node instead of falling back',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-missing-node-');
+      addTearDown(() => temp.delete(recursive: true));
+      final resources = await _resources(temp.absolute);
+      await File(resources.nodeExecutable).delete();
+      final state = Directory('${temp.path}${Platform.pathSeparator}state');
+      await state.create();
 
-    expect(
-      () => P3BrowserRuntimeLaunchPlan.probe(
-        resources: resources,
-        stateDirectory: state.absolute,
-      ),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'bundled_node_executable_required',
+      expect(
+        () => P3BrowserRuntimeLaunchPlan.probe(
+          resources: resources,
+          stateDirectory: state.absolute,
         ),
-      ),
-    );
-  });
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'bundled_node_executable_required',
+          ),
+        ),
+      );
+    },
+  );
 }
