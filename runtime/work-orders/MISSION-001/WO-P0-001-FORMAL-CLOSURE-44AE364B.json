@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-P0-001-FORMAL-CLOSURE-R2-44AE364B",
   "allowedPaths": [
     ".github/workflows/p1-p0-001-formal-closure.yml",
     "release/evidence/P0-001/**",
@@ -18,7 +18,7 @@
   "lastActor": "ELASTIC-GPT-44AE364B",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
-  "objective": "Close the real historical P0-001 formal-acceptance gap without rebuilding completed Product work. Against exact protected main, obtain a machine-observed clean-checkout baseline run equivalent to the previously required command `python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates --strict`, proving source-manifest integrity and all bounded safe gates. Candidate closure run 31310783845 passed on the exact tree now landed as protected main commit 521ecab1f2831206da98a282df51d8094230bc99; rerun against the landed SHA before terminal closure.",
+  "objective": "Close the real historical P0-001 formal-acceptance gap without rebuilding completed Product work. Against exact protected main commit 521ecab1f2831206da98a282df51d8094230bc99, rerun the historically required command `python3 tool/capture_baseline.py --project . --manifest-mode verify --run-safe-gates --strict`. Candidate closure run 31310783845 already passed on the tree-equivalent pre-landing candidate; this final run binds the result to protected main.",
   "parentProductPr": null,
   "parentWorkOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
   "priority": 100,
@@ -31,8 +31,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "IMPLEMENTATION",
-  "updatedAt": "2026-08-09T11:34:00Z",
+  "updatedAt": "2026-08-09T11:35:30Z",
   "workOrderId": "WO-P0-001-FORMAL-CLOSURE-44AE364B"
 }
