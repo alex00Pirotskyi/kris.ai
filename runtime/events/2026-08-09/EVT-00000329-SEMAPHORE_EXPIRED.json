@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000329-SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-P3-001-BROWSER-RUNTIME-44AE364B",
+      "SEM-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
+    ]
+  },
+  "recordedAt": "2026-08-09T16:47:00Z",
+  "runtimeGeneration": 329,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T164700Z-STALE-LEASE-RECOVERY",
+  "workOrderId": null
+}

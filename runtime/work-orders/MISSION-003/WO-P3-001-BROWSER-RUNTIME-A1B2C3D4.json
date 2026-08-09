@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-BROWSER-RUNTIME-44AE364B",
   "allowedPaths": [
     "lib/product/browser/**",
     "test/product/browser/**"
@@ -37,9 +36,9 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "supersededReadinessPr": 68,
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-09T12:38:30Z",
+  "updatedAt": "2026-08-09T16:47:00Z",
   "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
 }

@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
   "allowedPaths": [
     "automation_host/package.json",
     "automation_host/package-lock.json",
@@ -35,8 +34,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-09T12:46:00Z",
+  "updatedAt": "2026-08-09T16:47:00Z",
   "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
 }
