@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-TX-P5G2-C73E9A51",
+  "operation": "DELETE_EXACT_LEGACY_BRANCH_V1",
+  "expectedRuntimeGeneration": 300,
+  "workOrderId": "WO-RUNTIME-TX-CLEANUP-C73E9A51",
+  "semaphoreId": "SEM-RUNTIME-TX-CLEANUP-C73E9A51",
+  "workerIdentity": "ELASTIC-GPT-C73E9A51",
+  "productPr": 62,
+  "targetBranch": "runtime/tx/p5-integrate-94-gen2",
+  "expectedTargetHead": "5263440921451d2a25b040a9dfbf928ffcf5ee22",
+  "createdAt": "2026-08-09T09:30:00Z",
+  "note": "Configured grandfathered runtime transaction debt; exact-ref cleanup only."
+}
