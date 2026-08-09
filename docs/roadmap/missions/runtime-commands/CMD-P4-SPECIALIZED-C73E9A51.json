@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "commandId": "CMD-P4-SPECIALIZED-C73E9A51",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "expectedRuntimeGeneration": 304,
+  "workOrderId": "WO-P4-001-EXACT-SPECIALIZED-C73E9A51",
+  "semaphoreId": "SEM-P4-001-EXACT-SPECIALIZED-C73E9A51",
+  "workerIdentity": "ELASTIC-GPT-C73E9A51",
+  "productPr": 62,
+  "expectedProductHead": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "workflowFile": "p4-001-search-provider.yml",
+  "createdAt": "2026-08-09T09:46:00Z",
+  "note": "Exact specialized P4 validation after deterministic manifest finalization; no Product source mutation."
+}
