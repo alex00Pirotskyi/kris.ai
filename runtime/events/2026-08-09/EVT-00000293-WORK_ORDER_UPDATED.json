@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000293-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "actor": "ELASTIC-GPT-C73E9A51",
+    "nextStatus": "SUPERSEDED",
+    "reason": "The original nine-entry source-inventory authority update was consumed and then reapplied on reconciled current main by the dedicated follow-up; only the current-main validation lane remains relevant."
+  },
+  "recordedAt": "2026-08-09T08:53:00Z",
+  "runtimeGeneration": 293,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T084200Z-c73e9a51",
+  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-7F3A2C91"
+}
