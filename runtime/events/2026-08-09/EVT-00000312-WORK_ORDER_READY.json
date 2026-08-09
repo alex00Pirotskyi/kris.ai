@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000312-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "ELASTIC-GPT-44AE364B",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-09T10:38:49Z",
+  "runtimeGeneration": 312,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4"
+}
