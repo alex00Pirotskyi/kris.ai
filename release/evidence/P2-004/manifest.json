@@ -1,43 +1,40 @@
 {
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "3.0.0",
   "taskId": "P2-004",
-  "name": "Automation host technology spike",
-  "status": "source_only",
-  "localResult": "source_only",
-  "generatedAt": "2026-08-03T17:43:27Z",
-  "dependsOn": [
-    "P1-001",
-    "P1-012"
-  ],
-  "artifacts": [
-    "docs/adr/ADR-0012-p2-automation-host.md",
-    "tool/p2_technology_spike.py",
-    "tool/p2_toolchains.py",
-    "tool/p2_extend_toolchain_lock.py",
-    "tool/p2_toolchain_extension_test.py",
-    "tool/p2_evidence_contract.py",
-    "tool/p2_evidence_contract_test.py",
-    "tool/p2_contract_fixture_support.py",
-    "tool/p2_strict_finalizer_contract_test.py",
-    ".github/workflows/p2-owner-mode.yml",
-    "automation_host/package.json",
-    "automation_host/package-lock.json",
-    "config/toolchains.lock.json",
-    "config/p2_toolchain_extension.v1.template.json",
-    "config/p2_runner_provisioning.v3.template.json",
-    "config/p2_controlled_runner_policy.v5.template.json",
-    "schemas/p2_runner_attestation_v5.schema.json",
-    "schemas/p2_post_run_cleanup_v2.schema.json",
-    "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json"
-  ],
-  "testResults": "release/evidence/P2-004/test-results.json",
-  "ownerApproval": {
-    "status": "pending"
+  "name": "Automation host technology selection",
+  "status": "selection_pending",
+  "localResult": "source_candidate",
+  "selectionContract": {
+    "requiredPlatforms": ["windows", "macos", "linux"],
+    "roundsPerPlatform": 3,
+    "requiredSelectedCandidateProof": [
+      "real PTY launch/input/output",
+      "PTY resize exercised",
+      "startup measured",
+      "resident memory measured",
+      "package/dependency footprint measured",
+      "repeated-run reliability measured"
+    ],
+    "downstreamCertification": {
+      "P2-005": "interactive PTY attach/detach/reconnect/transcript/ANSI/resize",
+      "P2-006": "process-tree identity/descendants/termination/PID reuse"
+    }
   },
-  "independentReview": {
-    "status": "pending"
-  },
+  "candidates": [
+    "typescript-node-node-pty-with-native-lifecycle-adapters",
+    "native-platform-pty-supervisor",
+    "dart-control-plane-native-pty-helper"
+  ],
+  "selectedCandidate": null,
+  "selectionWorkflowRun": null,
   "platformReceipts": {},
-  "completedTaskPacket": null,
-  "sourceOnlyIsNotBehavioralProof": true
+  "aggregateReceipt": null,
+  "ownerApproval": {"status": "pending_measured_selection"},
+  "independentReview": {"status": "pending_measured_selection"},
+  "truthBoundary": {
+    "sourceOnlyIsNotBehavioralProof": true,
+    "p2_004SelectionDoesNotCertifyP2_005": true,
+    "p2_004SelectionDoesNotCertifyP2_006": true,
+    "acceptanceDoesNotImplyReleaseSupport": true
+  }
 }
