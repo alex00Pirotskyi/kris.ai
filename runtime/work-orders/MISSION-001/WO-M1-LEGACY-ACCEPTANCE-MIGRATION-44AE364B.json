@@ -8,7 +8,8 @@
     "docs/roadmap/missions/delivery/records/P1-003/**",
     "docs/roadmap/missions/delivery/records/P1-012/**",
     "docs/roadmap/missions/delivery/records/P2-004/**",
-    "runtime/acceptance-evidence/MISSION-001/**"
+    "runtime/acceptance-evidence/MISSION-001/**",
+    ".github/workflows/p1-v15-delivery-acceptance-validation.yml"
   ],
   "assignedWorker": "ELASTIC-GPT-44AE364B",
   "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
@@ -38,6 +39,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "REVIEW",
-  "updatedAt": "2026-08-09T11:39:30Z",
+  "updatedAt": "2026-08-09T11:58:00Z",
   "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B"
 }

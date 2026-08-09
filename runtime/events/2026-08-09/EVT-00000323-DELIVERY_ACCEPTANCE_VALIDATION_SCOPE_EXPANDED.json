@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000323-DELIVERY_ACCEPTANCE_VALIDATION_SCOPE_EXPANDED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "ELASTIC-GPT-44AE364B",
+    "addedAllowedPath": ".github/workflows/p1-v15-delivery-acceptance-validation.yml",
+    "reason": "temporary MISSION-001-owned helper workflow required to run strict delivery validation before any accepted records reach runtime"
+  },
+  "recordedAt": "2026-08-09T11:58:00Z",
+  "runtimeGeneration": 323,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B"
+}
