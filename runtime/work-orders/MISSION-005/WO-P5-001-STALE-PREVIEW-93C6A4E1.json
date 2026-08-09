@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P5-001-8731DD9F",
   "allowedPaths": [
     "lib/p5_ia_preview.dart"
   ],
@@ -25,8 +24,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-09T06:45:21Z",
+  "updatedAt": "2026-08-09T06:49:31Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
 }
