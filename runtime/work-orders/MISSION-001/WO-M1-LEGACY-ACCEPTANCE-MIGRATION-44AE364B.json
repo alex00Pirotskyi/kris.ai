@@ -1,0 +1,43 @@
+{
+  "activeSemaphoreId": "SEM-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B",
+  "allowedPaths": [
+    "docs/roadmap/missions/delivery/records/P0-001/**",
+    "docs/roadmap/missions/delivery/records/P0-008/**",
+    "docs/roadmap/missions/delivery/records/P1-001/**",
+    "docs/roadmap/missions/delivery/records/P1-002/**",
+    "docs/roadmap/missions/delivery/records/P1-003/**",
+    "docs/roadmap/missions/delivery/records/P1-012/**",
+    "docs/roadmap/missions/delivery/records/P2-004/**",
+    "runtime/acceptance-evidence/MISSION-001/**"
+  ],
+  "assignedWorker": "ELASTIC-GPT-44AE364B",
+  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "createdAt": "2026-08-09T11:39:30Z",
+  "createdBy": "WRK-20260809T103104Z-44AE364B",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "lastActor": "ELASTIC-GPT-44AE364B",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Perform the bounded Mission Execution 1.5 delivery-state migration required to unlock P3-001. Create strict append-only ACCEPTED records only for the proven dependency chain P0-001 -> P0-008 -> P1-001 -> P1-002 -> P1-003 -> P1-012 -> P2-004. Bind legacy tasks to current protected-main commit 521ecab1f2831206da98a282df51d8094230bc99 and exact current tri-platform Product CI; bind P2-004 to its reviewed/landed technology-selection commit with immutable R1 and landing receipts. Do not accept any unrelated roadmap task, do not certify P2-005/P2-006, and do not imply release/support/GA status.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "all seven delivery records are append-only new files",
+    "mission_delivery_strict.py validate passes with exact commit/tree/evidence/CI/R1 receipts",
+    "dependency order closes exactly P0-001,P0-008,P1-001,P1-002,P1-003,P1-012,P2-004 and no other task",
+    "P0-001 receipt references landed-main formal closure run 31311227913 and artifact 9037435870",
+    "legacy P0/P1 records bind current protected-main product-gates run 31310998304",
+    "P2-004 acceptance preserves technology-selection-only boundary and uses immutable R1/landing runtime receipts",
+    "P3-001 dependency P2-004@ACCEPTANCE becomes satisfiable without accepting P2-005/P2-006"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-09T11:39:30Z",
+  "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B"
+}

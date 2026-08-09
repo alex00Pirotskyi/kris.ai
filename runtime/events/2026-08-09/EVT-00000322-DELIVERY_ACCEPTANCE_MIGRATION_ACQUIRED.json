@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000322-DELIVERY_ACCEPTANCE_MIGRATION_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "ELASTIC-GPT-44AE364B",
+    "scope": ["P0-001","P0-008","P1-001","P1-002","P1-003","P1-012","P2-004"],
+    "semaphoreId": "SEM-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B",
+    "purpose": "bounded strict delivery-record migration required only to satisfy P3-001 P2-004@ACCEPTANCE"
+  },
+  "recordedAt": "2026-08-09T11:39:30Z",
+  "runtimeGeneration": 322,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B"
+}

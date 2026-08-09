@@ -1,0 +1,30 @@
+{
+  "allowedPaths": [
+    "docs/roadmap/missions/delivery/records/P0-001/**",
+    "docs/roadmap/missions/delivery/records/P0-008/**",
+    "docs/roadmap/missions/delivery/records/P1-001/**",
+    "docs/roadmap/missions/delivery/records/P1-002/**",
+    "docs/roadmap/missions/delivery/records/P1-003/**",
+    "docs/roadmap/missions/delivery/records/P1-012/**",
+    "docs/roadmap/missions/delivery/records/P2-004/**",
+    "runtime/acceptance-evidence/MISSION-001/**"
+  ],
+  "authorityId": "MISSION-001:DELIVERY-ACCEPTANCE:P3-UNLOCK",
+  "baseCommit": "bdb06ca0ce0ef060a519a8b6b4086ebcf8a703f1",
+  "baseTree": "a6660083dcb17075da99e7625f2caf5de80572f5",
+  "branch": "agent/mission-runtime",
+  "createdAt": "2026-08-09T11:39:30Z",
+  "executionRole": "REVIEWER",
+  "expiresAt": "2026-08-09T15:39:30Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": 75,
+  "refreshedAt": "2026-08-09T11:39:30Z",
+  "resourceId": "P3-001:DEPENDENCY-ACCEPTANCE",
+  "runtimeGeneration": 322,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-M1-LEGACY-ACCEPTANCE-MIGRATION-44AE364B",
+  "workerIdentity": "ELASTIC-GPT-44AE364B"
+}
