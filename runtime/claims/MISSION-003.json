@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 2,
+  "captainWorker": "ELASTIC-GPT-44AE364B",
+  "currentProductPrs": [],
+  "integrationAuthority": "ELASTIC-GPT-44AE364B",
   "mission": "MISSION-003",
-  "captainWorker": "D",
-  "status": "ACTIVE",
-  "integrationAuthority": "D",
   "priority": "HIGH",
-  "currentProductPrs": [68],
-  "runtimeGeneration": 0,
-  "updatedAt": "2026-08-07T12:20:00Z"
+  "runtimeGeneration": 325,
+  "schemaVersion": 2,
+  "status": "ACTIVE",
+  "updatedAt": "2026-08-09T12:18:30Z"
 }

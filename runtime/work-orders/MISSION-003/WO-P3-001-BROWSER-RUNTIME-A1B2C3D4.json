@@ -1,22 +1,40 @@
 {
-  "allowedPaths": ["lib/product/browser/**", "test/product/browser/**"],
-  "baseCommit": "7eecc840f68ca0dff13ab58c138845593254e390",
-  "baseTree": "2080824a34956e3b202126a0a9bd61b4d645d338",
+  "activeSemaphoreId": "SEM-P3-001-BROWSER-RUNTIME-44AE364B",
+  "allowedPaths": [
+    "lib/product/browser/**",
+    "test/product/browser/**"
+  ],
+  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "branch": "agent/c/mission-003-browser-runtime",
   "createdAt": "2026-08-08T06:53:12Z",
   "createdBy": "WRK-20260808T065312Z-a1b2c3d4",
-  "dependencyRequirements": [{"level": "ACCEPTANCE", "task": "P2-004"}],
-  "lastActor": "ELASTIC-GPT-6E91A2F4",
+  "dependencyRequirements": [
+    {
+      "level": "ACCEPTANCE",
+      "task": "P2-004"
+    }
+  ],
+  "lastActor": "ELASTIC-GPT-44AE364B",
   "maxChildWorkOrders": 4,
   "mission": "MISSION-003",
-  "objective": "Implement the actual P3-001 bundled browser automation runtime in the reserved browser product namespace once P2-004 satisfies its acceptance gate. P1-012 is already completed/approved on protected main and is no longer a live blocker. Pin the automation host/runtime and browser binaries, provide reproducible packaging and clean-machine launch without a global runtime, and establish the production source/test foundation for subsequent browser sessions/actions/process supervision. Do not spend this Work Order on additional provenance/readiness-only layers.",
+  "objective": "Implement the actual P3-001 bundled browser automation runtime in the reserved browser product namespace now that P2-004@ACCEPTANCE is satisfied. Pin the automation host/runtime and browser binaries, provide reproducible packaging and clean-machine launch without a global runtime, and establish the production source/test foundation for subsequent browser sessions/actions/process supervision. Do not spend this Work Order on additional provenance/readiness-only layers.",
   "parentProductPr": 68,
   "priority": 100,
+  "productBranch": "agent/c/mission-003-browser-runtime",
   "requestedRole": "BUILDER",
-  "requiredTests": ["clean-machine bundled worker launch without global runtime", "deterministic browser-runtime dependency/version assertion", "offline/reproducible package identity", "process start/stop and no-surviving-descendant smoke test", "exact-current product-gates"],
+  "requiredTests": [
+    "clean-machine bundled worker launch without global runtime",
+    "deterministic browser-runtime dependency/version assertion",
+    "offline/reproducible package identity",
+    "process start/stop and no-surviving-descendant smoke test",
+    "exact-current product-gates"
+  ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "CREATED",
+  "status": "IN_PROGRESS",
+  "supersededReadinessPr": 68,
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-09T06:55:00Z",
+  "updatedAt": "2026-08-09T12:18:30Z",
   "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
 }

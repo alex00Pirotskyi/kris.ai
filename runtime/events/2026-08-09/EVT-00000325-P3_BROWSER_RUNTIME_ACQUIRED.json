@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000325-P3_BROWSER_RUNTIME_ACQUIRED",
+  "eventType": "WORK_ACQUIRED",
+  "mission": "MISSION-003",
+  "recordedAt": "2026-08-09T12:18:30Z",
+  "runtimeGeneration": 325,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+  "details": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "semaphoreId": "SEM-P3-001-BROWSER-RUNTIME-44AE364B",
+    "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99"
+  }
+}
