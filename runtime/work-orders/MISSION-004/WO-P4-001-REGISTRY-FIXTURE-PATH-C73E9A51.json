@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "createdAt": "2026-08-09T09:55:00Z",
+  "createdBy": "WRK-20260809T084200Z-c73e9a51",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Repair the independently identified P4 combined-authority fixture-path defect in the canonical Test Center registry. On exact current P4 base 4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378, replace only exact string values `evals/fixtures/p4_001_search_provider/**` with `services/research_worker/test/fixtures/p4_001_search_provider/**` and `evals/fixtures/p4_001_search_provider/contract_cases.json` with `services/research_worker/test/fixtures/p4_001_search_provider/contract_cases.json`. Preserve every registry identity, array order, non-target value, P4 stable test ID, module, hierarchy/proof-lineage compatibility, and all non-P4 records byte-for-byte outside the replaced string literals. Do not change Product behavior or promote acceptance/support/release state.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "authority helper diff changes only config/test_center_registry.v1.json",
+    "all exact historical P4 fixture strings are absent after migration",
+    "owned services/research_worker/test/fixtures/p4_001_search_provider paths replace them one-for-one",
+    "all registry collection identities/counts/order and all non-target semantic values are preserved",
+    "canonical Test Center validation PASS",
+    "exact P4 specialized validation and product-gates PASS after integration",
+    "no Product behavior/acceptance/support/release promotion"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-09T09:55:00Z",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
