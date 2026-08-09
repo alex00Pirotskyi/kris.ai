@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000285-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "p1_012DependencyReconciled": true,
+    "p3WorkOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+    "parentProductPr": 75,
+    "requestedRole": "DEFECT_HUNTER",
+    "supersededWorkOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-09T06:55:00Z",
+  "runtimeGeneration": 285,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T065200Z-6e91a2f4",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4"
+}

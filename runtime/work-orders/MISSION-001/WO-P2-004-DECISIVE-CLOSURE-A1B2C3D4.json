@@ -14,6 +14,7 @@
   "createdBy": "WRK-20260808T065312Z-a1b2c3d4",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
+  "lastActor": "ELASTIC-GPT-6E91A2F4",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-001",
   "objective": "Decisively close the repository-controlled part of P2-004 so P3-001 can stop accumulating readiness-only work: extract the validated measurement-contract source/test logic from the temporary carrier into a clean exact candidate, preserve current Test Center/P8 authority rather than replacing its registry, remove or exclude temporary carrier payloads from the integration candidate, run the governed measurement-contract tests, and reduce any remaining blocker to the real tri-platform controlled measurement campaign. If the required interactive/self-hosted/signing environment is unavailable, record that boundary explicitly as EXTERNAL_HARD instead of creating more provenance layers. Do not claim P2-004 accepted until the roadmap measurement requirements are actually satisfied.",
@@ -30,8 +31,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "REVIEW",
+  "status": "SUPERSEDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-08T09:49:00Z",
+  "updatedAt": "2026-08-09T06:55:00Z",
   "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
 }

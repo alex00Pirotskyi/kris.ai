@@ -1,0 +1,36 @@
+{
+  "allowedPaths": [
+    "tool/p2_004_technology_selection.py",
+    "tool/p2_004_technology_selection_test.py",
+    ".github/workflows/p2-004-technology-selection.yml",
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/IMPLEMENTATION.md",
+    "release/evidence/P2-004/manifest.json"
+  ],
+  "baseCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+  "baseTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "createdAt": "2026-08-09T06:55:00Z",
+  "createdBy": "WRK-20260809T065200Z-6e91a2f4",
+  "dependencyRequirements": [],
+  "executionRole": "DEFECT_HUNTER",
+  "maxChildWorkOrders": 2,
+  "mission": "MISSION-001",
+  "objective": "Replace the contaminated PR #75 integration surface with a clean current-main P2-004 technology-selection candidate. Preserve the reviewed trusted-measurement contract where still useful, restore P2-004 to its roadmap role as a measured architecture selection rather than production certification of every candidate, measure the existing Node/node-pty implementation against native-PTY feasibility and a Dart-control-plane/native-helper architecture on Windows, macOS and Linux using real hosted-runner observations, select a technology only if the evidence is sufficient, and keep full reconnect/process-tree production certification in P2-005/P2-006. Do not claim P2-004 accepted from source-only evidence and do not begin P3 until the corrected P2-004 acceptance gate is genuinely satisfied.",
+  "parentProductPr": 75,
+  "priority": 100,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "python tool/p2_004_technology_selection_test.py",
+    "P2-004 hosted selection workflow passes on Windows 2025, macOS 15, and Ubuntu 24.04",
+    "selected architecture has real PTY behavioral evidence on every target platform",
+    "rejected architectures have measured feasibility/rejection evidence rather than invented pass receipts",
+    "clean candidate contains no temporary carrier/review workflow payload",
+    "P2-004 remains fail-closed until measured selection and exact-current Product validation succeed"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-09T06:55:00Z",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4"
+}

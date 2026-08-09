@@ -4,10 +4,11 @@
   "baseTree": "2080824a34956e3b202126a0a9bd61b4d645d338",
   "createdAt": "2026-08-08T06:53:12Z",
   "createdBy": "WRK-20260808T065312Z-a1b2c3d4",
-  "dependencyRequirements": [{"level": "ACCEPTANCE", "task": "P2-004"}, {"level": "ACCEPTANCE", "task": "P1-012"}],
+  "dependencyRequirements": [{"level": "ACCEPTANCE", "task": "P2-004"}],
+  "lastActor": "ELASTIC-GPT-6E91A2F4",
   "maxChildWorkOrders": 4,
   "mission": "MISSION-003",
-  "objective": "Implement the actual P3-001 bundled browser automation runtime in the reserved browser product namespace once P2-004 and P1-012 satisfy their dependency gates. Pin the automation host/runtime and browser binaries, provide reproducible packaging and clean-machine launch without a global runtime, and establish the production source/test foundation for subsequent browser sessions/actions/process supervision. Do not spend this Work Order on additional provenance/readiness-only layers.",
+  "objective": "Implement the actual P3-001 bundled browser automation runtime in the reserved browser product namespace once P2-004 satisfies its acceptance gate. P1-012 is already completed/approved on protected main and is no longer a live blocker. Pin the automation host/runtime and browser binaries, provide reproducible packaging and clean-machine launch without a global runtime, and establish the production source/test foundation for subsequent browser sessions/actions/process supervision. Do not spend this Work Order on additional provenance/readiness-only layers.",
   "parentProductPr": 68,
   "priority": 100,
   "requestedRole": "BUILDER",
@@ -16,5 +17,6 @@
   "schemaVersion": 1,
   "status": "CREATED",
   "type": "PRODUCT_FEATURE",
+  "updatedAt": "2026-08-09T06:55:00Z",
   "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
 }
