@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000302-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-C73E9A51",
+    "nextStatus": "LANDED",
+    "productPr": 62,
+    "exactProductHead": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+    "productGatesRunId": 31305596409,
+    "validateUbuntu": "success",
+    "validateWindows": "success",
+    "validateMacos": "success"
+  },
+  "recordedAt": "2026-08-09T09:34:00Z",
+  "runtimeGeneration": 302,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T084200Z-c73e9a51",
+  "workOrderId": "WO-P4-001-EXACT-CI-C73E9A51"
+}
