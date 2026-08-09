@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000287-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+    "requestedRole": "REVIEWER",
+    "reviewTargetCommit": "e8e85a4ffa744f9118f4dc6e04b563e7ee521aae",
+    "reviewTargetPr": 128,
+    "type": "REVIEW"
+  },
+  "recordedAt": "2026-08-09T07:36:00Z",
+  "runtimeGeneration": 287,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T065200Z-6e91a2f4",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-R1-6E91A2F4"
+}

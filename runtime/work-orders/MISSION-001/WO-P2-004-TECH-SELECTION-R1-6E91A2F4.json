@@ -1,0 +1,38 @@
+{
+  "allowedPaths": [
+    "tool/p2_004_technology_selection.py",
+    "tool/p2_004_technology_selection_test.py",
+    ".github/workflows/p2-004-technology-selection.yml",
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/IMPLEMENTATION.md",
+    "release/evidence/P2-004/manifest.json"
+  ],
+  "baseCommit": "e8e85a4ffa744f9118f4dc6e04b563e7ee521aae",
+  "baseTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "createdAt": "2026-08-09T07:36:00Z",
+  "createdBy": "WRK-20260809T065200Z-6e91a2f4",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Perform a fresh context-independent exact-head R1 technical/security review of clean P2-004 helper PR #128 at commit e8e85a4ffa744f9118f4dc6e04b563e7ee521aae. The authoring execution WRK-20260809T065200Z-6e91a2f4 is ineligible to satisfy this R1. Verify the six-file main-rooted diff, the corrected roadmap boundary between P2-004 selection and P2-005/P2-006 certification, measurement workflow integrity, exact run 31301030782 and artifact identities, the Node/node-pty selection decision, explicit macOS packaging-repair debt, honest rejection evidence for native/Dart alternatives, and absence of P2 acceptance/P3 behavior/release/GA overclaim. Inspect exact-current Product gates for the reviewed head before PASS.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "PR #128 exact head/tree equals e8e85a4ffa744f9118f4dc6e04b563e7ee521aae / 94e237375c8924f5b4c063243af7075f10fbd50e",
+    "effective main diff is exactly the six authorized P2-004 files",
+    "selection run 31301030782 has Windows/macOS/Linux/aggregate SUCCESS and artifacts match recorded ids/digests",
+    "Node selection follows measured evidence without treating native/Dart feasibility as passing PTY implementations",
+    "macOS node-pty spawn-helper execute-bit repair remains explicit downstream packaging debt",
+    "P2-005/P2-006/P3/release/support/GA claims remain false",
+    "exact-current product-gates for reviewed head are SUCCESS before R1 PASS"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-09T07:36:00Z",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-R1-6E91A2F4"
+}
