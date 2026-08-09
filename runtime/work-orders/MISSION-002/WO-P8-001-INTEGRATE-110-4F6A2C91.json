@@ -6,13 +6,13 @@
     "tool/test_center_assurance_hierarchy_test.py"
   ],
   "assignedWorker": "ELASTIC-4f6a2c91",
-  "baseCommit": "26ef06cf0c55badd55733d2f901d110a3f6a2737",
-  "baseTree": "53e05ce1b285602c5244348f060cf20b9bde60a3",
+  "baseCommit": "38584381f4e3e726f8e5a97cc8d8361f0e144761",
+  "baseTree": "a5d0d060d3c76e4a45d7c2b338e276d8dd576034",
   "createdAt": "2026-08-07T20:03:15Z",
   "createdBy": "ELASTIC-4f6a2c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "SYSTEM-P8-SOURCE-MANIFEST-FINALIZED",
+  "lastActor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-002",
   "objective": "Consume exact P8 assurance-trust helper PR #110 into canonical Product PR #65 without byte drift, preserve authoritative support-scope/evidence-lineage repairs, materialize the canonical source manifest, and rerun exact current P8/product validation. No P8 acceptance or support promotion.",
@@ -28,8 +28,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T20:14:30Z",
+  "updatedAt": "2026-08-09T17:16:14Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }

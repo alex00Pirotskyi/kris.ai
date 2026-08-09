@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000331-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-002",
+  "payload": {
+    "actor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-09T17:16:14Z",
+  "runtimeGeneration": 331,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T171608Z-1bb5a140",
+  "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
+}
