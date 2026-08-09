@@ -1,11 +1,12 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P8-001-CB5088AA",
   "allowedPaths": [
     "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
     "tool/test_center_assurance_enforcement.py",
     "tool/test_center_assurance_enforcement_test.py",
     "tool/test_center_assurance_hierarchy_test.py"
   ],
-  "assignedWorker": "ELASTIC-QWEN-E84D5B7D",
+  "assignedWorker": "ELASTIC-QWEN-FCEFBB97",
   "baseCommit": "38584381f4e3e726f8e5a97cc8d8361f0e144761",
   "baseTree": "a5d0d060d3c76e4a45d7c2b338e276d8dd576034",
   "createdAt": "2026-08-07T20:03:15Z",
@@ -28,8 +29,8 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-09T17:17:02Z",
+  "updatedAt": "2026-08-09T17:28:18Z",
   "workOrderId": "WO-P8-001-INTEGRATE-110-4F6A2C91"
 }
