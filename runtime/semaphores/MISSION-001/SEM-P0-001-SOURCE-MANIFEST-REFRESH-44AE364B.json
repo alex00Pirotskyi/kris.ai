@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256",
+    ".github/workflows/temp-p0-001-source-manifest-refresh.yml"
+  ],
+  "authorityId": "SOURCE_MANIFEST.sha256",
+  "baseCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "baseTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "branch": "agent/help/elastic-gpt-44ae364b/p0-001-source-manifest-refresh",
+  "createdAt": "2026-08-09T11:21:40Z",
+  "executionRole": "IMPLEMENTER",
+  "expiresAt": "2026-08-09T15:21:40Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-09T11:21:40Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 318,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
+  "workerIdentity": "ELASTIC-GPT-44AE364B"
+}

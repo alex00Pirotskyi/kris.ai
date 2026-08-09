@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000318-P0_001_SOURCE_MANIFEST_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "authorityId": "SOURCE_MANIFEST.sha256",
+    "executionRole": "IMPLEMENTER",
+    "semaphoreId": "SEM-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B",
+    "workerIdentity": "ELASTIC-GPT-44AE364B"
+  },
+  "recordedAt": "2026-08-09T11:21:40Z",
+  "runtimeGeneration": 318,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+  "workOrderId": "WO-P0-001-SOURCE-MANIFEST-REFRESH-44AE364B"
+}
