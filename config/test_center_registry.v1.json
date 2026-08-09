@@ -1,1036 +1,181 @@
 {
   "affectedTestMappings": [
     {
-      "excludedPaths": [
-        "release/evidence/generated/**"
-      ],
+      "excludedPaths": ["release/evidence/generated/**"],
       "mappingId": "affected.test-center-contracts",
+      "pathPatterns": ["config/test_center_registry.v1.json", "docs/testing/**", "schemas/test_center.v1.json", "tool/test_center_contracts.py"],
+      "priority": 10,
+      "testIds": ["tc.test-center.contracts", "tc.test-center.semantic-regressions"]
+    },
+    {
+      "excludedPaths": ["release/evidence/generated/**"],
+      "mappingId": "affected.p8-formal-test-hierarchy",
       "pathPatterns": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
-        "docs/testing/**",
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
         "schemas/test_center.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_enforcement_test.py",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py",
         "tool/test_center_contracts.py"
       ],
-      "priority": 10,
-      "testIds": [
-        "tc.test-center.contracts",
-        "tc.test-center.semantic-regressions"
-      ]
+      "priority": 15,
+      "testIds": ["tc.p8.formal-test-hierarchy", "tc.p8.formal-test-hierarchy-regressions"]
     },
     {
       "mappingId": "affected.testing-evidence-bridges",
-      "pathPatterns": [
-        "schemas/assurance_report.v1.json",
-        "schemas/project_profile.v2.json",
-        "schemas/verification_report.v1.json",
-        "tool/assurance_model.py"
-      ],
+      "pathPatterns": ["schemas/assurance_report.v1.json", "schemas/project_profile.v2.json", "schemas/verification_report.v1.json", "tool/assurance_model.py"],
       "priority": 20,
-      "testIds": [
-        "tc.test-center.contracts",
-        "tc.test-center.semantic-regressions"
-      ]
-    },
-    {
-      "excludedPaths": [
-        "release/evidence/generated/**"
-      ],
-      "mappingId": "affected.p1.trust-authority",
-      "pathPatterns": [
-        "config/access_profiles.v2.json",
-        "config/capability_grant.v2.json",
-        "config/policy_engine.v2.json",
-        "config/signed_manifest_v2.json",
-        "config/tuf_trust.v1.json",
-        "config/key_storage.v2.json",
-        "config/threat_model_v2.json",
-        "config/local_ipc.v1.json",
-        "tool/p1_*.py",
-        "release/evidence/P1/**"
-      ],
-      "priority": 100,
-      "testIds": [
-        "tc.p1.exit-gate"
-      ]
-    },
-    {
-      "excludedPaths": [
-        "release/evidence/generated/**"
-      ],
-      "mappingId": "affected.p1a.native-authority",
-      "pathPatterns": [
-        "native/**",
-        "config/p1a*",
-        "tool/p1a_*.py",
-        "release/evidence/P1A/**",
-        "release/evidence/P1A-001/**"
-      ],
-      "priority": 110,
-      "testIds": [
-        "tc.p1a.exit-gate"
-      ]
-    },
-    {
-      "excludedPaths": [
-        "release/evidence/generated/**"
-      ],
-      "mappingId": "affected.p2.owner-mode-source",
-      "pathPatterns": [
-        "automation_host/**",
-        "lib/product/**",
-        "test/product/**",
-        "tool/p2_*.py",
-        ".github/workflows/p2-owner-mode.yml",
-        "release/evidence/P2/**",
-        "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
-        ".github/workflows/worker-a-p2-004-measurement-contract.yml"
-      ],
-      "priority": 120,
-      "testIds": [
-        "tc.p2.acceptance-contract",
-        "tc.p2.application-composition",
-        "tc.p2.cleanup-contract",
-        "tc.p2.evidence-contract",
-        "tc.p2.runner-attestation",
-        "tc.p2.source-inventory",
-        "tc.p2.strict-finalizer"
-      ]
-    },
-    {
-      "excludedPaths": [
-        "release/evidence/generated/**"
-      ],
-      "mappingId": "affected.p2.behavioral-certification",
-      "pathPatterns": [
-        ".github/workflows/p2-owner-mode.yml",
-        "tool/p2_platform_ci.py",
-        "tool/p2_post_run_cleanup.py",
-        "tool/p2_finalize_platform_after_cleanup.py",
-        "tool/p2_exit_gate_test.py",
-        "release/evidence/P2/platforms/**",
-        "release/evidence/P2/manifest.json"
-      ],
-      "priority": 121,
-      "testIds": [
-        "tc.p2.behavioral-closure"
-      ]
-    },
-    {
-      "excludedPaths": [
-        "release/evidence/generated/**"
-      ],
-      "mappingId": "affected.worker-a.canonical-integration",
-      "pathPatterns": [
-        "config/test_center_registry.v1.json",
-        "tool/worker_a_test_center_v1.py",
-        "tool/worker_a_test_center_v1_test.py",
-        "tool/worker_a_p1_p2_execution_contract_test.py",
-        "release/evidence/worker-a/test-center-v1/**",
-        "release/evidence/worker-a/p1-p1a-p2-*.json*",
-        "docs/roadmap/progress/2026-08-05-worker-a-p1-p2-new-roadmap-execution.md"
-      ],
-      "priority": 130,
-      "testIds": [
-        "tc.test-center.contracts",
-        "tc.test-center.semantic-regressions",
-        "tc.worker-a.canonical-integration"
-      ]
+      "testIds": ["tc.test-center.contracts", "tc.test-center.semantic-regressions"]
     }
   ],
   "projectTestProfiles": [
     {
-      "affectedPaths": [
-        "config/test_center_registry.v1.json",
-        "docs/testing/**",
-        "schemas/test_center.v1.json",
-        "tool/test_center_contracts.py"
-      ],
-      "argv": [
-        "python",
-        "tool/test_center_contracts.py",
-        "check",
-        "--project",
-        "."
-      ],
+      "affectedPaths": ["config/test_center_registry.v1.json", "docs/testing/**", "schemas/test_center.v1.json", "tool/test_center_contracts.py"],
+      "argv": ["python", "tool/test_center_contracts.py", "check", "--project", "."],
       "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "RUNNER_ARCH",
-        "RUNNER_OS"
-      ],
+      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
       "evidenceDestination": "release/evidence/worker-b/test-center-contract-validation.json",
       "expectedOutputs": [],
-      "inputPaths": [
-        "config/test_center_registry.v1.json",
-        "schemas/test_center.v1.json"
-      ],
+      "inputPaths": ["config/test_center_registry.v1.json", "schemas/test_center.v1.json"],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
+      "platforms": ["linux", "macos", "windows"],
       "stableCheckId": "tc.test-center.contracts",
       "timeoutSeconds": 60,
       "workingDirectory": "."
     },
     {
-      "affectedPaths": [
-        "config/test_center_registry.v1.json",
-        "schemas/test_center.v1.json",
-        "tool/test_center_contracts.py",
-        "tool/test_center_contracts_test.py"
-      ],
-      "argv": [
-        "python",
-        "-m",
-        "unittest",
-        "-v",
-        "tool/test_center_contracts_test.py"
-      ],
+      "affectedPaths": ["config/test_center_registry.v1.json", "schemas/test_center.v1.json", "tool/test_center_contracts.py", "tool/test_center_contracts_test.py"],
+      "argv": ["python", "-m", "unittest", "-v", "tool/test_center_contracts_test.py"],
       "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "RUNNER_ARCH",
-        "RUNNER_OS"
-      ],
+      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
       "evidenceDestination": "release/evidence/generated/worker-b/test-center-semantic-regressions.json",
       "expectedOutputs": [],
-      "inputPaths": [
-        "config/test_center_registry.v1.json",
-        "schemas/test_center.v1.json",
-        "tool/test_center_contracts.py",
-        "tool/test_center_contracts_test.py"
-      ],
+      "inputPaths": ["config/test_center_registry.v1.json", "schemas/test_center.v1.json", "tool/test_center_contracts.py", "tool/test_center_contracts_test.py"],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
+      "platforms": ["linux", "macos", "windows"],
       "stableCheckId": "tc.test-center.semantic-regressions",
       "timeoutSeconds": 120,
       "workingDirectory": "."
     },
     {
       "affectedPaths": [
-        "tool/p1_exit_gate_test.py",
-        "tool/p1_*.py",
-        "config/access_profiles.v2.json",
-        "config/capability_grant.v2.json",
-        "config/policy_engine.v2.json",
-        "config/signed_manifest_v2.json",
-        "config/tuf_trust.v1.json",
-        "config/key_storage.v2.json",
-        "config/threat_model_v2.json",
-        "config/local_ipc.v1.json",
-        "release/evidence/P1/**"
-      ],
-      "argv": [
-        "python",
-        "tool/p1_exit_gate_test.py",
-        "--project",
-        "."
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p1-exit-gate.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p1_exit_gate_test.py",
-        "config/access_profiles.v2.json",
-        "config/capability_grant.v2.json",
-        "config/policy_engine.v2.json",
-        "config/signed_manifest_v2.json",
-        "release/evidence/P1/manifest.json"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p1.exit-gate",
-      "timeoutSeconds": 900,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "native/**",
-        "tool/p1a_*.py",
-        "config/p1a*",
-        "release/evidence/P1A/**",
-        "release/evidence/P1A-001/**"
-      ],
-      "argv": [
-        "python",
-        "tool/p1a_exit_gate_test.py",
-        "--project",
-        ".",
-        "--source-only"
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p1a-exit-gate-source.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p1a_exit_gate_test.py",
-        "release/evidence/P1A/manifest.json",
-        "tasks/active/P1A-001.md",
-        "tasks/active/.gitkeep"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p1a.exit-gate",
-      "timeoutSeconds": 900,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "automation_host/**",
-        "lib/product/**",
-        "tool/p2_*.py",
-        "release/evidence/P2/**",
-        ".github/workflows/p2-owner-mode.yml"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_source_inventory_test.py",
-        "--project",
-        "."
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-source-inventory.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_source_inventory_test.py",
-        "SOURCE_MANIFEST.sha256",
-        "release/evidence/P2/manifest.json"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.source-inventory",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "lib/product/**",
-        "test/product/**",
-        "tool/p2_patch_application_composition_test.py"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_patch_application_composition_test.py"
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-application-composition.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_patch_application_composition_test.py",
-        "lib/product/**",
-        "test/product/**"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.application-composition",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "tool/p2_task_assertion*.py",
-        "tool/p2_platform_ci.py",
-        "release/evidence/P2/**",
-        "tool/p2_task_platform_assertions.py",
-        "tool/p2_technology_spike.py",
-        "tool/p2_technology_spike_contract_test.py",
-        "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
-        ".github/workflows/p2-owner-mode.yml",
-        ".github/workflows/worker-a-p2-004-measurement-contract.yml"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_task_assertion_cli_test.py",
-        "--project",
-        "."
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-acceptance-contract.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_task_assertion_cli_test.py",
-        "tool/p2_platform_ci.py",
-        "tool/p2_task_platform_assertions.py",
-        "tool/p2_technology_spike.py",
-        "tool/p2_technology_spike_contract_test.py",
-        "docs/operations/P2_TECHNOLOGY_CANDIDATE_RECEIPT_TEMPLATE.json",
-        ".github/workflows/p2-owner-mode.yml",
-        ".github/workflows/worker-a-p2-004-measurement-contract.yml"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.acceptance-contract",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "tool/p2_evidence_contract*.py",
-        "release/evidence/P2/**"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_evidence_contract_test.py"
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-evidence-contract.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_evidence_contract_test.py",
-        "tool/p2_evidence_contract.py"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.evidence-contract",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "tool/p2_runner_attestation*.py",
-        "tool/p2_github_job_identity.py",
-        "release/evidence/P2/**"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_runner_attestation_contract_test.py"
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-runner-attestation.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_runner_attestation_contract_test.py",
-        "tool/p2_runner_attestation.py"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.runner-attestation",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "tool/p2_post_run_cleanup*.py",
-        "release/evidence/P2/**"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_post_run_cleanup_contract_test.py"
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-cleanup-contract.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_post_run_cleanup_contract_test.py",
-        "tool/p2_post_run_cleanup.py"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.cleanup-contract",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "tool/p2_finalize_platform_after_cleanup.py",
-        "tool/p2_strict_finalizer_contract_test.py",
-        "release/evidence/P2/**"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_strict_finalizer_contract_test.py",
-        "--project",
-        "."
-      ],
-      "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-strict-finalizer.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_strict_finalizer_contract_test.py",
-        "tool/p2_finalize_platform_after_cleanup.py"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.strict-finalizer",
-      "timeoutSeconds": 300,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
-        "tool/p2_platform_ci.py",
-        "tool/p2_exit_gate_test.py",
-        "tool/p2_post_run_cleanup.py",
-        "tool/p2_finalize_platform_after_cleanup.py",
-        ".github/workflows/p2-owner-mode.yml",
-        "release/evidence/P2/platforms/**",
-        "release/evidence/P2/manifest.json"
-      ],
-      "argv": [
-        "python",
-        "tool/p2_exit_gate_test.py",
-        "--project",
-        "."
-      ],
-      "assuranceClass": "release",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/p2-behavioral-closure.json",
-      "expectedOutputs": [],
-      "inputPaths": [
-        "tool/p2_exit_gate_test.py",
-        "release/evidence/P2/manifest.json"
-      ],
-      "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
-      ],
-      "stableCheckId": "tc.p2.behavioral-closure",
-      "timeoutSeconds": 900,
-      "workingDirectory": "."
-    },
-    {
-      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
-        "tool/worker_a_test_center_v1.py",
-        "tool/worker_a_test_center_v1_test.py",
-        "release/evidence/worker-a/test-center-v1/**",
-        "docs/roadmap/progress/2026-08-05-worker-a-p1-p2-new-roadmap-execution.md"
+        "docs/testing/TEST_CENTER_P8_001_HIERARCHY.md",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
-      "argv": [
-        "python",
-        "tool/worker_a_test_center_v1.py",
-        "check",
-        "--project",
-        "."
-      ],
+      "argv": ["python", "tool/test_center_assurance_hierarchy.py", "check", "--project", "."],
       "assuranceClass": "source_contract",
-      "environmentAllowlist": [
-        "CI",
-        "GITHUB_ACTIONS",
-        "GITHUB_HEAD_REF",
-        "GITHUB_REF_NAME",
-        "GITHUB_RUN_ATTEMPT",
-        "GITHUB_RUN_ID",
-        "RUNNER_ARCH",
-        "RUNNER_NAME",
-        "RUNNER_OS"
-      ],
-      "evidenceDestination": "release/evidence/generated/worker-a/worker-a-canonical-integration.json",
+      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
+      "evidenceDestination": "release/evidence/TEST_CENTER/P8-001/formal-test-hierarchy-validation.json",
       "expectedOutputs": [],
       "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
         "config/test_center_registry.v1.json",
-        "tool/worker_a_test_center_v1.py",
-        "release/evidence/worker-a/test-center-v1/affected-mapping-rationales.json"
+        "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.schema.json",
+        "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "schemas/test_center.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": [
-        "linux",
-        "macos",
-        "windows"
+      "platforms": ["linux", "macos", "windows"],
+      "stableCheckId": "tc.p8.formal-test-hierarchy",
+      "timeoutSeconds": 60,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
+        "config/test_center_registry.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/**",
+        "schemas/test_center.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_enforcement_test.py",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
       ],
-      "stableCheckId": "tc.worker-a.canonical-integration",
-      "timeoutSeconds": 300,
+      "argv": ["python", "-m", "unittest", "-v", "tool/test_center_assurance_hierarchy_test.py", "tool/test_center_assurance_enforcement_test.py"],
+      "assuranceClass": "behavioral",
+      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
+      "evidenceDestination": "release/evidence/generated/worker-b/p8-001-formal-hierarchy-regressions.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_assurance_report_contract.v1.json",
+        "config/test_center_registry.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.schema.json",
+        "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/component-pass-fixture.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-candidate-identity.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-deterministic-fixture.json",
+        "release/evidence/TEST_CENTER/P8-001/fixtures/unit-pass-machine-result.json",
+        "schemas/test_center.v1.json",
+        "schemas/test_center_assurance_execution_report.v1.json",
+        "schemas/test_center_assurance_hierarchy.v1.json",
+        "schemas/test_center_assurance_report_contract.v1.json",
+        "tool/test_center_assurance_enforcement.py",
+        "tool/test_center_assurance_enforcement_test.py",
+        "tool/test_center_assurance_hierarchy.py",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_jsonschema.py",
+        "tool/test_center_assurance_semantics.py",
+        "tool/test_center_contracts.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": ["linux", "macos", "windows"],
+      "stableCheckId": "tc.p8.formal-test-hierarchy-regressions",
+      "timeoutSeconds": 120,
       "workingDirectory": "."
     }
   ],
   "registryId": "test-center.canonical-v1",
   "schemaVersion": "1.0.0",
   "testCases": [
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "Canonical Test Center contract check",
-      "mandatory": true,
-      "moduleId": "tm.test-center",
-      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
-      "roadmapTaskIds": [],
-      "testId": "tc.test-center.contracts"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "Test Center semantic regression suite",
-      "mandatory": true,
-      "moduleId": "tm.test-center",
-      "purpose": "Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.",
-      "roadmapTaskIds": [],
-      "testId": "tc.test-center.semantic-regressions"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P1 full trust closure",
-      "mandatory": true,
-      "moduleId": "tm.p1.trust-authority",
-      "purpose": "Run the governed P1 exit gate over existing implementation and immutable evidence.",
-      "roadmapTaskIds": [
-        "P1-001",
-        "P1-002",
-        "P1-003",
-        "P1-004",
-        "P1-005",
-        "P1-006",
-        "P1-007",
-        "P1-008",
-        "P1-009",
-        "P1-010",
-        "P1-011",
-        "P1-012"
-      ],
-      "testId": "tc.p1.exit-gate"
-    },
-    {
-      "assuranceClass": "platform",
-      "displayName": "P1A native authority exit gate",
-      "mandatory": true,
-      "moduleId": "tm.p1a.native-authority",
-      "purpose": "Validate P1A aggregate source/native evidence and lifecycle without creating a second authority service.",
-      "roadmapTaskIds": [
-        "P1A-001",
-        "P1A-002",
-        "P1A-003",
-        "P1A-004",
-        "P1A-005",
-        "P1A-006",
-        "P1A-007",
-        "P1A-008",
-        "P1A-009",
-        "P1A-010",
-        "P1A-011",
-        "P1A-012",
-        "P1A-013"
-      ],
-      "testId": "tc.p1a.exit-gate"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 source inventory",
-      "mandatory": true,
-      "moduleId": "tm.p2.source-contracts",
-      "purpose": "Validate governed P2 source inventory and package identity without promoting behavior.",
-      "roadmapTaskIds": [
-        "P2-001",
-        "P2-002",
-        "P2-003",
-        "P2-004",
-        "P2-005",
-        "P2-006",
-        "P2-007",
-        "P2-008",
-        "P2-009",
-        "P2-010",
-        "P2-011",
-        "P2-012",
-        "P2-013",
-        "P2-014"
-      ],
-      "testId": "tc.p2.source-inventory"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 application composition",
-      "mandatory": true,
-      "moduleId": "tm.p2.source-contracts",
-      "purpose": "Validate the existing Owner Mode application-composition patch and runtime integration contracts.",
-      "roadmapTaskIds": [
-        "P2-001",
-        "P2-002",
-        "P2-003",
-        "P2-008",
-        "P2-012"
-      ],
-      "testId": "tc.p2.application-composition"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 canonical acceptance contract",
-      "mandatory": true,
-      "moduleId": "tm.p2.source-contracts",
-      "purpose": "Validate the governed task assertion and hello.txt acceptance contract without substituting it for a controlled run.",
-      "roadmapTaskIds": [
-        "P2-002",
-        "P2-003",
-        "P2-006",
-        "P2-013"
-      ],
-      "testId": "tc.p2.acceptance-contract"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 evidence contract",
-      "mandatory": true,
-      "moduleId": "tm.p2.evidence-certification",
-      "purpose": "Validate exact-SHA P2 evidence schema and source-versus-behavior separation.",
-      "roadmapTaskIds": [
-        "P2-001",
-        "P2-002",
-        "P2-003",
-        "P2-004",
-        "P2-005",
-        "P2-006",
-        "P2-007",
-        "P2-008",
-        "P2-009",
-        "P2-010",
-        "P2-011",
-        "P2-012",
-        "P2-013",
-        "P2-014"
-      ],
-      "testId": "tc.p2.evidence-contract"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 runner attestation contract",
-      "mandatory": true,
-      "moduleId": "tm.p2.evidence-certification",
-      "purpose": "Validate signed current-job runner identity, provisioning, and platform-binding contracts.",
-      "roadmapTaskIds": [
-        "P2-005",
-        "P2-006",
-        "P2-013"
-      ],
-      "testId": "tc.p2.runner-attestation"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 cleanup contract",
-      "mandatory": true,
-      "moduleId": "tm.p2.cleanup-lifecycle",
-      "purpose": "Validate cleanup receipts and no-residual-effect requirements independently from source success.",
-      "roadmapTaskIds": [
-        "P2-006",
-        "P2-010",
-        "P2-011",
-        "P2-013"
-      ],
-      "testId": "tc.p2.cleanup-contract"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "P2 strict finalizer contract",
-      "mandatory": true,
-      "moduleId": "tm.p2.cleanup-lifecycle",
-      "purpose": "Validate that final receipts cannot pass before signed cleanup and process-tree termination.",
-      "roadmapTaskIds": [
-        "P2-006",
-        "P2-011",
-        "P2-013"
-      ],
-      "testId": "tc.p2.strict-finalizer"
-    },
-    {
-      "assuranceClass": "release",
-      "displayName": "P2 controlled behavioral closure",
-      "mandatory": true,
-      "moduleId": "tm.p2.behavioral-certification",
-      "purpose": "Validate the aggregate tri-platform behavioral, hello.txt, cleanup, and process-tree receipts; a hosted source lane cannot satisfy this case.",
-      "roadmapTaskIds": [
-        "P2-001",
-        "P2-002",
-        "P2-003",
-        "P2-004",
-        "P2-005",
-        "P2-006",
-        "P2-007",
-        "P2-008",
-        "P2-009",
-        "P2-010",
-        "P2-011",
-        "P2-012",
-        "P2-013",
-        "P2-014"
-      ],
-      "testId": "tc.p2.behavioral-closure"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "displayName": "Worker A canonical integration",
-      "mandatory": true,
-      "moduleId": "tm.worker-a.test-center-integration",
-      "purpose": "Validate Worker A's canonical v1 registry extension, mapping rationales, adapters, evidence packs, and immutable review history.",
-      "roadmapTaskIds": [
-        "P1-001",
-        "P1-002",
-        "P1-003",
-        "P1-004",
-        "P1-005",
-        "P1-006",
-        "P1-007",
-        "P1-008",
-        "P1-009",
-        "P1-010",
-        "P1-011",
-        "P1-012",
-        "P1A-001",
-        "P1A-002",
-        "P1A-003",
-        "P1A-004",
-        "P1A-005",
-        "P1A-006",
-        "P1A-007",
-        "P1A-008",
-        "P1A-009",
-        "P1A-010",
-        "P1A-011",
-        "P1A-012",
-        "P1A-013",
-        "P2-001",
-        "P2-002",
-        "P2-003",
-        "P2-004",
-        "P2-005",
-        "P2-006",
-        "P2-007",
-        "P2-008",
-        "P2-009",
-        "P2-010",
-        "P2-011",
-        "P2-012",
-        "P2-013",
-        "P2-014"
-      ],
-      "testId": "tc.worker-a.canonical-integration"
-    }
+    {"assuranceClass":"source_contract","displayName":"Canonical Test Center contract check","mandatory":true,"moduleId":"tm.test-center","purpose":"Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.","roadmapTaskIds":[],"testId":"tc.test-center.contracts"},
+    {"assuranceClass":"source_contract","displayName":"Test Center semantic regression suite","mandatory":true,"moduleId":"tm.test-center","purpose":"Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.","roadmapTaskIds":[],"testId":"tc.test-center.semantic-regressions"},
+    {"assuranceClass":"source_contract","displayName":"P8-001 formal Test Center hierarchy","mandatory":true,"moduleId":"tm.reliability-security-diagnostics","purpose":"Enforce the canonical eight-level assurance hierarchy, exact ordering, report fields, fail-closed level handling, and complete stable-test binding coverage.","roadmapTaskIds":["P8-001"],"testId":"tc.p8.formal-test-hierarchy"},
+    {"assuranceClass":"behavioral","displayName":"P8-001 hierarchy semantic regressions","mandatory":true,"moduleId":"tm.reliability-security-diagnostics","purpose":"Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, evidence-contract drift, and support-promoting source checks are rejected.","roadmapTaskIds":["P8-001"],"testId":"tc.p8.formal-test-hierarchy-regressions"}
   ],
   "testModules": [
-    {
-      "assuranceClasses": [
-        "source_contract",
-        "behavioral",
-        "platform",
-        "release"
-      ],
-      "displayName": "Canonical Test Center",
-      "moduleId": "tm.test-center",
-      "owner": "Worker B / shared testing architecture",
-      "purpose": "Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."
-    },
-    {
-      "assuranceClasses": [
-        "architecture_lint",
-        "source_contract",
-        "behavioral"
-      ],
-      "displayName": "P1 Trust and Authority",
-      "moduleId": "tm.p1.trust-authority",
-      "owner": "Worker A / P1 critical path",
-      "purpose": "Validate the complete P1 trust, policy, signed-manifest, audit, threat-model, and authenticated-IPC source closure without changing runtime contracts."
-    },
-    {
-      "assuranceClasses": [
-        "source_contract",
-        "sdk_toolchain",
-        "platform"
-      ],
-      "displayName": "P1A Native Authority Service",
-      "moduleId": "tm.p1a.native-authority",
-      "owner": "Worker A / P1A native authority",
-      "purpose": "Validate native authority, cross-language trust, platform build, runtime security, evidence, and source-inventory contracts."
-    },
-    {
-      "assuranceClasses": [
-        "source_contract",
-        "mixed"
-      ],
-      "displayName": "P2 Owner Mode Source Contracts",
-      "moduleId": "tm.p2.source-contracts",
-      "owner": "Worker A / P2 source closure",
-      "purpose": "Validate Owner Mode source inventory, application composition, and canonical acceptance contracts without claiming controlled behavior."
-    },
-    {
-      "assuranceClasses": [
-        "source_contract",
-        "platform",
-        "release"
-      ],
-      "displayName": "P2 Evidence and Certification",
-      "moduleId": "tm.p2.evidence-certification",
-      "owner": "Worker A / P2 evidence closure",
-      "purpose": "Validate exact-candidate evidence, runner attestation, canonical result, and aggregate certification contracts."
-    },
-    {
-      "assuranceClasses": [
-        "source_contract",
-        "behavioral",
-        "platform"
-      ],
-      "displayName": "P2 Cleanup and Process Lifecycle",
-      "moduleId": "tm.p2.cleanup-lifecycle",
-      "owner": "Worker A / P2 cleanup and lifecycle",
-      "purpose": "Validate fail-closed cleanup, strict finalization, and process-tree termination evidence contracts."
-    },
-    {
-      "assuranceClasses": [
-        "behavioral",
-        "platform",
-        "release"
-      ],
-      "displayName": "P2 Platform Behavioral Certification",
-      "moduleId": "tm.p2.behavioral-certification",
-      "owner": "Worker A / P2 controlled behavior",
-      "purpose": "Represent controlled Windows, macOS, and Linux Owner Mode behavior, canonical hello.txt acceptance, cleanup, and process-tree termination as a distinct release gate."
-    },
-    {
-      "assuranceClasses": [
-        "architecture_lint",
-        "source_contract"
-      ],
-      "displayName": "Worker A Canonical Test Center Integration",
-      "moduleId": "tm.worker-a.test-center-integration",
-      "owner": "Worker A / shared-contract integrator",
-      "purpose": "Validate Worker A registrations, canonical adapters, deterministic mappings, execution records, and evidence sequencing against Worker B Test Center v1."
-    }
+    {"assuranceClasses":["source_contract","behavioral","platform","release"],"displayName":"Canonical Test Center","moduleId":"tm.test-center","owner":"Worker B / shared testing architecture","purpose":"Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."},
+    {"assuranceClasses":["source_contract","behavioral"],"displayName":"Reliability, Security & Diagnostics","moduleId":"tm.reliability-security-diagnostics","owner":"Worker B / MISSION-002","purpose":"Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."}
   ],
   "testingStudioPresentationRecords": [
     {
@@ -1042,16 +187,7 @@
       "evidenceLinks": [],
       "lastExactCommitResult": null,
       "phase": "Shared testing architecture",
-      "platformMatrix": {
-        "observed": [
-          "linux"
-        ],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
+      "platformMatrix": {"observed":["linux"],"required":["linux","macos","windows"]},
       "presentationId": "presentation.test-center.development-verification",
       "purpose": "Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.",
       "requiredNextAction": "Run both stable checks on the exact candidate across the required platform matrix before certification.",
@@ -1059,181 +195,6 @@
       "stateDomain": "TEST_EXECUTION",
       "supportClaimImpact": "No capability or release support claim is inferred from this source-contract PASS.",
       "surface": "DEVELOPMENT_VERIFICATION"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "capability": "Trust, policy, signed manifests, audit, threat model, and local authenticated IPC",
-      "certificationImpact": "P1 source closure remains unbound until exact-candidate execution records are packaged.",
-      "currentState": "UNKNOWN",
-      "displayName": "P1 trust and authority verification",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P1",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.p1.development-verification",
-      "purpose": "Show exact-candidate P1 source and security results without changing roadmap authority.",
-      "requiredNextAction": "Run tc.p1.exit-gate on the exact implementation candidate across the required platform matrix.",
-      "staleResultWarning": false,
-      "stateDomain": "TEST_EXECUTION",
-      "supportClaimImpact": "No platform or release support follows from registry integration.",
-      "surface": "DEVELOPMENT_VERIFICATION"
-    },
-    {
-      "assuranceClass": "platform",
-      "capability": "Native authority service and cross-language trust",
-      "certificationImpact": "No certification PASS exists for the new candidate.",
-      "currentState": "NOT_EVALUATED",
-      "displayName": "P1A native authority platform verification",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P1A",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.p1a.platform-certification",
-      "purpose": "Separate hosted source/native-build results from controlled platform security behavior.",
-      "requiredNextAction": "Package exact-candidate source/native results and retain unsupported controlled-behavior states honestly.",
-      "staleResultWarning": false,
-      "stateDomain": "CERTIFICATION",
-      "supportClaimImpact": "No new platform support claim is made.",
-      "surface": "PLATFORM_CERTIFICATION"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "capability": "Owner Mode source and certification test selection",
-      "certificationImpact": "Selection correctness does not itself certify P2.",
-      "currentState": "UNKNOWN",
-      "displayName": "P2 deterministic affected tests",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P2",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.p2.affected-tests",
-      "purpose": "Show canonical order-independent test selection for P2 runtime, evidence, cleanup, and behavioral paths.",
-      "requiredNextAction": "Run canonical select-affected in multiple changed-path orders and package the identical selection.",
-      "staleResultWarning": false,
-      "stateDomain": "TEST_EXECUTION",
-      "supportClaimImpact": "No support claim is inferred.",
-      "surface": "AFFECTED_TESTS"
-    },
-    {
-      "assuranceClass": "platform",
-      "capability": "Owner Mode controlled behavior",
-      "certificationImpact": "Behavioral closure is blocked until every required receipt passes.",
-      "currentState": "PARTIAL",
-      "displayName": "P2 controlled platform certification",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P2",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.p2.platform-certification",
-      "purpose": "Expose Windows, macOS, and Linux controlled Owner Mode behavior separately from hosted CI.",
-      "requiredNextAction": "Dispatch the governed protected-main workflow with authorized actor, exact package hash, approved environment, and all controlled runners.",
-      "staleResultWarning": false,
-      "stateDomain": "CERTIFICATION",
-      "supportClaimImpact": "Blocks behavior, platform, and release support.",
-      "surface": "PLATFORM_CERTIFICATION"
-    },
-    {
-      "assuranceClass": "release",
-      "capability": "Evidence integrity and certification inputs",
-      "certificationImpact": "Aggregate certification cannot pass without complete exact-candidate bindings.",
-      "currentState": "UNKNOWN",
-      "displayName": "P2 exact-candidate evidence",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P2",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.p2.evidence",
-      "purpose": "Expose immutable source, runner, cleanup, acceptance, and certification bindings for one candidate.",
-      "requiredNextAction": "Package canonical TestExecutionResult and EvidenceReference records for the implementation candidate.",
-      "staleResultWarning": false,
-      "stateDomain": "TEST_EXECUTION",
-      "supportClaimImpact": "No support promotion.",
-      "surface": "EVIDENCE"
-    },
-    {
-      "assuranceClass": "release",
-      "capability": "Owner Mode release readiness",
-      "certificationImpact": "Release readiness remains blocked.",
-      "currentState": "SOURCE_FOUNDATION",
-      "displayName": "P2 release readiness",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P2",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.p2.release-readiness",
-      "purpose": "Keep source readiness, behavioral closure, review, and roadmap transition as separate gates.",
-      "requiredNextAction": "Complete controlled behavior, aggregate evidence, fresh Worker B review, and Worker J reconciliation.",
-      "staleResultWarning": false,
-      "stateDomain": "CAPABILITY_SUPPORT",
-      "supportClaimImpact": "No behavior, platform, release, production, or GA support claim.",
-      "surface": "RELEASE_READINESS"
-    },
-    {
-      "assuranceClass": "source_contract",
-      "capability": "Worker A Test Center v1 integration",
-      "certificationImpact": "A PASS validates integration structure only.",
-      "currentState": "UNKNOWN",
-      "displayName": "Worker A canonical integration quick check",
-      "evidenceLinks": [],
-      "lastExactCommitResult": null,
-      "phase": "P1/P1A/P2 integration",
-      "platformMatrix": {
-        "observed": [],
-        "required": [
-          "linux",
-          "macos",
-          "windows"
-        ]
-      },
-      "presentationId": "presentation.worker-a.quick-check",
-      "purpose": "Validate canonical registry integration, adapter semantics, immutable review preservation, and deterministic mappings.",
-      "requiredNextAction": "Run tc.worker-a.canonical-integration on the exact implementation candidate.",
-      "staleResultWarning": false,
-      "stateDomain": "TEST_EXECUTION",
-      "supportClaimImpact": "No product support claim.",
-      "surface": "QUICK_CHECK"
     }
   ]
 }

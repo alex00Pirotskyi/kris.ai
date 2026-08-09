@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "roadmapTaskId": "P8-001",
+  "status": "REVIEW_CHANGES_IMPLEMENTED_PENDING_CANONICAL_MANIFEST_COMMIT_AND_FINAL_EXACT_CI",
+  "reviewedPredecessor": {
+    "commit": "22a8ac34cbf9601100f60c4929198f15f3c60e52",
+    "tree": "ef5d5ae584b1d823502bf6f2191ecf4285d36845",
+    "pullRequest": 65,
+    "reviewDecision": "REQUEST_CHANGES",
+    "reviewId": "PRR_kwDOTTSxks8AAAABIn1Efw",
+    "findingsAddressed": [
+      "P8-A-001",
+      "P8-A-002",
+      "P8-A-003"
+    ],
+    "reviewState": "COMMENTED",
+    "reviewDisposition": "REQUEST_CHANGES"
+  },
+  "implementationCandidate": {
+    "commit": "788af8db5891518a2b405d25e8d5b50cb89e8871",
+    "tree": "fe2bd4068d83b652ef988fd11d0de86a0fc9bffd",
+    "pullRequestMergeCandidate": "5601d60129ea0f4bd6de976fd02aaf6051059e9e",
+    "forcePush": false
+  },
+  "implementation": {
+    "assuranceExecutionReportSchema": "schemas/test_center_assurance_execution_report.v1.json",
+    "actualExecutionFixture": "release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json",
+    "actualExecutionValidation": "tool/test_center_assurance_hierarchy.py check-report",
+    "regressionCount": 32,
+    "downstreamMigrationBindingCount": 11,
+    "sourceManifestGenerator": "tool/p1a_refresh_source_manifest.py",
+    "downstreamMigrationSource": {
+      "pullRequest": 64,
+      "commit": "89a15332019c73675a19cdacd7021fae2199d75e",
+      "tree": "2ea1f8a718a69dba0120a4f98acb78053d6cebfb",
+      "reviewCommentId": 5203350863
+    }
+  },
+  "implementationWorkflow": {
+    "workflowName": "P8-001 Formal Test Hierarchy",
+    "workflowId": 328508749,
+    "runId": 31104232582,
+    "conclusion": "FAIL_REPAIR_LOOP",
+    "jobs": [
+      {
+        "jobId": 92625144125,
+        "platform": "ubuntu",
+        "conclusion": "FAIL_EXPECTED_STALE_SOURCE_MANIFEST",
+        "contractValidation": "PASS",
+        "canonicalManifestDoubleGeneration": "PASS_BYTE_IDENTICAL"
+      },
+      {
+        "jobId": 92625144199,
+        "platform": "windows",
+        "conclusion": "FAIL_PORTABLE_PATH_COMPARISON",
+        "contractValidation": "FAIL_BEFORE_MANIFEST_GENERATION",
+        "repair": "Use Path.as_posix() for the repository-relative report schema identity."
+      },
+      {
+        "jobId": 92625144310,
+        "platform": "macos",
+        "conclusion": "FAIL_EXPECTED_STALE_SOURCE_MANIFEST",
+        "contractValidation": "PASS",
+        "canonicalManifestDoubleGeneration": "PASS_BYTE_IDENTICAL"
+      }
+    ],
+    "artifact": {
+      "artifactId": 8968803777,
+      "name": "p8-001-source-manifest-5601d60129ea0f4bd6de976fd02aaf6051059e9e",
+      "archiveSha256": "77091700bce0e9e704bbe9a593d4340326f3826e24c8ecbc15e7ab5e7f1fcbf5",
+      "sourceManifestSha256": "1656ae06aba143cf83a85c5a48bc2bae3f01fbfe9ed21c53ac1b7a78a77cc2a7",
+      "receiptSha256": "7acf22425b3d1a0af55b4f114e79f22fad34c5386b66cf119cc6b0785f0b4588",
+      "entryCount": 1125,
+      "byteIdenticalAcrossTwoCanonicalGenerations": true
+    }
+  },
+  "sourceManifest": {
+    "state": "PENDING_CANONICAL_GENERATOR_ARTIFACT_FOR_THIS_EVIDENCE_REVISION",
+    "path": "SOURCE_MANIFEST.sha256",
+    "canonicalOwner": "python tool/p1a_refresh_source_manifest.py ."
+  },
+  "reviewState": {
+    "currentExactCandidateReview": "NOT_YET_REQUESTED",
+    "independentPass": false
+  },
+  "supportImpact": "NO_PROMOTION",
+  "certificationBoundary": "SOURCE_CONTRACT_ONLY",
+  "mergeAuthorization": "ABSENT"
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "contractId": "test-center.assurance-proof-contract-v1",
+  "hierarchyId": "test-center.assurance-hierarchy-v1",
+  "evidenceContracts": [
+    {"category":"exact_candidate_identity","mediaType":"application/json","jsonKind":"EXACT_CANDIDATE_IDENTITY","requiredJsonFields":["schemaVersion","kind","commit","tree"],"valueBindings":{"commit":"candidateCommit","tree":"candidateTree"},"requiredConstants":{}},
+    {"category":"machine_readable_result","mediaType":"application/json","jsonKind":"MACHINE_READABLE_RESULT","requiredJsonFields":["schemaVersion","kind","resultId","resultState"],"valueBindings":{"resultId":"executionResult.resultId","resultState":"executionResult.resultState"},"requiredConstants":{}},
+    {"category":"deterministic_fixture","mediaType":"application/json","jsonKind":"DETERMINISTIC_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture","seed"],"valueBindings":{},"requiredConstants":{}},
+    {"category":"component_fixture","mediaType":"application/json","jsonKind":"COMPONENT_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture"],"valueBindings":{},"requiredConstants":{}},
+    {"category":"integration_fixture","mediaType":"application/json","jsonKind":"INTEGRATION_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture"],"valueBindings":{},"requiredConstants":{}},
+    {"category":"cleanup_receipt","mediaType":"application/json","jsonKind":"CLEANUP_RECEIPT","requiredJsonFields":["schemaVersion","kind","cleanupState"],"valueBindings":{},"requiredConstants":{"cleanupState":"CLEAN"}},
+    {"category":"native_platform_receipt","mediaType":"application/json","jsonKind":"NATIVE_PLATFORM_RECEIPT","requiredJsonFields":["schemaVersion","kind","platform"],"valueBindings":{"platform":"executionResult.platform"},"requiredConstants":{}},
+    {"category":"seeded_attack_fixture","mediaType":"application/json","jsonKind":"SEEDED_ATTACK_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture","seed"],"valueBindings":{},"requiredConstants":{}},
+    {"category":"recovery_receipt","mediaType":"application/json","jsonKind":"RECOVERY_RECEIPT","requiredJsonFields":["schemaVersion","kind","recoveryState"],"valueBindings":{},"requiredConstants":{"recoveryState":"PASS"}},
+    {"category":"versioned_corpus","mediaType":"application/json","jsonKind":"VERSIONED_CORPUS","requiredJsonFields":["schemaVersion","kind","corpusId","version"],"valueBindings":{},"requiredConstants":{}},
+    {"category":"environment_identity","mediaType":"application/json","jsonKind":"ENVIRONMENT_IDENTITY","requiredJsonFields":["schemaVersion","kind","environmentDigest"],"valueBindings":{"environmentDigest":"executionResult.environment.digest"},"requiredConstants":{}},
+    {"category":"release_candidate_identity","mediaType":"application/json","jsonKind":"RELEASE_CANDIDATE_IDENTITY","requiredJsonFields":["schemaVersion","kind","commit","tree"],"valueBindings":{"commit":"candidateCommit","tree":"candidateTree"},"requiredConstants":{}},
+    {"category":"independent_review","mediaType":"application/json","jsonKind":"INDEPENDENT_REVIEW","requiredJsonFields":["schemaVersion","kind","reviewedCommit","reviewedTree","decision"],"valueBindings":{"reviewedCommit":"candidateCommit","reviewedTree":"candidateTree"},"requiredConstants":{"decision":"PASS"}},
+    {"category":"support_matrix","mediaType":"application/json","jsonKind":"SUPPORT_MATRIX","requiredJsonFields":["schemaVersion","kind","candidateCommit","candidateTree","status","supportRequirementId","requiredPlatforms","requiredCapabilities","matrix"],"valueBindings":{"candidateCommit":"candidateCommit","candidateTree":"candidateTree"},"requiredConstants":{"status":"PASS","supportRequirementId":"test-center.registry-profile-platform-lineage-v1"}}
+  ],
+  "lineageBindings": [
+    {"testId":"tc.test-center.contracts","lineageId":"test-center.contracts"},
+    {"testId":"tc.test-center.semantic-regressions","lineageId":"test-center.contracts"},
+    {"testId":"tc.p8.formal-test-hierarchy","lineageId":"p8.formal-test-hierarchy"},
+    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"}
+  ]
+}
