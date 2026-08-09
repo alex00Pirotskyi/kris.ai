@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000280-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "ELASTIC-GPT-5C4A1D72",
+    "ciRun": 31282863563,
+    "exactHead": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+    "nextStatus": "LANDED",
+    "reason": "Reconciled stale P11 CI_REPAIR runtime state after exact workflow_dispatch product-gates completed SUCCESS with validate-ubuntu, validate-windows, and validate-macos all SUCCESS. No acceptance/platform/release/production/GA promotion.",
+    "relayRun": 31282852170
+  },
+  "recordedAt": "2026-08-09T06:31:00Z",
+  "runtimeGeneration": 280,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T061600Z-5c4a1d72",
+  "workOrderId": "WO-P11-001-EXACT-CI-EA05391B"
+}
