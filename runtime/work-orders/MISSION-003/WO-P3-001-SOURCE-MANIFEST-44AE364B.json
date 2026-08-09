@@ -1,0 +1,33 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "a68a0790e12b24c831cb7fbca734c4deea471280",
+  "baseTree": "3640208da403f13ca72433b17cbd07850cf9637c",
+  "createdAt": "2026-08-09T12:38:30Z",
+  "createdBy": "ELASTIC-GPT-44AE364B",
+  "dependencyRequirements": [],
+  "executionRole": null,
+  "lastActor": "ELASTIC-GPT-44AE364B",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "After the P3-001 Product source candidate is stable, refresh only SOURCE_MANIFEST.sha256 entries affected by newly added or modified governed P3 source files. Change no Product source, prove every changed entry equals the exact candidate bytes, and keep the manifest refresh separate from implementation authorship.",
+  "parentProductPr": 131,
+  "parentWorkOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+  "priority": 70,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "effective diff is only SOURCE_MANIFEST.sha256",
+    "every changed/additional P3 source hash equals exact candidate bytes",
+    "full source-manifest verification passes",
+    "exact-current product-gates remain green"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "CREATED",
+  "type": "SHARED_AUTHORITY_REFRESH",
+  "updatedAt": "2026-08-09T12:38:30Z",
+  "workOrderId": "WO-P3-001-SOURCE-MANIFEST-44AE364B"
+}

@@ -1,0 +1,35 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "lib/product/product_runtime.dart",
+    "test/product/browser/browser_product_runtime_test.dart"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "a68a0790e12b24c831cb7fbca734c4deea471280",
+  "baseTree": "3640208da403f13ca72433b17cbd07850cf9637c",
+  "createdAt": "2026-08-09T12:38:30Z",
+  "createdBy": "ELASTIC-GPT-44AE364B",
+  "dependencyRequirements": [],
+  "executionRole": null,
+  "lastActor": "ELASTIC-GPT-44AE364B",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Wire the P3-001 browser runtime service into ProductRuntime only after the parent browser namespace and Node/browser bundle contract exist. Add a fail-closed runtime handle/probe surface without exposing P3-002 browser sessions/actions. ProductRuntime close must terminate any active browser probe/runtime cleanly, and unavailable/missing bundles must remain honest rather than falling back to global tools.",
+  "parentProductPr": 131,
+  "parentWorkOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+  "priority": 90,
+  "requestedRole": "BUILDER",
+  "requiredTests": [
+    "ProductRuntime exposes P3 browser bundle/probe availability without implementing P3-002",
+    "missing/invalid P3 bundle fails closed with bounded status",
+    "ProductRuntime close terminates P3 runtime resources",
+    "no global Node/browser fallback is introduced",
+    "exact-current product-gates remain green"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "CREATED",
+  "type": "PRODUCT_INTEGRATION",
+  "updatedAt": "2026-08-09T12:38:30Z",
+  "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
+}
