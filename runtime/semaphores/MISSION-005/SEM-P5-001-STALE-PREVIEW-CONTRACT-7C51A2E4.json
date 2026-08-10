@@ -1,0 +1,27 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-f-p5-001-information-architecture.yml",
+    "release/evidence/P5-001/manifest.json",
+    "test/product/p5_information_architecture/p5_source_boundary_test.dart",
+    "test/product/p5_information_architecture/worker_f_p5_ia.py",
+    "test/product/p5_information_architecture/worker_f_p5_ia_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "d1e9ca03e4227546be69ea6cd02020e72793d215",
+  "baseTree": "4334e377a11a9a5438c34323d1262ca0efaf4802",
+  "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+  "createdAt": "2026-08-10T07:05:35Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-10T11:05:35Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T07:05:35Z",
+  "resourceId": null,
+  "runtimeGeneration": 369,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}

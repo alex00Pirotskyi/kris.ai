@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000369-P5_STALE_PREVIEW_CONTRACT_WRITE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "allowedPaths": [
+      ".github/workflows/worker-f-p5-001-information-architecture.yml",
+      "release/evidence/P5-001/manifest.json",
+      "test/product/p5_information_architecture/p5_source_boundary_test.dart",
+      "test/product/p5_information_architecture/worker_f_p5_ia.py",
+      "test/product/p5_information_architecture/worker_f_p5_ia_test.py"
+    ],
+    "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+    "baseCommit": "d1e9ca03e4227546be69ea6cd02020e72793d215",
+    "baseTree": "4334e377a11a9a5438c34323d1262ca0efaf4802",
+    "measuredFailure": "Worker F exact-head validation requires deleted lib/p5_ia_preview.dart in validator/workflow contracts",
+    "semaphoreId": "SEM-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T07:05:35Z",
+  "runtimeGeneration": 369,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
+}
