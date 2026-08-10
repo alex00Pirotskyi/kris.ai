@@ -10,7 +10,7 @@
   "createdBy": "ELASTIC-7f3a2c91",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:STALE_READY_HELPER_ALREADY_MERGED_PR112",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Consume exact formatting helper PR #112 into canonical P5 Product PR #72 without changing P5 behavior, then rerun exact Product PR formatting/analyze/tests and preserve generated evidence/root-manifest finalization as a separate authority boundary.",
@@ -23,8 +23,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "CANCELLED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-09T17:28:04Z",
+  "updatedAt": "2026-08-10T06:56:00Z",
   "workOrderId": "WO-P5-001-INTEGRATE-112-7F3A2C91"
 }

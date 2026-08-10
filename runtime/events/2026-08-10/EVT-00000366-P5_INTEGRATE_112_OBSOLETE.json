@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000366-P5_INTEGRATE_112_OBSOLETE",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "reason": "Helper PR #112 is already merged into the canonical P5 branch; this stale READY integration record must not execute again.",
+    "helperPr": 112,
+    "helperMergeCommit": "53693ca66b37015a015294a4f729138caeb20482",
+    "liveProductHead": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+    "nextStatus": "CANCELLED"
+  },
+  "recordedAt": "2026-08-10T06:56:00Z",
+  "runtimeGeneration": 366,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-INTEGRATE-112-7F3A2C91"
+}
