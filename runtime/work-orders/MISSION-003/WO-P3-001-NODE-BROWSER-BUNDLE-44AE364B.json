@@ -11,13 +11,13 @@
     ".github/workflows/p3-browser-runtime.yml"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
-  "baseTree": "9740a907937550bf5283a551a3776c83f76cde25",
+  "baseCommit": "6b505ee401b3447ccf23215dff262a271cd8ea9e",
+  "baseTree": "3e417e2836d791c0489a028b2b302932faa85971",
   "createdAt": "2026-08-09T12:38:30Z",
   "createdBy": "ELASTIC-GPT-44AE364B",
   "dependencyRequirements": [],
   "executionRole": "BUILDER",
-  "lastActor": "ELASTIC-GPT-44AE364B",
+  "lastActor": "ELASTIC-GPT-7C51A2E4",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Add the actual pinned Node browser worker and reproducible P3 runtime bundle. Extend the selected automation_host with an exact browser automation dependency and lock, implement a probe worker that launches only the supplied bundled Chromium executable, stage Node + automation host + browser payload into browser-runtime-manifest.v1.json with exact file/tree/package-lock identities, and prove clean-machine launch/stop without global Node or network browser installation. Preserve the P3-001 parent protocol and do not implement P3-002 session semantics. The workflow may also run the exact repository Dart formatter against parent-owned browser files as a read-only formatting oracle; it must not commit parent-path changes.",
@@ -37,6 +37,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-10T12:10:00Z",
+  "updatedAt": "2026-08-10T12:50:00Z",
   "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
 }
