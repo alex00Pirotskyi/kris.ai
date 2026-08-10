@@ -1,0 +1,37 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "services/research_worker/src/search/validation.py",
+    "services/research_worker/test/test_contract_models.py"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "725e6090a897e64207d0ac933891a7c6c9622872",
+  "baseTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
+  "createdAt": "2026-08-10T10:40:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:INDEPENDENT_REVIEW_REQUESTED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Perform a fresh context-independent R1 technical review of helper PR #134 at exact head 725e6090a897e64207d0ac933891a7c6c9622872 / tree 978db8ce6ba796a9b8a0871fa21819a41ae3e831. Review exactly the two-file repair for P4-R1-4C1-001. Confirm require_public_result_url rejects ambiguous non-canonical numeric IPv4-like host aliases before DNS-name fallback without network I/O or broad SSRF-policy creep; confirm model and schema-format regressions cover 127.1, 127.0.1, 0177.0.0.1 and 0x7f.1 plus canonical public IPv4 acceptance; confirm prior request correlation, freshness, safe-search, cursor/provider/query contracts remain untouched. Acknowledge specialized tri-OS source PASS and general product-gates PASS, while preserving the separate SOURCE_MANIFEST.sha256 RELEASE boundary. Report R1 PASS or REQUEST_CHANGES bound to exact helper head/tree. The execution that authored helper #134 is ineligible to self-certify this Work Order.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "inspect exact PR #134 head 725e6090a897e64207d0ac933891a7c6c9622872 / tree 978db8ce6ba796a9b8a0871fa21819a41ae3e831 and exactly two changed files",
+    "verify non-canonical numeric IPv4-like hosts fail closed before domain fallback without network I/O",
+    "verify canonical public IPv4 remains accepted and ordinary DNS-name validation is not weakened",
+    "verify stable model and schema custom-format regression coverage for all four alias vectors",
+    "acknowledge P4 specialized run 31379465845 source lanes PASS on Windows/Linux/macOS and isolate its red source-manifest lane to the separately owned exact-head SOURCE_MANIFEST.sha256 drift",
+    "acknowledge product-gates run 31379465847 PASS on exact helper across Ubuntu/Windows/macOS",
+    "report R1 PASS or REQUEST_CHANGES; no R2, Test Center authority, source-manifest materialization, support, acceptance, release, production, or GA claim"
+  ],
+  "roadmapTask": "P4-001",
+  "runtimeGeneration": 381,
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-10T10:40:00Z",
+  "workOrderId": "WO-P4-001-PR134-R1-7C51A2E4"
+}

@@ -1,34 +1,35 @@
 {
-  "activeSemaphoreId": "SEM-P4-001-PUBLIC-URL-ALIAS-7C51A2E4",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "services/research_worker/src/search/validation.py",
     "services/research_worker/test/test_contract_models.py"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
-  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "baseCommit": "725e6090a897e64207d0ac933891a7c6c9622872",
+  "baseTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
   "createdAt": "2026-08-10T10:17:00Z",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "BUILDER",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:R1_PUBLIC_URL_ALIAS_REPAIR_READY",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:HELPER_CI_GREEN_SOURCE_FROZEN",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
-  "objective": "Repair exact-current P4-001 R1 finding P4-R1-4C1-001 without broadening scope. Make require_public_result_url fail closed for non-canonical IPv4-like numeric host aliases such as 127.1, 127.0.1, 0177.0.0.1 and 0x7f.1 that common resolvers can map to loopback but the current ipaddress-then-domain fallback accepts. Add deterministic network-free model and schema-format regressions in the existing URL fail-closed test. Preserve the already-reviewed request correlation, freshness, safe-search, cursor, provider metadata and capability semantics. Do not modify Test Center/shared authority, P4 evidence, workflow, SOURCE_MANIFEST.sha256, P4-002+, support, acceptance, release, production, or GA state in this source repair.",
+  "objective": "Repair exact-current P4-001 R1 finding P4-R1-4C1-001 without broadening scope. Exact helper PR #134 at 725e6090a897e64207d0ac933891a7c6c9622872 / tree 978db8ce6ba796a9b8a0871fa21819a41ae3e831 changes only validation.py and test_contract_models.py, rejects non-canonical numeric IPv4-like result-host aliases before the DNS fallback, and adds model/schema regressions plus canonical public IPv4 acceptance. Specialized Windows/Linux/macOS source lanes all pass. General product-gates run 31379465847 passes Ubuntu/macOS/Windows. The specialized source-manifest lane proves deterministic generation and exactly one separately owned drift path, SOURCE_MANIFEST.sha256. Product bytes are frozen pending fresh independent exact-head R1; this authoring execution is ineligible to self-review.",
   "parentProductPr": 62,
   "priority": 100,
   "requestedRole": "BUILDER",
   "requiredTests": [
-    "existing SearchContractModelsTest.test_result_url_validation_fails_closed covers canonical loopback/private hosts plus non-canonical numeric loopback aliases and canonical public IPv4 acceptance",
-    "schema validator public-result-url custom format rejects the same numeric alias vectors without network I/O",
-    "python tool/p4_001_search_provider_test.py --project . passes the full P4 source suite and all stable checks except separately owned source-manifest materialization",
-    "exact helper product-gates remains green across Ubuntu/Windows/macOS",
-    "no config/test_center_*, P8 authority, release/evidence/P4-001, workflow, or SOURCE_MANIFEST.sha256 mutation"
+    "SearchContractModelsTest.test_result_url_validation_fails_closed rejects 127.1, 127.0.1, 0177.0.0.1 and 0x7f.1 through model and schema validation while accepting canonical public IPv4",
+    "P4 specialized run 31379465845 canonical Windows/Linux/macOS source lanes PASS on exact helper; only separately owned exact-head SOURCE_MANIFEST.sha256 requirement is red",
+    "source-manifest artifact 9059262066 proves deterministic generation with changedPathCount exactly 1 and path SOURCE_MANIFEST.sha256",
+    "general product-gates run 31379465847 PASS on exact helper across Ubuntu/Windows/macOS",
+    "no config/test_center_*, P8 authority, release/evidence/P4-001, workflow, or SOURCE_MANIFEST.sha256 mutation in helper"
   ],
   "roadmapTask": "P4-001",
+  "runtimeGeneration": 381,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-10T10:23:00Z",
+  "updatedAt": "2026-08-10T10:40:00Z",
   "workOrderId": "WO-P4-001-PUBLIC-URL-ALIAS-7C51A2E4"
 }

@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000381-P4_PUBLIC_URL_HELPER_REVIEW_READY",
+  "eventType": "HELPER_REVIEW_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "helperCommit": "725e6090a897e64207d0ac933891a7c6c9622872",
+    "helperTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
+    "helperPr": 134,
+    "productGatesRunId": 31379465847,
+    "productGatesConclusion": "success",
+    "specializedRunId": 31379465845,
+    "specializedSourceLanes": "PASS_WINDOWS_LINUX_MACOS",
+    "sourceManifestChangedPathCount": 1,
+    "sourceManifestDriftPath": "SOURCE_MANIFEST.sha256",
+    "sourceManifestArtifactId": 9059262066,
+    "writeSemaphore": "SEM-P4-001-PUBLIC-URL-ALIAS-7C51A2E4",
+    "reviewWorkOrder": "WO-P4-001-PR134-R1-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T10:40:00Z",
+  "runtimeGeneration": 381,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P4-001-PUBLIC-URL-ALIAS-7C51A2E4"
+}
