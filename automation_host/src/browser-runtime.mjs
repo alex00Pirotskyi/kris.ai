@@ -18,6 +18,7 @@ const READY_SCHEMA_VERSION = '1.0.0';
 const PROTOCOL = 'stdio-json-v1';
 const MAX_STDERR_BYTES = 1024 * 1024;
 const EXIT_POLL_MS = 25;
+const SANDBOX_MODES = new Set(['required', 'disabled']);
 
 function fail(code, detail = '') {
   const error = new Error(detail ? `${code}:${detail}` : code);
@@ -44,6 +45,7 @@ export function parseArgs(argv) {
   const allowed = new Set([
     '--mode',
     '--protocol',
+    '--sandbox-mode',
     '--browser-executable',
     '--browser-root',
     '--runtime-manifest',
@@ -56,11 +58,16 @@ export function parseArgs(argv) {
   }
   const mode = requiredValue(argv, '--mode');
   const protocol = requiredValue(argv, '--protocol');
+  const sandboxMode = requiredValue(argv, '--sandbox-mode');
   if (mode !== 'probe') fail('mode_not_supported', mode);
   if (protocol !== PROTOCOL) fail('protocol_not_supported', protocol);
+  if (!SANDBOX_MODES.has(sandboxMode)) {
+    fail('sandbox_mode_not_supported', sandboxMode);
+  }
   return {
     mode,
     protocol,
+    sandboxMode,
     browserExecutable: requireAbsolute(
       requiredValue(argv, '--browser-executable'),
       'browser_executable_not_absolute',
@@ -162,8 +169,11 @@ export async function validateManifestBinding(options, env = process.env) {
   };
 }
 
-export function chromiumProbeArgs(profileDirectory) {
-  return [
+export function chromiumProbeArgs(profileDirectory, sandboxMode = 'required') {
+  if (!SANDBOX_MODES.has(sandboxMode)) {
+    fail('sandbox_mode_not_supported', sandboxMode);
+  }
+  const args = [
     '--headless=new',
     '--remote-debugging-port=0',
     `--user-data-dir=${profileDirectory}`,
@@ -175,8 +185,10 @@ export function chromiumProbeArgs(profileDirectory) {
     '--disable-dev-shm-usage',
     '--disable-features=Translate,MediaRouter,OptimizationHints',
     '--metrics-recording-only',
-    'about:blank',
   ];
+  if (sandboxMode === 'disabled') args.push('--no-sandbox');
+  args.push('about:blank');
+  return args;
 }
 
 async function waitForDevToolsPort(profileDirectory, child, timeoutMs = 20_000) {
@@ -270,18 +282,35 @@ async function terminateBrowserTree(child) {
     } catch (error) {
       if (error?.code !== 'ESRCH') throw error;
     }
-    if (!(await waitForProcessGroupExit(child.pid, 2_000))) {
+    await waitForExit(child, 2_000);
+    if (processGroupAlive(child.pid)) {
       try {
         process.kill(-child.pid, 'SIGKILL');
       } catch (error) {
         if (error?.code !== 'ESRCH') throw error;
       }
-      if (!(await waitForProcessGroupExit(child.pid, 5_000))) {
+      await waitForExit(child, 2_000);
+      if (!(await waitForProcessGroupExit(child.pid, 3_000))) {
         fail('chromium_tree_stop_timeout');
       }
     }
   }
   await waitForExit(child, 1_000);
+}
+
+async function boundedBrowserDisconnect(browser, timeoutMs = 1_000) {
+  if (!browser || !browser.isConnected()) return;
+  let timeout;
+  await Promise.race([
+    browser.close(),
+    new Promise((_, reject) => {
+      timeout = setTimeout(() => {
+        const error = new Error('browser_disconnect_timeout');
+        error.code = 'browser_disconnect_timeout';
+        reject(error);
+      }, timeoutMs);
+    }),
+  ]).finally(() => clearTimeout(timeout));
 }
 
 export function decorateProbeError(error, stderrTail, cleanupError = null) {
@@ -301,17 +330,21 @@ export function decorateProbeError(error, stderrTail, cleanupError = null) {
 
 async function waitForShutdown() {
   const lines = createInterface({ input: process.stdin, crlfDelay: Infinity });
-  for await (const line of lines) {
-    if (!line.trim()) continue;
-    let message;
-    try {
-      message = JSON.parse(line);
-    } catch {
-      continue;
+  try {
+    for await (const line of lines) {
+      if (!line.trim()) continue;
+      let message;
+      try {
+        message = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      if (message?.type === 'shutdown' && message?.schemaVersion === READY_SCHEMA_VERSION) {
+        return;
+      }
     }
-    if (message?.type === 'shutdown' && message?.schemaVersion === READY_SCHEMA_VERSION) {
-      return;
-    }
+  } finally {
+    lines.close();
   }
 }
 
@@ -322,7 +355,7 @@ export async function runProbe(options, env = process.env) {
   await mkdir(profileDirectory, { recursive: true });
   const child = spawn(
     options.browserExecutable,
-    chromiumProbeArgs(profileDirectory),
+    chromiumProbeArgs(profileDirectory, options.sandboxMode),
     {
       cwd: options.browserRoot,
       detached: process.platform !== 'win32',
@@ -349,6 +382,7 @@ export async function runProbe(options, env = process.env) {
         browserRevision: binding.browserRevision,
         browserExecutableSha256: binding.browserExecutableSha256,
         protocol: PROTOCOL,
+        sandboxMode: options.sandboxMode,
       })}\n`,
     );
     await waitForShutdown();
@@ -357,15 +391,13 @@ export async function runProbe(options, env = process.env) {
   }
 
   let cleanupError = null;
-  if (browser) {
-    try {
-      await browser.close();
-    } catch (error) {
-      cleanupError = error;
-    }
-  }
   try {
     await terminateBrowserTree(child);
+  } catch (error) {
+    cleanupError = error;
+  }
+  try {
+    await boundedBrowserDisconnect(browser);
   } catch (error) {
     cleanupError ??= error;
   }

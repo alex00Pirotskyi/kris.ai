@@ -152,10 +152,13 @@ jobs:
         include:
           - lane: ubuntu
             os: ubuntu-24.04
+            sandbox_mode: disabled
           - lane: windows
             os: windows-2025
+            sandbox_mode: required
           - lane: macos
             os: macos-15
+            sandbox_mode: required
     runs-on: ${{ matrix.os }}
     timeout-minutes: 50
     steps:
@@ -225,6 +228,7 @@ jobs:
           set -euo pipefail
           export P3_BUNDLE="$RUNNER_TEMP/p3-runtime"
           export P3_RECEIPT="$RUNNER_TEMP/p3-browser-probe-${{ matrix.lane }}.json"
+          export P3_SANDBOX_MODE="${{ matrix.sandbox_mode }}"
           python - <<'PY'
           import hashlib, json, os, pathlib, queue, subprocess, sys, threading, time
           root = pathlib.Path(os.environ['P3_BUNDLE']).resolve()
@@ -239,6 +243,7 @@ jobs:
           working = root / resources['automationHostRoot']['path']
           state = root.parent / 'p3-state'
           state.mkdir(parents=True, exist_ok=True)
+          sandbox_mode = os.environ['P3_SANDBOX_MODE']
           runtime_env = {
               'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': hashlib.sha256(manifest_bytes).hexdigest(),
               'KRISTIN_P3_RUNTIME_BUILD_SHA256': manifest['identity']['runtimeBuildSha256'],
@@ -246,6 +251,7 @@ jobs:
           }
           args = [
               str(node), str(worker), '--mode', 'probe', '--protocol', 'stdio-json-v1',
+              '--sandbox-mode', sandbox_mode,
               '--browser-executable', str(browser), '--browser-root', str(browser_root),
               '--runtime-manifest', str(manifest_path), '--state-directory', str(state),
           ]
@@ -279,6 +285,8 @@ jobs:
               raise SystemExit('ready browser revision mismatch')
           if ready.get('browserExecutableSha256') != resources['browserExecutable']['sha256']:
               raise SystemExit('ready browser executable SHA mismatch')
+          if ready.get('sandboxMode') != sandbox_mode:
+              raise SystemExit('ready sandbox mode mismatch')
           browser_pid = int(ready['browserPid'])
           process.stdin.write(json.dumps({'type':'shutdown','schemaVersion':'1.0.0'}) + '\n')
           process.stdin.flush()
@@ -312,6 +320,7 @@ jobs:
               'browserRevision': ready['browserRevision'],
               'browserVersion': ready['browserVersion'],
               'browserExecutableSha256': ready['browserExecutableSha256'],
+              'sandboxMode': ready['sandboxMode'],
               'workerPid': ready['pid'],
               'browserPid': browser_pid,
               'workerExitCode': process.returncode,

@@ -85,6 +85,7 @@ test('parseArgs accepts only the exact absolute probe contract', async () => {
     const parsed = parseArgs([
       '--mode', 'probe',
       '--protocol', 'stdio-json-v1',
+      '--sandbox-mode', 'required',
       '--browser-executable', f.browserExecutable,
       '--browser-root', f.browserRoot,
       '--runtime-manifest', f.runtimeManifest,
@@ -92,6 +93,7 @@ test('parseArgs accepts only the exact absolute probe contract', async () => {
     ]);
     assert.equal(parsed.mode, 'probe');
     assert.equal(parsed.protocol, 'stdio-json-v1');
+    assert.equal(parsed.sandboxMode, 'required');
     assert.equal(parsed.browserExecutable, path.resolve(f.browserExecutable));
     assert.equal(parsed.browserRoot, path.resolve(f.browserRoot));
   } finally {
@@ -99,11 +101,12 @@ test('parseArgs accepts only the exact absolute probe contract', async () => {
   }
 });
 
-test('parseArgs rejects relative paths and unknown arguments', () => {
+test('parseArgs rejects relative paths, unsupported sandbox mode and unknown arguments', () => {
   assert.throws(
     () => parseArgs([
       '--mode', 'probe',
       '--protocol', 'stdio-json-v1',
+      '--sandbox-mode', 'required',
       '--browser-executable', 'relative/chrome',
       '--browser-root', '/tmp/browser',
       '--runtime-manifest', '/tmp/manifest.json',
@@ -112,21 +115,37 @@ test('parseArgs rejects relative paths and unknown arguments', () => {
     /browser_executable_not_absolute/u,
   );
   assert.throws(
+    () => parseArgs([
+      '--mode', 'probe',
+      '--protocol', 'stdio-json-v1',
+      '--sandbox-mode', 'automatic',
+      '--browser-executable', '/tmp/chrome',
+      '--browser-root', '/tmp/browser',
+      '--runtime-manifest', '/tmp/manifest.json',
+      '--state-directory', '/tmp/state',
+    ]),
+    /sandbox_mode_not_supported/u,
+  );
+  assert.throws(
     () => parseArgs(['--unexpected', 'value']),
     /argument_set_invalid/u,
   );
 });
 
-test('chromiumProbeArgs pins CDP, profile and no-background-update flags', () => {
+test('chromiumProbeArgs keeps sandbox required by default and exposes explicit disabled mode', () => {
   const profile = path.resolve(os.tmpdir(), 'p3-profile');
-  const args = chromiumProbeArgs(profile);
-  assert.ok(args.includes('--headless=new'));
-  assert.ok(args.includes('--remote-debugging-port=0'));
-  assert.ok(args.includes(`--user-data-dir=${profile}`));
-  assert.ok(args.includes('--disable-background-networking'));
-  assert.ok(args.includes('--disable-component-update'));
-  assert.ok(args.includes('about:blank'));
-  assert.equal(args.some((value) => value === '--no-sandbox'), false);
+  const required = chromiumProbeArgs(profile, 'required');
+  assert.ok(required.includes('--headless=new'));
+  assert.ok(required.includes('--remote-debugging-port=0'));
+  assert.ok(required.includes(`--user-data-dir=${profile}`));
+  assert.ok(required.includes('--disable-background-networking'));
+  assert.ok(required.includes('--disable-component-update'));
+  assert.ok(required.includes('about:blank'));
+  assert.equal(required.includes('--no-sandbox'), false);
+
+  const disabled = chromiumProbeArgs(profile, 'disabled');
+  assert.ok(disabled.includes('--no-sandbox'));
+  assert.ok(disabled.includes('about:blank'));
 });
 
 test('waitForExit observes exit state without relying on a single exit event', async () => {
