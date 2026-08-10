@@ -22,6 +22,16 @@
     {"testId":"tc.test-center.contracts","lineageId":"test-center.contracts"},
     {"testId":"tc.test-center.semantic-regressions","lineageId":"test-center.contracts"},
     {"testId":"tc.p8.formal-test-hierarchy","lineageId":"p8.formal-test-hierarchy"},
-    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"}
+    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"},
+    {"testId":"tc.p5-001.navigation.primary-workspaces","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.flow.simple-task","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.flow.existing-run","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.flow.owner-mode","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.flow.verification-center","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.state.transitions","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.mode.progressive-disclosure","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.capability.honest-unavailable","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.keyboard.primary-flow","lineageId":"p5.information-architecture"},
+    {"testId":"tc.p5-001.semantics.primary-flow","lineageId":"p5.information-architecture"}
   ]
 }
