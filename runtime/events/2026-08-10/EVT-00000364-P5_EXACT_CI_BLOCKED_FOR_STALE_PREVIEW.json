@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000364-P5_EXACT_CI_BLOCKED_FOR_STALE_PREVIEW",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "blockedByWorkOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1",
+    "liveProductHead": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+    "liveProductTree": "ffc677555e501863768b2df6983b9d1cd50622cf",
+    "previousBaseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
+    "reason": "Do not dispatch exact Product CI against a candidate with the already-known stale preview release-validation defect."
+  },
+  "recordedAt": "2026-08-10T06:50:00Z",
+  "runtimeGeneration": 364,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-EXACT-CI-A6F03C19"
+}
