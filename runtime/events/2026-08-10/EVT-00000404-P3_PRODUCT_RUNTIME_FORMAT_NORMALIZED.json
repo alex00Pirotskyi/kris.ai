@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000404-P3_PRODUCT_RUNTIME_FORMAT_NORMALIZED",
+  "eventType": "P3_PRODUCT_RUNTIME_FORMAT_NORMALIZED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousHead": "38b807bd42bfd77805baf0db0c6fbeca1f9de34f",
+    "previousTree": "3f5db2b28498c8709c8fdcb559fc4c1ebe337ac8",
+    "head": "93bacb311e8aafb4c87ab9ee949a717bb06b80f3",
+    "tree": "d9fb6660073e6db6f27a28cef7319ba99d994c4a",
+    "exactFailure": {
+      "productGatesRun": 31420589823,
+      "job": 93560087416,
+      "diagnostic": "dart format changed exactly lib/product/product_runtime.dart; broader Product analyzer/tests were blocked behind formatting while the P3-specific parent-format oracle was already green"
+    },
+    "materializedFix": "Normalized only the new P3 ProductRuntime status/provenance getter layout: one expression collapsed within page width and Map.unmodifiable argument indentation aligned with repository formatter style. No composition semantics changed.",
+    "validationStatus": "PENDING_EXACT_CI"
+  },
+  "recordedAt": "2026-08-10T19:03:00Z",
+  "runtimeGeneration": 404,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
+}
