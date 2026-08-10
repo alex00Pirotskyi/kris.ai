@@ -188,6 +188,7 @@ jobs:
         run: |
           set -euo pipefail
           BROWSER_EXEC="$(node -e "const {chromium}=require('./automation_host/node_modules/playwright-core'); process.stdout.write(chromium.executablePath())")"
+          export BROWSER_EXEC
           echo "BROWSER_EXEC=$BROWSER_EXEC" >> "$GITHUB_ENV"
           python - <<'PY'
           import os, pathlib
