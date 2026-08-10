@@ -8,6 +8,8 @@ import sys
 import tempfile
 import unittest
 
+import p3_stage_browser_runtime_bundle as stage
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / 'tool/p3_stage_browser_runtime_bundle.py'
 
@@ -22,6 +24,18 @@ class P3StageBrowserRuntimeBundleTest(unittest.TestCase):
         browser.write_bytes(b'fake-chromium\n')
         (browser_root / 'resources.pak').write_bytes(b'resource\n')
         return node, browser_root, browser
+
+    def _symlink(
+        self,
+        link: pathlib.Path,
+        target: str,
+        *,
+        target_is_directory: bool = False,
+    ) -> None:
+        try:
+            link.symlink_to(target, target_is_directory=target_is_directory)
+        except (OSError, NotImplementedError) as error:
+            self.skipTest(f'symlink creation unavailable: {error}')
 
     def _stage(
         self,
@@ -106,6 +120,94 @@ class P3StageBrowserRuntimeBundleTest(unittest.TestCase):
                 resources['packageLock']['sha256'],
                 identity['packageLockSha256'],
             )
+
+    def test_copy_tree_omits_npm_bin_symlink_shims(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-npm-bin-') as raw:
+            temp = pathlib.Path(raw)
+            source = temp / 'automation-host'
+            package = source / 'node_modules/playwright-core'
+            package.mkdir(parents=True)
+            (package / 'cli.js').write_text('cli\n', encoding='utf-8')
+            bin_dir = source / 'node_modules/.bin'
+            bin_dir.mkdir(parents=True)
+            self._symlink(bin_dir / 'playwright-core', '../playwright-core/cli.js')
+            destination = temp / 'bundle'
+
+            stage.copy_tree(source, destination, include_node_modules=True)
+
+            self.assertTrue((destination / 'node_modules/playwright-core/cli.js').is_file())
+            self.assertFalse((destination / 'node_modules/.bin').exists())
+
+    def test_copy_tree_rejects_unexpected_automation_symlink(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-automation-link-') as raw:
+            temp = pathlib.Path(raw)
+            source = temp / 'automation-host'
+            source.mkdir()
+            (source / 'real.txt').write_text('real\n', encoding='utf-8')
+            self._symlink(source / 'unexpected-link', 'real.txt')
+
+            with self.assertRaisesRegex(SystemExit, 'runtime symlink rejected'):
+                stage.copy_tree(
+                    source,
+                    temp / 'bundle',
+                    include_node_modules=True,
+                )
+
+    def test_browser_tree_materializes_internal_relative_symlink(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-browser-link-') as raw:
+            temp = pathlib.Path(raw)
+            source = temp / 'browser'
+            version = source / 'Framework.framework/Versions/1'
+            version.mkdir(parents=True)
+            (version / 'framework.bin').write_bytes(b'framework\n')
+            current = source / 'Framework.framework/Versions/Current'
+            self._symlink(current, '1', target_is_directory=True)
+            destination = temp / 'bundle'
+
+            stage.copy_tree(
+                source,
+                destination,
+                include_node_modules=True,
+                materialize_internal_symlinks=True,
+            )
+
+            staged_current = destination / 'Framework.framework/Versions/Current'
+            self.assertTrue(staged_current.is_dir())
+            self.assertFalse(staged_current.is_symlink())
+            self.assertTrue((staged_current / 'framework.bin').is_file())
+            self.assertRegex(stage.tree_sha256(destination), r'^[0-9a-f]{64}$')
+
+    def test_browser_tree_rejects_escaping_symlink(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-browser-escape-') as raw:
+            temp = pathlib.Path(raw)
+            source = temp / 'browser'
+            source.mkdir()
+            outside = temp / 'outside'
+            outside.mkdir()
+            self._symlink(source / 'escape', '../outside', target_is_directory=True)
+
+            with self.assertRaisesRegex(SystemExit, 'escaping symlink rejected'):
+                stage.copy_tree(
+                    source,
+                    temp / 'bundle',
+                    include_node_modules=True,
+                    materialize_internal_symlinks=True,
+                )
+
+    def test_browser_tree_rejects_symlink_cycle(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-browser-cycle-') as raw:
+            temp = pathlib.Path(raw)
+            source = temp / 'browser'
+            source.mkdir()
+            self._symlink(source / 'loop', '.', target_is_directory=True)
+
+            with self.assertRaisesRegex(SystemExit, 'symlink cycle rejected'):
+                stage.copy_tree(
+                    source,
+                    temp / 'bundle',
+                    include_node_modules=True,
+                    materialize_internal_symlinks=True,
+                )
 
     def test_rejects_browser_executable_outside_browser_root(self) -> None:
         with tempfile.TemporaryDirectory(prefix='p3-stage-outside-') as raw:

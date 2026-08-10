@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import re
 import shutil
@@ -21,6 +22,32 @@ def sha256_file(path: pathlib.Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b''):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def is_npm_bin_shim(relative: pathlib.Path) -> bool:
+    parts = relative.parts
+    return any(
+        parts[index] == 'node_modules' and parts[index + 1] == '.bin'
+        for index in range(len(parts) - 1)
+    )
+
+
+def require_internal_relative_symlink(
+    item: pathlib.Path, root: pathlib.Path
+) -> pathlib.Path:
+    raw_target = os.readlink(item)
+    link_target = pathlib.Path(raw_target)
+    if link_target.is_absolute():
+        raise SystemExit(f'P3 runtime absolute symlink rejected: {item}')
+    resolved_root = root.resolve()
+    resolved_target = (item.parent / link_target).resolve()
+    try:
+        resolved_target.relative_to(resolved_root)
+    except ValueError as error:
+        raise SystemExit(f'P3 runtime escaping symlink rejected: {item}') from error
+    if not resolved_target.exists():
+        raise SystemExit(f'P3 runtime broken symlink rejected: {item}')
+    return resolved_target
 
 
 def tree_sha256(root: pathlib.Path) -> str:
@@ -51,22 +78,58 @@ def copy_file(src: pathlib.Path, dst: pathlib.Path, executable: bool) -> dict[st
     }
 
 
-def copy_tree(src: pathlib.Path, dst: pathlib.Path, *, include_node_modules: bool) -> None:
+def copy_tree(
+    src: pathlib.Path,
+    dst: pathlib.Path,
+    *,
+    include_node_modules: bool,
+    materialize_internal_symlinks: bool = False,
+    _active_roots: set[pathlib.Path] | None = None,
+) -> None:
     if not src.is_dir() or src.is_symlink():
         raise SystemExit(f'P3 runtime tree missing/symlinked: {src}')
-    for item in sorted(src.rglob('*'), key=lambda value: value.as_posix()):
-        relative = item.relative_to(src)
-        if any(part in SKIP_PARTS for part in relative.parts):
-            continue
-        if not include_node_modules and 'node_modules' in relative.parts:
-            continue
-        if item.is_symlink():
-            raise SystemExit(f'P3 runtime symlink rejected: {item}')
-        target = dst / relative
-        if item.is_dir():
-            target.mkdir(parents=True, exist_ok=True)
-        elif item.is_file():
-            copy_file(item, target, bool(item.stat().st_mode & stat.S_IXUSR))
+    resolved_src = src.resolve()
+    active_roots = _active_roots if _active_roots is not None else set()
+    if resolved_src in active_roots:
+        raise SystemExit(f'P3 runtime symlink cycle rejected: {src}')
+    active_roots.add(resolved_src)
+    try:
+        for item in sorted(src.rglob('*'), key=lambda value: value.as_posix()):
+            relative = item.relative_to(src)
+            if any(part in SKIP_PARTS for part in relative.parts):
+                continue
+            if not include_node_modules and 'node_modules' in relative.parts:
+                continue
+            if is_npm_bin_shim(relative):
+                continue
+            target = dst / relative
+            if item.is_symlink():
+                if not materialize_internal_symlinks:
+                    raise SystemExit(f'P3 runtime symlink rejected: {item}')
+                resolved_target = require_internal_relative_symlink(item, src)
+                if resolved_target.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                    copy_tree(
+                        resolved_target,
+                        target,
+                        include_node_modules=include_node_modules,
+                        materialize_internal_symlinks=True,
+                        _active_roots=active_roots,
+                    )
+                elif resolved_target.is_file():
+                    copy_file(
+                        resolved_target,
+                        target,
+                        bool(resolved_target.stat().st_mode & stat.S_IXUSR),
+                    )
+                else:
+                    raise SystemExit(f'P3 runtime symlink target invalid: {item}')
+            elif item.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+            elif item.is_file():
+                copy_file(item, target, bool(item.stat().st_mode & stat.S_IXUSR))
+    finally:
+        active_roots.remove(resolved_src)
 
 
 def relative_resource(row: dict[str, object], root: pathlib.Path) -> dict[str, object]:
@@ -175,7 +238,12 @@ def main() -> int:
     }
 
     staged_browser_root = destination / 'browser'
-    copy_tree(browser_root, staged_browser_root, include_node_modules=True)
+    copy_tree(
+        browser_root,
+        staged_browser_root,
+        include_node_modules=True,
+        materialize_internal_symlinks=True,
+    )
     staged_browser_executable = staged_browser_root / browser_relative
     if not staged_browser_executable.is_file():
         raise SystemExit('staged browser executable missing')
