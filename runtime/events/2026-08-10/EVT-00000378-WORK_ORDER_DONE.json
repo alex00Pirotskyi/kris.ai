@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000378-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-7C51A2E4:R1_REQUEST_CHANGES_REVIEW_COMPLETE",
+    "nextStatus": "LANDED",
+    "reviewDisposition": "REQUEST_CHANGES",
+    "reviewedCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+    "reviewedTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+    "reviewId": 4895708676
+  },
+  "recordedAt": "2026-08-10T10:15:00Z",
+  "runtimeGeneration": 378,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P4-001-R1-7C51A2E4"
+}
