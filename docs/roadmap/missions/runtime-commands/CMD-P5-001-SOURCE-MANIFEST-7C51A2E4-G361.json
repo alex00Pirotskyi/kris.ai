@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P5-001-SOURCE-MANIFEST-7C51A2E4-G361",
+  "createdAt": "2026-08-10T05:12:00Z",
+  "expectedProductHead": "44945f3655a938ed376e5aa663a4568610a4b9b8",
+  "expectedRuntimeGeneration": 361,
+  "note": "Materialize only SOURCE_MANIFEST.sha256 on exact canonical P5 Product PR #72 head after governed Test Center registry, hierarchy, and proof-lineage integration. Exact-head Worker F artifact receipt proves deterministic bytes at commit 44945f3655a938ed376e5aa663a4568610a4b9b8 / tree b7dbd0c5175cc1203071464d83720d8fca143667 / manifest SHA-256 18b2cc92a2e880d2cea499841f8739a33802cb128716978bb846dbc9f95b71d1. Do not alter Product source or promote acceptance, support, release, production-readiness, or GA state.",
+  "operation": "MATERIALIZE_SOURCE_MANIFEST_V1",
+  "productPr": 72,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-SOURCE-MANIFEST-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4",
+  "workOrderId": "WO-P5-001-SOURCE-MANIFEST-7C51A2E4"
+}
