@@ -1,0 +1,33 @@
+{
+  "eventId": "EVT-00000401-P3_EXACT_GREEN_AND_COMPOSITION_ACTIVATED",
+  "eventType": "P3_EXACT_GREEN_AND_COMPOSITION_ACTIVATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "head": "473b231c55bcbef97ad85015d70a19bbac6a4483",
+    "tree": "b813f7a2458beb25e5763ec7680bc722d5bbc512",
+    "exactValidation": {
+      "p3BrowserRuntimeRun": 31418071564,
+      "p3BrowserRuntimeStatus": "PASS",
+      "productGatesRun": 31418071460,
+      "productGatesStatus": "PASS"
+    },
+    "frozenLanes": [
+      "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4 browser namespace WRITE released while parent remains IN_PROGRESS",
+      "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B LANDED in canonical Product and WRITE released",
+      "WO-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4 LANDED in canonical Product and WRITE released"
+    ],
+    "activatedWorkOrder": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B",
+    "activatedSemaphore": "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4",
+    "compositionAllowedPaths": [
+      "lib/product/product_runtime.dart",
+      "test/product/browser/browser_product_runtime_test.dart"
+    ],
+    "truthBoundary": "P3 browser/runtime source and bundle lanes are exact-green and frozen; P3-001 remains incomplete until ProductRuntime composition and source-manifest finalization are complete. No P3-002 session/action semantics, acceptance, support, release, production, or GA promotion is claimed."
+  },
+  "recordedAt": "2026-08-10T18:24:00Z",
+  "runtimeGeneration": 401,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}
