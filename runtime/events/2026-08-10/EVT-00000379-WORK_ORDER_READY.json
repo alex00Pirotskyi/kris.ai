@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000379-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "BUILDER",
+    "type": "PRODUCT_DEFECT_REPAIR"
+  },
+  "recordedAt": "2026-08-10T10:17:00Z",
+  "runtimeGeneration": 379,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P4-001-PUBLIC-URL-ALIAS-7C51A2E4"
+}
