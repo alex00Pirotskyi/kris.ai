@@ -11,6 +11,8 @@ from __future__ import annotations
 import datetime as dt
 import json
 import pathlib
+import re
+import subprocess
 from typing import Any
 
 from mission_delivery_lib import load_latest_records, load_model
@@ -368,6 +370,117 @@ def validate_work_order(
         parse_time(item["updatedAt"])
 
 
+def _audit_git_binding(
+    project: pathlib.Path,
+    base_commit: Any,
+    base_tree: Any,
+    label: str,
+) -> None:
+    """Validate durable Git identity without requiring retired refs to remain reachable."""
+    for value, key in ((base_commit, "baseCommit"), (base_tree, "baseTree")):
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{40}", value):
+            raise ValueError(
+                f"{label} {key} must be a full lowercase Git object id; got {value!r}"
+            )
+    probe = subprocess.run(
+        ["git", "-C", str(project), "cat-file", "-e", f"{base_commit}^{{commit}}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if probe.returncode != 0:
+        return
+    tree = subprocess.run(
+        ["git", "-C", str(project), "rev-parse", f"{base_commit}^{{tree}}"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if tree.returncode != 0:
+        raise ValueError(
+            f"{label} locally available baseCommit cannot resolve its tree: {base_commit}"
+        )
+    actual_tree = tree.stdout.strip()
+    if actual_tree != base_tree:
+        raise ValueError(
+            f"{label} baseCommit/baseTree mismatch: {base_commit} -> {actual_tree}, "
+            f"recorded {base_tree}"
+        )
+
+
+def _audit_non_authoritative_work_order(
+    project: pathlib.Path,
+    item: dict[str, Any],
+) -> None:
+    """Audit terminal/planning history without replaying today's mutable authority policy."""
+    required = {
+        "schemaVersion", "workOrderId", "mission", "roadmapTask",
+        "parentProductPr", "priority", "type", "objective", "requestedRole",
+        "allowedPaths", "baseCommit", "baseTree", "dependencyRequirements",
+        "requiredTests", "maxChildWorkOrders", "status", "createdBy", "createdAt",
+    }
+    missing = sorted(required - set(item))
+    if missing:
+        raise ValueError(f"historical Work Order missing fields: {missing}")
+    if item["schemaVersion"] != 1:
+        raise ValueError("historical Work Order schemaVersion must be 1")
+    if item.get("status") not in WORK_ORDER_STATES or item.get("status") in ACTIVE_WORK:
+        raise ValueError(
+            f"historical Work Order has invalid audit status: {item.get('status')}"
+        )
+    for key in (
+        "workOrderId", "mission", "roadmapTask", "type", "objective",
+        "requestedRole", "createdBy",
+    ):
+        if not isinstance(item.get(key), str) or not item[key]:
+            raise ValueError(f"historical Work Order {key} must be a non-empty string")
+    parent_pr = item.get("parentProductPr")
+    if parent_pr is not None and parent_pr != 0 and (
+        not isinstance(parent_pr, int) or isinstance(parent_pr, bool) or parent_pr <= 0
+    ):
+        raise ValueError(
+            "historical Work Order parentProductPr must be null, 0, or positive integer"
+        )
+    if not isinstance(item.get("priority"), int) or isinstance(item.get("priority"), bool):
+        raise ValueError("historical Work Order priority must be an integer")
+    if (
+        not isinstance(item.get("maxChildWorkOrders"), int)
+        or isinstance(item.get("maxChildWorkOrders"), bool)
+        or item["maxChildWorkOrders"] < 0
+    ):
+        raise ValueError(
+            "historical Work Order maxChildWorkOrders must be a non-negative integer"
+        )
+    allowed = item.get("allowedPaths")
+    if not isinstance(allowed, list) or not allowed or not all(
+        isinstance(path, str) and path for path in allowed
+    ):
+        raise ValueError("historical Work Order allowedPaths must be non-empty strings")
+    dependencies = item.get("dependencyRequirements")
+    if not isinstance(dependencies, list) or not all(
+        (isinstance(value, str) and value) or isinstance(value, dict)
+        for value in dependencies
+    ):
+        raise ValueError(
+            "historical Work Order dependencyRequirements must be an audit list"
+        )
+    if not isinstance(item.get("requiredTests"), list):
+        raise ValueError("historical Work Order requiredTests must be an array")
+    parent_id = item.get("parentWorkOrderId")
+    if parent_id is not None and not isinstance(parent_id, str):
+        raise ValueError("historical Work Order parentWorkOrderId must be null or string")
+    _audit_git_binding(
+        project,
+        item.get("baseCommit"),
+        item.get("baseTree"),
+        f"historical Work Order {item['workOrderId']}",
+    )
+    parse_time(item["createdAt"])
+    if item.get("updatedAt"):
+        parse_time(item["updatedAt"])
+
+
 def validate_delegation_graph(work_orders: dict[str, dict[str, Any]]) -> None:
     for work_id, item in work_orders.items():
         parent_id = item.get("parentWorkOrderId")
@@ -376,7 +489,7 @@ def validate_delegation_graph(work_orders: dict[str, dict[str, Any]]) -> None:
         parent = work_orders.get(parent_id)
         if parent is None:
             raise ValueError(f"Work Order {work_id} references missing parent {parent_id}")
-        if (
+        if item.get("status") in ACTIVE_WORK and (
             parent["mission"] != item["mission"]
             or parent["roadmapTask"] != item["roadmapTask"]
             or parent["parentProductPr"] != item["parentProductPr"]
@@ -399,7 +512,7 @@ def validate_delegation_graph(work_orders: dict[str, dict[str, Any]]) -> None:
             child
             for child in work_orders.values()
             if child.get("parentWorkOrderId") == work_id
-            and child.get("status") not in {"CANCELLED", "SUPERSEDED"}
+            and child.get("status") in ACTIVE_WORK
         ]
         if len(children) > int(parent.get("maxChildWorkOrders", 0)):
             raise ValueError(
@@ -511,6 +624,62 @@ def validate_semaphore(
         raise ValueError("semaphore timestamp ordering invalid")
 
 
+def _audit_inactive_semaphore(
+    project: pathlib.Path,
+    item: dict[str, Any],
+    work_orders: dict[str, dict[str, Any]],
+) -> None:
+    """Audit non-authoritative semaphore history without current policy replay."""
+    required = {
+        "schemaVersion", "semaphoreId", "kind", "workOrderId", "mission",
+        "workerIdentity", "executionRole", "baseCommit", "baseTree",
+        "allowedPaths", "createdAt", "refreshedAt", "expiresAt",
+        "runtimeGeneration", "status",
+    }
+    missing = sorted(required - set(item))
+    if missing:
+        raise ValueError(f"historical semaphore missing fields: {missing}")
+    if item["schemaVersion"] != 1 or item.get("status") not in SEMAPHORE_STATES:
+        raise ValueError("invalid historical semaphore schema/status")
+    for key in (
+        "semaphoreId", "kind", "workOrderId", "mission",
+        "workerIdentity", "executionRole",
+    ):
+        if not isinstance(item.get(key), str) or not item[key]:
+            raise ValueError(f"historical semaphore {key} must be a non-empty string")
+    work = work_orders.get(item["workOrderId"])
+    if work is None:
+        raise ValueError(
+            f"historical semaphore references unknown Work Order {item['workOrderId']}"
+        )
+    if item["mission"] != work.get("mission"):
+        raise ValueError("historical semaphore mission differs from Work Order mission")
+    if not isinstance(item.get("allowedPaths"), list) or not all(
+        isinstance(path, str) and path for path in item["allowedPaths"]
+    ):
+        raise ValueError("historical semaphore allowedPaths must contain strings")
+    if (
+        not isinstance(item.get("runtimeGeneration"), int)
+        or isinstance(item.get("runtimeGeneration"), bool)
+        or item["runtimeGeneration"] < 0
+    ):
+        raise ValueError(
+            "historical semaphore runtimeGeneration must be non-negative integer"
+        )
+    _audit_git_binding(
+        project,
+        item.get("baseCommit"),
+        item.get("baseTree"),
+        f"historical semaphore {item['semaphoreId']}",
+    )
+    created, refreshed, expires = map(
+        parse_time,
+        (item["createdAt"], item["refreshedAt"], item["expiresAt"]),
+    )
+    if refreshed < created or expires < refreshed:
+        raise ValueError("historical semaphore timestamp ordering invalid")
+
+
 def load_semaphores(
     project: pathlib.Path,
     work_orders: dict[str, dict[str, Any]],
@@ -524,9 +693,13 @@ def load_semaphores(
     for path in semaphore_files(project):
         item = read_json(path)
         item["_path"] = path.relative_to(project).as_posix()
-        validate_semaphore(project, item, work_orders, product_prs)
+        is_active = _active(item, now)
+        if is_active:
+            validate_semaphore(project, item, work_orders, product_prs)
+        else:
+            _audit_inactive_semaphore(project, item, work_orders)
         all_items.append(item)
-        if _active(item, now):
+        if is_active:
             if item["kind"] in {"WRITE", "AUTHORITY"}:
                 branch = item["branch"]
                 if branch in branches:
@@ -554,7 +727,10 @@ def validate_runtime_state(project: pathlib.Path) -> dict[str, Any]:
     validate_claim_product_prs(claims, products)
     work_orders = load_work_orders(project)
     for item in work_orders.values():
-        validate_work_order(project, item, model, claims, products, latest)
+        if item.get("status") in ACTIVE_WORK:
+            validate_work_order(project, item, model, claims, products, latest)
+        else:
+            _audit_non_authoritative_work_order(project, item)
     validate_delegation_graph(work_orders)
     all_sems, active = load_semaphores(project, work_orders, products)
     for item in active:
@@ -670,7 +846,7 @@ def create_work_order(
             child
             for child in state["workOrders"].values()
             if child.get("parentWorkOrderId") == parent_id
-            and child.get("status") not in {"CANCELLED", "SUPERSEDED"}
+            and child.get("status") in ACTIVE_WORK
         ]
         if len(existing_children) >= int(parent.get("maxChildWorkOrders", 0)):
             raise ValueError(f"delegation budget exhausted for {parent_id}")
