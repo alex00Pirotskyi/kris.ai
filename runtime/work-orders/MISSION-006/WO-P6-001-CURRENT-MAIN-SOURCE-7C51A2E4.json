@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4",
   "allowedPaths": [
     "lib/product/model/model.dart",
     "lib/product/model/model_registry.dart",
@@ -32,8 +31,8 @@
   "roadmapTask": "P6-001",
   "runtimeGeneration": 382,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-10T10:47:00Z",
+  "updatedAt": "2026-08-10T11:08:08Z",
   "workOrderId": "WO-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4"
 }
