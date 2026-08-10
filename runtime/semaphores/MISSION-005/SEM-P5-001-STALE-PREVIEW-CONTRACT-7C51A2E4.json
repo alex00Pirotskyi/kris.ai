@@ -16,12 +16,12 @@
   "kind": "WRITE",
   "mission": "MISSION-005",
   "productPr": null,
-  "refreshedAt": "2026-08-10T09:27:00Z",
+  "refreshedAt": "2026-08-10T09:49:00Z",
   "resourceId": null,
-  "runtimeGeneration": 375,
+  "runtimeGeneration": 376,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
   "workerIdentity": "ELASTIC-GPT-7C51A2E4"
 }

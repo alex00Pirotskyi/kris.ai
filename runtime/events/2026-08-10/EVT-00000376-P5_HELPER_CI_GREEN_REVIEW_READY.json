@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000376-P5_HELPER_CI_GREEN_REVIEW_READY",
+  "eventType": "WORK_ORDER_CREATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "diagnosticCleanupCommit": "2d36b16a108e3e6f999715ccbc43a6b691c7d79d",
+    "helperCommit": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
+    "helperTree": "f3e7f53bbddd3f099379a8be99af442f16701585",
+    "productGatesRun": 31374116890,
+    "reason": "Final helper exact-head Worker F and general Product CI are green. Release source-write/diagnostic authority and expose a fresh independent R1 review gate without further Product mutation.",
+    "reviewWorkOrderId": "WO-P5-001-PR127-R1-A84E19D3",
+    "workerFRun": 31374116905
+  },
+  "recordedAt": "2026-08-10T09:49:00Z",
+  "runtimeGeneration": 376,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-PR127-R1-A84E19D3"
+}

@@ -1,0 +1,43 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    ".github/workflows/worker-f-p5-001-information-architecture.yml",
+    "lib/p5_ia_preview.dart",
+    "release/evidence/P5-001/manifest.json",
+    "test/product/p5_information_architecture/p5_source_boundary_test.dart",
+    "test/product/p5_information_architecture/worker_f_p5_ia.py",
+    "test/product/p5_information_architecture/worker_f_p5_ia_test.py",
+    "test/product/source_contract_test.dart"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
+  "baseTree": "f3e7f53bbddd3f099379a8be99af442f16701585",
+  "createdAt": "2026-08-10T09:49:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:INDEPENDENT_REVIEW_REQUESTED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Perform a fresh context-independent R1 technical review of helper PR #127 at exact head 4b8cba59ee9423b063cfd0e2c3effbc7ac417558 / tree f3e7f53bbddd3f099379a8be99af442f16701585. Review the final seven-path effective diff only. Confirm stale launcher removal and source-contract reconciliation are truthful; confirm the Worker F evidence-manifest restoration preserves candidate proof and does not weaken the final non-mutation gate; confirm no lib/product/p5_information_architecture/** implementation behavior, Test Center/shared authority, source inventory, root SOURCE_MANIFEST.sha256, support, acceptance, release, production, or GA state is improperly changed or promoted. Bind the disposition to the exact helper head/tree and report R1 PASS or REQUEST_CHANGES. The execution that authored the repair is ineligible to self-certify this Work Order.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "review exact PR #127 head 4b8cba59ee9423b063cfd0e2c3effbc7ac417558 / tree f3e7f53bbddd3f099379a8be99af442f16701585",
+    "inspect all seven allowed paths and effective diff against canonical PR #72 base",
+    "verify lib/p5_ia_preview.dart deletion does not remove production entrypoint behavior",
+    "verify test/product/source_contract_test.dart only removes the obsolete launcher from the governed source set",
+    "verify Worker F workflow evidence-manifest restoration occurs after candidate generation/proof and preserves hard final clean-tree failure",
+    "verify release/evidence/P5-001/manifest.json is truthful for the exact candidate",
+    "acknowledge Worker F run 31374116905 PASS and product-gates run 31374116890 PASS without substituting CI for review",
+    "report R1 PASS or REQUEST_CHANGES bound to exact head/tree; no R2 claim"
+  ],
+  "roadmapTask": "P5-001",
+  "runtimeGeneration": 376,
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-10T09:49:00Z",
+  "workOrderId": "WO-P5-001-PR127-R1-A84E19D3"
+}

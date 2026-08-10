@@ -1,4 +1,5 @@
 {
+  "activeSemaphoreId": null,
   "allowedPaths": [
     ".github/workflows/worker-f-p5-001-information-architecture.yml",
     "release/evidence/P5-001/manifest.json",
@@ -6,7 +7,6 @@
     "test/product/p5_information_architecture/worker_f_p5_ia.py",
     "test/product/p5_information_architecture/worker_f_p5_ia_test.py"
   ],
-  "activeSemaphoreId": "SEM-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
   "baseTree": "f3e7f53bbddd3f099379a8be99af442f16701585",
@@ -14,27 +14,25 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:CONCURRENT_WINNER_RECONCILED",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:EXACT_CI_GREEN_REVIEW_HANDOFF",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
-  "objective": "Complete the bounded P5-001 stale-preview/contract repair and exact-head certification. Current winning helper head 4b8cba59ee9423b063cfd0e2c3effbc7ac417558 preserves all prior seven-path repair scope and adds only a three-line Worker F workflow step that restores the governed P5 evidence manifest after canonical candidate generation/proof. This directly removes the measured Windows CRLF worktree-noise blocker without weakening the final repository-status gate. Reuse this winner, accept it only if exact-head Worker F and general Product CI are green, then obtain independent exact-scope review before helper integration. Preserve lib/product/p5_information_architecture/** behavior and all Test Center/shared-authority rows. Do not change source inventory, root SOURCE_MANIFEST.sha256, support, acceptance, release, production, or GA state.",
+  "objective": "Bounded P5-001 stale-preview/contract repair is source-complete and exact-head CI-green at 4b8cba59ee9423b063cfd0e2c3effbc7ac417558. Worker F run 31374116905 passes Ubuntu, Windows, and macOS including the final fail-closed non-mutation hygiene gate; general product-gates run 31374116890 also passes. Product bytes are frozen. Await fresh independent exact-scope R1 review through WO-P5-001-PR127-R1-A84E19D3; this execution must not self-certify that review. No Test Center/shared-authority/source-inventory/root-manifest/support/acceptance/release/production/GA promotion.",
   "parentProductPr": 72,
   "priority": 100,
   "requestedRole": "CI_REPAIR",
   "requiredTests": [
-    "python test/product/p5_information_architecture/worker_f_p5_ia.py check --project .",
-    "python test/product/p5_information_architecture/worker_f_p5_ia_test.py",
-    "flutter test test/product/p5_information_architecture/p5_source_boundary_test.dart",
-    "Worker F P5-001 exact-head Ubuntu/Windows/macOS validation",
-    "general exact-head product-gates remains green or is repaired only from measured failures",
-    "final repository-status gate remains fail-closed while printing exact dirty paths",
+    "Worker F P5-001 run 31374116905 PASS on Ubuntu/Windows/macOS",
+    "general product-gates run 31374116890 PASS",
+    "final repository-status gate remains fail-closed",
+    "fresh independent R1 review WO-P5-001-PR127-R1-A84E19D3 required before helper integration",
     "no Test Center/source-inventory/root-manifest/support promotion"
   ],
   "roadmapTask": "P5-001",
-  "runtimeGeneration": 375,
+  "runtimeGeneration": 376,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "REVIEW",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-10T09:27:00Z",
+  "updatedAt": "2026-08-10T09:49:00Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
 }
