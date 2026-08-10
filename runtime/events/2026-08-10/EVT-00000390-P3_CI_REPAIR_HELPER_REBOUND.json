@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000390-P3_CI_REPAIR_HELPER_REBOUND",
+  "eventType": "P3_CI_REPAIR_HELPER_REBOUND",
+  "mission": "MISSION-003",
+  "payload": {
+    "helperBranch": "agent/help/elastic-7d41b6a2/mission-003/p3-ci-repair",
+    "parentSemaphoreId": "SEM-P3-001-BROWSER-RUNTIME-7C51A2E4",
+    "nodeBundleSemaphoreId": "SEM-P3-001-NODE-BROWSER-BUNDLE-7C51A2E4",
+    "sourceCommit": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
+    "sourceTree": "9740a907937550bf5283a551a3776c83f76cde25"
+  },
+  "recordedAt": "2026-08-10T12:27:00Z",
+  "runtimeGeneration": 390,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}
