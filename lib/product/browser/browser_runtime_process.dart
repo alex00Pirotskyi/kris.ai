@@ -159,7 +159,10 @@ final class P3BrowserRuntimeLaunchPlan {
       allowedEnvironmentKeys.addAll(_windowsBootstrapEnvironmentKeys);
     }
     if (environment.containsKey('PATH') ||
-        environment.keys.toSet().difference(allowedEnvironmentKeys).isNotEmpty ||
+        environment.keys
+            .toSet()
+            .difference(allowedEnvironmentKeys)
+            .isNotEmpty ||
         environment.values.any(
           (value) => value.isEmpty || value.contains('\u0000'),
         )) {
