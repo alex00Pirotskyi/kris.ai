@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000374-P5_WINDOWS_STATUS_DIAGNOSTIC_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "branch": "agent/diag/mission-005/p5-windows-status-7c51a2e4",
+    "checkoutCommit": "578e72b6a6f1e84a84a01631bd30b1553fd0e54c",
+    "reason": "Exact Worker F Windows certification passes all substantive P5 gates but fails final status cleanliness without a tracked diff body; isolate the first dirty/untracked path off-candidate.",
+    "semaphoreId": "SEM-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T09:07:30Z",
+  "runtimeGeneration": 374,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
+}
