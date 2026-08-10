@@ -249,6 +249,22 @@ jobs:
               'KRISTIN_P3_RUNTIME_BUILD_SHA256': manifest['identity']['runtimeBuildSha256'],
               'KRISTIN_P3_BROWSER_REVISION': manifest['identity']['browserRevision'],
           }
+          windows_bootstrap_keys = []
+          if sys.platform == 'win32':
+              for key in (
+                  'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP',
+                  'USERPROFILE', 'LOCALAPPDATA', 'APPDATA',
+                  'PROGRAMFILES', 'PROGRAMFILES(X86)', 'PROGRAMDATA',
+                  'HOMEDRIVE', 'HOMEPATH',
+              ):
+                  value = os.environ.get(key)
+                  if value:
+                      runtime_env[key] = value
+                      windows_bootstrap_keys.append(key)
+              if 'SYSTEMROOT' not in runtime_env:
+                  raise SystemExit('Windows SystemRoot missing from bootstrap environment')
+          if 'PATH' in runtime_env:
+              raise SystemExit('global PATH must not be inherited into staged P3 runtime')
           args = [
               str(node), str(worker), '--mode', 'probe', '--protocol', 'stdio-json-v1',
               '--sandbox-mode', sandbox_mode,
@@ -321,6 +337,10 @@ jobs:
               'browserVersion': ready['browserVersion'],
               'browserExecutableSha256': ready['browserExecutableSha256'],
               'sandboxMode': ready['sandboxMode'],
+              'environmentPolicy': {
+                  'pathInherited': False,
+                  'windowsBootstrapKeys': windows_bootstrap_keys,
+              },
               'workerPid': ready['pid'],
               'browserPid': browser_pid,
               'workerExitCode': process.returncode,
