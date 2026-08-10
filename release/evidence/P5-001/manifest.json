@@ -7,13 +7,13 @@
     },
     {
       "path": "config/test_center_assurance_hierarchy.v1.json",
-      "sha256": "eccfc4246ce3368abfa00763a549164ad2873fbc4c3bc7f1ec5cb817896206d0",
+      "sha256": "ad43778c89c19d03383b34b34b163243517ab3784dad595c1210b3b7b861b272",
       "sizeBytes": 12324
     },
     {
       "path": "config/test_center_registry.v1.json",
-      "sha256": "ce902279753c5a60847565acbd7f2fc8a1cc13a09f23cb275150285c5dc02537",
-      "sizeBytes": 33779
+      "sha256": "0150b5ae2fa968bd92cad13e7ce43f3f1d46ef9432e33297c2a382685619e673",
+      "sizeBytes": 31927
     },
     {
       "path": "docs/ux/P5-001_INFORMATION_ARCHITECTURE.md",
@@ -27,8 +27,8 @@
     },
     {
       "path": "lib/product/p5_information_architecture/p5_controller.dart",
-      "sha256": "958c8f6f36f830547f05b88dcbbffe2e001e371fba4cf9293bb720a25e4306d0",
-      "sizeBytes": 22808
+      "sha256": "8172734ba56b344da43f6b56e6716e05c991ee8ed5863eec9119a557e481b4a4",
+      "sizeBytes": 22766
     },
     {
       "path": "lib/product/p5_information_architecture/p5_fixtures.dart",
@@ -52,8 +52,8 @@
     },
     {
       "path": "lib/product/p5_information_architecture/p5_task_workspaces.dart",
-      "sha256": "8b69141c83d613b7cddecfe6b40a9a0d7ab04e5957d3456dc4fce66e74eb7969",
-      "sizeBytes": 17210
+      "sha256": "2ff8d1421f532a9e77792d3637789629edc70fcf6ed1dca8f53dba859e62e50e",
+      "sizeBytes": 17225
     },
     {
       "path": "lib/product/p5_information_architecture/p5_verification_workspaces.dart",
