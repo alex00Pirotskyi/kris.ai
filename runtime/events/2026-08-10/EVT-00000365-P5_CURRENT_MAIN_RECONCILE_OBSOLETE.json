@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000365-P5_CURRENT_MAIN_RECONCILE_OBSOLETE",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "reason": "The current-main reconciliation objective is already materialized in canonical Product history; this stale READY record must not execute again.",
+    "materializedCommit": "6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b",
+    "liveProductHead": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+    "nextStatus": "CANCELLED"
+  },
+  "recordedAt": "2026-08-10T06:55:00Z",
+  "runtimeGeneration": 365,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-RECONCILE-C2D7A5E1"
+}
