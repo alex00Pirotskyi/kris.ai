@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000391-P3_PRODUCT_HEAD_RECONCILED",
+  "eventType": "PRODUCT_RUNTIME_RECONCILED",
+  "mission": "MISSION-003",
+  "payload": {
+    "productPr": 131,
+    "previousHead": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
+    "observedHead": "6b505ee401b3447ccf23215dff262a271cd8ea9e",
+    "observedTree": "3e417e2836d791c0489a028b2b302932faa85971",
+    "reason": "Concurrent bounded P3 workflow repair landed export BROWSER_EXEC on canonical Product branch; runtime observation reconciled before further Product mutation."
+  },
+  "recordedAt": "2026-08-10T12:38:00Z",
+  "runtimeGeneration": 391,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
+}

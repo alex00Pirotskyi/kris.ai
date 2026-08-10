@@ -5,8 +5,8 @@
   "productPr": 131,
   "captain": "ELASTIC-GPT-44AE364B",
   "branch": "agent/c/mission-003-browser-runtime",
-  "observedHead": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
+  "observedHead": "6b505ee401b3447ccf23215dff262a271cd8ea9e",
   "status": "ACTIVE",
-  "observedAt": "2026-08-09T16:57:00Z",
+  "observedAt": "2026-08-10T12:38:00Z",
   "supersedesReadinessPr": 68
 }
