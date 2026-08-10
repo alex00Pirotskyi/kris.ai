@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000372-P5_STALE_PREVIEW_WRITES_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-005",
+  "payload": {
+    "completedWorkOrderId": "WO-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4",
+    "effectiveProductDiffPathCount": 7,
+    "helperHead": "cfb82af981f2b054ce0dab79c133f623c35d2e0c",
+    "repairBlob": "8a7fad0a5f005cc70d2cf51c30b83bded4335bea",
+    "releasedSemaphoreIds": [
+      "SEM-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4",
+      "SEM-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4"
+    ],
+    "temporaryWorkflowAbsent": true,
+    "validatingWorkOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T08:38:00Z",
+  "runtimeGeneration": 372,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+}

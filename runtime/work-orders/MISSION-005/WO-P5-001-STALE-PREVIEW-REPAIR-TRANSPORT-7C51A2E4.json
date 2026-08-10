@@ -2,7 +2,6 @@
   "allowedPaths": [
     ".github/workflows/p5-stale-preview-source-contract-repair.yml"
   ],
-  "activeSemaphoreId": "SEM-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4",
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
   "createdAt": "2026-08-10T08:28:30Z",
@@ -11,7 +10,7 @@
     "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
   ],
   "executionRole": "CI_REPAIR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:REPAIR_TRANSPORT_ACQUIRED",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:REPAIR_TRANSPORT_COMPLETED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Materialize the already-authorized one-line source-contract repair without retransmitting the 75 KB test file by temporarily adding one exact-head, branch-local repair workflow. The workflow may only verify the current test/product/source_contract_test.dart blob, remove the single obsolete lib/p5_ia_preview.dart expected-set entry, prove a one-line deletion, commit that repair, and push the helper branch. The temporary workflow must be removed before helper certification. Do not modify Product implementation, validators, source manifest, Test Center authority, acceptance, support, release, production, or GA state.",
@@ -24,10 +23,10 @@
     "temporary workflow absent from final helper candidate"
   ],
   "roadmapTask": "P5-001",
-  "runtimeGeneration": 371,
+  "runtimeGeneration": 372,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-10T08:28:30Z",
+  "updatedAt": "2026-08-10T08:38:00Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4"
 }
