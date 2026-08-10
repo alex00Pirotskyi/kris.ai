@@ -261,8 +261,14 @@ async function waitForProcessGroupExit(pid, timeoutMs) {
 async function terminateBrowserTree(child) {
   if (process.platform === 'win32') {
     if (child.exitCode === null && child.signalCode === null) {
+      const systemRoot =
+        process.env.SystemRoot ?? process.env.SYSTEMROOT ?? process.env.WINDIR;
+      if (!systemRoot || !path.isAbsolute(systemRoot)) {
+        fail('windows_system_root_invalid');
+      }
+      const taskkillExecutable = path.join(systemRoot, 'System32', 'taskkill.exe');
       const killer = spawn(
-        'taskkill.exe',
+        taskkillExecutable,
         ['/PID', String(child.pid), '/T', '/F'],
         { stdio: 'ignore', windowsHide: true },
       );
