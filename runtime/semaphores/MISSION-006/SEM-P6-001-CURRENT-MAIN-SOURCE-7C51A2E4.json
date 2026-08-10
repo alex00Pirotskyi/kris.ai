@@ -1,0 +1,27 @@
+{
+  "allowedPaths": [
+    "lib/product/model/model.dart",
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart",
+    "test/product/model/model_registry_test.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "branch": "agent/help/elastic-7d41b6a2/mission-006/p6-current-main-source",
+  "createdAt": "2026-08-10T10:47:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-10T14:47:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-006",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T10:47:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 382,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}

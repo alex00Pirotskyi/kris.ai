@@ -1,0 +1,39 @@
+{
+  "activeSemaphoreId": "SEM-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4",
+  "allowedPaths": [
+    "lib/product/model/model.dart",
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart",
+    "test/product/model/model_registry_test.dart"
+  ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "createdAt": "2026-08-10T10:47:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:CURRENT_MAIN_SOURCE_RECONCILIATION_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Build a clean current-main P6-001 source candidate from exact protected main 521ecab1f2831206da98a282df51d8094230bc99 by transplanting byte-identically only the five currently authorized P6 model source/test files from canonical P6 head 62f1e14ac39eb354aa04430d1d44c62a71103d8c. Preserve the already reviewed caller-controlled benchmark trust-root repair. Exclude historical P8/Test Center ancestry, P6 historical evidence/reconstruction files, source-inventory authority, SOURCE_MANIFEST.sha256, and all unrelated branch ancestry. This helper is a staging candidate only; source-inventory append and release/evidence finalization remain separately authorized boundaries. Do not promote P6 acceptance, support, release, production, or GA state.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "effective helper diff from protected main is exactly the five P6 source/test paths",
+    "all five helper blobs are byte-identical to canonical P6 head 62f1e14ac39eb354aa04430d1d44c62a71103d8c",
+    "model_registry_test.dart",
+    "model_registry_identity_guard_test.dart",
+    "model_registry_public_contract_test.dart",
+    "no config/test_center_*, release/evidence/TEST_CENTER/**, release/evidence/P6-001/**, test/product/source_contract_test.dart, SOURCE_MANIFEST.sha256, or unrelated Product mutation"
+  ],
+  "roadmapTask": "P6-001",
+  "runtimeGeneration": 382,
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-10T10:47:00Z",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4"
+}
