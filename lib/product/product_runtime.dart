@@ -87,17 +87,16 @@ final class P3ProductRuntimeBrowserHandle {
 
   bool get available => !_closed && _service != null;
 
-  String get statusCode =>
-      _closed ? 'p3_product_runtime_closed' : _statusCode;
+  String get statusCode => _closed ? 'p3_product_runtime_closed' : _statusCode;
 
   Map<String, Object?> get provenance => Map<String, Object?>.unmodifiable(
-        <String, Object?>{
-          ..._provenance,
-          'available': available,
-          'statusCode': statusCode,
-          'p3_002SessionServiceImplemented': false,
-        },
-      );
+    <String, Object?>{
+      ..._provenance,
+      'available': available,
+      'statusCode': statusCode,
+      'p3_002SessionServiceImplemented': false,
+    },
+  );
 
   Future<P3BrowserRuntimeProbeResult> probe({
     Duration startupTimeout = const Duration(seconds: 30),
