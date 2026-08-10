@@ -1,14 +1,13 @@
 {
   "allowedPaths": [
-    "lib/product/browser/**",
-    "test/product/browser/**"
+    "test/product/source_contract_test.dart"
   ],
   "authorityId": null,
   "baseCommit": "e389fc20548788da4b9b1e78ef47c684533505ef",
   "baseTree": "bdeb60c0e86c46db83d5085e1650b51b9ff48b6c",
   "branch": "agent/c/mission-003-browser-runtime",
-  "createdAt": "2026-08-10T12:22:00Z",
-  "executionRole": "BUILDER",
+  "createdAt": "2026-08-10T13:30:00Z",
+  "executionRole": "DEFECT_HUNTER",
   "expiresAt": "2026-08-10T17:30:00Z",
   "kind": "WRITE",
   "mission": "MISSION-003",
@@ -17,8 +16,8 @@
   "resourceId": null,
   "runtimeGeneration": 394,
   "schemaVersion": 1,
-  "semaphoreId": "SEM-P3-001-BROWSER-RUNTIME-7C51A2E4",
+  "semaphoreId": "SEM-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4",
   "status": "ACTIVE",
-  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+  "workOrderId": "WO-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4",
   "workerIdentity": "ELASTIC-GPT-7C51A2E4"
 }

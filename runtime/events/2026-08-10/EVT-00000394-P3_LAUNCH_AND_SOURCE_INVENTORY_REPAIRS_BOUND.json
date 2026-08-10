@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000394-P3_LAUNCH_AND_SOURCE_INVENTORY_REPAIRS_BOUND",
+  "eventType": "P3_LAUNCH_AND_SOURCE_INVENTORY_REPAIRS_BOUND",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "baseCommit": "e389fc20548788da4b9b1e78ef47c684533505ef",
+    "baseTree": "bdeb60c0e86c46db83d5085e1650b51b9ff48b6c",
+    "specializedRun": 31392299128,
+    "specializedFailure": "macOS and Ubuntu staging pass but bundled worker exits before ready or fails shutdown with chromium_tree_stop_timeout; cleanup masks the primary startup error",
+    "productRun": 31392296646,
+    "productFailure": "test/product/source_contract_test.dart expected governed analyzer-visible source set omits the three new P3 browser Dart libraries (expected 77, actual 80)",
+    "sourceContractWorkOrder": "WO-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T13:30:00Z",
+  "runtimeGeneration": 394,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}

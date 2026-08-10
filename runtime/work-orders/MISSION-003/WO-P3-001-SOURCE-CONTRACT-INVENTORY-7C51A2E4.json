@@ -1,0 +1,33 @@
+{
+  "activeSemaphoreId": "SEM-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4",
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "e389fc20548788da4b9b1e78ef47c684533505ef",
+  "baseTree": "bdeb60c0e86c46db83d5085e1650b51b9ff48b6c",
+  "createdAt": "2026-08-10T13:30:00Z",
+  "createdBy": "ELASTIC-GPT-7C51A2E4",
+  "dependencyRequirements": [],
+  "executionRole": "DEFECT_HUNTER",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Repair the exact P3-001 Product source-contract inventory failure exposed by product-gates run 31392296646 without weakening the architecture gate. Add the three new governed P3 browser library files to the explicit analyzer-visible source set so the expected inventory remains exact; change no Product implementation source and do not convert the assertion into a looser count or subset check.",
+  "parentProductPr": 131,
+  "parentWorkOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+  "priority": 95,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "explicit governed source inventory includes lib/product/browser/browser_runtime.dart",
+    "explicit governed source inventory includes lib/product/browser/browser_runtime_bundle.dart",
+    "explicit governed source inventory includes lib/product/browser/browser_runtime_process.dart",
+    "actual analyzer-visible source set remains exactly equal in size to the explicit expected set",
+    "exact-current product-gates passes on Windows, macOS, and Ubuntu"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "PRODUCT_TEST_REPAIR",
+  "updatedAt": "2026-08-10T13:30:00Z",
+  "workOrderId": "WO-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4"
+}
