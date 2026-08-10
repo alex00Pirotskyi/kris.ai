@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "44945f3655a938ed376e5aa663a4568610a4b9b8",
+  "baseTree": "b7dbd0c5175cc1203071464d83720d8fca143667",
+  "branch": "agent/f/P5-001-information-architecture",
+  "createdAt": "2026-08-10T05:05:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-10T09:05:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T05:05:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 361,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-SOURCE-MANIFEST-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-SOURCE-MANIFEST-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
