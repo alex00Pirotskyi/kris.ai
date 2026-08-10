@@ -1,13 +1,14 @@
 {
+  "eventId": "EVT-00000386-SEMAPHORE_RELEASED",
   "eventType": "SEMAPHORE_RELEASED",
+  "runtimeGeneration": 386,
+  "recordedAt": "2026-08-10T11:55:52Z",
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4",
   "mission": "MISSION-006",
   "payload": {
-    "nextStatus": "HELPER_READY",
-    "semaphoreId": "SEM-P6-001-SOURCE-INVENTORY-7C51A2E4"
+    "semaphoreId": "SEM-P6-001-SOURCE-INVENTORY-7C51A2E4",
+    "nextStatus": "HELPER_READY"
   },
-  "runtimeGeneration": 386,
-  "schemaVersion": 1,
-  "timestamp": "2026-08-10T11:55:52Z",
-  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
-  "workOrderId": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4"
+  "schemaVersion": 1
 }
