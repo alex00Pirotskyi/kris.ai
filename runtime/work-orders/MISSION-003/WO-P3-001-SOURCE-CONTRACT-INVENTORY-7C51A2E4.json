@@ -4,8 +4,8 @@
     "test/product/source_contract_test.dart"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "f4bc123edeca1419d9c72136a258d9aa56930dc0",
-  "baseTree": "10e16b2638495846bbc8978dcc7f0ca92735322c",
+  "baseCommit": "473b231c55bcbef97ad85015d70a19bbac6a4483",
+  "baseTree": "b813f7a2458beb25e5763ec7680bc722d5bbc512",
   "createdAt": "2026-08-10T13:30:00Z",
   "createdBy": "ELASTIC-GPT-7C51A2E4",
   "dependencyRequirements": [],
@@ -28,6 +28,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_TEST_REPAIR",
-  "updatedAt": "2026-08-10T18:05:00Z",
+  "updatedAt": "2026-08-10T18:15:00Z",
   "workOrderId": "WO-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4"
 }

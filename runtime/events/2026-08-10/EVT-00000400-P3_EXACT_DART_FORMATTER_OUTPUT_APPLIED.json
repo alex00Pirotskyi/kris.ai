@@ -1,0 +1,25 @@
+{
+  "eventId": "EVT-00000400-P3_EXACT_DART_FORMATTER_OUTPUT_APPLIED",
+  "eventType": "P3_EXACT_DART_FORMATTER_OUTPUT_APPLIED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousHead": "f4bc123edeca1419d9c72136a258d9aa56930dc0",
+    "previousTree": "10e16b2638495846bbc8978dcc7f0ca92735322c",
+    "head": "473b231c55bcbef97ad85015d70a19bbac6a4483",
+    "tree": "b813f7a2458beb25e5763ec7680bc722d5bbc512",
+    "exactFailure": {
+      "p3BrowserRuntimeRun": 31417541658,
+      "job": 93549995930,
+      "jobName": "parent-format-oracle",
+      "diagnostic": "dart format changed exactly lib/product/browser/browser_runtime_process.dart; node-contracts, staging-source-contract, and browser-lock-oracle passed before platform probes were skipped"
+    },
+    "materializedFix": "Applied the formatter-produced blob 11cf35b8a1e1175dd57b8437442de5ec748a349a exactly; semantic Product launch-contract behavior is unchanged.",
+    "validationStatus": "PENDING_EXACT_CI"
+  },
+  "recordedAt": "2026-08-10T18:15:00Z",
+  "runtimeGeneration": 400,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}
