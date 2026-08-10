@@ -11,8 +11,8 @@
     ".github/workflows/p3-browser-runtime.yml"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "ca1bfc25043fd0aefa91cf6d28adde01b6451adc",
-  "baseTree": "5a0f635aefa15075b5619728e01b97a3382c7c9c",
+  "baseCommit": "817df4dca79dd21fc3d69818597bd6b0d6af3c54",
+  "baseTree": "b1e96177241eb2dedf9c53af01381ea5887afdfd",
   "createdAt": "2026-08-09T12:38:30Z",
   "createdBy": "ELASTIC-GPT-44AE364B",
   "dependencyRequirements": [],
@@ -37,6 +37,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-10T13:55:00Z",
+  "updatedAt": "2026-08-10T14:07:00Z",
   "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
 }
