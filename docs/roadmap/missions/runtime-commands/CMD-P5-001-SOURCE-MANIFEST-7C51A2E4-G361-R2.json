@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P5-001-SOURCE-MANIFEST-7C51A2E4-G361-R2",
+  "createdAt": "2026-08-10T05:56:00Z",
+  "expectedProductHead": "44945f3655a938ed376e5aa663a4568610a4b9b8",
+  "expectedRuntimeGeneration": 361,
+  "note": "Retry canonical P5 source-manifest materialization after PR #100 historical-runtime audit repair b90f13201caadefd9b6c0a8005daa1bdb9f4cf6b passed Mission Execution Control on Ubuntu, Windows, and macOS. Materialize only SOURCE_MANIFEST.sha256 on exact Product PR #72 head. Do not alter Product source or promote acceptance, support, release, production-readiness, or GA state.",
+  "operation": "MATERIALIZE_SOURCE_MANIFEST_V1",
+  "productPr": 72,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-SOURCE-MANIFEST-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4",
+  "workOrderId": "WO-P5-001-SOURCE-MANIFEST-7C51A2E4"
+}
