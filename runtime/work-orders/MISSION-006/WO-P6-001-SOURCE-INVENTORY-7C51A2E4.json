@@ -1,0 +1,28 @@
+{
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "baseCommit": "7f18474fa9fdb4e4b9e6f26a859c7bca41504415",
+  "baseTree": "24e3f3218b8d0b4a1916d9253aa593803844d245",
+  "createdAt": "2026-08-10T11:12:34Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Append exactly the two P6-001 analyzer-visible model library paths lib/product/model/model.dart and lib/product/model/model_registry.dart to the governed source inventory on top of clean current-main helper PR #135 head 7f18474fa9fdb4e4b9e6f26a859c7bca41504415. Preserve every existing protected-main inventory entry byte-for-byte except the append-safe set additions; do not remove or reorder unrelated entries, and make no Product behavior, Test Center, P6 evidence, workflow, or SOURCE_MANIFEST.sha256 change. This authority helper exists only to make the clean P6 source candidate truthful to the existing source-contract gate.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "test/product/source_contract_test.dart governed expected set is current helper inventory plus exactly lib/product/model/model.dart and lib/product/model/model_registry.dart",
+    "source-inventory authority diff adds exactly two unique lib/ entries and removes none",
+    "both P6 library paths occur exactly once in const expected set",
+    "no Product source, Test Center/shared authority, release/evidence, workflow, or SOURCE_MANIFEST.sha256 mutation"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-10T11:12:34Z",
+  "workOrderId": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4"
+}
