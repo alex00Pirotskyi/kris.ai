@@ -42,14 +42,20 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Reproduce Worker F stages and report exact status
+      - name: Reproduce Worker F stages and persist exact status
         shell: bash
         run: |
           set -euo pipefail
+          report_file="$RUNNER_TEMP/p5-windows-status.txt"
+          : > "$report_file"
           report() {
-            printf '\n===== STATUS AFTER %s =====\n' "$1"
-            git status --porcelain=v1 --untracked-files=all || true
-            printf '===== END STATUS %s =====\n' "$1"
+            label="$1"
+            status="$(git status --porcelain=v1 --untracked-files=all)"
+            {
+              printf '===== STATUS AFTER %s =====\n' "$label"
+              printf '%s\n' "$status"
+              printf '===== END STATUS %s =====\n' "$label"
+            } | tee -a "$report_file"
           }
           report setup
           python tool/v71r12_bootstrap_hosted_python.py --project .
@@ -86,7 +92,16 @@ jobs:
           report source-manifest-restored
           python tool/generated_state_guard.py audit --project . --strict
           report generated-state-audit
-          printf '\n===== FINAL TRACKED DIFF =====\n'
-          git diff --no-ext-diff || true
-          printf '\n===== FINAL PORCELAIN =====\n'
-          git status --porcelain=v1 --untracked-files=all || true
+          {
+            printf '===== FINAL TRACKED DIFF =====\n'
+            git diff --no-ext-diff || true
+            printf '===== FINAL PORCELAIN =====\n'
+            git status --porcelain=v1 --untracked-files=all || true
+          } | tee -a "$report_file"
+      - name: Upload exact status report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: p5-windows-status-report
+          path: ${{ runner.temp }}/p5-windows-status.txt
+          if-no-files-found: error
+          retention-days: 7
