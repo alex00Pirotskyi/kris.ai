@@ -1,0 +1,74 @@
+name: Mission V1.5 Historical Semaphore Diagnostic
+
+on:
+  push:
+    branches:
+      - agent/mission-execution-v15-gold
+    paths:
+      - '.github/workflows/mission-v15-history-semaphore-diagnostic.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/mission-execution-v15-gold
+          fetch-depth: 0
+      - name: Inspect inactive semaphore timestamp history
+        shell: bash
+        run: |
+          git fetch origin agent/mission-runtime:refs/remotes/origin/agent/mission-runtime
+          git worktree add "$RUNNER_TEMP/mission-runtime" refs/remotes/origin/agent/mission-runtime
+          RUNTIME_ROOT="$RUNNER_TEMP/mission-runtime" python - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import pathlib
+
+          root = pathlib.Path(os.environ['RUNTIME_ROOT'])
+          def parse(value):
+              return dt.datetime.fromisoformat(value[:-1] + '+00:00')
+
+          anomalies = []
+          for path in sorted((root / 'runtime' / 'semaphores').glob('**/*.json')):
+              item = json.loads(path.read_text(encoding='utf-8'))
+              if item.get('status') == 'ACTIVE':
+                  continue
+              created = parse(item['createdAt'])
+              refreshed = parse(item['refreshedAt'])
+              expires = parse(item['expiresAt'])
+              flags = []
+              if refreshed < created:
+                  flags.append('refreshed<created')
+              if expires <= refreshed:
+                  flags.append('expires<=refreshed')
+              if expires < created:
+                  flags.append('expires<created')
+              if flags:
+                  anomalies.append((path.relative_to(root).as_posix(), item, flags))
+          print(f'INACTIVE_SEMAPHORE_TIMESTAMP_ANOMALIES={len(anomalies)}')
+          for path, item, flags in anomalies:
+              print(json.dumps({
+                  'path': path,
+                  'semaphoreId': item.get('semaphoreId'),
+                  'status': item.get('status'),
+                  'createdAt': item.get('createdAt'),
+                  'refreshedAt': item.get('refreshedAt'),
+                  'expiresAt': item.get('expiresAt'),
+                  'flags': flags,
+              }, sort_keys=True))
+          PY
+      - name: Self-remove diagnostic if control head is unchanged
+        shell: bash
+        run: |
+          git fetch origin agent/mission-execution-v15-gold:refs/remotes/origin/agent/mission-execution-v15-gold
+          test "$(git rev-parse refs/remotes/origin/agent/mission-execution-v15-gold)" = "$GITHUB_SHA"
+          git rm .github/workflows/mission-v15-history-semaphore-diagnostic.yml
+          git config user.name 'mission-v15-history-diagnostic'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'chore(mission-v15): remove historical semaphore diagnostic'
+          git push origin HEAD:refs/heads/agent/mission-execution-v15-gold
