@@ -1,0 +1,31 @@
+{
+  "eventId": "EVT-00000399-P3_PRODUCT_LAUNCH_CONTRACT_REPAIRED",
+  "eventType": "P3_PRODUCT_LAUNCH_CONTRACT_REPAIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousHead": "fb3f99450549b6e0f762c2092297b580b8fb64c7",
+    "previousTree": "e524ea8f21e8d19c9d4d37a68550c042a831f2a6",
+    "head": "f4bc123edeca1419d9c72136a258d9aa56930dc0",
+    "tree": "10e16b2638495846bbc8978dcc7f0ca92735322c",
+    "previousExactValidation": {
+      "productGatesRun": 31416581633,
+      "productGatesStatus": "PASS",
+      "p3BrowserRuntimeRun": 31416581651,
+      "p3BrowserRuntimeStatus": "PASS"
+    },
+    "defect": "The workflow wrapper had the Windows bootstrap environment and explicit sandbox mode, but the Dart Product launch plan still omitted --sandbox-mode and started bundled Node on Windows with only KRISTIN identity variables. The actual Product path could therefore fail the worker protocol or reproduce the Windows Node CSPRNG startup failure even while the direct workflow probe passed.",
+    "materializedFixes": [
+      "Dart Product launch plan now passes --sandbox-mode required and rejects sandbox downgrade",
+      "Windows Dart Product launch copies only the same minimal bootstrap allowlist while refusing inherited PATH and requiring an absolute SYSTEMROOT",
+      "Dart ready handshake now requires sandboxMode=required and exposes it in probe provenance",
+      "tri-platform Product tests assert no PATH inheritance, bounded Windows bootstrap keys, required sandbox launch, and fail-closed downgraded sandbox handshakes"
+    ],
+    "validationStatus": "PENDING_EXACT_CI"
+  },
+  "recordedAt": "2026-08-10T18:05:00Z",
+  "runtimeGeneration": 399,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}
