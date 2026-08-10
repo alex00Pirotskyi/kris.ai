@@ -1,4 +1,4 @@
-name: TEMP P3 exact CI repair
+name: TEMP P3 exact repair blob publisher
 
 on:
   push:
@@ -9,29 +9,29 @@ permissions:
   contents: write
 
 jobs:
-  repair:
+  publish:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 2
+          ref: a8a393a4dec833dda4c416f541e5a04e79452fcd
+          persist-credentials: false
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Guard exact P3 repair base
+      - name: Guard exact P3 source blobs
         shell: bash
         run: |
           set -euo pipefail
-          BASE="$(git rev-parse HEAD^)"
-          test "$BASE" = "a8a393a4dec833dda4c416f541e5a04e79452fcd"
-          test "$(git rev-parse "$BASE:.github/workflows/p3-browser-runtime.yml")" = "546e0e4b4904ccabb6a49d11b796b3eb01e93f88"
-          test "$(git rev-parse "$BASE:lib/product/browser/browser_runtime.dart")" = "4870d3e1375d3ec2316289996617a2b547d66ec8"
-          test "$(git rev-parse "$BASE:lib/product/browser/browser_runtime_bundle.dart")" = "fe0fab1458c6da3daf7d778546b6c372cb03cf96"
-          test "$(git rev-parse "$BASE:test/product/browser/browser_runtime_bundle_test.dart")" = "c3a92d1abe6a5cee4c5b08715331ccf3e58effad"
-      - name: Resolve dependencies and materialize canonical formatting
+          test "$(git rev-parse HEAD)" = "a8a393a4dec833dda4c416f541e5a04e79452fcd"
+          test "$(git rev-parse HEAD:.github/workflows/p3-browser-runtime.yml)" = "546e0e4b4904ccabb6a49d11b796b3eb01e93f88"
+          test "$(git rev-parse HEAD:lib/product/browser/browser_runtime.dart)" = "4870d3e1375d3ec2316289996617a2b547d66ec8"
+          test "$(git rev-parse HEAD:lib/product/browser/browser_runtime_bundle.dart)" = "fe0fab1458c6da3daf7d778546b6c372cb03cf96"
+          test "$(git rev-parse HEAD:test/product/browser/browser_runtime_bundle_test.dart)" = "c3a92d1abe6a5cee4c5b08715331ccf3e58effad"
+      - name: Reproduce exact repair bytes
         shell: bash
         run: |
           set -euo pipefail
@@ -40,67 +40,67 @@ jobs:
             lib/product/browser/browser_runtime.dart \
             lib/product/browser/browser_runtime_bundle.dart \
             test/product/browser/browser_runtime_bundle_test.dart
-      - name: Restore and patch governed P3 workflow
-        shell: bash
-        run: |
-          set -euo pipefail
           python - <<'PY'
-          import pathlib, subprocess
-          base = 'a8a393a4dec833dda4c416f541e5a04e79452fcd'
+          import pathlib
           path = pathlib.Path('.github/workflows/p3-browser-runtime.yml')
-          source = subprocess.check_output(
-              ['git', 'show', f'{base}:.github/workflows/p3-browser-runtime.yml'],
-              text=True,
-              encoding='utf-8',
-          )
+          source = path.read_text(encoding='utf-8')
           format_line = '          dart format lib/product/browser/*.dart test/product/browser/*.dart\n'
           if source.count(format_line) != 1:
               raise SystemExit('unexpected P3 formatter oracle shape')
-          source = source.replace(
-              format_line,
-              '          flutter pub get\n' + format_line,
-              1,
-          )
+          source = source.replace(format_line, '          flutter pub get\n' + format_line, 1)
           env_line = '          echo "BROWSER_EXEC=$BROWSER_EXEC" >> "$GITHUB_ENV"\n'
           if source.count(env_line) != 1:
               raise SystemExit('unexpected P3 browser executable export shape')
-          source = source.replace(
-              env_line,
-              '          export BROWSER_EXEC\n' + env_line,
-              1,
-          )
+          source = source.replace(env_line, '          export BROWSER_EXEC\n' + env_line, 1)
           path.write_text(source, encoding='utf-8', newline='\n')
           PY
-      - name: Verify exact repair envelope
-        shell: bash
-        run: |
-          set -euo pipefail
-          BASE="a8a393a4dec833dda4c416f541e5a04e79452fcd"
           dart format --output=none --set-exit-if-changed \
             lib/product/browser/browser_runtime.dart \
             lib/product/browser/browser_runtime_bundle.dart \
             test/product/browser/browser_runtime_bundle_test.dart
-          git diff --check "$BASE"
+          git diff --check
           printf '%s\n' \
             '.github/workflows/p3-browser-runtime.yml' \
             'lib/product/browser/browser_runtime.dart' \
             'lib/product/browser/browser_runtime_bundle.dart' \
             'test/product/browser/browser_runtime_bundle_test.dart' \
             | sort > "$RUNNER_TEMP/expected-paths.txt"
-          git diff --name-only "$BASE" | sort > "$RUNNER_TEMP/actual-paths.txt"
+          git diff --name-only | sort > "$RUNNER_TEMP/actual-paths.txt"
           diff -u "$RUNNER_TEMP/expected-paths.txt" "$RUNNER_TEMP/actual-paths.txt"
-          grep -F '          flutter pub get' .github/workflows/p3-browser-runtime.yml
-          grep -F '          export BROWSER_EXEC' .github/workflows/p3-browser-runtime.yml
-      - name: Commit exact repair result
+      - name: Publish exact repaired bytes as Git blobs
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name 'Mission V1.5 P3 Repair'
-          git config user.email 'actions@users.noreply.github.com'
-          git add \
-            .github/workflows/p3-browser-runtime.yml \
-            lib/product/browser/browser_runtime.dart \
-            lib/product/browser/browser_runtime_bundle.dart \
-            test/product/browser/browser_runtime_bundle_test.dart
-          git commit -m 'ci(p3): repair browser probe and canonical formatting'
-          git push origin HEAD:agent/help/elastic-7d41b6a2/mission-003/p3-ci-repair
+          python - <<'PY'
+          import base64, json, os, pathlib, urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          paths = [
+              '.github/workflows/p3-browser-runtime.yml',
+              'lib/product/browser/browser_runtime.dart',
+              'lib/product/browser/browser_runtime_bundle.dart',
+              'test/product/browser/browser_runtime_bundle_test.dart',
+          ]
+          for value in paths:
+              raw = pathlib.Path(value).read_bytes()
+              payload = json.dumps({
+                  'content': base64.b64encode(raw).decode('ascii'),
+                  'encoding': 'base64',
+              }).encode('utf-8')
+              request = urllib.request.Request(
+                  f'https://api.github.com/repos/{repo}/git/blobs',
+                  data=payload,
+                  method='POST',
+                  headers={
+                      'Authorization': f'Bearer {token}',
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'Content-Type': 'application/json',
+                  },
+              )
+              with urllib.request.urlopen(request) as response:
+                  result = json.load(response)
+              print(f"P3_REPAIR_BLOB {value} {result['sha']}")
+          PY
