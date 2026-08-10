@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000368-P5_STALE_PREVIEW_WRITE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "allowedPaths": [
+      "lib/p5_ia_preview.dart"
+    ],
+    "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+    "baseCommit": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+    "baseTree": "ffc677555e501863768b2df6983b9d1cd50622cf",
+    "semaphoreId": "SEM-P5-001-STALE-PREVIEW-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T07:00:30Z",
+  "runtimeGeneration": 368,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
+}

@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "lib/p5_ia_preview.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+  "baseTree": "ffc677555e501863768b2df6983b9d1cd50622cf",
+  "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+  "createdAt": "2026-08-10T07:00:30Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-10T11:00:30Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T07:00:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 368,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-STALE-PREVIEW-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}

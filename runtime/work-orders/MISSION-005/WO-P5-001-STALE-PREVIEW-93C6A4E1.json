@@ -2,14 +2,15 @@
   "allowedPaths": [
     "lib/p5_ia_preview.dart"
   ],
-  "assignedWorker": "ELASTIC-QWEN-4FFD4D88",
+  "activeSemaphoreId": "SEM-P5-001-STALE-PREVIEW-7C51A2E4",
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
   "baseTree": "ffc677555e501863768b2df6983b9d1cd50622cf",
   "createdAt": "2026-08-08T22:53:00Z",
   "createdBy": "ELASTIC-93c6a4e1",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:STALE_READY_REBASED_TO_LIVE_PRODUCT",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:WRITE_SEMAPHORE_ACQUIRED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Repair exact-current P5-001 Product CI failure on canonical Product PR #72 head 00de2bbf075d4cb91e0f82a1326f9fa6e975786d by removing the stale standalone lib/p5_ia_preview.dart launcher that Kristin release validation classifies as a stale active library file. Preserve the actual lib/product/p5_information_architecture/** implementation and tests. Do not change Test Center, source inventory, manifest, acceptance, support, release, production, or GA state.",
@@ -24,9 +25,10 @@
     "exact canonical Product PR product-gates after integration"
   ],
   "roadmapTask": "P5-001",
+  "runtimeGeneration": 368,
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-10T06:49:00Z",
+  "updatedAt": "2026-08-10T07:00:30Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
 }
