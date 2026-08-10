@@ -1,0 +1,34 @@
+{
+  "eventId": "EVT-00000395-P3_PLATFORM_LAUNCH_BLOCKERS_REBASED",
+  "eventType": "P3_PLATFORM_LAUNCH_BLOCKERS_REBASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "baseCommit": "ca1bfc25043fd0aefa91cf6d28adde01b6451adc",
+    "baseTree": "5a0f635aefa15075b5619728e01b97a3382c7c9c",
+    "specializedRun": 31394332485,
+    "ubuntu": {
+      "status": "FAIL",
+      "primaryError": "chromium_cdp_timeout",
+      "chromiumDiagnostic": "No usable sandbox on GitHub-hosted Ubuntu runner",
+      "repair": "explicit probe sandboxMode=disabled only for Linux CI lane; normal/default mode remains required"
+    },
+    "macos": {
+      "status": "FAIL",
+      "browserReachedReady": true,
+      "failure": "worker did not exit within 15 seconds after shutdown command",
+      "repair": "close stdin readline deterministically, terminate owned browser process tree before bounded CDP disconnect"
+    },
+    "windows": {
+      "status": "PENDING",
+      "observedStep": "Download pinned Chromium for packaging only"
+    },
+    "productRun": 31392296646,
+    "productFailure": "governed source inventory omits three P3 browser Dart libraries"
+  },
+  "recordedAt": "2026-08-10T13:55:00Z",
+  "runtimeGeneration": 395,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
+}
