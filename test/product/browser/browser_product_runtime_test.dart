@@ -52,7 +52,8 @@ Future<void> _writeFakeBundle(Directory dataRoot) async {
   final workerScript = File(
     _join(<String>[automationHost.path, 'browser-runtime.mjs']),
   );
-  await workerScript.writeAsString('// fake worker script identity\n', flush: true);
+  await workerScript.writeAsString('// fake worker script identity\n',
+      flush: true);
   final packageLock = File(
     _join(<String>[automationHost.path, 'package-lock.json']),
   );
@@ -192,7 +193,8 @@ Future<P3ProductRuntimeBrowserHandle> _openIsolatedHandle(
     );
 
 void main() {
-  test('missing browser bundle is exposed as bounded fail-closed status', () async {
+  test('missing browser bundle is exposed as bounded fail-closed status',
+      () async {
     final temp = await Directory.systemTemp.createTemp('p3-product-missing-');
     addTearDown(() => temp.delete(recursive: true));
 
@@ -217,7 +219,8 @@ void main() {
     );
   });
 
-  test('invalid browser bundle remains blocked instead of falling back', () async {
+  test('invalid browser bundle remains blocked instead of falling back',
+      () async {
     final temp = await Directory.systemTemp.createTemp('p3-product-invalid-');
     addTearDown(() => temp.delete(recursive: true));
     final bundle = Directory(
@@ -240,7 +243,8 @@ void main() {
     );
   });
 
-  test('ProductRuntime composes P3 probe and close waits for teardown', () async {
+  test('ProductRuntime composes P3 probe and close waits for teardown',
+      () async {
     final temp = await Directory.systemTemp.createTemp('p3-product-active-');
     addTearDown(() => temp.delete(recursive: true));
     await _writeFakeBundle(temp);
