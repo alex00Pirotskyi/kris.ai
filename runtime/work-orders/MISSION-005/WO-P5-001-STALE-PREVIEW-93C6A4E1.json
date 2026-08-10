@@ -3,15 +3,16 @@
     "lib/p5_ia_preview.dart"
   ],
   "assignedWorker": "ELASTIC-QWEN-4FFD4D88",
-  "baseCommit": "b9be61899ab0792c7e194299324e7cb53c494f20",
-  "baseTree": "4a2e10b0deb218c9f861002c060c614016a59f70",
+  "baseCommit": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+  "baseTree": "ffc677555e501863768b2df6983b9d1cd50622cf",
   "createdAt": "2026-08-08T22:53:00Z",
   "createdBy": "ELASTIC-93c6a4e1",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:STALE_READY_REBASED_TO_LIVE_PRODUCT",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
-  "objective": "Repair exact-current P5-001 Product CI failure on canonical Product PR #72 head b9be61899ab0792c7e194299324e7cb53c494f20 by removing the stale standalone lib/p5_ia_preview.dart launcher that Kristin release validation classifies as a stale active library file. Preserve the actual lib/product/p5_information_architecture/** implementation and tests. Do not change Test Center, source inventory, manifest, acceptance, support, release, production, or GA state.",
+  "objective": "Repair exact-current P5-001 Product CI failure on canonical Product PR #72 head 00de2bbf075d4cb91e0f82a1326f9fa6e975786d by removing the stale standalone lib/p5_ia_preview.dart launcher that Kristin release validation classifies as a stale active library file. Preserve the actual lib/product/p5_information_architecture/** implementation and tests. Do not change Test Center, source inventory, manifest, acceptance, support, release, production, or GA state.",
   "parentProductPr": 72,
   "priority": 100,
   "requestedRole": "CI_REPAIR",
@@ -26,6 +27,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-09T06:49:31Z",
+  "updatedAt": "2026-08-10T06:49:00Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-93C6A4E1"
 }
