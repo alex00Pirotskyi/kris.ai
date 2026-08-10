@@ -13,6 +13,7 @@ on:
       - 'tool/mission_materialize_safe.py'
       - 'tool/mission_runtime_control.py'
       - 'tool/mission_runtime_model.py'
+      - 'tool/mission_runtime_history_compat_test.py'
       - 'tool/mission_orchestrator.py'
       - 'tool/mission_v15_authority_config_test.py'
       - 'docs/roadmap/anarchy/phases/**'
@@ -30,6 +31,7 @@ on:
       - 'tool/mission_control.py'
       - 'tool/mission_materialize_safe.py'
       - 'tool/mission_v15_authority_config_test.py'
+      - 'tool/mission_runtime_history_compat_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
       - 'schemas/mission_*.json'
@@ -62,6 +64,8 @@ jobs:
           test "$(git rev-parse HEAD)" = "$expected"
       - name: Validate shared-authority configuration
         run: python -m unittest -v tool/mission_v15_authority_config_test.py
+      - name: Validate Mission Execution runtime history compatibility
+        run: python -m unittest -v tool/mission_runtime_history_compat_test.py
       - name: Validate static topology with durable runtime overlay
         run: python tool/mission_materialize_safe.py --project . validate
       - name: Verify deterministic safe static views
