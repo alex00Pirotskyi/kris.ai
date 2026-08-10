@@ -126,7 +126,6 @@ void main() {
     test('only the governed library source is analyzer-visible', () {
       const expected = <String>{
         'lib/main.dart',
-        'lib/p5_ia_preview.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
         'lib/product/p5_information_architecture/p5_controller.dart',
         'lib/product/p5_information_architecture/p5_fixtures.dart',
