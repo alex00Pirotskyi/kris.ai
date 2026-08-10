@@ -26,6 +26,28 @@ final class P3BrowserRuntimeLaunchPlan {
     required this.startupTimeout,
   });
 
+  static const Set<String> _identityEnvironmentKeys = <String>{
+    'KRISTIN_P3_RUNTIME_MANIFEST_SHA256',
+    'KRISTIN_P3_RUNTIME_BUILD_SHA256',
+    'KRISTIN_P3_BROWSER_REVISION',
+  };
+
+  static const List<String> _windowsBootstrapEnvironmentKeys = <String>[
+    'SYSTEMROOT',
+    'WINDIR',
+    'COMSPEC',
+    'TEMP',
+    'TMP',
+    'USERPROFILE',
+    'LOCALAPPDATA',
+    'APPDATA',
+    'PROGRAMFILES',
+    'PROGRAMFILES(X86)',
+    'PROGRAMDATA',
+    'HOMEDRIVE',
+    'HOMEPATH',
+  ];
+
   factory P3BrowserRuntimeLaunchPlan.probe({
     required P3BrowserRuntimeResourceSet resources,
     required Directory stateDirectory,
@@ -38,6 +60,25 @@ final class P3BrowserRuntimeLaunchPlan {
         startupTimeout > const Duration(minutes: 2)) {
       throw const P3BrowserRuntimeException('startup_timeout_invalid');
     }
+    final environment = <String, String>{
+      'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': resources.manifestSha256,
+      'KRISTIN_P3_RUNTIME_BUILD_SHA256': resources.runtimeBuildSha256,
+      'KRISTIN_P3_BROWSER_REVISION': resources.browserRevision,
+    };
+    if (Platform.isWindows) {
+      for (final key in _windowsBootstrapEnvironmentKeys) {
+        final value = _environmentValue(Platform.environment, key);
+        if (value != null && value.isNotEmpty && !value.contains('\u0000')) {
+          environment[key] = value;
+        }
+      }
+      final systemRoot = environment['SYSTEMROOT'];
+      if (systemRoot == null || !_isAbsolute(systemRoot)) {
+        throw const P3BrowserRuntimeException(
+          'windows_system_root_required',
+        );
+      }
+    }
     final plan = P3BrowserRuntimeLaunchPlan(
       executable: resources.nodeExecutable,
       arguments: <String>[
@@ -46,6 +87,8 @@ final class P3BrowserRuntimeLaunchPlan {
         'probe',
         '--protocol',
         'stdio-json-v1',
+        '--sandbox-mode',
+        'required',
         '--browser-executable',
         resources.browserExecutable,
         '--browser-root',
@@ -56,11 +99,7 @@ final class P3BrowserRuntimeLaunchPlan {
         stateDirectory.absolute.path,
       ],
       workingDirectory: resources.workingDirectory,
-      environment: <String, String>{
-        'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': resources.manifestSha256,
-        'KRISTIN_P3_RUNTIME_BUILD_SHA256': resources.runtimeBuildSha256,
-        'KRISTIN_P3_BROWSER_REVISION': resources.browserRevision,
-      },
+      environment: environment,
       startupTimeout: startupTimeout,
     );
     plan.validate();
@@ -81,7 +120,7 @@ final class P3BrowserRuntimeLaunchPlan {
         !Directory(workingDirectory).existsSync()) {
       throw const P3BrowserRuntimeException('browser_runtime_cwd_required');
     }
-    if (arguments.length < 12 ||
+    if (arguments.length < 14 ||
         !_isAbsolute(arguments.first) ||
         !File(arguments.first).existsSync()) {
       throw const P3BrowserRuntimeException('browser_worker_script_required');
@@ -112,17 +151,29 @@ final class P3BrowserRuntimeLaunchPlan {
         _argumentValue('--protocol') != 'stdio-json-v1') {
       throw const P3BrowserRuntimeException('browser_probe_protocol_invalid');
     }
-    if (environment.keys.toSet().difference(<String>{
-          'KRISTIN_P3_RUNTIME_MANIFEST_SHA256',
-          'KRISTIN_P3_RUNTIME_BUILD_SHA256',
-          'KRISTIN_P3_BROWSER_REVISION',
-        }).isNotEmpty ||
+    if (_argumentValue('--sandbox-mode') != 'required') {
+      throw const P3BrowserRuntimeException('browser_sandbox_mode_invalid');
+    }
+    final allowedEnvironmentKeys = <String>{..._identityEnvironmentKeys};
+    if (Platform.isWindows) {
+      allowedEnvironmentKeys.addAll(_windowsBootstrapEnvironmentKeys);
+    }
+    if (environment.containsKey('PATH') ||
+        environment.keys.toSet().difference(allowedEnvironmentKeys).isNotEmpty ||
         environment.values.any(
           (value) => value.isEmpty || value.contains('\u0000'),
         )) {
       throw const P3BrowserRuntimeException(
         'browser_runtime_environment_invalid',
       );
+    }
+    if (Platform.isWindows) {
+      final systemRoot = environment['SYSTEMROOT'];
+      if (systemRoot == null || !_isAbsolute(systemRoot)) {
+        throw const P3BrowserRuntimeException(
+          'windows_system_root_required',
+        );
+      }
     }
   }
 
@@ -132,6 +183,19 @@ final class P3BrowserRuntimeLaunchPlan {
       throw P3BrowserRuntimeException('browser_runtime_argument_missing', name);
     }
     return arguments[index + 1];
+  }
+
+  static String? _environmentValue(
+    Map<String, String> environment,
+    String key,
+  ) {
+    final direct = environment[key];
+    if (direct != null) return direct;
+    final normalized = key.toUpperCase();
+    for (final entry in environment.entries) {
+      if (entry.key.toUpperCase() == normalized) return entry.value;
+    }
+    return null;
   }
 
   static bool _isAbsolute(String value) {
@@ -152,6 +216,7 @@ final class P3BrowserRuntimeReady {
     required this.browserRevision,
     required this.browserExecutableSha256,
     required this.protocol,
+    required this.sandboxMode,
   });
 
   factory P3BrowserRuntimeReady.fromJson(
@@ -166,6 +231,7 @@ final class P3BrowserRuntimeReady {
     final executableSha =
         value['browserExecutableSha256']?.toString().toLowerCase() ?? '';
     final protocol = value['protocol']?.toString() ?? '';
+    final sandboxMode = value['sandboxMode']?.toString() ?? '';
     if (value['type'] != 'ready' ||
         value['schemaVersion'] != '1.0.0' ||
         pid is! int ||
@@ -176,7 +242,8 @@ final class P3BrowserRuntimeReady {
         revision != resources.browserRevision ||
         executableSha != resources.browserExecutableSha256 ||
         version.isEmpty ||
-        protocol != 'stdio-json-v1') {
+        protocol != 'stdio-json-v1' ||
+        sandboxMode != 'required') {
       throw const P3BrowserRuntimeException('browser_worker_ready_invalid');
     }
     return P3BrowserRuntimeReady(
@@ -187,6 +254,7 @@ final class P3BrowserRuntimeReady {
       browserRevision: revision,
       browserExecutableSha256: executableSha,
       protocol: protocol,
+      sandboxMode: sandboxMode,
     );
   }
 
@@ -197,6 +265,7 @@ final class P3BrowserRuntimeReady {
   final String browserRevision;
   final String browserExecutableSha256;
   final String protocol;
+  final String sandboxMode;
 }
 
 /// Supervised P3-001 probe process. Browser sessions/actions remain P3-002+.

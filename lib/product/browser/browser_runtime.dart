@@ -20,6 +20,7 @@ final class P3BrowserRuntimeProbeResult {
         'browserVersion': ready.browserVersion,
         'browserRevision': ready.browserRevision,
         'protocol': ready.protocol,
+        'sandboxMode': ready.sandboxMode,
         'p3_002SessionServiceImplemented': false,
       };
 }

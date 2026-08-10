@@ -63,6 +63,10 @@ void main() {
     expect(plan.executable, resources.nodeExecutable);
     expect(plan.arguments.first, resources.workerScript);
     expect(
+      plan.arguments[plan.arguments.indexOf('--sandbox-mode') + 1],
+      'required',
+    );
+    expect(
       plan.arguments[plan.arguments.indexOf('--browser-executable') + 1],
       resources.browserExecutable,
     );
@@ -72,15 +76,75 @@ void main() {
     );
     expect(plan.workingDirectory, resources.workingDirectory);
     expect(plan.environment.containsKey('PATH'), isFalse);
-    expect(plan.environment.keys.toSet(), <String>{
+
+    const identityKeys = <String>{
       'KRISTIN_P3_RUNTIME_MANIFEST_SHA256',
       'KRISTIN_P3_RUNTIME_BUILD_SHA256',
       'KRISTIN_P3_BROWSER_REVISION',
-    });
+    };
+    expect(plan.environment.keys.toSet().containsAll(identityKeys), isTrue);
+    if (Platform.isWindows) {
+      const allowedWindowsKeys = <String>{
+        ...identityKeys,
+        'SYSTEMROOT',
+        'WINDIR',
+        'COMSPEC',
+        'TEMP',
+        'TMP',
+        'USERPROFILE',
+        'LOCALAPPDATA',
+        'APPDATA',
+        'PROGRAMFILES',
+        'PROGRAMFILES(X86)',
+        'PROGRAMDATA',
+        'HOMEDRIVE',
+        'HOMEPATH',
+      };
+      expect(plan.environment['SYSTEMROOT'], isNotEmpty);
+      expect(
+        plan.environment.keys.toSet().difference(allowedWindowsKeys),
+        isEmpty,
+      );
+    } else {
+      expect(plan.environment.keys.toSet(), identityKeys);
+    }
+  });
+
+  test('probe launch plan rejects sandbox downgrade', () async {
+    final temp = await Directory.systemTemp.createTemp('p3-sandbox-plan-');
+    addTearDown(() => temp.delete(recursive: true));
+    final resources = await _resources(temp.absolute);
+    final state = Directory('${temp.path}${Platform.pathSeparator}state');
+    await state.create();
+
+    final valid = P3BrowserRuntimeLaunchPlan.probe(
+      resources: resources,
+      stateDirectory: state.absolute,
+    );
+    final arguments = List<String>.from(valid.arguments);
+    arguments[arguments.indexOf('--sandbox-mode') + 1] = 'disabled';
+    final downgraded = P3BrowserRuntimeLaunchPlan(
+      executable: valid.executable,
+      arguments: arguments,
+      workingDirectory: valid.workingDirectory,
+      environment: valid.environment,
+      startupTimeout: valid.startupTimeout,
+    );
+
+    expect(
+      downgraded.validate,
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_sandbox_mode_invalid',
+        ),
+      ),
+    );
   });
 
   test(
-    'ready handshake is bound to exact browser revision and executable',
+    'ready handshake is bound to exact browser revision executable and sandbox',
     () async {
       final temp = await Directory.systemTemp.createTemp('p3-ready-');
       addTearDown(() => temp.delete(recursive: true));
@@ -96,11 +160,13 @@ void main() {
         'browserRevision': resources.browserRevision,
         'browserExecutableSha256': resources.browserExecutableSha256,
         'protocol': 'stdio-json-v1',
+        'sandboxMode': 'required',
       }, resources: resources);
 
       expect(ready.pid, 101);
       expect(ready.browserPid, 202);
       expect(ready.browserRevision, resources.browserRevision);
+      expect(ready.sandboxMode, 'required');
 
       expect(
         () => P3BrowserRuntimeReady.fromJson(<String, Object?>{
@@ -113,6 +179,22 @@ void main() {
           'browserRevision': 'different-revision',
           'browserExecutableSha256': resources.browserExecutableSha256,
           'protocol': 'stdio-json-v1',
+          'sandboxMode': 'required',
+        }, resources: resources),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+      expect(
+        () => P3BrowserRuntimeReady.fromJson(<String, Object?>{
+          'type': 'ready',
+          'schemaVersion': '1.0.0',
+          'pid': 101,
+          'browserPid': 202,
+          'browserEngine': 'chromium',
+          'browserVersion': 'test-browser',
+          'browserRevision': resources.browserRevision,
+          'browserExecutableSha256': resources.browserExecutableSha256,
+          'protocol': 'stdio-json-v1',
+          'sandboxMode': 'disabled',
         }, resources: resources),
         throwsA(isA<P3BrowserRuntimeException>()),
       );
