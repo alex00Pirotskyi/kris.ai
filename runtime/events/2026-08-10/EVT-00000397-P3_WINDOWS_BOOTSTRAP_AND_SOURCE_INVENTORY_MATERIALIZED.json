@@ -1,0 +1,45 @@
+{
+  "eventId": "EVT-00000397-P3_WINDOWS_BOOTSTRAP_AND_SOURCE_INVENTORY_MATERIALIZED",
+  "eventType": "P3_WINDOWS_BOOTSTRAP_AND_SOURCE_INVENTORY_MATERIALIZED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousHead": "817df4dca79dd21fc3d69818597bd6b0d6af3c54",
+    "previousTree": "b1e96177241eb2dedf9c53af01381ea5887afdfd",
+    "head": "47bb075740f00fd433d5873e6fd35210450571a3",
+    "tree": "e7f31e72d78bb7260c568f973c94951b39c40ded",
+    "sourceInventoryCommit": "ece2c863bf5925e9e8e4712677671fb348f2b3b1",
+    "windowsBootstrapCommit": "47bb075740f00fd433d5873e6fd35210450571a3",
+    "materializedFixes": [
+      "registered the three P3 browser Dart libraries in the exact governed analyzer-visible source inventory",
+      "preserved a minimal allowlisted Windows OS bootstrap environment for staged Node while explicitly refusing inherited PATH and recording the bootstrap keys in the P3 receipt"
+    ],
+    "previousSpecializedRun": 31396037462,
+    "previousProductRun": 31392296646,
+    "validationStatus": "PENDING_EXACT_CI",
+    "windowsEnvironmentPolicy": {
+      "pathInherited": false,
+      "systemRootRequired": true,
+      "bootstrapKeys": [
+        "SYSTEMROOT",
+        "WINDIR",
+        "COMSPEC",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "PROGRAMDATA",
+        "HOMEDRIVE",
+        "HOMEPATH"
+      ]
+    }
+  },
+  "recordedAt": "2026-08-10T17:45:00Z",
+  "runtimeGeneration": 397,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}
