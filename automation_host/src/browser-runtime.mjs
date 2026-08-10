@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { once } from 'node:events';
 import { createReadStream } from 'node:fs';
 import {
   access,
@@ -18,6 +17,7 @@ import { chromium } from 'playwright-core';
 const READY_SCHEMA_VERSION = '1.0.0';
 const PROTOCOL = 'stdio-json-v1';
 const MAX_STDERR_BYTES = 1024 * 1024;
+const EXIT_POLL_MS = 25;
 
 function fail(code, detail = '') {
   const error = new Error(detail ? `${code}:${detail}` : code);
@@ -210,41 +210,93 @@ function drainBounded(stream) {
   return () => tail;
 }
 
-async function waitForExit(child, timeoutMs) {
-  if (child.exitCode !== null) return child.exitCode;
-  const result = await Promise.race([
-    once(child, 'exit').then(([code]) => ({ exited: true, code })),
-    new Promise((resolve) =>
-      setTimeout(() => resolve({ exited: false, code: null }), timeoutMs),
-    ),
-  ]);
-  return result.exited ? result.code : null;
+export async function waitForExit(child, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      return child.exitCode ?? child.signalCode;
+    }
+    const remaining = Math.max(1, deadline - Date.now());
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(EXIT_POLL_MS, remaining)),
+    );
+  }
+  return child.exitCode ?? child.signalCode ?? null;
+}
+
+function processGroupAlive(pid) {
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ESRCH') return false;
+    throw error;
+  }
+}
+
+async function waitForProcessGroupExit(pid, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (!processGroupAlive(pid)) return true;
+    const remaining = Math.max(1, deadline - Date.now());
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(EXIT_POLL_MS, remaining)),
+    );
+  }
+  return !processGroupAlive(pid);
 }
 
 async function terminateBrowserTree(child) {
-  if (child.exitCode !== null) return;
   if (process.platform === 'win32') {
-    const killer = spawn(
-      'taskkill.exe',
-      ['/PID', String(child.pid), '/T', '/F'],
-      { stdio: 'ignore', windowsHide: true },
-    );
-    await waitForExit(killer, 5_000);
-  } else {
+    if (child.exitCode === null && child.signalCode === null) {
+      const killer = spawn(
+        'taskkill.exe',
+        ['/PID', String(child.pid), '/T', '/F'],
+        { stdio: 'ignore', windowsHide: true },
+      );
+      if ((await waitForExit(killer, 5_000)) === null) {
+        fail('chromium_taskkill_timeout');
+      }
+    }
+    if ((await waitForExit(child, 5_000)) === null) {
+      fail('chromium_tree_stop_timeout');
+    }
+    return;
+  }
+
+  if (processGroupAlive(child.pid)) {
     try {
       process.kill(-child.pid, 'SIGTERM');
     } catch (error) {
       if (error?.code !== 'ESRCH') throw error;
     }
-    if ((await waitForExit(child, 2_000)) === null) {
+    if (!(await waitForProcessGroupExit(child.pid, 2_000))) {
       try {
         process.kill(-child.pid, 'SIGKILL');
       } catch (error) {
         if (error?.code !== 'ESRCH') throw error;
       }
+      if (!(await waitForProcessGroupExit(child.pid, 5_000))) {
+        fail('chromium_tree_stop_timeout');
+      }
     }
   }
-  if ((await waitForExit(child, 5_000)) === null) fail('chromium_tree_stop_timeout');
+  await waitForExit(child, 1_000);
+}
+
+export function decorateProbeError(error, stderrTail, cleanupError = null) {
+  const primary = error instanceof Error ? error : new Error(String(error));
+  const details = [];
+  if (stderrTail) details.push(`chromiumStderr=${stderrTail}`);
+  if (cleanupError) {
+    details.push(
+      `cleanup=${String(cleanupError?.code ?? cleanupError?.message ?? cleanupError)}`,
+    );
+  }
+  if (details.length > 0) {
+    primary.message = `${primary.message}; ${details.join('; ')}`;
+  }
+  return primary;
 }
 
 async function waitForShutdown() {
@@ -281,6 +333,7 @@ export async function runProbe(options, env = process.env) {
   );
   const stderrTail = drainBounded(child.stderr);
   let browser;
+  let primaryError = null;
   try {
     const port = await waitForDevToolsPort(profileDirectory, child);
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
@@ -300,23 +353,32 @@ export async function runProbe(options, env = process.env) {
     );
     await waitForShutdown();
   } catch (error) {
-    if (child.exitCode !== null && stderrTail()) {
-      error.message = `${error.message}; chromiumStderr=${stderrTail()}`;
-    }
-    throw error;
-  } finally {
-    if (browser) {
-      try {
-        await browser.close();
-      } catch {
-        // Browser may already have exited; tree cleanup below remains authoritative.
-      }
-    }
-    if ((await waitForExit(child, 3_000)) === null) {
-      await terminateBrowserTree(child);
-    }
-    await rm(profileDirectory, { recursive: true, force: true });
+    primaryError = error;
   }
+
+  let cleanupError = null;
+  if (browser) {
+    try {
+      await browser.close();
+    } catch (error) {
+      cleanupError = error;
+    }
+  }
+  try {
+    await terminateBrowserTree(child);
+  } catch (error) {
+    cleanupError ??= error;
+  }
+  try {
+    await rm(profileDirectory, { recursive: true, force: true });
+  } catch (error) {
+    cleanupError ??= error;
+  }
+
+  if (primaryError) {
+    throw decorateProbeError(primaryError, stderrTail(), cleanupError);
+  }
+  if (cleanupError) throw cleanupError;
 }
 
 async function main() {

@@ -7,8 +7,10 @@ import test from 'node:test';
 
 import {
   chromiumProbeArgs,
+  decorateProbeError,
   parseArgs,
   validateManifestBinding,
+  waitForExit,
 } from './browser-runtime.mjs';
 
 function sha256(value) {
@@ -125,6 +127,30 @@ test('chromiumProbeArgs pins CDP, profile and no-background-update flags', () =>
   assert.ok(args.includes('--disable-component-update'));
   assert.ok(args.includes('about:blank'));
   assert.equal(args.some((value) => value === '--no-sandbox'), false);
+});
+
+test('waitForExit observes exit state without relying on a single exit event', async () => {
+  const child = { exitCode: null, signalCode: null };
+  setTimeout(() => {
+    child.signalCode = 'SIGTERM';
+  }, 10);
+  assert.equal(await waitForExit(child, 250), 'SIGTERM');
+});
+
+test('decorateProbeError preserves the primary failure and appends cleanup evidence', () => {
+  const primary = new Error('chromium_cdp_timeout');
+  primary.code = 'chromium_cdp_timeout';
+  const cleanup = new Error('chromium_tree_stop_timeout');
+  cleanup.code = 'chromium_tree_stop_timeout';
+  const decorated = decorateProbeError(
+    primary,
+    'sandbox or startup stderr',
+    cleanup,
+  );
+  assert.equal(decorated.code, 'chromium_cdp_timeout');
+  assert.match(decorated.message, /chromium_cdp_timeout/u);
+  assert.match(decorated.message, /chromiumStderr=sandbox or startup stderr/u);
+  assert.match(decorated.message, /cleanup=chromium_tree_stop_timeout/u);
 });
 
 test('validateManifestBinding accepts exact manifest, browser path and SHA', async () => {
