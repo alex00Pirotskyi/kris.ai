@@ -2,8 +2,8 @@
   "artifacts": [
     {
       "path": ".github/workflows/worker-f-p5-001-information-architecture.yml",
-      "sha256": "91dce43d13afffda5d5a27c491798c3f8d7e0af5486c39f529f3920761b0deb5",
-      "sizeBytes": 9840
+      "sha256": "e30d289c7480e12f23b4ab0e6c5a09fc6d2ceed2424e5229f6d0e3a6785a65f0",
+      "sizeBytes": 9873
     },
     {
       "path": "config/test_center_assurance_hierarchy.v1.json",
@@ -19,11 +19,6 @@
       "path": "docs/ux/P5-001_INFORMATION_ARCHITECTURE.md",
       "sha256": "32a8f62baeceab0aa0215e2399e30fe9938677d44690cae95ed55e8a58838d19",
       "sizeBytes": 120
-    },
-    {
-      "path": "lib/p5_ia_preview.dart",
-      "sha256": "fa681f64e99029e28e1d30c68ebec1660c40acb3907baeb0c876ff5695bb8b55",
-      "sizeBytes": 168
     },
     {
       "path": "lib/product/p5_information_architecture/p5_components.dart",
@@ -142,8 +137,8 @@
     },
     {
       "path": "test/product/p5_information_architecture/p5_source_boundary_test.dart",
-      "sha256": "e40e0bcce5db9a3c8f6ec8db767ec374cb7a9e737794e3336f9e7cdf841cb774",
-      "sizeBytes": 1287
+      "sha256": "4f42f0cb9c6373454f7a94550325f0c24eb23c8332c5bec28be271957c160127",
+      "sizeBytes": 1249
     },
     {
       "path": "test/product/p5_information_architecture/p5_state_controller_test.dart",
@@ -162,13 +157,13 @@
     },
     {
       "path": "test/product/p5_information_architecture/worker_f_p5_ia.py",
-      "sha256": "e7c6fbc7a3ee7ab9da2be286fa79326ee17a07d460d03aaf840b11cd444d5a92",
-      "sizeBytes": 13737
+      "sha256": "ef4155e98d69f6ebb4537515ba3e113e676fb28d019f4b84a127017b12b7d023",
+      "sizeBytes": 13659
     },
     {
       "path": "test/product/p5_information_architecture/worker_f_p5_ia_test.py",
-      "sha256": "9216fd047d5d6be11b6a665da7940688eebcd62ea0f71fb6fc9f2fb1fc1bb252",
-      "sizeBytes": 3944
+      "sha256": "c81684274534e1819d3dedcd0da2c1e845a82018e2e1935dc1f2bcf637d82912",
+      "sizeBytes": 3903
     }
   ],
   "claimBoundary": "Coded information-architecture and UX-flow prototype only.",

@@ -65,14 +65,12 @@ jobs:
         shell: bash
         run: >-
           dart format
-          lib/p5_ia_preview.dart
           lib/product/p5_information_architecture
           test/product/p5_information_architecture
       - name: Verify formatter idempotence
         shell: bash
         run: >-
           dart format --output=none --set-exit-if-changed
-          lib/p5_ia_preview.dart
           lib/product/p5_information_architecture
           test/product/p5_information_architecture
       - name: Upload canonical formatted P5 source and tests
@@ -81,7 +79,6 @@ jobs:
         with:
           name: p5-001-formatted-source-${{ github.sha }}
           path: |
-            lib/p5_ia_preview.dart
             lib/product/p5_information_architecture
             test/product/p5_information_architecture
           if-no-files-found: error
@@ -205,6 +202,9 @@ jobs:
             ${{ runner.temp }}/p5-source-manifest-receipt.json
           if-no-files-found: error
           retention-days: 30
+      - name: Restore governed root source manifest after candidate proof
+        shell: bash
+        run: cp "$RUNNER_TEMP/source-manifest-before" SOURCE_MANIFEST.sha256
       - name: Verify generated-state hygiene
         shell: bash
         run: |
@@ -216,7 +216,6 @@ jobs:
         run: |
           set -euo pipefail
           git diff --exit-code -- \
-            lib/p5_ia_preview.dart \
             lib/product/p5_information_architecture \
             test/product/p5_information_architecture \
             release/evidence/P5-001/manifest.json \

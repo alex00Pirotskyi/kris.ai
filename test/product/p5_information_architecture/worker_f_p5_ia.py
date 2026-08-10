@@ -92,7 +92,6 @@ def worker_f_files(project: Path) -> list[Path]:
         project / "config/test_center_registry.v1.json",
         project / "config/test_center_assurance_hierarchy.v1.json",
         project / "docs/ux/P5-001_INFORMATION_ARCHITECTURE.md",
-        project / "lib/p5_ia_preview.dart",
         project / "test/product/p5_information_architecture/worker_f_p5_ia.py",
         project / "test/product/p5_information_architecture/worker_f_p5_ia_test.py",
     ]
@@ -231,7 +230,6 @@ def validate_hierarchy(project: Path) -> None:
 
 def validate_source_boundary(project: Path) -> None:
     required = [
-        "lib/p5_ia_preview.dart",
         "lib/product/p5_information_architecture/p5_models.dart",
         "lib/product/p5_information_architecture/p5_controller.dart",
         "lib/product/p5_information_architecture/p5_fixtures.dart",
