@@ -1,0 +1,92 @@
+name: P5 Windows Status Diagnostic
+
+on:
+  push:
+    branches:
+      - agent/diag/mission-005/p5-windows-status-7c51a2e4
+    paths:
+      - '.github/workflows/p5-windows-status-diagnostic.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p5-windows-status-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: windows-2025
+    timeout-minutes: 70
+    steps:
+      - name: Checkout exact clean helper
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 578e72b6a6f1e84a84a01631bd30b1553fd0e54c
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirm clean helper identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "578e72b6a6f1e84a84a01631bd30b1553fd0e54c"
+          test -z "$(git status --porcelain --untracked-files=all)"
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+      - name: Set up locked Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Reproduce Worker F stages and report exact status
+        shell: bash
+        run: |
+          set -euo pipefail
+          report() {
+            printf '\n===== STATUS AFTER %s =====\n' "$1"
+            git status --porcelain=v1 --untracked-files=all || true
+            printf '===== END STATUS %s =====\n' "$1"
+          }
+          report setup
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          report python-bootstrap
+          flutter pub get
+          report flutter-pub-get
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/test_center_contracts.py check --project .
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python test/product/p5_information_architecture/worker_f_p5_ia.py manifest --project .
+          python test/product/p5_information_architecture/worker_f_p5_ia.py check --project .
+          python test/product/p5_information_architecture/worker_f_p5_ia_test.py
+          report p5-python-contracts
+          dart format --output=none --set-exit-if-changed lib/product/p5_information_architecture test/product/p5_information_architecture
+          report dart-format
+          flutter analyze
+          report flutter-analyze
+          flutter test test/product/p5_information_architecture/
+          report p5-tests
+          affected_tests="$RUNNER_TEMP/p5-affected-shipped-shell-tests.txt"
+          find test -type f \( -iname '*p2_app_shell*test.dart' -o -iname '*p2_owner*test.dart' -o -iname '*chat_studio*test.dart' \) -print | sort > "$affected_tests"
+          while IFS= read -r test_path; do
+            if [[ -n "$test_path" ]]; then
+              flutter test "$test_path"
+            fi
+          done < "$affected_tests"
+          report shipped-shell-tests
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-before"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest-first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest-first" SOURCE_MANIFEST.sha256
+          cp "$RUNNER_TEMP/source-manifest-before" SOURCE_MANIFEST.sha256
+          report source-manifest-restored
+          python tool/generated_state_guard.py audit --project . --strict
+          report generated-state-audit
+          printf '\n===== FINAL TRACKED DIFF =====\n'
+          git diff --no-ext-diff || true
+          printf '\n===== FINAL PORCELAIN =====\n'
+          git status --porcelain=v1 --untracked-files=all || true
