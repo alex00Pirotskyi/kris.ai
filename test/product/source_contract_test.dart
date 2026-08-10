@@ -671,7 +671,7 @@ void main() {
       expect(planning, contains('questions == 0'));
       expect(planning, isNot(contains('questions.isEmpty')));
       expect(api, contains("headers.value('origin')"));
-      expect(api, isNot(contains('HttpHeaders.originHeader')));
+      expect(api, isNot(contains('HttpHeaders.originHeader'));
       expect(ui, contains('CardThemeData('));
       expect(ui, isNot(contains('cardTheme: const CardTheme(')));
 
@@ -738,7 +738,7 @@ void main() {
           chat,
           contains('matrix.scaleByDouble(factor, factor, factor, 1.0);'),
         );
-        expect(chat, isNot(contains('matrix.scale(factor);')));
+        expect(chat, isNot(contains('matrix.scale(factor);'));
 
         final research = source('lib/product/models_research.dart');
         expect(
@@ -774,7 +774,7 @@ void main() {
         expect(cli, contains('if args.command is None:'));
 
         final pubspec = source('pubspec.yaml');
-        expect(pubspec, isNot(contains('flutter_markdown:')));
+        expect(pubspec, isNot(contains('flutter_markdown:'));
       },
     );
 
@@ -811,7 +811,7 @@ void main() {
       expect(tools, contains('class WorkspacePathRecovery'));
       expect(tools, contains('recoverExternalToolPath'));
       expect(tools, contains("'path_outside_project'"));
-      expect(tools, contains("'tool.path_normalized'") );
+      expect(tools, contains("'tool.path_normalized'"));
       expect(coordinator, contains("'tool.path_rebased_to_active_project'"));
       expect(studio, contains("'Generate prompt'"));
       expect(studio, contains("'Generate task list'"));
