@@ -12,6 +12,7 @@ _ID_RE = re.compile('^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$')
 _LANGUAGE_RE = re.compile('^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$')
 _COUNTRY_RE = re.compile('^[A-Z]{2}$')
 _DOMAIN_RE = re.compile('^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$')
+_IPV4_NUMERIC_COMPONENT_RE = re.compile(r'^(?:0[xX][0-9A-Fa-f]+|[0-9]+)$')
 _URL_FORBIDDEN_RE = re.compile(r'[\x00-\x20\x7f\\]')
 _SECRET_MARKERS = ('authorization', 'cookie', 'password', 'secret', 'token', 'apikey', 'clientsecret', 'privatekey')
 _AUTHORITY_MARKERS = {
@@ -139,6 +140,12 @@ def normalized_domains(value):
     validate_domains(value)
     return {'include': sorted((i.rstrip('.').lower() for i in value['include'])), 'exclude': sorted((i.rstrip('.').lower() for i in value['exclude']))}
 
+def _looks_like_noncanonical_ipv4(hostname: str) -> bool:
+    return all(
+        _IPV4_NUMERIC_COMPONENT_RE.fullmatch(component) is not None
+        for component in hostname.split('.')
+    )
+
 def require_public_result_url(value: Any, field: str) -> str:
     require_text(value, field, maximum=4096)
     if _URL_FORBIDDEN_RE.search(value):
@@ -165,6 +172,8 @@ def require_public_result_url(value: Any, field: str) -> str:
     try:
         address = ipaddress.ip_address(hostname)
     except ValueError:
+        if _looks_like_noncanonical_ipv4(hostname):
+            raise SearchContractError(f'{field} contains a non-canonical IP host')
         if hostname == 'localhost' or hostname.endswith('.localhost'):
             raise SearchContractError(f'{field} must use a public host')
         if '.' not in hostname or _DOMAIN_RE.fullmatch(hostname) is None:

@@ -139,12 +139,19 @@ class SearchContractModelsTest(unittest.TestCase):
 
     def test_result_url_validation_fails_closed(self) -> None:
         request = SearchRequest(request_id="req_url_matrix", query="fixture:all")
+        numeric_aliases = (
+            "https://127.1/private",
+            "https://127.0.1/private",
+            "https://0177.0.0.1/private",
+            "https://0x7f.1/private",
+        )
         for url in (
             "ftp://docs.example.org/result",
             "https://docs.example.org/result#fragment",
             "https:///missing-host",
             "https://127.0.0.1/private",
             "https://10.0.0.1/private",
+            *numeric_aliases,
             "https://localhost/private",
             "https://service.localhost/private",
             "https://docs.example.org:0/private",
@@ -166,6 +173,35 @@ class SearchContractModelsTest(unittest.TestCase):
                     "2026-08-05T00:00:00Z",
                     {},
                 )
+
+        for url in numeric_aliases:
+            unsafe_page = self.providers["fixture_alpha"].search(
+                SearchRequest.from_dict(self.fixture["cases"][0]["request"])
+            ).to_dict()
+            unsafe_page["results"][0]["url"] = url
+            with self.subTest(schema_url=url):
+                self.assertTrue(list(self.validators["page"].iter_errors(unsafe_page)))
+
+        public_url = "https://8.8.8.8/result"
+        public_result = SearchResult(
+            stable_result_id("fixture_alpha", request.query_id, public_url),
+            "fixture_alpha",
+            1,
+            "Public IPv4 URL",
+            public_url,
+            public_url,
+            "Canonical public IPv4 literals remain valid.",
+            None,
+            request.query_id,
+            "2026-08-05T00:00:00Z",
+            {},
+        )
+        self.assertEqual(public_url, public_result.url)
+        public_page = self.providers["fixture_alpha"].search(
+            SearchRequest.from_dict(self.fixture["cases"][0]["request"])
+        ).to_dict()
+        public_page["results"][0]["url"] = public_url
+        self.assertFalse(list(self.validators["page"].iter_errors(public_page)))
 
     def test_request_has_no_authority_or_credential_channel(self) -> None:
         serialized = canonical_json(
