@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000375-P5_WINDOWS_FIX_WINNER_RECONCILED",
+  "eventType": "RUNTIME_RECONCILED",
+  "mission": "MISSION-005",
+  "payload": {
+    "diagnosticRunId": 31373865723,
+    "helperCommit": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
+    "helperTree": "f3e7f53bbddd3f099379a8be99af442f16701585",
+    "reason": "Concurrent bounded workflow-restoration repair advanced PR #127 before the unpublished local runtime refresh. Preserve the winner, bind the existing contract-repair semaphore to the exact winning helper, and refresh disposable diagnostic cleanup authority."
+  },
+  "recordedAt": "2026-08-10T09:27:00Z",
+  "runtimeGeneration": 375,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
+}

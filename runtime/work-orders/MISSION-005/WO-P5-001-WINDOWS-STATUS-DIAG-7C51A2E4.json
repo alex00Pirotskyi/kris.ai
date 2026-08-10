@@ -4,17 +4,18 @@
   ],
   "activeSemaphoreId": "SEM-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4",
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "578e72b6a6f1e84a84a01631bd30b1553fd0e54c",
+  "baseCommit": "3a507185e8e90f6a29b220cca8bc4cf2b3dfb4cd",
+  "baseTree": "9c50b0412a8d0f2d58562080cf4856c5a34dbd66",
   "createdAt": "2026-08-10T09:07:30Z",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [
     "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
   ],
   "executionRole": "CI_REPAIR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:WINDOWS_STATUS_DIAGNOSTIC_ACQUIRED",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:WINDOWS_STATUS_DIAGNOSTIC_MEASURED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
-  "objective": "On a disposable diagnostic branch only, add one Windows diagnostic workflow that checks out exact clean helper 578e72b6a6f1e84a84a01631bd30b1553fd0e54c and prints git status --porcelain --untracked-files=all after each Worker F stage to identify the first non-clean path. Do not modify PR #127, PR #72, Product implementation, P5 evidence, root source manifest, Test Center, support, acceptance, release, production, or GA state. Diagnostic output is not certification evidence.",
+  "objective": "Disposable Windows status diagnosis is complete. Run 31373865723 succeeded against exact clean helper 578e72b6a6f1e84a84a01631bd30b1553fd0e54c and persisted the measured worktree checkpoints; prior diagnostic evidence isolated release/evidence/P5-001/manifest.json as the only tracked path dirtied by canonical candidate generation on Windows. Remove the diagnostic workflow from its disposable branch, then close this Work Order. Diagnostic output is not certification evidence.",
   "parentProductPr": 72,
   "priority": 100,
   "requestedRole": "CI_REPAIR",
@@ -25,10 +26,10 @@
     "diagnostic workflow is removed from its disposable branch after measurement"
   ],
   "roadmapTask": "P5-001",
-  "runtimeGeneration": 374,
+  "runtimeGeneration": 375,
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-10T09:07:30Z",
+  "updatedAt": "2026-08-10T09:27:00Z",
   "workOrderId": "WO-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
 }
