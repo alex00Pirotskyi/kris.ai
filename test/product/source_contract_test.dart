@@ -146,6 +146,8 @@ void main() {
         'lib/product/interoperability_v19.dart',
         'lib/product/knowledge_memory_v2.dart',
         'lib/product/mcp.dart',
+        'lib/product/model/model.dart',
+        'lib/product/model/model_registry.dart',
         'lib/product/models_research.dart',
         'lib/product/planning_runtime.dart',
         'lib/product/product_runtime.dart',
@@ -809,7 +811,7 @@ void main() {
       expect(tools, contains('class WorkspacePathRecovery'));
       expect(tools, contains('recoverExternalToolPath'));
       expect(tools, contains("'path_outside_project'"));
-      expect(tools, contains("'tool.path_normalized'"));
+      expect(tools, contains("'tool.path_normalized'") );
       expect(coordinator, contains("'tool.path_rebased_to_active_project'"));
       expect(studio, contains("'Generate prompt'"));
       expect(studio, contains("'Generate task list'"));
