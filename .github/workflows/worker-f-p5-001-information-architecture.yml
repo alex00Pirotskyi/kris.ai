@@ -146,6 +146,9 @@ jobs:
             ${{ runner.temp }}/p5-manifest-receipt.json
           if-no-files-found: error
           retention-days: 30
+      - name: Restore governed P5 evidence manifest after candidate proof
+        shell: bash
+        run: cp "$RUNNER_TEMP/p5-manifest-before.json" release/evidence/P5-001/manifest.json
       - name: Analyze Flutter source
         shell: bash
         run: flutter analyze
