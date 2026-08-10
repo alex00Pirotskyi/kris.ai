@@ -1,0 +1,30 @@
+{
+  "allowedPaths": [
+    ".github/workflows/p3-browser-runtime.yml",
+    "automation_host/package-lock.json",
+    "automation_host/package.json",
+    "automation_host/src/browser-runtime.mjs",
+    "automation_host/src/browser-runtime.test.mjs",
+    "config/p3.browser-runtime-lock.json",
+    "tool/p3_stage_browser_runtime_bundle.py",
+    "tool/p3_stage_browser_runtime_bundle_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "a8a393a4dec833dda4c416f541e5a04e79452fcd",
+  "baseTree": "9740a907937550bf5283a551a3776c83f76cde25",
+  "branch": "agent/c/mission-003-browser-runtime",
+  "createdAt": "2026-08-10T12:10:00Z",
+  "executionRole": "BUILDER",
+  "expiresAt": "2026-08-10T16:10:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T12:10:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 388,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-NODE-BROWSER-BUNDLE-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
