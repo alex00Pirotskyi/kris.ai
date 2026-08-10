@@ -5,8 +5,8 @@
     "test/product/browser/**"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "47bb075740f00fd433d5873e6fd35210450571a3",
-  "baseTree": "e7f31e72d78bb7260c568f973c94951b39c40ded",
+  "baseCommit": "fb3f99450549b6e0f762c2092297b580b8fb64c7",
+  "baseTree": "e524ea8f21e8d19c9d4d37a68550c042a831f2a6",
   "branch": "agent/c/mission-003-browser-runtime",
   "childWorkOrders": [
     "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
@@ -43,6 +43,6 @@
   "status": "IN_PROGRESS",
   "supersededReadinessPr": 68,
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-10T17:45:00Z",
+  "updatedAt": "2026-08-10T17:58:00Z",
   "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
 }
