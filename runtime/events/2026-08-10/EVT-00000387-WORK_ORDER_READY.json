@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000387-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-006",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "REVIEWER",
+    "type": "REVIEW"
+  },
+  "recordedAt": "2026-08-10T12:01:00Z",
+  "runtimeGeneration": 387,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-R1-7C51A2E4"
+}
