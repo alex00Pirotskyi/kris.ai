@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-SOURCE-MANIFEST-7C51A2E4",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
@@ -10,6 +9,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:SOURCE_MANIFEST_FINALIZED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Materialize the canonical deterministic SOURCE_MANIFEST.sha256 on exact canonical Product PR #72 head 44945f3655a938ed376e5aa663a4568610a4b9b8 after the governed P5-001 Test Center registry, hierarchy, and proof-lineage stack was integrated. Use only canonical generator-equivalent bytes already proven byte-identical by exact-head Worker F CI. Change no Product source and promote no ACCEPTED, certification, behavior/platform/release support, production readiness, or GA status.",
@@ -26,8 +26,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-10T05:05:00Z",
+  "updatedAt": "2026-08-10T06:43:00Z",
   "workOrderId": "WO-P5-001-SOURCE-MANIFEST-7C51A2E4"
 }
