@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P6-001-SOURCE-INVENTORY-7C51A2E4",
   "allowedPaths": [
     "test/product/source_contract_test.dart"
   ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "7f18474fa9fdb4e4b9e6f26a859c7bca41504415",
   "baseTree": "24e3f3218b8d0b4a1916d9253aa593803844d245",
   "createdAt": "2026-08-10T11:12:34Z",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Append exactly the two P6-001 analyzer-visible model library paths lib/product/model/model.dart and lib/product/model/model_registry.dart to the governed source inventory on top of clean current-main helper PR #135 head 7f18474fa9fdb4e4b9e6f26a859c7bca41504415. Preserve every existing protected-main inventory entry byte-for-byte except the append-safe set additions; do not remove or reorder unrelated entries, and make no Product behavior, Test Center, P6 evidence, workflow, or SOURCE_MANIFEST.sha256 change. This authority helper exists only to make the clean P6 source candidate truthful to the existing source-contract gate.",
@@ -21,8 +24,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-10T11:12:34Z",
+  "updatedAt": "2026-08-10T11:17:59Z",
   "workOrderId": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4"
 }
