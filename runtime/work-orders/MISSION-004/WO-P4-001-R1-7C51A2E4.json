@@ -1,0 +1,40 @@
+{
+  "allowedPaths": [
+    ".github/workflows/p4-001-search-provider.yml",
+    "release/evidence/P4-*/**",
+    "schemas/web_search_*.json",
+    "services/research_worker/**",
+    "tool/p4_001*.py"
+  ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "createdAt": "2026-08-10T10:05:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:P4_EXACT_CURRENT_R1_CLAIMED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Perform a fresh context-independent R1 technical review of the exact canonical P4-001 mission-owned Product surface at commit 4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378 / tree e7e1ff3069079af8399a54aa00c9fabeeab2514b. This execution did not author the reviewed P4 Product bytes. Verify that the previously blocking request/query correlation, freshness, and safe-search semantics remain fail-closed and correctly tested; verify deterministic fixture rehome, provider-neutral schemas/models, pagination/cursor/rate-limit/credential/public-URL safety contracts, P4 evidence/workflow truth, and absence of P4-002+ live-search/support/release overclaim. Bind the disposition to the exact head/tree. Shared Test Center/P8 authority files are outside this Work Order and must be evaluated only through their existing authority receipts plus exact-current compatibility gates, not silently re-owned here.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "review exact canonical P4 head/tree 4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378 / e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+    "effective current-main P4 surface remains bounded to mission-owned source/tests/evidence/workflow plus separately authorized shared authority",
+    "request/page/query/provider correlation and request/provider result-count ceilings remain fail-closed",
+    "freshness after/before/between strict boundary semantics and undated handling remain enforced before pagination",
+    "safe-search off/moderate/strict deterministic monotonic semantics remain enforced before pagination",
+    "fixture rehome bytes/loader/source gate are coherent and no evals fixture dependency remains",
+    "product-gates run 31305596409 SUCCESS on exact head across Ubuntu/Windows/macOS",
+    "P4 specialized run 31306783137 SUCCESS on exact head including canonical Linux/macOS/Windows and source-manifest lane",
+    "report R1 PASS or REQUEST_CHANGES bound to exact head/tree; no R2, acceptance, support, release, production, or GA claim"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-10T10:05:00Z",
+  "workOrderId": "WO-P4-001-R1-7C51A2E4"
+}
