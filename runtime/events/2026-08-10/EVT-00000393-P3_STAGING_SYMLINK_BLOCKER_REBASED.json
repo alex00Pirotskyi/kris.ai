@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000393-P3_STAGING_SYMLINK_BLOCKER_REBASED",
+  "eventType": "P3_STAGING_SYMLINK_BLOCKER_REBASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "baseCommit": "11b98a02ca8bcaa0e32933177016bc13afffc37b",
+    "baseTree": "7be43f0ab8d2b23958194ea9c034869976f1556c",
+    "failingRun": 31390691201,
+    "failingStep": "Stage exact application-owned P3 browser runtime",
+    "measuredBlocker": "npm node_modules/.bin/playwright-core symlink is rejected before staging on macOS and Ubuntu",
+    "repairBoundary": [
+      "tool/p3_stage_browser_runtime_bundle.py",
+      "tool/p3_stage_browser_runtime_bundle_test.py"
+    ]
+  },
+  "recordedAt": "2026-08-10T13:05:00Z",
+  "runtimeGeneration": 393,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B"
+}
