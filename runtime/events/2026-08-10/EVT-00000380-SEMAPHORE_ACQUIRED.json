@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000380-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "BUILDER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P4-001-PUBLIC-URL-ALIAS-7C51A2E4",
+    "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T10:23:00Z",
+  "runtimeGeneration": 380,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P4-001-PUBLIC-URL-ALIAS-7C51A2E4"
+}

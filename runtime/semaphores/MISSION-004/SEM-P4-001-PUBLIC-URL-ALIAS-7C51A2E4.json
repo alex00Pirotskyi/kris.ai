@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "services/research_worker/src/search/validation.py",
+    "services/research_worker/test/test_contract_models.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "branch": "agent/help/elastic-7d41b6a2/mission-004/p4-public-url-alias",
+  "createdAt": "2026-08-10T10:23:00Z",
+  "executionRole": "BUILDER",
+  "expiresAt": "2026-08-10T14:23:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T10:23:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 380,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-PUBLIC-URL-ALIAS-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-PUBLIC-URL-ALIAS-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
