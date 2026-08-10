@@ -11,7 +11,7 @@
   "createdAt": "2026-08-07T12:15:00Z",
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
   "dependencyRequirements": [],
-  "lastActor": "ELASTIC-QWEN-V5:STRANDED_HELPER_READY_WAKE",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:STALE_READY_HELPER_ALREADY_MERGED_PR94",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-005",
   "objective": "Consume the bounded P5 helper #94 into canonical Product PR #72, preserve the tri-platform-tested behavior, carry forward unaffected review scopes where machine proof permits, and close/delete the helper lifecycle.",
@@ -24,8 +24,8 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "CANCELLED",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-09T17:29:39Z",
+  "updatedAt": "2026-08-10T06:57:00Z",
   "workOrderId": "WO-P5-001-INTEGRATE-94"
 }
