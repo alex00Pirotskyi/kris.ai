@@ -5,8 +5,8 @@
     "test/product/browser/**"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "473b231c55bcbef97ad85015d70a19bbac6a4483",
-  "baseTree": "b813f7a2458beb25e5763ec7680bc722d5bbc512",
+  "baseCommit": "c8f85add32111bac95180f18b7b993f182330607",
+  "baseTree": "a30a75db0ff4fcb56c9efba920429e9b89e79e43",
   "branch": "agent/c/mission-003-browser-runtime",
   "childWorkOrders": [
     "WO-P3-001-NODE-BROWSER-BUNDLE-44AE364B",
@@ -23,7 +23,7 @@
     }
   ],
   "executionRole": "BUILDER",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:EXACT_P3_AND_PRODUCT_CI_GREEN:31418071564,31418071460:BROWSER_SOURCE_FROZEN",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:PRODUCT_COMPOSITION_MATERIALIZED:PENDING_EXACT_CI",
   "maxChildWorkOrders": 4,
   "mission": "MISSION-003",
   "objective": "Implement the actual P3-001 bundled browser automation runtime in the reserved browser product namespace now that P2-004@ACCEPTANCE is satisfied. Pin the automation host/runtime and browser binaries, provide reproducible packaging and clean-machine launch without a global runtime, and establish the production source/test foundation for subsequent browser sessions/actions/process supervision. Do not spend this Work Order on additional provenance/readiness-only layers.",
@@ -43,6 +43,6 @@
   "status": "IN_PROGRESS",
   "supersededReadinessPr": 68,
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-10T18:24:00Z",
+  "updatedAt": "2026-08-10T18:36:00Z",
   "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
 }

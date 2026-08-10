@@ -1,0 +1,33 @@
+{
+  "eventId": "EVT-00000402-P3_PRODUCT_RUNTIME_COMPOSITION_MATERIALIZED",
+  "eventType": "P3_PRODUCT_RUNTIME_COMPOSITION_MATERIALIZED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousHead": "473b231c55bcbef97ad85015d70a19bbac6a4483",
+    "previousTree": "b813f7a2458beb25e5763ec7680bc722d5bbc512",
+    "head": "c8f85add32111bac95180f18b7b993f182330607",
+    "tree": "a30a75db0ff4fcb56c9efba920429e9b89e79e43",
+    "materializedPaths": [
+      "lib/product/product_runtime.dart",
+      "test/product/browser/browser_product_runtime_test.dart"
+    ],
+    "compositionContract": [
+      "ProductRuntime exposes a bounded P3 browser-runtime handle with stable active/blocked status and provenance",
+      "missing and invalid application-owned bundles fail closed without global Node/browser fallback",
+      "only one ephemeral P3 probe may be active at a time and ProductRuntime.close waits for its guaranteed teardown",
+      "no P3-002 session/action service is exposed or claimed",
+      "behavioral composition tests stage a valid application-owned fake worker bundle and exercise real ProductRuntime initialization/probe/close"
+    ],
+    "priorExactGreen": {
+      "p3BrowserRuntimeRun": 31418071564,
+      "productGatesRun": 31418071460
+    },
+    "validationStatus": "PENDING_EXACT_CI"
+  },
+  "recordedAt": "2026-08-10T18:36:00Z",
+  "runtimeGeneration": 402,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
+}
