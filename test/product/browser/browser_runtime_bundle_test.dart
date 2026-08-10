@@ -44,8 +44,8 @@ Future<Directory> _writeBundle(
 
   final automationHostTree =
       await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
-        worker.parent.parent,
-      );
+    worker.parent.parent,
+  );
   final browserTree = await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
     browser.parent,
   );
@@ -120,8 +120,7 @@ void main() {
       final root = await _writeBundle(temp);
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: temp.absolute,
-        executablePath:
-            '${temp.path}${Platform.pathSeparator}app'
+        executablePath: '${temp.path}${Platform.pathSeparator}app'
             '${Platform.pathSeparator}kristin',
       );
 

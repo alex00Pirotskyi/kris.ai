@@ -48,6 +48,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          flutter pub get
           dart format lib/product/browser/*.dart test/product/browser/*.dart
           git diff --exit-code -- lib/product/browser test/product/browser
 
