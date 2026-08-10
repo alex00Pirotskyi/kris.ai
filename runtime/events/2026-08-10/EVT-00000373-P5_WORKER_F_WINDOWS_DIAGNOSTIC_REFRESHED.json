@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000373-P5_WORKER_F_WINDOWS_DIAGNOSTIC_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-005",
+  "payload": {
+    "baseCommit": "cfb82af981f2b054ce0dab79c133f623c35d2e0c",
+    "baseTree": "b0fc6b4395450904a5c8cf9a7efd193beea1d21f",
+    "measuredState": "product-gates green; Worker F Ubuntu/macOS green; Worker F Windows passes substantive P5 gates and fails final porcelain cleanliness with no git diff body",
+    "nextAction": "instrument existing final fail-closed status gate to print exact dirty paths",
+    "semaphoreId": "SEM-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T08:55:00Z",
+  "runtimeGeneration": 373,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
+}
