@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000370-P5_STALE_PREVIEW_SOURCE_CONTRACT_WRITE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "allowedPaths": [
+      "test/product/source_contract_test.dart"
+    ],
+    "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+    "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+    "measuredFailure": "Full Flutter suite still requires deleted lib/p5_ia_preview.dart in governed analyzer-visible source set.",
+    "semaphoreId": "SEM-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T07:15:00Z",
+  "runtimeGeneration": 370,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+}

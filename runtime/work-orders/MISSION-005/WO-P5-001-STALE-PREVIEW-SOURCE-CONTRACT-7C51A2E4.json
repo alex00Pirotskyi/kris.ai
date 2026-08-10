@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "activeSemaphoreId": "SEM-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4",
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+  "createdAt": "2026-08-10T07:15:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:SOURCE_CONTRACT_REPAIR_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Repair the exact-head full Flutter suite after the authorized removal of lib/p5_ia_preview.dart by removing only that deleted path from the governed expected library set in test/product/source_contract_test.dart. Preserve every other source inventory entry and invariant. Do not change Product implementation, P5 validator contracts, Test Center authority, source manifest, acceptance, support, release, production, or GA state.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "flutter test test/product/source_contract_test.dart",
+    "exact-head product-gates Ubuntu/Windows/macOS",
+    "Worker F P5-001 exact-head validation remains green"
+  ],
+  "roadmapTask": "P5-001",
+  "runtimeGeneration": 370,
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-10T07:15:00Z",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+}

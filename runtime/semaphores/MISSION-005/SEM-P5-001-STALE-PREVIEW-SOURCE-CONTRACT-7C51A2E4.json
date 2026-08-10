@@ -1,0 +1,22 @@
+{
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+  "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+  "createdAt": "2026-08-10T07:15:00Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-10T11:15:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-10T07:15:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 370,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
