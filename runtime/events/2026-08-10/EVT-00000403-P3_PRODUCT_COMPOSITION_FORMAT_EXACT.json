@@ -1,0 +1,25 @@
+{
+  "eventId": "EVT-00000403-P3_PRODUCT_COMPOSITION_FORMAT_EXACT",
+  "eventType": "P3_PRODUCT_COMPOSITION_FORMAT_EXACT",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousHead": "c8f85add32111bac95180f18b7b993f182330607",
+    "previousTree": "a30a75db0ff4fcb56c9efba920429e9b89e79e43",
+    "head": "38b807bd42bfd77805baf0db0c6fbeca1f9de34f",
+    "tree": "3f5db2b28498c8709c8fdcb559fc4c1ebe337ac8",
+    "exactFailure": {
+      "p3BrowserRuntimeRun": 31420194921,
+      "parentFormatJob": 93558799446,
+      "productGatesRun": 31420195085,
+      "diagnostic": "Both specialized and general Product validation stopped at Dart formatting; analyzer, Product tests, and staged browser probes did not run on the predecessor composition head."
+    },
+    "materializedFix": "Applied exact Dart formatter output blob 4d194fffce5b033f45cbd98a9df483355bb80b2e to test/product/browser/browser_product_runtime_test.dart only; ProductRuntime semantics are unchanged.",
+    "validationStatus": "PENDING_EXACT_CI"
+  },
+  "recordedAt": "2026-08-10T18:43:00Z",
+  "runtimeGeneration": 403,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
+}

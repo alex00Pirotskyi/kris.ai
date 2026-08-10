@@ -5,13 +5,13 @@
     "test/product/browser/browser_product_runtime_test.dart"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "c8f85add32111bac95180f18b7b993f182330607",
-  "baseTree": "a30a75db0ff4fcb56c9efba920429e9b89e79e43",
+  "baseCommit": "38b807bd42bfd77805baf0db0c6fbeca1f9de34f",
+  "baseTree": "3f5db2b28498c8709c8fdcb559fc4c1ebe337ac8",
   "createdAt": "2026-08-09T12:38:30Z",
   "createdBy": "ELASTIC-GPT-44AE364B",
   "dependencyRequirements": [],
   "executionRole": "BUILDER",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:PRODUCT_COMPOSITION_MATERIALIZED:PENDING_EXACT_CI",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:EXACT_FORMATTER_BLOB_4d194fff:PENDING_EXACT_CI",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Wire the P3-001 browser runtime service into ProductRuntime only after the parent browser namespace and Node/browser bundle contract exist. Add a fail-closed runtime handle/probe surface without exposing P3-002 browser sessions/actions. ProductRuntime close must terminate any active browser probe/runtime cleanly, and unavailable/missing bundles must remain honest rather than falling back to global tools.",
@@ -30,6 +30,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_INTEGRATION",
-  "updatedAt": "2026-08-10T18:36:00Z",
+  "updatedAt": "2026-08-10T18:43:00Z",
   "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
 }
