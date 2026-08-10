@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000371-P5_STALE_PREVIEW_REPAIR_TRANSPORT_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "allowedPaths": [
+      ".github/workflows/p5-stale-preview-source-contract-repair.yml"
+    ],
+    "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+    "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+    "reason": "Connector blob transport for the 75 KB source-contract test failed its precomputed SHA guard; acquire a disjoint temporary exact-repair workflow path so GitHub can apply the already-authorized one-line deletion server-side.",
+    "semaphoreId": "SEM-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4"
+  },
+  "recordedAt": "2026-08-10T08:28:30Z",
+  "runtimeGeneration": 371,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4"
+}

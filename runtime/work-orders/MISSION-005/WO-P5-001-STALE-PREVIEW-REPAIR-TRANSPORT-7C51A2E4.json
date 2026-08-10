@@ -1,0 +1,33 @@
+{
+  "allowedPaths": [
+    ".github/workflows/p5-stale-preview-source-contract-repair.yml"
+  ],
+  "activeSemaphoreId": "SEM-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4",
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+  "createdAt": "2026-08-10T08:28:30Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [
+    "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+  ],
+  "executionRole": "CI_REPAIR",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:REPAIR_TRANSPORT_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Materialize the already-authorized one-line source-contract repair without retransmitting the 75 KB test file by temporarily adding one exact-head, branch-local repair workflow. The workflow may only verify the current test/product/source_contract_test.dart blob, remove the single obsolete lib/p5_ia_preview.dart expected-set entry, prove a one-line deletion, commit that repair, and push the helper branch. The temporary workflow must be removed before helper certification. Do not modify Product implementation, validators, source manifest, Test Center authority, acceptance, support, release, production, or GA state.",
+  "parentProductPr": 72,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "exact source-contract blob precondition 46825f12e87806d8cca99f535f3a97ec3ed0a373",
+    "repair diff is exactly one deletion in test/product/source_contract_test.dart",
+    "temporary workflow absent from final helper candidate"
+  ],
+  "roadmapTask": "P5-001",
+  "runtimeGeneration": 371,
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-10T08:28:30Z",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4"
+}
