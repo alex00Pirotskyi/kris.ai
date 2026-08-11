@@ -24,11 +24,11 @@
     "SOURCE_MANIFEST.sha256 remains a separate RELEASE finalization boundary and fresh exact canonical P4/product CI is required after materialization"
   ],
   "maxChildWorkOrders": 0,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "createdAt": "2026-08-11T06:44:00Z",
-  "updatedAt": "2026-08-11T06:50:00Z",
+  "updatedAt": "2026-08-11T06:54:00Z",
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "executionRole": "INTEGRATOR",
-  "activeSemaphoreId": "SEM-P4-001-INTEGRATE-134-7C51A2E4"
+  "lastActor": "ELASTIC-GPT-7C51A2E4:PR134_INTEGRATED_CANONICAL_RECONCILED"
 }
