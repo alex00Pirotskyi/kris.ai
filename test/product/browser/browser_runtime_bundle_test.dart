@@ -155,7 +155,10 @@ void main() {
         '${preferred.path}${Platform.pathSeparator}automation_host'
         '${Platform.pathSeparator}src${Platform.pathSeparator}browser-runtime.mjs',
       );
-      await preferredWorker.writeAsString('// tampered preferred\n', mode: FileMode.append);
+      await preferredWorker.writeAsString(
+        '// tampered preferred\n',
+        mode: FileMode.append,
+      );
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: applicationDataRoot.absolute,
         executablePath:
