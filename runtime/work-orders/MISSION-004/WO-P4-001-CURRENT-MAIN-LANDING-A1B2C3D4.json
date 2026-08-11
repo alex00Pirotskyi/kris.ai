@@ -1,4 +1,5 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P4-001-53BD1640",
   "allowedPaths": [
     "services/research_worker/**",
     "tool/p4_001*.py",
@@ -6,7 +7,7 @@
     "release/evidence/P4-*/**",
     ".github/workflows/p4-001*.yml"
   ],
-  "assignedWorker": "ELASTIC-GPT-91B4E7C2",
+  "assignedWorker": "ELASTIC-QWEN-836DC449",
   "baseCommit": "ebcb89b629ba2b50f5061e19692d086f848cc4e1",
   "baseTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
   "createdAt": "2026-08-08T06:53:12Z",
@@ -30,8 +31,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-11T20:19:01Z",
+  "updatedAt": "2026-08-11T20:19:18Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }
