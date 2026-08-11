@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000438-P3_SOURCE_INVENTORY_AUTHORITY_RECONCILED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "authorityId": "source-inventory",
+    "authorityOwnerMission": "MISSION-001",
+    "eligibleRequestingMission": "MISSION-003",
+    "path": "test/product/source_contract_test.dart",
+    "workOrderType": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-11T14:49:30Z",
+  "runtimeGeneration": 438,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T144930Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-SOURCE-CONTRACT-INVENTORY-7C51A2E4"
+}
