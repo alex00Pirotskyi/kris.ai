@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C",
   "allowedPaths": [
     "automation_host/src/browser-runtime.mjs",
     "automation_host/src/browser-runtime.test.mjs"
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T18:33:00Z",
+  "updatedAt": "2026-08-11T18:41:00Z",
   "workOrderId": "WO-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C"
 }
