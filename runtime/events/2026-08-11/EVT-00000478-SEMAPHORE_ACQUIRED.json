@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000478-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "reason": "formatter-only exact-head CI repair",
+    "semaphoreId": "SEM-P3-001-BUNDLE-FORMAT-5F6A7B8C",
+    "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-11T20:24:00Z",
+  "runtimeGeneration": 478,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T200400Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
+}
