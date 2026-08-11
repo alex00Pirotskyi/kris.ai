@@ -6,7 +6,7 @@
   "parentProductPr": 62,
   "priority": 100,
   "type": "RELEASE_FINALIZATION",
-  "objective": "Materialize only the exact canonical SOURCE_MANIFEST.sha256 for P4-001 Product PR #62 at source head 5a09eca38c3445f186a4d5b744a0a8ef34fd1583 / tree 978db8ce6ba796a9b8a0871fa21819a41ae3e831 using exact workflow artifact 9091787789. Use one short-lived workflow only as connector-native transport: bind its parent to the frozen canonical source, re-resolve live RELEASE authority, remove the workflow before generation, generate the canonical root manifest twice, require the certified artifact digest, commit the manifest together with deletion of the temporary workflow, and fast-forward the canonical branch only under an exact-head guard. Final effective diff from 5a09eca38c3445f186a4d5b744a0a8ef34fd1583 must be exactly SOURCE_MANIFEST.sha256. This does not claim protected-main landing, R2, acceptance, support, release support, production readiness, or GA.",
+  "objective": "Materialize only the exact canonical SOURCE_MANIFEST.sha256 for P4-001 Product PR #62 at source head 5a09eca38c3445f186a4d5b744a0a8ef34fd1583 / tree 978db8ce6ba796a9b8a0871fa21819a41ae3e831. Connector-native finalizer run 31467942933 proved the P4 source and Product pre-release gates, generated the expected 123425-byte manifest twice with SHA-256 3d4e4299c412b066de6ff22c236e086459312eba828a9faf222d3cb890877f4f and Git blob db3336c102862416b94fa2b667afac395a71d4e0, and proved the effective finalization diff would be only SOURCE_MANIFEST.sha256. Publication failed closed before push because the branch still contains the pre-repair P1A generator: tool/v71r12_exact_source_gate.py rejected the generated manifest for scripts/bootstrap_windows.cmd and scripts/run_checks.cmd under canonical CRLF text semantics. The temporary workflow has been retired and the canonical P4 tree restored byte-identically. Resume only after the shared P1A canonical-text repair at PR #138 clears its required context-independent R1 and is integrated/reconciled so the repository-owned generator and verifier agree. No acceptance, support, release support, production readiness, or GA is implied.",
   "requestedRole": "RELEASE_FINALIZER",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256",
@@ -17,23 +17,20 @@
   "dependencyRequirements": [],
   "requiredTests": [
     "P4 specialized run 31466717043 canonical Linux/macOS/Windows source lanes PASS at exact source head 5a09eca38c3445f186a4d5b744a0a8ef34fd1583",
-    "source-manifest artifact 9091787789 is bound to exact source head/tree 5a09eca38c3445f186a4d5b744a0a8ef34fd1583 / 978db8ce6ba796a9b8a0871fa21819a41ae3e831",
-    "artifact archive digest is sha256:0ee4e29c8992aabe9c60fc50c9be1b4e3a95498dc592c2701ea871a2e830ffc6",
-    "artifact metadata proves idempotent generation, changedPathCount exactly 1, and changed path exactly SOURCE_MANIFEST.sha256",
-    "exact manifest candidate is 123425 bytes with SHA-256 3d4e4299c412b066de6ff22c236e086459312eba828a9faf222d3cb890877f4f and expected Git blob db3336c102862416b94fa2b667afac395a71d4e0",
+    "source-manifest artifact 9091787789 is bound to exact source head/tree and proves deterministic one-path generation",
     "pre-release product-gates run 31466717098 PASS on Ubuntu/macOS/Windows at exact source head",
-    "temporary finalizer workflow parent is exact frozen source head/tree and is absent from the final candidate tree",
-    "final effective diff from frozen source head is exactly SOURCE_MANIFEST.sha256",
-    "post-materialization exact canonical P4 source-manifest + Linux/macOS/Windows source lanes PASS",
-    "post-materialization exact product-gates validate-ubuntu/validate-macos/validate-windows PASS"
+    "finalizer run 31467942933 proves expected manifest SHA/size/Git blob and final effective one-file scope, but canonical verifier fails on old generator CRLF semantics before publication",
+    "P1A canonical-text review Work Order WO-P0-001-MANIFEST-CANONICAL-TEXT-R1-7C51A2E4 must clear and the shared generator repair must be integrated before retry",
+    "post-repair materialization must rerun exact canonical P4 source-manifest + Linux/macOS/Windows source lanes",
+    "post-repair materialization must rerun exact product-gates validate-ubuntu/validate-macos/validate-windows"
   ],
   "maxChildWorkOrders": 0,
-  "status": "IN_PROGRESS",
+  "status": "BLOCKED",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "createdAt": "2026-08-11T07:00:00Z",
-  "updatedAt": "2026-08-11T07:08:00Z",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:RELEASE_AUTHORITY_ACQUIRED",
+  "updatedAt": "2026-08-11T07:16:00Z",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:FINALIZER_31467942933:BLOCKED_BY_P1A_CANONICAL_TEXT_R1",
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "executionRole": "RELEASE_FINALIZER",
-  "activeSemaphoreId": "SEM-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
+  "activeSemaphoreId": null
 }
