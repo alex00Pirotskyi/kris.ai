@@ -96,29 +96,32 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
       throw StateError('p3_application_data_root_must_be_absolute');
     }
     final executableRoot = File(executablePath).absolute.parent;
-    final candidates = <Directory>[
-      Directory(
-        '${applicationDataRoot.absolute.path}${Platform.pathSeparator}'
-        'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
-      ),
-      Directory(
-        '${executableRoot.path}${Platform.pathSeparator}'
-        'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
-      ),
-    ];
-    Object? lastError;
-    for (final candidate in candidates) {
-      if (!await candidate.exists()) continue;
-      try {
-        return await resolveRoot(candidate.absolute);
-      } catch (error) {
-        lastError = error;
-      }
+    final preferred = Directory(
+      '${applicationDataRoot.absolute.path}${Platform.pathSeparator}'
+      'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
+    );
+    if (await preferred.exists()) {
+      return _resolveExistingCandidate(preferred);
     }
-    if (lastError != null) {
-      throw StateError('p3_browser_runtime_bundle_invalid:$lastError');
+
+    final fallback = Directory(
+      '${executableRoot.path}${Platform.pathSeparator}'
+      'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
+    );
+    if (await fallback.exists()) {
+      return _resolveExistingCandidate(fallback);
     }
     throw StateError('p3_browser_runtime_bundle_missing');
+  }
+
+  Future<P3BrowserRuntimeResourceSet> _resolveExistingCandidate(
+    Directory candidate,
+  ) async {
+    try {
+      return await resolveRoot(candidate.absolute);
+    } catch (error) {
+      throw StateError('p3_browser_runtime_bundle_invalid:$error');
+    }
   }
 
   Future<P3BrowserRuntimeResourceSet> resolveRoot(Directory root) async {
