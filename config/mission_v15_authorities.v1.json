@@ -40,6 +40,12 @@
       "setStartMarker": "const expected = <String>{",
       "pathPrefix": "lib/"
     },
+    "product-runtime-composition": {
+      "ownerMission": "MISSION-001",
+      "path": "lib/product/product_runtime.dart",
+      "mode": "BOUNDED_PRODUCT_RUNTIME_COMPOSITION_V1",
+      "eligibleRequestingMissions": ["MISSION-003"]
+    },
     "release-validator-source-policy": {
       "ownerMission": "MISSION-008",
       "path": "tool/validate_release.py",
