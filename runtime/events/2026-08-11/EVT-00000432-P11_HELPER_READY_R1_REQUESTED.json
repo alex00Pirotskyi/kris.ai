@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000432-P11_HELPER_READY_R1_REQUESTED",
+  "eventType": "P11_HELPER_READY_R1_REQUESTED",
+  "runtimeGeneration": 432,
+  "recordedAt": "2026-08-11T08:04:00Z",
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "mission": "MISSION-010",
+  "payload": {
+    "helperPr": 139,
+    "helperHead": "1403f42d27a838ff7cdb2684832c6855023670cf",
+    "helperTree": "03dd2b8ab0bdc4416b966fbcf7a76773a157987d",
+    "productGatesRun": 31470952181,
+    "productGates": {
+      "validate-ubuntu": "SUCCESS",
+      "validate-macos": "SUCCESS",
+      "validate-windows": "SUCCESS"
+    },
+    "sourceWorkOrderStatus": "HELPER_READY",
+    "reviewWorkOrder": "WO-P11-001-PR139-R1-7C51A2E4",
+    "reviewWorkOrderStatus": "READY",
+    "authoringExecutionIneligible": true
+  }
+}

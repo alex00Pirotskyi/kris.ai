@@ -6,7 +6,7 @@
   "parentProductPr": 71,
   "priority": 92,
   "type": "PRODUCT_DEFECT_REPAIR",
-  "objective": "Repair the exact-current P11-001 immutable-review provenance defects identified by context-independent R1 on canonical PR #71 head 1383b8c4dff657020eb6873d01d370ffbfb30b72 / tree 01821da30672d2275b69ee3dcfc83c5dbb10ccdc. Exact helper PR #139 now freezes the bounded repair at head 1403f42d27a838ff7cdb2684832c6855023670cf / tree 03dd2b8ab0bdc4416b966fbcf7a76773a157987d. The helper changes only tool/worker_e_dependency_binding.py, tool/worker_e_native_parity_readiness_test.py, and release/evidence/P11-001/dependency-status.json; it restores the previously proven closed reviewRequirement semantics from historical source 5cd9cd6f76b146a21a7df2971722bf9189cc6b61 and adds adversarial wrong-record-type plus surplus/omitted-scope regressions. Preserve P11 as SOURCE_FOUNDATION only. No Test Center/P8 authority, generated manifest, native behavior, support, acceptance, release, production, or GA state is changed by this source helper.",
+  "objective": "Repair the exact-current P11-001 immutable-review provenance defects identified by context-independent R1 on canonical PR #71 head 1383b8c4dff657020eb6873d01d370ffbfb30b72 / tree 01821da30672d2275b69ee3dcfc83c5dbb10ccdc. Exact helper PR #139 is frozen at head 1403f42d27a838ff7cdb2684832c6855023670cf / tree 03dd2b8ab0bdc4416b966fbcf7a76773a157987d. The helper changes only tool/worker_e_dependency_binding.py, tool/worker_e_native_parity_readiness_test.py, and release/evidence/P11-001/dependency-status.json; it restores the previously proven closed reviewRequirement semantics from historical source 5cd9cd6f76b146a21a7df2971722bf9189cc6b61 and adds adversarial wrong-record-type plus surplus/omitted-scope regressions. Exact helper product-gates run 31470952181 is SUCCESS on Ubuntu, macOS, and Windows. Product bytes are now frozen pending fresh context-independent exact-head R1. Preserve P11 as SOURCE_FOUNDATION only. No Test Center/P8 authority, generated manifest, native behavior, support, acceptance, release, production, or GA state is changed by this source helper.",
   "requestedRole": "BUILDER",
   "allowedPaths": [
     "tool/worker_e_dependency_binding.py",
@@ -19,20 +19,20 @@
   "requiredTests": [
     "source diff from 1383b8c4dff657020eb6873d01d370ffbfb30b72 is exactly the three authorized paths",
     "immutable review requirement requires recordType=IndependentReview and exact reviewType/mission/task/pullRequest",
-    "artifact scope and requiredScope are closed and must be exactly equal",
-    "regressions reject wrong recordType, extra artifact scope, omitted artifact scope, wrong review type, wrong candidate, wrong scope, and missing review requirement",
-    "existing immutable evidence blob/SHA binding and LIVE_HEAD_AT_CANDIDATE real-ref protections remain unchanged",
-    "helper product-gates run 31470952181 must PASS Ubuntu/macOS/Windows",
+    "artifact scope and requiredScope are closed non-empty string-to-bool maps and must be exactly equal",
+    "regressions reject wrong recordType, surplus artifact scope, omitted artifact scope, wrong review type, wrong candidate, wrong required scope, and missing review requirement",
+    "existing immutable evidence Git blob/SHA binding and LIVE_HEAD_AT_CANDIDATE real-ref protections remain unchanged",
+    "helper product-gates run 31470952181 PASS on Ubuntu/macOS/Windows",
     "fresh context-independent exact-head R1 required before integration",
     "after integration, canonical Worker E materialize + tri-platform validation is required on the canonical P11 branch"
   ],
   "maxChildWorkOrders": 0,
-  "status": "VALIDATING",
+  "status": "HELPER_READY",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "createdAt": "2026-08-11T07:38:00Z",
-  "updatedAt": "2026-08-11T07:57:00Z",
+  "updatedAt": "2026-08-11T08:04:00Z",
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "executionRole": "BUILDER",
   "activeSemaphoreId": null,
-  "lastActor": "ELASTIC-GPT-7C51A2E4:PR139_HELPER_FROZEN:1403F42D"
+  "lastActor": "ELASTIC-GPT-7C51A2E4:PR139_EXACT_PRODUCT_CI_GREEN:R1_REQUIRED"
 }
