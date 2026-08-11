@@ -9,6 +9,7 @@ import {
   chromiumProbeArgs,
   decorateProbeError,
   parseArgs,
+  raceStartupWithShutdown,
   validateManifestBinding,
   waitForExit,
 } from './browser-runtime.mjs';
@@ -154,6 +155,30 @@ test('waitForExit observes exit state without relying on a single exit event', a
     child.signalCode = 'SIGTERM';
   }, 10);
   assert.equal(await waitForExit(child, 250), 'SIGTERM');
+});
+
+test('raceStartupWithShutdown interrupts startup before readiness', async () => {
+  let resolveStartup;
+  const startup = new Promise((resolve) => {
+    resolveStartup = resolve;
+  });
+  let requestShutdown;
+  const shutdown = new Promise((resolve) => {
+    requestShutdown = resolve;
+  });
+
+  const pending = raceStartupWithShutdown(startup, shutdown);
+  requestShutdown();
+  await assert.rejects(
+    pending,
+    (error) => error?.code === 'browser_shutdown_requested',
+  );
+  resolveStartup(9222);
+
+  assert.equal(
+    await raceStartupWithShutdown(Promise.resolve(9333), new Promise(() => {})),
+    9333,
+  );
 });
 
 test('decorateProbeError preserves the primary failure and appends cleanup evidence', () => {
