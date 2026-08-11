@@ -1,11 +1,14 @@
 {
-  "schemaVersion": 2,
-  "mission": "MISSION-001",
   "captainWorker": "A",
-  "status": "ACTIVE",
+  "currentProductPrs": [
+    75,
+    138
+  ],
   "integrationAuthority": "A",
+  "mission": "MISSION-001",
   "priority": "CRITICAL",
-  "currentProductPrs": [75],
-  "runtimeGeneration": 0,
-  "updatedAt": "2026-08-07T12:20:00Z"
+  "runtimeGeneration": 433,
+  "schemaVersion": 2,
+  "status": "ACTIVE",
+  "updatedAt": "2026-08-11T10:46:13Z"
 }

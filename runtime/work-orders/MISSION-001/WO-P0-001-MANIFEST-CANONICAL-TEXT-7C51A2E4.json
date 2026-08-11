@@ -19,7 +19,7 @@
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
   "objective": "Repair the protected-main P1A source-manifest generator so it uses the same canonical source-byte identity already enforced by tool/v71r12_exact_source_gate.py and represented by protected-main SOURCE_MANIFEST.sha256. UTF-8 text must normalize CRLF to LF before SHA-256; binary/non-UTF-8 data must remain byte-exact. Preserve exact path discovery, generated-path exclusion, sort order, LF manifest serialization, and terminal newline. Add a deterministic regression in the existing P1A canonical-text contract. This is a measured cross-portfolio blocker exposed by P3 finalization run 31462641851; do not change Product behavior, P3 source, support state, acceptance, release, production, or GA state in this source Work Order.",
-  "parentProductPr": null,
+  "parentProductPr": 138,
   "priority": 100,
   "requestedRole": "DEFECT_HUNTER",
   "requiredTests": [
@@ -34,6 +34,6 @@
   "schemaVersion": 1,
   "status": "HELPER_READY",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T06:17:00Z",
+  "updatedAt": "2026-08-11T10:46:13Z",
   "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4"
 }

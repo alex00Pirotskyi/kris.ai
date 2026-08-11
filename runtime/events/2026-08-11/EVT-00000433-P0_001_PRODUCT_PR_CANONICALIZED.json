@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000433-P0_001_PRODUCT_PR_CANONICALIZED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-001",
+  "payload": {
+    "canonicalProductPr": 138,
+    "canonicalTask": "P0-001",
+    "claimCurrentProductPrs": [
+      75,
+      138
+    ],
+    "reason": "Repair malformed executable P0-001 Work Order authority: HELPER_READY source Work Order had parentProductPr=null while exact PR #138 review/release records already bind to PR #138.",
+    "sourceWorkOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+    "sourceWorkOrderParentProductPr": 138
+  },
+  "recordedAt": "2026-08-11T10:46:13Z",
+  "runtimeGeneration": 433,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T103656Z-3df69492",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4"
+}
