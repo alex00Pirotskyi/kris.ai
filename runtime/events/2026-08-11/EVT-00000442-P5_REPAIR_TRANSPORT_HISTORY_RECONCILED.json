@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000442-P5_REPAIR_TRANSPORT_HISTORY_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-005",
+  "payload": {
+    "reason": "Normalize one completed legacy repair-transport Work Order to current historical-audit shape without reopening executable authority.",
+    "workOrder": "WO-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4",
+    "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+    "resolvedBaseTree": "1ba6f19f1cdd30e1587a9b610b465c5b65a572c9",
+    "legacyStatus": "DONE",
+    "auditStatus": "LANDED",
+    "historicalOnly": true
+  },
+  "recordedAt": "2026-08-11T16:21:00Z",
+  "runtimeGeneration": 442,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T162100Z-5f6a7b8c",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4"
+}
