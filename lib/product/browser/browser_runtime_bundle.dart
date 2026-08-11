@@ -60,7 +60,7 @@ final class P3BrowserRuntimeResourceSet {
         'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
         'applicationOwned': true,
         'globalRuntimeRequired': false,
-        'networkInstallRequired': false,
+        'browserNetworkInstallRequired': false,
         'sourceCommit': sourceCommit,
         'sourceTree': sourceTree,
         'runtimeBuildSha256': runtimeBuildSha256,
