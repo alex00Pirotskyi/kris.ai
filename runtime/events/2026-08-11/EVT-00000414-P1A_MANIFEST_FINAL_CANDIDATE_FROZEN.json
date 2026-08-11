@@ -1,0 +1,48 @@
+{
+  "eventId": "EVT-00000414-P1A_MANIFEST_FINAL_CANDIDATE_FROZEN",
+  "eventType": "P1A_MANIFEST_FINAL_CANDIDATE_FROZEN",
+  "mission": "MISSION-001",
+  "payload": {
+    "repairPr": 138,
+    "protectedMainBase": "521ecab1f2831206da98a282df51d8094230bc99",
+    "sourceCandidateHead": "9b5a7b78ab1b97c1ff8a81d5e65d36a5e1a0bdd8",
+    "finalCandidateHead": "220f06e633a45af6c0caf42e684fe1983b8b5d49",
+    "finalCandidateTree": "17e45c5c027567dbc5cd1a1a10966d2ef6b109be",
+    "finalEffectiveDiffFromSource": [
+      "SOURCE_MANIFEST.sha256"
+    ],
+    "finalEffectiveDiffFromMain": [
+      "SOURCE_MANIFEST.sha256",
+      "tool/p1a_refresh_source_manifest.py",
+      "tool/p1a_text_eof_contract_test.py"
+    ],
+    "sourceContract": {
+      "run": 31463235983,
+      "ubuntu": "PASS",
+      "macos": "PASS",
+      "windows": "PASS"
+    },
+    "manifestFinalizer": {
+      "run": 31463640909,
+      "status": "PASS",
+      "artifactId": 9090690985,
+      "artifactDigest": "sha256:7891f6c558afeae5defbfd667bc0f13b6ae8bd1861a6ecce9498eb7621496161",
+      "manifestSha256": "3cb82a137f328f98472a92a51a49560caf936ea253fcd166bf5bc96f0d625c60",
+      "entryCount": 1129,
+      "generationCount": 2,
+      "byteIdenticalGenerations": true,
+      "exactManifestVerifier": true,
+      "temporaryWorkflowInFinalTree": false
+    },
+    "releaseSemaphore": {
+      "semaphoreId": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+      "status": "RELEASED"
+    },
+    "exactFinalCi": "fresh pull-request-triggered runs required; initial GITHUB_TOKEN publication suites were action_required and are not PASS"
+  },
+  "recordedAt": "2026-08-11T06:05:00Z",
+  "runtimeGeneration": 414,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4"
+}

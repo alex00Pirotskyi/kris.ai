@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256",
     ".github/workflows/temp-p0-001-manifest-canonical-text-finalize.yml"
@@ -12,6 +12,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:FINALIZER_PASS:31463640909:220F06E633A45AF6C0CAF42E684FE1983B8B5D49",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
   "objective": "Materialize the exact root SOURCE_MANIFEST.sha256 for the frozen P1A canonical-text generator repair at 9b5a7b78ab1b97c1ff8a81d5e65d36a5e1a0bdd8. Use one short-lived workflow only as connector-native transport: prove the exact parent commit/tree and runtime semaphore, remove the workflow in the runner before generation, run the repaired canonical generator twice byte-identically, commit the generated root manifest together with deletion of the temporary workflow, then verify the final effective diff from the frozen source candidate is exactly SOURCE_MANIFEST.sha256 and the full exact source-manifest verifier passes. Change no Product behavior, P3 source, Test Center/P8 state, support, acceptance, release, production, or GA state.",
@@ -30,8 +31,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "SHARED_AUTHORITY_REFRESH",
-  "updatedAt": "2026-08-11T05:59:00Z",
+  "updatedAt": "2026-08-11T06:05:00Z",
   "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4"
 }
