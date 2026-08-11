@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-BUNDLE-FORMAT-5F6A7B8C",
   "allowedPaths": [
     "lib/product/browser/browser_runtime_bundle.dart",
     "test/product/browser/browser_runtime_bundle_test.dart"
@@ -11,7 +10,7 @@
   "createdBy": "WRK-20260811T182700Z-5f6a7b8c",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:PR144_FORMATTER_REPAIR:EOF_NEWLINE",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:PR144_FORMATTER_REPAIRED:VALIDATING",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Close the P3-001 fail-open browser-runtime resolver defect: if the preferred application-data runtime/current bundle exists but fails identity/resource validation, fail closed on that invalid current bundle instead of silently falling back to an executable-root bundle. Preserve executable-root resolution only when the preferred application-data current bundle is absent. Add an adversarial regression with an invalid preferred bundle and a simultaneously valid fallback bundle proving the invalid current bundle cannot be masked or downgraded by fallback.",
@@ -27,8 +26,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T20:24:00Z",
+  "updatedAt": "2026-08-11T20:25:00Z",
   "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
 }

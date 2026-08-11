@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000479-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P3-001-BUNDLE-FORMAT-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-11T20:25:00Z",
+  "runtimeGeneration": 479,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T200400Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
+}
