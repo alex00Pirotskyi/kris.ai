@@ -209,6 +209,43 @@
       "expectedSha": "93d33e534559dfc39c31f12a4c2d942b249b5e81",
       "name": "validation/v71r12-repair-failure-30910847377",
       "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+    },
+    {
+      "class": "disposable-ci",
+      "closedPr": 48,
+      "expectedSha": "9383e9ac4a24f6bb795a3b15407fbed4a6392e24",
+      "name": "ci/direct-pr14-repair-trigger",
+      "reason": "Closed disposable PR #48 trigger; protected main already contains the product-CI bootstrap repair it existed to launch."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-prestack-345847c",
+      "reason": "Superseded Worker A prestack snapshot; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup",
+      "reason": "Superseded Worker A stack backup; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-2",
+      "reason": "Superseded Worker A stack backup; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-final",
+      "reason": "Superseded Worker A final stack backup; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+    },
+    {
+      "class": "superseded-repair",
+      "expectedSha": "0e082868fb91cd9d0e57626e4ba0a0ae2ef895d9",
+      "name": "should-not-call",
+      "reason": "Obsolete runtime reservation/probe branch; current agent/mission-runtime is 248 commits ahead from this exact ancestor."
     }
   ],
   "keep": [
@@ -217,24 +254,8 @@
       "reason": "Protected default branch and current roadmap authority."
     },
     {
-      "name": "ci/direct-pr14-repair-trigger",
-      "reason": "Active draft PR #48 and exact trigger for the protected PR14 repair controller."
-    },
-    {
       "name": "integration/p2-owner-risk-v71r12",
-      "reason": "Retained P2 integration/evidence lineage until owner-risk closure is landed."
-    },
-    {
-      "name": "merge/p1-p2-owner-risk-qa-preview",
-      "reason": "Active governed P1/P2 landing target; must remain until protected landing completes."
-    },
-    {
-      "name": "validated/v71r12-p1-p2-final",
-      "reason": "Exact tri-platform validated application candidate anchor."
-    },
-    {
-      "name": "validation/v71r12-repair-success-30913519385",
-      "reason": "Successful repair evidence anchor for run 30913519385."
+      "reason": "Retained P2 integration/evidence lineage because it still has unique diverged history not proven redundant to protected main."
     }
   ],
   "roadmapAuthority": "docs/roadmap/MASTER.md",
