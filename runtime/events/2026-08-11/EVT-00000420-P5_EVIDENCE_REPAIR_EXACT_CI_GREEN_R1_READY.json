@@ -1,0 +1,43 @@
+{
+  "eventId": "EVT-00000420-P5_EVIDENCE_REPAIR_EXACT_CI_GREEN_R1_READY",
+  "eventType": "P5_EVIDENCE_REPAIR_EXACT_CI_GREEN_R1_READY",
+  "mission": "MISSION-005",
+  "payload": {
+    "canonicalProductPr": 72,
+    "helperPr": 127,
+    "repairedHead": "c55e093fec9c5858b63b77c80c7abe2d653e863f",
+    "repairedTree": "001cf87e2b0ac01ba825ac6e44c2530b6b3dbcbf",
+    "repairDelta": ["release/evidence/P5-001/manifest.json"],
+    "canonicalEvidenceManifestSha256": "92bbb48c46d0e28db435387e5cbfc50e98eb4c786146c5f6798c541b1a3be16b",
+    "evidenceArtifact": {
+      "run": 31465227386,
+      "artifactId": 9091265792,
+      "artifactDigest": "sha256:8a1d00a41946d84fac399cef9dc68347231b17e891f7be9788583c94b15a0919"
+    },
+    "exactValidation": {
+      "workerFRun": 31465227386,
+      "workerFPlatforms": {"ubuntu": "PASS", "macos": "PASS", "windows": "PASS"},
+      "productGatesRun": 31465227372,
+      "productPlatforms": {"ubuntu": "PASS", "macos": "PASS", "windows": "PASS"}
+    },
+    "repairWorkOrder": {
+      "workOrder": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+      "status": "HELPER_READY",
+      "writeSemaphore": "SEM-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+      "writeSemaphoreStatus": "RELEASED"
+    },
+    "review": {
+      "workOrder": "WO-P5-001-PR127-R1-A84E19D3",
+      "status": "READY",
+      "previousReviewId": 4903482358,
+      "previousReviewCarriesForward": false,
+      "authoringExecutionEligible": false,
+      "requestedGitHubReviewer": "alex11Pirotskyi"
+    }
+  },
+  "recordedAt": "2026-08-11T06:38:00Z",
+  "runtimeGeneration": 420,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4"
+}
