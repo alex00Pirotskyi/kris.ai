@@ -1,0 +1,25 @@
+{
+  "eventId": "EVT-00000406-P3_BROWSER_EXCEPTION_API_EXPORT_REPAIR_ACQUIRED",
+  "eventType": "P3_BROWSER_EXCEPTION_API_EXPORT_REPAIR_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "baseCommit": "20b84267b320fef2d2fa1a1b5d4c819dc80f42cd",
+    "baseTree": "f17433cc191490aa58747fce8b4ee7b696640ebd",
+    "productGatesRun": 31422892200,
+    "analyzerFailure": "ProductRuntime imports browser_runtime.dart but P3BrowserRuntimeException is declared in browser_runtime_process.dart and is not re-exported",
+    "repairBoundary": "export only P3BrowserRuntimeException from browser_runtime.dart; no ProductRuntime behavior change",
+    "activeSemaphore": "SEM-P3-001-BROWSER-RUNTIME-7C51A2E4-R2",
+    "compositionSemaphore": "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4-R2",
+    "windowsProbe": {
+      "latestRun": 31422892214,
+      "classification": "RETEST_REQUIRED_NONDETERMINISTIC",
+      "browserBytesUnchangedSinceGreenRun": 31418071564
+    }
+  },
+  "recordedAt": "2026-08-11T04:20:00Z",
+  "runtimeGeneration": 406,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}

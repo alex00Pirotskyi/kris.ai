@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "lib/product/browser/**",
+    "test/product/browser/**"
+  ],
+  "authorityId": null,
+  "baseCommit": "20b84267b320fef2d2fa1a1b5d4c819dc80f42cd",
+  "baseTree": "f17433cc191490aa58747fce8b4ee7b696640ebd",
+  "branch": "agent/c/mission-003-browser-runtime",
+  "createdAt": "2026-08-11T04:20:00Z",
+  "executionRole": "BUILDER",
+  "expiresAt": "2026-08-11T10:20:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-003",
+  "productPr": 131,
+  "refreshedAt": "2026-08-11T04:20:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 406,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-BROWSER-RUNTIME-7C51A2E4-R2",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
