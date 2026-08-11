@@ -1,0 +1,39 @@
+{
+  "eventId": "EVT-00000413-P1A_MANIFEST_SOURCE_FROZEN_RELEASE_ACQUIRED",
+  "eventType": "P1A_MANIFEST_SOURCE_FROZEN_RELEASE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "repairPr": 138,
+    "sourceCandidateHead": "9b5a7b78ab1b97c1ff8a81d5e65d36a5e1a0bdd8",
+    "sourceCandidateTree": "3dd7e90e3510e3f224eac0bce0c2ef9891064942",
+    "sourceValidation": {
+      "workflow": "P1 Authority Service Amendment",
+      "run": 31463235983,
+      "sourceLanes": {
+        "ubuntu-24.04": "PASS",
+        "macos-15": "PASS",
+        "windows-2025": "PASS"
+      }
+    },
+    "sourceWorkOrder": {
+      "workOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+      "writeSemaphore": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+      "status": "VALIDATING",
+      "writeSemaphoreStatus": "RELEASED"
+    },
+    "manifestFinalization": {
+      "workOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+      "releaseSemaphore": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+      "status": "IN_PROGRESS",
+      "allowedPaths": [
+        "SOURCE_MANIFEST.sha256",
+        ".github/workflows/temp-p0-001-manifest-canonical-text-finalize.yml"
+      ]
+    }
+  },
+  "recordedAt": "2026-08-11T05:59:00Z",
+  "runtimeGeneration": 413,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4"
+}

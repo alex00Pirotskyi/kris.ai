@@ -1,0 +1,37 @@
+{
+  "activeSemaphoreId": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256",
+    ".github/workflows/temp-p0-001-manifest-canonical-text-finalize.yml"
+  ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "9b5a7b78ab1b97c1ff8a81d5e65d36a5e1a0bdd8",
+  "baseTree": "3dd7e90e3510e3f224eac0bce0c2ef9891064942",
+  "branch": "agent/help/elastic-7c51a2e4/mission-001/p1a-manifest-canonical-text",
+  "createdAt": "2026-08-11T05:59:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Materialize the exact root SOURCE_MANIFEST.sha256 for the frozen P1A canonical-text generator repair at 9b5a7b78ab1b97c1ff8a81d5e65d36a5e1a0bdd8. Use one short-lived workflow only as connector-native transport: prove the exact parent commit/tree and runtime semaphore, remove the workflow in the runner before generation, run the repaired canonical generator twice byte-identically, commit the generated root manifest together with deletion of the temporary workflow, then verify the final effective diff from the frozen source candidate is exactly SOURCE_MANIFEST.sha256 and the full exact source-manifest verifier passes. Change no Product behavior, P3 source, Test Center/P8 state, support, acceptance, release, production, or GA state.",
+  "parentProductPr": 138,
+  "parentWorkOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "temporary workflow parent is exactly 9b5a7b78ab1b97c1ff8a81d5e65d36a5e1a0bdd8 / 3dd7e90e3510e3f224eac0bce0c2ef9891064942",
+    "P1A source-contract run 31463235983 is green on Ubuntu, macOS, and Windows before manifest publication",
+    "repaired tool/p1a_refresh_source_manifest.py generates byte-identical first and second manifests",
+    "tool/v71r12_exact_source_gate.py full source-manifest verification passes on the final committed candidate",
+    "effective diff from frozen source candidate is exactly SOURCE_MANIFEST.sha256",
+    "temporary finalizer workflow is absent from the final candidate tree",
+    "exact-current product-gates rerun on the final candidate before integration"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "SHARED_AUTHORITY_REFRESH",
+  "updatedAt": "2026-08-11T05:59:00Z",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4"
+}
