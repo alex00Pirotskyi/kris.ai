@@ -1,0 +1,36 @@
+{
+  "eventId": "EVT-00000445-STALE_READY_PRODUCT_BASES_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-005",
+  "payload": {
+    "reason": "Reconcile four READY Work Orders whose dispatch baseCommit/baseTree no longer matched the live canonical Product PR branch. REVIEW targets remain unchanged and exact; P4 authority work is rebased to the live descendant where its fixture-path defect remains present.",
+    "reconciledWorkOrders": {
+      "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51": {
+        "liveBaseCommit": "ebcb89b629ba2b50f5061e19692d086f848cc4e1",
+        "liveBaseTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
+        "mode": "REBASE_OUTSTANDING_AUTHORITY_UPDATE"
+      },
+      "WO-P5-001-PR127-R1-A84E19D3": {
+        "liveBaseCommit": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+        "liveBaseTree": "ffc677555e501863768b2df6983b9d1cd50622cf",
+        "mode": "REVIEW_DISPATCH_BASE_ONLY"
+      },
+      "WO-P6-001-CURRENT-MAIN-R1-7C51A2E4": {
+        "liveBaseCommit": "62f1e14ac39eb354aa04430d1d44c62a71103d8c",
+        "liveBaseTree": "f4f6ab6670d9970ee5a8bcb0e6b6e573c3225cbc",
+        "mode": "REVIEW_DISPATCH_BASE_ONLY"
+      },
+      "WO-P11-001-PR139-R1-7C51A2E4": {
+        "liveBaseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+        "liveBaseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+        "mode": "REVIEW_DISPATCH_BASE_ONLY"
+      }
+    },
+    "reviewTargetsChanged": false
+  },
+  "recordedAt": "2026-08-11T16:38:00Z",
+  "runtimeGeneration": 445,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T163800Z-5f6a7b8c",
+  "workOrderId": "WO-P5-001-PR127-R1-A84E19D3"
+}
