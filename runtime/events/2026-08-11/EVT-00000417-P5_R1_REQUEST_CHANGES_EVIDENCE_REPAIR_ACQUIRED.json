@@ -1,0 +1,38 @@
+{
+  "eventId": "EVT-00000417-P5_R1_REQUEST_CHANGES_EVIDENCE_REPAIR_ACQUIRED",
+  "eventType": "P5_R1_REQUEST_CHANGES_EVIDENCE_REPAIR_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "canonicalProductPr": 72,
+    "helperPr": 127,
+    "review": {
+      "reviewId": 4903482358,
+      "decision": "REQUEST_CHANGES",
+      "findingId": "P5-R1-4B8-001",
+      "reviewedHead": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
+      "reviewedTree": "f3e7f53bbddd3f099379a8be99af442f16701585"
+    },
+    "measuredMismatch": {
+      "generatedEvidenceManifestSha256": "92bbb48c46d0e28db435387e5cbfc50e98eb4c786146c5f6798c541b1a3be16b",
+      "committedEvidenceManifestSha256": "734dd3d44544ebd561819a283dbd5eba1aa88bef9412a2fbec8218953ffe9e74",
+      "artifactId": 9057249035,
+      "sourceRun": 31374116905,
+      "productGatesRun": 31374116890
+    },
+    "repair": {
+      "workOrder": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+      "semaphore": "SEM-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+      "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+      "allowedPaths": [
+        "release/evidence/P5-001/manifest.json"
+      ],
+      "status": "IN_PROGRESS"
+    },
+    "freshReviewRequiredAfterRepair": true
+  },
+  "recordedAt": "2026-08-11T06:25:00Z",
+  "runtimeGeneration": 417,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4"
+}

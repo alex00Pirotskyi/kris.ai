@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "release/evidence/P5-001/manifest.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
+  "baseTree": "f3e7f53bbddd3f099379a8be99af442f16701585",
+  "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
+  "createdAt": "2026-08-11T06:25:00Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-11T09:25:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": 72,
+  "refreshedAt": "2026-08-11T06:25:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 417,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4"
+}
