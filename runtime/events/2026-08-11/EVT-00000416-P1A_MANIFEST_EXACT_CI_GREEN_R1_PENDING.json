@@ -1,0 +1,55 @@
+{
+  "eventId": "EVT-00000416-P1A_MANIFEST_EXACT_CI_GREEN_R1_PENDING",
+  "eventType": "P1A_MANIFEST_EXACT_CI_GREEN_R1_PENDING",
+  "mission": "MISSION-001",
+  "payload": {
+    "repairPr": 138,
+    "candidateHead": "220f06e633a45af6c0caf42e684fe1983b8b5d49",
+    "candidateTree": "17e45c5c027567dbc5cd1a1a10966d2ef6b109be",
+    "candidateState": "HELPER_READY",
+    "manifestFinalization": {
+      "workOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+      "status": "LANDED",
+      "semaphore": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-RELEASE-7C51A2E4",
+      "semaphoreStatus": "RELEASED",
+      "run": 31463640909,
+      "artifactId": 9090690985
+    },
+    "exactFinalValidation": {
+      "p1AuthorityRun": 31463927082,
+      "p1aSourceContract": {
+        "ubuntu": "PASS",
+        "macos": "PASS",
+        "windows": "PASS"
+      },
+      "productGatesRuns": [
+        31463927129,
+        31463970212
+      ],
+      "productGates": {
+        "ubuntu": "PASS",
+        "macos": "PASS",
+        "windows": "PASS"
+      },
+      "p8Run": 31463927044,
+      "p8Status": "PASS",
+      "mainRulesetRequiredContexts": {
+        "validate-ubuntu": "PASS",
+        "validate-windows": "PASS",
+        "validate-macos": "PASS"
+      }
+    },
+    "review": {
+      "workOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-R1-7C51A2E4",
+      "status": "READY",
+      "requestedGitHubReviewer": "alex11Pirotskyi",
+      "authoringExecutionEligible": false
+    },
+    "landing": "BLOCKED_ONLY_ON_REQUIRED_CONTEXT_INDEPENDENT_R1_AND_SUBSEQUENT_INTEGRATION_AUTHORITY"
+  },
+  "recordedAt": "2026-08-11T06:17:00Z",
+  "runtimeGeneration": 416,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4"
+}
