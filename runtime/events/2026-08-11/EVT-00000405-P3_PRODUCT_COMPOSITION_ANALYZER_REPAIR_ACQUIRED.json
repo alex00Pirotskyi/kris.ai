@@ -1,0 +1,46 @@
+{
+  "eventId": "EVT-00000405-P3_PRODUCT_COMPOSITION_ANALYZER_REPAIR_ACQUIRED",
+  "eventType": "P3_PRODUCT_COMPOSITION_ANALYZER_REPAIR_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "previousObservedHead": "93bacb311e8aafb4c87ab9ee949a717bb06b80f3",
+    "currentHead": "20b84267b320fef2d2fa1a1b5d4c819dc80f42cd",
+    "currentTree": "f17433cc191490aa58747fce8b4ee7b696640ebd",
+    "productGates": {
+      "run": 31422892200,
+      "status": "FAIL",
+      "failure": "flutter analyzer cannot resolve P3BrowserRuntimeException from lib/product/product_runtime.dart",
+      "repairBoundary": "add the direct browser_runtime_process.dart exception import in the already-authorized ProductRuntime composition path"
+    },
+    "p3Specialized": {
+      "run": 31422892214,
+      "ubuntu": "PASS",
+      "macos": "PASS",
+      "windows": {
+        "status": "FAIL",
+        "diagnostic": "Chromium emitted DevTools listening but startup hit sandbox executable access denied plus DevToolsActivePort EBUSY",
+        "classification": "RETEST_REQUIRED_NONDETERMINISTIC"
+      },
+      "sameBrowserBytesPriorGreenRuns": [
+        31418071564,
+        31421996771
+      ],
+      "reasonForNoBrowserMutationYet": "473b231c55bcbef97ad85015d70a19bbac6a4483 through current head changes only ProductRuntime composition paths, while exact P3 passed on both prior candidates"
+    },
+    "leaseRollover": {
+      "expiredSemaphore": "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4",
+      "activeSemaphore": "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4-R2"
+    },
+    "runtimeRecovery": {
+      "intermediateCommit": "f0ba25f5af5a27ebfda0bdc9c450bedfc0c6183f",
+      "accidentalDelta": "exactly one empty top-level file named noop",
+      "recovery": "remove noop in the generation-405 fast-forward commit; preserve append-only history and do not force rewrite runtime"
+    }
+  },
+  "recordedAt": "2026-08-11T04:11:00Z",
+  "runtimeGeneration": 405,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
+}

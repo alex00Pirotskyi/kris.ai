@@ -1,17 +1,17 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4",
+  "activeSemaphoreId": "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4-R2",
   "allowedPaths": [
     "lib/product/product_runtime.dart",
     "test/product/browser/browser_product_runtime_test.dart"
   ],
   "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "baseCommit": "93bacb311e8aafb4c87ab9ee949a717bb06b80f3",
-  "baseTree": "d9fb6660073e6db6f27a28cef7319ba99d994c4a",
+  "baseCommit": "20b84267b320fef2d2fa1a1b5d4c819dc80f42cd",
+  "baseTree": "f17433cc191490aa58747fce8b4ee7b696640ebd",
   "createdAt": "2026-08-09T12:38:30Z",
   "createdBy": "ELASTIC-GPT-44AE364B",
   "dependencyRequirements": [],
   "executionRole": "BUILDER",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:PRODUCT_RUNTIME_FORMAT_NORMALIZED:PENDING_EXACT_CI",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:ANALYZER_IMPORT_REPAIR_ACQUIRED:WINDOWS_RETEST_PENDING",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Wire the P3-001 browser runtime service into ProductRuntime only after the parent browser namespace and Node/browser bundle contract exist. Add a fail-closed runtime handle/probe surface without exposing P3-002 browser sessions/actions. ProductRuntime close must terminate any active browser probe/runtime cleanly, and unavailable/missing bundles must remain honest rather than falling back to global tools.",
@@ -30,6 +30,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_INTEGRATION",
-  "updatedAt": "2026-08-10T19:03:00Z",
+  "updatedAt": "2026-08-11T04:11:00Z",
   "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
 }
