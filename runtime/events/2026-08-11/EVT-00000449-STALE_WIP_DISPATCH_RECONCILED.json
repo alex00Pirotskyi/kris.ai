@@ -1,0 +1,32 @@
+{
+  "eventId": "EVT-00000449-STALE_WIP_DISPATCH_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": null,
+  "payload": {
+    "actor": "GPT-5.6-SOL-5F6A7B8C",
+    "reason": "Remove duplicate/stale dispatch without resetting live helper-review chains. Obsolete exact-run validation is cancelled; completed P5 finalization/authority work is terminalized; P5 and P6 source evolution is represented as reciprocal supersession so only the authority-complete/final repaired helper remains active.",
+    "cancelledWorkOrders": [
+      "WO-P5-001-EXACT-CI-SANITIZER"
+    ],
+    "landedWorkOrders": [
+      "WO-P5-001-SOURCE-MANIFEST-7C51A2E4",
+      "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+    ],
+    "supersessionEdges": [
+      ["WO-P5-001-STALE-PREVIEW-93C6A4E1", "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"],
+      ["WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4", "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4"],
+      ["WO-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4", "WO-P6-001-SOURCE-INVENTORY-7C51A2E4"]
+    ],
+    "preservedLiveReviewWorkOrders": [
+      "WO-P5-001-PR127-R1-A84E19D3",
+      "WO-P6-001-CURRENT-MAIN-R1-7C51A2E4",
+      "WO-P11-001-PR139-R1-7C51A2E4",
+      "WO-P0-001-MANIFEST-CANONICAL-TEXT-R1-7C51A2E4"
+    ]
+  },
+  "recordedAt": "2026-08-11T17:45:00Z",
+  "runtimeGeneration": 449,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T174500Z-5f6a7b8c",
+  "workOrderId": null
+}

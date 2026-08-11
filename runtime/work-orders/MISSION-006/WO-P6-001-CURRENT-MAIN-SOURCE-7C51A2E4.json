@@ -13,7 +13,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:CURRENT_MAIN_SOURCE_RECONCILIATION_ACQUIRED",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:SOURCE_ONLY_CANDIDATE_SUPERSEDED_BY_AUTHORITY_COMPLETE_CANDIDATE",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Build a clean current-main P6-001 source candidate from exact protected main 521ecab1f2831206da98a282df51d8094230bc99 by transplanting byte-identically only the five currently authorized P6 model source/test files from canonical P6 head 62f1e14ac39eb354aa04430d1d44c62a71103d8c. Preserve the already reviewed caller-controlled benchmark trust-root repair. Exclude historical P8/Test Center ancestry, P6 historical evidence/reconstruction files, source-inventory authority, SOURCE_MANIFEST.sha256, and all unrelated branch ancestry. This helper is a staging candidate only; source-inventory append and release/evidence finalization remain separately authorized boundaries. Do not promote P6 acceptance, support, release, production, or GA state.",
@@ -31,8 +31,9 @@
   "roadmapTask": "P6-001",
   "runtimeGeneration": 382,
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "SUPERSEDED",
+  "supersededBy": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-10T11:08:08Z",
+  "updatedAt": "2026-08-11T17:45:00Z",
   "workOrderId": "WO-P6-001-CURRENT-MAIN-SOURCE-7C51A2E4"
 }
