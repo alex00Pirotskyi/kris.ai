@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000443-P5_SOURCE_INVENTORY_GIT_BINDING_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-005",
+  "payload": {
+    "reason": "Restore the required immutable baseTree binding on the active P5 source-inventory AUTHORITY_UPDATE without changing its authority path, objective, status, or Product source.",
+    "workOrder": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4",
+    "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+    "resolvedBaseTree": "1ba6f19f1cdd30e1587a9b610b465c5b65a572c9",
+    "authorityPath": "test/product/source_contract_test.dart"
+  },
+  "recordedAt": "2026-08-11T16:24:00Z",
+  "runtimeGeneration": 443,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T162400Z-5f6a7b8c",
+  "workOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
+}
