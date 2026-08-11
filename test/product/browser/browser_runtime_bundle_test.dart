@@ -161,11 +161,11 @@ void main() {
       );
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: applicationDataRoot.absolute,
-        executablePath:
-            '${executableRoot.path}${Platform.pathSeparator}kristin',
+        executablePath: '${executableRoot.path}${Platform.pathSeparator}kristin',
       );
 
       expect(fallback.existsSync(), isTrue);
+
       expect(
         resolver.resolve(),
         throwsA(
@@ -197,8 +197,7 @@ void main() {
       final fallback = await _writeBundle(executableRoot);
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: applicationDataRoot.absolute,
-        executablePath:
-            '${executableRoot.path}${Platform.pathSeparator}kristin',
+        executablePath: '${executableRoot.path}${Platform.pathSeparator}kristin',
       );
 
       final resources = await resolver.resolve();
