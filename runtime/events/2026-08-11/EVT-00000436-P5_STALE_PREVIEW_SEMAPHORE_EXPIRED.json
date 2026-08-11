@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000436-P5_STALE_PREVIEW_SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-P5-001-STALE-PREVIEW-7C51A2E4"
+    ]
+  },
+  "recordedAt": "2026-08-11T11:01:30Z",
+  "runtimeGeneration": 436,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T103656Z-3df69492",
+  "workOrderId": null
+}
