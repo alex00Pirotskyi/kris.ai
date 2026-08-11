@@ -1,0 +1,42 @@
+{
+  "eventId": "EVT-00000410-P3_IMPLEMENTATION_FROZEN_SOURCE_MANIFEST_ACQUIRED",
+  "eventType": "P3_IMPLEMENTATION_FROZEN_SOURCE_MANIFEST_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "branch": "agent/c/mission-003-browser-runtime",
+    "candidateHead": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
+    "candidateTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+    "productGates": {
+      "run": 31458748468,
+      "status": "PASS",
+      "platforms": ["ubuntu", "windows", "macos"]
+    },
+    "p3Specialized": {
+      "run": 31458748556,
+      "status": "PASS",
+      "oracles": ["parent-format", "node-contracts", "browser-lock", "staging-source-contract"],
+      "stagedBrowserProbes": ["ubuntu", "windows", "macos"]
+    },
+    "windowsPriorFailureDisposition": "TRANSIENT_NOT_REPRODUCED_ON_EXACT_CURRENT_HEAD",
+    "implementation": {
+      "parentWorkOrderStatus": "VALIDATING",
+      "compositionWorkOrderStatus": "VALIDATING",
+      "writeSemaphoresReleased": [
+        "SEM-P3-001-BROWSER-RUNTIME-7C51A2E4-R2",
+        "SEM-P3-001-PRODUCT-COMPOSITION-7C51A2E4-R2"
+      ]
+    },
+    "sourceManifest": {
+      "workOrder": "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+      "releaseSemaphore": "SEM-P3-001-SOURCE-MANIFEST-7C51A2E4",
+      "status": "IN_PROGRESS",
+      "allowedPaths": ["SOURCE_MANIFEST.sha256"]
+    },
+    "review": "fresh independent exact-SHA R1 remains required after manifest materialization and exact-current retest"
+  },
+  "recordedAt": "2026-08-11T04:42:00Z",
+  "runtimeGeneration": 410,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P3-001-BROWSER-RUNTIME-A1B2C3D4"
+}

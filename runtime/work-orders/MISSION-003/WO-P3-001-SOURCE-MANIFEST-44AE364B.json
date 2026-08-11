@@ -1,16 +1,16 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-P3-001-SOURCE-MANIFEST-7C51A2E4",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
-  "assignedWorker": null,
-  "baseCommit": "a68a0790e12b24c831cb7fbca734c4deea471280",
-  "baseTree": "3640208da403f13ca72433b17cbd07850cf9637c",
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
+  "baseTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
   "createdAt": "2026-08-09T12:38:30Z",
   "createdBy": "ELASTIC-GPT-44AE364B",
   "dependencyRequirements": [],
-  "executionRole": null,
-  "lastActor": "ELASTIC-GPT-44AE364B",
+  "executionRole": "RELEASE_FINALIZER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:EXACT_CI_GREEN:SOURCE_MANIFEST_FINALIZATION_ACQUIRED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "After the P3-001 Product source candidate is stable, refresh only SOURCE_MANIFEST.sha256 entries affected by newly added or modified governed P3 source files. Change no Product source, prove every changed entry equals the exact candidate bytes, and keep the manifest refresh separate from implementation authorship.",
@@ -26,8 +26,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "CREATED",
+  "status": "IN_PROGRESS",
   "type": "SHARED_AUTHORITY_REFRESH",
-  "updatedAt": "2026-08-09T12:38:30Z",
+  "updatedAt": "2026-08-11T04:42:00Z",
   "workOrderId": "WO-P3-001-SOURCE-MANIFEST-44AE364B"
 }
