@@ -2,6 +2,7 @@
   "allowedPaths": [],
   "authorityId": null,
   "baseCommit": "1da13554983f2211b2a75e28743efb36465b7fd5",
+  "baseTree": "1ba6f19f1cdd30e1587a9b610b465c5b65a572c9",
   "branch": "agent/help/elastic-7d41b6a2/mission-005/p5-stale-preview",
   "createdAt": "2026-08-10T07:15:00Z",
   "executionRole": "CI_REPAIR",
