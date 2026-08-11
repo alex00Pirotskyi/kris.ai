@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "authorityId": "test-center-registry",
+  "baseCommit": "ebcb89b629ba2b50f5061e19692d086f848cc4e1",
+  "baseTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
+  "branch": "agent/local-qwen/elastic-qwen-5fa457e8/mission-004/wo-p4-001-registry-fixture-path-c73e9a51-1e051e9c",
+  "createdAt": "2026-08-11T19:24:57Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-11T21:24:57Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-11T19:24:57Z",
+  "resourceId": null,
+  "runtimeGeneration": 463,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P4-001-1E051E9C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51",
+  "workerIdentity": "ELASTIC-QWEN-5FA457E8"
+}
