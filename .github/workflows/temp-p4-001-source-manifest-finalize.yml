@@ -1,0 +1,295 @@
+name: TEMP P4-001 Source Manifest Finalizer
+
+on:
+  push:
+    branches:
+      - 'agent/p4-001-search-provider-foundation'
+
+permissions:
+  actions: read
+  contents: write
+
+env:
+  SOURCE_HEAD: 5a09eca38c3445f186a4d5b744a0a8ef34fd1583
+  SOURCE_TREE: 978db8ce6ba796a9b8a0871fa21819a41ae3e831
+  SOURCE_BRANCH: agent/p4-001-search-provider-foundation
+  RUNTIME_BRANCH: agent/mission-runtime
+  RELEASE_WORK_ORDER: WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4
+  RELEASE_SEMAPHORE: SEM-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4
+  P4_VALIDATION_RUN: '31466717043'
+  PRODUCT_VALIDATION_RUN: '31466717098'
+  MANIFEST_ARTIFACT_ID: '9091787789'
+  EXPECTED_MANIFEST_SHA256: 3d4e4299c412b066de6ff22c236e086459312eba828a9faf222d3cb890877f4f
+  EXPECTED_MANIFEST_BYTES: '123425'
+  EXPECTED_MANIFEST_GIT_BLOB: db3336c102862416b94fa2b667afac395a71d4e0
+  EXPECTED_ARTIFACT_DIGEST: sha256:0ee4e29c8992aabe9c60fc50c9be1b4e3a95498dc592c2701ea871a2e830ffc6
+  TEMP_WORKFLOW: .github/workflows/temp-p4-001-source-manifest-finalize.yml
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 2
+
+      - name: Bind transport commit to frozen canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^1)" = "$SOURCE_HEAD"
+          test "$(git rev-parse 'HEAD^1^{tree}')" = "$SOURCE_TREE"
+          test "$(git diff --name-only HEAD^1 HEAD)" = "$TEMP_WORKFLOW"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Re-resolve runtime release authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/$RUNTIME_BRANCH:refs/remotes/origin/$RUNTIME_BRANCH" \
+            "+refs/heads/$SOURCE_BRANCH:refs/remotes/origin/$SOURCE_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$SOURCE_BRANCH")" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import json
+          import subprocess
+
+          runtime = 'refs/remotes/origin/agent/mission-runtime'
+          expected_head = '5a09eca38c3445f186a4d5b744a0a8ef34fd1583'
+          expected_tree = '978db8ce6ba796a9b8a0871fa21819a41ae3e831'
+
+          def load(path):
+              return json.loads(subprocess.check_output(['git', 'show', f'{runtime}:{path}']))
+
+          meta = load('runtime/meta.json')
+          if int(meta.get('runtimeGeneration', -1)) < 427:
+              raise SystemExit(f'runtime generation regressed: {meta}')
+
+          release = load(
+              'runtime/semaphores/MISSION-004/'
+              'SEM-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4.json'
+          )
+          if release.get('status') != 'ACTIVE':
+              raise SystemExit(f'release semaphore is not ACTIVE: {release}')
+          if release.get('workerIdentity') != 'ELASTIC-GPT-7C51A2E4':
+              raise SystemExit(f'release worker mismatch: {release}')
+          if release.get('workOrderId') != 'WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4':
+              raise SystemExit(f'release work-order mismatch: {release}')
+          if release.get('baseCommit') != expected_head or release.get('baseTree') != expected_tree:
+              raise SystemExit(f'release base mismatch: {release}')
+          if sorted(release.get('allowedPaths', [])) != sorted([
+              'SOURCE_MANIFEST.sha256',
+              '.github/workflows/temp-p4-001-source-manifest-finalize.yml',
+          ]):
+              raise SystemExit(f'release allowed-path mismatch: {release}')
+
+          integration = load(
+              'runtime/semaphores/MISSION-004/'
+              'SEM-P4-001-INTEGRATE-134-7C51A2E4.json'
+          )
+          if integration.get('status') != 'RELEASED':
+              raise SystemExit(f'helper integration semaphore not released: {integration}')
+          PY
+
+      - name: Require exact pre-release P4 and Product proof
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          p4_jobs="$RUNNER_TEMP/p4-jobs.json"
+          product_jobs="$RUNNER_TEMP/product-jobs.json"
+          artifact_json="$RUNNER_TEMP/manifest-artifact.json"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$P4_VALIDATION_RUN/jobs?per_page=100" \
+            > "$p4_jobs"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$PRODUCT_VALIDATION_RUN/jobs?per_page=100" \
+            > "$product_jobs"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts/$MANIFEST_ARTIFACT_ID" \
+            > "$artifact_json"
+          python3 - "$p4_jobs" "$product_jobs" "$artifact_json" <<'PY'
+          import json
+          import sys
+
+          p4 = json.load(open(sys.argv[1], encoding='utf-8'))
+          product = json.load(open(sys.argv[2], encoding='utf-8'))
+          artifact = json.load(open(sys.argv[3], encoding='utf-8'))
+
+          expected_p4 = {
+              'p4-001-canonical-linux',
+              'p4-001-canonical-macos',
+              'p4-001-canonical-windows',
+          }
+          found_p4 = {
+              job.get('name'): job.get('conclusion')
+              for job in p4.get('jobs', [])
+              if job.get('name') in expected_p4
+          }
+          if set(found_p4) != expected_p4 or any(v != 'success' for v in found_p4.values()):
+              raise SystemExit(f'canonical P4 source proof is not green: {found_p4}')
+
+          expected_product = {'validate-ubuntu', 'validate-macos', 'validate-windows'}
+          found_product = {
+              job.get('name'): job.get('conclusion')
+              for job in product.get('jobs', [])
+              if job.get('name') in expected_product
+          }
+          if set(found_product) != expected_product or any(v != 'success' for v in found_product.values()):
+              raise SystemExit(f'Product proof is not green: {found_product}')
+
+          if artifact.get('id') != 9091787789:
+              raise SystemExit(f'artifact id mismatch: {artifact}')
+          if artifact.get('digest') != 'sha256:0ee4e29c8992aabe9c60fc50c9be1b4e3a95498dc592c2701ea871a2e830ffc6':
+              raise SystemExit(f'artifact archive digest mismatch: {artifact}')
+          run = artifact.get('workflow_run') or {}
+          if run.get('head_sha') != '5a09eca38c3445f186a4d5b744a0a8ef34fd1583':
+              raise SystemExit(f'artifact source head mismatch: {run}')
+          print(f'P4 source proof PASS: {found_p4}')
+          print(f'Product proof PASS: {found_product}')
+          PY
+
+      - name: Generate certified canonical root manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm "$TEMP_WORKFLOW"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          test "$(sha256sum SOURCE_MANIFEST.sha256 | awk '{print $1}')" = "$EXPECTED_MANIFEST_SHA256"
+          test "$(wc -c < SOURCE_MANIFEST.sha256 | tr -d ' ')" = "$EXPECTED_MANIFEST_BYTES"
+          test "$(git hash-object SOURCE_MANIFEST.sha256)" = "$EXPECTED_MANIFEST_GIT_BLOB"
+          git diff --check -- SOURCE_MANIFEST.sha256
+          git add SOURCE_MANIFEST.sha256
+          expected_staged="$(printf '%s\n%s\n' "$TEMP_WORKFLOW" 'SOURCE_MANIFEST.sha256' | sort)"
+          actual_staged="$(git diff --cached --name-only | sort)"
+          test "$actual_staged" = "$expected_staged"
+
+      - name: Commit final manifest and prove final effective scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Mission V1.5 Release Finalizer'
+          git config user.email 'mission-v15-release@users.noreply.github.com'
+          git commit -m 'chore(p4): materialize canonical source manifest'
+          final_head="$(git rev-parse HEAD)"
+          test ! -e "$TEMP_WORKFLOW"
+          if git ls-tree -r --name-only HEAD | grep -Fxq "$TEMP_WORKFLOW"; then
+            echo 'temporary workflow survived final tree' >&2
+            exit 1
+          fi
+          test "$(git diff --name-only "$SOURCE_HEAD" HEAD)" = 'SOURCE_MANIFEST.sha256'
+          git diff --check "$SOURCE_HEAD" HEAD -- SOURCE_MANIFEST.sha256
+          test -z "$(git status --porcelain)"
+          echo "FINAL_HEAD=$final_head" >> "$GITHUB_ENV"
+
+      - name: Verify final committed manifest against final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util
+          import pathlib
+          import sys
+
+          path = pathlib.Path('tool/v71r12_exact_source_gate.py').resolve()
+          spec = importlib.util.spec_from_file_location('p4_manifest_exact_gate', path)
+          if spec is None or spec.loader is None:
+              raise SystemExit('cannot load exact source gate')
+          module = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = module
+          spec.loader.exec_module(module)
+          module.verify_source_manifest(pathlib.Path('.').resolve())
+          PY
+          test -z "$(git status --porcelain)"
+
+      - name: Re-check release authority and fast-forward canonical P4 branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/$RUNTIME_BRANCH:refs/remotes/origin/$RUNTIME_BRANCH" \
+            "+refs/heads/$SOURCE_BRANCH:refs/remotes/origin/$SOURCE_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$SOURCE_BRANCH")" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import json
+          import subprocess
+
+          runtime = 'refs/remotes/origin/agent/mission-runtime'
+          path = (
+              'runtime/semaphores/MISSION-004/'
+              'SEM-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4.json'
+          )
+          value = json.loads(subprocess.check_output(['git', 'show', f'{runtime}:{path}']))
+          if value.get('status') != 'ACTIVE':
+              raise SystemExit(f'release authority changed before publication: {value}')
+          if value.get('workerIdentity') != 'ELASTIC-GPT-7C51A2E4':
+              raise SystemExit(f'release worker changed before publication: {value}')
+          if value.get('baseCommit') != '5a09eca38c3445f186a4d5b744a0a8ef34fd1583':
+              raise SystemExit(f'release base changed before publication: {value}')
+          PY
+          git push origin HEAD:"refs/heads/$SOURCE_BRANCH"
+          git fetch --no-tags origin "+refs/heads/$SOURCE_BRANCH:refs/remotes/origin/$SOURCE_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$SOURCE_BRANCH")" = "$FINAL_HEAD"
+
+      - name: Record exact P4 manifest receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          export FINAL_HEAD
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = Path('SOURCE_MANIFEST.sha256')
+          raw = manifest.read_bytes()
+          payload = {
+              'schemaVersion': '1.0.0',
+              'workExecutionId': 'WRK-20260809T192000Z-7c51a2e4',
+              'workerIdentity': 'ELASTIC-GPT-7C51A2E4',
+              'productPr': 62,
+              'sourceHead': os.environ['SOURCE_HEAD'],
+              'sourceTree': os.environ['SOURCE_TREE'],
+              'finalHead': os.environ['FINAL_HEAD'],
+              'effectiveFinalizationDiff': ['SOURCE_MANIFEST.sha256'],
+              'manifestSha256': hashlib.sha256(raw).hexdigest(),
+              'manifestBytes': len(raw),
+              'generator': 'tool/p1a_refresh_source_manifest.py',
+              'generationCount': 2,
+              'byteIdenticalGenerations': True,
+              'exactManifestVerifier': True,
+              'p4ValidationRun': 31466717043,
+              'productValidationRun': 31466717098,
+              'sourceManifestArtifact': 9091787789,
+              'temporaryWorkflowInFinalTree': False,
+              'fastForwardPublication': True,
+          }
+          out = Path(os.environ['RUNNER_TEMP']) / 'p4-source-manifest-metadata.json'
+          out.write_text(json.dumps(payload, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(payload, indent=2, sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p4-001-canonical-manifest-${{ env.FINAL_HEAD }}
+          path: |
+            SOURCE_MANIFEST.sha256
+            ${{ runner.temp }}/p4-source-manifest-metadata.json
+          if-no-files-found: error
+          retention-days: 30
