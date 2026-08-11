@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000441-P5_R1_AUTHORITY_SCOPE_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-005",
+  "payload": {
+    "reason": "Remove test/product/source_contract_test.dart from REVIEW Work Order mutation authority. The source-contract file remains explicit review evidence and is governed by the separate source-inventory AUTHORITY_UPDATE boundary.",
+    "reviewWorkOrder": "WO-P5-001-PR127-R1-A84E19D3",
+    "reviewEvidenceStillIncludes": "test/product/source_contract_test.dart",
+    "sourceInventoryAuthorityWorkOrder": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4",
+    "canonicalProductPr": 72
+  },
+  "recordedAt": "2026-08-11T16:14:00Z",
+  "runtimeGeneration": 441,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T161400Z-5f6a7b8c",
+  "workOrderId": "WO-P5-001-PR127-R1-A84E19D3"
+}
