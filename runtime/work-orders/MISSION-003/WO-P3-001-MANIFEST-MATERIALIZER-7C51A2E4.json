@@ -1,0 +1,34 @@
+{
+  "activeSemaphoreId": "SEM-P3-001-MANIFEST-MATERIALIZER-7C51A2E4",
+  "allowedPaths": [
+    ".github/workflows/temp-p3-001-source-manifest-materializer.yml"
+  ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
+  "baseTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+  "branch": "agent/help/elastic-7c51a2e4/mission-003/p3-manifest-materializer",
+  "createdAt": "2026-08-11T05:38:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Remove the connector-only manifest-generation transport blocker without widening the P3 Product or root-manifest Work Orders. On a short-lived helper branch rooted exactly at P3 candidate 2ecf469251af705573d955efcfa8ac81afe1ae4e, add only one temporary workflow. In the runner delete that workflow before generation, prove HEAD^ equals the frozen P3 candidate and its tree, run the canonical tool/p1a_refresh_source_manifest.py twice byte-identically, verify only SOURCE_MANIFEST.sha256 differs from the frozen candidate worktree, and upload the candidate manifest as an artifact. Do not commit SOURCE_MANIFEST.sha256 on this helper; the already-active RELEASE Work Order remains the only authority allowed to materialize it on canonical PR #131.",
+  "parentProductPr": 131,
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "helper parent commit is exactly 2ecf469251af705573d955efcfa8ac81afe1ae4e and parent tree is 6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+    "temporary workflow is removed in the runner before canonical source-manifest generation",
+    "python tool/p1a_refresh_source_manifest.py . produces byte-identical first and second candidates",
+    "after restoring the committed manifest and removing the temporary workflow, helper worktree is clean",
+    "uploaded artifact contains source-manifest.candidate plus exact candidate commit/tree metadata",
+    "no Product source, SOURCE_MANIFEST.sha256, shared authority, evidence, support, acceptance, release, production, or GA state is committed by this helper"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-11T05:38:00Z",
+  "workOrderId": "WO-P3-001-MANIFEST-MATERIALIZER-7C51A2E4"
+}
