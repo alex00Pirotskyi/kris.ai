@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json"
+  ],
+  "authorityId": "test-center-registry",
+  "baseCommit": "ebcb89b629ba2b50f5061e19692d086f848cc4e1",
+  "baseTree": "978db8ce6ba796a9b8a0871fa21819a41ae3e831",
+  "branch": "agent/help/gpt-5f6a7b8c/mission-004/p4-registry-fixture-path",
+  "createdAt": "2026-08-11T19:45:30Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-11T21:45:30Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-11T19:45:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 467,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-REGISTRY-FIXTURE-PATH-5F6A7B8C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51",
+  "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+}
