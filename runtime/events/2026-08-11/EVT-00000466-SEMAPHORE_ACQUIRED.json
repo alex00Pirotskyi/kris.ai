@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000466-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-QWEN-P3-001-907EFE72",
+    "workerIdentity": "ELASTIC-QWEN-7F407720"
+  },
+  "recordedAt": "2026-08-11T19:42:58Z",
+  "runtimeGeneration": 466,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T194245Z-d6a522ee",
+  "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
+}
