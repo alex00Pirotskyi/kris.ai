@@ -27,8 +27,12 @@
     "fresh exact-head Product CI and Worker E validation required after source helper publication"
   ],
   "maxChildWorkOrders": 0,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "createdAt": "2026-08-11T07:38:00Z",
-  "updatedAt": "2026-08-11T07:38:00Z"
+  "updatedAt": "2026-08-11T07:40:00Z",
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "executionRole": "BUILDER",
+  "activeSemaphoreId": "SEM-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:P11_CLOSED_REVIEW_BINDING_WRITE_ACQUIRED"
 }

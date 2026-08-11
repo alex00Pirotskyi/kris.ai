@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "kind": "WRITE",
+  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "mission": "MISSION-010",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4",
+  "executionRole": "BUILDER",
+  "branch": "agent/help/elastic-7c51a2e4/mission-010/p11-review-binding-closed",
+  "productPr": 71,
+  "authorityId": null,
+  "resourceId": null,
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "allowedPaths": [
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py",
+    "release/evidence/P11-001/dependency-status.json"
+  ],
+  "createdAt": "2026-08-11T07:40:00Z",
+  "refreshedAt": "2026-08-11T07:40:00Z",
+  "expiresAt": "2026-08-11T08:40:00Z",
+  "runtimeGeneration": 430,
+  "status": "ACTIVE"
+}
