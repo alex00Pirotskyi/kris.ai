@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-INTEGRATE-134-7C51A2E4",
+  "kind": "INTEGRATION",
+  "workOrderId": "WO-P4-001-INTEGRATE-134-7C51A2E4",
+  "mission": "MISSION-004",
+  "workerIdentity": "ELASTIC-GPT-7C51A2E4",
+  "executionRole": "INTEGRATOR",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "productPr": 62,
+  "authorityId": null,
+  "resourceId": null,
+  "baseCommit": "4c1afbc55b82a1c7b707b46c41a4ab2f5b74f378",
+  "baseTree": "e7e1ff3069079af8399a54aa00c9fabeeab2514b",
+  "allowedPaths": [
+    "services/research_worker/src/search/validation.py",
+    "services/research_worker/test/test_contract_models.py"
+  ],
+  "createdAt": "2026-08-11T06:50:00Z",
+  "refreshedAt": "2026-08-11T06:50:00Z",
+  "expiresAt": "2026-08-11T07:50:00Z",
+  "runtimeGeneration": 423,
+  "status": "ACTIVE"
+}
