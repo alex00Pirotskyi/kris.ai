@@ -3,6 +3,8 @@ import 'dart:io';
 import 'browser_runtime_bundle.dart';
 import 'browser_runtime_process.dart';
 
+export 'browser_runtime_process.dart' show P3BrowserRuntimeException;
+
 final class P3BrowserRuntimeProbeResult {
   const P3BrowserRuntimeProbeResult({
     required this.ready,
