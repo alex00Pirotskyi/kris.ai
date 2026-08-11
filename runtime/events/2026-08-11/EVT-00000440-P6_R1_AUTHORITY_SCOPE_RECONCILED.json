@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000440-P6_R1_AUTHORITY_SCOPE_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-006",
+  "payload": {
+    "reason": "Remove test/product/source_contract_test.dart from REVIEW Work Order authority scope. The shared source-inventory file remains explicitly inspected by the R1 objective/requiredTests and was materialized under the separate AUTHORITY_UPDATE boundary.",
+    "reviewWorkOrder": "WO-P6-001-CURRENT-MAIN-R1-7C51A2E4",
+    "reviewAuthorityPaths": [
+      "lib/product/model/model.dart",
+      "lib/product/model/model_registry.dart",
+      "test/product/model/model_registry_identity_guard_test.dart",
+      "test/product/model/model_registry_public_contract_test.dart",
+      "test/product/model/model_registry_test.dart"
+    ],
+    "reviewEvidenceStillIncludes": "test/product/source_contract_test.dart",
+    "sourceInventoryAuthorityWorkOrder": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4",
+    "canonicalProductPr": 76
+  },
+  "recordedAt": "2026-08-11T16:09:00Z",
+  "runtimeGeneration": 440,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T160900Z-5f6a7b8c",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-R1-7C51A2E4"
+}
