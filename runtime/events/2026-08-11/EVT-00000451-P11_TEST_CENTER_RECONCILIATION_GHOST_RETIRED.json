@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000451-P11_TEST_CENTER_RECONCILIATION_GHOST_RETIRED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "GPT-5.6-SOL-5F6A7B8C",
+    "reason": "P11 Test Center reconciliation Work Order remained VALIDATING and was repeatedly revived by stranded-integration housekeeping even though canonical P11 commit 74d650577229b98e6d82de4695efe5e43661fbc0 already reconciled the exact Work Order base with protected-main P8/Test Center commit de00002ad01b19ab4ef4ced531d19a320a66b5c3. Retire the completed lane without changing Product bytes, support, acceptance, release, production, or GA state.",
+    "evidenceCommit": "74d650577229b98e6d82de4695efe5e43661fbc0",
+    "testCenterMainCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+    "previousStatus": "VALIDATING",
+    "nextStatus": "LANDED"
+  },
+  "recordedAt": "2026-08-11T17:56:50Z",
+  "runtimeGeneration": 451,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T175650Z-5f6a7b8c",
+  "workOrderId": "WO-P11-001-RECONCILE-TEST-CENTER-9C41E2AF"
+}
