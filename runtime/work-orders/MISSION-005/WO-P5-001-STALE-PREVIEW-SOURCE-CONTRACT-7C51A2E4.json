@@ -8,7 +8,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:SOURCE_CONTRACT_MATERIALIZED_VALIDATING",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:AUTHORITY_SCOPE_RECONCILED:SOURCE_INVENTORY",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Repair the exact-head full Flutter suite after the authorized removal of lib/p5_ia_preview.dart by removing only that deleted path from the governed expected library set in test/product/source_contract_test.dart. Preserve every other source inventory entry and invariant. Do not change Product implementation, P5 validator contracts, Test Center authority, source manifest, acceptance, support, release, production, or GA state.",
@@ -24,7 +24,7 @@
   "runtimeGeneration": 372,
   "schemaVersion": 1,
   "status": "VALIDATING",
-  "type": "CI_REPAIR",
-  "updatedAt": "2026-08-10T08:38:00Z",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-11T15:02:30Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4"
 }
