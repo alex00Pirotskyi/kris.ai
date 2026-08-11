@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000477-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-004",
+  "payload": {
+    "helperPullRequest": 143,
+    "parentWorkOrderId": null,
+    "requestedRole": "REVIEWER",
+    "reviewTargetCommit": "2be43a464acca333b43462b912731c50cfb382cc",
+    "reviewTargetTree": "c325ef45d5965a2b89dd0f5db7592c2cbb5d79b3",
+    "type": "REVIEW"
+  },
+  "recordedAt": "2026-08-11T20:21:30Z",
+  "runtimeGeneration": 477,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T194530Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-PR143-R1-5F6A7B8C"
+}

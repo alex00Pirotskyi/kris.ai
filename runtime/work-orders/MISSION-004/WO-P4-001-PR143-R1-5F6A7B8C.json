@@ -1,0 +1,36 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "release/evidence/P4-001/IMPLEMENTATION.md"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "8972077cf452878e45266fefb3adf13510fa722b",
+  "baseTree": "031dcd214940382450136e619402c49eb340abd5",
+  "createdAt": "2026-08-11T20:20:30Z",
+  "createdBy": "WRK-20260811T194530Z-5f6a7b8c",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:EXTERNAL_R1_REQUESTED:ALEX11PIROTSKYI",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-004",
+  "objective": "Perform a fresh context-independent R1 technical review of pull request 143 candidate at exact head 2be43a464acca333b43462b912731c50cfb382cc / tree c325ef45d5965a2b89dd0f5db7592c2cbb5d79b3. Reviewer GitHub identity must be alex11Pirotskyi and must be distinct from the authoring alex00Pirotskyi identity. Review exactly the one-file Test Center registry authority repair: confirm the net diff is +37/-37 in config/test_center_registry.v1.json, every changed line is one of the two authorized P4 fixture namespace substitutions, all historical evals/fixtures/p4_001_search_provider references are gone, registry structure/identities/order/non-target values and the original EOF convention are preserved, and no Product behavior or acceptance/support/release state changed. The current canonical P4 dispatch anchor is 8972077cf452878e45266fefb3adf13510fa722b / 031dcd214940382450136e619402c49eb340abd5 after Qwen reconciled protected main; this does not change the frozen review target. Acknowledge product-gates run 31530743315 SUCCESS on Ubuntu, Windows and macOS; P4 specialized run 31530743291 and P8/Test Center run 31530743398 have all source/contract lanes PASS with only the separately owned root SOURCE_MANIFEST equality jobs failing as expected for this authority-only helper. Report PASS or REQUEST_CHANGES bound to the exact helper head/tree. No integration or release claim is implied.",
+  "parentProductPr": 62,
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "inspect exact pull request 143 head/tree 2be43a464acca333b43462b912731c50cfb382cc / c325ef45d5965a2b89dd0f5db7592c2cbb5d79b3 and exactly one changed file",
+    "net registry diff is exactly +37/-37 and every change is an authorized fixture namespace substitution",
+    "no evals/fixtures/p4_001_search_provider path remains and owned services/research_worker/test/fixtures/p4_001_search_provider paths replace them one-for-one",
+    "registry identities, ordering, non-target values, P4 stable test IDs, modules, hierarchy/proof-lineage compatibility and EOF convention are preserved",
+    "product-gates run 31530743315 is SUCCESS on validate-ubuntu, validate-windows and validate-macos",
+    "P4 specialized run 31530743291 canonical Windows/Linux/macOS source lanes are SUCCESS; only separately owned source-manifest equality is red",
+    "P8/Test Center run 31530743398 contracts/hierarchy/regression lanes are SUCCESS on all required platforms; only separately owned P8 source-manifest equality is red",
+    "review must be submitted by alex11Pirotskyi, not alex00Pirotskyi; report PASS or REQUEST_CHANGES; no integration, acceptance, support, release, production or GA claim"
+  ],
+  "roadmapTask": "P4-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-11T20:20:30Z",
+  "workOrderId": "WO-P4-001-PR143-R1-5F6A7B8C"
+}
