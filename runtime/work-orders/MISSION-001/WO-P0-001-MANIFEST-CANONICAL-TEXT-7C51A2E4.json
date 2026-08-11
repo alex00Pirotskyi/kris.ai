@@ -1,0 +1,36 @@
+{
+  "activeSemaphoreId": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+  "allowedPaths": [
+    "tool/p1a_refresh_source_manifest.py",
+    "tool/p1a_text_eof_contract_test.py"
+  ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
+  "baseCommit": "521ecab1f2831206da98a282df51d8094230bc99",
+  "baseTree": "6fb1261ca415bcacbe127310a362405508bed5c9",
+  "branch": "agent/help/elastic-7c51a2e4/mission-001/p1a-manifest-canonical-text",
+  "createdAt": "2026-08-11T05:48:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "dependencyRequirements": [],
+  "executionRole": "DEFECT_HUNTER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:MATERIALIZER_RUN_31462641851:CANONICAL_GENERATOR_VERIFIER_MISMATCH_PROVEN",
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-001",
+  "objective": "Repair the protected-main P1A source-manifest generator so it uses the same canonical source-byte identity already enforced by tool/v71r12_exact_source_gate.py and represented by protected-main SOURCE_MANIFEST.sha256. UTF-8 text must normalize CRLF to LF before SHA-256; binary/non-UTF-8 data must remain byte-exact. Preserve exact path discovery, generated-path exclusion, sort order, LF manifest serialization, and terminal newline. Add a deterministic regression in the existing P1A canonical-text contract. This is a measured cross-portfolio blocker exposed by P3 finalization run 31462641851; do not change Product behavior, P3 source, current manifest bytes, support state, acceptance, release, production, or GA state in this source Work Order.",
+  "parentProductPr": null,
+  "priority": 100,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "generator and exact verifier use identical canonical source-byte semantics for UTF-8 CRLF text",
+    "binary and non-UTF-8 payloads remain byte-exact rather than newline-normalized",
+    "regression fixture proves CRLF .cmd input hashes to the canonical LF digest",
+    "running the repaired generator twice is byte-identical and preserves exact sorted path scope",
+    "P1 Authority Service Amendment source-contract lanes remain green on Ubuntu, Windows, and macOS",
+    "exact-current product-gates remain green before integration"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-11T05:48:00Z",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4"
+}

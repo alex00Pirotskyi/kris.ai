@@ -1,0 +1,45 @@
+{
+  "eventId": "EVT-00000412-P1A_MANIFEST_CANONICAL_TEXT_REPAIR_ACQUIRED",
+  "eventType": "P1A_MANIFEST_CANONICAL_TEXT_REPAIR_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "blockingRun": 31462641851,
+    "blockingJob": 93689081961,
+    "canonicalProductPr": 131,
+    "p3CandidateHead": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
+    "p3CandidateTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+    "measuredMismatch": {
+      "scripts/bootstrap_windows.cmd": {
+        "generatorRawSha256": "8e852d79051fcb4c3686d9ff3cff999a7bb2e614ebb7c62e66e4ba76c68df7c3",
+        "canonicalVerifierSha256": "a98ad5afcc0056544d13a3f755904a205dc3a33a3e037e8859cb0a504cb7c665"
+      },
+      "scripts/run_checks.cmd": {
+        "generatorRawSha256": "dac2792b9303d06e7c06033bd397880367cbb825281d58a0b5d32d4da00dd421",
+        "canonicalVerifierSha256": "66daf56fa5576858bca59d249251a0d82b5ea6d8cc1cc74f5a2324eac8820141"
+      }
+    },
+    "p3Finalization": {
+      "sourceManifestWorkOrder": "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+      "materializerWorkOrder": "WO-P3-001-MANIFEST-MATERIALIZER-7C51A2E4",
+      "status": "BLOCKED_PENDING_GENERATOR_REPAIR",
+      "semaphoresReleased": [
+        "SEM-P3-001-SOURCE-MANIFEST-7C51A2E4",
+        "SEM-P3-001-MANIFEST-MATERIALIZER-7C51A2E4"
+      ]
+    },
+    "repair": {
+      "workOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+      "semaphore": "SEM-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4",
+      "branch": "agent/help/elastic-7c51a2e4/mission-001/p1a-manifest-canonical-text",
+      "allowedPaths": [
+        "tool/p1a_refresh_source_manifest.py",
+        "tool/p1a_text_eof_contract_test.py"
+      ]
+    }
+  },
+  "recordedAt": "2026-08-11T05:48:00Z",
+  "runtimeGeneration": 412,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4"
+}
