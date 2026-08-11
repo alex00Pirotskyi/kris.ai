@@ -2,8 +2,8 @@
   "artifacts": [
     {
       "path": ".github/workflows/worker-f-p5-001-information-architecture.yml",
-      "sha256": "e30d289c7480e12f23b4ab0e6c5a09fc6d2ceed2424e5229f6d0e3a6785a65f0",
-      "sizeBytes": 9873
+      "sha256": "a309da7a81885c85736ebe1ef9dbd927ac5959ce5ac1240250fb32513da4a53b",
+      "sizeBytes": 10060
     },
     {
       "path": "config/test_center_assurance_hierarchy.v1.json",
