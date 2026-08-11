@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "release/evidence/P5-001/manifest.json"
   ],
@@ -11,6 +11,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
+  "lastActor": "ELASTIC-GPT-7C51A2E4:ONE_FILE_REPAIR_PUBLISHED:C55E093FEC9C5858B63B77C80C7ABE2D653E863F:CI_IN_PROGRESS",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Repair exact R1 finding P5-R1-4B8-001 on helper PR #127 without changing Product behavior or widening the seven-path helper scope. Materialize only release/evidence/P5-001/manifest.json using the exact canonical evidence-manifest candidate emitted by Worker F run 31374116905 artifact 9057249035 for helper head 4b8cba59ee9423b063cfd0e2c3effbc7ac417558 / tree f3e7f53bbddd3f099379a8be99af442f16701585. The artifact receipt binds generated manifest SHA-256 92bbb48c46d0e28db435387e5cbfc50e98eb4c786146c5f6798c541b1a3be16b and size 6847. Change no workflow, P5 Product source, Test Center/shared authority, source inventory, root SOURCE_MANIFEST.sha256, support, acceptance, release, production, or GA state. After materialization, rerun exact Worker F and product-gates and require fresh R1 because the reviewed helper head changes.",
@@ -27,10 +28,10 @@
     "fresh R1 reviews the repaired exact head; no carry-forward from review 4903482358"
   ],
   "roadmapTask": "P5-001",
-  "runtimeGeneration": 417,
+  "runtimeGeneration": 418,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T06:25:00Z",
+  "updatedAt": "2026-08-11T06:31:00Z",
   "workOrderId": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4"
 }

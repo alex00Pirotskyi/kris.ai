@@ -1,0 +1,37 @@
+{
+  "eventId": "EVT-00000418-P5_EVIDENCE_REPAIR_FROZEN_CI_RUNNING",
+  "eventType": "P5_EVIDENCE_REPAIR_FROZEN_CI_RUNNING",
+  "mission": "MISSION-005",
+  "payload": {
+    "canonicalProductPr": 72,
+    "helperPr": 127,
+    "previousHead": "4b8cba59ee9423b063cfd0e2c3effbc7ac417558",
+    "repairedHead": "c55e093fec9c5858b63b77c80c7abe2d653e863f",
+    "repairedTree": "001cf87e2b0ac01ba825ac6e44c2530b6b3dbcbf",
+    "repairDelta": [
+      "release/evidence/P5-001/manifest.json"
+    ],
+    "canonicalEvidenceManifestSha256": "92bbb48c46d0e28db435387e5cbfc50e98eb4c786146c5f6798c541b1a3be16b",
+    "repairWorkOrder": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+    "repairSemaphore": {
+      "semaphoreId": "SEM-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
+      "status": "RELEASED"
+    },
+    "exactValidation": {
+      "workerFRun": 31465227386,
+      "productGatesRun": 31465227372,
+      "status": "IN_PROGRESS"
+    },
+    "review": {
+      "previousReviewId": 4903482358,
+      "previousDecision": "REQUEST_CHANGES",
+      "freshR1Required": true,
+      "authoringExecutionEligible": false
+    }
+  },
+  "recordedAt": "2026-08-11T06:31:00Z",
+  "runtimeGeneration": 418,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4"
+}
