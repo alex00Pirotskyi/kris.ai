@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "mission": "MISSION-010",
+  "roadmapTask": "P11-001",
+  "parentProductPr": 71,
+  "priority": 92,
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "objective": "Repair the exact-current P11-001 immutable-review provenance defects identified by context-independent R1 on canonical PR #71 head 1383b8c4dff657020eb6873d01d370ffbfb30b72 / tree 01821da30672d2275b69ee3dcfc83c5dbb10ccdc. Change only tool/worker_e_dependency_binding.py, tool/worker_e_native_parity_readiness_test.py, and release/evidence/P11-001/dependency-status.json. Require an explicit closed reviewRequirement containing recordType=IndependentReview, reviewType, mission, task, pullRequest, and the complete requiredScope map; require exact artifact/requirement equality including the full scope map; add fail-closed regressions for wrong record type and surplus/omitted scope semantics. Reuse the previously proven stronger semantics from historical source 5cd9cd6f76b146a21a7df2971722bf9189cc6b61 without reverting unrelated current P11 repairs. Preserve P11 as SOURCE_FOUNDATION only. Do not modify Test Center/P8 authority, generated manifests, native behavior, support, acceptance, release, production, or GA state in this source repair.",
+  "requestedRole": "BUILDER",
+  "allowedPaths": [
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py",
+    "release/evidence/P11-001/dependency-status.json"
+  ],
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "dependencyRequirements": [],
+  "requiredTests": [
+    "source diff from 1383b8c4dff657020eb6873d01d370ffbfb30b72 is exactly the three authorized paths",
+    "immutable review requirement requires recordType=IndependentReview and exact reviewType/mission/task/pullRequest",
+    "artifact scope and requiredScope are validated as closed non-empty string-to-bool maps and must be exactly equal",
+    "regressions reject wrong recordType, extra artifact scope flag, omitted required scope flag, wrong review type, wrong candidate, and missing review requirement",
+    "existing immutable evidence blob/SHA binding and LIVE_HEAD_AT_CANDIDATE real-ref protections remain unchanged",
+    "focused Worker E dependency/readiness regressions PASS",
+    "no generated manifest or Test Center/P8 authority mutation in source helper",
+    "fresh exact-head Product CI and Worker E validation required after source helper publication"
+  ],
+  "maxChildWorkOrders": 0,
+  "status": "READY",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
+  "createdAt": "2026-08-11T07:38:00Z",
+  "updatedAt": "2026-08-11T07:38:00Z"
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000429-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "runtimeGeneration": 429,
+  "recordedAt": "2026-08-11T07:38:00Z",
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "mission": "MISSION-010",
+  "payload": {
+    "type": "PRODUCT_DEFECT_REPAIR",
+    "requestedRole": "BUILDER",
+    "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+    "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc"
+  }
+}
