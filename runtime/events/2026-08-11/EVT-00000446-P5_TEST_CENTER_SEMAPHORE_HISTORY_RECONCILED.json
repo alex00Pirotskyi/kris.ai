@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000446-P5_TEST_CENTER_SEMAPHORE_HISTORY_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-005",
+  "payload": {
+    "historicalOnly": true,
+    "reason": "Normalize a released P5 integration semaphore whose expiresAt equaled refreshedAt. Mission Execution compatibility validation requires expiresAt to be strictly later; repository integration-semaphore precedent uses a one-second terminal margin.",
+    "semaphoreId": "SEM-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4",
+    "timestampReconciliation": {
+      "expiresAtAfter": "2026-08-09T19:53:01Z",
+      "expiresAtBefore": "2026-08-09T19:53:00Z",
+      "refreshedAt": "2026-08-09T19:53:00Z"
+    },
+    "leaseReopened": false
+  },
+  "recordedAt": "2026-08-11T16:53:00Z",
+  "runtimeGeneration": 446,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T165300Z-5f6a7b8c",
+  "workOrderId": "WO-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4"
+}
