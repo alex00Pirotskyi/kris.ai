@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000483-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-003",
+  "payload": {
+    "pullRequest": 144,
+    "requestedRole": "REVIEWER",
+    "reviewTargetCommit": "84080801962102c4239d769919ef4478efe9c903",
+    "reviewTargetTree": "b1a3323dbec7a2ba1e25a442d962998ad5f85a46",
+    "type": "REVIEW"
+  },
+  "recordedAt": "2026-08-11T20:51:00Z",
+  "runtimeGeneration": 483,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T200400Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-PR144-R1-5F6A7B8C"
+}
