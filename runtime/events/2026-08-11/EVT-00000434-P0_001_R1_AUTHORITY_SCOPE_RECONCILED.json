@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000434-P0_001_R1_AUTHORITY_SCOPE_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-001",
+  "payload": {
+    "reason": "Remove SOURCE_MANIFEST.sha256 from REVIEW Work Order authority scope. The generated root manifest remains explicitly inspected by the R1 objective/requiredTests and was materialized under the separate terminal release-finalization boundary.",
+    "reviewWorkOrder": "WO-P0-001-MANIFEST-CANONICAL-TEXT-R1-7C51A2E4",
+    "reviewAuthorityPaths": [
+      "tool/p1a_refresh_source_manifest.py",
+      "tool/p1a_text_eof_contract_test.py"
+    ],
+    "reviewEvidenceStillIncludes": "SOURCE_MANIFEST.sha256",
+    "canonicalProductPr": 138
+  },
+  "recordedAt": "2026-08-11T10:57:30Z",
+  "runtimeGeneration": 434,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T103656Z-3df69492",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-R1-7C51A2E4"
+}
