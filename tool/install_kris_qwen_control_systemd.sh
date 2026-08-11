@@ -54,6 +54,7 @@ Type=simple
 WorkingDirectory=${REPO_DIR}
 EnvironmentFile=-${ENV_FILE}
 Environment=PYTHONUNBUFFERED=1
+Environment=HOME=/root
 ExecStart=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py
 Restart=always
 RestartSec=2
@@ -66,6 +67,14 @@ UMask=0077
 [Install]
 WantedBy=multi-user.target
 EOF
+
+# A system service cannot answer an interactive HTTPS username/password prompt.
+# If root already authenticated with `gh auth login`, wire that credential store
+# into git before starting the controller. Tokens remain in gh's normal store;
+# nothing is copied into this script or the systemd unit.
+if command -v gh >/dev/null 2>&1 && HOME=/root gh auth status --hostname github.com >/dev/null 2>&1; then
+  HOME=/root gh auth setup-git >/dev/null
+fi
 
 systemctl daemon-reload
 systemctl enable --now kris-qwen-control.service
