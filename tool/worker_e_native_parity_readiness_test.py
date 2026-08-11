@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import copy
 import hashlib
 import json
 from pathlib import Path
@@ -56,6 +55,67 @@ class DependencyBindingTest(unittest.TestCase):
             }],
         }
 
+    def immutable_review(
+        self,
+        *,
+        artifact_record_type: str = "IndependentReview",
+        extra_scope: dict[str, bool] | None = None,
+        omit_scope: str | None = None,
+    ) -> dict:
+        reviewed_commit = self.commit
+        reviewed_tree = self.tree
+        required_scope = {
+            "activationState": True,
+            "authorityBoundary": True,
+            "claimInflation": True,
+            "crossWorkerPathConflict": True,
+            "dependencyOwnerApproval": False,
+            "exactSourceIdentity": True,
+            "mergeAuthorization": False,
+            "nativeBehaviorSecurityReview": False,
+            "testCenterOwnerReview": False,
+        }
+        artifact_scope = dict(required_scope)
+        if extra_scope:
+            artifact_scope.update(extra_scope)
+        if omit_scope:
+            artifact_scope.pop(omit_scope)
+        artifact = {
+            "recordType": artifact_record_type,
+            "reviewType": "NO_CONFLICT_AND_ACTIVATION_STATE",
+            "mission": "MISSION-010",
+            "task": "P11-001 native readiness source foundation",
+            "pullRequest": 71,
+            "candidate": {"commit": reviewed_commit, "tree": reviewed_tree},
+            "reviewerRole": "Worker J",
+            "decision": "PASS",
+            "scope": artifact_scope,
+        }
+        (self.root / "review.json").write_text(json.dumps(artifact, sort_keys=True) + "\n")
+        snapshot_commit, snapshot_tree = self.commit_all("review artifact")
+        blob = self.git("rev-parse", f"{snapshot_commit}:review.json")
+        return {
+            "bindingKind": "IMMUTABLE_REVIEW_SNAPSHOT",
+            "commit": snapshot_commit,
+            "tree": snapshot_tree,
+            "liveHeadClaimed": False,
+            "evidencePaths": ["review.json"],
+            "evidenceBindings": [{"path": "review.json", "gitBlob": blob}],
+            "reviewArtifactPath": "review.json",
+            "reviewedCommit": reviewed_commit,
+            "reviewedTree": reviewed_tree,
+            "reviewerRole": "Worker J",
+            "decision": "PASS",
+            "reviewRequirement": {
+                "recordType": "IndependentReview",
+                "reviewType": "NO_CONFLICT_AND_ACTIVATION_STATE",
+                "mission": "MISSION-010",
+                "task": "P11-001 native readiness source foundation",
+                "pullRequest": 71,
+                "requiredScope": required_scope,
+            },
+        }
+
     def test_exact_ancestry_passes(self):
         binding.verify_binding(self.root, "protectedMain", self.ancestry())
 
@@ -106,72 +166,44 @@ class DependencyBindingTest(unittest.TestCase):
             binding.verify_binding(self.root, "workerA", row)
 
     def test_immutable_review_binds_reviewed_candidate_and_purpose(self):
-        reviewed_commit = self.commit
-        reviewed_tree = self.tree
-        artifact = {
-            "candidate": {"commit": reviewed_commit, "tree": reviewed_tree},
-            "reviewerRole": "Worker J",
-            "decision": "PASS",
-            "reviewType": "NO_CONFLICT_AND_ACTIVATION_STATE",
-            "mission": "MISSION-010",
-            "pullRequest": 71,
-            "task": "P11-001 native readiness source foundation",
-            "scope": {
-                "activationState": True,
-                "crossWorkerPathConflict": True,
-                "nativeBehaviorSecurityReview": False,
-                "testCenterOwnerReview": False,
-            },
-        }
-        (self.root / "review.json").write_text(json.dumps(artifact, sort_keys=True) + "\n")
-        snapshot_commit, snapshot_tree = self.commit_all("review artifact")
-        blob = self.git("rev-parse", f"{snapshot_commit}:review.json")
-        row = {
-            "bindingKind": "IMMUTABLE_REVIEW_SNAPSHOT",
-            "commit": snapshot_commit,
-            "tree": snapshot_tree,
-            "liveHeadClaimed": False,
-            "evidencePaths": ["review.json"],
-            "evidenceBindings": [{"path": "review.json", "gitBlob": blob}],
-            "reviewArtifactPath": "review.json",
-            "reviewedCommit": reviewed_commit,
-            "reviewedTree": reviewed_tree,
-            "reviewerRole": "Worker J",
-            "decision": "PASS",
-            "expectedReview": {
-                "reviewType": "NO_CONFLICT_AND_ACTIVATION_STATE",
-                "mission": "MISSION-010",
-                "task": "P11-001 native readiness source foundation",
-                "pullRequest": 71,
-                "requiredScope": {
-                    "activationState": True,
-                    "crossWorkerPathConflict": True,
-                    "nativeBehaviorSecurityReview": False,
-                    "testCenterOwnerReview": False,
-                },
-            },
-        }
+        row = self.immutable_review()
         binding.verify_binding(self.root, "workerJ", row)
-
-        wrong_candidate = copy.deepcopy(row)
-        wrong_candidate["reviewedCommit"] = snapshot_commit
+        row["reviewedCommit"] = row["commit"]
         with self.assertRaisesRegex(binding.DependencyBindingError, "candidate does not match"):
-            binding.verify_binding(self.root, "workerJ", wrong_candidate)
+            binding.verify_binding(self.root, "workerJ", row)
 
-        wrong_type = copy.deepcopy(row)
-        wrong_type["expectedReview"]["reviewType"] = "NATIVE_SECURITY"
-        with self.assertRaisesRegex(binding.DependencyBindingError, "review type mismatch"):
-            binding.verify_binding(self.root, "workerJ", wrong_type)
+    def test_immutable_review_rejects_wrong_record_type(self):
+        row = self.immutable_review(artifact_record_type="ReviewSummary")
+        with self.assertRaisesRegex(binding.DependencyBindingError, "recordType does not satisfy"):
+            binding.verify_binding(self.root, "workerJ", row)
 
-        wrong_scope = copy.deepcopy(row)
-        wrong_scope["expectedReview"]["requiredScope"]["nativeBehaviorSecurityReview"] = True
-        with self.assertRaisesRegex(binding.DependencyBindingError, "review scope mismatch"):
-            binding.verify_binding(self.root, "workerJ", wrong_scope)
+    def test_immutable_review_rejects_wrong_review_type(self):
+        row = self.immutable_review()
+        row["reviewRequirement"]["reviewType"] = "NATIVE_BEHAVIOR_SECURITY_REVIEW"
+        with self.assertRaisesRegex(binding.DependencyBindingError, "reviewType does not satisfy"):
+            binding.verify_binding(self.root, "workerJ", row)
 
-        missing_requirement = copy.deepcopy(row)
-        del missing_requirement["expectedReview"]
-        with self.assertRaisesRegex(binding.DependencyBindingError, "lacks expected review requirement"):
-            binding.verify_binding(self.root, "workerJ", missing_requirement)
+    def test_immutable_review_rejects_wrong_required_scope(self):
+        row = self.immutable_review()
+        row["reviewRequirement"]["requiredScope"]["nativeBehaviorSecurityReview"] = True
+        with self.assertRaisesRegex(binding.DependencyBindingError, "scope does not satisfy"):
+            binding.verify_binding(self.root, "workerJ", row)
+
+    def test_immutable_review_rejects_surplus_artifact_scope(self):
+        row = self.immutable_review(extra_scope={"unexpectedMergeAuthority": False})
+        with self.assertRaisesRegex(binding.DependencyBindingError, "scope does not satisfy"):
+            binding.verify_binding(self.root, "workerJ", row)
+
+    def test_immutable_review_rejects_omitted_artifact_scope(self):
+        row = self.immutable_review(omit_scope="claimInflation")
+        with self.assertRaisesRegex(binding.DependencyBindingError, "scope does not satisfy"):
+            binding.verify_binding(self.root, "workerJ", row)
+
+    def test_immutable_review_requires_closed_requirement(self):
+        row = self.immutable_review()
+        row.pop("reviewRequirement")
+        with self.assertRaisesRegex(binding.DependencyBindingError, "lacks explicit reviewRequirement"):
+            binding.verify_binding(self.root, "workerJ", row)
 
     def test_live_head_resolves_real_ref_and_detects_ref_move(self):
         subprocess.run(["git", "-C", str(self.root), "branch", "candidate", self.commit], check=True)
