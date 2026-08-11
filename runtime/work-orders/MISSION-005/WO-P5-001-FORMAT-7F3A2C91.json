@@ -23,8 +23,9 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "LANDED",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-07T19:45:30Z",
-  "workOrderId": "WO-P5-001-FORMAT-7F3A2C91"
+  "updatedAt": "2026-08-11T17:39:56Z",
+  "workOrderId": "WO-P5-001-FORMAT-7F3A2C91",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:PR112_MERGED"
 }

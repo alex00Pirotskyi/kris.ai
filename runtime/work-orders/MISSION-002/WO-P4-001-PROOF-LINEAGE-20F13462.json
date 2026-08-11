@@ -26,8 +26,9 @@
   ],
   "roadmapTask": "P8-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "LANDED",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-08T23:08:00Z",
-  "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462"
+  "updatedAt": "2026-08-11T17:39:56Z",
+  "workOrderId": "WO-P4-001-PROOF-LINEAGE-20F13462",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:PR124_MERGED"
 }

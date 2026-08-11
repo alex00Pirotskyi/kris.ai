@@ -25,8 +25,9 @@
   ],
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "LANDED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T22:49:30Z",
-  "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B"
+  "updatedAt": "2026-08-11T17:39:56Z",
+  "workOrderId": "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:PR133_MERGED"
 }

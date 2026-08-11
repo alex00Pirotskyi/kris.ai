@@ -1,0 +1,30 @@
+{
+  "eventId": "EVT-00000448-STALE_WIP_MERGED_HELPERS_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": null,
+  "payload": {
+    "actor": "GPT-5.6-SOL-5F6A7B8C",
+    "reason": "Retire nonterminal Work Orders whose bounded helper/integration objective is proven completed by merged GitHub PR state. No active semaphore existed at reconciliation time; no live review/helper chain is retired.",
+    "landedWorkOrders": {
+      "WO-P4-001-INTEGRATE-92": 92,
+      "WO-P4-001-INTEGRATE-111-4A9C2D1E": 111,
+      "WO-P4-001-SAFE-SEARCH-4A9C2D1E": 111,
+      "WO-P4-001-INTEGRATE-134-7C51A2E4": 134,
+      "WO-P4-001-PROOF-LINEAGE-20F13462": 124,
+      "WO-P2-004-TECH-SELECTION-6E91A2F4": 128,
+      "WO-P5-001-FORMAT-7F3A2C91": 112,
+      "WO-P6-001-INTEGRATE-118-C4E91A7F": 118,
+      "WO-P5-001-INTEGRATE-TEST-CENTER-7C51A2E4": 133,
+      "WO-P5-001-TEST-CENTER-LINEAGE-7C51A2E4": 133,
+      "WO-P5-001-TEST-CENTER-REGISTRY-5948C03B": 133,
+      "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1": 117
+    },
+    "reviewOrHelperChainsPreserved": true,
+    "activeSemaphoreCountBefore": 0
+  },
+  "recordedAt": "2026-08-11T17:39:56Z",
+  "runtimeGeneration": 448,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T173956Z-5f6a7b8c",
+  "workOrderId": null
+}

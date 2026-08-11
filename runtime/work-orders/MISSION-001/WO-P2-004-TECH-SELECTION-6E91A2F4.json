@@ -30,8 +30,9 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "LANDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-09T07:41:00Z",
-  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4"
+  "updatedAt": "2026-08-11T17:39:56Z",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:PR128_MERGED"
 }
