@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P3-001-907EFE72",
   "allowedPaths": [
     "lib/product/browser/browser_runtime_bundle.dart",
     "test/product/browser/browser_runtime_bundle_test.dart"
@@ -26,8 +25,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T19:42:58Z",
+  "updatedAt": "2026-08-11T19:51:03Z",
   "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
 }
