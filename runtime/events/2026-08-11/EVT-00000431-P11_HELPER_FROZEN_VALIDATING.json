@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "eventId": "EVT-00000431-P11_HELPER_FROZEN_VALIDATING",
+  "eventType": "P11_HELPER_FROZEN_VALIDATING",
+  "runtimeGeneration": 431,
+  "recordedAt": "2026-08-11T07:57:00Z",
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
+  "mission": "MISSION-010",
+  "payload": {
+    "helperPr": 139,
+    "helperHead": "1403f42d27a838ff7cdb2684832c6855023670cf",
+    "helperTree": "03dd2b8ab0bdc4416b966fbcf7a76773a157987d",
+    "changedPaths": [
+      "release/evidence/P11-001/dependency-status.json",
+      "tool/worker_e_dependency_binding.py",
+      "tool/worker_e_native_parity_readiness_test.py"
+    ],
+    "productGatesRun": 31470952181,
+    "releasedSemaphore": "SEM-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4"
+  }
+}
