@@ -1,0 +1,32 @@
+{
+  "eventId": "EVT-00000447-P5_RELEASED_SEMAPHORE_TIMESTAMPS_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-005",
+  "payload": {
+    "historicalOnly": true,
+    "leaseReopened": false,
+    "reason": "Normalize three released P5 semaphores whose expiresAt equaled refreshedAt. Mission Execution compatibility validation requires expiresAt to be strictly later; repository semaphore precedent uses a one-second terminal margin.",
+    "reconciledSemaphores": {
+      "SEM-P5-001-SOURCE-MANIFEST-7C51A2E4": {
+        "expiresAtAfter": "2026-08-10T06:43:01Z",
+        "expiresAtBefore": "2026-08-10T06:43:00Z",
+        "refreshedAt": "2026-08-10T06:43:00Z"
+      },
+      "SEM-P5-001-STALE-PREVIEW-REPAIR-TRANSPORT-7C51A2E4": {
+        "expiresAtAfter": "2026-08-10T08:38:01Z",
+        "expiresAtBefore": "2026-08-10T08:38:00Z",
+        "refreshedAt": "2026-08-10T08:38:00Z"
+      },
+      "SEM-P5-001-STALE-PREVIEW-SOURCE-CONTRACT-7C51A2E4": {
+        "expiresAtAfter": "2026-08-10T08:38:01Z",
+        "expiresAtBefore": "2026-08-10T08:38:00Z",
+        "refreshedAt": "2026-08-10T08:38:00Z"
+      }
+    }
+  },
+  "recordedAt": "2026-08-11T16:58:00Z",
+  "runtimeGeneration": 447,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T165800Z-5f6a7b8c",
+  "workOrderId": "WO-P5-001-SOURCE-MANIFEST-7C51A2E4"
+}
