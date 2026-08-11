@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000421-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "ELASTIC-GPT-7C51A2E4:R1_PASS:4903560641:EXACT_HELPER_REVIEW_COMPLETE",
+    "nextStatus": "LANDED"
+  },
+  "recordedAt": "2026-08-11T06:40:30Z",
+  "runtimeGeneration": 421,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260809T192000Z-7c51a2e4",
+  "workOrderId": "WO-P4-001-PR134-R1-7C51A2E4"
+}
