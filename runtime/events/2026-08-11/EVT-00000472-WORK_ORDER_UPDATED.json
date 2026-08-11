@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000472-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "GPT-5.6-SOL-5F6A7B8C:PR143_EXACT_PRODUCT_CI_GREEN:R1_REQUIRED",
+    "helperPullRequest": 143,
+    "nextStatus": "HELPER_READY",
+    "productGatesRun": 31530743315
+  },
+  "recordedAt": "2026-08-11T20:18:00Z",
+  "runtimeGeneration": 472,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T194530Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
