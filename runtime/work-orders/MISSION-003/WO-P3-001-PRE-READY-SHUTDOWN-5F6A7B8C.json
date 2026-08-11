@@ -1,13 +1,16 @@
 {
+  "activeSemaphoreId": "SEM-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C",
   "allowedPaths": [
     "automation_host/src/browser-runtime.mjs",
     "automation_host/src/browser-runtime.test.mjs"
   ],
+  "assignedWorker": "GPT-5.6-SOL-5F6A7B8C",
   "baseCommit": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
   "baseTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
   "createdAt": "2026-08-11T18:32:00Z",
   "createdBy": "WRK-20260811T183200Z-5f6a7b8c",
   "dependencyRequirements": [],
+  "executionRole": "DEFECT_HUNTER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Close the P3-001 pre-ready shutdown lifecycle defect in the bundled browser worker. The worker currently starts reading shutdown commands only after Chromium reaches CDP readiness and the ready record is emitted; if the Dart supervisor times out during Chromium startup/connect and terminates the Node worker, the detached Chromium process group can outlive the worker. Make shutdown observable during startup, race startup/connect against that shutdown signal, and guarantee the existing browser-tree cleanup path runs before process exit. Preserve normal ready/shutdown behavior and P3-002 session boundaries.",
@@ -24,8 +27,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T18:32:00Z",
+  "updatedAt": "2026-08-11T18:33:00Z",
   "workOrderId": "WO-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C"
 }

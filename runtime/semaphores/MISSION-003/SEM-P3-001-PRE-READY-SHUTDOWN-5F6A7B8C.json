@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "automation_host/src/browser-runtime.mjs",
+    "automation_host/src/browser-runtime.test.mjs"
+  ],
+  "baseCommit": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
+  "baseTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+  "branch": "agent/help/gpt-5f6a7b8c/mission-003/p3-pre-ready-shutdown",
+  "createdAt": "2026-08-11T18:33:00Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-11T22:33:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-11T18:33:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 457,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C",
+  "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+}
