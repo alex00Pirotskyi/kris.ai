@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000435-P3_001_WORK_ORDER_TYPE_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-003",
+  "payload": {
+    "reason": "Reconcile active P3-001 ProductRuntime composition Work Order from legacy type PRODUCT_INTEGRATION to current Mission Execution 1.5 type INTEGRATION without changing source, scope, status, tests, or ownership.",
+    "workOrder": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B",
+    "oldType": "PRODUCT_INTEGRATION",
+    "newType": "INTEGRATION",
+    "parentProductPr": 131
+  },
+  "recordedAt": "2026-08-11T10:59:30Z",
+  "runtimeGeneration": 435,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260811T103656Z-3df69492",
+  "workOrderId": "WO-P3-001-PRODUCT-COMPOSITION-44AE364B"
+}
