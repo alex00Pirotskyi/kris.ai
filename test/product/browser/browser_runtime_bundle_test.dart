@@ -139,18 +139,18 @@ void main() {
   );
 
   test(
-    'invalid application-data current bundle cannot be masked by valid fallback',
+    'invalid preferred current bundle cannot be masked by valid fallback',
     () async {
-      final temp = await Directory.systemTemp.createTemp('p3-browser-priority-');
+      final temp = await Directory.systemTemp.createTemp('p3-priority-');
       addTearDown(() => temp.delete(recursive: true));
       final applicationDataRoot = Directory(
         '${temp.path}${Platform.pathSeparator}application-data',
       );
       final preferred = await _writeBundle(applicationDataRoot);
-      final executableRoot = Directory(
+      final installRoot = Directory(
         '${temp.path}${Platform.pathSeparator}installed-app',
       );
-      final fallback = await _writeBundle(executableRoot);
+      final fallback = await _writeBundle(installRoot);
       final preferredWorker = File(
         '${preferred.path}${Platform.pathSeparator}automation_host'
         '${Platform.pathSeparator}src${Platform.pathSeparator}browser-runtime.mjs',
@@ -161,7 +161,7 @@ void main() {
       );
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: applicationDataRoot.absolute,
-        executablePath: '${executableRoot.path}${Platform.pathSeparator}kristin',
+        executablePath: '${installRoot.path}${Platform.pathSeparator}kristin',
       );
 
       expect(fallback.existsSync(), isTrue);
@@ -185,19 +185,19 @@ void main() {
   test(
     'uses executable-root bundle only when application-data current is absent',
     () async {
-      final temp = await Directory.systemTemp.createTemp('p3-browser-fallback-');
+      final temp = await Directory.systemTemp.createTemp('p3-fallback-');
       addTearDown(() => temp.delete(recursive: true));
       final applicationDataRoot = Directory(
         '${temp.path}${Platform.pathSeparator}application-data',
       );
       await applicationDataRoot.create(recursive: true);
-      final executableRoot = Directory(
+      final installRoot = Directory(
         '${temp.path}${Platform.pathSeparator}installed-app',
       );
-      final fallback = await _writeBundle(executableRoot);
+      final fallback = await _writeBundle(installRoot);
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: applicationDataRoot.absolute,
-        executablePath: '${executableRoot.path}${Platform.pathSeparator}kristin',
+        executablePath: '${installRoot.path}${Platform.pathSeparator}kristin',
       );
 
       final resources = await resolver.resolve();
