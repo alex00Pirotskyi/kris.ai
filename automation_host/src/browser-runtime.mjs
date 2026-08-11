@@ -354,6 +354,21 @@ async function waitForShutdown() {
   }
 }
 
+function shutdownRequestedError() {
+  const error = new Error('browser_shutdown_requested');
+  error.code = 'browser_shutdown_requested';
+  return error;
+}
+
+export async function raceStartupWithShutdown(operation, shutdown) {
+  return Promise.race([
+    operation,
+    shutdown.then(() => {
+      throw shutdownRequestedError();
+    }),
+  ]);
+}
+
 export async function runProbe(options, env = process.env) {
   const binding = await validateManifestBinding(options, env);
   const profileDirectory = path.join(options.stateDirectory, 'chromium-profile');
@@ -371,11 +386,18 @@ export async function runProbe(options, env = process.env) {
     },
   );
   const stderrTail = drainBounded(child.stderr);
+  const shutdown = waitForShutdown();
   let browser;
   let primaryError = null;
   try {
-    const port = await waitForDevToolsPort(profileDirectory, child);
-    browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
+    const port = await raceStartupWithShutdown(
+      waitForDevToolsPort(profileDirectory, child),
+      shutdown,
+    );
+    browser = await raceStartupWithShutdown(
+      chromium.connectOverCDP(`http://127.0.0.1:${port}`),
+      shutdown,
+    );
     const browserVersion = browser.version();
     process.stdout.write(
       `${JSON.stringify({
@@ -391,7 +413,7 @@ export async function runProbe(options, env = process.env) {
         sandboxMode: options.sandboxMode,
       })}\n`,
     );
-    await waitForShutdown();
+    await shutdown;
   } catch (error) {
     primaryError = error;
   }
