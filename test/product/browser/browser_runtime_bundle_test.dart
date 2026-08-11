@@ -134,7 +134,7 @@ void main() {
       expect(File(resources.browserExecutable).existsSync(), isTrue);
       expect(resources.provenance['applicationOwned'], isTrue);
       expect(resources.provenance['globalRuntimeRequired'], isFalse);
-      expect(resources.provenance['networkInstallRequired'], isFalse);
+      expect(resources.provenance['browserNetworkInstallRequired'], isFalse);
     },
   );
 
