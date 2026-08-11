@@ -1,0 +1,36 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "automation_host/src/browser-runtime.mjs",
+    "automation_host/src/browser-runtime.test.mjs"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
+  "baseTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+  "createdAt": "2026-08-11T18:54:00Z",
+  "createdBy": "WRK-20260811T183200Z-5f6a7b8c",
+  "dependencyRequirements": [],
+  "executionRole": "REVIEWER",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:R1_REQUESTED:PR142",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Perform a fresh context-independent R1 technical review of helper PR #142 at exact head 3e572d57385bd80add12b18fc319e87da309c159 / tree 9b2e1fa5f9c8d38f617e39ae56dbd53ba6e0b037. Review exactly the two-file P3-001 pre-ready shutdown repair. Confirm the bundled Node browser worker begins consuming shutdown before CDP readiness, races both DevTools-port discovery and connectOverCDP against shutdown, and routes a pre-ready shutdown through the existing browser-tree/profile cleanup without changing normal ready-then-shutdown semantics. Independently run the automation-host Node test suite because general product-gates does not execute it. Acknowledge exact helper product-gates run 31523891557 SUCCESS on Ubuntu, Windows, and macOS. Report PASS or REQUEST_CHANGES bound to the exact head/tree. No integration, P3-002 sessions/actions, acceptance, support, release, production, or GA claim is implied.",
+  "parentProductPr": 131,
+  "priority": 100,
+  "requestedRole": "REVIEWER",
+  "requiredTests": [
+    "inspect exact PR #142 head/tree 3e572d57385bd80add12b18fc319e87da309c159 / 9b2e1fa5f9c8d38f617e39ae56dbd53ba6e0b037 and exactly two changed paths",
+    "npm test --prefix automation_host passes on the exact helper head",
+    "pre-ready shutdown interrupts pending CDP startup/connect before the ready record",
+    "shutdown-triggered startup interruption reaches browser process-group and profile cleanup",
+    "normal ready-then-shutdown behavior remains unchanged",
+    "product-gates run 31523891557 is SUCCESS on validate-ubuntu, validate-windows, and validate-macos",
+    "report PASS or REQUEST_CHANGES; no integration, acceptance, support, release, production, or GA claim"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "REVIEW",
+  "updatedAt": "2026-08-11T18:54:00Z",
+  "workOrderId": "WO-P3-001-PR142-R1-5F6A7B8C"
+}
