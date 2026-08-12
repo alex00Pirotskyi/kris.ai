@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000496-P4_STALE_READY_ASSIGNEE_CLEARED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-004",
+  "payload": {
+    "reason": "Clear stale assignedWorker from a READY integration Work Order after its prior Qwen lease was released. The stale assignee made the only GREEN integration lane visible but ineligible to a new persistent Qwen worker identity.",
+    "oldAssignedWorker": "ELASTIC-QWEN-836DC449",
+    "newAssignedWorker": null,
+    "status": "READY",
+    "activeSemaphoreId": null,
+    "canonicalProductHead": "2bea2ea68fa4ef8ed40f9776bbbabe3664c53514"
+  },
+  "recordedAt": "2026-08-12T10:20:30Z",
+  "runtimeGeneration": 496,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
