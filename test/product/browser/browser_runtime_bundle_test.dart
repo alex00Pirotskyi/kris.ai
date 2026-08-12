@@ -139,6 +139,75 @@ void main() {
   );
 
   test(
+    'invalid preferred current bundle cannot be masked by valid fallback',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-priority-');
+      addTearDown(() => temp.delete(recursive: true));
+      final applicationDataRoot = Directory(
+        '${temp.path}${Platform.pathSeparator}application-data',
+      );
+      final preferred = await _writeBundle(applicationDataRoot);
+      final installRoot = Directory(
+        '${temp.path}${Platform.pathSeparator}installed-app',
+      );
+      final fallback = await _writeBundle(installRoot);
+      final preferredWorker = File(
+        '${preferred.path}${Platform.pathSeparator}automation_host'
+        '${Platform.pathSeparator}src${Platform.pathSeparator}browser-runtime.mjs',
+      );
+      await preferredWorker.writeAsString(
+        '// tampered preferred\n',
+        mode: FileMode.append,
+      );
+      final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
+        applicationDataRoot: applicationDataRoot.absolute,
+        executablePath: '${installRoot.path}${Platform.pathSeparator}kristin',
+      );
+
+      expect(fallback.existsSync(), isTrue);
+
+      expect(
+        resolver.resolve(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => '$error',
+            'error',
+            allOf(
+              contains('p3_browser_runtime_bundle_invalid'),
+              contains('p3_runtime_resource_digest_mismatch:browserWorker'),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'uses executable-root bundle only when application-data current is absent',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-fallback-');
+      addTearDown(() => temp.delete(recursive: true));
+      final applicationDataRoot = Directory(
+        '${temp.path}${Platform.pathSeparator}application-data',
+      );
+      await applicationDataRoot.create(recursive: true);
+      final installRoot = Directory(
+        '${temp.path}${Platform.pathSeparator}installed-app',
+      );
+      final fallback = await _writeBundle(installRoot);
+      final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
+        applicationDataRoot: applicationDataRoot.absolute,
+        executablePath: '${installRoot.path}${Platform.pathSeparator}kristin',
+      );
+
+      final resources = await resolver.resolve();
+
+      expect(resources.root.path, fallback.absolute.path);
+      expect(resources.browserEngine, 'chromium');
+    },
+  );
+
+  test(
     'rejects a tampered worker even when manifest identity is unchanged',
     () async {
       final temp = await Directory.systemTemp.createTemp('p3-browser-tamper-');
