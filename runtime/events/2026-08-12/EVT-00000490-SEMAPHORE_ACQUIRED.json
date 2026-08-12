@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000490-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "WRITE",
+    "reason": "repair both P4 registry records and 18 hierarchy bindings dropped by Qwen protected-main reconciliation; bounded shared-authority paths are explicitly eligible for MISSION-004",
+    "semaphoreId": "SEM-P4-001-TEST-CENTER-MERGE-REPAIR-5F6A7B8C",
+    "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T05:03:30Z",
+  "runtimeGeneration": 490,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}

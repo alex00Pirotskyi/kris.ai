@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "config/test_center_registry.v1.json",
+    "config/test_center_assurance_hierarchy.v1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "8972077cf452878e45266fefb3adf13510fa722b",
+  "baseTree": "031dcd214940382450136e619402c49eb340abd5",
+  "branch": "agent/help/gpt-5f6a7b8c/mission-004/p4-registry-merge-repair",
+  "createdAt": "2026-08-12T05:03:30Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-12T06:03:30Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-12T05:03:30Z",
+  "resourceId": null,
+  "runtimeGeneration": 490,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-TEST-CENTER-MERGE-REPAIR-5F6A7B8C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51",
+  "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+}
