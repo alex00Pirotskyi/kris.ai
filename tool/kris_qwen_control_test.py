@@ -14,6 +14,7 @@ import unittest
 
 HERE = Path(__file__).resolve().parent
 CONTROL = HERE / "kris_qwen_control.py"
+INSTALLER = HERE / "install_kris_qwen_control_systemd.sh"
 
 spec = importlib.util.spec_from_file_location("kris_qwen_control", CONTROL)
 assert spec and spec.loader
@@ -146,6 +147,20 @@ class ControllerTest(unittest.TestCase):
         self.assertFalse(self.controller.verify_token("wrong"))
         token = self.controller.token_path.read_text(encoding="utf-8").strip()
         self.assertTrue(self.controller.verify_token(token))
+
+    def test_systemd_installer_pins_root_gh_credential_store(self) -> None:
+        installer = INSTALLER.read_text(encoding="utf-8")
+        self.assertIn("Environment=HOME=/root", installer)
+        self.assertIn("Environment=GH_CONFIG_DIR=/root/.config/gh", installer)
+        self.assertIn("Environment=GIT_TERMINAL_PROMPT=0", installer)
+        self.assertIn(
+            "HOME=/root GH_CONFIG_DIR=/root/.config/gh gh auth status --hostname github.com",
+            installer,
+        )
+        self.assertIn(
+            "HOME=/root GH_CONFIG_DIR=/root/.config/gh gh auth setup-git --hostname github.com",
+            installer,
+        )
 
 
 if __name__ == "__main__":
