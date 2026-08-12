@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000508-P4_PR147_INTEGRATED_CANONICAL_RECONCILED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "helperPullRequest": 147,
+    "helperHead": "e7a0e7235ad24b2c4ebe13ffb78eb0d05c630306",
+    "canonicalProductHead": "2d3779336f66c669a97e3aa589100fa7956e2c4d",
+    "integrationMode": "maintainer_override_squash",
+    "externalReviewSatisfied": false,
+    "productGatesRun": 31589798752,
+    "nextStatus": "VALIDATING"
+  },
+  "recordedAt": "2026-08-12T11:10:00Z",
+  "runtimeGeneration": 508,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T105400Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
