@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000495-P4_CURRENT_MAIN_LANDING_BASE_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-004",
+  "payload": {
+    "reason": "Reconcile the outstanding READY P4 protected-main integration Work Order after PR #146 advanced canonical Product PR #62 from 8972077cf452878e45266fefb3adf13510fa722b to 2bea2ea68fa4ef8ed40f9776bbbabe3664c53514. Only the live Product dispatch binding changes; the landing objective and required gates remain unchanged.",
+    "reconciledWorkOrders": {
+      "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4": {
+        "liveBaseCommit": "2bea2ea68fa4ef8ed40f9776bbbabe3664c53514",
+        "liveBaseTree": "0fcf8d987ee20914a9e0e639cbba80093b210370",
+        "mode": "REBASE_OUTSTANDING_INTEGRATION",
+        "previousBaseCommit": "8972077cf452878e45266fefb3adf13510fa722b",
+        "previousBaseTree": "031dcd214940382450136e619402c49eb340abd5"
+      }
+    }
+  },
+  "recordedAt": "2026-08-12T09:49:23Z",
+  "runtimeGeneration": 495,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T094923Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
