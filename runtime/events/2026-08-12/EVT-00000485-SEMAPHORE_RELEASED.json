@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000485-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "canonicalProductHead": "dea3e457384c85e20035ed08c299e483a2d68460",
+    "externalReviewSatisfied": false,
+    "helperPullRequest": 142,
+    "integrationMode": "maintainer_override_squash",
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P3-001-PR142-INTEGRATION-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T04:38:00Z",
+  "runtimeGeneration": 485,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C"
+}
