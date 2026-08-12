@@ -22,6 +22,24 @@
     {"testId":"tc.test-center.contracts","lineageId":"test-center.contracts"},
     {"testId":"tc.test-center.semantic-regressions","lineageId":"test-center.contracts"},
     {"testId":"tc.p8.formal-test-hierarchy","lineageId":"p8.formal-test-hierarchy"},
-    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"}
+    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"},
+    {"testId":"tc.p4-001.request-schema","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.result-schema","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.page-schema","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.provider-error-schema","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.url-fail-closed","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.credential-rejection","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.secret-normalization","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.provider-metadata-isolation","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.stable-query-identity","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.stable-result-identity","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.cursor-provider-binding","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.capability-negotiation","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.rate-limit-representation","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.partial-failure-representation","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.fixture-provider-parity","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.network-free-determinism","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.unfetched-snippet-classification","lineageId":"p4-001.search-provider-interface"},
+    {"testId":"tc.p4-001.normalized-result-state-preservation","lineageId":"p4-001.search-provider-interface"}
   ]
 }
