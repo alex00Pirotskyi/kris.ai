@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000538-P3_PR144_R1_BINDING_REFRESHED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "action": "REFRESH_REVIEW_DISPATCH_BINDING",
+    "canonicalDispatchHead": "d2d6bff20419736c4ecacbab727657720815cd56",
+    "canonicalDispatchTree": "03b456d53532253538d0498343ba593c861f208e",
+    "originalReviewHead": "84080801962102c4239d769919ef4478efe9c903",
+    "originalReviewPullRequest": 144,
+    "originalReviewTree": "b1a3323dbec7a2ba1e25a442d962998ad5f85a46",
+    "previousDispatchHead": "8d65923539c2b9487123fcec85c457b693f857d8",
+    "reviewStatus": "READY",
+    "truthBoundary": "Dispatch binding refresh only. The original review target is unchanged and no R1 PASS is represented or inferred."
+  },
+  "recordedAt": "2026-08-12T18:18:00Z",
+  "runtimeGeneration": 538,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T173608Z-c7ffecff",
+  "workOrderId": "WO-P3-001-PR144-R1-5F6A7B8C"
+}
