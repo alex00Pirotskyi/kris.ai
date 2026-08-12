@@ -10,11 +10,9 @@
     "lib/product/browser/browser_runtime.dart",
     "lib/product/browser/browser_runtime_bundle.dart",
     "lib/product/browser/browser_runtime_process.dart",
-    "lib/product/product_runtime.dart",
     "test/product/browser/browser_product_runtime_test.dart",
     "test/product/browser/browser_runtime_bundle_test.dart",
     "test/product/browser/browser_runtime_process_test.dart",
-    "test/product/source_contract_test.dart",
     "tool/p3_stage_browser_runtime_bundle.py",
     "tool/p3_stage_browser_runtime_bundle_test.py"
   ],
@@ -25,25 +23,25 @@
   "createdBy": "WRK-20260812T101900Z-5f6a7b8c",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:FRONTIER_REOPENED:MAIN_ADVANCED_P1A_GENERATOR_REPAIR",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:AUTHORITY_SPLIT:MISSION_OWNED_RECONCILIATION_ONLY",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
-  "objective": "Reconcile canonical P3-001 Product PR #131 from exact head c188224a40b621445c563402e23e0509898e4fa5 onto current protected main after maintainer-override landing of P1A canonical-text generator repair #138 at 74e242ce1427f76a0c2031264fe8acd4919394bf. Preserve exactly the current P3 browser-runtime Product/bundle/workflow/staging/source-inventory surface listed in allowedPaths; inherit protected-main bytes everywhere else. Do not resurrect the obsolete temporary manifest-materializer workaround, do not implement P3-002+, and do not claim R1, acceptance, support, release, production, or GA. After reconciliation, leave canonical P3 in VALIDATING for exact P3 Browser Runtime and product-gates validation plus separately authorized source-manifest finalization.",
+  "objective": "Reconcile canonical P3-001 Product PR #131 from exact head c188224a40b621445c563402e23e0509898e4fa5 onto current protected main after maintainer-override landing of P1A canonical-text generator repair #138 at 74e242ce1427f76a0c2031264fe8acd4919394bf. Preserve exactly the MISSION-003-owned browser-runtime Product/bundle/workflow/staging surface listed in allowedPaths and inherit protected-main bytes everywhere else. The shared ProductRuntime composition path lib/product/product_runtime.dart and source-inventory path test/product/source_contract_test.dart are intentionally excluded from this INTEGRATION authority and must be restored only through their separate AUTHORITY_UPDATE lanes after reconciliation. Do not resurrect the obsolete temporary manifest-materializer workaround, do not implement P3-002+, and do not claim R1, acceptance, support, release, production, or GA. Leave canonical P3 in VALIDATING for the shared-authority restores, exact P3 Browser Runtime/product-gates validation, and separately authorized source-manifest finalization.",
   "parentProductPr": 131,
   "priority": 100,
   "requestedRole": "INTEGRATOR",
   "requiredTests": [
-    "effective diff against protected main is confined to the 16 authorized P3 paths",
+    "effective MISSION-003-owned diff against protected main is confined to the 14 authorized P3 paths",
     "protected-main P1A canonical source-manifest generator bytes are inherited unchanged",
+    "shared ProductRuntime composition and source-inventory are not claimed by this integration semaphore",
     "P3 browser runtime source and bundle identities remain present after reconciliation",
     "no P3-002 session/action surface is introduced",
-    "exact canonical P3 Browser Runtime validation is required after reconciliation",
-    "exact canonical product-gates tri-platform validation is required after reconciliation"
+    "exact canonical P3 Browser Runtime and product-gates validation are required after shared-authority restoration"
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
   "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-12T10:25:30Z",
+  "updatedAt": "2026-08-12T10:37:30Z",
   "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C"
 }

@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000498-P3_RECONCILIATION_AUTHORITY_SPLIT",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "reason": "Runtime hygiene correctly rejected shared ProductRuntime composition and source-inventory paths inside an ordinary P3 INTEGRATION Work Order. Reconciliation authority is narrowed to MISSION-003-owned paths; shared surfaces remain separate AUTHORITY_UPDATE work.",
+    "integrationAllowedPathCount": 14,
+    "separateSharedAuthorities": [
+      "lib/product/product_runtime.dart",
+      "test/product/source_contract_test.dart"
+    ],
+    "canonicalProductHead": "c188224a40b621445c563402e23e0509898e4fa5",
+    "protectedMainHead": "74e242ce1427f76a0c2031264fe8acd4919394bf"
+  },
+  "recordedAt": "2026-08-12T10:37:30Z",
+  "runtimeGeneration": 498,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C"
+}
