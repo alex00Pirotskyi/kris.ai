@@ -1,0 +1,25 @@
+{
+  "eventId": "EVT-00000494-P3_PR142_R1_PRODUCT_BASE_RECONCILED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-003",
+  "payload": {
+    "reason": "Reconcile the READY PR #142 R1 review Work Order whose dispatch baseCommit/baseTree no longer matched live canonical Product PR #131 after the subsequent PR #145 canonical P3 advance. The immutable original PR #142 helper review target and unsatisfied non-blocking R1 assurance debt remain unchanged.",
+    "reconciledWorkOrders": {
+      "WO-P3-001-PR142-R1-5F6A7B8C": {
+        "liveBaseCommit": "c188224a40b621445c563402e23e0509898e4fa5",
+        "liveBaseTree": "54d4da3ff7093f114e77d8d3fd1d1d20139a8a91",
+        "mode": "REVIEW_DISPATCH_BASE_ONLY",
+        "previousBaseCommit": "dea3e457384c85e20035ed08c299e483a2d68460",
+        "previousBaseTree": "9b2e1fa5f9c8d38f617e39ae56dbd53ba6e0b037",
+        "reviewTargetCommit": "3e572d57385bd80add12b18fc319e87da309c159",
+        "reviewTargetTree": "9b2e1fa5f9c8d38f617e39ae56dbd53ba6e0b037"
+      }
+    },
+    "reviewTargetsChanged": false
+  },
+  "recordedAt": "2026-08-12T09:45:14Z",
+  "runtimeGeneration": 494,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T094514Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-PR142-R1-5F6A7B8C"
+}
