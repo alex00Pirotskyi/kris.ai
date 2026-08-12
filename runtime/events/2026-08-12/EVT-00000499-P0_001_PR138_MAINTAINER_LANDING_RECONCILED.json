@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000499-P0_001_PR138_MAINTAINER_LANDING_RECONCILED",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "productPr": 138,
+    "landingMode": "maintainer_override_squash",
+    "landedMainHead": "74e242ce1427f76a0c2031264fe8acd4919394bf",
+    "sourceWorkOrderStatus": "LANDED",
+    "externalReviewSatisfied": false,
+    "reviewWorkOrderStatus": "CANCELLED",
+    "reviewTruth": "not performed; no PASS inferred",
+    "canonicalRuntimeBranch": "main"
+  },
+  "recordedAt": "2026-08-12T10:44:30Z",
+  "runtimeGeneration": 499,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P0-001-MANIFEST-CANONICAL-TEXT-7C51A2E4"
+}
