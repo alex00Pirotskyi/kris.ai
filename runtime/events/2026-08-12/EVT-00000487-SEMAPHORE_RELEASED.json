@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000487-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "canonicalProductHead": "c188224a40b621445c563402e23e0509898e4fa5",
+    "externalReviewSatisfied": false,
+    "helperPullRequest": 145,
+    "replacesPullRequest": 144,
+    "integrationMode": "maintainer_override_squash",
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P3-001-PR144-REBASE-INTEGRATION-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T04:47:00Z",
+  "runtimeGeneration": 487,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
+}
