@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000497-P3_CURRENT_MAIN_RECONCILIATION_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-003",
+  "payload": {
+    "reason": "Protected main advanced by PR #138 with the canonical-text manifest generator repair, making P3 current-main reconciliation mechanically actionable again.",
+    "canonicalProductHead": "c188224a40b621445c563402e23e0509898e4fa5",
+    "protectedMainHead": "74e242ce1427f76a0c2031264fe8acd4919394bf",
+    "allowedPathCount": 16,
+    "integrationMode": "current-main-reconcile",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-12T10:25:30Z",
+  "runtimeGeneration": 497,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C"
+}
