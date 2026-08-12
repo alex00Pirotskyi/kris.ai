@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000509-P3_RECONCILIATION_CHILD_BUDGET_RECONCILED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "reason": "P3 current-main reconciliation intentionally requires exactly one post-reconciliation child to restore shared ProductRuntime composition and source inventory. Increase child budget from zero to one rather than detaching the real dependency chain.",
+    "parentWorkOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C",
+    "childWorkOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C",
+    "oldMaxChildWorkOrders": 0,
+    "newMaxChildWorkOrders": 1
+  },
+  "recordedAt": "2026-08-12T11:13:00Z",
+  "runtimeGeneration": 509,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C"
+}
