@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000488-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "WRITE",
+    "reason": "maintainer override repair of P4 Test Center registration dropped by Qwen protected-main reconciliation, preserving corrected owned fixture namespace; external R1 remains unsatisfied and is not represented as PASS",
+    "semaphoreId": "SEM-P4-001-REGISTRY-MERGE-REPAIR-5F6A7B8C",
+    "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T04:53:00Z",
+  "runtimeGeneration": 488,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
