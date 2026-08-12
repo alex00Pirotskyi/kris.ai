@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "config/test_center_assurance_hierarchy.v1.json",
+    "config/test_center_registry.v1.json",
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "9fc07a7bf9913ec10a8bec72ca551f9f5621e346",
+  "baseTree": "799141aefdba7a0602e077601db56fdf8c0474ed",
+  "branch": "agent/help/gpt-5f6a7b8c/mission-004/p4-test-center-repair-after-main-138",
+  "createdAt": "2026-08-12T10:57:00Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-12T12:57:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-12T10:57:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 505,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-TEST-CENTER-RESTORE-AFTER-MAIN-5F6A7B8C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51",
+  "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+}

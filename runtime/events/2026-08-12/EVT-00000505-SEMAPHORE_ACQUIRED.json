@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000505-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "WRITE",
+    "reason": "restore P4 Test Center registry, hierarchy and proof-lineage records dropped by current-main reconciliation 9fc07a7b",
+    "semaphoreId": "SEM-P4-001-TEST-CENTER-RESTORE-AFTER-MAIN-5F6A7B8C",
+    "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T10:57:00Z",
+  "runtimeGeneration": 505,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T105400Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
