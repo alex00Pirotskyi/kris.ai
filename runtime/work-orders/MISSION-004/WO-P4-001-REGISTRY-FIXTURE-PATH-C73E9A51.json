@@ -1,4 +1,5 @@
 {
+  "activeSemaphoreId": "SEM-P4-001-COMPLETE-TEST-CENTER-REPAIR-5F6A7B8C",
   "allowedPaths": [
     "config/test_center_registry.v1.json",
     "config/test_center_assurance_hierarchy.v1.json",
@@ -11,7 +12,7 @@
   "createdBy": "WRK-20260809T084200Z-c73e9a51",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:P4_QWEN_MERGE_REGRESSION:EXPAND_TO_PROOF_LINEAGE_AUTHORITY",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:P4_QWEN_MERGE_REGRESSION:COMPLETE_TEST_CENTER_REPAIR_IN_PROGRESS",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Repair the complete P4-001 Test Center shared-authority state dropped by Qwen merge commit 8972077cf452878e45266fefb3adf13510fa722b: canonical registry records, 18 formal hierarchy bindings, and 18 assurance proof-lineage bindings. Restore the prior P4 records as an append-safe semantic union with current shared Test Center/P8 records, retain the verified fixture migration to services/research_worker/test/fixtures/p4_001_search_provider, and preserve all non-P4 shared semantics. Change only the three explicitly authorized shared Test Center files; do not promote Product behavior, acceptance, support or release state.",
@@ -31,8 +32,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-12T05:11:00Z",
+  "updatedAt": "2026-08-12T05:13:00Z",
   "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
 }

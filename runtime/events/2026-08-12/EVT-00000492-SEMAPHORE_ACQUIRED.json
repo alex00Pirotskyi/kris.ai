@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000492-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "WRITE",
+    "reason": "complete bounded P4 Test Center merge-regression repair across registry, hierarchy and proof-lineage shared authorities",
+    "semaphoreId": "SEM-P4-001-COMPLETE-TEST-CENTER-REPAIR-5F6A7B8C",
+    "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T05:13:00Z",
+  "runtimeGeneration": 492,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
