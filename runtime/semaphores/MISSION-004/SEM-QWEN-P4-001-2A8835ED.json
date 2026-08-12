@@ -1,0 +1,27 @@
+{
+  "allowedPaths": [
+    ".github/workflows/p4-001*.yml",
+    "release/evidence/P4-*/**",
+    "schemas/web_search_*.json",
+    "services/research_worker/**",
+    "tool/p4_001*.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "2bea2ea68fa4ef8ed40f9776bbbabe3664c53514",
+  "baseTree": "0fcf8d987ee20914a9e0e639cbba80093b210370",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "createdAt": "2026-08-12T10:50:06Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-12T12:50:06Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-12T10:50:06Z",
+  "resourceId": null,
+  "runtimeGeneration": 502,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P4-001-2A8835ED",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+  "workerIdentity": "ELASTIC-QWEN-CB233CBE"
+}
