@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P4-001-2A8835ED",
   "allowedPaths": [
     "services/research_worker/**",
     "tool/p4_001*.py",
@@ -31,8 +30,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-12T10:50:06Z",
+  "updatedAt": "2026-08-12T10:50:21Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }
