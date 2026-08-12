@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000512-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "helperPullRequest": 148,
+    "helperHead": "24991a2e17d7437a2014ee2669f64c4acd0c66b2",
+    "nextStatus": "VALIDATING",
+    "reason": "exact ProductRuntime composition and source-inventory blobs restored for machine validation",
+    "semaphoreId": "SEM-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T11:23:00Z",
+  "runtimeGeneration": 512,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
+}

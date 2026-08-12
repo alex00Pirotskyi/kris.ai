@@ -1,10 +1,10 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "lib/product/product_runtime.dart",
     "test/product/source_contract_test.dart"
   ],
-  "assignedWorker": "GPT-5.6-SOL-5F6A7B8C",
+  "assignedWorker": null,
   "baseCommit": "76788a2a4c27aa474f060b4c8d621ff3061a0971",
   "baseTree": "2ae47d5ea766de0fd941d68ddd42c24c225888b3",
   "branch": "agent/help/gpt-5f6a7b8c/mission-003/p3-shared-surfaces-after-main-138",
@@ -12,10 +12,10 @@
   "createdBy": "WRK-20260812T101900Z-5f6a7b8c",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:WRITE_LEASE_ACQUIRED:P3_POST_MAIN_SHARED_SURFACES",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:PR148_FROZEN:EXACT_SHARED_BLOBS:CI_VALIDATING",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
-  "objective": "Restore the two separately governed P3-001 shared surfaces intentionally removed by Qwen current-main reconciliation 76788a2a4c27aa474f060b4c8d621ff3061a0971: ProductRuntime browser composition in lib/product/product_runtime.dart and the three governed browser library entries in test/product/source_contract_test.dart. Reuse the exact already-verified blobs from pre-reconciliation canonical P3 c188224a40b621445c563402e23e0509898e4fa5. Preserve the protected-main P1A canonical-text generator and SOURCE_MANIFEST bytes inherited through PR #138; change no other P3 Product, bundle, workflow, Test Center, acceptance, support, release, production, or GA state.",
+  "objective": "Restore the two separately governed P3-001 shared surfaces intentionally removed by Qwen current-main reconciliation 76788a2a4c27aa474f060b4c8d621ff3061a0971. Exact pre-reconciliation ProductRuntime composition and source-inventory blobs were restored on helper PR #148 at head 24991a2e17d7437a2014ee2669f64c4acd0c66b2 / tree dd35b4d2165eaccefdd559583513b38aa3967980. Preserve protected-main P1A generator and SOURCE_MANIFEST bytes inherited through PR #138; change no other P3 Product, bundle, workflow, Test Center, acceptance, support, release, production, or GA state.",
   "parentProductPr": 131,
   "parentWorkOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C",
   "priority": 100,
@@ -31,8 +31,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-12T11:20:00Z",
+  "updatedAt": "2026-08-12T11:23:00Z",
   "workOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
 }
