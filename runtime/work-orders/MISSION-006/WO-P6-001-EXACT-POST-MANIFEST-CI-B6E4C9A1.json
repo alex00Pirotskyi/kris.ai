@@ -1,0 +1,39 @@
+{
+  "activeSemaphoreId": "SEM-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1",
+  "allowedPaths": [
+    "lib/product/model/model.dart",
+    "lib/product/model/model_registry.dart",
+    "test/product/model/model_registry_identity_guard_test.dart",
+    "test/product/model/model_registry_public_contract_test.dart",
+    "test/product/model/model_registry_test.dart"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-B6E4C9A1",
+  "baseCommit": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+  "baseTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
+  "createdAt": "2026-08-12T21:44:00Z",
+  "createdBy": "WRK-20260812T211030Z-b6e4c9a1",
+  "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_EXACT_POST_MANIFEST_CI_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Dispatch the repository's existing product-gates workflow by workflow_dispatch against canonical P6-001 Product PR #76 at exact post-manifest head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 / tree 0d5f19883612fba07c61ed537749dbdaa00c3692. Bind the allocated run to that exact SHA, validate Ubuntu, Windows, and macOS, mutate no Product source, and keep R2 identity independence, protected-main landing, acceptance, support, release support, production readiness, release promotion, and GA explicitly unpromoted.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "ci.yml workflow_dispatch run is allocated with head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+    "validate-ubuntu succeeds on the exact dispatched head",
+    "validate-windows succeeds on the exact dispatched head",
+    "validate-macos succeeds on the exact dispatched head",
+    "canonical P6 branch remains 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 throughout dispatch and validation",
+    "effective Product diff from protected main remains the six P6 source/test files plus SOURCE_MANIFEST.sha256",
+    "no Product source mutation or R2, protected-main landing, acceptance, support, release, production readiness, or GA promotion is performed"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "INTEGRATING",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-12T21:44:00Z",
+  "workOrderId": "WO-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1"
+}

@@ -1,0 +1,20 @@
+{
+  "eventId": "EVT-00000544-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "commandId": "CMD-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1-G544",
+    "executionRole": "CI_REPAIR",
+    "expectedProductHead": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+    "kind": "INTEGRATION",
+    "productPr": 76,
+    "releasedSemaphoreId": "SEM-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+    "semaphoreId": "SEM-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1",
+    "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+  },
+  "recordedAt": "2026-08-12T21:44:00Z",
+  "runtimeGeneration": 544,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T211030Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1"
+}
