@@ -2,7 +2,7 @@
   "allowedPaths": [
     "config/test_center_registry.v1.json"
   ],
-  "assignedWorker": "ELASTIC-20f13462",
+  "assignedWorker": null,
   "baseCommit": "0ea342b105768a197190867ddaf763e5378a3d98",
   "baseTree": "cbd904561d54e54f2df251cb62c6e5fe415d963a",
   "createdAt": "2026-08-08T09:15:00Z",
@@ -24,8 +24,9 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "LANDED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-08T17:36:30Z",
+  "updatedAt": "2026-08-12T11:50:00Z",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_PREREQUISITE_RECONCILIATION:TEST_CENTER_STATE_CONSUMED_BY_PR147",
   "workOrderId": "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA"
 }

@@ -13,7 +13,7 @@
   "createdBy": "WRK-20260809T084200Z-c73e9a51",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:MAINTAINER_OVERRIDE:PR147_INTEGRATED:MACHINE_GREEN",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_PREREQUISITE_RECONCILIATION:PR147_INTEGRATED_MACHINE_GREEN",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Repair the complete P4-001 Test Center shared-authority state dropped again by Qwen current-main reconciliation commit 9fc07a7bf9913ec10a8bec72ca551f9f5621e346 after protected main advanced through PR #138. Exact verified Test Center registry, hierarchy and proof-lineage blobs were restored through helper PR #147 and squash-integrated into canonical P4 as 2d3779336f66c669a97e3aa589100fa7956e2c4d. P4 source/Test Center and P8 contracts/hierarchy/proof-lineage passed on Linux, Windows and macOS; product-gates passed on all three. Root SOURCE_MANIFEST publication remains separate. No R1 PASS, acceptance, support, release, production, or GA state is claimed.",
@@ -33,8 +33,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "LANDED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-12T11:10:00Z",
+  "updatedAt": "2026-08-12T11:50:00Z",
   "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
 }

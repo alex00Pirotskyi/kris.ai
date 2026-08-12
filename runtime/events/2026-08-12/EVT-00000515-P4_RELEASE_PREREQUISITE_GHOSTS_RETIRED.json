@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000515-P4_RELEASE_PREREQUISITE_GHOSTS_RETIRED",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-004",
+  "payload": {
+    "reason": "Qwen v5.2 release-finalization safety correctly refused the GREEN P4 manifest lane because three same-Product-PR authority/blocker rows were still nonterminal even though their outcomes are already present and machine-verified in canonical P4. Retire only those consumed prerequisites so the one-file SOURCE_MANIFEST finalizer can become executable without weakening selector policy.",
+    "canonicalProductHead": "2d3779336f66c669a97e3aa589100fa7956e2c4d",
+    "canonicalProductTree": "65b6526dea7d2527f86c6cd425674f76ac88e026",
+    "retiredWorkOrders": [
+      "WO-P4-001-CLEAN-TEST-CENTER-4D82C7FA",
+      "WO-P4-001-FIXTURE-REHOME-B450571C",
+      "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+    ],
+    "p4SpecializedRun": 31590514440,
+    "productGatesRun": 31590514338,
+    "nextWorkOrder": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-12T11:50:00Z",
+  "runtimeGeneration": 515,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
+}
