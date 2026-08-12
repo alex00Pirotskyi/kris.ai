@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'browser/browser_runtime.dart';
 import 'crypto_utils.dart';
 import 'deployment_support.dart';
 import 'domain.dart';
@@ -22,129 +21,6 @@ import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
 import 'p1_authority_service_contract_v1.dart';
 import 'p1_authority_service_product_runtime_v1.dart';
-
-final class P3ProductRuntimeBrowserHandle {
-  P3ProductRuntimeBrowserHandle._({
-    required P3BrowserRuntimeService? service,
-    required Directory? stateDirectory,
-    required String statusCode,
-    required Map<String, Object?> provenance,
-  })  : _service = service,
-        _stateDirectory = stateDirectory,
-        _statusCode = statusCode,
-        _provenance = Map<String, Object?>.unmodifiable(provenance);
-
-  factory P3ProductRuntimeBrowserHandle.blocked(String statusCode) =>
-      P3ProductRuntimeBrowserHandle._(
-        service: null,
-        stateDirectory: null,
-        statusCode: statusCode,
-        provenance: const <String, Object?>{
-          'applicationOwned': true,
-          'globalRuntimeRequired': false,
-          'browserNetworkInstallRequired': false,
-          'p3_002SessionServiceImplemented': false,
-        },
-      );
-
-  static Future<P3ProductRuntimeBrowserHandle> open({
-    required Directory applicationDataRoot,
-    required Directory stateDirectory,
-    String? executablePath,
-  }) async {
-    final service = P3BrowserRuntimeService(
-      applicationDataRoot: applicationDataRoot,
-      executablePath: executablePath,
-    );
-    try {
-      final resources = await service.resolveBundle();
-      return P3ProductRuntimeBrowserHandle._(
-        service: service,
-        stateDirectory: stateDirectory.absolute,
-        statusCode: 'p3_browser_runtime_available',
-        provenance: resources.provenance,
-      );
-    } on StateError catch (error) {
-      final message = error.message.toString();
-      return P3ProductRuntimeBrowserHandle.blocked(
-        message.startsWith('p3_browser_runtime_bundle_missing')
-            ? 'p3_browser_runtime_bundle_missing'
-            : 'p3_browser_runtime_bundle_invalid',
-      );
-    } on FileSystemException {
-      return P3ProductRuntimeBrowserHandle.blocked(
-        'p3_browser_runtime_bundle_unreadable',
-      );
-    }
-  }
-
-  final P3BrowserRuntimeService? _service;
-  final Directory? _stateDirectory;
-  final String _statusCode;
-  final Map<String, Object?> _provenance;
-  Future<P3BrowserRuntimeProbeResult>? _activeProbe;
-  bool _closed = false;
-
-  bool get available => !_closed && _service != null;
-
-  String get statusCode => _closed ? 'p3_product_runtime_closed' : _statusCode;
-
-  Map<String, Object?> get provenance => Map<String, Object?>.unmodifiable(
-        <String, Object?>{
-          ..._provenance,
-          'available': available,
-          'statusCode': statusCode,
-          'p3_002SessionServiceImplemented': false,
-        },
-      );
-
-  Future<P3BrowserRuntimeProbeResult> probe({
-    Duration startupTimeout = const Duration(seconds: 30),
-  }) async {
-    if (_closed) {
-      throw const P3BrowserRuntimeException('p3_product_runtime_closed');
-    }
-    final service = _service;
-    final stateDirectory = _stateDirectory;
-    if (service == null || stateDirectory == null) {
-      throw P3BrowserRuntimeException(
-        'p3_product_runtime_unavailable',
-        _statusCode,
-      );
-    }
-    if (_activeProbe != null) {
-      throw const P3BrowserRuntimeException(
-        'p3_product_runtime_probe_in_progress',
-      );
-    }
-    final future = service.probe(
-      stateDirectory: stateDirectory,
-      startupTimeout: startupTimeout,
-    );
-    _activeProbe = future;
-    try {
-      return await future;
-    } finally {
-      if (identical(_activeProbe, future)) _activeProbe = null;
-    }
-  }
-
-  Future<void> close() async {
-    if (_closed) return;
-    _closed = true;
-    final active = _activeProbe;
-    if (active != null) {
-      try {
-        await active;
-      } catch (_) {
-        // The probe owns fail-closed teardown. Application shutdown must wait
-        // for it, but a failed diagnostic probe must not strand other runtime
-        // shutdown responsibilities.
-      }
-    }
-    _activeProbe = null;
-  }
-}
 
 class ProductRuntime {
   ProductRuntime._({
@@ -203,12 +79,6 @@ class ProductRuntime {
   final ExecutionIntelligenceService executionIntelligence;
   final ProjectManagerV2Service projectManagerV2;
   final RunCoordinator runs;
-  P3ProductRuntimeBrowserHandle? _p3BrowserRuntime;
-  P3ProductRuntimeBrowserHandle get p3BrowserRuntime =>
-      _p3BrowserRuntime ??
-      P3ProductRuntimeBrowserHandle.blocked(
-        'product_runtime_p3_not_initialized',
-      );
   P2ProductRuntimeOwnerModeHandle? _p2OwnerModeRuntime;
   P2ProductRuntimeOwnerModeHandle get p2OwnerMode =>
       _p2OwnerModeRuntime ??
@@ -394,12 +264,6 @@ class ProductRuntime {
       dataRoot: directories.root,
       p1AuthorityService: runtime.p1AuthorityService,
     );
-    runtime._p3BrowserRuntime = await P3ProductRuntimeBrowserHandle.open(
-      applicationDataRoot: directories.root,
-      stateDirectory: Directory(
-        '${directories.cache.path}${Platform.pathSeparator}p3-browser-runtime',
-      ),
-    );
     await coordinator.reconcileInterruptedRuns();
     await coordinator.reconcileMemoryEpisodes();
     await audit.append('application.started', 'application', <String, dynamic>{
@@ -411,7 +275,6 @@ class ProductRuntime {
   }
 
   Future<void> close() async {
-    await _p3BrowserRuntime?.close();
     await _p2OwnerModeRuntime?.close();
     await _p1AuthorityServiceRuntime?.close();
     await managedProcesses.stopAll();
