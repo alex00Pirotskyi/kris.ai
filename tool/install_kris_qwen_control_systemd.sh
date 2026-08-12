@@ -55,6 +55,8 @@ WorkingDirectory=${REPO_DIR}
 EnvironmentFile=-${ENV_FILE}
 Environment=PYTHONUNBUFFERED=1
 Environment=HOME=/root
+Environment=GH_CONFIG_DIR=/root/.config/gh
+Environment=GIT_TERMINAL_PROMPT=0
 ExecStart=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py
 Restart=always
 RestartSec=2
@@ -69,11 +71,12 @@ WantedBy=multi-user.target
 EOF
 
 # A system service cannot answer an interactive HTTPS username/password prompt.
-# If root already authenticated with `gh auth login`, wire that credential store
-# into git before starting the controller. Tokens remain in gh's normal store;
-# nothing is copied into this script or the systemd unit.
-if command -v gh >/dev/null 2>&1 && HOME=/root gh auth status --hostname github.com >/dev/null 2>&1; then
-  HOME=/root gh auth setup-git >/dev/null
+# If root already authenticated with `gh auth login`, bind that exact credential
+# store into both gh API calls and git credential plumbing before starting the
+# controller. Tokens remain in gh's normal store; nothing is copied into this
+# script or the systemd unit.
+if command -v gh >/dev/null 2>&1 && HOME=/root GH_CONFIG_DIR=/root/.config/gh gh auth status --hostname github.com >/dev/null 2>&1; then
+  HOME=/root GH_CONFIG_DIR=/root/.config/gh gh auth setup-git --hostname github.com >/dev/null
 fi
 
 systemctl daemon-reload
