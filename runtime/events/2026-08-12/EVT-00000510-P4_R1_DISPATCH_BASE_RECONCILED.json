@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000510-P4_R1_DISPATCH_BASE_RECONCILED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "reason": "Rebind the non-blocking outstanding PR #143 review dispatch base to the live canonical P4 head after PR #147 restoration. Original exact review target remains unchanged.",
+    "reviewWorkOrderId": "WO-P4-001-PR143-R1-5F6A7B8C",
+    "liveBaseCommit": "2d3779336f66c669a97e3aa589100fa7956e2c4d",
+    "liveBaseTree": "65b6526dea7d2527f86c6cd425674f76ac88e026",
+    "reviewTargetsChanged": false
+  },
+  "recordedAt": "2026-08-12T11:15:30Z",
+  "runtimeGeneration": 510,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-PR143-R1-5F6A7B8C"
+}
