@@ -12,12 +12,12 @@
   "kind": "RELEASE",
   "mission": "MISSION-003",
   "productPr": null,
-  "refreshedAt": "2026-08-12T17:46:53Z",
+  "refreshedAt": "2026-08-12T18:00:00Z",
   "resourceId": "SOURCE_MANIFEST.sha256",
   "runtimeGeneration": 535,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P3-001-SOURCE-MANIFEST-C7FFECFF",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF",
   "workerIdentity": "GPT-5.6-PRO-C7FFECFF"
 }

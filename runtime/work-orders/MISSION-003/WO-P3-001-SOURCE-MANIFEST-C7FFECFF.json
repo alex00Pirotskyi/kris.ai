@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-SOURCE-MANIFEST-C7FFECFF",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
@@ -10,7 +10,7 @@
   "createdBy": "WRK-20260812T173608Z-c7ffecff",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
-  "lastActor": "GPT-5.6-PRO-C7FFECFF:EXACT_HEAD_RELEASE_FINALIZER_ACQUIRED",
+  "lastActor": "GPT-5.6-PRO-C7FFECFF:MANIFEST_MATERIALIZED_D2D6BFF2:AWAITING_EXACT_HEAD_CI",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Materialize only the deterministic SOURCE_MANIFEST.sha256 for canonical P3-001 Product PR #131 at exact head 8d65923539c2b9487123fcec85c457b693f857d8. The prior 2ecf469251af705573d955efcfa8ac81afe1ae4e manifest blocker and its temporary materializer are stale because P3 has since been reconciled to current main and exact P3 Browser Runtime plus tri-platform product-gates are green. Run the canonical generator twice byte-identically, commit only SOURCE_MANIFEST.sha256, preserve all Product source bytes, and keep R1, acceptance, support, release support, production readiness, and GA explicitly unpromoted.",
@@ -27,9 +27,9 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "supersedes": "WO-P3-001-SOURCE-MANIFEST-44AE364B",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-12T17:46:53Z",
+  "updatedAt": "2026-08-12T18:00:00Z",
   "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
 }

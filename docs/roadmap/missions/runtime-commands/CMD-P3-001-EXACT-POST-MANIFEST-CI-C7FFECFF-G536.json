@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P3-001-EXACT-POST-MANIFEST-CI-C7FFECFF-G536",
+  "createdAt": "2026-08-12T18:00:00Z",
+  "expectedProductHead": "d2d6bff20419736c4ecacbab727657720815cd56",
+  "expectedRuntimeGeneration": 536,
+  "note": "Dispatch the repository's existing ci.yml workflow by workflow_dispatch against exact canonical P3-001 post-manifest head d2d6bff20419736c4ecacbab727657720815cd56. Bind the allocated run to that SHA, mutate no Product source, and do not promote R1, acceptance, support, release support, production readiness, release promotion, or GA.",
+  "operation": "DISPATCH_EXACT_PRODUCT_GATES_V1",
+  "productPr": 131,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-EXACT-POST-MANIFEST-CI-C7FFECFF",
+  "workOrderId": "WO-P3-001-EXACT-POST-MANIFEST-CI-C7FFECFF",
+  "workerIdentity": "GPT-5.6-PRO-C7FFECFF"
+}
