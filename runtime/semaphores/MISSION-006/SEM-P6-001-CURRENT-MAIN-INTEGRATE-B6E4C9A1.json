@@ -10,12 +10,12 @@
   "kind": "INTEGRATION",
   "mission": "MISSION-006",
   "productPr": 76,
-  "refreshedAt": "2026-08-12T21:21:00Z",
+  "refreshedAt": "2026-08-12T21:29:00Z",
   "resourceId": null,
   "runtimeGeneration": 541,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
   "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
 }

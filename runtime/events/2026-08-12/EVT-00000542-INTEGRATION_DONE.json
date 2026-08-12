@@ -1,0 +1,28 @@
+{
+  "eventId": "EVT-00000542-INTEGRATION_DONE",
+  "eventType": "INTEGRATION_DONE",
+  "mission": "MISSION-006",
+  "payload": {
+    "canonicalHead": "4e707b207e59770e9380ebf5da10510ca303f4b9",
+    "canonicalTree": "4cd9fbb8b9e36a1df4f1d4ca20d033f54e97a4e5",
+    "effectiveChangedPaths": [
+      "lib/product/model/model.dart",
+      "lib/product/model/model_registry.dart",
+      "test/product/model/model_registry_identity_guard_test.dart",
+      "test/product/model/model_registry_public_contract_test.dart",
+      "test/product/model/model_registry_test.dart",
+      "test/product/source_contract_test.dart"
+    ],
+    "nextStatus": "VALIDATING",
+    "previousCanonicalHead": "62f1e14ac39eb354aa04430d1d44c62a71103d8c",
+    "productPr": 76,
+    "protectedMain": "74e242ce1427f76a0c2031264fe8acd4919394bf",
+    "releasedSemaphoreId": "SEM-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
+    "truthBoundary": "Current-main reconciliation only. Exact CI, source-manifest finalization, protected-main landing, acceptance, support, release, production readiness, and GA remain separate."
+  },
+  "recordedAt": "2026-08-12T21:29:00Z",
+  "runtimeGeneration": 542,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T211030Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1"
+}
