@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000489-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "nextStatus": "READY",
+    "reason": "expand bounded P4 shared-authority repair from registry-only to registry plus formal hierarchy after exact P8 CI exposed 18 missing P4 hierarchy bindings",
+    "semaphoreId": "SEM-P4-001-REGISTRY-MERGE-REPAIR-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T05:00:00Z",
+  "runtimeGeneration": 489,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
