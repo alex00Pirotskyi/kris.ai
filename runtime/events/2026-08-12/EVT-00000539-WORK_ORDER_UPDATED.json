@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000539-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-006",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:P6_CURRENT_MAIN_R1_ACQUIRED",
+    "nextStatus": "REVIEW"
+  },
+  "recordedAt": "2026-08-12T21:10:30Z",
+  "runtimeGeneration": 539,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T211030Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-R1-7C51A2E4"
+}
