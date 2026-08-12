@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000493-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "canonicalProductHead": "2bea2ea68fa4ef8ed40f9776bbbabe3664c53514",
+    "externalReviewSatisfied": false,
+    "helperPullRequest": 146,
+    "replacesPullRequest": 143,
+    "integrationMode": "maintainer_override_squash",
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-P4-001-COMPLETE-TEST-CENTER-REPAIR-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T05:18:00Z",
+  "runtimeGeneration": 493,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T041609Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
