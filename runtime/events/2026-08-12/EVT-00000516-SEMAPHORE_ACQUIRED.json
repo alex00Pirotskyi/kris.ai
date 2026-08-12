@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000516-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-004",
+  "payload": {
+    "executionRole": "RELEASE_FINALIZER",
+    "kind": "RELEASE",
+    "semaphoreId": "SEM-QWEN-P4-001-6C88D1D4",
+    "workerIdentity": "ELASTIC-QWEN-F642C3C6"
+  },
+  "recordedAt": "2026-08-12T11:59:38Z",
+  "runtimeGeneration": 516,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T115924Z-7fd9bf2a",
+  "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
+}
