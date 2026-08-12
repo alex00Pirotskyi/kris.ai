@@ -16,7 +16,7 @@
     {"category":"environment_identity","mediaType":"application/json","jsonKind":"ENVIRONMENT_IDENTITY","requiredJsonFields":["schemaVersion","kind","environmentDigest"],"valueBindings":{"environmentDigest":"executionResult.environment.digest"},"requiredConstants":{}},
     {"category":"release_candidate_identity","mediaType":"application/json","jsonKind":"RELEASE_CANDIDATE_IDENTITY","requiredJsonFields":["schemaVersion","kind","commit","tree"],"valueBindings":{"commit":"candidateCommit","tree":"candidateTree"},"requiredConstants":{}},
     {"category":"independent_review","mediaType":"application/json","jsonKind":"INDEPENDENT_REVIEW","requiredJsonFields":["schemaVersion","kind","reviewedCommit","reviewedTree","decision"],"valueBindings":{"reviewedCommit":"candidateCommit","reviewedTree":"candidateTree"},"requiredConstants":{"decision":"PASS"}},
-    {"category":"support_matrix","mediaType":"application/json","jsonKind":"SUPPORT_MATRIX","requiredJsonFields":["schemaVersion","kind","candidateCommit","candidateTree","status"],"valueBindings":{"candidateCommit":"candidateCommit","candidateTree":"candidateTree"},"requiredConstants":{"status":"PASS"}}
+    {"category":"support_matrix","mediaType":"application/json","jsonKind":"SUPPORT_MATRIX","requiredJsonFields":["schemaVersion","kind","candidateCommit","candidateTree","status","supportRequirementId","requiredPlatforms","requiredCapabilities","matrix"],"valueBindings":{"candidateCommit":"candidateCommit","candidateTree":"candidateTree"},"requiredConstants":{"status":"PASS","supportRequirementId":"test-center.registry-profile-platform-lineage-v1"}}
   ],
   "lineageBindings": [
     {"testId":"tc.test-center.contracts","lineageId":"test-center.contracts"},
