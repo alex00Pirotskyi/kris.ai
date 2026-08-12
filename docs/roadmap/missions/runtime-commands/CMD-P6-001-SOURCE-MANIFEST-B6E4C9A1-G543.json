@@ -1,0 +1,13 @@
+{
+  "commandId": "CMD-P6-001-SOURCE-MANIFEST-B6E4C9A1-G543",
+  "createdAt": "2026-08-12T21:40:00Z",
+  "expectedProductHead": "4e707b207e59770e9380ebf5da10510ca303f4b9",
+  "expectedRuntimeGeneration": 543,
+  "note": "Materialize only SOURCE_MANIFEST.sha256 on exact canonical P6-001 Product PR #76 head 4e707b207e59770e9380ebf5da10510ca303f4b9 after exact tri-platform product-gates run 31642561305 succeeded. Preserve all Product source and current-main generator bytes. Do not promote R2, protected-main landing, acceptance, support, release, production readiness, or GA.",
+  "operation": "MATERIALIZE_SOURCE_MANIFEST_V1",
+  "productPr": 76,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+  "workOrderId": "WO-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+  "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+}

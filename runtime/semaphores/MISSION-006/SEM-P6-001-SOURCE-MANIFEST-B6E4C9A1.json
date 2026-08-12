@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "4e707b207e59770e9380ebf5da10510ca303f4b9",
+  "baseTree": "4cd9fbb8b9e36a1df4f1d4ca20d033f54e97a4e5",
+  "branch": "agent/g/mission-006-model-routing",
+  "createdAt": "2026-08-12T21:40:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-13T03:40:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-006",
+  "productPr": null,
+  "refreshedAt": "2026-08-12T21:40:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 543,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+  "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+}

@@ -1,0 +1,39 @@
+{
+  "activeSemaphoreId": "SEM-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-B6E4C9A1",
+  "baseCommit": "4e707b207e59770e9380ebf5da10510ca303f4b9",
+  "baseTree": "4cd9fbb8b9e36a1df4f1d4ca20d033f54e97a4e5",
+  "createdAt": "2026-08-12T21:40:00Z",
+  "createdBy": "WRK-20260812T211030Z-b6e4c9a1",
+  "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_SOURCE_MANIFEST_FINALIZER_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Materialize only the deterministic SOURCE_MANIFEST.sha256 for canonical P6-001 Product PR #76 at exact current-main candidate head 4e707b207e59770e9380ebf5da10510ca303f4b9 / tree 4cd9fbb8b9e36a1df4f1d4ca20d033f54e97a4e5. Exact pre-manifest product-gates run 31642561305 succeeded on Ubuntu, macOS, and Windows, and exact P1 Authority Service Amendment run 31642561256 succeeded. The six-file source candidate has context-independent R1 technical/security PASS recorded as PR #137 review 4921208866. Run the canonical source-manifest generator twice byte-identically, commit only SOURCE_MANIFEST.sha256, preserve every Product source byte and the current protected-main generator, then require exact post-manifest CI before terminal completion. Do not promote R2 identity independence, protected-main landing, acceptance, behavior or platform support, release support, production readiness, release promotion, or GA.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "product-gates run 31642561305 is SUCCESS on exact pre-manifest head 4e707b207e59770e9380ebf5da10510ca303f4b9",
+    "validate-ubuntu job 94262624627 succeeded",
+    "validate-macos job 94262624635 succeeded",
+    "validate-windows job 94262624647 succeeded",
+    "P1 Authority Service Amendment run 31642561256 succeeded",
+    "live runtime hygiene snapshot at generation 542 reports activeSemaphoreCount 0 before acquisition",
+    "python tool/p1a_refresh_source_manifest.py . produces byte-identical first and second candidates",
+    "effective Product diff from 4e707b207e59770e9380ebf5da10510ca303f4b9 changes exactly SOURCE_MANIFEST.sha256",
+    "all six P6 Product source/test blobs remain byte-identical after manifest materialization",
+    "exact post-materialization product-gates succeed before terminal LANDED state",
+    "no R2, protected-main landing, acceptance, support, release, production readiness, or GA state is implied"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-12T21:40:00Z",
+  "workOrderId": "WO-P6-001-SOURCE-MANIFEST-B6E4C9A1"
+}
