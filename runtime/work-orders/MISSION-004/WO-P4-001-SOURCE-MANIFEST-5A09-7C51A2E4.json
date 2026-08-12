@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P4-001-3EBBF080",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
@@ -29,8 +28,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-12T12:38:42Z",
+  "updatedAt": "2026-08-12T12:55:56Z",
   "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
 }
