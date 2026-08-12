@@ -1,0 +1,26 @@
+{
+  "eventId": "EVT-00000533-P4_QWEN_SOURCE_MANIFEST_SALVAGED",
+  "eventType": "HELPER_INTEGRATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4",
+    "qwenWorker": "ELASTIC-QWEN-E803D9CB",
+    "qwenHelperCommit": "6006b65853881c58af5c3a3bf5e6772ffc2e3ff7",
+    "qwenHelperBranch": "agent/local-qwen/elastic-qwen-e803d9cb/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-fd5839a4",
+    "manifestSha256": "3f9f500c500351b20ba199157e50aba8039d9199064b72efdb4df975a0c02670",
+    "manifestBytes": 123750,
+    "salvagePr": 149,
+    "canonicalProductHead": "4de3c0c7c8dc5cc59ac89d115b4ed8f025e62939",
+    "canonicalProductTree": "7c4e4b254cca8806a94c6a36d9c4b51191535b69",
+    "p4SpecializedRun": 31612894953,
+    "p8HierarchyRun": 31612894938,
+    "p2AlignmentRun": 31612894929,
+    "productGatesRun": 31612894876,
+    "reason": "Qwen completed the exact one-file manifest finalization and local release gate, then the persistent worker exhausted its hard-error budget on a post-gate `gh pr view` API-auth failure. The already-pushed exact helper was preserved, hosted-validated, and integrated without regenerating Product bytes."
+  },
+  "recordedAt": "2026-08-12T15:42:30Z",
+  "runtimeGeneration": 533,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T154000Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
+}
