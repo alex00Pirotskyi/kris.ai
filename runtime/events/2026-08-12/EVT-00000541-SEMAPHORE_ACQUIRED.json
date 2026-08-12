@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000541-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "canonicalBranch": "agent/g/mission-006-model-routing",
+    "expectedCanonicalHead": "62f1e14ac39eb354aa04430d1d44c62a71103d8c",
+    "helperHead": "cdef61b15a4b8a1cb4632f78a00f76e96188f86a",
+    "helperReviewId": 4921208866,
+    "kind": "INTEGRATION",
+    "productPr": 76,
+    "protectedMain": "74e242ce1427f76a0c2031264fe8acd4919394bf",
+    "semaphoreId": "SEM-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
+    "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+  },
+  "recordedAt": "2026-08-12T21:21:00Z",
+  "runtimeGeneration": 541,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T211030Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1"
+}

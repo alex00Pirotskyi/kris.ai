@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "62f1e14ac39eb354aa04430d1d44c62a71103d8c",
+  "baseTree": "f4f6ab6670d9970ee5a8bcb0e6b6e573c3225cbc",
+  "branch": "agent/g/mission-006-model-routing",
+  "createdAt": "2026-08-12T21:21:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-13T03:21:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "refreshedAt": "2026-08-12T21:21:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 541,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
+  "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+}
