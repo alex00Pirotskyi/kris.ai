@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "2d3779336f66c669a97e3aa589100fa7956e2c4d",
+  "baseTree": "65b6526dea7d2527f86c6cd425674f76ac88e026",
+  "branch": "agent/local-qwen/elastic-qwen-f753206e/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-67f68407",
+  "createdAt": "2026-08-12T13:18:26Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-12T15:18:26Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-004",
+  "productPr": null,
+  "refreshedAt": "2026-08-12T13:18:26Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 526,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P4-001-67F68407",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4",
+  "workerIdentity": "ELASTIC-QWEN-F753206E"
+}
