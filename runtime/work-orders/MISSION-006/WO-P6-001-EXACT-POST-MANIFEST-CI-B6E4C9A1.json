@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "lib/product/model/model.dart",
     "lib/product/model/model_registry.dart",
@@ -7,33 +7,34 @@
     "test/product/model/model_registry_public_contract_test.dart",
     "test/product/model/model_registry_test.dart"
   ],
-  "assignedWorker": "GPT-5.6-PRO-B6E4C9A1",
+  "assignedWorker": null,
   "baseCommit": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
   "baseTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
   "createdAt": "2026-08-12T21:44:00Z",
   "createdBy": "WRK-20260812T211030Z-b6e4c9a1",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_EXACT_POST_MANIFEST_CI_ACQUIRED",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_EXACT_POST_MANIFEST_CI_31644178250:LANDED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
-  "objective": "Dispatch the repository's existing product-gates workflow by workflow_dispatch against canonical P6-001 Product PR #76 at exact post-manifest head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 / tree 0d5f19883612fba07c61ed537749dbdaa00c3692. Bind the allocated run to that exact SHA, validate Ubuntu, Windows, and macOS, mutate no Product source, and keep R2 identity independence, protected-main landing, acceptance, support, release support, production readiness, release promotion, and GA explicitly unpromoted.",
+  "objective": "Exact post-manifest CI validation is complete for canonical P6-001 Product PR #76 at head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 / tree 0d5f19883612fba07c61ed537749dbdaa00c3692. Repository-native dispatch allocated product-gates workflow_dispatch run 31644178250 to that exact SHA. Ubuntu, macOS, and Windows all completed successfully, including formatting, fatal static analysis, the full Flutter test suite, trust/security and architecture gates, and native release builds. The canonical Product branch remained unchanged and this Work Order performed no Product-source mutation or lifecycle promotion.",
   "parentProductPr": 76,
   "priority": 100,
   "requestedRole": "CI_REPAIR",
   "requiredTests": [
-    "ci.yml workflow_dispatch run is allocated with head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
-    "validate-ubuntu succeeds on the exact dispatched head",
-    "validate-windows succeeds on the exact dispatched head",
-    "validate-macos succeeds on the exact dispatched head",
-    "canonical P6 branch remains 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 throughout dispatch and validation",
-    "effective Product diff from protected main remains the six P6 source/test files plus SOURCE_MANIFEST.sha256",
-    "no Product source mutation or R2, protected-main landing, acceptance, support, release, production readiness, or GA promotion is performed"
+    "product-gates workflow_dispatch run 31644178250 is bound to 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+    "validate-ubuntu job 94273726196 succeeded",
+    "validate-windows job 94273726342 succeeded",
+    "validate-macos job 94273726405 succeeded",
+    "all three lanes passed formatting, flutter analyze, flutter test, security and architecture gates, and native release builds",
+    "canonical P6 branch remained 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 throughout dispatch and validation",
+    "effective Product diff from protected main remained the six P6 source/test files plus SOURCE_MANIFEST.sha256",
+    "no Product source mutation or R2, protected-main landing, acceptance, support, release, production readiness, or GA promotion was performed"
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-12T21:44:00Z",
+  "updatedAt": "2026-08-12T21:57:00Z",
   "workOrderId": "WO-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1"
 }

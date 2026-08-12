@@ -5,13 +5,14 @@
     "release/evidence/P6-*/**",
     ".github/workflows/worker-g*.yml"
   ],
-  "assignedWorker": "Elastic-8634d003",
+  "assignedWorker": null,
   "baseCommit": "eb669431927338e4ae7be3df647d57bc728dfde5",
   "baseTree": "7bee181b9655da0207c5c5a059fa330a5a2a3c57",
   "createdAt": "2026-08-07T12:15:00Z",
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSEDED_BY_CLEAN_CURRENT_MAIN_LANDING",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-006",
   "objective": "Drive canonical P6 Product PR #76 from its current validated model-registry source to an exact integration candidate: preserve benchmark-provenance repairs, close mission-owned evidence/integration defects, use the v1.5 exact-SHA CI route, and prepare truthful source landing without implying P6 acceptance or support promotion.",
@@ -25,8 +26,9 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "SUPERSEDED",
+  "supersededBy": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-07T14:38:00Z",
+  "updatedAt": "2026-08-12T21:57:00Z",
   "workOrderId": "WO-P6-001-LANDING"
 }

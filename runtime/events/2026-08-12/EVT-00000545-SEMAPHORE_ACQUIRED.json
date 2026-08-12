@@ -1,0 +1,30 @@
+{
+  "eventId": "EVT-00000545-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "canonicalProductHead": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+    "canonicalProductTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
+    "completedWorkOrders": [
+      "WO-P6-001-CURRENT-MAIN-INTEGRATE-B6E4C9A1",
+      "WO-P6-001-SOURCE-MANIFEST-B6E4C9A1",
+      "WO-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1"
+    ],
+    "executionRole": "INTEGRATOR",
+    "expectedProductHead": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+    "kind": "INTEGRATION",
+    "mergeMethod": "squash",
+    "postManifestProductGatesRun": 31644178250,
+    "productPr": 76,
+    "protectedMain": "74e242ce1427f76a0c2031264fe8acd4919394bf",
+    "releasedSemaphoreId": "SEM-P6-001-EXACT-POST-MANIFEST-CI-B6E4C9A1",
+    "semaphoreId": "SEM-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1",
+    "supersededWorkOrderId": "WO-P6-001-LANDING",
+    "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+  },
+  "recordedAt": "2026-08-12T21:57:00Z",
+  "runtimeGeneration": 545,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T211030Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1"
+}
