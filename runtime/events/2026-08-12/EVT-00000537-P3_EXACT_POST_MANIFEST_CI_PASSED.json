@@ -1,0 +1,23 @@
+{
+  "eventId": "EVT-00000537-P3_EXACT_POST_MANIFEST_CI_PASSED",
+  "eventType": "CI_PASSED",
+  "mission": "MISSION-003",
+  "payload": {
+    "canonicalProductHead": "d2d6bff20419736c4ecacbab727657720815cd56",
+    "canonicalProductTree": "03b456d53532253538d0498343ba593c861f208e",
+    "exactProductGatesRun": 31625600290,
+    "jobs": {
+      "validateMacos": 94211069303,
+      "validateUbuntu": 94211069333,
+      "validateWindows": 94211069379
+    },
+    "productPr": 131,
+    "result": "SUCCESS",
+    "truthBoundary": "Exact post-manifest CI only. No Product mutation, R1, acceptance, support, release support, production readiness, release promotion, protected-main landing, or GA promotion."
+  },
+  "recordedAt": "2026-08-12T18:11:00Z",
+  "runtimeGeneration": 537,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T173608Z-c7ffecff",
+  "workOrderId": "WO-P3-001-EXACT-POST-MANIFEST-CI-C7FFECFF"
+}

@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000537-P3_SOURCE_MANIFEST_FINALIZATION_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-003",
+  "payload": {
+    "canonicalProductHead": "d2d6bff20419736c4ecacbab727657720815cd56",
+    "canonicalProductTree": "03b456d53532253538d0498343ba593c861f208e",
+    "exactCiWorkOrderId": "WO-P3-001-EXACT-POST-MANIFEST-CI-C7FFECFF",
+    "exactProductGatesRun": 31625600290,
+    "manifestOnlyDiffBase": "8d65923539c2b9487123fcec85c457b693f857d8",
+    "nextStatus": "LANDED",
+    "productPr": 131,
+    "sourceManifestRelayRun": 31624681508,
+    "truthBoundary": "Source-manifest finalization only. R1, acceptance, support, release support, production readiness, release promotion, protected-main landing, and GA remain separate authority decisions.",
+    "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
+  },
+  "recordedAt": "2026-08-12T18:11:00Z",
+  "runtimeGeneration": 537,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T173608Z-c7ffecff",
+  "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
+}
