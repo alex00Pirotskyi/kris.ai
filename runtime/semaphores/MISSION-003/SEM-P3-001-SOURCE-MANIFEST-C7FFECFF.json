@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "8d65923539c2b9487123fcec85c457b693f857d8",
+  "baseTree": "dd35b4d2165eaccefdd559583513b38aa3967980",
+  "branch": "agent/c/mission-003-browser-runtime",
+  "createdAt": "2026-08-12T17:46:53Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-12T23:46:53Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-12T17:46:53Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 535,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-SOURCE-MANIFEST-C7FFECFF",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF",
+  "workerIdentity": "GPT-5.6-PRO-C7FFECFF"
+}

@@ -10,7 +10,7 @@
   "createdBy": "ELASTIC-GPT-44AE364B",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:MATERIALIZER_RUN_31462641851:BLOCKED_CANONICAL_TEXT_GENERATOR_MISMATCH",
+  "lastActor": "GPT-5.6-PRO-C7FFECFF:SUPERSEDED_BY_EXACT_HEAD_RELEASE_FINALIZER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "After the P3-001 Product source candidate is stable, refresh only SOURCE_MANIFEST.sha256 entries affected by newly added or modified governed P3 source files. Change no Product source, prove every changed entry equals the exact candidate bytes, and keep the manifest refresh separate from implementation authorship.",
@@ -26,8 +26,9 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "SUPERSEDED",
+  "supersededBy": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF",
   "type": "SHARED_AUTHORITY_REFRESH",
-  "updatedAt": "2026-08-11T05:48:00Z",
+  "updatedAt": "2026-08-12T17:46:53Z",
   "workOrderId": "WO-P3-001-SOURCE-MANIFEST-44AE364B"
 }

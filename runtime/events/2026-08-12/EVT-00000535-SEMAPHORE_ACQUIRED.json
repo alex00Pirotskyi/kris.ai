@@ -1,0 +1,23 @@
+{
+  "eventId": "EVT-00000535-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "commandId": "CMD-P3-001-SOURCE-MANIFEST-C7FFECFF-G535",
+    "executionRole": "RELEASE_FINALIZER",
+    "expectedProductHead": "8d65923539c2b9487123fcec85c457b693f857d8",
+    "kind": "RELEASE",
+    "resourceId": "SOURCE_MANIFEST.sha256",
+    "semaphoreId": "SEM-P3-001-SOURCE-MANIFEST-C7FFECFF",
+    "supersededWorkOrders": [
+      "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+      "WO-P3-001-MANIFEST-MATERIALIZER-7C51A2E4"
+    ],
+    "workerIdentity": "GPT-5.6-PRO-C7FFECFF"
+  },
+  "recordedAt": "2026-08-12T17:46:53Z",
+  "runtimeGeneration": 535,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T173608Z-c7ffecff",
+  "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
+}

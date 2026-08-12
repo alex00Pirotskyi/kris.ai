@@ -11,7 +11,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:MATERIALIZER_RUN_31462641851:BLOCKED_CANONICAL_TEXT_GENERATOR_MISMATCH",
+  "lastActor": "GPT-5.6-PRO-C7FFECFF:SUPERSEDED_BY_RUNNER_NATIVE_RELEASE_FINALIZER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Remove the connector-only manifest-generation transport blocker without widening the P3 Product or root-manifest Work Orders. On a short-lived helper branch rooted exactly at P3 candidate 2ecf469251af705573d955efcfa8ac81afe1ae4e, add only one temporary workflow. In the runner delete that workflow before generation, prove HEAD^ equals the frozen P3 candidate and its tree, run the canonical tool/p1a_refresh_source_manifest.py twice byte-identically, verify only SOURCE_MANIFEST.sha256 differs from the frozen candidate worktree, and upload the candidate manifest as an artifact. Do not commit SOURCE_MANIFEST.sha256 on this helper; the already-active RELEASE Work Order remains the only authority allowed to materialize it on canonical PR #131.",
@@ -28,8 +28,9 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "BLOCKED",
+  "status": "SUPERSEDED",
+  "supersededBy": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-11T05:48:00Z",
+  "updatedAt": "2026-08-12T17:46:53Z",
   "workOrderId": "WO-P3-001-MANIFEST-MATERIALIZER-7C51A2E4"
 }

@@ -1,0 +1,35 @@
+{
+  "activeSemaphoreId": "SEM-P3-001-SOURCE-MANIFEST-C7FFECFF",
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-C7FFECFF",
+  "baseCommit": "8d65923539c2b9487123fcec85c457b693f857d8",
+  "baseTree": "dd35b4d2165eaccefdd559583513b38aa3967980",
+  "createdAt": "2026-08-12T17:46:53Z",
+  "createdBy": "WRK-20260812T173608Z-c7ffecff",
+  "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
+  "lastActor": "GPT-5.6-PRO-C7FFECFF:EXACT_HEAD_RELEASE_FINALIZER_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Materialize only the deterministic SOURCE_MANIFEST.sha256 for canonical P3-001 Product PR #131 at exact head 8d65923539c2b9487123fcec85c457b693f857d8. The prior 2ecf469251af705573d955efcfa8ac81afe1ae4e manifest blocker and its temporary materializer are stale because P3 has since been reconciled to current main and exact P3 Browser Runtime plus tri-platform product-gates are green. Run the canonical generator twice byte-identically, commit only SOURCE_MANIFEST.sha256, preserve all Product source bytes, and keep R1, acceptance, support, release support, production readiness, and GA explicitly unpromoted.",
+  "parentProductPr": 131,
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "P3 Browser Runtime run 31592054342 is SUCCESS on exact pre-manifest head 8d65923539c2b9487123fcec85c457b693f857d8",
+    "product-gates run 31592054326 is SUCCESS on exact pre-manifest head across Ubuntu, macOS, and Windows",
+    "python tool/p1a_refresh_source_manifest.py . produces byte-identical first and second candidates",
+    "effective Product diff from 8d65923539c2b9487123fcec85c457b693f857d8 changes exactly SOURCE_MANIFEST.sha256",
+    "post-materialization exact-head Product validation is green before terminal LANDED state",
+    "no R1, acceptance, support, release support, production readiness, release promotion, or GA state is implied"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "supersedes": "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-12T17:46:53Z",
+  "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
+}
