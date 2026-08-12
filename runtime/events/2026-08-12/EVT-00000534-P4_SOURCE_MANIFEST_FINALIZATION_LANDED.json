@@ -1,0 +1,26 @@
+{
+  "eventId": "EVT-00000534-P4_SOURCE_MANIFEST_FINALIZATION_LANDED",
+  "eventType": "WORK_ORDER_LANDED",
+  "mission": "MISSION-004",
+  "payload": {
+    "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4",
+    "qwenHelperCommit": "6006b65853881c58af5c3a3bf5e6772ffc2e3ff7",
+    "salvagePr": 149,
+    "canonicalProductHead": "4de3c0c7c8dc5cc59ac89d115b4ed8f025e62939",
+    "canonicalProductTree": "7c4e4b254cca8806a94c6a36d9c4b51191535b69",
+    "manifestSha256": "3f9f500c500351b20ba199157e50aba8039d9199064b72efdb4df975a0c02670",
+    "manifestBytes": 123750,
+    "helperProductGatesRun": 31612894876,
+    "canonicalP4SpecializedRun": 31613622500,
+    "canonicalP8HierarchyRun": 31613622550,
+    "canonicalP2AlignmentRun": 31613622492,
+    "canonicalProductGatesRun": 31613622453,
+    "nextStatus": "LANDED",
+    "truthBoundary": "Source-manifest finalization only. External review debt, acceptance, support, production readiness, release promotion, and GA remain separate."
+  },
+  "recordedAt": "2026-08-12T15:48:00Z",
+  "runtimeGeneration": 534,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T154800Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
+}
