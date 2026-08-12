@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000513-P3_PR148_CANONICAL_RECONCILED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "canonicalProductHead": "8d65923539c2b9487123fcec85c457b693f857d8",
+    "canonicalProductTree": "dd35b4d2165eaccefdd559583513b38aa3967980",
+    "helperPullRequest": 148,
+    "helperHead": "24991a2e17d7437a2014ee2669f64c4acd0c66b2",
+    "productGatesRun": 31591486917,
+    "productGatesConclusion": "SUCCESS_UBUNTU_WINDOWS_MACOS",
+    "reviewDispatchBasesRebound": [
+      "WO-P3-001-PR142-R1-5F6A7B8C",
+      "WO-P3-001-PR144-R1-5F6A7B8C"
+    ],
+    "reviewTargetsChanged": false,
+    "p3SpecializedState": "VALIDATING_MACOS_SHUTDOWN_EPERM_BLOCKER"
+  },
+  "recordedAt": "2026-08-12T11:35:00Z",
+  "runtimeGeneration": 513,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
+}
