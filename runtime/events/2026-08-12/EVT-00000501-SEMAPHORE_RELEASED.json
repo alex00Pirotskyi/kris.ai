@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000501-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-003",
+  "payload": {
+    "nextStatus": "VALIDATING",
+    "semaphoreId": "SEM-QWEN-P3-001-6777A665"
+  },
+  "recordedAt": "2026-08-12T10:48:47Z",
+  "runtimeGeneration": 501,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T104820Z-440e4a1b",
+  "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C"
+}

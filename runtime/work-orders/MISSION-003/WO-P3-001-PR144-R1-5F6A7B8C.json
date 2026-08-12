@@ -5,8 +5,8 @@
     "test/product/browser/browser_runtime_bundle_test.dart"
   ],
   "assignedWorker": null,
-  "baseCommit": "c188224a40b621445c563402e23e0509898e4fa5",
-  "baseTree": "54d4da3ff7093f114e77d8d3fd1d1d20139a8a91",
+  "baseCommit": "76788a2a4c27aa474f060b4c8d621ff3061a0971",
+  "baseTree": "2ae47d5ea766de0fd941d68ddd42c24c225888b3",
   "createdAt": "2026-08-11T20:51:00Z",
   "createdBy": "WRK-20260811T200400Z-5f6a7b8c",
   "dependencyRequirements": [],
@@ -32,6 +32,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "REVIEW",
-  "updatedAt": "2026-08-12T04:47:00Z",
+  "updatedAt": "2026-08-12T10:48:47Z",
   "workOrderId": "WO-P3-001-PR144-R1-5F6A7B8C"
 }
