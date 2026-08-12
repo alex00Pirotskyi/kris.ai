@@ -1,8 +1,8 @@
 {
-  "activeSemaphoreId": "SEM-P4-001-TEST-CENTER-MERGE-REPAIR-5F6A7B8C",
   "allowedPaths": [
     "config/test_center_registry.v1.json",
-    "config/test_center_assurance_hierarchy.v1.json"
+    "config/test_center_assurance_hierarchy.v1.json",
+    "release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json"
   ],
   "assignedWorker": "GPT-5.6-SOL-5F6A7B8C",
   "baseCommit": "8972077cf452878e45266fefb3adf13510fa722b",
@@ -11,28 +11,28 @@
   "createdBy": "WRK-20260809T084200Z-c73e9a51",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:P4_QWEN_MERGE_REGRESSION:REGISTRY_AND_HIERARCHY_REPAIR_IN_PROGRESS",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:P4_QWEN_MERGE_REGRESSION:EXPAND_TO_PROOF_LINEAGE_AUTHORITY",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
-  "objective": "Repair the P4-001 Test Center shared-authority state after Qwen merge commit 8972077cf452878e45266fefb3adf13510fa722b reconciled protected main by dropping both the P4-specific canonical registry records and their 18 formal hierarchy bindings. Restore the prior P4 registry records as a semantic union with current shared Test Center/P8 records, retain the verified fixture migration to services/research_worker/test/fixtures/p4_001_search_provider, and restore the exact P4 hierarchy bindings removed by that merge. Change only config/test_center_registry.v1.json and config/test_center_assurance_hierarchy.v1.json; preserve all non-P4 shared semantics and do not promote Product behavior, acceptance, support or release state.",
+  "objective": "Repair the complete P4-001 Test Center shared-authority state dropped by Qwen merge commit 8972077cf452878e45266fefb3adf13510fa722b: canonical registry records, 18 formal hierarchy bindings, and 18 assurance proof-lineage bindings. Restore the prior P4 records as an append-safe semantic union with current shared Test Center/P8 records, retain the verified fixture migration to services/research_worker/test/fixtures/p4_001_search_provider, and preserve all non-P4 shared semantics. Change only the three explicitly authorized shared Test Center files; do not promote Product behavior, acceptance, support or release state.",
   "parentProductPr": 62,
   "priority": 100,
   "requestedRole": "AUTHORITY_OWNER",
   "requiredTests": [
-    "helper diff changes only config/test_center_registry.v1.json and config/test_center_assurance_hierarchy.v1.json",
-    "all canonical P4-001 affected-test mappings, project profiles, stable test cases, module and presentation records are restored",
-    "all 18 canonical P4-001 stable test IDs have exactly one formal hierarchy binding",
+    "helper diff changes only the Test Center registry, hierarchy, and proof-lineage contract",
+    "all canonical P4-001 mappings, profiles, stable test cases, module and presentation records are restored",
+    "all 18 P4 stable test IDs have exactly one hierarchy binding and one proof-lineage binding",
     "all exact historical evals/fixtures/p4_001_search_provider strings remain absent",
     "owned services/research_worker/test/fixtures/p4_001_search_provider paths are present one-for-one",
     "all shared Test Center and P8 records from current protected-main reconciliation are preserved",
-    "canonical Test Center and P8 hierarchy validation PASS",
+    "canonical Test Center and P8 hierarchy/proof-lineage validation PASS",
     "exact P4 specialized validation and product-gates PASS after integration",
     "no Product behavior/acceptance/support/release promotion"
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-12T05:03:30Z",
+  "updatedAt": "2026-08-12T05:11:00Z",
   "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
 }
