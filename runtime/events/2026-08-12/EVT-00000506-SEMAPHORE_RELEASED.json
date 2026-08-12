@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000506-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-004",
+  "payload": {
+    "helperPullRequest": 147,
+    "helperHead": "e7a0e7235ad24b2c4ebe13ffb78eb0d05c630306",
+    "nextStatus": "VALIDATING",
+    "reason": "exact three-blob P4 shared Test Center restoration frozen for machine validation",
+    "semaphoreId": "SEM-P4-001-TEST-CENTER-RESTORE-AFTER-MAIN-5F6A7B8C"
+  },
+  "recordedAt": "2026-08-12T10:59:30Z",
+  "runtimeGeneration": 506,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T105400Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-REGISTRY-FIXTURE-PATH-C73E9A51"
+}
