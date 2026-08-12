@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000514-P4_SOURCE_MANIFEST_FINALIZATION_READY",
+  "eventType": "BLOCKER_CLEARED",
+  "mission": "MISSION-004",
+  "payload": {
+    "reason": "PR #138 landed the canonical-text source-manifest generator repair and current canonical P4 is machine-green except for committed SOURCE_MANIFEST equality. Retire the temporary workflow transport and reopen exact one-file finalization.",
+    "canonicalProductHead": "2d3779336f66c669a97e3aa589100fa7956e2c4d",
+    "canonicalProductTree": "65b6526dea7d2527f86c6cd425674f76ac88e026",
+    "p4SpecializedRun": 31590514440,
+    "productGatesRun": 31590514338,
+    "allowedPaths": ["SOURCE_MANIFEST.sha256"],
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-12T11:40:00Z",
+  "runtimeGeneration": 514,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4"
+}
