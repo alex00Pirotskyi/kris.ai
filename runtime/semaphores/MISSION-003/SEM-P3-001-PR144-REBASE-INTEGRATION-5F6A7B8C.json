@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "lib/product/browser/browser_runtime_bundle.dart",
+    "test/product/browser/browser_runtime_bundle_test.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "dea3e457384c85e20035ed08c299e483a2d68460",
+  "baseTree": "9b2e1fa5f9c8d38f617e39ae56dbd53ba6e0b037",
+  "branch": "agent/help/gpt-5f6a7b8c/mission-003/p3-fail-closed-bundle-fallback-rebased",
+  "createdAt": "2026-08-12T04:42:00Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-12T05:42:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-003",
+  "productPr": 131,
+  "refreshedAt": "2026-08-12T04:42:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 486,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-PR144-REBASE-INTEGRATION-5F6A7B8C",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C",
+  "workerIdentity": "GPT-5.6-SOL-5F6A7B8C"
+}

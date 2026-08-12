@@ -1,16 +1,17 @@
 {
+  "activeSemaphoreId": "SEM-P3-001-PR144-REBASE-INTEGRATION-5F6A7B8C",
   "allowedPaths": [
     "lib/product/browser/browser_runtime_bundle.dart",
     "test/product/browser/browser_runtime_bundle_test.dart"
   ],
   "assignedWorker": "GPT-5.6-SOL-5F6A7B8C",
-  "baseCommit": "2ecf469251af705573d955efcfa8ac81afe1ae4e",
-  "baseTree": "6e8372c1ec661e142436ed5d9fa038a0ad35ee73",
+  "baseCommit": "dea3e457384c85e20035ed08c299e483a2d68460",
+  "baseTree": "9b2e1fa5f9c8d38f617e39ae56dbd53ba6e0b037",
   "createdAt": "2026-08-11T18:27:00Z",
   "createdBy": "WRK-20260811T182700Z-5f6a7b8c",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:PR144_EXACT_PRODUCT_CI_GREEN:R1_REQUIRED",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:MAINTAINER_OVERRIDE:PR144_REBASE_INTEGRATING_WITH_REVIEW_UNSATISFIED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Close the P3-001 fail-open browser-runtime resolver defect: if the preferred application-data runtime/current bundle exists but fails identity/resource validation, fail closed on that invalid current bundle instead of silently falling back to an executable-root bundle. Preserve executable-root resolution only when the preferred application-data current bundle is absent. Add an adversarial regression with an invalid preferred bundle and a simultaneously valid fallback bundle proving the invalid current bundle cannot be masked or downgraded by fallback.",
@@ -26,8 +27,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "INTEGRATING",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-08-11T20:50:00Z",
+  "updatedAt": "2026-08-12T04:42:00Z",
   "workOrderId": "WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C"
 }
