@@ -1,0 +1,38 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "lib/product/product_runtime.dart",
+    "test/product/source_contract_test.dart"
+  ],
+  "assignedWorker": null,
+  "baseCommit": "76788a2a4c27aa474f060b4c8d621ff3061a0971",
+  "baseTree": "2ae47d5ea766de0fd941d68ddd42c24c225888b3",
+  "branch": "agent/help/gpt-5f6a7b8c/mission-003/p3-shared-surfaces-after-main-138",
+  "createdAt": "2026-08-12T11:07:00Z",
+  "createdBy": "WRK-20260812T101900Z-5f6a7b8c",
+  "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
+  "lastActor": "GPT-5.6-SOL-5F6A7B8C:POST_MAIN_SHARED_AUTHORITY_RESTORE_READY",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Restore the two separately governed P3-001 shared surfaces intentionally removed by Qwen current-main reconciliation 76788a2a4c27aa474f060b4c8d621ff3061a0971: ProductRuntime browser composition in lib/product/product_runtime.dart and the three governed browser library entries in test/product/source_contract_test.dart. Reuse the exact already-verified blobs from pre-reconciliation canonical P3 c188224a40b621445c563402e23e0509898e4fa5. Preserve the protected-main P1A canonical-text generator and SOURCE_MANIFEST bytes inherited through PR #138; change no other P3 Product, bundle, workflow, Test Center, acceptance, support, release, production, or GA state.",
+  "parentProductPr": 131,
+  "parentWorkOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C",
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "helper diff is exactly lib/product/product_runtime.dart and test/product/source_contract_test.dart",
+    "ProductRuntime browser composition blob matches pre-reconciliation canonical P3 c188224a",
+    "source inventory restores exactly the three P3 browser library paths",
+    "protected-main P1A generator and SOURCE_MANIFEST changes remain untouched",
+    "P3 Browser Runtime exact canonical validation passes after integration",
+    "product-gates passes on Ubuntu, Windows, and macOS after integration",
+    "no P3-002, acceptance, support, release, production, or GA promotion"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-12T11:07:00Z",
+  "workOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
+}

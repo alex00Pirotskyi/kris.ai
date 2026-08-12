@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000507-P3_SHARED_SURFACES_RESTORE_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-003",
+  "payload": {
+    "reason": "Qwen current-main reconciliation 76788a2a intentionally excluded shared ProductRuntime composition and source-inventory authority; restore those two surfaces before canonical P3 validation.",
+    "canonicalProductHead": "76788a2a4c27aa474f060b4c8d621ff3061a0971",
+    "priorVerifiedP3Head": "c188224a40b621445c563402e23e0509898e4fa5",
+    "helperBranch": "agent/help/gpt-5f6a7b8c/mission-003/p3-shared-surfaces-after-main-138",
+    "allowedPathCount": 2,
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-12T11:07:00Z",
+  "runtimeGeneration": 507,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260812T101900Z-5f6a7b8c",
+  "workOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
+}
