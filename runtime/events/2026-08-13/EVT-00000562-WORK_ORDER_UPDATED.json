@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000562-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "GPT-5.6-PRO-SOLO-38CB129E:CURRENT_MAIN_RECONCILED:P6_BLOBS_PRESERVED",
+    "newCandidateCommit": "fa5ecc5d09ca442de2ce4919f80e7cf6a6c80150",
+    "newCandidateTree": "894c30009112867abf3d07d25f93336935dfaa11",
+    "previousCandidateCommit": "4de3c0c7c8dc5cc59ac89d115b4ed8f025e62939",
+    "reason": "Strict protected-main status checks require the Product branch to include current main. The two-parent reconciliation carries exactly the six P6-controlled Product/test blobs while preserving the bounded P4 source candidate. SOURCE_MANIFEST finalization remains the next exact-candidate gate."
+  },
+  "recordedAt": "2026-08-13T10:28:30Z",
+  "runtimeGeneration": 562,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T101547Z-3b4525d1",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
