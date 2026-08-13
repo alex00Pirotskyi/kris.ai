@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000556-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
+    "replacementWorkOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
+    "sourceEventId": "EVT-00000375-P5_WINDOWS_FIX_WINNER_RECONCILED",
+    "supersededWorkOrderId": "WO-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
+  },
+  "recordedAt": "2026-08-13T07:00:00Z",
+  "runtimeGeneration": 556,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
+}

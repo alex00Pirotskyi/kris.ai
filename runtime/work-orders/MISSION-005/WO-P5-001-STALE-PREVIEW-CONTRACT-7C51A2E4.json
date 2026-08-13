@@ -13,7 +13,7 @@
   "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:EXACT_CONTRACT_SUPERSEDED_BY_EVIDENCE_REPAIR",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Bounded P5-001 stale-preview/contract repair is source-complete and exact-head CI-green at 4b8cba59ee9423b063cfd0e2c3effbc7ac417558. Worker F run 31374116905 passes Ubuntu, Windows, and macOS including the final fail-closed non-mutation hygiene gate; general product-gates run 31374116890 also passes. Product bytes are frozen. Await fresh independent exact-scope R1 review through WO-P5-001-PR127-R1-A84E19D3; this execution must not self-certify that review. No Test Center/shared-authority/source-inventory/root-manifest/support/acceptance/release/production/GA promotion.",
@@ -31,9 +31,12 @@
   "runtimeGeneration": 376,
   "schemaVersion": 1,
   "status": "SUPERSEDED",
-  "supersedes": "WO-P5-001-STALE-PREVIEW-93C6A4E1",
+  "supersedes": [
+    "WO-P5-001-STALE-PREVIEW-93C6A4E1",
+    "WO-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
+  ],
   "supersededBy": "WO-P5-001-EVIDENCE-MANIFEST-7C51A2E4",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-11T17:45:00Z",
+  "updatedAt": "2026-08-13T07:00:00Z",
   "workOrderId": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
 }

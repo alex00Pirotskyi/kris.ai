@@ -12,7 +12,7 @@
     "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4"
   ],
   "executionRole": "CI_REPAIR",
-  "lastActor": "ELASTIC-GPT-7C51A2E4:DIAGNOSTIC_CONSUMED_AND_CLEANED",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Disposable Windows status diagnosis completed and was consumed by the final helper repair. Diagnostic run 31373865723 isolated release/evidence/P5-001/manifest.json as the only tracked Windows worktree drift, and cleanup commit 2d36b16a108e3e6f999715ccbc43a6b691c7d79d removed the diagnostic workflow from the disposable branch. Diagnostic output is not certification evidence.",
@@ -28,7 +28,8 @@
   "runtimeGeneration": 376,
   "schemaVersion": 1,
   "status": "SUPERSEDED",
+  "supersededBy": "WO-P5-001-STALE-PREVIEW-CONTRACT-7C51A2E4",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-10T09:49:00Z",
+  "updatedAt": "2026-08-13T07:00:00Z",
   "workOrderId": "WO-P5-001-WINDOWS-STATUS-DIAG-7C51A2E4"
 }
