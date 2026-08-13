@@ -1,0 +1,140 @@
+{
+  "affectedMappingIds": [
+    "affected.p4-001.request",
+    "affected.p4-001.result-page",
+    "affected.p4-001.provider",
+    "affected.p4-001.cursor",
+    "affected.p4-001.security-validation",
+    "affected.p4-001.schemas",
+    "affected.p4-001.fixtures",
+    "affected.p4-001.workflow",
+    "affected.p4-001.evidence"
+  ],
+  "canonicalContractStatus": "CANONICAL_TEST_CENTER_V1",
+  "canonicalRecords": {
+    "capabilitySupportRecord": "generated per exact candidate and platform",
+    "certificationRecord": "PARTIAL until tri-platform evidence and independent reviews",
+    "developmentVerificationRequest": "generated per exact candidate and platform",
+    "developmentVerificationResult": "generated per exact candidate and platform",
+    "evidenceReference": "generated per stable profile and platform",
+    "testExecutionResult": "generated per stable profile and platform",
+    "testingStudioPresentationRecord": "generated per exact candidate and platform"
+  },
+  "canonicalTestIds": [
+    "tc.p4-001.request-schema",
+    "tc.p4-001.result-schema",
+    "tc.p4-001.page-schema",
+    "tc.p4-001.provider-error-schema",
+    "tc.p4-001.url-fail-closed",
+    "tc.p4-001.credential-rejection",
+    "tc.p4-001.secret-normalization",
+    "tc.p4-001.provider-metadata-isolation",
+    "tc.p4-001.stable-query-identity",
+    "tc.p4-001.stable-result-identity",
+    "tc.p4-001.cursor-provider-binding",
+    "tc.p4-001.capability-negotiation",
+    "tc.p4-001.rate-limit-representation",
+    "tc.p4-001.partial-failure-representation",
+    "tc.p4-001.fixture-provider-parity",
+    "tc.p4-001.network-free-determinism",
+    "tc.p4-001.unfetched-snippet-classification",
+    "tc.p4-001.normalized-result-state-preservation"
+  ],
+  "capabilitySupport": {
+    "behaviorSupportEstablished": false,
+    "browserImplemented": false,
+    "citationsImplemented": false,
+    "datasetsImplemented": false,
+    "fetchImplemented": false,
+    "liveProviderBehaviorCertified": false,
+    "networkRetrievalImplemented": false,
+    "releaseSupported": false,
+    "status": "SOURCE_FOUNDATION"
+  },
+  "certification": {
+    "passForbiddenWithoutIndependentReview": true,
+    "sourcePassDoesNotEstablishBehavior": true,
+    "status": "NOT_EVALUATED"
+  },
+  "contractOwner": "Worker B",
+  "contractSource": {
+    "branch": "agent/b/test-center-contracts-and-review",
+    "commit": "2b8988b84c4eb8929cc1e733de274d5f484afea1",
+    "registryPath": "config/test_center_registry.v1.json",
+    "schemaPath": "schemas/test_center.v1.json",
+    "schemaVersion": "1.0.0",
+    "tree": "b33344fd5a7bcc212fd94933e4962654de062aac"
+  },
+  "executionContract": {
+    "assuranceClass": "source_contract",
+    "dependencies": [
+      "python-standard-library"
+    ],
+    "evidenceRoot": "release/evidence/P4-001/canonical/",
+    "mutationPolicy": "NON_MUTATING",
+    "network": "DENIED_AND_NOT_REQUIRED",
+    "platforms": [
+      "linux",
+      "macos",
+      "windows"
+    ],
+    "workflowArtifactsSupplemental": true
+  },
+  "moduleId": "tm.p4-001.search-provider-interface",
+  "profileIds": [
+    "tc.p4-001.request-schema",
+    "tc.p4-001.result-schema",
+    "tc.p4-001.page-schema",
+    "tc.p4-001.provider-error-schema",
+    "tc.p4-001.url-fail-closed",
+    "tc.p4-001.credential-rejection",
+    "tc.p4-001.secret-normalization",
+    "tc.p4-001.provider-metadata-isolation",
+    "tc.p4-001.stable-query-identity",
+    "tc.p4-001.stable-result-identity",
+    "tc.p4-001.cursor-provider-binding",
+    "tc.p4-001.capability-negotiation",
+    "tc.p4-001.rate-limit-representation",
+    "tc.p4-001.partial-failure-representation",
+    "tc.p4-001.fixture-provider-parity",
+    "tc.p4-001.network-free-determinism",
+    "tc.p4-001.unfetched-snippet-classification",
+    "tc.p4-001.normalized-result-state-preservation"
+  ],
+  "provisionalIdAliases": {
+    "P4-001-CAPABILITY-NEGOTIATION": "tc.p4-001.capability-negotiation",
+    "P4-001-CREDENTIAL-REJECTION": "tc.p4-001.credential-rejection",
+    "P4-001-CURSOR-PROVIDER-BINDING": "tc.p4-001.cursor-provider-binding",
+    "P4-001-FIXTURE-PROVIDER-PARITY": "tc.p4-001.fixture-provider-parity",
+    "P4-001-NETWORK-FREE-DETERMINISM": "tc.p4-001.network-free-determinism",
+    "P4-001-NORMALIZED-RESULT-STATE-PRESERVATION": "tc.p4-001.normalized-result-state-preservation",
+    "P4-001-PAGE-SCHEMA": "tc.p4-001.page-schema",
+    "P4-001-PARTIAL-FAILURE-REPRESENTATION": "tc.p4-001.partial-failure-representation",
+    "P4-001-PROVIDER-ERROR-SCHEMA": "tc.p4-001.provider-error-schema",
+    "P4-001-PROVIDER-METADATA-ISOLATION": "tc.p4-001.provider-metadata-isolation",
+    "P4-001-RATE-LIMIT-REPRESENTATION": "tc.p4-001.rate-limit-representation",
+    "P4-001-REQUEST-SCHEMA": "tc.p4-001.request-schema",
+    "P4-001-RESULT-SCHEMA": "tc.p4-001.result-schema",
+    "P4-001-SECRET-NORMALIZATION": "tc.p4-001.secret-normalization",
+    "P4-001-STABLE-QUERY-IDENTITY": "tc.p4-001.stable-query-identity",
+    "P4-001-STABLE-RESULT-IDENTITY": "tc.p4-001.stable-result-identity",
+    "P4-001-UNFETCHED-SNIPPET-CLASSIFICATION": "tc.p4-001.unfetched-snippet-classification",
+    "P4-001-URL-FAIL-CLOSED": "tc.p4-001.url-fail-closed"
+  },
+  "requiredNextAction": "Run the exact integration candidate through the canonical linux, macos, and windows profiles; package immutable evidence; then obtain Worker B and Worker I exact-SHA decisions plus Worker J no-conflict.",
+  "schemaVersion": "1.0.0",
+  "supersedes": {
+    "classification": [
+      "PROVISIONAL_EXECUTION_REFERENCE",
+      "NON_NORMATIVE",
+      "PENDING_WORKER_B_CONTRACT"
+    ],
+    "gitBlobSha1": "ea9210738cf223640fc0e6ab80e570509f300b6c",
+    "historicalPath": "release/evidence/P4-001/history/test-center-handoff.provisional.0.1.1.json",
+    "sha256": "49a8cd1a01c6c5250bb16a6d2b449f1546c58f0d3ed9240303446bc605dc965a",
+    "status": "SUPERSEDED"
+  },
+  "taskIds": [
+    "P4-001"
+  ]
+}
