@@ -9,7 +9,7 @@
   "createdBy": "ELASTIC-7f3a2c91",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "ELASTIC-GPT-C73E9A51:SUPERSEDED_BY_CURRENT_MAIN_SOURCE_INVENTORY",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Append exactly the nine P5-001 analyzer-visible library paths from canonical Product PR #72 to the governed source inventory so the exact global source-contract test matches the current 85-file P5 source tree; preserve every existing inventory entry and make no product-behavior or root-manifest change.",
@@ -23,7 +23,8 @@
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
   "status": "SUPERSEDED",
+  "supersededBy": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-09T08:53:00Z",
+  "updatedAt": "2026-08-13T06:55:00Z",
   "workOrderId": "WO-P5-001-SOURCE-INVENTORY-7F3A2C91"
 }

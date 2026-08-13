@@ -9,6 +9,7 @@
   "createdBy": "ELASTIC-c2d7a5e1",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Append exactly the nine P5-001 analyzer-visible library paths to the governed source inventory on reconciled canonical Product PR #72 head 6c4a8d8652d4df69d45f52d8997e51daf3ac6c2b. Preserve every current protected-main inventory entry including lib/product/mcp_protocol.dart, make no product-behavior/Test Center/root-manifest change, and prove the resulting inventory is the current-main superset plus exactly the nine P5 paths.",
@@ -23,8 +24,8 @@
   "roadmapTask": "P5-001",
   "schemaVersion": 1,
   "status": "LANDED",
+  "supersedes": "WO-P5-001-SOURCE-INVENTORY-7F3A2C91",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-11T17:39:56Z",
-  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:PR117_MERGED_AND_CONSUMED"
+  "updatedAt": "2026-08-13T06:55:00Z",
+  "workOrderId": "WO-P5-001-SOURCE-INVENTORY-POSTMAIN-C2D7A5E1"
 }
