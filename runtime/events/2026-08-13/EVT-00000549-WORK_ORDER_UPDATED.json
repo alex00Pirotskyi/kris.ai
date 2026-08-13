@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000549-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_SEMANTIC_REPAIR",
+    "nextStatus": "CANCELLED",
+    "reason": "The historical record was retired because its governing branch-capacity rule became obsolete and no replacement Work Order exists. CANCELLED preserves that truth without fabricating a supersession edge."
+  },
+  "recordedAt": "2026-08-13T06:15:00Z",
+  "runtimeGeneration": 549,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P2-004-BRANCH-SLOT-A7C4D2F1"
+}
