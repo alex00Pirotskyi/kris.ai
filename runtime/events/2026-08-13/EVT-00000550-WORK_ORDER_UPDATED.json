@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000550-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
+    "replacementWorkOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
+    "supersededWorkOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
+  },
+  "recordedAt": "2026-08-13T06:18:00Z",
+  "runtimeGeneration": 550,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4"
+}

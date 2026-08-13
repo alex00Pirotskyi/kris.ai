@@ -14,6 +14,7 @@
   "createdBy": "WRK-20260809T065200Z-6e91a2f4",
   "dependencyRequirements": [],
   "executionRole": "DEFECT_HUNTER",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-001",
   "objective": "Replace the contaminated PR #75 integration surface with a clean current-main P2-004 technology-selection candidate. Preserve the reviewed trusted-measurement contract where still useful, restore P2-004 to its roadmap role as a measured architecture selection rather than production certification of every candidate, measure the existing Node/node-pty implementation against native-PTY feasibility and a Dart-control-plane/native-helper architecture on Windows, macOS and Linux using real hosted-runner observations, select a technology only if the evidence is sufficient, and keep full reconnect/process-tree production certification in P2-005/P2-006. Do not claim P2-004 accepted from source-only evidence and do not begin P3 until the corrected P2-004 acceptance gate is genuinely satisfied.",
@@ -31,8 +32,8 @@
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
   "status": "LANDED",
+  "supersedes": "WO-P2-004-DECISIVE-CLOSURE-A1B2C3D4",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-11T17:39:56Z",
-  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4",
-  "lastActor": "GPT-5.6-SOL-5F6A7B8C:STALE_WIP_RECONCILIATION:PR128_MERGED"
+  "updatedAt": "2026-08-13T06:18:00Z",
+  "workOrderId": "WO-P2-004-TECH-SELECTION-6E91A2F4"
 }
