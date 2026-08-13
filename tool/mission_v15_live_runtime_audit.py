@@ -11,13 +11,32 @@ from mission_delivery_lib import run_git
 from mission_runtime_model import ACTIVE_WORK, validate_runtime_state
 
 
-def live_branch_head(project: pathlib.Path, branch: str) -> str:
-    for ref in (f"refs/remotes/origin/{branch}", f"refs/heads/{branch}"):
+def resolve_product_head(
+    project: pathlib.Path,
+    branch: str,
+    product_pr: int,
+) -> dict[str, object]:
+    """Resolve an exact Product head without requiring its source branch to survive merge."""
+    candidates = (
+        (f"refs/remotes/origin/{branch}", True),
+        (f"refs/heads/{branch}", True),
+        (f"refs/remotes/origin/pull/{product_pr}/head", False),
+        (f"refs/pull/{product_pr}/head", False),
+    )
+    for ref, source_branch_present in candidates:
         try:
-            return run_git(project, "rev-parse", ref)
+            head = run_git(project, "rev-parse", "--verify", f"{ref}^{{commit}}")
         except Exception:
             continue
-    raise ValueError(f"live branch ref not fetched: {branch}")
+        return {
+            "head": head,
+            "ref": ref,
+            "sourceBranchPresent": source_branch_present,
+        }
+    raise ValueError(
+        f"live Product source ref not fetched: PR{product_pr}:{branch} "
+        "(expected branch or immutable refs/pull/<pr>/head)"
+    )
 
 
 def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> dict:
@@ -26,7 +45,8 @@ def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> di
     violations: list[str] = []
     active_semaphores = state["activeSemaphores"]
     for pr, product in sorted(state["productPrs"].items()):
-        live_head = live_branch_head(repository_project, product["branch"])
+        resolution = resolve_product_head(repository_project, product["branch"], pr)
+        live_head = str(resolution["head"])
         observed_head = product.get("observedHead")
         if product.get("status") in {"ACTIVE", "REVIEW", "LANDING"}:
             if not observed_head:
@@ -82,9 +102,9 @@ def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> di
 
         stale_ready = []
         for item in work:
-            # READY/RESERVED work must be based on the current canonical branch.
-            # Once a worker owns an active semaphore, the immutable reservation
-            # governs candidate ancestry and the owner branch may move separately.
+            # READY/RESERVED work must be based on the current canonical Product
+            # head. A merged PR may have no source branch, so its immutable PR
+            # head becomes the exact canonical source identity for this audit.
             if item["status"] in {"READY", "RESERVED"} and item["baseCommit"] != live_head:
                 stale_ready.append(item["workOrderId"])
                 violations.append(
@@ -99,6 +119,8 @@ def audit(repository_project: pathlib.Path, runtime_project: pathlib.Path) -> di
                 "status": product.get("status"),
                 "observedHead": observed_head,
                 "liveHead": live_head,
+                "resolvedRef": resolution["ref"],
+                "sourceBranchPresent": resolution["sourceBranchPresent"],
                 "activeWorkOrders": [item["workOrderId"] for item in work],
                 "integratingWorkOrders": [item["workOrderId"] for item in integrating_work],
                 "activeIntegrationSemaphores": [
