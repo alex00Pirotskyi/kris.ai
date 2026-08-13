@@ -3,6 +3,7 @@ name: Mission V1.5 Hygiene
 on:
   pull_request:
     paths:
+      - '.github/workflows/mission-v15-hygiene.yml'
       - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_v15_hygiene.py'
       - 'tool/mission_v15_live_runtime_audit.py'
@@ -40,10 +41,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.10'
-      - name: Fetch all branches and runtime
+      - name: Fetch branches, immutable PR heads and runtime
         shell: bash
         run: |
-          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          git fetch --no-tags origin \
+            '+refs/heads/*:refs/remotes/origin/*' \
+            '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
           runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
           git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
       - name: Audit branch growth and runtime hygiene
