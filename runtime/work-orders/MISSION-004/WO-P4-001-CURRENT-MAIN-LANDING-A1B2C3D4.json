@@ -14,7 +14,7 @@
   "createdBy": "WRK-20260808T065312Z-a1b2c3d4",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "GPT-5.6-PRO-SOLO-38CB129E:SOURCE_MANIFEST_FINALIZED:ARTIFACT_9177676521",
+  "lastActor": "GPT-5.6-PRO-SOLO-38CB129E:INTEGRATION_STATE_INVARIANT_RESTORED:EXACT_FINAL_CANDIDATE",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-004",
   "objective": "Make P4-001 the next protected-main source landing. Reconcile the existing canonical P4 Product branch onto current protected main without creating another long-lived Product PR or importing stale P8 authority. Preserve current-main P8/Test Center bytes, carry forward only currently authorized P4-owned source/tests/evidence plus separately authorized P4 Test Center/source-manifest authority, eliminate obsolete ancestry from the effective landing diff, then run exact-current P4/product tri-platform validation, controlled finalization, and protected-main landing. The required deterministic fixture remains a separately tracked control-plane path-policy blocker until MISSION-004 ownership policy authorizes it. Do not start P4-002+.",
@@ -31,8 +31,8 @@
   ],
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-13T10:44:30Z",
+  "updatedAt": "2026-08-13T10:49:30Z",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
 }
