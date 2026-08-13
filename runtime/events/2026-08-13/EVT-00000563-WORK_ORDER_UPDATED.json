@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000563-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "GPT-5.6-PRO-SOLO-38CB129E:SOURCE_MANIFEST_FINALIZED:ARTIFACT_9177676521",
+    "artifactDigest": "sha256:44cdb0a83b99ba4cf312606f206c6408ed038deccb61200ecd1d921edded4b26",
+    "artifactId": 9177676521,
+    "candidateCommit": "402a5764472a19feebdd51de192513640a05463d",
+    "candidateTree": "f9efb1f0d212c7d15aad481e614b7cc9f2982e82",
+    "generatedManifestSha256": "e628581bed87e73e06341f0e2e93ed43e537fbbcf5026162c35abb678bcfa1df",
+    "generatorRunId": 31691770828,
+    "nextStatus": "VALIDATING",
+    "reason": "Consumed the exact idempotent one-path source-manifest artifact generated from reconciled candidate fa5ecc5d09ca442de2ce4919f80e7cf6a6c80150. The finalization commit changes only SOURCE_MANIFEST.sha256."
+  },
+  "recordedAt": "2026-08-13T10:44:30Z",
+  "runtimeGeneration": 563,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T101547Z-3b4525d1",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
