@@ -51,6 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           cd control
+          request=''
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             request="$DISPATCH_REQUEST_PATH"
           else
@@ -59,12 +60,48 @@ jobs:
                 "$EVENT_BEFORE" "$EVENT_AFTER" -- \
                 'docs/roadmap/missions/landing-validations/requests/*.json'
             )
-            if [ "${#requests[@]}" -ne 1 ]; then
-              echo "expected exactly one newly-added landing request, found ${#requests[@]}" >&2
+            if [ "${#requests[@]}" -gt 1 ]; then
+              echo "expected at most one newly-added landing request, found ${#requests[@]}" >&2
               printf '%s\n' "${requests[@]}" >&2
               exit 1
             fi
-            request="${requests[0]}"
+            if [ "${#requests[@]}" -eq 1 ]; then
+              request="${requests[0]}"
+            else
+              cursor="$EVENT_BEFORE"
+              introduced_at=''
+              for _ in $(seq 1 32); do
+                parent="$(git rev-parse "${cursor}^" 2>/dev/null || true)"
+                [ -n "$parent" ] || break
+                mapfile -t inherited_requests < <(
+                  git diff-tree --no-commit-id --name-only --diff-filter=A -r \
+                    "$parent" "$cursor" -- \
+                    'docs/roadmap/missions/landing-validations/requests/*.json'
+                )
+                if [ "${#inherited_requests[@]}" -gt 1 ]; then
+                  echo "ambiguous historical landing request introduction at $cursor" >&2
+                  printf '%s\n' "${inherited_requests[@]}" >&2
+                  exit 1
+                fi
+                if [ "${#inherited_requests[@]}" -eq 1 ]; then
+                  request="${inherited_requests[0]}"
+                  introduced_at="$cursor"
+                  break
+                fi
+                cursor="$parent"
+              done
+              if [ -z "$introduced_at" ]; then
+                echo 'no immutable landing request found in the last 32 first-parent commits' >&2
+                exit 1
+              fi
+              introduced_blob="$(git rev-parse "${introduced_at}:${request}")"
+              current_blob="$(git rev-parse "${EVENT_AFTER}:${request}")"
+              if [ "$introduced_blob" != "$current_blob" ]; then
+                echo "landing request changed after introduction: $request" >&2
+                exit 1
+              fi
+              echo "reusing unchanged immutable landing request from $introduced_at"
+            fi
           fi
           case "$request" in
             docs/roadmap/missions/landing-validations/requests/*.json) ;;
