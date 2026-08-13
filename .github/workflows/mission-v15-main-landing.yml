@@ -122,16 +122,18 @@ jobs:
           fetch-depth: 0
           path: target
           persist-credentials: false
-      - name: Fetch and bind exact Product source branch
+      - name: Fetch and bind immutable Product PR head
         shell: bash
         env:
+          PRODUCT_PR: ${{ steps.request.outputs.product_pr }}
           SOURCE_BRANCH: ${{ steps.request.outputs.source_branch }}
           SOURCE_SHA: ${{ steps.request.outputs.source_sha }}
         run: |
           set -euo pipefail
-          git -C target fetch --no-tags origin \
-            "+refs/heads/${SOURCE_BRANCH}:refs/remotes/origin/${SOURCE_BRANCH}"
-          test "$(git -C target rev-parse "refs/remotes/origin/${SOURCE_BRANCH}")" = "$SOURCE_SHA"
+          source_ref="refs/pull/${PRODUCT_PR}/head"
+          local_ref="refs/remotes/origin/${SOURCE_BRANCH}"
+          git -C target fetch --no-tags origin "+${source_ref}:${local_ref}"
+          test "$(git -C target rev-parse "$local_ref")" = "$SOURCE_SHA"
       - name: Check out immutable runtime authority snapshot
         uses: actions/checkout@v4
         with:
