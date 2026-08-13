@@ -7,7 +7,7 @@
   "createdAt": "2026-08-07T19:00:00Z",
   "createdBy": "SANITIZER-V2",
   "dependencyRequirements": [],
-  "lastActor": "ELASTIC-GPT-C73E9A51",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-004",
   "objective": "Exact P4-001 product-gates workflow_dispatch run 31209651005 is allocated on canonical Product PR #62 head fceea9a561dad8ff57f398c8be2f5fe27ad48f25. Validate that exact run; do not infer acceptance/support from CI and do not mutate Product source merely to retrigger checks.",
@@ -23,7 +23,8 @@
   "roadmapTask": "P4-001",
   "schemaVersion": 1,
   "status": "SUPERSEDED",
+  "supersededBy": "WO-P4-001-EXACT-CI-C73E9A51",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-09T09:15:00Z",
+  "updatedAt": "2026-08-13T06:50:00Z",
   "workOrderId": "WO-P4-001-EXACT-CI-SANITIZER"
 }

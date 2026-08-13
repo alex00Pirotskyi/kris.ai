@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000554-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_CHAIN_REPAIR",
+    "replacementWorkOrderId": "WO-P4-001-EXACT-CI-C73E9A51",
+    "sourceEventId": "EVT-00000296-WORK_ORDER_READY",
+    "supersededWorkOrderId": "WO-P4-001-EXACT-CI-SANITIZER"
+  },
+  "recordedAt": "2026-08-13T06:50:00Z",
+  "runtimeGeneration": 554,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P4-001-EXACT-CI-SANITIZER"
+}
