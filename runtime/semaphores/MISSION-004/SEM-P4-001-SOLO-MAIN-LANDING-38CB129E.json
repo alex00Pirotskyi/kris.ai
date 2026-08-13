@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "2bea2ea68fa4ef8ed40f9776bbbabe3664c53514",
+  "baseTree": "0fcf8d987ee20914a9e0e639cbba80093b210370",
+  "branch": "agent/p4-001-search-provider-foundation",
+  "createdAt": "2026-08-13T10:21:35Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-13T14:21:35Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-004",
+  "productPr": 62,
+  "refreshedAt": "2026-08-13T10:21:35Z",
+  "resourceId": null,
+  "runtimeGeneration": 561,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P4-001-SOLO-MAIN-LANDING-38CB129E",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+  "workerIdentity": "GPT-5.6-PRO-SOLO-38CB129E"
+}
