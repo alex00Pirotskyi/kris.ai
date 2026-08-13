@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000547-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-006",
+  "payload": {
+    "nextStatus": "LANDED",
+    "semaphoreId": "SEM-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1"
+  },
+  "recordedAt": "2026-08-13T05:41:50Z",
+  "runtimeGeneration": 547,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1"
+}

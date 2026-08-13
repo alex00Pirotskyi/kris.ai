@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1",
   "allowedPaths": [
     ".github/workflows/mission-v15-main-landing.yml",
     "tool/mission_v15_landing_gate.py",
@@ -36,8 +35,8 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-13T00:31:00Z",
+  "updatedAt": "2026-08-13T05:41:50Z",
   "workOrderId": "WO-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1"
 }
