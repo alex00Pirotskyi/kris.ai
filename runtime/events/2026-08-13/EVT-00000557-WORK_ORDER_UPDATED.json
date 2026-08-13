@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000557-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-006",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:P6_SOURCE_INVENTORY_LANDED_MAIN",
+    "canonicalProductPr": 76,
+    "helperCommit": "cdef61b15a4b8a1cb4632f78a00f76e96188f86a",
+    "helperPr": 137,
+    "landedMainCommit": "3cdae267902d467126ed637c22f05a802cb8f739",
+    "nextStatus": "LANDED",
+    "path": "test/product/source_contract_test.dart",
+    "protectedMainBlob": "0c0989fe3bf71df005b014a35d9f727fe919bf3c",
+    "supportPromotionNotInferred": true
+  },
+  "recordedAt": "2026-08-13T07:05:00Z",
+  "runtimeGeneration": 557,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-SOURCE-INVENTORY-7C51A2E4"
+}
