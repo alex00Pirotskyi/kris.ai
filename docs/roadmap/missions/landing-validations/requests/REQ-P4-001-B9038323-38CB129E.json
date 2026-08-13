@@ -1,0 +1,32 @@
+{
+  "expectedJobs": [
+    {
+      "id": 94424355562,
+      "name": "validate-ubuntu"
+    },
+    {
+      "id": 94424355470,
+      "name": "validate-windows"
+    },
+    {
+      "id": 94424355506,
+      "name": "validate-macos"
+    }
+  ],
+  "landingBaseCommit": "3cdae267902d467126ed637c22f05a802cb8f739",
+  "landingSemaphoreId": "SEM-P4-001-SOLO-MAIN-LANDING-38CB129E",
+  "landingWorkOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
+  "mergedMainCommit": "b903832336641e7d76c7b382f3aaafcb504abec4",
+  "mergedMainTree": "f9efb1f0d212c7d15aad481e614b7cc9f2982e82",
+  "mission": "MISSION-004",
+  "productGatesRun": 31693011224,
+  "productPr": 62,
+  "requestId": "REQ-P4-001-B9038323-38CB129E",
+  "runtimeCommit": "d472454b36843dea73f80e3da8ea7aa910ff0a8d",
+  "runtimeGeneration": 564,
+  "schemaVersion": 1,
+  "sourceBranch": "agent/p4-001-search-provider-foundation",
+  "sourceCommit": "402a5764472a19feebdd51de192513640a05463d",
+  "sourceTree": "f9efb1f0d212c7d15aad481e614b7cc9f2982e82",
+  "task": "P4-001"
+}
