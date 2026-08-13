@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1",
   "allowedPaths": [
     "lib/product/model/model.dart",
     "lib/product/model/model_registry.dart",
@@ -37,9 +36,9 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "READY",
   "supersedes": "WO-P6-001-LANDING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-12T21:57:00Z",
+  "updatedAt": "2026-08-13T05:52:28Z",
   "workOrderId": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1"
 }

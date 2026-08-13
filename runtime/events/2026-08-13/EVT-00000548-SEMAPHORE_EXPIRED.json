@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000548-SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1"
+    ]
+  },
+  "recordedAt": "2026-08-13T05:52:28Z",
+  "runtimeGeneration": 548,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": null
+}
