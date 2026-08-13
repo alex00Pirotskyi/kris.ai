@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000553-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:SUPERSESSION_SEMANTIC_REPAIR",
+    "nextStatus": "CANCELLED",
+    "reason": "The historical 60-branch migration-ceiling blocker became obsolete under the soft-80/hard-150 NEW_BRANCH_CREATION_ONLY policy and no replacement Work Order exists.",
+    "sourceEventId": "EVT-00000277-WORK_ORDER_UPDATED"
+  },
+  "recordedAt": "2026-08-13T06:43:00Z",
+  "runtimeGeneration": 553,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P4-001-BRANCH-CAPACITY-PROOF3-7C4E91B2"
+}
