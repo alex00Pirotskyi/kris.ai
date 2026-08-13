@@ -22,6 +22,8 @@ on:
       - '.github/workflows/mission-v15-hygiene.yml'
       - 'tool/mission_v15_live_runtime_audit.py'
       - 'tool/mission_v15_live_runtime_audit_test.py'
+      - 'tool/mission_v15_supersession_invariant.py'
+      - 'tool/mission_v15_supersession_test.py'
       - 'runtime/**'
   workflow_dispatch:
     inputs:
@@ -56,6 +58,9 @@ jobs:
       - name: Run immutable Product-head resolution regressions
         shell: bash
         run: python tool/mission_v15_live_runtime_audit_test.py
+      - name: Run Work Order supersession regressions
+        shell: bash
+        run: python tool/mission_v15_supersession_test.py
       - name: Audit branch growth and runtime hygiene
         shell: bash
         run: |

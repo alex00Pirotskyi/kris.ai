@@ -38,13 +38,40 @@ def scope_key(item: dict[str, Any]) -> tuple[Any, Any, Any]:
     )
 
 
+def supersedes_ids(item: dict[str, Any], work_id: str) -> list[str]:
+    """Return normalized predecessor IDs, accepting legacy one-to-one records."""
+    value = item.get("supersedes")
+    if value is None:
+        return []
+    if isinstance(value, str):
+        if not value:
+            raise ValueError(f"Work Order {work_id} supersedes must not be empty")
+        return [value]
+    if isinstance(value, list):
+        if not value:
+            raise ValueError(f"Work Order {work_id} supersedes list must not be empty")
+        result: list[str] = []
+        for index, source_id in enumerate(value):
+            if not isinstance(source_id, str) or not source_id:
+                raise ValueError(
+                    f"Work Order {work_id} supersedes[{index}] must be a non-empty string"
+                )
+            result.append(source_id)
+        if len(set(result)) != len(result):
+            raise ValueError(f"Work Order {work_id} supersedes contains duplicates")
+        return result
+    raise ValueError(
+        f"Work Order {work_id} supersedes must be a string or an array of strings"
+    )
+
+
 def validate_supersession(project: pathlib.Path) -> dict[str, Any]:
     work_orders = load_work_orders(project)
     edges: list[dict[str, str]] = []
 
     for work_id, item in work_orders.items():
         replacement_id = item.get("supersededBy")
-        source_id = item.get("supersedes")
+        source_ids = supersedes_ids(item, work_id)
 
         if item.get("status") == "SUPERSEDED" and not replacement_id:
             raise ValueError(
@@ -67,15 +94,14 @@ def validate_supersession(project: pathlib.Path) -> dict[str, Any]:
                 raise ValueError(
                     f"Work Order {work_id} replacement {replacement_id} crosses mission/task/Product PR scope"
                 )
-            if replacement.get("supersedes") != work_id:
+            replacement_sources = supersedes_ids(replacement, replacement_id)
+            if work_id not in replacement_sources:
                 raise ValueError(
                     f"Work Order {work_id} replacement {replacement_id} does not reciprocally supersede it"
                 )
             edges.append({"from": work_id, "to": replacement_id})
 
-        if source_id:
-            if not isinstance(source_id, str):
-                raise ValueError(f"Work Order {work_id} supersedes must be a string")
+        for source_id in source_ids:
             source = work_orders.get(source_id)
             if source is None:
                 raise ValueError(
