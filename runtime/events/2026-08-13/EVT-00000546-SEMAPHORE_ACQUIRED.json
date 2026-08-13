@@ -1,0 +1,24 @@
+{
+  "eventId": "EVT-00000546-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-006",
+  "payload": {
+    "blockedWorkOrderId": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1",
+    "controlPlaneBranch": "agent/mission-execution-v15-gold",
+    "controlPlaneHead": "0f31241f0f117958f4eb14fdf3c0c8b1f454c167",
+    "controlPlaneTree": "953b41c35fdbf6492194f0de28b62c9b3f6892c0",
+    "executionRole": "CI_REPAIR",
+    "kind": "INTEGRATION",
+    "landedMainCommit": "3cdae267902d467126ed637c22f05a802cb8f739",
+    "landedMainProductGatesRun": 31646142828,
+    "productPr": 76,
+    "repairReason": "The required Mission V1.5 Main Landing workflow exists only on the active draft control-plane branch and its current checkout strategy cannot validate the already-landed protected-main commit. Acquire a bounded immutable-request repair without mutating Product source.",
+    "semaphoreId": "SEM-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1",
+    "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+  },
+  "recordedAt": "2026-08-13T00:31:00Z",
+  "runtimeGeneration": 546,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T003100Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1"
+}

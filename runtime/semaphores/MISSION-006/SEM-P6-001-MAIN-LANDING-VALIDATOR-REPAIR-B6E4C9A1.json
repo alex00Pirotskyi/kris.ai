@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    ".github/workflows/mission-v15-main-landing.yml",
+    "tool/mission_v15_landing_gate.py",
+    "tool/mission_v15_landing_test.py",
+    "docs/roadmap/missions/landing-validations/requests/REQ-P6-001-3CDAE267-B6E4C9A1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "0f31241f0f117958f4eb14fdf3c0c8b1f454c167",
+  "baseTree": "953b41c35fdbf6492194f0de28b62c9b3f6892c0",
+  "branch": "agent/mission-execution-v15-gold",
+  "createdAt": "2026-08-13T00:31:00Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-13T06:31:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-006",
+  "productPr": 76,
+  "refreshedAt": "2026-08-13T00:31:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 546,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1",
+  "workerIdentity": "GPT-5.6-PRO-B6E4C9A1"
+}

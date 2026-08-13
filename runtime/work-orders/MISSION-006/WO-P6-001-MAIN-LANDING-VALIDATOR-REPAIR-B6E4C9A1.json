@@ -1,0 +1,43 @@
+{
+  "activeSemaphoreId": "SEM-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1",
+  "allowedPaths": [
+    ".github/workflows/mission-v15-main-landing.yml",
+    "tool/mission_v15_landing_gate.py",
+    "tool/mission_v15_landing_test.py",
+    "docs/roadmap/missions/landing-validations/requests/REQ-P6-001-3CDAE267-B6E4C9A1.json"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-B6E4C9A1",
+  "baseCommit": "0f31241f0f117958f4eb14fdf3c0c8b1f454c167",
+  "baseTree": "953b41c35fdbf6492194f0de28b62c9b3f6892c0",
+  "createdAt": "2026-08-13T00:31:00Z",
+  "createdBy": "WRK-20260813T003100Z-b6e4c9a1",
+  "dependencyRequirements": [
+    "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1@INTEGRATING"
+  ],
+  "executionRole": "CI_REPAIR",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_MAIN_LANDING_VALIDATOR_REPAIR_ACQUIRED",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-006",
+  "objective": "Repair only the active Mission V1.5 Main Landing validation path needed to close P6-001 source landing. On agent/mission-execution-v15-gold, make the existing landing workflow consume one immutable exact request, validate protected-main commit 3cdae267902d467126ed637c22f05a802cb8f739 and its tree against the verified P6 candidate, verify PR #76 squash-merge identity and exact successful main product-gates run 31646142828, verify the runtime landing authority snapshot, prove the canonical source manifest remains current without mutation, and emit a machine-readable receipt. Do not alter Product source, merge the broad control-plane PR, or promote acceptance, support, release, production readiness, R2 identity independence, or GA.",
+  "parentProductPr": 76,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "control repair changes only the four allowed control/request paths",
+    "landing workflow runs from exact active control-plane head and consumes exactly one newly-added immutable request",
+    "request binds source head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 / tree 0d5f19883612fba07c61ed537749dbdaa00c3692",
+    "request binds landing base 74e242ce1427f76a0c2031264fe8acd4919394bf and merged main 3cdae267902d467126ed637c22f05a802cb8f739 / tree 0d5f19883612fba07c61ed537749dbdaa00c3692",
+    "PR #76 API identity confirms merged squash result at the exact main commit from the exact source head",
+    "product-gates run 31646142828 and validate-ubuntu, validate-windows, validate-macos jobs are terminal SUCCESS on the exact main commit",
+    "runtime authority is read from immutable head e19a35b2a5faf37867316ae27ff7020cffdde545 and matches the active landing Work Order and semaphore",
+    "canonical source-manifest regeneration is byte-identical and target checkout remains unmodified",
+    "focused landing tests pass before publishing the control commit",
+    "no Product source or lifecycle promotion is performed"
+  ],
+  "roadmapTask": "P6-001",
+  "schemaVersion": 1,
+  "status": "INTEGRATING",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-13T00:31:00Z",
+  "workOrderId": "WO-P6-001-MAIN-LANDING-VALIDATOR-REPAIR-B6E4C9A1"
+}
