@@ -2,51 +2,191 @@ name: Mission V1.5 Main Landing
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - agent/mission-execution-v15-gold
+    paths:
+      - '.github/workflows/mission-v15-main-landing.yml'
+      - 'tool/mission_v15_landing_gate.py'
+      - 'tool/mission_v15_landing_test.py'
+      - 'docs/roadmap/missions/landing-validations/requests/*.json'
   workflow_dispatch:
     inputs:
-      main_sha:
-        description: Exact protected-main commit to validate
+      request_path:
+        description: Immutable exact-main landing request path on this ref
         required: true
         type: string
 
 permissions:
+  actions: read
   contents: read
+  pull-requests: read
+
+concurrency:
+  group: mission-v15-main-landing
+  cancel-in-progress: false
 
 jobs:
   landing-truth:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out exact control implementation
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.main_sha || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
+          path: control
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.10'
-      - name: Assert exact protected-main identity
+      - name: Resolve one immutable landing request
+        id: request
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          EVENT_AFTER: ${{ github.sha }}
+          DISPATCH_REQUEST_PATH: ${{ github.event.inputs.request_path }}
+        run: |
+          set -euo pipefail
+          cd control
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            request="$DISPATCH_REQUEST_PATH"
+          else
+            mapfile -t requests < <(
+              git diff-tree --no-commit-id --name-only --diff-filter=A -r \
+                "$EVENT_BEFORE" "$EVENT_AFTER" -- \
+                'docs/roadmap/missions/landing-validations/requests/*.json'
+            )
+            if [ "${#requests[@]}" -ne 1 ]; then
+              echo "expected exactly one newly-added landing request, found ${#requests[@]}" >&2
+              printf '%s\n' "${requests[@]}" >&2
+              exit 1
+            fi
+            request="${requests[0]}"
+          fi
+          case "$request" in
+            docs/roadmap/missions/landing-validations/requests/*.json) ;;
+            *) echo "landing request path is outside the immutable request directory: $request" >&2; exit 1 ;;
+          esac
+          test -f "$request"
+          python - "$request" "$GITHUB_OUTPUT" <<'PY'
+          import json
+          import pathlib
+          import re
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          output = pathlib.Path(sys.argv[2])
+          value = json.loads(path.read_text(encoding='utf-8'))
+          if value.get('schemaVersion') != 1:
+              raise SystemExit('landing request schemaVersion must be 1')
+          sha_re = re.compile(r'^[0-9a-f]{40}$')
+          required_sha = {
+              'main_sha': 'mergedMainCommit',
+              'runtime_sha': 'runtimeCommit',
+              'source_sha': 'sourceCommit',
+          }
+          required_text = {
+              'request_id': 'requestId',
+              'source_branch': 'sourceBranch',
+          }
+          required_int = {
+              'product_pr': 'productPr',
+              'product_gates_run': 'productGatesRun',
+          }
+          lines = [f'request_path={path.as_posix()}']
+          for output_name, field in required_sha.items():
+              item = value.get(field)
+              if not isinstance(item, str) or not sha_re.fullmatch(item):
+                  raise SystemExit(f'{field} must be a lowercase 40-hex Git object ID')
+              lines.append(f'{output_name}={item}')
+          for output_name, field in required_text.items():
+              item = value.get(field)
+              if not isinstance(item, str) or not item or '\n' in item:
+                  raise SystemExit(f'{field} must be a single non-empty line')
+              lines.append(f'{output_name}={item}')
+          for output_name, field in required_int.items():
+              item = value.get(field)
+              if not isinstance(item, int) or isinstance(item, bool) or item <= 0:
+                  raise SystemExit(f'{field} must be a positive integer')
+              lines.append(f'{output_name}={item}')
+          with output.open('a', encoding='utf-8') as stream:
+              stream.write('\n'.join(lines) + '\n')
+          PY
+      - name: Check out exact protected-main target
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.request.outputs.main_sha }}
+          fetch-depth: 0
+          path: target
+          persist-credentials: false
+      - name: Fetch and bind exact Product source branch
+        shell: bash
+        env:
+          SOURCE_BRANCH: ${{ steps.request.outputs.source_branch }}
+          SOURCE_SHA: ${{ steps.request.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git -C target fetch --no-tags origin \
+            "+refs/heads/${SOURCE_BRANCH}:refs/remotes/origin/${SOURCE_BRANCH}"
+          test "$(git -C target rev-parse "refs/remotes/origin/${SOURCE_BRANCH}")" = "$SOURCE_SHA"
+      - name: Check out immutable runtime authority snapshot
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.request.outputs.runtime_sha }}
+          fetch-depth: 0
+          path: runtime
+          persist-credentials: false
+      - name: Fetch exact GitHub merge and CI receipts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCT_PR: ${{ steps.request.outputs.product_pr }}
+          PRODUCT_GATES_RUN: ${{ steps.request.outputs.product_gates_run }}
+        run: |
+          set -euo pipefail
+          api="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}"
+          headers=(
+            -H "Accept: application/vnd.github+json"
+            -H "Authorization: Bearer ${GH_TOKEN}"
+            -H "X-GitHub-Api-Version: 2022-11-28"
+          )
+          curl --fail --silent --show-error --location "${headers[@]}" \
+            "${api}/pulls/${PRODUCT_PR}" -o "$RUNNER_TEMP/product-pr.json"
+          curl --fail --silent --show-error --location "${headers[@]}" \
+            "${api}/actions/runs/${PRODUCT_GATES_RUN}" -o "$RUNNER_TEMP/product-gates-run.json"
+          curl --fail --silent --show-error --location "${headers[@]}" \
+            "${api}/actions/runs/${PRODUCT_GATES_RUN}/jobs?per_page=100&filter=latest" \
+            -o "$RUNNER_TEMP/product-gates-jobs.json"
+      - name: Run focused landing regressions
         shell: bash
         run: |
-          expected='${{ github.event.inputs.main_sha || github.sha }}'
-          test "$(git rev-parse HEAD)" = "$expected"
-      - name: Validate strict delivery and source landing truth
+          set -euo pipefail
+          PYTHONPATH=control/tool python control/tool/mission_v15_landing_test.py
+      - name: Validate exact protected-main landing truth
         shell: bash
         run: |
-          python tool/mission_delivery_strict.py --project . validate
-          python tool/mission_v15_landing_gate.py \
-            --project . \
-            --main-commit '${{ github.event.inputs.main_sha || github.sha }}' \
+          set -euo pipefail
+          PYTHONPATH=control/tool python control/tool/mission_v15_landing_gate.py \
+            --project target \
+            --runtime-project runtime \
+            --exact-request "control/${{ steps.request.outputs.request_path }}" \
+            --pr-json "$RUNNER_TEMP/product-pr.json" \
+            --run-json "$RUNNER_TEMP/product-gates-run.json" \
+            --jobs-json "$RUNNER_TEMP/product-gates-jobs.json" \
             --output "$RUNNER_TEMP/landing-truth.json"
-      - name: Verify canonical source manifest
+      - name: Verify all checkouts remain unmodified
         shell: bash
         run: |
-          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.before"
-          python tool/p1a_refresh_source_manifest.py .
-          cmp "$RUNNER_TEMP/source-manifest.before" SOURCE_MANIFEST.sha256
-      - name: Verify non-mutation
-        shell: bash
-        run: test -z "$(git status --porcelain=v1)"
+          set -euo pipefail
+          test -z "$(git -C control status --porcelain=v1)"
+          test -z "$(git -C target status --porcelain=v1)"
+          test -z "$(git -C runtime status --porcelain=v1)"
       - uses: actions/upload-artifact@v4
         with:
-          name: mission-v15-main-landing-${{ github.event.inputs.main_sha || github.sha }}
+          name: mission-v15-main-landing-${{ steps.request.outputs.request_id }}
           path: ${{ runner.temp }}/landing-truth.json
+          if-no-files-found: error
+          retention-days: 90
