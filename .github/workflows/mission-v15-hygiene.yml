@@ -18,6 +18,7 @@ on:
     branches:
       - agent/mission-runtime
     paths:
+      - '.github/workflows/mission-v15-hygiene.yml'
       - 'runtime/**'
   workflow_dispatch:
     inputs:
