@@ -10,7 +10,7 @@
   "createdBy": "WRK-20260812T173608Z-c7ffecff",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
-  "lastActor": "GPT-5.6-PRO-C7FFECFF:SOURCE_MANIFEST_D2D6BFF2:EXACT_TRI_PLATFORM_CI_31625600290:LANDED",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:MANY_TO_ONE_SUPERSESSION_REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-003",
   "objective": "Canonical P3-001 Product PR #131 source-manifest finalization is complete at exact head d2d6bff20419736c4ecacbab727657720815cd56. The repository-owned release finalizer ran the canonical source-manifest generator twice byte-identically in relay run 31624681508 and committed only SOURCE_MANIFEST.sha256. The effective Product diff from pre-manifest head 8d65923539c2b9487123fcec85c457b693f857d8 changes exactly that root manifest, with no Product-source edits. Exact workflow_dispatch product-gates run 31625600290 then succeeded on Ubuntu, macOS, and Windows at the unchanged canonical head. This terminal record covers source-manifest finalization only; R1, acceptance, support, release support, production readiness, release promotion, landing to protected main, and GA remain separate authority decisions.",
@@ -32,8 +32,11 @@
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
   "status": "LANDED",
-  "supersedes": "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+  "supersedes": [
+    "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+    "WO-P3-001-MANIFEST-MATERIALIZER-7C51A2E4"
+  ],
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-12T18:11:00Z",
+  "updatedAt": "2026-08-13T06:24:00Z",
   "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
 }

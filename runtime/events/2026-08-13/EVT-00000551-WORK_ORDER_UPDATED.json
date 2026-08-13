@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000551-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-003",
+  "payload": {
+    "actor": "GPT-5.6-PRO-B6E4C9A1:MANY_TO_ONE_SUPERSESSION_REPAIR",
+    "replacementWorkOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF",
+    "supersededWorkOrderIds": [
+      "WO-P3-001-SOURCE-MANIFEST-44AE364B",
+      "WO-P3-001-MANIFEST-MATERIALIZER-7C51A2E4"
+    ],
+    "sourceEventId": "EVT-00000535-SEMAPHORE_ACQUIRED"
+  },
+  "recordedAt": "2026-08-13T06:24:00Z",
+  "runtimeGeneration": 551,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P3-001-SOURCE-MANIFEST-C7FFECFF"
+}
