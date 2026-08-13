@@ -8,7 +8,9 @@ on:
     paths:
       - '.github/workflows/mission-v15-main-landing.yml'
       - 'tool/mission_v15_landing_gate.py'
+      - 'tool/mission_v15_landing_gate_compat.py'
       - 'tool/mission_v15_landing_test.py'
+      - 'tool/mission_v15_landing_compat_test.py'
       - 'docs/roadmap/missions/landing-validations/requests/*.json'
   workflow_dispatch:
     inputs:
@@ -204,11 +206,12 @@ jobs:
         run: |
           set -euo pipefail
           PYTHONPATH=control/tool python control/tool/mission_v15_landing_test.py
+          PYTHONPATH=control/tool python control/tool/mission_v15_landing_compat_test.py
       - name: Validate exact protected-main landing truth
         shell: bash
         run: |
           set -euo pipefail
-          PYTHONPATH=control/tool python control/tool/mission_v15_landing_gate.py \
+          PYTHONPATH=control/tool python control/tool/mission_v15_landing_gate_compat.py \
             --project target \
             --runtime-project runtime \
             --exact-request "control/${{ steps.request.outputs.request_path }}" \

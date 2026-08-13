@@ -51,14 +51,17 @@ jobs:
           tool/mission_delivery_checks.py
           tool/mission_delivery_live.py
           tool/mission_delivery_control.py
+          tool/mission_delivery_control_v15.py
           tool/mission_delivery_strict.py
           tool/mission_delivery_control_test.py
+          tool/mission_delivery_control_v15_test.py
           tool/mission_v15_regression_test.py
       - name: Run delivery regressions
         shell: bash
         run: |
           set -euo pipefail
           python -m unittest -v tool/mission_delivery_control_test.py
+          PYTHONPATH=tool python -m unittest -v tool/mission_delivery_control_v15_test.py
           python tool/mission_v15_regression_test.py
       - name: Validate durable runtime and delivery control
         shell: bash
@@ -66,7 +69,7 @@ jobs:
           set -euo pipefail
           python tool/mission_materialize_safe.py --project . validate
           python tool/mission_runtime_control.py --project . validate
-          python tool/mission_delivery_control.py --project . validate
+          python tool/mission_delivery_control_v15.py --project . validate
           python tool/mission_delivery_strict.py --project . validate
           python tool/mission_materialize_safe.py --project . materialize --check
       - name: Generate canonical source-manifest candidate twice
@@ -131,7 +134,7 @@ jobs:
           HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
-          python tool/mission_delivery_control.py --project . ownership \
+          python tool/mission_delivery_control_v15.py --project . ownership \
             --event-path "${GITHUB_EVENT_PATH}" \
             --head-branch "${HEAD_BRANCH}" \
             --base "${BASE_SHA}" \
@@ -144,7 +147,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          python tool/mission_delivery_control.py --project . review-impact \
+          python tool/mission_delivery_control_v15.py --project . review-impact \
             --base "${BASE_SHA}" \
             --head "${HEAD_SHA}" \
             --output "${RUNNER_TEMP}/review-impact.json"
