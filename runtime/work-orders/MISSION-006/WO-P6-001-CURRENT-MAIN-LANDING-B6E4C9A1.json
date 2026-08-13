@@ -13,7 +13,7 @@
   "createdBy": "WRK-20260812T211030Z-b6e4c9a1",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_PROTECTED_MAIN_LANDING_ACQUIRED",
+  "lastActor": "GPT-5.6-PRO-B6E4C9A1:P6_PROTECTED_MAIN_LANDING_VERIFIED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-006",
   "objective": "Land canonical P6-001 Product PR #76 from exact verified head 7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29 / tree 0d5f19883612fba07c61ed537749dbdaa00c3692 onto protected main by GitHub squash merge with expected-head protection. Require protected main to remain 74e242ce1427f76a0c2031264fe8acd4919394bf before merge, preserve the exact seven-file effective diff, and rely on GitHub's real branch-protection response rather than bypassing an unmet gate. After merge, resolve the actual landed main commit and require exact product-gates plus Mission V1.5 Main Landing validation on that real commit before recording LANDED_MAIN. Do not infer P6 acceptance, behavior or platform support, release support, production readiness, release promotion, R2 identity independence, or GA from source landing.",
@@ -36,9 +36,9 @@
   ],
   "roadmapTask": "P6-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "LANDED",
   "supersedes": "WO-P6-001-LANDING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-13T05:52:28Z",
+  "updatedAt": "2026-08-13T07:10:00Z",
   "workOrderId": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1"
 }

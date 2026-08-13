@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000558-PRODUCT_PR_LANDED",
+  "eventType": "PRODUCT_PR_LANDED",
+  "mission": "MISSION-006",
+  "payload": {
+    "acceptedCountNotInferred": true,
+    "landingArtifactId": 9164256884,
+    "landingValidationRun": 31655631142,
+    "mergedMainCommit": "3cdae267902d467126ed637c22f05a802cb8f739",
+    "mergedMainTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
+    "productGatesRun": 31646142828,
+    "productPr": 76,
+    "sourceCommit": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+    "sourceTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
+    "supportPromotionNotInferred": true
+  },
+  "recordedAt": "2026-08-13T07:10:00Z",
+  "runtimeGeneration": 558,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T053150Z-b6e4c9a1",
+  "workOrderId": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1"
+}

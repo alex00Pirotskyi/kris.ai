@@ -1,11 +1,11 @@
 {
-  "branch": "agent/g/mission-006-model-routing",
+  "branch": "main",
   "captain": "G",
   "mission": "MISSION-006",
-  "observedAt": "2026-08-12T21:44:00Z",
-  "observedHead": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+  "observedAt": "2026-08-13T07:10:00Z",
+  "observedHead": "3cdae267902d467126ed637c22f05a802cb8f739",
   "productPr": 76,
   "schemaVersion": 1,
-  "status": "ACTIVE",
+  "status": "LANDED",
   "task": "P6-001"
 }
