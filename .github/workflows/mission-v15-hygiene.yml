@@ -7,6 +7,7 @@ on:
       - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_v15_hygiene.py'
       - 'tool/mission_v15_live_runtime_audit.py'
+      - 'tool/mission_v15_live_runtime_audit_test.py'
       - 'tool/mission_v15_runtime_atomicity.py'
       - 'tool/mission_v15_supersession_invariant.py'
       - 'tool/mission_v15_supersession_test.py'
@@ -19,6 +20,8 @@ on:
       - agent/mission-runtime
     paths:
       - '.github/workflows/mission-v15-hygiene.yml'
+      - 'tool/mission_v15_live_runtime_audit.py'
+      - 'tool/mission_v15_live_runtime_audit_test.py'
       - 'runtime/**'
   workflow_dispatch:
     inputs:
@@ -50,6 +53,9 @@ jobs:
             '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
           runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
           git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
+      - name: Run immutable Product-head resolution regressions
+        shell: bash
+        run: python tool/mission_v15_live_runtime_audit_test.py
       - name: Audit branch growth and runtime hygiene
         shell: bash
         run: |
