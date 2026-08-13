@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000559-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-004",
+  "payload": {
+    "actor": "GPT-5.6-PRO-SOLO-38CB129E:SOLO_MAINTAINER_APPROVAL_STAGE:NO_R1_PASS_CLAIM",
+    "nextStatus": "REVIEW"
+  },
+  "recordedAt": "2026-08-13T10:16:36Z",
+  "runtimeGeneration": 559,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260813T101547Z-3b4525d1",
+  "workOrderId": "WO-P4-001-PR143-R1-5F6A7B8C"
+}
