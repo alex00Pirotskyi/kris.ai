@@ -44,6 +44,14 @@ class SupersessionInvariantTests(unittest.TestCase):
         self.assertTrue(result["pass"])
         self.assertEqual(result["supersessionEdgeCount"], 1)
 
+    def test_many_to_one_same_scope_replacement_passes(self) -> None:
+        self.write("WO-OLD-A", status="SUPERSEDED", supersededBy="WO-NEW")
+        self.write("WO-OLD-B", status="SUPERSEDED", supersededBy="WO-NEW")
+        self.write("WO-NEW", supersedes=["WO-OLD-A", "WO-OLD-B"])
+        result = validate_supersession(self.root)
+        self.assertTrue(result["pass"])
+        self.assertEqual(result["supersessionEdgeCount"], 2)
+
     def test_dangling_replacement_fails(self) -> None:
         self.write("WO-OLD", status="SUPERSEDED", supersededBy="WO-MISSING")
         with self.assertRaises(ValueError):
@@ -52,6 +60,19 @@ class SupersessionInvariantTests(unittest.TestCase):
     def test_non_reciprocal_replacement_fails(self) -> None:
         self.write("WO-OLD", status="SUPERSEDED", supersededBy="WO-NEW")
         self.write("WO-NEW")
+        with self.assertRaises(ValueError):
+            validate_supersession(self.root)
+
+    def test_many_to_one_missing_member_fails(self) -> None:
+        self.write("WO-OLD-A", status="SUPERSEDED", supersededBy="WO-NEW")
+        self.write("WO-OLD-B", status="SUPERSEDED", supersededBy="WO-NEW")
+        self.write("WO-NEW", supersedes=["WO-OLD-A"])
+        with self.assertRaises(ValueError):
+            validate_supersession(self.root)
+
+    def test_duplicate_predecessor_fails(self) -> None:
+        self.write("WO-OLD", status="SUPERSEDED", supersededBy="WO-NEW")
+        self.write("WO-NEW", supersedes=["WO-OLD", "WO-OLD"])
         with self.assertRaises(ValueError):
             validate_supersession(self.root)
 
