@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000604-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "GPT-5.6-PRO-5A8D1C3E:LEGACY_PUSH_SUPERSEDES_17_REF_MANIFEST",
+    "nextStatus": "SUPERSEDED"
+  },
+  "recordedAt": "2026-08-14T08:43:00Z",
+  "runtimeGeneration": 604,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T081345Z-5a8d1c3e",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E"
+}
