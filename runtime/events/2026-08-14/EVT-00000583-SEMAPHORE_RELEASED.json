@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000583-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91"
+  },
+  "recordedAt": "2026-08-14T04:00:00Z",
+  "runtimeGeneration": 583,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91"
+}
