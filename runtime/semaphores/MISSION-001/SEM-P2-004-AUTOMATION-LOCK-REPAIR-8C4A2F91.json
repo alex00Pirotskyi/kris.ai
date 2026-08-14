@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "config/p2_toolchain_extension.v1.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "0bf7fa68e76ed83d30634e63643e670fd2a67080",
+  "baseTree": "71ffcc51be54e7be03335bd383f2941aa54f1a7b",
+  "branch": "agent/h/p2-004-automation-lock-repair-8c4a2f91",
+  "createdAt": "2026-08-14T03:51:10Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-14T07:51:10Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T03:51:10Z",
+  "resourceId": null,
+  "runtimeGeneration": 582,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91",
+  "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+}

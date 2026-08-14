@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000582-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91",
+    "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+  },
+  "recordedAt": "2026-08-14T03:51:10Z",
+  "runtimeGeneration": 582,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91"
+}
