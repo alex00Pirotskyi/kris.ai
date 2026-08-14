@@ -1,9 +1,8 @@
 {
-  "controlPlaneBranch": "agent/mission-execution-v15-gold",
   "controlPlanePr": 100,
   "createdAt": "2026-08-07T12:06:00Z",
   "purpose": "Mutable Mission Execution 1.5 coordination state. Runtime coordination authority lives here; product source does not.",
-  "runtimeGeneration": 568,
+  "runtimeGeneration": 569,
   "schemaVersion": 1,
-  "updatedAt": "2026-08-13T11:07:00Z"
+  "updatedAt": "2026-08-14T02:13:00Z"
 }

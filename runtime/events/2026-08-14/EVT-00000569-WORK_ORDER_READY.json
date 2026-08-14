@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000569-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-003",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "INTEGRATOR",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-14T02:13:00Z",
+  "runtimeGeneration": 569,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-8C4A2F91"
+}
