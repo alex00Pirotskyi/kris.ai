@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000610-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "nextStatus": "BLOCKED",
+    "semaphoreId": "SEM-P0-001-LEGACY-SALVAGE-MANIFEST-7F3C9A12"
+  },
+  "recordedAt": "2026-08-14T14:54:22Z",
+  "runtimeGeneration": 610,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T143443Z-7f3c9a12",
+  "workOrderId": "WO-P0-001-LEGACY-SALVAGE-MANIFEST-7F3C9A12"
+}
