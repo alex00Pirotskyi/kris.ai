@@ -10,6 +10,7 @@
   "createdBy": "WRK-20260814T081345Z-5a8d1c3e",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
+  "lastActor": "GPT-5.6-PRO-7F3C9A12:REOPEN_POLICY_CLASS_REPAIR",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
   "objective": "Salvage and retire the owner's 59 newly pushed legacy branches while preserving every reusable byte. Reconcile PR #140 into one fail-closed exact-SHA policy containing the previously proven 17 refs plus 59 new legacy refs (76 total). The new tranche is valid only after proving: P0 executable gates are byte-identical or superseded on protected main; P1 Authority Service is newer on protected main; the P2 consolidated foundation already exists on protected main; temp-worker-f-noop-discard has an empty tree diff against canonical P5 branch agent/f/P5-001-information-architecture; and integration/p2-owner-risk-v71r12 remains excluded because unique Owner Mode QA is still being ported. Do not delete protected branches, open-PR heads, runtime/control authority, canonical Product branches, or any ref that moved from its reviewed SHA. Delegate one bounded RELEASE_FINALIZATION child after the two-file policy/report helper is exact.",
@@ -33,8 +34,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "READY",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-14T14:47:09Z",
+  "updatedAt": "2026-08-14T14:57:01Z",
   "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
 }
