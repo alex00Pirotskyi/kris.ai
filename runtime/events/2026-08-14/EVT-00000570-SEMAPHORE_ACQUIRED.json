@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000570-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-003",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P3-001-CURRENT-MAIN-RECONCILE-8C4A2F91",
+    "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+  },
+  "recordedAt": "2026-08-14T02:16:00Z",
+  "runtimeGeneration": 570,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-8C4A2F91"
+}
