@@ -12,12 +12,12 @@
   "kind": "AUTHORITY",
   "mission": "MISSION-003",
   "productPr": null,
-  "refreshedAt": "2026-08-14T02:56:00Z",
+  "refreshedAt": "2026-08-14T03:00:30Z",
   "resourceId": null,
-  "runtimeGeneration": 574,
+  "runtimeGeneration": 575,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P3-001-SOURCE-INVENTORY-8C4A2F91",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P3-001-SHARED-AUTHORITY-8C4A2F91",
   "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
 }
