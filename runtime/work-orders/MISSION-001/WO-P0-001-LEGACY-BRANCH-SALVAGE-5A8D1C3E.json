@@ -1,17 +1,16 @@
 {
-  "activeSemaphoreId": "SEM-P0-001-LEGACY-BRANCH-POLICY-REPAIR-7F3C9A12",
   "allowedPaths": [
     "config/branch_hygiene.json",
     "docs/progress/2026-08-14-branch-hygiene-cleanup.md"
   ],
-  "assignedWorker": "GPT-5.6-PRO-7F3C9A12",
+  "assignedWorker": null,
   "baseCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
   "baseTree": "c8326296186720b3f8554574b87eddb859f70109",
   "createdAt": "2026-08-14T08:46:00Z",
   "createdBy": "WRK-20260814T081345Z-5a8d1c3e",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "GPT-5.6-PRO-7F3C9A12:REOPEN_POLICY_CLASS_REPAIR",
+  "lastActor": "GPT-5.6-PRO-SOLO-15F3C9A1:RELEASE_STALE_SOLO_HANDOFF",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
   "objective": "Salvage and retire the owner's 59 newly pushed legacy branches while preserving every reusable byte. Reconcile PR #140 into one fail-closed exact-SHA policy containing the previously proven 17 refs plus 59 new legacy refs (76 total). The new tranche is valid only after proving: P0 executable gates are byte-identical or superseded on protected main; P1 Authority Service is newer on protected main; the P2 consolidated foundation already exists on protected main; temp-worker-f-noop-discard has an empty tree diff against canonical P5 branch agent/f/P5-001-information-architecture; and integration/p2-owner-risk-v71r12 remains excluded because unique Owner Mode QA is still being ported. Do not delete protected branches, open-PR heads, runtime/control authority, canonical Product branches, or any ref that moved from its reviewed SHA. Delegate one bounded RELEASE_FINALIZATION child after the two-file policy/report helper is exact.",
@@ -35,8 +34,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-14T14:59:22Z",
+  "updatedAt": "2026-08-14T15:58:00Z",
   "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
 }

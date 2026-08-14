@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000613-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "nextStatus": "READY",
+    "reason": "SOLO_EXECUTION_STALE_HANDOFF",
+    "releasedWorkerIdentity": "GPT-5.6-PRO-7F3C9A12",
+    "semaphoreId": "SEM-P0-001-LEGACY-BRANCH-POLICY-REPAIR-7F3C9A12"
+  },
+  "recordedAt": "2026-08-14T15:58:00Z",
+  "runtimeGeneration": 613,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T155800Z-15f3c9a1",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+}
