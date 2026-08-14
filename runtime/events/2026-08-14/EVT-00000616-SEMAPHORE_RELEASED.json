@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000616-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "exactHelperHead": "cfc4ca575842d1cb19709a3e9c27dcede335a881",
+    "nextStatus": "HELPER_READY",
+    "reason": "EXACT_HELPER_FROZEN_CI_RUNNING",
+    "semaphoreId": "SEM-P0-001-LEGACY-BRANCH-POLICY-REPAIR-SOLO-15F3C9A1"
+  },
+  "recordedAt": "2026-08-14T16:25:00Z",
+  "runtimeGeneration": 616,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T155800Z-15f3c9a1",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+}
