@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-P3-001-SOURCE-INVENTORY-8C4A2F91",
   "allowedPaths": [
     "lib/product/product_runtime.dart",
     "test/product/source_contract_test.dart"
@@ -27,8 +27,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-14T02:50:40Z",
+  "updatedAt": "2026-08-14T02:56:00Z",
   "workOrderId": "WO-P3-001-SHARED-AUTHORITY-8C4A2F91"
 }

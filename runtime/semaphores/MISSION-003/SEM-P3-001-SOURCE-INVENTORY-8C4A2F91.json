@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "authorityId": "source-inventory",
+  "baseCommit": "115b95e02181761408708f04d7450f9ff551895d",
+  "baseTree": "39504e1b06bbda0834903f00d24e5226d66ad58d",
+  "branch": "agent/h/p3-001-shared-authority-8c4a2f91",
+  "createdAt": "2026-08-14T02:56:00Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-14T06:56:00Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T02:56:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 574,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-SOURCE-INVENTORY-8C4A2F91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-SHARED-AUTHORITY-8C4A2F91",
+  "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+}
