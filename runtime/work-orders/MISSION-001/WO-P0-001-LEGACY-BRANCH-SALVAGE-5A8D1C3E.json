@@ -1,0 +1,38 @@
+{
+  "allowedPaths": [
+    "config/branch_hygiene.json",
+    "docs/progress/2026-08-14-branch-hygiene-cleanup.md"
+  ],
+  "baseCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+  "baseTree": "c8326296186720b3f8554574b87eddb859f70109",
+  "createdAt": "2026-08-14T08:46:00Z",
+  "createdBy": "WRK-20260814T081345Z-5a8d1c3e",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-001",
+  "objective": "Salvage and retire the owner's 59 newly pushed legacy branches while preserving every reusable byte. Reconcile PR #140 into one fail-closed exact-SHA policy containing the previously proven 17 refs plus 59 new legacy refs (76 total). The new tranche is valid only after proving: P0 executable gates are byte-identical or superseded on protected main; P1 Authority Service is newer on protected main; the P2 consolidated foundation already exists on protected main; temp-worker-f-noop-discard has an empty tree diff against canonical P5 branch agent/f/P5-001-information-architecture; and integration/p2-owner-risk-v71r12 remains excluded because unique Owner Mode QA is still being ported. Do not delete protected branches, open-PR heads, runtime/control authority, canonical Product branches, or any ref that moved from its reviewed SHA. Delegate one bounded RELEASE_FINALIZATION child after the two-file policy/report helper is exact.",
+  "parentProductPr": 138,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "live protected main remains 67e6e0314877d4ff3233d3e11e0743dd7562de55 / c8326296186720b3f8554574b87eddb859f70109",
+    "branch audit accounts for 146 live refs and exactly 59 newly pushed legacy refs",
+    "config/branch_hygiene.json contains exactly 76 exact-SHA candidates: 17 prior proven refs plus 59 legacy refs",
+    "the 59-ref legacy set is exactly 19 backup refs, 22 P0 integration refs, 7 P1 authority snapshots, 1 P2 consolidated foundation ref, 1 P3 WIP ref, 5 root P0 refs, 2 rescue refs, 1 security ref, and temp-worker-f-noop-discard",
+    "P0-002 v1 trust disablement and P0-005 support-policy gates are byte-identical between legacy heads and protected main",
+    "protected main contains a newer P1 Authority Service runtime than integration/p1-authority-service-v63r15",
+    "experiments/p2_consolidated_foundation/P2_TASK_REDUCTION_MATRIX.json already exists on protected main",
+    "temp-worker-f-noop-discard has an empty tree diff against agent/f/P5-001-information-architecture and the canonical P5 ref is retained",
+    "integration/p2-owner-risk-v71r12 remains retained and absent from the deletion set",
+    "none of the 76 candidates is main, protected, an open pull-request head, agent/mission-runtime, an active control-plane branch, or a canonical Product branch",
+    "tool/branch_hygiene.py --self-test passes and the live plan is READY with zero missing keep refs",
+    "effective helper diff before finalization is exactly config/branch_hygiene.json and docs/progress/2026-08-14-branch-hygiene-cleanup.md",
+    "canonical SOURCE_MANIFEST.sha256 is regenerated only through one bounded RELEASE_FINALIZATION child"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "BLOCKER_REMOVAL",
+  "updatedAt": "2026-08-14T08:46:00Z",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+}

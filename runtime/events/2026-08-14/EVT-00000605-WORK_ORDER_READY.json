@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000605-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "CI_REPAIR",
+    "type": "BLOCKER_REMOVAL"
+  },
+  "recordedAt": "2026-08-14T08:46:00Z",
+  "runtimeGeneration": 605,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T081345Z-5a8d1c3e",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+}
