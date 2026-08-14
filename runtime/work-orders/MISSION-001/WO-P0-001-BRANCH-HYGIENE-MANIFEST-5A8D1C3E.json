@@ -1,0 +1,33 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "baseCommit": "e12859b212b82324819a151cfcff26522437468c",
+  "baseTree": "3fd331ff03f8728ff776ebfa7ead726eb981f9b3",
+  "createdAt": "2026-08-14T06:40:00Z",
+  "createdBy": "WRK-20260814T061736Z-5a8d1c3e",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Materialize the canonical SOURCE_MANIFEST.sha256 for the exact current-main branch-hygiene candidate at e12859b212b82324819a151cfcff26522437468c / tree 3fd331ff03f8728ff776ebfa7ead726eb981f9b3. Use the repository-owned branch-hygiene source-manifest publisher and canonical generator, require byte-stable generation and canonical text, and return a candidate whose net diff against the exact parent helper adds only SOURCE_MANIFEST.sha256. Do not alter the 17-ref deletion policy, Product behavior, Owner Mode authority, acceptance, support, production, release, or GA state.",
+  "parentProductPr": 138,
+  "parentWorkOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "branch starts from exact hygiene candidate e12859b212b82324819a151cfcff26522437468c / 3fd331ff03f8728ff776ebfa7ead726eb981f9b3",
+    "tool/p1a_refresh_source_manifest.py generates SOURCE_MANIFEST.sha256 canonically",
+    "two consecutive canonical generations are byte-identical",
+    "tool/p1a_text_eof_contract_test.py --project . passes",
+    "tool/branch_hygiene.py --self-test passes",
+    "live branch-hygiene plan is READY for exactly 17 exact-SHA candidates with all retained refs present",
+    "effective diff against the parent hygiene helper adds only SOURCE_MANIFEST.sha256",
+    "no Product behavior, authority, acceptance, support, production, release, or GA state changes"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-14T06:40:00Z",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E"
+}

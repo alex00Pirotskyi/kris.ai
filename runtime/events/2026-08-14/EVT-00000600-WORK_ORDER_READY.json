@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000600-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
+    "requestedRole": "RELEASE_FINALIZER",
+    "type": "RELEASE_FINALIZATION"
+  },
+  "recordedAt": "2026-08-14T06:40:00Z",
+  "runtimeGeneration": 600,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T061736Z-5a8d1c3e",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E"
+}
