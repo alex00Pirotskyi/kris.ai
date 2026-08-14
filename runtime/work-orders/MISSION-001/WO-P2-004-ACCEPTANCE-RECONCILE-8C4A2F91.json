@@ -1,0 +1,33 @@
+{
+  "allowedPaths": [
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/IMPLEMENTATION.md",
+    "release/evidence/P2-004/manifest.json"
+  ],
+  "baseCommit": "1e4cc0102e371307a577ceefef7dc0ca1855412f",
+  "baseTree": "af0f9308c29a4a4391dbc88386fa59dafb20e73a",
+  "createdAt": "2026-08-14T04:40:00Z",
+  "createdBy": "WRK-20260814T021300Z-8c4a2f91",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-001",
+  "objective": "Reconcile the stale P2-004 ADR and evidence with the already-landed exact tri-platform technology-selection proof, exact commit-bound R1 review, clean PR #128 landing, and exact-current P2/Product validation. Record the corrected P2-004 technology-selection task as ACCEPTED without implying P2-005 interactive PTY certification, P2-006 process-tree certification, separate-identity R2, release support, production readiness, release, or GA. Preserve the human owner boundary for production/release promotion and use one bounded child only for canonical SOURCE_MANIFEST.sha256 finalization.",
+  "parentProductPr": 75,
+  "priority": 100,
+  "requestedRole": "AUDITOR",
+  "requiredTests": [
+    "PR #128 exact reviewed head/tree remain e8e85a4ffa744f9118f4dc6e04b563e7ee521aae / 94e237375c8924f5b4c063243af7075f10fbd50e",
+    "R1 execution WRK-20260809T103104Z-44AE364B remains PASS and is not represented as separate-identity R2",
+    "selection workflow 31301030782 and recorded Windows/macOS/Linux/aggregate artifact identities remain unchanged",
+    "clean PR #128 landing and exact-current P2-004, P2 Owner Mode and product-gates validation are recorded",
+    "ADR, IMPLEMENTATION.md and manifest.json agree that P2-004 is ACCEPTED",
+    "truth boundary keeps P2-005, P2-006, support, production, release and GA false",
+    "canonical source manifest is regenerated only through one bounded RELEASE_FINALIZATION child"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "EVIDENCE_FINALIZATION",
+  "updatedAt": "2026-08-14T04:40:00Z",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91"
+}
