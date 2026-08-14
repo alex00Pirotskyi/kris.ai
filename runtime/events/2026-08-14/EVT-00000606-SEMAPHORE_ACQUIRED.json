@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000606-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P0-001-LEGACY-BRANCH-SALVAGE-7F3C9A12",
+    "workerIdentity": "GPT-5.6-PRO-7F3C9A12"
+  },
+  "recordedAt": "2026-08-14T14:34:43Z",
+  "runtimeGeneration": 606,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T143443Z-7f3c9a12",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+}
