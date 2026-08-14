@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "config/branch_hygiene.json",
+    "docs/progress/2026-08-14-branch-hygiene-cleanup.md"
+  ],
+  "authorityId": null,
+  "baseCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+  "baseTree": "c8326296186720b3f8554574b87eddb859f70109",
+  "branch": "agent/repository-branch-hygiene-20260805",
+  "createdAt": "2026-08-14T14:59:22Z",
+  "executionRole": "CI_REPAIR",
+  "expiresAt": "2026-08-14T18:59:22Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T14:59:22Z",
+  "resourceId": null,
+  "runtimeGeneration": 612,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P0-001-LEGACY-BRANCH-POLICY-REPAIR-7F3C9A12",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E",
+  "workerIdentity": "GPT-5.6-PRO-7F3C9A12"
+}
