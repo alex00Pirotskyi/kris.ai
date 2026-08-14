@@ -1,13 +1,16 @@
 {
+  "activeSemaphoreId": "SEM-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
   "allowedPaths": [
     "config/branch_hygiene.json",
     "docs/progress/2026-08-14-branch-hygiene-cleanup.md"
   ],
+  "assignedWorker": "GPT-5.6-PRO-5A8D1C3E",
   "baseCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
   "baseTree": "c8326296186720b3f8554574b87eddb859f70109",
   "createdAt": "2026-08-14T06:25:00Z",
   "createdBy": "WRK-20260814T061736Z-5a8d1c3e",
   "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
   "objective": "Reconcile stale branch-hygiene PR #140 onto current protected main as a fail-closed exact-SHA cleanup. Replace the obsolete retention set, retain integration/p2-owner-risk-v71r12 because its unique QA lineage has not yet been ported, and schedule deletion only for 17 live branches proven disposable by terminal LANDED Work Orders or exact supersession ancestry. Do not wildcard-delete, delete open-PR heads, delete canonical Product branches, delete runtime/control authority, or infer that the remaining branches are safe. Delegate one bounded RELEASE_FINALIZATION child for canonical SOURCE_MANIFEST.sha256 materialization after the policy/report helper is exact.",
@@ -28,8 +31,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-14T06:25:00Z",
+  "updatedAt": "2026-08-14T06:30:00Z",
   "workOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E"
 }

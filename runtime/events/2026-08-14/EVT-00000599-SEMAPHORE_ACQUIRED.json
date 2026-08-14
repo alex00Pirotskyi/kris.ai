@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000599-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "CI_REPAIR",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
+    "workerIdentity": "GPT-5.6-PRO-5A8D1C3E"
+  },
+  "recordedAt": "2026-08-14T06:30:00Z",
+  "runtimeGeneration": 599,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T061736Z-5a8d1c3e",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E"
+}
