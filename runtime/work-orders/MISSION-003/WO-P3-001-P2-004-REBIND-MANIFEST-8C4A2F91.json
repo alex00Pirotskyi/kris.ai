@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P3-001-P2-004-REBIND-MANIFEST-8C4A2F91",
   "allowedPaths": [
     ".github/workflows/temp-p3-p2-004-manifest-finalize-8c4a2f91.yml",
     "SOURCE_MANIFEST.sha256"
@@ -28,8 +27,8 @@
   ],
   "roadmapTask": "P3-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "VALIDATING",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-14T04:07:00Z",
+  "updatedAt": "2026-08-14T04:15:00Z",
   "workOrderId": "WO-P3-001-P2-004-REBIND-MANIFEST-8C4A2F91"
 }
