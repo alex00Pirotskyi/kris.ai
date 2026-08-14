@@ -1,76 +1,111 @@
-# Branch hygiene cleanup — 2026-08-14
+# Branch hygiene cleanup — expanded legacy salvage — 2026-08-14
 
 ## Decision
 
-The repository has real branch debris, but branch count is not itself proof that a ref is disposable. This cleanup therefore remains fail-closed and exact-SHA bound.
+The owner pushed a larger set of legacy local branches after the original 17-ref cleanup candidate was prepared. The old tranche is therefore superseded by this expanded, fail-closed policy.
 
-The first executable deletion tranche contains **17 currently live refs**:
+This candidate records **76 exact deletion refs**:
 
-- 5 exact legacy snapshots already proven superseded by the existing hygiene review;
-- 7 short-lived P2/P3 helper and finalizer refs whose outputs are already consumed by protected main;
-- 5 Qwen P4 manifest refs attached to terminal `LANDED` Work Orders.
+- 17 refs already proven by the first cleanup audit;
+- 59 newly pushed legacy refs audited against protected `main` at `67e6e0314877d4ff3233d3e11e0743dd7562de55`, tree `c8326296186720b3f8554574b87eddb859f70109`.
 
-No wildcard, prefix-wide, age-only, or “looks duplicated” deletion is permitted.
+The live audit observed 146 remote branches before cleanup. Branch count is context only; it is not deletion authority.
+
+## Newly pushed legacy tranche
+
+The 59 new candidates are exactly:
+
+- 19 `backup/**` snapshots;
+- 22 historical P0 integration refs;
+- 7 historical P1 Authority Service revisions;
+- 1 quarantined P2 consolidated-foundation ref;
+- 1 early P3 full-train WIP ref;
+- 5 root-level P0 staging refs;
+- 2 rescue stash refs;
+- 1 P0-002 security ref;
+- 1 no-op Worker F ref.
+
+Every candidate is bound to its current live SHA in `config/branch_hygiene.json`. No wildcard, prefix-wide, age-only, or branch-name-only deletion is authorized.
+
+## Reusable source preservation
+
+### P0 source
+
+The legacy P0 branches are retained in Git history and their executable security/support gates are already preserved or superseded on protected main.
+
+The P0-002 v1 trust-disablement gate remains byte-identical to the legacy security lineage. The P0-005 security/support policy gate is also preserved on protected main. Historical backup and staging refs therefore provide no independent Product continuation after their exact bytes and ancestry are bound in this policy.
+
+### P1 Authority Service
+
+`integration/p1-authority-service-v63r7` through `v63r15` are historical revisions. Protected main contains the later merged authority-service runtime and subsequent security/runtime corrections. The old refs are retained only by Git object history after deletion; no current Product or open pull request depends on their names.
+
+### P2 consolidated foundation
+
+`integration/p2-consolidated-foundation-v1` is a quarantined source-foundation archive rather than a completed Product candidate. Its task-reduction matrix and reference package already exist on protected main under `experiments/p2_consolidated_foundation/**`. Deleting the branch name does not delete that retained source or imply P2 completion.
+
+### P3 WIP
+
+`integration/p3-full-train-wip` points to an early P0-era baseline and is superseded by the later P3 browser-runtime source already landed on protected main. It is not the canonical P3 Product branch.
+
+### P5 no-op ref
+
+`temp-worker-f-noop-discard` has an empty effective tree diff against retained canonical P5 branch `agent/f/P5-001-information-architecture`. The canonical P5 branch remains explicitly retained.
 
 ## Explicitly retained
 
-`integration/p2-owner-risk-v71r12` is retained. It is old and diverged, but it still contains unique Owner Mode QA lineage that has not yet been ported to current protected main. The correct sequence is port, validate, land, prove redundancy, then delete the old ref.
+The following are not part of the deletion set:
 
-`ci/direct-pr14-repair-trigger` is also retained because its later diverged history has not yet been proven redundant.
+- `main` — protected source authority;
+- `agent/mission-runtime` — mutable Mission Execution authority;
+- `agent/mission-execution-v15-gold` — active control-plane candidate;
+- `agent/mission-delivery-enforcement-v1` — retained control-plane lineage and open PR head;
+- `integration/p2-owner-risk-v71r12` — unique Owner Mode QA/recovery lineage still being ported;
+- `ci/direct-pr14-repair-trigger` — unique diverged PR14 repair history pending a separate decision;
+- `agent/f/P5-001-information-architecture` — canonical P5 Product branch.
 
-Mission Runtime, the Mission Execution 1.5 control plane, and the delivery enforcement branch are explicit retained anchors.
-
-## Tranche 1 proof classes
-
-### Superseded exact ancestors
-
-Four Worker A backup refs point to the same exact historical commit `345847cb06b3123f2841bdface68a6615cd5de42`. The canonical Worker A lineage continued beyond that ancestor.
-
-`should-not-call` remains an obsolete runtime probe at `0e082868fb91cd9d0e57626e4ba0a0ae2ef895d9`.
-
-### Landed P2/P3 helper refs
-
-The seven `agent/h/*` candidates are bounded manifest, lock-repair, or shared-authority helper branches. Their source has already been consumed by the P3 and P2-004 protected-main landings, and no open pull request uses them.
-
-Three of the P3/P2 helpers intentionally share exact head `ba8833bdb309397142d3b48af340ea33380fa5b1`; retaining three names for one consumed tree provides no product value.
-
-### Landed Qwen manifest refs
-
-The Qwen branches map to either:
-
-- `WO-P4-001-CLEAN-MANIFEST-4D82C7FA`, status `LANDED`; or
-- `WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4`, status `LANDED`.
-
-They are execution transport debris, not independent product lines.
+Open pull-request heads, protected refs, current runtime/control authority, canonical Product branches, and any ref that moved from its reviewed SHA must fail the entire cleanup before the first deletion.
 
 ## Execution contract
 
-`tool/branch_hygiene.py` must still re-read the live repository immediately before deletion and reject the entire operation when any candidate:
+After this policy lands on protected main, `.github/workflows/branch-hygiene.yml` must re-read:
 
-- moved from its reviewed SHA;
-- became protected;
-- became an open pull-request head;
-- overlaps the keep set;
-- or when any retained anchor is missing.
+1. all live branch refs and their exact SHAs;
+2. the protected-branch list;
+3. every open pull-request head;
+4. the keep set;
+5. the exact 76-candidate policy.
 
-The cleanup workflow executes only after this policy lands on protected main. The exact deletion receipt remains the durable record.
+The workflow must stop before deleting anything when:
 
-## Remaining audit
+- a candidate is absent or moved;
+- a candidate became protected;
+- a candidate became an open PR head;
+- a candidate overlaps the keep set;
+- a retained anchor is missing;
+- the policy does not parse or contains duplicate names;
+- the live plan is not `READY`.
 
-The other live branches are not declared safe by omission. They stay untouched until an exact report proves one of:
+Only after all checks pass may the exact refs be deleted and a durable receipt emitted.
 
-1. the branch is an ancestor of a retained canonical lineage;
-2. its effective product diff is already contained in protected main;
-3. its Work Order is terminal and its helper output was consumed;
-4. it is an exact duplicate tree with no independent review/evidence role;
-5. it has no open PR, no active semaphore, no canonical Product mapping, and no retained evidence purpose.
+## Product continuation
 
-This second-pass audit is where the repository can approach the larger “zero-unmerged-product” deletion estimate without converting an estimate into a destructive command.
+This cleanup removes delivery-capacity debris. It does not replace Product work. After the cleanup candidate reaches exact validation, the next product-first sequence is:
 
-## Generator debt
+1. re-resolve the Owner Mode recovery lineage and preserve the bounded current-main repair for `merged_p1a_service_unavailable`;
+2. re-resolve P5 UX/UI candidates and retain only runtime-reachable, current-main-compatible source;
+3. run exact-head Product CI;
+4. obtain the required review authority or preserve review debt truthfully;
+5. land verified source through protected-main policy;
+6. reclaim consumed helper refs through the same exact fail-closed lifecycle.
 
-The repeated Qwen and finalizer refs confirm a lifecycle defect: helper creation is durable, while helper reclamation is mostly manual. A follow-up runtime hygiene change must make terminal helper cleanup an explicit post-consumption state transition:
+## Truth boundary
 
-`helper consumed → Work Order terminal → no open PR / active semaphore → exact ref deletion candidate`
+This is repository hygiene and source-preservation work only.
 
-That mechanism must continue to fail closed and must never infer deletion merely from age or branch naming.
+It does not claim:
+
+- P2-005 or P2-006 behavioral certification;
+- independent R1/R2 approval for unrelated Product candidates;
+- platform or release support;
+- production readiness;
+- release or GA.
