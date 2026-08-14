@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91",
   "allowedPaths": [
     "docs/adr/ADR-0012-p2-automation-host.md",
     "release/evidence/P2-004/IMPLEMENTATION.md",
@@ -29,8 +28,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "EVIDENCE_FINALIZATION",
-  "updatedAt": "2026-08-14T04:49:00Z",
+  "updatedAt": "2026-08-14T04:53:00Z",
   "workOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91"
 }

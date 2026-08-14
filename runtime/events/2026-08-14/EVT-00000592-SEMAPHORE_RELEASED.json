@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000592-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "helperHead": "e2f57def3ff2e1768c82631bf9e9a3129fc18b6c",
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91"
+  },
+  "recordedAt": "2026-08-14T04:53:00Z",
+  "runtimeGeneration": 592,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91"
+}
