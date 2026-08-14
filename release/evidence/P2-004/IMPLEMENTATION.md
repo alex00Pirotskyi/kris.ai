@@ -66,10 +66,59 @@ Artifacts from run `31301030782`:
 - Windows `9034502386` — `sha256:87a132ae0753712e9be245e3c53dbaf186648590a35c5fa23fdc0750a3f1b8fa`
 - Aggregate `9034507272` — `sha256:43e077c036f0b4a8fb1e420a9db0dcdf3ffddd5989b18d053af98d9245c9fb92`
 
+## Independent review
+
+The clean six-file helper PR #128 was reviewed at exact head
+`e8e85a4ffa744f9118f4dc6e04b563e7ee521aae` and tree
+`94e237375c8924f5b4c063243af7075f10fbd50e` by the context-independent
+review execution `WRK-20260809T103104Z-44AE364B`.
+
+The review verified:
+
+- the effective protected-main diff was exactly the six P2-004 files;
+- workflow run `31301030782` and all four artifact identities/digests;
+- real PTY launch/input/output/resize for 3/3 rounds on every target OS;
+- honest rejection evidence for the native and Dart alternatives;
+- explicit macOS execute-bit packaging debt and Windows startup debt;
+- the boundary that P2-004 does not certify P2-005, P2-006, P3 behavior,
+  release support, production readiness or GA;
+- exact-head P2-004 and tri-platform Product validation.
+
+Technical disposition: **R1 PASS**.
+
+GitHub records the review as `COMMENTED` because the connected GitHub identity
+was also the PR author. The Mission Execution review was a different,
+context-independent execution and is the R1 required by the P2-004 acceptance
+contract. It is not represented as separate-identity R2.
+
+## Clean landing and exact-current validation
+
+- clean helper PR #128 merged as `2c8499f4b0b56276c29e5bfde821478836074041`;
+- canonical integration Work Order `WO-P2-004-INTEGRATE-SELECTION-6E91A2F4` is LANDED;
+- exact-current P2-004 Technology Selection run `31769134490`: SUCCESS;
+- exact-current P2 Owner Mode source-contract run `31769134494`: SUCCESS on Windows, macOS and Linux;
+- exact-current product-gates run `31769134506`: SUCCESS on Windows, macOS and Linux, including native release builds;
+- validated candidate `bb2085479d6e2f0e167e8db97fa6f54120534a5d` has tree `af0f9308c29a4a4391dbc88386fa59dafb20e73a`;
+- protected-main commit `1e4cc0102e371307a577ceefef7dc0ca1855412f` carries that exact tree;
+- the later P3 integration re-bound `config/p2_toolchain_extension.v1.json` to the exact automation-host package lock and exact-current P2-004/P2 Owner Mode validation remained green.
+
 ## Current assurance status
 
-Technology selection is measured and recorded, but P2-004 remains review-pending. Source presence or hosted setup alone is not acceptance evidence. Acceptance still requires exact-current Product validation, independent commit-bound review and clean landing/reconciliation.
+**P2-004 is ACCEPTED.**
 
-P1-012 is already completed and owner-approved on protected main; it is not a live P3 blocker. P3 remains gated only on P2-004 acceptance until this selection closes.
+The corrected task done condition and all four acceptance gates are satisfied:
+real tri-platform measurement, exact commit-bound R1, clean protected-main
+landing, and exact-current Product validation.
 
-Nothing in this evidence claims P2-005, P2-006, release support, production readiness or GA.
+This acceptance remains intentionally narrow. It does not claim:
+
+- separate-identity R2;
+- P2-005 interactive PTY certification;
+- P2-006 process-tree certification;
+- packaging/signing/updater certification;
+- removal of the macOS `spawn-helper` packaging repair;
+- Windows startup optimization;
+- platform or release support;
+- production readiness, release or GA;
+- human owner approval for identity, signing, legal, payment, MFA or
+  production-promotion actions.

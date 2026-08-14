@@ -1,7 +1,8 @@
 # ADR-0012: P2 automation-host technology selection
 
-- Status: **MEASURED SELECTION — independent review pending**
-- Date: 2026-08-09
+- Status: **ACCEPTED — exact reviewed tri-platform selection**
+- Decision date: 2026-08-09
+- Acceptance recorded: 2026-08-14
 - Corrective scope: P2-004 technology selection only
 - Measured source commit: `1b5a69739af9a999065ae9397bb74ade6b853356`
 - Measurement workflow: `P2-004 Technology Selection` run `31301030782`
@@ -12,7 +13,14 @@
 
 The exact measured source commit produced successful Windows 2025, macOS 15 and Ubuntu 24.04 selection jobs plus a successful tri-platform aggregate. On every target OS, the Node candidate completed three real PTY launch/input/output/resize rounds. The selection measurements also captured startup time, resident memory and installed automation-host footprint.
 
-This decision is not yet P2-004 `ACCEPTED`; exact-current Product validation and an independent commit-bound technical/security review remain required.
+P2-004 is accepted because all four corrected acceptance gates are now satisfied:
+
+1. the final clean candidate passed exact-current Product validation;
+2. the exact measured decision and carry-forward were reviewed by a context-independent R1 execution;
+3. the clean six-file candidate landed on protected main;
+4. this record preserves the boundary that P2-004 acceptance does not certify P2-005, P2-006, support, release, production or GA.
+
+The R1 was performed by execution `WRK-20260809T103104Z-44AE364B` against PR #128 head `e8e85a4ffa744f9118f4dc6e04b563e7ee521aae` and tree `94e237375c8924f5b4c063243af7075f10fbd50e`. GitHub recorded the review as `COMMENTED` because the connected GitHub identity was also the PR author; the Mission Execution review itself was context-independent and its bounded technical disposition was PASS. This is not represented as a separate-identity R2.
 
 ## Measured basis
 
@@ -22,9 +30,9 @@ This decision is not yet P2-004 `ACCEPTED`; exact-current Product validation and
 | macOS 15 | 68.941 ms | 48,398,336 B | 64,977,520 B | 3/3 PASS | `node-pty` 1.1.0 prebuilt spawn-helper required execute-bit repair |
 | Windows 2025 | 5,158.999 ms | 56,479,744 B | 66,235,568 B | 3/3 PASS | none |
 
-The Windows startup cost is materially larger than Linux/macOS and remains a downstream optimization target. It did not prevent reliable real PTY launch/input/output/resize in all three measured rounds.
+Every passing Node round exercised actual PTY launch/input/output and resize. The Windows startup latency is materially higher and remains a downstream optimization concern rather than a hidden result.
 
-The macOS first measurement run exposed `node-pty` failing with `posix_spawnp failed`. The corrective selection run preserved that as packaging evidence and applied a deterministic execute-bit repair to the installed prebuilt `spawn-helper`; all three subsequent macOS PTY rounds passed. Production packaging must remove the need for this runtime repair before downstream certification.
+On macOS, the first exact measurement exposed the pinned `node-pty` 1.1.0 prebuilt `spawn-helper` as non-executable. The corrective run records the deterministic execute-bit repair and then obtains three real PTY passes. Production packaging must remove the need for this runtime repair before downstream certification.
 
 ## Alternatives
 
@@ -40,15 +48,15 @@ Dart process/control-plane I/O was measured successfully on all three platforms,
 
 P2-004 is a technology-selection spike. It does **not** require production certification of every competing architecture before a selection can be made.
 
-- **P2-004** selects the automation-host technology.
+- **P2-004** selects the automation-host technology and is accepted by this ADR.
 - **P2-005** implements and certifies production interactive PTY behavior, including input, resize, ANSI, attach, detach, reconnect and transcript.
 - **P2-006** implements and certifies process-tree lifecycle behavior, including stable identity, descendants, stop/kill, parent death and PID reuse.
 
-Therefore this selection must not be represented as P2-005 or P2-006 acceptance, release support, production readiness or GA.
+Therefore this selection must not be represented as P2-005 or P2-006 acceptance, platform/release support, production readiness or GA.
 
 ## Measurement mechanism
 
-`.github/workflows/p2-004-technology-selection.yml` executes on ordinary GitHub hosted Windows, macOS and Linux runners and measures the exact candidate commit through `tool/p2_004_technology_selection.py`.
+`.github/workflows/p2-004-technology-selection.yml` executes on ordinary GitHub-hosted Windows, macOS and Linux runners and measures the exact candidate commit through `tool/p2_004_technology_selection.py`.
 
 For Node, the spike uses the repository's real `node-pty` dependency closure and a direct PTY launch/input/output/resize probe. It deliberately does not require the Windows Job-Object lifecycle helper because full process-tree guarantees belong to P2-006 rather than technology selection.
 
@@ -73,6 +81,19 @@ Artifacts:
 
 The aggregate status is `selected` and the selected candidate is `typescript-node-node-pty-with-native-lifecycle-adapters`.
 
+Review and landing:
+
+- clean helper PR: #128
+- reviewed head/tree: `e8e85a4ffa744f9118f4dc6e04b563e7ee521aae` / `94e237375c8924f5b4c063243af7075f10fbd50e`
+- R1 execution: `WRK-20260809T103104Z-44AE364B`
+- R1 Work Order: `WO-P2-004-TECH-SELECTION-R1-6E91A2F4`
+- clean landing commit: `2c8499f4b0b56276c29e5bfde821478836074041`
+- exact-current P2-004 run: `31769134490`
+- exact-current P2 Owner Mode source-contract run: `31769134494`
+- exact-current tri-platform Product-gates run: `31769134506`
+- validated candidate/tree: `bb2085479d6e2f0e167e8db97fa6f54120534a5d` / `af0f9308c29a4a4391dbc88386fa59dafb20e73a`
+- protected-main commit carrying that tree: `1e4cc0102e371307a577ceefef7dc0ca1855412f`
+
 ## Security and authority invariants
 
 Technology selection does not alter the P1/P2 authority model:
@@ -83,13 +104,17 @@ Technology selection does not alter the P1/P2 authority model:
 - technology selection does not authorize browser behavior; browser automation belongs to P3;
 - source-only, skipped, unavailable, malformed or partial evidence cannot be promoted to a measured selection.
 
-## Acceptance gates remaining
+## Acceptance truth boundary
 
-P2-004 may move to `ACCEPTED` only after:
+P2-004 technology selection is **ACCEPTED**.
 
-1. exact-current Product validation is green for the final clean candidate;
-2. the exact measured decision and carry-forward from measurement source `1b5a697…` are independently reviewed;
-3. the clean current-main candidate is landed according to repository policy;
-4. acceptance is recorded without implying P2-005/P2-006/release/GA support.
+The following remain explicitly unclaimed:
 
-Until those gates pass, this ADR remains a measured selection pending review.
+- separate-identity R2 review;
+- P2-005 interactive PTY production certification;
+- P2-006 process-tree production certification;
+- removal of the recorded macOS packaging-repair debt;
+- Windows startup optimization;
+- platform or release support;
+- production readiness, release or GA;
+- human owner approval for identity, signing, legal, payment, MFA or production-promotion actions.
