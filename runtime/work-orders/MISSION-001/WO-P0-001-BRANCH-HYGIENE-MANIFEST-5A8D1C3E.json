@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
@@ -29,8 +28,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "HELPER_READY",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-14T06:41:00Z",
+  "updatedAt": "2026-08-14T08:34:00Z",
   "workOrderId": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E"
 }
