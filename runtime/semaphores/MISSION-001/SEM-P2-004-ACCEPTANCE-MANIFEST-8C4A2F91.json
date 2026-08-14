@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    ".github/workflows/temp-p2-004-acceptance-manifest-8c4a2f91.yml",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "e2f57def3ff2e1768c82631bf9e9a3129fc18b6c",
+  "baseTree": "79934e5ac826d98c32284a2f5bba32ed500c6efc",
+  "branch": "agent/h/p2-004-acceptance-manifest-8c4a2f91",
+  "createdAt": "2026-08-14T05:01:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-14T09:01:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T05:01:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 594,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-ACCEPTANCE-MANIFEST-8C4A2F91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-MANIFEST-8C4A2F91",
+  "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+}
