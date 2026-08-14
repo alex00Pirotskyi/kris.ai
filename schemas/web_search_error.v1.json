@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/web_search_error.v1.json",
+  "title": "Kristin Web Search Provider Error v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "providerId", "code", "retryable", "safeMessage", "retryAfterMs", "diagnosticCode"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "requestId": {"$ref": "#/$defs/id"},
+    "providerId": {"$ref": "#/$defs/id"},
+    "code": {"enum": ["invalid_request", "unsupported_filter", "throttled", "provider_unavailable", "provider_error"]},
+    "retryable": {"type": "boolean"},
+    "safeMessage": {"type": "string", "minLength": 1, "maxLength": 512},
+    "retryAfterMs": {"type": ["integer", "null"], "minimum": 0, "maximum": 86400000},
+    "diagnosticCode": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"}
+  }
+}

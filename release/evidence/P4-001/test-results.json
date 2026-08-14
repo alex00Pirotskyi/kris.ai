@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "taskId": "P4-001",
+  "classification": "source_only_machine_observed",
+  "observedSourceHead": "122ea8902bb4c33547928434a6d4d5aa88e08c73",
+  "observedSourceTree": "a2257451d6d6eb72df75717e9921ec6a7f3841c7",
+  "networkUsage": "none",
+  "localRegression": {
+    "command": "PYTHONPATH=. python -m unittest services.research_worker.test.test_contract_regressions -v",
+    "exitCode": 0,
+    "testsRun": 6,
+    "passed": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "outputSha256": "90fe3eb0b64a9fd2e89b92d1eaa7b2d1e7684afe333abb0ae6f29e60f7af6657"
+  },
+  "exactHeadSourceGate": {
+    "status": "pending_ci",
+    "testsRun": null,
+    "passed": null,
+    "failures": null,
+    "errors": null,
+    "skipped": null,
+    "outputSha256": null
+  },
+  "repositoryCi": {
+    "status": "pending_ci",
+    "runs": []
+  },
+  "completionEligible": false,
+  "completionReason": "Exact-head CI and independent review are pending."
+}
