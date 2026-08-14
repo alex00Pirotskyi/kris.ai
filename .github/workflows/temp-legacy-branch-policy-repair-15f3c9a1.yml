@@ -1,0 +1,142 @@
+name: Temporary exact legacy branch policy repair
+
+on:
+  push:
+    branches:
+      - agent/repository-branch-hygiene-20260805
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: temp-legacy-branch-policy-repair-15f3c9a1
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      TEMP_WORKFLOW: .github/workflows/temp-legacy-branch-policy-repair-15f3c9a1.yml
+      EXPECTED_BRANCH: agent/repository-branch-hygiene-20260805
+    steps:
+      - name: Check out exact branch head
+        uses: actions/checkout@v4
+        with:
+          ref: agent/repository-branch-hygiene-20260805
+          fetch-depth: 0
+
+      - name: Bind trigger and frozen Product boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git branch --show-current)" = "$EXPECTED_BRANCH"
+          test "$(git rev-parse refs/remotes/origin/main)" = "67e6e0314877d4ff3233d3e11e0743dd7562de55" || \
+            git fetch --no-tags origin main
+          test "$(git rev-parse refs/remotes/origin/main)" = "67e6e0314877d4ff3233d3e11e0743dd7562de55"
+
+      - name: Replace only rejected cleanup-class labels
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('config/branch_hygiene.json')
+          raw = path.read_text(encoding='utf-8')
+          replacements = {
+              '"class": "legacy-snapshot"': '"class": "failure-snapshot"',
+              '"class": "preserved-on-main"': '"class": "merged-foundation"',
+              '"class": "duplicate-product-tree"': '"class": "merged-foundation"',
+          }
+          counts = {old: raw.count(old) for old in replacements}
+          assert counts['"class": "legacy-snapshot"'] == 26, counts
+          assert counts['"class": "preserved-on-main"'] == 2, counts
+          assert counts['"class": "duplicate-product-tree"'] == 1, counts
+          for old, new in replacements.items():
+              raw = raw.replace(old, new)
+          path.write_text(raw, encoding='utf-8', newline='\n')
+
+          value = json.loads(raw)
+          assert value['schemaVersion'] == '1.0.0'
+          assert value['audit']['candidateCount'] == 76
+          assert len(value['delete']) == 76
+          assert len({item['name'] for item in value['delete']}) == 76
+          assert len({item['expectedSha'] for item in value['delete']}) <= 76
+          allowed = {
+              'disposable-ci',
+              'superseded-repair',
+              'merged-foundation',
+              'superseded-integration',
+              'failure-snapshot',
+          }
+          assert {item['class'] for item in value['delete']} <= allowed
+          keep = {item['name'] for item in value['keep']}
+          delete = {item['name'] for item in value['delete']}
+          assert 'integration/p2-owner-risk-v71r12' in keep
+          assert 'integration/p2-owner-risk-v71r12' not in delete
+          assert keep.isdisjoint(delete)
+          PY
+
+      - name: Validate parser and exact live deletion plan
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 tool/branch_hygiene.py --self-test
+          python3 tool/branch_hygiene.py \
+            --repository "$GITHUB_REPOSITORY" \
+            --config config/branch_hygiene.json \
+            --receipt /tmp/branch-hygiene-plan.json
+          python3 - <<'PY'
+          import json
+          value = json.load(open('/tmp/branch-hygiene-plan.json', encoding='utf-8'))
+          assert value['status'] == 'ready', value
+          assert value['mode'] == 'plan'
+          assert len(value['plan']) == 76
+          assert value['deleteCount'] + value['alreadyAbsentCount'] == 76
+          assert not value.get('errors')
+          PY
+
+      - name: Remove temporary transport and regenerate manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm "$TEMP_WORKFLOW"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 /tmp/source-manifest.first
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp /tmp/source-manifest.first SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+
+      - name: Commit exact repaired candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add -A -- config/branch_hygiene.json SOURCE_MANIFEST.sha256 "$TEMP_WORKFLOW"
+          git diff --cached --check
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          printf 'staged: %s\n' "${staged[@]}"
+          unauthorized="$(printf '%s\n' "${staged[@]}" | grep -vxF \
+            -e 'config/branch_hygiene.json' \
+            -e 'SOURCE_MANIFEST.sha256' \
+            -e "$TEMP_WORKFLOW" || true)"
+          test -z "$unauthorized"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(repo): repair exact legacy cleanup classes'
+          ! git ls-tree -r --name-only HEAD | grep -Fx "$TEMP_WORKFLOW"
+          test -z "$(git status --porcelain=v1)"
+
+      - name: Publish exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:refs/heads/agent/repository-branch-hygiene-20260805
