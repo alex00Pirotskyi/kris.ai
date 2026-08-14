@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000596-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "GPT-5.6-PRO-8C4A2F91:MANIFEST_FINALIZER_CONSUMED:PR151_LANDED",
+    "cleanCandidateHead": "aa2c55e80145302c847b50eebb2ffc0b96fa83c7",
+    "finalizerRun": 31771796687,
+    "landingCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+    "landingTree": "c8326296186720b3f8554574b87eddb859f70109",
+    "nextStatus": "LANDED",
+    "pullRequest": 151
+  },
+  "recordedAt": "2026-08-14T05:26:00Z",
+  "runtimeGeneration": 596,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-MANIFEST-8C4A2F91"
+}
