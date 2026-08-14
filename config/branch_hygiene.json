@@ -114,115 +114,115 @@
       "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "backup/p0-003-generator-check-failure",
       "reason": "Legacy P0 generator-check backup; executable source is superseded by protected main and retained Git history."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-combined-20260723T110430Z",
       "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-combined-20260723T110802Z",
       "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-combined-20260723T111205Z",
       "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-combined-20260723T111219Z",
       "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "9019b9a043ba4e16ac12f17503cfee06a51ce4d4",
       "name": "backup/pre-combined-20260723T111311Z",
       "reason": "Legacy P0 combined snapshot whose executable gates are preserved or superseded on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "backup/pre-integrated-stage-a-20260723T162915Z",
       "reason": "Pre-integration P0 stage backup; current main contains the accepted successor source."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "backup/pre-main-stage-a-20260723T170746Z",
       "reason": "Pre-main P0 stage snapshot fully superseded by protected-main history."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-p0-002-20260723T102821Z",
       "reason": "P0-002 pre-change backup; the fail-closed v1 trust-disablement gate is byte-identical on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-p0-002-20260723T103209Z",
       "reason": "P0-002 pre-change backup; the fail-closed v1 trust-disablement gate is byte-identical on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "backup/pre-p0-002-20260723T103549Z",
       "reason": "P0-002 pre-change backup; the fail-closed v1 trust-disablement gate is byte-identical on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "backup/pre-p0-003-p0-005-20260723T150929Z",
       "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "backup/pre-p0-003-p0-005-20260723T151610Z",
       "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "backup/pre-p0-003-p0-005-20260723T152128Z",
       "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "backup/pre-p0-003-p0-005-20260723T152917Z",
       "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "796dceaab798dd881c9985edc923cb2e54348c20",
       "name": "backup/pre-p0-003-p0-005-20260723T153457Z",
       "reason": "P0-003/P0-005 pre-integration snapshot; its policy/support gate source is preserved on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "backup/pre-p0-003-p0-005-20260723T153513Z",
       "reason": "P0-003/P0-005 pre-integration snapshot superseded by protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "backup/pre-p0-003-repair-20260723T155022Z",
       "reason": "P0-003 repair backup superseded by the accepted protected-main repair lineage."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "backup/pre-p0-003-repair-20260723T155217Z",
       "reason": "P0-003 repair backup superseded by the accepted protected-main repair lineage."
@@ -402,7 +402,7 @@
       "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
-      "class": "preserved-on-main",
+      "class": "merged-foundation",
       "expectedSha": "5f86a0266d7ff9c1db4f9bf9d4f5d1fc93af9edd",
       "name": "integration/p2-consolidated-foundation-v1",
       "reason": "Quarantined P2 source-foundation archive; its task-reduction matrix and reusable reference package are already preserved on protected main."
@@ -414,55 +414,55 @@
       "reason": "Early P3 WIP snapshot superseded by the landed canonical P3 browser-runtime source."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "p0-003-p0-005-20260723T151610Z",
       "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "p0-003-p0-005-20260723T152128Z",
       "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "796dceaab798dd881c9985edc923cb2e54348c20",
       "name": "p0-003-p0-005-20260723T152917Z",
       "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "p0-003-p0-005-20260723T153457Z",
       "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "p0-003-p0-005-20260723T153513Z",
       "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "d6e4387e3bff26b92bf2e82baab54d8ecaa30063",
       "name": "rescue/stash-0",
       "reason": "Legacy rescue stash; reusable P0/P1 source is preserved or superseded on protected main."
     },
     {
-      "class": "legacy-snapshot",
+      "class": "failure-snapshot",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "rescue/stash-1",
       "reason": "Legacy rescue stash identical to the superseded P0 baseline."
     },
     {
-      "class": "preserved-on-main",
+      "class": "merged-foundation",
       "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
       "name": "security/p0-002-disable-v1-trust",
       "reason": "P0-002 security branch whose fail-closed trust-disablement source is byte-identical on protected main."
     },
     {
-      "class": "duplicate-product-tree",
+      "class": "merged-foundation",
       "expectedSha": "750895ab550faa4af697ea8aad8c6e9ca0b8539a",
       "name": "temp-worker-f-noop-discard",
       "reason": "No-op Worker F branch with an empty tree diff against retained canonical P5 branch agent/f/P5-001-information-architecture."
