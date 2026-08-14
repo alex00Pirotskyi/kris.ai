@@ -1,0 +1,36 @@
+{
+  "allowedPaths": [
+    ".github/workflows/temp-legacy-branch-salvage-manifest-7f3c9a12.yml",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "baseCommit": "ea5eee8402490cf24545bcef109a60b6ff237160",
+  "baseTree": "64a96f9194dab3cc229fd7f4cd6041ff31ec1bf7",
+  "createdAt": "2026-08-14T14:49:38Z",
+  "createdBy": "WRK-20260814T143443Z-7f3c9a12",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Materialize canonical SOURCE_MANIFEST.sha256 for the exact expanded legacy-branch salvage helper at ea5eee8402490cf24545bcef109a60b6ff237160 / tree 64a96f9194dab3cc229fd7f4cd6041ff31ec1bf7. Use one self-removing temporary workflow; validate that config/branch_hygiene.json contains exactly 76 unique exact-SHA candidates and retains integration/p2-owner-risk-v71r12 plus canonical/runtime/control refs; run tool/branch_hygiene.py --self-test; generate the canonical manifest twice byte-identically; run the canonical text/EOF contract; remove the temporary workflow before committing; and prove the net diff against the parent helper is exactly SOURCE_MANIFEST.sha256. Do not delete branches, mutate Product source, or promote acceptance, support, production, release, or GA state.",
+  "parentProductPr": 138,
+  "parentWorkOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E",
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "helper starts at exact parent head/tree ea5eee8402490cf24545bcef109a60b6ff237160 / 64a96f9194dab3cc229fd7f4cd6041ff31ec1bf7",
+    "config/branch_hygiene.json parses and contains exactly 76 unique delete refs with lowercase full-SHA expectedSha values",
+    "integration/p2-owner-risk-v71r12 is present in keep and absent from delete",
+    "main, agent/mission-runtime, agent/mission-execution-v15-gold, agent/mission-delivery-enforcement-v1 and agent/f/P5-001-information-architecture remain in keep",
+    "python3 tool/branch_hygiene.py --self-test passes",
+    "python3 tool/p1a_refresh_source_manifest.py . produces two byte-identical candidates",
+    "python3 tool/p1a_text_eof_contract_test.py --project . passes",
+    "temporary workflow removes itself before commit",
+    "net diff against parent helper is exactly SOURCE_MANIFEST.sha256",
+    "no branch deletion or Product/lifecycle promotion is performed"
+  ],
+  "roadmapTask": "P0-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-14T14:49:38Z",
+  "workOrderId": "WO-P0-001-LEGACY-SALVAGE-MANIFEST-7F3C9A12"
+}
