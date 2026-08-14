@@ -1,0 +1,31 @@
+{
+  "allowedPaths": [
+    "lib/product/product_runtime.dart",
+    "test/product/source_contract_test.dart"
+  ],
+  "baseCommit": "f0cae64479ac862793a0392968bb5f9fa76dffc4",
+  "baseTree": "6067cdd8b113ddb08b733bb7c812b582fd87469d",
+  "createdAt": "2026-08-14T02:35:00Z",
+  "createdBy": "WRK-20260814T021300Z-8c4a2f91",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-003",
+  "objective": "Restore the P3-001 browser-runtime composition and source inventory on a dedicated helper branch without overwriting current protected-main P4-001 or P6-001 shared-surface entries. Acquire the product-runtime-composition and source-inventory authorities sequentially, preserve every current-main shared entry byte-for-byte unless a minimal P3 insertion is required, and return one helper candidate for the active P3 integrator. Do not touch SOURCE_MANIFEST.sha256, the 14 already-reconciled P3-owned paths, P3-002+, reviews, acceptance, support, release, production, or GA state.",
+  "parentProductPr": 131,
+  "parentWorkOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-8C4A2F91",
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "helper branch is rooted at exact P3 current-main reconciliation head f0cae64479ac862793a0392968bb5f9fa76dffc4",
+    "lib/product/product_runtime.dart preserves current-main P4-001 and P6-001 composition while adding only P3 browser runtime integration",
+    "test/product/source_contract_test.dart preserves current-main inventory and adds the three P3 browser runtime source paths",
+    "effective helper diff is exactly the two authorized shared paths",
+    "no source-manifest or mission-owned product path changes occur"
+  ],
+  "roadmapTask": "P3-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-14T02:35:00Z",
+  "workOrderId": "WO-P3-001-SHARED-AUTHORITY-8C4A2F91"
+}
