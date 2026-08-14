@@ -1,13 +1,18 @@
 {
-  "schemaVersion": "3.0.0",
+  "schemaVersion": "3.1.0",
   "taskId": "P2-004",
   "name": "Automation host technology selection",
-  "status": "measured_selection_review_pending",
+  "status": "accepted",
+  "acceptedAt": "2026-08-14T04:50:00Z",
   "localResult": "measured_selection",
   "measurementSourceCommit": "1b5a69739af9a999065ae9397bb74ade6b853356",
   "selectionWorkflowRun": 31301030782,
   "selectionContract": {
-    "requiredPlatforms": ["windows", "macos", "linux"],
+    "requiredPlatforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
     "roundsPerPlatform": 3,
     "requiredSelectedCandidateProof": [
       "real PTY launch/input/output",
@@ -17,6 +22,7 @@
       "package/dependency footprint measured",
       "repeated-run reliability measured"
     ],
+    "correctedDoneCondition": "exact reviewed tri-platform measurement selects an automation-host technology",
     "downstreamCertification": {
       "P2-005": "interactive PTY attach/detach/reconnect/transcript/ANSI/resize",
       "P2-006": "process-tree identity/descendants/termination/PID reuse"
@@ -68,14 +74,67 @@
     "native-platform-pty-supervisor": "real POSIX PTY passes on Linux/macOS, but no independent complete Windows supervisor implementation; ConPTY/Job Object API feasibility only",
     "dart-control-plane-native-pty-helper": "real Dart control-plane process I/O measured, but real PTY still requires native helper on every target platform"
   },
-  "ownerApproval": {"status": "pending_independent_review"},
-  "independentReview": {"status": "pending"},
+  "independentReview": {
+    "status": "r1_pass",
+    "reviewClass": "context_independent_execution",
+    "separateIdentityR2Satisfied": false,
+    "workExecutionId": "WRK-20260809T103104Z-44AE364B",
+    "workOrderId": "WO-P2-004-TECH-SELECTION-R1-6E91A2F4",
+    "pullRequest": 128,
+    "reviewedHead": "e8e85a4ffa744f9118f4dc6e04b563e7ee521aae",
+    "reviewedTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+    "githubReviewState": "COMMENTED",
+    "technicalDisposition": "PASS",
+    "identityBoundary": "GitHub recorded COMMENTED because the connected identity was also the PR author; the Mission Execution reviewer was a different context-independent execution. This is R1, not separate-identity R2."
+  },
+  "landing": {
+    "cleanHelperPullRequest": 128,
+    "cleanLandingCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+    "integrationWorkOrder": "WO-P2-004-INTEGRATE-SELECTION-6E91A2F4",
+    "integrationStatus": "LANDED",
+    "protectedMainContainsSelection": true,
+    "exactCurrentValidatedHead": "bb2085479d6e2f0e167e8db97fa6f54120534a5d",
+    "exactCurrentValidatedTree": "af0f9308c29a4a4391dbc88386fa59dafb20e73a",
+    "protectedMainCommit": "1e4cc0102e371307a577ceefef7dc0ca1855412f"
+  },
+  "exactCurrentValidation": {
+    "p2TechnologySelectionRun": 31769134490,
+    "p2OwnerModeRun": 31769134494,
+    "productGatesRun": 31769134506,
+    "p2TechnologySelection": "SUCCESS",
+    "p2OwnerModeTriPlatformSourceContracts": "SUCCESS",
+    "productGatesTriPlatformNativeBuilds": "SUCCESS"
+  },
+  "ownerApproval": {
+    "status": "not_a_corrected_p2_004_acceptance_gate",
+    "boundary": "Human owner approval remains required for identity, signing, legal, payment, MFA and production-promotion actions; none is implied here."
+  },
+  "acceptance": {
+    "status": "ACCEPTED",
+    "basis": [
+      "exact tri-platform measured selection",
+      "exact commit-bound context-independent R1 PASS",
+      "clean protected-main landing",
+      "exact-current tri-platform P2 and Product validation",
+      "downstream certification boundaries preserved"
+    ]
+  },
   "truthBoundary": {
     "sourceOnlyIsNotBehavioralProof": true,
     "p2_004TechnologySelected": true,
-    "p2_004Accepted": false,
+    "p2_004Accepted": true,
+    "separateIdentityR2Satisfied": false,
     "p2_004SelectionDoesNotCertifyP2_005": true,
     "p2_004SelectionDoesNotCertifyP2_006": true,
+    "p2_005InteractivePtyCertified": false,
+    "p2_006ProcessTreeCertified": false,
+    "macosPackagingRepairDebtClosed": false,
+    "windowsStartupOptimizationClosed": false,
+    "platformSupportPromoted": false,
+    "releaseSupportPromoted": false,
+    "productionReadinessPromoted": false,
+    "releasePromoted": false,
+    "gaPromoted": false,
     "acceptanceDoesNotImplyReleaseSupport": true
   }
 }

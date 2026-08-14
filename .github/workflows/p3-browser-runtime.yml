@@ -1,0 +1,362 @@
+name: P3 Browser Runtime
+
+on:
+  push:
+    branches:
+      - 'agent/c/mission-003-browser-runtime'
+    paths:
+      - '.github/workflows/p3-browser-runtime.yml'
+      - 'lib/product/browser/**'
+      - 'test/product/browser/**'
+      - 'automation_host/**'
+      - 'config/p3.browser-runtime-lock.json'
+      - 'tool/p3_stage_browser_runtime_bundle.py'
+      - 'tool/p3_stage_browser_runtime_bundle_test.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/p3-browser-runtime.yml'
+      - 'lib/product/browser/**'
+      - 'test/product/browser/**'
+      - 'automation_host/**'
+      - 'config/p3.browser-runtime-lock.json'
+      - 'tool/p3_stage_browser_runtime_bundle.py'
+      - 'tool/p3_stage_browser_runtime_bundle_test.py'
+
+permissions:
+  contents: read
+
+env:
+  P3_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  parent-format-oracle:
+    name: parent-format-oracle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.P3_SOURCE_SHA }}
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Require exact Dart formatting for all P3 parent sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart format lib/product/browser/*.dart test/product/browser/*.dart
+          git diff --exit-code -- lib/product/browser test/product/browser
+
+  node-contracts:
+    name: node-contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.P3_SOURCE_SHA }}
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Verify exact P3 automation-host package closure
+        shell: bash
+        working-directory: automation_host
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          node -e "const p=require('./package.json'); if(p.version!=='2.0.0-p3.1'||p.dependencies['playwright-core']!=='1.61.1'||p.dependencies['node-pty']!=='1.1.0') process.exit(1)"
+          npm ls --all --json
+          npm test
+          git diff --exit-code -- package.json package-lock.json
+
+  browser-lock-oracle:
+    name: browser-lock-oracle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.P3_SOURCE_SHA }}
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Verify committed Chromium identity from installed playwright-core
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+          cp config/p3.browser-runtime-lock.json "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json"
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto';
+          import { readFile, writeFile } from 'node:fs/promises';
+          const pkg = JSON.parse(await readFile('automation_host/package.json', 'utf8'));
+          const browsers = JSON.parse(await readFile('automation_host/node_modules/playwright-core/browsers.json', 'utf8'));
+          const chromium = browsers.browsers.find((row) => row.name === 'chromium');
+          if (!chromium || !chromium.revision || !chromium.browserVersion) throw new Error('playwright Chromium identity missing');
+          const lockBytes = await readFile('automation_host/package-lock.json');
+          const lock = {
+            schemaVersion: '1.0.0',
+            nodeVersion: '24.18.0',
+            automationHostPackageVersion: pkg.version,
+            playwrightCoreVersion: pkg.dependencies['playwright-core'],
+            packageLockSha256: createHash('sha256').update(lockBytes).digest('hex'),
+            browserEngine: 'chromium',
+            browserRevision: String(chromium.revision),
+            browserVersion: String(chromium.browserVersion),
+            browserInstallPhase: 'packaging_only',
+            runtimeBrowserNetworkInstall: false,
+            globalNodeRuntimeRequired: false,
+          };
+          await writeFile('config/p3.browser-runtime-lock.json', `${JSON.stringify(lock, null, 2)}\n`);
+          console.log(JSON.stringify(lock, null, 2));
+          NODE
+          cmp "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json" config/p3.browser-runtime-lock.json
+          git diff --exit-code -- config/p3.browser-runtime-lock.json
+
+  staging-source-contract:
+    name: staging-source-contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.P3_SOURCE_SHA }}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Verify deterministic P3 bundle staging source contract
+        shell: bash
+        run: python tool/p3_stage_browser_runtime_bundle_test.py -v
+
+  staged-browser-probe:
+    name: staged-browser-probe-${{ matrix.lane }}
+    needs: [parent-format-oracle, node-contracts, browser-lock-oracle, staging-source-contract]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: ubuntu
+            os: ubuntu-24.04
+            sandbox_mode: disabled
+          - lane: windows
+            os: windows-2025
+            sandbox_mode: required
+          - lane: macos
+            os: macos-15
+            sandbox_mode: required
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.P3_SOURCE_SHA }}
+          fetch-depth: 1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Install exact automation-host dependency closure
+        shell: bash
+        run: npm ci --prefix automation_host --no-audit --no-fund
+      - name: Download pinned Chromium for packaging only
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/p3-pw-browsers" >> "$GITHUB_ENV"
+          PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/p3-pw-browsers" node automation_host/node_modules/playwright-core/cli.js install --with-deps chromium
+      - id: browser
+        name: Resolve exact downloaded Chromium payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          BROWSER_EXEC="$(node -e "const {chromium}=require('./automation_host/node_modules/playwright-core'); process.stdout.write(chromium.executablePath())")"
+          export BROWSER_EXEC
+          echo "BROWSER_EXEC=$BROWSER_EXEC" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import os, pathlib
+          cache = pathlib.Path(os.environ['PLAYWRIGHT_BROWSERS_PATH']).resolve()
+          executable = pathlib.Path(os.environ['BROWSER_EXEC']).resolve()
+          relative = executable.relative_to(cache)
+          if not relative.parts:
+              raise SystemExit('downloaded browser executable outside Playwright cache')
+          root = cache / relative.parts[0]
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
+              handle.write(f"root={root}\n")
+              handle.write(f"executable={executable}\n")
+          print(f'BROWSER_ROOT={root}')
+          print(f'BROWSER_EXEC={executable}')
+          PY
+      - name: Stage exact application-owned P3 browser runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_EXE="$(node -p "process.execPath")"
+          SOURCE_TREE="$(git rev-parse HEAD^{tree})"
+          python tool/p3_stage_browser_runtime_bundle.py \
+            --project . \
+            --destination "$RUNNER_TEMP/p3-runtime" \
+            --node-executable "$NODE_EXE" \
+            --browser-root "${{ steps.browser.outputs.root }}" \
+            --browser-executable "${{ steps.browser.outputs.executable }}" \
+            --source-commit "$P3_SOURCE_SHA" \
+            --source-tree "$SOURCE_TREE"
+      - name: Launch staged Node + staged Chromium with scrubbed runtime environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          export P3_BUNDLE="$RUNNER_TEMP/p3-runtime"
+          export P3_RECEIPT="$RUNNER_TEMP/p3-browser-probe-${{ matrix.lane }}.json"
+          export P3_SANDBOX_MODE="${{ matrix.sandbox_mode }}"
+          python - <<'PY'
+          import hashlib, json, os, pathlib, queue, subprocess, sys, threading, time
+          root = pathlib.Path(os.environ['P3_BUNDLE']).resolve()
+          manifest_path = root / 'browser-runtime-manifest.v1.json'
+          manifest_bytes = manifest_path.read_bytes()
+          manifest = json.loads(manifest_bytes)
+          resources = manifest['resources']
+          node = root / resources['nodeExecutable']['path']
+          worker = root / resources['browserWorker']['path']
+          browser = root / resources['browserExecutable']['path']
+          browser_root = root / resources['browserRoot']['path']
+          working = root / resources['automationHostRoot']['path']
+          state = root.parent / 'p3-state'
+          state.mkdir(parents=True, exist_ok=True)
+          sandbox_mode = os.environ['P3_SANDBOX_MODE']
+          runtime_env = {
+              'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': hashlib.sha256(manifest_bytes).hexdigest(),
+              'KRISTIN_P3_RUNTIME_BUILD_SHA256': manifest['identity']['runtimeBuildSha256'],
+              'KRISTIN_P3_BROWSER_REVISION': manifest['identity']['browserRevision'],
+          }
+          windows_bootstrap_keys = []
+          if sys.platform == 'win32':
+              for key in (
+                  'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP',
+                  'USERPROFILE', 'LOCALAPPDATA', 'APPDATA',
+                  'PROGRAMFILES', 'PROGRAMFILES(X86)', 'PROGRAMDATA',
+                  'HOMEDRIVE', 'HOMEPATH',
+              ):
+                  value = os.environ.get(key)
+                  if value:
+                      runtime_env[key] = value
+                      windows_bootstrap_keys.append(key)
+              if 'SYSTEMROOT' not in runtime_env:
+                  raise SystemExit('Windows SystemRoot missing from bootstrap environment')
+          if 'PATH' in runtime_env:
+              raise SystemExit('global PATH must not be inherited into staged P3 runtime')
+          args = [
+              str(node), str(worker), '--mode', 'probe', '--protocol', 'stdio-json-v1',
+              '--sandbox-mode', sandbox_mode,
+              '--browser-executable', str(browser), '--browser-root', str(browser_root),
+              '--runtime-manifest', str(manifest_path), '--state-directory', str(state),
+          ]
+          process = subprocess.Popen(
+              args, cwd=working, env=runtime_env, stdin=subprocess.PIPE,
+              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+              encoding='utf-8', errors='replace', bufsize=1,
+          )
+          stdout_queue: queue.Queue[str] = queue.Queue()
+          stderr_rows: list[str] = []
+          assert process.stdout is not None and process.stderr is not None and process.stdin is not None
+          threading.Thread(target=lambda: [stdout_queue.put(line) for line in process.stdout], daemon=True).start()
+          threading.Thread(target=lambda: [stderr_rows.append(line) for line in process.stderr], daemon=True).start()
+          deadline = time.time() + 35
+          ready = None
+          while time.time() < deadline:
+              if process.poll() is not None:
+                  raise SystemExit(f'worker exited before ready rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
+              try:
+                  line = stdout_queue.get(timeout=0.2)
+              except queue.Empty:
+                  continue
+              value = json.loads(line)
+              if value.get('type') == 'ready':
+                  ready = value
+                  break
+          if ready is None:
+              process.kill()
+              raise SystemExit(f'worker ready timeout stderr={"".join(stderr_rows)[-8000:]}')
+          if ready.get('browserRevision') != manifest['identity']['browserRevision']:
+              raise SystemExit('ready browser revision mismatch')
+          if ready.get('browserExecutableSha256') != resources['browserExecutable']['sha256']:
+              raise SystemExit('ready browser executable SHA mismatch')
+          if ready.get('sandboxMode') != sandbox_mode:
+              raise SystemExit('ready sandbox mode mismatch')
+          browser_pid = int(ready['browserPid'])
+          process.stdin.write(json.dumps({'type':'shutdown','schemaVersion':'1.0.0'}) + '\n')
+          process.stdin.flush()
+          process.wait(timeout=15)
+          if process.returncode != 0:
+              raise SystemExit(f'worker shutdown failed rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
+          alive = False
+          if sys.platform == 'win32':
+              check = subprocess.run(
+                  ['tasklist.exe', '/FI', f'PID eq {browser_pid}', '/NH'],
+                  capture_output=True, text=True, encoding='utf-8', errors='replace',
+              )
+              alive = str(browser_pid) in check.stdout
+          else:
+              try:
+                  os.kill(browser_pid, 0)
+              except ProcessLookupError:
+                  alive = False
+              except PermissionError:
+                  alive = True
+              else:
+                  alive = True
+          if alive:
+              raise SystemExit(f'browser root process survived shutdown pid={browser_pid}')
+          receipt = {
+              'schemaVersion': '1.0.0',
+              'platform': sys.platform,
+              'sourceCommit': os.environ['P3_SOURCE_SHA'],
+              'manifestSha256': runtime_env['KRISTIN_P3_RUNTIME_MANIFEST_SHA256'],
+              'runtimeBuildSha256': runtime_env['KRISTIN_P3_RUNTIME_BUILD_SHA256'],
+              'browserRevision': ready['browserRevision'],
+              'browserVersion': ready['browserVersion'],
+              'browserExecutableSha256': ready['browserExecutableSha256'],
+              'sandboxMode': ready['sandboxMode'],
+              'environmentPolicy': {
+                  'pathInherited': False,
+                  'windowsBootstrapKeys': windows_bootstrap_keys,
+              },
+              'workerPid': ready['pid'],
+              'browserPid': browser_pid,
+              'workerExitCode': process.returncode,
+              'browserRootProcessSurvived': False,
+              'globalNodeRuntimeUsedForProbe': False,
+              'runtimeBrowserNetworkInstall': False,
+          }
+          pathlib.Path(os.environ['P3_RECEIPT']).write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(receipt, indent=2, sort_keys=True))
+          PY
+      - name: Upload P3 browser probe receipt and manifest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p3-browser-probe-${{ matrix.lane }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/p3-browser-probe-${{ matrix.lane }}.json
+            ${{ runner.temp }}/p3-runtime/browser-runtime-manifest.v1.json
+          if-no-files-found: error
+          retention-days: 30

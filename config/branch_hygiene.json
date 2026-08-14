@@ -1,9 +1,10 @@
 {
   "audit": {
-    "beforeBranchCount": 78,
-    "capturedAtUtc": "2026-08-11T14:47:20Z",
-    "mainSha": "521ecab1f2831206da98a282df51d8094230bc99",
-    "policy": "Exact-SHA, protected-branch, open-PR, and default-branch checks must all pass before the first deletion.",
+    "beforeBranchCount": 87,
+    "capturedAtUtc": "2026-08-14T06:32:00Z",
+    "candidateCount": 17,
+    "mainSha": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+    "policy": "Exact-SHA, protected-branch, open-PR, runtime-authority, canonical-product, and retained-lineage checks must all pass before the first deletion.",
     "repository": "alex00Pirotskyi/kris.ai"
   },
   "defaultBranch": "main",
@@ -12,45 +13,129 @@
       "class": "superseded-integration",
       "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
       "name": "agent/a/p1-p2-new-roadmap-execution-prestack-345847c",
-      "reason": "Superseded Worker A prestack snapshot; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+      "reason": "Superseded Worker A prestack snapshot; the canonical Worker A branch continued from this exact ancestor."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
       "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup",
-      "reason": "Superseded Worker A stack backup; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+      "reason": "Superseded Worker A stack backup at the same exact ancestor as the canonical continuation."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
       "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-2",
-      "reason": "Superseded Worker A stack backup; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+      "reason": "Superseded Worker A stack backup at the same exact ancestor as the canonical continuation."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
       "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-final",
-      "reason": "Superseded Worker A final stack backup; canonical Worker A branch is 41 commits ahead from this exact ancestor."
+      "reason": "Superseded Worker A final stack backup at the same exact ancestor as the canonical continuation."
     },
     {
       "class": "superseded-repair",
       "expectedSha": "0e082868fb91cd9d0e57626e4ba0a0ae2ef895d9",
       "name": "should-not-call",
-      "reason": "Obsolete runtime reservation/probe branch; current agent/mission-runtime is hundreds of commits ahead from this exact ancestor."
+      "reason": "Obsolete runtime reservation/probe branch; current Mission Runtime supersedes this exact historical ref."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "29a4332b6237fec57c6a6d6702753cf7d2e50313",
+      "name": "agent/h/p2-004-acceptance-manifest-8c4a2f91",
+      "reason": "Self-removing P2-004 manifest helper consumed by landed PR #151; its Work Order is LANDED."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "ba8833bdb309397142d3b48af340ea33380fa5b1",
+      "name": "agent/h/p2-004-automation-lock-repair-8c4a2f91",
+      "reason": "P2 toolchain-lock repair helper consumed by the landed P3/P2 protected-main tree; its Work Order is LANDED."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "bca6c6d894e799e1389207fdb907786ebc4946bd",
+      "name": "agent/h/p3-001-manifest-finalize-8c4a2f91",
+      "reason": "Historical P3 manifest-finalization transport consumed by the landed P3 source; no open PR uses this ref."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "ba8833bdb309397142d3b48af340ea33380fa5b1",
+      "name": "agent/h/p3-001-manifest-p2lock-8c4a2f91",
+      "reason": "Duplicate exact P3/P2 lock-repair helper head already consumed by protected main."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "640383701509bec499cbb8987856b5b2b0a8f9b2",
+      "name": "agent/h/p3-001-p2-004-manifest-8c4a2f91",
+      "reason": "Self-removing P3 manifest transport whose clean one-file output was consumed into the landed canonical P3 head."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "ba8833bdb309397142d3b48af340ea33380fa5b1",
+      "name": "agent/h/p3-001-p2-004-manifest-finalize-8c4a2f91",
+      "reason": "Duplicate exact P3/P2 manifest-finalization base already consumed by protected main."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "04b2b67d405c86ffda20afa93104be13972160a5",
+      "name": "agent/h/p3-001-shared-authority-8c4a2f91",
+      "reason": "Bounded shared-authority helper consumed into the exact landed P3 composition; no open PR uses this ref."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "7dd213e6511bf0eafee838120f00d3450296e61b",
+      "name": "agent/local-qwen/elastic-qwen-0104e7d7/mission-004/wo-p4-001-clean-manifest-4d82c7fa-b2861719",
+      "reason": "Qwen clean-manifest helper belongs to terminal LANDED Work Order WO-P4-001-CLEAN-MANIFEST-4D82C7FA."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "190089c736b53743d513c06d3922aae0694f01ef",
+      "name": "agent/local-qwen/elastic-qwen-80f0f562/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-6fb634ac",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "5f45980a105cb4692a14ed75f7f1d1398c580427",
+      "name": "agent/local-qwen/elastic-qwen-a14448ec/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-3ebbf080",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "20b8673a4689b1b99b6f14466fc2f3d2db6a434d",
+      "name": "agent/local-qwen/elastic-qwen-f642c3c6/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-6c88d1d4",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "fe860c37bdb001ab72ae738f844b85ab68eb5bfd",
+      "name": "agent/local-qwen/elastic-qwen-f753206e/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-67f68407",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
     }
   ],
   "keep": [
     {
       "name": "main",
-      "reason": "Protected default branch and current roadmap authority."
+      "reason": "Protected default branch and current source authority."
+    },
+    {
+      "name": "agent/mission-runtime",
+      "reason": "Mutable Mission Execution 1.5 runtime authority."
+    },
+    {
+      "name": "agent/mission-execution-v15-gold",
+      "reason": "Active Mission Execution 1.5 control-plane candidate."
+    },
+    {
+      "name": "agent/mission-delivery-enforcement-v1",
+      "reason": "Retained mission-delivery enforcement lineage and open control-plane PR head."
     },
     {
       "name": "integration/p2-owner-risk-v71r12",
-      "reason": "Retained P2 integration/evidence lineage because it still has unique diverged history not proven redundant to protected main."
+      "reason": "Retained because its unique Owner Mode QA lineage is being ported to current main and is not yet proven redundant."
     },
     {
       "name": "ci/direct-pr14-repair-trigger",
-      "reason": "Closed trigger PR, but the live ref has later unique diverged PR14 reconciliation history; retain until that lineage is separately proven redundant."
+      "reason": "Retained unique diverged PR14 reconciliation history pending a separate exact-lineage decision."
     }
   ],
   "roadmapAuthority": "docs/roadmap/MASTER.md",
