@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000597-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "acceptanceBoundary": "p2_004_technology_selection_only",
+    "actor": "GPT-5.6-PRO-5A8D1C3E:P2_004_ACCEPTANCE_PR151_LANDED:DOWNSTREAM_CERTIFICATION_FALSE",
+    "landingCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+    "landingTree": "c8326296186720b3f8554574b87eddb859f70109",
+    "nextStatus": "LANDED",
+    "p2_005Certified": false,
+    "p2_006Certified": false,
+    "pullRequest": 151,
+    "releasePromoted": false,
+    "separateIdentityR2Satisfied": false
+  },
+  "recordedAt": "2026-08-14T06:18:00Z",
+  "runtimeGeneration": 597,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T061736Z-5a8d1c3e",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91"
+}
