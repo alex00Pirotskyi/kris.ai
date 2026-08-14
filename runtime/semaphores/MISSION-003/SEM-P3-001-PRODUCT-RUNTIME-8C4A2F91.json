@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "lib/product/product_runtime.dart"
+  ],
+  "authorityId": "product-runtime-composition",
+  "baseCommit": "f0cae64479ac862793a0392968bb5f9fa76dffc4",
+  "baseTree": "6067cdd8b113ddb08b733bb7c812b582fd87469d",
+  "branch": "agent/h/p3-001-shared-authority-8c4a2f91",
+  "createdAt": "2026-08-14T02:38:24Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-14T06:38:24Z",
+  "kind": "AUTHORITY",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T02:38:24Z",
+  "resourceId": null,
+  "runtimeGeneration": 572,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-PRODUCT-RUNTIME-8C4A2F91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-SHARED-AUTHORITY-8C4A2F91",
+  "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+}
