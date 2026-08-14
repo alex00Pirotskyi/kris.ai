@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
   "allowedPaths": [
     "config/branch_hygiene.json",
     "docs/progress/2026-08-14-branch-hygiene-cleanup.md"
@@ -31,8 +30,8 @@
   ],
   "roadmapTask": "P0-001",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "SUPERSEDED",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-14T06:30:00Z",
+  "updatedAt": "2026-08-14T08:39:00Z",
   "workOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E"
 }

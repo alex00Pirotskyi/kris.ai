@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000603-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "nextStatus": "SUPERSEDED",
+    "semaphoreId": "SEM-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E"
+  },
+  "recordedAt": "2026-08-14T08:39:00Z",
+  "runtimeGeneration": 603,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T081345Z-5a8d1c3e",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E"
+}
