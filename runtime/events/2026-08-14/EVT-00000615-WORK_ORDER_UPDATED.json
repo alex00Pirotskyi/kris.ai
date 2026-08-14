@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000615-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "action": "RESTORE_CANONICAL_PRODUCT_PR_BINDING",
+    "canonicalProductPr": 138,
+    "cleanupHelperPr": 140,
+    "semaphoreId": "SEM-P0-001-LEGACY-BRANCH-POLICY-REPAIR-SOLO-15F3C9A1",
+    "workerIdentity": "GPT-5.6-PRO-SOLO-15F3C9A1"
+  },
+  "recordedAt": "2026-08-14T16:17:00Z",
+  "runtimeGeneration": 615,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T155800Z-15f3c9a1",
+  "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+}

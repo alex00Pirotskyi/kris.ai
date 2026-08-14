@@ -13,11 +13,11 @@
   "createdBy": "WRK-20260814T081345Z-5a8d1c3e",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "GPT-5.6-PRO-SOLO-15F3C9A1:TAKEOVER_AND_EXACT_POLICY_REPAIR",
+  "lastActor": "GPT-5.6-PRO-SOLO-15F3C9A1:RESTORE_CANONICAL_P0_PRODUCT_PR_138",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
-  "objective": "Finish the exact 76-ref legacy branch cleanup candidate on PR #140 after the repository-owned parser rejected three noncanonical cleanup classes. Replace only legacy-snapshot, preserved-on-main, and duplicate-product-tree with existing accepted classes; preserve every branch name, expected SHA, keep/delete decision, reason, Product boundary, and Owner Mode retention decision. Use one self-removing workflow to run the parser self-test, live fail-closed plan, canonical text checks, and byte-stable source-manifest generation. Do not execute deletions from the helper branch, alter Product source, or promote acceptance, support, production, release, or GA.",
-  "parentProductPr": 140,
+  "objective": "Finish the exact 76-ref legacy branch cleanup candidate on helper PR #140 after the repository-owned parser rejected three noncanonical cleanup classes. Replace only legacy-snapshot, preserved-on-main, and duplicate-product-tree with existing accepted classes; preserve every branch name, expected SHA, keep/delete decision, reason, Product boundary, and Owner Mode retention decision. Use one self-removing workflow to run the parser self-test, live fail-closed plan, canonical text checks, and byte-stable source-manifest generation. Do not execute deletions from the helper branch, alter Product source, or promote acceptance, support, production, release, or GA. The canonical P0-001 Product PR remains #138; PR #140 is the bounded cleanup helper only.",
+  "parentProductPr": 138,
   "priority": 100,
   "requestedRole": "CI_REPAIR",
   "requiredTests": [
@@ -37,6 +37,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-14T16:06:00Z",
+  "updatedAt": "2026-08-14T16:17:00Z",
   "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
 }
