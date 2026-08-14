@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000593-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91",
+    "requestedRole": "RELEASE_FINALIZER",
+    "type": "RELEASE_FINALIZATION"
+  },
+  "recordedAt": "2026-08-14T04:58:00Z",
+  "runtimeGeneration": 593,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-MANIFEST-8C4A2F91"
+}

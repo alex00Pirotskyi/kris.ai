@@ -1,0 +1,33 @@
+{
+  "allowedPaths": [
+    ".github/workflows/temp-p2-004-acceptance-manifest-8c4a2f91.yml",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "baseCommit": "e2f57def3ff2e1768c82631bf9e9a3129fc18b6c",
+  "baseTree": "79934e5ac826d98c32284a2f5bba32ed500c6efc",
+  "createdAt": "2026-08-14T04:58:00Z",
+  "createdBy": "WRK-20260814T021300Z-8c4a2f91",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Regenerate SOURCE_MANIFEST.sha256 for the exact P2-004 acceptance-evidence helper at e2f57def3ff2e1768c82631bf9e9a3129fc18b6c using the repository-owned canonical generator. Use one self-removing temporary workflow, parse the updated manifest JSON, rerun the P2-004 selection contract, prove byte-stable generation and canonical text, and return a candidate whose net diff against the evidence helper is exactly SOURCE_MANIFEST.sha256. Do not alter Product behavior or promote P2-005/P2-006 certification, separate-identity R2, support, production, release or GA.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91",
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "helper starts at exact evidence head/tree e2f57def3ff2e1768c82631bf9e9a3129fc18b6c / 79934e5ac826d98c32284a2f5bba32ed500c6efc",
+    "release/evidence/P2-004/manifest.json parses as JSON and records P2-004 accepted while downstream claims remain false",
+    "python3 tool/p2_004_technology_selection_test.py passes",
+    "tool/p1a_refresh_source_manifest.py produces two byte-identical outputs",
+    "tool/p1a_text_eof_contract_test.py --project . passes",
+    "temporary workflow deletes itself before commit",
+    "net helper diff against evidence head is exactly SOURCE_MANIFEST.sha256"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-14T04:58:00Z",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-MANIFEST-8C4A2F91"
+}
