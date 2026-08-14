@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/IMPLEMENTATION.md",
+    "release/evidence/P2-004/manifest.json"
+  ],
+  "authorityId": null,
+  "baseCommit": "1e4cc0102e371307a577ceefef7dc0ca1855412f",
+  "baseTree": "af0f9308c29a4a4391dbc88386fa59dafb20e73a",
+  "branch": "agent/h/p2-004-acceptance-reconcile-8c4a2f91",
+  "createdAt": "2026-08-14T04:49:00Z",
+  "executionRole": "AUDITOR",
+  "expiresAt": "2026-08-14T08:49:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T04:49:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 591,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-ACCEPTANCE-RECONCILE-8C4A2F91",
+  "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+}
