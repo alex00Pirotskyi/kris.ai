@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000576-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-003",
+  "payload": {
+    "actor": "GPT-5.6-PRO-8C4A2F91",
+    "nextStatus": "LANDED"
+  },
+  "recordedAt": "2026-08-14T03:04:00Z",
+  "runtimeGeneration": 576,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P3-001-SHARED-AUTHORITY-8C4A2F91"
+}
