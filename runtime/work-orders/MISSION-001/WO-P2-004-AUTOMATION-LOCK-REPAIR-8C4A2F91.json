@@ -9,6 +9,7 @@
   "createdBy": "WRK-20260814T021300Z-8c4a2f91",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
+  "lastActor": "GPT-5.6-PRO-8C4A2F91:HELPER_CONSUMED_IN_P3:EXACT_P2_004_AND_OWNER_MODE_PASS",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
   "objective": "Repair the P2 toolchain-extension authority after P3-001 added the locked playwright-core dependency to automation_host/package-lock.json. Regenerate config/p2_toolchain_extension.v1.json with the repository-owned tool/p2_extend_toolchain_lock.py so both the package-lock SHA-256 and declared input fingerprint bind the exact P3 candidate. Preserve all version pins and every other file. Do not change P2 acceptance, release support, production, or GA state.",
@@ -25,8 +26,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "HELPER_READY",
+  "status": "LANDED",
   "type": "CI_REPAIR",
-  "updatedAt": "2026-08-14T04:00:00Z",
+  "updatedAt": "2026-08-14T04:31:00Z",
   "workOrderId": "WO-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91"
 }

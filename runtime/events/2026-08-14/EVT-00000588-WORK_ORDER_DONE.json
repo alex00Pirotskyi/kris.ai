@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000588-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-001",
+  "payload": {
+    "actor": "GPT-5.6-PRO-8C4A2F91:HELPER_CONSUMED_IN_P3:EXACT_P2_004_AND_OWNER_MODE_PASS",
+    "consumedAtHead": "bb2085479d6e2f0e167e8db97fa6f54120534a5d",
+    "exactRuns": {
+      "p2OwnerMode": 31769134494,
+      "p2TechnologySelection": 31769134490
+    },
+    "nextStatus": "LANDED"
+  },
+  "recordedAt": "2026-08-14T04:31:00Z",
+  "runtimeGeneration": 588,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260814T021300Z-8c4a2f91",
+  "workOrderId": "WO-P2-004-AUTOMATION-LOCK-REPAIR-8C4A2F91"
+}
