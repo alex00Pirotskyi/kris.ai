@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "e12859b212b82324819a151cfcff26522437468c",
+  "baseTree": "3fd331ff03f8728ff776ebfa7ead726eb981f9b3",
+  "branch": "agent/repository-branch-hygiene-20260805",
+  "createdAt": "2026-08-14T06:41:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-14T10:41:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T06:41:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 601,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E",
+  "workerIdentity": "GPT-5.6-PRO-5A8D1C3E"
+}
