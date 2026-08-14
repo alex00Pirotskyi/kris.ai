@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    ".github/workflows/temp-p3-manifest-finalize-8c4a2f91.yml",
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "04b2b67d405c86ffda20afa93104be13972160a5",
+  "baseTree": "84b0316e172c262845fed9dff8ed0b916f94e955",
+  "branch": "agent/h/p3-001-manifest-finalize-8c4a2f91",
+  "createdAt": "2026-08-14T03:12:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-14T07:12:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-14T03:12:00Z",
+  "resourceId": "SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 578,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-001-MANIFEST-FINALIZE-8C4A2F91",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-001-MANIFEST-FINALIZE-8C4A2F91",
+  "workerIdentity": "GPT-5.6-PRO-8C4A2F91"
+}
