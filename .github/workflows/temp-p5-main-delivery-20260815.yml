@@ -84,45 +84,43 @@ jobs:
           replace_one(
               '    rebuild_from_main(transport_head)\n'
               '    integrate_main_shell()\n',
-              '''    rebuild_from_main(transport_head)
-    controller_path = (
-        REPO_ROOT
-        / "lib/product/p5_information_architecture/p5_controller.dart"
-    )
-    controller_text = controller_path.read_text(encoding="utf-8")
-    controller_text = replace_once(
-        controller_text,
-        "extension P5IterableFirstOrNull<T> on Iterable<T> {",
-        "extension _P5IterableFirstOrNull<T> on Iterable<T> {",
-        "private P5 iterable extension",
-    )
-    controller_path.write_text(
-        controller_text,
-        encoding="utf-8",
-        newline="\\n",
-    )
-    integrate_main_shell()
-''',
+              '    rebuild_from_main(transport_head)\n'
+              '    controller_path = (\n'
+              '        REPO_ROOT\n'
+              '        / "lib/product/p5_information_architecture/p5_controller.dart"\n'
+              '    )\n'
+              '    controller_text = controller_path.read_text(encoding="utf-8")\n'
+              '    controller_text = replace_once(\n'
+              '        controller_text,\n'
+              '        "extension P5IterableFirstOrNull<T> on Iterable<T> {",\n'
+              '        "extension _P5IterableFirstOrNull<T> on Iterable<T> {",\n'
+              '        "private P5 iterable extension",\n'
+              '    )\n'
+              '    controller_path.write_text(\n'
+              '        controller_text,\n'
+              '        encoding="utf-8",\n'
+              '        newline="\\n",\n'
+              '    )\n'
+              '    integrate_main_shell()\n',
               'controller extension isolation',
           )
-          inventory_function = '''
-
-def update_p2_source_inventory() -> None:
-    path = REPO_ROOT / "config/p2_source_inventory.v1.json"
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    test_paths = payload.get("testDart")
-    if not isinstance(test_paths, list):
-        raise RuntimeError("P2 source inventory testDart is not a list")
-    entry = "test/product/p2_owner_mode_failure_presentation_test.dart"
-    if entry not in test_paths:
-        test_paths.append(entry)
-    payload["testDart"] = sorted(str(item) for item in test_paths)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\\n",
-        encoding="utf-8",
-        newline="\\n",
-    )
-'''
+          inventory_function = (
+              '\n\ndef update_p2_source_inventory() -> None:\n'
+              '    path = REPO_ROOT / "config/p2_source_inventory.v1.json"\n'
+              '    payload = json.loads(path.read_text(encoding="utf-8"))\n'
+              '    test_paths = payload.get("testDart")\n'
+              '    if not isinstance(test_paths, list):\n'
+              '        raise RuntimeError("P2 source inventory testDart is not a list")\n'
+              '    entry = "test/product/p2_owner_mode_failure_presentation_test.dart"\n'
+              '    if entry not in test_paths:\n'
+              '        test_paths.append(entry)\n'
+              '    payload["testDart"] = sorted(str(item) for item in test_paths)\n'
+              '    path.write_text(\n'
+              '        json.dumps(payload, indent=2, ensure_ascii=False) + "\\n",\n'
+              '        encoding="utf-8",\n'
+              '        newline="\\n",\n'
+              '    )\n'
+          )
           replace_one(
               '\n\ndef validate_product() -> None:\n',
               inventory_function + '\n\ndef validate_product() -> None:\n',
