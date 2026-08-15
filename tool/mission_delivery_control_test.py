@@ -37,5 +37,29 @@ class MissionDeliveryWorkIdCompatibilityTests(unittest.TestCase):
             M.validate_record(record, model)
 
 
+class MissionDeliverySanitationControlTests(unittest.TestCase):
+    def test_sanitation_scope_is_exact_and_fail_closed(self):
+        result = M.classify_runtime_sanitation_paths(
+            [
+                ".github/workflows/workflow-integrity.yml",
+                "SOURCE_MANIFEST.sha256",
+                "tool/mission_delivery_control.py",
+                "tool/mission_delivery_control_v1.py",
+            ]
+        )
+        self.assertTrue(result["authorized"])
+        self.assertEqual(result["violations"], [])
+        self.assertEqual(
+            {row["category"] for row in result["paths"]},
+            {"V15_RUNTIME_SANITATION"},
+        )
+
+        rejected = M.classify_runtime_sanitation_paths(
+            ["tool/mission_delivery_control.py", "lib/product/unrelated.dart"]
+        )
+        self.assertFalse(rejected["authorized"])
+        self.assertEqual(rejected["violations"], ["lib/product/unrelated.dart"])
+
+
 if __name__ == "__main__":
     unittest.main()
