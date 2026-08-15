@@ -26,6 +26,9 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
+      - name: Bind detached checkout to exact Product branch
+        run: git switch --force-create agent/product/p5-002-design-tokens-3a7c91e4 "$GITHUB_SHA"
+
       - name: Install exact Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
