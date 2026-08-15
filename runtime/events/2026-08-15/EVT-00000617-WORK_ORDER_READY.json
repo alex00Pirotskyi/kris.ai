@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000617-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-005",
+  "payload": {
+    "exactProductHead": "e43f76203a7b96e33d1f324b98d134583ca00a80",
+    "exactProductTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+    "parentProductPr": 72,
+    "requestedRole": "INTEGRATOR",
+    "type": "INTEGRATION"
+  },
+  "recordedAt": "2026-08-15T10:38:35Z",
+  "runtimeGeneration": 617,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260815T103835Z-6f4a91c2",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2"
+}
