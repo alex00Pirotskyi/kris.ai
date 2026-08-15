@@ -1,0 +1,25 @@
+{
+  "eventId": "EVT-00000620-P5_LANDED_MAIN",
+  "eventType": "WORK_ORDER_LANDED",
+  "mission": "MISSION-005",
+  "payload": {
+    "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2",
+    "productPr": 72,
+    "preLandingHead": "e43f76203a7b96e33d1f324b98d134583ca00a80",
+    "landedMainCommit": "8bc2d61bbaa35a1bf10285cbb9993a17e50c1cb2",
+    "landedMainTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+    "postMainProductGatesRun": 31881603848,
+    "validateUbuntuJob": 95004870247,
+    "validateWindowsJob": 95004870043,
+    "validateMacosJob": 95004869987,
+    "workOrderStatus": "LANDED",
+    "productPrStatus": "LANDED",
+    "semaphoreStatus": "RELEASED",
+    "truthBoundary": "P5-001 is LANDED_MAIN only. Roadmap acceptance, independent R2, P5-002+, accessibility certification, platform/support promotion, production readiness, release, and GA remain separate and are not claimed."
+  },
+  "recordedAt": "2026-08-15T11:29:00Z",
+  "runtimeGeneration": 620,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260815T103835Z-6f4a91c2",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2"
+}
