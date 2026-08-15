@@ -124,6 +124,7 @@ def validate() -> None:
         "--reporter",
         "expanded",
     )
+    run("npm", "ci", "--prefix", "automation_host")
     run("npm", "test", "--prefix", "automation_host")
 
     sys.path.insert(0, str(ROOT / "tool"))
