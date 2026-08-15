@@ -1,12 +1,11 @@
 {
   "audit": {
-    "beforeBranchCount": 146,
-    "capturedAtUtc": "2026-08-14T14:34:43Z",
+    "beforeBranchCount": 148,
     "candidateCount": 76,
-    "newLegacyCandidateCount": 59,
-    "priorCandidateCount": 17,
-    "mainSha": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
-    "policy": "Exact-SHA, protected-branch, open-PR, runtime-authority, canonical-product, retained-lineage, and current-ref checks must all pass before the first deletion.",
+    "capturedAtUtc": "2026-08-15T17:04:35Z",
+    "excludedReviewedCandidateCount": 0,
+    "mainSha": "8bc2d61bbaa35a1bf10285cbb9993a17e50c1cb2",
+    "policy": "Only the prior reviewed deletion set is eligible. Missing, moved, protected, retained, and open-PR refs are removed before publication; the executor revalidates exact SHAs before the first deletion.",
     "repository": "alex00Pirotskyi/kris.ai"
   },
   "defaultBranch": "main",
@@ -34,12 +33,6 @@
       "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
       "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-final",
       "reason": "Superseded Worker A final stack backup at the same exact ancestor as the canonical continuation."
-    },
-    {
-      "class": "superseded-repair",
-      "expectedSha": "0e082868fb91cd9d0e57626e4ba0a0ae2ef895d9",
-      "name": "should-not-call",
-      "reason": "Obsolete runtime reservation/probe branch; current Mission Runtime supersedes this exact historical ref."
     },
     {
       "class": "merged-foundation",
@@ -237,43 +230,37 @@
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4",
-      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v5",
-      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v6",
-      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v7",
-      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v8",
-      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "a8a299b665fa2536e35cb757c966105a452a77c3",
       "name": "integration/p0-001-p0-010-complete-v3.1.6-v12",
       "reason": "Completed historical P0 train ref; its governed source is preserved or superseded on protected main."
-    },
-    {
-      "class": "superseded-integration",
-      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
-      "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v9",
-      "reason": "Historical P0 stage ref superseded by protected main."
     },
     {
       "class": "superseded-integration",
@@ -292,6 +279,12 @@
       "expectedSha": "b59107232e032a649d1e0ef3ede787888a36c6a0",
       "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v12",
       "reason": "Final historical P0 stage ref; reusable governance/source work is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v9",
+      "reason": "Historical P0 stage ref superseded by protected main."
     },
     {
       "class": "superseded-integration",
@@ -361,18 +354,6 @@
     },
     {
       "class": "superseded-integration",
-      "expectedSha": "ec01896bf1169eb031c3c1484201b622ab4d6afc",
-      "name": "integration/p1-authority-service-v63r7",
-      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
-    },
-    {
-      "class": "superseded-integration",
-      "expectedSha": "a708fa1f294d63d3673b6b6c1415c16c4e0ad572",
-      "name": "integration/p1-authority-service-v63r9",
-      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
-    },
-    {
-      "class": "superseded-integration",
       "expectedSha": "1761430252746ae1845088df4211d6910532abf8",
       "name": "integration/p1-authority-service-v63r10",
       "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
@@ -399,6 +380,18 @@
       "class": "superseded-integration",
       "expectedSha": "afe7511150ef287a21f7f94662f525ce6c644fa2",
       "name": "integration/p1-authority-service-v63r15",
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "ec01896bf1169eb031c3c1484201b622ab4d6afc",
+      "name": "integration/p1-authority-service-v63r7",
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "a708fa1f294d63d3673b6b6c1415c16c4e0ad572",
+      "name": "integration/p1-authority-service-v63r9",
       "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
@@ -462,6 +455,12 @@
       "reason": "P0-002 security branch whose fail-closed trust-disablement source is byte-identical on protected main."
     },
     {
+      "class": "superseded-repair",
+      "expectedSha": "0e082868fb91cd9d0e57626e4ba0a0ae2ef895d9",
+      "name": "should-not-call",
+      "reason": "Obsolete runtime reservation/probe branch; current Mission Runtime supersedes this exact historical ref."
+    },
+    {
       "class": "merged-foundation",
       "expectedSha": "750895ab550faa4af697ea8aad8c6e9ca0b8539a",
       "name": "temp-worker-f-noop-discard",
@@ -470,32 +469,28 @@
   ],
   "keep": [
     {
-      "name": "main",
-      "reason": "Protected default branch and current source authority."
-    },
-    {
-      "name": "agent/mission-runtime",
-      "reason": "Mutable Mission Execution 1.5 runtime authority."
+      "name": "agent/mission-delivery-enforcement-v1",
+      "reason": "Current delivery-enforcement lineage pending explicit disposition."
     },
     {
       "name": "agent/mission-execution-v15-gold",
-      "reason": "Active Mission Execution 1.5 control-plane candidate."
+      "reason": "Current Mission Execution control implementation branch."
     },
     {
-      "name": "agent/mission-delivery-enforcement-v1",
-      "reason": "Retained mission-delivery enforcement lineage and open control-plane PR head."
-    },
-    {
-      "name": "integration/p2-owner-risk-v71r12",
-      "reason": "Retained because its unique Owner Mode QA and recovery lineage is not yet fully ported and independently landed on current main."
+      "name": "agent/mission-runtime",
+      "reason": "Mutable Mission Execution runtime authority."
     },
     {
       "name": "ci/direct-pr14-repair-trigger",
-      "reason": "Retained unique diverged PR14 reconciliation history pending a separate exact-lineage decision."
+      "reason": "Historical repair-status lineage retained until PR14 cleanup is fully closed."
     },
     {
-      "name": "agent/f/P5-001-information-architecture",
-      "reason": "Retained canonical P5 Product branch; temp-worker-f-noop-discard is deleted only because its effective tree diff against this ref is empty."
+      "name": "integration/p2-owner-risk-v71r12",
+      "reason": "Unique P1/P2 owner-risk evidence lineage pending current-schema migration."
+    },
+    {
+      "name": "main",
+      "reason": "Protected default branch."
     }
   ],
   "roadmapAuthority": "docs/roadmap/MASTER.md",
