@@ -1,0 +1,19 @@
+{
+  "eventId": "EVT-00000624-RUNTIME_REPAIR",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "payload": {
+    "action": "REPAIR_PARTIAL_GENERATION_623",
+    "correctedP2InventoryScope": true,
+    "partialGenerationCommit": "e155779e268854038d2bdf9f276534faf145e012",
+    "p2InventoryMutationAuthorized": false,
+    "semaphoreId": "SEM-P5-002-DESIGN-TOKENS-3A7C91E4",
+    "truthBoundary": "Current runtime state is coherent at generation 624. Immutable generation 623 contains a metadata-only connector write and remains explicitly recorded rather than hidden or force-rewritten.",
+    "workerIdentity": "GPT-5.6-PRO-3A7C91E4"
+  },
+  "recordedAt": "2026-08-15T12:20:00Z",
+  "runtimeGeneration": 624,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260815T120500Z-3a7c91e4",
+  "workOrderId": "WO-P5-002-DESIGN-TOKENS-3A7C91E4"
+}
