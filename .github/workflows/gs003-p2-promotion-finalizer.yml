@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/gs003-p2-promotion-finalizer.yml
       - tool/gs003_p2_promotion_finalize.py
+      - tool/p2_promotion_state_test.py
 
 permissions:
   contents: write

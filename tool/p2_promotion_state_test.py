@@ -29,9 +29,12 @@ class P2PromotionStateTest(unittest.TestCase):
             'project / "release/evidence/P2-004/state.json"',
             source,
         )
-        self.assertNotIn(
-            'value.get("status") not in {"source_only", "failed"}',
-            source,
+        self.assertIn('if task_id == "P2-004":', source)
+        self.assertIn("committed unfinished P2 evidence invalid", source)
+        self.assertNotIn("committed P2 evidence invalid:", source)
+        self.assertLess(
+            source.index('if task_id == "P2-004":'),
+            source.index("committed unfinished P2 evidence invalid"),
         )
 
     def test_unfinished_capabilities_remain_source_only(self) -> None:
