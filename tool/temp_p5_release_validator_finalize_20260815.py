@@ -134,6 +134,7 @@ def validate() -> None:
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot load release validator")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     module.checks.clear()
     module.check_chat_workspace_ux()
