@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 1,
-  "task": "P5-001",
-  "mission": "MISSION-005",
-  "productPr": 72,
-  "captain": "F",
   "branch": "agent/f/P5-001-information-architecture",
-  "observedHead": "00de2bbf075d4cb91e0f82a1326f9fa6e975786d",
+  "captain": "F",
+  "mission": "MISSION-005",
+  "observedAt": "2026-08-15T10:40:00Z",
+  "observedHead": "e43f76203a7b96e33d1f324b98d134583ca00a80",
+  "productPr": 72,
+  "schemaVersion": 1,
   "status": "ACTIVE",
-  "observedAt": "2026-08-10T06:43:00Z"
+  "task": "P5-001"
 }

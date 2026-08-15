@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "e43f76203a7b96e33d1f324b98d134583ca00a80",
+  "baseTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+  "branch": "agent/f/P5-001-information-architecture",
+  "createdAt": "2026-08-15T10:40:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-15T16:40:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-005",
+  "productPr": 72,
+  "refreshedAt": "2026-08-15T10:40:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 618,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-001-CURRENT-MAIN-LANDING-6F4A91C2",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2",
+  "workerIdentity": "GPT-5.6-PRO-6F4A91C2"
+}
