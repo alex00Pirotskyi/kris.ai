@@ -1,240 +1,501 @@
 {
   "audit": {
-    "beforeBranchCount": 38,
-    "capturedAtUtc": "2026-08-05T04:13:10Z",
-    "mainSha": "16459d2fee29e0b6a41b5e4e5da9fc4dcdb93309",
-    "policy": "Exact-SHA, protected-branch, open-PR, and default-branch checks must all pass before the first deletion.",
+    "beforeBranchCount": 146,
+    "capturedAtUtc": "2026-08-14T14:34:43Z",
+    "candidateCount": 76,
+    "newLegacyCandidateCount": 59,
+    "priorCandidateCount": 17,
+    "mainSha": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+    "policy": "Exact-SHA, protected-branch, open-PR, runtime-authority, canonical-product, retained-lineage, and current-ref checks must all pass before the first deletion.",
     "repository": "alex00Pirotskyi/kris.ai"
   },
   "defaultBranch": "main",
   "delete": [
     {
-      "class": "disposable-ci",
-      "closedPr": 32,
-      "expectedSha": "2e38fd4242aa19e0e8b63b5d5907ecc9cc633329",
-      "name": "ci/dispatch-p1-p2-promotion-trigger",
-      "reason": "Closed one-shot promotion dispatcher; PR #32 is closed and the governed promotion run is already recorded."
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-prestack-345847c",
+      "reason": "Superseded Worker A prestack snapshot; the canonical Worker A branch continued from this exact ancestor."
     },
     {
-      "class": "disposable-ci",
-      "closedPr": 17,
-      "expectedSha": "48610770e92a41780b93379b2a6fd022a44a5a8b",
-      "name": "ci/execute-pr14-repair-trigger",
-      "reason": "Closed one-shot PR14 execution trigger; PR #17 is closed and superseded by the protected product-gate controller."
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup",
+      "reason": "Superseded Worker A stack backup at the same exact ancestor as the canonical continuation."
     },
     {
-      "class": "disposable-ci",
-      "closedPr": 19,
-      "expectedSha": "66d4969c5b00bf6dea594fad41b4c46b4ec05351",
-      "name": "ci/execute-pr14-repair-trigger-2",
-      "reason": "Closed workflow-run repair trigger; PR #19 is closed and superseded by the protected product-gate controller."
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-2",
+      "reason": "Superseded Worker A stack backup at the same exact ancestor as the canonical continuation."
     },
     {
-      "class": "disposable-ci",
-      "closedPr": 26,
-      "expectedSha": "a1ea42af83417582378ba534ab73dd9e0a5381d7",
-      "name": "ci/export-pr14-repair-artifact",
-      "reason": "Closed read-only artifact export branch; PR #26 is closed and its artifact lineage is recorded."
-    },
-    {
-      "class": "disposable-ci",
-      "closedPr": 23,
-      "expectedSha": "de9b2f6135446348baed7f9ad58c482bffade88e",
-      "name": "ci/fix-pr14-pr-trigger-yaml",
-      "reason": "Superseded YAML repair branch from closed PR #23; authoritative fix landed through PR #24."
-    },
-    {
-      "class": "disposable-ci",
-      "closedPr": 36,
-      "expectedSha": "2cf214ae39beb7022e7aeeb18dd8d30c6ed66966",
-      "name": "ci/observe-p1-p2-promotion-trigger",
-      "reason": "Closed read-only promotion observer used by PRs #34 and #36; exact run evidence is already recorded."
-    },
-    {
-      "class": "disposable-ci",
-      "closedPr": 35,
-      "expectedSha": "26c02165f214e2dfcad80f96ea0dcb89dc247afc",
-      "name": "ci/observe-p1-p2-promotion-trigger-v2",
-      "reason": "Closed read-only promotion observer v2; PR #35 is closed and evidence is already recorded."
-    },
-    {
-      "class": "disposable-ci",
-      "closedPr": 30,
-      "expectedSha": "c95dba06807522194740611d553b117f892aae0f",
-      "name": "ci/p2-python-lock-refresh-trigger",
-      "reason": "Closed exact Python-lock refresh trigger; PR #30 is closed and the governed lock repair is on the retained integration lineage."
-    },
-    {
-      "class": "disposable-ci",
-      "closedPr": 40,
-      "expectedSha": "6ee22690a2e34af211af084a25bcbf25db037ce7",
-      "name": "ci/reconcile-pr14-main-trigger",
-      "reason": "Closed PR14 reconciliation trigger; PR #40 is closed and superseded by the current protected repair controller."
+      "class": "superseded-integration",
+      "expectedSha": "345847cb06b3123f2841bdface68a6615cd5de42",
+      "name": "agent/a/p1-p2-new-roadmap-execution-stack-backup-final",
+      "reason": "Superseded Worker A final stack backup at the same exact ancestor as the canonical continuation."
     },
     {
       "class": "superseded-repair",
-      "expectedSha": "21cc7c89207d7c92e391c5f67232d7631a35ca53",
-      "name": "fix/v71r12-hosted-gate-30838146560",
-      "reason": "Historical hosted-gate repair attempt superseded by later V71-R12 validated and integration branches."
-    },
-    {
-      "class": "superseded-repair",
-      "expectedSha": "38adbab8fc3d3198fcfb26a3001690963c07723f",
-      "name": "fix/v71r12-hosted-gate-30839956041",
-      "reason": "Historical hosted-gate repair attempt superseded by later V71-R12 validated and integration branches."
-    },
-    {
-      "class": "superseded-repair",
-      "expectedSha": "7876997395a244814e8b58ea7744f0015a303c23",
-      "name": "fix/v71r12-triplatform-30889417167",
-      "reason": "Historical tri-platform repair attempt superseded by successful validation run 30913519385."
-    },
-    {
-      "class": "superseded-repair",
-      "expectedSha": "7cf6889a8888c1e91b9a1bc6a1983937a1996291",
-      "name": "fix/v71r12-upload-artifact-30915552748",
-      "reason": "Historical hidden-artifact repair attempt superseded by the retained integration and protected control-plane lineage."
+      "expectedSha": "0e082868fb91cd9d0e57626e4ba0a0ae2ef895d9",
+      "name": "should-not-call",
+      "reason": "Obsolete runtime reservation/probe branch; current Mission Runtime supersedes this exact historical ref."
     },
     {
       "class": "merged-foundation",
+      "expectedSha": "29a4332b6237fec57c6a6d6702753cf7d2e50313",
+      "name": "agent/h/p2-004-acceptance-manifest-8c4a2f91",
+      "reason": "Self-removing P2-004 manifest helper consumed by landed PR #151; its Work Order is LANDED."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "ba8833bdb309397142d3b48af340ea33380fa5b1",
+      "name": "agent/h/p2-004-automation-lock-repair-8c4a2f91",
+      "reason": "P2 toolchain-lock repair helper consumed by the landed P3/P2 protected-main tree; its Work Order is LANDED."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "bca6c6d894e799e1389207fdb907786ebc4946bd",
+      "name": "agent/h/p3-001-manifest-finalize-8c4a2f91",
+      "reason": "Historical P3 manifest-finalization transport consumed by the landed P3 source; no open PR uses this ref."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "ba8833bdb309397142d3b48af340ea33380fa5b1",
+      "name": "agent/h/p3-001-manifest-p2lock-8c4a2f91",
+      "reason": "Duplicate exact P3/P2 lock-repair helper head already consumed by protected main."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "640383701509bec499cbb8987856b5b2b0a8f9b2",
+      "name": "agent/h/p3-001-p2-004-manifest-8c4a2f91",
+      "reason": "Self-removing P3 manifest transport whose clean one-file output was consumed into the landed canonical P3 head."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "ba8833bdb309397142d3b48af340ea33380fa5b1",
+      "name": "agent/h/p3-001-p2-004-manifest-finalize-8c4a2f91",
+      "reason": "Duplicate exact P3/P2 manifest-finalization base already consumed by protected main."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "04b2b67d405c86ffda20afa93104be13972160a5",
+      "name": "agent/h/p3-001-shared-authority-8c4a2f91",
+      "reason": "Bounded shared-authority helper consumed into the exact landed P3 composition; no open PR uses this ref."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "7dd213e6511bf0eafee838120f00d3450296e61b",
+      "name": "agent/local-qwen/elastic-qwen-0104e7d7/mission-004/wo-p4-001-clean-manifest-4d82c7fa-b2861719",
+      "reason": "Qwen clean-manifest helper belongs to terminal LANDED Work Order WO-P4-001-CLEAN-MANIFEST-4D82C7FA."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "190089c736b53743d513c06d3922aae0694f01ef",
+      "name": "agent/local-qwen/elastic-qwen-80f0f562/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-6fb634ac",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "5f45980a105cb4692a14ed75f7f1d1398c580427",
+      "name": "agent/local-qwen/elastic-qwen-a14448ec/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-3ebbf080",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "20b8673a4689b1b99b6f14466fc2f3d2db6a434d",
+      "name": "agent/local-qwen/elastic-qwen-f642c3c6/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-6c88d1d4",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "fe860c37bdb001ab72ae738f844b85ab68eb5bfd",
+      "name": "agent/local-qwen/elastic-qwen-f753206e/mission-004/wo-p4-001-source-manifest-5a09-7c51a2e4-67f68407",
+      "reason": "Qwen manifest execution debris for terminal LANDED Work Order WO-P4-001-SOURCE-MANIFEST-5A09-7C51A2E4."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "backup/p0-003-generator-check-failure",
+      "reason": "Legacy P0 generator-check backup; executable source is superseded by protected main and retained Git history."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-combined-20260723T110430Z",
+      "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-combined-20260723T110802Z",
+      "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-combined-20260723T111205Z",
+      "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-combined-20260723T111219Z",
+      "reason": "Duplicate pre-combination P0 snapshot; the same trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "9019b9a043ba4e16ac12f17503cfee06a51ce4d4",
+      "name": "backup/pre-combined-20260723T111311Z",
+      "reason": "Legacy P0 combined snapshot whose executable gates are preserved or superseded on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "backup/pre-integrated-stage-a-20260723T162915Z",
+      "reason": "Pre-integration P0 stage backup; current main contains the accepted successor source."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "backup/pre-main-stage-a-20260723T170746Z",
+      "reason": "Pre-main P0 stage snapshot fully superseded by protected-main history."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-p0-002-20260723T102821Z",
+      "reason": "P0-002 pre-change backup; the fail-closed v1 trust-disablement gate is byte-identical on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-p0-002-20260723T103209Z",
+      "reason": "P0-002 pre-change backup; the fail-closed v1 trust-disablement gate is byte-identical on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "backup/pre-p0-002-20260723T103549Z",
+      "reason": "P0-002 pre-change backup; the fail-closed v1 trust-disablement gate is byte-identical on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "backup/pre-p0-003-p0-005-20260723T150929Z",
+      "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "backup/pre-p0-003-p0-005-20260723T151610Z",
+      "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "backup/pre-p0-003-p0-005-20260723T152128Z",
+      "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "backup/pre-p0-003-p0-005-20260723T152917Z",
+      "reason": "P0-003/P0-005 pre-integration snapshot superseded by the protected-main P0 train."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "796dceaab798dd881c9985edc923cb2e54348c20",
+      "name": "backup/pre-p0-003-p0-005-20260723T153457Z",
+      "reason": "P0-003/P0-005 pre-integration snapshot; its policy/support gate source is preserved on protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "backup/pre-p0-003-p0-005-20260723T153513Z",
+      "reason": "P0-003/P0-005 pre-integration snapshot superseded by protected main."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "backup/pre-p0-003-repair-20260723T155022Z",
+      "reason": "P0-003 repair backup superseded by the accepted protected-main repair lineage."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "backup/pre-p0-003-repair-20260723T155217Z",
+      "reason": "P0-003 repair backup superseded by the accepted protected-main repair lineage."
+    },
+    {
+      "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-002",
-      "reason": "P0-001/P0-002 foundation is contained in protected main and no longer needs a live branch."
+      "reason": "Historical P0 integration ref fully superseded by protected main."
     },
     {
-      "class": "merged-foundation",
-      "expectedSha": "277f231043f0472f7fe34f4128a16ba4e0897536",
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-008-stage-a-v3.1.4",
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v5",
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v6",
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v7",
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v8",
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "a8a299b665fa2536e35cb757c966105a452a77c3",
       "name": "integration/p0-001-p0-010-complete-v3.1.6-v12",
-      "reason": "Completed P0 integration snapshot is contained in main; durable evidence and commit SHA remain in the roadmap records."
+      "reason": "Completed historical P0 train ref; its governed source is preserved or superseded on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v9",
+      "reason": "Historical P0 stage ref superseded by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v10",
+      "reason": "Historical P0 stage ref superseded by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v11",
+      "reason": "Historical P0 stage ref superseded by protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "b59107232e032a649d1e0ef3ede787888a36c6a0",
       "name": "integration/p0-001-p0-010-stage-a-v3.1.6-v12",
-      "reason": "P0 Stage A was superseded by the completed P0 integration and protected main."
+      "reason": "Final historical P0 stage ref; reusable governance/source work is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "integration/p0-001-to-p0-003",
+      "reason": "Duplicate early P0 integration ref; executable trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "integration/p0-001-to-p0-003-20260723T110802Z",
+      "reason": "Duplicate early P0 integration ref; executable trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "integration/p0-001-to-p0-003-20260723T111205Z",
+      "reason": "Duplicate early P0 integration ref; executable trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "integration/p0-001-to-p0-003-20260723T111220Z",
+      "reason": "Duplicate early P0 integration ref; executable trust-disablement source is preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-001-to-p0-003-20260723T111311Z",
+      "reason": "Historical P0 integration ref superseded by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-003-p0-005-main-ready-20260723T170746Z",
+      "reason": "Historical main-ready P0 ref already consumed by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-003-p0-005-v3.1.2",
+      "reason": "Duplicate P0-003/P0-005 integration ref already superseded by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-003-p0-005-v3.1.2-20260723T162915Z",
+      "reason": "Duplicate P0-003/P0-005 integration ref already superseded by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p0-003-repair",
+      "reason": "Historical P0-003 repair integration ref superseded by protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "integration/p0-003-repair-v2-20260723T155022Z",
+      "reason": "P0-003 repair-v2 snapshot superseded by protected-main source."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "integration/p0-003-repair-v2-20260723T155217Z",
+      "reason": "P0-003 repair-v2 snapshot superseded by protected-main source."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "ec01896bf1169eb031c3c1484201b622ab4d6afc",
       "name": "integration/p1-authority-service-v63r7",
-      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "a708fa1f294d63d3673b6b6c1415c16c4e0ad572",
       "name": "integration/p1-authority-service-v63r9",
-      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "1761430252746ae1845088df4211d6910532abf8",
       "name": "integration/p1-authority-service-v63r10",
-      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "e33fde5e3a9650317ddc4c78e6ca0b4d6be963b1",
       "name": "integration/p1-authority-service-v63r11",
-      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "13be67299263fedd70d5e61caab54b35eeaad560",
       "name": "integration/p1-authority-service-v63r12",
-      "reason": "Superseded P1A integration iteration; authoritative P1A source landed through V63-R15."
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
       "class": "superseded-integration",
-      "closedPr": 7,
       "expectedSha": "aa59eb618e6e4b5b10101246978c58ebbb9d9b14",
       "name": "integration/p1-authority-service-v63r13",
-      "reason": "Closed unmerged PR #7 was superseded by the V63-R15 source landing in PR #8."
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
     },
     {
       "class": "superseded-integration",
+      "expectedSha": "afe7511150ef287a21f7f94662f525ce6c644fa2",
+      "name": "integration/p1-authority-service-v63r15",
+      "reason": "Historical P1 Authority Service revision; protected main contains the later merged runtime and security corrections."
+    },
+    {
+      "class": "merged-foundation",
+      "expectedSha": "5f86a0266d7ff9c1db4f9bf9d4f5d1fc93af9edd",
+      "name": "integration/p2-consolidated-foundation-v1",
+      "reason": "Quarantined P2 source-foundation archive; its task-reduction matrix and reusable reference package are already preserved on protected main."
+    },
+    {
+      "class": "superseded-integration",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "integration/p3-full-train-wip",
+      "reason": "Early P3 WIP snapshot superseded by the landed canonical P3 browser-runtime source."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "p0-003-p0-005-20260723T151610Z",
+      "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "p0-003-p0-005-20260723T152128Z",
+      "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "796dceaab798dd881c9985edc923cb2e54348c20",
+      "name": "p0-003-p0-005-20260723T152917Z",
+      "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
+    },
+    {
+      "class": "failure-snapshot",
+      "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
+      "name": "p0-003-p0-005-20260723T153457Z",
+      "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
+    },
+    {
+      "class": "failure-snapshot",
       "expectedSha": "c0f08d8f185e14482399502c193bb929546227b3",
       "name": "p0-003-p0-005-20260723T153513Z",
-      "reason": "Timestamped P0-003/P0-005 working branch was superseded by the completed P0 integration and protected main."
+      "reason": "Root-level P0 stage ref duplicated by the accepted protected-main P0 lineage."
     },
     {
       "class": "failure-snapshot",
-      "expectedSha": "12f830eaec27a8d6c04c54b9ae1e33af433810df",
-      "name": "validation/v71r12-integration-failure-30915552748",
-      "reason": "Failed integration snapshot; exact run identity and failure evidence are preserved in durable records."
+      "expectedSha": "d6e4387e3bff26b92bf2e82baab54d8ecaa30063",
+      "name": "rescue/stash-0",
+      "reason": "Legacy rescue stash; reusable P0/P1 source is preserved or superseded on protected main."
     },
     {
       "class": "failure-snapshot",
-      "expectedSha": "c32b3b135444786e03443fe9a26c495f243ecc9d",
-      "name": "validation/v71r12-integration-failure-30934451574",
-      "reason": "Failed integration snapshot; exact run identity and failure evidence are preserved in durable records."
+      "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
+      "name": "rescue/stash-1",
+      "reason": "Legacy rescue stash identical to the superseded P0 baseline."
     },
     {
-      "class": "failure-snapshot",
-      "expectedSha": "35bb9b92022a6a0f04fc98ff10d4e49e2c955b43",
-      "name": "validation/v71r12-repair-failure-30900900467",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+      "class": "merged-foundation",
+      "expectedSha": "08e7d37cf70f79d5bd3fa8defcab0b3349157f86",
+      "name": "security/p0-002-disable-v1-trust",
+      "reason": "P0-002 security branch whose fail-closed trust-disablement source is byte-identical on protected main."
     },
     {
-      "class": "failure-snapshot",
-      "expectedSha": "6a75d008684b545263d1bfa5571a7b26a81494ec",
-      "name": "validation/v71r12-repair-failure-30902636921",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
-    },
-    {
-      "class": "failure-snapshot",
-      "expectedSha": "1e02e75b0036ec830f9db7f4389f9a776fa03f34",
-      "name": "validation/v71r12-repair-failure-30904777658",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
-    },
-    {
-      "class": "failure-snapshot",
-      "expectedSha": "29017ce9773c28834f6e1f44cdb4bb2db47bd308",
-      "name": "validation/v71r12-repair-failure-30907221184",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
-    },
-    {
-      "class": "failure-snapshot",
-      "expectedSha": "f2e4d5876a7635fcd28fa59fd5cb098b4a5769c0",
-      "name": "validation/v71r12-repair-failure-30907619291",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
-    },
-    {
-      "class": "failure-snapshot",
-      "expectedSha": "f78910538941a47a71126dbf0bb48c917e53fd2d",
-      "name": "validation/v71r12-repair-failure-30907954535",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
-    },
-    {
-      "class": "failure-snapshot",
-      "expectedSha": "93d33e534559dfc39c31f12a4c2d942b249b5e81",
-      "name": "validation/v71r12-repair-failure-30910847377",
-      "reason": "Failed repair snapshot retained by run ID in documentation; live branch is no longer required."
+      "class": "merged-foundation",
+      "expectedSha": "750895ab550faa4af697ea8aad8c6e9ca0b8539a",
+      "name": "temp-worker-f-noop-discard",
+      "reason": "No-op Worker F branch with an empty tree diff against retained canonical P5 branch agent/f/P5-001-information-architecture."
     }
   ],
   "keep": [
     {
       "name": "main",
-      "reason": "Protected default branch and current roadmap authority."
+      "reason": "Protected default branch and current source authority."
     },
     {
-      "name": "ci/direct-pr14-repair-trigger",
-      "reason": "Active draft PR #48 and exact trigger for the protected PR14 repair controller."
+      "name": "agent/mission-runtime",
+      "reason": "Mutable Mission Execution 1.5 runtime authority."
+    },
+    {
+      "name": "agent/mission-execution-v15-gold",
+      "reason": "Active Mission Execution 1.5 control-plane candidate."
+    },
+    {
+      "name": "agent/mission-delivery-enforcement-v1",
+      "reason": "Retained mission-delivery enforcement lineage and open control-plane PR head."
     },
     {
       "name": "integration/p2-owner-risk-v71r12",
-      "reason": "Retained P2 integration/evidence lineage until owner-risk closure is landed."
+      "reason": "Retained because its unique Owner Mode QA and recovery lineage is not yet fully ported and independently landed on current main."
     },
     {
-      "name": "merge/p1-p2-owner-risk-qa-preview",
-      "reason": "Active governed P1/P2 landing target; must remain until protected landing completes."
+      "name": "ci/direct-pr14-repair-trigger",
+      "reason": "Retained unique diverged PR14 reconciliation history pending a separate exact-lineage decision."
     },
     {
-      "name": "validated/v71r12-p1-p2-final",
-      "reason": "Exact tri-platform validated application candidate anchor."
-    },
-    {
-      "name": "validation/v71r12-repair-success-30913519385",
-      "reason": "Successful repair evidence anchor for run 30913519385."
+      "name": "agent/f/P5-001-information-architecture",
+      "reason": "Retained canonical P5 Product branch; temp-worker-f-noop-discard is deleted only because its effective tree diff against this ref is empty."
     }
   ],
   "roadmapAuthority": "docs/roadmap/MASTER.md",
