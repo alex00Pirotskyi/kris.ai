@@ -206,6 +206,7 @@ void main() {
         'lib/product/p2_runtime_resource_resolver.dart',
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
+        'lib/product/p5_design_tokens.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
         'lib/product/p5_information_architecture/p5_controller.dart',
         'lib/product/p5_information_architecture/p5_fixtures.dart',
@@ -235,6 +236,17 @@ void main() {
       expect(chatOffset, greaterThanOrEqualTo(0));
       expect(experienceOffset, greaterThan(chatOffset));
       expect(ownerOffset, greaterThan(experienceOffset));
+    });
+
+    test('application wires semantic accessibility themes', () {
+      final ui = source('lib/product/ui.dart');
+      expect(ui, contains("import 'p5_design_tokens.dart';"));
+      expect(ui, contains('highContrastTheme: _studioTheme('));
+      expect(ui, contains('highContrastDarkTheme: _studioTheme('));
+      expect(ui, contains('accessibilityFeatures.disableAnimations'));
+      expect(ui, contains('P5DesignSystem.themeTransitionDuration'));
+      expect(ui, contains('WidgetsBinding.instance.addObserver(this)'));
+      expect(ui, contains('WidgetsBinding.instance.removeObserver(this)'));
     });
 
     test('stale-source migration consumes governed inventories', () {
@@ -672,6 +684,7 @@ void main() {
       final api = source('lib/product/api_server.dart');
       final ui = <String>[
         source('lib/product/ui.dart'),
+        source('lib/product/p5_design_tokens.dart'),
         source('lib/product/chat_studio.dart'),
         source('lib/product/ui_advanced.dart'),
         source('lib/product/ui_components.dart'),

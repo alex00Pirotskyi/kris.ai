@@ -48,7 +48,8 @@ void main() {
       ]) {
         final tokens = theme.extension<P5DesignTokens>()!;
         expect(tokens.highContrast, isTrue);
-        expect(_contrast(tokens.onSurface, tokens.canvas), greaterThanOrEqualTo(7));
+        expect(_contrast(tokens.onSurface, tokens.canvas),
+            greaterThanOrEqualTo(7));
         expect(
           _contrast(tokens.onSurfaceMuted, tokens.canvas),
           greaterThanOrEqualTo(7),
@@ -84,8 +85,7 @@ void main() {
           theme.navigationRailTheme.selectedLabelTextStyle!.fontSize,
           greaterThanOrEqualTo(tokens.navigationFontSize),
         );
-        final selectedNavigationStyle = theme
-            .navigationBarTheme.labelTextStyle!
+        final selectedNavigationStyle = theme.navigationBarTheme.labelTextStyle!
             .resolve(<WidgetState>{WidgetState.selected});
         expect(
           selectedNavigationStyle!.fontSize,

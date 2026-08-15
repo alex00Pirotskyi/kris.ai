@@ -9,6 +9,7 @@ import 'chat_studio.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
 import 'p2_product_runtime_bootstrap.dart';
+import 'p5_design_tokens.dart';
 import 'p5_information_architecture/p5_controller.dart';
 import 'p5_information_architecture/p5_prototype.dart';
 import 'ui_advanced.dart';
@@ -23,13 +24,14 @@ class KristinApp extends StatefulWidget {
   State<KristinApp> createState() => _KristinAppState();
 }
 
-class _KristinAppState extends State<KristinApp> {
+class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
   late final GovernedApiServer api = GovernedApiServer(widget.runtime);
   String? startupError;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (widget.runtime.settings.apiEnabled) {
       unawaited(
         api.start().catchError((Object failure) {
@@ -45,19 +47,46 @@ class _KristinAppState extends State<KristinApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(api.stop());
     unawaited(widget.runtime.close());
     super.dispose();
   }
 
   @override
+  void didChangeAccessibilityFeatures() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final reducedMotion = WidgetsBinding
+        .instance.platformDispatcher.accessibilityFeatures.disableAnimations;
     return MaterialApp(
       title: 'Kristin Local Agent',
       debugShowCheckedModeBanner: false,
-      theme: _studioTheme(Brightness.light),
-      darkTheme: _studioTheme(Brightness.dark),
+      theme: _studioTheme(
+        Brightness.light,
+        reducedMotion: reducedMotion,
+      ),
+      darkTheme: _studioTheme(
+        Brightness.dark,
+        reducedMotion: reducedMotion,
+      ),
+      highContrastTheme: _studioTheme(
+        Brightness.light,
+        highContrast: true,
+        reducedMotion: reducedMotion,
+      ),
+      highContrastDarkTheme: _studioTheme(
+        Brightness.dark,
+        highContrast: true,
+        reducedMotion: reducedMotion,
+      ),
       themeMode: ThemeMode.system,
+      themeAnimationDuration:
+          P5DesignSystem.themeTransitionDuration(reducedMotion),
+      themeAnimationCurve: Curves.easeOutCubic,
       home: KristinMainShell(
         ownerMode: widget.runtime.p2OwnerMode,
         chat: ChatStudio(
@@ -201,79 +230,15 @@ class _KristinMainShellState extends State<KristinMainShell> {
   }
 }
 
-ThemeData _studioTheme(Brightness brightness) {
-  final dark = brightness == Brightness.dark;
-  final scheme = ColorScheme.fromSeed(
-    seedColor: const Color(0xff6558d3),
+ThemeData _studioTheme(
+  Brightness brightness, {
+  bool highContrast = false,
+  bool reducedMotion = false,
+}) {
+  return P5DesignSystem.theme(
     brightness: brightness,
-  );
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    brightness: brightness,
-    scaffoldBackgroundColor:
-        dark ? const Color(0xff111217) : const Color(0xfff8f7f4),
-    appBarTheme: AppBarTheme(
-      backgroundColor: dark ? const Color(0xff111217) : const Color(0xfff8f7f4),
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-    ),
-    cardTheme: CardThemeData(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor:
-          dark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.outlineVariant),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.outlineVariant),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.primary, width: 1.6),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      height: 70,
-      labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        return TextStyle(
-          fontWeight:
-              states.contains(WidgetState.selected) ? FontWeight.w700 : null,
-        );
-      }),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    ),
-    dividerTheme: DividerThemeData(color: scheme.outlineVariant),
+    highContrast: highContrast,
+    reducedMotion: reducedMotion,
   );
 }
 

@@ -1,6 +1,5 @@
 import 'dart:ui' show lerpDouble;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 @immutable
@@ -284,12 +283,12 @@ abstract final class P5DesignSystem {
       titleMedium: baseTextTheme.titleMedium?.copyWith(
         fontSize: 18,
         height: 1.3,
-        fontWeight: FontWeight.w650,
+        fontWeight: FontWeight.w600,
       ),
       titleSmall: baseTextTheme.titleSmall?.copyWith(
         fontSize: 16,
         height: 1.35,
-        fontWeight: FontWeight.w650,
+        fontWeight: FontWeight.w600,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
         fontSize: 17,
@@ -307,7 +306,7 @@ abstract final class P5DesignSystem {
       labelLarge: baseTextTheme.labelLarge?.copyWith(
         fontSize: tokens.buttonFontSize,
         height: 1.25,
-        fontWeight: FontWeight.w650,
+        fontWeight: FontWeight.w600,
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontSize: tokens.labelFontSize,
@@ -341,7 +340,8 @@ abstract final class P5DesignSystem {
       scaffoldBackgroundColor: tokens.canvas,
       canvasColor: tokens.canvas,
       focusColor: tokens.focusRing.withValues(alpha: highContrast ? 0.32 : 0.2),
-      hoverColor: tokens.focusRing.withValues(alpha: highContrast ? 0.18 : 0.08),
+      hoverColor:
+          tokens.focusRing.withValues(alpha: highContrast ? 0.18 : 0.08),
       highlightColor:
           tokens.focusRing.withValues(alpha: highContrast ? 0.22 : 0.1),
       textTheme: textTheme,
@@ -423,7 +423,7 @@ abstract final class P5DesignSystem {
             color: tokens.onSurface,
             fontSize: tokens.navigationFontSize,
             fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w750
+                ? FontWeight.w700
                 : FontWeight.w600,
           );
         }),
@@ -441,7 +441,7 @@ abstract final class P5DesignSystem {
         selectedLabelTextStyle: TextStyle(
           color: tokens.onSurface,
           fontSize: tokens.navigationFontSize,
-          fontWeight: FontWeight.w750,
+          fontWeight: FontWeight.w700,
         ),
         unselectedLabelTextStyle: TextStyle(
           color: tokens.onSurfaceMuted,
@@ -474,7 +474,7 @@ abstract final class P5DesignSystem {
           ),
           textStyle: TextStyle(
             fontSize: tokens.buttonFontSize,
-            fontWeight: FontWeight.w650,
+            fontWeight: FontWeight.w600,
           ),
           minimumSize: const Size(48, 48),
           padding: EdgeInsets.symmetric(
@@ -491,7 +491,7 @@ abstract final class P5DesignSystem {
           foregroundColor: tokens.focusRing,
           textStyle: TextStyle(
             fontSize: tokens.buttonFontSize,
-            fontWeight: FontWeight.w650,
+            fontWeight: FontWeight.w600,
           ),
           minimumSize: const Size(44, 44),
           padding: EdgeInsets.symmetric(
@@ -516,7 +516,8 @@ abstract final class P5DesignSystem {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: dark ? const Color(0xfff3f0f7) : const Color(0xff202127),
+        backgroundColor:
+            dark ? const Color(0xfff3f0f7) : const Color(0xff202127),
         contentTextStyle: TextStyle(
           color: dark ? const Color(0xff17151b) : Colors.white,
           fontSize: tokens.bodyFontSize,
@@ -534,9 +535,8 @@ abstract final class P5DesignSystem {
           color: dark ? Colors.white : const Color(0xff202127),
           borderRadius: BorderRadius.circular(tokens.radiusSm),
         ),
-        waitDuration: reducedMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 450),
+        waitDuration:
+            reducedMotion ? Duration.zero : const Duration(milliseconds: 450),
       ),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: tokens.focusRing,
@@ -552,10 +552,12 @@ abstract final class P5DesignSystem {
     required bool reducedMotion,
   }) {
     final dark = brightness == Brightness.dark;
-    final fast = reducedMotion ? Duration.zero : const Duration(milliseconds: 100);
+    final fast =
+        reducedMotion ? Duration.zero : const Duration(milliseconds: 100);
     final standard =
         reducedMotion ? Duration.zero : const Duration(milliseconds: 180);
-    final slow = reducedMotion ? Duration.zero : const Duration(milliseconds: 280);
+    final slow =
+        reducedMotion ? Duration.zero : const Duration(milliseconds: 280);
 
     if (highContrast && dark) {
       return P5DesignTokens(
@@ -723,6 +725,7 @@ Duration _lerpDuration(Duration start, Duration end, double t) {
       start.inMicroseconds.toDouble(),
       end.inMicroseconds.toDouble(),
       t,
-    )!.round(),
+    )!
+        .round(),
   );
 }
