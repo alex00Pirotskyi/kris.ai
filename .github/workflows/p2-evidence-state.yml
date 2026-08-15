@@ -1,0 +1,76 @@
+name: P2 Evidence State
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/p2-evidence-state.yml
+      - schemas/p2_evidence_state.v1.schema.json
+      - tool/p2_evidence_state.py
+      - tool/p2_evidence_state_test.py
+      - release/evidence/P2/**
+      - release/evidence/P2-004/**
+      - docs/adr/ADR-0012-p2-automation-host.md
+      - SOURCE_MANIFEST.sha256
+  pull_request:
+    paths:
+      - .github/workflows/p2-evidence-state.yml
+      - schemas/p2_evidence_state.v1.schema.json
+      - tool/p2_evidence_state.py
+      - tool/p2_evidence_state_test.py
+      - release/evidence/P2/**
+      - release/evidence/P2-004/**
+      - docs/adr/ADR-0012-p2-automation-host.md
+      - SOURCE_MANIFEST.sha256
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p2-evidence-state-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: p2-evidence-state-${{ matrix.lane }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: ubuntu
+            os: ubuntu-24.04
+          - lane: windows
+            os: windows-2025
+          - lane: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Validate canonical P2 state
+        shell: bash
+        run: python tool/p2_evidence_state.py --project .
+
+      - name: Run P2 state regressions
+        shell: bash
+        run: python tool/p2_evidence_state_test.py
+
+      - name: Prove validation is non-mutating
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          git diff --cached --exit-code
+          test -z "$(git status --porcelain --untracked-files=no)"
