@@ -50,5 +50,18 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Align temporary finalizer with current formatter CLI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tool/temp_p5_002_design_tokens_3a7c91e4.py')
+          text = path.read_text(encoding='utf-8')
+          old = 'run("python3", "tool/dart_format_scope.py")'
+          new = 'run("python3", "tool/dart_format_scope.py", "--write")'
+          if text.count(old) != 1:
+              raise SystemExit('expected exactly one legacy formatter invocation')
+          path.write_text(text.replace(old, new), encoding='utf-8', newline='\n')
+          PY
+
       - name: Finalize, validate, and publish clean P5-002 candidate
         run: python3 tool/temp_p5_002_design_tokens_3a7c91e4.py
