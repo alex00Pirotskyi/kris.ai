@@ -136,5 +136,15 @@
     "releasePromoted": false,
     "gaPromoted": false,
     "acceptanceDoesNotImplyReleaseSupport": true
-  }
+  },
+  "recordType": "P2TaskAcceptanceEvidence",
+  "recordRole": "historical",
+  "stateAuthority": false,
+  "supersededBy": "release/evidence/P2-004/state.json",
+  "claimLevel": "VERIFIED_SOURCE",
+  "productBehaviorObserved": false,
+  "platformQualified": false,
+  "releaseSupported": false,
+  "productionSupported": false,
+  "gaPromoted": false
 }

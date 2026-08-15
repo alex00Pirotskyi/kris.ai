@@ -1,0 +1,43 @@
+{
+  "claimLevel": "VERIFIED_SOURCE",
+  "completionEligible": true,
+  "downstreamTasks": {
+    "P2-005": false,
+    "P2-006": false
+  },
+  "effectiveAt": "2026-08-14T05:23:56Z",
+  "evidenceRefs": [
+    "docs/adr/ADR-0012-p2-automation-host.md",
+    "release/evidence/P2-004/manifest.json",
+    "release/evidence/P2-004/technology-spike.json",
+    "release/evidence/P2-004/test-results.json"
+  ],
+  "measurementObserved": true,
+  "packagedExecution": false,
+  "phaseCompletionEligible": false,
+  "platform": "cross_platform_measurement",
+  "platformQualified": false,
+  "productBehaviorObserved": false,
+  "productionSupported": false,
+  "recordRole": "active",
+  "recordType": "P2TaskState",
+  "releaseSupported": false,
+  "schemaVersion": "1.0.0",
+  "selectedCandidate": "typescript-node-node-pty-with-native-lifecycle-adapters",
+  "sourceCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+  "sourceTree": "c8326296186720b3f8554574b87eddb859f70109",
+  "status": "accepted_decision",
+  "supersedes": [
+    "release/evidence/P2-004/manifest.json",
+    "release/evidence/P2-004/technology-spike.json"
+  ],
+  "taskId": "P2-004",
+  "taskKind": "architecture_decision",
+  "truthBoundary": {
+    "gaPromoted": false,
+    "p2PhaseComplete": false,
+    "platformSupportPromoted": false,
+    "productionReadinessPromoted": false,
+    "releaseSupportPromoted": false
+  }
+}
