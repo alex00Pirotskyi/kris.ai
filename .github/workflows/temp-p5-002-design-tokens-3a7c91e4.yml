@@ -69,6 +69,21 @@ jobs:
           if source.count(redundant) != 1:
               raise SystemExit('expected exactly one redundant foundation import')
           tokens.write_text(source.replace(redundant, ''), encoding='utf-8', newline='\n')
+
+          contract = Path('test/product/source_contract_test.dart')
+          source = contract.read_text(encoding='utf-8')
+          old = (
+              "        source('lib/product/ui.dart'),\n"
+              "        source('lib/product/chat_studio.dart'),"
+          )
+          new = (
+              "        source('lib/product/ui.dart'),\n"
+              "        source('lib/product/p5_design_tokens.dart'),\n"
+              "        source('lib/product/chat_studio.dart'),"
+          )
+          if source.count(old) != 1:
+              raise SystemExit('expected exactly one Flutter compatibility source aggregate')
+          contract.write_text(source.replace(old, new), encoding='utf-8', newline='\n')
           PY
 
       - name: Finalize, validate, and publish clean P5-002 candidate
