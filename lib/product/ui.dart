@@ -8,7 +8,9 @@ import 'api_server.dart';
 import 'chat_studio.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
-import 'p2_app_shell.dart';
+import 'p2_product_runtime_bootstrap.dart';
+import 'p5_information_architecture/p5_controller.dart';
+import 'p5_information_architecture/p5_prototype.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
@@ -56,7 +58,7 @@ class _KristinAppState extends State<KristinApp> {
       theme: _studioTheme(Brightness.light),
       darkTheme: _studioTheme(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: P2KristinShell(
+      home: KristinMainShell(
         ownerMode: widget.runtime.p2OwnerMode,
         chat: ChatStudio(
           runtime: widget.runtime,
@@ -65,6 +67,137 @@ class _KristinAppState extends State<KristinApp> {
         ),
       ),
     );
+  }
+}
+
+class KristinMainShell extends StatefulWidget {
+  const KristinMainShell({
+    super.key,
+    required this.ownerMode,
+    required this.chat,
+  });
+
+  final P2ProductRuntimeOwnerModeHandle ownerMode;
+  final Widget chat;
+
+  @override
+  State<KristinMainShell> createState() => _KristinMainShellState();
+}
+
+class _KristinMainShellState extends State<KristinMainShell> {
+  var _index = 0;
+  late final P5InformationArchitectureController _experienceController;
+
+  @override
+  void initState() {
+    super.initState();
+    _experienceController = P5InformationArchitectureController();
+  }
+
+  @override
+  void dispose() {
+    _experienceController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final qaPreview = widget.ownerMode.runtimeProvenance['qaPreview'] == true;
+    final ownerAvailable = widget.ownerMode.available;
+    final pages = <Widget>[
+      widget.chat,
+      P5InformationArchitecturePrototype(
+        controller: _experienceController,
+      ),
+      widget.ownerMode.buildWorkspace(
+        key: const ValueKey<String>('kristin-owner-mode-workspace'),
+      ),
+    ];
+    final wide = MediaQuery.sizeOf(context).width >= 1100;
+    final shell = Scaffold(
+      body: wide
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                NavigationRail(
+                  selectedIndex: _index,
+                  labelType: NavigationRailLabelType.all,
+                  onDestinationSelected: _selectDestination,
+                  destinations: <NavigationRailDestination>[
+                    const NavigationRailDestination(
+                      icon: Icon(Icons.chat_bubble_outline),
+                      selectedIcon: Icon(Icons.chat_bubble),
+                      label: Text('Chat'),
+                    ),
+                    const NavigationRailDestination(
+                      icon: Icon(Icons.dashboard_customize_outlined),
+                      selectedIcon: Icon(Icons.dashboard_customize),
+                      label: Text('Experience'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(
+                        ownerAvailable
+                            ? Icons.admin_panel_settings_outlined
+                            : Icons.gpp_bad_outlined,
+                      ),
+                      selectedIcon: Icon(
+                        ownerAvailable
+                            ? Icons.admin_panel_settings
+                            : Icons.gpp_bad,
+                      ),
+                      label: const Text('Owner Mode'),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: IndexedStack(index: _index, children: pages),
+                ),
+              ],
+            )
+          : IndexedStack(index: _index, children: pages),
+      bottomNavigationBar: wide
+          ? null
+          : NavigationBar(
+              selectedIndex: _index,
+              onDestinationSelected: _selectDestination,
+              destinations: <NavigationDestination>[
+                const NavigationDestination(
+                  icon: Icon(Icons.chat_bubble_outline),
+                  selectedIcon: Icon(Icons.chat_bubble),
+                  label: 'Chat',
+                ),
+                const NavigationDestination(
+                  icon: Icon(Icons.dashboard_customize_outlined),
+                  selectedIcon: Icon(Icons.dashboard_customize),
+                  label: 'Experience',
+                ),
+                NavigationDestination(
+                  icon: Icon(
+                    ownerAvailable
+                        ? Icons.admin_panel_settings_outlined
+                        : Icons.gpp_bad_outlined,
+                  ),
+                  selectedIcon: Icon(
+                    ownerAvailable ? Icons.admin_panel_settings : Icons.gpp_bad,
+                  ),
+                  label: 'Owner Mode',
+                ),
+              ],
+            ),
+    );
+    if (!qaPreview) return shell;
+    return Banner(
+      message: 'OWNER-RISK QA — SECURITY EVIDENCE WAIVED',
+      location: BannerLocation.topEnd,
+      color: Colors.deepOrange,
+      child: shell,
+    );
+  }
+
+  void _selectDestination(int value) {
+    if (value == _index) return;
+    setState(() => _index = value);
   }
 }
 

@@ -1104,7 +1104,7 @@ def check_chat_workspace_ux() -> None:
 
     if "home: ChatStudio(" not in ui:
         shell = read(ROOT / "lib/product/p2_app_shell.dart")
-        shell_is_chat_first = (
+        p2_shell_is_chat_first = (
             "home: P2KristinShell(" in ui
             and "chat: ChatStudio(" in ui
             and "var _index = 0;" in shell
@@ -1114,10 +1114,22 @@ def check_chat_workspace_ux() -> None:
                 "widget.ownerMode.buildWorkspace(",
             )
         )
-        if not shell_is_chat_first:
+        integrated_shell_is_chat_first = (
+            "home: KristinMainShell(" in ui
+            and "chat: ChatStudio(" in ui
+            and "var _index = 0;" in ui
+            and source_contains(
+                ui,
+                "final pages = <Widget>[ widget.chat, "
+                "P5InformationArchitecturePrototype( "
+                "controller: _experienceController, ), "
+                "widget.ownerMode.buildWorkspace(",
+            )
+        )
+        if not (p2_shell_is_chat_first or integrated_shell_is_chat_first):
             failures.append(
-                "the application does not open in ChatStudio or the "
-                "governed chat-first P2 shell"
+                "the application does not open in ChatStudio, the governed "
+                "chat-first P2 shell, or the governed chat-first integrated shell"
             )
 
     primary = re.search(

@@ -64,6 +64,7 @@
     "test/product/p2_filesystem_service_test.dart",
     "test/product/p2_fixture_runtime_unit_test.dart",
     "test/product/p2_host_operations_test.dart",
+    "test/product/p2_owner_mode_failure_presentation_test.dart",
     "test/product/p2_owner_mode_test.dart",
     "test/product/p2_owner_risk_contract_test.dart",
     "test/product/p2_owner_risk_runtime_smoke_test.dart",
