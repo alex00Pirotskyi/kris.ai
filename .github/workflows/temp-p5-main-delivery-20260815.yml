@@ -38,6 +38,14 @@ jobs:
           cache: true
           pub-cache: true
 
+      - name: Set up locked Node runtime
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+
       - name: Materialize, validate, and publish runnable Product candidate
         shell: bash
         run: |
@@ -75,6 +83,20 @@ jobs:
               '    run("python3", "tool/p1a_text_eof_contract_test.py", "--project", ".")\n'
               '    run("python3", "tool/dart_format_scope.py", "--check")\n',
               'remove duplicate dependency resolution',
+          )
+          replace_one(
+              '    run("npm", "test", "--prefix", "automation_host")\n',
+              '    run(\n'
+              '        "npm",\n'
+              '        "ci",\n'
+              '        "--prefix",\n'
+              '        "automation_host",\n'
+              '        "--ignore-scripts",\n'
+              '        "--no-audit",\n'
+              '        "--no-fund",\n'
+              '    )\n'
+              '    run("npm", "test", "--prefix", "automation_host")\n',
+              'locked automation-host install',
           )
           replace_one(
               "      return 'The Kristin Authority Service is not installed or running. Install or start it, then restart Kristin. Owner Mode stayed locked and no host authority was granted.';",
