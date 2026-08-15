@@ -42,6 +42,108 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -c 'from pathlib import Path; p=Path("tool/temp_p5_main_delivery_20260815.py"); t=p.read_text(encoding="utf-8"); old="    run(\"dart\", \"format\", *format_paths)\n    run(\"python3\", \"tool/p1a_refresh_source_manifest.py\", \".\")\n"; new="    run(\"flutter\", \"pub\", \"get\")\n    run(\"dart\", \"format\", *format_paths)\n    run(\"python3\", \"tool/p1a_refresh_source_manifest.py\", \".\")\n"; late="    run(\"python3\", \"tool/p1a_text_eof_contract_test.py\", \"--project\", \".\")\n    run(\"flutter\", \"pub\", \"get\")\n    run(\"python3\", \"tool/dart_format_scope.py\", \"--check\")\n"; late_new="    run(\"python3\", \"tool/p1a_text_eof_contract_test.py\", \"--project\", \".\")\n    run(\"python3\", \"tool/dart_format_scope.py\", \"--check\")\n"; assert t.count(old)==1 and t.count(late)==1; p.write_text(t.replace(old,new,1).replace(late,late_new,1),encoding="utf-8",newline="\n")'
-          python3 -c 'from pathlib import Path; p=Path("tool/temp_p5_main_delivery_20260815.py"); t=p.read_text(encoding="utf-8"); old="p5_information_architecture/p5_controller.dart\x27;\\n"; new="p5_information_architecture/p5_controller.dart\x27\\n    hide P5IterableFirstOrNull;\\n"; assert t.count(old)==1; p.write_text(t.replace(old,new,1),encoding="utf-8",newline="\n")'
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tool/temp_p5_main_delivery_20260815.py')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_one(old: str, new: str, label: str) -> None:
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f'{label}: expected one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_one(
+              'import os\nimport re\n',
+              'import json\nimport os\nimport re\n',
+              'json import',
+          )
+          replace_one(
+              '    run("dart", "format", *format_paths)\n'
+              '    run("python3", "tool/p1a_refresh_source_manifest.py", ".")\n',
+              '    run("flutter", "pub", "get")\n'
+              '    run("dart", "format", *format_paths)\n'
+              '    run("python3", "tool/p1a_refresh_source_manifest.py", ".")\n',
+              'dependency-before-format order',
+          )
+          replace_one(
+              '    run("python3", "tool/p1a_text_eof_contract_test.py", "--project", ".")\n'
+              '    run("flutter", "pub", "get")\n'
+              '    run("python3", "tool/dart_format_scope.py", "--check")\n',
+              '    run("python3", "tool/p1a_text_eof_contract_test.py", "--project", ".")\n'
+              '    run("python3", "tool/dart_format_scope.py", "--check")\n',
+              'remove duplicate dependency resolution',
+          )
+          replace_one(
+              "      return 'The Kristin Authority Service is not installed or running. Install or start it, then restart Kristin. Owner Mode stayed locked and no host authority was granted.';",
+              "      return 'The Kristin Authority Service is unavailable. Please install or start it, then restart Kristin. Owner Mode stayed locked and no host authority was granted.';",
+              'actionable Owner Mode copy',
+          )
+          replace_one(
+              '    rebuild_from_main(transport_head)\n'
+              '    integrate_main_shell()\n',
+              '''    rebuild_from_main(transport_head)
+    controller_path = (
+        REPO_ROOT
+        / "lib/product/p5_information_architecture/p5_controller.dart"
+    )
+    controller_text = controller_path.read_text(encoding="utf-8")
+    controller_text = replace_once(
+        controller_text,
+        "extension P5IterableFirstOrNull<T> on Iterable<T> {",
+        "extension _P5IterableFirstOrNull<T> on Iterable<T> {",
+        "private P5 iterable extension",
+    )
+    controller_path.write_text(
+        controller_text,
+        encoding="utf-8",
+        newline="\\n",
+    )
+    integrate_main_shell()
+''',
+              'controller extension isolation',
+          )
+          inventory_function = '''
+
+def update_p2_source_inventory() -> None:
+    path = REPO_ROOT / "config/p2_source_inventory.v1.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    test_paths = payload.get("testDart")
+    if not isinstance(test_paths, list):
+        raise RuntimeError("P2 source inventory testDart is not a list")
+    entry = "test/product/p2_owner_mode_failure_presentation_test.dart"
+    if entry not in test_paths:
+        test_paths.append(entry)
+    payload["testDart"] = sorted(str(item) for item in test_paths)
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\\n",
+        encoding="utf-8",
+        newline="\\n",
+    )
+'''
+          replace_one(
+              '\n\ndef validate_product() -> None:\n',
+              inventory_function + '\n\ndef validate_product() -> None:\n',
+              'P2 source inventory function',
+          )
+          replace_one(
+              '    write_regressions()\n'
+              '    validate_product()\n',
+              '    write_regressions()\n'
+              '    update_p2_source_inventory()\n'
+              '    validate_product()\n',
+              'P2 source inventory call',
+          )
+          replace_one(
+              '    exact = {\n'
+              '        "SOURCE_MANIFEST.sha256",\n',
+              '    exact = {\n'
+              '        "SOURCE_MANIFEST.sha256",\n'
+              '        "config/p2_source_inventory.v1.json",\n',
+              'authorized P2 inventory scope',
+          )
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
           python3 tool/temp_p5_main_delivery_20260815.py
