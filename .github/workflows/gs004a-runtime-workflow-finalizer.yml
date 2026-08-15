@@ -41,6 +41,7 @@ jobs:
           set -euo pipefail
           test "$(git branch --show-current)" = 'agent/gpt-gold/gs-004a-runtime-workflow-sanitation'
 
+          cp tool/gs004a_publish_candidate_object.py "$RUNNER_TEMP/gs004a_publish_candidate_object.py"
           python tool/gs004a_pin_runtime_actions.py .
           ruby tool/workflow_integrity_test.rb .
           python tool/p1a_refresh_source_manifest.py .
@@ -82,7 +83,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python tool/gs004a_publish_candidate_object.py .
+        run: python "$RUNNER_TEMP/gs004a_publish_candidate_object.py" .
 
       - name: Print connector handoff
         shell: bash
