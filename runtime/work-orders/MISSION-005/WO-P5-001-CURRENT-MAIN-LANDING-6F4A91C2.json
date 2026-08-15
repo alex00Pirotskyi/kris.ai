@@ -35,7 +35,7 @@
   "createdBy": "WRK-20260815T103835Z-6f4a91c2",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "GPT-5.6-PRO-6F4A91C2:EXACT_P5_LANDING_AUTHORITY_ACQUIRED",
+  "lastActor": "GPT-5.6-PRO-6F4A91C2:PROTECTED_MAIN_SQUASH_LANDED_POST_MAIN_VALIDATION_RUNNING",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Bind canonical Product PR #72 to the exact clean P5-001 candidate e43f76203a7b96e33d1f324b98d134583ca00a80 / tree 13360a13e915ef798b07f977ab490626a6b042fb, complete genuine owner-context exact-head CI, merge through the normal protected-main squash endpoint with an expected-head guard when repository policy permits, validate the actual landed main commit, and close stale P5 ownership without implying P5-002+, independent R2, support, production, release, or GA.",
@@ -52,10 +52,10 @@
     "no P5-002+, accessibility certification, support, production, release, or GA promotion is inferred"
   ],
   "roadmapTask": "P5-001",
-  "runtimeGeneration": 618,
+  "runtimeGeneration": 619,
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-15T10:40:00Z",
+  "updatedAt": "2026-08-15T11:22:00Z",
   "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2"
 }

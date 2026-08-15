@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000619-P5_PROTECTED_MAIN_LANDING_STARTED",
+  "eventType": "PRODUCT_PR_LANDING_STARTED",
+  "mission": "MISSION-005",
+  "payload": {
+    "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2",
+    "productPr": 72,
+    "mergeMethod": "squash",
+    "preLandingHead": "e43f76203a7b96e33d1f324b98d134583ca00a80",
+    "landedMainCommit": "8bc2d61bbaa35a1bf10285cbb9993a17e50c1cb2",
+    "landedMainTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+    "postMainProductGatesRun": 31881603848,
+    "workOrderStatus": "VALIDATING",
+    "productPrStatus": "LANDING",
+    "truthBoundary": "Protected-main source landing is real and tree-exact. Terminal LANDED_MAIN waits for actual-main tri-platform validation; acceptance, independent R2, P5-002+, accessibility certification, support, production, release, and GA remain separate."
+  },
+  "recordedAt": "2026-08-15T11:22:00Z",
+  "runtimeGeneration": 619,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260815T103835Z-6f4a91c2",
+  "workOrderId": "WO-P5-001-CURRENT-MAIN-LANDING-6F4A91C2"
+}
