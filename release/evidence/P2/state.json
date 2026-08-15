@@ -1,0 +1,52 @@
+{
+  "acceptedDecisionTasks": [
+    "P2-004"
+  ],
+  "activeTaskRecords": {
+    "P2-004": "release/evidence/P2-004/state.json"
+  },
+  "behaviorCertifiedTasks": [],
+  "claimLevel": "VERIFIED_SOURCE",
+  "effectiveAt": "2026-08-14T05:23:56Z",
+  "knownDebts": [
+    "P2-005 interactive PTY behavior is not certified.",
+    "P2-006 process-tree behavior is not certified.",
+    "macOS node-pty spawn-helper packaging repair is not closed.",
+    "Windows automation-host startup optimization is not closed."
+  ],
+  "phase": "P2",
+  "phaseCompletionEligible": false,
+  "platformQualified": false,
+  "productionSupported": false,
+  "recordRole": "active",
+  "recordType": "P2PhaseState",
+  "releaseSupported": false,
+  "schemaVersion": "1.0.0",
+  "sourceCommit": "67e6e0314877d4ff3233d3e11e0743dd7562de55",
+  "sourceTree": "c8326296186720b3f8554574b87eddb859f70109",
+  "status": "incomplete",
+  "taskStates": {
+    "P2-001": "source_only",
+    "P2-002": "source_only",
+    "P2-003": "source_only",
+    "P2-004": "accepted_decision",
+    "P2-005": "source_only",
+    "P2-006": "source_only",
+    "P2-007": "source_only",
+    "P2-008": "source_only",
+    "P2-009": "source_only",
+    "P2-010": "source_only",
+    "P2-011": "source_only",
+    "P2-012": "source_only",
+    "P2-013": "source_only",
+    "P2-014": "source_only"
+  },
+  "truthBoundary": {
+    "acceptedDecisionDoesNotCompletePhase": true,
+    "gaPromoted": false,
+    "platformSupportPromoted": false,
+    "productionReadinessPromoted": false,
+    "releaseSupportPromoted": false,
+    "sourceOnlyIsNotBehavioralProof": true
+  }
+}

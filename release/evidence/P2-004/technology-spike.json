@@ -4,5 +4,10 @@
     "status": "blocked_external_tri_platform_measurement_required"
   },
   "schemaVersion": "1.0.0",
-  "sourceOnly": true
+  "sourceOnly": true,
+  "recordType": "P2TechnologySpike",
+  "recordRole": "historical",
+  "stateAuthority": false,
+  "supersededBy": "release/evidence/P2-004/state.json",
+  "claimLevel": "IMPLEMENTED_SOURCE"
 }

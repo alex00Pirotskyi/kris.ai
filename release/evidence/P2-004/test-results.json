@@ -11,5 +11,10 @@
       "name": "measured automation-host comparison",
       "status": "source_only"
     }
-  ]
+  ],
+  "recordType": "P2TaskDiagnostic",
+  "recordRole": "diagnostic",
+  "stateAuthority": false,
+  "activeState": "release/evidence/P2-004/state.json",
+  "claimLevel": "IMPLEMENTED_SOURCE"
 }

@@ -23,5 +23,9 @@
   "triOsBehavioralEvidence": "pending",
   "ownerApproval": "pending",
   "independentSecurityReview": "pending",
-  "sourceOnlyIsNotBehavioralProof": true
+  "sourceOnlyIsNotBehavioralProof": true,
+  "recordType": "P2LegacyPhaseManifest",
+  "recordRole": "historical",
+  "stateAuthority": false,
+  "supersededBy": "release/evidence/P2/state.json"
 }

@@ -1,0 +1,369 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.kris.ai/schemas/p2_evidence_state.v1.schema.json",
+  "title": "KRIS.AI P2 evidence state v1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/taskState"
+    },
+    {
+      "$ref": "#/$defs/phaseState"
+    }
+  ],
+  "$defs": {
+    "gitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "claimLevel": {
+      "type": "string",
+      "enum": [
+        "IMPLEMENTED_SOURCE",
+        "VERIFIED_SOURCE",
+        "BEHAVIOR_VERIFIED",
+        "PLATFORM_QUALIFIED",
+        "RELEASE_CANDIDATE",
+        "SUPPORTED",
+        "GA"
+      ]
+    },
+    "recordRole": {
+      "type": "string",
+      "enum": [
+        "active",
+        "historical",
+        "diagnostic",
+        "superseded",
+        "release_receipt"
+      ]
+    },
+    "taskState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "schemaVersion",
+        "taskId",
+        "taskKind",
+        "recordRole",
+        "status",
+        "claimLevel",
+        "sourceCommit",
+        "sourceTree",
+        "effectiveAt",
+        "platform",
+        "packagedExecution",
+        "productBehaviorObserved",
+        "measurementObserved",
+        "completionEligible",
+        "phaseCompletionEligible",
+        "platformQualified",
+        "releaseSupported",
+        "productionSupported",
+        "selectedCandidate",
+        "evidenceRefs",
+        "supersedes",
+        "downstreamTasks",
+        "truthBoundary"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "P2TaskState"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "taskId": {
+          "type": "string",
+          "pattern": "^P2-[0-9]{3}$"
+        },
+        "taskKind": {
+          "type": "string",
+          "enum": [
+            "architecture_decision",
+            "product_capability",
+            "operational_documentation"
+          ]
+        },
+        "recordRole": {
+          "const": "active"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "source_only",
+            "accepted_decision",
+            "blocked",
+            "behavior_verified",
+            "platform_qualified",
+            "supported",
+            "ga"
+          ]
+        },
+        "claimLevel": {
+          "$ref": "#/$defs/claimLevel"
+        },
+        "sourceCommit": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "sourceTree": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "effectiveAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "source",
+            "windows",
+            "macos",
+            "linux",
+            "cross_platform_measurement"
+          ]
+        },
+        "packagedExecution": {
+          "type": "boolean"
+        },
+        "productBehaviorObserved": {
+          "type": "boolean"
+        },
+        "measurementObserved": {
+          "type": "boolean"
+        },
+        "completionEligible": {
+          "type": "boolean"
+        },
+        "phaseCompletionEligible": {
+          "type": "boolean"
+        },
+        "platformQualified": {
+          "type": "boolean"
+        },
+        "releaseSupported": {
+          "type": "boolean"
+        },
+        "productionSupported": {
+          "type": "boolean"
+        },
+        "selectedCandidate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[^/].+"
+          }
+        },
+        "supersedes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[^/].+"
+          }
+        },
+        "downstreamTasks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "P2-005",
+            "P2-006"
+          ],
+          "properties": {
+            "P2-005": {
+              "type": "boolean"
+            },
+            "P2-006": {
+              "type": "boolean"
+            }
+          }
+        },
+        "truthBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "p2PhaseComplete",
+            "platformSupportPromoted",
+            "releaseSupportPromoted",
+            "productionReadinessPromoted",
+            "gaPromoted"
+          ],
+          "properties": {
+            "p2PhaseComplete": {
+              "type": "boolean"
+            },
+            "platformSupportPromoted": {
+              "type": "boolean"
+            },
+            "releaseSupportPromoted": {
+              "type": "boolean"
+            },
+            "productionReadinessPromoted": {
+              "type": "boolean"
+            },
+            "gaPromoted": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "phaseState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "schemaVersion",
+        "phase",
+        "recordRole",
+        "status",
+        "claimLevel",
+        "sourceCommit",
+        "sourceTree",
+        "effectiveAt",
+        "taskStates",
+        "acceptedDecisionTasks",
+        "behaviorCertifiedTasks",
+        "phaseCompletionEligible",
+        "platformQualified",
+        "releaseSupported",
+        "productionSupported",
+        "activeTaskRecords",
+        "knownDebts",
+        "truthBoundary"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "P2PhaseState"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "phase": {
+          "const": "P2"
+        },
+        "recordRole": {
+          "const": "active"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "incomplete",
+            "complete"
+          ]
+        },
+        "claimLevel": {
+          "$ref": "#/$defs/claimLevel"
+        },
+        "sourceCommit": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "sourceTree": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "effectiveAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "taskStates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "source_only",
+              "accepted_decision",
+              "blocked",
+              "behavior_verified",
+              "platform_qualified",
+              "supported",
+              "ga"
+            ]
+          }
+        },
+        "acceptedDecisionTasks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^P2-[0-9]{3}$"
+          }
+        },
+        "behaviorCertifiedTasks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^P2-[0-9]{3}$"
+          }
+        },
+        "phaseCompletionEligible": {
+          "type": "boolean"
+        },
+        "platformQualified": {
+          "type": "boolean"
+        },
+        "releaseSupported": {
+          "type": "boolean"
+        },
+        "productionSupported": {
+          "type": "boolean"
+        },
+        "activeTaskRecords": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[^/].+"
+          }
+        },
+        "knownDebts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "truthBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceOnlyIsNotBehavioralProof",
+            "acceptedDecisionDoesNotCompletePhase",
+            "platformSupportPromoted",
+            "releaseSupportPromoted",
+            "productionReadinessPromoted",
+            "gaPromoted"
+          ],
+          "properties": {
+            "sourceOnlyIsNotBehavioralProof": {
+              "type": "boolean"
+            },
+            "acceptedDecisionDoesNotCompletePhase": {
+              "type": "boolean"
+            },
+            "platformSupportPromoted": {
+              "type": "boolean"
+            },
+            "releaseSupportPromoted": {
+              "type": "boolean"
+            },
+            "productionReadinessPromoted": {
+              "type": "boolean"
+            },
+            "gaPromoted": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}
