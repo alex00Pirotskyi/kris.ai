@@ -38,9 +38,8 @@ jobs:
           cache: true
           pub-cache: true
 
-      - name: Materialize, validate, and publish runnable Product candidate
+      - name: Finalize, validate, and publish clean runnable Product candidate
         shell: bash
         run: |
           set -euo pipefail
-          python3 tool/temp_p5_patch_materializer_20260815.py
-          python3 tool/temp_p5_main_delivery_20260815.py
+          python3 tool/temp_p5_release_validator_finalize_20260815.py
