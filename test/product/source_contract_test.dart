@@ -126,18 +126,12 @@ void main() {
     test('only the governed library source is analyzer-visible', () {
       const expected = <String>{
         'lib/main.dart',
-        'lib/p5_ia_preview.dart',
-        'lib/product/p5_information_architecture/p5_components.dart',
-        'lib/product/p5_information_architecture/p5_controller.dart',
-        'lib/product/p5_information_architecture/p5_fixtures.dart',
-        'lib/product/p5_information_architecture/p5_models.dart',
-        'lib/product/p5_information_architecture/p5_prototype.dart',
-        'lib/product/p5_information_architecture/p5_support_workspaces.dart',
-        'lib/product/p5_information_architecture/p5_task_workspaces.dart',
-        'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
         'lib/product/agent_decision.dart',
         'lib/product/agent_protocol.dart',
         'lib/product/api_server.dart',
+        'lib/product/browser/browser_runtime.dart',
+        'lib/product/browser/browser_runtime_bundle.dart',
+        'lib/product/browser/browser_runtime_process.dart',
         'lib/product/chat_studio.dart',
         'lib/product/crypto_utils.dart',
         'lib/product/deployment_support.dart',
@@ -155,6 +149,8 @@ void main() {
         'lib/product/interoperability_v19.dart',
         'lib/product/knowledge_memory_v2.dart',
         'lib/product/mcp.dart',
+        'lib/product/model/model.dart',
+        'lib/product/model/model_registry.dart',
         'lib/product/models_research.dart',
         'lib/product/planning_runtime.dart',
         'lib/product/product_runtime.dart',
@@ -210,6 +206,14 @@ void main() {
         'lib/product/p2_runtime_resource_resolver.dart',
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
+        'lib/product/p5_information_architecture/p5_components.dart',
+        'lib/product/p5_information_architecture/p5_controller.dart',
+        'lib/product/p5_information_architecture/p5_fixtures.dart',
+        'lib/product/p5_information_architecture/p5_models.dart',
+        'lib/product/p5_information_architecture/p5_prototype.dart',
+        'lib/product/p5_information_architecture/p5_support_workspaces.dart',
+        'lib/product/p5_information_architecture/p5_task_workspaces.dart',
+        'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
         'lib/product/mcp_protocol.dart',
       };
       final actual = activeDartFiles()
@@ -219,18 +223,18 @@ void main() {
       expect(actual.length, expected.length);
     });
 
-    test('application opens chat-first through the governed P2 shell', () {
+    test('application opens chat-first through the integrated experience shell',
+        () {
       final ui = source('lib/product/ui.dart');
-      final shell = source('lib/product/p2_app_shell.dart');
-      expect(ui, contains('home: P2KristinShell('));
-      expect(ui, contains('chat: ChatStudio('));
-      expect(shell, contains('var _index = 0;'));
-      final chatOffset = shell.indexOf('widget.chat,');
-      final ownerOffset = shell.indexOf(
-        'widget.ownerMode.buildWorkspace(',
-      );
+      expect(ui, contains('home: KristinMainShell('));
+      expect(ui, contains('var _index = 0;'));
+      final chatOffset = ui.indexOf('widget.chat,');
+      final experienceOffset =
+          ui.indexOf('P5InformationArchitecturePrototype(');
+      final ownerOffset = ui.indexOf('widget.ownerMode.buildWorkspace(');
       expect(chatOffset, greaterThanOrEqualTo(0));
-      expect(ownerOffset, greaterThan(chatOffset));
+      expect(experienceOffset, greaterThan(chatOffset));
+      expect(ownerOffset, greaterThan(experienceOffset));
     });
 
     test('stale-source migration consumes governed inventories', () {
@@ -371,11 +375,11 @@ void main() {
     test('the application opens in the chat-first workspace', () {
       final ui = source('lib/product/ui.dart');
       final chat = source('lib/product/chat_studio.dart');
-      final p2Shell = source('lib/product/p2_app_shell.dart');
-      expect(ui, contains('home: P2KristinShell('));
+      final shell = source('lib/product/ui.dart');
+      expect(ui, contains('home: KristinMainShell('));
       expect(ui, contains('chat: ChatStudio('));
-      expect(p2Shell, contains('var _index = 0;'));
-      expect(p2Shell, contains('widget.chat,'));
+      expect(shell, contains('var _index = 0;'));
+      expect(shell, contains('widget.chat,'));
       expect(chat, contains("label: 'Chats'"));
       expect(chat, contains("label: 'Project Manager'"));
       expect(chat, contains("'BUILD & DEBUG'"));

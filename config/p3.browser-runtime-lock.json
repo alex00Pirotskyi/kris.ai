@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "nodeVersion": "24.18.0",
+  "automationHostPackageVersion": "2.0.0-p3.1",
+  "playwrightCoreVersion": "1.61.1",
+  "packageLockSha256": "72d49987b5bcd7244af3934440733ae8b4462162c8c77a3595f455067cc6c8a2",
+  "browserEngine": "chromium",
+  "browserRevision": "1228",
+  "browserVersion": "149.0.7827.55",
+  "browserInstallPhase": "packaging_only",
+  "runtimeBrowserNetworkInstall": false,
+  "globalNodeRuntimeRequired": false
+}

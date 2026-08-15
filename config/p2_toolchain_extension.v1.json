@@ -2,7 +2,7 @@
   "authority": "P2-toolchain-extension-v1",
   "automationHostPackageLock": {
     "path": "automation_host/package-lock.json",
-    "sha256": "b23e7e78736ed689317e5edb2e346fb5de31230863ea42d2380d297c1cd3f428"
+    "sha256": "72d49987b5bcd7244af3934440733ae8b4462162c8c77a3595f455067cc6c8a2"
   },
   "baseAuthority": {
     "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
@@ -14,7 +14,7 @@
     "pinnedBy": "flutter-sdk",
     "version": "3.12.2"
   },
-  "declaredInputFingerprint": "95241b65e9eea2fcec9c4a52e336d41d2a867736c65384cec0440bd9ca186168",
+  "declaredInputFingerprint": "9dbef7d492717f527afcecfbceaa44003c12cf5cb98b0d25e21b1f1d4f486b62",
   "flutter": {
     "channel": "stable",
     "version": "3.44.8"

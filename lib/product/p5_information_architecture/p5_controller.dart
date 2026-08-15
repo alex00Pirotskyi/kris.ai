@@ -720,7 +720,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
   }
 }
 
-extension P5IterableFirstOrNull<T> on Iterable<T> {
+extension _P5IterableFirstOrNull<T> on Iterable<T> {
   T? get firstOrNull {
     final iterator = this.iterator;
     return iterator.moveNext() ? iterator.current : null;

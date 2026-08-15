@@ -10,7 +10,6 @@ void main() {
           .listSync(recursive: true)
           .whereType<File>()
           .where((file) => file.path.endsWith('.dart')),
-      File('lib/p5_ia_preview.dart'),
     ];
     const forbidden = <String>[
       "import 'dart:io'",

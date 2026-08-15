@@ -165,54 +165,94 @@
       "rationale": "Executes deterministic mutation tests that reject unknown levels, missing bindings, invalid predecessor ordering, report ambiguity, and invalid actual execution reports."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.navigation.primary-workspaces"
+      "testId": "tc.p4-001.request-schema",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.simple-task"
+      "testId": "tc.p4-001.result-schema",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.existing-run"
+      "testId": "tc.p4-001.page-schema",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.owner-mode"
+      "testId": "tc.p4-001.provider-error-schema",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.flow.verification-center"
+      "testId": "tc.p4-001.url-fail-closed",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.state.transitions"
+      "testId": "tc.p4-001.credential-rejection",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.mode.progressive-disclosure"
+      "testId": "tc.p4-001.secret-normalization",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.capability.honest-unavailable"
+      "testId": "tc.p4-001.provider-metadata-isolation",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.keyboard.primary-flow"
+      "testId": "tc.p4-001.stable-query-identity",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     },
     {
-      "levelId": "unit",
-      "rationale": "Deterministic in-memory presentation behavior capped at SOURCE_FOUNDATION support.",
-      "testId": "tc.p5-001.semantics.primary-flow"
+      "testId": "tc.p4-001.stable-result-identity",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.cursor-provider-binding",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.capability-negotiation",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.rate-limit-representation",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.partial-failure-representation",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.fixture-provider-parity",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.network-free-determinism",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.unfetched-snippet-classification",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
+    },
+    {
+      "testId": "tc.p4-001.normalized-result-state-preservation",
+      "levelId": "architecture_lint",
+      "rationale": "P4-001 canonical source-contract validation; source-only binding grants no behavioral or platform support."
     }
   ],
   "pendingMigrationBindings": [

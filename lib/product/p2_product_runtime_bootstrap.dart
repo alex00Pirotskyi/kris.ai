@@ -28,6 +28,19 @@ final class P2ProductRuntimeOwnerModeHandle {
       runtime?.authority.completionEligible == true &&
       runtime?.authority.authorityKind == 'p1-isolated-authority-service-v2';
 
+  String get diagnosticCode =>
+      _normalizedFailureCode(failureCode ?? 'owner_runtime_start_failed');
+
+  String get recoveryMessage {
+    if (diagnosticCode == 'merged_p1a_service_unavailable') {
+      return 'The Kristin Authority Service is unavailable. Please install or start it, then restart Kristin. Owner Mode stayed locked and no host authority was granted.';
+    }
+    if (diagnosticCode == 'product_runtime_p2_not_initialized') {
+      return 'Owner Mode has not finished starting. Restart Kristin and open Owner Mode again. No host authority was granted.';
+    }
+    return 'Kristin could not start Owner Mode safely. Review the diagnostic code, repair the local runtime, and restart Kristin. No host authority was granted.';
+  }
+
   Widget buildWorkspace({Key? key}) {
     final active = runtime;
     if (active != null) {
@@ -51,12 +64,12 @@ final class P2ProductRuntimeOwnerModeHandle {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Kristin failed closed because the isolated P1 authority service or the application-owned P2 runtime bundle was unavailable. No host authority was granted.',
+                Text(
+                  recoveryMessage,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                SelectableText('Status: ${failureCode ?? 'unknown'}'),
+                SelectableText('Diagnostic: $diagnosticCode'),
               ],
             ),
           ),
@@ -95,7 +108,22 @@ final class P2ProductRuntimeOwnerModeHandle {
   ) =>
       P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
   static P2ProductRuntimeOwnerModeHandle blocked(String code) =>
-      P2ProductRuntimeOwnerModeHandle._(runtime: null, failureCode: code);
+      P2ProductRuntimeOwnerModeHandle._(
+        runtime: null,
+        failureCode: _normalizedFailureCode(code),
+      );
+
+  static String _normalizedFailureCode(String code) {
+    final normalized = code
+        .trim()
+        .replaceFirst(
+          RegExp(r'^Bad[ _]state[:_ ]+', caseSensitive: false),
+          '',
+        )
+        .replaceAll(RegExp(r'[^A-Za-z0-9_.:-]'), '_')
+        .replaceAll(RegExp(r'_+'), '_');
+    return normalized.isEmpty ? 'owner_runtime_start_failed' : normalized;
+  }
 }
 
 /// Starts P2 from application-owned resources and ProductRuntime's merged P1A service handle. It does not read P1 policy/config from the source
@@ -297,6 +325,10 @@ final class P2ProductRuntimeBootstrap {
   }
 
   static String _safeFailureCode(Object error) {
+    if (error is StateError &&
+        error.message == 'merged_p1a_service_unavailable') {
+      return 'merged_p1a_service_unavailable';
+    }
     final value = '$error';
     if (RegExp(
       r'(secret|token|password|credential|api.?key|private.?key|bearer)',
