@@ -6,6 +6,7 @@ on:
       - agent/gpt-gold/gs-004a-runtime-workflow-sanitation
     paths:
       - .github/workflows/gs004a-runtime-workflow-finalizer.yml
+      - tool/gs004a_pin_runtime_actions.py
 
 permissions:
   contents: write
@@ -33,15 +34,18 @@ jobs:
           python-version: '3.12.10'
           check-latest: false
 
-      - name: Validate runtime workflow sanitation and finalize manifest
+      - name: Pin runtime Actions, validate sanitation, and finalize manifest
         shell: bash
         run: |
           set -euo pipefail
           test "$(git branch --show-current)" = 'agent/gpt-gold/gs-004a-runtime-workflow-sanitation'
 
+          python tool/gs004a_pin_runtime_actions.py .
           ruby tool/workflow_integrity_test.rb .
           python tool/p1a_refresh_source_manifest.py .
-          rm .github/workflows/gs004a-runtime-workflow-finalizer.yml
+          rm \
+            .github/workflows/gs004a-runtime-workflow-finalizer.yml \
+            tool/gs004a_pin_runtime_actions.py
           python tool/p1a_refresh_source_manifest.py .
 
           ruby tool/workflow_integrity_test.rb .
@@ -49,13 +53,30 @@ jobs:
 
           mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
           printf 'CHANGED_PATH=%s\n' "${paths[@]}"
-          test "${#paths[@]}" -eq 2
-          test "${paths[0]}" = '.github/workflows/gs004a-runtime-workflow-finalizer.yml'
-          test "${paths[1]}" = 'SOURCE_MANIFEST.sha256'
+          test "${#paths[@]}" -eq 14
+          expected=(
+            '.github/workflows/gs004a-runtime-workflow-finalizer.yml'
+            '.github/workflows/mission-execution-control.yml'
+            '.github/workflows/mission-execution-materialize.yml'
+            '.github/workflows/mission-v15-connector-authority-relay.yml'
+            '.github/workflows/mission-v15-governance-drift.yml'
+            '.github/workflows/mission-v15-helper-gate.yml'
+            '.github/workflows/mission-v15-hygiene.yml'
+            '.github/workflows/mission-v15-main-landing.yml'
+            '.github/workflows/mission-v15-product-integration.yml'
+            '.github/workflows/mission-v15-runtime-invariants.yml'
+            '.github/workflows/mission-v15-scale.yml'
+            '.github/workflows/v32-exact-source-import.yml'
+            'SOURCE_MANIFEST.sha256'
+            'tool/gs004a_pin_runtime_actions.py'
+          )
+          for index in "${!expected[@]}"; do
+            test "${paths[$index]}" = "${expected[$index]}"
+          done
 
           git config user.name 'KRIS.AI Gold Standard Finalizer'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git diff --cached --check
-          git commit -m 'chore(runtime): finalize workflow sanitation manifest'
+          git commit -m 'chore(runtime): pin workflow dependencies and finalize sanitation'
           git push origin HEAD:refs/heads/agent/gpt-gold/gs-004a-runtime-workflow-sanitation
