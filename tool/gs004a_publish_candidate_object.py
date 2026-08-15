@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Publish an unreferenced exact Git candidate through the Git Data API.
+"""Publish exact changed-file blobs for a connector-owned Git tree handoff.
 
-The workflow token may create Git objects but is intentionally not allowed to
-move a ref containing workflow changes. The repository connector performs the
-final reviewed ref movement after inspecting the candidate SHA/tree.
+The workflow token may publish immutable blob objects, but it intentionally does
+not create a workflow-changing tree or move a ref. The connected repository
+authority consumes the logged base tree, parent, and entries.
 """
 from __future__ import annotations
 
@@ -28,24 +28,29 @@ def git(project: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
-def api(repository: str, token: str, path: str, payload: dict) -> dict:
+def create_blob(repository: str, token: str, data: bytes) -> str:
     request = urllib.request.Request(
-        f"https://api.github.com/repos/{repository}{path}",
-        data=json.dumps(payload).encode("utf-8"),
+        f"https://api.github.com/repos/{repository}/git/blobs",
+        data=json.dumps(
+            {
+                "content": base64.b64encode(data).decode("ascii"),
+                "encoding": "base64",
+            }
+        ).encode("utf-8"),
         method="POST",
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
-            "User-Agent": "kris-ai-gs004a-candidate-publisher",
+            "User-Agent": "kris-ai-gs004a-blob-handoff",
             "X-GitHub-Api-Version": "2022-11-28",
         },
     )
     with urllib.request.urlopen(request, timeout=120) as response:
         value = json.loads(response.read().decode("utf-8"))
-    if not isinstance(value, dict):
-        raise RuntimeError(f"GitHub API object required for {path}")
-    return value
+    if not isinstance(value, dict) or not isinstance(value.get("sha"), str):
+        raise RuntimeError("GitHub blob response missing SHA")
+    return value["sha"]
 
 
 def status_paths(project: Path) -> list[tuple[str, bool]]:
@@ -69,9 +74,9 @@ def main() -> int:
     base_tree = git(project, "rev-parse", "HEAD^{tree}")
     paths = status_paths(project)
     if not paths:
-        raise SystemExit("candidate publication requires a non-empty working-tree delta")
+        raise SystemExit("blob handoff requires a non-empty working-tree delta")
 
-    entries: list[dict] = []
+    entries: list[dict[str, object]] = []
     for relative, deleted in paths:
         if deleted:
             entries.append(
@@ -79,49 +84,27 @@ def main() -> int:
             )
             continue
         path = project / relative
-        data = path.read_bytes()
-        blob = api(
-            repository,
-            token,
-            "/git/blobs",
-            {
-                "content": base64.b64encode(data).decode("ascii"),
-                "encoding": "base64",
-            },
-        )
         mode = "100755" if os.access(path, os.X_OK) else "100644"
         entries.append(
-            {"path": relative, "mode": mode, "type": "blob", "sha": blob["sha"]}
+            {
+                "path": relative,
+                "mode": mode,
+                "type": "blob",
+                "sha": create_blob(repository, token, path.read_bytes()),
+            }
         )
 
-    tree = api(
-        repository,
-        token,
-        "/git/trees",
-        {"base_tree": base_tree, "tree": entries},
-    )
-    commit = api(
-        repository,
-        token,
-        "/git/commits",
-        {
-            "message": "chore(runtime): pin workflow dependencies and finalize sanitation",
-            "tree": tree["sha"],
-            "parents": [parent],
-        },
-    )
     result = {
-        "candidateCommit": commit["sha"],
-        "candidateTree": tree["sha"],
+        "baseTree": base_tree,
         "parent": parent,
-        "changedPaths": [relative for relative, _ in paths],
+        "entries": entries,
     }
-    print("GS004A_CANDIDATE=" + json.dumps(result, sort_keys=True))
+    rendered = json.dumps(result, sort_keys=True, separators=(",", ":"))
+    print("GS004A_BLOB_HANDOFF=" + rendered)
     output = os.environ.get("GITHUB_OUTPUT")
     if output:
         with Path(output).open("a", encoding="utf-8") as stream:
-            stream.write(f"candidate_commit={commit['sha']}\n")
-            stream.write(f"candidate_tree={tree['sha']}\n")
+            stream.write("blob_handoff=" + rendered + "\n")
     return 0
 
 
