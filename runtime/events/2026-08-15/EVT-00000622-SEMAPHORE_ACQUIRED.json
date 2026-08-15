@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000622-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "executionRole": "IMPLEMENTER",
+    "expectedProductHead": "8bc2d61bbaa35a1bf10285cbb9993a17e50c1cb2",
+    "expectedProductTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P5-002-DESIGN-TOKENS-3A7C91E4",
+    "workerIdentity": "GPT-5.6-PRO-3A7C91E4"
+  },
+  "recordedAt": "2026-08-15T12:07:00Z",
+  "runtimeGeneration": 622,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260815T120500Z-3a7c91e4",
+  "workOrderId": "WO-P5-002-DESIGN-TOKENS-3A7C91E4"
+}

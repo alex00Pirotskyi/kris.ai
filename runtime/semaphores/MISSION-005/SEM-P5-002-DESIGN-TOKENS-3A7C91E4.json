@@ -1,0 +1,30 @@
+{
+  "allowedPaths": [
+    ".github/workflows/temp-p5-002-design-tokens-3a7c91e4.yml",
+    "SOURCE_MANIFEST.sha256",
+    "config/p2_source_inventory.v1.json",
+    "lib/product/p5_design_tokens.dart",
+    "lib/product/ui.dart",
+    "test/product/p5_design_tokens_test.dart",
+    "test/product/source_contract_test.dart",
+    "tool/temp_p5_002_design_tokens_3a7c91e4.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "8bc2d61bbaa35a1bf10285cbb9993a17e50c1cb2",
+  "baseTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+  "branch": "agent/product/p5-002-design-tokens-3a7c91e4",
+  "createdAt": "2026-08-15T12:07:00Z",
+  "executionRole": "IMPLEMENTER",
+  "expiresAt": "2026-08-15T18:07:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-005",
+  "productPr": null,
+  "refreshedAt": "2026-08-15T12:07:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 622,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-002-DESIGN-TOKENS-3A7C91E4",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-002-DESIGN-TOKENS-3A7C91E4",
+  "workerIdentity": "GPT-5.6-PRO-3A7C91E4"
+}
