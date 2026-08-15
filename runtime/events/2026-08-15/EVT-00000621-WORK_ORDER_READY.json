@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000621-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-005",
+  "payload": {
+    "baseCommit": "8bc2d61bbaa35a1bf10285cbb9993a17e50c1cb2",
+    "baseTree": "13360a13e915ef798b07f977ab490626a6b042fb",
+    "requestedRole": "IMPLEMENTER",
+    "type": "IMPLEMENTATION"
+  },
+  "recordedAt": "2026-08-15T12:05:00Z",
+  "runtimeGeneration": 621,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260815T120500Z-3a7c91e4",
+  "workOrderId": "WO-P5-002-DESIGN-TOKENS-3A7C91E4"
+}
