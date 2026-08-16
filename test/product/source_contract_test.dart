@@ -237,6 +237,19 @@ void main() {
       expect(ownerOffset, greaterThan(experienceOffset));
     });
 
+    test('release validator follows governed design-token modules', () {
+      final validator = source('tool/validate_release.py');
+      expect(
+        validator,
+        contains('_load_governed_product_library_files()'),
+      );
+      expect(
+        validator,
+        contains('relative.endswith("_design_tokens.dart")'),
+      );
+      expect(validator, contains('*design_token_sources'));
+    });
+
     test('stale-source migration consumes governed inventories', () {
       final migration = source('tool/prune_stale_legacy.dart');
       expect(migration, contains('SOURCE_MANIFEST.sha256'));
