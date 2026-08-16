@@ -1,0 +1,39 @@
+name: Temporary GS-003 owner-risk PR trigger finalizer
+
+on:
+  push:
+    branches:
+      - agent/gpt-gold/gs-003c-p2-promotion-current-main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-gs003-owner-risk-pr-trigger-finalizer
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Bind checkout to exact remediation branch
+        run: git switch --force-create agent/gpt-gold/gs-003c-p2-promotion-current-main "$GITHUB_SHA"
+
+      - name: Install exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Finalize exact-head PR promotion workflow
+        run: python3 tool/temp_gs003_owner_risk_pr_trigger_finalizer.py
