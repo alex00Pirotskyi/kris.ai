@@ -1,0 +1,34 @@
+{
+  "allowedPaths": [
+    "tool/p2_macos_packaging_test.py",
+    "tool/v70_package_platform.py"
+  ],
+  "baseCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
+  "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "createdAt": "2026-08-16T19:15:05Z",
+  "createdBy": "WRK-20260816T191505Z-9e4c2a73",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Repair the exact macOS QA shipment blocker proven by PR #159: tool/v70_package_platform.py uses codesign --deep over a bundled runtime containing node_modules/.bin symlinks. Sign only regular Mach-O descendants inside-out, never sign symlinks, sign the outer app without --deep, retain deep/strict verification, remove --deep from the generated launcher re-sign path, and add deterministic source/unit regressions. Do not change payload provenance, remove runtime files, certify a platform, or promote release, production, or GA support.",
+  "parentProductPr": 75,
+  "parentWorkOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "regular Mach-O descendants are selected by magic bytes and symlinks are ignored",
+    "nested Mach-O files are signed before the outer app bundle",
+    "no signing invocation uses --deep",
+    "verification remains codesign --verify --deep --strict",
+    "generated macOS launcher re-signing omits --deep",
+    "a synthetic node_modules/.bin symlink regression passes",
+    "source manifest is byte-stable",
+    "exact-head Product Gates and owner-risk macOS packaging pass"
+  ],
+  "roadmapTask": "P2-004",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-16T19:15:05Z",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
+}

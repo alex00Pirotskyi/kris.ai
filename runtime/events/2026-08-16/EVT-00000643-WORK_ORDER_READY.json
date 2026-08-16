@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000643-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+    "requestedRole": "AUTHORITY_OWNER",
+    "type": "AUTHORITY_UPDATE"
+  },
+  "recordedAt": "2026-08-16T19:15:05Z",
+  "runtimeGeneration": 643,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T191505Z-9e4c2a73",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
+}
