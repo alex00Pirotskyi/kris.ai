@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000648-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "RELEASE_FINALIZER",
+    "kind": "RELEASE",
+    "resourceId": "P2-004-MACOS-PACKAGING-MANIFEST",
+    "semaphoreId": "SEM-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74",
+    "workerIdentity": "GPT-5.6-PRO-GOLD:GS-003D-MANIFEST-FINALIZER"
+  },
+  "recordedAt": "2026-08-16T19:40:00Z",
+  "runtimeGeneration": 648,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T194000Z-9e4c2a74",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74"
+}

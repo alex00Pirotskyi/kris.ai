@@ -1,12 +1,15 @@
 {
+  "activeSemaphoreId": "SEM-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD:GS-003D-MANIFEST-FINALIZER",
   "baseCommit": "6c8469d0d75e73be504fc2a02c4be452087e07fe",
   "baseTree": "fc6e89dc8751c1891fc601c63c9b4e64426fa396",
   "createdAt": "2026-08-16T19:38:00Z",
   "createdBy": "WRK-20260816T193800Z-9e4c2a74",
   "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
   "objective": "Publish only the byte-stable canonical SOURCE_MANIFEST.sha256 generated for the exact macOS packaging source candidate 6c8469d0. Do not alter source, evidence, support, platform, release, production, or GA state.",
@@ -22,8 +25,8 @@
   ],
   "roadmapTask": "P2-004",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-16T19:38:00Z",
+  "updatedAt": "2026-08-16T19:40:00Z",
   "workOrderId": "WO-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74"
 }

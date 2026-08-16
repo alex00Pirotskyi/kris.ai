@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "6c8469d0d75e73be504fc2a02c4be452087e07fe",
+  "baseTree": "fc6e89dc8751c1891fc601c63c9b4e64426fa396",
+  "branch": "agent/gpt-gold/gs-003d-macos-package-signing",
+  "createdAt": "2026-08-16T19:40:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-16T23:40:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-16T19:40:00Z",
+  "resourceId": "P2-004-MACOS-PACKAGING-MANIFEST",
+  "runtimeGeneration": 648,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74",
+  "workerIdentity": "GPT-5.6-PRO-GOLD:GS-003D-MANIFEST-FINALIZER"
+}
