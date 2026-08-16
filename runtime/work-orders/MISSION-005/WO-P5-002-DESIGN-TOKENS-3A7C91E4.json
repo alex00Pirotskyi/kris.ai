@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P5-002-DESIGN-TOKENS-3A7C91E4",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     ".github/workflows/temp-p5-002-design-tokens-3a7c91e4.yml",
     "SOURCE_MANIFEST.sha256",
@@ -18,11 +18,11 @@
     "P5-001@LANDED_MAIN"
   ],
   "executionRole": "IMPLEMENTER",
-  "lastActor": "GPT-5.6-PRO-3A7C91E4:P5_002_RUNTIME_REPAIR_624",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-016:OLD_HELPER_SUPERSEDED_BY_PR157",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Implement P5-002 as a real normal-app design-token system on protected-main P5-001: semantic color, typography, spacing, radius, elevation, focus, motion, status, and Owner Mode tokens; readable light and dark themes; dedicated high-contrast light/dark themes; and reduced-motion behavior driven by platform accessibility. Replace the monolithic private theme builder with the governed token system, preserve the chat-first integrated shell and fail-closed authority behavior, add direct token/theme/contrast/motion/widget regressions, update the global analyzer-visible source contract, prove the P2-only inventory remains byte-identical and valid, regenerate the canonical root manifest, and publish one exact Product PR. Do not claim P5-003+, manual accessibility certification, platform support, production readiness, release, or GA.",
-  "parentProductPr": null,
+  "parentProductPr": 157,
   "priority": 100,
   "requestedRole": "IMPLEMENTER",
   "requiredTests": [
@@ -39,10 +39,10 @@
     "SOURCE_MANIFEST.sha256 is generated twice byte-identically and the final candidate contains no temporary transport files"
   ],
   "roadmapTask": "P5-002",
-  "runtimeGeneration": 624,
+  "runtimeGeneration": 627,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "SUPERSEDED",
   "type": "IMPLEMENTATION",
-  "updatedAt": "2026-08-15T12:20:00Z",
+  "updatedAt": "2026-08-16T03:59:00Z",
   "workOrderId": "WO-P5-002-DESIGN-TOKENS-3A7C91E4"
 }
