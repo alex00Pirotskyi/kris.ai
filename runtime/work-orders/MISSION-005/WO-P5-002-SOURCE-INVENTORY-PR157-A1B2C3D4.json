@@ -10,7 +10,7 @@
   "createdBy": "WRK-20260816T073900Z-a1b2c3d4",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
-  "lastActor": "GPT-5.6-PRO-GOLD:GEN632:SOURCE_INVENTORY_AUTHORITY",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-016:SOURCE-INVENTORY-VALIDATED",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-005",
   "objective": "Validate the exact append-only P5-002 source-inventory change in test/product/source_contract_test.dart for canonical Product PR #157. Preserve MISSION-001 ownership and the closed governed inventory contract; authorize no other shared path and make no product-support promotion.",
@@ -27,8 +27,8 @@
   "roadmapTask": "P5-002",
   "runtimeGeneration": 632,
   "schemaVersion": 1,
-  "status": "VALIDATING",
+  "status": "LANDED",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-16T07:39:00Z",
+  "updatedAt": "2026-08-16T08:01:00Z",
   "workOrderId": "WO-P5-002-SOURCE-INVENTORY-PR157-A1B2C3D4"
 }

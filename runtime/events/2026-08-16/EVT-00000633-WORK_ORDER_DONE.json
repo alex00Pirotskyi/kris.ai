@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000633-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-005",
+  "payload": {
+    "actor": "GPT-5.6-PRO-GOLD:GS-016:SOURCE-INVENTORY-VALIDATED",
+    "nextStatus": "LANDED"
+  },
+  "recordedAt": "2026-08-16T08:01:00Z",
+  "runtimeGeneration": 633,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T080100Z-9e4c2a71",
+  "workOrderId": "WO-P5-002-SOURCE-INVENTORY-PR157-A1B2C3D4"
+}
