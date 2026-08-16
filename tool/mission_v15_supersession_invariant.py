@@ -65,9 +65,27 @@ def supersedes_ids(item: dict[str, Any], work_id: str) -> list[str]:
     )
 
 
+def missing_superseded_by_ids(
+    work_orders: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Return every legacy SUPERSEDED record missing its reciprocal successor."""
+    return sorted(
+        work_id
+        for work_id, item in work_orders.items()
+        if item.get("status") == "SUPERSEDED" and not item.get("supersededBy")
+    )
+
+
 def validate_supersession(project: pathlib.Path) -> dict[str, Any]:
     work_orders = load_work_orders(project)
     edges: list[dict[str, str]] = []
+
+    missing_replacements = missing_superseded_by_ids(work_orders)
+    if missing_replacements:
+        raise ValueError(
+            "SUPERSEDED Work Orders missing supersededBy: "
+            + ",".join(missing_replacements)
+        )
 
     for work_id, item in work_orders.items():
         replacement_id = item.get("supersededBy")

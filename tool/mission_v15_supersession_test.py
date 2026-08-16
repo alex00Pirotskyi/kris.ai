@@ -52,6 +52,15 @@ class SupersessionInvariantTests(unittest.TestCase):
         self.assertTrue(result["pass"])
         self.assertEqual(result["supersessionEdgeCount"], 2)
 
+    def test_all_missing_replacements_are_reported(self) -> None:
+        self.write("WO-Z", status="SUPERSEDED")
+        self.write("WO-A", status="SUPERSEDED")
+        with self.assertRaisesRegex(
+            ValueError,
+            "SUPERSEDED Work Orders missing supersededBy: WO-A,WO-Z",
+        ):
+            validate_supersession(self.root)
+
     def test_dangling_replacement_fails(self) -> None:
         self.write("WO-OLD", status="SUPERSEDED", supersededBy="WO-MISSING")
         with self.assertRaises(ValueError):
