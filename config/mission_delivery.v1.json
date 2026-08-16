@@ -141,8 +141,11 @@
       ],
       "owned": [
         "lib/product/p5_information_architecture/**",
+        "lib/product/p5_design_tokens.dart",
+        "lib/product/ui.dart",
         "lib/p5_ia_preview.dart",
         "test/product/p5_information_architecture/**",
+        "test/product/p5_design_tokens_test.dart",
         "docs/ux/**",
         "release/evidence/P5-*/**",
         "release/evidence/P22-*/**",
