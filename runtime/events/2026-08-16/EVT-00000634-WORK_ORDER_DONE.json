@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000634-WORK_ORDER_DONE",
+  "eventType": "WORK_ORDER_DONE",
+  "mission": "MISSION-005",
+  "payload": {
+    "actor": "GPT-5.6-PRO-GOLD:GS-016:SOURCE-MANIFEST-VALIDATED",
+    "nextStatus": "LANDED"
+  },
+  "recordedAt": "2026-08-16T08:03:00Z",
+  "runtimeGeneration": 634,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T080300Z-9e4c2a71",
+  "workOrderId": "WO-P5-002-SOURCE-MANIFEST-PR157-B1C2D3E4"
+}
