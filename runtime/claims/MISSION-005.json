@@ -5,7 +5,10 @@
   "status": "ACTIVE",
   "integrationAuthority": "F",
   "priority": "HIGH",
-  "currentProductPrs": [72],
-  "runtimeGeneration": 0,
-  "updatedAt": "2026-08-07T12:20:00Z"
+  "currentProductPrs": [
+    72,
+    157
+  ],
+  "runtimeGeneration": 627,
+  "updatedAt": "2026-08-16T03:59:00Z"
 }

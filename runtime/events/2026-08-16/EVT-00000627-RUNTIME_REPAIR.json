@@ -1,0 +1,45 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T03:59:00Z",
+  "details": {
+    "actions": [
+      {
+        "from": "VALIDATING",
+        "record": "runtime/work-orders/MISSION-003/WO-P3-001-FAIL-CLOSED-BUNDLE-FALLBACK-5F6A7B8C.json",
+        "to": "LANDED"
+      },
+      {
+        "from": "IN_PROGRESS",
+        "record": "runtime/work-orders/MISSION-005/WO-P5-002-DESIGN-TOKENS-3A7C91E4.json",
+        "to": "SUPERSEDED"
+      },
+      {
+        "from": "ACTIVE",
+        "record": "runtime/semaphores/MISSION-005/SEM-P5-002-DESIGN-TOKENS-3A7C91E4.json",
+        "to": "EXPIRED"
+      },
+      {
+        "from": null,
+        "record": "runtime/integration/product-prs/P5-002.json",
+        "to": "ACTIVE"
+      },
+      {
+        "from": [
+          72
+        ],
+        "record": "runtime/claims/MISSION-005.json#currentProductPrs",
+        "to": [
+          72,
+          157
+        ]
+      }
+    ],
+    "reason": "Terminalize the consumed P3 helper, supersede the expired legacy P5 helper reservation, and bind exact current-main P5-002 Product PR #157 without promoting behavior, platform, release, production, or GA status."
+  },
+  "eventId": "EVT-00000627-RUNTIME_REPAIR",
+  "eventType": "RUNTIME_REPAIR",
+  "mission": "MISSION-015",
+  "runtimeGeneration": 627,
+  "schemaVersion": 1,
+  "workOrderId": "WO-SYS-RUNTIME-REPAIR-GS-005-627"
+}
