@@ -1,11 +1,14 @@
 {
   "branch": "agent/gpt-gold/gs-016-p5-002-current-main",
   "captain": "F",
+  "mainLandingCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
+  "mainLandingTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
   "mission": "MISSION-005",
-  "observedAt": "2026-08-16T07:34:00Z",
+  "observedAt": "2026-08-16T08:14:00Z",
   "observedHead": "cd46198450bebdd028280a89aadd056508baeb2a",
   "productPr": 157,
+  "runtimeGeneration": 637,
   "schemaVersion": 1,
-  "status": "ACTIVE",
+  "status": "LANDED",
   "task": "P5-002"
 }

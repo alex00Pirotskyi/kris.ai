@@ -1,0 +1,27 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T08:14:00Z",
+  "details": {
+    "candidateCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
+    "candidateTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+    "consumedBranch": "agent/gpt-gold/gs-016-p5-002-current-main",
+    "consumedBranchPresent": false,
+    "mainLandingCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
+    "mainLandingTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+    "postMainProductGatesJobs": {
+      "macos": 95135725866,
+      "ubuntu": 95135725864,
+      "windows": 95135725938
+    },
+    "postMainProductGatesRun": 31935130828,
+    "productPr": 157,
+    "releasedSemaphore": "SEM-P5-002-PR157-LANDING-9E4C2A71",
+    "truthBoundary": "P5-002 protected-main source and automated widget validation landing only; no manual WCAG certification, packaged-platform qualification, production support, release support, release, or GA promotion."
+  },
+  "eventId": "EVT-00000637-PRODUCT_LANDED",
+  "eventType": "PRODUCT_LANDED",
+  "mission": "MISSION-005",
+  "runtimeGeneration": 637,
+  "schemaVersion": 1,
+  "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
+}

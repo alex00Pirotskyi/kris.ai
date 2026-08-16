@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": "SEM-P5-002-PR157-LANDING-9E4C2A71",
+  "activeSemaphoreId": null,
   "allowedPaths": [
     "lib/product/p5_design_tokens.dart",
     "lib/product/ui.dart",
@@ -12,7 +12,9 @@
   "createdBy": "WRK-20260816T064200Z-3a7c91e4",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "GPT-5.6-PRO-GOLD:GS-016:EXACT-HEAD-VALIDATED",
+  "lastActor": "GPT-5.6-PRO-GOLD:POST_LANDING_RECONCILIATION:P5_PR157:E4F66CE5",
+  "mainLandingCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
+  "mainLandingTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-005",
   "objective": "Validate and integrate the exact three MISSION-005-owned P5-002 Product paths from canonical PR #157 at cd46198450bebdd028280a89aadd056508baeb2a / tree db4c9218c6180d9b3613e6635d6213c85f49d9cd. The shared source inventory and generated root manifest are delegated to two separately typed child Work Orders. Require exact-head tri-platform Product and compatibility gates and protected-main source landing only after all three Work Orders pass. Do not promote manual accessibility certification, behavior certification, platform support, release support, production readiness, release, or GA.",
@@ -29,11 +31,11 @@
     "no acceptance, manual accessibility certification, platform, release, production, or GA promotion is made"
   ],
   "roadmapTask": "P5-002",
-  "runtimeGeneration": 632,
+  "runtimeGeneration": 637,
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "LANDED",
   "supersedes": "WO-P5-002-DESIGN-TOKENS-3A7C91E4",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-16T08:07:00Z",
+  "updatedAt": "2026-08-16T08:14:00Z",
   "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
 }
