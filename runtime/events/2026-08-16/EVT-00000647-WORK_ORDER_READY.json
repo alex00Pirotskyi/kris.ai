@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000647-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-001",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "RELEASE_FINALIZER",
+    "sourceCommit": "6c8469d0d75e73be504fc2a02c4be452087e07fe",
+    "type": "RELEASE_FINALIZATION"
+  },
+  "recordedAt": "2026-08-16T19:38:00Z",
+  "runtimeGeneration": 647,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T193800Z-9e4c2a74",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74"
+}
