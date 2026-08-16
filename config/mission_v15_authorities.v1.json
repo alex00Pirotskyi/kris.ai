@@ -52,6 +52,18 @@
       "mode": "BOUNDED_P2_OWNER_RISK_SOURCE_GATE_V1",
       "eligibleRequestingMissions": []
     },
+    "p2-r4-compatibility-handoff-workflow": {
+      "ownerMission": "MISSION-001",
+      "path": ".github/workflows/temp-r4-chat-first-compatibility-handoff.yml",
+      "mode": "SELF_REMOVING_EXACT_TRANSPORT_V1",
+      "eligibleRequestingMissions": []
+    },
+    "p2-r4-compatibility-handoff-script": {
+      "ownerMission": "MISSION-001",
+      "path": "tool/temp_r4_chat_first_compatibility_handoff.py",
+      "mode": "SELF_REMOVING_EXACT_TRANSPORT_V1",
+      "eligibleRequestingMissions": []
+    },
     "release-validator-source-policy": {
       "ownerMission": "MISSION-008",
       "path": "tool/validate_release.py",
