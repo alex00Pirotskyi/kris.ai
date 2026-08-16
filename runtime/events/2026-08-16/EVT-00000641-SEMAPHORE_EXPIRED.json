@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000641-SEMAPHORE_EXPIRED",
+  "eventType": "SEMAPHORE_EXPIRED",
+  "mission": null,
+  "payload": {
+    "semaphoreIds": [
+      "SEM-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
+    ]
+  },
+  "recordedAt": "2026-08-16T18:27:30Z",
+  "runtimeGeneration": 641,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T182730Z-9e4c2a71",
+  "workOrderId": null
+}

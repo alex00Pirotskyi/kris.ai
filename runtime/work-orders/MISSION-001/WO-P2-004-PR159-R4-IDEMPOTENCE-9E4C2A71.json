@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
   "allowedPaths": [
     "tool/p2_promotion_state_test.py",
     "tool/v71r12_exact_source_gate.py"
@@ -31,8 +30,8 @@
   "roadmapTask": "P2-004",
   "runtimeGeneration": 639,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "READY",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-16T13:50:52Z",
+  "updatedAt": "2026-08-16T18:27:30Z",
   "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
 }
