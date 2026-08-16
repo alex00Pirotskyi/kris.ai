@@ -10,6 +10,7 @@
   "createdBy": "WRK-20260814T061736Z-5a8d1c3e",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN630:RECIPROCAL_SUPERSESSION_RECONCILIATION",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
   "objective": "Reconcile stale branch-hygiene PR #140 onto current protected main as a fail-closed exact-SHA cleanup. Replace the obsolete retention set, retain integration/p2-owner-risk-v71r12 because its unique QA lineage has not yet been ported, and schedule deletion only for 17 live branches proven disposable by terminal LANDED Work Orders or exact supersession ancestry. Do not wildcard-delete, delete open-PR heads, delete canonical Product branches, delete runtime/control authority, or infer that the remaining branches are safe. Delegate one bounded RELEASE_FINALIZATION child for canonical SOURCE_MANIFEST.sha256 materialization after the policy/report helper is exact.",
@@ -29,9 +30,11 @@
     "canonical SOURCE_MANIFEST.sha256 is generated only by one bounded RELEASE_FINALIZATION child"
   ],
   "roadmapTask": "P0-001",
+  "runtimeGeneration": 630,
   "schemaVersion": 1,
   "status": "SUPERSEDED",
+  "supersededBy": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E",
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-14T08:39:00Z",
+  "updatedAt": "2026-08-16T06:42:00Z",
   "workOrderId": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E"
 }

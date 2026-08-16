@@ -11,7 +11,7 @@
   "createdBy": "WRK-20260814T081345Z-5a8d1c3e",
   "dependencyRequirements": [],
   "executionRole": "CI_REPAIR",
-  "lastActor": "GPT-5.6-PRO-GOLD:PR154_SUPERSEDES_PR140",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN630:PR154_LANDING_CHAIN_RECONCILED",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
   "objective": "Finish the exact 76-ref legacy branch cleanup candidate on helper PR #140 after the repository-owned parser rejected three noncanonical cleanup classes. The repaired exact candidate is frozen at cfc4ca575842d1cb19709a3e9c27dcede335a881 with the temporary workflow removed and canonical source manifest materialized. Preserve every branch name, expected SHA, keep/delete decision, reason, Product boundary, and Owner Mode retention decision. Do not execute deletions before protected-main landing, alter Product source, or promote acceptance, support, production, release, or GA. The canonical P0-001 Product PR remains #138; PR #140 is the bounded cleanup helper only.",
@@ -31,9 +31,15 @@
     "no branch deletion, Product source mutation, review promotion, acceptance, support, production, release, or GA action occurs before landing"
   ],
   "roadmapTask": "P0-001",
+  "runtimeGeneration": 630,
   "schemaVersion": 1,
   "status": "SUPERSEDED",
+  "supersededBy": "WO-P0-001-BRANCH-HYGIENE-PR154-LANDED-5A8D1C3E",
+  "supersedes": [
+    "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
+    "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E"
+  ],
   "type": "BLOCKER_REMOVAL",
-  "updatedAt": "2026-08-15T18:13:00Z",
+  "updatedAt": "2026-08-16T06:42:00Z",
   "workOrderId": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
 }

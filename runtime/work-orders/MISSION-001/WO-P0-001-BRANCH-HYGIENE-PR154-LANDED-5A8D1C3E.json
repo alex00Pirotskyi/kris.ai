@@ -1,0 +1,38 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256",
+    "config/branch_hygiene.json"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD",
+  "baseCommit": "71c7b2afc2ee2721b6d644e52149d8ecd55e8cd9",
+  "baseTree": "30e21c5119ad1818e4a3acc47816754c5f6e5c66",
+  "createdAt": "2026-08-16T06:42:00Z",
+  "createdBy": "WRK-20260816T064200Z-5a8d1c3e",
+  "dependencyRequirements": [],
+  "executionRole": "INTEGRATOR",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN630:PR154_VERIFIED_PROTECTED_MAIN_LANDING",
+  "mainLandingCommit": "e3b4233dec57d38f9792698ada16f9ce2e2c6982",
+  "mainLandingTree": "30e21c5119ad1818e4a3acc47816754c5f6e5c66",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-001",
+  "objective": "Record the exact current-main rematerialization and protected-main landing of the live-bound branch-hygiene policy through PR #154. Bind the final reviewed source candidate 71c7b2afc2ee2721b6d644e52149d8ecd55e8cd9 to signed protected-main commit e3b4233dec57d38f9792698ada16f9ce2e2c6982, preserving the exact cleanup policy and canonical manifest without making any Product, support, release, production, or GA claim.",
+  "parentProductPr": 138,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "PR #154 exact candidate contains only config/branch_hygiene.json and SOURCE_MANIFEST.sha256",
+    "branch-hygiene policy remains exact-SHA and fail-closed",
+    "protected-main squash commit tree equals the reviewed candidate tree",
+    "the protected-main commit is cryptographically verified by GitHub",
+    "no Product behavior, acceptance, support, release, production, or GA state is promoted"
+  ],
+  "roadmapTask": "P0-001",
+  "runtimeGeneration": 630,
+  "schemaVersion": 1,
+  "status": "LANDED",
+  "supersedes": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-16T06:42:00Z",
+  "workOrderId": "WO-P0-001-BRANCH-HYGIENE-PR154-LANDED-5A8D1C3E"
+}

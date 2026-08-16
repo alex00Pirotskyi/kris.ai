@@ -9,7 +9,7 @@
   "createdBy": "WRK-20260814T061736Z-5a8d1c3e",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
-  "lastActor": "GPT-5.6-PRO-5A8D1C3E:LEGACY_PUSH_SUPERSEDES_17_REF_MANIFEST",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN630:RECIPROCAL_SUPERSESSION_RECONCILIATION",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
   "objective": "Materialize the canonical SOURCE_MANIFEST.sha256 for the exact current-main branch-hygiene candidate at e12859b212b82324819a151cfcff26522437468c / tree 3fd331ff03f8728ff776ebfa7ead726eb981f9b3. Use the repository-owned branch-hygiene source-manifest publisher and canonical generator, require byte-stable generation and canonical text, and return a candidate whose net diff against the exact parent helper adds only SOURCE_MANIFEST.sha256. Do not alter the 17-ref deletion policy, Product behavior, Owner Mode authority, acceptance, support, production, release, or GA state.",
@@ -28,9 +28,11 @@
     "no Product behavior, authority, acceptance, support, production, release, or GA state changes"
   ],
   "roadmapTask": "P0-001",
+  "runtimeGeneration": 630,
   "schemaVersion": 1,
   "status": "SUPERSEDED",
+  "supersededBy": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-14T08:43:00Z",
+  "updatedAt": "2026-08-16T06:42:00Z",
   "workOrderId": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E"
 }

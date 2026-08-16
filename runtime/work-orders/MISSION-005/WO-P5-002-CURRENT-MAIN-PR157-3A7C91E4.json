@@ -1,0 +1,45 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256",
+    "lib/product/p5_design_tokens.dart",
+    "lib/product/ui.dart",
+    "test/product/p5_design_tokens_test.dart",
+    "test/product/source_contract_test.dart"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD:GS-016",
+  "baseCommit": "e24ed278b5b5df2a80f996712ebf175b7218ba3b",
+  "baseTree": "d981edd440ec99a9e801119b8aab35befc59a2bc",
+  "createdAt": "2026-08-16T06:42:00Z",
+  "createdBy": "WRK-20260816T064200Z-3a7c91e4",
+  "dependencyRequirements": [
+    "the governed design-token release-validator repair must land on protected main before PR #157 can obtain an exact-head Product Gate pass"
+  ],
+  "executionRole": "INTEGRATOR",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN630:WAITING_FOR_VALIDATOR_MAIN_LANDING",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Continue P5-002 exclusively through canonical Product PR #157 from exact current-main candidate e24ed278b5b5df2a80f996712ebf175b7218ba3b / tree d981edd440ec99a9e801119b8aab35befc59a2bc. Preserve the exact five-path Product scope, land the separate governed release-validator repair first, reconcile PR #157 onto the resulting protected-main head without widening behavior, rerun exact tri-platform Product and compatibility gates, and perform protected-main source landing only after those gates pass. Do not promote manual accessibility certification, platform support, release support, production readiness, release, or GA.",
+  "parentProductPr": 157,
+  "priority": 100,
+  "requestedRole": "INTEGRATOR",
+  "requiredTests": [
+    "the validator repair lands as its own exact three-path protected-main change",
+    "PR #157 remains an exact five-path Product candidate after current-main reconciliation",
+    "release validation discovers governed *_design_tokens.dart modules without weakening CardThemeData checks",
+    "flutter analyze with fatal warnings and infos passes",
+    "full Flutter tests and automation-host tests pass",
+    "product-gates pass on Ubuntu, Windows, and macOS at the exact PR #157 head",
+    "canonical SOURCE_MANIFEST.sha256 remains byte-stable",
+    "post-landing protected-main Product Gates pass before runtime records LANDED",
+    "no acceptance, accessibility certification, platform, release, production, or GA promotion is made"
+  ],
+  "roadmapTask": "P5-002",
+  "runtimeGeneration": 630,
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "supersedes": "WO-P5-002-DESIGN-TOKENS-3A7C91E4",
+  "type": "INTEGRATION",
+  "updatedAt": "2026-08-16T06:42:00Z",
+  "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
+}

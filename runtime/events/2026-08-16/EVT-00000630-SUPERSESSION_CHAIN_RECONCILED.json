@@ -1,0 +1,35 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T06:42:00Z",
+  "details": {
+    "actions": [
+      {
+        "from": "WO-P0-001-BRANCH-HYGIENE-CLEANUP-5A8D1C3E",
+        "to": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+      },
+      {
+        "from": "WO-P0-001-BRANCH-HYGIENE-MANIFEST-5A8D1C3E",
+        "to": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E"
+      },
+      {
+        "from": "WO-P0-001-LEGACY-BRANCH-SALVAGE-5A8D1C3E",
+        "mainLandingCommit": "e3b4233dec57d38f9792698ada16f9ce2e2c6982",
+        "mainLandingTree": "30e21c5119ad1818e4a3acc47816754c5f6e5c66",
+        "productPr": 154,
+        "to": "WO-P0-001-BRANCH-HYGIENE-PR154-LANDED-5A8D1C3E"
+      },
+      {
+        "from": "WO-P5-002-DESIGN-TOKENS-3A7C91E4",
+        "productPr": 157,
+        "to": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
+      }
+    ],
+    "truthBoundary": "Reconcile reciprocal Work Order lineage only. P0 branch hygiene is bound to its verified protected-main source landing. P5-002 remains blocked on the separate validator repair. No behavior, acceptance, accessibility certification, platform qualification, release support, production, or GA promotion."
+  },
+  "eventId": "EVT-00000630-SUPERSESSION_CHAIN_RECONCILED",
+  "eventType": "SUPERSESSION_CHAIN_RECONCILED",
+  "mission": "MISSION-015",
+  "runtimeGeneration": 630,
+  "schemaVersion": 1,
+  "workOrderId": "WO-SYS-RUNTIME-REPAIR-GS-004-630"
+}
