@@ -1,0 +1,22 @@
+{
+  "eventId": "EVT-00000639-RUNTIME_REPAIR",
+  "eventType": "RUNTIME_REPAIR",
+  "mission": "MISSION-001",
+  "payload": {
+    "authorityId": "p2-owner-risk-source-gate",
+    "exactPath": "tool/v71r12_exact_source_gate.py",
+    "historicalLanding": {
+      "productPr": 14,
+      "protectedMainCommit": "0a4176bcbcb975684c3a590be652c9fffe1ce770"
+    },
+    "nextExecutionRole": "AUTHORITY_OWNER",
+    "nextType": "AUTHORITY_UPDATE",
+    "semaphoreId": "SEM-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+    "truthBoundary": "Exact-path authority repair only; no behavior certification, accessibility certification, platform support, release support, production, release, or GA promotion."
+  },
+  "recordedAt": "2026-08-16T08:52:00Z",
+  "runtimeGeneration": 639,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T085200Z-9e4c2a71",
+  "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
+}

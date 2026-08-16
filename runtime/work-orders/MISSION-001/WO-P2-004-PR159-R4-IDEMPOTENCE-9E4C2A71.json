@@ -10,14 +10,14 @@
   "createdAt": "2026-08-16T08:43:00Z",
   "createdBy": "WRK-20260816T084300Z-9e4c2a71",
   "dependencyRequirements": [],
-  "executionRole": "CI_REPAIR",
-  "lastActor": "GPT-5.6-PRO-GOLD:GS-003C:R4-SUCCESSOR-SHELL-REPAIR",
+  "executionRole": "AUTHORITY_OWNER",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-003C:EXACT-GATE-AUTHORITY-BOUND",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-001",
-  "objective": "Repair helper PR #159 after the exact tri-platform Owner-Risk Promotion gate proved that the historical V70-R4 chat-first text patcher does not recognize the current P5-002 KristinMainShell successor. Preserve every canonical P2 evidence-state boundary, audit the remaining R4 invariants read-only through the existing syntax-aware lexer, accept exactly one complete governed shell version, add a page-reordering negative regression, and change only the two authorized P2 tool paths. Do not certify P2 behavior, accessibility, any platform, release support, production readiness, release, or GA.",
+  "objective": "Repair helper PR #159 after the exact tri-platform Owner-Risk Promotion gate proved that the historical V70-R4 chat-first text patcher does not recognize the current P5-002 KristinMainShell successor. Preserve every canonical P2 evidence-state boundary, audit the remaining R4 invariants read-only through the existing syntax-aware lexer, accept exactly one complete governed shell version, add a page-reordering negative regression, and change only the ordinary MISSION-001 P2 regression plus the exact legacy owner-risk source gate bound by repository authority. Do not certify P2 behavior, accessibility, any platform, release support, production readiness, release, or GA.",
   "parentProductPr": 75,
   "priority": 100,
-  "requestedRole": "CI_REPAIR",
+  "requestedRole": "AUTHORITY_OWNER",
   "requiredTests": [
     "the current integrated shell binds KristinMainShell with Chat first, Experience second, and Owner Mode third",
     "the R4 audit uses the existing Dart lexer and ignores comments and string decoys",
@@ -29,10 +29,10 @@
     "exact-head tri-platform Owner-Risk Promotion and Product Gates pass"
   ],
   "roadmapTask": "P2-004",
-  "runtimeGeneration": 638,
+  "runtimeGeneration": 639,
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
-  "type": "CI_REPAIR",
-  "updatedAt": "2026-08-16T08:43:00Z",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-16T08:52:00Z",
   "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
 }
