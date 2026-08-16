@@ -1,0 +1,49 @@
+name: Temporary R4 chat-first compatibility handoff
+
+on:
+  push:
+    branches:
+      - agent/gpt-gold/gs-003c-p2-promotion-current-main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-r4-chat-first-compatibility-handoff
+  cancel-in-progress: false
+
+jobs:
+  handoff:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind checkout to exact remediation branch
+        run: git switch --force-create agent/gpt-gold/gs-003c-p2-promotion-current-main "$GITHUB_SHA"
+
+      - name: Install exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Build and validate immutable R4 compatibility candidate
+        run: python3 tool/temp_r4_chat_first_compatibility_handoff.py
+
+      - name: Upload exact six-path candidate handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: r4-chat-first-candidate-${{ github.sha }}
+          path: ${{ runner.temp }}/r4-chat-first-candidate
+          if-no-files-found: error
+          retention-days: 30
+          include-hidden-files: true
