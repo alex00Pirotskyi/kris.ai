@@ -46,6 +46,12 @@
       "mode": "BOUNDED_PRODUCT_RUNTIME_COMPOSITION_V1",
       "eligibleRequestingMissions": ["MISSION-003"]
     },
+    "p2-owner-risk-source-gate": {
+      "ownerMission": "MISSION-001",
+      "path": "tool/v71r12_exact_source_gate.py",
+      "mode": "BOUNDED_P2_OWNER_RISK_SOURCE_GATE_V1",
+      "eligibleRequestingMissions": []
+    },
     "release-validator-source-policy": {
       "ownerMission": "MISSION-008",
       "path": "tool/validate_release.py",
