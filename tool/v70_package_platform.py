@@ -104,6 +104,35 @@ def zip_payload(source: pathlib.Path, archive: pathlib.Path) -> None:
     temporary.replace(archive)
 
 
+MACHO_MAGICS = {
+    bytes.fromhex(value)
+    for value in (
+        "feedface", "cefaedfe", "feedfacf", "cffaedfe",
+        "cafebabe", "bebafeca", "cafebabf", "bfbafeca",
+    )
+}
+
+
+def is_macho_file(path: pathlib.Path) -> bool:
+    if path.is_symlink() or not path.is_file():
+        return False
+    try:
+        with path.open("rb") as stream:
+            return stream.read(4) in MACHO_MAGICS
+    except OSError:
+        return False
+
+
+def macos_signing_targets(app_bundle: pathlib.Path, p1a_native: pathlib.Path) -> list[pathlib.Path]:
+    candidates = {
+        path.resolve()
+        for root in (app_bundle, p1a_native)
+        for path in root.rglob("*")
+        if is_macho_file(path)
+    }
+    return sorted(candidates, key=lambda item: (-len(item.parts), item.as_posix()))
+
+
 def ad_hoc_sign_macos(app_bundle: pathlib.Path, p1a_native: pathlib.Path) -> str:
     def execute(argv: list[str]) -> None:
         result = subprocess.run(argv, text=True, encoding="utf-8", errors="replace", capture_output=True)
@@ -111,10 +140,10 @@ def ad_hoc_sign_macos(app_bundle: pathlib.Path, p1a_native: pathlib.Path) -> str
             fail(f"macOS ad-hoc code signing failed ({result.returncode}): {' '.join(argv)}\n{result.stdout}\n{result.stderr}")
 
     subprocess.run(["xattr", "-cr", str(app_bundle)], text=True, encoding="utf-8", errors="replace", capture_output=True)
-    for binary in sorted((path for path in p1a_native.rglob("*") if path.is_file() and os.access(path, os.X_OK)), key=lambda item: item.as_posix()):
+    for binary in macos_signing_targets(app_bundle, p1a_native):
         execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(binary)])
         execute(["codesign", "--verify", "--strict", "--verbose=2", str(binary)])
-    execute(["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none", str(app_bundle)])
+    execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(app_bundle)])
     execute(["codesign", "--verify", "--deep", "--strict", "--verbose=2", str(app_bundle)])
     return "ad-hoc-resigned-after-runtime-staging"
 
@@ -163,7 +192,7 @@ RUNTIME="$ROOT/{runtime_rel}"
 # Runtime configuration is relocation-specific and changes files inside the app.
 # Re-seal the QA app ad hoc after that write so macOS never sees a stale signature.
 /usr/bin/xattr -cr "$APP_BUNDLE" 2>/dev/null || true
-/usr/bin/codesign --force --deep --sign - --timestamp=none "$APP_BUNDLE"
+/usr/bin/codesign --force --sign - --timestamp=none "$APP_BUNDLE"
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 exec "$ROOT/app/{app_binary}" "$@"
 ''', encoding="utf-8")
