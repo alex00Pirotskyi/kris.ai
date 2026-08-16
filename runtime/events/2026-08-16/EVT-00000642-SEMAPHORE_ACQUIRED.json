@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000642-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P2-004-PR159-R4-REVALIDATION-9E4C2A72",
+    "workerIdentity": "GPT-5.6-PRO-GOLD:GS-003C-R4-REVALIDATION"
+  },
+  "recordedAt": "2026-08-16T18:29:35Z",
+  "runtimeGeneration": 642,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T182935Z-9e4c2a72",
+  "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
+}

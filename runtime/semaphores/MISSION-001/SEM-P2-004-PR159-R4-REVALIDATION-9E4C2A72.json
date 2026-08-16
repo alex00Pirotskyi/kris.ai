@@ -1,0 +1,24 @@
+{
+  "allowedPaths": [
+    "tool/p2_promotion_state_test.py",
+    "tool/v71r12_exact_source_gate.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "6f3fcf7b0b786bc804d86ff3a07bda1f99301454",
+  "baseTree": "e58e2d9b74d98476a48d8ae037489ca23110a45a",
+  "branch": "agent/gpt-gold/gs-003c-p2-promotion-current-main",
+  "createdAt": "2026-08-16T18:29:35Z",
+  "executionRole": "AUTHORITY_OWNER",
+  "expiresAt": "2026-08-16T22:29:35Z",
+  "kind": "WRITE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-16T18:29:35Z",
+  "resourceId": null,
+  "runtimeGeneration": 642,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-PR159-R4-REVALIDATION-9E4C2A72",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+  "workerIdentity": "GPT-5.6-PRO-GOLD:GS-003C-R4-REVALIDATION"
+}
