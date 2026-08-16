@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000644-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-001",
+  "payload": {
+    "executionRole": "AUTHORITY_OWNER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-P2-004-MACOS-PACKAGING-9E4C2A73",
+    "workerIdentity": "GPT-5.6-PRO-GOLD:GS-003D-MACOS-PACKAGING"
+  },
+  "recordedAt": "2026-08-16T19:17:03Z",
+  "runtimeGeneration": 644,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T191703Z-9e4c2a73",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
+}
