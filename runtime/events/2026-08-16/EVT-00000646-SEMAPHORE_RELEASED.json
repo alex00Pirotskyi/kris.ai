@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000646-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-001",
+  "payload": {
+    "nextStatus": "HELPER_READY",
+    "semaphoreId": "SEM-P2-004-MACOS-PACKAGING-9E4C2A73",
+    "sourceCommit": "6c8469d0d75e73be504fc2a02c4be452087e07fe",
+    "sourceTree": "fc6e89dc8751c1891fc601c63c9b4e64426fa396"
+  },
+  "recordedAt": "2026-08-16T19:35:00Z",
+  "runtimeGeneration": 646,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T193500Z-9e4c2a73",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
+}
