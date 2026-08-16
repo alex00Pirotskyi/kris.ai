@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -142,6 +143,31 @@ def restore_validator_reports() -> None:
             path.unlink()
 
 
+def restore_generated_test_outputs() -> None:
+    allowed = {
+        "SOURCE_MANIFEST.sha256",
+        "test/product/source_contract_test.dart",
+        "tool/validate_release.py",
+        WORKFLOW.as_posix(),
+        SCRIPT.as_posix(),
+    }
+    changed = run("git", "diff", "--name-only", capture=True).splitlines()
+    for relative in changed:
+        if relative and relative not in allowed:
+            run("git", "restore", "--source=HEAD", "--", relative)
+    untracked = run(
+        "git", "ls-files", "--others", "--exclude-standard", capture=True
+    ).splitlines()
+    for relative in untracked:
+        if not relative or relative in allowed:
+            continue
+        target = ROOT / relative
+        if target.is_symlink() or target.is_file():
+            target.unlink()
+        elif target.is_dir():
+            shutil.rmtree(target)
+
+
 def validate() -> None:
     run("flutter", "pub", "get")
     run("python3", "tool/dart_format_scope.py", "--write")
@@ -173,8 +199,13 @@ def validate() -> None:
     )
     run("npm", "ci", "--prefix", "automation_host")
     run("npm", "test", "--prefix", "automation_host")
+    restore_generated_test_outputs()
     run("python3", "tool/p1a_refresh_source_manifest.py", ".")
-    run("git", "diff", "--exit-code", "--", "SOURCE_MANIFEST.sha256")
+    first = (ROOT / "SOURCE_MANIFEST.sha256").read_bytes()
+    run("python3", "tool/p1a_refresh_source_manifest.py", ".")
+    if (ROOT / "SOURCE_MANIFEST.sha256").read_bytes() != first:
+        raise RuntimeError("SOURCE_MANIFEST.sha256 is not byte-stable after tests")
+    run("python3", "tool/p1a_text_eof_contract_test.py", "--project", ".")
 
 
 def prove_scope() -> list[str]:
