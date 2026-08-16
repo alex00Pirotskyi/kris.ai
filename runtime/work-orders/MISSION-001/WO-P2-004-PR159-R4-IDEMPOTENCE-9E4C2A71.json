@@ -1,0 +1,38 @@
+{
+  "activeSemaphoreId": "SEM-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+  "allowedPaths": [
+    "tool/p2_promotion_state_test.py",
+    "tool/v71r12_exact_source_gate.py"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD:GS-003C-R4-REPAIR",
+  "baseCommit": "6f3fcf7b0b786bc804d86ff3a07bda1f99301454",
+  "baseTree": "e58e2d9b74d98476a48d8ae037489ca23110a45a",
+  "createdAt": "2026-08-16T08:43:00Z",
+  "createdBy": "WRK-20260816T084300Z-9e4c2a71",
+  "dependencyRequirements": [],
+  "executionRole": "CI_REPAIR",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-003C:R4-SUCCESSOR-SHELL-REPAIR",
+  "maxChildWorkOrders": 1,
+  "mission": "MISSION-001",
+  "objective": "Repair helper PR #159 after the exact tri-platform Owner-Risk Promotion gate proved that the historical V70-R4 chat-first text patcher does not recognize the current P5-002 KristinMainShell successor. Preserve every canonical P2 evidence-state boundary, audit the remaining R4 invariants read-only through the existing syntax-aware lexer, accept exactly one complete governed shell version, add a page-reordering negative regression, and change only the two authorized P2 tool paths. Do not certify P2 behavior, accessibility, any platform, release support, production readiness, release, or GA.",
+  "parentProductPr": 75,
+  "priority": 100,
+  "requestedRole": "CI_REPAIR",
+  "requiredTests": [
+    "the current integrated shell binds KristinMainShell with Chat first, Experience second, and Owner Mode third",
+    "the R4 audit uses the existing Dart lexer and ignores comments and string decoys",
+    "all non-shell V70-R4 semantic invariants remain true",
+    "exactly one of the legacy P2 shell or integrated P5 successor shell is recognized",
+    "a reordered page list fails closed",
+    "the historical patcher is not executed and no tracked source is mutated",
+    "tool/p2_promotion_state_test.py passes",
+    "exact-head tri-platform Owner-Risk Promotion and Product Gates pass"
+  ],
+  "roadmapTask": "P2-004",
+  "runtimeGeneration": 638,
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "CI_REPAIR",
+  "updatedAt": "2026-08-16T08:43:00Z",
+  "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
+}

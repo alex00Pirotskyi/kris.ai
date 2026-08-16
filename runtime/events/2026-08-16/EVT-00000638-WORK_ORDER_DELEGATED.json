@@ -1,0 +1,21 @@
+{
+  "eventId": "EVT-00000638-WORK_ORDER_DELEGATED",
+  "eventType": "WORK_ORDER_DELEGATED",
+  "mission": "MISSION-001",
+  "payload": {
+    "branch": "agent/gpt-gold/gs-003c-p2-promotion-current-main",
+    "childWorkOrderId": "WO-P2-004-PR159-MANIFEST-9E4C2A71",
+    "exactBaseCommit": "6f3fcf7b0b786bc804d86ff3a07bda1f99301454",
+    "exactBaseTree": "e58e2d9b74d98476a48d8ae037489ca23110a45a",
+    "parentWorkOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+    "semaphoreIds": [
+      "SEM-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
+      "SEM-P2-004-PR159-MANIFEST-9E4C2A71"
+    ]
+  },
+  "recordedAt": "2026-08-16T08:43:00Z",
+  "runtimeGeneration": 638,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T084300Z-9e4c2a71",
+  "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
+}

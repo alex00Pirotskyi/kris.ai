@@ -1,0 +1,23 @@
+{
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "authorityId": null,
+  "baseCommit": "6f3fcf7b0b786bc804d86ff3a07bda1f99301454",
+  "baseTree": "e58e2d9b74d98476a48d8ae037489ca23110a45a",
+  "branch": null,
+  "createdAt": "2026-08-16T08:43:00Z",
+  "executionRole": "RELEASE_FINALIZER",
+  "expiresAt": "2026-08-16T12:43:00Z",
+  "kind": "RELEASE",
+  "mission": "MISSION-001",
+  "productPr": null,
+  "refreshedAt": "2026-08-16T08:43:00Z",
+  "resourceId": "P2-004:PR159:SOURCE_MANIFEST.sha256",
+  "runtimeGeneration": 638,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P2-004-PR159-MANIFEST-9E4C2A71",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P2-004-PR159-MANIFEST-9E4C2A71",
+  "workerIdentity": "GPT-5.6-PRO-GOLD:GS-003C-R4-MANIFEST"
+}
