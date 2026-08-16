@@ -9,6 +9,9 @@ on:
       - 'tool/mission_v15_live_runtime_audit.py'
       - 'tool/mission_v15_live_runtime_audit_test.py'
       - 'tool/mission_v15_runtime_atomicity.py'
+      - 'tool/mission_v15_runtime_atomicity_test.py'
+      - 'tool/mission_v15_runtime_atomicity_baseline.py'
+      - 'tool/mission_v15_runtime_atomicity_baseline_test.py'
       - 'tool/mission_v15_supersession_invariant.py'
       - 'tool/mission_v15_supersession_test.py'
       - 'tool/mission_runtime_model.py'
@@ -20,8 +23,13 @@ on:
       - agent/mission-runtime
     paths:
       - '.github/workflows/mission-v15-hygiene.yml'
+      - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_v15_live_runtime_audit.py'
       - 'tool/mission_v15_live_runtime_audit_test.py'
+      - 'tool/mission_v15_runtime_atomicity.py'
+      - 'tool/mission_v15_runtime_atomicity_test.py'
+      - 'tool/mission_v15_runtime_atomicity_baseline.py'
+      - 'tool/mission_v15_runtime_atomicity_baseline_test.py'
       - 'tool/mission_v15_supersession_invariant.py'
       - 'tool/mission_v15_supersession_test.py'
       - 'runtime/**'
@@ -61,6 +69,11 @@ jobs:
       - name: Run Work Order supersession regressions
         shell: bash
         run: python tool/mission_v15_supersession_test.py
+      - name: Run runtime atomicity regressions
+        shell: bash
+        run: |
+          python tool/mission_v15_runtime_atomicity_test.py
+          python tool/mission_v15_runtime_atomicity_baseline_test.py
       - name: Audit branch growth and runtime hygiene
         shell: bash
         run: |
@@ -76,6 +89,13 @@ jobs:
             --repository-project . \
             --runtime-project "$RUNNER_TEMP/mission-runtime" \
             --output "$RUNNER_TEMP/live-runtime.json"
+      - name: Validate historical runtime atomicity debt baseline
+        shell: bash
+        run: |
+          python tool/mission_v15_runtime_atomicity_baseline.py \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --config config/mission_v15_hygiene.v1.json \
+            --output "$RUNNER_TEMP/runtime-atomicity-baseline.json"
       - name: Audit runtime generation atomicity
         shell: bash
         run: |
@@ -95,5 +115,6 @@ jobs:
           path: |
             ${{ runner.temp }}/hygiene.json
             ${{ runner.temp }}/live-runtime.json
+            ${{ runner.temp }}/runtime-atomicity-baseline.json
             ${{ runner.temp }}/runtime-atomicity.json
             ${{ runner.temp }}/supersession.json

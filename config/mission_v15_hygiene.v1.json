@@ -27,9 +27,37 @@
     "noop_should_not_exist"
   ],
   "runtimeAtomicity": {
-    "enforceFromGeneration": 545,
+    "legacyAuditFromGeneration": 545,
+    "enforceFromGeneration": 627,
+    "enforcementBaselineCommit": "564afa62de355787c1221622b25048dd5d49b2a1",
+    "historicalViolationDebt": [
+      {
+        "commit": "e155779e268854038d2bdf9f276534faf145e012",
+        "runtimeGeneration": 623,
+        "violations": [
+          "GENERATION_EVENT_ATOMICITY:eventChanges=0,added=0"
+        ]
+      },
+      {
+        "commit": "bda31565dbde8112596d82d8ccb537f0166a4700",
+        "runtimeGeneration": 623,
+        "violations": [
+          "GENERATION_EVENT_ATOMICITY:eventChanges=0,added=0",
+          "GENERATION_NOT_SINGLE_STEP:623->623",
+          "RUNTIME_CHANGE_WITHOUT_META"
+        ]
+      },
+      {
+        "commit": "b1da1183206feec0f60ea93250bd50073354b6b3",
+        "runtimeGeneration": 625,
+        "violations": [
+          "GENERATION_COMMIT_HAS_NON_RUNTIME_PATHS:.github/workflows/temp-p5-runtime-main-finalize-20260815.yml,tool/temp_p5_runtime_main_finalize_20260815.py"
+        ]
+      }
+    ],
     "runtimePathPrefix": "runtime/",
-    "eventPathPrefix": "runtime/events/"
+    "eventPathPrefix": "runtime/events/",
+    "commandPathPrefix": "docs/roadmap/missions/runtime-commands/"
   },
   "target": {
     "longLivedCanonicalBranches": 15,
