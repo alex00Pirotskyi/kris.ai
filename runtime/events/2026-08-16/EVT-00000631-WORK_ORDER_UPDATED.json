@@ -1,0 +1,28 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T07:34:00Z",
+  "details": {
+    "candidateCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
+    "candidateTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+    "exactPaths": [
+      "SOURCE_MANIFEST.sha256",
+      "lib/product/p5_design_tokens.dart",
+      "lib/product/ui.dart",
+      "test/product/p5_design_tokens_test.dart",
+      "test/product/source_contract_test.dart"
+    ],
+    "finalizerRun": 31933921039,
+    "fromStatus": "BLOCKED",
+    "productPr": 157,
+    "toStatus": "VALIDATING",
+    "truthBoundary": "The separate validator repair is verified on protected main and the exact five-path P5-002 candidate is under current-head validation. Record no manual accessibility certification, behavior certification, platform qualification, release support, production readiness, release, or GA promotion.",
+    "validatorLandingCommit": "fb8ebae9ef8845d306c61e355bafc01ea95165f1",
+    "validatorLandingTree": "6b5f6fd82e6b0c2c83caf9983b3b921a7192c92f"
+  },
+  "eventId": "EVT-00000631-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-005",
+  "runtimeGeneration": 631,
+  "schemaVersion": 1,
+  "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
+}
