@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Make the owner-risk promotion workflow exact-head and PR-bound."""
+"""Build an immutable exact-head owner-risk promotion candidate handoff."""
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -111,7 +114,13 @@ def validate() -> None:
     patch_workflow()
     remove_transport()
     refresh_manifest_twice()
-    run("python3", "-m", "py_compile", "tool/v71r12_exact_source_gate.py", "tool/p2_promotion_state_test.py")
+    run(
+        "python3",
+        "-m",
+        "py_compile",
+        "tool/v71r12_exact_source_gate.py",
+        "tool/p2_promotion_state_test.py",
+    )
     run("python3", "tool/p2_evidence_state.py", "--project", ".")
     run("python3", "tool/p2_evidence_state_test.py")
     run("python3", "tool/p2_promotion_state_test.py")
@@ -137,45 +146,66 @@ def prove_scope() -> list[str]:
         )
     for temporary in (WORKFLOW.as_posix(), SCRIPT.as_posix()):
         if temporary in paths or (ROOT / temporary).exists():
-            raise RuntimeError(f"temporary finalizer survived: {temporary}")
+            raise RuntimeError(f"temporary handoff survived: {temporary}")
     return paths
 
 
-def publish(paths: list[str]) -> None:
-    run("git", "config", "user.name", "github-actions[bot]")
-    run(
-        "git",
-        "config",
-        "user.email",
-        "41898282+github-actions[bot]@users.noreply.github.com",
+def build_handoff(paths: list[str], trigger: str) -> None:
+    runner_temp = os.environ.get("RUNNER_TEMP", "").strip()
+    if not runner_temp:
+        raise RuntimeError("RUNNER_TEMP is unavailable")
+    target_root = Path(runner_temp) / "gs003-owner-risk-candidate"
+    if target_root.exists():
+        shutil.rmtree(target_root)
+    target_root.mkdir(parents=True)
+
+    files = []
+    for relative in sorted(paths):
+        source = ROOT / relative
+        target = target_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        payload = source.read_bytes()
+        files.append(
+            {
+                "path": relative,
+                "bytes": len(payload),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+                "gitBlob": run("git", "hash-object", relative, capture=True),
+            }
+        )
+
+    metadata = {
+        "schemaVersion": 1,
+        "baseCommit": BASE,
+        "baseTree": run("git", "rev-parse", f"{BASE}^{{tree}}", capture=True),
+        "transportCommit": trigger,
+        "cleanParent": CLEAN_PARENT,
+        "effectivePaths": sorted(paths),
+        "files": files,
+        "truthBoundary": {
+            "p2AcceptedDecisionTasks": ["P2-004"],
+            "p2BehaviorCertifiedTasks": [],
+            "p2PhaseComplete": False,
+            "platformQualified": False,
+            "releaseSupported": False,
+            "productionSupported": False,
+            "gaPromoted": False,
+        },
+    }
+    (target_root / "metadata.json").write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
-    run(
-        "git",
-        "commit",
-        "-m",
-        "ci(p2): require exact-head owner-risk promotion on pull requests",
-        "-m",
-        "Run the full tri-platform owner-risk workflow before main landing, "
-        "check out the immutable PR head rather than the merge ref, and bind "
-        "packaging receipts to that exact candidate identity.",
-    )
-    run("git", "diff", "--exit-code")
-    run("git", "diff", "--cached", "--exit-code")
-    if run("git", "status", "--porcelain=v1", capture=True):
-        raise RuntimeError("final owner-risk promotion candidate worktree is dirty")
-    head = run("git", "rev-parse", "HEAD", capture=True)
-    tree = run("git", "rev-parse", "HEAD^{tree}", capture=True)
-    run("git", "push", "origin", f"HEAD:refs/heads/{BRANCH}")
-    print(f"OWNER_RISK_PR_FINAL_COMMIT={head}")
-    print(f"OWNER_RISK_PR_FINAL_TREE={tree}")
-    print("OWNER_RISK_PR_FINAL_PATHS=" + ",".join(paths))
+    print(json.dumps(metadata, indent=2, sort_keys=True))
 
 
 def main() -> int:
     trigger = os.environ.get("GITHUB_SHA", "").strip()
     verify_transport(trigger)
     validate()
-    publish(prove_scope())
+    build_handoff(prove_scope(), trigger)
     return 0
 
 

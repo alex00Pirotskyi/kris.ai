@@ -1,4 +1,4 @@
-name: Temporary GS-003 owner-risk PR trigger finalizer
+name: Temporary GS-003 owner-risk PR trigger handoff
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
       - agent/gpt-gold/gs-003c-p2-promotion-current-main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: temp-gs003-owner-risk-pr-trigger-finalizer
+  group: temp-gs003-owner-risk-pr-trigger-handoff
   cancel-in-progress: false
 
 jobs:
-  finalize:
+  handoff:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -25,6 +25,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Bind checkout to exact remediation branch
         run: git switch --force-create agent/gpt-gold/gs-003c-p2-promotion-current-main "$GITHUB_SHA"
@@ -35,5 +36,14 @@ jobs:
           python-version: '3.12.10'
           check-latest: false
 
-      - name: Finalize exact-head PR promotion workflow
+      - name: Build and validate immutable candidate handoff
         run: python3 tool/temp_gs003_owner_risk_pr_trigger_finalizer.py
+
+      - name: Upload exact four-path candidate handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: gs003-owner-risk-candidate-${{ github.sha }}
+          path: ${{ runner.temp }}/gs003-owner-risk-candidate
+          if-no-files-found: error
+          retention-days: 30
+          include-hidden-files: true
