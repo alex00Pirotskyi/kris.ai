@@ -1,5 +1,5 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-P5-002-PR157-LANDING-9E4C2A71",
   "allowedPaths": [
     "lib/product/p5_design_tokens.dart",
     "lib/product/ui.dart",
@@ -31,9 +31,9 @@
   "roadmapTask": "P5-002",
   "runtimeGeneration": 632,
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "supersedes": "WO-P5-002-DESIGN-TOKENS-3A7C91E4",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-16T08:05:00Z",
+  "updatedAt": "2026-08-16T08:07:00Z",
   "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
 }

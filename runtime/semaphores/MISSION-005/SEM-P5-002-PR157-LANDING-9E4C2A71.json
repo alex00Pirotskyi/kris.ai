@@ -1,0 +1,21 @@
+{
+  "allowedPaths": [],
+  "authorityId": null,
+  "baseCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
+  "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "branch": "agent/gpt-gold/gs-016-p5-002-current-main",
+  "createdAt": "2026-08-16T08:07:00Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-16T12:07:00Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-005",
+  "productPr": 157,
+  "refreshedAt": "2026-08-16T08:07:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 636,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P5-002-PR157-LANDING-9E4C2A71",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4",
+  "workerIdentity": "GPT-5.6-PRO-GOLD:GS-016"
+}

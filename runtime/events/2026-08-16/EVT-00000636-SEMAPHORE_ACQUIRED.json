@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000636-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-005",
+  "payload": {
+    "executionRole": "INTEGRATOR",
+    "kind": "INTEGRATION",
+    "semaphoreId": "SEM-P5-002-PR157-LANDING-9E4C2A71",
+    "workerIdentity": "GPT-5.6-PRO-GOLD:GS-016"
+  },
+  "recordedAt": "2026-08-16T08:07:00Z",
+  "runtimeGeneration": 636,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T080700Z-9e4c2a71",
+  "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
+}
