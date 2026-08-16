@@ -12,10 +12,10 @@
   "productPr": 62,
   "refreshedAt": "2026-08-13T10:49:30Z",
   "resourceId": null,
-  "runtimeGeneration": 564,
+  "runtimeGeneration": 628,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P4-001-SOLO-MAIN-LANDING-38CB129E",
-  "status": "ACTIVE",
+  "status": "RELEASED",
   "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4",
   "workerIdentity": "GPT-5.6-PRO-SOLO-38CB129E"
 }

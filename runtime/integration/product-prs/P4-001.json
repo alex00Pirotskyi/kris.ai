@@ -1,11 +1,14 @@
 {
   "branch": "agent/p4-001-search-provider-foundation",
   "captain": "D",
+  "mainLandingCommit": "b903832336641e7d76c7b382f3aaafcb504abec4",
+  "mainLandingTree": "f9efb1f0d212c7d15aad481e614b7cc9f2982e82",
   "mission": "MISSION-004",
-  "observedAt": "2026-08-13T10:44:30Z",
+  "observedAt": "2026-08-16T04:20:00Z",
   "observedHead": "402a5764472a19feebdd51de192513640a05463d",
   "productPr": 62,
+  "runtimeGeneration": 628,
   "schemaVersion": 1,
-  "status": "ACTIVE",
+  "status": "LANDED",
   "task": "P4-001"
 }

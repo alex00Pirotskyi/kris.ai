@@ -1,0 +1,19 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T04:20:00Z",
+  "details": {
+    "candidateCommit": "402a5764472a19feebdd51de192513640a05463d",
+    "candidateTree": "f9efb1f0d212c7d15aad481e614b7cc9f2982e82",
+    "mainLandingCommit": "b903832336641e7d76c7b382f3aaafcb504abec4",
+    "mainLandingTree": "f9efb1f0d212c7d15aad481e614b7cc9f2982e82",
+    "productPr": 62,
+    "releasedSemaphore": "SEM-P4-001-SOLO-MAIN-LANDING-38CB129E",
+    "truthBoundary": "P4-001 protected-main source landing only; no independent R1/R2 approval, acceptance, live-search support, release support, production, or GA promotion."
+  },
+  "eventId": "EVT-00000628-PRODUCT_LANDED",
+  "eventType": "PRODUCT_LANDED",
+  "mission": "MISSION-004",
+  "runtimeGeneration": 628,
+  "schemaVersion": 1,
+  "workOrderId": "WO-P4-001-CURRENT-MAIN-LANDING-A1B2C3D4"
+}
