@@ -1,0 +1,40 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T04:28:00Z",
+  "details": {
+    "actions": [
+      {
+        "mainLandingCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+        "productPr": 75,
+        "replacementProductPr": 128,
+        "task": "P2-004",
+        "to": "SUPERSEDED"
+      },
+      {
+        "mainLandingCommit": "1e4cc0102e371307a577ceefef7dc0ca1855412f",
+        "productPr": 131,
+        "task": "P3-001",
+        "to": "LANDED"
+      },
+      {
+        "mainLandingCommit": "eddf1fdac3dd3412358a576e45b82e99528cfed4",
+        "productPr": 96,
+        "task": "P7-001",
+        "to": "LANDED"
+      },
+      {
+        "mainLandingCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+        "productPr": 65,
+        "task": "P8-001",
+        "to": "LANDED"
+      }
+    ],
+    "truthBoundary": "Reconcile immutable protected-main source outcomes only. No behavior, acceptance, platform qualification, release support, production, or GA promotion."
+  },
+  "eventId": "EVT-00000629-PRODUCT_STATE_RECONCILED",
+  "eventType": "PRODUCT_STATE_RECONCILED",
+  "mission": "MISSION-015",
+  "runtimeGeneration": 629,
+  "schemaVersion": 1,
+  "workOrderId": "WO-SYS-RUNTIME-REPAIR-GS-004-629"
+}

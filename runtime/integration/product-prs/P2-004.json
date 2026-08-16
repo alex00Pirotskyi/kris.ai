@@ -1,12 +1,17 @@
 {
-  "schemaVersion": 1,
-  "task": "P2-004",
-  "mission": "MISSION-001",
-  "productPr": 75,
-  "captain": "A",
   "branch": "agent/a/p2-004-measurement-contract-repair",
+  "captain": "A",
+  "mainLandingCommit": "2c8499f4b0b56276c29e5bfde821478836074041",
+  "mainLandingTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
+  "mission": "MISSION-001",
+  "observedAt": "2026-08-16T04:28:00Z",
   "observedHead": "da35625cfc4a94440f508ba290d167d26651542b",
   "observedTree": "94e237375c8924f5b4c063243af7075f10fbd50e",
-  "status": "ACTIVE",
-  "observedAt": "2026-08-09T10:44:10Z"
+  "productPr": 75,
+  "replacementCandidateCommit": "e8e85a4ffa744f9118f4dc6e04b563e7ee521aae",
+  "replacementProductPr": 128,
+  "runtimeGeneration": 629,
+  "schemaVersion": 1,
+  "status": "SUPERSEDED",
+  "task": "P2-004"
 }

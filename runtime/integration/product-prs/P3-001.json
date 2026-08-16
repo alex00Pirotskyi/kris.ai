@@ -1,12 +1,15 @@
 {
   "branch": "agent/c/mission-003-browser-runtime",
   "captain": "ELASTIC-GPT-44AE364B",
+  "mainLandingCommit": "1e4cc0102e371307a577ceefef7dc0ca1855412f",
+  "mainLandingTree": "af0f9308c29a4a4391dbc88386fa59dafb20e73a",
   "mission": "MISSION-003",
-  "observedAt": "2026-08-14T04:29:00Z",
+  "observedAt": "2026-08-16T04:28:00Z",
   "observedHead": "bb2085479d6e2f0e167e8db97fa6f54120534a5d",
   "productPr": 131,
+  "runtimeGeneration": 629,
   "schemaVersion": 1,
-  "status": "ACTIVE",
+  "status": "LANDED",
   "supersedesReadinessPr": 68,
   "task": "P3-001"
 }

@@ -1,11 +1,14 @@
 {
-  "schemaVersion": 1,
-  "task": "P7-001",
-  "mission": "MISSION-007",
-  "productPr": 96,
-  "captain": "I",
   "branch": "agent/i/mission-007-p7-001-mcp-version-adapter",
+  "captain": "I",
+  "mainLandingCommit": "eddf1fdac3dd3412358a576e45b82e99528cfed4",
+  "mainLandingTree": "33bea41e73a68b30f1f17f09323824d81a6419d1",
+  "mission": "MISSION-007",
+  "observedAt": "2026-08-16T04:28:00Z",
   "observedHead": "ec5086210a778b8a1be51f22b9cd81f735956034",
-  "status": "ACTIVE",
-  "observedAt": "2026-08-07T17:21:00Z"
+  "productPr": 96,
+  "runtimeGeneration": 629,
+  "schemaVersion": 1,
+  "status": "LANDED",
+  "task": "P7-001"
 }

@@ -1,11 +1,14 @@
 {
-  "schemaVersion": 1,
-  "task": "P8-001",
-  "mission": "MISSION-002",
-  "productPr": 65,
-  "captain": "B",
   "branch": "agent/b/test-center-contracts-and-review",
-  "observedHead": "38584381f4e3e726f8e5a97cc8d8361f0e144761",
-  "status": "ACTIVE",
-  "observedAt": "2026-08-08T23:53:00Z"
+  "captain": "B",
+  "mainLandingCommit": "de00002ad01b19ab4ef4ced531d19a320a66b5c3",
+  "mainLandingTree": "bdbc1cc3fe7f84da6b1d305964713f57f433c5f2",
+  "mission": "MISSION-002",
+  "observedAt": "2026-08-16T04:28:00Z",
+  "observedHead": "f23316535b8042662250ec63005817e72da581d0",
+  "productPr": 65,
+  "runtimeGeneration": 629,
+  "schemaVersion": 1,
+  "status": "LANDED",
+  "task": "P8-001"
 }
