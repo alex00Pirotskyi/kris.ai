@@ -8,7 +8,7 @@ bd942164d87856c44c7c7fa96f23eaf241a41cea4b06834ee34550a4bd3e7662  .github/pull_r
 54a5fe8e232d0faa232a63ade008d0e6b6cf59d168c130a24277fe7b50da1ce2  .github/workflows/branch-hygiene.yml
 0ae3fd597401985d72de48550ff4f461dae3070b6a4fba7dad0b614d9e209cce  .github/workflows/ci.yml
 79bd1e8070b2a1d53c9047436cc6eec005174d5b0fbd69c8c0ba2b4fd30022c0  .github/workflows/p1-authority-amendment.yml
-7643f62a954a3ffbc14502c88bedf1d76981cebf7c6a921a73192c707f321d2b  .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml
+adc132e13629f7d9582ea342b7d5eba22f1374fe93aa90d9d6619471c3bbd963  .github/workflows/p1-p2-owner-risk-promotion-v71r12.yml
 a8478cd7b80c22b9d9de7379daab3d2f01345caf38355069fd37a715d9b1f59f  .github/workflows/p2-004-technology-selection.yml
 d9d8227c379c428193e33a86b4968b7394bf42efa9fbc6ce90d8fd44f98b2048  .github/workflows/p2-evidence-state.yml
 05918a5c978d9a25e5aa7c2c520bc27a48dece702120b9b995d770325a755dcc  .github/workflows/p2-integration-alignment.yml
