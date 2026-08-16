@@ -1,0 +1,18 @@
+{
+  "eventId": "EVT-00000645-RUNTIME_REPAIR",
+  "eventType": "RUNTIME_REPAIR",
+  "mission": "MISSION-001",
+  "payload": {
+    "allowedPathsAdded": [
+      ".github/workflows/p2-macos-packaging-finalizer.yml",
+      "tool/p2_macos_packaging_finalizer.py"
+    ],
+    "semaphoreId": "SEM-P2-004-MACOS-PACKAGING-9E4C2A73",
+    "truthBoundary": "Two exact self-removing transport paths only; final candidate scope remains the packager, one P2 regression and later source-manifest finalization. No platform, release, production or GA promotion."
+  },
+  "recordedAt": "2026-08-16T19:21:02Z",
+  "runtimeGeneration": 645,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260816T192102Z-9e4c2a73",
+  "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
+}

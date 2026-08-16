@@ -1,5 +1,7 @@
 {
   "allowedPaths": [
+    ".github/workflows/p2-macos-packaging-finalizer.yml",
+    "tool/p2_macos_packaging_finalizer.py",
     "tool/p2_macos_packaging_test.py",
     "tool/v70_package_platform.py"
   ],
@@ -9,13 +11,13 @@
   "branch": "agent/gpt-gold/gs-003d-macos-package-signing",
   "createdAt": "2026-08-16T19:17:03Z",
   "executionRole": "AUTHORITY_OWNER",
-  "expiresAt": "2026-08-16T23:17:03Z",
+  "expiresAt": "2026-08-16T23:21:02Z",
   "kind": "WRITE",
   "mission": "MISSION-001",
   "productPr": null,
-  "refreshedAt": "2026-08-16T19:17:03Z",
+  "refreshedAt": "2026-08-16T19:21:02Z",
   "resourceId": null,
-  "runtimeGeneration": 644,
+  "runtimeGeneration": 645,
   "schemaVersion": 1,
   "semaphoreId": "SEM-P2-004-MACOS-PACKAGING-9E4C2A73",
   "status": "ACTIVE",

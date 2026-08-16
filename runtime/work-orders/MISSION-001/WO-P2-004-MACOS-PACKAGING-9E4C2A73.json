@@ -1,6 +1,8 @@
 {
   "activeSemaphoreId": "SEM-P2-004-MACOS-PACKAGING-9E4C2A73",
   "allowedPaths": [
+    ".github/workflows/p2-macos-packaging-finalizer.yml",
+    "tool/p2_macos_packaging_finalizer.py",
     "tool/p2_macos_packaging_test.py",
     "tool/v70_package_platform.py"
   ],
@@ -11,9 +13,10 @@
   "createdBy": "WRK-20260816T191505Z-9e4c2a73",
   "dependencyRequirements": [],
   "executionRole": "AUTHORITY_OWNER",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-003D:SELF-REMOVING-FINALIZER-BOUND",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
-  "objective": "Repair the exact macOS QA shipment blocker proven by PR #159: tool/v70_package_platform.py uses codesign --deep over a bundled runtime containing node_modules/.bin symlinks. Sign only regular Mach-O descendants inside-out, never sign symlinks, sign the outer app without --deep, retain deep/strict verification, remove --deep from the generated launcher re-sign path, and add deterministic source/unit regressions. Do not change payload provenance, remove runtime files, certify a platform, or promote release, production, or GA support.",
+  "objective": "Repair the exact macOS QA shipment blocker proven by PR #159: tool/v70_package_platform.py uses codesign --deep over a bundled runtime containing node_modules/.bin symlinks. Sign only regular Mach-O descendants inside-out, never sign symlinks, sign the outer app without --deep, retain deep/strict verification, remove --deep from the generated launcher re-sign path, and add deterministic source/unit regressions. The two added finalizer paths are exact self-removing transport only and must not survive the candidate. Do not change payload provenance, remove runtime files, certify a platform, or promote release, production, or GA support.",
   "parentProductPr": 75,
   "parentWorkOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71",
   "priority": 100,
@@ -25,6 +28,7 @@
     "verification remains codesign --verify --deep --strict",
     "generated macOS launcher re-signing omits --deep",
     "a synthetic node_modules/.bin symlink regression passes",
+    "self-removing finalizer paths do not survive",
     "source manifest is byte-stable",
     "exact-head Product Gates and owner-risk macOS packaging pass"
   ],
@@ -32,6 +36,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "AUTHORITY_UPDATE",
-  "updatedAt": "2026-08-16T19:17:03Z",
+  "updatedAt": "2026-08-16T19:21:02Z",
   "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
 }
