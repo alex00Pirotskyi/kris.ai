@@ -925,7 +925,14 @@ def check_flutter_dart_compatibility() -> None:
     chat = read(ROOT / "lib/product/chat_studio.dart")
     ui_advanced = read(ROOT / "lib/product/ui_advanced.dart")
     ui_components = read(ROOT / "lib/product/ui_components.dart")
-    all_ui = "\n".join((ui, chat, ui_advanced, ui_components))
+    design_token_sources = [
+        read(ROOT / relative)
+        for relative in sorted(_load_governed_product_library_files())
+        if relative.endswith("_design_tokens.dart")
+    ]
+    all_ui = "\n".join(
+        (ui, chat, ui_advanced, ui_components, *design_token_sources)
+    )
     mcp = read(ROOT / "lib/product/mcp.dart")
     deployment = read(ROOT / "lib/product/deployment_support.dart")
     models = read(ROOT / "lib/product/models_research.dart")
