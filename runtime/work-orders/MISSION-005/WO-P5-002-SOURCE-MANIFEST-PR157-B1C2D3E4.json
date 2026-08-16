@@ -1,0 +1,34 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "SOURCE_MANIFEST.sha256"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD:GS-016:SOURCE-MANIFEST",
+  "baseCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
+  "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "createdAt": "2026-08-16T07:39:00Z",
+  "createdBy": "WRK-20260816T073900Z-b1c2d3e4",
+  "dependencyRequirements": [],
+  "executionRole": "RELEASE_FINALIZER",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN632:SOURCE_MANIFEST_FINALIZATION",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Validate the exact canonical SOURCE_MANIFEST.sha256 generated for P5-002 Product PR #157. Require two byte-identical generations and the canonical text EOF/manifest contract; authorize no other generated path and make no release-support or product-support promotion.",
+  "parentProductPr": 157,
+  "parentWorkOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4",
+  "priority": 100,
+  "requestedRole": "RELEASE_FINALIZER",
+  "requiredTests": [
+    "python tool/p1a_refresh_source_manifest.py . produces byte-identical consecutive outputs",
+    "the committed manifest matches the exact five-path candidate",
+    "the canonical text EOF/manifest contract passes",
+    "no behavior, accessibility certification, platform, release support, production, release, or GA claim is made"
+  ],
+  "roadmapTask": "P5-002",
+  "runtimeGeneration": 632,
+  "schemaVersion": 1,
+  "status": "VALIDATING",
+  "type": "RELEASE_FINALIZATION",
+  "updatedAt": "2026-08-16T07:39:00Z",
+  "workOrderId": "WO-P5-002-SOURCE-MANIFEST-PR157-B1C2D3E4"
+}

@@ -1,0 +1,34 @@
+{
+  "activeSemaphoreId": null,
+  "allowedPaths": [
+    "test/product/source_contract_test.dart"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD:GS-016:SOURCE-INVENTORY",
+  "baseCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
+  "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "createdAt": "2026-08-16T07:39:00Z",
+  "createdBy": "WRK-20260816T073900Z-a1b2c3d4",
+  "dependencyRequirements": [],
+  "executionRole": "AUTHORITY_OWNER",
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN632:SOURCE_INVENTORY_AUTHORITY",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-005",
+  "objective": "Validate the exact append-only P5-002 source-inventory change in test/product/source_contract_test.dart for canonical Product PR #157. Preserve MISSION-001 ownership and the closed governed inventory contract; authorize no other shared path and make no product-support promotion.",
+  "parentProductPr": 157,
+  "parentWorkOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4",
+  "priority": 100,
+  "requestedRole": "AUTHORITY_OWNER",
+  "requiredTests": [
+    "the source inventory adds exactly lib/product/p5_design_tokens.dart",
+    "the governed release-validator source regression remains present",
+    "source-contract tests pass without widening unrelated inventory",
+    "no behavior, accessibility certification, platform, release, production, or GA claim is made"
+  ],
+  "roadmapTask": "P5-002",
+  "runtimeGeneration": 632,
+  "schemaVersion": 1,
+  "status": "VALIDATING",
+  "type": "AUTHORITY_UPDATE",
+  "updatedAt": "2026-08-16T07:39:00Z",
+  "workOrderId": "WO-P5-002-SOURCE-INVENTORY-PR157-A1B2C3D4"
+}

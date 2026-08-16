@@ -1,0 +1,38 @@
+{
+  "actor": "GPT-5.6-PRO-GOLD",
+  "createdAt": "2026-08-16T07:39:00Z",
+  "details": {
+    "candidateCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
+    "candidateTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+    "childWorkOrders": [
+      {
+        "allowedPaths": [
+          "test/product/source_contract_test.dart"
+        ],
+        "type": "AUTHORITY_UPDATE",
+        "workOrderId": "WO-P5-002-SOURCE-INVENTORY-PR157-A1B2C3D4"
+      },
+      {
+        "allowedPaths": [
+          "SOURCE_MANIFEST.sha256"
+        ],
+        "type": "RELEASE_FINALIZATION",
+        "workOrderId": "WO-P5-002-SOURCE-MANIFEST-PR157-B1C2D3E4"
+      }
+    ],
+    "ownedProductPaths": [
+      "lib/product/p5_design_tokens.dart",
+      "lib/product/ui.dart",
+      "test/product/p5_design_tokens_test.dart"
+    ],
+    "policyCommit": "13d4e8fc77ef02d5e60873943bc851d54580fa45",
+    "productPr": 157,
+    "truthBoundary": "Split exact P5-002 Product ownership from the pre-existing shared source-inventory authority and generated source-manifest authority. No behavior, manual accessibility certification, platform qualification, release support, production readiness, release, or GA promotion."
+  },
+  "eventId": "EVT-00000632-WORK_ORDER_DELEGATED",
+  "eventType": "WORK_ORDER_DELEGATED",
+  "mission": "MISSION-005",
+  "runtimeGeneration": 632,
+  "schemaVersion": 1,
+  "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
+}

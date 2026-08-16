@@ -1,11 +1,9 @@
 {
   "activeSemaphoreId": null,
   "allowedPaths": [
-    "SOURCE_MANIFEST.sha256",
     "lib/product/p5_design_tokens.dart",
     "lib/product/ui.dart",
-    "test/product/p5_design_tokens_test.dart",
-    "test/product/source_contract_test.dart"
+    "test/product/p5_design_tokens_test.dart"
   ],
   "assignedWorker": "GPT-5.6-PRO-GOLD:GS-016",
   "baseCommit": "cd46198450bebdd028280a89aadd056508baeb2a",
@@ -14,30 +12,28 @@
   "createdBy": "WRK-20260816T064200Z-3a7c91e4",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "GPT-5.6-PRO-GOLD:GEN631:EXACT_HEAD_VALIDATION",
-  "maxChildWorkOrders": 0,
+  "lastActor": "GPT-5.6-PRO-GOLD:GEN632:EXACT_AUTHORITY_SPLIT",
+  "maxChildWorkOrders": 2,
   "mission": "MISSION-005",
-  "objective": "Continue P5-002 exclusively through canonical Product PR #157 from exact current-main candidate cd46198450bebdd028280a89aadd056508baeb2a / tree db4c9218c6180d9b3613e6635d6213c85f49d9cd. The separate governed release-validator repair landed on protected main at fb8ebae9ef8845d306c61e355bafc01ea95165f1 and passed exact-main validation. Preserve the exact five-path Product scope, require exact-head tri-platform Product and compatibility gates, and perform protected-main source landing only after those gates pass. Do not promote manual accessibility certification, platform support, release support, production readiness, release, or GA.",
+  "objective": "Validate and integrate the exact three MISSION-005-owned P5-002 Product paths from canonical PR #157 at cd46198450bebdd028280a89aadd056508baeb2a / tree db4c9218c6180d9b3613e6635d6213c85f49d9cd. The shared source inventory and generated root manifest are delegated to two separately typed child Work Orders. Require exact-head tri-platform Product and compatibility gates and protected-main source landing only after all three Work Orders pass. Do not promote manual accessibility certification, behavior certification, platform support, release support, production readiness, release, or GA.",
   "parentProductPr": 157,
   "priority": 100,
   "requestedRole": "INTEGRATOR",
   "requiredTests": [
-    "the validator repair lands as its own exact three-path protected-main change",
-    "PR #157 remains an exact five-path Product candidate after current-main reconciliation",
+    "the exact Product diff contains only the three owned P5 paths plus the two separately governed child paths",
     "release validation discovers governed *_design_tokens.dart modules without weakening CardThemeData checks",
     "flutter analyze with fatal warnings and infos passes",
     "full Flutter tests and automation-host tests pass",
     "product-gates pass on Ubuntu, Windows, and macOS at the exact PR #157 head",
-    "canonical SOURCE_MANIFEST.sha256 remains byte-stable",
     "post-landing protected-main Product Gates pass before runtime records LANDED",
-    "no acceptance, accessibility certification, platform, release, production, or GA promotion is made"
+    "no acceptance, manual accessibility certification, platform, release, production, or GA promotion is made"
   ],
   "roadmapTask": "P5-002",
-  "runtimeGeneration": 631,
+  "runtimeGeneration": 632,
   "schemaVersion": 1,
   "status": "VALIDATING",
   "supersedes": "WO-P5-002-DESIGN-TOKENS-3A7C91E4",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-16T07:34:00Z",
+  "updatedAt": "2026-08-16T07:39:00Z",
   "workOrderId": "WO-P5-002-CURRENT-MAIN-PR157-3A7C91E4"
 }
