@@ -173,6 +173,152 @@ final class P3BrowserDownloadPolicy {
       );
 }
 
+const int _p3HardMaxUploadBytes = 32 * 1024 * 1024;
+const String _p3UploadStageManifestType = 'kristin-p3-browser-upload-stage-v1';
+const String _p3UploadReceiptType = 'kristin-p3-browser-upload-receipt-v1';
+final RegExp _p3UploadStageId = RegExp(r'^uploadstage_[A-Za-z0-9_-]{1,115}$');
+final RegExp _p3UploadReceiptId =
+    RegExp(r'^uploadreceipt_[A-Za-z0-9_-]{1,113}$');
+final RegExp _p3UploadMimeType =
+    RegExp(r'^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$');
+
+String _boundedBrowserUploadFilename(String raw) {
+  var value = raw.split(RegExp(r'[\\/]')).last;
+  value = value
+      .replaceAll(RegExp(r'[\u0000-\u001f\u007f<>:"|?*]'), '_')
+      .trim()
+      .replaceAll(RegExp(r'[. ]+$'), '');
+  if (value.isEmpty || value == '.' || value == '..') value = 'upload';
+  final result = StringBuffer();
+  var bytes = 0;
+  for (final rune in value.runes) {
+    final character = String.fromCharCode(rune);
+    final characterBytes = utf8.encode(character).length;
+    if (bytes + characterBytes > 255) break;
+    result.write(character);
+    bytes += characterBytes;
+  }
+  final bounded = result.toString();
+  return bounded.isEmpty ? 'upload' : bounded;
+}
+
+String _normalizedBrowserUploadMimeType(String raw) {
+  if (raw.length < 3 ||
+      utf8.encode(raw).length > 255 ||
+      raw.contains('\u0000') ||
+      !_p3UploadMimeType.hasMatch(raw)) {
+    throw const P3BrowserRuntimeException(
+      'browser_upload_mime_type_invalid',
+    );
+  }
+  return raw.toLowerCase();
+}
+
+bool _isAbsoluteBrowserUploadPath(String value) =>
+    value.startsWith('/') ||
+    RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value) ||
+    value.startsWith(r'\\');
+
+final class P3BrowserUploadPolicy {
+  const P3BrowserUploadPolicy({
+    this.maxPayloadBytes = _p3HardMaxUploadBytes,
+    this.maxStagingBytes = _p3HardMaxUploadBytes,
+    this.maxStages = 128,
+    this.maxReceipts = 1024,
+    this.maxManifestBytes = 64 * 1024,
+    this.maxReceiptBytes = 64 * 1024,
+  });
+
+  factory P3BrowserUploadPolicy.fromJson(Map<String, Object?> value) {
+    _requireExactBrowserKeys(
+      value,
+      const <String>{
+        'maxPayloadBytes',
+        'maxStagingBytes',
+        'maxStages',
+        'maxReceipts',
+        'maxManifestBytes',
+        'maxReceiptBytes',
+      },
+      'browser_upload_limits_invalid',
+    );
+    final policy = P3BrowserUploadPolicy(
+      maxPayloadBytes: value['maxPayloadBytes'] is int
+          ? value['maxPayloadBytes']! as int
+          : -1,
+      maxStagingBytes: value['maxStagingBytes'] is int
+          ? value['maxStagingBytes']! as int
+          : -1,
+      maxStages: value['maxStages'] is int ? value['maxStages']! as int : -1,
+      maxReceipts:
+          value['maxReceipts'] is int ? value['maxReceipts']! as int : -1,
+      maxManifestBytes: value['maxManifestBytes'] is int
+          ? value['maxManifestBytes']! as int
+          : -1,
+      maxReceiptBytes: value['maxReceiptBytes'] is int
+          ? value['maxReceiptBytes']! as int
+          : -1,
+    );
+    policy.validate();
+    return policy;
+  }
+
+  final int maxPayloadBytes;
+  final int maxStagingBytes;
+  final int maxStages;
+  final int maxReceipts;
+  final int maxManifestBytes;
+  final int maxReceiptBytes;
+
+  void validate() {
+    if (maxPayloadBytes < 1 ||
+        maxPayloadBytes > _p3HardMaxUploadBytes ||
+        maxStagingBytes < maxPayloadBytes ||
+        maxStagingBytes > _p3HardMaxUploadBytes ||
+        maxStages < 1 ||
+        maxStages > 256 ||
+        maxReceipts < 1 ||
+        maxReceipts > 4096 ||
+        maxManifestBytes < 1024 ||
+        maxManifestBytes > 64 * 1024 ||
+        maxReceiptBytes < 1024 ||
+        maxReceiptBytes > 64 * 1024) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_limits_invalid',
+      );
+    }
+  }
+
+  Map<String, Object?> toJson() => <String, Object?>{
+        'maxPayloadBytes': maxPayloadBytes,
+        'maxStagingBytes': maxStagingBytes,
+        'maxStages': maxStages,
+        'maxReceipts': maxReceipts,
+        'maxManifestBytes': maxManifestBytes,
+        'maxReceiptBytes': maxReceiptBytes,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      other is P3BrowserUploadPolicy &&
+      other.maxPayloadBytes == maxPayloadBytes &&
+      other.maxStagingBytes == maxStagingBytes &&
+      other.maxStages == maxStages &&
+      other.maxReceipts == maxReceipts &&
+      other.maxManifestBytes == maxManifestBytes &&
+      other.maxReceiptBytes == maxReceiptBytes;
+
+  @override
+  int get hashCode => Object.hash(
+        maxPayloadBytes,
+        maxStagingBytes,
+        maxStages,
+        maxReceipts,
+        maxManifestBytes,
+        maxReceiptBytes,
+      );
+}
+
 final class P3BrowserSessionQuotas {
   const P3BrowserSessionQuotas({
     this.maxSessions = 4,
@@ -460,6 +606,7 @@ final class P3BrowserSessionReady {
     required this.runtime,
     required this.quotas,
     required this.downloadPolicy,
+    required this.uploadPolicy,
   });
 
   factory P3BrowserSessionReady.fromJson(
@@ -473,9 +620,11 @@ final class P3BrowserSessionReady {
     );
     final quotasValue = value['quotas'];
     final downloadPolicyValue = value['downloadPolicy'];
+    final uploadPolicyValue = value['uploadPolicy'];
     if (value['serviceMode'] != 'sessions' ||
         quotasValue is! Map ||
-        downloadPolicyValue is! Map) {
+        downloadPolicyValue is! Map ||
+        uploadPolicyValue is! Map) {
       throw const P3BrowserRuntimeException(
         'browser_session_ready_invalid',
       );
@@ -517,16 +666,33 @@ final class P3BrowserSessionReady {
         'browser_session_ready_download_policy_mismatch',
       );
     }
+    late final P3BrowserUploadPolicy uploadPolicy;
+    try {
+      uploadPolicy = P3BrowserUploadPolicy.fromJson(
+        Map<String, Object?>.from(uploadPolicyValue),
+      );
+    } on P3BrowserRuntimeException {
+      throw const P3BrowserRuntimeException(
+        'browser_session_ready_invalid',
+      );
+    }
+    if (uploadPolicy != const P3BrowserUploadPolicy()) {
+      throw const P3BrowserRuntimeException(
+        'browser_session_ready_upload_policy_mismatch',
+      );
+    }
     return P3BrowserSessionReady(
       runtime: runtime,
       quotas: quotas,
       downloadPolicy: downloadPolicy,
+      uploadPolicy: uploadPolicy,
     );
   }
 
   final P3BrowserRuntimeReady runtime;
   final P3BrowserSessionQuotas quotas;
   final P3BrowserDownloadPolicy downloadPolicy;
+  final P3BrowserUploadPolicy uploadPolicy;
 
   Map<String, Object?> get provenance => <String, Object?>{
         'workerPid': runtime.pid,
@@ -539,14 +705,19 @@ final class P3BrowserSessionReady {
         'serviceMode': 'sessions',
         'quotas': quotas.toJson(),
         'downloadPolicy': downloadPolicy.toJson(),
+        'uploadPolicy': uploadPolicy.toJson(),
         'applicationOwned': true,
         'globalRuntimeRequired': false,
         'browserNetworkInstallRequired': false,
         'persistentProfileStateLocalOnly': true,
         'downloadQuarantineApplicationOwned': true,
         'downloadReceiptValidationIndependent': true,
+        'uploadStagingApplicationOwned': true,
+        'uploadReceiptValidationIndependent': true,
+        'uploadBrowserTransferMode': 'in-memory-buffer',
         'p3_002SessionServiceImplemented': true,
         'p3_006aDownloadQuarantineImplemented': true,
+        'p3_006bUploadStagingImplemented': true,
       };
 }
 
@@ -557,6 +728,7 @@ final class P3BrowserSessionInfo {
     required this.profileId,
     required this.pageCount,
     required this.downloadsEnabled,
+    required this.uploadsEnabled,
     required this.createdAt,
   });
 
@@ -566,6 +738,7 @@ final class P3BrowserSessionInfo {
     final profileId = value['profileId'];
     final pageCount = value['pageCount'];
     final downloadsEnabled = value['downloadsEnabled'];
+    final uploadsEnabled = value['uploadsEnabled'];
     final createdAt = DateTime.tryParse(value['createdAt']?.toString() ?? '');
     final kind = P3BrowserSessionKind.values
         .where((candidate) => candidate.wireName == kindName)
@@ -577,6 +750,7 @@ final class P3BrowserSessionInfo {
         pageCount is! int ||
         pageCount < 0 ||
         downloadsEnabled is! bool ||
+        uploadsEnabled is! bool ||
         createdAt == null) {
       throw const P3BrowserRuntimeException(
         'browser_session_response_invalid',
@@ -595,6 +769,7 @@ final class P3BrowserSessionInfo {
       profileId: profileId as String?,
       pageCount: pageCount,
       downloadsEnabled: downloadsEnabled,
+      uploadsEnabled: uploadsEnabled,
       createdAt: createdAt.toUtc(),
     );
   }
@@ -604,6 +779,7 @@ final class P3BrowserSessionInfo {
   final String? profileId;
   final int pageCount;
   final bool downloadsEnabled;
+  final bool uploadsEnabled;
   final DateTime createdAt;
 }
 
@@ -1031,6 +1207,409 @@ final class P3BrowserDownloadReceipt {
   final String sourceUrl;
   final String suggestedFilename;
   final String payloadRelativePath;
+  final int bytes;
+  final String sha256;
+  final String locatorStrategy;
+  final int locatorIndex;
+  final DateTime createdAt;
+  final String receiptHash;
+  final Map<String, Object?> json;
+
+  Map<String, Object?> toJson() => Map<String, Object?>.from(json);
+}
+
+final class P3BrowserUploadStageRequest {
+  const P3BrowserUploadStageRequest({
+    required this.sourcePath,
+    required this.fileName,
+    this.mimeType = 'application/octet-stream',
+  });
+
+  final String sourcePath;
+  final String fileName;
+  final String mimeType;
+
+  Map<String, Object?> toJson() {
+    if (sourcePath.isEmpty ||
+        sourcePath.contains('\u0000') ||
+        utf8.encode(sourcePath).length > 32 * 1024 ||
+        !_isAbsoluteBrowserUploadPath(sourcePath)) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_source_path_invalid',
+      );
+    }
+    return <String, Object?>{
+      'sourcePath': sourcePath,
+      'fileName': _boundedBrowserUploadFilename(fileName),
+      'mimeType': _normalizedBrowserUploadMimeType(mimeType),
+    };
+  }
+}
+
+final class P3BrowserUploadStage {
+  P3BrowserUploadStage._({
+    required this.stageId,
+    required this.sessionId,
+    required this.sessionKind,
+    required this.profileId,
+    required this.fileName,
+    required this.mimeType,
+    required this.payloadRelativePath,
+    required this.bytes,
+    required this.sha256,
+    required this.createdAt,
+    required this.manifestHash,
+    required Map<String, Object?> json,
+  }) : json = Map<String, Object?>.unmodifiable(json);
+
+  factory P3BrowserUploadStage.fromJson(Map<String, Object?> value) {
+    _requireExactBrowserKeys(
+      value,
+      const <String>{
+        'schemaVersion',
+        'manifestType',
+        'stageId',
+        'sessionId',
+        'sessionKind',
+        'profileId',
+        'file',
+        'createdAt',
+        'manifestHash',
+      },
+      'browser_upload_manifest_invalid',
+    );
+    final fileValue = value['file'];
+    if (fileValue is! Map) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_manifest_invalid',
+      );
+    }
+    final file = Map<String, Object?>.from(fileValue);
+    _requireExactBrowserKeys(
+      file,
+      const <String>{'name', 'mimeType', 'relativePath', 'bytes', 'sha256'},
+      'browser_upload_manifest_invalid',
+    );
+
+    final stageId = value['stageId'];
+    final sessionId = value['sessionId'];
+    final sessionKindName = value['sessionKind'];
+    final profileId = value['profileId'];
+    final fileName = file['name'];
+    final mimeType = file['mimeType'];
+    final relativePath = file['relativePath'];
+    final bytes = file['bytes'];
+    final sha256 = file['sha256'];
+    final createdAtValue = value['createdAt'];
+    final manifestHash = value['manifestHash'];
+    final sessionKind = P3BrowserSessionKind.values
+        .where((candidate) => candidate.wireName == sessionKindName)
+        .firstOrNull;
+    final createdAt =
+        createdAtValue is String ? DateTime.tryParse(createdAtValue) : null;
+    final profileValid =
+        (sessionKind == P3BrowserSessionKind.ephemeral && profileId == null) ||
+            (sessionKind == P3BrowserSessionKind.persistent &&
+                profileId is String &&
+                _p3ProfileId.hasMatch(profileId));
+    final expectedRelativePath =
+        stageId is String ? 'uploads/staging/$stageId/payload.bin' : '';
+    String? normalizedMimeType;
+    if (mimeType is String) {
+      try {
+        normalizedMimeType = _normalizedBrowserUploadMimeType(mimeType);
+      } on P3BrowserRuntimeException {
+        normalizedMimeType = null;
+      }
+    }
+
+    if (value['schemaVersion'] != '1.0.0' ||
+        value['manifestType'] != _p3UploadStageManifestType ||
+        stageId is! String ||
+        !_p3UploadStageId.hasMatch(stageId) ||
+        sessionId is! String ||
+        !_p3GeneratedId.hasMatch(sessionId) ||
+        sessionKind == null ||
+        !profileValid ||
+        fileName is! String ||
+        _boundedBrowserUploadFilename(fileName) != fileName ||
+        utf8.encode(fileName).length > 255 ||
+        mimeType is! String ||
+        normalizedMimeType != mimeType ||
+        relativePath != expectedRelativePath ||
+        bytes is! int ||
+        bytes < 0 ||
+        bytes > _p3HardMaxUploadBytes ||
+        sha256 is! String ||
+        !_p3Sha256.hasMatch(sha256) ||
+        createdAtValue is! String ||
+        createdAt == null ||
+        createdAtValue != _canonicalBrowserIsoTimestamp(createdAt) ||
+        manifestHash is! String ||
+        !_p3Sha256.hasMatch(manifestHash)) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_manifest_invalid',
+      );
+    }
+
+    final hashInput = Map<String, Object?>.from(value)..remove('manifestHash');
+    if (utf8.encode(canonicalJson(value)).length > 64 * 1024 ||
+        Sha256.text(canonicalJson(hashInput)) != manifestHash) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_manifest_hash_mismatch',
+      );
+    }
+    return P3BrowserUploadStage._(
+      stageId: stageId,
+      sessionId: sessionId,
+      sessionKind: sessionKind,
+      profileId: profileId as String?,
+      fileName: fileName,
+      mimeType: mimeType,
+      payloadRelativePath: relativePath as String,
+      bytes: bytes,
+      sha256: sha256,
+      createdAt: createdAt.toUtc(),
+      manifestHash: manifestHash,
+      json: <String, Object?>{
+        ...value,
+        'file': Map<String, Object?>.unmodifiable(file),
+      },
+    );
+  }
+
+  final String stageId;
+  final String sessionId;
+  final P3BrowserSessionKind sessionKind;
+  final String? profileId;
+  final String fileName;
+  final String mimeType;
+  final String payloadRelativePath;
+  final int bytes;
+  final String sha256;
+  final DateTime createdAt;
+  final String manifestHash;
+  final Map<String, Object?> json;
+
+  Map<String, Object?> get requestIdentity => <String, Object?>{
+        'stageId': stageId,
+        'manifestHash': manifestHash,
+        'fileName': fileName,
+        'mimeType': mimeType,
+        'bytes': bytes,
+        'sha256': sha256,
+      };
+
+  Map<String, Object?> toJson() => Map<String, Object?>.from(json);
+}
+
+final class P3BrowserUploadRequest {
+  const P3BrowserUploadRequest({
+    required this.locators,
+    required this.stage,
+    this.timeout = const Duration(seconds: 30),
+  });
+
+  final List<P3BrowserLocator> locators;
+  final P3BrowserUploadStage stage;
+  final Duration timeout;
+
+  Map<String, Object?> toJson() {
+    if (locators.isEmpty || locators.length > 8) {
+      throw const P3BrowserRuntimeException(
+        'browser_locator_list_invalid',
+      );
+    }
+    if (timeout < const Duration(milliseconds: 100) ||
+        timeout > const Duration(seconds: 60)) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_timeout_invalid',
+      );
+    }
+    return <String, Object?>{
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
+      'stage': stage.requestIdentity,
+      'timeoutMs': timeout.inMilliseconds,
+    };
+  }
+}
+
+final class P3BrowserUploadReceipt {
+  P3BrowserUploadReceipt._({
+    required this.receiptId,
+    required this.stageId,
+    required this.manifestHash,
+    required this.sessionId,
+    required this.sessionKind,
+    required this.profileId,
+    required this.pageId,
+    required this.fileName,
+    required this.mimeType,
+    required this.bytes,
+    required this.sha256,
+    required this.locatorStrategy,
+    required this.locatorIndex,
+    required this.createdAt,
+    required this.receiptHash,
+    required Map<String, Object?> json,
+  }) : json = Map<String, Object?>.unmodifiable(json);
+
+  factory P3BrowserUploadReceipt.fromJson(Map<String, Object?> value) {
+    _requireExactBrowserKeys(
+      value,
+      const <String>{
+        'schemaVersion',
+        'receiptType',
+        'receiptId',
+        'stageId',
+        'manifestHash',
+        'sessionId',
+        'sessionKind',
+        'profileId',
+        'pageId',
+        'file',
+        'locator',
+        'transferMode',
+        'createdAt',
+        'receiptHash',
+      },
+      'browser_upload_receipt_invalid',
+    );
+    final fileValue = value['file'];
+    final locatorValue = value['locator'];
+    if (fileValue is! Map || locatorValue is! Map) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_receipt_invalid',
+      );
+    }
+    final file = Map<String, Object?>.from(fileValue);
+    final locator = Map<String, Object?>.from(locatorValue);
+    _requireExactBrowserKeys(
+      file,
+      const <String>{'name', 'mimeType', 'bytes', 'sha256'},
+      'browser_upload_receipt_invalid',
+    );
+    _requireExactBrowserKeys(
+      locator,
+      const <String>{'strategy', 'index'},
+      'browser_upload_receipt_invalid',
+    );
+
+    final receiptId = value['receiptId'];
+    final stageId = value['stageId'];
+    final manifestHash = value['manifestHash'];
+    final sessionId = value['sessionId'];
+    final sessionKindName = value['sessionKind'];
+    final profileId = value['profileId'];
+    final pageId = value['pageId'];
+    final fileName = file['name'];
+    final mimeType = file['mimeType'];
+    final bytes = file['bytes'];
+    final sha256 = file['sha256'];
+    final locatorStrategy = locator['strategy'];
+    final locatorIndex = locator['index'];
+    final createdAtValue = value['createdAt'];
+    final receiptHash = value['receiptHash'];
+    final sessionKind = P3BrowserSessionKind.values
+        .where((candidate) => candidate.wireName == sessionKindName)
+        .firstOrNull;
+    final createdAt =
+        createdAtValue is String ? DateTime.tryParse(createdAtValue) : null;
+    final profileValid =
+        (sessionKind == P3BrowserSessionKind.ephemeral && profileId == null) ||
+            (sessionKind == P3BrowserSessionKind.persistent &&
+                profileId is String &&
+                _p3ProfileId.hasMatch(profileId));
+    String? normalizedMimeType;
+    if (mimeType is String) {
+      try {
+        normalizedMimeType = _normalizedBrowserUploadMimeType(mimeType);
+      } on P3BrowserRuntimeException {
+        normalizedMimeType = null;
+      }
+    }
+
+    if (value['schemaVersion'] != '1.0.0' ||
+        value['receiptType'] != _p3UploadReceiptType ||
+        receiptId is! String ||
+        !_p3UploadReceiptId.hasMatch(receiptId) ||
+        stageId is! String ||
+        !_p3UploadStageId.hasMatch(stageId) ||
+        manifestHash is! String ||
+        !_p3Sha256.hasMatch(manifestHash) ||
+        sessionId is! String ||
+        !_p3GeneratedId.hasMatch(sessionId) ||
+        sessionKind == null ||
+        !profileValid ||
+        pageId is! String ||
+        !_p3GeneratedId.hasMatch(pageId) ||
+        fileName is! String ||
+        _boundedBrowserUploadFilename(fileName) != fileName ||
+        utf8.encode(fileName).length > 255 ||
+        mimeType is! String ||
+        normalizedMimeType != mimeType ||
+        bytes is! int ||
+        bytes < 0 ||
+        bytes > _p3HardMaxUploadBytes ||
+        sha256 is! String ||
+        !_p3Sha256.hasMatch(sha256) ||
+        locatorStrategy is! String ||
+        !_p3DownloadLocatorStrategies.contains(locatorStrategy) ||
+        locatorIndex is! int ||
+        locatorIndex < 0 ||
+        locatorIndex > 7 ||
+        value['transferMode'] != 'in-memory-buffer' ||
+        createdAtValue is! String ||
+        createdAt == null ||
+        createdAtValue != _canonicalBrowserIsoTimestamp(createdAt) ||
+        receiptHash is! String ||
+        !_p3Sha256.hasMatch(receiptHash)) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_receipt_invalid',
+      );
+    }
+
+    final hashInput = Map<String, Object?>.from(value)..remove('receiptHash');
+    if (utf8.encode(canonicalJson(value)).length > 64 * 1024 ||
+        Sha256.text(canonicalJson(hashInput)) != receiptHash) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_receipt_hash_mismatch',
+      );
+    }
+    return P3BrowserUploadReceipt._(
+      receiptId: receiptId,
+      stageId: stageId,
+      manifestHash: manifestHash,
+      sessionId: sessionId,
+      sessionKind: sessionKind,
+      profileId: profileId as String?,
+      pageId: pageId,
+      fileName: fileName,
+      mimeType: mimeType,
+      bytes: bytes,
+      sha256: sha256,
+      locatorStrategy: locatorStrategy,
+      locatorIndex: locatorIndex,
+      createdAt: createdAt.toUtc(),
+      receiptHash: receiptHash,
+      json: <String, Object?>{
+        ...value,
+        'file': Map<String, Object?>.unmodifiable(file),
+        'locator': Map<String, Object?>.unmodifiable(locator),
+      },
+    );
+  }
+
+  final String receiptId;
+  final String stageId;
+  final String manifestHash;
+  final String sessionId;
+  final P3BrowserSessionKind sessionKind;
+  final String? profileId;
+  final String pageId;
+  final String fileName;
+  final String mimeType;
   final int bytes;
   final String sha256;
   final String locatorStrategy;
@@ -1916,6 +2495,7 @@ final class P3BrowserSessionProcess {
     P3BrowserSessionKind kind = P3BrowserSessionKind.ephemeral,
     String? profileId,
     bool downloadsEnabled = false,
+    bool uploadsEnabled = false,
   }) async {
     if (kind == P3BrowserSessionKind.persistent &&
         (profileId == null || profileId.isEmpty)) {
@@ -1932,12 +2512,14 @@ final class P3BrowserSessionProcess {
       'kind': kind.wireName,
       if (profileId != null) 'profileId': profileId,
       'downloadsEnabled': downloadsEnabled,
+      'uploadsEnabled': uploadsEnabled,
     });
     final info = _decodeResponse(() => P3BrowserSessionInfo.fromJson(result));
     if (info.kind != kind ||
         info.profileId != profileId ||
         info.pageCount != 0 ||
-        info.downloadsEnabled != downloadsEnabled) {
+        info.downloadsEnabled != downloadsEnabled ||
+        info.uploadsEnabled != uploadsEnabled) {
       _protocolViolation('browser_session_response_identity_mismatch');
     }
     return info;
@@ -2154,6 +2736,88 @@ final class P3BrowserSessionProcess {
     }
   }
 
+  Future<P3BrowserUploadStage> stageUpload(
+    String sessionId,
+    P3BrowserUploadStageRequest request,
+  ) async {
+    final result = await _request('upload.stage', <String, Object?>{
+      'sessionId': sessionId,
+      'stageRequest': request.toJson(),
+    });
+    final stage = _decodeResponse(
+      () => P3BrowserUploadStage.fromJson(result),
+    );
+    if (stage.sessionId != sessionId) {
+      _protocolViolation('browser_upload_manifest_identity_mismatch');
+    }
+    return stage;
+  }
+
+  Future<P3BrowserUploadReceipt> uploadPage(
+    String sessionId,
+    String pageId,
+    P3BrowserUploadRequest request,
+  ) async {
+    final result = await _request('page.upload', <String, Object?>{
+      'sessionId': sessionId,
+      'pageId': pageId,
+      'uploadRequest': request.toJson(),
+    });
+    final receipt = _decodeResponse(
+      () => P3BrowserUploadReceipt.fromJson(result),
+    );
+    if (receipt.sessionId != sessionId ||
+        receipt.pageId != pageId ||
+        receipt.stageId != request.stage.stageId ||
+        receipt.manifestHash != request.stage.manifestHash) {
+      _protocolViolation('browser_upload_receipt_identity_mismatch');
+    }
+    return receipt;
+  }
+
+  Future<List<P3BrowserUploadReceipt>> listUploadReceipts(
+    String sessionId,
+  ) async {
+    final result = await _request('upload.list', <String, Object?>{
+      'sessionId': sessionId,
+    });
+    final values = result['uploads'];
+    if (values is! List) {
+      throw const P3BrowserRuntimeException(
+        'browser_upload_response_invalid',
+      );
+    }
+    final receipts = _decodeResponse(() => values.map((value) {
+          if (value is! Map) {
+            throw const P3BrowserRuntimeException(
+              'browser_upload_response_invalid',
+            );
+          }
+          return P3BrowserUploadReceipt.fromJson(
+            Map<String, Object?>.from(value),
+          );
+        }).toList(growable: false));
+    if (receipts.length > ready.uploadPolicy.maxReceipts ||
+        receipts.any((receipt) => receipt.sessionId != sessionId) ||
+        receipts.map((receipt) => receipt.receiptId).toSet().length !=
+            receipts.length ||
+        receipts.map((receipt) => receipt.stageId).toSet().length !=
+            receipts.length) {
+      _protocolViolation('browser_upload_response_identity_mismatch');
+    }
+    for (var index = 1; index < receipts.length; index += 1) {
+      final previous = receipts[index - 1];
+      final current = receipts[index];
+      final ordered = previous.createdAt.isBefore(current.createdAt) ||
+          (previous.createdAt.isAtSameMomentAs(current.createdAt) &&
+              previous.receiptId.compareTo(current.receiptId) <= 0);
+      if (!ordered) {
+        _protocolViolation('browser_upload_response_identity_mismatch');
+      }
+    }
+    return receipts;
+  }
+
   Future<void> closePage(String sessionId, String pageId) async {
     final result = await _request('page.close', <String, Object?>{
       'sessionId': sessionId,
@@ -2214,8 +2878,9 @@ final class P3BrowserSessionProcess {
 ///
 /// P3-001 resolves and probes the pinned application-owned runtime. P3-002 adds
 /// isolated ephemeral/persistent contexts and bounded page lifecycle. P3-006A
-/// adds explicit download opt-in, application-owned quarantine, independently
-/// verified durable receipts, exact inventory listing, and receipt-bound discard.
+/// adds controlled download quarantine. P3-006B adds explicit upload opt-in,
+/// application-owned staging, in-memory browser transfer, one-use consumption
+/// locks, and independently verified durable upload receipts.
 final class P3BrowserRuntimeService {
   P3BrowserRuntimeService({
     required Directory applicationDataRoot,

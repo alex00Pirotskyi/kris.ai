@@ -19,7 +19,10 @@ import test from 'node:test';
 import {
   BrowserSessionRegistry,
   P3_DOWNLOAD_LIMITS,
+  P3_UPLOAD_LIMITS,
   canonicalDownloadReceiptJson,
+  canonicalUploadManifestJson,
+  canonicalUploadReceiptJson,
   canonicalObservationJson,
   capturePageObservation,
   createPageTelemetry,
@@ -34,11 +37,17 @@ import {
   raceStartupWithShutdown,
   serveSessionCommands,
   sanitizeDownloadFilename,
+  sanitizeUploadFilename,
   validateDownloadLimits,
   validateDownloadReceipt,
   validateManifestBinding,
   validatePageDownloadRequest,
+  validatePageUploadRequest,
   validateSessionQuotas,
+  validateUploadLimits,
+  validateUploadReceipt,
+  validateUploadStageManifest,
+  validateUploadStageRequest,
   waitForExit,
 } from './browser-runtime.mjs';
 
@@ -594,6 +603,54 @@ const downloadRequest = Object.freeze({
   ],
   timeoutMs: 30_000,
 });
+
+function configureUploadPage(page, { failFirst = false } = {}) {
+  page.uploadCalls = [];
+  page.getByLabel = (value, options) => {
+    assert.equal(value, 'Upload evidence');
+    assert.deepEqual(options, { exact: true });
+    return {
+      count: async () => 1,
+      setInputFiles: async (file, { timeout }) => {
+        assert.equal(timeout, 30_000);
+        assert.equal(typeof file, 'object');
+        assert.equal('path' in file, false);
+        assert.equal(Buffer.isBuffer(file.buffer), true);
+        page.uploadCalls.push({
+          name: file.name,
+          mimeType: file.mimeType,
+          buffer: Buffer.from(file.buffer),
+        });
+        if (failFirst && page.uploadCalls.length === 1) {
+          const error = new Error('browser_upload_failed_once');
+          error.code = 'browser_upload_failed_once';
+          throw error;
+        }
+      },
+    };
+  };
+}
+
+function uploadPageRequest(manifest) {
+  return {
+    locators: [
+      {
+        strategy: 'label',
+        value: 'Upload evidence',
+        exact: true,
+      },
+    ],
+    stage: {
+      stageId: manifest.stageId,
+      manifestHash: manifest.manifestHash,
+      fileName: manifest.file.name,
+      mimeType: manifest.file.mimeType,
+      bytes: manifest.file.bytes,
+      sha256: manifest.file.sha256,
+    },
+    timeoutMs: 30_000,
+  };
+}
 
 test('ephemeral sessions isolate pages and never persist a profile', async () => {
   const f = await fixture();
@@ -1193,6 +1250,447 @@ test('download payload and quarantine quotas fail closed without durable partial
     assert.deepEqual(
       (await readdir(scope)).filter((name) => name.startsWith('.partial-')),
       [],
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('upload policy validators are bounded and staging requests never choose IDs', () => {
+  assert.deepEqual(validateUploadLimits(), P3_UPLOAD_LIMITS);
+  assert.throws(
+    () =>
+      validateUploadLimits({
+        ...P3_UPLOAD_LIMITS,
+        maxPayloadBytes: P3_UPLOAD_LIMITS.maxPayloadBytes + 1,
+      }),
+    (error) => error.code === 'browser_upload_limits_invalid',
+  );
+  assert.equal(
+    sanitizeUploadFilename('../unsafe\\evidence?.bin '),
+    'evidence_.bin',
+  );
+  assert.equal(sanitizeUploadFilename('..'), 'upload');
+  const staged = validateUploadStageRequest({
+    sourcePath: path.resolve(os.tmpdir(), 'evidence.bin'),
+    fileName: '../unsafe/evidence?.bin ',
+    mimeType: 'application/octet-stream',
+  });
+  assert.equal(staged.sourcePath, path.resolve(os.tmpdir(), 'evidence.bin'));
+  assert.equal(staged.fileName, 'evidence_.bin');
+  assert.equal(staged.mimeType, 'application/octet-stream');
+  assert.equal('stageId' in staged, false);
+  assert.throws(
+    () =>
+      validateUploadStageRequest({
+        sourcePath: 'relative/evidence.bin',
+        fileName: 'evidence.bin',
+        mimeType: 'application/octet-stream',
+      }),
+    (error) => error.code === 'browser_upload_source_path_invalid',
+  );
+});
+
+test('upload staging requires explicit session opt-in before reading the source', async () => {
+  const f = await fixture();
+  try {
+    const sourcePath = path.join(f.root, 'upload-source.bin');
+    await writeFile(sourcePath, Buffer.from([1, 2, 3]));
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_one'),
+    });
+    const session = await registry.openSession({ kind: 'ephemeral' });
+    assert.equal(session.uploadsEnabled, false);
+    await assert.rejects(
+      registry.stageUpload(session.sessionId, {
+        sourcePath,
+        fileName: 'evidence.bin',
+        mimeType: 'application/octet-stream',
+      }),
+      (error) => error.code === 'browser_uploads_disabled',
+    );
+    assert.equal(registry.uploadStages.size, 0);
+    assert.equal(registry.stagedUploadBytes, 0);
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('structured uploads bind application-owned staging to an in-memory browser payload and durable receipt', async () => {
+  const f = await fixture();
+  try {
+    const payload = Buffer.from('verified-upload-payload');
+    const sourcePath = path.join(f.root, 'source-upload.bin');
+    await writeFile(sourcePath, payload);
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds(
+        'session_one',
+        'page_one',
+        'uploadstage_one',
+        'uploadreceipt_one',
+      ),
+      clock: () => new Date('2026-08-17T00:00:00.000Z'),
+    });
+    const session = await registry.openSession({
+      kind: 'persistent',
+      profileId: 'work',
+      uploadsEnabled: true,
+    });
+    assert.equal(session.uploadsEnabled, true);
+    assert.equal(browser.contexts.at(-1).options.acceptDownloads, false);
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = registry.sessions
+      .get(session.sessionId)
+      .pages.get(pageInfo.pageId);
+    configureUploadPage(page);
+
+    const manifest = await registry.stageUpload(session.sessionId, {
+      sourcePath,
+      fileName: '../../evidence?.bin ',
+      mimeType: 'application/octet-stream',
+    });
+    assert.equal(manifest.manifestType, 'kristin-p3-browser-upload-stage-v1');
+    assert.equal(manifest.stageId, 'uploadstage_one');
+    assert.equal(manifest.sessionId, session.sessionId);
+    assert.equal(manifest.sessionKind, 'persistent');
+    assert.equal(manifest.profileId, 'work');
+    assert.equal(manifest.file.name, 'evidence_.bin');
+    assert.equal(manifest.file.mimeType, 'application/octet-stream');
+    assert.equal(manifest.file.bytes, payload.length);
+    assert.equal(manifest.file.sha256, sha256(payload));
+    assert.equal(
+      manifest.file.relativePath,
+      'uploads/staging/uploadstage_one/payload.bin',
+    );
+    assert.equal(JSON.stringify(manifest).includes(sourcePath), false);
+    const manifestBase = { ...manifest };
+    delete manifestBase.manifestHash;
+    assert.equal(
+      manifest.manifestHash,
+      sha256(canonicalUploadManifestJson(manifestBase)),
+    );
+    assert.deepEqual(validateUploadStageManifest(manifest), manifest);
+    const stagedPayload = path.join(
+      f.stateDirectory,
+      ...manifest.file.relativePath.split('/'),
+    );
+    assert.deepEqual(await readFile(stagedPayload), payload);
+
+    const request = uploadPageRequest(manifest);
+    assert.deepEqual(validatePageUploadRequest(request), request);
+    const receipt = await registry.performUpload(
+      session.sessionId,
+      pageInfo.pageId,
+      request,
+    );
+    assert.equal(page.uploadCalls.length, 1);
+    assert.deepEqual(page.uploadCalls[0], {
+      name: 'evidence_.bin',
+      mimeType: 'application/octet-stream',
+      buffer: payload,
+    });
+    assert.equal(receipt.receiptType, 'kristin-p3-browser-upload-receipt-v1');
+    assert.equal(receipt.receiptId, 'uploadreceipt_one');
+    assert.equal(receipt.stageId, manifest.stageId);
+    assert.equal(receipt.manifestHash, manifest.manifestHash);
+    assert.equal(receipt.sessionId, session.sessionId);
+    assert.equal(receipt.pageId, pageInfo.pageId);
+    assert.equal(receipt.transferMode, 'in-memory-buffer');
+    assert.deepEqual(receipt.file, {
+      name: manifest.file.name,
+      mimeType: manifest.file.mimeType,
+      bytes: payload.length,
+      sha256: sha256(payload),
+    });
+    const receiptBase = { ...receipt };
+    delete receiptBase.receiptHash;
+    assert.equal(
+      receipt.receiptHash,
+      sha256(canonicalUploadReceiptJson(receiptBase)),
+    );
+    assert.deepEqual(validateUploadReceipt(receipt), receipt);
+    assert.deepEqual(await registry.listUploadReceipts(session.sessionId), [
+      receipt,
+    ]);
+    await assert.rejects(lstat(path.dirname(stagedPayload)), { code: 'ENOENT' });
+
+    const restored = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+    });
+    await restored.initialize();
+    assert.equal(restored.uploadReceipts.size, 1);
+    assert.deepEqual(
+      restored.uploadReceipts.get(receipt.receiptId),
+      receipt,
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('upload staging rejects symlinks, non-files, and payloads beyond the hard policy', async () => {
+  const f = await fixture();
+  try {
+    const sourcePath = path.join(f.root, 'source.bin');
+    const linkedPath = path.join(f.root, 'linked.bin');
+    const directoryPath = path.join(f.root, 'source-directory');
+    await writeFile(sourcePath, Buffer.from([1, 2, 3, 4, 5]));
+    await symlink(sourcePath, linkedPath);
+    await mkdir(directoryPath);
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      uploadLimits: {
+        maxPayloadBytes: 4,
+        maxStagingBytes: 4,
+        maxStages: 2,
+        maxReceipts: 2,
+        maxManifestBytes: 1024,
+        maxReceiptBytes: 1024,
+      },
+      idFactory: deterministicIds('session_one'),
+    });
+    const session = await registry.openSession({
+      kind: 'ephemeral',
+      uploadsEnabled: true,
+    });
+    for (const [candidate, code] of [
+      [linkedPath, 'browser_upload_source_symlink'],
+      [directoryPath, 'browser_upload_source_not_regular_file'],
+      [sourcePath, 'browser_upload_payload_too_large'],
+    ]) {
+      await assert.rejects(
+        registry.stageUpload(session.sessionId, {
+          sourcePath: candidate,
+          fileName: 'source.bin',
+          mimeType: 'application/octet-stream',
+        }),
+        (error) => error.code === code,
+      );
+    }
+    assert.equal(registry.uploadStages.size, 0);
+    assert.deepEqual(
+      await readdir(path.join(f.stateDirectory, 'uploads', 'staging')),
+      [],
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('browser upload failure removes the consumption lock and permits one safe retry', async () => {
+  const f = await fixture();
+  try {
+    const sourcePath = path.join(f.root, 'retry.bin');
+    await writeFile(sourcePath, Buffer.from([7, 8, 9]));
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds(
+        'session_one',
+        'page_one',
+        'uploadstage_one',
+        'uploadreceipt_one',
+      ),
+      clock: () => new Date('2026-08-17T00:00:00.000Z'),
+    });
+    const session = await registry.openSession({
+      kind: 'ephemeral',
+      uploadsEnabled: true,
+    });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = registry.sessions
+      .get(session.sessionId)
+      .pages.get(pageInfo.pageId);
+    configureUploadPage(page, { failFirst: true });
+    const manifest = await registry.stageUpload(session.sessionId, {
+      sourcePath,
+      fileName: 'retry.bin',
+      mimeType: 'application/octet-stream',
+    });
+    const request = uploadPageRequest(manifest);
+    await assert.rejects(
+      registry.performUpload(session.sessionId, pageInfo.pageId, request),
+      (error) => error.code === 'browser_upload_failed_once',
+    );
+    const paths = registry._uploadStagePaths(manifest.stageId);
+    await assert.rejects(lstat(paths.lockPath), { code: 'ENOENT' });
+    assert.equal(registry.uploadStages.get(manifest.stageId).locked, false);
+
+    const receipt = await registry.performUpload(
+      session.sessionId,
+      pageInfo.pageId,
+      request,
+    );
+    assert.equal(page.uploadCalls.length, 2);
+    assert.equal(receipt.stageId, manifest.stageId);
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('successful browser upload with failed receipt persistence is durably non-replayable', async () => {
+  const f = await fixture();
+  try {
+    const sourcePath = path.join(f.root, 'ambiguous.bin');
+    await writeFile(sourcePath, Buffer.from([4, 3, 2, 1]));
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds(
+        'session_one',
+        'page_one',
+        'uploadstage_one',
+        'uploadreceipt_one',
+      ),
+      clock: () => new Date('2026-08-17T00:00:00.000Z'),
+    });
+    const session = await registry.openSession({
+      kind: 'ephemeral',
+      uploadsEnabled: true,
+    });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = registry.sessions
+      .get(session.sessionId)
+      .pages.get(pageInfo.pageId);
+    configureUploadPage(page);
+    const manifest = await registry.stageUpload(session.sessionId, {
+      sourcePath,
+      fileName: 'ambiguous.bin',
+      mimeType: 'application/octet-stream',
+    });
+    registry._persistUploadReceipt = async () => {
+      const error = new Error('simulated_receipt_failure');
+      error.code = 'simulated_receipt_failure';
+      throw error;
+    };
+    const request = uploadPageRequest(manifest);
+    await assert.rejects(
+      registry.performUpload(session.sessionId, pageInfo.pageId, request),
+      (error) => error.code === 'simulated_receipt_failure',
+    );
+    assert.equal(page.uploadCalls.length, 1);
+    assert.equal(registry.uploadStages.get(manifest.stageId).locked, true);
+    const lockPath = registry._uploadStagePaths(manifest.stageId).lockPath;
+    assert.equal((await lstat(lockPath)).isFile(), true);
+    await assert.rejects(
+      registry.performUpload(session.sessionId, pageInfo.pageId, request),
+      (error) => error.code === 'browser_upload_stage_consumed_pending_receipt',
+    );
+    assert.equal(page.uploadCalls.length, 1);
+
+    const restored = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+    });
+    await restored.initialize();
+    assert.equal(restored.uploadStages.get(manifest.stageId).locked, true);
+    assert.equal(restored.uploadReceipts.size, 0);
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('upload receipt inventory rejects canonical receipt tampering on restart', async () => {
+  const f = await fixture();
+  try {
+    const sourcePath = path.join(f.root, 'tamper.bin');
+    await writeFile(sourcePath, Buffer.from([1, 3, 3, 7]));
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds(
+        'session_one',
+        'page_one',
+        'uploadstage_one',
+        'uploadreceipt_one',
+      ),
+      clock: () => new Date('2026-08-17T00:00:00.000Z'),
+    });
+    const session = await registry.openSession({
+      kind: 'ephemeral',
+      uploadsEnabled: true,
+    });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = registry.sessions
+      .get(session.sessionId)
+      .pages.get(pageInfo.pageId);
+    configureUploadPage(page);
+    const manifest = await registry.stageUpload(session.sessionId, {
+      sourcePath,
+      fileName: 'tamper.bin',
+      mimeType: 'application/octet-stream',
+    });
+    const receipt = await registry.performUpload(
+      session.sessionId,
+      pageInfo.pageId,
+      uploadPageRequest(manifest),
+    );
+    const receiptPath = registry._uploadReceiptPath(receipt.receiptId);
+    const tampered = JSON.parse(await readFile(receiptPath, 'utf8'));
+    tampered.file.bytes += 1;
+    await writeFile(
+      receiptPath,
+      `${canonicalUploadReceiptJson(tampered)}\n`,
+    );
+    const restored = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+    });
+    await assert.rejects(
+      restored.initialize(),
+      (error) => error.code === 'browser_upload_receipt_hash_mismatch',
     );
   } finally {
     await f.cleanup();

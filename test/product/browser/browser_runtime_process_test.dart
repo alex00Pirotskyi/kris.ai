@@ -105,6 +105,71 @@ Map<String, Object?> _downloadReceiptEnvelope({
   };
 }
 
+Map<String, Object?> _uploadStageEnvelope({
+  String sessionKind = 'ephemeral',
+  String sessionId = 'session_one',
+  String? profileId,
+  String stageId = 'uploadstage_fixture',
+  String fileName = 'evidence.bin',
+  String mimeType = 'application/octet-stream',
+}) {
+  final base = <String, Object?>{
+    'schemaVersion': '1.0.0',
+    'manifestType': 'kristin-p3-browser-upload-stage-v1',
+    'stageId': stageId,
+    'sessionId': sessionId,
+    'sessionKind': sessionKind,
+    'profileId': profileId,
+    'file': <String, Object?>{
+      'name': fileName,
+      'mimeType': mimeType,
+      'relativePath': 'uploads/staging/$stageId/payload.bin',
+      'bytes': 4,
+      'sha256': Sha256.hex(<int>[1, 2, 3, 4]),
+    },
+    'createdAt': '2026-08-17T00:00:00.000Z',
+  };
+  return <String, Object?>{
+    ...base,
+    'manifestHash': Sha256.text(canonicalJson(base)),
+  };
+}
+
+Map<String, Object?> _uploadReceiptEnvelope({
+  Map<String, Object?>? stageEnvelope,
+  String receiptId = 'uploadreceipt_fixture',
+}) {
+  final stage = stageEnvelope ?? _uploadStageEnvelope();
+  final stageFile = Map<String, Object?>.from(stage['file']! as Map);
+  final base = <String, Object?>{
+    'schemaVersion': '1.0.0',
+    'receiptType': 'kristin-p3-browser-upload-receipt-v1',
+    'receiptId': receiptId,
+    'stageId': stage['stageId'],
+    'manifestHash': stage['manifestHash'],
+    'sessionId': stage['sessionId'],
+    'sessionKind': stage['sessionKind'],
+    'profileId': stage['profileId'],
+    'pageId': 'page_one',
+    'file': <String, Object?>{
+      'name': stageFile['name'],
+      'mimeType': stageFile['mimeType'],
+      'bytes': stageFile['bytes'],
+      'sha256': stageFile['sha256'],
+    },
+    'locator': <String, Object?>{
+      'strategy': 'label',
+      'index': 0,
+    },
+    'transferMode': 'in-memory-buffer',
+    'createdAt': '2026-08-17T00:00:00.000Z',
+  };
+  return <String, Object?>{
+    ...base,
+    'receiptHash': Sha256.text(canonicalJson(base)),
+  };
+}
+
 Map<String, Object?> _observationEnvelope() {
   final screenshot = <int>[1, 2, 3, 4];
   final observation = <String, Object?>{
@@ -429,6 +494,7 @@ void main() {
       'serviceMode': 'sessions',
       'quotas': quotas.toJson(),
       'downloadPolicy': const P3BrowserDownloadPolicy().toJson(),
+      'uploadPolicy': const P3BrowserUploadPolicy().toJson(),
     };
 
     final ready = P3BrowserSessionReady.fromJson(
@@ -439,10 +505,15 @@ void main() {
 
     expect(ready.quotas, quotas);
     expect(ready.downloadPolicy, const P3BrowserDownloadPolicy());
+    expect(ready.uploadPolicy, const P3BrowserUploadPolicy());
     expect(ready.provenance['p3_002SessionServiceImplemented'], isTrue);
     expect(ready.provenance['p3_006aDownloadQuarantineImplemented'], isTrue);
+    expect(ready.provenance['p3_006bUploadStagingImplemented'], isTrue);
     expect(ready.provenance['persistentProfileStateLocalOnly'], isTrue);
     expect(ready.provenance['downloadQuarantineApplicationOwned'], isTrue);
+    expect(ready.provenance['uploadStagingApplicationOwned'], isTrue);
+    expect(ready.provenance['uploadReceiptValidationIndependent'], isTrue);
+    expect(ready.provenance['uploadBrowserTransferMode'], 'in-memory-buffer');
 
     expect(
       () => P3BrowserSessionReady.fromJson(
@@ -485,6 +556,26 @@ void main() {
         ),
       ),
     );
+    expect(
+      () => P3BrowserSessionReady.fromJson(
+        <String, Object?>{
+          ...value,
+          'uploadPolicy': const P3BrowserUploadPolicy(
+            maxPayloadBytes: 1024,
+            maxStagingBytes: 1024,
+          ).toJson(),
+        },
+        resources: resources,
+        expectedQuotas: quotas,
+      ),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_session_ready_upload_policy_mismatch',
+        ),
+      ),
+    );
   });
 
   test('session and page response models reject inconsistent identities', () {
@@ -494,11 +585,13 @@ void main() {
       'profileId': 'work',
       'pageCount': 1,
       'downloadsEnabled': true,
+      'uploadsEnabled': true,
       'createdAt': '2026-08-17T00:00:00Z',
     });
     expect(session.kind, P3BrowserSessionKind.persistent);
     expect(session.profileId, 'work');
     expect(session.downloadsEnabled, isTrue);
+    expect(session.uploadsEnabled, isTrue);
 
     final page = P3BrowserPageInfo.fromJson(<String, Object?>{
       'pageId': 'page_one',
@@ -514,6 +607,7 @@ void main() {
         'profileId': 'must-not-exist',
         'pageCount': 0,
         'downloadsEnabled': false,
+        'uploadsEnabled': false,
         'createdAt': '2026-08-17T00:00:00Z',
       }),
       throwsA(isA<P3BrowserRuntimeException>()),
@@ -636,6 +730,198 @@ void main() {
 
     expect(
       () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
+        ...envelope,
+        'unexpected': true,
+      }),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
+
+  test('upload policy and staging request enforce exact product bounds', () {
+    final policy = P3BrowserUploadPolicy.fromJson(
+      const P3BrowserUploadPolicy().toJson(),
+    );
+    expect(policy, const P3BrowserUploadPolicy());
+    expect(policy.maxPayloadBytes, 32 * 1024 * 1024);
+    expect(policy.maxStagingBytes, 32 * 1024 * 1024);
+    expect(
+      () => P3BrowserUploadPolicy.fromJson(<String, Object?>{
+        ...const P3BrowserUploadPolicy().toJson(),
+        'maxPayloadBytes': 32 * 1024 * 1024 + 1,
+      }),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_upload_limits_invalid',
+        ),
+      ),
+    );
+
+    final stageRequest = const P3BrowserUploadStageRequest(
+      sourcePath: '/tmp/source.bin',
+      fileName: '../unsafe\\evidence?.bin ',
+      mimeType: 'APPLICATION/OCTET-STREAM',
+    ).toJson();
+    expect(stageRequest['sourcePath'], '/tmp/source.bin');
+    expect(stageRequest['fileName'], 'evidence_.bin');
+    expect(stageRequest['mimeType'], 'application/octet-stream');
+    expect(stageRequest.containsKey('stageId'), isFalse);
+    expect(
+      () => const P3BrowserUploadStageRequest(
+        sourcePath: 'relative/source.bin',
+        fileName: 'source.bin',
+      ).toJson(),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_upload_source_path_invalid',
+        ),
+      ),
+    );
+  });
+
+  test('upload manifest independently binds stage identity and payload', () {
+    final envelope = _uploadStageEnvelope();
+    expect(
+      envelope['manifestHash'],
+      '209d1dcb2cfe3bc1dac0375d68128d0223d1d76b28bcdb19f239701b8796b082',
+    );
+    final stage = P3BrowserUploadStage.fromJson(envelope);
+    expect(stage.stageId, 'uploadstage_fixture');
+    expect(stage.sessionId, 'session_one');
+    expect(stage.sessionKind, P3BrowserSessionKind.ephemeral);
+    expect(stage.profileId, isNull);
+    expect(stage.fileName, 'evidence.bin');
+    expect(stage.mimeType, 'application/octet-stream');
+    expect(stage.bytes, 4);
+    expect(
+      stage.payloadRelativePath,
+      'uploads/staging/uploadstage_fixture/payload.bin',
+    );
+
+    final request = P3BrowserUploadRequest(
+      locators: <P3BrowserLocator>[
+        P3BrowserLocator.label('Upload evidence'),
+      ],
+      stage: stage,
+      timeout: const Duration(seconds: 45),
+    ).toJson();
+    expect(request['timeoutMs'], 45000);
+    final identity = Map<String, Object?>.from(request['stage']! as Map);
+    expect(identity['stageId'], stage.stageId);
+    expect(identity['manifestHash'], stage.manifestHash);
+    expect(identity['bytes'], stage.bytes);
+    expect(identity.containsKey('sourcePath'), isFalse);
+    expect(identity.containsKey('path'), isFalse);
+
+    final tampered = Map<String, Object?>.from(envelope);
+    tampered['file'] = <String, Object?>{
+      ...Map<String, Object?>.from(envelope['file']! as Map),
+      'bytes': 5,
+    };
+    expect(
+      () => P3BrowserUploadStage.fromJson(tampered),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_upload_manifest_hash_mismatch',
+        ),
+      ),
+    );
+
+    final persistent = P3BrowserUploadStage.fromJson(
+      _uploadStageEnvelope(
+        sessionKind: 'persistent',
+        profileId: 'work',
+      ),
+    );
+    expect(persistent.profileId, 'work');
+    expect(
+      persistent.payloadRelativePath,
+      'uploads/staging/uploadstage_fixture/payload.bin',
+    );
+
+    expect(
+      () => P3BrowserUploadStage.fromJson(<String, Object?>{
+        ...envelope,
+        'unexpected': true,
+      }),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
+
+  test('upload receipt independently binds stage, browser effect, and hash',
+      () {
+    final envelope = _uploadReceiptEnvelope();
+    expect(
+      envelope['receiptHash'],
+      '6500b6211d64dfd0d84611fd3bc622e666195f838e39ead08d61755d63069d6d',
+    );
+    final receipt = P3BrowserUploadReceipt.fromJson(envelope);
+    expect(receipt.receiptId, 'uploadreceipt_fixture');
+    expect(receipt.stageId, 'uploadstage_fixture');
+    expect(
+      receipt.manifestHash,
+      '209d1dcb2cfe3bc1dac0375d68128d0223d1d76b28bcdb19f239701b8796b082',
+    );
+    expect(receipt.sessionId, 'session_one');
+    expect(receipt.pageId, 'page_one');
+    expect(receipt.fileName, 'evidence.bin');
+    expect(receipt.mimeType, 'application/octet-stream');
+    expect(receipt.bytes, 4);
+    expect(receipt.locatorStrategy, 'label');
+    expect(receipt.locatorIndex, 0);
+    expect(receipt.toJson()['transferMode'], 'in-memory-buffer');
+
+    final tampered = Map<String, Object?>.from(envelope);
+    tampered['file'] = <String, Object?>{
+      ...Map<String, Object?>.from(envelope['file']! as Map),
+      'bytes': 5,
+    };
+    expect(
+      () => P3BrowserUploadReceipt.fromJson(tampered),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_upload_receipt_hash_mismatch',
+        ),
+      ),
+    );
+
+    final wrongTransfer = <String, Object?>{
+      ...envelope,
+      'transferMode': 'filesystem-path',
+    };
+    final wrongTransferBase = Map<String, Object?>.from(wrongTransfer)
+      ..remove('receiptHash');
+    wrongTransfer['receiptHash'] =
+        Sha256.text(canonicalJson(wrongTransferBase));
+    expect(
+      () => P3BrowserUploadReceipt.fromJson(wrongTransfer),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_upload_receipt_invalid',
+        ),
+      ),
+    );
+
+    final persistentStage = _uploadStageEnvelope(
+      sessionKind: 'persistent',
+      profileId: 'work',
+    );
+    final persistent = P3BrowserUploadReceipt.fromJson(
+      _uploadReceiptEnvelope(stageEnvelope: persistentStage),
+    );
+    expect(persistent.profileId, 'work');
+
+    expect(
+      () => P3BrowserUploadReceipt.fromJson(<String, Object?>{
         ...envelope,
         'unexpected': true,
       }),

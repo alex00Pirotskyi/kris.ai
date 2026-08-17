@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { createReadStream } from 'node:fs';
+import { constants as fsConstants, createReadStream } from 'node:fs';
 import {
   access,
   lstat,
@@ -36,6 +36,21 @@ export const P3_DOWNLOAD_LIMITS = Object.freeze({
   maxPayloadBytes: HARD_MAX_DOWNLOAD_BYTES,
   maxQuarantineBytes: HARD_MAX_DOWNLOAD_BYTES,
   maxReceipts: 1024,
+  maxReceiptBytes: 64 * 1024,
+});
+const UPLOAD_STAGE_ID = /^uploadstage_[A-Za-z0-9_-]{1,115}$/u;
+const UPLOAD_RECEIPT_ID = /^uploadreceipt_[A-Za-z0-9_-]{1,113}$/u;
+const UPLOAD_STAGE_MANIFEST_TYPE = 'kristin-p3-browser-upload-stage-v1';
+const UPLOAD_RECEIPT_TYPE = 'kristin-p3-browser-upload-receipt-v1';
+const UPLOAD_CONSUMPTION_LOCK_TYPE =
+  'kristin-p3-browser-upload-consumption-lock-v1';
+const HARD_MAX_UPLOAD_BYTES = 32 * 1024 * 1024;
+export const P3_UPLOAD_LIMITS = Object.freeze({
+  maxPayloadBytes: HARD_MAX_UPLOAD_BYTES,
+  maxStagingBytes: HARD_MAX_UPLOAD_BYTES,
+  maxStages: 128,
+  maxReceipts: 1024,
+  maxManifestBytes: 64 * 1024,
   maxReceiptBytes: 64 * 1024,
 });
 
@@ -1250,6 +1265,81 @@ export function validatePageDownloadRequest(value) {
   });
 }
 
+export function validateUploadStageRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set(['sourcePath', 'fileName', 'mimeType']),
+    'browser_upload_stage_request_invalid',
+  );
+  if (
+    typeof value.sourcePath !== 'string' ||
+    !path.isAbsolute(value.sourcePath) ||
+    value.sourcePath.includes('\0') ||
+    Buffer.byteLength(value.sourcePath, 'utf8') > 32 * 1024
+  ) {
+    fail('browser_upload_source_path_invalid');
+  }
+  if (typeof value.fileName !== 'string') {
+    fail('browser_upload_filename_invalid');
+  }
+  return Object.freeze({
+    sourcePath: path.resolve(value.sourcePath),
+    fileName: sanitizeUploadFilename(value.fileName),
+    mimeType: validateUploadMimeType(
+      value.mimeType ?? 'application/octet-stream',
+    ),
+  });
+}
+
+export function validatePageUploadRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set(['locators', 'stage', 'timeoutMs']),
+    'browser_upload_request_invalid',
+  );
+  exactObjectKeys(
+    value.stage,
+    new Set([
+      'stageId',
+      'manifestHash',
+      'fileName',
+      'mimeType',
+      'bytes',
+      'sha256',
+    ]),
+    'browser_upload_stage_identity_invalid',
+  );
+  const timeoutMs = value.timeoutMs ?? 30_000;
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 100 ||
+    timeoutMs > 60_000
+  ) {
+    fail('browser_upload_timeout_invalid');
+  }
+  if (
+    typeof value.stage.stageId !== 'string' ||
+    !UPLOAD_STAGE_ID.test(value.stage.stageId) ||
+    typeof value.stage.manifestHash !== 'string' ||
+    !SHA256_HEX.test(value.stage.manifestHash) ||
+    typeof value.stage.fileName !== 'string' ||
+    sanitizeUploadFilename(value.stage.fileName) !== value.stage.fileName ||
+    validateUploadMimeType(value.stage.mimeType) !== value.stage.mimeType ||
+    !Number.isSafeInteger(value.stage.bytes) ||
+    value.stage.bytes < 0 ||
+    value.stage.bytes > HARD_MAX_UPLOAD_BYTES ||
+    typeof value.stage.sha256 !== 'string' ||
+    !SHA256_HEX.test(value.stage.sha256)
+  ) {
+    fail('browser_upload_stage_identity_invalid');
+  }
+  return Object.freeze({
+    locators: normalizeLocatorList(value.locators),
+    stage: Object.freeze({ ...value.stage }),
+    timeoutMs,
+  });
+}
+
 function locatorFromDescriptor(page, descriptor) {
   switch (descriptor.strategy) {
     case 'role':
@@ -1836,6 +1926,7 @@ export class BrowserSessionRegistry {
     quotas,
     idFactory = defaultIdFactory,
     downloadLimits = P3_DOWNLOAD_LIMITS,
+    uploadLimits = P3_UPLOAD_LIMITS,
     clock = () => new Date(),
   }) {
     if (!browser || typeof browser.newContext !== 'function') {
@@ -1851,6 +1942,7 @@ export class BrowserSessionRegistry {
     this.stateDirectory = path.resolve(stateDirectory);
     this.quotas = validateSessionQuotas(quotas);
     this.downloadLimits = validateDownloadLimits(downloadLimits);
+    this.uploadLimits = validateUploadLimits(uploadLimits);
     this.idFactory = idFactory;
     this.clock = clock;
     this.sessions = new Map();
@@ -1864,6 +1956,13 @@ export class BrowserSessionRegistry {
       this.downloadsRoot,
       'quarantine',
     );
+    this.uploadStages = new Map();
+    this.uploadReceipts = new Map();
+    this.uploadReceiptByStage = new Map();
+    this.stagedUploadBytes = 0;
+    this.uploadsRoot = uploadChildPath(this.stateDirectory, 'uploads');
+    this.uploadStagingRoot = uploadChildPath(this.uploadsRoot, 'staging');
+    this.uploadReceiptsRoot = uploadChildPath(this.uploadsRoot, 'receipts');
     this.initialized = false;
   }
 
@@ -1886,6 +1985,7 @@ export class BrowserSessionRegistry {
       fail('browser_persistent_profile_quota_exceeded');
     }
     await this._initializeDownloadInventory();
+    await this._initializeUploadInventory();
     this.initialized = true;
   }
 
@@ -2269,6 +2369,7 @@ export class BrowserSessionRegistry {
       profileId: session.profileId,
       pageCount: session.pages.size,
       downloadsEnabled: session.downloadsEnabled,
+      uploadsEnabled: session.uploadsEnabled,
       createdAt: session.createdAt,
     };
   }
@@ -2277,11 +2378,15 @@ export class BrowserSessionRegistry {
     kind = 'ephemeral',
     profileId = null,
     downloadsEnabled = false,
+    uploadsEnabled = false,
   } = {}) {
   await this.initialize();
   if (!SESSION_MODES.has(kind)) fail('browser_session_kind_invalid');
   if (typeof downloadsEnabled !== 'boolean') {
     fail('browser_download_opt_in_invalid');
+  }
+  if (typeof uploadsEnabled !== 'boolean') {
+    fail('browser_upload_opt_in_invalid');
   }
   if (this.sessions.size >= this.quotas.maxSessions) {
     fail('browser_session_quota_exceeded');
@@ -2349,6 +2454,7 @@ export class BrowserSessionRegistry {
       kind,
       profileId: kind === 'persistent' ? profileId : null,
       downloadsEnabled,
+      uploadsEnabled,
       statePath,
       context,
       pages: new Map(),
@@ -2586,6 +2692,11 @@ export class BrowserSessionRegistry {
         primaryError ??= error;
       }
     }
+    try {
+      await this._discardReadyUploadStagesForSession(sessionId);
+    } catch (error) {
+      primaryError ??= error;
+    }
     let contextClosed = false;
     try {
       await session.context.close();
@@ -2629,6 +2740,7 @@ export class BrowserSessionRegistry {
           kind: message.kind,
           profileId: message.profileId ?? null,
           downloadsEnabled: message.downloadsEnabled ?? false,
+          uploadsEnabled: message.uploadsEnabled ?? false,
         });
       case 'session.list':
         return { sessions: this.listSessions() };
@@ -2665,12 +2777,1160 @@ export class BrowserSessionRegistry {
           message.downloadId,
           message.receiptHash,
         );
+      case 'upload.stage':
+        return this.stageUpload(message.sessionId, message.stageRequest);
+      case 'page.upload':
+        return this.performUpload(
+          message.sessionId,
+          message.pageId,
+          message.uploadRequest,
+        );
+      case 'upload.list':
+        return {
+          uploads: await this.listUploadReceipts(message.sessionId),
+        };
       case 'page.close':
         return this.closePage(message.sessionId, message.pageId);
       default:
         fail('browser_session_operation_not_supported', String(message.type ?? 'missing'));
     }
   }
+
+  async _ensureUploadRoots() {
+    await mkdir(this.uploadsRoot, { recursive: true, mode: 0o700 });
+    await rejectUploadSymlinkIfPresent(
+      this.uploadsRoot,
+      'browser_uploads_root_symlink',
+    );
+    const rootEntries = await readdir(this.uploadsRoot, {
+      withFileTypes: true,
+    });
+    for (const entry of rootEntries) {
+      if (entry.name !== 'staging' && entry.name !== 'receipts') {
+        fail('browser_uploads_root_entry_invalid', entry.name);
+      }
+      if (entry.isSymbolicLink() || !entry.isDirectory()) {
+        fail('browser_uploads_root_entry_invalid', entry.name);
+      }
+    }
+    for (const directory of [
+      this.uploadStagingRoot,
+      this.uploadReceiptsRoot,
+    ]) {
+      await mkdir(directory, { recursive: true, mode: 0o700 });
+      await rejectUploadSymlinkIfPresent(
+        directory,
+        'browser_upload_directory_symlink',
+      );
+      const metadata = await lstat(directory);
+      if (!metadata.isDirectory()) {
+        fail('browser_upload_directory_invalid');
+      }
+    }
+  }
+
+  _uploadStagePaths(stageId) {
+    assertIdentifier(stageId, UPLOAD_STAGE_ID, 'browser_upload_stage_id_invalid');
+    const stageDirectory = uploadChildPath(this.uploadStagingRoot, stageId);
+    return {
+      stageDirectory,
+      payloadPath: uploadChildPath(stageDirectory, 'payload.bin'),
+      manifestPath: uploadChildPath(stageDirectory, 'manifest.json'),
+      lockPath: uploadChildPath(stageDirectory, 'consumption-lock.json'),
+    };
+  }
+
+  _uploadReceiptPath(receiptId) {
+    assertIdentifier(
+      receiptId,
+      UPLOAD_RECEIPT_ID,
+      'browser_upload_receipt_id_invalid',
+    );
+    return uploadChildPath(this.uploadReceiptsRoot, `${receiptId}.json`);
+  }
+
+  async _readBoundedUploadJson(
+    filePath,
+    maximumBytes,
+    code,
+    canonicalizer,
+  ) {
+    await rejectUploadSymlinkIfPresent(filePath, code);
+    const metadata = await lstat(filePath).catch((error) => {
+      if (error?.code === 'ENOENT') fail(code);
+      throw error;
+    });
+    if (
+      metadata.isSymbolicLink() ||
+      !metadata.isFile() ||
+      metadata.size < 2 ||
+      metadata.size > maximumBytes
+    ) {
+      fail(code);
+    }
+    try {
+      const raw = await readFile(filePath, 'utf8');
+      const value = JSON.parse(raw);
+      if (raw !== `${canonicalizer(value)}\n`) fail(code);
+      return value;
+    } catch (error) {
+      if (error?.code) throw error;
+      fail(code);
+    }
+  }
+
+  async _readStoredUploadStage(stageId) {
+    const paths = this._uploadStagePaths(stageId);
+    await rejectUploadSymlinkIfPresent(
+      paths.stageDirectory,
+      'browser_upload_stage_symlink',
+    );
+    const directoryMetadata = await lstat(paths.stageDirectory).catch(
+      (error) => {
+        if (error?.code === 'ENOENT') {
+          fail('browser_upload_stage_not_found', stageId);
+        }
+        throw error;
+      },
+    );
+    if (!directoryMetadata.isDirectory()) {
+      fail('browser_upload_stage_invalid', stageId);
+    }
+    const entries = await readdir(paths.stageDirectory, {
+      withFileTypes: true,
+    });
+    const names = entries.map((entry) => entry.name).sort();
+    const expectedWithoutLock = ['manifest.json', 'payload.bin'];
+    const expectedWithLock = [
+      'consumption-lock.json',
+      'manifest.json',
+      'payload.bin',
+    ];
+    const namesValid =
+      JSON.stringify(names) === JSON.stringify(expectedWithoutLock) ||
+      JSON.stringify(names) === JSON.stringify(expectedWithLock);
+    if (
+      !namesValid ||
+      entries.some((entry) => entry.isSymbolicLink() || !entry.isFile())
+    ) {
+      fail('browser_upload_stage_invalid', stageId);
+    }
+    const rawManifest = await this._readBoundedUploadJson(
+      paths.manifestPath,
+      this.uploadLimits.maxManifestBytes,
+      'browser_upload_manifest_invalid',
+      canonicalUploadManifestJson,
+    );
+    const manifest = validateUploadStageManifest(rawManifest, { stageId });
+    const payloadMetadata = await lstat(paths.payloadPath);
+    if (
+      payloadMetadata.isSymbolicLink() ||
+      !payloadMetadata.isFile() ||
+      payloadMetadata.size !== manifest.file.bytes ||
+      payloadMetadata.size > this.uploadLimits.maxPayloadBytes
+    ) {
+      fail('browser_upload_payload_size_mismatch', stageId);
+    }
+    if ((await sha256File(paths.payloadPath)) !== manifest.file.sha256) {
+      fail('browser_upload_payload_sha_mismatch', stageId);
+    }
+    let lock = null;
+    if (names.length === 3) {
+      lock = validateUploadConsumptionLock(
+        await this._readBoundedUploadJson(
+          paths.lockPath,
+          this.uploadLimits.maxManifestBytes,
+          'browser_upload_lock_invalid',
+          canonicalUploadLockJson,
+        ),
+        {
+          stageId,
+          manifestHash: manifest.manifestHash,
+          sessionId: manifest.sessionId,
+        },
+      );
+    }
+    return Object.freeze({ manifest, lock, paths });
+  }
+
+  async _readStoredUploadReceipt(receiptId) {
+    const receiptPath = this._uploadReceiptPath(receiptId);
+    const rawReceipt = await this._readBoundedUploadJson(
+      receiptPath,
+      this.uploadLimits.maxReceiptBytes,
+      'browser_upload_receipt_invalid',
+      canonicalUploadReceiptJson,
+    );
+    return validateUploadReceipt(rawReceipt, { receiptId });
+  }
+
+  async _initializeUploadInventory() {
+    await this._ensureUploadRoots();
+    const receipts = new Map();
+    const receiptByStage = new Map();
+    const receiptEntries = await readdir(this.uploadReceiptsRoot, {
+      withFileTypes: true,
+    });
+    for (const entry of receiptEntries) {
+      if (entry.name.startsWith('.partial-')) {
+        if (entry.isSymbolicLink() || !entry.isFile()) {
+          fail('browser_upload_receipt_entry_invalid', entry.name);
+        }
+        await rm(uploadChildPath(this.uploadReceiptsRoot, entry.name), {
+          force: true,
+        });
+        continue;
+      }
+      if (
+        entry.isSymbolicLink() ||
+        !entry.isFile() ||
+        !entry.name.endsWith('.json')
+      ) {
+        fail('browser_upload_receipt_entry_invalid', entry.name);
+      }
+      const receiptId = entry.name.slice(0, -'.json'.length);
+      if (!UPLOAD_RECEIPT_ID.test(receiptId)) {
+        fail('browser_upload_receipt_entry_invalid', entry.name);
+      }
+      const receipt = await this._readStoredUploadReceipt(receiptId);
+      if (
+        receipts.has(receipt.receiptId) ||
+        receiptByStage.has(receipt.stageId)
+      ) {
+        fail('browser_upload_receipt_identity_collision');
+      }
+      if (receipts.size + 1 > this.uploadLimits.maxReceipts) {
+        fail('browser_upload_receipt_quota_exceeded');
+      }
+      receipts.set(receipt.receiptId, receipt);
+      receiptByStage.set(receipt.stageId, receipt.receiptId);
+    }
+
+    const stages = new Map();
+    let stagedBytes = 0;
+    const stageEntries = await readdir(this.uploadStagingRoot, {
+      withFileTypes: true,
+    });
+    for (const entry of stageEntries) {
+      if (entry.name.startsWith('.partial-')) {
+        if (entry.isSymbolicLink() || !entry.isDirectory()) {
+          fail('browser_upload_partial_stage_invalid', entry.name);
+        }
+        await rm(uploadChildPath(this.uploadStagingRoot, entry.name), {
+          recursive: true,
+          force: true,
+        });
+        continue;
+      }
+      if (
+        entry.isSymbolicLink() ||
+        !entry.isDirectory() ||
+        !UPLOAD_STAGE_ID.test(entry.name)
+      ) {
+        fail('browser_upload_stage_entry_invalid', entry.name);
+      }
+      const stored = await this._readStoredUploadStage(entry.name);
+      const receiptId = receiptByStage.get(entry.name);
+      if (receiptId) {
+        const receipt = receipts.get(receiptId);
+        if (
+          receipt.manifestHash !== stored.manifest.manifestHash ||
+          receipt.sessionId !== stored.manifest.sessionId ||
+          receipt.file.name !== stored.manifest.file.name ||
+          receipt.file.mimeType !== stored.manifest.file.mimeType ||
+          receipt.file.bytes !== stored.manifest.file.bytes ||
+          receipt.file.sha256 !== stored.manifest.file.sha256
+        ) {
+          fail('browser_upload_receipt_stage_mismatch', entry.name);
+        }
+        await rm(stored.paths.stageDirectory, {
+          recursive: true,
+          force: false,
+        });
+        continue;
+      }
+      if (stored.lock === null) {
+        await rm(stored.paths.stageDirectory, {
+          recursive: true,
+          force: false,
+        });
+        continue;
+      }
+      stagedBytes += stored.manifest.file.bytes;
+      if (
+        stages.size + 1 > this.uploadLimits.maxStages ||
+        stagedBytes > this.uploadLimits.maxStagingBytes
+      ) {
+        fail('browser_upload_staging_quota_exceeded');
+      }
+      stages.set(entry.name, {
+        manifest: stored.manifest,
+        locked: true,
+      });
+    }
+    this.uploadReceipts = receipts;
+    this.uploadReceiptByStage = receiptByStage;
+    this.uploadStages = stages;
+    this.stagedUploadBytes = stagedBytes;
+  }
+
+  async _writeCanonicalUploadJson(
+    filePath,
+    value,
+    maximumBytes,
+    code,
+    canonicalizer,
+  ) {
+    const bytes = Buffer.from(`${canonicalizer(value)}\n`);
+    if (bytes.length > maximumBytes) fail(code);
+    await rejectUploadSymlinkIfPresent(filePath, code);
+    const handle = await open(filePath, 'wx', 0o600).catch((error) => {
+      if (error?.code === 'EEXIST') fail(code);
+      throw error;
+    });
+    try {
+      await handle.writeFile(bytes);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  }
+
+  async _persistUploadReceipt(receipt) {
+    await this._ensureUploadRoots();
+    const receiptPath = this._uploadReceiptPath(receipt.receiptId);
+    await rejectUploadSymlinkIfPresent(
+      receiptPath,
+      'browser_upload_receipt_symlink',
+    );
+    try {
+      await lstat(receiptPath);
+      fail('browser_upload_receipt_id_collision', receipt.receiptId);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    const temporaryPath = uploadChildPath(
+      this.uploadReceiptsRoot,
+      `.partial-${receipt.receiptId}-${randomUUID()}`,
+    );
+    try {
+      await this._writeCanonicalUploadJson(
+        temporaryPath,
+        receipt,
+        this.uploadLimits.maxReceiptBytes,
+        'browser_upload_receipt_persist_failed',
+        canonicalUploadReceiptJson,
+      );
+      await rename(temporaryPath, receiptPath);
+      const stored = await this._readStoredUploadReceipt(receipt.receiptId);
+      if (stored.receiptHash !== receipt.receiptHash) {
+        fail('browser_upload_receipt_inventory_mismatch');
+      }
+    } catch (error) {
+      await rm(temporaryPath, { force: true });
+      throw error;
+    }
+  }
+
+  async _writeUploadConsumptionLock(paths, lock) {
+    await this._writeCanonicalUploadJson(
+      paths.lockPath,
+      lock,
+      this.uploadLimits.maxManifestBytes,
+      'browser_upload_stage_consumed',
+      canonicalUploadLockJson,
+    );
+  }
+
+  async _discardReadyUploadStagesForSession(sessionId) {
+    for (const [stageId, tracked] of Array.from(this.uploadStages.entries())) {
+      if (tracked.manifest.sessionId !== sessionId || tracked.locked) continue;
+      const stored = await this._readStoredUploadStage(stageId);
+      if (stored.lock !== null) {
+        tracked.locked = true;
+        continue;
+      }
+      try {
+        await rm(stored.paths.stageDirectory, {
+          recursive: true,
+          force: false,
+        });
+      } finally {
+        this.uploadStages.delete(stageId);
+        this.stagedUploadBytes -= tracked.manifest.file.bytes;
+      }
+    }
+  }
+
+  async stageUpload(sessionId, rawRequest) {
+    const session = this._session(sessionId);
+    if (session.uploadsEnabled !== true) {
+      fail('browser_uploads_disabled', sessionId);
+    }
+    const request = validateUploadStageRequest(rawRequest);
+    if (
+      this.uploadStages.size >= this.uploadLimits.maxStages ||
+      this.stagedUploadBytes >= this.uploadLimits.maxStagingBytes
+    ) {
+      fail('browser_upload_staging_quota_exceeded');
+    }
+    const sourceMetadata = await lstat(request.sourcePath).catch((error) => {
+      if (error?.code === 'ENOENT') fail('browser_upload_source_not_found');
+      throw error;
+    });
+    if (sourceMetadata.isSymbolicLink()) {
+      fail('browser_upload_source_symlink');
+    }
+    if (!sourceMetadata.isFile()) {
+      fail('browser_upload_source_not_regular_file');
+    }
+    if (sourceMetadata.size > this.uploadLimits.maxPayloadBytes) {
+      fail('browser_upload_payload_too_large');
+    }
+
+    const sourceHandle = await open(
+      request.sourcePath,
+      fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0),
+    ).catch((error) => {
+      if (error?.code === 'ELOOP') fail('browser_upload_source_symlink');
+      throw error;
+    });
+    let payload;
+    try {
+      const openedMetadata = await sourceHandle.stat();
+      if (
+        !openedMetadata.isFile() ||
+        openedMetadata.size !== sourceMetadata.size ||
+        (sourceMetadata.ino &&
+          openedMetadata.ino &&
+          sourceMetadata.ino !== openedMetadata.ino) ||
+        (sourceMetadata.dev &&
+          openedMetadata.dev &&
+          sourceMetadata.dev !== openedMetadata.dev)
+      ) {
+        fail('browser_upload_source_changed');
+      }
+      payload = await sourceHandle.readFile();
+      const finalMetadata = await sourceHandle.stat();
+      if (
+        !finalMetadata.isFile() ||
+        finalMetadata.size !== payload.length ||
+        finalMetadata.size !== openedMetadata.size
+      ) {
+        fail('browser_upload_source_changed');
+      }
+    } finally {
+      await sourceHandle.close();
+    }
+    if (payload.length > this.uploadLimits.maxPayloadBytes) {
+      fail('browser_upload_payload_too_large');
+    }
+    if (
+      this.stagedUploadBytes + payload.length >
+      this.uploadLimits.maxStagingBytes
+    ) {
+      fail('browser_upload_staging_quota_exceeded');
+    }
+
+    const stageId = this._nextId('uploadstage');
+    assertIdentifier(stageId, UPLOAD_STAGE_ID, 'browser_upload_stage_id_invalid');
+    if (
+      this.uploadStages.has(stageId) ||
+      this.uploadReceiptByStage.has(stageId)
+    ) {
+      fail('browser_upload_stage_id_collision', stageId);
+    }
+    const paths = this._uploadStagePaths(stageId);
+    await this._ensureUploadRoots();
+    await rejectUploadSymlinkIfPresent(
+      paths.stageDirectory,
+      'browser_upload_stage_symlink',
+    );
+    try {
+      await lstat(paths.stageDirectory);
+      fail('browser_upload_stage_id_collision', stageId);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    const temporaryDirectory = uploadChildPath(
+      this.uploadStagingRoot,
+      `.partial-${stageId}-${randomUUID()}`,
+    );
+    const temporaryPayload = uploadChildPath(
+      temporaryDirectory,
+      'payload.bin',
+    );
+    const temporaryManifest = uploadChildPath(
+      temporaryDirectory,
+      'manifest.json',
+    );
+    await mkdir(temporaryDirectory, { mode: 0o700 });
+    let renamed = false;
+    try {
+      const payloadHandle = await open(temporaryPayload, 'wx', 0o600);
+      try {
+        await payloadHandle.writeFile(payload);
+        await payloadHandle.sync();
+      } finally {
+        await payloadHandle.close();
+      }
+      const now = this.clock();
+      if (!(now instanceof Date) || Number.isNaN(now.valueOf())) {
+        fail('browser_upload_clock_invalid');
+      }
+      const manifest = createUploadStageManifest({
+        stageId,
+        session,
+        name: request.fileName,
+        mimeType: request.mimeType,
+        bytes: payload.length,
+        sha256: createHash('sha256').update(payload).digest('hex'),
+        createdAt: now.toISOString(),
+      });
+      await this._writeCanonicalUploadJson(
+        temporaryManifest,
+        manifest,
+        this.uploadLimits.maxManifestBytes,
+        'browser_upload_manifest_persist_failed',
+        canonicalUploadManifestJson,
+      );
+      await rename(temporaryDirectory, paths.stageDirectory);
+      renamed = true;
+      const stored = await this._readStoredUploadStage(stageId);
+      if (stored.manifest.manifestHash !== manifest.manifestHash) {
+        fail('browser_upload_manifest_inventory_mismatch');
+      }
+      this.uploadStages.set(stageId, { manifest, locked: false });
+      this.stagedUploadBytes += payload.length;
+      return manifest;
+    } catch (error) {
+      await rm(temporaryDirectory, { recursive: true, force: true });
+      if (renamed) {
+        await rm(paths.stageDirectory, { recursive: true, force: true });
+      }
+      throw error;
+    }
+  }
+
+  async performUpload(sessionId, pageId, rawRequest) {
+    const session = this._session(sessionId);
+    if (session.uploadsEnabled !== true) {
+      fail('browser_uploads_disabled', sessionId);
+    }
+    assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+    const page = session.pages.get(pageId);
+    if (!page) fail('browser_page_not_found', pageId);
+    const request = validatePageUploadRequest(rawRequest);
+    if (this.uploadReceipts.size >= this.uploadLimits.maxReceipts) {
+      fail('browser_upload_receipt_quota_exceeded');
+    }
+    const existingReceiptId = this.uploadReceiptByStage.get(
+      request.stage.stageId,
+    );
+    if (existingReceiptId) {
+      fail('browser_upload_stage_already_completed', existingReceiptId);
+    }
+    const tracked = this.uploadStages.get(request.stage.stageId);
+    if (!tracked) {
+      fail('browser_upload_stage_not_found', request.stage.stageId);
+    }
+    if (tracked.locked) {
+      fail('browser_upload_stage_consumed_pending_receipt');
+    }
+    if (tracked.manifest.sessionId !== sessionId) {
+      fail('browser_upload_stage_session_mismatch');
+    }
+    const stored = await this._readStoredUploadStage(request.stage.stageId);
+    if (stored.lock !== null) {
+      tracked.locked = true;
+      fail('browser_upload_stage_consumed_pending_receipt');
+    }
+    if (
+      stored.manifest.manifestHash !== tracked.manifest.manifestHash ||
+      !uploadIdentityMatches(request.stage, stored.manifest)
+    ) {
+      fail('browser_upload_stage_identity_mismatch');
+    }
+    const resolved = await resolvePageActionLocator(page, request.locators);
+    if (
+      !resolved.locator ||
+      typeof resolved.locator.setInputFiles !== 'function'
+    ) {
+      fail('browser_locator_api_unavailable', resolved.descriptor.strategy);
+    }
+    const lockTime = this.clock();
+    if (!(lockTime instanceof Date) || Number.isNaN(lockTime.valueOf())) {
+      fail('browser_upload_clock_invalid');
+    }
+    const lock = createUploadConsumptionLock({
+      manifest: stored.manifest,
+      pageId,
+      locatorStrategy: resolved.descriptor.strategy,
+      locatorIndex: resolved.index,
+      lockedAt: lockTime.toISOString(),
+    });
+    await this._writeUploadConsumptionLock(stored.paths, lock);
+    tracked.locked = true;
+
+    let sideEffectSucceeded = false;
+    try {
+      const payload = await readFile(stored.paths.payloadPath);
+      if (
+        payload.length !== stored.manifest.file.bytes ||
+        createHash('sha256').update(payload).digest('hex') !==
+          stored.manifest.file.sha256
+      ) {
+        fail('browser_upload_payload_identity_mismatch');
+      }
+      await resolved.locator.setInputFiles(
+        {
+          name: stored.manifest.file.name,
+          mimeType: stored.manifest.file.mimeType,
+          buffer: payload,
+        },
+        { timeout: request.timeoutMs },
+      );
+      sideEffectSucceeded = true;
+    } catch (error) {
+      if (!sideEffectSucceeded) {
+        try {
+          await rm(stored.paths.lockPath, { force: false });
+          tracked.locked = false;
+        } catch (unlockError) {
+          error.message = `${error.message}; unlock=${String(
+            unlockError?.code ?? unlockError?.message ?? unlockError,
+          )}`;
+        }
+      }
+      throw error;
+    }
+
+    const receiptId = this._nextId('uploadreceipt');
+    assertIdentifier(
+      receiptId,
+      UPLOAD_RECEIPT_ID,
+      'browser_upload_receipt_id_invalid',
+    );
+    if (this.uploadReceipts.has(receiptId)) {
+      fail('browser_upload_receipt_id_collision', receiptId);
+    }
+    const receiptTime = this.clock();
+    if (
+      !(receiptTime instanceof Date) ||
+      Number.isNaN(receiptTime.valueOf())
+    ) {
+      fail('browser_upload_clock_invalid');
+    }
+    const receipt = createUploadReceipt({
+      receiptId,
+      manifest: stored.manifest,
+      pageId,
+      locatorStrategy: resolved.descriptor.strategy,
+      locatorIndex: resolved.index,
+      createdAt: receiptTime.toISOString(),
+    });
+    await this._persistUploadReceipt(receipt);
+    this.uploadReceipts.set(receiptId, receipt);
+    this.uploadReceiptByStage.set(receipt.stageId, receiptId);
+    try {
+      await rm(stored.paths.stageDirectory, {
+        recursive: true,
+        force: false,
+      });
+    } catch {
+      // The durable receipt blocks replay; restart inventory removes the stage.
+    }
+    this.uploadStages.delete(receipt.stageId);
+    this.stagedUploadBytes -= stored.manifest.file.bytes;
+    return receipt;
+  }
+
+  async listUploadReceipts(sessionId) {
+    const session = this._session(sessionId);
+    if (session.uploadsEnabled !== true) {
+      fail('browser_uploads_disabled', sessionId);
+    }
+    const verified = [];
+    for (const tracked of this.uploadReceipts.values()) {
+      if (tracked.sessionId !== sessionId) continue;
+      const stored = await this._readStoredUploadReceipt(tracked.receiptId);
+      if (stored.receiptHash !== tracked.receiptHash) {
+        fail('browser_upload_receipt_inventory_mismatch');
+      }
+      verified.push(stored);
+    }
+    return verified.sort(
+      (left, right) =>
+        left.createdAt.localeCompare(right.createdAt) ||
+        left.receiptId.localeCompare(right.receiptId),
+    );
+  }
+}
+
+export function validateUploadLimits(value = P3_UPLOAD_LIMITS) {
+  const limits = {
+    maxPayloadBytes: value?.maxPayloadBytes,
+    maxStagingBytes: value?.maxStagingBytes,
+    maxStages: value?.maxStages,
+    maxReceipts: value?.maxReceipts,
+    maxManifestBytes: value?.maxManifestBytes,
+    maxReceiptBytes: value?.maxReceiptBytes,
+  };
+  if (
+    !Number.isSafeInteger(limits.maxPayloadBytes) ||
+    limits.maxPayloadBytes < 1 ||
+    limits.maxPayloadBytes > HARD_MAX_UPLOAD_BYTES ||
+    !Number.isSafeInteger(limits.maxStagingBytes) ||
+    limits.maxStagingBytes < limits.maxPayloadBytes ||
+    limits.maxStagingBytes > HARD_MAX_UPLOAD_BYTES ||
+    !Number.isSafeInteger(limits.maxStages) ||
+    limits.maxStages < 1 ||
+    limits.maxStages > 256 ||
+    !Number.isSafeInteger(limits.maxReceipts) ||
+    limits.maxReceipts < 1 ||
+    limits.maxReceipts > 4096 ||
+    !Number.isSafeInteger(limits.maxManifestBytes) ||
+    limits.maxManifestBytes < 1024 ||
+    limits.maxManifestBytes > 64 * 1024 ||
+    !Number.isSafeInteger(limits.maxReceiptBytes) ||
+    limits.maxReceiptBytes < 1024 ||
+    limits.maxReceiptBytes > 64 * 1024
+  ) {
+    fail('browser_upload_limits_invalid');
+  }
+  return Object.freeze(limits);
+}
+
+function canonicalUploadValue(value, code) {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalUploadValue(item, code));
+  }
+  if (value && typeof value === 'object') {
+    const result = {};
+    for (const key of Object.keys(value).sort()) {
+      result[key] = canonicalUploadValue(value[key], code);
+    }
+    return result;
+  }
+  fail(code);
+}
+
+export function canonicalUploadManifestJson(value) {
+  return JSON.stringify(
+    canonicalUploadValue(value, 'browser_upload_manifest_value_invalid'),
+  );
+}
+
+export function canonicalUploadReceiptJson(value) {
+  return JSON.stringify(
+    canonicalUploadValue(value, 'browser_upload_receipt_value_invalid'),
+  );
+}
+
+function canonicalUploadLockJson(value) {
+  return JSON.stringify(
+    canonicalUploadValue(value, 'browser_upload_lock_value_invalid'),
+  );
+}
+
+export function sanitizeUploadFilename(raw) {
+  let value = String(raw ?? '').split(/[\\/]/u).at(-1) ?? '';
+  value = value
+    .replace(/[\u0000-\u001f\u007f<>:"|?*]/gu, '_')
+    .trim()
+    .replace(/[. ]+$/u, '');
+  if (!value || value === '.' || value === '..') value = 'upload';
+  value = boundedUtf8(value, 255).text;
+  return value || 'upload';
+}
+
+function validateUploadMimeType(value) {
+  if (
+    typeof value !== 'string' ||
+    value.length < 3 ||
+    Buffer.byteLength(value, 'utf8') > 255 ||
+    value.includes('\0') ||
+    !/^[A-Za-z0-9!#$&^_.+-]+\/[A-Za-z0-9!#$&^_.+-]+$/u.test(value)
+  ) {
+    fail('browser_upload_mime_type_invalid');
+  }
+  return value.toLowerCase();
+}
+
+function uploadChildPath(root, ...segments) {
+  const resolvedRoot = path.resolve(root);
+  const candidate = path.resolve(resolvedRoot, ...segments);
+  if (
+    candidate !== resolvedRoot &&
+    !candidate.startsWith(`${resolvedRoot}${path.sep}`)
+  ) {
+    fail('browser_upload_path_escape');
+  }
+  return candidate;
+}
+
+async function rejectUploadSymlinkIfPresent(value, code) {
+  try {
+    if ((await lstat(value)).isSymbolicLink()) fail(code);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+
+function uploadStageRelativePath(stageId) {
+  return ['uploads', 'staging', stageId, 'payload.bin'].join('/');
+}
+
+function uploadManifestHashInput(manifest) {
+  const { manifestHash: _manifestHash, ...base } = manifest;
+  return base;
+}
+
+function uploadReceiptHashInput(receipt) {
+  const { receiptHash: _receiptHash, ...base } = receipt;
+  return base;
+}
+
+function uploadLockHashInput(lock) {
+  const { lockHash: _lockHash, ...base } = lock;
+  return base;
+}
+
+function validUploadSessionIdentity(value) {
+  return (
+    (value.sessionKind === 'ephemeral' && value.profileId === null) ||
+    (value.sessionKind === 'persistent' &&
+      typeof value.profileId === 'string' &&
+      PROFILE_ID.test(value.profileId))
+  );
+}
+
+export function validateUploadStageManifest(value, expected = {}) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'schemaVersion',
+      'manifestType',
+      'stageId',
+      'sessionId',
+      'sessionKind',
+      'profileId',
+      'file',
+      'createdAt',
+      'manifestHash',
+    ]),
+    'browser_upload_manifest_invalid',
+  );
+  exactObjectKeys(
+    value.file,
+    new Set(['name', 'mimeType', 'relativePath', 'bytes', 'sha256']),
+    'browser_upload_manifest_invalid',
+  );
+  if (
+    value.schemaVersion !== READY_SCHEMA_VERSION ||
+    value.manifestType !== UPLOAD_STAGE_MANIFEST_TYPE ||
+    typeof value.stageId !== 'string' ||
+    !UPLOAD_STAGE_ID.test(value.stageId) ||
+    typeof value.sessionId !== 'string' ||
+    !GENERATED_ID.test(value.sessionId) ||
+    !SESSION_MODES.has(value.sessionKind) ||
+    !validUploadSessionIdentity(value) ||
+    typeof value.file.name !== 'string' ||
+    sanitizeUploadFilename(value.file.name) !== value.file.name ||
+    Buffer.byteLength(value.file.name, 'utf8') > 255 ||
+    validateUploadMimeType(value.file.mimeType) !== value.file.mimeType ||
+    value.file.relativePath !== uploadStageRelativePath(value.stageId) ||
+    !Number.isSafeInteger(value.file.bytes) ||
+    value.file.bytes < 0 ||
+    value.file.bytes > HARD_MAX_UPLOAD_BYTES ||
+    typeof value.file.sha256 !== 'string' ||
+    !SHA256_HEX.test(value.file.sha256) ||
+    !canonicalIsoTimestamp(value.createdAt) ||
+    typeof value.manifestHash !== 'string' ||
+    !SHA256_HEX.test(value.manifestHash)
+  ) {
+    fail('browser_upload_manifest_invalid');
+  }
+  for (const [key, expectedValue] of Object.entries(expected)) {
+    if (expectedValue !== undefined && value[key] !== expectedValue) {
+      fail('browser_upload_manifest_identity_mismatch', key);
+    }
+  }
+  const canonical = canonicalUploadManifestJson(
+    uploadManifestHashInput(value),
+  );
+  if (
+    createHash('sha256').update(canonical).digest('hex') !==
+    value.manifestHash
+  ) {
+    fail('browser_upload_manifest_hash_mismatch');
+  }
+  return Object.freeze({
+    ...value,
+    file: Object.freeze({ ...value.file }),
+  });
+}
+
+export function validateUploadReceipt(value, expected = {}) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'schemaVersion',
+      'receiptType',
+      'receiptId',
+      'stageId',
+      'manifestHash',
+      'sessionId',
+      'sessionKind',
+      'profileId',
+      'pageId',
+      'file',
+      'locator',
+      'transferMode',
+      'createdAt',
+      'receiptHash',
+    ]),
+    'browser_upload_receipt_invalid',
+  );
+  exactObjectKeys(
+    value.file,
+    new Set(['name', 'mimeType', 'bytes', 'sha256']),
+    'browser_upload_receipt_invalid',
+  );
+  exactObjectKeys(
+    value.locator,
+    new Set(['strategy', 'index']),
+    'browser_upload_receipt_invalid',
+  );
+  if (
+    value.schemaVersion !== READY_SCHEMA_VERSION ||
+    value.receiptType !== UPLOAD_RECEIPT_TYPE ||
+    typeof value.receiptId !== 'string' ||
+    !UPLOAD_RECEIPT_ID.test(value.receiptId) ||
+    typeof value.stageId !== 'string' ||
+    !UPLOAD_STAGE_ID.test(value.stageId) ||
+    typeof value.manifestHash !== 'string' ||
+    !SHA256_HEX.test(value.manifestHash) ||
+    typeof value.sessionId !== 'string' ||
+    !GENERATED_ID.test(value.sessionId) ||
+    !SESSION_MODES.has(value.sessionKind) ||
+    !validUploadSessionIdentity(value) ||
+    typeof value.pageId !== 'string' ||
+    !GENERATED_ID.test(value.pageId) ||
+    typeof value.file.name !== 'string' ||
+    sanitizeUploadFilename(value.file.name) !== value.file.name ||
+    Buffer.byteLength(value.file.name, 'utf8') > 255 ||
+    validateUploadMimeType(value.file.mimeType) !== value.file.mimeType ||
+    !Number.isSafeInteger(value.file.bytes) ||
+    value.file.bytes < 0 ||
+    value.file.bytes > HARD_MAX_UPLOAD_BYTES ||
+    typeof value.file.sha256 !== 'string' ||
+    !SHA256_HEX.test(value.file.sha256) ||
+    !LOCATOR_STRATEGIES.has(value.locator.strategy) ||
+    !Number.isSafeInteger(value.locator.index) ||
+    value.locator.index < 0 ||
+    value.locator.index > 7 ||
+    value.transferMode !== 'in-memory-buffer' ||
+    !canonicalIsoTimestamp(value.createdAt) ||
+    typeof value.receiptHash !== 'string' ||
+    !SHA256_HEX.test(value.receiptHash)
+  ) {
+    fail('browser_upload_receipt_invalid');
+  }
+  for (const [key, expectedValue] of Object.entries(expected)) {
+    if (expectedValue !== undefined && value[key] !== expectedValue) {
+      fail('browser_upload_receipt_identity_mismatch', key);
+    }
+  }
+  const canonical = canonicalUploadReceiptJson(uploadReceiptHashInput(value));
+  if (
+    createHash('sha256').update(canonical).digest('hex') !==
+    value.receiptHash
+  ) {
+    fail('browser_upload_receipt_hash_mismatch');
+  }
+  return Object.freeze({
+    ...value,
+    file: Object.freeze({ ...value.file }),
+    locator: Object.freeze({ ...value.locator }),
+  });
+}
+
+function validateUploadConsumptionLock(value, expected = {}) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'schemaVersion',
+      'lockType',
+      'stageId',
+      'manifestHash',
+      'sessionId',
+      'pageId',
+      'locator',
+      'lockedAt',
+      'lockHash',
+    ]),
+    'browser_upload_lock_invalid',
+  );
+  exactObjectKeys(
+    value.locator,
+    new Set(['strategy', 'index']),
+    'browser_upload_lock_invalid',
+  );
+  if (
+    value.schemaVersion !== READY_SCHEMA_VERSION ||
+    value.lockType !== UPLOAD_CONSUMPTION_LOCK_TYPE ||
+    typeof value.stageId !== 'string' ||
+    !UPLOAD_STAGE_ID.test(value.stageId) ||
+    typeof value.manifestHash !== 'string' ||
+    !SHA256_HEX.test(value.manifestHash) ||
+    typeof value.sessionId !== 'string' ||
+    !GENERATED_ID.test(value.sessionId) ||
+    typeof value.pageId !== 'string' ||
+    !GENERATED_ID.test(value.pageId) ||
+    !LOCATOR_STRATEGIES.has(value.locator.strategy) ||
+    !Number.isSafeInteger(value.locator.index) ||
+    value.locator.index < 0 ||
+    value.locator.index > 7 ||
+    !canonicalIsoTimestamp(value.lockedAt) ||
+    typeof value.lockHash !== 'string' ||
+    !SHA256_HEX.test(value.lockHash)
+  ) {
+    fail('browser_upload_lock_invalid');
+  }
+  for (const [key, expectedValue] of Object.entries(expected)) {
+    if (expectedValue !== undefined && value[key] !== expectedValue) {
+      fail('browser_upload_lock_identity_mismatch', key);
+    }
+  }
+  const canonical = canonicalUploadLockJson(uploadLockHashInput(value));
+  if (createHash('sha256').update(canonical).digest('hex') !== value.lockHash) {
+    fail('browser_upload_lock_hash_mismatch');
+  }
+  return Object.freeze({
+    ...value,
+    locator: Object.freeze({ ...value.locator }),
+  });
+}
+
+function createUploadStageManifest({
+  stageId,
+  session,
+  name,
+  mimeType,
+  bytes,
+  sha256,
+  createdAt,
+}) {
+  const base = {
+    schemaVersion: READY_SCHEMA_VERSION,
+    manifestType: UPLOAD_STAGE_MANIFEST_TYPE,
+    stageId,
+    sessionId: session.sessionId,
+    sessionKind: session.kind,
+    profileId: session.profileId,
+    file: {
+      name,
+      mimeType,
+      relativePath: uploadStageRelativePath(stageId),
+      bytes,
+      sha256,
+    },
+    createdAt,
+  };
+  const manifestHash = createHash('sha256')
+    .update(canonicalUploadManifestJson(base))
+    .digest('hex');
+  return validateUploadStageManifest({ ...base, manifestHash });
+}
+
+function createUploadConsumptionLock({
+  manifest,
+  pageId,
+  locatorStrategy,
+  locatorIndex,
+  lockedAt,
+}) {
+  const base = {
+    schemaVersion: READY_SCHEMA_VERSION,
+    lockType: UPLOAD_CONSUMPTION_LOCK_TYPE,
+    stageId: manifest.stageId,
+    manifestHash: manifest.manifestHash,
+    sessionId: manifest.sessionId,
+    pageId,
+    locator: {
+      strategy: locatorStrategy,
+      index: locatorIndex,
+    },
+    lockedAt,
+  };
+  const lockHash = createHash('sha256')
+    .update(canonicalUploadLockJson(base))
+    .digest('hex');
+  return validateUploadConsumptionLock({ ...base, lockHash });
+}
+
+function createUploadReceipt({
+  receiptId,
+  manifest,
+  pageId,
+  locatorStrategy,
+  locatorIndex,
+  createdAt,
+}) {
+  const base = {
+    schemaVersion: READY_SCHEMA_VERSION,
+    receiptType: UPLOAD_RECEIPT_TYPE,
+    receiptId,
+    stageId: manifest.stageId,
+    manifestHash: manifest.manifestHash,
+    sessionId: manifest.sessionId,
+    sessionKind: manifest.sessionKind,
+    profileId: manifest.profileId,
+    pageId,
+    file: {
+      name: manifest.file.name,
+      mimeType: manifest.file.mimeType,
+      bytes: manifest.file.bytes,
+      sha256: manifest.file.sha256,
+    },
+    locator: {
+      strategy: locatorStrategy,
+      index: locatorIndex,
+    },
+    transferMode: 'in-memory-buffer',
+    createdAt,
+  };
+  const receiptHash = createHash('sha256')
+    .update(canonicalUploadReceiptJson(base))
+    .digest('hex');
+  return validateUploadReceipt({ ...base, receiptHash });
+}
+
+function uploadRequestIdentity(manifest) {
+  return Object.freeze({
+    stageId: manifest.stageId,
+    manifestHash: manifest.manifestHash,
+    fileName: manifest.file.name,
+    mimeType: manifest.file.mimeType,
+    bytes: manifest.file.bytes,
+    sha256: manifest.file.sha256,
+  });
+}
+
+function uploadIdentityMatches(requestIdentity, manifest) {
+  const expected = uploadRequestIdentity(manifest);
+  return Object.keys(expected).every(
+    (key) => requestIdentity[key] === expected[key],
+  );
 }
 
 function responseLine(value) {
@@ -2848,6 +4108,7 @@ export async function runSessions(options, env = process.env) {
         serviceMode: 'sessions',
         quotas: options.quotas,
         downloadPolicy: registry.downloadLimits,
+        uploadPolicy: registry.uploadLimits,
       }),
     );
     await serveSessionCommands(registry, process.stdin, process.stdout);
