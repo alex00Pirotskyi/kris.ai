@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_process.dart';
+import 'package:kristin_local_agent/product/crypto_utils.dart';
 
 String _hex(String value, int length) =>
     List<String>.filled(length, value).join();
@@ -46,6 +48,73 @@ Future<P3BrowserRuntimeResourceSet> _resources(Directory root) async {
     packageLock: lock.path,
     packageLockSha256: _hex('3', 64),
   );
+}
+
+Object? _canonicalTestValue(Object? value) {
+  if (value == null || value is String || value is bool || value is num) {
+    return value;
+  }
+  if (value is List) {
+    return value.map<Object?>(_canonicalTestValue).toList(growable: false);
+  }
+  if (value is Map) {
+    final keys = value.keys.map((key) => key.toString()).toList()..sort();
+    return <String, Object?>{
+      for (final key in keys) key: _canonicalTestValue(value[key]),
+    };
+  }
+  throw StateError('unsupported canonical test value');
+}
+
+String _canonicalTestJson(Map<String, Object?> value) =>
+    jsonEncode(_canonicalTestValue(value));
+
+Map<String, Object?> _observationEnvelope() {
+  final screenshot = <int>[1, 2, 3, 4];
+  final observation = <String, Object?>{
+    'schemaVersion': '1.0.0',
+    'url': 'https://example.test/form',
+    'title': 'Example form',
+    'dom': <String, Object?>{
+      'text': '<html></html>',
+      'bytes': 13,
+      'truncated': false,
+    },
+    'visibleText': <String, Object?>{
+      'text': 'Sign in',
+      'bytes': 7,
+      'truncated': false,
+    },
+    'accessibility': <String, Object?>{
+      'text': '- heading "Sign in"',
+      'bytes': 19,
+      'truncated': false,
+    },
+    'forms': <Object?>[],
+    'formsTruncated': false,
+    'screenshot': <String, Object?>{
+      'bytes': screenshot.length,
+      'sha256': Sha256.hex(screenshot),
+      'base64': base64Encode(screenshot),
+      'mediaType': 'image/jpeg',
+    },
+    'console': <String, Object?>{
+      'entries': <Object?>[],
+      'dropped': 0,
+    },
+    'network': <String, Object?>{
+      'requests': <Object?>[],
+      'requestsDropped': 0,
+      'responses': <Object?>[],
+      'responsesDropped': 0,
+    },
+  };
+  return <String, Object?>{
+    'sessionId': 'session_one',
+    'pageId': 'page_one',
+    'observationHash': Sha256.text(_canonicalTestJson(observation)),
+    'observation': observation,
+  };
 }
 
 void main() {
@@ -392,6 +461,54 @@ void main() {
         'sessionId': 'session_one',
       }),
       throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
+
+  test('page observation validates canonical hash and screenshot binding', () {
+    final envelope = _observationEnvelope();
+    final parsed = P3BrowserPageObservation.fromJson(envelope);
+    expect(parsed.sessionId, 'session_one');
+    expect(parsed.pageId, 'page_one');
+    expect(parsed.observationHash, envelope['observationHash']);
+
+    final tamperedObservation = Map<String, Object?>.from(
+      envelope['observation']! as Map,
+    )..['title'] = 'Tampered';
+    expect(
+      () => P3BrowserPageObservation.fromJson(<String, Object?>{
+        ...envelope,
+        'observation': tamperedObservation,
+      }),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_observation_hash_invalid',
+        ),
+      ),
+    );
+
+    final screenshot = Map<String, Object?>.from(
+      (envelope['observation']! as Map)['screenshot']! as Map,
+    )..['base64'] = base64Encode(<int>[9, 9, 9, 9]);
+    final tamperedScreenshot = Map<String, Object?>.from(
+      envelope['observation']! as Map,
+    )..['screenshot'] = screenshot;
+    expect(
+      () => P3BrowserPageObservation.fromJson(<String, Object?>{
+        ...envelope,
+        'observationHash': Sha256.text(
+          _canonicalTestJson(tamperedScreenshot),
+        ),
+        'observation': tamperedScreenshot,
+      }),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_observation_screenshot_binding_invalid',
+        ),
+      ),
     );
   });
 }

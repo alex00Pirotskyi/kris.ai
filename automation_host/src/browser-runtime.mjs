@@ -507,6 +507,290 @@ function defaultIdFactory(prefix) {
   return `${prefix}_${randomUUID().replaceAll('-', '')}`;
 }
 
+
+export const P3_PAGE_OBSERVATION_LIMITS = Object.freeze({
+  domBytes: 192 * 1024,
+  visibleTextBytes: 64 * 1024,
+  accessibilityBytes: 96 * 1024,
+  screenshotBytes: 256 * 1024,
+  maxForms: 50,
+  maxControlsPerForm: 50,
+  maxConsoleEntries: 50,
+  maxNetworkEntries: 100,
+  maxEnvelopeBytes: 900 * 1024,
+});
+
+function canonicalObservationValue(value) {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalObservationValue(item));
+  }
+  if (value && typeof value === 'object') {
+    const result = {};
+    for (const key of Object.keys(value).sort()) {
+      result[key] = canonicalObservationValue(value[key]);
+    }
+    return result;
+  }
+  fail('browser_observation_value_invalid');
+}
+
+export function canonicalObservationJson(value) {
+  return JSON.stringify(canonicalObservationValue(value));
+}
+
+function boundedUtf8(raw, maximumBytes) {
+  const text = String(raw ?? '');
+  const bytes = Buffer.from(text, 'utf8');
+  if (bytes.length <= maximumBytes) {
+    return { text, bytes: bytes.length, truncated: false };
+  }
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  let end = maximumBytes;
+  while (end > 0) {
+    try {
+      const bounded = decoder.decode(bytes.subarray(0, end));
+      return { text: bounded, bytes: end, truncated: true };
+    } catch {
+      end -= 1;
+    }
+  }
+  return { text: '', bytes: 0, truncated: true };
+}
+
+function boundedScalar(raw, maximumBytes = 4096) {
+  return boundedUtf8(raw, maximumBytes).text;
+}
+
+function sanitizedNetworkUrl(raw) {
+  const value = boundedScalar(raw, 8192);
+  try {
+    const parsed = new URL(value);
+    parsed.username = '';
+    parsed.password = '';
+    parsed.search = '';
+    parsed.hash = '';
+    return boundedScalar(parsed.toString(), 4096);
+  } catch {
+    return boundedScalar(value.split(/[?#]/u, 1)[0], 4096);
+  }
+}
+
+function telemetryPush(telemetry, key, entry, maximum) {
+  if (telemetry[key].length < maximum) {
+    telemetry[key].push(entry);
+  } else {
+    telemetry[`${key}Dropped`] += 1;
+  }
+}
+
+export function createPageTelemetry(page) {
+  const telemetry = {
+    console: [],
+    consoleDropped: 0,
+    requests: [],
+    requestsDropped: 0,
+    responses: [],
+    responsesDropped: 0,
+  };
+  if (typeof page.on !== 'function') return telemetry;
+  page.on('console', (message) => {
+    try {
+      telemetryPush(
+        telemetry,
+        'console',
+        {
+          type: boundedScalar(
+            typeof message.type === 'function' ? message.type() : 'log',
+            64,
+          ),
+          text: boundedScalar(
+            typeof message.text === 'function' ? message.text() : '',
+            4096,
+          ),
+        },
+        P3_PAGE_OBSERVATION_LIMITS.maxConsoleEntries,
+      );
+    } catch {
+      telemetry.consoleDropped += 1;
+    }
+  });
+  page.on('request', (request) => {
+    try {
+      telemetryPush(
+        telemetry,
+        'requests',
+        {
+          url: sanitizedNetworkUrl(request.url()),
+          method: boundedScalar(request.method(), 32),
+          resourceType: boundedScalar(request.resourceType(), 64),
+        },
+        P3_PAGE_OBSERVATION_LIMITS.maxNetworkEntries,
+      );
+    } catch {
+      telemetry.requestsDropped += 1;
+    }
+  });
+  page.on('response', (response) => {
+    try {
+      const request = response.request();
+      telemetryPush(
+        telemetry,
+        'responses',
+        {
+          url: sanitizedNetworkUrl(response.url()),
+          status: response.status(),
+          method: boundedScalar(request.method(), 32),
+          resourceType: boundedScalar(request.resourceType(), 64),
+        },
+        P3_PAGE_OBSERVATION_LIMITS.maxNetworkEntries,
+      );
+    } catch {
+      telemetry.responsesDropped += 1;
+    }
+  });
+  return telemetry;
+}
+
+function normalizeForms(rawForms) {
+  if (!Array.isArray(rawForms)) fail('browser_observation_forms_invalid');
+  return rawForms.slice(0, P3_PAGE_OBSERVATION_LIMITS.maxForms).map(
+    (form, index) => {
+      if (!form || typeof form !== 'object' || Array.isArray(form)) {
+        fail('browser_observation_forms_invalid');
+      }
+      const controls = Array.isArray(form.controls)
+        ? form.controls
+            .slice(0, P3_PAGE_OBSERVATION_LIMITS.maxControlsPerForm)
+            .map((control) => ({
+              tag: boundedScalar(control?.tag, 64),
+              type: boundedScalar(control?.type, 64),
+              name: boundedScalar(control?.name, 512),
+              id: boundedScalar(control?.id, 512),
+              autocomplete: boundedScalar(control?.autocomplete, 256),
+              required: control?.required === true,
+              disabled: control?.disabled === true,
+              checked: control?.checked === true,
+            }))
+        : [];
+      return {
+        index,
+        id: boundedScalar(form.id, 512),
+        name: boundedScalar(form.name, 512),
+        method: boundedScalar(form.method, 32).toUpperCase(),
+        action: sanitizedNetworkUrl(form.action),
+        controls,
+        controlsTruncated:
+          Array.isArray(form.controls) &&
+          form.controls.length >
+            P3_PAGE_OBSERVATION_LIMITS.maxControlsPerForm,
+      };
+    },
+  );
+}
+
+export async function capturePageObservation(page, telemetry) {
+  if (!page || typeof page.locator !== 'function') {
+    fail('browser_observation_page_invalid');
+  }
+  const body = page.locator('body');
+  if (
+    !body ||
+    typeof body.innerText !== 'function' ||
+    typeof body.ariaSnapshot !== 'function'
+  ) {
+    fail('browser_observation_accessibility_unavailable');
+  }
+  const [title, dom, visibleText, accessibility, rawForms, screenshot] =
+    await Promise.all([
+      page.title(),
+      page.content(),
+      body.innerText(),
+      body.ariaSnapshot(),
+      page.evaluate(() =>
+        Array.from(document.forms).map((form) => ({
+          id: form.id,
+          name: form.getAttribute('name') ?? '',
+          method: form.method,
+          action: form.action,
+          controls: Array.from(form.elements).map((control) => ({
+            tag: control.tagName.toLowerCase(),
+            type: control.getAttribute('type') ?? '',
+            name: control.getAttribute('name') ?? '',
+            id: control.id,
+            autocomplete: control.getAttribute('autocomplete') ?? '',
+            required: control.required === true,
+            disabled: control.disabled === true,
+            checked: control.checked === true,
+          })),
+        })),
+      ),
+      page.screenshot({
+        type: 'jpeg',
+        quality: 55,
+        fullPage: false,
+        animations: 'disabled',
+        caret: 'hide',
+        scale: 'css',
+      }),
+    ]);
+  if (!Buffer.isBuffer(screenshot)) {
+    fail('browser_observation_screenshot_invalid');
+  }
+  if (screenshot.length > P3_PAGE_OBSERVATION_LIMITS.screenshotBytes) {
+    fail('browser_observation_screenshot_too_large');
+  }
+  const observation = {
+    schemaVersion: '1.0.0',
+    url: sanitizedNetworkUrl(page.url()),
+    title: boundedScalar(title, 4096),
+    dom: boundedUtf8(dom, P3_PAGE_OBSERVATION_LIMITS.domBytes),
+    visibleText: boundedUtf8(
+      visibleText,
+      P3_PAGE_OBSERVATION_LIMITS.visibleTextBytes,
+    ),
+    accessibility: boundedUtf8(
+      accessibility,
+      P3_PAGE_OBSERVATION_LIMITS.accessibilityBytes,
+    ),
+    forms: normalizeForms(rawForms),
+    formsTruncated:
+      Array.isArray(rawForms) &&
+      rawForms.length > P3_PAGE_OBSERVATION_LIMITS.maxForms,
+    screenshot: {
+      bytes: screenshot.length,
+      sha256: createHash('sha256').update(screenshot).digest('hex'),
+      base64: screenshot.toString('base64'),
+      mediaType: 'image/jpeg',
+    },
+    console: {
+      entries: telemetry.console.slice(),
+      dropped: telemetry.consoleDropped,
+    },
+    network: {
+      requests: telemetry.requests.slice(),
+      requestsDropped: telemetry.requestsDropped,
+      responses: telemetry.responses.slice(),
+      responsesDropped: telemetry.responsesDropped,
+    },
+  };
+  const canonical = canonicalObservationJson(observation);
+  if (Buffer.byteLength(canonical, 'utf8') > P3_PAGE_OBSERVATION_LIMITS.maxEnvelopeBytes) {
+    fail('browser_observation_envelope_too_large');
+  }
+  return {
+    observation,
+    observationHash: createHash('sha256').update(canonical).digest('hex'),
+  };
+}
+
 export class BrowserSessionRegistry {
   constructor({ browser, stateDirectory, quotas, idFactory = defaultIdFactory }) {
     if (!browser || typeof browser.newContext !== 'function') {
@@ -522,6 +806,7 @@ export class BrowserSessionRegistry {
     this.sessions = new Map();
     this.persistentProfiles = new Set();
     this.activePersistentProfiles = new Set();
+    this.pageTelemetry = new WeakMap();
     this.initialized = false;
   }
 
@@ -691,8 +976,28 @@ export class BrowserSessionRegistry {
     if (session.pages.has(pageId)) fail('browser_page_id_collision');
     const page = await session.context.newPage();
     session.pages.set(pageId, page);
+    this.pageTelemetry.set(page, createPageTelemetry(page));
     return { pageId, sessionId };
   }
+
+  async observePage(sessionId, pageId) {
+  const session = this._session(sessionId);
+  assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+  const page = session.pages.get(pageId);
+  if (!page) fail('browser_page_not_found', pageId);
+  let telemetry = this.pageTelemetry.get(page);
+  if (!telemetry) {
+    telemetry = createPageTelemetry(page);
+    this.pageTelemetry.set(page, telemetry);
+  }
+  const captured = await capturePageObservation(page, telemetry);
+  return {
+    sessionId,
+    pageId,
+    observationHash: captured.observationHash,
+    observation: captured.observation,
+  };
+}
 
   async closePage(sessionId, pageId) {
     const session = this._session(sessionId);
@@ -700,6 +1005,7 @@ export class BrowserSessionRegistry {
     const page = session.pages.get(pageId);
     if (!page) fail('browser_page_not_found', pageId);
     await page.close();
+    this.pageTelemetry.delete(page);
     session.pages.delete(pageId);
     return { pageId, sessionId, closed: true };
   }
@@ -718,6 +1024,7 @@ export class BrowserSessionRegistry {
     for (const [pageId, page] of Array.from(session.pages.entries()).reverse()) {
       try {
         await page.close();
+        this.pageTelemetry.delete(page);
         session.pages.delete(pageId);
       } catch (error) {
         primaryError ??= error;
@@ -774,6 +1081,8 @@ export class BrowserSessionRegistry {
         return this.openPage(message.sessionId);
       case 'page.list':
         return { pages: this.listPages(message.sessionId) };
+      case 'page.observe':
+        return this.observePage(message.sessionId, message.pageId);
       case 'page.close':
         return this.closePage(message.sessionId, message.pageId);
       default:

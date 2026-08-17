@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../crypto_utils.dart';
 import 'browser_runtime_bundle.dart';
 import 'browser_runtime_process.dart';
 
@@ -461,6 +462,140 @@ final class P3BrowserPageInfo {
   final String sessionId;
 }
 
+Object? _canonicalBrowserObservationValue(Object? value) {
+  if (value == null || value is String || value is bool) return value;
+  if (value is num && value.isFinite) return value;
+  if (value is List) {
+    return value
+        .map<Object?>((item) => _canonicalBrowserObservationValue(item))
+        .toList(growable: false);
+  }
+  if (value is Map) {
+    final keys = value.keys.map((key) => key.toString()).toList()..sort();
+    return <String, Object?>{
+      for (final key in keys)
+        key: _canonicalBrowserObservationValue(value[key]),
+    };
+  }
+  throw const P3BrowserRuntimeException(
+    'browser_observation_value_invalid',
+  );
+}
+
+String _canonicalBrowserObservationJson(Map<String, Object?> value) =>
+    jsonEncode(_canonicalBrowserObservationValue(value));
+
+final class P3BrowserPageObservation {
+  P3BrowserPageObservation._({
+    required this.sessionId,
+    required this.pageId,
+    required this.observationHash,
+    required Map<String, Object?> observation,
+  }) : observation = Map<String, Object?>.unmodifiable(observation);
+
+  factory P3BrowserPageObservation.fromJson(Map<String, Object?> value) {
+    final sessionId = value['sessionId'];
+    final pageId = value['pageId'];
+    final observationHash = value['observationHash'];
+    final rawObservation = value['observation'];
+    if (sessionId is! String ||
+        sessionId.isEmpty ||
+        pageId is! String ||
+        pageId.isEmpty ||
+        observationHash is! String ||
+        !RegExp(r'^[0-9a-f]{64}$').hasMatch(observationHash) ||
+        rawObservation is! Map) {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_response_invalid',
+      );
+    }
+    final observation = Map<String, Object?>.from(rawObservation);
+    if (observation['schemaVersion'] != '1.0.0' ||
+        observation['url'] is! String ||
+        observation['title'] is! String ||
+        observation['forms'] is! List ||
+        observation['console'] is! Map ||
+        observation['network'] is! Map) {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_response_invalid',
+      );
+    }
+    for (final key in const <String>[
+      'dom',
+      'visibleText',
+      'accessibility',
+    ]) {
+      final field = observation[key];
+      if (field is! Map) {
+        throw const P3BrowserRuntimeException(
+          'browser_observation_response_invalid',
+        );
+      }
+      final mapped = Map<String, Object?>.from(field);
+      if (mapped['text'] is! String ||
+          mapped['bytes'] is! int ||
+          mapped['truncated'] is! bool) {
+        throw const P3BrowserRuntimeException(
+          'browser_observation_response_invalid',
+        );
+      }
+    }
+    final screenshotValue = observation['screenshot'];
+    if (screenshotValue is! Map) {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_response_invalid',
+      );
+    }
+    final screenshot = Map<String, Object?>.from(screenshotValue);
+    final screenshotBytes = screenshot['bytes'];
+    final screenshotSha = screenshot['sha256'];
+    final screenshotBase64 = screenshot['base64'];
+    if (screenshotBytes is! int ||
+        screenshotBytes < 0 ||
+        screenshotBytes > 256 * 1024 ||
+        screenshotSha is! String ||
+        !RegExp(r'^[0-9a-f]{64}$').hasMatch(screenshotSha) ||
+        screenshotBase64 is! String ||
+        screenshot['mediaType'] != 'image/jpeg') {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_response_invalid',
+      );
+    }
+    late final List<int> decodedScreenshot;
+    try {
+      decodedScreenshot = base64Decode(screenshotBase64);
+    } on FormatException {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_response_invalid',
+      );
+    }
+    if (decodedScreenshot.length != screenshotBytes ||
+        Sha256.hex(decodedScreenshot) != screenshotSha) {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_screenshot_binding_invalid',
+      );
+    }
+    final canonical = _canonicalBrowserObservationJson(observation);
+    if (utf8.encode(canonical).length > 900 * 1024 ||
+        Sha256.text(canonical) != observationHash) {
+      throw const P3BrowserRuntimeException(
+        'browser_observation_hash_invalid',
+      );
+    }
+    return P3BrowserPageObservation._(
+      sessionId: sessionId,
+      pageId: pageId,
+      observationHash: observationHash,
+      observation: observation,
+    );
+  }
+
+  final String sessionId;
+  final String pageId;
+  final String observationHash;
+  final Map<String, Object?> observation;
+}
+
 final class P3BrowserSessionProcess {
   P3BrowserSessionProcess._(
     this._process,
@@ -842,6 +977,23 @@ final class P3BrowserSessionProcess {
       _protocolViolation('browser_page_response_identity_mismatch');
     }
     return pages;
+  }
+
+  Future<P3BrowserPageObservation> observePage(
+    String sessionId,
+    String pageId,
+  ) async {
+    final result = await _request('page.observe', <String, Object?>{
+      'sessionId': sessionId,
+      'pageId': pageId,
+    });
+    final observation = _decodeResponse(
+      () => P3BrowserPageObservation.fromJson(result),
+    );
+    if (observation.sessionId != sessionId || observation.pageId != pageId) {
+      _protocolViolation('browser_observation_identity_mismatch');
+    }
+    return observation;
   }
 
   Future<void> closePage(String sessionId, String pageId) async {

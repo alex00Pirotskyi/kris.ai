@@ -8,6 +8,7 @@ import test from 'node:test';
 
 import {
   BrowserSessionRegistry,
+  canonicalObservationJson,
   chromiumProbeArgs,
   decorateProbeError,
   parseArgs,
@@ -339,7 +340,74 @@ test('validateManifestBinding rejects manifest and executable tampering', async 
 
 class FakePage {
   constructor() {
-    this.closed = false;
+  this.closed = false;
+  this.handlers = new Map();
+  this.observation = {
+    url: 'https://example.test/form?secret=remove-me#fragment',
+    title: 'Example form',
+    dom: '<html><body><form id="login"></form></body></html>',
+    visibleText: 'Sign in',
+    accessibility: '- document:\n  - heading "Sign in" [level=1]',
+    forms: [
+      {
+        id: 'login',
+        name: 'login',
+        method: 'post',
+        action: 'https://example.test/login?token=remove-me',
+        controls: [
+          {
+            tag: 'input',
+            type: 'password',
+            name: 'password',
+            id: 'password',
+            autocomplete: 'current-password',
+            required: true,
+            disabled: false,
+            checked: false,
+          },
+        ],
+      },
+    ],
+    screenshot: Buffer.from('deterministic-jpeg'),
+  };
+}
+
+  on(event, handler) {
+    const handlers = this.handlers.get(event) ?? [];
+    handlers.push(handler);
+    this.handlers.set(event, handlers);
+  }
+
+  emit(event, value) {
+    for (const handler of this.handlers.get(event) ?? []) handler(value);
+  }
+
+  url() {
+    return this.observation.url;
+  }
+
+  async title() {
+    return this.observation.title;
+  }
+
+  async content() {
+    return this.observation.dom;
+  }
+
+  locator(selector) {
+    assert.equal(selector, 'body');
+    return {
+      innerText: async () => this.observation.visibleText,
+      ariaSnapshot: async () => this.observation.accessibility,
+    };
+  }
+
+  async evaluate() {
+    return this.observation.forms;
+  }
+
+  async screenshot() {
+    return this.observation.screenshot;
   }
 
   async close() {
@@ -721,6 +789,86 @@ test('stdio session protocol correlates responses and shuts down without executi
     assert.equal(rows[0].ok, true);
     assert.equal(rows[0].result.sessionId, 'session_one');
     await registry.closeAll();
+  } finally {
+    await f.cleanup();
+  }
+});
+
+
+test('canonical page observation is stable bounded and secret-minimizing', async () => {
+  const f = await fixture();
+  try {
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_observe', 'page_observe'),
+    });
+    const session = await registry.openSession({ kind: 'ephemeral' });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = browser.contexts[0].pages[0];
+    page.emit('console', {
+      type: () => 'warning',
+      text: () => 'deterministic console message',
+    });
+    const request = {
+      url: () => 'https://api.example.test/items?api_key=must-not-leak',
+      method: () => 'GET',
+      resourceType: () => 'fetch',
+    };
+    page.emit('request', request);
+    page.emit('response', {
+      url: request.url,
+      status: () => 200,
+      request: () => request,
+    });
+
+    const first = await registry.execute({
+      type: 'page.observe',
+      schemaVersion: '1.0.0',
+      sessionId: session.sessionId,
+      pageId: pageInfo.pageId,
+    });
+    const second = await registry.observePage(
+      session.sessionId,
+      pageInfo.pageId,
+    );
+
+    assert.equal(first.observationHash, second.observationHash);
+    assert.match(first.observationHash, /^[0-9a-f]{64}$/u);
+    assert.equal(first.observation.url, 'https://example.test/form');
+    assert.equal(
+      first.observation.forms[0].action,
+      'https://example.test/login',
+    );
+    assert.equal('value' in first.observation.forms[0].controls[0], false);
+    assert.equal(
+      first.observation.network.requests[0].url,
+      'https://api.example.test/items',
+    );
+    assert.equal(
+      first.observation.screenshot.sha256,
+      sha256(Buffer.from('deterministic-jpeg')),
+    );
+    assert.equal(
+      canonicalObservationJson({ b: 2, a: { z: 3, y: 4 } }),
+      canonicalObservationJson({ a: { y: 4, z: 3 }, b: 2 }),
+    );
+
+    page.observation.visibleText = 'x'.repeat(70 * 1024);
+    const bounded = await registry.observePage(
+      session.sessionId,
+      pageInfo.pageId,
+    );
+    assert.equal(bounded.observation.visibleText.truncated, true);
+    assert.ok(bounded.observation.visibleText.bytes <= 64 * 1024);
+    assert.notEqual(bounded.observationHash, first.observationHash);
+    await registry.closeSession(session.sessionId);
   } finally {
     await f.cleanup();
   }
