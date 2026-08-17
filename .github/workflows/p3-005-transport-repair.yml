@@ -1,4 +1,4 @@
-name: P3-005 Repaired Source Materializer
+name: P3-005 Analyzer Diagnostic
 
 on:
   push:
@@ -8,33 +8,24 @@ on:
       - '.github/workflows/p3-005-transport-repair.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  materialize:
+  diagnose:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 20
     steps:
-      - name: Check out exact transport head
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
-          persist-credentials: true
-      - name: Install exact Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Install exact Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Build, validate, and publish only product source
+      - name: Reproduce exact analyzer warning with source context
         shell: bash
         run: |
           set -euo pipefail
@@ -58,54 +49,17 @@ jobs:
           )
           patch = gzip.decompress(base64.b64decode(encoded)).decode('utf-8')
           old = '      action: action,\n'
-          new = '      action: action!,\n'
           if patch.count(old) != 1:
-              raise SystemExit(
-                  'expected exactly one nullable action constructor binding; '
-                  f'found {patch.count(old)}'
-              )
-          patch = patch.replace(old, new, 1)
+              raise SystemExit(f'nullable action anchor count={patch.count(old)}')
+          patch = patch.replace(old, '      action: action!,\n', 1)
           Path('/tmp/p3-005-patch.py').write_text(patch, encoding='utf-8')
           PY
           python3 /tmp/p3-005-patch.py
-          node --check automation_host/src/browser-runtime.mjs
-          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
-          npm test --prefix automation_host
           flutter pub get
-          dart fix --apply
           dart format \
             lib/product/browser/browser_runtime.dart \
             test/product/browser/browser_runtime_process_test.dart
-          flutter test test/product/browser
+          echo '--- generated browser_runtime.dart lines 1210-1235 ---'
+          nl -ba lib/product/browser/browser_runtime.dart | sed -n '1210,1235p'
+          echo '--- analyzer ---'
           flutter analyze --fatal-infos --fatal-warnings
-          git diff --check
-          python3 - <<'PY'
-          import subprocess
-
-          expected = {
-              'automation_host/src/browser-runtime.mjs',
-              'automation_host/src/browser-runtime.test.mjs',
-              'lib/product/browser/browser_runtime.dart',
-              'test/product/browser/browser_runtime_process_test.dart',
-          }
-          actual = set(
-              subprocess.check_output(
-                  ['git', 'diff', 'HEAD', '--name-only'], text=True
-              ).splitlines()
-          )
-          if actual != expected:
-              raise SystemExit(
-                  f'P3-005 product scope mismatch '
-                  f'actual={sorted(actual)} expected={sorted(expected)}'
-              )
-          PY
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            automation_host/src/browser-runtime.mjs \
-            automation_host/src/browser-runtime.test.mjs \
-            lib/product/browser/browser_runtime.dart \
-            test/product/browser/browser_runtime_process_test.dart
-          git diff --cached --check
-          git commit -m 'feat(p3-005): add verified visual fallback'
-          git push origin HEAD:refs/heads/agent/product/p3-005-verified-visual-fallback
