@@ -1,362 +1,963 @@
-name: P3 Browser Runtime
+name: P3-004 Locator Action Engine Materializer
 
 on:
   push:
     branches:
-      - 'agent/c/mission-003-browser-runtime'
+      - 'agent/product/p3-004-locator-action-engine'
     paths:
       - '.github/workflows/p3-browser-runtime.yml'
-      - 'lib/product/browser/**'
-      - 'test/product/browser/**'
-      - 'automation_host/**'
-      - 'config/p3.browser-runtime-lock.json'
-      - 'tool/p3_stage_browser_runtime_bundle.py'
-      - 'tool/p3_stage_browser_runtime_bundle_test.py'
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/p3-browser-runtime.yml'
-      - 'lib/product/browser/**'
-      - 'test/product/browser/**'
-      - 'automation_host/**'
-      - 'config/p3.browser-runtime-lock.json'
-      - 'tool/p3_stage_browser_runtime_bundle.py'
-      - 'tool/p3_stage_browser_runtime_bundle_test.py'
 
 permissions:
-  contents: read
-
-env:
-  P3_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  contents: write
 
 jobs:
-  parent-format-oracle:
-    name: parent-format-oracle
+  materialize:
+    name: build-tested-locator-action-source
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Require exact Dart formatting for all P3 parent sources
+      - name: Implement, validate, and publish P3-004
         shell: bash
+        env:
+          BASE_COMMIT: 5456ff57409c75910bc9a1f51ef489bcebcda661
+          TARGET_BRANCH: agent/product/p3-004-locator-action-engine
         run: |
           set -euo pipefail
-          flutter pub get
-          dart format lib/product/browser/*.dart test/product/browser/*.dart
-          git diff --exit-code -- lib/product/browser test/product/browser
+          python3 - <<'PY'
+          from pathlib import Path
 
-  node-contracts:
-    name: node-contracts
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Verify exact P3 automation-host package closure
-        shell: bash
-        working-directory: automation_host
-        run: |
-          set -euo pipefail
-          npm ci --ignore-scripts --no-audit --no-fund
-          node -e "const p=require('./package.json'); if(p.version!=='2.0.0-p3.1'||p.dependencies['playwright-core']!=='1.61.1'||p.dependencies['node-pty']!=='1.1.0') process.exit(1)"
-          npm ls --all --json
-          npm test
-          git diff --exit-code -- package.json package-lock.json
+          node_path = Path('automation_host/src/browser-runtime.mjs')
+          node = node_path.read_text(encoding='utf-8')
+          marker = 'export class BrowserSessionRegistry {'
+          if 'export function validatePageActionRequest' not in node:
+              helper = r'''
+          const PAGE_ACTIONS = new Set([
+            'click',
+            'fill',
+            'type',
+            'select',
+            'check',
+            'uncheck',
+            'press',
+            'hover',
+            'drag',
+            'wait',
+            'scroll',
+          ]);
+          const LOCATOR_STRATEGIES = new Set([
+            'role',
+            'label',
+            'placeholder',
+            'text',
+            'testId',
+            'css',
+          ]);
+          const WAIT_STATES = new Set(['attached', 'detached', 'visible', 'hidden']);
 
-  browser-lock-oracle:
-    name: browser-lock-oracle
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Verify committed Chromium identity from installed playwright-core
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
-          cp config/p3.browser-runtime-lock.json "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json"
-          node --input-type=module <<'NODE'
-          import { createHash } from 'node:crypto';
-          import { readFile, writeFile } from 'node:fs/promises';
-          const pkg = JSON.parse(await readFile('automation_host/package.json', 'utf8'));
-          const browsers = JSON.parse(await readFile('automation_host/node_modules/playwright-core/browsers.json', 'utf8'));
-          const chromium = browsers.browsers.find((row) => row.name === 'chromium');
-          if (!chromium || !chromium.revision || !chromium.browserVersion) throw new Error('playwright Chromium identity missing');
-          const lockBytes = await readFile('automation_host/package-lock.json');
-          const lock = {
-            schemaVersion: '1.0.0',
-            nodeVersion: '24.18.0',
-            automationHostPackageVersion: pkg.version,
-            playwrightCoreVersion: pkg.dependencies['playwright-core'],
-            packageLockSha256: createHash('sha256').update(lockBytes).digest('hex'),
-            browserEngine: 'chromium',
-            browserRevision: String(chromium.revision),
-            browserVersion: String(chromium.browserVersion),
-            browserInstallPhase: 'packaging_only',
-            runtimeBrowserNetworkInstall: false,
-            globalNodeRuntimeRequired: false,
-          };
-          await writeFile('config/p3.browser-runtime-lock.json', `${JSON.stringify(lock, null, 2)}\n`);
-          console.log(JSON.stringify(lock, null, 2));
-          NODE
-          cmp "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json" config/p3.browser-runtime-lock.json
-          git diff --exit-code -- config/p3.browser-runtime-lock.json
-
-  staging-source-contract:
-    name: staging-source-contract
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - name: Verify deterministic P3 bundle staging source contract
-        shell: bash
-        run: python tool/p3_stage_browser_runtime_bundle_test.py -v
-
-  staged-browser-probe:
-    name: staged-browser-probe-${{ matrix.lane }}
-    needs: [parent-format-oracle, node-contracts, browser-lock-oracle, staging-source-contract]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - lane: ubuntu
-            os: ubuntu-24.04
-            sandbox_mode: disabled
-          - lane: windows
-            os: windows-2025
-            sandbox_mode: required
-          - lane: macos
-            os: macos-15
-            sandbox_mode: required
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 50
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-          fetch-depth: 1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Install exact automation-host dependency closure
-        shell: bash
-        run: npm ci --prefix automation_host --no-audit --no-fund
-      - name: Download pinned Chromium for packaging only
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/p3-pw-browsers" >> "$GITHUB_ENV"
-          PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/p3-pw-browsers" node automation_host/node_modules/playwright-core/cli.js install --with-deps chromium
-      - id: browser
-        name: Resolve exact downloaded Chromium payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          BROWSER_EXEC="$(node -e "const {chromium}=require('./automation_host/node_modules/playwright-core'); process.stdout.write(chromium.executablePath())")"
-          export BROWSER_EXEC
-          echo "BROWSER_EXEC=$BROWSER_EXEC" >> "$GITHUB_ENV"
-          python - <<'PY'
-          import os, pathlib
-          cache = pathlib.Path(os.environ['PLAYWRIGHT_BROWSERS_PATH']).resolve()
-          executable = pathlib.Path(os.environ['BROWSER_EXEC']).resolve()
-          relative = executable.relative_to(cache)
-          if not relative.parts:
-              raise SystemExit('downloaded browser executable outside Playwright cache')
-          root = cache / relative.parts[0]
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
-              handle.write(f"root={root}\n")
-              handle.write(f"executable={executable}\n")
-          print(f'BROWSER_ROOT={root}')
-          print(f'BROWSER_EXEC={executable}')
-          PY
-      - name: Stage exact application-owned P3 browser runtime
-        shell: bash
-        run: |
-          set -euo pipefail
-          NODE_EXE="$(node -p "process.execPath")"
-          SOURCE_TREE="$(git rev-parse HEAD^{tree})"
-          python tool/p3_stage_browser_runtime_bundle.py \
-            --project . \
-            --destination "$RUNNER_TEMP/p3-runtime" \
-            --node-executable "$NODE_EXE" \
-            --browser-root "${{ steps.browser.outputs.root }}" \
-            --browser-executable "${{ steps.browser.outputs.executable }}" \
-            --source-commit "$P3_SOURCE_SHA" \
-            --source-tree "$SOURCE_TREE"
-      - name: Launch staged Node + staged Chromium with scrubbed runtime environment
-        shell: bash
-        run: |
-          set -euo pipefail
-          export P3_BUNDLE="$RUNNER_TEMP/p3-runtime"
-          export P3_RECEIPT="$RUNNER_TEMP/p3-browser-probe-${{ matrix.lane }}.json"
-          export P3_SANDBOX_MODE="${{ matrix.sandbox_mode }}"
-          python - <<'PY'
-          import hashlib, json, os, pathlib, queue, subprocess, sys, threading, time
-          root = pathlib.Path(os.environ['P3_BUNDLE']).resolve()
-          manifest_path = root / 'browser-runtime-manifest.v1.json'
-          manifest_bytes = manifest_path.read_bytes()
-          manifest = json.loads(manifest_bytes)
-          resources = manifest['resources']
-          node = root / resources['nodeExecutable']['path']
-          worker = root / resources['browserWorker']['path']
-          browser = root / resources['browserExecutable']['path']
-          browser_root = root / resources['browserRoot']['path']
-          working = root / resources['automationHostRoot']['path']
-          state = root.parent / 'p3-state'
-          state.mkdir(parents=True, exist_ok=True)
-          sandbox_mode = os.environ['P3_SANDBOX_MODE']
-          runtime_env = {
-              'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': hashlib.sha256(manifest_bytes).hexdigest(),
-              'KRISTIN_P3_RUNTIME_BUILD_SHA256': manifest['identity']['runtimeBuildSha256'],
-              'KRISTIN_P3_BROWSER_REVISION': manifest['identity']['browserRevision'],
+          function exactObjectKeys(value, allowed, code) {
+            if (!value || typeof value !== 'object' || Array.isArray(value)) {
+              fail(code);
+            }
+            const unknown = Object.keys(value).filter((key) => !allowed.has(key));
+            if (unknown.length > 0) fail(code, unknown.sort().join(','));
           }
-          windows_bootstrap_keys = []
-          if sys.platform == 'win32':
-              for key in (
-                  'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP',
-                  'USERPROFILE', 'LOCALAPPDATA', 'APPDATA',
-                  'PROGRAMFILES', 'PROGRAMFILES(X86)', 'PROGRAMDATA',
-                  'HOMEDRIVE', 'HOMEPATH',
-              ):
-                  value = os.environ.get(key)
-                  if value:
-                      runtime_env[key] = value
-                      windows_bootstrap_keys.append(key)
-              if 'SYSTEMROOT' not in runtime_env:
-                  raise SystemExit('Windows SystemRoot missing from bootstrap environment')
-          if 'PATH' in runtime_env:
-              raise SystemExit('global PATH must not be inherited into staged P3 runtime')
-          args = [
-              str(node), str(worker), '--mode', 'probe', '--protocol', 'stdio-json-v1',
-              '--sandbox-mode', sandbox_mode,
-              '--browser-executable', str(browser), '--browser-root', str(browser_root),
-              '--runtime-manifest', str(manifest_path), '--state-directory', str(state),
-          ]
-          process = subprocess.Popen(
-              args, cwd=working, env=runtime_env, stdin=subprocess.PIPE,
-              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-              encoding='utf-8', errors='replace', bufsize=1,
+
+          function boundedActionString(value, code, maximumBytes = 8192) {
+            if (typeof value !== 'string' || value.includes('\0')) fail(code);
+            const bytes = Buffer.byteLength(value, 'utf8');
+            if (bytes === 0 || bytes > maximumBytes) fail(code);
+            return value;
+          }
+
+          function normalizeLocatorDescriptor(value) {
+            exactObjectKeys(
+              value,
+              new Set(['strategy', 'value', 'role', 'name', 'exact']),
+              'browser_locator_invalid',
+            );
+            if (!LOCATOR_STRATEGIES.has(value.strategy)) {
+              fail('browser_locator_strategy_invalid');
+            }
+            const exact = value.exact === true;
+            if (value.exact !== undefined && typeof value.exact !== 'boolean') {
+              fail('browser_locator_invalid');
+            }
+            if (value.strategy === 'role') {
+              return Object.freeze({
+                strategy: 'role',
+                role: boundedActionString(value.role, 'browser_locator_role_invalid', 128),
+                name: boundedActionString(value.name, 'browser_locator_name_invalid', 4096),
+                exact,
+              });
+            }
+            if (value.role !== undefined || value.name !== undefined) {
+              fail('browser_locator_invalid');
+            }
+            return Object.freeze({
+              strategy: value.strategy,
+              value: boundedActionString(value.value, 'browser_locator_value_invalid', 8192),
+              exact,
+            });
+          }
+
+          function normalizeLocatorList(value, code = 'browser_locator_list_invalid') {
+            if (!Array.isArray(value) || value.length < 1 || value.length > 8) {
+              fail(code);
+            }
+            return Object.freeze(value.map((item) => normalizeLocatorDescriptor(item)));
+          }
+
+          export function validatePageActionRequest(value) {
+            exactObjectKeys(
+              value,
+              new Set([
+                'action',
+                'locators',
+                'targetLocators',
+                'value',
+                'options',
+                'key',
+                'state',
+                'deltaY',
+                'timeoutMs',
+              ]),
+              'browser_action_request_invalid',
+            );
+            if (!PAGE_ACTIONS.has(value.action)) {
+              fail('browser_action_kind_invalid');
+            }
+            const timeoutMs = value.timeoutMs ?? 10_000;
+            if (
+              !Number.isSafeInteger(timeoutMs) ||
+              timeoutMs < 100 ||
+              timeoutMs > 30_000
+            ) {
+              fail('browser_action_timeout_invalid');
+            }
+            const request = {
+              action: value.action,
+              locators: normalizeLocatorList(value.locators),
+              timeoutMs,
+            };
+            if (value.action === 'fill' || value.action === 'type') {
+              request.value = boundedActionString(
+                value.value,
+                'browser_action_value_invalid',
+                64 * 1024,
+              );
+            } else if (value.value !== undefined) {
+              fail('browser_action_request_invalid', 'value');
+            }
+            if (value.action === 'select') {
+              const options = Array.isArray(value.options)
+                ? value.options
+                : [value.options];
+              if (options.length < 1 || options.length > 32) {
+                fail('browser_action_options_invalid');
+              }
+              request.options = Object.freeze(
+                options.map((item) =>
+                  boundedActionString(
+                    item,
+                    'browser_action_options_invalid',
+                    4096,
+                  ),
+                ),
+              );
+            } else if (value.options !== undefined) {
+              fail('browser_action_request_invalid', 'options');
+            }
+            if (value.action === 'press') {
+              request.key = boundedActionString(
+                value.key,
+                'browser_action_key_invalid',
+                128,
+              );
+            } else if (value.key !== undefined) {
+              fail('browser_action_request_invalid', 'key');
+            }
+            if (value.action === 'wait') {
+              request.state = value.state ?? 'visible';
+              if (!WAIT_STATES.has(request.state)) {
+                fail('browser_action_wait_state_invalid');
+              }
+            } else if (value.state !== undefined) {
+              fail('browser_action_request_invalid', 'state');
+            }
+            if (value.action === 'scroll') {
+              if (
+                !Number.isSafeInteger(value.deltaY) ||
+                value.deltaY === 0 ||
+                Math.abs(value.deltaY) > 100_000
+              ) {
+                fail('browser_action_scroll_delta_invalid');
+              }
+              request.deltaY = value.deltaY;
+            } else if (value.deltaY !== undefined) {
+              fail('browser_action_request_invalid', 'deltaY');
+            }
+            if (value.action === 'drag') {
+              request.targetLocators = normalizeLocatorList(
+                value.targetLocators,
+                'browser_action_target_locator_invalid',
+              );
+            } else if (value.targetLocators !== undefined) {
+              fail('browser_action_request_invalid', 'targetLocators');
+            }
+            return Object.freeze(request);
+          }
+
+          function locatorFromDescriptor(page, descriptor) {
+            switch (descriptor.strategy) {
+              case 'role':
+                if (typeof page.getByRole !== 'function') {
+                  fail('browser_locator_api_unavailable', 'role');
+                }
+                return page.getByRole(descriptor.role, {
+                  name: descriptor.name,
+                  exact: descriptor.exact,
+                });
+              case 'label':
+                if (typeof page.getByLabel !== 'function') {
+                  fail('browser_locator_api_unavailable', 'label');
+                }
+                return page.getByLabel(descriptor.value, {
+                  exact: descriptor.exact,
+                });
+              case 'placeholder':
+                if (typeof page.getByPlaceholder !== 'function') {
+                  fail('browser_locator_api_unavailable', 'placeholder');
+                }
+                return page.getByPlaceholder(descriptor.value, {
+                  exact: descriptor.exact,
+                });
+              case 'text':
+                if (typeof page.getByText !== 'function') {
+                  fail('browser_locator_api_unavailable', 'text');
+                }
+                return page.getByText(descriptor.value, {
+                  exact: descriptor.exact,
+                });
+              case 'testId':
+                if (typeof page.getByTestId !== 'function') {
+                  fail('browser_locator_api_unavailable', 'testId');
+                }
+                return page.getByTestId(descriptor.value);
+              case 'css':
+                return page.locator(descriptor.value);
+              default:
+                fail('browser_locator_strategy_invalid');
+            }
+          }
+
+          export async function resolvePageActionLocator(page, descriptors) {
+            for (let index = 0; index < descriptors.length; index += 1) {
+              const descriptor = descriptors[index];
+              const locator = locatorFromDescriptor(page, descriptor);
+              if (!locator || typeof locator.count !== 'function') {
+                fail('browser_locator_api_unavailable', descriptor.strategy);
+              }
+              const count = await locator.count();
+              if (!Number.isSafeInteger(count) || count < 0) {
+                fail('browser_locator_count_invalid');
+              }
+              if (count === 0) continue;
+              if (count !== 1) {
+                fail('browser_locator_ambiguous', descriptor.strategy);
+              }
+              return { locator, descriptor, index };
+            }
+            fail('browser_locator_not_found');
+          }
+
+          async function performResolvedAction(resolved, request, target = null) {
+            const locator = resolved.locator;
+            const timeout = request.timeoutMs;
+            switch (request.action) {
+              case 'click':
+                await locator.click({ timeout });
+                return;
+              case 'fill':
+                await locator.fill(request.value, { timeout });
+                return;
+              case 'type':
+                await locator.pressSequentially(request.value, { delay: 0, timeout });
+                return;
+              case 'select':
+                await locator.selectOption(request.options, { timeout });
+                return;
+              case 'check':
+                await locator.check({ timeout });
+                return;
+              case 'uncheck':
+                await locator.uncheck({ timeout });
+                return;
+              case 'press':
+                await locator.press(request.key, { timeout });
+                return;
+              case 'hover':
+                await locator.hover({ timeout });
+                return;
+              case 'drag':
+                await locator.dragTo(target.locator, { timeout });
+                return;
+              case 'wait':
+                await locator.waitFor({ state: request.state, timeout });
+                return;
+              case 'scroll':
+                await locator.evaluate(
+                  (element, deltaY) => element.scrollBy({ top: deltaY, behavior: 'auto' }),
+                  request.deltaY,
+                );
+                return;
+              default:
+                fail('browser_action_kind_invalid');
+            }
+          }
+
+          export async function performPageAction(page, rawRequest, telemetry) {
+            const request = validatePageActionRequest(rawRequest);
+            const before = await capturePageObservation(page, telemetry);
+            const resolved = await resolvePageActionLocator(page, request.locators);
+            let target = null;
+            if (request.action === 'drag') {
+              target = await resolvePageActionLocator(page, request.targetLocators);
+            }
+            await performResolvedAction(resolved, request, target);
+            const after = await capturePageObservation(page, telemetry);
+            return {
+              action: request.action,
+              locatorStrategy: resolved.descriptor.strategy,
+              locatorIndex: resolved.index,
+              ...(target
+                ? {
+                    targetLocatorStrategy: target.descriptor.strategy,
+                    targetLocatorIndex: target.index,
+                  }
+                : {}),
+              sensitiveInputProvided:
+                request.action === 'fill' || request.action === 'type',
+              beforeObservationHash: before.observationHash,
+              afterObservationHash: after.observationHash,
+              observationChanged:
+                before.observationHash !== after.observationHash,
+            };
+          }
+
+          '''
+              node = node.replace(marker, helper + marker, 1)
+          node = node.replace(
+              '  async closePage(sessionId, pageId) {',
+              r'''  async performAction(sessionId, pageId, request) {
+            const session = this._session(sessionId);
+            assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+            const page = session.pages.get(pageId);
+            if (!page) fail('browser_page_not_found', pageId);
+            let telemetry = this.pageTelemetry.get(page);
+            if (!telemetry) {
+              telemetry = createPageTelemetry(page);
+              this.pageTelemetry.set(page, telemetry);
+            }
+            const result = await performPageAction(page, request, telemetry);
+            return { sessionId, pageId, ...result };
+          }
+
+            async closePage(sessionId, pageId) {''',
+              1,
           )
-          stdout_queue: queue.Queue[str] = queue.Queue()
-          stderr_rows: list[str] = []
-          assert process.stdout is not None and process.stderr is not None and process.stdin is not None
-          threading.Thread(target=lambda: [stdout_queue.put(line) for line in process.stdout], daemon=True).start()
-          threading.Thread(target=lambda: [stderr_rows.append(line) for line in process.stderr], daemon=True).start()
-          deadline = time.time() + 35
-          ready = None
-          while time.time() < deadline:
-              if process.poll() is not None:
-                  raise SystemExit(f'worker exited before ready rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
-              try:
-                  line = stdout_queue.get(timeout=0.2)
-              except queue.Empty:
-                  continue
-              value = json.loads(line)
-              if value.get('type') == 'ready':
-                  ready = value
-                  break
-          if ready is None:
-              process.kill()
-              raise SystemExit(f'worker ready timeout stderr={"".join(stderr_rows)[-8000:]}')
-          if ready.get('browserRevision') != manifest['identity']['browserRevision']:
-              raise SystemExit('ready browser revision mismatch')
-          if ready.get('browserExecutableSha256') != resources['browserExecutable']['sha256']:
-              raise SystemExit('ready browser executable SHA mismatch')
-          if ready.get('sandboxMode') != sandbox_mode:
-              raise SystemExit('ready sandbox mode mismatch')
-          browser_pid = int(ready['browserPid'])
-          process.stdin.write(json.dumps({'type':'shutdown','schemaVersion':'1.0.0'}) + '\n')
-          process.stdin.flush()
-          process.wait(timeout=15)
-          if process.returncode != 0:
-              raise SystemExit(f'worker shutdown failed rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
-          alive = False
-          if sys.platform == 'win32':
-              check = subprocess.run(
-                  ['tasklist.exe', '/FI', f'PID eq {browser_pid}', '/NH'],
-                  capture_output=True, text=True, encoding='utf-8', errors='replace',
-              )
-              alive = str(browser_pid) in check.stdout
-          else:
-              try:
-                  os.kill(browser_pid, 0)
-              except ProcessLookupError:
-                  alive = False
-              except PermissionError:
-                  alive = True
-              else:
-                  alive = True
-          if alive:
-              raise SystemExit(f'browser root process survived shutdown pid={browser_pid}')
-          receipt = {
-              'schemaVersion': '1.0.0',
-              'platform': sys.platform,
-              'sourceCommit': os.environ['P3_SOURCE_SHA'],
-              'manifestSha256': runtime_env['KRISTIN_P3_RUNTIME_MANIFEST_SHA256'],
-              'runtimeBuildSha256': runtime_env['KRISTIN_P3_RUNTIME_BUILD_SHA256'],
-              'browserRevision': ready['browserRevision'],
-              'browserVersion': ready['browserVersion'],
-              'browserExecutableSha256': ready['browserExecutableSha256'],
-              'sandboxMode': ready['sandboxMode'],
-              'environmentPolicy': {
-                  'pathInherited': False,
-                  'windowsBootstrapKeys': windows_bootstrap_keys,
-              },
-              'workerPid': ready['pid'],
-              'browserPid': browser_pid,
-              'workerExitCode': process.returncode,
-              'browserRootProcessSurvived': False,
-              'globalNodeRuntimeUsedForProbe': False,
-              'runtimeBrowserNetworkInstall': False,
+          node = node.replace(
+              "      case 'page.close':\n        return this.closePage(message.sessionId, message.pageId);",
+              "      case 'page.action':\n"
+              "        return this.performAction(\n"
+              "          message.sessionId,\n"
+              "          message.pageId,\n"
+              "          message.actionRequest,\n"
+              "        );\n"
+              "      case 'page.close':\n"
+              "        return this.closePage(message.sessionId, message.pageId);",
+              1,
+          )
+          node_path.write_text(node, encoding='utf-8')
+
+          test_path = Path('automation_host/src/browser-runtime.test.mjs')
+          test = test_path.read_text(encoding='utf-8')
+          test = test.replace(
+              '  canonicalObservationJson,\n',
+              '  canonicalObservationJson,\n  performPageAction,\n  resolvePageActionLocator,\n  validatePageActionRequest,\n',
+              1,
+          )
+          if 'class FakeActionLocator' not in test:
+              test += r'''
+
+          class FakeActionLocator {
+            constructor(page, key, count = 1) {
+              this.page = page;
+              this.key = key;
+              this.matchCount = count;
+            }
+
+            async count() {
+              return this.matchCount;
+            }
+
+            _record(action, detail = null) {
+              this.page.actions.push({ action, key: this.key, detail });
+              this.page.observation.visibleText = `${this.page.observation.visibleText}|${action}`;
+            }
+
+            async click(options) { this._record('click', options); }
+            async fill(value, options) { this._record('fill', { length: value.length, options }); }
+            async pressSequentially(value, options) { this._record('type', { length: value.length, options }); }
+            async selectOption(value, options) { this._record('select', { value, options }); }
+            async check(options) { this._record('check', options); }
+            async uncheck(options) { this._record('uncheck', options); }
+            async press(value, options) { this._record('press', { value, options }); }
+            async hover(options) { this._record('hover', options); }
+            async dragTo(target, options) { this._record('drag', { target: target.key, options }); }
+            async waitFor(options) { this._record('wait', options); }
+            async evaluate(_callback, value) { this._record('scroll', value); }
           }
-          pathlib.Path(os.environ['P3_RECEIPT']).write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-          print(json.dumps(receipt, indent=2, sort_keys=True))
+
+          class FakeActionPage extends FakePage {
+            constructor(matches = {}) {
+              super();
+              this.matches = matches;
+              this.actions = [];
+            }
+
+            _actionLocator(key) {
+              return new FakeActionLocator(this, key, this.matches[key] ?? 0);
+            }
+
+            getByRole(role, options) {
+              return this._actionLocator(`role:${role}:${options.name}:${options.exact}`);
+            }
+
+            getByLabel(value, options) {
+              return this._actionLocator(`label:${value}:${options.exact}`);
+            }
+
+            getByPlaceholder(value, options) {
+              return this._actionLocator(`placeholder:${value}:${options.exact}`);
+            }
+
+            getByText(value, options) {
+              return this._actionLocator(`text:${value}:${options.exact}`);
+            }
+
+            getByTestId(value) {
+              return this._actionLocator(`testId:${value}`);
+            }
+
+            locator(value) {
+              if (value === 'body') return super.locator(value);
+              return this._actionLocator(`css:${value}`);
+            }
+          }
+
+          test('locator priority chooses the first unique structured match and redacts fill value', async () => {
+            const page = new FakeActionPage({
+              'role:textbox:Email:true': 0,
+              'label:Email address:true': 1,
+              'css:#email': 1,
+            });
+            const telemetry = createPageTelemetry(page);
+            const result = await performPageAction(
+              page,
+              {
+                action: 'fill',
+                locators: [
+                  { strategy: 'role', role: 'textbox', name: 'Email', exact: true },
+                  { strategy: 'label', value: 'Email address', exact: true },
+                  { strategy: 'css', value: '#email' },
+                ],
+                value: 'person+secret@example.test',
+              },
+              telemetry,
+            );
+            assert.equal(result.locatorStrategy, 'label');
+            assert.equal(result.locatorIndex, 1);
+            assert.equal(result.sensitiveInputProvided, true);
+            assert.equal(JSON.stringify(result).includes('person+secret'), false);
+            assert.equal(page.actions[0].action, 'fill');
+            assert.equal(page.actions[0].detail.length, 26);
+            assert.notEqual(result.beforeObservationHash, result.afterObservationHash);
+          });
+
+          test('ambiguous locator fails closed instead of falling through', async () => {
+            const page = new FakeActionPage({
+              'text:Continue:true': 2,
+              'testId:continue': 1,
+            });
+            await assert.rejects(
+              resolvePageActionLocator(page, [
+                { strategy: 'text', value: 'Continue', exact: true },
+                { strategy: 'testId', value: 'continue' },
+              ]),
+              (error) => error?.code === 'browser_locator_ambiguous',
+            );
+            assert.equal(page.actions.length, 0);
+          });
+
+          test('coordinate and unrelated fields are rejected and drag target is structured', async () => {
+            assert.throws(
+              () => validatePageActionRequest({
+                action: 'click',
+                locators: [{ strategy: 'css', value: '#submit' }],
+                x: 100,
+                y: 200,
+              }),
+              (error) => error?.code === 'browser_action_request_invalid',
+            );
+            const page = new FakeActionPage({
+              'testId:source': 1,
+              'testId:target': 1,
+            });
+            const result = await performPageAction(
+              page,
+              {
+                action: 'drag',
+                locators: [{ strategy: 'testId', value: 'source' }],
+                targetLocators: [{ strategy: 'testId', value: 'target' }],
+              },
+              createPageTelemetry(page),
+            );
+            assert.equal(result.locatorStrategy, 'testId');
+            assert.equal(result.targetLocatorStrategy, 'testId');
+            assert.equal(page.actions[0].detail.target, 'testId:target');
+          });
+
+          test('action request validates operation-specific fields and bounds', () => {
+            assert.throws(
+              () => validatePageActionRequest({
+                action: 'fill',
+                locators: [{ strategy: 'label', value: 'Name' }],
+              }),
+              (error) => error?.code === 'browser_action_value_invalid',
+            );
+            assert.throws(
+              () => validatePageActionRequest({
+                action: 'click',
+                locators: [{ strategy: 'css', value: '#button' }],
+                timeoutMs: 99,
+              }),
+              (error) => error?.code === 'browser_action_timeout_invalid',
+            );
+            assert.throws(
+              () => validatePageActionRequest({
+                action: 'scroll',
+                locators: [{ strategy: 'css', value: '#pane' }],
+                deltaY: 0,
+              }),
+              (error) => error?.code === 'browser_action_scroll_delta_invalid',
+            );
+          });
+          '''
+          test_path.write_text(test, encoding='utf-8')
+
+          dart_path = Path('lib/product/browser/browser_runtime.dart')
+          dart = dart_path.read_text(encoding='utf-8')
+          marker = 'final class P3BrowserSessionProcess {'
+          if 'enum P3BrowserActionKind' not in dart:
+              helper = r'''
+          enum P3BrowserActionKind {
+            click,
+            fill,
+            type,
+            select,
+            check,
+            uncheck,
+            press,
+            hover,
+            drag,
+            wait,
+            scroll;
+
+            String get wireName => name;
+          }
+
+          final class P3BrowserLocator {
+            const P3BrowserLocator._(this.value);
+
+            factory P3BrowserLocator.role(
+              String role,
+              String name, {
+              bool exact = false,
+            }) =>
+                P3BrowserLocator._(<String, Object?>{
+                  'strategy': 'role',
+                  'role': role,
+                  'name': name,
+                  'exact': exact,
+                });
+
+            factory P3BrowserLocator.label(String value, {bool exact = false}) =>
+                P3BrowserLocator._(<String, Object?>{
+                  'strategy': 'label',
+                  'value': value,
+                  'exact': exact,
+                });
+
+            factory P3BrowserLocator.placeholder(
+              String value, {
+              bool exact = false,
+            }) =>
+                P3BrowserLocator._(<String, Object?>{
+                  'strategy': 'placeholder',
+                  'value': value,
+                  'exact': exact,
+                });
+
+            factory P3BrowserLocator.text(String value, {bool exact = false}) =>
+                P3BrowserLocator._(<String, Object?>{
+                  'strategy': 'text',
+                  'value': value,
+                  'exact': exact,
+                });
+
+            factory P3BrowserLocator.testId(String value) =>
+                P3BrowserLocator._(<String, Object?>{
+                  'strategy': 'testId',
+                  'value': value,
+                });
+
+            factory P3BrowserLocator.css(String value) =>
+                P3BrowserLocator._(<String, Object?>{
+                  'strategy': 'css',
+                  'value': value,
+                });
+
+            final Map<String, Object?> value;
+
+            Map<String, Object?> toJson() => Map<String, Object?>.from(value);
+          }
+
+          final class P3BrowserActionRequest {
+            const P3BrowserActionRequest({
+              required this.action,
+              required this.locators,
+              this.targetLocators = const <P3BrowserLocator>[],
+              this.value,
+              this.options = const <String>[],
+              this.key,
+              this.state,
+              this.deltaY,
+              this.timeout = const Duration(seconds: 10),
+            });
+
+            final P3BrowserActionKind action;
+            final List<P3BrowserLocator> locators;
+            final List<P3BrowserLocator> targetLocators;
+            final String? value;
+            final List<String> options;
+            final String? key;
+            final String? state;
+            final int? deltaY;
+            final Duration timeout;
+
+            Map<String, Object?> toJson() {
+              if (locators.isEmpty || locators.length > 8) {
+                throw const P3BrowserRuntimeException(
+                  'browser_locator_list_invalid',
+                );
+              }
+              if (timeout < const Duration(milliseconds: 100) ||
+                  timeout > const Duration(seconds: 30)) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_timeout_invalid',
+                );
+              }
+              final requiresValue =
+                  action == P3BrowserActionKind.fill ||
+                  action == P3BrowserActionKind.type;
+              if (requiresValue != (value != null && value!.isNotEmpty)) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_value_invalid',
+                );
+              }
+              if ((action == P3BrowserActionKind.select) != options.isNotEmpty) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_options_invalid',
+                );
+              }
+              if ((action == P3BrowserActionKind.press) !=
+                  (key != null && key!.isNotEmpty)) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_key_invalid',
+                );
+              }
+              if ((action == P3BrowserActionKind.drag) != targetLocators.isNotEmpty) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_target_locator_invalid',
+                );
+              }
+              if ((action == P3BrowserActionKind.scroll) !=
+                  (deltaY != null && deltaY != 0)) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_scroll_delta_invalid',
+                );
+              }
+              return <String, Object?>{
+                'action': action.wireName,
+                'locators': locators
+                    .map((locator) => locator.toJson())
+                    .toList(growable: false),
+                if (targetLocators.isNotEmpty)
+                  'targetLocators': targetLocators
+                      .map((locator) => locator.toJson())
+                      .toList(growable: false),
+                if (value != null) 'value': value,
+                if (options.isNotEmpty) 'options': options,
+                if (key != null) 'key': key,
+                if (state != null) 'state': state,
+                if (deltaY != null) 'deltaY': deltaY,
+                'timeoutMs': timeout.inMilliseconds,
+              };
+            }
+          }
+
+          final class P3BrowserActionResult {
+            const P3BrowserActionResult({
+              required this.sessionId,
+              required this.pageId,
+              required this.action,
+              required this.locatorStrategy,
+              required this.locatorIndex,
+              required this.targetLocatorStrategy,
+              required this.targetLocatorIndex,
+              required this.sensitiveInputProvided,
+              required this.beforeObservationHash,
+              required this.afterObservationHash,
+              required this.observationChanged,
+            });
+
+            factory P3BrowserActionResult.fromJson(Map<String, Object?> value) {
+              final sessionId = value['sessionId'];
+              final pageId = value['pageId'];
+              final actionName = value['action'];
+              final locatorStrategy = value['locatorStrategy'];
+              final locatorIndex = value['locatorIndex'];
+              final targetLocatorStrategy = value['targetLocatorStrategy'];
+              final targetLocatorIndex = value['targetLocatorIndex'];
+              final sensitive = value['sensitiveInputProvided'];
+              final beforeHash = value['beforeObservationHash'];
+              final afterHash = value['afterObservationHash'];
+              final changed = value['observationChanged'];
+              final action = P3BrowserActionKind.values
+                  .where((candidate) => candidate.wireName == actionName)
+                  .firstOrNull;
+              final hex = RegExp(r'^[0-9a-f]{64}$');
+              if (sessionId is! String ||
+                  sessionId.isEmpty ||
+                  pageId is! String ||
+                  pageId.isEmpty ||
+                  action == null ||
+                  locatorStrategy is! String ||
+                  locatorStrategy.isEmpty ||
+                  locatorIndex is! int ||
+                  locatorIndex < 0 ||
+                  (targetLocatorStrategy != null &&
+                      targetLocatorStrategy is! String) ||
+                  (targetLocatorIndex != null && targetLocatorIndex is! int) ||
+                  sensitive is! bool ||
+                  beforeHash is! String ||
+                  !hex.hasMatch(beforeHash) ||
+                  afterHash is! String ||
+                  !hex.hasMatch(afterHash) ||
+                  changed is! bool ||
+                  changed != (beforeHash != afterHash)) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_response_invalid',
+                );
+              }
+              if ((action == P3BrowserActionKind.drag) !=
+                  (targetLocatorStrategy is String &&
+                      targetLocatorStrategy.isNotEmpty &&
+                      targetLocatorIndex is int &&
+                      targetLocatorIndex >= 0)) {
+                throw const P3BrowserRuntimeException(
+                  'browser_action_response_invalid',
+                );
+              }
+              return P3BrowserActionResult(
+                sessionId: sessionId,
+                pageId: pageId,
+                action: action,
+                locatorStrategy: locatorStrategy,
+                locatorIndex: locatorIndex,
+                targetLocatorStrategy: targetLocatorStrategy as String?,
+                targetLocatorIndex: targetLocatorIndex as int?,
+                sensitiveInputProvided: sensitive,
+                beforeObservationHash: beforeHash,
+                afterObservationHash: afterHash,
+                observationChanged: changed,
+              );
+            }
+
+            final String sessionId;
+            final String pageId;
+            final P3BrowserActionKind action;
+            final String locatorStrategy;
+            final int locatorIndex;
+            final String? targetLocatorStrategy;
+            final int? targetLocatorIndex;
+            final bool sensitiveInputProvided;
+            final String beforeObservationHash;
+            final String afterObservationHash;
+            final bool observationChanged;
+          }
+
+          '''
+              dart = dart.replace(marker, helper + marker, 1)
+          dart = dart.replace(
+              '  Future<void> closePage(String sessionId, String pageId) async {',
+              r'''  Future<P3BrowserActionResult> performAction(
+            String sessionId,
+            String pageId,
+            P3BrowserActionRequest action,
+          ) async {
+            final result = await _request('page.action', <String, Object?>{
+              'sessionId': sessionId,
+              'pageId': pageId,
+              'actionRequest': action.toJson(),
+            });
+            final parsed = _decodeResponse(
+              () => P3BrowserActionResult.fromJson(result),
+            );
+            if (parsed.sessionId != sessionId || parsed.pageId != pageId) {
+              _protocolViolation('browser_action_identity_mismatch');
+            }
+            return parsed;
+          }
+
+            Future<void> closePage(String sessionId, String pageId) async {''',
+              1,
+          )
+          dart_path.write_text(dart, encoding='utf-8')
+
+          dart_test_path = Path('test/product/browser/browser_runtime_process_test.dart')
+          dart_test = dart_test_path.read_text(encoding='utf-8')
+          if "structured action request" not in dart_test:
+              insertion = r'''
+
+            test('structured action request and result reject ambiguity-prone payloads', () {
+              final request = P3BrowserActionRequest(
+                action: P3BrowserActionKind.fill,
+                locators: <P3BrowserLocator>[
+                  P3BrowserLocator.role('textbox', 'Email', exact: true),
+                  P3BrowserLocator.label('Email address', exact: true),
+                  P3BrowserLocator.css('#email'),
+                ],
+                value: 'person+secret@example.test',
+              );
+              final json = request.toJson();
+              expect(json['action'], 'fill');
+              expect((json['locators']! as List).length, 3);
+              expect(json.containsKey('x'), isFalse);
+              expect(json.containsKey('y'), isFalse);
+
+              final result = P3BrowserActionResult.fromJson(<String, Object?>{
+                'sessionId': 'session_one',
+                'pageId': 'page_one',
+                'action': 'fill',
+                'locatorStrategy': 'label',
+                'locatorIndex': 1,
+                'sensitiveInputProvided': true,
+                'beforeObservationHash': _hex('a', 64),
+                'afterObservationHash': _hex('b', 64),
+                'observationChanged': true,
+              });
+              expect(result.action, P3BrowserActionKind.fill);
+              expect(result.locatorStrategy, 'label');
+              expect(result.sensitiveInputProvided, isTrue);
+
+              expect(
+                () => P3BrowserActionRequest(
+                  action: P3BrowserActionKind.drag,
+                  locators: <P3BrowserLocator>[
+                    P3BrowserLocator.testId('source'),
+                  ],
+                ).toJson(),
+                throwsA(isA<P3BrowserRuntimeException>()),
+              );
+              expect(
+                () => P3BrowserActionResult.fromJson(<String, Object?>{
+                  'sessionId': 'session_one',
+                  'pageId': 'page_one',
+                  'action': 'click',
+                  'locatorStrategy': 'role',
+                  'locatorIndex': 0,
+                  'sensitiveInputProvided': false,
+                  'beforeObservationHash': _hex('a', 64),
+                  'afterObservationHash': _hex('a', 64),
+                  'observationChanged': true,
+                }),
+                throwsA(isA<P3BrowserRuntimeException>()),
+              );
+            });
+          '''
+              close = dart_test.rfind('\n}')
+              if close < 0:
+                  raise SystemExit('Dart test main closing brace missing')
+              dart_test = dart_test[:close] + insertion + dart_test[close:]
+          dart_test_path.write_text(dart_test, encoding='utf-8')
           PY
-      - name: Upload P3 browser probe receipt and manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: p3-browser-probe-${{ matrix.lane }}-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/p3-browser-probe-${{ matrix.lane }}.json
-            ${{ runner.temp }}/p3-runtime/browser-runtime-manifest.v1.json
-          if-no-files-found: error
-          retention-days: 30
+          git checkout "$BASE_COMMIT" -- .github/workflows/p3-browser-runtime.yml
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+          npm test --prefix automation_host
+          flutter pub get
+          dart format \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          flutter test test/product/browser
+          flutter analyze --fatal-infos --fatal-warnings
+          git diff HEAD --check
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              '.github/workflows/p3-browser-runtime.yml',
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', 'HEAD', '--name-only'], text=True
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'P3-004 scope mismatch actual={sorted(actual)} expected={sorted(expected)}'
+              )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            .github/workflows/p3-browser-runtime.yml \
+            automation_host/src/browser-runtime.mjs \
+            automation_host/src/browser-runtime.test.mjs \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          git diff --cached --check
+          git commit -m 'feat(p3-004): add structured locator action engine'
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
