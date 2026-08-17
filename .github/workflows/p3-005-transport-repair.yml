@@ -20,20 +20,51 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: true
-      - name: Repair pinned Node action and remove repair transport
+      - name: Repair nullable action payload and remove transport
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
+          import base64
+          import gzip
+          import hashlib
+          import re
+          import textwrap
           from pathlib import Path
 
           target = Path('.github/workflows/p3-browser-runtime.yml')
           source = target.read_text(encoding='utf-8')
-          bad = 'actions/setup-node@48b55a011bda9f5d6aeb4d4f8c696479add0b2'
-          good = 'actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e'
-          if source.count(bad) != 1:
-              raise SystemExit(f'expected one bad setup-node ref, found {source.count(bad)}')
-          target.write_text(source.replace(bad, good, 1), encoding='utf-8')
+          start_token = '          cat > "$RUNNER_TEMP/p3-005-patch.py.gz.b64" <<\'PAYLOAD\'\n'
+          end_token = '\n          PAYLOAD\n'
+          start = source.index(start_token) + len(start_token)
+          end = source.index(end_token, start)
+          encoded = ''.join(line.strip() for line in source[start:end].splitlines())
+          patch = gzip.decompress(base64.b64decode(encoded)).decode('utf-8')
+
+          old = '      action: action,\n'
+          new = '      action: action!,\n'
+          if patch.count(old) != 1:
+              raise SystemExit(
+                  f'expected one nullable action constructor binding, found {patch.count(old)}'
+              )
+          patch = patch.replace(old, new, 1)
+
+          compressed = gzip.compress(patch.encode('utf-8'), compresslevel=9, mtime=0)
+          payload = base64.b64encode(compressed).decode('ascii')
+          indented_payload = '\n'.join(
+              f'          {line}' for line in textwrap.wrap(payload, width=120)
+          )
+          repaired = source[:start] + indented_payload + source[end:]
+          digest = hashlib.sha256(patch.encode('utf-8')).hexdigest()
+          repaired, count = re.subn(
+              r'PATCH_SHA256: [0-9a-f]{64}',
+              f'PATCH_SHA256: {digest}',
+              repaired,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f'expected one PATCH_SHA256 binding, found {count}')
+          target.write_text(repaired, encoding='utf-8')
           Path('.github/workflows/p3-005-transport-repair.yml').unlink()
           PY
           git diff --check
@@ -41,5 +72,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A .github/workflows/p3-browser-runtime.yml .github/workflows/p3-005-transport-repair.yml
           git diff --cached --check
-          git commit -m 'fix(p3-005): repair pinned Node setup action'
+          git commit -m 'fix(p3-005): repair nullable action materializer'
           git push origin HEAD:refs/heads/agent/product/p3-005-verified-visual-fallback
