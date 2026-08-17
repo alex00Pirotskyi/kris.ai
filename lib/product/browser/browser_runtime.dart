@@ -840,6 +840,424 @@ final class P3BrowserActionResult {
   final bool observationChanged;
 }
 
+final class P3BrowserVisualSource {
+  const P3BrowserVisualSource({
+    required this.observationHash,
+    required this.screenshotSha256,
+    required this.viewportWidth,
+    required this.viewportHeight,
+  });
+
+  final String observationHash;
+  final String screenshotSha256;
+  final int viewportWidth;
+  final int viewportHeight;
+
+  Map<String, Object?> toJson() {
+    final hex = RegExp(r'^[0-9a-f]{64}$');
+    if (!hex.hasMatch(observationHash) ||
+        !hex.hasMatch(screenshotSha256) ||
+        viewportWidth < 1 ||
+        viewportWidth > 32768 ||
+        viewportHeight < 1 ||
+        viewportHeight > 32768) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_source_invalid',
+      );
+    }
+    return <String, Object?>{
+      'observationHash': observationHash,
+      'screenshotSha256': screenshotSha256,
+      'viewportWidth': viewportWidth,
+      'viewportHeight': viewportHeight,
+    };
+  }
+}
+
+final class P3BrowserVisualTarget {
+  const P3BrowserVisualTarget({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.confidence,
+    required this.description,
+  });
+
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+  final double confidence;
+  final String description;
+
+  Map<String, Object?> toJson() {
+    if (!x.isFinite ||
+        !y.isFinite ||
+        !width.isFinite ||
+        !height.isFinite ||
+        !confidence.isFinite ||
+        x < 0 ||
+        y < 0 ||
+        width <= 0 ||
+        height <= 0 ||
+        x > 100000 ||
+        y > 100000 ||
+        width > 100000 ||
+        height > 100000 ||
+        confidence < 0 ||
+        confidence > 1 ||
+        description.isEmpty ||
+        description.contains('\u0000') ||
+        utf8.encode(description).length > 4096) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_target_invalid',
+      );
+    }
+    return <String, Object?>{
+      'x': x,
+      'y': y,
+      'width': width,
+      'height': height,
+      'confidence': confidence,
+      'description': description,
+    };
+  }
+}
+
+final class P3BrowserVisualVerification {
+  const P3BrowserVisualVerification({
+    this.requireObservationChange = true,
+    this.expectedUrl,
+    this.expectedUrlPrefix,
+  });
+
+  final bool requireObservationChange;
+  final String? expectedUrl;
+  final String? expectedUrlPrefix;
+
+  Map<String, Object?> toJson() {
+    if (expectedUrl != null && expectedUrlPrefix != null) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_verification_invalid',
+      );
+    }
+    if ((expectedUrl != null && expectedUrl!.isEmpty) ||
+        (expectedUrlPrefix != null && expectedUrlPrefix!.isEmpty) ||
+        (!requireObservationChange &&
+            expectedUrl == null &&
+            expectedUrlPrefix == null)) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_verification_required',
+      );
+    }
+    return <String, Object?>{
+      'requireObservationChange': requireObservationChange,
+      if (expectedUrl != null) 'expectedUrl': expectedUrl,
+      if (expectedUrlPrefix != null) 'expectedUrlPrefix': expectedUrlPrefix,
+    };
+  }
+}
+
+final class P3BrowserVisualActionRequest {
+  const P3BrowserVisualActionRequest({
+    required this.action,
+    required this.locators,
+    required this.visualSource,
+    required this.visualTarget,
+    this.targetLocators = const <P3BrowserLocator>[],
+    this.visualDragTarget,
+    this.minimumConfidence = 0.9,
+    this.verification = const P3BrowserVisualVerification(),
+    this.timeout = const Duration(seconds: 10),
+  });
+
+  final P3BrowserActionKind action;
+  final List<P3BrowserLocator> locators;
+  final List<P3BrowserLocator> targetLocators;
+  final P3BrowserVisualSource visualSource;
+  final P3BrowserVisualTarget visualTarget;
+  final P3BrowserVisualTarget? visualDragTarget;
+  final double minimumConfidence;
+  final P3BrowserVisualVerification verification;
+  final Duration timeout;
+
+  Map<String, Object?> toJson() {
+    if (action != P3BrowserActionKind.click &&
+        action != P3BrowserActionKind.drag) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_action_kind_invalid',
+      );
+    }
+    if (locators.isEmpty || locators.length > 8) {
+      throw const P3BrowserRuntimeException(
+        'browser_locator_list_invalid',
+      );
+    }
+    if (timeout < const Duration(milliseconds: 100) ||
+        timeout > const Duration(seconds: 30)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_timeout_invalid',
+      );
+    }
+    if (!minimumConfidence.isFinite ||
+        minimumConfidence < 0.9 ||
+        minimumConfidence > 1) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_confidence_invalid',
+      );
+    }
+    final drag = action == P3BrowserActionKind.drag;
+    if (drag != targetLocators.isNotEmpty ||
+        drag != (visualDragTarget != null) ||
+        targetLocators.length > 8) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_target_locator_invalid',
+      );
+    }
+    return <String, Object?>{
+      'action': action.wireName,
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
+      if (targetLocators.isNotEmpty)
+        'targetLocators': targetLocators
+            .map((locator) => locator.toJson())
+            .toList(growable: false),
+      'visualSource': visualSource.toJson(),
+      'visualTarget': visualTarget.toJson(),
+      if (visualDragTarget != null)
+        'visualDragTarget': visualDragTarget!.toJson(),
+      'minimumConfidence': minimumConfidence,
+      'verification': verification.toJson(),
+      'timeoutMs': timeout.inMilliseconds,
+    };
+  }
+}
+
+enum P3BrowserVisualActionDisposition {
+  executed('executed'),
+  userTakeoverRequired('user_takeover_required');
+
+  const P3BrowserVisualActionDisposition(this.wireName);
+
+  final String wireName;
+}
+
+enum P3BrowserVisualExecutionMode {
+  structured('structured'),
+  visual('visual');
+
+  const P3BrowserVisualExecutionMode(this.wireName);
+
+  final String wireName;
+}
+
+final class P3BrowserVisualActionResult {
+  const P3BrowserVisualActionResult({
+    required this.sessionId,
+    required this.pageId,
+    required this.action,
+    required this.disposition,
+    required this.executionMode,
+    required this.locatorStrategy,
+    required this.locatorIndex,
+    required this.targetLocatorStrategy,
+    required this.targetLocatorIndex,
+    required this.structuredFailureCode,
+    required this.minimumConfidence,
+    required this.visualConfidence,
+    required this.visualDestinationConfidence,
+    required this.beforeObservationHash,
+    required this.beforeScreenshotSha256,
+    required this.afterObservationHash,
+    required this.afterScreenshotSha256,
+    required this.observationChanged,
+    required this.verified,
+    required this.pauseReason,
+  });
+
+  factory P3BrowserVisualActionResult.fromJson(
+    Map<String, Object?> value,
+  ) {
+    final sessionId = value['sessionId'];
+    final pageId = value['pageId'];
+    final actionName = value['action'];
+    final dispositionName = value['disposition'];
+    final executionModeName = value['executionMode'];
+    final locatorStrategy = value['locatorStrategy'];
+    final locatorIndex = value['locatorIndex'];
+    final targetLocatorStrategy = value['targetLocatorStrategy'];
+    final targetLocatorIndex = value['targetLocatorIndex'];
+    final structuredFailureCode = value['structuredFailureCode'];
+    final minimumConfidence = value['minimumConfidence'];
+    final visualConfidence = value['visualConfidence'];
+    final visualDestinationConfidence = value['visualDestinationConfidence'];
+    final beforeObservationHash = value['beforeObservationHash'];
+    final beforeScreenshotSha256 = value['beforeScreenshotSha256'];
+    final afterObservationHash = value['afterObservationHash'];
+    final afterScreenshotSha256 = value['afterScreenshotSha256'];
+    final observationChanged = value['observationChanged'];
+    final verified = value['verified'];
+    final pauseReason = value['pauseReason'];
+    final action = P3BrowserActionKind.values
+        .where((candidate) => candidate.wireName == actionName)
+        .firstOrNull;
+    final disposition = P3BrowserVisualActionDisposition.values
+        .where((candidate) => candidate.wireName == dispositionName)
+        .firstOrNull;
+    final executionMode = P3BrowserVisualExecutionMode.values
+        .where((candidate) => candidate.wireName == executionModeName)
+        .firstOrNull;
+    final hex = RegExp(r'^[0-9a-f]{64}$');
+    if ((locatorStrategy != null && locatorStrategy is! String) ||
+        (locatorIndex != null && locatorIndex is! int) ||
+        (targetLocatorStrategy != null && targetLocatorStrategy is! String) ||
+        (targetLocatorIndex != null && targetLocatorIndex is! int) ||
+        (structuredFailureCode != null && structuredFailureCode is! String) ||
+        (visualConfidence != null && visualConfidence is! num) ||
+        (visualDestinationConfidence != null &&
+            visualDestinationConfidence is! num) ||
+        (afterObservationHash != null && afterObservationHash is! String) ||
+        (afterScreenshotSha256 != null && afterScreenshotSha256 is! String) ||
+        (pauseReason != null && pauseReason is! String)) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_action_response_invalid',
+      );
+    }
+    if (sessionId is! String ||
+        sessionId.isEmpty ||
+        pageId is! String ||
+        pageId.isEmpty ||
+        (action != P3BrowserActionKind.click &&
+            action != P3BrowserActionKind.drag) ||
+        disposition == null ||
+        executionMode == null ||
+        minimumConfidence is! num ||
+        !minimumConfidence.isFinite ||
+        minimumConfidence < 0.9 ||
+        minimumConfidence > 1 ||
+        beforeObservationHash is! String ||
+        !hex.hasMatch(beforeObservationHash) ||
+        beforeScreenshotSha256 is! String ||
+        !hex.hasMatch(beforeScreenshotSha256) ||
+        observationChanged is! bool ||
+        verified is! bool) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_action_response_invalid',
+      );
+    }
+
+    final structured = executionMode == P3BrowserVisualExecutionMode.structured;
+    if (structured !=
+            (locatorStrategy is String &&
+                locatorStrategy.isNotEmpty &&
+                locatorIndex is int &&
+                locatorIndex >= 0) ||
+        (structured &&
+            (structuredFailureCode != null ||
+                visualConfidence != null ||
+                visualDestinationConfidence != null)) ||
+        (!structured &&
+            structuredFailureCode != 'browser_locator_not_found' &&
+            structuredFailureCode != 'browser_locator_ambiguous')) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_action_response_invalid',
+      );
+    }
+    final drag = action == P3BrowserActionKind.drag;
+    if ((structured && drag) !=
+            (targetLocatorStrategy is String &&
+                targetLocatorStrategy.isNotEmpty &&
+                targetLocatorIndex is int &&
+                targetLocatorIndex >= 0) ||
+        (!structured &&
+            (visualConfidence is! num ||
+                !visualConfidence.isFinite ||
+                visualConfidence < 0 ||
+                visualConfidence > 1)) ||
+        (!structured &&
+            drag !=
+                (visualDestinationConfidence is num &&
+                    visualDestinationConfidence.isFinite &&
+                    visualDestinationConfidence >= 0 &&
+                    visualDestinationConfidence <= 1))) {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_action_response_invalid',
+      );
+    }
+
+    final executed = disposition == P3BrowserVisualActionDisposition.executed;
+    if (executed) {
+      if (afterObservationHash is! String ||
+          !hex.hasMatch(afterObservationHash) ||
+          afterScreenshotSha256 is! String ||
+          !hex.hasMatch(afterScreenshotSha256) ||
+          observationChanged !=
+              (beforeObservationHash != afterObservationHash) ||
+          verified != true ||
+          pauseReason != null) {
+        throw const P3BrowserRuntimeException(
+          'browser_visual_action_response_invalid',
+        );
+      }
+    } else if (executionMode != P3BrowserVisualExecutionMode.visual ||
+        afterObservationHash != null ||
+        afterScreenshotSha256 != null ||
+        observationChanged != false ||
+        verified != false ||
+        pauseReason != 'browser_visual_target_low_confidence') {
+      throw const P3BrowserRuntimeException(
+        'browser_visual_action_response_invalid',
+      );
+    }
+
+    return P3BrowserVisualActionResult(
+      sessionId: sessionId,
+      pageId: pageId,
+      action: action!,
+      disposition: disposition,
+      executionMode: executionMode,
+      locatorStrategy: locatorStrategy as String?,
+      locatorIndex: locatorIndex as int?,
+      targetLocatorStrategy: targetLocatorStrategy as String?,
+      targetLocatorIndex: targetLocatorIndex as int?,
+      structuredFailureCode: structuredFailureCode as String?,
+      minimumConfidence: (minimumConfidence).toDouble(),
+      visualConfidence: (visualConfidence as num?)?.toDouble(),
+      visualDestinationConfidence:
+          (visualDestinationConfidence as num?)?.toDouble(),
+      beforeObservationHash: beforeObservationHash,
+      beforeScreenshotSha256: beforeScreenshotSha256,
+      afterObservationHash: afterObservationHash as String?,
+      afterScreenshotSha256: afterScreenshotSha256 as String?,
+      observationChanged: observationChanged,
+      verified: verified,
+      pauseReason: pauseReason as String?,
+    );
+  }
+
+  final String sessionId;
+  final String pageId;
+  final P3BrowserActionKind action;
+  final P3BrowserVisualActionDisposition disposition;
+  final P3BrowserVisualExecutionMode executionMode;
+  final String? locatorStrategy;
+  final int? locatorIndex;
+  final String? targetLocatorStrategy;
+  final int? targetLocatorIndex;
+  final String? structuredFailureCode;
+  final double minimumConfidence;
+  final double? visualConfidence;
+  final double? visualDestinationConfidence;
+  final String beforeObservationHash;
+  final String beforeScreenshotSha256;
+  final String? afterObservationHash;
+  final String? afterScreenshotSha256;
+  final bool observationChanged;
+  final bool verified;
+  final String? pauseReason;
+}
+
 final class P3BrowserSessionProcess {
   P3BrowserSessionProcess._(
     this._process,
@@ -1255,6 +1673,25 @@ final class P3BrowserSessionProcess {
     );
     if (parsed.sessionId != sessionId || parsed.pageId != pageId) {
       _protocolViolation('browser_action_identity_mismatch');
+    }
+    return parsed;
+  }
+
+  Future<P3BrowserVisualActionResult> performVerifiedVisualAction(
+    String sessionId,
+    String pageId,
+    P3BrowserVisualActionRequest action,
+  ) async {
+    final result = await _request('page.visualAction', <String, Object?>{
+      'sessionId': sessionId,
+      'pageId': pageId,
+      'visualActionRequest': action.toJson(),
+    });
+    final parsed = _decodeResponse(
+      () => P3BrowserVisualActionResult.fromJson(result),
+    );
+    if (parsed.sessionId != sessionId || parsed.pageId != pageId) {
+      _protocolViolation('browser_visual_action_identity_mismatch');
     }
     return parsed;
   }

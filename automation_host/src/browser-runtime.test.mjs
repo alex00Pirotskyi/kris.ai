@@ -9,10 +9,13 @@ import test from 'node:test';
 import {
   BrowserSessionRegistry,
   canonicalObservationJson,
+  capturePageObservation,
   createPageTelemetry,
   performPageAction,
+  performVerifiedVisualAction,
   resolvePageActionLocator,
   validatePageActionRequest,
+  validateVisualActionRequest,
   chromiumProbeArgs,
   decorateProbeError,
   parseArgs,
@@ -1040,5 +1043,290 @@ test('action request validates operation-specific fields and bounds', () => {
       deltaY: 0,
     }),
     (error) => error?.code === 'browser_action_scroll_delta_invalid',
+  );
+});
+
+class FakeVisualMouse {
+  constructor(page) {
+    this.page = page;
+    this.events = [];
+    this.isDown = false;
+  }
+
+  async click(x, y) {
+    this.events.push({ type: 'click', x, y });
+    this.page.observation.visibleText =
+      `${this.page.observation.visibleText}|visual-click`;
+  }
+
+  async move(x, y, options = null) {
+    this.events.push({ type: 'move', x, y, options });
+  }
+
+  async down() {
+    this.isDown = true;
+    this.events.push({ type: 'down' });
+  }
+
+  async up() {
+    this.events.push({ type: 'up' });
+    if (this.isDown) {
+      this.page.observation.visibleText =
+        `${this.page.observation.visibleText}|visual-drag`;
+    }
+    this.isDown = false;
+  }
+}
+
+class FakeVisualPage extends FakeActionPage {
+  constructor(matches = {}) {
+    super(matches);
+    this.visualViewport = { width: 1280, height: 720 };
+    this.mouse = new FakeVisualMouse(this);
+  }
+
+  viewportSize() {
+    return this.visualViewport;
+  }
+}
+
+async function visualRequestFixture(page) {
+  const telemetry = createPageTelemetry(page);
+  const before = await capturePageObservation(page, telemetry);
+  return {
+    telemetry,
+    before,
+    source: {
+      observationHash: before.observationHash,
+      screenshotSha256: before.observation.screenshot.sha256,
+      viewportWidth: page.visualViewport.width,
+      viewportHeight: page.visualViewport.height,
+    },
+  };
+}
+
+test('verified visual action keeps coordinates dormant when a structured locator succeeds', async () => {
+  const page = new FakeVisualPage({ 'testId:submit': 1 });
+  const fixture = await visualRequestFixture(page);
+  const result = await performVerifiedVisualAction(
+    page,
+    {
+      action: 'click',
+      locators: [{ strategy: 'testId', value: 'submit' }],
+      visualSource: fixture.source,
+      visualTarget: {
+        x: 100,
+        y: 100,
+        width: 80,
+        height: 40,
+        confidence: 0.1,
+        description: 'unused fallback target',
+      },
+    },
+    fixture.telemetry,
+  );
+
+  assert.equal(result.disposition, 'executed');
+  assert.equal(result.executionMode, 'structured');
+  assert.equal(result.locatorStrategy, 'testId');
+  assert.equal(page.mouse.events.length, 0);
+  assert.equal(page.actions[0].action, 'click');
+  assert.equal(result.verified, true);
+});
+
+test('high-confidence visual click runs only after an ambiguous structured locator', async () => {
+  const page = new FakeVisualPage({ 'text:Continue:true': 2 });
+  const fixture = await visualRequestFixture(page);
+  const result = await performVerifiedVisualAction(
+    page,
+    {
+      action: 'click',
+      locators: [
+        { strategy: 'text', value: 'Continue', exact: true },
+      ],
+      visualSource: fixture.source,
+      visualTarget: {
+        x: 200,
+        y: 150,
+        width: 120,
+        height: 60,
+        confidence: 0.97,
+        description: 'Continue button',
+      },
+      minimumConfidence: 0.95,
+    },
+    fixture.telemetry,
+  );
+
+  assert.equal(result.disposition, 'executed');
+  assert.equal(result.executionMode, 'visual');
+  assert.equal(result.structuredFailureCode, 'browser_locator_ambiguous');
+  assert.equal(result.visualConfidence, 0.97);
+  assert.equal(page.actions.length, 0);
+  assert.deepEqual(page.mouse.events[0], {
+    type: 'click',
+    x: 260,
+    y: 180,
+  });
+  assert.equal(result.observationChanged, true);
+  assert.equal(result.verified, true);
+});
+
+test('low-confidence visual fallback requests takeover without moving the mouse', async () => {
+  const page = new FakeVisualPage();
+  const fixture = await visualRequestFixture(page);
+  const result = await performVerifiedVisualAction(
+    page,
+    {
+      action: 'click',
+      locators: [{ strategy: 'css', value: '#missing' }],
+      visualSource: fixture.source,
+      visualTarget: {
+        x: 20,
+        y: 20,
+        width: 40,
+        height: 30,
+        confidence: 0.82,
+        description: 'uncertain target',
+      },
+    },
+    fixture.telemetry,
+  );
+
+  assert.equal(result.disposition, 'user_takeover_required');
+  assert.equal(result.executionMode, 'visual');
+  assert.equal(result.pauseReason, 'browser_visual_target_low_confidence');
+  assert.equal(result.structuredFailureCode, 'browser_locator_not_found');
+  assert.equal(result.observationChanged, false);
+  assert.equal(result.verified, false);
+  assert.equal(page.mouse.events.length, 0);
+});
+
+test('stale screenshot binding fails before any visual effect', async () => {
+  const page = new FakeVisualPage();
+  const fixture = await visualRequestFixture(page);
+  await assert.rejects(
+    performVerifiedVisualAction(
+      page,
+      {
+        action: 'click',
+        locators: [{ strategy: 'css', value: '#missing' }],
+        visualSource: {
+          ...fixture.source,
+          observationHash: 'f'.repeat(64),
+        },
+        visualTarget: {
+          x: 20,
+          y: 20,
+          width: 40,
+          height: 30,
+          confidence: 0.99,
+          description: 'stale target',
+        },
+      },
+      fixture.telemetry,
+    ),
+    (error) => error?.code === 'browser_visual_source_stale',
+  );
+  assert.equal(page.mouse.events.length, 0);
+});
+
+test('verified visual drag binds both high-confidence rectangles and postcondition', async () => {
+  const page = new FakeVisualPage();
+  const fixture = await visualRequestFixture(page);
+  const result = await performVerifiedVisualAction(
+    page,
+    {
+      action: 'drag',
+      locators: [{ strategy: 'testId', value: 'missing-source' }],
+      targetLocators: [
+        { strategy: 'testId', value: 'missing-destination' },
+      ],
+      visualSource: fixture.source,
+      visualTarget: {
+        x: 50,
+        y: 60,
+        width: 40,
+        height: 20,
+        confidence: 0.98,
+        description: 'drag source',
+      },
+      visualDragTarget: {
+        x: 400,
+        y: 300,
+        width: 80,
+        height: 60,
+        confidence: 0.96,
+        description: 'drag destination',
+      },
+      verification: {
+        requireObservationChange: true,
+        expectedUrlPrefix: 'https://example.test/',
+      },
+    },
+    fixture.telemetry,
+  );
+
+  assert.equal(result.disposition, 'executed');
+  assert.equal(result.executionMode, 'visual');
+  assert.equal(result.visualDestinationConfidence, 0.96);
+  assert.deepEqual(
+    page.mouse.events.map((event) => event.type),
+    ['move', 'down', 'move', 'up'],
+  );
+  assert.deepEqual(page.mouse.events[0], {
+    type: 'move',
+    x: 70,
+    y: 70,
+    options: null,
+  });
+  assert.equal(result.verified, true);
+});
+
+test('visual action validation rejects confidence weakening and unrelated actions', () => {
+  assert.throws(
+    () =>
+      validateVisualActionRequest({
+        action: 'fill',
+        locators: [{ strategy: 'css', value: '#name' }],
+        visualSource: {
+          observationHash: 'a'.repeat(64),
+          screenshotSha256: 'b'.repeat(64),
+          viewportWidth: 1280,
+          viewportHeight: 720,
+        },
+        visualTarget: {
+          x: 1,
+          y: 1,
+          width: 20,
+          height: 20,
+          confidence: 1,
+          description: 'name',
+        },
+      }),
+    (error) => error?.code === 'browser_visual_action_kind_invalid',
+  );
+  assert.throws(
+    () =>
+      validateVisualActionRequest({
+        action: 'click',
+        locators: [{ strategy: 'css', value: '#button' }],
+        visualSource: {
+          observationHash: 'a'.repeat(64),
+          screenshotSha256: 'b'.repeat(64),
+          viewportWidth: 1280,
+          viewportHeight: 720,
+        },
+        visualTarget: {
+          x: 1,
+          y: 1,
+          width: 20,
+          height: 20,
+          confidence: 1,
+          description: 'button',
+        },
+        minimumConfidence: 0.89,
+      }),
+    (error) => error?.code === 'browser_visual_confidence_invalid',
   );
 });

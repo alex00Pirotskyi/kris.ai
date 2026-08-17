@@ -568,4 +568,186 @@ void main() {
       throwsA(isA<P3BrowserRuntimeException>()),
     );
   });
+
+  test(
+      'verified visual action request binds screenshot, confidence, and postcondition',
+      () {
+    final request = P3BrowserVisualActionRequest(
+      action: P3BrowserActionKind.click,
+      locators: <P3BrowserLocator>[
+        P3BrowserLocator.text('Continue', exact: true),
+      ],
+      visualSource: P3BrowserVisualSource(
+        observationHash: _hex('a', 64),
+        screenshotSha256: _hex('b', 64),
+        viewportWidth: 1280,
+        viewportHeight: 720,
+      ),
+      visualTarget: const P3BrowserVisualTarget(
+        x: 100,
+        y: 120,
+        width: 80,
+        height: 40,
+        confidence: 0.97,
+        description: 'Continue button',
+      ),
+      minimumConfidence: 0.95,
+      verification: const P3BrowserVisualVerification(
+        expectedUrlPrefix: 'https://example.test/',
+      ),
+    );
+
+    final json = request.toJson();
+    expect(json['action'], 'click');
+    expect(json['minimumConfidence'], 0.95);
+    expect(
+      (json['visualSource']! as Map)['observationHash'],
+      _hex('a', 64),
+    );
+    expect(
+      (json['visualTarget']! as Map)['confidence'],
+      0.97,
+    );
+    expect(json.containsKey('x'), isFalse);
+
+    expect(
+      () => P3BrowserVisualActionRequest(
+        action: P3BrowserActionKind.drag,
+        locators: <P3BrowserLocator>[
+          P3BrowserLocator.testId('source'),
+        ],
+        visualSource: P3BrowserVisualSource(
+          observationHash: _hex('a', 64),
+          screenshotSha256: _hex('b', 64),
+          viewportWidth: 1280,
+          viewportHeight: 720,
+        ),
+        visualTarget: const P3BrowserVisualTarget(
+          x: 1,
+          y: 1,
+          width: 20,
+          height: 20,
+          confidence: 1,
+          description: 'source',
+        ),
+      ).toJson(),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_action_target_locator_invalid',
+        ),
+      ),
+    );
+    expect(
+      () => P3BrowserVisualActionRequest(
+        action: P3BrowserActionKind.click,
+        locators: <P3BrowserLocator>[
+          P3BrowserLocator.testId('button'),
+        ],
+        visualSource: P3BrowserVisualSource(
+          observationHash: _hex('a', 64),
+          screenshotSha256: _hex('b', 64),
+          viewportWidth: 1280,
+          viewportHeight: 720,
+        ),
+        visualTarget: const P3BrowserVisualTarget(
+          x: 1,
+          y: 1,
+          width: 20,
+          height: 20,
+          confidence: 1,
+          description: 'button',
+        ),
+        minimumConfidence: 0.89,
+      ).toJson(),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_visual_confidence_invalid',
+        ),
+      ),
+    );
+  });
+
+  test('verified visual action result distinguishes execution from takeover',
+      () {
+    final executed = P3BrowserVisualActionResult.fromJson(
+      <String, Object?>{
+        'sessionId': 'session_one',
+        'pageId': 'page_one',
+        'action': 'click',
+        'disposition': 'executed',
+        'executionMode': 'visual',
+        'structuredFailureCode': 'browser_locator_ambiguous',
+        'minimumConfidence': 0.95,
+        'visualConfidence': 0.97,
+        'beforeObservationHash': _hex('a', 64),
+        'beforeScreenshotSha256': _hex('1', 64),
+        'afterObservationHash': _hex('b', 64),
+        'afterScreenshotSha256': _hex('2', 64),
+        'observationChanged': true,
+        'verified': true,
+      },
+    );
+    expect(
+      executed.disposition,
+      P3BrowserVisualActionDisposition.executed,
+    );
+    expect(
+      executed.executionMode,
+      P3BrowserVisualExecutionMode.visual,
+    );
+    expect(executed.structuredFailureCode, 'browser_locator_ambiguous');
+    expect(executed.visualConfidence, 0.97);
+    expect(executed.verified, isTrue);
+
+    final paused = P3BrowserVisualActionResult.fromJson(
+      <String, Object?>{
+        'sessionId': 'session_one',
+        'pageId': 'page_one',
+        'action': 'click',
+        'disposition': 'user_takeover_required',
+        'executionMode': 'visual',
+        'structuredFailureCode': 'browser_locator_not_found',
+        'minimumConfidence': 0.9,
+        'visualConfidence': 0.82,
+        'beforeObservationHash': _hex('a', 64),
+        'beforeScreenshotSha256': _hex('1', 64),
+        'observationChanged': false,
+        'verified': false,
+        'pauseReason': 'browser_visual_target_low_confidence',
+      },
+    );
+    expect(
+      paused.disposition,
+      P3BrowserVisualActionDisposition.userTakeoverRequired,
+    );
+    expect(paused.afterObservationHash, isNull);
+    expect(paused.pauseReason, 'browser_visual_target_low_confidence');
+
+    expect(
+      () => P3BrowserVisualActionResult.fromJson(
+        <String, Object?>{
+          'sessionId': 'session_one',
+          'pageId': 'page_one',
+          'action': 'click',
+          'disposition': 'user_takeover_required',
+          'executionMode': 'visual',
+          'structuredFailureCode': 'browser_locator_not_found',
+          'minimumConfidence': 0.9,
+          'visualConfidence': 0.82,
+          'beforeObservationHash': _hex('a', 64),
+          'beforeScreenshotSha256': _hex('1', 64),
+          'afterObservationHash': _hex('b', 64),
+          'afterScreenshotSha256': _hex('2', 64),
+          'observationChanged': true,
+          'verified': false,
+          'pauseReason': 'browser_visual_target_low_confidence',
+        },
+      ),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
 }

@@ -1105,6 +1105,448 @@ export async function performPageAction(page, rawRequest, telemetry) {
   };
 }
 
+
+const VISUAL_ACTIONS = new Set(['click', 'drag']);
+const VISUAL_FALLBACK_CODES = new Set([
+  'browser_locator_not_found',
+  'browser_locator_ambiguous',
+]);
+const SHA256_HEX = /^[0-9a-f]{64}$/u;
+export const P3_VISUAL_MIN_CONFIDENCE = 0.9;
+
+function finiteVisualNumber(value, code) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) fail(code);
+  return value;
+}
+
+function normalizeVisualSource(value) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'observationHash',
+      'screenshotSha256',
+      'viewportWidth',
+      'viewportHeight',
+    ]),
+    'browser_visual_source_invalid',
+  );
+  if (
+    typeof value.observationHash !== 'string' ||
+    !SHA256_HEX.test(value.observationHash) ||
+    typeof value.screenshotSha256 !== 'string' ||
+    !SHA256_HEX.test(value.screenshotSha256) ||
+    !Number.isSafeInteger(value.viewportWidth) ||
+    value.viewportWidth < 1 ||
+    value.viewportWidth > 32768 ||
+    !Number.isSafeInteger(value.viewportHeight) ||
+    value.viewportHeight < 1 ||
+    value.viewportHeight > 32768
+  ) {
+    fail('browser_visual_source_invalid');
+  }
+  return Object.freeze({
+    observationHash: value.observationHash,
+    screenshotSha256: value.screenshotSha256,
+    viewportWidth: value.viewportWidth,
+    viewportHeight: value.viewportHeight,
+  });
+}
+
+function normalizeVisualTarget(value, code = 'browser_visual_target_invalid') {
+  exactObjectKeys(
+    value,
+    new Set(['x', 'y', 'width', 'height', 'confidence', 'description']),
+    code,
+  );
+  const x = finiteVisualNumber(value.x, code);
+  const y = finiteVisualNumber(value.y, code);
+  const width = finiteVisualNumber(value.width, code);
+  const height = finiteVisualNumber(value.height, code);
+  const confidence = finiteVisualNumber(value.confidence, code);
+  if (
+    x < 0 ||
+    y < 0 ||
+    width <= 0 ||
+    height <= 0 ||
+    x > 100000 ||
+    y > 100000 ||
+    width > 100000 ||
+    height > 100000 ||
+    confidence < 0 ||
+    confidence > 1
+  ) {
+    fail(code);
+  }
+  return Object.freeze({
+    x,
+    y,
+    width,
+    height,
+    confidence,
+    description: boundedActionString(
+      value.description,
+      'browser_visual_target_description_invalid',
+      4096,
+    ),
+  });
+}
+
+function normalizeVisualVerification(value = {}) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'requireObservationChange',
+      'expectedUrl',
+      'expectedUrlPrefix',
+    ]),
+    'browser_visual_verification_invalid',
+  );
+  if (
+    value.requireObservationChange !== undefined &&
+    typeof value.requireObservationChange !== 'boolean'
+  ) {
+    fail('browser_visual_verification_invalid');
+  }
+  if (value.expectedUrl !== undefined && value.expectedUrlPrefix !== undefined) {
+    fail('browser_visual_verification_invalid');
+  }
+  const requireObservationChange = value.requireObservationChange ?? true;
+  const expectedUrl =
+    value.expectedUrl === undefined
+      ? null
+      : sanitizedNetworkUrl(
+          boundedActionString(
+            value.expectedUrl,
+            'browser_visual_expected_url_invalid',
+            8192,
+          ),
+        );
+  const expectedUrlPrefix =
+    value.expectedUrlPrefix === undefined
+      ? null
+      : sanitizedNetworkUrl(
+          boundedActionString(
+            value.expectedUrlPrefix,
+            'browser_visual_expected_url_invalid',
+            8192,
+          ),
+        );
+  if (!requireObservationChange && expectedUrl === null && expectedUrlPrefix === null) {
+    fail('browser_visual_verification_required');
+  }
+  return Object.freeze({
+    requireObservationChange,
+    expectedUrl,
+    expectedUrlPrefix,
+  });
+}
+
+export function validateVisualActionRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'action',
+      'locators',
+      'targetLocators',
+      'visualSource',
+      'visualTarget',
+      'visualDragTarget',
+      'minimumConfidence',
+      'verification',
+      'timeoutMs',
+    ]),
+    'browser_visual_action_request_invalid',
+  );
+  if (!VISUAL_ACTIONS.has(value.action)) {
+    fail('browser_visual_action_kind_invalid');
+  }
+  const timeoutMs = value.timeoutMs ?? 10000;
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 100 ||
+    timeoutMs > 30000
+  ) {
+    fail('browser_action_timeout_invalid');
+  }
+  const minimumConfidence = finiteVisualNumber(
+    value.minimumConfidence ?? P3_VISUAL_MIN_CONFIDENCE,
+    'browser_visual_confidence_invalid',
+  );
+  if (minimumConfidence < P3_VISUAL_MIN_CONFIDENCE || minimumConfidence > 1) {
+    fail('browser_visual_confidence_invalid');
+  }
+  const request = {
+    action: value.action,
+    locators: normalizeLocatorList(value.locators),
+    visualSource: normalizeVisualSource(value.visualSource),
+    visualTarget: normalizeVisualTarget(value.visualTarget),
+    minimumConfidence,
+    verification: normalizeVisualVerification(value.verification),
+    timeoutMs,
+  };
+  if (value.action === 'drag') {
+    request.targetLocators = normalizeLocatorList(
+      value.targetLocators,
+      'browser_action_target_locator_invalid',
+    );
+    request.visualDragTarget = normalizeVisualTarget(
+      value.visualDragTarget,
+      'browser_visual_drag_target_invalid',
+    );
+  } else if (
+    value.targetLocators !== undefined ||
+    value.visualDragTarget !== undefined
+  ) {
+    fail('browser_visual_action_request_invalid');
+  }
+  return Object.freeze(request);
+}
+
+async function currentVisualViewport(page) {
+  let viewport = null;
+  if (typeof page.viewportSize === 'function') {
+    viewport = await page.viewportSize();
+  }
+  if (viewport === null || viewport === undefined) {
+    if (typeof page.evaluate !== 'function') {
+      fail('browser_visual_viewport_unavailable');
+    }
+    viewport = await page.evaluate(() => ({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }));
+  }
+  if (
+    !viewport ||
+    !Number.isSafeInteger(viewport.width) ||
+    viewport.width < 1 ||
+    viewport.width > 32768 ||
+    !Number.isSafeInteger(viewport.height) ||
+    viewport.height < 1 ||
+    viewport.height > 32768
+  ) {
+    fail('browser_visual_viewport_invalid');
+  }
+  return { width: viewport.width, height: viewport.height };
+}
+
+function visualTargetCenter(target, viewport) {
+  if (
+    target.x + target.width > viewport.width ||
+    target.y + target.height > viewport.height
+  ) {
+    fail('browser_visual_target_out_of_bounds');
+  }
+  return {
+    x: target.x + target.width / 2,
+    y: target.y + target.height / 2,
+  };
+}
+
+function assertVisualSourceBinding(request, before, viewport) {
+  if (
+    request.visualSource.observationHash !== before.observationHash ||
+    request.visualSource.screenshotSha256 !==
+      before.observation.screenshot.sha256
+  ) {
+    fail('browser_visual_source_stale');
+  }
+  if (
+    request.visualSource.viewportWidth !== viewport.width ||
+    request.visualSource.viewportHeight !== viewport.height
+  ) {
+    fail('browser_visual_viewport_stale');
+  }
+}
+
+async function resolveStructuredVisualAction(page, request) {
+  try {
+    const source = await resolvePageActionLocator(page, request.locators);
+    let target = null;
+    if (request.action === 'drag') {
+      target = await resolvePageActionLocator(page, request.targetLocators);
+    }
+    return { source, target, failureCode: null };
+  } catch (error) {
+    if (!VISUAL_FALLBACK_CODES.has(error?.code)) throw error;
+    return { source: null, target: null, failureCode: error.code };
+  }
+}
+
+async function performVisualMouseAction(
+  page,
+  request,
+  sourcePoint,
+  destinationPoint = null,
+) {
+  if (
+    !page.mouse ||
+    typeof page.mouse.click !== 'function' ||
+    typeof page.mouse.move !== 'function' ||
+    typeof page.mouse.down !== 'function' ||
+    typeof page.mouse.up !== 'function'
+  ) {
+    fail('browser_visual_mouse_unavailable');
+  }
+  if (request.action === 'click') {
+    await page.mouse.click(sourcePoint.x, sourcePoint.y);
+    return;
+  }
+  await page.mouse.move(sourcePoint.x, sourcePoint.y);
+  await page.mouse.down();
+  let primaryError = null;
+  try {
+    await page.mouse.move(destinationPoint.x, destinationPoint.y, {
+      steps: 12,
+    });
+  } catch (error) {
+    primaryError = error;
+  }
+  try {
+    await page.mouse.up();
+  } catch (error) {
+    primaryError ??= error;
+  }
+  if (primaryError) throw primaryError;
+}
+
+function verifyVisualActionPostconditions(request, before, after) {
+  const observationChanged =
+    before.observationHash !== after.observationHash;
+  if (
+    request.verification.requireObservationChange &&
+    !observationChanged
+  ) {
+    fail('browser_visual_action_unverified');
+  }
+  let urlTransitionVerified = false;
+  if (request.verification.expectedUrl !== null) {
+    if (after.observation.url !== request.verification.expectedUrl) {
+      fail('browser_visual_action_url_mismatch');
+    }
+    urlTransitionVerified =
+      before.observation.url !== request.verification.expectedUrl;
+  }
+  if (request.verification.expectedUrlPrefix !== null) {
+    if (
+      !after.observation.url.startsWith(
+        request.verification.expectedUrlPrefix,
+      )
+    ) {
+      fail('browser_visual_action_url_mismatch');
+    }
+    urlTransitionVerified =
+      !before.observation.url.startsWith(
+        request.verification.expectedUrlPrefix,
+      );
+  }
+  if (!observationChanged && !urlTransitionVerified) {
+    fail('browser_visual_action_unverified');
+  }
+  return observationChanged;
+}
+
+export async function performVerifiedVisualAction(
+  page,
+  rawRequest,
+  telemetry,
+) {
+  const request = validateVisualActionRequest(rawRequest);
+  const before = await capturePageObservation(page, telemetry);
+  const structured = await resolveStructuredVisualAction(page, request);
+  if (structured.failureCode === null) {
+    await performResolvedAction(
+      structured.source,
+      request,
+      structured.target,
+    );
+    const after = await capturePageObservation(page, telemetry);
+    const observationChanged = verifyVisualActionPostconditions(
+      request,
+      before,
+      after,
+    );
+    return {
+      action: request.action,
+      disposition: 'executed',
+      executionMode: 'structured',
+      locatorStrategy: structured.source.descriptor.strategy,
+      locatorIndex: structured.source.index,
+      ...(structured.target
+        ? {
+            targetLocatorStrategy:
+              structured.target.descriptor.strategy,
+            targetLocatorIndex: structured.target.index,
+          }
+        : {}),
+      minimumConfidence: request.minimumConfidence,
+      beforeObservationHash: before.observationHash,
+      beforeScreenshotSha256: before.observation.screenshot.sha256,
+      afterObservationHash: after.observationHash,
+      afterScreenshotSha256: after.observation.screenshot.sha256,
+      observationChanged,
+      verified: true,
+    };
+  }
+
+  const viewport = await currentVisualViewport(page);
+  assertVisualSourceBinding(request, before, viewport);
+  const sourcePoint = visualTargetCenter(request.visualTarget, viewport);
+  const destinationPoint =
+    request.action === 'drag'
+      ? visualTargetCenter(request.visualDragTarget, viewport)
+      : null;
+  const lowConfidence =
+    request.visualTarget.confidence < request.minimumConfidence ||
+    (request.action === 'drag' &&
+      request.visualDragTarget.confidence < request.minimumConfidence);
+  const visualBase = {
+    action: request.action,
+    executionMode: 'visual',
+    structuredFailureCode: structured.failureCode,
+    minimumConfidence: request.minimumConfidence,
+    visualConfidence: request.visualTarget.confidence,
+    ...(request.action === 'drag'
+      ? {
+          visualDestinationConfidence:
+            request.visualDragTarget.confidence,
+        }
+      : {}),
+    beforeObservationHash: before.observationHash,
+    beforeScreenshotSha256: before.observation.screenshot.sha256,
+  };
+  if (lowConfidence) {
+    return {
+      ...visualBase,
+      disposition: 'user_takeover_required',
+      pauseReason: 'browser_visual_target_low_confidence',
+      observationChanged: false,
+      verified: false,
+    };
+  }
+
+  await performVisualMouseAction(
+    page,
+    request,
+    sourcePoint,
+    destinationPoint,
+  );
+  const after = await capturePageObservation(page, telemetry);
+  const observationChanged = verifyVisualActionPostconditions(
+    request,
+    before,
+    after,
+  );
+  return {
+    ...visualBase,
+    disposition: 'executed',
+    afterObservationHash: after.observationHash,
+    afterScreenshotSha256: after.observation.screenshot.sha256,
+    observationChanged,
+    verified: true,
+  };
+}
+
 export class BrowserSessionRegistry {
   constructor({ browser, stateDirectory, quotas, idFactory = defaultIdFactory }) {
     if (!browser || typeof browser.newContext !== 'function') {
@@ -1327,6 +1769,24 @@ export class BrowserSessionRegistry {
   return { sessionId, pageId, ...result };
 }
 
+  async performVisualAction(sessionId, pageId, request) {
+    const session = this._session(sessionId);
+    assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+    const page = session.pages.get(pageId);
+    if (!page) fail('browser_page_not_found', pageId);
+    let telemetry = this.pageTelemetry.get(page);
+    if (!telemetry) {
+      telemetry = createPageTelemetry(page);
+      this.pageTelemetry.set(page, telemetry);
+    }
+    const result = await performVerifiedVisualAction(
+      page,
+      request,
+      telemetry,
+    );
+    return { sessionId, pageId, ...result };
+  }
+
   async closePage(sessionId, pageId) {
     const session = this._session(sessionId);
     assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
@@ -1416,6 +1876,12 @@ export class BrowserSessionRegistry {
           message.sessionId,
           message.pageId,
           message.actionRequest,
+        );
+      case 'page.visualAction':
+        return this.performVisualAction(
+          message.sessionId,
+          message.pageId,
+          message.visualActionRequest,
         );
       case 'page.close':
         return this.closePage(message.sessionId, message.pageId);
