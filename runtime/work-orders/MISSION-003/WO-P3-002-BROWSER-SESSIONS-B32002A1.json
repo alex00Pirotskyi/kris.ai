@@ -1,0 +1,41 @@
+{
+  "activeSemaphoreId": "SEM-P3-002-BROWSER-SESSIONS-B32002A1",
+  "allowedPaths": [
+    "automation_host/src/browser-runtime.mjs",
+    "automation_host/src/browser-runtime.test.mjs",
+    "lib/product/browser/browser_runtime.dart",
+    "test/product/browser/browser_runtime_process_test.dart"
+  ],
+  "assignedWorker": "GPT-5.6-PRO-GOLD:GS-012-P3-002",
+  "baseCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
+  "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "branch": "agent/product/p3-002-browser-session-service",
+  "childWorkOrders": [],
+  "createdAt": "2026-08-17T00:02:00Z",
+  "createdBy": "WRK-20260817T000200Z-b32002a1",
+  "dependencyRequirements": [],
+  "executionRole": "BUILDER",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-012:P3-002-PRODUCT-IMPLEMENTATION",
+  "maxChildWorkOrders": 2,
+  "mission": "MISSION-003",
+  "objective": "Implement the first real P3-002 Browser Session Service product slice on the landed P3-001 bundled runtime: isolated ephemeral and persistent browser contexts, local profile-state persistence, bounded session/page/profile quotas, request-correlated page lifecycle operations, and deterministic cleanup. Keep the service application-owned and offline at runtime. Do not spend this Work Order on readiness prose, governance expansion, observations/actions beyond session lifecycle, or platform/release/production/GA promotion.",
+  "parentProductPr": null,
+  "priority": 100,
+  "productBranch": "agent/product/p3-002-browser-session-service",
+  "requestedRole": "BUILDER",
+  "requiredTests": [
+    "ephemeral contexts never restore or persist profile state",
+    "persistent profiles restore exact local storage state without cross-profile leakage",
+    "session, page, and persistent-profile quotas fail closed",
+    "invalid profile/session/page identifiers and unknown operations fail closed",
+    "shutdown closes every page/context and terminates the browser tree",
+    "Dart request correlation, timeout, and close behavior remain deterministic",
+    "exact-head Node tests and Product Gates"
+  ],
+  "roadmapTask": "P3-002",
+  "schemaVersion": 1,
+  "status": "IN_PROGRESS",
+  "type": "PRODUCT_FEATURE",
+  "updatedAt": "2026-08-17T00:02:00Z",
+  "workOrderId": "WO-P3-002-BROWSER-SESSIONS-B32002A1"
+}

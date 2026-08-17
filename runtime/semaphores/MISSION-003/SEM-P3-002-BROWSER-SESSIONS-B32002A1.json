@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    "automation_host/src/browser-runtime.mjs",
+    "automation_host/src/browser-runtime.test.mjs",
+    "lib/product/browser/browser_runtime.dart",
+    "test/product/browser/browser_runtime_process_test.dart"
+  ],
+  "authorityId": null,
+  "baseCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
+  "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "branch": "agent/product/p3-002-browser-session-service",
+  "createdAt": "2026-08-17T00:02:00Z",
+  "executionRole": "BUILDER",
+  "expiresAt": "2026-08-17T06:02:00Z",
+  "kind": "WRITE",
+  "mission": "MISSION-003",
+  "productPr": null,
+  "refreshedAt": "2026-08-17T00:02:00Z",
+  "resourceId": null,
+  "runtimeGeneration": 649,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-P3-002-BROWSER-SESSIONS-B32002A1",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P3-002-BROWSER-SESSIONS-B32002A1",
+  "workerIdentity": "GPT-5.6-PRO-GOLD:GS-012-P3-002"
+}
