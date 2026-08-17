@@ -1,0 +1,41 @@
+name: Qwen v6 Materializer Diagnostic
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-v6-materializer'
+    paths:
+      - '.github/workflows/qwen-v6-materializer-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Decode and show the exact failing insertion block
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+
+          encoded = Path('tool/qwen_v6_materialize.py.gz.b64').read_text(encoding='utf-8').strip()
+          source = gzip.decompress(base64.b64decode(encoded)).decode('utf-8')
+          rows = source.splitlines()
+          for index, row in enumerate(rows):
+              if 'GitHub infrastructure preflight' in row or 'github_infrastructure_preflight' in row:
+                  start = max(0, index - 20)
+                  end = min(len(rows), index + 35)
+                  print(f'--- materializer lines {start + 1}-{end} ---')
+                  for number in range(start, end):
+                      print(f'{number + 1:04d}: {rows[number]}')
+          PY
