@@ -35,7 +35,7 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Apply, inspect, validate, and publish exact hardening
+      - name: Apply, repair, validate, and publish exact hardening
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -73,10 +73,119 @@ jobs:
           base64 --decode "$RUNNER_TEMP/p3-002-hardening.py.b64" > "$RUNNER_TEMP/p3-002-hardening.py"
           echo "$PATCH_SHA256  $RUNNER_TEMP/p3-002-hardening.py" | sha256sum --check --strict
           python3 "$RUNNER_TEMP/p3-002-hardening.py"
-          echo '--- hardened registry source ---'
-          nl -ba automation_host/src/browser-runtime.mjs | sed -n '500,720p'
-          echo '--- hardened registry tests ---'
-          nl -ba automation_host/src/browser-runtime.test.mjs | sed -n '500,680p'
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('automation_host/src/browser-runtime.mjs')
+          source = path.read_text(encoding='utf-8')
+          start = source.index("  async openSession({ kind = 'ephemeral', profileId = null } = {}) {")
+          end = source.index('\n  listSessions() {', start)
+          replacement = r'''  async openSession({ kind = 'ephemeral', profileId = null } = {}) {
+            await this.initialize();
+            if (!SESSION_MODES.has(kind)) fail('browser_session_kind_invalid');
+            if (this.sessions.size >= this.quotas.maxSessions) {
+              fail('browser_session_quota_exceeded');
+            }
+            if (
+              kind !== 'persistent' &&
+              profileId !== null &&
+              profileId !== undefined
+            ) {
+              fail('browser_ephemeral_profile_forbidden');
+            }
+
+            let storageState = null;
+            let statePath = null;
+            let profileDirectory = null;
+            let existingProfile = false;
+            let profileReserved = false;
+            let context = null;
+
+            if (kind === 'persistent') {
+              assertIdentifier(profileId, PROFILE_ID, 'browser_profile_id_invalid');
+              if (this.activePersistentProfiles.has(profileId)) {
+                fail('browser_profile_in_use', profileId);
+              }
+              existingProfile = this.persistentProfiles.has(profileId);
+              if (
+                !existingProfile &&
+                this.persistentProfiles.size >= this.quotas.maxPersistentProfiles
+              ) {
+                fail('browser_persistent_profile_quota_exceeded');
+              }
+              // Reserve before the first asynchronous filesystem or browser call so
+              // concurrent opens cannot race the same persistent profile.
+              this.activePersistentProfiles.add(profileId);
+              profileReserved = true;
+            }
+
+            try {
+              if (kind === 'persistent') {
+                profileDirectory = childPath(
+                  this.stateDirectory,
+                  'profiles',
+                  profileId,
+                );
+                await rejectSymlinkIfPresent(
+                  profileDirectory,
+                  'browser_profile_directory_symlink',
+                );
+                await mkdir(profileDirectory, { recursive: true, mode: 0o700 });
+                statePath = childPath(profileDirectory, 'storage-state.json');
+                storageState = await readStorageState(statePath);
+              }
+
+              // Identifiers are allocated only after all request/profile policy
+              // checks pass. Rejected requests must have no observable ID side effect.
+              const sessionId = this._nextId('session');
+              if (this.sessions.has(sessionId)) fail('browser_session_id_collision');
+
+              context = await this.browser.newContext({
+                acceptDownloads: false,
+                ...(storageState ? { storageState } : {}),
+              });
+              const session = {
+                sessionId,
+                kind,
+                profileId: kind === 'persistent' ? profileId : null,
+                statePath,
+                context,
+                pages: new Map(),
+                createdAt: new Date().toISOString(),
+              };
+              this.sessions.set(sessionId, session);
+              if (kind === 'persistent') {
+                this.persistentProfiles.add(profileId);
+                // The reservation remains active and is now owned by the tracked
+                // session. Only successful tracked cleanup releases it.
+                profileReserved = false;
+              }
+              return this._metadata(session);
+            } catch (error) {
+              if (context) {
+                try {
+                  await context.close();
+                } catch {
+                  // Preserve the primary open failure; no session was published.
+                }
+              }
+              if (profileReserved) {
+                this.activePersistentProfiles.delete(profileId);
+              }
+              if (kind === 'persistent' && !existingProfile && profileDirectory) {
+                try {
+                  await rm(profileDirectory, { recursive: true, force: true });
+                } catch {
+                  // Preserve the primary failure. A later initialization rejects
+                  // unsafe symlinks and re-evaluates the durable profile inventory.
+                }
+              }
+              throw error;
+            }
+          }
+          '''
+          path.write_text(source[:start] + replacement + source[end:], encoding='utf-8')
+          PY
           git checkout "$BASE_COMMIT" -- .github/workflows/p3-browser-runtime.yml
           npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
           npm test --prefix automation_host
