@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  mkdtemp,
+  mkdir,
+  readFile,
+  readdir,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { Readable, Writable } from 'node:stream';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,6 +18,8 @@ import test from 'node:test';
 
 import {
   BrowserSessionRegistry,
+  P3_DOWNLOAD_LIMITS,
+  canonicalDownloadReceiptJson,
   canonicalObservationJson,
   capturePageObservation,
   createPageTelemetry,
@@ -21,7 +33,11 @@ import {
   parseArgs,
   raceStartupWithShutdown,
   serveSessionCommands,
+  sanitizeDownloadFilename,
+  validateDownloadLimits,
+  validateDownloadReceipt,
   validateManifestBinding,
+  validatePageDownloadRequest,
   validateSessionQuotas,
   waitForExit,
 } from './browser-runtime.mjs';
@@ -508,6 +524,77 @@ function deterministicIds(...values) {
   };
 }
 
+class FakeDownload {
+  constructor({
+    payload,
+    suggestedFilename = 'report.txt',
+    url = 'https://example.test/report?token=secret#fragment',
+    failureReason = null,
+  }) {
+    this.payload = Buffer.from(payload);
+    this.filename = suggestedFilename;
+    this.downloadUrl = url;
+    this.failureReason = failureReason;
+    this.cancelled = false;
+  }
+
+  async createReadStream() {
+    return Readable.from([
+      this.payload.subarray(0, Math.floor(this.payload.length / 2)),
+      this.payload.subarray(Math.floor(this.payload.length / 2)),
+    ]);
+  }
+
+  suggestedFilename() {
+    return this.filename;
+  }
+
+  url() {
+    return this.downloadUrl;
+  }
+
+  async failure() {
+    return this.failureReason;
+  }
+
+  async cancel() {
+    this.cancelled = true;
+  }
+}
+
+function configureDownloadPage(page, download) {
+  page.downloadToReturn = download;
+  page.downloadClicks = 0;
+  page.getByRole = (role, options) => {
+    assert.equal(role, 'link');
+    assert.deepEqual(options, { name: 'Export', exact: true });
+    return {
+      count: async () => 1,
+      click: async ({ timeout }) => {
+        assert.equal(timeout, 30_000);
+        page.downloadClicks += 1;
+      },
+    };
+  };
+  page.waitForEvent = async (event, { timeout }) => {
+    assert.equal(event, 'download');
+    assert.equal(timeout, 30_000);
+    return page.downloadToReturn;
+  };
+}
+
+const downloadRequest = Object.freeze({
+  locators: [
+    {
+      strategy: 'role',
+      role: 'link',
+      name: 'Export',
+      exact: true,
+    },
+  ],
+  timeoutMs: 30_000,
+});
+
 test('ephemeral sessions isolate pages and never persist a profile', async () => {
   const f = await fixture();
   try {
@@ -746,6 +833,367 @@ test('failed page close remains tracked and can be retried', async () => {
     );
     assert.equal(registry.listSessions().length, 1);
     await registry.closeSession(session.sessionId);
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('download policy validators are bounded and canonical', () => {
+  assert.deepEqual(validateDownloadLimits(P3_DOWNLOAD_LIMITS), P3_DOWNLOAD_LIMITS);
+  assert.throws(
+    () => validateDownloadLimits({
+      ...P3_DOWNLOAD_LIMITS,
+      maxPayloadBytes: P3_DOWNLOAD_LIMITS.maxPayloadBytes + 1,
+    }),
+    /browser_download_limits_invalid/u,
+  );
+  assert.deepEqual(validatePageDownloadRequest(downloadRequest), {
+    locators: [
+      {
+        strategy: 'role',
+        role: 'link',
+        name: 'Export',
+        exact: true,
+      },
+    ],
+    timeoutMs: 30_000,
+  });
+  assert.equal(sanitizeDownloadFilename('../unsafe\\name?.txt'), 'name_.txt');
+  assert.equal(sanitizeDownloadFilename('..'), 'download');
+});
+
+test('downloads require explicit session opt-in before any browser side effect', async () => {
+  const f = await fixture();
+  try {
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_one', 'page_one'),
+    });
+    const session = await registry.openSession({ kind: 'ephemeral' });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = browser.contexts[0].pages[0];
+    configureDownloadPage(page, new FakeDownload({ payload: 'blocked' }));
+
+    assert.equal(session.downloadsEnabled, false);
+    assert.equal(browser.contexts[0].options.acceptDownloads, false);
+    await assert.rejects(
+      registry.performDownload(session.sessionId, pageInfo.pageId, downloadRequest),
+      /browser_downloads_disabled/u,
+    );
+    assert.equal(page.downloadClicks, 0);
+    await assert.rejects(
+      registry.openSession({
+        kind: 'ephemeral',
+        downloadsEnabled: 'yes',
+      }),
+      /browser_download_opt_in_invalid/u,
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('structured downloads enter application-owned quarantine with exact durable receipts', async () => {
+  const f = await fixture();
+  try {
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds(
+        'session_download',
+        'page_download',
+        'download_receipt_one',
+      ),
+      clock: () => new Date('2026-08-17T11:00:00.000Z'),
+    });
+    const session = await registry.openSession({
+      kind: 'ephemeral',
+      downloadsEnabled: true,
+    });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const payload = Buffer.from('exact downloaded bytes');
+    const page = browser.contexts[0].pages[0];
+    configureDownloadPage(
+      page,
+      new FakeDownload({
+        payload,
+        suggestedFilename: '../unsafe\\name?.txt',
+      }),
+    );
+
+    const receipt = await registry.execute({
+      type: 'page.download',
+      schemaVersion: '1.0.0',
+      sessionId: session.sessionId,
+      pageId: pageInfo.pageId,
+      downloadRequest,
+    });
+
+    assert.equal(browser.contexts[0].options.acceptDownloads, true);
+    assert.equal(receipt.downloadId, 'download_receipt_one');
+    assert.equal(receipt.sessionId, session.sessionId);
+    assert.equal(receipt.sessionKind, 'ephemeral');
+    assert.equal(receipt.profileId, null);
+    assert.equal(receipt.pageId, pageInfo.pageId);
+    assert.equal(receipt.sourceUrl, 'https://example.test/report');
+    assert.equal(receipt.suggestedFilename, 'name_.txt');
+    assert.equal(receipt.content.bytes, payload.length);
+    assert.equal(receipt.content.sha256, sha256(payload));
+    assert.equal(receipt.locator.strategy, 'role');
+    assert.equal(receipt.locator.index, 0);
+    const { receiptHash, ...hashInput } = receipt;
+    assert.equal(
+      receiptHash,
+      sha256(canonicalDownloadReceiptJson(hashInput)),
+    );
+    assert.deepEqual(validateDownloadReceipt(receipt), receipt);
+
+    const payloadPath = path.join(
+      f.stateDirectory,
+      ...receipt.content.relativePath.split('/'),
+    );
+    assert.deepEqual(await readFile(payloadPath), payload);
+    assert.equal((await lstat(payloadPath)).isFile(), true);
+    const listed = await registry.execute({
+      type: 'download.list',
+      schemaVersion: '1.0.0',
+    });
+    assert.equal(listed.downloads.length, 1);
+    assert.equal(listed.downloads[0].receiptHash, receiptHash);
+
+    await assert.rejects(
+      registry.discardDownload(receipt.downloadId, '0'.repeat(64)),
+      /browser_download_receipt_identity_mismatch/u,
+    );
+    const discarded = await registry.execute({
+      type: 'download.discard',
+      schemaVersion: '1.0.0',
+      downloadId: receipt.downloadId,
+      receiptHash,
+    });
+    assert.deepEqual(discarded, {
+      downloadId: receipt.downloadId,
+      discarded: true,
+    });
+    assert.deepEqual(await registry.listDownloads(), []);
+    await assert.rejects(readFile(payloadPath), (error) => error?.code === 'ENOENT');
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('download inventory restores after restart and rejects payload tampering', async () => {
+  const f = await fixture();
+  try {
+    const firstBrowser = new FakeBrowser();
+    const first = new BrowserSessionRegistry({
+      browser: firstBrowser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds(
+        'session_profile',
+        'page_profile',
+        'download_profile_one',
+      ),
+      clock: () => new Date('2026-08-17T11:01:00.000Z'),
+    });
+    const session = await first.openSession({
+      kind: 'persistent',
+      profileId: 'work',
+      downloadsEnabled: true,
+    });
+    const pageInfo = await first.openPage(session.sessionId);
+    const page = firstBrowser.contexts[0].pages[0];
+    configureDownloadPage(page, new FakeDownload({ payload: 'persist me' }));
+    const receipt = await first.performDownload(
+      session.sessionId,
+      pageInfo.pageId,
+      downloadRequest,
+    );
+    await first.closeAll();
+
+    const restored = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+    });
+    await restored.initialize();
+    const inventory = await restored.listDownloads();
+    assert.equal(inventory.length, 1);
+    assert.equal(inventory[0].receiptHash, receipt.receiptHash);
+    assert.match(
+      inventory[0].content.relativePath,
+      /^downloads\/quarantine\/persistent\/work\//u,
+    );
+
+    const payloadPath = path.join(
+      f.stateDirectory,
+      ...receipt.content.relativePath.split('/'),
+    );
+    await writeFile(payloadPath, 'tampered and longer');
+    const rejected = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+    });
+    await assert.rejects(
+      rejected.initialize(),
+      /browser_download_size_mismatch/u,
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('download inventory rejects malformed receipts, path mismatches, and symlinks', async () => {
+  const f = await fixture();
+  try {
+    const scope = path.join(
+      f.stateDirectory,
+      'downloads',
+      'quarantine',
+      'ephemeral',
+      'session_manual',
+    );
+    const entry = path.join(scope, 'download_manual');
+    await mkdir(entry, { recursive: true });
+    await writeFile(path.join(entry, 'payload.bin'), 'payload');
+    await writeFile(path.join(entry, 'receipt.json'), '{broken-json\n');
+    const malformed = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+    });
+    await assert.rejects(
+      malformed.initialize(),
+      /browser_download_receipt_invalid/u,
+    );
+
+    await rm(path.join(f.stateDirectory, 'downloads'), {
+      recursive: true,
+      force: true,
+    });
+    if (process.platform !== 'win32') {
+      const symlinkScope = path.join(
+        f.stateDirectory,
+        'downloads',
+        'quarantine',
+        'ephemeral',
+        'session_symlink',
+      );
+      await mkdir(symlinkScope, { recursive: true });
+      const target = path.join(f.root, 'outside');
+      await mkdir(target);
+      await symlink(target, path.join(symlinkScope, 'download_symlink'));
+      const linked = new BrowserSessionRegistry({
+        browser: new FakeBrowser(),
+        stateDirectory: f.stateDirectory,
+        quotas: {
+          maxSessions: 2,
+          maxPagesPerSession: 2,
+          maxPersistentProfiles: 2,
+        },
+      });
+      await assert.rejects(
+        linked.initialize(),
+        /browser_download_entry_invalid/u,
+      );
+    }
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('download payload and quarantine quotas fail closed without durable partials', async () => {
+  const f = await fixture();
+  try {
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      downloadLimits: {
+        maxPayloadBytes: 8,
+        maxQuarantineBytes: 8,
+        maxReceipts: 2,
+        maxReceiptBytes: 1024,
+      },
+      idFactory: deterministicIds(
+        'session_quota',
+        'page_quota',
+        'download_first',
+        'download_second',
+      ),
+    });
+    const session = await registry.openSession({
+      kind: 'ephemeral',
+      downloadsEnabled: true,
+    });
+    const pageInfo = await registry.openPage(session.sessionId);
+    const page = browser.contexts[0].pages[0];
+    configureDownloadPage(page, new FakeDownload({ payload: '123456' }));
+    await registry.performDownload(
+      session.sessionId,
+      pageInfo.pageId,
+      downloadRequest,
+    );
+
+    const overflow = new FakeDownload({ payload: 'abc' });
+    page.downloadToReturn = overflow;
+    await assert.rejects(
+      registry.performDownload(
+        session.sessionId,
+        pageInfo.pageId,
+        downloadRequest,
+      ),
+      /browser_download_quarantine_quota_exceeded/u,
+    );
+    assert.equal(overflow.cancelled, true);
+    assert.equal((await registry.listDownloads()).length, 1);
+    const scope = path.join(
+      f.stateDirectory,
+      'downloads',
+      'quarantine',
+      'ephemeral',
+      session.sessionId,
+    );
+    assert.deepEqual(
+      (await readdir(scope)).filter((name) => name.startsWith('.partial-')),
+      [],
+    );
   } finally {
     await f.cleanup();
   }

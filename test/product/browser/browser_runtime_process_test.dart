@@ -69,6 +69,42 @@ Object? _canonicalTestValue(Object? value) {
 String _canonicalTestJson(Map<String, Object?> value) =>
     jsonEncode(_canonicalTestValue(value));
 
+Map<String, Object?> _downloadReceiptEnvelope({
+  String sessionKind = 'ephemeral',
+  String sessionId = 'session_one',
+  String? profileId,
+  String downloadId = 'download_fixture',
+  String suggestedFilename = 'report.csv',
+}) {
+  final scopeId = sessionKind == 'persistent' ? profileId! : sessionId;
+  final base = <String, Object?>{
+    'schemaVersion': '1.0.0',
+    'receiptType': 'kristin-p3-browser-download-receipt-v1',
+    'downloadId': downloadId,
+    'sessionId': sessionId,
+    'sessionKind': sessionKind,
+    'profileId': profileId,
+    'pageId': 'page_one',
+    'sourceUrl': 'https://example.test/export',
+    'suggestedFilename': suggestedFilename,
+    'content': <String, Object?>{
+      'relativePath': 'downloads/quarantine/$sessionKind/$scopeId/'
+          '$downloadId/payload.bin',
+      'bytes': 4,
+      'sha256': Sha256.hex(<int>[1, 2, 3, 4]),
+    },
+    'locator': <String, Object?>{
+      'strategy': 'testId',
+      'index': 0,
+    },
+    'createdAt': '2026-08-17T00:00:00.000Z',
+  };
+  return <String, Object?>{
+    ...base,
+    'receiptHash': Sha256.text(canonicalJson(base)),
+  };
+}
+
 Map<String, Object?> _observationEnvelope() {
   final screenshot = <int>[1, 2, 3, 4];
   final observation = <String, Object?>{
@@ -392,6 +428,7 @@ void main() {
       'sandboxMode': 'required',
       'serviceMode': 'sessions',
       'quotas': quotas.toJson(),
+      'downloadPolicy': const P3BrowserDownloadPolicy().toJson(),
     };
 
     final ready = P3BrowserSessionReady.fromJson(
@@ -401,8 +438,11 @@ void main() {
     );
 
     expect(ready.quotas, quotas);
+    expect(ready.downloadPolicy, const P3BrowserDownloadPolicy());
     expect(ready.provenance['p3_002SessionServiceImplemented'], isTrue);
+    expect(ready.provenance['p3_006aDownloadQuarantineImplemented'], isTrue);
     expect(ready.provenance['persistentProfileStateLocalOnly'], isTrue);
+    expect(ready.provenance['downloadQuarantineApplicationOwned'], isTrue);
 
     expect(
       () => P3BrowserSessionReady.fromJson(
@@ -425,6 +465,26 @@ void main() {
         ),
       ),
     );
+    expect(
+      () => P3BrowserSessionReady.fromJson(
+        <String, Object?>{
+          ...value,
+          'downloadPolicy': const P3BrowserDownloadPolicy(
+            maxPayloadBytes: 1024,
+            maxQuarantineBytes: 1024,
+          ).toJson(),
+        },
+        resources: resources,
+        expectedQuotas: quotas,
+      ),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_session_ready_download_policy_mismatch',
+        ),
+      ),
+    );
   });
 
   test('session and page response models reject inconsistent identities', () {
@@ -433,10 +493,12 @@ void main() {
       'kind': 'persistent',
       'profileId': 'work',
       'pageCount': 1,
+      'downloadsEnabled': true,
       'createdAt': '2026-08-17T00:00:00Z',
     });
     expect(session.kind, P3BrowserSessionKind.persistent);
     expect(session.profileId, 'work');
+    expect(session.downloadsEnabled, isTrue);
 
     final page = P3BrowserPageInfo.fromJson(<String, Object?>{
       'pageId': 'page_one',
@@ -451,6 +513,7 @@ void main() {
         'kind': 'ephemeral',
         'profileId': 'must-not-exist',
         'pageCount': 0,
+        'downloadsEnabled': false,
         'createdAt': '2026-08-17T00:00:00Z',
       }),
       throwsA(isA<P3BrowserRuntimeException>()),
@@ -459,6 +522,122 @@ void main() {
       () => P3BrowserPageInfo.fromJson(<String, Object?>{
         'pageId': '',
         'sessionId': 'session_one',
+      }),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
+
+  test('download policy and request enforce exact product bounds', () {
+    final policy = P3BrowserDownloadPolicy.fromJson(
+      const P3BrowserDownloadPolicy().toJson(),
+    );
+    expect(policy, const P3BrowserDownloadPolicy());
+    expect(policy.maxPayloadBytes, 128 * 1024 * 1024);
+    expect(
+      () => P3BrowserDownloadPolicy.fromJson(<String, Object?>{
+        ...const P3BrowserDownloadPolicy().toJson(),
+        'maxPayloadBytes': 128 * 1024 * 1024 + 1,
+      }),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_download_limits_invalid',
+        ),
+      ),
+    );
+
+    final request = P3BrowserDownloadRequest(
+      locators: <P3BrowserLocator>[
+        P3BrowserLocator.testId('download-report'),
+        P3BrowserLocator.text('Download report', exact: true),
+      ],
+      timeout: const Duration(seconds: 45),
+    ).toJson();
+    expect(request['timeoutMs'], 45000);
+    expect((request['locators']! as List).length, 2);
+    expect(request.containsKey('path'), isFalse);
+    expect(
+      () => const P3BrowserDownloadRequest(
+        locators: <P3BrowserLocator>[],
+      ).toJson(),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+    expect(
+      () => P3BrowserDownloadRequest(
+        locators: <P3BrowserLocator>[
+          P3BrowserLocator.testId('download-report'),
+        ],
+        timeout: const Duration(seconds: 61),
+      ).toJson(),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
+
+  test('download receipt independently binds identity, path, payload and hash',
+      () {
+    final envelope = _downloadReceiptEnvelope();
+    expect(
+      envelope['receiptHash'],
+      'e39dd7a3849bea6dc1210691b3a4614c8bf13852b4e5e09d563b04d92e870c4e',
+    );
+    final receipt = P3BrowserDownloadReceipt.fromJson(envelope);
+    expect(receipt.downloadId, 'download_fixture');
+    expect(receipt.sessionKind, P3BrowserSessionKind.ephemeral);
+    expect(receipt.profileId, isNull);
+    expect(receipt.bytes, 4);
+    expect(receipt.suggestedFilename, 'report.csv');
+    expect(receipt.locatorStrategy, 'testId');
+    expect(receipt.locatorIndex, 0);
+
+    expect(
+      () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
+        ...envelope,
+        'sourceUrl': 'https://example.test/tampered',
+      }),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_download_receipt_hash_mismatch',
+        ),
+      ),
+    );
+
+    final wrongPath = Map<String, Object?>.from(envelope);
+    wrongPath['content'] = <String, Object?>{
+      ...Map<String, Object?>.from(envelope['content']! as Map),
+      'relativePath': '../escape/report.csv',
+    };
+    final wrongPathBase = Map<String, Object?>.from(wrongPath)
+      ..remove('receiptHash');
+    wrongPath['receiptHash'] = Sha256.text(canonicalJson(wrongPathBase));
+    expect(
+      () => P3BrowserDownloadReceipt.fromJson(wrongPath),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_download_receipt_invalid',
+        ),
+      ),
+    );
+
+    final persistent = _downloadReceiptEnvelope(
+      sessionKind: 'persistent',
+      profileId: 'work',
+    );
+    final persistentReceipt = P3BrowserDownloadReceipt.fromJson(persistent);
+    expect(persistentReceipt.profileId, 'work');
+    expect(
+      persistentReceipt.payloadRelativePath,
+      'downloads/quarantine/persistent/work/download_fixture/payload.bin',
+    );
+
+    expect(
+      () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
+        ...envelope,
+        'unexpected': true,
       }),
       throwsA(isA<P3BrowserRuntimeException>()),
     );

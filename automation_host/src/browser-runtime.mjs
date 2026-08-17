@@ -5,6 +5,7 @@ import {
   access,
   lstat,
   mkdir,
+  open,
   readFile,
   readdir,
   realpath,
@@ -27,6 +28,16 @@ const SESSION_MODES = new Set(['ephemeral', 'persistent']);
 const PROFILE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u;
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const GENERATED_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/u;
+const DOWNLOAD_ID = /^download_[A-Za-z0-9_-]{1,119}$/u;
+const SHA256_HEX = /^[0-9a-f]{64}$/u;
+const DOWNLOAD_RECEIPT_TYPE = 'kristin-p3-browser-download-receipt-v1';
+const HARD_MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024;
+export const P3_DOWNLOAD_LIMITS = Object.freeze({
+  maxPayloadBytes: HARD_MAX_DOWNLOAD_BYTES,
+  maxQuarantineBytes: HARD_MAX_DOWNLOAD_BYTES,
+  maxReceipts: 1024,
+  maxReceiptBytes: 64 * 1024,
+});
 
 function fail(code, detail = '') {
   const error = new Error(detail ? `${code}:${detail}` : code);
@@ -507,6 +518,257 @@ function defaultIdFactory(prefix) {
   return `${prefix}_${randomUUID().replaceAll('-', '')}`;
 }
 
+export function validateDownloadLimits(value = P3_DOWNLOAD_LIMITS) {
+  const limits = {
+    maxPayloadBytes: value?.maxPayloadBytes,
+    maxQuarantineBytes: value?.maxQuarantineBytes,
+    maxReceipts: value?.maxReceipts,
+    maxReceiptBytes: value?.maxReceiptBytes,
+  };
+  if (
+    !Number.isSafeInteger(limits.maxPayloadBytes) ||
+    limits.maxPayloadBytes < 1 ||
+    limits.maxPayloadBytes > HARD_MAX_DOWNLOAD_BYTES ||
+    !Number.isSafeInteger(limits.maxQuarantineBytes) ||
+    limits.maxQuarantineBytes < limits.maxPayloadBytes ||
+    limits.maxQuarantineBytes > HARD_MAX_DOWNLOAD_BYTES ||
+    !Number.isSafeInteger(limits.maxReceipts) ||
+    limits.maxReceipts < 1 ||
+    limits.maxReceipts > 4096 ||
+    !Number.isSafeInteger(limits.maxReceiptBytes) ||
+    limits.maxReceiptBytes < 1024 ||
+    limits.maxReceiptBytes > 64 * 1024
+  ) {
+    fail('browser_download_limits_invalid');
+  }
+  return Object.freeze(limits);
+}
+
+function canonicalDownloadReceiptValue(value) {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalDownloadReceiptValue(item));
+  }
+  if (value && typeof value === 'object') {
+    const result = {};
+    for (const key of Object.keys(value).sort()) {
+      result[key] = canonicalDownloadReceiptValue(value[key]);
+    }
+    return result;
+  }
+  fail('browser_download_receipt_value_invalid');
+}
+
+export function canonicalDownloadReceiptJson(value) {
+  return JSON.stringify(canonicalDownloadReceiptValue(value));
+}
+
+export function sanitizeDownloadFilename(raw) {
+  let value = String(raw ?? '').split(/[\\/]/u).at(-1) ?? '';
+  value = value
+    .replace(/[\u0000-\u001f\u007f<>:"|?*]/gu, '_')
+    .trim()
+    .replace(/[. ]+$/u, '');
+  if (!value || value === '.' || value === '..') value = 'download';
+  value = boundedUtf8(value, 255).text;
+  return value || 'download';
+}
+
+function downloadChildPath(root, ...segments) {
+  const resolvedRoot = path.resolve(root);
+  const candidate = path.resolve(resolvedRoot, ...segments);
+  if (
+    candidate !== resolvedRoot &&
+    !candidate.startsWith(`${resolvedRoot}${path.sep}`)
+  ) {
+    fail('browser_download_path_escape');
+  }
+  return candidate;
+}
+
+async function rejectDownloadSymlinkIfPresent(value, code) {
+  try {
+    if ((await lstat(value)).isSymbolicLink()) fail(code);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+
+function downloadScopeForSession(session) {
+  if (session.kind === 'persistent') {
+    return { scopeKind: 'persistent', scopeId: session.profileId };
+  }
+  return { scopeKind: 'ephemeral', scopeId: session.sessionId };
+}
+
+function downloadRelativePath(scopeKind, scopeId, downloadId) {
+  return [
+    'downloads',
+    'quarantine',
+    scopeKind,
+    scopeId,
+    downloadId,
+    'payload.bin',
+  ].join('/');
+}
+
+function canonicalIsoTimestamp(value) {
+  if (typeof value !== 'string') return false;
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
+}
+
+function downloadReceiptHashInput(receipt) {
+  const { receiptHash: _receiptHash, ...base } = receipt;
+  return base;
+}
+
+export function validateDownloadReceipt(value, expected = {}) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'schemaVersion',
+      'receiptType',
+      'downloadId',
+      'sessionId',
+      'sessionKind',
+      'profileId',
+      'pageId',
+      'sourceUrl',
+      'suggestedFilename',
+      'content',
+      'locator',
+      'createdAt',
+      'receiptHash',
+    ]),
+    'browser_download_receipt_invalid',
+  );
+  exactObjectKeys(
+    value.content,
+    new Set(['relativePath', 'bytes', 'sha256']),
+    'browser_download_receipt_invalid',
+  );
+  exactObjectKeys(
+    value.locator,
+    new Set(['strategy', 'index']),
+    'browser_download_receipt_invalid',
+  );
+  const profileValid =
+    (value.sessionKind === 'ephemeral' && value.profileId === null) ||
+    (value.sessionKind === 'persistent' &&
+      typeof value.profileId === 'string' &&
+      PROFILE_ID.test(value.profileId));
+  const scopeId =
+    value.sessionKind === 'persistent' ? value.profileId : value.sessionId;
+  const expectedRelativePath =
+    typeof scopeId === 'string' && DOWNLOAD_ID.test(value.downloadId ?? '')
+      ? downloadRelativePath(
+          value.sessionKind,
+          scopeId,
+          value.downloadId,
+        )
+      : '';
+  if (
+    value.schemaVersion !== READY_SCHEMA_VERSION ||
+    value.receiptType !== DOWNLOAD_RECEIPT_TYPE ||
+    typeof value.downloadId !== 'string' ||
+    !DOWNLOAD_ID.test(value.downloadId) ||
+    typeof value.sessionId !== 'string' ||
+    !GENERATED_ID.test(value.sessionId) ||
+    !SESSION_MODES.has(value.sessionKind) ||
+    !profileValid ||
+    typeof value.pageId !== 'string' ||
+    !GENERATED_ID.test(value.pageId) ||
+    typeof value.sourceUrl !== 'string' ||
+    Buffer.byteLength(value.sourceUrl, 'utf8') > 4096 ||
+    typeof value.suggestedFilename !== 'string' ||
+    sanitizeDownloadFilename(value.suggestedFilename) !==
+      value.suggestedFilename ||
+    Buffer.byteLength(value.suggestedFilename, 'utf8') > 255 ||
+    value.content.relativePath !== expectedRelativePath ||
+    !Number.isSafeInteger(value.content.bytes) ||
+    value.content.bytes < 0 ||
+    value.content.bytes > HARD_MAX_DOWNLOAD_BYTES ||
+    typeof value.content.sha256 !== 'string' ||
+    !SHA256_HEX.test(value.content.sha256) ||
+    !LOCATOR_STRATEGIES.has(value.locator.strategy) ||
+    !Number.isSafeInteger(value.locator.index) ||
+    value.locator.index < 0 ||
+    value.locator.index > 7 ||
+    !canonicalIsoTimestamp(value.createdAt) ||
+    typeof value.receiptHash !== 'string' ||
+    !SHA256_HEX.test(value.receiptHash)
+  ) {
+    fail('browser_download_receipt_invalid');
+  }
+  for (const [key, expectedValue] of Object.entries(expected)) {
+    if (expectedValue !== undefined && value[key] !== expectedValue) {
+      fail('browser_download_receipt_identity_mismatch', key);
+    }
+  }
+  const canonical = canonicalDownloadReceiptJson(
+    downloadReceiptHashInput(value),
+  );
+  if (
+    createHash('sha256').update(canonical).digest('hex') !==
+    value.receiptHash
+  ) {
+    fail('browser_download_receipt_hash_mismatch');
+  }
+  return Object.freeze({
+    ...value,
+    content: Object.freeze({ ...value.content }),
+    locator: Object.freeze({ ...value.locator }),
+  });
+}
+
+function createDownloadReceipt({
+  downloadId,
+  session,
+  pageId,
+  sourceUrl,
+  suggestedFilename,
+  relativePath,
+  bytes,
+  sha256,
+  locatorStrategy,
+  locatorIndex,
+  createdAt,
+}) {
+  const base = {
+    schemaVersion: READY_SCHEMA_VERSION,
+    receiptType: DOWNLOAD_RECEIPT_TYPE,
+    downloadId,
+    sessionId: session.sessionId,
+    sessionKind: session.kind,
+    profileId: session.profileId,
+    pageId,
+    sourceUrl,
+    suggestedFilename,
+    content: {
+      relativePath,
+      bytes,
+      sha256,
+    },
+    locator: {
+      strategy: locatorStrategy,
+      index: locatorIndex,
+    },
+    createdAt,
+  };
+  const receiptHash = createHash('sha256')
+    .update(canonicalDownloadReceiptJson(base))
+    .digest('hex');
+  return validateDownloadReceipt({ ...base, receiptHash });
+}
+
 
 export const P3_PAGE_OBSERVATION_LIMITS = Object.freeze({
   domBytes: 192 * 1024,
@@ -968,6 +1230,26 @@ export function validatePageActionRequest(value) {
   return Object.freeze(request);
 }
 
+export function validatePageDownloadRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set(['locators', 'timeoutMs']),
+    'browser_download_request_invalid',
+  );
+  const timeoutMs = value.timeoutMs ?? 30_000;
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 100 ||
+    timeoutMs > 60_000
+  ) {
+    fail('browser_download_timeout_invalid');
+  }
+  return Object.freeze({
+    locators: normalizeLocatorList(value.locators),
+    timeoutMs,
+  });
+}
+
 function locatorFromDescriptor(page, descriptor) {
   switch (descriptor.strategy) {
     case 'role':
@@ -1111,7 +1393,7 @@ const VISUAL_FALLBACK_CODES = new Set([
   'browser_locator_not_found',
   'browser_locator_ambiguous',
 ]);
-const SHA256_HEX = /^[0-9a-f]{64}$/u;
+
 export const P3_VISUAL_MIN_CONFIDENCE = 0.9;
 
 function finiteVisualNumber(value, code) {
@@ -1548,21 +1830,40 @@ export async function performVerifiedVisualAction(
 }
 
 export class BrowserSessionRegistry {
-  constructor({ browser, stateDirectory, quotas, idFactory = defaultIdFactory }) {
+  constructor({
+    browser,
+    stateDirectory,
+    quotas,
+    idFactory = defaultIdFactory,
+    downloadLimits = P3_DOWNLOAD_LIMITS,
+    clock = () => new Date(),
+  }) {
     if (!browser || typeof browser.newContext !== 'function') {
       fail('browser_session_browser_invalid');
     }
     if (!path.isAbsolute(stateDirectory)) {
       fail('browser_session_state_directory_not_absolute');
     }
+    if (typeof idFactory !== 'function' || typeof clock !== 'function') {
+      fail('browser_session_dependency_invalid');
+    }
     this.browser = browser;
     this.stateDirectory = path.resolve(stateDirectory);
     this.quotas = validateSessionQuotas(quotas);
+    this.downloadLimits = validateDownloadLimits(downloadLimits);
     this.idFactory = idFactory;
+    this.clock = clock;
     this.sessions = new Map();
     this.persistentProfiles = new Set();
     this.activePersistentProfiles = new Set();
     this.pageTelemetry = new WeakMap();
+    this.downloadReceipts = new Map();
+    this.quarantineBytes = 0;
+    this.downloadsRoot = downloadChildPath(this.stateDirectory, 'downloads');
+    this.quarantineRoot = downloadChildPath(
+      this.downloadsRoot,
+      'quarantine',
+    );
     this.initialized = false;
   }
 
@@ -1584,7 +1885,368 @@ export class BrowserSessionRegistry {
     if (this.persistentProfiles.size > this.quotas.maxPersistentProfiles) {
       fail('browser_persistent_profile_quota_exceeded');
     }
+    await this._initializeDownloadInventory();
     this.initialized = true;
+  }
+
+  async _ensureDownloadRoots() {
+    await mkdir(this.downloadsRoot, { recursive: true, mode: 0o700 });
+    await rejectDownloadSymlinkIfPresent(
+      this.downloadsRoot,
+      'browser_downloads_root_symlink',
+    );
+    const downloadEntries = await readdir(this.downloadsRoot, {
+      withFileTypes: true,
+    });
+    for (const entry of downloadEntries) {
+      if (entry.name !== 'quarantine') {
+        fail('browser_downloads_root_entry_invalid', entry.name);
+      }
+      if (entry.isSymbolicLink() || !entry.isDirectory()) {
+        fail('browser_download_quarantine_root_invalid');
+      }
+    }
+    await mkdir(this.quarantineRoot, { recursive: true, mode: 0o700 });
+    await rejectDownloadSymlinkIfPresent(
+      this.quarantineRoot,
+      'browser_download_quarantine_root_symlink',
+    );
+    for (const scopeKind of SESSION_MODES) {
+      const scopeRoot = downloadChildPath(this.quarantineRoot, scopeKind);
+      await mkdir(scopeRoot, { recursive: true, mode: 0o700 });
+      await rejectDownloadSymlinkIfPresent(
+        scopeRoot,
+        'browser_download_scope_root_symlink',
+      );
+    }
+    const quarantineEntries = await readdir(this.quarantineRoot, {
+      withFileTypes: true,
+    });
+    for (const entry of quarantineEntries) {
+      if (!SESSION_MODES.has(entry.name)) {
+        fail('browser_download_scope_kind_invalid', entry.name);
+      }
+      if (entry.isSymbolicLink() || !entry.isDirectory()) {
+        fail('browser_download_scope_root_invalid', entry.name);
+      }
+    }
+  }
+
+  _downloadPaths(scopeKind, scopeId, downloadId) {
+    if (!SESSION_MODES.has(scopeKind)) {
+      fail('browser_download_scope_kind_invalid');
+    }
+    const scopePattern = scopeKind === 'persistent' ? PROFILE_ID : GENERATED_ID;
+    if (typeof scopeId !== 'string' || !scopePattern.test(scopeId)) {
+      fail('browser_download_scope_id_invalid');
+    }
+    assertIdentifier(downloadId, DOWNLOAD_ID, 'browser_download_id_invalid');
+    const scopeRoot = downloadChildPath(this.quarantineRoot, scopeKind);
+    const scopeDirectory = downloadChildPath(scopeRoot, scopeId);
+    const entryDirectory = downloadChildPath(scopeDirectory, downloadId);
+    return {
+      scopeRoot,
+      scopeDirectory,
+      entryDirectory,
+      payloadPath: downloadChildPath(entryDirectory, 'payload.bin'),
+      receiptPath: downloadChildPath(entryDirectory, 'receipt.json'),
+    };
+  }
+
+  async _ensureDownloadScope(scopeKind, scopeId) {
+    await this._ensureDownloadRoots();
+    const markerId = 'download_scope_marker';
+    const { scopeRoot, scopeDirectory } = this._downloadPaths(
+      scopeKind,
+      scopeId,
+      markerId,
+    );
+    await rejectDownloadSymlinkIfPresent(
+      scopeRoot,
+      'browser_download_scope_root_symlink',
+    );
+    await mkdir(scopeDirectory, { recursive: false, mode: 0o700 }).catch(
+      (error) => {
+        if (error?.code !== 'EEXIST') throw error;
+      },
+    );
+    await rejectDownloadSymlinkIfPresent(
+      scopeDirectory,
+      'browser_download_scope_directory_symlink',
+    );
+    const metadata = await lstat(scopeDirectory);
+    if (!metadata.isDirectory()) {
+      fail('browser_download_scope_directory_invalid');
+    }
+    return scopeDirectory;
+  }
+
+  async _readStoredDownload(scopeKind, scopeId, downloadId) {
+    const paths = this._downloadPaths(scopeKind, scopeId, downloadId);
+    await rejectDownloadSymlinkIfPresent(
+      paths.entryDirectory,
+      'browser_download_entry_symlink',
+    );
+    const entryMetadata = await lstat(paths.entryDirectory).catch((error) => {
+      if (error?.code === 'ENOENT') fail('browser_download_not_found', downloadId);
+      throw error;
+    });
+    if (!entryMetadata.isDirectory()) {
+      fail('browser_download_entry_invalid', downloadId);
+    }
+    const entries = await readdir(paths.entryDirectory, { withFileTypes: true });
+    const names = entries.map((entry) => entry.name).sort();
+    if (
+      names.length !== 2 ||
+      names[0] !== 'payload.bin' ||
+      names[1] !== 'receipt.json' ||
+      entries.some((entry) => entry.isSymbolicLink() || !entry.isFile())
+    ) {
+      fail('browser_download_entry_invalid', downloadId);
+    }
+    const [payloadMetadata, receiptMetadata] = await Promise.all([
+      lstat(paths.payloadPath),
+      lstat(paths.receiptPath),
+    ]);
+    if (
+      payloadMetadata.isSymbolicLink() ||
+      !payloadMetadata.isFile() ||
+      receiptMetadata.isSymbolicLink() ||
+      !receiptMetadata.isFile() ||
+      receiptMetadata.size < 2 ||
+      receiptMetadata.size > this.downloadLimits.maxReceiptBytes
+    ) {
+      fail('browser_download_entry_invalid', downloadId);
+    }
+    let rawReceipt;
+    try {
+      rawReceipt = JSON.parse(await readFile(paths.receiptPath, 'utf8'));
+    } catch (error) {
+      if (error?.code) throw error;
+      fail('browser_download_receipt_invalid', downloadId);
+    }
+    const receipt = validateDownloadReceipt(rawReceipt, {
+      downloadId,
+      sessionKind: scopeKind,
+      ...(scopeKind === 'persistent'
+        ? { profileId: scopeId }
+        : { sessionId: scopeId }),
+    });
+    if (
+      payloadMetadata.size !== receipt.content.bytes ||
+      payloadMetadata.size > this.downloadLimits.maxPayloadBytes
+    ) {
+      fail('browser_download_size_mismatch', downloadId);
+    }
+    const digest = await sha256File(paths.payloadPath);
+    if (digest !== receipt.content.sha256) {
+      fail('browser_download_sha_mismatch', downloadId);
+    }
+    return receipt;
+  }
+
+  async _initializeDownloadInventory() {
+    await this._ensureDownloadRoots();
+    const restored = new Map();
+    let restoredBytes = 0;
+    for (const scopeKind of SESSION_MODES) {
+      const scopeRoot = downloadChildPath(this.quarantineRoot, scopeKind);
+      const scopes = await readdir(scopeRoot, { withFileTypes: true });
+      for (const scope of scopes) {
+        if (scope.isSymbolicLink() || !scope.isDirectory()) {
+          fail('browser_download_scope_directory_invalid', scope.name);
+        }
+        const scopePattern =
+          scopeKind === 'persistent' ? PROFILE_ID : GENERATED_ID;
+        if (!scopePattern.test(scope.name)) {
+          fail('browser_download_scope_id_invalid', scope.name);
+        }
+        const scopeDirectory = downloadChildPath(scopeRoot, scope.name);
+        await rejectDownloadSymlinkIfPresent(
+          scopeDirectory,
+          'browser_download_scope_directory_symlink',
+        );
+        const entries = await readdir(scopeDirectory, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.name.startsWith('.partial-')) {
+            if (entry.isSymbolicLink() || !entry.isDirectory()) {
+              fail('browser_download_partial_entry_invalid', entry.name);
+            }
+            await rm(downloadChildPath(scopeDirectory, entry.name), {
+              recursive: true,
+              force: true,
+            });
+            continue;
+          }
+          if (
+            entry.isSymbolicLink() ||
+            !entry.isDirectory() ||
+            !DOWNLOAD_ID.test(entry.name)
+          ) {
+            fail('browser_download_entry_invalid', entry.name);
+          }
+          const receipt = await this._readStoredDownload(
+            scopeKind,
+            scope.name,
+            entry.name,
+          );
+          if (restored.has(receipt.downloadId)) {
+            fail('browser_download_id_collision', receipt.downloadId);
+          }
+          restoredBytes += receipt.content.bytes;
+          if (
+            restored.size + 1 > this.downloadLimits.maxReceipts ||
+            restoredBytes > this.downloadLimits.maxQuarantineBytes
+          ) {
+            fail('browser_download_quarantine_quota_exceeded');
+          }
+          restored.set(receipt.downloadId, receipt);
+        }
+      }
+    }
+    this.downloadReceipts = restored;
+    this.quarantineBytes = restoredBytes;
+  }
+
+  async _quarantineDownload({
+    download,
+    downloadId,
+    session,
+    pageId,
+    locatorStrategy,
+    locatorIndex,
+  }) {
+    if (
+      !download ||
+      typeof download.createReadStream !== 'function' ||
+      typeof download.suggestedFilename !== 'function' ||
+      typeof download.url !== 'function'
+    ) {
+      fail('browser_download_handle_invalid');
+    }
+    const { scopeKind, scopeId } = downloadScopeForSession(session);
+    const scopeDirectory = await this._ensureDownloadScope(
+      scopeKind,
+      scopeId,
+    );
+    const paths = this._downloadPaths(scopeKind, scopeId, downloadId);
+    await rejectDownloadSymlinkIfPresent(
+      paths.entryDirectory,
+      'browser_download_entry_symlink',
+    );
+    try {
+      await lstat(paths.entryDirectory);
+      fail('browser_download_id_collision', downloadId);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    const temporaryDirectory = downloadChildPath(
+      scopeDirectory,
+      `.partial-${downloadId}-${randomUUID()}`,
+    );
+    await mkdir(temporaryDirectory, { mode: 0o700 });
+    const temporaryPayload = downloadChildPath(
+      temporaryDirectory,
+      'payload.bin',
+    );
+    const temporaryReceipt = downloadChildPath(
+      temporaryDirectory,
+      'receipt.json',
+    );
+    let payloadHandle;
+    try {
+      const stream = await download.createReadStream();
+      if (!stream || typeof stream[Symbol.asyncIterator] !== 'function') {
+        fail('browser_download_stream_unavailable');
+      }
+      payloadHandle = await open(temporaryPayload, 'wx', 0o600);
+      const digest = createHash('sha256');
+      let bytes = 0;
+      for await (const rawChunk of stream) {
+        const chunk = Buffer.isBuffer(rawChunk)
+          ? rawChunk
+          : Buffer.from(rawChunk);
+        bytes += chunk.length;
+        if (bytes > this.downloadLimits.maxPayloadBytes) {
+          fail('browser_download_too_large');
+        }
+        if (
+          this.quarantineBytes + bytes >
+          this.downloadLimits.maxQuarantineBytes
+        ) {
+          fail('browser_download_quarantine_quota_exceeded');
+        }
+        digest.update(chunk);
+        await payloadHandle.write(chunk);
+      }
+      await payloadHandle.sync();
+      await payloadHandle.close();
+      payloadHandle = null;
+      if (typeof download.failure === 'function') {
+        const failureReason = await download.failure();
+        if (failureReason !== null) {
+          fail('browser_download_failed', boundedScalar(failureReason, 1024));
+        }
+      }
+      const sourceUrl = sanitizedNetworkUrl(download.url());
+      const suggestedFilename = sanitizeDownloadFilename(
+        download.suggestedFilename(),
+      );
+      const now = this.clock();
+      if (!(now instanceof Date) || Number.isNaN(now.valueOf())) {
+        fail('browser_download_clock_invalid');
+      }
+      const receipt = createDownloadReceipt({
+        downloadId,
+        session,
+        pageId,
+        sourceUrl,
+        suggestedFilename,
+        relativePath: downloadRelativePath(
+          scopeKind,
+          scopeId,
+          downloadId,
+        ),
+        bytes,
+        sha256: digest.digest('hex'),
+        locatorStrategy,
+        locatorIndex,
+        createdAt: now.toISOString(),
+      });
+      const receiptBytes = Buffer.from(`${JSON.stringify(receipt)}\n`);
+      if (receiptBytes.length > this.downloadLimits.maxReceiptBytes) {
+        fail('browser_download_receipt_too_large');
+      }
+      await writeFile(temporaryReceipt, receiptBytes, {
+        mode: 0o600,
+        flag: 'wx',
+      });
+      await rename(temporaryDirectory, paths.entryDirectory);
+      this.downloadReceipts.set(downloadId, receipt);
+      this.quarantineBytes += bytes;
+      return receipt;
+    } catch (error) {
+      if (payloadHandle) {
+        try {
+          await payloadHandle.close();
+        } catch {
+          // Preserve the primary quarantine failure.
+        }
+      }
+      if (
+        (error?.code === 'browser_download_too_large' ||
+          error?.code === 'browser_download_quarantine_quota_exceeded') &&
+        typeof download.cancel === 'function'
+      ) {
+        try {
+          await download.cancel();
+        } catch {
+          // Preserve the primary policy failure.
+        }
+      }
+      await rm(temporaryDirectory, { recursive: true, force: true });
+      throw error;
+    }
   }
 
   _nextId(prefix) {
@@ -1606,13 +2268,21 @@ export class BrowserSessionRegistry {
       kind: session.kind,
       profileId: session.profileId,
       pageCount: session.pages.size,
+      downloadsEnabled: session.downloadsEnabled,
       createdAt: session.createdAt,
     };
   }
 
-  async openSession({ kind = 'ephemeral', profileId = null } = {}) {
+  async openSession({
+    kind = 'ephemeral',
+    profileId = null,
+    downloadsEnabled = false,
+  } = {}) {
   await this.initialize();
   if (!SESSION_MODES.has(kind)) fail('browser_session_kind_invalid');
+  if (typeof downloadsEnabled !== 'boolean') {
+    fail('browser_download_opt_in_invalid');
+  }
   if (this.sessions.size >= this.quotas.maxSessions) {
     fail('browser_session_quota_exceeded');
   }
@@ -1671,13 +2341,14 @@ export class BrowserSessionRegistry {
     if (this.sessions.has(sessionId)) fail('browser_session_id_collision');
 
     context = await this.browser.newContext({
-      acceptDownloads: false,
+      acceptDownloads: downloadsEnabled,
       ...(storageState ? { storageState } : {}),
     });
     const session = {
       sessionId,
       kind,
       profileId: kind === 'persistent' ? profileId : null,
+      downloadsEnabled,
       statePath,
       context,
       pages: new Map(),
@@ -1787,6 +2458,103 @@ export class BrowserSessionRegistry {
     return { sessionId, pageId, ...result };
   }
 
+  async performDownload(sessionId, pageId, rawRequest) {
+    const session = this._session(sessionId);
+    if (session.downloadsEnabled !== true) {
+      fail('browser_downloads_disabled', sessionId);
+    }
+    if (
+      this.downloadReceipts.size >= this.downloadLimits.maxReceipts ||
+      this.quarantineBytes >= this.downloadLimits.maxQuarantineBytes
+    ) {
+      fail('browser_download_quarantine_quota_exceeded');
+    }
+    assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+    const page = session.pages.get(pageId);
+    if (!page) fail('browser_page_not_found', pageId);
+    if (typeof page.waitForEvent !== 'function') {
+      fail('browser_download_event_api_unavailable');
+    }
+    const request = validatePageDownloadRequest(rawRequest);
+    const resolved = await resolvePageActionLocator(page, request.locators);
+    if (!resolved.locator || typeof resolved.locator.click !== 'function') {
+      fail('browser_locator_api_unavailable', resolved.descriptor.strategy);
+    }
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: request.timeoutMs }),
+      resolved.locator.click({ timeout: request.timeoutMs }),
+    ]);
+    const downloadId = this._nextId('download');
+    if (this.downloadReceipts.has(downloadId)) {
+      fail('browser_download_id_collision', downloadId);
+    }
+    return this._quarantineDownload({
+      download,
+      downloadId,
+      session,
+      pageId,
+      locatorStrategy: resolved.descriptor.strategy,
+      locatorIndex: resolved.index,
+    });
+  }
+
+  async listDownloads() {
+    const verified = [];
+    for (const receipt of this.downloadReceipts.values()) {
+      const scopeId =
+        receipt.sessionKind === 'persistent'
+          ? receipt.profileId
+          : receipt.sessionId;
+      const stored = await this._readStoredDownload(
+        receipt.sessionKind,
+        scopeId,
+        receipt.downloadId,
+      );
+      if (stored.receiptHash !== receipt.receiptHash) {
+        fail('browser_download_receipt_inventory_mismatch');
+      }
+      verified.push(stored);
+    }
+    return verified.sort(
+      (left, right) =>
+        left.createdAt.localeCompare(right.createdAt) ||
+        left.downloadId.localeCompare(right.downloadId),
+    );
+  }
+
+  async discardDownload(downloadId, receiptHash) {
+    assertIdentifier(downloadId, DOWNLOAD_ID, 'browser_download_id_invalid');
+    if (typeof receiptHash !== 'string' || !SHA256_HEX.test(receiptHash)) {
+      fail('browser_download_receipt_hash_invalid');
+    }
+    const tracked = this.downloadReceipts.get(downloadId);
+    if (!tracked) fail('browser_download_not_found', downloadId);
+    if (tracked.receiptHash !== receiptHash) {
+      fail('browser_download_receipt_identity_mismatch', 'receiptHash');
+    }
+    const scopeId =
+      tracked.sessionKind === 'persistent'
+        ? tracked.profileId
+        : tracked.sessionId;
+    const stored = await this._readStoredDownload(
+      tracked.sessionKind,
+      scopeId,
+      downloadId,
+    );
+    if (stored.receiptHash !== receiptHash) {
+      fail('browser_download_receipt_inventory_mismatch');
+    }
+    const paths = this._downloadPaths(
+      tracked.sessionKind,
+      scopeId,
+      downloadId,
+    );
+    await rm(paths.entryDirectory, { recursive: true, force: false });
+    this.downloadReceipts.delete(downloadId);
+    this.quarantineBytes -= tracked.content.bytes;
+    return { downloadId, discarded: true };
+  }
+
   async closePage(sessionId, pageId) {
     const session = this._session(sessionId);
     assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
@@ -1860,6 +2628,7 @@ export class BrowserSessionRegistry {
         return this.openSession({
           kind: message.kind,
           profileId: message.profileId ?? null,
+          downloadsEnabled: message.downloadsEnabled ?? false,
         });
       case 'session.list':
         return { sessions: this.listSessions() };
@@ -1882,6 +2651,19 @@ export class BrowserSessionRegistry {
           message.sessionId,
           message.pageId,
           message.visualActionRequest,
+        );
+      case 'page.download':
+        return this.performDownload(
+          message.sessionId,
+          message.pageId,
+          message.downloadRequest,
+        );
+      case 'download.list':
+        return { downloads: await this.listDownloads() };
+      case 'download.discard':
+        return this.discardDownload(
+          message.downloadId,
+          message.receiptHash,
         );
       case 'page.close':
         return this.closePage(message.sessionId, message.pageId);
@@ -2065,6 +2847,7 @@ export async function runSessions(options, env = process.env) {
         sandboxMode: options.sandboxMode,
         serviceMode: 'sessions',
         quotas: options.quotas,
+        downloadPolicy: registry.downloadLimits,
       }),
     );
     await serveSessionCommands(registry, process.stdin, process.stdout);
