@@ -374,6 +374,7 @@ void main() {
       'sessionId': 'session_one',
     });
     expect(page.pageId, 'page_one');
+    expect(page.sessionId, 'session_one');
 
     expect(
       () => P3BrowserSessionInfo.fromJson(<String, Object?>{

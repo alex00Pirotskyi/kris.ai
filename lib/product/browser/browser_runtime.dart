@@ -520,6 +520,8 @@ final class P3BrowserSessionProcess {
   int _requestSequence = 0;
   bool _listenersStarted = false;
   bool _closing = false;
+  Object? _terminalError;
+  Future<void>? _closeFuture;
 
   P3BrowserSessionReady get ready {
     final value = _readyValue;
@@ -600,6 +602,7 @@ final class P3BrowserSessionProcess {
           '$error',
         ),
       );
+      unawaited(close());
     }
   }
 
@@ -614,7 +617,7 @@ final class P3BrowserSessionProcess {
     }
     final completer = _pending.remove(requestId);
     if (completer == null) {
-      return;
+      throw const FormatException('response request id unmatched');
     }
     if (ok) {
       final result = value['result'];
@@ -660,9 +663,11 @@ final class P3BrowserSessionProcess {
     _failProtocol(
       P3BrowserRuntimeException('browser_worker_transport_error', '$error'),
     );
+    unawaited(close());
   }
 
   void _failProtocol(Object error) {
+    _terminalError ??= error;
     if (!_ready.isCompleted) {
       _ready.completeError(error);
     }
@@ -676,6 +681,8 @@ final class P3BrowserSessionProcess {
     String type,
     Map<String, Object?> payload,
   ) async {
+    final terminalError = _terminalError;
+    if (terminalError != null) throw terminalError;
     if (_closing) {
       throw const P3BrowserRuntimeException(
         'browser_session_service_closed',
@@ -708,10 +715,30 @@ final class P3BrowserSessionProcess {
       return await completer.future.timeout(launchPlan.requestTimeout);
     } on TimeoutException {
       _pending.remove(requestId);
-      throw const P3BrowserRuntimeException(
+      const error = P3BrowserRuntimeException(
         'browser_session_request_timeout',
       );
+      _failProtocol(error);
+      unawaited(close());
+      throw error;
     }
+  }
+
+  T _decodeResponse<T>(T Function() decode) {
+    try {
+      return decode();
+    } catch (error, stackTrace) {
+      _failProtocol(error);
+      unawaited(close());
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+
+  Never _protocolViolation(String code, [String detail = '']) {
+    final error = P3BrowserRuntimeException(code, detail);
+    _failProtocol(error);
+    unawaited(close());
+    throw error;
   }
 
   Future<P3BrowserSessionInfo> openSession({
@@ -733,7 +760,13 @@ final class P3BrowserSessionProcess {
       'kind': kind.wireName,
       if (profileId != null) 'profileId': profileId,
     });
-    return P3BrowserSessionInfo.fromJson(result);
+    final info = _decodeResponse(() => P3BrowserSessionInfo.fromJson(result));
+    if (info.kind != kind ||
+        info.profileId != profileId ||
+        info.pageCount != 0) {
+      _protocolViolation('browser_session_response_identity_mismatch');
+    }
+    return info;
   }
 
   Future<List<P3BrowserSessionInfo>> listSessions() async {
@@ -744,29 +777,44 @@ final class P3BrowserSessionProcess {
         'browser_session_response_invalid',
       );
     }
-    return values.map((value) {
-      if (value is! Map) {
-        throw const P3BrowserRuntimeException(
-          'browser_session_response_invalid',
-        );
-      }
-      return P3BrowserSessionInfo.fromJson(
-        Map<String, Object?>.from(value),
-      );
-    }).toList(growable: false);
+    final sessions = _decodeResponse(() => values.map((value) {
+          if (value is! Map) {
+            throw const P3BrowserRuntimeException(
+              'browser_session_response_invalid',
+            );
+          }
+          return P3BrowserSessionInfo.fromJson(
+            Map<String, Object?>.from(value),
+          );
+        }).toList(growable: false));
+    if (sessions.map((session) => session.sessionId).toSet().length !=
+            sessions.length ||
+        sessions.any(
+          (session) => session.pageCount > launchPlan.quotas.maxPagesPerSession,
+        )) {
+      _protocolViolation('browser_session_response_identity_mismatch');
+    }
+    return sessions;
   }
 
   Future<void> closeSession(String sessionId) async {
-    await _request('session.close', <String, Object?>{
+    final result = await _request('session.close', <String, Object?>{
       'sessionId': sessionId,
     });
+    if (result['sessionId'] != sessionId || result['closed'] != true) {
+      _protocolViolation('browser_session_response_identity_mismatch');
+    }
   }
 
   Future<P3BrowserPageInfo> openPage(String sessionId) async {
     final result = await _request('page.open', <String, Object?>{
       'sessionId': sessionId,
     });
-    return P3BrowserPageInfo.fromJson(result);
+    final page = _decodeResponse(() => P3BrowserPageInfo.fromJson(result));
+    if (page.sessionId != sessionId) {
+      _protocolViolation('browser_page_response_identity_mismatch');
+    }
+    return page;
   }
 
   Future<List<P3BrowserPageInfo>> listPages(String sessionId) async {
@@ -779,26 +827,38 @@ final class P3BrowserSessionProcess {
         'browser_page_response_invalid',
       );
     }
-    return values.map((value) {
-      if (value is! Map) {
-        throw const P3BrowserRuntimeException(
-          'browser_page_response_invalid',
-        );
-      }
-      return P3BrowserPageInfo.fromJson(
-        Map<String, Object?>.from(value),
-      );
-    }).toList(growable: false);
+    final pages = _decodeResponse(() => values.map((value) {
+          if (value is! Map) {
+            throw const P3BrowserRuntimeException(
+              'browser_page_response_invalid',
+            );
+          }
+          return P3BrowserPageInfo.fromJson(
+            Map<String, Object?>.from(value),
+          );
+        }).toList(growable: false));
+    if (pages.any((page) => page.sessionId != sessionId) ||
+        pages.map((page) => page.pageId).toSet().length != pages.length) {
+      _protocolViolation('browser_page_response_identity_mismatch');
+    }
+    return pages;
   }
 
   Future<void> closePage(String sessionId, String pageId) async {
-    await _request('page.close', <String, Object?>{
+    final result = await _request('page.close', <String, Object?>{
       'sessionId': sessionId,
       'pageId': pageId,
     });
+    if (result['sessionId'] != sessionId ||
+        result['pageId'] != pageId ||
+        result['closed'] != true) {
+      _protocolViolation('browser_page_response_identity_mismatch');
+    }
   }
 
-  Future<void> close() async {
+  Future<void> close() => _closeFuture ??= _close();
+
+  Future<void> _close() async {
     if (_closing) return;
     _closing = true;
     _failProtocol(

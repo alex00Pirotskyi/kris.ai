@@ -382,6 +382,48 @@ class FakeBrowser {
   }
 }
 
+class RetryClosePage extends FakePage {
+  constructor() {
+    super();
+    this.closeAttempts = 0;
+  }
+
+  async close() {
+    this.closeAttempts += 1;
+    if (this.closeAttempts === 1) throw new Error('page_close_failed_once');
+    await super.close();
+  }
+}
+
+class RetryCloseContext extends FakeContext {
+  constructor(options) {
+    super(options);
+    this.closeAttempts = 0;
+  }
+
+  async newPage() {
+    const page = new RetryClosePage();
+    this.pages.push(page);
+    return page;
+  }
+
+  async close() {
+    this.closeAttempts += 1;
+    if (this.closeAttempts === 1) throw new Error('context_close_failed_once');
+    await super.close();
+  }
+}
+
+class RetryCloseBrowser extends FakeBrowser {
+  async newContext(options) {
+    const context = this.contexts.length === 0
+      ? new RetryCloseContext(options)
+      : new FakeContext(options);
+    this.contexts.push(context);
+    return context;
+  }
+}
+
 function deterministicIds(...values) {
   const queue = [...values];
   return () => {
@@ -538,9 +580,97 @@ test('invalid profile identifiers and unknown operations fail closed', async () 
       /browser_ephemeral_profile_forbidden/u,
     );
     await assert.rejects(
-      registry.execute({ type: 'navigate', url: 'https://example.com' }),
+      registry.execute({
+        type: 'session.list',
+        schemaVersion: '0.9.0',
+      }),
+      /browser_session_request_schema_invalid/u,
+    );
+    await assert.rejects(
+      registry.execute({
+        type: 'navigate',
+        schemaVersion: '1.0.0',
+        url: 'https://example.com',
+      }),
       /browser_session_operation_not_supported/u,
     );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('persistent profiles are exclusive until tracked cleanup succeeds', async () => {
+  const f = await fixture();
+  try {
+    const browser = new RetryCloseBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_alpha', 'session_alpha_again'),
+    });
+    const alpha = await registry.openSession({
+      kind: 'persistent',
+      profileId: 'alpha',
+    });
+    await assert.rejects(
+      registry.openSession({ kind: 'persistent', profileId: 'alpha' }),
+      /browser_profile_in_use/u,
+    );
+    await assert.rejects(
+      registry.closeSession(alpha.sessionId),
+      /context_close_failed_once/u,
+    );
+    assert.equal(registry.listSessions().length, 1);
+    await assert.rejects(
+      registry.openSession({ kind: 'persistent', profileId: 'alpha' }),
+      /browser_profile_in_use/u,
+    );
+    await registry.closeSession(alpha.sessionId);
+    const reopened = await registry.openSession({
+      kind: 'persistent',
+      profileId: 'alpha',
+    });
+    assert.equal(reopened.profileId, 'alpha');
+    await registry.closeSession(reopened.sessionId);
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('failed page close remains tracked and can be retried', async () => {
+  const f = await fixture();
+  try {
+    const browser = new RetryCloseBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_one', 'page_one'),
+    });
+    const session = await registry.openSession({ kind: 'ephemeral' });
+    const page = await registry.openPage(session.sessionId);
+    await assert.rejects(
+      registry.closePage(session.sessionId, page.pageId),
+      /page_close_failed_once/u,
+    );
+    assert.equal(registry.listPages(session.sessionId).length, 1);
+    await registry.closePage(session.sessionId, page.pageId);
+    assert.equal(registry.listPages(session.sessionId).length, 0);
+    await assert.rejects(
+      registry.closeSession(session.sessionId),
+      /context_close_failed_once/u,
+    );
+    assert.equal(registry.listSessions().length, 1);
+    await registry.closeSession(session.sessionId);
   } finally {
     await f.cleanup();
   }

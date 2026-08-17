@@ -521,6 +521,7 @@ export class BrowserSessionRegistry {
     this.idFactory = idFactory;
     this.sessions = new Map();
     this.persistentProfiles = new Set();
+    this.activePersistentProfiles = new Set();
     this.initialized = false;
   }
 
@@ -569,37 +570,69 @@ export class BrowserSessionRegistry {
   }
 
   async openSession({ kind = 'ephemeral', profileId = null } = {}) {
-    await this.initialize();
-    if (!SESSION_MODES.has(kind)) fail('browser_session_kind_invalid');
-    if (this.sessions.size >= this.quotas.maxSessions) {
-      fail('browser_session_quota_exceeded');
+  await this.initialize();
+  if (!SESSION_MODES.has(kind)) fail('browser_session_kind_invalid');
+  if (this.sessions.size >= this.quotas.maxSessions) {
+    fail('browser_session_quota_exceeded');
+  }
+  if (
+    kind !== 'persistent' &&
+    profileId !== null &&
+    profileId !== undefined
+  ) {
+    fail('browser_ephemeral_profile_forbidden');
+  }
+
+  let storageState = null;
+  let statePath = null;
+  let profileDirectory = null;
+  let existingProfile = false;
+  let profileReserved = false;
+  let context = null;
+
+  if (kind === 'persistent') {
+    assertIdentifier(profileId, PROFILE_ID, 'browser_profile_id_invalid');
+    if (this.activePersistentProfiles.has(profileId)) {
+      fail('browser_profile_in_use', profileId);
     }
-    let storageState = null;
-    let statePath = null;
+    existingProfile = this.persistentProfiles.has(profileId);
+    if (
+      !existingProfile &&
+      this.persistentProfiles.size >= this.quotas.maxPersistentProfiles
+    ) {
+      fail('browser_persistent_profile_quota_exceeded');
+    }
+    // Reserve before the first asynchronous filesystem or browser call so
+    // concurrent opens cannot race the same persistent profile.
+    this.activePersistentProfiles.add(profileId);
+    profileReserved = true;
+  }
+
+  try {
     if (kind === 'persistent') {
-      assertIdentifier(profileId, PROFILE_ID, 'browser_profile_id_invalid');
-      const existing = this.persistentProfiles.has(profileId);
-      if (!existing && this.persistentProfiles.size >= this.quotas.maxPersistentProfiles) {
-        fail('browser_persistent_profile_quota_exceeded');
-      }
-      const profileDirectory = childPath(this.stateDirectory, 'profiles', profileId);
-      await rejectSymlinkIfPresent(profileDirectory, 'browser_profile_directory_symlink');
+      profileDirectory = childPath(
+        this.stateDirectory,
+        'profiles',
+        profileId,
+      );
+      await rejectSymlinkIfPresent(
+        profileDirectory,
+        'browser_profile_directory_symlink',
+      );
       await mkdir(profileDirectory, { recursive: true, mode: 0o700 });
       statePath = childPath(profileDirectory, 'storage-state.json');
       storageState = await readStorageState(statePath);
-      this.persistentProfiles.add(profileId);
-    } else if (profileId !== null && profileId !== undefined) {
-      fail('browser_ephemeral_profile_forbidden');
     }
-    const context = await this.browser.newContext({
+
+    // Identifiers are allocated only after all request/profile policy
+    // checks pass. Rejected requests must have no observable ID side effect.
+    const sessionId = this._nextId('session');
+    if (this.sessions.has(sessionId)) fail('browser_session_id_collision');
+
+    context = await this.browser.newContext({
       acceptDownloads: false,
       ...(storageState ? { storageState } : {}),
     });
-    const sessionId = this._nextId('session');
-    if (this.sessions.has(sessionId)) {
-      await context.close();
-      fail('browser_session_id_collision');
-    }
     const session = {
       sessionId,
       kind,
@@ -610,8 +643,35 @@ export class BrowserSessionRegistry {
       createdAt: new Date().toISOString(),
     };
     this.sessions.set(sessionId, session);
+    if (kind === 'persistent') {
+      this.persistentProfiles.add(profileId);
+      // The reservation remains active and is now owned by the tracked
+      // session. Only successful tracked cleanup releases it.
+      profileReserved = false;
+    }
     return this._metadata(session);
+  } catch (error) {
+    if (context) {
+      try {
+        await context.close();
+      } catch {
+        // Preserve the primary open failure; no session was published.
+      }
+    }
+    if (profileReserved) {
+      this.activePersistentProfiles.delete(profileId);
+    }
+    if (kind === 'persistent' && !existingProfile && profileDirectory) {
+      try {
+        await rm(profileDirectory, { recursive: true, force: true });
+      } catch {
+        // Preserve the primary failure. A later initialization rejects
+        // unsafe symlinks and re-evaluates the durable profile inventory.
+      }
+    }
+    throw error;
   }
+}
 
   listSessions() {
     return Array.from(this.sessions.values(), (session) => this._metadata(session));
@@ -627,12 +687,9 @@ export class BrowserSessionRegistry {
     if (session.pages.size >= this.quotas.maxPagesPerSession) {
       fail('browser_page_quota_exceeded');
     }
-    const page = await session.context.newPage();
     const pageId = this._nextId('page');
-    if (session.pages.has(pageId)) {
-      await page.close();
-      fail('browser_page_id_collision');
-    }
+    if (session.pages.has(pageId)) fail('browser_page_id_collision');
+    const page = await session.context.newPage();
     session.pages.set(pageId, page);
     return { pageId, sessionId };
   }
@@ -642,14 +699,13 @@ export class BrowserSessionRegistry {
     assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
     const page = session.pages.get(pageId);
     if (!page) fail('browser_page_not_found', pageId);
-    session.pages.delete(pageId);
     await page.close();
+    session.pages.delete(pageId);
     return { pageId, sessionId, closed: true };
   }
 
   async closeSession(sessionId) {
     const session = this._session(sessionId);
-    this.sessions.delete(sessionId);
     let primaryError = null;
     if (session.kind === 'persistent') {
       try {
@@ -660,17 +716,26 @@ export class BrowserSessionRegistry {
       }
     }
     for (const [pageId, page] of Array.from(session.pages.entries()).reverse()) {
-      session.pages.delete(pageId);
       try {
         await page.close();
+        session.pages.delete(pageId);
       } catch (error) {
         primaryError ??= error;
       }
     }
+    let contextClosed = false;
     try {
       await session.context.close();
+      contextClosed = true;
+      session.pages.clear();
     } catch (error) {
       primaryError ??= error;
+    }
+    if (contextClosed) {
+      this.sessions.delete(sessionId);
+      if (session.kind === 'persistent') {
+        this.activePersistentProfiles.delete(session.profileId);
+      }
     }
     if (primaryError) throw primaryError;
     return { sessionId, closed: true };
@@ -691,6 +756,9 @@ export class BrowserSessionRegistry {
   async execute(message) {
     if (!message || typeof message !== 'object' || Array.isArray(message)) {
       fail('browser_session_request_invalid');
+    }
+    if (message.schemaVersion !== READY_SCHEMA_VERSION) {
+      fail('browser_session_request_schema_invalid');
     }
     switch (message.type) {
       case 'session.open':
