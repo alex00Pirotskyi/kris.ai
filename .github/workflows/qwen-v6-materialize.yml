@@ -1,0 +1,74 @@
+name: Qwen v6 Current-Main Materializer
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-v6-materializer'
+    paths:
+      - '.github/workflows/qwen-v6-materialize.yml'
+      - 'tool/qwen_v6_materialize.py.gz.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact v6 target
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-server-control-v6
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Check out immutable transport payload
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: .qwen-v6-transport
+          persist-credentials: false
+      - name: Materialize v6 worker and run exact regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+
+          encoded = Path('.qwen-v6-transport/tool/qwen_v6_materialize.py.gz.b64').read_text(encoding='utf-8').strip()
+          Path('/tmp/qwen_v6_materialize.py').write_bytes(gzip.decompress(base64.b64decode(encoded)))
+          PY
+          python3 /tmp/qwen_v6_materialize.py .
+          python3 -m py_compile \
+            tool/kris_qwen_worker.py \
+            tool/kris_qwen_control.py \
+            tool/kris_qwen_v6_guard.py
+          python3 tool/kris_qwen_v6_guard_test.py
+          python3 tool/kris_qwen_control_test.py
+          test "$(python3 tool/kris_qwen_worker.py version)" = '6.0.0'
+          test "$(python3 tool/kris_qwen_control.py --version)" = '2.0.0'
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              'SOURCE_MANIFEST.sha256',
+              'tool/kris_qwen_worker.py',
+          }
+          actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          if actual != expected:
+              raise SystemExit(f'v6 materializer scope mismatch actual={sorted(actual)} expected={sorted(expected)}')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256 tool/kris_qwen_worker.py
+          git diff --cached --check
+          git commit -m 'feat(qwen-v6): wire authority-aware product worker'
+          git push origin HEAD:refs/heads/agent/qwen-server-control-v6
