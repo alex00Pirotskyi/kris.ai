@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_process.dart';
 
@@ -226,4 +227,170 @@ void main() {
       );
     },
   );
+
+  test('session launch plan binds exact quotas and strips parent PATH',
+      () async {
+    final temp = await Directory.systemTemp.createTemp('p3-session-plan-');
+    addTearDown(() => temp.delete(recursive: true));
+    final resources = await _resources(temp.absolute);
+    final state = Directory('${temp.path}${Platform.pathSeparator}sessions');
+    await state.create();
+    const quotas = P3BrowserSessionQuotas(
+      maxSessions: 3,
+      maxPagesPerSession: 5,
+      maxPersistentProfiles: 7,
+    );
+
+    final plan = P3BrowserSessionLaunchPlan.create(
+      resources: resources,
+      stateDirectory: state.absolute,
+      quotas: quotas,
+    );
+
+    expect(plan.executable, resources.nodeExecutable);
+    expect(plan.arguments.first, resources.workerScript);
+    expect(plan.arguments[plan.arguments.indexOf('--mode') + 1], 'sessions');
+    expect(
+      plan.arguments[plan.arguments.indexOf('--max-sessions') + 1],
+      '3',
+    );
+    expect(
+      plan.arguments[plan.arguments.indexOf('--max-pages-per-session') + 1],
+      '5',
+    );
+    expect(
+      plan.arguments[plan.arguments.indexOf('--max-persistent-profiles') + 1],
+      '7',
+    );
+    expect(plan.quotas, quotas);
+    expect(plan.environment.containsKey('PATH'), isFalse);
+  });
+
+  test('session launch plan rejects quota mutation after construction',
+      () async {
+    final temp = await Directory.systemTemp.createTemp('p3-session-mutate-');
+    addTearDown(() => temp.delete(recursive: true));
+    final resources = await _resources(temp.absolute);
+    final state = Directory('${temp.path}${Platform.pathSeparator}sessions');
+    await state.create();
+    final valid = P3BrowserSessionLaunchPlan.create(
+      resources: resources,
+      stateDirectory: state.absolute,
+    );
+    final arguments = List<String>.from(valid.arguments);
+    arguments[arguments.indexOf('--max-sessions') + 1] = '16';
+    final mutated = P3BrowserSessionLaunchPlan(
+      executable: valid.executable,
+      arguments: arguments,
+      workingDirectory: valid.workingDirectory,
+      environment: valid.environment,
+      startupTimeout: valid.startupTimeout,
+      requestTimeout: valid.requestTimeout,
+      quotas: valid.quotas,
+    );
+
+    expect(
+      mutated.validate,
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_session_quota_binding_invalid',
+        ),
+      ),
+    );
+  });
+
+  test('session ready handshake binds service mode and exact quotas', () async {
+    final temp = await Directory.systemTemp.createTemp('p3-session-ready-');
+    addTearDown(() => temp.delete(recursive: true));
+    final resources = await _resources(temp.absolute);
+    const quotas = P3BrowserSessionQuotas(
+      maxSessions: 3,
+      maxPagesPerSession: 5,
+      maxPersistentProfiles: 7,
+    );
+    final value = <String, Object?>{
+      'type': 'ready',
+      'schemaVersion': '1.0.0',
+      'pid': 101,
+      'browserPid': 202,
+      'browserEngine': 'chromium',
+      'browserVersion': 'test-browser',
+      'browserRevision': resources.browserRevision,
+      'browserExecutableSha256': resources.browserExecutableSha256,
+      'protocol': 'stdio-json-v1',
+      'sandboxMode': 'required',
+      'serviceMode': 'sessions',
+      'quotas': quotas.toJson(),
+    };
+
+    final ready = P3BrowserSessionReady.fromJson(
+      value,
+      resources: resources,
+      expectedQuotas: quotas,
+    );
+
+    expect(ready.quotas, quotas);
+    expect(ready.provenance['p3_002SessionServiceImplemented'], isTrue);
+    expect(ready.provenance['persistentProfileStateLocalOnly'], isTrue);
+
+    expect(
+      () => P3BrowserSessionReady.fromJson(
+        <String, Object?>{
+          ...value,
+          'quotas': const P3BrowserSessionQuotas(
+            maxSessions: 4,
+            maxPagesPerSession: 5,
+            maxPersistentProfiles: 7,
+          ).toJson(),
+        },
+        resources: resources,
+        expectedQuotas: quotas,
+      ),
+      throwsA(
+        isA<P3BrowserRuntimeException>().having(
+          (error) => error.code,
+          'code',
+          'browser_session_ready_quota_mismatch',
+        ),
+      ),
+    );
+  });
+
+  test('session and page response models reject inconsistent identities', () {
+    final session = P3BrowserSessionInfo.fromJson(<String, Object?>{
+      'sessionId': 'session_one',
+      'kind': 'persistent',
+      'profileId': 'work',
+      'pageCount': 1,
+      'createdAt': '2026-08-17T00:00:00Z',
+    });
+    expect(session.kind, P3BrowserSessionKind.persistent);
+    expect(session.profileId, 'work');
+
+    final page = P3BrowserPageInfo.fromJson(<String, Object?>{
+      'pageId': 'page_one',
+      'sessionId': 'session_one',
+    });
+    expect(page.pageId, 'page_one');
+
+    expect(
+      () => P3BrowserSessionInfo.fromJson(<String, Object?>{
+        'sessionId': 'session_bad',
+        'kind': 'ephemeral',
+        'profileId': 'must-not-exist',
+        'pageCount': 0,
+        'createdAt': '2026-08-17T00:00:00Z',
+      }),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+    expect(
+      () => P3BrowserPageInfo.fromJson(<String, Object?>{
+        'pageId': '',
+        'sessionId': 'session_one',
+      }),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
 }

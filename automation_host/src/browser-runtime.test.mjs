@@ -1,16 +1,20 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { Readable, Writable } from 'node:stream';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
 import {
+  BrowserSessionRegistry,
   chromiumProbeArgs,
   decorateProbeError,
   parseArgs,
   raceStartupWithShutdown,
+  serveSessionCommands,
   validateManifestBinding,
+  validateSessionQuotas,
   waitForExit,
 } from './browser-runtime.mjs';
 
@@ -21,7 +25,10 @@ function sha256(value) {
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'p3-browser-runtime-test-'));
   const browserRoot = path.join(root, 'browser');
-  const browserExecutable = path.join(browserRoot, process.platform === 'win32' ? 'chrome.exe' : 'chrome');
+  const browserExecutable = path.join(
+    browserRoot,
+    process.platform === 'win32' ? 'chrome.exe' : 'chrome',
+  );
   const stateDirectory = path.join(root, 'state');
   const runtimeManifest = path.join(root, 'browser-runtime-manifest.v1.json');
   await mkdir(browserRoot, { recursive: true });
@@ -80,6 +87,27 @@ async function fixture() {
   };
 }
 
+function sessionArgs(f, overrides = {}) {
+  const quotas = {
+    maxSessions: 2,
+    maxPagesPerSession: 2,
+    maxPersistentProfiles: 2,
+    ...overrides,
+  };
+  return [
+    '--mode', 'sessions',
+    '--protocol', 'stdio-json-v1',
+    '--sandbox-mode', 'required',
+    '--browser-executable', f.browserExecutable,
+    '--browser-root', f.browserRoot,
+    '--runtime-manifest', f.runtimeManifest,
+    '--state-directory', f.stateDirectory,
+    '--max-sessions', String(quotas.maxSessions),
+    '--max-pages-per-session', String(quotas.maxPagesPerSession),
+    '--max-persistent-profiles', String(quotas.maxPersistentProfiles),
+  ];
+}
+
 test('parseArgs accepts only the exact absolute probe contract', async () => {
   const f = await fixture();
   try {
@@ -102,7 +130,39 @@ test('parseArgs accepts only the exact absolute probe contract', async () => {
   }
 });
 
-test('parseArgs rejects relative paths, unsupported sandbox mode and unknown arguments', () => {
+test('parseArgs accepts bounded session quotas and rejects probe quota injection', async () => {
+  const f = await fixture();
+  try {
+    const parsed = parseArgs(sessionArgs(f));
+    assert.equal(parsed.mode, 'sessions');
+    assert.deepEqual(parsed.quotas, {
+      maxSessions: 2,
+      maxPagesPerSession: 2,
+      maxPersistentProfiles: 2,
+    });
+    assert.throws(
+      () => parseArgs([
+        '--mode', 'probe',
+        '--protocol', 'stdio-json-v1',
+        '--sandbox-mode', 'required',
+        '--browser-executable', f.browserExecutable,
+        '--browser-root', f.browserRoot,
+        '--runtime-manifest', f.runtimeManifest,
+        '--state-directory', f.stateDirectory,
+        '--max-sessions', '2',
+      ]),
+      /argument_not_allowed_for_mode/u,
+    );
+    assert.throws(
+      () => parseArgs(sessionArgs(f, { maxSessions: 0 })),
+      /argument_integer_out_of_range/u,
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('parseArgs rejects relative paths, duplicate arguments, unsupported sandbox mode and unknown arguments', () => {
   assert.throws(
     () => parseArgs([
       '--mode', 'probe',
@@ -114,6 +174,13 @@ test('parseArgs rejects relative paths, unsupported sandbox mode and unknown arg
       '--state-directory', '/tmp/state',
     ]),
     /browser_executable_not_absolute/u,
+  );
+  assert.throws(
+    () => parseArgs([
+      '--mode', 'probe',
+      '--mode', 'probe',
+    ]),
+    /argument_set_invalid/u,
   );
   assert.throws(
     () => parseArgs([
@@ -130,6 +197,23 @@ test('parseArgs rejects relative paths, unsupported sandbox mode and unknown arg
   assert.throws(
     () => parseArgs(['--unexpected', 'value']),
     /argument_set_invalid/u,
+  );
+});
+
+test('session quota validator is bounded and immutable', () => {
+  const quotas = validateSessionQuotas({
+    maxSessions: 4,
+    maxPagesPerSession: 8,
+    maxPersistentProfiles: 6,
+  });
+  assert.equal(Object.isFrozen(quotas), true);
+  assert.throws(
+    () => validateSessionQuotas({
+      maxSessions: 17,
+      maxPagesPerSession: 8,
+      maxPersistentProfiles: 6,
+    }),
+    /browser_session_quota_invalid:maxSessions/u,
   );
 });
 
@@ -248,6 +332,265 @@ test('validateManifestBinding rejects manifest and executable tampering', async 
       }),
       /browser_executable_sha_mismatch/u,
     );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+class FakePage {
+  constructor() {
+    this.closed = false;
+  }
+
+  async close() {
+    this.closed = true;
+  }
+}
+
+class FakeContext {
+  constructor(options) {
+    this.options = options;
+    this.pages = [];
+    this.closed = false;
+    this.state = options.storageState ?? { cookies: [], origins: [] };
+  }
+
+  async newPage() {
+    const page = new FakePage();
+    this.pages.push(page);
+    return page;
+  }
+
+  async storageState() {
+    return this.state;
+  }
+
+  async close() {
+    this.closed = true;
+  }
+}
+
+class FakeBrowser {
+  constructor() {
+    this.contexts = [];
+  }
+
+  async newContext(options) {
+    const context = new FakeContext(options);
+    this.contexts.push(context);
+    return context;
+  }
+}
+
+function deterministicIds(...values) {
+  const queue = [...values];
+  return () => {
+    const value = queue.shift();
+    if (!value) throw new Error('test identifier queue exhausted');
+    return value;
+  };
+}
+
+test('ephemeral sessions isolate pages and never persist a profile', async () => {
+  const f = await fixture();
+  try {
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_one', 'page_one'),
+    });
+    const session = await registry.openSession({ kind: 'ephemeral' });
+    assert.equal(session.profileId, null);
+    const page = await registry.openPage(session.sessionId);
+    assert.equal(page.pageId, 'page_one');
+    assert.equal(registry.listPages(session.sessionId).length, 1);
+    await registry.closeSession(session.sessionId);
+    assert.equal(browser.contexts[0].closed, true);
+    assert.equal(browser.contexts[0].pages[0].closed, true);
+    await assert.rejects(
+      readFile(path.join(f.stateDirectory, 'profiles', 'ephemeral', 'storage-state.json')),
+      (error) => error?.code === 'ENOENT',
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('persistent profiles restore exact local state without cross-profile leakage', async () => {
+  const f = await fixture();
+  try {
+    const firstBrowser = new FakeBrowser();
+    const first = new BrowserSessionRegistry({
+      browser: firstBrowser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_alpha'),
+    });
+    const alpha = await first.openSession({
+      kind: 'persistent',
+      profileId: 'alpha',
+    });
+    firstBrowser.contexts[0].state = {
+      cookies: [{ name: 'token', value: 'alpha-only' }],
+      origins: [],
+    };
+    await first.closeSession(alpha.sessionId);
+
+    const secondBrowser = new FakeBrowser();
+    const second = new BrowserSessionRegistry({
+      browser: secondBrowser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_alpha_again', 'session_beta'),
+    });
+    const restored = await second.openSession({
+      kind: 'persistent',
+      profileId: 'alpha',
+    });
+    assert.equal(
+      secondBrowser.contexts[0].options.storageState.cookies[0].value,
+      'alpha-only',
+    );
+    await second.closeSession(restored.sessionId);
+    await second.openSession({ kind: 'persistent', profileId: 'beta' });
+    assert.equal(secondBrowser.contexts[1].options.storageState, undefined);
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('session, page and persistent-profile quotas fail closed', async () => {
+  const f = await fixture();
+  try {
+    const browser = new FakeBrowser();
+    const registry = new BrowserSessionRegistry({
+      browser,
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 1,
+        maxPagesPerSession: 1,
+        maxPersistentProfiles: 1,
+      },
+      idFactory: deterministicIds(
+        'session_one',
+        'page_one',
+        'session_alpha',
+      ),
+    });
+    const ephemeral = await registry.openSession({ kind: 'ephemeral' });
+    await assert.rejects(
+      registry.openSession({ kind: 'ephemeral' }),
+      /browser_session_quota_exceeded/u,
+    );
+    await registry.openPage(ephemeral.sessionId);
+    await assert.rejects(
+      registry.openPage(ephemeral.sessionId),
+      /browser_page_quota_exceeded/u,
+    );
+    await registry.closeSession(ephemeral.sessionId);
+    const alpha = await registry.openSession({
+      kind: 'persistent',
+      profileId: 'alpha',
+    });
+    await registry.closeSession(alpha.sessionId);
+    await assert.rejects(
+      registry.openSession({ kind: 'persistent', profileId: 'beta' }),
+      /browser_persistent_profile_quota_exceeded/u,
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('invalid profile identifiers and unknown operations fail closed', async () => {
+  const f = await fixture();
+  try {
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_one'),
+    });
+    await assert.rejects(
+      registry.openSession({ kind: 'persistent', profileId: '../escape' }),
+      /browser_profile_id_invalid/u,
+    );
+    await assert.rejects(
+      registry.openSession({ kind: 'ephemeral', profileId: 'forbidden' }),
+      /browser_ephemeral_profile_forbidden/u,
+    );
+    await assert.rejects(
+      registry.execute({ type: 'navigate', url: 'https://example.com' }),
+      /browser_session_operation_not_supported/u,
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('stdio session protocol correlates responses and shuts down without executing later input', async () => {
+  const f = await fixture();
+  try {
+    const registry = new BrowserSessionRegistry({
+      browser: new FakeBrowser(),
+      stateDirectory: f.stateDirectory,
+      quotas: {
+        maxSessions: 2,
+        maxPagesPerSession: 2,
+        maxPersistentProfiles: 2,
+      },
+      idFactory: deterministicIds('session_one'),
+    });
+    const input = Readable.from([
+      '{not-json}\n',
+      `${JSON.stringify({
+        type: 'session.open',
+        schemaVersion: '1.0.0',
+        requestId: 'req-1',
+        kind: 'ephemeral',
+      })}\n`,
+      `${JSON.stringify({
+        type: 'shutdown',
+        schemaVersion: '1.0.0',
+      })}\n`,
+      `${JSON.stringify({
+        type: 'session.list',
+        schemaVersion: '1.0.0',
+        requestId: 'req-2',
+      })}\n`,
+    ]);
+    let outputText = '';
+    const output = new Writable({
+      write(chunk, _encoding, callback) {
+        outputText += chunk.toString();
+        callback();
+      },
+    });
+    await serveSessionCommands(registry, input, output);
+    const rows = outputText.trim().split('\n').map((row) => JSON.parse(row));
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].requestId, 'req-1');
+    assert.equal(rows[0].ok, true);
+    assert.equal(rows[0].result.sessionId, 'session_one');
+    await registry.closeAll();
   } finally {
     await f.cleanup();
   }
