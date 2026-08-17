@@ -16,11 +16,11 @@
   "createdBy": "WRK-20260817T000200Z-b32002a1",
   "dependencyRequirements": [],
   "executionRole": "BUILDER",
-  "lastActor": "GPT-5.6-PRO-GOLD:GS-012:P3-002-SELF-REMOVING-MATERIALIZER",
+  "lastActor": "GPT-5.6-PRO-GOLD:GS-012:P3-002-PR161-EXACT-CANDIDATE",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-003",
   "objective": "Implement the first real P3-002 Browser Session Service product slice on the landed P3-001 bundled runtime: isolated ephemeral and persistent browser contexts, local profile-state persistence, bounded session/page/profile quotas, request-correlated page lifecycle operations, and deterministic cleanup. Keep the service application-owned and offline at runtime. The workflow path is exact self-removing transport only and must be restored before the product commit. Do not spend this Work Order on readiness prose, governance expansion, observations/actions beyond session lifecycle, or platform/release/production/GA promotion.",
-  "parentProductPr": null,
+  "parentProductPr": 161,
   "priority": 100,
   "productBranch": "agent/product/p3-002-browser-session-service",
   "requestedRole": "BUILDER",
@@ -38,6 +38,6 @@
   "schemaVersion": 1,
   "status": "IN_PROGRESS",
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-17T00:19:30Z",
+  "updatedAt": "2026-08-17T00:29:00Z",
   "workOrderId": "WO-P3-002-BROWSER-SESSIONS-B32002A1"
 }
