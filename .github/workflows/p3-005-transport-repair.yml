@@ -65,14 +65,14 @@ jobs:
                   f'found {patch.count(old)}'
               )
           patch = patch.replace(old, new, 1)
-          output = Path('/tmp/p3-005-patch.py')
-          output.write_text(patch, encoding='utf-8')
+          Path('/tmp/p3-005-patch.py').write_text(patch, encoding='utf-8')
           PY
           python3 /tmp/p3-005-patch.py
           node --check automation_host/src/browser-runtime.mjs
           npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
           npm test --prefix automation_host
           flutter pub get
+          dart fix --apply
           dart format \
             lib/product/browser/browser_runtime.dart \
             test/product/browser/browser_runtime_process_test.dart
