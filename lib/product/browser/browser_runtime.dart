@@ -596,6 +596,250 @@ final class P3BrowserPageObservation {
   final Map<String, Object?> observation;
 }
 
+enum P3BrowserActionKind {
+  click,
+  fill,
+  type,
+  select,
+  check,
+  uncheck,
+  press,
+  hover,
+  drag,
+  wait,
+  scroll;
+
+  String get wireName => name;
+}
+
+final class P3BrowserLocator {
+  const P3BrowserLocator._(this.value);
+
+  factory P3BrowserLocator.role(
+    String role,
+    String name, {
+    bool exact = false,
+  }) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'role',
+        'role': role,
+        'name': name,
+        'exact': exact,
+      });
+
+  factory P3BrowserLocator.label(String value, {bool exact = false}) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'label',
+        'value': value,
+        'exact': exact,
+      });
+
+  factory P3BrowserLocator.placeholder(
+    String value, {
+    bool exact = false,
+  }) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'placeholder',
+        'value': value,
+        'exact': exact,
+      });
+
+  factory P3BrowserLocator.text(String value, {bool exact = false}) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'text',
+        'value': value,
+        'exact': exact,
+      });
+
+  factory P3BrowserLocator.testId(String value) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'testId',
+        'value': value,
+      });
+
+  factory P3BrowserLocator.css(String value) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'css',
+        'value': value,
+      });
+
+  final Map<String, Object?> value;
+
+  Map<String, Object?> toJson() => Map<String, Object?>.from(value);
+}
+
+final class P3BrowserActionRequest {
+  const P3BrowserActionRequest({
+    required this.action,
+    required this.locators,
+    this.targetLocators = const <P3BrowserLocator>[],
+    this.value,
+    this.options = const <String>[],
+    this.key,
+    this.state,
+    this.deltaY,
+    this.timeout = const Duration(seconds: 10),
+  });
+
+  final P3BrowserActionKind action;
+  final List<P3BrowserLocator> locators;
+  final List<P3BrowserLocator> targetLocators;
+  final String? value;
+  final List<String> options;
+  final String? key;
+  final String? state;
+  final int? deltaY;
+  final Duration timeout;
+
+  Map<String, Object?> toJson() {
+    if (locators.isEmpty || locators.length > 8) {
+      throw const P3BrowserRuntimeException(
+        'browser_locator_list_invalid',
+      );
+    }
+    if (timeout < const Duration(milliseconds: 100) ||
+        timeout > const Duration(seconds: 30)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_timeout_invalid',
+      );
+    }
+    final requiresValue = action == P3BrowserActionKind.fill ||
+        action == P3BrowserActionKind.type;
+    if (requiresValue != (value != null && value!.isNotEmpty)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_value_invalid',
+      );
+    }
+    if ((action == P3BrowserActionKind.select) != options.isNotEmpty) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_options_invalid',
+      );
+    }
+    if ((action == P3BrowserActionKind.press) !=
+        (key != null && key!.isNotEmpty)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_key_invalid',
+      );
+    }
+    if ((action == P3BrowserActionKind.drag) != targetLocators.isNotEmpty) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_target_locator_invalid',
+      );
+    }
+    if ((action == P3BrowserActionKind.scroll) !=
+        (deltaY != null && deltaY != 0)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_scroll_delta_invalid',
+      );
+    }
+    return <String, Object?>{
+      'action': action.wireName,
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
+      if (targetLocators.isNotEmpty)
+        'targetLocators': targetLocators
+            .map((locator) => locator.toJson())
+            .toList(growable: false),
+      if (value != null) 'value': value,
+      if (options.isNotEmpty) 'options': options,
+      if (key != null) 'key': key,
+      if (state != null) 'state': state,
+      if (deltaY != null) 'deltaY': deltaY,
+      'timeoutMs': timeout.inMilliseconds,
+    };
+  }
+}
+
+final class P3BrowserActionResult {
+  const P3BrowserActionResult({
+    required this.sessionId,
+    required this.pageId,
+    required this.action,
+    required this.locatorStrategy,
+    required this.locatorIndex,
+    required this.targetLocatorStrategy,
+    required this.targetLocatorIndex,
+    required this.sensitiveInputProvided,
+    required this.beforeObservationHash,
+    required this.afterObservationHash,
+    required this.observationChanged,
+  });
+
+  factory P3BrowserActionResult.fromJson(Map<String, Object?> value) {
+    final sessionId = value['sessionId'];
+    final pageId = value['pageId'];
+    final actionName = value['action'];
+    final locatorStrategy = value['locatorStrategy'];
+    final locatorIndex = value['locatorIndex'];
+    final targetLocatorStrategy = value['targetLocatorStrategy'];
+    final targetLocatorIndex = value['targetLocatorIndex'];
+    final sensitive = value['sensitiveInputProvided'];
+    final beforeHash = value['beforeObservationHash'];
+    final afterHash = value['afterObservationHash'];
+    final changed = value['observationChanged'];
+    final action = P3BrowserActionKind.values
+        .where((candidate) => candidate.wireName == actionName)
+        .firstOrNull;
+    final hex = RegExp(r'^[0-9a-f]{64}$');
+    if (sessionId is! String ||
+        sessionId.isEmpty ||
+        pageId is! String ||
+        pageId.isEmpty ||
+        action == null ||
+        locatorStrategy is! String ||
+        locatorStrategy.isEmpty ||
+        locatorIndex is! int ||
+        locatorIndex < 0 ||
+        (targetLocatorStrategy != null && targetLocatorStrategy is! String) ||
+        (targetLocatorIndex != null && targetLocatorIndex is! int) ||
+        sensitive is! bool ||
+        beforeHash is! String ||
+        !hex.hasMatch(beforeHash) ||
+        afterHash is! String ||
+        !hex.hasMatch(afterHash) ||
+        changed is! bool ||
+        changed != (beforeHash != afterHash)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_response_invalid',
+      );
+    }
+    if ((action == P3BrowserActionKind.drag) !=
+        (targetLocatorStrategy is String &&
+            targetLocatorStrategy.isNotEmpty &&
+            targetLocatorIndex is int &&
+            targetLocatorIndex >= 0)) {
+      throw const P3BrowserRuntimeException(
+        'browser_action_response_invalid',
+      );
+    }
+    return P3BrowserActionResult(
+      sessionId: sessionId,
+      pageId: pageId,
+      action: action,
+      locatorStrategy: locatorStrategy,
+      locatorIndex: locatorIndex,
+      targetLocatorStrategy: targetLocatorStrategy as String?,
+      targetLocatorIndex: targetLocatorIndex as int?,
+      sensitiveInputProvided: sensitive,
+      beforeObservationHash: beforeHash,
+      afterObservationHash: afterHash,
+      observationChanged: changed,
+    );
+  }
+
+  final String sessionId;
+  final String pageId;
+  final P3BrowserActionKind action;
+  final String locatorStrategy;
+  final int locatorIndex;
+  final String? targetLocatorStrategy;
+  final int? targetLocatorIndex;
+  final bool sensitiveInputProvided;
+  final String beforeObservationHash;
+  final String afterObservationHash;
+  final bool observationChanged;
+}
+
 final class P3BrowserSessionProcess {
   P3BrowserSessionProcess._(
     this._process,
@@ -994,6 +1238,25 @@ final class P3BrowserSessionProcess {
       _protocolViolation('browser_observation_identity_mismatch');
     }
     return observation;
+  }
+
+  Future<P3BrowserActionResult> performAction(
+    String sessionId,
+    String pageId,
+    P3BrowserActionRequest action,
+  ) async {
+    final result = await _request('page.action', <String, Object?>{
+      'sessionId': sessionId,
+      'pageId': pageId,
+      'actionRequest': action.toJson(),
+    });
+    final parsed = _decodeResponse(
+      () => P3BrowserActionResult.fromJson(result),
+    );
+    if (parsed.sessionId != sessionId || parsed.pageId != pageId) {
+      _protocolViolation('browser_action_identity_mismatch');
+    }
+    return parsed;
   }
 
   Future<void> closePage(String sessionId, String pageId) async {

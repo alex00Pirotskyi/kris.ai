@@ -791,6 +791,320 @@ export async function capturePageObservation(page, telemetry) {
   };
 }
 
+
+const PAGE_ACTIONS = new Set([
+  'click',
+  'fill',
+  'type',
+  'select',
+  'check',
+  'uncheck',
+  'press',
+  'hover',
+  'drag',
+  'wait',
+  'scroll',
+]);
+const LOCATOR_STRATEGIES = new Set([
+  'role',
+  'label',
+  'placeholder',
+  'text',
+  'testId',
+  'css',
+]);
+const WAIT_STATES = new Set(['attached', 'detached', 'visible', 'hidden']);
+
+function exactObjectKeys(value, allowed, code) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    fail(code);
+  }
+  const unknown = Object.keys(value).filter((key) => !allowed.has(key));
+  if (unknown.length > 0) fail(code, unknown.sort().join(','));
+}
+
+function boundedActionString(value, code, maximumBytes = 8192) {
+  if (typeof value !== 'string' || value.includes('\0')) fail(code);
+  const bytes = Buffer.byteLength(value, 'utf8');
+  if (bytes === 0 || bytes > maximumBytes) fail(code);
+  return value;
+}
+
+function normalizeLocatorDescriptor(value) {
+  exactObjectKeys(
+    value,
+    new Set(['strategy', 'value', 'role', 'name', 'exact']),
+    'browser_locator_invalid',
+  );
+  if (!LOCATOR_STRATEGIES.has(value.strategy)) {
+    fail('browser_locator_strategy_invalid');
+  }
+  const exact = value.exact === true;
+  if (value.exact !== undefined && typeof value.exact !== 'boolean') {
+    fail('browser_locator_invalid');
+  }
+  if (value.strategy === 'role') {
+    return Object.freeze({
+      strategy: 'role',
+      role: boundedActionString(value.role, 'browser_locator_role_invalid', 128),
+      name: boundedActionString(value.name, 'browser_locator_name_invalid', 4096),
+      exact,
+    });
+  }
+  if (value.role !== undefined || value.name !== undefined) {
+    fail('browser_locator_invalid');
+  }
+  return Object.freeze({
+    strategy: value.strategy,
+    value: boundedActionString(value.value, 'browser_locator_value_invalid', 8192),
+    exact,
+  });
+}
+
+function normalizeLocatorList(value, code = 'browser_locator_list_invalid') {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 8) {
+    fail(code);
+  }
+  return Object.freeze(value.map((item) => normalizeLocatorDescriptor(item)));
+}
+
+export function validatePageActionRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set([
+      'action',
+      'locators',
+      'targetLocators',
+      'value',
+      'options',
+      'key',
+      'state',
+      'deltaY',
+      'timeoutMs',
+    ]),
+    'browser_action_request_invalid',
+  );
+  if (!PAGE_ACTIONS.has(value.action)) {
+    fail('browser_action_kind_invalid');
+  }
+  const timeoutMs = value.timeoutMs ?? 10_000;
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 100 ||
+    timeoutMs > 30_000
+  ) {
+    fail('browser_action_timeout_invalid');
+  }
+  const request = {
+    action: value.action,
+    locators: normalizeLocatorList(value.locators),
+    timeoutMs,
+  };
+  if (value.action === 'fill' || value.action === 'type') {
+    request.value = boundedActionString(
+      value.value,
+      'browser_action_value_invalid',
+      64 * 1024,
+    );
+  } else if (value.value !== undefined) {
+    fail('browser_action_request_invalid', 'value');
+  }
+  if (value.action === 'select') {
+    const options = Array.isArray(value.options)
+      ? value.options
+      : [value.options];
+    if (options.length < 1 || options.length > 32) {
+      fail('browser_action_options_invalid');
+    }
+    request.options = Object.freeze(
+      options.map((item) =>
+        boundedActionString(
+          item,
+          'browser_action_options_invalid',
+          4096,
+        ),
+      ),
+    );
+  } else if (value.options !== undefined) {
+    fail('browser_action_request_invalid', 'options');
+  }
+  if (value.action === 'press') {
+    request.key = boundedActionString(
+      value.key,
+      'browser_action_key_invalid',
+      128,
+    );
+  } else if (value.key !== undefined) {
+    fail('browser_action_request_invalid', 'key');
+  }
+  if (value.action === 'wait') {
+    request.state = value.state ?? 'visible';
+    if (!WAIT_STATES.has(request.state)) {
+      fail('browser_action_wait_state_invalid');
+    }
+  } else if (value.state !== undefined) {
+    fail('browser_action_request_invalid', 'state');
+  }
+  if (value.action === 'scroll') {
+    if (
+      !Number.isSafeInteger(value.deltaY) ||
+      value.deltaY === 0 ||
+      Math.abs(value.deltaY) > 100_000
+    ) {
+      fail('browser_action_scroll_delta_invalid');
+    }
+    request.deltaY = value.deltaY;
+  } else if (value.deltaY !== undefined) {
+    fail('browser_action_request_invalid', 'deltaY');
+  }
+  if (value.action === 'drag') {
+    request.targetLocators = normalizeLocatorList(
+      value.targetLocators,
+      'browser_action_target_locator_invalid',
+    );
+  } else if (value.targetLocators !== undefined) {
+    fail('browser_action_request_invalid', 'targetLocators');
+  }
+  return Object.freeze(request);
+}
+
+function locatorFromDescriptor(page, descriptor) {
+  switch (descriptor.strategy) {
+    case 'role':
+      if (typeof page.getByRole !== 'function') {
+        fail('browser_locator_api_unavailable', 'role');
+      }
+      return page.getByRole(descriptor.role, {
+        name: descriptor.name,
+        exact: descriptor.exact,
+      });
+    case 'label':
+      if (typeof page.getByLabel !== 'function') {
+        fail('browser_locator_api_unavailable', 'label');
+      }
+      return page.getByLabel(descriptor.value, {
+        exact: descriptor.exact,
+      });
+    case 'placeholder':
+      if (typeof page.getByPlaceholder !== 'function') {
+        fail('browser_locator_api_unavailable', 'placeholder');
+      }
+      return page.getByPlaceholder(descriptor.value, {
+        exact: descriptor.exact,
+      });
+    case 'text':
+      if (typeof page.getByText !== 'function') {
+        fail('browser_locator_api_unavailable', 'text');
+      }
+      return page.getByText(descriptor.value, {
+        exact: descriptor.exact,
+      });
+    case 'testId':
+      if (typeof page.getByTestId !== 'function') {
+        fail('browser_locator_api_unavailable', 'testId');
+      }
+      return page.getByTestId(descriptor.value);
+    case 'css':
+      return page.locator(descriptor.value);
+    default:
+      fail('browser_locator_strategy_invalid');
+  }
+}
+
+export async function resolvePageActionLocator(page, descriptors) {
+  for (let index = 0; index < descriptors.length; index += 1) {
+    const descriptor = descriptors[index];
+    const locator = locatorFromDescriptor(page, descriptor);
+    if (!locator || typeof locator.count !== 'function') {
+      fail('browser_locator_api_unavailable', descriptor.strategy);
+    }
+    const count = await locator.count();
+    if (!Number.isSafeInteger(count) || count < 0) {
+      fail('browser_locator_count_invalid');
+    }
+    if (count === 0) continue;
+    if (count !== 1) {
+      fail('browser_locator_ambiguous', descriptor.strategy);
+    }
+    return { locator, descriptor, index };
+  }
+  fail('browser_locator_not_found');
+}
+
+async function performResolvedAction(resolved, request, target = null) {
+  const locator = resolved.locator;
+  const timeout = request.timeoutMs;
+  switch (request.action) {
+    case 'click':
+      await locator.click({ timeout });
+      return;
+    case 'fill':
+      await locator.fill(request.value, { timeout });
+      return;
+    case 'type':
+      await locator.pressSequentially(request.value, { delay: 0, timeout });
+      return;
+    case 'select':
+      await locator.selectOption(request.options, { timeout });
+      return;
+    case 'check':
+      await locator.check({ timeout });
+      return;
+    case 'uncheck':
+      await locator.uncheck({ timeout });
+      return;
+    case 'press':
+      await locator.press(request.key, { timeout });
+      return;
+    case 'hover':
+      await locator.hover({ timeout });
+      return;
+    case 'drag':
+      await locator.dragTo(target.locator, { timeout });
+      return;
+    case 'wait':
+      await locator.waitFor({ state: request.state, timeout });
+      return;
+    case 'scroll':
+      await locator.evaluate(
+        (element, deltaY) => element.scrollBy({ top: deltaY, behavior: 'auto' }),
+        request.deltaY,
+      );
+      return;
+    default:
+      fail('browser_action_kind_invalid');
+  }
+}
+
+export async function performPageAction(page, rawRequest, telemetry) {
+  const request = validatePageActionRequest(rawRequest);
+  const before = await capturePageObservation(page, telemetry);
+  const resolved = await resolvePageActionLocator(page, request.locators);
+  let target = null;
+  if (request.action === 'drag') {
+    target = await resolvePageActionLocator(page, request.targetLocators);
+  }
+  await performResolvedAction(resolved, request, target);
+  const after = await capturePageObservation(page, telemetry);
+  return {
+    action: request.action,
+    locatorStrategy: resolved.descriptor.strategy,
+    locatorIndex: resolved.index,
+    ...(target
+      ? {
+          targetLocatorStrategy: target.descriptor.strategy,
+          targetLocatorIndex: target.index,
+        }
+      : {}),
+    sensitiveInputProvided:
+      request.action === 'fill' || request.action === 'type',
+    beforeObservationHash: before.observationHash,
+    afterObservationHash: after.observationHash,
+    observationChanged:
+      before.observationHash !== after.observationHash,
+  };
+}
+
 export class BrowserSessionRegistry {
   constructor({ browser, stateDirectory, quotas, idFactory = defaultIdFactory }) {
     if (!browser || typeof browser.newContext !== 'function') {
@@ -999,6 +1313,20 @@ export class BrowserSessionRegistry {
   };
 }
 
+  async performAction(sessionId, pageId, request) {
+  const session = this._session(sessionId);
+  assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+  const page = session.pages.get(pageId);
+  if (!page) fail('browser_page_not_found', pageId);
+  let telemetry = this.pageTelemetry.get(page);
+  if (!telemetry) {
+    telemetry = createPageTelemetry(page);
+    this.pageTelemetry.set(page, telemetry);
+  }
+  const result = await performPageAction(page, request, telemetry);
+  return { sessionId, pageId, ...result };
+}
+
   async closePage(sessionId, pageId) {
     const session = this._session(sessionId);
     assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
@@ -1083,6 +1411,12 @@ export class BrowserSessionRegistry {
         return { pages: this.listPages(message.sessionId) };
       case 'page.observe':
         return this.observePage(message.sessionId, message.pageId);
+      case 'page.action':
+        return this.performAction(
+          message.sessionId,
+          message.pageId,
+          message.actionRequest,
+        );
       case 'page.close':
         return this.closePage(message.sessionId, message.pageId);
       default:

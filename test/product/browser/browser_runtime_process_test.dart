@@ -511,4 +511,61 @@ void main() {
       ),
     );
   });
+
+  test('structured action request and result reject ambiguity-prone payloads',
+      () {
+    final request = P3BrowserActionRequest(
+      action: P3BrowserActionKind.fill,
+      locators: <P3BrowserLocator>[
+        P3BrowserLocator.role('textbox', 'Email', exact: true),
+        P3BrowserLocator.label('Email address', exact: true),
+        P3BrowserLocator.css('#email'),
+      ],
+      value: 'person+secret@example.test',
+    );
+    final json = request.toJson();
+    expect(json['action'], 'fill');
+    expect((json['locators']! as List).length, 3);
+    expect(json.containsKey('x'), isFalse);
+    expect(json.containsKey('y'), isFalse);
+
+    final result = P3BrowserActionResult.fromJson(<String, Object?>{
+      'sessionId': 'session_one',
+      'pageId': 'page_one',
+      'action': 'fill',
+      'locatorStrategy': 'label',
+      'locatorIndex': 1,
+      'sensitiveInputProvided': true,
+      'beforeObservationHash': _hex('a', 64),
+      'afterObservationHash': _hex('b', 64),
+      'observationChanged': true,
+    });
+    expect(result.action, P3BrowserActionKind.fill);
+    expect(result.locatorStrategy, 'label');
+    expect(result.sensitiveInputProvided, isTrue);
+
+    expect(
+      () => P3BrowserActionRequest(
+        action: P3BrowserActionKind.drag,
+        locators: <P3BrowserLocator>[
+          P3BrowserLocator.testId('source'),
+        ],
+      ).toJson(),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+    expect(
+      () => P3BrowserActionResult.fromJson(<String, Object?>{
+        'sessionId': 'session_one',
+        'pageId': 'page_one',
+        'action': 'click',
+        'locatorStrategy': 'role',
+        'locatorIndex': 0,
+        'sensitiveInputProvided': false,
+        'beforeObservationHash': _hex('a', 64),
+        'afterObservationHash': _hex('a', 64),
+        'observationChanged': true,
+      }),
+      throwsA(isA<P3BrowserRuntimeException>()),
+    );
+  });
 }

@@ -9,6 +9,10 @@ import test from 'node:test';
 import {
   BrowserSessionRegistry,
   canonicalObservationJson,
+  createPageTelemetry,
+  performPageAction,
+  resolvePageActionLocator,
+  validatePageActionRequest,
   chromiumProbeArgs,
   decorateProbeError,
   parseArgs,
@@ -872,4 +876,169 @@ test('canonical page observation is stable bounded and secret-minimizing', async
   } finally {
     await f.cleanup();
   }
+});
+
+
+class FakeActionLocator {
+  constructor(page, key, count = 1) {
+    this.page = page;
+    this.key = key;
+    this.matchCount = count;
+  }
+
+  async count() {
+    return this.matchCount;
+  }
+
+  _record(action, detail = null) {
+    this.page.actions.push({ action, key: this.key, detail });
+    this.page.observation.visibleText = `${this.page.observation.visibleText}|${action}`;
+  }
+
+  async click(options) { this._record('click', options); }
+  async fill(value, options) { this._record('fill', { length: value.length, options }); }
+  async pressSequentially(value, options) { this._record('type', { length: value.length, options }); }
+  async selectOption(value, options) { this._record('select', { value, options }); }
+  async check(options) { this._record('check', options); }
+  async uncheck(options) { this._record('uncheck', options); }
+  async press(value, options) { this._record('press', { value, options }); }
+  async hover(options) { this._record('hover', options); }
+  async dragTo(target, options) { this._record('drag', { target: target.key, options }); }
+  async waitFor(options) { this._record('wait', options); }
+  async evaluate(_callback, value) { this._record('scroll', value); }
+}
+
+class FakeActionPage extends FakePage {
+  constructor(matches = {}) {
+    super();
+    this.matches = matches;
+    this.actions = [];
+  }
+
+  _actionLocator(key) {
+    return new FakeActionLocator(this, key, this.matches[key] ?? 0);
+  }
+
+  getByRole(role, options) {
+    return this._actionLocator(`role:${role}:${options.name}:${options.exact}`);
+  }
+
+  getByLabel(value, options) {
+    return this._actionLocator(`label:${value}:${options.exact}`);
+  }
+
+  getByPlaceholder(value, options) {
+    return this._actionLocator(`placeholder:${value}:${options.exact}`);
+  }
+
+  getByText(value, options) {
+    return this._actionLocator(`text:${value}:${options.exact}`);
+  }
+
+  getByTestId(value) {
+    return this._actionLocator(`testId:${value}`);
+  }
+
+  locator(value) {
+    if (value === 'body') return super.locator(value);
+    return this._actionLocator(`css:${value}`);
+  }
+}
+
+test('locator priority chooses the first unique structured match and redacts fill value', async () => {
+  const page = new FakeActionPage({
+    'role:textbox:Email:true': 0,
+    'label:Email address:true': 1,
+    'css:#email': 1,
+  });
+  const telemetry = createPageTelemetry(page);
+  const result = await performPageAction(
+    page,
+    {
+      action: 'fill',
+      locators: [
+        { strategy: 'role', role: 'textbox', name: 'Email', exact: true },
+        { strategy: 'label', value: 'Email address', exact: true },
+        { strategy: 'css', value: '#email' },
+      ],
+      value: 'person+secret@example.test',
+    },
+    telemetry,
+  );
+  assert.equal(result.locatorStrategy, 'label');
+  assert.equal(result.locatorIndex, 1);
+  assert.equal(result.sensitiveInputProvided, true);
+  assert.equal(JSON.stringify(result).includes('person+secret'), false);
+  assert.equal(page.actions[0].action, 'fill');
+  assert.equal(page.actions[0].detail.length, 26);
+  assert.notEqual(result.beforeObservationHash, result.afterObservationHash);
+});
+
+test('ambiguous locator fails closed instead of falling through', async () => {
+  const page = new FakeActionPage({
+    'text:Continue:true': 2,
+    'testId:continue': 1,
+  });
+  await assert.rejects(
+    resolvePageActionLocator(page, [
+      { strategy: 'text', value: 'Continue', exact: true },
+      { strategy: 'testId', value: 'continue' },
+    ]),
+    (error) => error?.code === 'browser_locator_ambiguous',
+  );
+  assert.equal(page.actions.length, 0);
+});
+
+test('coordinate and unrelated fields are rejected and drag target is structured', async () => {
+  assert.throws(
+    () => validatePageActionRequest({
+      action: 'click',
+      locators: [{ strategy: 'css', value: '#submit' }],
+      x: 100,
+      y: 200,
+    }),
+    (error) => error?.code === 'browser_action_request_invalid',
+  );
+  const page = new FakeActionPage({
+    'testId:source': 1,
+    'testId:target': 1,
+  });
+  const result = await performPageAction(
+    page,
+    {
+      action: 'drag',
+      locators: [{ strategy: 'testId', value: 'source' }],
+      targetLocators: [{ strategy: 'testId', value: 'target' }],
+    },
+    createPageTelemetry(page),
+  );
+  assert.equal(result.locatorStrategy, 'testId');
+  assert.equal(result.targetLocatorStrategy, 'testId');
+  assert.equal(page.actions[0].detail.target, 'testId:target');
+});
+
+test('action request validates operation-specific fields and bounds', () => {
+  assert.throws(
+    () => validatePageActionRequest({
+      action: 'fill',
+      locators: [{ strategy: 'label', value: 'Name' }],
+    }),
+    (error) => error?.code === 'browser_action_value_invalid',
+  );
+  assert.throws(
+    () => validatePageActionRequest({
+      action: 'click',
+      locators: [{ strategy: 'css', value: '#button' }],
+      timeoutMs: 99,
+    }),
+    (error) => error?.code === 'browser_action_timeout_invalid',
+  );
+  assert.throws(
+    () => validatePageActionRequest({
+      action: 'scroll',
+      locators: [{ strategy: 'css', value: '#pane' }],
+      deltaY: 0,
+    }),
+    (error) => error?.code === 'browser_action_scroll_delta_invalid',
+  );
 });
