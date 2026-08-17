@@ -121,7 +121,9 @@ jobs:
               'test/product/browser/browser_runtime_process_test.dart',
           }
           actual = set(
-              subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+              subprocess.check_output(
+                  ['git', 'diff', 'HEAD', '--name-only'], text=True
+              ).splitlines()
           )
           if actual != expected:
               raise SystemExit(
