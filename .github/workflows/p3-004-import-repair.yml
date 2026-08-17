@@ -1,0 +1,52 @@
+name: P3-004 Test Import Repair
+
+on:
+  push:
+    branches:
+      - 'agent/product/p3-004-locator-action-engine'
+    paths:
+      - '.github/workflows/p3-004-import-repair.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Add the omitted exported test helper and remove transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/p3-browser-runtime.yml')
+          source = path.read_text(encoding='utf-8')
+          old = (
+              "'  canonicalObservationJson,\\n',\n"
+              "              '  canonicalObservationJson,\\n  performPageAction,\\n"
+          )
+          new = (
+              "'  canonicalObservationJson,\\n',\n"
+              "              '  canonicalObservationJson,\\n  createPageTelemetry,\\n"
+              "  performPageAction,\\n"
+          )
+          if source.count(old) != 1:
+              raise SystemExit(f'expected one import-repair anchor, found {source.count(old)}')
+          path.write_text(source.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/p3-004-import-repair.yml').unlink()
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A .github/workflows/p3-browser-runtime.yml .github/workflows/p3-004-import-repair.yml
+          git diff --cached --check
+          git commit -m 'fix(p3-004): import page telemetry in action tests'
+          git push origin HEAD:refs/heads/agent/product/p3-004-locator-action-engine
