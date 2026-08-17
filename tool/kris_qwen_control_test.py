@@ -1,167 +1,216 @@
 #!/usr/bin/env python3
-"""Behavioral tests for the local KRIS Qwen worker controller."""
 from __future__ import annotations
 
 import importlib.util
 import json
 import os
-from pathlib import Path
-import subprocess
+import pathlib
 import sys
 import tempfile
-import time
 import unittest
+from unittest import mock
 
-HERE = Path(__file__).resolve().parent
-CONTROL = HERE / "kris_qwen_control.py"
-INSTALLER = HERE / "install_kris_qwen_control_systemd.sh"
+HERE = pathlib.Path(__file__).resolve().parent
+for module_name, filename in (
+    ("kris_qwen_v6_guard", "kris_qwen_v6_guard.py"),
+    ("kris_qwen_control", "kris_qwen_control.py"),
+):
+    spec = importlib.util.spec_from_file_location(module_name, HERE / filename)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
 
-spec = importlib.util.spec_from_file_location("kris_qwen_control", CONTROL)
-assert spec and spec.loader
-mod = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = mod
-spec.loader.exec_module(mod)
-ControllerConfig = mod.ControllerConfig
-QwenController = mod.QwenController
-
-
-FAKE_WORKER = r'''#!/usr/bin/env python3
-import json, os, pathlib, sys, time
-
-def root_arg():
-    i = sys.argv.index("--root")
-    return pathlib.Path(sys.argv[i + 1]).expanduser().resolve()
-
-def write(path, value):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value) + "\n")
-
-cmd = sys.argv[1]
-if cmd == "version":
-    print(json.dumps({"scriptVersion":"test"}))
-    raise SystemExit(0)
-root = root_arg()
-op = root / "operator"
-stop = op / "stop-request.json"
-status = op / "status.json"
-if cmd == "control":
-    action = sys.argv[2]
-    if action == "clear":
-        stop.unlink(missing_ok=True)
-        raise SystemExit(0)
-    if action == "stop":
-        write(stop, {"mode":"GRACEFUL", "reason":"test"})
-        raise SystemExit(0)
-    raise SystemExit(2)
-if cmd == "stack":
-    write(status, {"pid":os.getpid(), "state":"IDLE", "scriptVersion":"test"})
-    while not stop.exists():
-        time.sleep(0.05)
-    write(status, {"pid":os.getpid(), "state":"STOPPED", "scriptVersion":"test"})
-    stop.unlink(missing_ok=True)
-    raise SystemExit(0)
-raise SystemExit(2)
-'''
+control = sys.modules["kris_qwen_control"]
+v6 = sys.modules["kris_qwen_v6_guard"]
 
 
-class ControllerTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
-        self.repo = self.root / "repo"
-        self.repo.mkdir()
-        subprocess.run(["git", "init", "-b", "main"], cwd=self.repo, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=self.repo, check=True)
-        subprocess.run(["git", "config", "user.name", "Test"], cwd=self.repo, check=True)
-        tool = self.repo / "tool"
-        tool.mkdir()
-        self.worker = tool / "kris_qwen_worker.py"
-        self.worker.write_text(FAKE_WORKER, encoding="utf-8")
-        (self.repo / "README.md").write_text("fixture\n", encoding="utf-8")
-        subprocess.run(["git", "add", "."], cwd=self.repo, check=True)
-        subprocess.run(["git", "commit", "-m", "fixture"], cwd=self.repo, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        self.worker_root = self.root / "worker-root"
-        self.state_dir = self.root / "control-state"
-        self.cfg = ControllerConfig(
-            repo_dir=self.repo,
-            branch="main",
-            python_executable=sys.executable,
-            worker_script=self.worker,
-            worker_root=self.worker_root,
-            state_dir=self.state_dir,
-            host="127.0.0.1",
-            port=0,
-            stop_timeout=5,
-            worker_extra_args=(),
-        )
-        self.controller = QwenController(self.cfg)
+def config(root: pathlib.Path, backend: str = "process"):
+    repo = root / "repo"
+    (repo / "tool").mkdir(parents=True)
+    (repo / ".git").mkdir()
+    python = root / "python"
+    python.write_text("")
+    model = root / "model.gguf"
+    model.write_bytes(b"model")
+    worker = repo / "tool/kris_qwen_worker.py"
+    worker.write_text("#!/usr/bin/env python3\n")
+    return control.ControlConfig(
+        repo_dir=repo,
+        repo_branch="agent/qwen-server-control-v6",
+        python=python,
+        worker_root=root / "worker",
+        host="127.0.0.1",
+        port=8090,
+        backend=backend,
+        model_unit="kris-qwen-model.service",
+        worker_unit="kris-qwen-worker.service",
+        stop_timeout=5,
+        token_path=root / "worker/controller/control-token",
+        model_path=model,
+        sandbox_mode="off",
+    )
 
-    def tearDown(self) -> None:
-        pid = self.controller.worker_pid()
-        if pid:
+
+class SecurityContractTest(unittest.TestCase):
+    def test_dashboard_never_embeds_token_placeholder_or_runtime_token(self) -> None:
+        self.assertNotIn("__TOKEN__", control.DASHBOARD_HTML)
+        self.assertNotIn("control-token-value", control.DASHBOARD_HTML)
+        self.assertIn("sessionStorage", control.DASHBOARD_HTML)
+        self.assertIn("X-Kris-Control-Token", control.DASHBOARD_HTML)
+
+    def test_host_and_origin_are_loopback_only(self) -> None:
+        self.assertTrue(control._loopback_host("127.0.0.1:8090"))
+        self.assertTrue(control._loopback_host("localhost:8090"))
+        self.assertFalse(control._loopback_host("10.0.0.2:8090"))
+        self.assertTrue(control._loopback_origin(None))
+        self.assertTrue(control._loopback_origin("http://127.0.0.1:8090"))
+        self.assertFalse(control._loopback_origin("https://evil.example"))
+
+    def test_environment_rejects_non_loopback_listener(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {
+                "KRIS_QWEN_CONTROL_HOST": "0.0.0.0",
+                "KRIS_QWEN_ROOT": "/tmp/qwen-test",
+            },
+            clear=False,
+        ):
+            with self.assertRaisesRegex(control.ControllerError, "loopback-only"):
+                control.ControlConfig.from_environment()
+
+
+class OperationRecoveryTest(unittest.TestCase):
+    def test_interrupted_operation_is_marked_and_backend_is_reconciled(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            cfg.controller_dir.mkdir(parents=True)
+            v6.atomic_write_json(
+                cfg.operation_path,
+                {"schemaVersion": 2, "operationId": "op-1", "kind": "start", "state": "RUNNING"},
+            )
+            backend = mock.Mock()
+            backend.status.return_value = {"backend": "process", "running": False}
+            controller = object.__new__(control.Controller)
+            controller.cfg = cfg
+            controller.token = "x" * 48
+            controller.lock = __import__("threading").Lock()
+            controller.rates = __import__("collections").defaultdict(__import__("collections").deque)
+            controller.backend = backend
+            controller._recover_operation()
+            row = json.loads(cfg.operation_path.read_text())
+            self.assertEqual(row["state"], "INTERRUPTED")
+            self.assertEqual(row["backendStatus"]["running"], False)
+
+    def test_operation_lock_rejects_concurrent_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            backend = mock.Mock()
+            controller = object.__new__(control.Controller)
+            controller.cfg = cfg
+            controller.token = "x" * 48
+            controller.lock = __import__("threading").Lock()
+            controller.rates = __import__("collections").defaultdict(__import__("collections").deque)
+            controller.backend = backend
+            controller.lock.acquire()
             try:
-                self.controller.request_graceful_stop("test cleanup")
-            except Exception:
-                pass
-            deadline = time.time() + 2
-            while time.time() < deadline and mod.pid_alive(pid):
-                time.sleep(0.05)
-            if mod.pid_alive(pid):
-                os.kill(pid, 9)
-        self.temp.cleanup()
+                with self.assertRaisesRegex(control.ControllerError, "already running"):
+                    controller._operation("start", lambda: {})
+            finally:
+                controller.lock.release()
 
-    def test_worker_command_uses_stack(self) -> None:
-        command = self.controller._worker_command()
-        self.assertIn("stack", command)
-        self.assertNotIn("serve", command)
-        self.assertEqual(command[1], str(self.worker))
 
-    def test_start_and_safe_stop_use_worker_protocol(self) -> None:
-        started = self.controller.start_worker()
-        self.assertEqual(started["status"], "STARTED")
-        pid = int(started["pid"])
-        deadline = time.time() + 2
-        while time.time() < deadline and not self.controller.operator_status_path.exists():
-            time.sleep(0.02)
-        self.assertTrue(mod.pid_alive(pid))
-        stopped = self.controller.request_graceful_stop("unit test")
-        self.assertEqual(stopped["status"], "STOP_REQUESTED")
-        deadline = time.time() + 3
-        while time.time() < deadline and mod.pid_alive(pid):
-            time.sleep(0.05)
-        self.assertFalse(mod.pid_alive(pid))
+class SystemdBackendTest(unittest.TestCase):
+    def test_start_orders_model_before_worker_and_rolls_back_on_worker_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw), backend="systemd")
+            backend = control.SystemdBackend(cfg)
+            calls = []
 
-    def test_refresh_refuses_dirty_checkout_before_fetch(self) -> None:
-        (self.repo / "dirty.txt").write_text("do not destroy\n", encoding="utf-8")
-        with self.assertRaisesRegex(RuntimeError, "checkout is dirty"):
-            self.controller._refresh_repo_fast_forward()
-        self.assertTrue((self.repo / "dirty.txt").exists())
+            def fake_run(argv, **kwargs):
+                calls.append(list(argv))
+                if argv[:3] == ["systemctl", "start", cfg.worker_unit]:
+                    raise control.ControllerError("worker failed")
+                return mock.Mock(returncode=0, stdout="", stderr="")
 
-    def test_non_loopback_listener_is_rejected(self) -> None:
-        cfg = ControllerConfig(**{**self.cfg.__dict__, "host": "0.0.0.0"})
-        with self.assertRaisesRegex(RuntimeError, "non-loopback"):
-            QwenController(cfg)
+            with mock.patch.object(control, "run", side_effect=fake_run), mock.patch.object(
+                backend, "_wait", return_value=None
+            ):
+                with self.assertRaisesRegex(control.ControllerError, "worker failed"):
+                    backend.start()
+            self.assertEqual(calls[0], ["systemctl", "start", cfg.model_unit])
+            self.assertIn(["systemctl", "stop", cfg.model_unit], calls)
 
-    def test_control_token_is_required(self) -> None:
-        self.assertFalse(self.controller.verify_token(None))
-        self.assertFalse(self.controller.verify_token("wrong"))
-        token = self.controller.token_path.read_text(encoding="utf-8").strip()
-        self.assertTrue(self.controller.verify_token(token))
+    def test_stop_orders_worker_before_model(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw), backend="systemd")
+            backend = control.SystemdBackend(cfg)
+            calls = []
 
-    def test_systemd_installer_pins_root_gh_credential_store(self) -> None:
-        installer = INSTALLER.read_text(encoding="utf-8")
-        self.assertIn("Environment=HOME=/root", installer)
-        self.assertIn("Environment=GH_CONFIG_DIR=/root/.config/gh", installer)
-        self.assertIn("Environment=GIT_TERMINAL_PROMPT=0", installer)
-        self.assertIn(
-            "HOME=/root GH_CONFIG_DIR=/root/.config/gh gh auth status --hostname github.com",
-            installer,
-        )
-        self.assertIn(
-            "HOME=/root GH_CONFIG_DIR=/root/.config/gh gh auth setup-git --hostname github.com",
-            installer,
-        )
+            def fake_run(argv, **kwargs):
+                calls.append(list(argv))
+                return mock.Mock(returncode=0, stdout="", stderr="")
+
+            with mock.patch.object(control, "run", side_effect=fake_run), mock.patch.object(
+                backend, "_wait", return_value=None
+            ), mock.patch.object(backend, "status", return_value={"ok": True}):
+                backend.stop()
+            self.assertEqual(calls[0], ["systemctl", "stop", cfg.worker_unit])
+            self.assertEqual(calls[1], ["systemctl", "stop", cfg.model_unit])
+
+
+class ProcessBackendTest(unittest.TestCase):
+    def test_stale_pid_record_is_not_adopted(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            cfg.controller_dir.mkdir(parents=True)
+            v6.atomic_write_json(
+                cfg.process_path,
+                {
+                    "pid": os.getpid(),
+                    "identity": {
+                        "pid": os.getpid(),
+                        "start_ticks": 1,
+                        "executable": "/wrong",
+                        "cmdline_sha256": "0" * 64,
+                    },
+                },
+            )
+            backend = control.ProcessBackend(cfg)
+            self.assertIsNone(backend._record())
+            self.assertFalse(backend.status()["running"])
+
+
+class PreflightTest(unittest.TestCase):
+    def test_worker_version_and_github_auth_are_required(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            controller = object.__new__(control.Controller)
+            controller.cfg = cfg
+            responses = [
+                mock.Mock(returncode=0, stdout="6.0.0\n", stderr=""),
+                mock.Mock(returncode=0, stdout="logged in\n", stderr=""),
+            ]
+            with mock.patch.object(control, "run", side_effect=responses), mock.patch.object(
+                control, "shutil_which", return_value="/usr/bin/bwrap"
+            ):
+                value = controller.preflight()
+            self.assertEqual(value["workerVersion"], "6.0.0")
+            self.assertEqual(value["githubAuth"], "ok")
+
+    def test_github_auth_failure_is_rejected_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            controller = object.__new__(control.Controller)
+            controller.cfg = cfg
+            responses = [
+                mock.Mock(returncode=0, stdout="6.0.0\n", stderr=""),
+                mock.Mock(returncode=1, stdout="", stderr="not logged into any GitHub hosts; run gh auth login"),
+            ]
+            with mock.patch.object(control, "run", side_effect=responses):
+                with self.assertRaisesRegex(control.ControllerError, "authentication"):
+                    controller.preflight()
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)
