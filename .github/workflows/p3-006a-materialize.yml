@@ -1,0 +1,106 @@
+name: P3-006A Controlled Download Quarantine Materializer
+
+on:
+  push:
+    branches:
+      - 'agent/product/p3-006a-download-quarantine'
+    paths:
+      - '.github/workflows/p3-006a-materialize.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    name: build-test-and-publish-download-quarantine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      BASE_COMMIT: e4082480be31b2a86873705e61b4cd86098ab7e0
+      TARGET_BRANCH: agent/product/p3-006a-download-quarantine
+      ENCODED_SHA256: 93bc7b3c20b73a654726905a9402d2b0473e2338546cb879a18984b32416f2e1
+      PATCH_SHA256: 1e82aa121465efc9949f34ab3d36d8b38bed506e7de2570ab30c857527c5b426
+    steps:
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Materialize exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/p3-006a-patch/* > "$RUNNER_TEMP/p3-006a.patch.gz.b64"
+          printf '%s  %s\n' "$ENCODED_SHA256" "$RUNNER_TEMP/p3-006a.patch.gz.b64" | sha256sum --check --strict
+          base64 --decode "$RUNNER_TEMP/p3-006a.patch.gz.b64" > "$RUNNER_TEMP/p3-006a.patch.gz"
+          gzip --decompress --stdout "$RUNNER_TEMP/p3-006a.patch.gz" > "$RUNNER_TEMP/p3-006a.patch"
+          printf '%s  %s\n' "$PATCH_SHA256" "$RUNNER_TEMP/p3-006a.patch" | sha256sum --check --strict
+          git apply --index "$RUNNER_TEMP/p3-006a.patch"
+          rm -rf .github/p3-006a-patch .github/workflows/p3-006a-materialize.yml
+      - name: Verify automation host
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check automation_host/src/browser-runtime.mjs
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+          npm test --prefix automation_host
+          git diff --exit-code -- automation_host/package.json automation_host/package-lock.json
+      - name: Verify Flutter product contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart format \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          flutter test test/product/browser
+          flutter analyze --fatal-infos --fatal-warnings
+      - name: Enforce exact product scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          python3 - <<'PY'
+          import subprocess
+
+          base = 'e4082480be31b2a86873705e61b4cd86098ab7e0'
+          expected = {
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', base, '--name-only', '--'], text=True
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'P3-006A product scope mismatch '
+                  f'actual={sorted(actual)} expected={sorted(expected)}'
+              )
+          PY
+      - name: Publish exact verified source candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(p3-006a): add controlled download quarantine'
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
