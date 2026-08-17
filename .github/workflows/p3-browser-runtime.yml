@@ -1,362 +1,209 @@
-name: P3 Browser Runtime
+name: P3-005 Verified Visual Fallback Materializer
 
 on:
   push:
     branches:
-      - 'agent/c/mission-003-browser-runtime'
+      - 'agent/product/p3-005-verified-visual-fallback'
     paths:
       - '.github/workflows/p3-browser-runtime.yml'
-      - 'lib/product/browser/**'
-      - 'test/product/browser/**'
-      - 'automation_host/**'
-      - 'config/p3.browser-runtime-lock.json'
-      - 'tool/p3_stage_browser_runtime_bundle.py'
-      - 'tool/p3_stage_browser_runtime_bundle_test.py'
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/p3-browser-runtime.yml'
-      - 'lib/product/browser/**'
-      - 'test/product/browser/**'
-      - 'automation_host/**'
-      - 'config/p3.browser-runtime-lock.json'
-      - 'tool/p3_stage_browser_runtime_bundle.py'
-      - 'tool/p3_stage_browser_runtime_bundle_test.py'
 
 permissions:
-  contents: read
-
-env:
-  P3_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  contents: write
 
 jobs:
-  parent-format-oracle:
-    name: parent-format-oracle
+  materialize:
+    name: build-tested-verified-visual-fallback
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Require exact Dart formatting for all P3 parent sources
+      - name: Implement, validate, and publish P3-005
         shell: bash
+        env:
+          BASE_COMMIT: a3b770d6885d4d9c2651bc4be084fda7ba465e57
+          TARGET_BRANCH: agent/product/p3-005-verified-visual-fallback
+          PATCH_SHA256: f7ff66f8381abcb6757d8b231a74e3573aa321322f5a75cc349970537b46ecf6
         run: |
           set -euo pipefail
-          flutter pub get
-          dart format lib/product/browser/*.dart test/product/browser/*.dart
-          git diff --exit-code -- lib/product/browser test/product/browser
-
-  node-contracts:
-    name: node-contracts
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Verify exact P3 automation-host package closure
-        shell: bash
-        working-directory: automation_host
-        run: |
-          set -euo pipefail
-          npm ci --ignore-scripts --no-audit --no-fund
-          node -e "const p=require('./package.json'); if(p.version!=='2.0.0-p3.1'||p.dependencies['playwright-core']!=='1.61.1'||p.dependencies['node-pty']!=='1.1.0') process.exit(1)"
-          npm ls --all --json
-          npm test
-          git diff --exit-code -- package.json package-lock.json
-
-  browser-lock-oracle:
-    name: browser-lock-oracle
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Verify committed Chromium identity from installed playwright-core
-        shell: bash
-        run: |
-          set -euo pipefail
+          cat > "$RUNNER_TEMP/p3-005-patch.py.gz.b64" <<'PAYLOAD'
+          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
+          PAYLOAD
+          base64 --decode "$RUNNER_TEMP/p3-005-patch.py.gz.b64" \
+            | gzip --decompress > "$RUNNER_TEMP/p3-005-patch.py"
+          echo "$PATCH_SHA256  $RUNNER_TEMP/p3-005-patch.py" \
+            | sha256sum --check --strict
+          python3 "$RUNNER_TEMP/p3-005-patch.py"
+          git checkout "$BASE_COMMIT" -- .github/workflows/p3-browser-runtime.yml
+          node --check automation_host/src/browser-runtime.mjs
           npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
-          cp config/p3.browser-runtime-lock.json "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json"
-          node --input-type=module <<'NODE'
-          import { createHash } from 'node:crypto';
-          import { readFile, writeFile } from 'node:fs/promises';
-          const pkg = JSON.parse(await readFile('automation_host/package.json', 'utf8'));
-          const browsers = JSON.parse(await readFile('automation_host/node_modules/playwright-core/browsers.json', 'utf8'));
-          const chromium = browsers.browsers.find((row) => row.name === 'chromium');
-          if (!chromium || !chromium.revision || !chromium.browserVersion) throw new Error('playwright Chromium identity missing');
-          const lockBytes = await readFile('automation_host/package-lock.json');
-          const lock = {
-            schemaVersion: '1.0.0',
-            nodeVersion: '24.18.0',
-            automationHostPackageVersion: pkg.version,
-            playwrightCoreVersion: pkg.dependencies['playwright-core'],
-            packageLockSha256: createHash('sha256').update(lockBytes).digest('hex'),
-            browserEngine: 'chromium',
-            browserRevision: String(chromium.revision),
-            browserVersion: String(chromium.browserVersion),
-            browserInstallPhase: 'packaging_only',
-            runtimeBrowserNetworkInstall: false,
-            globalNodeRuntimeRequired: false,
-          };
-          await writeFile('config/p3.browser-runtime-lock.json', `${JSON.stringify(lock, null, 2)}\n`);
-          console.log(JSON.stringify(lock, null, 2));
-          NODE
-          cmp "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json" config/p3.browser-runtime-lock.json
-          git diff --exit-code -- config/p3.browser-runtime-lock.json
+          npm test --prefix automation_host
+          flutter pub get
+          dart format \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          flutter test test/product/browser
+          flutter analyze --fatal-infos --fatal-warnings
+          git diff HEAD --check
+          python3 - <<'PY'
+          import subprocess
 
-  staging-source-contract:
-    name: staging-source-contract
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - name: Verify deterministic P3 bundle staging source contract
-        shell: bash
-        run: python tool/p3_stage_browser_runtime_bundle_test.py -v
-
-  staged-browser-probe:
-    name: staged-browser-probe-${{ matrix.lane }}
-    needs: [parent-format-oracle, node-contracts, browser-lock-oracle, staging-source-contract]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - lane: ubuntu
-            os: ubuntu-24.04
-            sandbox_mode: disabled
-          - lane: windows
-            os: windows-2025
-            sandbox_mode: required
-          - lane: macos
-            os: macos-15
-            sandbox_mode: required
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 50
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-          fetch-depth: 1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Install exact automation-host dependency closure
-        shell: bash
-        run: npm ci --prefix automation_host --no-audit --no-fund
-      - name: Download pinned Chromium for packaging only
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/p3-pw-browsers" >> "$GITHUB_ENV"
-          PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/p3-pw-browsers" node automation_host/node_modules/playwright-core/cli.js install --with-deps chromium
-      - id: browser
-        name: Resolve exact downloaded Chromium payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          BROWSER_EXEC="$(node -e "const {chromium}=require('./automation_host/node_modules/playwright-core'); process.stdout.write(chromium.executablePath())")"
-          export BROWSER_EXEC
-          echo "BROWSER_EXEC=$BROWSER_EXEC" >> "$GITHUB_ENV"
-          python - <<'PY'
-          import os, pathlib
-          cache = pathlib.Path(os.environ['PLAYWRIGHT_BROWSERS_PATH']).resolve()
-          executable = pathlib.Path(os.environ['BROWSER_EXEC']).resolve()
-          relative = executable.relative_to(cache)
-          if not relative.parts:
-              raise SystemExit('downloaded browser executable outside Playwright cache')
-          root = cache / relative.parts[0]
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
-              handle.write(f"root={root}\n")
-              handle.write(f"executable={executable}\n")
-          print(f'BROWSER_ROOT={root}')
-          print(f'BROWSER_EXEC={executable}')
-          PY
-      - name: Stage exact application-owned P3 browser runtime
-        shell: bash
-        run: |
-          set -euo pipefail
-          NODE_EXE="$(node -p "process.execPath")"
-          SOURCE_TREE="$(git rev-parse HEAD^{tree})"
-          python tool/p3_stage_browser_runtime_bundle.py \
-            --project . \
-            --destination "$RUNNER_TEMP/p3-runtime" \
-            --node-executable "$NODE_EXE" \
-            --browser-root "${{ steps.browser.outputs.root }}" \
-            --browser-executable "${{ steps.browser.outputs.executable }}" \
-            --source-commit "$P3_SOURCE_SHA" \
-            --source-tree "$SOURCE_TREE"
-      - name: Launch staged Node + staged Chromium with scrubbed runtime environment
-        shell: bash
-        run: |
-          set -euo pipefail
-          export P3_BUNDLE="$RUNNER_TEMP/p3-runtime"
-          export P3_RECEIPT="$RUNNER_TEMP/p3-browser-probe-${{ matrix.lane }}.json"
-          export P3_SANDBOX_MODE="${{ matrix.sandbox_mode }}"
-          python - <<'PY'
-          import hashlib, json, os, pathlib, queue, subprocess, sys, threading, time
-          root = pathlib.Path(os.environ['P3_BUNDLE']).resolve()
-          manifest_path = root / 'browser-runtime-manifest.v1.json'
-          manifest_bytes = manifest_path.read_bytes()
-          manifest = json.loads(manifest_bytes)
-          resources = manifest['resources']
-          node = root / resources['nodeExecutable']['path']
-          worker = root / resources['browserWorker']['path']
-          browser = root / resources['browserExecutable']['path']
-          browser_root = root / resources['browserRoot']['path']
-          working = root / resources['automationHostRoot']['path']
-          state = root.parent / 'p3-state'
-          state.mkdir(parents=True, exist_ok=True)
-          sandbox_mode = os.environ['P3_SANDBOX_MODE']
-          runtime_env = {
-              'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': hashlib.sha256(manifest_bytes).hexdigest(),
-              'KRISTIN_P3_RUNTIME_BUILD_SHA256': manifest['identity']['runtimeBuildSha256'],
-              'KRISTIN_P3_BROWSER_REVISION': manifest['identity']['browserRevision'],
+          expected = {
+              '.github/workflows/p3-browser-runtime.yml',
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
           }
-          windows_bootstrap_keys = []
-          if sys.platform == 'win32':
-              for key in (
-                  'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP',
-                  'USERPROFILE', 'LOCALAPPDATA', 'APPDATA',
-                  'PROGRAMFILES', 'PROGRAMFILES(X86)', 'PROGRAMDATA',
-                  'HOMEDRIVE', 'HOMEPATH',
-              ):
-                  value = os.environ.get(key)
-                  if value:
-                      runtime_env[key] = value
-                      windows_bootstrap_keys.append(key)
-              if 'SYSTEMROOT' not in runtime_env:
-                  raise SystemExit('Windows SystemRoot missing from bootstrap environment')
-          if 'PATH' in runtime_env:
-              raise SystemExit('global PATH must not be inherited into staged P3 runtime')
-          args = [
-              str(node), str(worker), '--mode', 'probe', '--protocol', 'stdio-json-v1',
-              '--sandbox-mode', sandbox_mode,
-              '--browser-executable', str(browser), '--browser-root', str(browser_root),
-              '--runtime-manifest', str(manifest_path), '--state-directory', str(state),
-          ]
-          process = subprocess.Popen(
-              args, cwd=working, env=runtime_env, stdin=subprocess.PIPE,
-              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-              encoding='utf-8', errors='replace', bufsize=1,
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', 'HEAD', '--name-only'], text=True
+              ).splitlines()
           )
-          stdout_queue: queue.Queue[str] = queue.Queue()
-          stderr_rows: list[str] = []
-          assert process.stdout is not None and process.stderr is not None and process.stdin is not None
-          threading.Thread(target=lambda: [stdout_queue.put(line) for line in process.stdout], daemon=True).start()
-          threading.Thread(target=lambda: [stderr_rows.append(line) for line in process.stderr], daemon=True).start()
-          deadline = time.time() + 35
-          ready = None
-          while time.time() < deadline:
-              if process.poll() is not None:
-                  raise SystemExit(f'worker exited before ready rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
-              try:
-                  line = stdout_queue.get(timeout=0.2)
-              except queue.Empty:
-                  continue
-              value = json.loads(line)
-              if value.get('type') == 'ready':
-                  ready = value
-                  break
-          if ready is None:
-              process.kill()
-              raise SystemExit(f'worker ready timeout stderr={"".join(stderr_rows)[-8000:]}')
-          if ready.get('browserRevision') != manifest['identity']['browserRevision']:
-              raise SystemExit('ready browser revision mismatch')
-          if ready.get('browserExecutableSha256') != resources['browserExecutable']['sha256']:
-              raise SystemExit('ready browser executable SHA mismatch')
-          if ready.get('sandboxMode') != sandbox_mode:
-              raise SystemExit('ready sandbox mode mismatch')
-          browser_pid = int(ready['browserPid'])
-          process.stdin.write(json.dumps({'type':'shutdown','schemaVersion':'1.0.0'}) + '\n')
-          process.stdin.flush()
-          process.wait(timeout=15)
-          if process.returncode != 0:
-              raise SystemExit(f'worker shutdown failed rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
-          alive = False
-          if sys.platform == 'win32':
-              check = subprocess.run(
-                  ['tasklist.exe', '/FI', f'PID eq {browser_pid}', '/NH'],
-                  capture_output=True, text=True, encoding='utf-8', errors='replace',
+          if actual != expected:
+              raise SystemExit(
+                  f'P3-005 scope mismatch actual={sorted(actual)} '
+                  f'expected={sorted(expected)}'
               )
-              alive = str(browser_pid) in check.stdout
-          else:
-              try:
-                  os.kill(browser_pid, 0)
-              except ProcessLookupError:
-                  alive = False
-              except PermissionError:
-                  alive = True
-              else:
-                  alive = True
-          if alive:
-              raise SystemExit(f'browser root process survived shutdown pid={browser_pid}')
-          receipt = {
-              'schemaVersion': '1.0.0',
-              'platform': sys.platform,
-              'sourceCommit': os.environ['P3_SOURCE_SHA'],
-              'manifestSha256': runtime_env['KRISTIN_P3_RUNTIME_MANIFEST_SHA256'],
-              'runtimeBuildSha256': runtime_env['KRISTIN_P3_RUNTIME_BUILD_SHA256'],
-              'browserRevision': ready['browserRevision'],
-              'browserVersion': ready['browserVersion'],
-              'browserExecutableSha256': ready['browserExecutableSha256'],
-              'sandboxMode': ready['sandboxMode'],
-              'environmentPolicy': {
-                  'pathInherited': False,
-                  'windowsBootstrapKeys': windows_bootstrap_keys,
-              },
-              'workerPid': ready['pid'],
-              'browserPid': browser_pid,
-              'workerExitCode': process.returncode,
-              'browserRootProcessSurvived': False,
-              'globalNodeRuntimeUsedForProbe': False,
-              'runtimeBrowserNetworkInstall': False,
-          }
-          pathlib.Path(os.environ['P3_RECEIPT']).write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-          print(json.dumps(receipt, indent=2, sort_keys=True))
           PY
-      - name: Upload P3 browser probe receipt and manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: p3-browser-probe-${{ matrix.lane }}-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/p3-browser-probe-${{ matrix.lane }}.json
-            ${{ runner.temp }}/p3-runtime/browser-runtime-manifest.v1.json
-          if-no-files-found: error
-          retention-days: 30
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            .github/workflows/p3-browser-runtime.yml \
+            automation_host/src/browser-runtime.mjs \
+            automation_host/src/browser-runtime.test.mjs \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          git diff --cached --check
+          git commit -m 'feat(p3-005): add verified visual fallback'
+          python3 - <<'PY'
+          import os
+          import subprocess
+
+          expected = {
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', '--name-only', os.environ['BASE_COMMIT'], 'HEAD'],
+                  text=True,
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'P3-005 effective diff mismatch actual={sorted(actual)} '
+                  f'expected={sorted(expected)}'
+              )
+          PY
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
