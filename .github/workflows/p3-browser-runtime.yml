@@ -1,362 +1,921 @@
-name: P3 Browser Runtime
+name: P3-003 Canonical Page Observation Materializer
 
 on:
   push:
     branches:
-      - 'agent/c/mission-003-browser-runtime'
+      - 'agent/product/p3-003-canonical-page-observation'
     paths:
       - '.github/workflows/p3-browser-runtime.yml'
-      - 'lib/product/browser/**'
-      - 'test/product/browser/**'
-      - 'automation_host/**'
-      - 'config/p3.browser-runtime-lock.json'
-      - 'tool/p3_stage_browser_runtime_bundle.py'
-      - 'tool/p3_stage_browser_runtime_bundle_test.py'
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/p3-browser-runtime.yml'
-      - 'lib/product/browser/**'
-      - 'test/product/browser/**'
-      - 'automation_host/**'
-      - 'config/p3.browser-runtime-lock.json'
-      - 'tool/p3_stage_browser_runtime_bundle.py'
-      - 'tool/p3_stage_browser_runtime_bundle_test.py'
 
 permissions:
-  contents: read
-
-env:
-  P3_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  contents: write
 
 jobs:
-  parent-format-oracle:
-    name: parent-format-oracle
+  materialize:
+    name: build-tested-page-observation-source
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Require exact Dart formatting for all P3 parent sources
+      - name: Implement, validate, and publish P3-003
         shell: bash
+        env:
+          BASE_COMMIT: a0569b05fd0f598f92636cfdab383fd169bb7a30
+          TARGET_BRANCH: agent/product/p3-003-canonical-page-observation
         run: |
           set -euo pipefail
-          flutter pub get
-          dart format lib/product/browser/*.dart test/product/browser/*.dart
-          git diff --exit-code -- lib/product/browser test/product/browser
+          python3 - <<'PY'
+          from pathlib import Path
 
-  node-contracts:
-    name: node-contracts
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Verify exact P3 automation-host package closure
-        shell: bash
-        working-directory: automation_host
-        run: |
-          set -euo pipefail
-          npm ci --ignore-scripts --no-audit --no-fund
-          node -e "const p=require('./package.json'); if(p.version!=='2.0.0-p3.1'||p.dependencies['playwright-core']!=='1.61.1'||p.dependencies['node-pty']!=='1.1.0') process.exit(1)"
-          npm ls --all --json
-          npm test
-          git diff --exit-code -- package.json package-lock.json
+          node_path = Path('automation_host/src/browser-runtime.mjs')
+          node = node_path.read_text(encoding='utf-8')
+          marker = 'export class BrowserSessionRegistry {'
+          if 'export async function capturePageObservation' not in node:
+              helper = r'''
+          export const P3_PAGE_OBSERVATION_LIMITS = Object.freeze({
+            domBytes: 192 * 1024,
+            visibleTextBytes: 64 * 1024,
+            accessibilityBytes: 96 * 1024,
+            screenshotBytes: 256 * 1024,
+            maxForms: 50,
+            maxControlsPerForm: 50,
+            maxConsoleEntries: 50,
+            maxNetworkEntries: 100,
+            maxEnvelopeBytes: 900 * 1024,
+          });
 
-  browser-lock-oracle:
-    name: browser-lock-oracle
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Verify committed Chromium identity from installed playwright-core
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
-          cp config/p3.browser-runtime-lock.json "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json"
-          node --input-type=module <<'NODE'
-          import { createHash } from 'node:crypto';
-          import { readFile, writeFile } from 'node:fs/promises';
-          const pkg = JSON.parse(await readFile('automation_host/package.json', 'utf8'));
-          const browsers = JSON.parse(await readFile('automation_host/node_modules/playwright-core/browsers.json', 'utf8'));
-          const chromium = browsers.browsers.find((row) => row.name === 'chromium');
-          if (!chromium || !chromium.revision || !chromium.browserVersion) throw new Error('playwright Chromium identity missing');
-          const lockBytes = await readFile('automation_host/package-lock.json');
-          const lock = {
-            schemaVersion: '1.0.0',
-            nodeVersion: '24.18.0',
-            automationHostPackageVersion: pkg.version,
-            playwrightCoreVersion: pkg.dependencies['playwright-core'],
-            packageLockSha256: createHash('sha256').update(lockBytes).digest('hex'),
-            browserEngine: 'chromium',
-            browserRevision: String(chromium.revision),
-            browserVersion: String(chromium.browserVersion),
-            browserInstallPhase: 'packaging_only',
-            runtimeBrowserNetworkInstall: false,
-            globalNodeRuntimeRequired: false,
-          };
-          await writeFile('config/p3.browser-runtime-lock.json', `${JSON.stringify(lock, null, 2)}\n`);
-          console.log(JSON.stringify(lock, null, 2));
-          NODE
-          cmp "$RUNNER_TEMP/p3.browser-runtime-lock.expected.json" config/p3.browser-runtime-lock.json
-          git diff --exit-code -- config/p3.browser-runtime-lock.json
-
-  staging-source-contract:
-    name: staging-source-contract
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - name: Verify deterministic P3 bundle staging source contract
-        shell: bash
-        run: python tool/p3_stage_browser_runtime_bundle_test.py -v
-
-  staged-browser-probe:
-    name: staged-browser-probe-${{ matrix.lane }}
-    needs: [parent-format-oracle, node-contracts, browser-lock-oracle, staging-source-contract]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - lane: ubuntu
-            os: ubuntu-24.04
-            sandbox_mode: disabled
-          - lane: windows
-            os: windows-2025
-            sandbox_mode: required
-          - lane: macos
-            os: macos-15
-            sandbox_mode: required
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 50
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ env.P3_SOURCE_SHA }}
-          fetch-depth: 1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
-        with:
-          node-version: '24.18.0'
-          check-latest: false
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
-      - name: Install exact automation-host dependency closure
-        shell: bash
-        run: npm ci --prefix automation_host --no-audit --no-fund
-      - name: Download pinned Chromium for packaging only
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/p3-pw-browsers" >> "$GITHUB_ENV"
-          PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/p3-pw-browsers" node automation_host/node_modules/playwright-core/cli.js install --with-deps chromium
-      - id: browser
-        name: Resolve exact downloaded Chromium payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          BROWSER_EXEC="$(node -e "const {chromium}=require('./automation_host/node_modules/playwright-core'); process.stdout.write(chromium.executablePath())")"
-          export BROWSER_EXEC
-          echo "BROWSER_EXEC=$BROWSER_EXEC" >> "$GITHUB_ENV"
-          python - <<'PY'
-          import os, pathlib
-          cache = pathlib.Path(os.environ['PLAYWRIGHT_BROWSERS_PATH']).resolve()
-          executable = pathlib.Path(os.environ['BROWSER_EXEC']).resolve()
-          relative = executable.relative_to(cache)
-          if not relative.parts:
-              raise SystemExit('downloaded browser executable outside Playwright cache')
-          root = cache / relative.parts[0]
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as handle:
-              handle.write(f"root={root}\n")
-              handle.write(f"executable={executable}\n")
-          print(f'BROWSER_ROOT={root}')
-          print(f'BROWSER_EXEC={executable}')
-          PY
-      - name: Stage exact application-owned P3 browser runtime
-        shell: bash
-        run: |
-          set -euo pipefail
-          NODE_EXE="$(node -p "process.execPath")"
-          SOURCE_TREE="$(git rev-parse HEAD^{tree})"
-          python tool/p3_stage_browser_runtime_bundle.py \
-            --project . \
-            --destination "$RUNNER_TEMP/p3-runtime" \
-            --node-executable "$NODE_EXE" \
-            --browser-root "${{ steps.browser.outputs.root }}" \
-            --browser-executable "${{ steps.browser.outputs.executable }}" \
-            --source-commit "$P3_SOURCE_SHA" \
-            --source-tree "$SOURCE_TREE"
-      - name: Launch staged Node + staged Chromium with scrubbed runtime environment
-        shell: bash
-        run: |
-          set -euo pipefail
-          export P3_BUNDLE="$RUNNER_TEMP/p3-runtime"
-          export P3_RECEIPT="$RUNNER_TEMP/p3-browser-probe-${{ matrix.lane }}.json"
-          export P3_SANDBOX_MODE="${{ matrix.sandbox_mode }}"
-          python - <<'PY'
-          import hashlib, json, os, pathlib, queue, subprocess, sys, threading, time
-          root = pathlib.Path(os.environ['P3_BUNDLE']).resolve()
-          manifest_path = root / 'browser-runtime-manifest.v1.json'
-          manifest_bytes = manifest_path.read_bytes()
-          manifest = json.loads(manifest_bytes)
-          resources = manifest['resources']
-          node = root / resources['nodeExecutable']['path']
-          worker = root / resources['browserWorker']['path']
-          browser = root / resources['browserExecutable']['path']
-          browser_root = root / resources['browserRoot']['path']
-          working = root / resources['automationHostRoot']['path']
-          state = root.parent / 'p3-state'
-          state.mkdir(parents=True, exist_ok=True)
-          sandbox_mode = os.environ['P3_SANDBOX_MODE']
-          runtime_env = {
-              'KRISTIN_P3_RUNTIME_MANIFEST_SHA256': hashlib.sha256(manifest_bytes).hexdigest(),
-              'KRISTIN_P3_RUNTIME_BUILD_SHA256': manifest['identity']['runtimeBuildSha256'],
-              'KRISTIN_P3_BROWSER_REVISION': manifest['identity']['browserRevision'],
+          function canonicalObservationValue(value) {
+            if (
+              value === null ||
+              typeof value === 'string' ||
+              typeof value === 'boolean'
+            ) {
+              return value;
+            }
+            if (typeof value === 'number' && Number.isFinite(value)) return value;
+            if (Array.isArray(value)) {
+              return value.map((item) => canonicalObservationValue(item));
+            }
+            if (value && typeof value === 'object') {
+              const result = {};
+              for (const key of Object.keys(value).sort()) {
+                result[key] = canonicalObservationValue(value[key]);
+              }
+              return result;
+            }
+            fail('browser_observation_value_invalid');
           }
-          windows_bootstrap_keys = []
-          if sys.platform == 'win32':
-              for key in (
-                  'SYSTEMROOT', 'WINDIR', 'COMSPEC', 'TEMP', 'TMP',
-                  'USERPROFILE', 'LOCALAPPDATA', 'APPDATA',
-                  'PROGRAMFILES', 'PROGRAMFILES(X86)', 'PROGRAMDATA',
-                  'HOMEDRIVE', 'HOMEPATH',
-              ):
-                  value = os.environ.get(key)
-                  if value:
-                      runtime_env[key] = value
-                      windows_bootstrap_keys.append(key)
-              if 'SYSTEMROOT' not in runtime_env:
-                  raise SystemExit('Windows SystemRoot missing from bootstrap environment')
-          if 'PATH' in runtime_env:
-              raise SystemExit('global PATH must not be inherited into staged P3 runtime')
-          args = [
-              str(node), str(worker), '--mode', 'probe', '--protocol', 'stdio-json-v1',
-              '--sandbox-mode', sandbox_mode,
-              '--browser-executable', str(browser), '--browser-root', str(browser_root),
-              '--runtime-manifest', str(manifest_path), '--state-directory', str(state),
-          ]
-          process = subprocess.Popen(
-              args, cwd=working, env=runtime_env, stdin=subprocess.PIPE,
-              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-              encoding='utf-8', errors='replace', bufsize=1,
-          )
-          stdout_queue: queue.Queue[str] = queue.Queue()
-          stderr_rows: list[str] = []
-          assert process.stdout is not None and process.stderr is not None and process.stdin is not None
-          threading.Thread(target=lambda: [stdout_queue.put(line) for line in process.stdout], daemon=True).start()
-          threading.Thread(target=lambda: [stderr_rows.append(line) for line in process.stderr], daemon=True).start()
-          deadline = time.time() + 35
-          ready = None
-          while time.time() < deadline:
-              if process.poll() is not None:
-                  raise SystemExit(f'worker exited before ready rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
-              try:
-                  line = stdout_queue.get(timeout=0.2)
-              except queue.Empty:
-                  continue
-              value = json.loads(line)
-              if value.get('type') == 'ready':
-                  ready = value
-                  break
-          if ready is None:
-              process.kill()
-              raise SystemExit(f'worker ready timeout stderr={"".join(stderr_rows)[-8000:]}')
-          if ready.get('browserRevision') != manifest['identity']['browserRevision']:
-              raise SystemExit('ready browser revision mismatch')
-          if ready.get('browserExecutableSha256') != resources['browserExecutable']['sha256']:
-              raise SystemExit('ready browser executable SHA mismatch')
-          if ready.get('sandboxMode') != sandbox_mode:
-              raise SystemExit('ready sandbox mode mismatch')
-          browser_pid = int(ready['browserPid'])
-          process.stdin.write(json.dumps({'type':'shutdown','schemaVersion':'1.0.0'}) + '\n')
-          process.stdin.flush()
-          process.wait(timeout=15)
-          if process.returncode != 0:
-              raise SystemExit(f'worker shutdown failed rc={process.returncode} stderr={"".join(stderr_rows)[-8000:]}')
-          alive = False
-          if sys.platform == 'win32':
-              check = subprocess.run(
-                  ['tasklist.exe', '/FI', f'PID eq {browser_pid}', '/NH'],
-                  capture_output=True, text=True, encoding='utf-8', errors='replace',
-              )
-              alive = str(browser_pid) in check.stdout
-          else:
-              try:
-                  os.kill(browser_pid, 0)
-              except ProcessLookupError:
-                  alive = False
-              except PermissionError:
-                  alive = True
-              else:
-                  alive = True
-          if alive:
-              raise SystemExit(f'browser root process survived shutdown pid={browser_pid}')
-          receipt = {
-              'schemaVersion': '1.0.0',
-              'platform': sys.platform,
-              'sourceCommit': os.environ['P3_SOURCE_SHA'],
-              'manifestSha256': runtime_env['KRISTIN_P3_RUNTIME_MANIFEST_SHA256'],
-              'runtimeBuildSha256': runtime_env['KRISTIN_P3_RUNTIME_BUILD_SHA256'],
-              'browserRevision': ready['browserRevision'],
-              'browserVersion': ready['browserVersion'],
-              'browserExecutableSha256': ready['browserExecutableSha256'],
-              'sandboxMode': ready['sandboxMode'],
-              'environmentPolicy': {
-                  'pathInherited': False,
-                  'windowsBootstrapKeys': windows_bootstrap_keys,
+
+          export function canonicalObservationJson(value) {
+            return JSON.stringify(canonicalObservationValue(value));
+          }
+
+          function boundedUtf8(raw, maximumBytes) {
+            const text = String(raw ?? '');
+            const bytes = Buffer.from(text, 'utf8');
+            if (bytes.length <= maximumBytes) {
+              return { text, bytes: bytes.length, truncated: false };
+            }
+            const decoder = new TextDecoder('utf-8', { fatal: true });
+            let end = maximumBytes;
+            while (end > 0) {
+              try {
+                const bounded = decoder.decode(bytes.subarray(0, end));
+                return { text: bounded, bytes: end, truncated: true };
+              } catch {
+                end -= 1;
+              }
+            }
+            return { text: '', bytes: 0, truncated: true };
+          }
+
+          function boundedScalar(raw, maximumBytes = 4096) {
+            return boundedUtf8(raw, maximumBytes).text;
+          }
+
+          function sanitizedNetworkUrl(raw) {
+            const value = boundedScalar(raw, 8192);
+            try {
+              const parsed = new URL(value);
+              parsed.username = '';
+              parsed.password = '';
+              parsed.search = '';
+              parsed.hash = '';
+              return boundedScalar(parsed.toString(), 4096);
+            } catch {
+              return boundedScalar(value.split(/[?#]/u, 1)[0], 4096);
+            }
+          }
+
+          function telemetryPush(telemetry, key, entry, maximum) {
+            if (telemetry[key].length < maximum) {
+              telemetry[key].push(entry);
+            } else {
+              telemetry[`${key}Dropped`] += 1;
+            }
+          }
+
+          export function createPageTelemetry(page) {
+            const telemetry = {
+              console: [],
+              consoleDropped: 0,
+              requests: [],
+              requestsDropped: 0,
+              responses: [],
+              responsesDropped: 0,
+            };
+            if (typeof page.on !== 'function') return telemetry;
+            page.on('console', (message) => {
+              try {
+                telemetryPush(
+                  telemetry,
+                  'console',
+                  {
+                    type: boundedScalar(
+                      typeof message.type === 'function' ? message.type() : 'log',
+                      64,
+                    ),
+                    text: boundedScalar(
+                      typeof message.text === 'function' ? message.text() : '',
+                      4096,
+                    ),
+                  },
+                  P3_PAGE_OBSERVATION_LIMITS.maxConsoleEntries,
+                );
+              } catch {
+                telemetry.consoleDropped += 1;
+              }
+            });
+            page.on('request', (request) => {
+              try {
+                telemetryPush(
+                  telemetry,
+                  'requests',
+                  {
+                    url: sanitizedNetworkUrl(request.url()),
+                    method: boundedScalar(request.method(), 32),
+                    resourceType: boundedScalar(request.resourceType(), 64),
+                  },
+                  P3_PAGE_OBSERVATION_LIMITS.maxNetworkEntries,
+                );
+              } catch {
+                telemetry.requestsDropped += 1;
+              }
+            });
+            page.on('response', (response) => {
+              try {
+                const request = response.request();
+                telemetryPush(
+                  telemetry,
+                  'responses',
+                  {
+                    url: sanitizedNetworkUrl(response.url()),
+                    status: response.status(),
+                    method: boundedScalar(request.method(), 32),
+                    resourceType: boundedScalar(request.resourceType(), 64),
+                  },
+                  P3_PAGE_OBSERVATION_LIMITS.maxNetworkEntries,
+                );
+              } catch {
+                telemetry.responsesDropped += 1;
+              }
+            });
+            return telemetry;
+          }
+
+          function normalizeForms(rawForms) {
+            if (!Array.isArray(rawForms)) fail('browser_observation_forms_invalid');
+            return rawForms.slice(0, P3_PAGE_OBSERVATION_LIMITS.maxForms).map(
+              (form, index) => {
+                if (!form || typeof form !== 'object' || Array.isArray(form)) {
+                  fail('browser_observation_forms_invalid');
+                }
+                const controls = Array.isArray(form.controls)
+                  ? form.controls
+                      .slice(0, P3_PAGE_OBSERVATION_LIMITS.maxControlsPerForm)
+                      .map((control) => ({
+                        tag: boundedScalar(control?.tag, 64),
+                        type: boundedScalar(control?.type, 64),
+                        name: boundedScalar(control?.name, 512),
+                        id: boundedScalar(control?.id, 512),
+                        autocomplete: boundedScalar(control?.autocomplete, 256),
+                        required: control?.required === true,
+                        disabled: control?.disabled === true,
+                        checked: control?.checked === true,
+                      }))
+                  : [];
+                return {
+                  index,
+                  id: boundedScalar(form.id, 512),
+                  name: boundedScalar(form.name, 512),
+                  method: boundedScalar(form.method, 32).toUpperCase(),
+                  action: sanitizedNetworkUrl(form.action),
+                  controls,
+                  controlsTruncated:
+                    Array.isArray(form.controls) &&
+                    form.controls.length >
+                      P3_PAGE_OBSERVATION_LIMITS.maxControlsPerForm,
+                };
               },
-              'workerPid': ready['pid'],
-              'browserPid': browser_pid,
-              'workerExitCode': process.returncode,
-              'browserRootProcessSurvived': False,
-              'globalNodeRuntimeUsedForProbe': False,
-              'runtimeBrowserNetworkInstall': False,
+            );
           }
-          pathlib.Path(os.environ['P3_RECEIPT']).write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-          print(json.dumps(receipt, indent=2, sort_keys=True))
+
+          export async function capturePageObservation(page, telemetry) {
+            if (!page || typeof page.locator !== 'function') {
+              fail('browser_observation_page_invalid');
+            }
+            const body = page.locator('body');
+            if (
+              !body ||
+              typeof body.innerText !== 'function' ||
+              typeof body.ariaSnapshot !== 'function'
+            ) {
+              fail('browser_observation_accessibility_unavailable');
+            }
+            const [title, dom, visibleText, accessibility, rawForms, screenshot] =
+              await Promise.all([
+                page.title(),
+                page.content(),
+                body.innerText(),
+                body.ariaSnapshot(),
+                page.evaluate(() =>
+                  Array.from(document.forms).map((form) => ({
+                    id: form.id,
+                    name: form.getAttribute('name') ?? '',
+                    method: form.method,
+                    action: form.action,
+                    controls: Array.from(form.elements).map((control) => ({
+                      tag: control.tagName.toLowerCase(),
+                      type: control.getAttribute('type') ?? '',
+                      name: control.getAttribute('name') ?? '',
+                      id: control.id,
+                      autocomplete: control.getAttribute('autocomplete') ?? '',
+                      required: control.required === true,
+                      disabled: control.disabled === true,
+                      checked: control.checked === true,
+                    })),
+                  })),
+                ),
+                page.screenshot({
+                  type: 'jpeg',
+                  quality: 55,
+                  fullPage: false,
+                  animations: 'disabled',
+                  caret: 'hide',
+                  scale: 'css',
+                }),
+              ]);
+            if (!Buffer.isBuffer(screenshot)) {
+              fail('browser_observation_screenshot_invalid');
+            }
+            if (screenshot.length > P3_PAGE_OBSERVATION_LIMITS.screenshotBytes) {
+              fail('browser_observation_screenshot_too_large');
+            }
+            const observation = {
+              schemaVersion: '1.0.0',
+              url: sanitizedNetworkUrl(page.url()),
+              title: boundedScalar(title, 4096),
+              dom: boundedUtf8(dom, P3_PAGE_OBSERVATION_LIMITS.domBytes),
+              visibleText: boundedUtf8(
+                visibleText,
+                P3_PAGE_OBSERVATION_LIMITS.visibleTextBytes,
+              ),
+              accessibility: boundedUtf8(
+                accessibility,
+                P3_PAGE_OBSERVATION_LIMITS.accessibilityBytes,
+              ),
+              forms: normalizeForms(rawForms),
+              formsTruncated:
+                Array.isArray(rawForms) &&
+                rawForms.length > P3_PAGE_OBSERVATION_LIMITS.maxForms,
+              screenshot: {
+                bytes: screenshot.length,
+                sha256: createHash('sha256').update(screenshot).digest('hex'),
+                base64: screenshot.toString('base64'),
+                mediaType: 'image/jpeg',
+              },
+              console: {
+                entries: telemetry.console.slice(),
+                dropped: telemetry.consoleDropped,
+              },
+              network: {
+                requests: telemetry.requests.slice(),
+                requestsDropped: telemetry.requestsDropped,
+                responses: telemetry.responses.slice(),
+                responsesDropped: telemetry.responsesDropped,
+              },
+            };
+            const canonical = canonicalObservationJson(observation);
+            if (Buffer.byteLength(canonical, 'utf8') > P3_PAGE_OBSERVATION_LIMITS.maxEnvelopeBytes) {
+              fail('browser_observation_envelope_too_large');
+            }
+            return {
+              observation,
+              observationHash: createHash('sha256').update(canonical).digest('hex'),
+            };
+          }
+
+          '''
+              node = node.replace(marker, helper + marker, 1)
+
+          node = node.replace(
+              '    this.activePersistentProfiles = new Set();\n    this.initialized = false;',
+              '    this.activePersistentProfiles = new Set();\n'
+              '    this.pageTelemetry = new WeakMap();\n'
+              '    this.initialized = false;',
+              1,
+          )
+          node = node.replace(
+              '    const page = await session.context.newPage();\n'
+              '    session.pages.set(pageId, page);',
+              '    const page = await session.context.newPage();\n'
+              '    session.pages.set(pageId, page);\n'
+              '    this.pageTelemetry.set(page, createPageTelemetry(page));',
+              1,
+          )
+          node = node.replace(
+              '  async closePage(sessionId, pageId) {',
+              r'''  async observePage(sessionId, pageId) {
+            const session = this._session(sessionId);
+            assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+            const page = session.pages.get(pageId);
+            if (!page) fail('browser_page_not_found', pageId);
+            let telemetry = this.pageTelemetry.get(page);
+            if (!telemetry) {
+              telemetry = createPageTelemetry(page);
+              this.pageTelemetry.set(page, telemetry);
+            }
+            const captured = await capturePageObservation(page, telemetry);
+            return {
+              sessionId,
+              pageId,
+              observationHash: captured.observationHash,
+              observation: captured.observation,
+            };
+          }
+
+            async closePage(sessionId, pageId) {''',
+              1,
+          )
+          node = node.replace(
+              '    await page.close();\n    session.pages.delete(pageId);',
+              '    await page.close();\n'
+              '    this.pageTelemetry.delete(page);\n'
+              '    session.pages.delete(pageId);',
+              1,
+          )
+          node = node.replace(
+              '        await page.close();\n        session.pages.delete(pageId);',
+              '        await page.close();\n'
+              '        this.pageTelemetry.delete(page);\n'
+              '        session.pages.delete(pageId);',
+              1,
+          )
+          node = node.replace(
+              "      case 'page.close':\n        return this.closePage(message.sessionId, message.pageId);",
+              "      case 'page.observe':\n"
+              "        return this.observePage(message.sessionId, message.pageId);\n"
+              "      case 'page.close':\n"
+              "        return this.closePage(message.sessionId, message.pageId);",
+              1,
+          )
+          node_path.write_text(node, encoding='utf-8')
+
+          node_test_path = Path('automation_host/src/browser-runtime.test.mjs')
+          node_test = node_test_path.read_text(encoding='utf-8')
+          node_test = node_test.replace(
+              '  BrowserSessionRegistry,\n',
+              '  BrowserSessionRegistry,\n  canonicalObservationJson,\n',
+              1,
+          )
+          node_test = node_test.replace(
+              "  constructor() {\n    this.closed = false;\n  }",
+              r'''  constructor() {
+            this.closed = false;
+            this.handlers = new Map();
+            this.observation = {
+              url: 'https://example.test/form?secret=remove-me#fragment',
+              title: 'Example form',
+              dom: '<html><body><form id="login"></form></body></html>',
+              visibleText: 'Sign in',
+              accessibility: '- document:\n  - heading "Sign in" [level=1]',
+              forms: [
+                {
+                  id: 'login',
+                  name: 'login',
+                  method: 'post',
+                  action: 'https://example.test/login?token=remove-me',
+                  controls: [
+                    {
+                      tag: 'input',
+                      type: 'password',
+                      name: 'password',
+                      id: 'password',
+                      autocomplete: 'current-password',
+                      required: true,
+                      disabled: false,
+                      checked: false,
+                    },
+                  ],
+                },
+              ],
+              screenshot: Buffer.from('deterministic-jpeg'),
+            };
+          }
+
+            on(event, handler) {
+              const handlers = this.handlers.get(event) ?? [];
+              handlers.push(handler);
+              this.handlers.set(event, handlers);
+            }
+
+            emit(event, value) {
+              for (const handler of this.handlers.get(event) ?? []) handler(value);
+            }
+
+            url() {
+              return this.observation.url;
+            }
+
+            async title() {
+              return this.observation.title;
+            }
+
+            async content() {
+              return this.observation.dom;
+            }
+
+            locator(selector) {
+              assert.equal(selector, 'body');
+              return {
+                innerText: async () => this.observation.visibleText,
+                ariaSnapshot: async () => this.observation.accessibility,
+              };
+            }
+
+            async evaluate() {
+              return this.observation.forms;
+            }
+
+            async screenshot() {
+              return this.observation.screenshot;
+            }''',
+              1,
+          )
+          if "test('canonical page observation" not in node_test:
+              node_test += r'''
+
+          test('canonical page observation is stable bounded and secret-minimizing', async () => {
+            const f = await fixture();
+            try {
+              const browser = new FakeBrowser();
+              const registry = new BrowserSessionRegistry({
+                browser,
+                stateDirectory: f.stateDirectory,
+                quotas: {
+                  maxSessions: 2,
+                  maxPagesPerSession: 2,
+                  maxPersistentProfiles: 2,
+                },
+                idFactory: deterministicIds('session_observe', 'page_observe'),
+              });
+              const session = await registry.openSession({ kind: 'ephemeral' });
+              const pageInfo = await registry.openPage(session.sessionId);
+              const page = browser.contexts[0].pages[0];
+              page.emit('console', {
+                type: () => 'warning',
+                text: () => 'deterministic console message',
+              });
+              const request = {
+                url: () => 'https://api.example.test/items?api_key=must-not-leak',
+                method: () => 'GET',
+                resourceType: () => 'fetch',
+              };
+              page.emit('request', request);
+              page.emit('response', {
+                url: request.url,
+                status: () => 200,
+                request: () => request,
+              });
+
+              const first = await registry.execute({
+                type: 'page.observe',
+                schemaVersion: '1.0.0',
+                sessionId: session.sessionId,
+                pageId: pageInfo.pageId,
+              });
+              const second = await registry.observePage(
+                session.sessionId,
+                pageInfo.pageId,
+              );
+
+              assert.equal(first.observationHash, second.observationHash);
+              assert.match(first.observationHash, /^[0-9a-f]{64}$/u);
+              assert.equal(first.observation.url, 'https://example.test/form');
+              assert.equal(
+                first.observation.forms[0].action,
+                'https://example.test/login',
+              );
+              assert.equal('value' in first.observation.forms[0].controls[0], false);
+              assert.equal(
+                first.observation.network.requests[0].url,
+                'https://api.example.test/items',
+              );
+              assert.equal(
+                first.observation.screenshot.sha256,
+                sha256(Buffer.from('deterministic-jpeg')),
+              );
+              assert.equal(
+                canonicalObservationJson({ b: 2, a: { z: 3, y: 4 } }),
+                canonicalObservationJson({ a: { y: 4, z: 3 }, b: 2 }),
+              );
+
+              page.observation.visibleText = 'x'.repeat(70 * 1024);
+              const bounded = await registry.observePage(
+                session.sessionId,
+                pageInfo.pageId,
+              );
+              assert.equal(bounded.observation.visibleText.truncated, true);
+              assert.ok(bounded.observation.visibleText.bytes <= 64 * 1024);
+              assert.notEqual(bounded.observationHash, first.observationHash);
+              await registry.closeSession(session.sessionId);
+            } finally {
+              await f.cleanup();
+            }
+          });
+          '''
+          node_test_path.write_text(node_test, encoding='utf-8')
+
+          dart_path = Path('lib/product/browser/browser_runtime.dart')
+          dart = dart_path.read_text(encoding='utf-8')
+          if "import '../crypto_utils.dart';" not in dart:
+              dart = dart.replace(
+                  "import 'browser_runtime_bundle.dart';",
+                  "import '../crypto_utils.dart';\nimport 'browser_runtime_bundle.dart';",
+                  1,
+              )
+          dart_marker = 'final class P3BrowserSessionProcess {'
+          if 'final class P3BrowserPageObservation' not in dart:
+              dart_helper = r'''
+          Object? _canonicalBrowserObservationValue(Object? value) {
+            if (value == null || value is String || value is bool) return value;
+            if (value is num && value.isFinite) return value;
+            if (value is List) {
+              return value
+                  .map<Object?>((item) => _canonicalBrowserObservationValue(item))
+                  .toList(growable: false);
+            }
+            if (value is Map) {
+              final keys = value.keys.map((key) => key.toString()).toList()..sort();
+              return <String, Object?>{
+                for (final key in keys)
+                  key: _canonicalBrowserObservationValue(value[key]),
+              };
+            }
+            throw const P3BrowserRuntimeException(
+              'browser_observation_value_invalid',
+            );
+          }
+
+          String _canonicalBrowserObservationJson(Map<String, Object?> value) =>
+              jsonEncode(_canonicalBrowserObservationValue(value));
+
+          final class P3BrowserPageObservation {
+            P3BrowserPageObservation._({
+              required this.sessionId,
+              required this.pageId,
+              required this.observationHash,
+              required Map<String, Object?> observation,
+            }) : observation = Map<String, Object?>.unmodifiable(observation);
+
+            factory P3BrowserPageObservation.fromJson(Map<String, Object?> value) {
+              final sessionId = value['sessionId'];
+              final pageId = value['pageId'];
+              final observationHash = value['observationHash'];
+              final rawObservation = value['observation'];
+              if (sessionId is! String ||
+                  sessionId.isEmpty ||
+                  pageId is! String ||
+                  pageId.isEmpty ||
+                  observationHash is! String ||
+                  !RegExp(r'^[0-9a-f]{64}$').hasMatch(observationHash) ||
+                  rawObservation is! Map) {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_response_invalid',
+                );
+              }
+              final observation = Map<String, Object?>.from(rawObservation);
+              if (observation['schemaVersion'] != '1.0.0' ||
+                  observation['url'] is! String ||
+                  observation['title'] is! String ||
+                  observation['forms'] is! List ||
+                  observation['console'] is! Map ||
+                  observation['network'] is! Map) {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_response_invalid',
+                );
+              }
+              for (final key in const <String>[
+                'dom',
+                'visibleText',
+                'accessibility',
+              ]) {
+                final field = observation[key];
+                if (field is! Map) {
+                  throw const P3BrowserRuntimeException(
+                    'browser_observation_response_invalid',
+                  );
+                }
+                final mapped = Map<String, Object?>.from(field);
+                if (mapped['text'] is! String ||
+                    mapped['bytes'] is! int ||
+                    mapped['truncated'] is! bool) {
+                  throw const P3BrowserRuntimeException(
+                    'browser_observation_response_invalid',
+                  );
+                }
+              }
+              final screenshotValue = observation['screenshot'];
+              if (screenshotValue is! Map) {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_response_invalid',
+                );
+              }
+              final screenshot = Map<String, Object?>.from(screenshotValue);
+              final screenshotBytes = screenshot['bytes'];
+              final screenshotSha = screenshot['sha256'];
+              final screenshotBase64 = screenshot['base64'];
+              if (screenshotBytes is! int ||
+                  screenshotBytes < 0 ||
+                  screenshotBytes > 256 * 1024 ||
+                  screenshotSha is! String ||
+                  !RegExp(r'^[0-9a-f]{64}$').hasMatch(screenshotSha) ||
+                  screenshotBase64 is! String ||
+                  screenshot['mediaType'] != 'image/jpeg') {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_response_invalid',
+                );
+              }
+              late final List<int> decodedScreenshot;
+              try {
+                decodedScreenshot = base64Decode(screenshotBase64);
+              } on FormatException {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_response_invalid',
+                );
+              }
+              if (decodedScreenshot.length != screenshotBytes ||
+                  Sha256.hex(decodedScreenshot) != screenshotSha) {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_screenshot_binding_invalid',
+                );
+              }
+              final canonical = _canonicalBrowserObservationJson(observation);
+              if (utf8.encode(canonical).length > 900 * 1024 ||
+                  Sha256.text(canonical) != observationHash) {
+                throw const P3BrowserRuntimeException(
+                  'browser_observation_hash_invalid',
+                );
+              }
+              return P3BrowserPageObservation._(
+                sessionId: sessionId,
+                pageId: pageId,
+                observationHash: observationHash,
+                observation: observation,
+              );
+            }
+
+            final String sessionId;
+            final String pageId;
+            final String observationHash;
+            final Map<String, Object?> observation;
+          }
+
+          '''
+              dart = dart.replace(dart_marker, dart_helper + dart_marker, 1)
+          dart = dart.replace(
+              '  Future<void> closePage(String sessionId, String pageId) async {',
+              r'''  Future<P3BrowserPageObservation> observePage(
+            String sessionId,
+            String pageId,
+          ) async {
+            final result = await _request('page.observe', <String, Object?>{
+              'sessionId': sessionId,
+              'pageId': pageId,
+            });
+            final observation = _decodeResponse(
+              () => P3BrowserPageObservation.fromJson(result),
+            );
+            if (observation.sessionId != sessionId ||
+                observation.pageId != pageId) {
+              _protocolViolation('browser_observation_identity_mismatch');
+            }
+            return observation;
+          }
+
+            Future<void> closePage(String sessionId, String pageId) async {''',
+              1,
+          )
+          dart_path.write_text(dart, encoding='utf-8')
+
+          dart_test_path = Path('test/product/browser/browser_runtime_process_test.dart')
+          dart_test = dart_test_path.read_text(encoding='utf-8')
+          if "import 'dart:convert';" not in dart_test:
+              dart_test = dart_test.replace(
+                  "import 'dart:io';",
+                  "import 'dart:convert';\nimport 'dart:io';",
+                  1,
+              )
+          if "product/crypto_utils.dart" not in dart_test:
+              dart_test = dart_test.replace(
+                  "import 'package:kristin_local_agent/product/browser/browser_runtime_process.dart';",
+                  "import 'package:kristin_local_agent/product/browser/browser_runtime_process.dart';\n"
+                  "import 'package:kristin_local_agent/product/crypto_utils.dart';",
+                  1,
+              )
+          if '_canonicalTestJson' not in dart_test:
+              helper = r'''
+          Object? _canonicalTestValue(Object? value) {
+            if (value == null || value is String || value is bool || value is num) {
+              return value;
+            }
+            if (value is List) {
+              return value.map<Object?>(_canonicalTestValue).toList(growable: false);
+            }
+            if (value is Map) {
+              final keys = value.keys.map((key) => key.toString()).toList()..sort();
+              return <String, Object?>{
+                for (final key in keys) key: _canonicalTestValue(value[key]),
+              };
+            }
+            throw StateError('unsupported canonical test value');
+          }
+
+          String _canonicalTestJson(Map<String, Object?> value) =>
+              jsonEncode(_canonicalTestValue(value));
+
+          Map<String, Object?> _observationEnvelope() {
+            final screenshot = <int>[1, 2, 3, 4];
+            final observation = <String, Object?>{
+              'schemaVersion': '1.0.0',
+              'url': 'https://example.test/form',
+              'title': 'Example form',
+              'dom': <String, Object?>{
+                'text': '<html></html>',
+                'bytes': 13,
+                'truncated': false,
+              },
+              'visibleText': <String, Object?>{
+                'text': 'Sign in',
+                'bytes': 7,
+                'truncated': false,
+              },
+              'accessibility': <String, Object?>{
+                'text': '- heading "Sign in"',
+                'bytes': 19,
+                'truncated': false,
+              },
+              'forms': <Object?>[],
+              'formsTruncated': false,
+              'screenshot': <String, Object?>{
+                'bytes': screenshot.length,
+                'sha256': Sha256.hex(screenshot),
+                'base64': base64Encode(screenshot),
+                'mediaType': 'image/jpeg',
+              },
+              'console': <String, Object?>{
+                'entries': <Object?>[],
+                'dropped': 0,
+              },
+              'network': <String, Object?>{
+                'requests': <Object?>[],
+                'requestsDropped': 0,
+                'responses': <Object?>[],
+                'responsesDropped': 0,
+              },
+            };
+            return <String, Object?>{
+              'sessionId': 'session_one',
+              'pageId': 'page_one',
+              'observationHash': Sha256.text(_canonicalTestJson(observation)),
+              'observation': observation,
+            };
+          }
+
+          '''
+              dart_test = dart_test.replace('void main() {', helper + 'void main() {', 1)
+          if "page observation validates canonical hash" not in dart_test:
+              insertion = r'''
+
+            test('page observation validates canonical hash and screenshot binding', () {
+              final envelope = _observationEnvelope();
+              final parsed = P3BrowserPageObservation.fromJson(envelope);
+              expect(parsed.sessionId, 'session_one');
+              expect(parsed.pageId, 'page_one');
+              expect(parsed.observationHash, envelope['observationHash']);
+
+              final tamperedObservation = Map<String, Object?>.from(
+                envelope['observation']! as Map,
+              )..['title'] = 'Tampered';
+              expect(
+                () => P3BrowserPageObservation.fromJson(<String, Object?>{
+                  ...envelope,
+                  'observation': tamperedObservation,
+                }),
+                throwsA(
+                  isA<P3BrowserRuntimeException>().having(
+                    (error) => error.code,
+                    'code',
+                    'browser_observation_hash_invalid',
+                  ),
+                ),
+              );
+
+              final screenshot = Map<String, Object?>.from(
+                (envelope['observation']! as Map)['screenshot']! as Map,
+              )..['base64'] = base64Encode(<int>[9, 9, 9, 9]);
+              final tamperedScreenshot = Map<String, Object?>.from(
+                envelope['observation']! as Map,
+              )..['screenshot'] = screenshot;
+              expect(
+                () => P3BrowserPageObservation.fromJson(<String, Object?>{
+                  ...envelope,
+                  'observationHash': Sha256.text(
+                    _canonicalTestJson(tamperedScreenshot),
+                  ),
+                  'observation': tamperedScreenshot,
+                }),
+                throwsA(
+                  isA<P3BrowserRuntimeException>().having(
+                    (error) => error.code,
+                    'code',
+                    'browser_observation_screenshot_binding_invalid',
+                  ),
+                ),
+              );
+            });
+          '''
+              close = dart_test.rfind('\n}')
+              if close < 0:
+                  raise SystemExit('Dart test main closing brace missing')
+              dart_test = dart_test[:close] + insertion + dart_test[close:]
+          dart_test_path.write_text(dart_test, encoding='utf-8')
           PY
-      - name: Upload P3 browser probe receipt and manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: p3-browser-probe-${{ matrix.lane }}-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/p3-browser-probe-${{ matrix.lane }}.json
-            ${{ runner.temp }}/p3-runtime/browser-runtime-manifest.v1.json
-          if-no-files-found: error
-          retention-days: 30
+          git checkout "$BASE_COMMIT" -- .github/workflows/p3-browser-runtime.yml
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+          npm test --prefix automation_host
+          flutter pub get
+          dart format \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          flutter test test/product/browser
+          flutter analyze --fatal-infos --fatal-warnings
+          git diff HEAD --check
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              '.github/workflows/p3-browser-runtime.yml',
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', 'HEAD', '--name-only'], text=True
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'P3-003 scope mismatch actual={sorted(actual)} expected={sorted(expected)}'
+              )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            .github/workflows/p3-browser-runtime.yml \
+            automation_host/src/browser-runtime.mjs \
+            automation_host/src/browser-runtime.test.mjs \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart
+          git diff --cached --check
+          git commit -m 'feat(p3-003): add canonical page observations'
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
