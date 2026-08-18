@@ -49,8 +49,9 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          path = Path('config/test_center_registry.v1.json')
-          registry = json.loads(path.read_text(encoding='utf-8'))
+
+          registry_path = Path('config/test_center_registry.v1.json')
+          registry = json.loads(registry_path.read_text(encoding='utf-8'))
           if not any(item.get('moduleId') == 'tm.p25.prompt-studio' for item in registry['testModules']):
               registry['testModules'].append({
                   'moduleId': 'tm.p25.prompt-studio',
@@ -59,7 +60,18 @@ jobs:
                   'purpose': 'Verify Prompt Studio rescue contracts, deterministic behavior, owner-machine benchmarks, and packaged journeys without promoting evidence above its assurance class.',
                   'assuranceClasses': ['source_contract', 'behavioral', 'platform'],
               })
-          path.write_text(json.dumps(registry, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          proof_path = Path('release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json')
+          proof = json.loads(proof_path.read_text(encoding='utf-8'))
+          existing = {item['testId'] for item in proof['lineageBindings']}
+          for test_id in ('tc.p25.roadmap-contract', 'tc.p25.test-station-contract'):
+              if test_id not in existing:
+                  proof['lineageBindings'].append({
+                      'testId': test_id,
+                      'lineageId': 'p25.prompt-studio-product-rescue',
+                  })
+          proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + '\n', encoding='utf-8')
           PY
           python tool/roadmap_control.py render --project .
           rm -rf .github/p25-materializer
@@ -100,6 +112,7 @@ jobs:
               'docs/roadmap/p25/prompt_studio_test_station.v1.json',
               'docs/roadmap/roadmap.yaml',
               'docs/testing/TEST_CENTER_P25_PROMPT_STUDIO.md',
+              'release/evidence/TEST_CENTER/P8-001/contracts/assurance-proof-contract.v1.json',
               'tasks/planned/P25-001.md',
               'tasks/planned/P25-002.md',
               'tasks/planned/P25-003.md',
