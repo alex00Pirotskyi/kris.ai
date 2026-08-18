@@ -1,24 +1,28 @@
 name: P25 Governance Materializer
 
 on:
-  push:
+  pull_request:
     branches:
       - 'agent/p25-prompt-studio-product-rescue-v4'
     paths:
-      - '.github/workflows/p25-governance-materializer.yml'
+      - '.github/p25-materializer/trigger.txt'
 
 permissions:
   contents: write
 
 jobs:
   materialize:
+    if: github.event.pull_request.head.ref == 'agent/p25-governance-trigger'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.base.sha }}
+      TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
     steps:
-      - name: Check out exact P25 governance branch
+      - name: Check out exact P25 governance base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.EXPECTED_HEAD }}
           fetch-depth: 0
           persist-credentials: true
       - name: Set up Python
@@ -29,6 +33,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+          git fetch origin main
           cat .github/p25-materializer/part*.txt > "${RUNNER_TEMP}/p25-materializer.b64"
           python - <<'PY'
           import base64
@@ -100,4 +108,6 @@ jobs:
           git add -A
           git diff --cached --check
           git commit -m 'docs(p25): govern Prompt Studio product rescue'
-          git push origin HEAD:refs/heads/agent/p25-prompt-studio-product-rescue-v4
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
