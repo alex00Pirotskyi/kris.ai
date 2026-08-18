@@ -46,6 +46,21 @@ jobs:
           source = zlib.decompress(base64.b64decode(payload)).decode('utf-8')
           exec(compile(source, '<p25-governance-materializer>', 'exec'), {'__name__': '__main__'})
           PY
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('config/test_center_registry.v1.json')
+          registry = json.loads(path.read_text(encoding='utf-8'))
+          if not any(item.get('moduleId') == 'tm.p25.prompt-studio' for item in registry['testModules']):
+              registry['testModules'].append({
+                  'moduleId': 'tm.p25.prompt-studio',
+                  'displayName': 'P25 Prompt Studio Product Rescue',
+                  'owner': 'P25 product and Test Center lane',
+                  'purpose': 'Verify Prompt Studio rescue contracts, deterministic behavior, owner-machine benchmarks, and packaged journeys without promoting evidence above its assurance class.',
+                  'assuranceClasses': ['source_contract', 'behavioral', 'platform'],
+              })
+          path.write_text(json.dumps(registry, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
           python tool/roadmap_control.py render --project .
           rm -rf .github/p25-materializer
           rm .github/workflows/p25-governance-materializer.yml
