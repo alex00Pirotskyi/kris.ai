@@ -11,205 +11,196 @@ import unittest
 from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
-for module_name, filename in (
-    ("kris_qwen_v6_guard", "kris_qwen_v6_guard.py"),
-    ("kris_qwen_control", "kris_qwen_control.py"),
-):
-    spec = importlib.util.spec_from_file_location(module_name, HERE / filename)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-
-control = sys.modules["kris_qwen_control"]
-v6 = sys.modules["kris_qwen_v6_guard"]
+spec = importlib.util.spec_from_file_location("kris_qwen_control", HERE / "kris_qwen_control.py")
+assert spec is not None and spec.loader is not None
+control = importlib.util.module_from_spec(spec)
+sys.modules["kris_qwen_control"] = control
+spec.loader.exec_module(control)
 
 
-def config(root: pathlib.Path, backend: str = "process"):
+def config(root: pathlib.Path, *, host: str = "127.0.0.1", remote: bool = False):
     repo = root / "repo"
     (repo / "tool").mkdir(parents=True)
     (repo / ".git").mkdir()
-    python = root / "python"
-    python.write_text("")
-    model = root / "model.gguf"
-    model.write_bytes(b"model")
     worker = repo / "tool/kris_qwen_worker.py"
-    worker.write_text("#!/usr/bin/env python3\n")
+    worker.write_text("#!/usr/bin/env python3\n", encoding="utf-8")
     return control.ControlConfig(
         repo_dir=repo,
-        repo_branch="agent/qwen-server-control-v6",
-        python=python,
+        repo_branch="main",
+        python=sys.executable,
+        worker_script=worker,
         worker_root=root / "worker",
-        host="127.0.0.1",
+        state_dir=root / "worker/controller",
+        host=host,
         port=8090,
-        backend=backend,
-        model_unit="kris-qwen-model.service",
-        worker_unit="kris-qwen-worker.service",
-        stop_timeout=5,
-        token_path=root / "worker/controller/control-token",
-        model_path=model,
-        sandbox_mode="off",
+        allow_remote_http=remote,
+        stop_timeout=30,
+        worker_extra_args=(),
     )
 
 
 class SecurityContractTest(unittest.TestCase):
-    def test_dashboard_never_embeds_token_placeholder_or_runtime_token(self) -> None:
+    def test_dashboard_does_not_embed_control_token(self) -> None:
         self.assertNotIn("__TOKEN__", control.DASHBOARD_HTML)
-        self.assertNotIn("control-token-value", control.DASHBOARD_HTML)
         self.assertIn("sessionStorage", control.DASHBOARD_HTML)
         self.assertIn("X-Kris-Control-Token", control.DASHBOARD_HTML)
+        self.assertIn("Fetch latest + run Qwen", control.DASHBOARD_HTML)
 
-    def test_host_and_origin_are_loopback_only(self) -> None:
-        self.assertTrue(control._loopback_host("127.0.0.1:8090"))
-        self.assertTrue(control._loopback_host("localhost:8090"))
-        self.assertFalse(control._loopback_host("10.0.0.2:8090"))
-        self.assertTrue(control._loopback_origin(None))
-        self.assertTrue(control._loopback_origin("http://127.0.0.1:8090"))
-        self.assertFalse(control._loopback_origin("https://evil.example"))
+    def test_same_origin_accepts_phone_address_and_rejects_cross_origin(self) -> None:
+        self.assertTrue(control.same_origin("192.168.1.10:8090", "http://192.168.1.10:8090"))
+        self.assertTrue(control.same_origin("100.90.1.5:8090", "http://100.90.1.5:8090/"))
+        self.assertFalse(control.same_origin("192.168.1.10:8090", "https://evil.example"))
+        self.assertFalse(control.same_origin("", None))
 
-    def test_environment_rejects_non_loopback_listener(self) -> None:
+    def test_environment_rejects_remote_listener_without_explicit_opt_in(self) -> None:
         with mock.patch.dict(
             os.environ,
             {
                 "KRIS_QWEN_CONTROL_HOST": "0.0.0.0",
-                "KRIS_QWEN_ROOT": "/tmp/qwen-test",
+                "KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP": "0",
+                "KRIS_QWEN_ROOT": "/tmp/kris-qwen-control-test",
             },
             clear=False,
         ):
-            with self.assertRaisesRegex(control.ControllerError, "loopback-only"):
+            with self.assertRaisesRegex(control.ControllerError, "explicit"):
                 control.ControlConfig.from_environment()
 
+    def test_phone_mode_can_opt_in_to_remote_http(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {
+                "KRIS_QWEN_CONTROL_HOST": "127.0.0.1",
+                "KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP": "0",
+                "KRIS_QWEN_ROOT": "/tmp/kris-qwen-control-test",
+            },
+            clear=False,
+        ):
+            cfg = control.ControlConfig.from_environment(host="0.0.0.0", allow_remote_http=True)
+        self.assertEqual(cfg.host, "0.0.0.0")
+        self.assertTrue(cfg.allow_remote_http)
 
-class OperationRecoveryTest(unittest.TestCase):
-    def test_interrupted_operation_is_marked_and_backend_is_reconciled(self) -> None:
+
+class WorkerVersionTest(unittest.TestCase):
+    def test_json_worker_version_is_parsed(self) -> None:
+        self.assertEqual(
+            control.worker_version_from_stdout(json.dumps({"scriptVersion": "5.2.0", "sha256": "abc"})),
+            "5.2.0",
+        )
+
+    def test_plain_worker_version_remains_compatible(self) -> None:
+        self.assertEqual(control.worker_version_from_stdout("6.0.0\n"), "6.0.0")
+
+    def test_missing_json_version_is_rejected(self) -> None:
+        with self.assertRaisesRegex(control.ControllerError, "scriptVersion"):
+            control.worker_version_from_stdout(json.dumps({"version": "6.0.0"}))
+
+
+class ControllerPreflightTest(unittest.TestCase):
+    def test_preflight_accepts_real_worker_version_json_shape(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             cfg = config(pathlib.Path(raw))
-            cfg.controller_dir.mkdir(parents=True)
-            v6.atomic_write_json(
-                cfg.operation_path,
-                {"schemaVersion": 2, "operationId": "op-1", "kind": "start", "state": "RUNNING"},
-            )
-            backend = mock.Mock()
-            backend.status.return_value = {"backend": "process", "running": False}
-            controller = object.__new__(control.Controller)
-            controller.cfg = cfg
-            controller.token = "x" * 48
-            controller.lock = __import__("threading").Lock()
-            controller.rates = __import__("collections").defaultdict(__import__("collections").deque)
-            controller.backend = backend
-            controller._recover_operation()
-            row = json.loads(cfg.operation_path.read_text())
-            self.assertEqual(row["state"], "INTERRUPTED")
-            self.assertEqual(row["backendStatus"]["running"], False)
-
-    def test_operation_lock_rejects_concurrent_mutation(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            cfg = config(pathlib.Path(raw))
-            backend = mock.Mock()
-            controller = object.__new__(control.Controller)
-            controller.cfg = cfg
-            controller.token = "x" * 48
-            controller.lock = __import__("threading").Lock()
-            controller.rates = __import__("collections").defaultdict(__import__("collections").deque)
-            controller.backend = backend
-            controller.lock.acquire()
-            try:
-                with self.assertRaisesRegex(control.ControllerError, "already running"):
-                    controller._operation("start", lambda: {})
-            finally:
-                controller.lock.release()
-
-
-class SystemdBackendTest(unittest.TestCase):
-    def test_start_orders_model_before_worker_and_rolls_back_on_worker_failure(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            cfg = config(pathlib.Path(raw), backend="systemd")
-            backend = control.SystemdBackend(cfg)
-            calls = []
-
-            def fake_run(argv, **kwargs):
-                calls.append(list(argv))
-                if argv[:3] == ["systemctl", "start", cfg.worker_unit]:
-                    raise control.ControllerError("worker failed")
-                return mock.Mock(returncode=0, stdout="", stderr="")
-
-            with mock.patch.object(control, "run", side_effect=fake_run), mock.patch.object(
-                backend, "_wait", return_value=None
-            ):
-                with self.assertRaisesRegex(control.ControllerError, "worker failed"):
-                    backend.start()
-            self.assertEqual(calls[0], ["systemctl", "start", cfg.model_unit])
-            self.assertIn(["systemctl", "stop", cfg.model_unit], calls)
-
-    def test_stop_orders_worker_before_model(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            cfg = config(pathlib.Path(raw), backend="systemd")
-            backend = control.SystemdBackend(cfg)
-            calls = []
-
-            def fake_run(argv, **kwargs):
-                calls.append(list(argv))
-                return mock.Mock(returncode=0, stdout="", stderr="")
-
-            with mock.patch.object(control, "run", side_effect=fake_run), mock.patch.object(
-                backend, "_wait", return_value=None
-            ), mock.patch.object(backend, "status", return_value={"ok": True}):
-                backend.stop()
-            self.assertEqual(calls[0], ["systemctl", "stop", cfg.worker_unit])
-            self.assertEqual(calls[1], ["systemctl", "stop", cfg.model_unit])
-
-
-class ProcessBackendTest(unittest.TestCase):
-    def test_stale_pid_record_is_not_adopted(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            cfg = config(pathlib.Path(raw))
-            cfg.controller_dir.mkdir(parents=True)
-            v6.atomic_write_json(
-                cfg.process_path,
-                {
-                    "pid": os.getpid(),
-                    "identity": {
-                        "pid": os.getpid(),
-                        "start_ticks": 1,
-                        "executable": "/wrong",
-                        "cmdline_sha256": "0" * 64,
-                    },
-                },
-            )
-            backend = control.ProcessBackend(cfg)
-            self.assertIsNone(backend._record())
-            self.assertFalse(backend.status()["running"])
-
-
-class PreflightTest(unittest.TestCase):
-    def test_worker_version_and_github_auth_are_required(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            cfg = config(pathlib.Path(raw))
-            controller = object.__new__(control.Controller)
-            controller.cfg = cfg
-            responses = [
-                mock.Mock(returncode=0, stdout="6.0.0\n", stderr=""),
+            controller = control.QwenController(cfg)
+            calls = [
+                mock.Mock(returncode=0, stdout="main\n", stderr=""),
+                mock.Mock(returncode=0, stdout=json.dumps({"scriptVersion": "5.2.0"}) + "\n", stderr=""),
                 mock.Mock(returncode=0, stdout="logged in\n", stderr=""),
+                mock.Mock(returncode=0, stdout="abc123\n", stderr=""),
             ]
-            with mock.patch.object(control, "run", side_effect=responses), mock.patch.object(
-                control, "shutil_which", return_value="/usr/bin/bwrap"
-            ):
+            with mock.patch.object(control, "run", side_effect=calls):
                 value = controller.preflight()
-            self.assertEqual(value["workerVersion"], "6.0.0")
+            self.assertEqual(value["workerVersion"], "5.2.0")
             self.assertEqual(value["githubAuth"], "ok")
 
-    def test_github_auth_failure_is_rejected_before_start(self) -> None:
+    def test_preflight_rejects_github_auth_failure(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             cfg = config(pathlib.Path(raw))
-            controller = object.__new__(control.Controller)
-            controller.cfg = cfg
-            responses = [
-                mock.Mock(returncode=0, stdout="6.0.0\n", stderr=""),
-                mock.Mock(returncode=1, stdout="", stderr="not logged into any GitHub hosts; run gh auth login"),
-            ]
-            with mock.patch.object(control, "run", side_effect=responses):
+            controller = control.QwenController(cfg)
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "worker_version", return_value="5.2.0"
+            ), mock.patch.object(
+                control, "run", return_value=mock.Mock(returncode=1, stdout="", stderr="not logged in")
+            ):
                 with self.assertRaisesRegex(control.ControllerError, "authentication"):
                     controller.preflight()
+
+
+class FastForwardTest(unittest.TestCase):
+    def test_fetch_latest_refuses_dirty_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            controller = control.QwenController(cfg)
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "_git", return_value=mock.Mock(returncode=0, stdout=" M local.txt\n", stderr="")
+            ):
+                with self.assertRaisesRegex(control.ControllerError, "dirty"):
+                    controller._fast_forward_repo()
+
+    def test_fetch_latest_fast_forwards_only_to_fetched_remote(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            controller = control.QwenController(cfg)
+            calls: list[tuple[str, ...]] = []
+
+            def fake_git(*args, check=True, timeout=300):
+                calls.append(tuple(args))
+                if args[:2] == ("status", "--porcelain"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("rev-parse", "HEAD"):
+                    count = sum(1 for row in calls if row == ("rev-parse", "HEAD"))
+                    return mock.Mock(returncode=0, stdout=("old\n" if count == 1 else "new\n"), stderr="")
+                if args == ("fetch", "origin", "main", "--prune"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("rev-parse", "origin/main"):
+                    return mock.Mock(returncode=0, stdout="new\n", stderr="")
+                if args == ("merge-base", "--is-ancestor", "old", "new"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("merge", "--ff-only", "origin/main"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                raise AssertionError(args)
+
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "_git", side_effect=fake_git
+            ):
+                result = controller._fast_forward_repo()
+            self.assertTrue(result["changed"])
+            self.assertEqual(result["before"], "old")
+            self.assertEqual(result["after"], "new")
+            self.assertIn(("merge", "--ff-only", "origin/main"), calls)
+
+    def test_non_fast_forward_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            controller = control.QwenController(cfg)
+
+            def fake_git(*args, check=True, timeout=300):
+                if args[:2] == ("status", "--porcelain"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("rev-parse", "HEAD"):
+                    return mock.Mock(returncode=0, stdout="old\n", stderr="")
+                if args == ("fetch", "origin", "main", "--prune"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("rev-parse", "origin/main"):
+                    return mock.Mock(returncode=0, stdout="other\n", stderr="")
+                if args == ("merge-base", "--is-ancestor", "old", "other"):
+                    return mock.Mock(returncode=1, stdout="", stderr="")
+                raise AssertionError(args)
+
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "_git", side_effect=fake_git
+            ):
+                with self.assertRaisesRegex(control.ControllerError, "non-fast-forward"):
+                    controller._fast_forward_repo()
+
+
+class LaunchCommandTest(unittest.TestCase):
+    def test_worker_command_runs_stack_with_configured_root(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            cfg = config(pathlib.Path(raw))
+            controller = control.QwenController(cfg)
+            argv = controller._worker_command()
+            self.assertEqual(argv[1], str(cfg.worker_script))
+            self.assertEqual(argv[2], "stack")
+            self.assertIn(str(cfg.worker_root), argv)
 
 
 if __name__ == "__main__":
