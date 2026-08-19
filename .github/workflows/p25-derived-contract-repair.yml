@@ -1,0 +1,99 @@
+name: P25 Derived Contract Repair
+
+on:
+  push:
+    branches:
+      - 'agent/p25-prompt-studio-product-rescue-v4'
+    paths:
+      - '.github/workflows/p25-derived-contract-repair.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Repair exact derived bindings and self-remove
+        shell: bash
+        env:
+          TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tool/p0_008_roadmap_test.py')
+          source = path.read_text(encoding='utf-8')
+          old = '''    "3.1.6-p0-010-generated-state-hygiene",
+})'''
+          new = '''    "3.1.6-p0-010-generated-state-hygiene",
+    "3.1.7-p25-prompt-studio-product-rescue",
+})'''
+          if source.count(old) != 1:
+              raise SystemExit(
+                  f'expected one cumulative-version anchor, found {source.count(old)}'
+              )
+          path.write_text(source.replace(old, new, 1), encoding='utf-8', newline='\n')
+          Path('.github/workflows/p25-derived-contract-repair.yml').unlink()
+          PY
+
+          python3 tool/p2_extend_toolchain_lock.py --project .
+          python3 tool/p0_008_roadmap_test.py --project .
+          python3 tool/p2_toolchains.py --project .
+          python3 tool/p2_toolchain_extension_test.py --project .
+          python3 tool/roadmap_control.py validate --project . --strict
+          python3 tool/p25_prompt_studio_roadmap_test.py --project .
+          ruby tool/workflow_integrity_test.rb .
+
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+
+          expected = {
+              '.github/workflows/p25-derived-contract-repair.yml',
+              'SOURCE_MANIFEST.sha256',
+              'config/p2_toolchain_extension.v1.json',
+              'tool/p0_008_roadmap_test.py',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', '--name-only'], text=True
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'derived-contract scope mismatch actual={sorted(actual)} expected={sorted(expected)}'
+              )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A \
+            .github/workflows/p25-derived-contract-repair.yml \
+            SOURCE_MANIFEST.sha256 \
+            config/p2_toolchain_extension.v1.json \
+            tool/p0_008_roadmap_test.py
+          git diff --cached --check
+          git commit -m 'ci(p25): refresh derived roadmap and P2 bindings'
+
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
