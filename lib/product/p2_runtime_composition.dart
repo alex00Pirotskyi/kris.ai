@@ -227,13 +227,14 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
         _sessions.remove(sessionId);
         try {
           await _invoke(
-              binding,
-              'pty.terminate',
-              <String, Object?>{
-                'sessionId': sessionId,
-                'processIdentity': identity.toJson(),
-              },
-              expectedGrantDigest: grantDigest);
+            binding,
+            'pty.terminate',
+            <String, Object?>{
+              'sessionId': sessionId,
+              'processIdentity': identity.toJson(),
+            },
+            expectedGrantDigest: grantDigest,
+          );
         } catch (_) {
           // The session is unknown until restart reconciliation; never claim open.
         }
@@ -252,14 +253,15 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
   }) async* {
     final record = _session(sessionId, binding, grantDigest);
     final attach = await _invoke(
-        binding,
-        'pty.attach',
-        <String, Object?>{
-          'sessionId': sessionId,
-          'fromCursor': fromCursor,
-          'processIdentity': record.processIdentity.toJson(),
-        },
-        expectedGrantDigest: grantDigest);
+      binding,
+      'pty.attach',
+      <String, Object?>{
+        'sessionId': sessionId,
+        'fromCursor': fromCursor,
+        'processIdentity': record.processIdentity.toJson(),
+      },
+      expectedGrantDigest: grantDigest,
+    );
     final backlog = attach['dataBase64'];
     if (backlog is String && backlog.isNotEmpty) {
       yield base64Decode(backlog);
@@ -286,14 +288,15 @@ final class P2AutomationPtyBackend implements P2PtyBackend {
   }) {
     final record = _session(sessionId, binding, grantDigest);
     return _invoke(
-        binding,
-        operation,
-        <String, Object?>{
-          'sessionId': sessionId,
-          'processIdentity': record.processIdentity.toJson(),
-          ...payload,
-        },
-        expectedGrantDigest: grantDigest);
+      binding,
+      operation,
+      <String, Object?>{
+        'sessionId': sessionId,
+        'processIdentity': record.processIdentity.toJson(),
+        ...payload,
+      },
+      expectedGrantDigest: grantDigest,
+    );
   }
 
   @override
@@ -408,7 +411,9 @@ class P2ProcessAuthorization {
 }
 
 typedef P2ProcessAuthorizationResolver = P2ProcessAuthorization Function(
-    int pid, String operation);
+  int pid,
+  String operation,
+);
 
 final class P2AutomationProcessTreeAdapter
     implements P2NativeProcessTreeAdapter {
@@ -449,18 +454,6 @@ final class P2AutomationProcessTreeAdapter
     await journal.append(receipt);
     _receipts[pid] = receipt;
     return response;
-  }
-
-  @override
-  Future<P2ProcessIdentity> register(int pid) async {
-    final response = await _invoke(pid, 'process.register', <String, Object?>{
-      'pid': pid,
-    });
-    final identity = response['processIdentity'];
-    if (response['status'] != 'ok' || identity is! Map) {
-      throw StateError('process_register_failed');
-    }
-    return P2ProcessIdentity.fromJson(Map<String, Object?>.from(identity));
   }
 
   @override
@@ -516,7 +509,9 @@ class P2WatchdogAuthorization {
 }
 
 typedef P2WatchdogAuthorizationResolver = P2WatchdogAuthorization Function(
-    String watchdogId, String operation);
+  String watchdogId,
+  String operation,
+);
 
 final class P2AutomationWatchdogTransport implements P2WatchdogTransport {
   P2AutomationWatchdogTransport({
