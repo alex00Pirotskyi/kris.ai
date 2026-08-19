@@ -33,4 +33,12 @@ jobs:
           cache: true
       - name: Run exact P2-001 assertion without wrapper
         shell: bash
-        run: python tool/p2_task_platform_assertions.py --task P2-001 --platform windows --mode hosted --runner-image windows-2025
+        run: |
+          mkdir -p diag/artifact/task-results
+          python tool/p2_task_platform_assertions.py \
+            --project . \
+            --task P2-001 \
+            --commit-sha bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
+            --output diag/artifact/task-results/P2-001.json \
+            --artifact-root diag/artifact \
+            --max-command-seconds 20
