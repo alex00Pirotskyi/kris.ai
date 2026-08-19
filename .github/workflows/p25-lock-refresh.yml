@@ -1,0 +1,159 @@
+name: P25 Deterministic Lock Refresh
+
+on:
+  push:
+    branches:
+      - 'agent/p25-prompt-studio-product-rescue-v4'
+    paths:
+      - '.github/workflows/p25-lock-refresh.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Regenerate lock contract, validate, and self-remove
+        shell: bash
+        env:
+          TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+
+          original_head="$(git rev-parse HEAD)"
+          flutter create \
+            --project-name kristin_local_agent \
+            --org local.kristin \
+            --platforms=linux \
+            .
+          flutter pub get
+          cp pubspec.lock "${RUNNER_TEMP}/pubspec.lock.generated"
+
+          git reset --hard "${original_head}"
+          cp "${RUNNER_TEMP}/pubspec.lock.generated" pubspec.lock
+
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          from pathlib import Path
+
+          def canonical(value: object) -> bytes:
+              return (
+                  json.dumps(
+                      value,
+                      sort_keys=True,
+                      separators=(",", ":"),
+                      ensure_ascii=False,
+                  )
+                  + "\n"
+              ).encode("utf-8")
+
+          def declared_input_payload(manifest: dict[str, object]) -> dict[str, object]:
+              return {
+                  "schemaVersion": manifest["schemaVersion"],
+                  "sourceCommit": manifest["sourceCommit"],
+                  "python": manifest["python"],
+                  "flutter": manifest["flutter"],
+                  "dart": manifest["dart"],
+                  "githubActions": manifest["githubActions"],
+                  "runners": manifest["runners"],
+                  "cache": manifest["cache"],
+                  "lockfiles": manifest["lockfiles"],
+              }
+
+          lock_hash = hashlib.sha256(Path("pubspec.lock").read_bytes()).hexdigest()
+          paths = [
+              Path("config/toolchains.lock.json"),
+              Path("release/evidence/P0-004/inputs.json"),
+          ]
+          for path in paths:
+              document = json.loads(path.read_text(encoding="utf-8"))
+              manifest = document if path.name == "toolchains.lock.json" else document["toolchains"]
+              lockfiles = manifest.get("lockfiles")
+              if not isinstance(lockfiles, list) or len(lockfiles) != 1:
+                  raise SystemExit(f"unexpected lockfile declaration in {path}")
+              if lockfiles[0].get("path") != "pubspec.lock":
+                  raise SystemExit(f"unexpected lockfile path in {path}")
+              lockfiles[0]["sha256"] = lock_hash
+              manifest["declaredInputFingerprint"] = hashlib.sha256(
+                  canonical(declared_input_payload(manifest))
+              ).hexdigest()
+              path.write_text(
+                  json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+                  encoding="utf-8",
+                  newline="\n",
+              )
+          print(lock_hash)
+          PY
+
+          rm .github/workflows/p25-lock-refresh.yml
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+
+          python3 tool/toolchain_lock_test.py --source-only
+          python3 tool/p25_prompt_studio_roadmap_test.py --project .
+          python3 tool/p25_prompt_studio_test_station.py \
+            --project . \
+            --profile contract \
+            --check
+          ruby tool/workflow_integrity_test.rb .
+          python3 tool/p1a_text_eof_contract_test.py --project .
+
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+
+          expected = {
+              ".github/workflows/p25-lock-refresh.yml",
+              "SOURCE_MANIFEST.sha256",
+              "config/toolchains.lock.json",
+              "pubspec.lock",
+              "release/evidence/P0-004/inputs.json",
+          }
+          actual = set(
+              subprocess.check_output(
+                  ["git", "diff", "--name-only"], text=True
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f"lock refresh scope mismatch actual={sorted(actual)} expected={sorted(expected)}"
+              )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A \
+            .github/workflows/p25-lock-refresh.yml \
+            SOURCE_MANIFEST.sha256 \
+            config/toolchains.lock.json \
+            pubspec.lock \
+            release/evidence/P0-004/inputs.json
+          git diff --cached --check
+          git commit -m 'ci(p25): refresh deterministic pub lock contract'
+
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
