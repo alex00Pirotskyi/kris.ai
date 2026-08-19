@@ -1,0 +1,32 @@
+name: lock-drift-diagnostic
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          pub-cache-key: 'flutter-pub-:os:-:channel:-:version:-:arch:-:hash:'
+      - name: Capture exact lock regeneration
+        shell: bash
+        run: |
+          echo '--- committed hash ---'
+          sha256sum pubspec.lock
+          cp pubspec.lock /tmp/pubspec.lock.before
+          flutter create --project-name kristin_local_agent --org local.kristin --platforms=linux .
+          flutter pub get
+          echo '--- regenerated hash ---'
+          sha256sum pubspec.lock
+          echo '--- exact diff ---'
+          diff -u /tmp/pubspec.lock.before pubspec.lock || true
