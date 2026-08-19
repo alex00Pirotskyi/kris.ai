@@ -72,7 +72,9 @@ final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
       'paths': <String, Object?>{
         'roots': <String>['/'],
       },
-      'process': <String, Object?>{'operation': operation},
+      'process': operationBoundGrants
+          ? <String, Object?>{'operation': operation}
+          : <String, Object?>{'sessionOperations': true},
       'network': <String, Object?>{'destinations': <String>[]},
       'browser': <String, Object?>{'profiles': <String>[]},
       'secrets': <String, Object?>{'leaseIds': <String>[], 'rawReveal': false},
