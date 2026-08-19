@@ -1,106 +1,138 @@
 # KRIS Qwen server control
 
-This is the simple operational mode for the local Qwen Mission Execution worker.
+This is the operational controller for the repo-owned Qwen worker.
 
-## What runs
+## Current implementation status
 
-There are two layers:
+As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate still reports **5.2.0**. The repository also contains a v6 design document, but the worker source has not yet implemented that design completely. The controller therefore reads the worker's real JSON `version` response instead of hard-coding a fictional v6 version.
 
-1. `kris-qwen-control.service` — a tiny persistent localhost HTTP controller.
-2. `tool/kris_qwen_worker.py stack` — the repo-owned Qwen stack that the controller starts and drains.
+The control layer is Python-standard-library only. Uvicorn/Gunicorn/Flask/FastAPI are not required.
 
-The controller stays available while the worker is stopped. It uses only the Python standard library and systemd; Gunicorn, Flask and FastAPI are not required.
+## Fastest way: run from the server and open it on your phone
 
-`serve` is intentionally **not** used by the dashboard. `serve` starts only `llama-server`. `stack` starts the tuned `llama-server` and the worker loop as one lifecycle.
+From the server checkout:
 
-## Buttons
+```bash
+chmod +x tool/run_kris_qwen_phone_control.sh
+./tool/run_kris_qwen_phone_control.sh
+```
 
-- **Start worker** — verifies the repo-owned worker entrypoint and starts `stack`.
-- **Safe stop** — writes the worker's existing `operator/stop-request.json` graceful-stop request. It never sends a hard kill.
-- **Refresh + restart** — requests a safe stop, waits for the worker to drain, refuses a dirty checkout, fetches the configured Git branch, accepts only a fast-forward, verifies the refreshed worker entrypoint, and starts it again.
+The script follows the branch currently checked out on the server unless `KRIS_QWEN_REPO_BRANCH` is set. It prints:
 
-The status panel shows the worker PID/state, Git branch/head, script version, current controller operation, and recent worker output.
+- one or more `http://SERVER-IP:8090` URLs;
+- the control-token file path;
+- the control token for this installation.
 
-## One-time install
+Open the printed URL on your phone, paste the token into **Control token**, then press:
 
-From the server checkout of `alex00Pirotskyi/kris.ai`:
+**Fetch latest + run Qwen**
+
+That operation:
+
+1. safely drains a currently running Qwen worker;
+2. refuses to touch a dirty server checkout;
+3. runs `git fetch origin <configured-branch>`;
+4. accepts only a fast-forward update;
+5. fast-forwards the checkout;
+6. executes the refreshed worker's `version` command and parses its JSON `scriptVersion`;
+7. verifies `gh auth status`;
+8. starts the refreshed `tool/kris_qwen_worker.py stack`.
+
+The controller process itself does not need to restart when the worker file changes. The new worker process is loaded from the refreshed bytes on disk.
+
+Other buttons:
+
+- **Run current Qwen** — starts the worker already present in the checkout without fetching.
+- **Safe stop** — uses `kris_qwen_worker.py control stop`; it does not hard-kill the worker.
+
+## Security boundary
+
+Phone mode intentionally binds to `0.0.0.0`, but it is an explicit opt-in. Every API operation requires a long random bearer token and same-origin browser requests. The token is never embedded in dashboard HTML; the browser keeps it only in `sessionStorage`.
+
+**Plain HTTP does not encrypt the token. Use phone mode only on a trusted LAN or private VPN such as Tailscale. Do not expose port 8090 directly to the public Internet.**
+
+For an Internet-hosted server without a VPN, keep the controller loopback-only and use a tunnel instead.
+
+## Direct controller commands
+
+Loopback-only:
+
+```bash
+python3 tool/kris_qwen_control.py
+```
+
+Phone/trusted-LAN mode:
+
+```bash
+python3 tool/kris_qwen_control.py --phone
+```
+
+Explicit host:
+
+```bash
+python3 tool/kris_qwen_control.py --host 192.168.1.20 --allow-remote-http
+```
+
+Status:
+
+```bash
+python3 tool/kris_qwen_control.py --status
+python3 tool/kris_qwen_worker.py version
+```
+
+Environment overrides:
+
+```text
+KRIS_QWEN_REPO_DIR
+KRIS_QWEN_REPO_BRANCH
+KRIS_QWEN_ROOT
+KRIS_QWEN_PYTHON
+KRIS_QWEN_CONTROL_HOST
+KRIS_QWEN_CONTROL_PORT
+KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP
+KRIS_QWEN_STOP_TIMEOUT
+KRIS_QWEN_WORKER_ARGS
+```
+
+## Fetch safety rules
+
+**Fetch latest + run** never uses `git reset --hard`, rebase, force checkout, or force push. It fails closed if:
+
+- the server checkout is dirty;
+- the checkout is not on the configured branch;
+- the remote update is not a fast-forward;
+- the worker `version` entry point is missing/broken;
+- GitHub CLI authentication is unavailable to the server process;
+- the current worker does not reach a safe stop before the configured timeout.
+
+If safe stop times out, the controller leaves the worker alive and reports the failure.
+
+## Optional systemd controller
+
+A persistent loopback controller can be installed with:
 
 ```bash
 chmod +x tool/install_kris_qwen_control_systemd.sh
 sudo ./tool/install_kris_qwen_control_systemd.sh
 ```
 
-The installer writes:
+The installer defaults to loopback-only. To make the installed service reachable over a trusted private network, edit `/etc/kris-qwen-control.env`:
 
-- `/etc/systemd/system/kris-qwen-control.service`
-- `/etc/kris-qwen-control.env`
+```text
+KRIS_QWEN_CONTROL_HOST=0.0.0.0
+KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP=1
+```
 
-Edit `/etc/kris-qwen-control.env` for model/worker overrides, then restart only the controller:
+then:
 
 ```bash
 sudo systemctl restart kris-qwen-control
 ```
 
-A controller restart does not intentionally hard-stop the Qwen worker; the service uses `KillMode=process` so the repo-owned worker remains governed by its own graceful-stop protocol.
+The foreground `run_kris_qwen_phone_control.sh` path is simpler when you only want to open the panel temporarily.
 
-## Open the dashboard
+## Worker status note
 
-The controller deliberately binds only to `127.0.0.1`. From your laptop/desktop, use an SSH tunnel:
+The current 5.2 worker includes the repeated `control-plane-invalid:*` backoff behavior: after repeated identical Mission Execution authority failures it surfaces a stable blocked/recovering state instead of continuously burning fresh executions.
 
-```bash
-ssh -L 8090:127.0.0.1:8090 root@YOUR_SERVER
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8090
-```
-
-Do not bind this control endpoint directly to the public Internet. POST operations require a per-install token, but localhost + SSH tunneling is the intended boundary.
-
-## Migrating from the old manual command
-
-If a manually launched command such as this is still running:
-
-```bash
-python ./kris_qwen_worker_v5_1_9.py serve
-```
-
-stop that old process once before pressing **Start worker**. A standalone `serve` process owns the model port but does not participate in the worker process lock/graceful-stop lifecycle.
-
-After migration, use the dashboard rather than manually starting `serve`.
-
-## Refresh safety rules
-
-**Refresh + restart never performs `git reset --hard`, force checkout, rebase, or force push.** It fails closed when:
-
-- the server checkout is dirty;
-- the checkout is not on the configured branch;
-- the remote update is not a fast-forward;
-- the refreshed worker fails its `version` entrypoint probe;
-- the current worker does not reach a safe stop before `KRIS_QWEN_STOP_TIMEOUT`.
-
-If safe stop times out, the controller reports the error and leaves the worker alive instead of killing it.
-
-## Current control-plane validation failure
-
-The repeated message:
-
-```text
-shared Mission Execution runtime validation is unhealthy;
-Work Order path exceeds mission/shared authority policy: lib/product/product_runtime.dart
-```
-
-is a repository/runtime authority validation failure, not a llama.cpp health failure. Worker v5.2 changes the repeated-invalid-state behavior: after three identical `control-plane-invalid:*` failures it exposes `BLOCKED_CONTROL_PLANE` and backs off for at least five minutes instead of creating a new execution every 30 seconds forever.
-
-That makes the fault visible in the dashboard without hiding it. The actual invalid Work Order/control-plane record still has to be repaired by the Mission Execution authority that owns that runtime state.
-
-## Useful commands
-
-```bash
-systemctl status kris-qwen-control --no-pager
-journalctl -u kris-qwen-control -f
-python3 tool/kris_qwen_control.py --status
-python3 tool/kris_qwen_worker.py version
-```
+That is separate from the v6 design work. The v6 design document remains a target architecture, not a statement that the current worker has already implemented every v6 invariant.
