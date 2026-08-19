@@ -6,10 +6,6 @@ on:
       - 'agent/p25-prompt-studio-product-rescue-v4'
     paths:
       - '.github/workflows/p25-derived-contract-repair.yml'
-  pull_request:
-    branches:
-      - 'agent/p25-prompt-studio-product-rescue-v4'
-    paths:
       - '.github/p25-derived-contract-repair.trigger'
 
 permissions:
@@ -17,15 +13,12 @@ permissions:
 
 jobs:
   repair:
-    if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'pull_request' &&
-       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      EXPECTED_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.sha }}
+      EXPECTED_HEAD: ${{ github.sha }}
       BASE_MAIN: e4f66ce5a95870cad342bbf9aaf89f94dc768f58
+      PERMANENT_WORKFLOW_COMMIT: 048949f8c240c4f2859f225101ad31055472bf16
       TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
     steps:
       - name: Check out exact P25 target
@@ -39,7 +32,7 @@ jobs:
         with:
           python-version: '3.12.10'
           check-latest: false
-      - name: Restore unrelated bytes, repair roadmap compatibility, validate, and self-remove
+      - name: Repair exact derived bindings, validate, and self-remove
         shell: bash
         run: |
           set -euo pipefail
@@ -48,6 +41,12 @@ jobs:
           test "${remote_head}" = "${EXPECTED_HEAD}"
 
           git cat-file -e "${BASE_MAIN}^{commit}"
+          git cat-file -e "${PERMANENT_WORKFLOW_COMMIT}^{commit}"
+          git checkout "${PERMANENT_WORKFLOW_COMMIT}" -- \
+            .github/workflows/p25-prompt-studio.yml
+          rm -f \
+            .github/workflows/p25-derived-contract-repair.yml \
+            .github/p25-derived-contract-repair.trigger
           git checkout "${BASE_MAIN}" -- \
             config/toolchains.lock.json \
             pubspec.lock \
@@ -58,17 +57,21 @@ jobs:
 
           path = Path('tool/p0_008_roadmap_test.py')
           source = path.read_text(encoding='utf-8')
-          old = '''    "3.1.6-p0-010-generated-state-hygiene",
+          version = '    "3.1.7-p25-prompt-studio-product-rescue",\n'
+          if version not in source:
+              old = '''    "3.1.6-p0-010-generated-state-hygiene",
 })'''
-          new = '''    "3.1.6-p0-010-generated-state-hygiene",
+              new = '''    "3.1.6-p0-010-generated-state-hygiene",
     "3.1.7-p25-prompt-studio-product-rescue",
 })'''
-          if source.count(old) != 1:
-              raise SystemExit(
-                  f'expected one cumulative-version anchor, found {source.count(old)}'
-              )
-          path.write_text(source.replace(old, new, 1), encoding='utf-8', newline='\n')
-          Path('.github/workflows/p25-derived-contract-repair.yml').unlink()
+              if source.count(old) != 1:
+                  raise SystemExit(
+                      f'expected one cumulative-version anchor, found {source.count(old)}'
+                  )
+              source = source.replace(old, new, 1)
+          if source.count('"3.1.7-p25-prompt-studio-product-rescue"') != 1:
+              raise SystemExit('P25 cumulative roadmap version must occur exactly once')
+          path.write_text(source, encoding='utf-8', newline='\n')
           PY
 
           python3 tool/v71r12_bootstrap_hosted_python.py --project .
@@ -93,7 +96,9 @@ jobs:
           import subprocess
 
           expected = {
+              '.github/p25-derived-contract-repair.trigger',
               '.github/workflows/p25-derived-contract-repair.yml',
+              '.github/workflows/p25-prompt-studio.yml',
               'SOURCE_MANIFEST.sha256',
               'config/toolchains.lock.json',
               'pubspec.lock',
@@ -107,14 +112,16 @@ jobs:
           )
           if actual != expected:
               raise SystemExit(
-                  f'derived-contract scope mismatch actual={sorted(actual)} expected={sorted(expected)}'
+                  f'P25 repair scope mismatch actual={sorted(actual)} expected={sorted(expected)}'
               )
           PY
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A \
+            .github/p25-derived-contract-repair.trigger \
             .github/workflows/p25-derived-contract-repair.yml \
+            .github/workflows/p25-prompt-studio.yml \
             SOURCE_MANIFEST.sha256 \
             config/toolchains.lock.json \
             pubspec.lock \
