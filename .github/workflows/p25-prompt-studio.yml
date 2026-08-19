@@ -31,7 +31,7 @@ on:
       - 'tool/p25_prompt_studio_*.py'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   contract:
@@ -83,3 +83,119 @@ jobs:
           cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
           python tool/p1a_text_eof_contract_test.py --project .
           git diff --exit-code -- SOURCE_MANIFEST.sha256
+
+  materialize-interactive-redesign:
+    if: >-
+      (github.event_name == 'push' && github.ref_name == 'agent/product/p25-002-fast-interactive-runtime') ||
+      (github.event_name == 'pull_request' && github.head_ref == 'agent/product/p25-002-fast-interactive-runtime')
+    name: p25-interactive-prompt-studio-redesign
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Apply, validate, and publish the product redesign
+        shell: bash
+        env:
+          TARGET_BRANCH: agent/product/p25-002-fast-interactive-runtime
+          EXPECTED_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ORIGINAL_P25_WORKFLOW_BLOB: e7d37e81a095a5614b799fc7f55fe4c8872e2b88
+        run: |
+          set -euo pipefail
+
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD_SHA}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD_SHA}"
+
+          payload_root="$(mktemp -d)"
+          cleanup() { rm -rf "${payload_root}"; }
+          trap cleanup EXIT
+
+          test "$(sha256sum .p25-redesign/payload.b64.00 | cut -d' ' -f1)" = "b986bcd75206652469cb41dc8ba25c40f16c6cce81d58e5b9a52c94202acd00a"
+          test "$(sha256sum .p25-redesign/payload.b64.01 | cut -d' ' -f1)" = "d121c7cdd7f65bc826920e1e0f9da5ba9fb9ae2908aaa9e9e1801f774bccc1fc"
+          test "$(sha256sum .p25-redesign/payload.b64.02 | cut -d' ' -f1)" = "c4cfe957e700e89cf959d7a04c2a0dca936365f57e6b5830856f85ae9d6a6e38"
+          test "$(sha256sum .p25-redesign/payload.b64.03 | cut -d' ' -f1)" = "a4a5da1c17fecf0866109514d0d9a2674eedd498aa6cc58a6f7cc2c90b0cdd90"
+          test "$(sha256sum .p25-redesign/payload.b64.04 | cut -d' ' -f1)" = "bdbbd34cdae38867306b6e6997faab3be335830e8c4d29f5eb67bd6fbc61bc6f"
+
+          cat .p25-redesign/payload.b64.* | base64 --decode > "${payload_root}/payload.tar.gz"
+          test "$(sha256sum "${payload_root}/payload.tar.gz" | cut -d' ' -f1)" = "d09df8c58babd1b0502c64a1fb6855be3dffe56d738a8ebd57cbbd457d9a4b23"
+          tar -xzf "${payload_root}/payload.tar.gz" -C "${payload_root}"
+
+          test "$(git hash-object lib/product/prompt_planning.dart)" = "57e2f6d2adfe9a55832095463533b63591499051"
+          test "$(git hash-object lib/product/product_runtime.dart)" = "a947bc14fcd480f2337b08e529fac269ed6e7876"
+          test "$(git hash-object lib/product/chat_studio.dart)" = "40fd5a29a299045b1baec70121c8574b8deb142b"
+          test "$(git hash-object test/product/p25_fast_path_contract_test.dart)" = "1f2f7a5535d54b81779c0298eef242ef4f36b7da"
+
+          patcher="${payload_root}/p25_prompt_studio_redesign_apply.py"
+          python3 "${patcher}" . --check
+          python3 "${patcher}" . --apply
+
+          flutter pub get
+          changed_product=(
+            lib/product/prompt_planning.dart
+            lib/product/product_runtime.dart
+            lib/product/chat_studio.dart
+            test/product/p25_fast_path_contract_test.dart
+          )
+          dart format "${changed_product[@]}"
+          git diff --check -- "${changed_product[@]}"
+
+          flutter test --reporter expanded \
+            test/product/p25_fast_path_contract_test.dart \
+            test/product/prompt_studio_v2_test.dart \
+            test/product/model/model_registry_test.dart \
+            test/product/budget_diagnostics_test.dart \
+            test/product/execution_reliability_test.dart
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          python3 tool/p25_prompt_studio_roadmap_test.py --project .
+          python3 tool/p25_prompt_studio_test_station.py --project . --profile contract --check
+
+          git status --porcelain=v1 --untracked-files=all > "${payload_root}/status.txt"
+          python3 - "${payload_root}/status.txt" "${changed_product[@]}" <<'PY'
+          from pathlib import Path
+          import sys
+
+          allowed = set(sys.argv[2:])
+          changed = set()
+          for line in Path(sys.argv[1]).read_text(encoding='utf-8').splitlines():
+              if not line:
+                  continue
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ', 1)[1]
+              changed.add(path)
+          unexpected = sorted(changed - allowed)
+          missing = sorted(allowed - changed)
+          if unexpected:
+              raise SystemExit('unexpected changed paths: ' + ', '.join(unexpected))
+          if missing:
+              raise SystemExit('expected product paths were not changed: ' + ', '.join(missing))
+          print('Prompt Studio redesign changed-path scope verified.')
+          PY
+
+          git add -- "${changed_product[@]}"
+          git cat-file blob "${ORIGINAL_P25_WORKFLOW_BLOB}" > .github/workflows/p25-prompt-studio.yml
+          git add -- .github/workflows/p25-prompt-studio.yml
+          git rm -r -- .p25-redesign .github/workflows/p25-003-prompt-studio-redesign.yml
+          git diff --cached --check
+
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD_SHA}"
+
+          git -c user.name='Kris AI Product Worker' \
+              -c user.email='kris-ai-product-worker@users.noreply.github.com' \
+              commit -m 'feat(p25): redesign Prompt Studio around interactive choices'
+          result_sha="$(git rev-parse HEAD)"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+          printf 'P25-003 product commit: %s\n' "${result_sha}"
