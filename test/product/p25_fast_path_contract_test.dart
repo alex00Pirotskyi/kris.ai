@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/execution_intelligence.dart';
+import 'package:kristin_local_agent/product/prompt_planning.dart';
 
 void main() {
   group('P25 focused fast path', () {
@@ -40,6 +42,65 @@ void main() {
       },
     );
 
+    test('clarification contract enforces question and option bounds', () {
+      final session = PromptClarificationSession.fromModelJson(
+        <String, dynamic>{
+          'brief': 'A local desktop utility is already clear.',
+          'questions': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'question': 'Which release target should lead?',
+              'whyItMatters': 'It changes scope and verification.',
+              'options': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'label': 'Working first version',
+                  'description': 'Prioritize usable behavior.',
+                  'recommended': true,
+                },
+                <String, dynamic>{
+                  'label': 'Production-ready',
+                  'description': 'Prioritize robustness.',
+                  'recommended': false,
+                },
+              ],
+            },
+            <String, dynamic>{
+              'question': 'Which tradeoff should lead?',
+              'whyItMatters': 'It gives the prompt a tie-breaker.',
+              'options': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'label': 'Reliability',
+                  'description': 'Prefer stronger checks.',
+                  'recommended': true,
+                },
+                <String, dynamic>{
+                  'label': 'Speed',
+                  'description': 'Prefer the smallest solution.',
+                  'recommended': false,
+                },
+              ],
+            },
+          ],
+        },
+        goal: 'Build a local calculator',
+        model: ModelIdentity(
+          providerId: 'ollama',
+          name: 'phi5-mini',
+          digest: 'digest',
+          discoveredAt: DateTime.utc(2026, 8, 19),
+        ),
+      );
+      expect(session.questions, hasLength(2));
+      expect(session.questions.first.options, hasLength(2));
+      expect(session.questions.first.recommendedOption.label,
+          'Working first version');
+      expect(
+        session.missingAnswerIds(<String, String>{
+          'question_1': 'Working first version',
+        }),
+        <String>['question_2'],
+      );
+    });
+
     test('prompt and plan generation permit only one bounded repair', () {
       final source = File(
         'lib/product/prompt_planning.dart',
@@ -50,20 +111,27 @@ void main() {
       );
       expect(source, isNot(contains('maxOutputTokens: 6144')));
       expect(source, isNot(contains('min(32000')));
-      expect(source, contains('final outputTokenBudget = switch (action)'));
-      expect(source, contains('limit <= 7'));
-      expect(source, contains('USER FEEDBACK OR ANSWERS'));
+      expect(source, contains('maxOutputTokens: 1024'));
+      expect(source, contains('STRUCTURED INTAKE'));
+      expect(source, contains('clarifyingQuestions: const <String>[]'));
+      expect(source, contains("stage: 'plan_validation_started'"));
     });
 
     test(
-      'Prompt Studio exposes live progress, stop, and feedback controls',
+      'Prompt Studio is question-first and shows every AI operation',
       () {
         final source = File('lib/product/chat_studio.dart').readAsStringSync();
         expect(source, contains('int generatedMaxTasks = 7;'));
+        expect(source, contains('Future<void> _startPromptStudioFlow()'));
+        expect(source, contains('class _PromptClarificationDialog'));
+        expect(source, contains("'Other — write my own answer'"));
+        expect(source, contains("'Generate final prompt'"));
         expect(source, contains('Widget _promptGenerationStatusCard()'));
+        expect(source, contains('_PromptStudioOperationKind.taskPlan'));
         expect(source, contains("label: const Text('Stop')"));
-        expect(source, contains("label: const Text('Apply my feedback')"));
-        expect(source, contains('items: const <int>[1, 3, 5, 7, 10, 15, 25]'));
+        expect(source, contains("label: const Text('Improve with AI')"));
+        expect(source, contains("label: const Text('Simplify')"));
+        expect(source, contains("label: const Text('Add useful detail')"));
         expect(source, contains('onTextDelta: (delta)'));
       },
     );
