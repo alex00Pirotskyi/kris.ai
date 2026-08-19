@@ -19,11 +19,16 @@ final class P3BrowserReplayLimits {
   final int maxBundleBytes;
 
   void validate() {
-    if (maxTraceEntries < 1 || maxTraceEntries > 1024 ||
-        maxConsoleEntries < 1 || maxConsoleEntries > 1024 ||
-        maxNetworkEntries < 1 || maxNetworkEntries > 4096 ||
-        maxStringBytes < 128 || maxStringBytes > 16 * 1024 ||
-        maxBundleBytes < 16 * 1024 || maxBundleBytes > 8 * 1024 * 1024) {
+    if (maxTraceEntries < 1 ||
+        maxTraceEntries > 1024 ||
+        maxConsoleEntries < 1 ||
+        maxConsoleEntries > 1024 ||
+        maxNetworkEntries < 1 ||
+        maxNetworkEntries > 4096 ||
+        maxStringBytes < 128 ||
+        maxStringBytes > 16 * 1024 ||
+        maxBundleBytes < 16 * 1024 ||
+        maxBundleBytes > 8 * 1024 * 1024) {
       throw StateError('browser_replay_limits_invalid');
     }
   }
@@ -261,7 +266,8 @@ final class P3BrowserReplayRecorder {
     String? detail,
     String? pageId,
   }) {
-    if (code.trim().isEmpty) throw StateError('browser_replay_failure_code_invalid');
+    if (code.trim().isEmpty)
+      throw StateError('browser_replay_failure_code_invalid');
     final failure = <String, Object?>{
       'at': _timestamp(),
       'code': _boundedString(code),
