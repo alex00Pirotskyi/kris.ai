@@ -62,17 +62,6 @@ jobs:
           test "$(sha256sum "${RUNNER_TEMP}/p25-adaptive.tar.gz" | cut -d' ' -f1)" = "88d9e66c8787bde1a36bf7162fa76a28e0e019ab17eec5767a9ee461bcfa442f"
           tar -xzf "${RUNNER_TEMP}/p25-adaptive.tar.gz" -C .p25-adaptive
 
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('.p25-adaptive/p25_adaptive_mission_apply.py')
-          source = path.read_text(encoding='utf-8')
-          old = "JsonEncoder.withIndent(' ')"
-          new = "JsonEncoder.withIndent('  ')"
-          if source.count(old) != 2:
-              raise SystemExit('adaptive patcher JSON-indent repair anchor drifted')
-          path.write_text(source.replace(old, new), encoding='utf-8', newline='\n')
-          PY
           python3 -m py_compile .p25-adaptive/p25_adaptive_mission_apply.py
 
           python3 .p25-adaptive/p25_adaptive_mission_apply.py . --check
