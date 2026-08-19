@@ -152,7 +152,13 @@ jobs:
               'tool/p25_prompt_studio_roadmap_test.py',
               'tool/p25_prompt_studio_test_station.py',
           }
-          actual = set(subprocess.check_output(['git', 'diff', 'origin/main', '--name-only'], text=True).splitlines())
+          tracked = subprocess.check_output(
+              ['git', 'diff', 'origin/main', '--name-only'], text=True
+          ).splitlines()
+          untracked = subprocess.check_output(
+              ['git', 'ls-files', '--others', '--exclude-standard'], text=True
+          ).splitlines()
+          actual = set(tracked + untracked)
           if actual != expected:
               raise SystemExit(f'P25 governance scope mismatch actual={sorted(actual)} expected={sorted(expected)}')
           PY
