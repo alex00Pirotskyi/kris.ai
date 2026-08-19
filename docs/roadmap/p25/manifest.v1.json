@@ -1,0 +1,127 @@
+{
+  "authority": {
+    "decision": "docs/roadmap/decisions/ADR-P25-001-prompt-studio-product-rescue.md",
+    "human": "docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md",
+    "testStation": "docs/roadmap/p25/prompt_studio_test_station.v1.json"
+  },
+  "benchmarkCorpus": "docs/roadmap/p25/benchmark_corpus.v1.json",
+  "manifestId": "p25.prompt-studio-product-rescue-v4",
+  "nextReady": [
+    "P25-001"
+  ],
+  "performanceBudget": "docs/roadmap/p25/performance_budget.v1.json",
+  "schemaVersion": "1.0.0",
+  "status": "READY",
+  "taskOrder": [
+    "P25-001",
+    "P25-002",
+    "P25-003",
+    "P25-004",
+    "P25-005",
+    "P25-006",
+    "P25-007",
+    "P25-008",
+    "P25-009",
+    "P25-010",
+    "P25-011"
+  ],
+  "tasks": [
+    {
+      "dependsOn": [],
+      "id": "P25-001",
+      "packet": "tasks/planned/P25-001.md",
+      "status": "READY",
+      "title": "Instrument and benchmark the real Prompt Studio path"
+    },
+    {
+      "dependsOn": [
+        "P25-001"
+      ],
+      "id": "P25-002",
+      "packet": "tasks/planned/P25-002.md",
+      "status": "BLOCKED",
+      "title": "Durable operation, streaming and cancellation"
+    },
+    {
+      "dependsOn": [
+        "P25-002"
+      ],
+      "id": "P25-003",
+      "packet": "tasks/planned/P25-003.md",
+      "status": "BLOCKED",
+      "title": "Fast adaptive prompt generation"
+    },
+    {
+      "dependsOn": [
+        "P25-003"
+      ],
+      "id": "P25-004",
+      "packet": "tasks/planned/P25-004.md",
+      "status": "BLOCKED",
+      "title": "Conversation-first Prompt Studio workspace"
+    },
+    {
+      "dependsOn": [
+        "P25-004"
+      ],
+      "id": "P25-005",
+      "packet": "tasks/planned/P25-005.md",
+      "status": "BLOCKED",
+      "title": "Live questions, interruption and resume"
+    },
+    {
+      "dependsOn": [
+        "P25-005"
+      ],
+      "id": "P25-006",
+      "packet": "tasks/planned/P25-006.md",
+      "status": "BLOCKED",
+      "title": "Direct editing, auto-save, history and recovery"
+    },
+    {
+      "dependsOn": [
+        "P25-006"
+      ],
+      "id": "P25-007",
+      "packet": "tasks/planned/P25-007.md",
+      "status": "BLOCKED",
+      "title": "Canonical Prompt Studio contract convergence"
+    },
+    {
+      "dependsOn": [
+        "P25-007"
+      ],
+      "id": "P25-008",
+      "packet": "tasks/planned/P25-008.md",
+      "status": "BLOCKED",
+      "title": "Compact plan skeleton and lazy runner packets"
+    },
+    {
+      "dependsOn": [
+        "P25-008"
+      ],
+      "id": "P25-009",
+      "packet": "tasks/planned/P25-009.md",
+      "status": "BLOCKED",
+      "title": "Token-efficient roadmap optimizer"
+    },
+    {
+      "dependsOn": [
+        "P25-009"
+      ],
+      "id": "P25-010",
+      "packet": "tasks/planned/P25-010.md",
+      "status": "BLOCKED",
+      "title": "Expert graph and economics inspector"
+    },
+    {
+      "dependsOn": [
+        "P25-010"
+      ],
+      "id": "P25-011",
+      "packet": "tasks/planned/P25-011.md",
+      "status": "BLOCKED",
+      "title": "Atomic migration and legacy retirement"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+name: P25 Prompt Studio Roadmap
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/p25-prompt-studio.yml'
+      - 'SOURCE_MANIFEST.sha256'
+      - 'config/test_center_registry.v1.json'
+      - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md'
+      - 'docs/roadmap/p25/**'
+      - 'docs/roadmap/decisions/ADR-P25-001-prompt-studio-product-rescue.md'
+      - 'docs/testing/TEST_CENTER_P25_PROMPT_STUDIO.md'
+      - 'tasks/planned/P25-*.md'
+      - 'tool/p25_prompt_studio_*.py'
+  push:
+    branches:
+      - 'agent/p25-prompt-studio-product-rescue-v4'
+      - 'agent/product/p25-*'
+    paths:
+      - '.github/workflows/p25-prompt-studio.yml'
+      - 'SOURCE_MANIFEST.sha256'
+      - 'config/test_center_registry.v1.json'
+      - 'config/test_center_assurance_hierarchy.v1.json'
+      - 'docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md'
+      - 'docs/roadmap/p25/**'
+      - 'docs/roadmap/decisions/ADR-P25-001-prompt-studio-product-rescue.md'
+      - 'docs/testing/TEST_CENTER_P25_PROMPT_STUDIO.md'
+      - 'tasks/planned/P25-*.md'
+      - 'tool/p25_prompt_studio_*.py'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: p25-roadmap-contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: P25 roadmap and Test Station contracts
+        run: |
+          python tool/p25_prompt_studio_roadmap_test.py --project .
+          python tool/p25_prompt_studio_test_station.py --project . --profile contract --check
+      - name: Existing roadmap and Test Center contracts
+        run: |
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/roadmap_control.py render --project . --check
+          python tool/test_center_contracts.py check --project .
+          python tool/test_center_assurance_hierarchy.py check --project .
+      - name: Workflow integrity
+        run: ruby tool/workflow_integrity_test.rb .
+      - name: Non-mutation
+        shell: bash
+        run: |
+          git diff --check
+          git diff --exit-code
+
+  source-manifest:
+    name: p25-roadmap-source-manifest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Rebuild source manifest twice
+        shell: bash
+        run: |
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --exit-code -- SOURCE_MANIFEST.sha256

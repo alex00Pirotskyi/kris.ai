@@ -13,6 +13,7 @@ This ledger indexes decisions. The ADR files are authoritative for their individ
 | `ADR-0004` | Automation-host boundary; technology deferred | ACCEPTED | `P1-001`, `P2-004` | Yes for boundary; technology remains P2-004 |
 | `ADR-0005` | Browser profile and research storage | PROPOSED | `P3-008`, `P4-011` | No |
 | `ADR-0006` | Secure update system | PROPOSED | `P1-008`, `P9-008` | No |
+| `ADR-P25-001` | Prompt Studio product rescue architecture | ACCEPTED | `P25-001`–`P25-011` | Yes, within P25 scope |
 
 A proposed ADR may guide investigation but may not authorize a production implementation. An ADR becomes accepted only through its owning roadmap task and evidence.
 ## P1-001 accepted runtime-boundary set — 2026-07-27

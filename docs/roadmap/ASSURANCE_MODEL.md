@@ -144,3 +144,7 @@ P0-007 is `DONE` only when:
 - no check is `unclassified`;
 - a fresh independent reviewer confirms that source and mixed checks are not presented as behavioral proof;
 - the roadmap status and evidence manifest identify the exact tested commit.
+
+## P25 Prompt Studio assurance boundary
+
+P25 uses the canonical Test Center hierarchy. Roadmap and suite contracts are source-only. Deterministic operation, cancellation, recovery, question, optimizer, and packet tests are behavioral only at the production boundary they execute. The local Phi campaign is benchmark evidence bound to exact source, model digest, hardware identity, corpus version, and cold/warm classification. Installed Windows journeys are platform evidence. No source or benchmark pass alone grants packaged behavior, platform support, release support, production readiness, release, or GA.

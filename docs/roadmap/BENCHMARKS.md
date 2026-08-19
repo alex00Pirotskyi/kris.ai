@@ -106,3 +106,9 @@ A suite change requires:
 6. independent review before the new baseline becomes authoritative.
 
 P8-001 later expands this bootstrap into the formal benchmark and assurance hierarchy.
+
+## P25 Prompt Studio benchmark
+
+The committed P25 corpus contains 20 simple goals, 10 ambiguous goals, 10 normal plan goals, and 5 complex plan goals. Measurements must cover UI dispatch, discovery, warm-up, request opening, first token, generation, parsing, validation, repair, persistence, and UI delivery. Owner-machine evidence binds exact CPU, RAM, OS, provider version, model identity/digest, source commit/tree, corpus version, and repeated p50/p95 statistics.
+
+The normative initial budget is `docs/roadmap/p25/performance_budget.v1.json`. It may be tightened freely and relaxed only through measured evidence plus reviewed rationale.

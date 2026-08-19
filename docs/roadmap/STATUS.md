@@ -3,7 +3,7 @@
 **Roadmap authority:** `DERIVED`
 **Human constitution:** `docs/roadmap/MASTER.md`
 **Machine authority:** `docs/roadmap/roadmap.yaml`
-**Roadmap version:** `3.1.6-p0-010-generated-state-hygiene`
+**Roadmap version:** `3.1.7-p25-prompt-studio-product-rescue`
 **Bootstrap scope:** `P0` and `P1`
 
 > This file is generated from `roadmap.yaml`. Edit task status in the manifest through a reviewed work packet, then regenerate this ledger. GitHub issues may mirror this state but are not authoritative.
