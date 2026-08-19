@@ -1,4 +1,5 @@
 name: P25-004 Adaptive Mission Planner
+# activation: exact-head adaptive product candidate
 
 on:
   push:
