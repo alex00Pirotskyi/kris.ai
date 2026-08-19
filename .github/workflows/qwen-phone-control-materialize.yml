@@ -26,59 +26,128 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Apply phone URL discovery repair
+      - name: Apply runtime control-plane compatibility repair
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
 
-          controller_path = Path('tool/kris_qwen_control.py')
-          controller = controller_path.read_text(encoding='utf-8')
-          old = (
-              "        for _, _, addresses in socket.gethostbyname_ex(name):\n"
-              "            candidates.update(addresses)\n"
-          )
-          new = (
-              "        _, _, addresses = socket.gethostbyname_ex(name)\n"
-              "        candidates.update(addresses)\n"
-          )
-          if old not in controller:
-              raise SystemExit('expected broken gethostbyname_ex loop not found')
-          controller_path.write_text(
-              controller.replace(old, new, 1),
-              encoding='utf-8',
-              newline='\n',
-          )
+          worker_path = Path('tool/kris_qwen_worker.py')
+          worker = worker_path.read_text(encoding='utf-8')
+          old_version = 'SCRIPT_VERSION = "5.2.0"'
+          new_version = 'SCRIPT_VERSION = "5.2.1"'
+          if old_version not in worker:
+              raise SystemExit('expected Qwen worker version 5.2.0 not found')
+          worker = worker.replace(old_version, new_version, 1)
 
-          test_path = Path('tool/kris_qwen_control_test.py')
-          tests = test_path.read_text(encoding='utf-8')
-          marker = '\n\nclass WorkerVersionTest(unittest.TestCase):\n'
-          if marker not in tests:
-              raise SystemExit('worker-version test marker not found')
-          regression = (
-              "\n"
-              "    def test_phone_url_discovery_handles_gethostbyname_ex_result(self) -> None:\n"
-              "        with mock.patch.object(control.socket, 'gethostname', return_value='kris-server'):\n"
-              "            with mock.patch.object(\n"
-              "                control.socket,\n"
-              "                'gethostbyname_ex',\n"
-              "                return_value=('kris-server', [], ['10.0.0.2', '10.0.0.3']),\n"
-              "            ):\n"
-              "                with mock.patch.object(\n"
-              "                    control.socket, 'socket', side_effect=OSError('offline')\n"
-              "                ):\n"
-              "                    urls = control.discover_phone_urls(8090)\n"
-              "        self.assertEqual(\n"
-              "            urls,\n"
-              "            ['http://10.0.0.2:8090', 'http://10.0.0.3:8090'],\n"
-              "        )\n"
+          old = '''    branch = str(meta.get("controlPlaneBranch") or "").strip()
+          if not branch:
+              raise WorkerError("runtime/meta.json does not name controlPlaneBranch")
+          '''
+          new = '''    branch = str(meta.get("controlPlaneBranch") or "").strip()
+          if not branch:
+              branch = str(cfg.control_branch or DEFAULT_CONTROL_BRANCH).strip()
+              if not branch:
+                  raise WorkerError(
+                      "runtime/meta.json does not name controlPlaneBranch and no configured control branch is available"
+                  )
+          '''
+          if old not in worker:
+              raise SystemExit('expected strict controlPlaneBranch block not found')
+          worker = worker.replace(old, new, 1)
+          worker_path.write_text(worker, encoding='utf-8', newline='\n')
+
+          docs_path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
+          docs = docs_path.read_text(encoding='utf-8')
+          old_status = (
+              'As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate still reports '
+              '**5.2.0**. Separate v6 experiments exist in Git history, but this delivery does not claim '
+              'that design: the current worker source has not implemented those v6 invariants completely. '
+              "The controller therefore reads the worker's real JSON `version` response instead of hard-coding "
+              'a fictional v6 version.\n'
           )
-          test_path.write_text(
-              tests.replace(marker, regression + marker, 1),
+          new_status = (
+              'As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate reports '
+              '**5.2.1**. This patch keeps Mission runtime metadata backward-compatible: when schema-v1 '
+              '`runtime/meta.json` does not contain `controlPlaneBranch`, the worker uses its configured/default '
+              'control branch and still verifies that exact remote branch exists before proceeding. If the runtime '
+              'metadata does name a control branch, that runtime-selected branch remains authoritative. Separate v6 '
+              'experiments exist in Git history, but this delivery does not claim that design: the current worker '
+              'source has not implemented those v6 invariants completely. The controller therefore reads the worker\'s '
+              'real JSON `version` response instead of hard-coding a fictional v6 version.\n'
+          )
+          if old_status not in docs:
+              raise SystemExit('expected Qwen implementation-status paragraph not found')
+          docs_path.write_text(
+              docs.replace(old_status, new_status, 1),
               encoding='utf-8',
               newline='\n',
           )
+          PY
+
+      - name: Validate worker compatibility behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util
+          import pathlib
+          import sys
+          from unittest import mock
+
+          path = pathlib.Path('tool/kris_qwen_worker.py').resolve()
+          spec = importlib.util.spec_from_file_location('kris_qwen_worker_compat', path)
+          if spec is None or spec.loader is None:
+              raise SystemExit('cannot import Qwen worker')
+          worker = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = worker
+          spec.loader.exec_module(worker)
+
+          class Cfg:
+              anchor = pathlib.Path('/tmp/kris-qwen-anchor')
+              runtime_branch = 'agent/mission-runtime'
+              control_branch = 'agent/mission-execution-v15-gold'
+
+          cfg = Cfg()
+          responses = [
+              mock.Mock(
+                  returncode=0,
+                  stdout='{"runtimeGeneration":651,"schemaVersion":1}\n',
+                  stderr='',
+              ),
+              mock.Mock(returncode=0, stdout='ok\n', stderr=''),
+          ]
+          with mock.patch.object(worker, 'git', side_effect=responses) as git_mock:
+              resolved = worker.resolve_control_plane(cfg)
+          if resolved != 'agent/mission-execution-v15-gold':
+              raise SystemExit(f'legacy runtime metadata fallback failed: {resolved!r}')
+          if cfg.control_branch != resolved:
+              raise SystemExit('fallback did not update configured control branch')
+          verify_call = git_mock.call_args_list[1]
+          if 'origin/agent/mission-execution-v15-gold' not in verify_call.args:
+              raise SystemExit(f'fallback branch was not remotely verified: {verify_call!r}')
+
+          cfg = Cfg()
+          responses = [
+              mock.Mock(
+                  returncode=0,
+                  stdout='{"runtimeGeneration":652,"schemaVersion":1,"controlPlaneBranch":"agent/runtime-selected"}\n',
+                  stderr='',
+              ),
+              mock.Mock(returncode=0, stdout='ok\n', stderr=''),
+          ]
+          with mock.patch.object(worker, 'git', side_effect=responses) as git_mock:
+              resolved = worker.resolve_control_plane(cfg)
+          if resolved != 'agent/runtime-selected' or cfg.control_branch != resolved:
+              raise SystemExit('runtime-selected control branch did not remain authoritative')
+          verify_call = git_mock.call_args_list[1]
+          if 'origin/agent/runtime-selected' not in verify_call.args:
+              raise SystemExit(f'runtime-selected branch was not remotely verified: {verify_call!r}')
+
+          if worker.SCRIPT_VERSION != '5.2.1':
+              raise SystemExit(f'unexpected worker version {worker.SCRIPT_VERSION!r}')
+          print('validated runtime control-plane compatibility and strict remote verification')
           PY
 
       - name: Validate Qwen phone control and refresh exact source manifest
@@ -101,8 +170,8 @@ jobs:
           )
           value = json.loads(raw)
           version = str(value.get('scriptVersion') or '').strip()
-          if not version:
-              raise SystemExit(f'worker version JSON missing scriptVersion: {raw!r}')
+          if version != '5.2.1':
+              raise SystemExit(f'unexpected worker version JSON: {raw!r}')
           if subprocess.check_output(
               ['python3', 'tool/kris_qwen_control.py', '--version'],
               text=True,
@@ -111,6 +180,7 @@ jobs:
           print(f'validated worker version {version}')
           PY
           test -x run_my_server.py
+          test -x tool/run_kris_qwen_phone_control.sh
           bash -n tool/install_kris_qwen_control_systemd.sh
           bash -n tool/run_kris_qwen_phone_control.sh
           python3 tool/p1a_refresh_source_manifest.py .
@@ -124,15 +194,15 @@ jobs:
 
           expected = {
               'SOURCE_MANIFEST.sha256',
-              'tool/kris_qwen_control.py',
-              'tool/kris_qwen_control_test.py',
+              'docs/KRIS_QWEN_SERVER_CONTROL.md',
+              'tool/kris_qwen_worker.py',
           }
           actual = set(
               subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
           )
           if actual != expected:
               raise SystemExit(
-                  f'phone-control materializer scope mismatch actual={sorted(actual)} '
+                  f'Qwen compatibility materializer scope mismatch actual={sorted(actual)} '
                   f'expected={sorted(expected)}'
               )
           PY
@@ -140,8 +210,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add \
             SOURCE_MANIFEST.sha256 \
-            tool/kris_qwen_control.py \
-            tool/kris_qwen_control_test.py
+            docs/KRIS_QWEN_SERVER_CONTROL.md \
+            tool/kris_qwen_worker.py
           git diff --cached --check
-          git commit -m 'fix(qwen): repair phone URL discovery'
+          git commit -m 'fix(qwen): support legacy runtime control metadata'
           git push origin HEAD:refs/heads/agent/qwen-phone-control
