@@ -1,1 +1,1 @@
-trigger P25 governance materialization from exact base 3f79fec5b55796909eedaeab74a35e34d47ef77a
+trigger P25 governance materialization from exact base 61929de95c625b2eb4dc5ace08e2fc53edbe7ee7
