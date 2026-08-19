@@ -1,1 +1,1 @@
-P25 governance repair target: 4e9a82ef241fec23ddfef9d287037d4dc481843b
+P25 derived-contract repair target: 8c2072f4526c2f2e6dc46a8d02913b4e3a90f5d7
