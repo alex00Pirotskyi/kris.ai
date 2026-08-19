@@ -47,6 +47,7 @@ jobs:
           exec(compile(source, '<p25-governance-materializer>', 'exec'), {'__name__': '__main__'})
           PY
           python - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
@@ -84,6 +85,18 @@ jobs:
                   encoding='utf-8',
                   newline='\n',
               )
+
+          master_path = Path('docs/roadmap/MASTER.md')
+          roadmap_path = Path('docs/roadmap/roadmap.yaml')
+          roadmap = json.loads(roadmap_path.read_text(encoding='utf-8'))
+          roadmap['authority']['masterSha256'] = hashlib.sha256(
+              master_path.read_bytes()
+          ).hexdigest()
+          roadmap_path.write_text(
+              json.dumps(roadmap, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+              newline='\n',
+          )
           PY
           python tool/roadmap_control.py render --project .
           rm -rf .github/p25-materializer
