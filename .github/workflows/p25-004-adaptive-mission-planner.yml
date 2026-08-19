@@ -1,0 +1,164 @@
+name: P25-004 Adaptive Mission Planner
+
+on:
+  push:
+    branches:
+      - 'agent/product/p25-002-fast-interactive-runtime'
+    paths:
+      - '.github/workflows/p25-004-adaptive-mission-planner.yml'
+      - '.p25-adaptive/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p25-004-adaptive-mission-planner
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    name: p25-adaptive-mission-planner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    steps:
+      - name: Check out exact transport head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Apply, validate, and publish adaptive mission planning
+        shell: bash
+        env:
+          TARGET_BRANCH: agent/product/p25-002-fast-interactive-runtime
+        run: |
+          set -euo pipefail
+
+          test "${GITHUB_REF_NAME}" = "${TARGET_BRANCH}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+
+          test "$(git hash-object lib/product/prompt_planning.dart)" = "35a7ff80b6c4c98d70308d3c417d8160c7bcecfa"
+          test "$(git hash-object lib/product/chat_studio.dart)" = "fec881893966af268c507f780f27481e542ad3a7"
+          test "$(git hash-object test/product/source_contract_test.dart)" = "245681f634e05a7e3167bcd1a785a41c4dc8c5b5"
+
+          test "$(sha256sum .p25-adaptive/payload.b64.00 | cut -d' ' -f1)" = "84b32d8d29d4e75ee35db79f75118db4918178155e03de4768454f8fa8589399"
+          test "$(sha256sum .p25-adaptive/payload.b64.01 | cut -d' ' -f1)" = "bc9677e1f19ae73246eb0272f8e15cac2f611ba7e363e832612384de9706e0f1"
+          test "$(sha256sum .p25-adaptive/payload.b64.02 | cut -d' ' -f1)" = "7d21f52ae39726c888d0d67a2060e9257a9db691eda2daedfb347701b180cd5a"
+          test "$(sha256sum .p25-adaptive/payload.b64.03 | cut -d' ' -f1)" = "ed238ad69d5cde6f49e2f504a9c8d9f42baeecc880f554b57bce4b6929143ca2"
+          cat .p25-adaptive/payload.b64.* | base64 --decode > "${RUNNER_TEMP}/p25-adaptive.tar.gz"
+          test "$(sha256sum "${RUNNER_TEMP}/p25-adaptive.tar.gz" | cut -d' ' -f1)" = "88d9e66c8787bde1a36bf7162fa76a28e0e019ab17eec5767a9ee461bcfa442f"
+          tar -xzf "${RUNNER_TEMP}/p25-adaptive.tar.gz" -C .p25-adaptive
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.p25-adaptive/p25_adaptive_mission_apply.py')
+          source = path.read_text(encoding='utf-8')
+          old = "JsonEncoder.withIndent(' ')"
+          new = "JsonEncoder.withIndent('  ')"
+          if source.count(old) != 2:
+              raise SystemExit('adaptive patcher JSON-indent repair anchor drifted')
+          path.write_text(source.replace(old, new), encoding='utf-8', newline='\n')
+          PY
+          python3 -m py_compile .p25-adaptive/p25_adaptive_mission_apply.py
+
+          python3 .p25-adaptive/p25_adaptive_mission_apply.py . --check
+          python3 .p25-adaptive/p25_adaptive_mission_apply.py . --apply
+
+          rm -rf .p25-adaptive/source .p25-adaptive/p25_adaptive_mission_apply.py
+          git rm -r -- .p25-adaptive .github/workflows/p25-004-adaptive-mission-planner.yml
+
+          flutter pub get
+          changed_product=(
+            lib/product/adaptive_mission_planning.dart
+            lib/product/adaptive_mission_ui.dart
+            lib/product/prompt_planning.dart
+            lib/product/chat_studio.dart
+            test/product/adaptive_mission_planning_test.dart
+            test/product/source_contract_test.dart
+          )
+          dart format "${changed_product[@]}"
+          git diff --check -- "${changed_product[@]}"
+
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+
+          flutter test --reporter expanded \
+            test/product/adaptive_mission_planning_test.dart \
+            test/product/p25_fast_path_contract_test.dart \
+            test/product/prompt_studio_v2_test.dart \
+            test/product/source_contract_test.dart \
+            test/product/v1_product_preview_test.dart \
+            test/product/model/model_registry_test.dart \
+            test/product/budget_diagnostics_test.dart \
+            test/product/execution_reliability_test.dart
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          python3 tool/p25_prompt_studio_roadmap_test.py --project .
+          python3 tool/p25_prompt_studio_test_station.py --project . --profile contract --check
+
+          expected_changed=(
+            SOURCE_MANIFEST.sha256
+            lib/product/adaptive_mission_planning.dart
+            lib/product/adaptive_mission_ui.dart
+            lib/product/prompt_planning.dart
+            lib/product/chat_studio.dart
+            test/product/adaptive_mission_planning_test.dart
+            test/product/source_contract_test.dart
+          )
+          git add -- "${expected_changed[@]}"
+          git diff --cached --check
+
+          git status --porcelain=v1 --untracked-files=all > "${RUNNER_TEMP}/status.txt"
+          python3 - "${RUNNER_TEMP}/status.txt" "${expected_changed[@]}" <<'PY'
+          from pathlib import Path
+          import sys
+
+          allowed = set(sys.argv[2:])
+          allowed.update({
+              '.github/workflows/p25-004-adaptive-mission-planner.yml',
+              '.p25-adaptive/payload.b64.00',
+              '.p25-adaptive/payload.b64.01',
+              '.p25-adaptive/payload.b64.02',
+              '.p25-adaptive/payload.b64.03',
+          })
+          changed = set()
+          for line in Path(sys.argv[1]).read_text(encoding='utf-8').splitlines():
+              if not line:
+                  continue
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ', 1)[1]
+              changed.add(path)
+          unexpected = sorted(changed - allowed)
+          missing = sorted(set(sys.argv[2:]) - changed)
+          if unexpected:
+              raise SystemExit('unexpected changed paths: ' + ', '.join(unexpected))
+          if missing:
+              raise SystemExit('expected product paths were not changed: ' + ', '.join(missing))
+          print('Adaptive mission planner changed-path scope verified.')
+          PY
+
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+
+          git -c user.name='Kris AI Product Worker' \
+              -c user.email='kris-ai-product-worker@users.noreply.github.com' \
+              commit -m 'feat(p25): add adaptive mission planning and token economics'
+          result_sha="$(git rev-parse HEAD)"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+          printf 'P25 adaptive mission planner product commit: %s\n' "${result_sha}"
