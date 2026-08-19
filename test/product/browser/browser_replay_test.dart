@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/browser_replay.dart';
 
 void main() {
-  test('failed replay preserves telemetry and hashes without page payloads', () {
+  test('failed replay preserves telemetry and hashes without page payloads',
+      () {
     final recorder = P3BrowserReplayRecorder(
       runId: 'run-p3-007',
       sessionId: 'session_1',
