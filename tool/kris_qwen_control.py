@@ -669,7 +669,9 @@ class ControlHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
-        if path == "/api/status" and self._guard():
+        if path == "/api/status":
+            if not self._guard():
+                return
             self._json(HTTPStatus.OK, self.controller.status())
             return
         self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
