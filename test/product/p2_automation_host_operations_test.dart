@@ -25,10 +25,12 @@ void main() {
       expectedGrantDigest: grantDigest,
     );
 
-    final openBinding =
-        Map<String, Object?>.from(opened.grantProof.capabilityGrant['binding']! as Map);
-    final inputBinding =
-        Map<String, Object?>.from(input.grantProof.capabilityGrant['binding']! as Map);
+    final openBinding = Map<String, Object?>.from(
+      opened.grantProof.capabilityGrant['binding']! as Map,
+    );
+    final inputBinding = Map<String, Object?>.from(
+      input.grantProof.capabilityGrant['binding']! as Map,
+    );
     expect(openBinding.containsKey('operation'), isFalse);
     expect(inputBinding.containsKey('operation'), isFalse);
     expect(opened.grantProof.grantDigest, grantDigest);
@@ -73,12 +75,13 @@ void main() {
         bindingProvider: _Bindings(),
       );
       final plan = await adapter.plan(
-          'fixture',
-          'install',
-          <String>[
-            'fixture-sdk',
-          ],
-          testBinding('package.plan', taskId: 'P2-007'));
+        'fixture',
+        'install',
+        <String>[
+          'fixture-sdk',
+        ],
+        testBinding('package.plan', taskId: 'P2-007'),
+      );
       final applied = await adapter.apply(
         plan,
         testBinding('package.apply', taskId: 'P2-007'),
