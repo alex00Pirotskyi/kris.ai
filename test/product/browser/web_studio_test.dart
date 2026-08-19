@@ -100,7 +100,11 @@ void main() {
       editor.newDocument('new/theme.css'),
       editor.newDocument('new/client.js'),
     ];
-    final content = <String>['<p>new</p>\n', 'p { color: red; }\n', 'boot();\n'];
+    final content = <String>[
+      '<p>new</p>\n',
+      'p { color: red; }\n',
+      'boot();\n'
+    ];
 
     for (var index = 0; index < documents.length; index += 1) {
       final saved = await editor.save(documents[index], content[index]);
@@ -123,7 +127,7 @@ void main() {
     final result = await editor.search('hello studio');
     final paths = result.matches.map((item) => item.path).toSet();
 
-    expect(paths, <String>{'index.html', 'src/app.js'});
+    expect(paths, unorderedEquals(<String>['index.html', 'src/app.js']));
     expect(result.matches.every((item) => item.line == 1), isTrue);
     expect(paths.any((path) => path.contains('node_modules')), isFalse);
   });
