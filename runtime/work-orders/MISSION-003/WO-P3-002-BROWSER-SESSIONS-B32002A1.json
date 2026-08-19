@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-P3-002-BROWSER-SESSIONS-B32002A1",
   "allowedPaths": [
     ".github/workflows/p3-browser-runtime.yml",
     "automation_host/src/browser-runtime.mjs",
@@ -10,13 +9,15 @@
   "assignedWorker": "GPT-5.6-PRO-GOLD:GS-012-P3-002",
   "baseCommit": "e4f66ce5a95870cad342bbf9aaf89f94dc768f58",
   "baseTree": "db4c9218c6180d9b3613e6635d6213c85f49d9cd",
+  "blockerClassification": "STALE_BLOCKER",
+  "blockerReason": "Cumulative P3-002 through P3-006B source landed on protected main at e9a2019095b5da8c31a4d4741597f7afcf4aadb2; this old P3-002 execution lane must not be requeued.",
   "branch": "agent/product/p3-002-browser-session-service",
   "childWorkOrders": [],
   "createdAt": "2026-08-17T00:02:00Z",
   "createdBy": "WRK-20260817T000200Z-b32002a1",
   "dependencyRequirements": [],
   "executionRole": "BUILDER",
-  "lastActor": "GPT-5.6-PRO-GOLD:GS-012:P3-002-PR161-EXACT-CANDIDATE",
+  "lastActor": "GPT-5.6-SOL:RUNTIME-CONTROL-PLANE-REPAIR",
   "maxChildWorkOrders": 2,
   "mission": "MISSION-003",
   "objective": "Implement the first real P3-002 Browser Session Service product slice on the landed P3-001 bundled runtime: isolated ephemeral and persistent browser contexts, local profile-state persistence, bounded session/page/profile quotas, request-correlated page lifecycle operations, and deterministic cleanup. Keep the service application-owned and offline at runtime. The workflow path is exact self-removing transport only and must be restored before the product commit. Do not spend this Work Order on readiness prose, governance expansion, observations/actions beyond session lifecycle, or platform/release/production/GA promotion.",
@@ -36,8 +37,8 @@
   ],
   "roadmapTask": "P3-002",
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "SUPERSEDED",
   "type": "PRODUCT_FEATURE",
-  "updatedAt": "2026-08-17T00:29:00Z",
+  "updatedAt": "2026-08-19T18:33:12Z",
   "workOrderId": "WO-P3-002-BROWSER-SESSIONS-B32002A1"
 }

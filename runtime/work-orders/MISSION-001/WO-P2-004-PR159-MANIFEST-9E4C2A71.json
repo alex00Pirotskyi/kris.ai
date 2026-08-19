@@ -1,16 +1,17 @@
 {
-  "activeSemaphoreId": "SEM-P2-004-PR159-MANIFEST-9E4C2A71",
   "allowedPaths": [
     "SOURCE_MANIFEST.sha256"
   ],
   "assignedWorker": "GPT-5.6-PRO-GOLD:GS-003C-R4-MANIFEST",
   "baseCommit": "6f3fcf7b0b786bc804d86ff3a07bda1f99301454",
   "baseTree": "e58e2d9b74d98476a48d8ae037489ca23110a45a",
+  "blockerClassification": "STALE_BLOCKER",
+  "blockerReason": "Manifest finalization was consumed into the exact current PR #159 candidate; it must not remain an active child.",
   "createdAt": "2026-08-16T08:43:00Z",
   "createdBy": "WRK-20260816T084300Z-9e4c2a71",
   "dependencyRequirements": [],
   "executionRole": "RELEASE_FINALIZER",
-  "lastActor": "GPT-5.6-PRO-GOLD:GS-003C:R4-SUCCESSOR-MANIFEST",
+  "lastActor": "GPT-5.6-SOL:RUNTIME-CONTROL-PLANE-REPAIR",
   "maxChildWorkOrders": 0,
   "mission": "MISSION-001",
   "objective": "Materialize the canonical SOURCE_MANIFEST.sha256 for the exact PR #159 R4 successor-shell CI repair. Change only the two repaired P2 tool digests, preserve all 1,192 sorted source paths and every unrelated digest, require LF with one terminal newline, and make no Product, behavior, accessibility, platform, release, production, or GA promotion.",
@@ -28,8 +29,8 @@
   "roadmapTask": "P2-004",
   "runtimeGeneration": 638,
   "schemaVersion": 1,
-  "status": "IN_PROGRESS",
+  "status": "SUPERSEDED",
   "type": "RELEASE_FINALIZATION",
-  "updatedAt": "2026-08-16T08:43:00Z",
+  "updatedAt": "2026-08-19T18:33:12Z",
   "workOrderId": "WO-P2-004-PR159-MANIFEST-9E4C2A71"
 }

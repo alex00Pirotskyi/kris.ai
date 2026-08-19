@@ -1,0 +1,97 @@
+{
+  "eventId": "EVT-00000652-CONTROL_PLANE_RECONCILED",
+  "eventType": "CONTROL_PLANE_RECONCILED",
+  "mission": null,
+  "payload": {
+    "expiredSemaphores": [
+      "SEM-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74",
+      "SEM-P2-004-PR159-MANIFEST-9E4C2A71",
+      "SEM-P2-004-PR159-R4-REVALIDATION-9E4C2A72",
+      "SEM-P3-002-BROWSER-SESSIONS-B32002A1"
+    ],
+    "p3ProductPr161": {
+      "lastObservedHead": "a0569b05fd0f598f92636cfdab383fd169bb7a30",
+      "lastObservedTree": "98c2f22bbaf32d80b182adaf30fc3c6989c9e134",
+      "mainLandingCommit": "e9a2019095b5da8c31a4d4741597f7afcf4aadb2",
+      "mainLandingTree": "af3806cc6d50d9ee8bd14ff9f414a14ce8525236",
+      "status": "SUPERSEDED"
+    },
+    "reason": "Remove stale active runtime authority and expired leases that block Mission Execution validation without requeueing obsolete work.",
+    "reviewDebtPreserved": true,
+    "reviewPassClaimed": false,
+    "supportOrReleasePromotionClaimed": false,
+    "transitions": [
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "VALIDATING",
+        "to": "SUPERSEDED",
+        "workOrderId": "WO-P3-001-CURRENT-MAIN-RECONCILE-5F6A7B8C"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "VALIDATING",
+        "to": "SUPERSEDED",
+        "workOrderId": "WO-P3-001-PRE-READY-SHUTDOWN-5F6A7B8C"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "VALIDATING",
+        "to": "SUPERSEDED",
+        "workOrderId": "WO-P3-001-SHARED-SURFACES-AFTER-MAIN-5F6A7B8C"
+      },
+      {
+        "classification": "EXTERNAL_HARD",
+        "from": "REVIEW",
+        "to": "BLOCKED",
+        "workOrderId": "WO-P3-001-PR142-R1-5F6A7B8C"
+      },
+      {
+        "classification": "EXTERNAL_HARD",
+        "from": "REVIEW",
+        "to": "BLOCKED",
+        "workOrderId": "WO-P3-001-PR144-R1-5F6A7B8C"
+      },
+      {
+        "classification": "EXTERNAL_HARD",
+        "from": "REVIEW",
+        "to": "BLOCKED",
+        "workOrderId": "WO-P4-001-PR143-R1-5F6A7B8C"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "IN_PROGRESS",
+        "to": "SUPERSEDED",
+        "workOrderId": "WO-P2-004-PR159-MANIFEST-9E4C2A71"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "IN_PROGRESS",
+        "to": "BLOCKED",
+        "workOrderId": "WO-P2-004-PR159-R4-IDEMPOTENCE-9E4C2A71"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "HELPER_READY",
+        "to": "BLOCKED",
+        "workOrderId": "WO-P2-004-MACOS-PACKAGING-9E4C2A73"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "IN_PROGRESS",
+        "to": "BLOCKED",
+        "workOrderId": "WO-P2-004-MACOS-PACKAGING-MANIFEST-9E4C2A74"
+      },
+      {
+        "classification": "STALE_BLOCKER",
+        "from": "IN_PROGRESS",
+        "to": "SUPERSEDED",
+        "workOrderId": "WO-P3-002-BROWSER-SESSIONS-B32002A1"
+      }
+    ]
+  },
+  "recordedAt": "2026-08-19T18:33:12Z",
+  "runtimeGeneration": 652,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-CONTROL-PLANE-REPAIR",
+  "workOrderId": null
+}
