@@ -130,6 +130,20 @@ jobs:
 
           python3 "${payload_root}/p25_patcher_selftest.py"
           python3 "${payload_root}/p25_fastpath_apply.py" . --no-verify
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/product/chat_studio.dart')
+          source = path.read_text(encoding='utf-8')
+          anchor = "import 'product_runtime.dart';\n"
+          addition = anchor + "import 'storage_security.dart';\n"
+          if "import 'storage_security.dart';" not in source:
+              if source.count(anchor) != 1:
+                  raise SystemExit('chat_studio ProductException import anchor drifted')
+              source = source.replace(anchor, addition, 1)
+              path.write_text(source, encoding='utf-8', newline='\n')
+          PY
+          dart format lib/product/chat_studio.dart
 
           test_targets=(
             test/product/p25_fast_path_contract_test.dart
@@ -179,7 +193,13 @@ jobs:
           git add -- "${expected_product[@]}"
           git cat-file blob "${ORIGINAL_P25_WORKFLOW_BLOB}" > .github/workflows/p25-prompt-studio.yml
           git add -- .github/workflows/p25-prompt-studio.yml
-          git rm -r -- .p25-fastpath .github/workflows/p25-002-materialize.yml
+          git rm -r -- \
+            .p25-fastpath \
+            .github/workflows/p25-002-materialize.yml \
+            tool/p25_prompt_studio_materialize_trigger.py \
+            docs/.p25-pr-materializer-placeholder \
+            docs/.p25-pr-event-marker \
+            docs/.p25-pr-ready
           git diff --cached --check
 
           git -c user.name='Kris AI Product Worker' \
