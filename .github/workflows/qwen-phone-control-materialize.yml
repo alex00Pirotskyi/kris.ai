@@ -1,0 +1,83 @@
+name: Qwen Phone Control Materializer
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-phone-control-materializer'
+    paths:
+      - '.github/workflows/qwen-phone-control-materialize.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qwen-phone-control-materializer
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out phone-control candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-phone-control
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Validate Qwen phone control and refresh exact source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            tool/kris_qwen_worker.py \
+            tool/kris_qwen_control.py \
+            tool/kris_qwen_control_test.py
+          python3 tool/kris_qwen_control_test.py
+          python3 - <<'PY'
+          import json
+          import subprocess
+
+          raw = subprocess.check_output(
+              ['python3', 'tool/kris_qwen_worker.py', 'version'],
+              text=True,
+          )
+          value = json.loads(raw)
+          version = str(value.get('scriptVersion') or '').strip()
+          if not version:
+              raise SystemExit(f'worker version JSON missing scriptVersion: {raw!r}')
+          if subprocess.check_output(
+              ['python3', 'tool/kris_qwen_control.py', '--version'],
+              text=True,
+          ).strip() != '2.1.0':
+              raise SystemExit('unexpected Qwen controller version')
+          print(f'validated worker version {version}')
+          PY
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          bash -n tool/run_kris_qwen_phone_control.sh
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+
+          expected = {'SOURCE_MANIFEST.sha256'}
+          actual = set(
+              subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'phone-control materializer scope mismatch actual={sorted(actual)} '
+                  f'expected={sorted(expected)}'
+              )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'chore(qwen): refresh exact source manifest'
+          git push origin HEAD:refs/heads/agent/qwen-phone-control
