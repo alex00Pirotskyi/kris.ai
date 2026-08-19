@@ -41,4 +41,4 @@ jobs:
             --commit-sha bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
             --output diag/artifact/task-results/P2-001.json \
             --artifact-root diag/artifact \
-            --max-command-seconds 20
+            --max-command-seconds 90
