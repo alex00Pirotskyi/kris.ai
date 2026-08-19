@@ -140,6 +140,19 @@ jobs:
           patcher="${payload_root}/p25_prompt_studio_redesign_apply.py"
           python3 "${patcher}" . --check
           python3 "${patcher}" . --apply
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/product/chat_studio.dart')
+          source = path.read_text(encoding='utf-8')
+          anchor = "import 'extensions_index.dart';\n"
+          addition = anchor + "import 'models_research.dart';\n"
+          if "import 'models_research.dart';" not in source:
+              if source.count(anchor) != 1:
+                  raise SystemExit('chat_studio model-progress import anchor drifted')
+              source = source.replace(anchor, addition, 1)
+              path.write_text(source, encoding='utf-8', newline='\n')
+          PY
 
           flutter pub get
           changed_product=(
