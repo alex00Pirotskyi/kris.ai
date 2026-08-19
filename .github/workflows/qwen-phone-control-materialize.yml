@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: qwen-phone-control-materializer
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   materialize:
@@ -56,27 +56,26 @@ jobs:
           marker = '\n\nclass WorkerVersionTest(unittest.TestCase):\n'
           if marker not in tests:
               raise SystemExit('worker-version test marker not found')
-          regression = '''
-              def test_phone_url_discovery_handles_gethostbyname_ex_result(self) -> None:
-                  with mock.patch.object(control.socket, "gethostname", return_value="kris-server"), \\
-                       mock.patch.object(
-                           control.socket,
-                           "gethostbyname_ex",
-                           return_value=("kris-server", [], ["10.0.0.2", "10.0.0.3"]),
-                       ), \\
-                       mock.patch.object(control.socket, "socket", side_effect=OSError("offline")):
-                      urls = control.discover_phone_urls(8090)
-                  self.assertEqual(
-                      urls,
-                      ["http://10.0.0.2:8090", "http://10.0.0.3:8090"],
-                  )
-          '''
-          regression = '\n'.join(
-              line[10:] if line.startswith('          ') else line
-              for line in regression.splitlines()
-          ) + '\n'
+          regression = (
+              "\n"
+              "    def test_phone_url_discovery_handles_gethostbyname_ex_result(self) -> None:\n"
+              "        with mock.patch.object(control.socket, 'gethostname', return_value='kris-server'):\n"
+              "            with mock.patch.object(\n"
+              "                control.socket,\n"
+              "                'gethostbyname_ex',\n"
+              "                return_value=('kris-server', [], ['10.0.0.2', '10.0.0.3']),\n"
+              "            ):\n"
+              "                with mock.patch.object(\n"
+              "                    control.socket, 'socket', side_effect=OSError('offline')\n"
+              "                ):\n"
+              "                    urls = control.discover_phone_urls(8090)\n"
+              "        self.assertEqual(\n"
+              "            urls,\n"
+              "            ['http://10.0.0.2:8090', 'http://10.0.0.3:8090'],\n"
+              "        )\n"
+          )
           test_path.write_text(
-              tests.replace(marker, '\n' + regression + marker, 1),
+              tests.replace(marker, regression + marker, 1),
               encoding='utf-8',
               newline='\n',
           )
