@@ -72,6 +72,18 @@ jobs:
                       'lineageId': 'p25.prompt-studio-product-rescue',
                   })
           proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          for relative in (
+              'docs/roadmap/ASSURANCE_MODEL.md',
+              'docs/roadmap/BENCHMARKS.md',
+              'docs/roadmap/MASTER.md',
+          ):
+              path = Path(relative)
+              path.write_text(
+                  path.read_text(encoding='utf-8').rstrip('\n') + '\n',
+                  encoding='utf-8',
+                  newline='\n',
+              )
           PY
           python tool/roadmap_control.py render --project .
           rm -rf .github/p25-materializer
