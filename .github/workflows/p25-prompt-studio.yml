@@ -83,3 +83,128 @@ jobs:
           cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
           python tool/p1a_text_eof_contract_test.py --project .
           git diff --exit-code -- SOURCE_MANIFEST.sha256
+
+  repair-derived-bindings:
+    name: p25-publish-derived-binding-repair
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.head_ref == 'agent/p25-prompt-studio-product-rescue-v4' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      TARGET_BRANCH: ${{ github.head_ref }}
+      BASE_MAIN: e4f66ce5a95870cad342bbf9aaf89f94dc768f58
+      PERMANENT_WORKFLOW_COMMIT: 048949f8c240c4f2859f225101ad31055472bf16
+    steps:
+      - name: Check out exact P25 PR head with branch credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.EXPECTED_HEAD }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Repair, validate, restore read-only workflow, and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+
+          git cat-file -e "${BASE_MAIN}^{commit}"
+          git cat-file -e "${PERMANENT_WORKFLOW_COMMIT}^{commit}"
+          git checkout "${PERMANENT_WORKFLOW_COMMIT}" -- \
+            .github/workflows/p25-prompt-studio.yml
+          rm -f .github/workflows/p25-derived-contract-repair.yml
+          git checkout "${BASE_MAIN}" -- \
+            config/toolchains.lock.json \
+            pubspec.lock \
+            release/evidence/P0-004/inputs.json
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tool/p0_008_roadmap_test.py')
+          source = path.read_text(encoding='utf-8')
+          version = '    "3.1.7-p25-prompt-studio-product-rescue",\n'
+          if version not in source:
+              old = '''    "3.1.6-p0-010-generated-state-hygiene",
+})'''
+              new = '''    "3.1.6-p0-010-generated-state-hygiene",
+    "3.1.7-p25-prompt-studio-product-rescue",
+})'''
+              if source.count(old) != 1:
+                  raise SystemExit(
+                      f'expected one cumulative-version anchor, found {source.count(old)}'
+                  )
+              source = source.replace(old, new, 1)
+          if source.count('"3.1.7-p25-prompt-studio-product-rescue"') != 1:
+              raise SystemExit('P25 cumulative roadmap version must occur exactly once')
+          path.write_text(source, encoding='utf-8', newline='\n')
+          PY
+
+          python3 tool/v71r12_bootstrap_hosted_python.py --project .
+          python3 tool/p0_008_roadmap_test.py --project .
+          python3 tool/p2_toolchains.py --project .
+          python3 tool/p2_toolchain_extension_test.py --project .
+          python3 tool/roadmap_control.py validate --project . --strict
+          python3 tool/p25_prompt_studio_roadmap_test.py --project .
+          python3 tool/test_center_contracts.py check --project .
+          python3 -m unittest -v tool/test_center_contracts_test.py
+          python3 tool/test_center_assurance_hierarchy.py check --project .
+          ruby tool/workflow_integrity_test.rb .
+
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+
+          expected = {
+              '.github/workflows/p25-derived-contract-repair.yml',
+              '.github/workflows/p25-prompt-studio.yml',
+              'SOURCE_MANIFEST.sha256',
+              'config/toolchains.lock.json',
+              'pubspec.lock',
+              'release/evidence/P0-004/inputs.json',
+              'tool/p0_008_roadmap_test.py',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', '--name-only'], text=True
+              ).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit(
+                  f'P25 finalizer scope mismatch actual={sorted(actual)} expected={sorted(expected)}'
+              )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A \
+            .github/workflows/p25-derived-contract-repair.yml \
+            .github/workflows/p25-prompt-studio.yml \
+            SOURCE_MANIFEST.sha256 \
+            config/toolchains.lock.json \
+            pubspec.lock \
+            release/evidence/P0-004/inputs.json \
+            tool/p0_008_roadmap_test.py
+          git diff --cached --check
+          git commit -m 'ci(p25): repair roadmap and restore toolchain bindings'
+
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
