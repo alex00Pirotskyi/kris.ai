@@ -6,6 +6,7 @@ on:
       - 'agent/product/p25-002-fast-interactive-runtime'
     paths:
       - '.github/workflows/p25-002-materialize.yml'
+      - '.p25-fastpath/trigger'
   workflow_dispatch:
 
 permissions:
