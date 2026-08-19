@@ -31,6 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile \
+            run_my_server.py \
             tool/kris_qwen_worker.py \
             tool/kris_qwen_control.py \
             tool/kris_qwen_control_test.py
@@ -54,6 +55,7 @@ jobs:
               raise SystemExit('unexpected Qwen controller version')
           print(f'validated worker version {version}')
           PY
+          test -x run_my_server.py
           bash -n tool/install_kris_qwen_control_systemd.sh
           bash -n tool/run_kris_qwen_phone_control.sh
           python3 tool/p1a_refresh_source_manifest.py .
