@@ -85,7 +85,9 @@ jobs:
           git diff --exit-code -- SOURCE_MANIFEST.sha256
 
   materialize-fast-product:
-    if: github.event_name == 'push' && github.ref_name == 'agent/product/p25-002-fast-interactive-runtime'
+    if: >-
+      (github.event_name == 'push' && github.ref_name == 'agent/product/p25-002-fast-interactive-runtime') ||
+      (github.event_name == 'pull_request' && github.head_ref == 'agent/product/p25-002-fast-interactive-runtime')
     name: p25-fast-interactive-product
     runs-on: ubuntu-24.04
     timeout-minutes: 70
@@ -93,7 +95,7 @@ jobs:
       - name: Check out exact transport head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: true
       - name: Install exact Flutter
@@ -107,13 +109,13 @@ jobs:
         shell: bash
         env:
           TARGET_BRANCH: agent/product/p25-002-fast-interactive-runtime
+          EXPECTED_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           ORIGINAL_P25_WORKFLOW_BLOB: e7d37e81a095a5614b799fc7f55fe4c8872e2b88
         run: |
           set -euo pipefail
-          test "${GITHUB_REF_NAME}" = "${TARGET_BRANCH}"
-          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD_SHA}"
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
-          test "${remote_head}" = "${GITHUB_SHA}"
+          test "${remote_head}" = "${EXPECTED_HEAD_SHA}"
 
           payload_root="$(mktemp -d)"
           cleanup() { rm -rf "${payload_root}"; }
