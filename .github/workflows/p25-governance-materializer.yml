@@ -86,6 +86,23 @@ jobs:
                   newline='\n',
               )
 
+          p25_markdown = [
+              Path('docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md'),
+              Path('docs/roadmap/decisions/ADR-P25-001-prompt-studio-product-rescue.md'),
+              Path('docs/testing/TEST_CENTER_P25_PROMPT_STUDIO.md'),
+              *sorted(Path('tasks/planned').glob('P25-*.md')),
+          ]
+          for path in p25_markdown:
+              normalized = '\n'.join(
+                  line.rstrip(' \t')
+                  for line in path.read_text(encoding='utf-8').splitlines()
+              ).rstrip('\n') + '\n'
+              path.write_text(
+                  normalized,
+                  encoding='utf-8',
+                  newline='\n',
+              )
+
           master_path = Path('docs/roadmap/MASTER.md')
           roadmap_path = Path('docs/roadmap/roadmap.yaml')
           roadmap = json.loads(roadmap_path.read_text(encoding='utf-8'))
