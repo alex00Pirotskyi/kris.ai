@@ -108,7 +108,7 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-n      - name: Apply, validate, and publish adaptive mission planning
+      - name: Apply, validate, and publish adaptive mission planning
         shell: bash
         env:
           TARGET_BRANCH: agent/product/p25-002-fast-interactive-runtime
