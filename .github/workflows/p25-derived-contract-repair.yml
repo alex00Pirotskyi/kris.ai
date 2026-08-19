@@ -6,19 +6,32 @@ on:
       - 'agent/p25-prompt-studio-product-rescue-v4'
     paths:
       - '.github/workflows/p25-derived-contract-repair.yml'
+  pull_request:
+    branches:
+      - 'agent/p25-prompt-studio-product-rescue-v4'
+    paths:
+      - '.github/p25-derived-contract-repair.trigger'
 
 permissions:
   contents: write
 
 jobs:
   repair:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      EXPECTED_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.sha }}
+      BASE_MAIN: e4f66ce5a95870cad342bbf9aaf89f94dc768f58
+      TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
     steps:
-      - name: Check out exact candidate
+      - name: Check out exact P25 target
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.EXPECTED_HEAD }}
           fetch-depth: 0
           persist-credentials: true
       - name: Set up exact Python
@@ -28,14 +41,11 @@ jobs:
           check-latest: false
       - name: Restore unrelated bytes, repair roadmap compatibility, validate, and self-remove
         shell: bash
-        env:
-          BASE_MAIN: e4f66ce5a95870cad342bbf9aaf89f94dc768f58
-          TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
-          test "${remote_head}" = "${GITHUB_SHA}"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
 
           git cat-file -e "${BASE_MAIN}^{commit}"
           git checkout "${BASE_MAIN}" -- \
@@ -114,5 +124,5 @@ jobs:
           git commit -m 'ci(p25): repair roadmap and restore toolchain bindings'
 
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
-          test "${remote_head}" = "${GITHUB_SHA}"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
           git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
