@@ -108,14 +108,21 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Apply, validate, and publish adaptive mission planning
+n      - name: Apply, validate, and publish adaptive mission planning
         shell: bash
         env:
           TARGET_BRANCH: agent/product/p25-002-fast-interactive-runtime
           EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           ORIGINAL_P25_WORKFLOW_BLOB: e7d37e81a095a5614b799fc7f55fe4c8872e2b88
         run: |
-          set -euo pipefail
+          set -euxo pipefail
+
+          printf 'HEAD=%s expected=%s remote=%s\n' "$(git rev-parse HEAD)" "${EXPECTED_HEAD_SHA}" "$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          printf 'source blobs: prompt=%s chat=%s contract=%s\n' \
+            "$(git hash-object lib/product/prompt_planning.dart)" \
+            "$(git hash-object lib/product/chat_studio.dart)" \
+            "$(git hash-object test/product/source_contract_test.dart)"
+          sha256sum .p25-adaptive/payload.b64.*
 
           test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD_SHA}"
           remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
@@ -133,17 +140,6 @@ jobs:
           test "$(sha256sum "${RUNNER_TEMP}/p25-adaptive.tar.gz" | cut -d' ' -f1)" = "88d9e66c8787bde1a36bf7162fa76a28e0e019ab17eec5767a9ee461bcfa442f"
           tar -xzf "${RUNNER_TEMP}/p25-adaptive.tar.gz" -C .p25-adaptive
 
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('.p25-adaptive/p25_adaptive_mission_apply.py')
-          source = path.read_text(encoding='utf-8')
-          old = "JsonEncoder.withIndent(' ')"
-          new = "JsonEncoder.withIndent('  ')"
-          if source.count(old) != 2:
-              raise SystemExit('adaptive patcher JSON-indent repair anchor drifted')
-          path.write_text(source.replace(old, new), encoding='utf-8', newline='\n')
-          PY
           python3 -m py_compile .p25-adaptive/p25_adaptive_mission_apply.py
 
           python3 .p25-adaptive/p25_adaptive_mission_apply.py . --check
