@@ -61,7 +61,7 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
 
-SCRIPT_VERSION = "5.2.0"
+SCRIPT_VERSION = "5.2.1"
 
 # Never hard-code GitHub credentials in this worker. Use GH_TOKEN /
 # GITHUB_TOKEN from the environment, or the normal `gh auth login` credential
@@ -1217,7 +1217,11 @@ def resolve_control_plane(cfg: Config) -> str:
         raise WorkerError(f"runtime/meta.json is invalid JSON: {exc}") from exc
     branch = str(meta.get("controlPlaneBranch") or "").strip()
     if not branch:
-        raise WorkerError("runtime/meta.json does not name controlPlaneBranch")
+        branch = str(cfg.control_branch or DEFAULT_CONTROL_BRANCH).strip()
+        if not branch:
+            raise WorkerError(
+                "runtime/meta.json does not name controlPlaneBranch and no configured control branch is available"
+            )
     exists = git(cfg.anchor, "rev-parse", "--verify", f"origin/{branch}", check=False, timeout=120)
     if exists.returncode != 0:
         raise WorkerError(f"runtime-selected control branch is not available: {branch}")
