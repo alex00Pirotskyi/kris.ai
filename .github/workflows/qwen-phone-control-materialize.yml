@@ -41,18 +41,20 @@ jobs:
               raise SystemExit('expected Qwen worker version 5.2.0 not found')
           worker = worker.replace(old_version, new_version, 1)
 
-          old = '''    branch = str(meta.get("controlPlaneBranch") or "").strip()
-          if not branch:
-              raise WorkerError("runtime/meta.json does not name controlPlaneBranch")
-          '''
-          new = '''    branch = str(meta.get("controlPlaneBranch") or "").strip()
-          if not branch:
-              branch = str(cfg.control_branch or DEFAULT_CONTROL_BRANCH).strip()
-              if not branch:
-                  raise WorkerError(
-                      "runtime/meta.json does not name controlPlaneBranch and no configured control branch is available"
-                  )
-          '''
+          old = (
+              '    branch = str(meta.get("controlPlaneBranch") or "").strip()\n'
+              '    if not branch:\n'
+              '        raise WorkerError("runtime/meta.json does not name controlPlaneBranch")\n'
+          )
+          new = (
+              '    branch = str(meta.get("controlPlaneBranch") or "").strip()\n'
+              '    if not branch:\n'
+              '        branch = str(cfg.control_branch or DEFAULT_CONTROL_BRANCH).strip()\n'
+              '        if not branch:\n'
+              '            raise WorkerError(\n'
+              '                "runtime/meta.json does not name controlPlaneBranch and no configured control branch is available"\n'
+              '            )\n'
+          )
           if old not in worker:
               raise SystemExit('expected strict controlPlaneBranch block not found')
           worker = worker.replace(old, new, 1)
@@ -74,7 +76,7 @@ jobs:
               'control branch and still verifies that exact remote branch exists before proceeding. If the runtime '
               'metadata does name a control branch, that runtime-selected branch remains authoritative. Separate v6 '
               'experiments exist in Git history, but this delivery does not claim that design: the current worker '
-              'source has not implemented those v6 invariants completely. The controller therefore reads the worker\'s '
+              "source has not implemented those v6 invariants completely. The controller therefore reads the worker's "
               'real JSON `version` response instead of hard-coding a fictional v6 version.\n'
           )
           if old_status not in docs:
