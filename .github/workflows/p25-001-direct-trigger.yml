@@ -1,0 +1,66 @@
+name: P25-001 Direct Reviewed Materializer Trigger
+
+on:
+  push:
+    branches:
+      - 'agent/product/p25-001-prompt-studio-latency-trace'
+    paths:
+      - '.p25/direct-materialize-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize-reviewed-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - name: Check out exact trigger head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Execute the reviewed materializer body
+        shell: bash
+        env:
+          TARGET_BRANCH: agent/product/p25-001-prompt-studio-latency-trace
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path('.github/workflows/p25-001-materialize.yml').read_text(
+              encoding='utf-8'
+          )
+          marker = '        run: |\n'
+          if source.count(marker) != 1:
+              raise SystemExit('reviewed materializer run body was not unique')
+          body = source.split(marker, 1)[1]
+          lines = []
+          for line in body.splitlines():
+              if line.startswith('          '):
+                  lines.append(line[10:])
+              elif not line.strip():
+                  lines.append('')
+              else:
+                  raise SystemExit(
+                      f'unexpected materializer indentation: {line[:40]!r}'
+                  )
+          script = '\n'.join(lines).rstrip() + '\n'
+          if 'feat(p25-001): instrument Prompt Studio latency path' not in script:
+              raise SystemExit('reviewed materializer identity check failed')
+          Path('/tmp/p25-001-materialize.sh').write_text(
+              script,
+              encoding='utf-8',
+              newline='\n',
+          )
+          PY
+          bash /tmp/p25-001-materialize.sh
