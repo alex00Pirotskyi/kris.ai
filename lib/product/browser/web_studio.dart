@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -315,8 +314,7 @@ final class P3WebStudioEditor {
   }
 
   Future<List<P3WebStudioFileNode>> fileTree({String root = '.'}) async {
-    final normalizedRoot = boundary.normalizeToolPath(root);
-    final directory = await boundary.directory(normalizedRoot);
+    final directory = await boundary.directory(boundary.normalizeToolPath(root));
     final result = <P3WebStudioFileNode>[];
     await _walkTree(directory, 0, result);
     result.sort((left, right) {
@@ -337,14 +335,13 @@ final class P3WebStudioEditor {
       return;
     }
     final entities = await directory.list(followLinks: false).toList();
-    entities.sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+    entities
+        .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
     for (final entity in entities) {
       if (output.length >= limits.maxTreeEntries) return;
       if (entity is Link) continue;
       final path = boundary.relative(entity.path);
-      final name = entity.uri.pathSegments
-          .where((segment) => segment.isNotEmpty)
-          .last;
+      final name = _basename(entity);
       if (entity is Directory && _ignoredDirectoryNames.contains(name)) {
         continue;
       }
@@ -395,10 +392,9 @@ final class P3WebStudioEditor {
       );
     }
     final bytes = await file.readAsBytes();
-    final content = _decodeText(bytes, normalized);
     return P3WebStudioDocument(
       path: normalized,
-      content: content,
+      content: _decodeText(bytes, normalized),
       sha256: Sha256.hex(bytes),
       language: languageForPath(normalized),
       sizeBytes: bytes.length,
@@ -494,6 +490,7 @@ final class P3WebStudioEditor {
         hunks: const <P3WebStudioDiffHunk>[],
       );
     }
+
     final before = _lines(source.content);
     final after = _lines(content);
     var prefix = 0;
@@ -509,8 +506,7 @@ final class P3WebStudioEditor {
             after[after.length - suffix - 1]) {
       suffix += 1;
     }
-    final removed = before.sublist(prefix, before.length - suffix);
-    final added = after.sublist(prefix, after.length - suffix);
+
     return P3WebStudioDiff(
       beforeHash: beforeHash,
       afterHash: afterHash,
@@ -519,8 +515,12 @@ final class P3WebStudioEditor {
         P3WebStudioDiffHunk(
           oldStartLine: prefix + 1,
           newStartLine: prefix + 1,
-          removed: List<String>.unmodifiable(removed),
-          added: List<String>.unmodifiable(added),
+          removed: List<String>.unmodifiable(
+            before.sublist(prefix, before.length - suffix),
+          ),
+          added: List<String>.unmodifiable(
+            after.sublist(prefix, after.length - suffix),
+          ),
         ),
       ],
     );
@@ -534,64 +534,79 @@ final class P3WebStudioEditor {
     if (query.isEmpty || query.length > limits.maxQueryCharacters) {
       throw StateError('web_studio_search_query_invalid');
     }
-    final normalizedRoot = boundary.normalizeToolPath(root);
-    final directory = await boundary.directory(normalizedRoot);
+    final directory = await boundary.directory(boundary.normalizeToolPath(root));
     final matches = <P3WebStudioSearchMatch>[];
     var filesScanned = 0;
     var filesSkipped = 0;
     var truncated = false;
     final expected = caseSensitive ? query : query.toLowerCase();
 
-    await for (final entity in directory.list(recursive: true, followLinks: false)) {
-      if (entity is! File) continue;
-      final path = boundary.relative(entity.path);
-      if (_isIgnoredPath(path) || !_isSearchable(path)) {
-        filesSkipped += 1;
-        continue;
-      }
-      if (filesScanned >= limits.maxSearchFiles) {
-        truncated = true;
-        break;
-      }
-      final stat = await entity.stat();
-      if (stat.size > limits.maxSearchFileBytes) {
-        filesSkipped += 1;
-        continue;
-      }
-      filesScanned += 1;
-      late final String content;
-      try {
-        content = _decodeText(await entity.readAsBytes(), path);
-      } on ProductException {
-        filesSkipped += 1;
-        continue;
-      }
-      final lines = _lines(content);
-      for (var lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
-        final line = lines[lineIndex];
-        final haystack = caseSensitive ? line : line.toLowerCase();
-        var start = 0;
-        while (start <= haystack.length) {
-          final index = haystack.indexOf(expected, start);
-          if (index < 0) break;
-          matches.add(
-            P3WebStudioSearchMatch(
-              path: path,
-              line: lineIndex + 1,
-              column: index + 1,
-              preview: _preview(line, index, query.length),
-            ),
-          );
-          if (matches.length >= limits.maxSearchMatches) {
-            truncated = true;
-            break;
+    Future<void> scan(Directory current, int depth) async {
+      if (truncated || depth > limits.maxTreeDepth) return;
+      final entities = await current.list(followLinks: false).toList();
+      entities
+          .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+      for (final entity in entities) {
+        if (truncated) return;
+        if (entity is Link) continue;
+        final path = boundary.relative(entity.path);
+        if (entity is Directory) {
+          if (_ignoredDirectoryNames.contains(_basename(entity))) {
+            filesSkipped += 1;
+            continue;
           }
-          start = index + max(1, expected.length);
+          await scan(entity, depth + 1);
+          continue;
         }
-        if (truncated) break;
+        if (entity is! File) continue;
+        if (!_isSearchable(path)) {
+          filesSkipped += 1;
+          continue;
+        }
+        if (filesScanned >= limits.maxSearchFiles) {
+          truncated = true;
+          return;
+        }
+        final stat = await entity.stat();
+        if (stat.size > limits.maxSearchFileBytes) {
+          filesSkipped += 1;
+          continue;
+        }
+        filesScanned += 1;
+        late final String content;
+        try {
+          content = _decodeText(await entity.readAsBytes(), path);
+        } on ProductException {
+          filesSkipped += 1;
+          continue;
+        }
+        final lines = _lines(content);
+        for (var lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+          final line = lines[lineIndex];
+          final haystack = caseSensitive ? line : line.toLowerCase();
+          var start = 0;
+          while (start <= haystack.length) {
+            final index = haystack.indexOf(expected, start);
+            if (index < 0) break;
+            matches.add(
+              P3WebStudioSearchMatch(
+                path: path,
+                line: lineIndex + 1,
+                column: index + 1,
+                preview: _preview(line, index, query.length),
+              ),
+            );
+            if (matches.length >= limits.maxSearchMatches) {
+              truncated = true;
+              return;
+            }
+            start = index + max(1, expected.length);
+          }
+        }
       }
-      if (truncated) break;
     }
+
+    await scan(directory, 0);
     return P3WebStudioSearchResult(
       matches: List<P3WebStudioSearchMatch>.unmodifiable(matches),
       filesScanned: filesScanned,
@@ -600,15 +615,14 @@ final class P3WebStudioEditor {
     );
   }
 
-  bool _isIgnoredPath(String path) {
-    final segments = path.replaceAll('\\', '/').split('/');
-    return segments.any(_ignoredDirectoryNames.contains);
-  }
-
   bool _isSearchable(String path) {
     final lower = path.toLowerCase();
     return _searchableExtensions.any(lower.endsWith);
   }
+
+  String _basename(FileSystemEntity entity) => entity.uri.pathSegments
+      .where((segment) => segment.isNotEmpty)
+      .last;
 
   String _decodeText(List<int> bytes, String path) {
     if (bytes.contains(0)) {
