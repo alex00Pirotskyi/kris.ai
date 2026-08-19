@@ -79,6 +79,22 @@ class SecurityContractTest(unittest.TestCase):
         self.assertEqual(cfg.host, "0.0.0.0")
         self.assertTrue(cfg.allow_remote_http)
 
+    def test_phone_url_discovery_handles_gethostbyname_ex_result(self) -> None:
+        with mock.patch.object(control.socket, 'gethostname', return_value='kris-server'):
+            with mock.patch.object(
+                control.socket,
+                'gethostbyname_ex',
+                return_value=('kris-server', [], ['10.0.0.2', '10.0.0.3']),
+            ):
+                with mock.patch.object(
+                    control.socket, 'socket', side_effect=OSError('offline')
+                ):
+                    urls = control.discover_phone_urls(8090)
+        self.assertEqual(
+            urls,
+            ['http://10.0.0.2:8090', 'http://10.0.0.3:8090'],
+        )
+
 
 class WorkerVersionTest(unittest.TestCase):
     def test_json_worker_version_is_parsed(self) -> None:

@@ -194,8 +194,8 @@ def discover_phone_urls(port: int) -> list[str]:
     candidates: set[str] = set()
     with contextlib.suppress(OSError):
         name = socket.gethostname()
-        for _, _, addresses in socket.gethostbyname_ex(name):
-            candidates.update(addresses)
+        _, _, addresses = socket.gethostbyname_ex(name)
+        candidates.update(addresses)
     with contextlib.suppress(OSError):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
