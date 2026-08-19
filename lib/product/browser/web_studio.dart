@@ -314,7 +314,8 @@ final class P3WebStudioEditor {
   }
 
   Future<List<P3WebStudioFileNode>> fileTree({String root = '.'}) async {
-    final directory = await boundary.directory(boundary.normalizeToolPath(root));
+    final directory =
+        await boundary.directory(boundary.normalizeToolPath(root));
     final result = <P3WebStudioFileNode>[];
     await _walkTree(directory, 0, result);
     result.sort((left, right) {
@@ -534,7 +535,8 @@ final class P3WebStudioEditor {
     if (query.isEmpty || query.length > limits.maxQueryCharacters) {
       throw StateError('web_studio_search_query_invalid');
     }
-    final directory = await boundary.directory(boundary.normalizeToolPath(root));
+    final directory =
+        await boundary.directory(boundary.normalizeToolPath(root));
     final matches = <P3WebStudioSearchMatch>[];
     var filesScanned = 0;
     var filesSkipped = 0;
@@ -620,9 +622,8 @@ final class P3WebStudioEditor {
     return _searchableExtensions.any(lower.endsWith);
   }
 
-  String _basename(FileSystemEntity entity) => entity.uri.pathSegments
-      .where((segment) => segment.isNotEmpty)
-      .last;
+  String _basename(FileSystemEntity entity) =>
+      entity.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
 
   String _decodeText(List<int> bytes, String path) {
     if (bytes.contains(0)) {
