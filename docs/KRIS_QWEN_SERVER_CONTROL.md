@@ -4,7 +4,7 @@ This is the operational controller for the repo-owned Qwen worker.
 
 ## Current implementation status
 
-As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate still reports **5.2.0**. The repository also contains a v6 design document, but the worker source has not yet implemented that design completely. The controller therefore reads the worker's real JSON `version` response instead of hard-coding a fictional v6 version.
+As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate still reports **5.2.0**. Separate v6 experiments exist in Git history, but this delivery does not claim that design: the current worker source has not implemented those v6 invariants completely. The controller therefore reads the worker's real JSON `version` response instead of hard-coding a fictional v6 version.
 
 The control layer is Python-standard-library only. Uvicorn/Gunicorn/Flask/FastAPI are not required.
 
@@ -135,4 +135,4 @@ The foreground `run_kris_qwen_phone_control.sh` path is simpler when you only wa
 
 The current 5.2 worker includes the repeated `control-plane-invalid:*` backoff behavior: after repeated identical Mission Execution authority failures it surfaces a stable blocked/recovering state instead of continuously burning fresh executions.
 
-That is separate from the v6 design work. The v6 design document remains a target architecture, not a statement that the current worker has already implemented every v6 invariant.
+That behavior is separate from historical/in-progress v6 design work. This PR does not ship or claim those v6 invariants.
