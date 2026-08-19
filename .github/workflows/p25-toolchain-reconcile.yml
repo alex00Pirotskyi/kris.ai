@@ -1,0 +1,155 @@
+name: P25 Toolchain Binding Reconciliation
+
+on:
+  push:
+    branches:
+      - 'agent/p25-prompt-studio-product-rescue-v4'
+    paths:
+      - '.github/workflows/p25-toolchain-reconcile.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact P25 head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Set up exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Reconcile, verify, self-remove, and publish
+        shell: bash
+        env:
+          TARGET_BRANCH: agent/p25-prompt-studio-product-rescue-v4
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+
+          flutter pub get
+
+          python3 - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+
+          def canonical(value: object) -> bytes:
+              return (json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False) + '\n').encode('utf-8')
+
+          def sha256_file(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(1024 * 1024), b''):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          lock_path = root / 'config/toolchains.lock.json'
+          lock = json.loads(lock_path.read_text(encoding='utf-8'))
+          pubspec_sha = sha256_file(root / 'pubspec.lock')
+          if pubspec_sha != 'c5de3590470b9420fb60a5f85f3e42328bde4bfcd46139fb5e50e4037fad0618':
+              raise SystemExit(f'unexpected Flutter 3.44.8 pubspec.lock hash: {pubspec_sha}')
+          lockfiles = lock.get('lockfiles')
+          if not isinstance(lockfiles, list) or len(lockfiles) != 1 or lockfiles[0].get('path') != 'pubspec.lock':
+              raise SystemExit('unexpected P0-004 lockfile declaration')
+          lockfiles[0]['sha256'] = pubspec_sha
+          payload = {
+              'schemaVersion': lock['schemaVersion'],
+              'sourceCommit': lock['sourceCommit'],
+              'python': lock['python'],
+              'flutter': lock['flutter'],
+              'dart': lock['dart'],
+              'githubActions': lock['githubActions'],
+              'runners': lock['runners'],
+              'cache': lock['cache'],
+              'lockfiles': lock['lockfiles'],
+          }
+          lock['declaredInputFingerprint'] = hashlib.sha256(canonical(payload)).hexdigest()
+          if lock['declaredInputFingerprint'] != '73ce3a534aa8a3de35005c88747e1b60a453247305876352630008973f0e6961':
+              raise SystemExit('unexpected P0-004 declared-input fingerprint')
+          lock_path.write_text(json.dumps(lock, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          inputs_path = root / 'release/evidence/P0-004/inputs.json'
+          inputs = json.loads(inputs_path.read_text(encoding='utf-8'))
+          toolchains = inputs.get('toolchains')
+          if not isinstance(toolchains, dict):
+              raise SystemExit('P0-004 input toolchain binding is missing')
+          toolchains['declaredInputFingerprint'] = lock['declaredInputFingerprint']
+          input_lockfiles = toolchains.get('lockfiles')
+          if not isinstance(input_lockfiles, list) or len(input_lockfiles) != 1 or input_lockfiles[0].get('path') != 'pubspec.lock':
+              raise SystemExit('unexpected P0-004 evidence lockfile declaration')
+          input_lockfiles[0]['sha256'] = pubspec_sha
+          inputs_path.write_text(json.dumps(inputs, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
+
+          python3 tool/p2_extend_toolchain_lock.py --project .
+          python3 tool/v71r12_bootstrap_hosted_python.py --project .
+          python3 tool/toolchain_lock_test.py
+          python3 tool/p2_toolchains.py --project .
+          python3 tool/p2_toolchain_extension_test.py --project .
+          python3 tool/p0_008_roadmap_test.py --project .
+          python3 tool/roadmap_control.py validate --project . --strict
+          python3 tool/p25_prompt_studio_roadmap_test.py --project .
+          python3 tool/p25_prompt_studio_test_station.py --project . --profile contract --check
+          python3 tool/test_center_contracts.py check --project .
+          python3 tool/test_center_assurance_hierarchy.py check --project .
+
+          rm .github/workflows/p25-toolchain-reconcile.yml
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+          ruby tool/workflow_integrity_test.rb .
+
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+
+          expected = {
+              '.github/workflows/p25-toolchain-reconcile.yml',
+              'SOURCE_MANIFEST.sha256',
+              'config/p2_toolchain_extension.v1.json',
+              'config/toolchains.lock.json',
+              'pubspec.lock',
+              'release/evidence/P0-004/inputs.json',
+          }
+          actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          if actual != expected:
+              raise SystemExit(f'P25 toolchain reconciliation scope mismatch actual={sorted(actual)} expected={sorted(expected)}')
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A \
+            .github/workflows/p25-toolchain-reconcile.yml \
+            SOURCE_MANIFEST.sha256 \
+            config/p2_toolchain_extension.v1.json \
+            config/toolchains.lock.json \
+            pubspec.lock \
+            release/evidence/P0-004/inputs.json
+          git diff --cached --check
+          git commit -m 'ci(p25): reconcile Flutter lock and P2 toolchain binding'
+
+          remote_head="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${GITHUB_SHA}"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
