@@ -37,6 +37,9 @@ Map<String, Object?> testReceipt(
     };
 
 final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
+  TestEnvelopeAuthority({this.operationBoundGrants = true});
+
+  final bool operationBoundGrants;
   int _requests = 0;
   final Map<String, int> _grantUses = <String, int>{};
   final List<P2AutomationEnvelope> issued = <P2AutomationEnvelope>[];
@@ -87,7 +90,7 @@ final class TestEnvelopeAuthority implements P2AutomationEnvelopeAuthority {
         'actorId': binding.actorId,
         'toolId': binding.toolId,
         'accessProfileId': binding.accessProfileId,
-        'operation': operation,
+        if (operationBoundGrants) 'operation': operation,
       },
       'scope': scope,
       'budgets': <String, int>{'wallClockMs': 30000},
