@@ -111,9 +111,13 @@ def main() -> int:
     worker_policy = repo / "tool" / "kris_qwen_v53_policy.py"
     worker_recovery = repo / "tool" / "kris_qwen_v53_recovery.py"
     worker_reconcile = repo / "tool" / "kris_qwen_v53_reconcile.py"
-    worker_v53 = repo / "tool" / "kris_qwen_worker_v53.py"
+    worker_v53_base = repo / "tool" / "kris_qwen_worker_v53_base.py"
+    worker_v531 = repo / "tool" / "kris_qwen_worker_v531.py"
     worker_legacy_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
-    worker_entry = repo / "tool" / "kris_qwen_worker_v531.py"
+    # Keep the stable v53 filename so already-running controller PID matching and
+    # stale launcher configuration remain compatible. The v53 file forwards to
+    # the deterministic 5.3.1 entry.
+    worker_entry = repo / "tool" / "kris_qwen_worker_v53.py"
 
     if not (repo / ".git").is_dir():
         fail(f"not a Git checkout: {repo}")
@@ -124,7 +128,8 @@ def main() -> int:
         and worker_policy.is_file()
         and worker_recovery.is_file()
         and worker_reconcile.is_file()
-        and worker_v53.is_file()
+        and worker_v53_base.is_file()
+        and worker_v531.is_file()
         and worker_legacy_entry.is_file()
         and worker_entry.is_file()
     ):
@@ -169,7 +174,7 @@ def main() -> int:
     print(f"  repo:   {repo}")
     print(f"  branch: {branch}")
     print(f"  port:   {port}")
-    print("  worker: 5.3.1")
+    print("  worker: 5.3.1 (stable v53 entry)")
     print("  mode:   foreground always-on worker + automatic safe updates")
     print("  note:   durable controller crash recovery requires the systemd installer")
     if ip:
