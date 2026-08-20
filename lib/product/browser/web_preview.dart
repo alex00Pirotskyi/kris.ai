@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import '../domain.dart';
+import '../p2_effect_boundary.dart';
+import '../p2_process_tree.dart';
+import '../p2_pty_service.dart';
+import '../storage_security.dart' show ProductException;
 import '../workspace_tools.dart';
 
 final class P3PreviewLimits {
@@ -100,6 +103,143 @@ final class P3PreviewProcessSession {
 abstract interface class P3PreviewProcessHost {
   Future<P3PreviewProcessSession> start(P3DevServerConfig config);
   Future<void> stop(P3PreviewProcessSession session, Duration grace);
+}
+
+final class P3PreviewProcessAuthorization {
+  const P3PreviewProcessAuthorization({
+    required this.binding,
+    required this.grantDigest,
+  });
+
+  final P2EffectBinding binding;
+  final String grantDigest;
+
+  void validate() {
+    final values = <String>[
+      binding.runId,
+      binding.taskId,
+      binding.actorId,
+      binding.toolId,
+      binding.accessProfileId,
+      binding.capabilityId,
+    ];
+    if (values.any((value) => value.trim().isEmpty) ||
+        binding.operation != 'pty.open' ||
+        !RegExp(r'^[0-9a-f]{64}$', caseSensitive: false)
+            .hasMatch(grantDigest)) {
+      throw StateError('web_preview_process_authorization_invalid');
+    }
+  }
+}
+
+typedef P3PreviewProcessAuthorizationResolver = P3PreviewProcessAuthorization
+    Function(P3DevServerConfig config);
+typedef P3PreviewProcessCompletion = Future<void> Function(
+  String sessionId,
+  P2ProcessIdentity processIdentity,
+);
+
+final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
+  P3P2ManagedPreviewProcessHost({
+    required this.ptyBackend,
+    required P2NativeProcessTreeAdapter processTreeAdapter,
+    required this.authorizationFor,
+    required this.onProcessStopped,
+  }) : _processTrees = P2ProcessTreeManager(processTreeAdapter);
+
+  final P2PtyBackend ptyBackend;
+  final P3PreviewProcessAuthorizationResolver authorizationFor;
+  final P3PreviewProcessCompletion onProcessStopped;
+  final P2ProcessTreeManager _processTrees;
+  final Map<String, _P3P2ManagedPreviewSession> _sessions =
+      <String, _P3P2ManagedPreviewSession>{};
+
+  @override
+  Future<P3PreviewProcessSession> start(P3DevServerConfig config) async {
+    final authorization = authorizationFor(config);
+    authorization.validate();
+    final session = await ptyBackend.open(
+      P2PtyOpenRequest(
+        shell: config.command,
+        cwd: config.cwd,
+        arguments: List<String>.unmodifiable(config.arguments),
+        environmentDelta:
+            Map<String, String?>.unmodifiable(config.environmentDelta),
+        transcriptBudgetBytes: 1024 * 1024,
+      ),
+      authorization.binding,
+      authorization.grantDigest,
+    );
+    if (_sessions.containsKey(session.sessionId)) {
+      await _terminateFailedOpen(session, authorization);
+      throw StateError('web_preview_process_session_duplicate');
+    }
+    try {
+      final identity =
+          await _processTrees.adoptManaged(session.processIdentity);
+      _sessions[session.sessionId] = _P3P2ManagedPreviewSession(
+        session: session,
+        authorization: authorization,
+        processIdentity: identity,
+      );
+      return P3PreviewProcessSession(
+        sessionId: session.sessionId,
+        processIdentity: identity.stableKey,
+      );
+    } catch (_) {
+      await _terminateFailedOpen(session, authorization);
+      rethrow;
+    }
+  }
+
+  Future<void> _terminateFailedOpen(
+    P2PtySession session,
+    P3PreviewProcessAuthorization authorization,
+  ) async {
+    var stopped = false;
+    try {
+      await ptyBackend.terminate(
+        session.sessionId,
+        binding: authorization.binding,
+        grantDigest: authorization.grantDigest,
+      );
+      stopped = true;
+    } catch (_) {}
+    if (stopped) {
+      try {
+        await onProcessStopped(session.sessionId, session.processIdentity);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Future<void> stop(
+    P3PreviewProcessSession session,
+    Duration grace,
+  ) async {
+    final record = _sessions[session.sessionId];
+    if (record == null) {
+      throw StateError('web_preview_process_session_unknown');
+    }
+    if (session.processIdentity != record.processIdentity.stableKey) {
+      throw StateError('web_preview_process_identity_mismatch');
+    }
+    await _processTrees.stop(record.processIdentity, grace: grace);
+    await onProcessStopped(session.sessionId, record.processIdentity);
+    _sessions.remove(session.sessionId);
+  }
+}
+
+final class _P3P2ManagedPreviewSession {
+  const _P3P2ManagedPreviewSession({
+    required this.session,
+    required this.authorization,
+    required this.processIdentity,
+  });
+
+  final P2PtySession session;
+  final P3PreviewProcessAuthorization authorization;
+  final P2ProcessIdentity processIdentity;
 }
 
 abstract interface class P3PreviewRefreshTarget {
@@ -212,7 +352,8 @@ final class P3LivePreviewService {
     final id = _id();
     final startedAt = _clock().toUtc();
     final process = await processHost.start(config);
-    if (process.sessionId.trim().isEmpty || process.processIdentity.trim().isEmpty) {
+    if (process.sessionId.trim().isEmpty ||
+        process.processIdentity.trim().isEmpty) {
       try {
         await processHost.stop(process, limits.stopGrace);
       } catch (_) {}
@@ -286,7 +427,7 @@ final class P3LivePreviewService {
     _requireOpen();
     final staticPreview = _static[previewId];
     if (staticPreview != null) {
-      staticPreview.notifyReload();
+      await staticPreview.notifyReload();
       return staticPreview.snapshot;
     }
     final devPreview = _dev[previewId];
@@ -455,10 +596,15 @@ final class _P3StaticPreview {
           ..contentType = ContentType('text', 'event-stream', charset: 'utf-8')
           ..set(HttpHeaders.cacheControlHeader, 'no-store')
           ..set(HttpHeaders.connectionHeader, 'keep-alive');
-        response.write('retry: 500\n\n');
-        await response.flush();
+        response.bufferOutput = false;
         _reloadClients.add(response);
-        response.done.whenComplete(() => _reloadClients.remove(response));
+        try {
+          response.write('retry: 500\n\n');
+          await response.flush();
+        } catch (_) {
+          _reloadClients.remove(response);
+          rethrow;
+        }
         return;
       }
 
@@ -515,7 +661,7 @@ final class _P3StaticPreview {
     return '${html.substring(0, bodyIndex)}$reloadScript${html.substring(bodyIndex)}';
   }
 
-  void notifyReload() {
+  Future<void> notifyReload() async {
     if (lifecycle != P3PreviewLifecycle.ready) {
       throw StateError('web_preview_not_ready');
     }
@@ -523,7 +669,7 @@ final class _P3StaticPreview {
     for (final response in _reloadClients.toList()) {
       try {
         response.write('data: $revision\n\n');
-        response.flush();
+        await response.flush();
       } catch (_) {
         _reloadClients.remove(response);
       }
@@ -590,18 +736,32 @@ bool _isHtml(String path) {
 
 ContentType _contentType(String path) {
   final lower = path.toLowerCase();
-  if (_isHtml(lower)) return ContentType.html;
-  if (lower.endsWith('.css')) return ContentType('text', 'css', charset: 'utf-8');
+  if (_isHtml(lower)) {
+    return ContentType.html;
+  }
+  if (lower.endsWith('.css')) {
+    return ContentType('text', 'css', charset: 'utf-8');
+  }
   if (lower.endsWith('.js') || lower.endsWith('.mjs')) {
     return ContentType('text', 'javascript', charset: 'utf-8');
   }
-  if (lower.endsWith('.json')) return ContentType.json;
-  if (lower.endsWith('.svg')) return ContentType('image', 'svg+xml');
-  if (lower.endsWith('.png')) return ContentType('image', 'png');
+  if (lower.endsWith('.json')) {
+    return ContentType.json;
+  }
+  if (lower.endsWith('.svg')) {
+    return ContentType('image', 'svg+xml');
+  }
+  if (lower.endsWith('.png')) {
+    return ContentType('image', 'png');
+  }
   if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
     return ContentType('image', 'jpeg');
   }
-  if (lower.endsWith('.gif')) return ContentType('image', 'gif');
-  if (lower.endsWith('.webp')) return ContentType('image', 'webp');
+  if (lower.endsWith('.gif')) {
+    return ContentType('image', 'gif');
+  }
+  if (lower.endsWith('.webp')) {
+    return ContentType('image', 'webp');
+  }
   return ContentType.binary;
 }

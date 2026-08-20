@@ -4,6 +4,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/web_preview.dart';
+import 'package:kristin_local_agent/product/p2_effect_boundary.dart';
+import 'package:kristin_local_agent/product/p2_process_tree.dart';
+import 'package:kristin_local_agent/product/p2_pty_service.dart';
 import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 void main() {
@@ -70,8 +73,13 @@ void main() {
     final lines = response
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .where((line) => line.startsWith('data:'));
-    final firstReload = lines.first.timeout(const Duration(seconds: 2));
+        .asBroadcastStream();
+    await lines
+        .firstWhere((line) => line == 'retry: 500')
+        .timeout(const Duration(seconds: 2));
+    final firstReload = lines
+        .firstWhere((line) => line.startsWith('data:'))
+        .timeout(const Duration(seconds: 2));
 
     final changed = await service.sourceChanged(preview.id);
     expect(changed.revision, 1);
@@ -145,13 +153,85 @@ void main() {
 
   test('configured dev server rejects non-loopback targets', () async {
     expect(
-      () => const P3DevServerConfig(
+      () => P3DevServerConfig(
         command: 'npm',
         cwd: '.',
         url: Uri(scheme: 'http', host: 'example.com', port: 8080),
       ).validate(const P3PreviewLimits()),
       throwsStateError,
     );
+  });
+  test('P2 managed preview host binds PTY launch and exact process stop',
+      () async {
+    final pty = _RecordingPreviewPtyBackend();
+    final processTree = _RecordingPreviewProcessTreeAdapter();
+    final completions = <String>[];
+    final host = P3P2ManagedPreviewProcessHost(
+      ptyBackend: pty,
+      processTreeAdapter: processTree,
+      authorizationFor: (_) => P3PreviewProcessAuthorization(
+        binding: _previewBinding(),
+        grantDigest: 'a' * 64,
+      ),
+      onProcessStopped: (sessionId, identity) async {
+        completions.add('$sessionId:${identity.stableKey}');
+      },
+    );
+    final config = P3DevServerConfig(
+      command: 'npm',
+      arguments: const <String>['run', 'dev'],
+      cwd: '.',
+      url: Uri.parse('http://127.0.0.1:4173/'),
+      environmentDelta: const <String, String?>{'MODE': 'preview'},
+    );
+
+    final session = await host.start(config);
+    expect(session.sessionId, 'managed-preview');
+    expect(session.processIdentity, _previewIdentity.stableKey);
+    expect(pty.lastRequest?.shell, 'npm');
+    expect(pty.lastRequest?.arguments, <String>['run', 'dev']);
+    expect(pty.lastRequest?.environmentDelta, <String, String?>{
+      'MODE': 'preview',
+    });
+    expect(pty.lastBinding?.operation, 'pty.open');
+    expect(pty.lastGrantDigest, 'a' * 64);
+    expect(processTree.calls, <String>['inspect']);
+
+    await host.stop(session, const Duration(milliseconds: 75));
+    expect(processTree.calls, <String>[
+      'inspect',
+      'inspect',
+      'stop:75',
+      'inspect',
+    ]);
+    expect(completions, <String>[
+      'managed-preview:${_previewIdentity.stableKey}',
+    ]);
+  });
+
+  test('P2 managed preview host rejects malformed authorization', () async {
+    final pty = _RecordingPreviewPtyBackend();
+    final host = P3P2ManagedPreviewProcessHost(
+      ptyBackend: pty,
+      processTreeAdapter: _RecordingPreviewProcessTreeAdapter(),
+      authorizationFor: (_) => P3PreviewProcessAuthorization(
+        binding: _previewBinding(),
+        grantDigest: 'not-a-digest',
+      ),
+      onProcessStopped: (_, __) async {},
+    );
+
+    await expectLater(
+      host.start(
+        P3DevServerConfig(
+          command: 'npm',
+          cwd: '.',
+          url: Uri.parse('http://127.0.0.1:4173/'),
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(pty.openCount, 0);
   });
 }
 
@@ -160,7 +240,8 @@ Future<void> _serveReadiness(
   _RecordingProcessHost host,
 ) async {
   await for (final request in server) {
-    request.response.statusCode = host.ready ? HttpStatus.ok : HttpStatus.notFound;
+    request.response.statusCode =
+        host.ready ? HttpStatus.ok : HttpStatus.notFound;
     request.response.write(host.ready ? 'ready' : 'starting');
     await request.response.close();
   }
@@ -182,6 +263,142 @@ final class _HttpFixtureResponse {
   const _HttpFixtureResponse(this.statusCode, this.body);
   final int statusCode;
   final String body;
+}
+
+const P2ProcessIdentity _previewIdentity = P2ProcessIdentity(
+  pid: 4101,
+  startToken: 'preview-start',
+  supervisorToken: 'preview-supervisor',
+  platformGroupId: 'preview-group',
+);
+
+P2EffectBinding _previewBinding() => const P2EffectBinding(
+      runId: 'run-preview',
+      taskId: 'P3-013',
+      actorId: 'desktop_host',
+      toolId: 'web_preview',
+      accessProfileId: 'owner',
+      capabilityId: 'pty',
+      operation: 'pty.open',
+    );
+
+final class _RecordingPreviewPtyBackend implements P2PtyBackend {
+  int openCount = 0;
+  P2PtyOpenRequest? lastRequest;
+  P2EffectBinding? lastBinding;
+  String? lastGrantDigest;
+
+  @override
+  Future<P2PtySession> open(
+    P2PtyOpenRequest request,
+    P2EffectBinding binding,
+    String grantDigest,
+  ) async {
+    openCount += 1;
+    lastRequest = request;
+    lastBinding = binding;
+    lastGrantDigest = grantDigest;
+    return P2PtySession(
+      sessionId: 'managed-preview',
+      runId: binding.runId,
+      taskId: binding.taskId,
+      actorId: binding.actorId,
+      grantDigest: grantDigest,
+      processIdentity: _previewIdentity,
+      state: P2PtyState.attached,
+      transcriptCursor: 0,
+    );
+  }
+
+  @override
+  Future<void> terminate(
+    String sessionId, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) async {}
+
+  @override
+  Future<P2PtySession> attach(
+    String sessionId,
+    int fromCursor, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> detach(
+    String sessionId, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> input(
+    String sessionId,
+    List<int> bytes, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> interrupt(
+    String sessionId, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Stream<List<int>> output(
+    String sessionId,
+    int fromCursor, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      const Stream<List<int>>.empty();
+
+  @override
+  Future<void> resize(
+    String sessionId,
+    int columns,
+    int rows, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+}
+
+final class _RecordingPreviewProcessTreeAdapter
+    implements P2NativeProcessTreeAdapter {
+  final List<String> calls = <String>[];
+  P2ProcessLifecycle state = P2ProcessLifecycle.running;
+
+  @override
+  Future<P2ProcessLifecycle> inspect(P2ProcessIdentity identity) async {
+    expect(identity.stableKey, _previewIdentity.stableKey);
+    calls.add('inspect');
+    return state;
+  }
+
+  @override
+  Future<void> requestStop(
+    P2ProcessIdentity identity,
+    Duration grace,
+  ) async {
+    expect(identity.stableKey, _previewIdentity.stableKey);
+    calls.add('stop:${grace.inMilliseconds}');
+    state = P2ProcessLifecycle.stopped;
+  }
+
+  @override
+  Future<void> forceKill(P2ProcessIdentity identity) async {
+    expect(identity.stableKey, _previewIdentity.stableKey);
+    calls.add('kill');
+    state = P2ProcessLifecycle.killed;
+  }
 }
 
 final class _RecordingProcessHost implements P3PreviewProcessHost {
