@@ -1,0 +1,40 @@
+name: p2-012-test-diagnostic
+on:
+  pull_request:
+permissions:
+  contents: write
+jobs:
+  targeted-test:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p2-012-test-diagnostic
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - name: Run focused Owner workspace test and capture concise failure
+        shell: bash
+        run: |
+          flutter pub get
+          set +e
+          flutter test --no-pub test/product/p2_owner_workspace_test.dart --reporter expanded > /tmp/p2-012-test.log 2>&1
+          status=$?
+          set -e
+          {
+            echo "exit=$status"
+            echo "--- failure markers ---"
+            grep -n -E "(FAILED|TestFailure|Exception|Error|Expected:|Actual:|Which:|The following TestFailure|══|Some tests failed|Test failed|EXCEPTION CAUGHT)" /tmp/p2-012-test.log | tail -n 160 || true
+            echo "--- log tail ---"
+            tail -n 260 /tmp/p2-012-test.log
+          } > p2-012-test-diagnostic.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add p2-012-test-diagnostic.txt
+          git commit -m 'ci: capture P2-012 targeted test failure'
+          git push origin HEAD:agent/p2-012-test-diagnostic
