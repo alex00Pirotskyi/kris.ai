@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
-      - name: Qwen 5.4 engineering worker regression
+      - name: Qwen 5.4.1 engineering worker regression
         if: runner.os == 'Linux'
         shell: bash
         run: |
@@ -42,22 +42,27 @@ jobs:
             tool/kris_qwen_worker_v53_base.py \
             tool/kris_qwen_worker_v531.py \
             tool/kris_qwen_worker_v54.py \
+            tool/kris_qwen_worker_v541.py \
             tool/kris_qwen_v53_policy.py \
             tool/kris_qwen_v53_recovery.py \
             tool/kris_qwen_v53_reconcile.py \
             tool/kris_qwen_engineering_env.py \
             tool/kris_qwen_control.py.compat.py \
             tool/kris_qwen_v531_test.py \
-            tool/kris_qwen_engineering_env_test.py
+            tool/kris_qwen_engineering_env_test.py \
+            tool/kris_qwen_v541_test.py \
+            tool/kris_qwen_control_token_redaction_test.py
           python tool/kris_qwen_v531_test.py
           python tool/kris_qwen_engineering_env_test.py
-          python tool/kris_qwen_worker_v53.py version | tee /tmp/kris-qwen-v54-version.json
+          python tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_control_token_redaction_test.py
+          python tool/kris_qwen_worker_v53.py version | tee /tmp/kris-qwen-v541-version.json
           python - <<'PY'
           import json
           import pathlib
-          value = json.loads(pathlib.Path('/tmp/kris-qwen-v54-version.json').read_text(encoding='utf-8'))
-          assert value.get('scriptVersion') == '5.4.0', value
-          assert str(value.get('path', '')).endswith('kris_qwen_worker_v54.py'), value
+          value = json.loads(pathlib.Path('/tmp/kris-qwen-v541-version.json').read_text(encoding='utf-8'))
+          assert value.get('scriptVersion') == '5.4.1', value
+          assert str(value.get('path', '')).endswith('kris_qwen_worker_v541.py'), value
           PY
           bash -n tool/install_kris_qwen_control_systemd.sh
           [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.0' ]]

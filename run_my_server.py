@@ -116,7 +116,7 @@ def main() -> int:
     worker_legacy_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
     # Keep the stable v53 filename so already-running controller PID matching and
     # stale launcher configuration remain compatible. The v53 file forwards to
-    # the deterministic 5.3.1 entry.
+    # the deterministic 5.4.1 entry.
     worker_entry = repo / "tool" / "kris_qwen_worker_v53.py"
 
     if not (repo / ".git").is_dir():
@@ -133,7 +133,7 @@ def main() -> int:
         and worker_legacy_entry.is_file()
         and worker_entry.is_file()
     ):
-        fail("Qwen controller/worker always-on 5.3.1 compatibility files are missing from tool/")
+        fail("Qwen controller/worker always-on 5.4.1 compatibility files are missing from tool/")
 
     branch = os.environ.get("KRIS_QWEN_REPO_BRANCH", "").strip() or current_branch(repo)
 
@@ -174,7 +174,7 @@ def main() -> int:
     print(f"  repo:   {repo}")
     print(f"  branch: {branch}")
     print(f"  port:   {port}")
-    print("  worker: 5.3.1 (stable v53 entry)")
+    print("  worker: 5.4.1 (stable v53 entry)")
     print("  mode:   foreground always-on worker + automatic safe updates")
     print("  note:   durable controller crash recovery requires the systemd installer")
     if ip:
@@ -182,7 +182,7 @@ def main() -> int:
     else:
         print(f"  open:   http://<server-ip>:{port}")
     print()
-    print("The controller will print the control token below.")
+    print("The control token value is never printed; read it from the controller token file.")
     if ip:
         try:
             public = not ipaddress.ip_address(ip).is_private
