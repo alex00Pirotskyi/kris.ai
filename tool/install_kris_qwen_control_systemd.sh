@@ -80,6 +80,7 @@ required=(
   "${REPO_DIR}/tool/kris_qwen_worker.py.compat.py"
   "${REPO_DIR}/tool/kris_qwen_worker_v53.py"
   "${REPO_DIR}/tool/kris_qwen_v53_policy.py"
+  "${REPO_DIR}/tool/kris_qwen_v53_recovery.py"
 )
 for path in "${required[@]}"; do
   if [[ ! -f "${path}" ]]; then
