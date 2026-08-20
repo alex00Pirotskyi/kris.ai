@@ -93,7 +93,8 @@ def main() -> int:
     controller = repo / "tool" / "kris_qwen_control.py"
     controller_entry = repo / "tool" / "kris_qwen_control.py.compat.py"
     worker = repo / "tool" / "kris_qwen_worker.py"
-    worker_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
+    worker_policy = repo / "tool" / "kris_qwen_worker.py.compat.py"
+    worker_entry = repo / "tool" / "kris_qwen_worker_v53.py"
 
     if not (repo / ".git").is_dir():
         fail(f"not a Git checkout: {repo}")
@@ -101,9 +102,10 @@ def main() -> int:
         controller.is_file()
         and controller_entry.is_file()
         and worker.is_file()
+        and worker_policy.is_file()
         and worker_entry.is_file()
     ):
-        fail("Qwen controller/worker compatibility files are missing from tool/")
+        fail("Qwen controller/worker always-on compatibility files are missing from tool/")
 
     branch = os.environ.get("KRIS_QWEN_REPO_BRANCH", "").strip() or current_branch(repo)
 
