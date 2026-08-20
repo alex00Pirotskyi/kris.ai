@@ -1,0 +1,101 @@
+name: Qwen Branch Hygiene Reconcile
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-phone-control-materializer'
+    paths:
+      - '.github/workflows/qwen-branch-hygiene-reconcile.yml'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: qwen-phone-control-materializer
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out latest phone-control candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-phone-control
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Remove only reaped retained refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('config/branch_hygiene.json')
+          text = path.read_text(encoding='utf-8')
+          blocks = (
+              '''    {\n      "name": "ci/direct-pr14-repair-trigger",\n      "reason": "Historical repair-status lineage retained until PR14 cleanup is fully closed."\n    },\n''',
+              '''    {\n      "name": "integration/p2-owner-risk-v71r12",\n      "reason": "Unique P1/P2 owner-risk evidence lineage pending current-schema migration."\n    },\n''',
+          )
+          for block in blocks:
+              if text.count(block) != 1:
+                  raise SystemExit(f'branch-hygiene keep block missing/ambiguous: {block!r}')
+              text = text.replace(block, '', 1)
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
+          git diff --check
+
+      - name: Prove live branch-hygiene plan is now valid
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 tool/branch_hygiene.py --self-test
+          python3 tool/branch_hygiene.py \
+            --config config/branch_hygiene.json \
+            --repository "$GITHUB_REPOSITORY" \
+            --receipt "$RUNNER_TEMP/branch-hygiene-plan.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          value = json.loads(pathlib.Path(os.environ['RUNNER_TEMP'], 'branch-hygiene-plan.json').read_text(encoding='utf-8'))
+          if value.get('status') == 'blocked' or value.get('errors'):
+              raise SystemExit(f'branch hygiene still blocked: {value.get("errors")}')
+          print(f"BRANCH_HYGIENE_RECONCILED beforeBranchCount={value.get('beforeBranchCount')}")
+          PY
+
+      - name: Regenerate source manifest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp -s "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_source_manifest_test.py .
+          python3 tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+          actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          expected = {'SOURCE_MANIFEST.sha256', 'config/branch_hygiene.json'}
+          if actual != expected:
+              raise SystemExit(f'hygiene reconciliation scope mismatch: {sorted(actual)}')
+          PY
+
+      - name: Publish exact cleanup-policy reconciliation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256 config/branch_hygiene.json
+          git diff --cached --check
+          git commit -m 'chore(repo): reconcile branch hygiene after safe reap'
+          candidate="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/agent/qwen-phone-control
+          git fetch origin '+refs/heads/agent/qwen-phone-control:refs/remotes/origin/agent/qwen-phone-control'
+          [[ "$(git rev-parse origin/agent/qwen-phone-control)" == "$candidate" ]]
+          echo "QWEN_BRANCH_HYGIENE_RECONCILED candidate=$candidate"
