@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kristin P3 deterministic fixture</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; }
+    main { max-width: 720px; display: grid; gap: 16px; }
+    #drag-source, #drag-target { border: 1px solid #777; padding: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Browser fixture</h1>
+    <p id="status" aria-live="polite">ready</p>
+    <form id="profile-form">
+      <label for="name">Name</label>
+      <input id="name" name="name" placeholder="Profile name" autocomplete="off">
+      <label for="mode">Mode</label>
+      <select id="mode" name="mode">
+        <option value="safe">Safe</option>
+        <option value="strict">Strict</option>
+      </select>
+      <label><input id="confirm" type="checkbox"> Confirm</label>
+      <button id="submit" type="submit">Save</button>
+    </form>
+    <button id="open-dialog" type="button">Open dialog</button>
+    <dialog id="fixture-dialog">
+      <p>Deterministic dialog</p>
+      <button id="close-dialog" type="button">Close</button>
+    </dialog>
+    <div id="drag-source" draggable="true">Drag source</div>
+    <div id="drag-target">Drag target</div>
+    <a id="download" download="fixture.txt" href="data:text/plain,Kristin%20P3%20fixture">Download fixture</a>
+    <label for="upload">Upload fixture</label>
+    <input id="upload" type="file">
+  </main>
+  <script src="fixture.js"></script>
+</body>
+</html>
