@@ -16,8 +16,9 @@ void main() {
       });
 
       expect(decision, isA<CompleteDecision>());
-      expect((decision as CompleteDecision).summary, isNotEmpty);
-      expect(decision.summary, contains('objective evidence'));
+      final complete = decision as CompleteDecision;
+      expect(complete.summary, isNotEmpty);
+      expect(complete.summary, contains('objective evidence'));
     });
 
     test('root file inspection becomes a bounded directory listing', () {
