@@ -1,0 +1,88 @@
+name: p2-012-layout-fix-oracle
+on:
+  pull_request:
+permissions:
+  contents: write
+jobs:
+  layout-fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p2-012-layout-fix-oracle
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - name: Apply, format, and validate constrained terminal layout
+        shell: bash
+        run: |
+          flutter pub get
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('lib/product/p2_owner_workspace.dart')
+          text = path.read_text()
+          old = '''              if (constraints.maxWidth >= 900) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    SizedBox(width: 330, child: _buildTabList(tabs)),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: _buildTerminalPane(context)),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  SizedBox(height: 180, child: _buildTabList(tabs)),
+                  const Divider(height: 1),
+                  Expanded(child: _buildTerminalPane(context)),
+                ],
+              );'''
+          new = '''              final useSideBySide = constraints.maxWidth >= 900 ||
+                  (constraints.maxWidth >= 720 && constraints.maxHeight < 420);
+              if (useSideBySide) {
+                final tabListWidth = constraints.maxWidth >= 900 ? 330.0 : 260.0;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    SizedBox(width: tabListWidth, child: _buildTabList(tabs)),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: _buildTerminalPane(context)),
+                  ],
+                );
+              }
+              final tabListHeight = constraints.maxHeight < 360 ? 96.0 : 180.0;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  SizedBox(height: tabListHeight, child: _buildTabList(tabs)),
+                  const Divider(height: 1),
+                  Expanded(child: _buildTerminalPane(context)),
+                ],
+              );'''
+          if old not in text:
+              raise SystemExit('target layout block not found exactly once')
+          if text.count(old) != 1:
+              raise SystemExit('target layout block is ambiguous')
+          path.write_text(text.replace(old, new))
+          PY
+          dart format lib/product/p2_owner_workspace.dart
+          set +e
+          flutter test --no-pub test/product/p2_owner_workspace_test.dart --reporter expanded > /tmp/p2-layout.log 2>&1
+          status=$?
+          set -e
+          {
+            echo "exit=$status"
+            tail -n 180 /tmp/p2-layout.log
+          } > p2-012-layout-fix-diagnostic.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/product/p2_owner_workspace.dart p2-012-layout-fix-diagnostic.txt
+          git commit -m 'fix(p2): keep Owner terminal usable at constrained heights'
+          git push origin HEAD:agent/p2-012-layout-fix-oracle
