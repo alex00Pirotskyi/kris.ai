@@ -330,17 +330,25 @@ class ToolContract {
     ToolDescriptorDialect dialect = ToolDescriptorDialect.canonical,
   }) {
     if (dialect == ToolDescriptorDialect.model) {
+      final properties = _map(inputSchema['properties']);
       return <String, dynamic>{
         'name': name,
-        'version': version,
         'description': description,
         'permission': permission.name,
         'risk': risk.name,
-        'inputSchema': inputSchema,
-        'argumentSchema': <String, dynamic>{
+        'arguments': <String, dynamic>{
           'required': requiredArguments,
           'optional': optionalArguments,
-          'example': example,
+          'types': <String, dynamic>{
+            for (final entry in properties.entries)
+              entry.key: _map(entry.value)['type'] ?? 'any',
+          },
+          'defaults': <String, dynamic>{
+            for (final entry in properties.entries)
+              if (_map(entry.value).containsKey('default'))
+                entry.key: _cloneJson(_map(entry.value)['default']),
+          },
+          'example': _cloneJson(example),
         },
       };
     }
