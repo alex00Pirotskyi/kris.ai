@@ -18,28 +18,26 @@ jobs:
           flutter-version: 3.44.8
           channel: stable
           cache: true
-      - name: Apply, format, and validate constrained terminal layout
+      - name: Synchronize async widget assertions and validate terminal behavior
         shell: bash
         run: |
           flutter pub get
           python - <<'PY'
-          import base64
           from pathlib import Path
-          path = Path('lib/product/p2_owner_workspace.dart')
+          path = Path('test/product/p2_owner_workspace_test.dart')
           text = path.read_text()
-          start_marker = '              if (constraints.maxWidth >= 900) {'
-          end_marker = '            },\n          ),'
-          start = text.find(start_marker)
-          if start < 0:
-              raise SystemExit('layout start marker not found')
-          end = text.find(end_marker, start)
-          if end < 0:
-              raise SystemExit('layout end marker not found')
-          payload = 'ICAgICAgICAgICAgICBmaW5hbCB1c2VTaWRlQnlTaWRlID0gY29uc3RyYWludHMubWF4V2lkdGggPj0gOTAwIHx8CiAgICAgICAgICAgICAgICAgIChjb25zdHJhaW50cy5tYXhXaWR0aCA+PSA3MjAgJiYgY29uc3RyYWludHMubWF4SGVpZ2h0IDwgNDIwKTsKICAgICAgICAgICAgICBpZiAodXNlU2lkZUJ5U2lkZSkgewogICAgICAgICAgICAgICAgZmluYWwgdGFiTGlzdFdpZHRoID0gY29uc3RyYWludHMubWF4V2lkdGggPj0gOTAwID8gMzMwLjAgOiAyNjAuMDsKICAgICAgICAgICAgICAgIHJldHVybiBSb3coCiAgICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0cmV0Y2gsCiAgICAgICAgICAgICAgICAgIGNoaWxkcmVuOiA8V2lkZ2V0PlsKICAgICAgICAgICAgICAgICAgICBTaXplZEJveCh3aWR0aDogdGFiTGlzdFdpZHRoLCBjaGlsZDogX2J1aWxkVGFiTGlzdCh0YWJzKSksCiAgICAgICAgICAgICAgICAgICAgY29uc3QgVmVydGljYWxEaXZpZGVyKHdpZHRoOiAxKSwKICAgICAgICAgICAgICAgICAgICBFeHBhbmRlZChjaGlsZDogX2J1aWxkVGVybWluYWxQYW5lKGNvbnRleHQpKSwKICAgICAgICAgICAgICAgICAgXSwKICAgICAgICAgICAgICAgICk7CiAgICAgICAgICAgICAgfQogICAgICAgICAgICAgIGZpbmFsIHRhYkxpc3RIZWlnaHQgPSBjb25zdHJhaW50cy5tYXhIZWlnaHQgPCAzNjAgPyA5Ni4wIDogMTgwLjA7CiAgICAgICAgICAgICAgcmV0dXJuIENvbHVtbigKICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0cmV0Y2gsCiAgICAgICAgICAgICAgICBjaGlsZHJlbjogPFdpZGdldD5bCiAgICAgICAgICAgICAgICAgIFNpemVkQm94KGhlaWdodDogdGFiTGlzdEhlaWdodCwgY2hpbGQ6IF9idWlsZFRhYkxpc3QodGFicykpLAogICAgICAgICAgICAgICAgICBjb25zdCBEaXZpZGVyKGhlaWdodDogMSksCiAgICAgICAgICAgICAgICAgIEV4cGFuZGVkKGNoaWxkOiBfYnVpbGRUZXJtaW5hbFBhbmUoY29udGV4dCkpLAogICAgICAgICAgICAgICAgXSwKICAgICAgICAgICAgICApOwo='
-          replacement = base64.b64decode(payload).decode()
-          path.write_text(text[:start] + replacement + text[end:])
+          replacements = [
+              ("    await tester.tap(find.byTooltip('Send terminal input'));\n    await tester.pump();", "    await tester.tap(find.byTooltip('Send terminal input'));\n    await tester.pumpAndSettle();"),
+              ("    await tester.tap(find.text('Detach'));\n    await tester.pump();", "    await tester.tap(find.text('Detach'));\n    await tester.pumpAndSettle();"),
+              ("    await tester.tap(find.text('Attach'));\n    await tester.pump();\n    await tester.pump();", "    await tester.tap(find.text('Attach'));\n    await tester.pumpAndSettle();"),
+          ]
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f'widget synchronization target missing: {old!r}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
           PY
-          dart format lib/product/p2_owner_workspace.dart
+          dart format test/product/p2_owner_workspace_test.dart
           set +e
           flutter test --no-pub test/product/p2_owner_workspace_test.dart --reporter expanded > /tmp/p2-layout.log 2>&1
           status=$?
@@ -50,6 +48,6 @@ jobs:
           } > p2-012-layout-fix-diagnostic.txt
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/product/p2_owner_workspace.dart p2-012-layout-fix-diagnostic.txt
-          git commit -m 'fix(p2): keep Owner terminal usable at constrained heights'
+          git add test/product/p2_owner_workspace_test.dart p2-012-layout-fix-diagnostic.txt
+          git commit -m 'test(p2): settle asynchronous terminal actions'
           git push origin HEAD:agent/p2-012-layout-fix-oracle-v2
