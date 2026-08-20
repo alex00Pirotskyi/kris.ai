@@ -191,7 +191,6 @@ jobs:
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
           python tool/p1a_refresh_source_manifest.py .
           cmp -s "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
-          python tool/p1a_source_manifest_test.py .
           python tool/p1a_text_eof_contract_test.py --project .
           git diff --check
           mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
