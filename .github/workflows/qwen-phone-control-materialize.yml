@@ -1,4 +1,4 @@
-# validation target: frozen 5.3 head including capped persistent backoff
+# validation target: Qwen 5.3 never-idle / never-stop phone execution
 name: Qwen Phone Control Materializer
 
 on:
@@ -85,7 +85,9 @@ jobs:
               'CONTINUOUS_PRIMARY_CODE_PREFIXES',
               'CONTINUOUS_TOOL_DENY_PREFIXES',
               'RED_ALERT_FRONTIER',
+              'RED_ALERT_HARD_ERROR',
               'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
+              'stack stays alive',
               'Successful work chains immediately',
               '+refs/pull/*/head:refs/remotes/origin/pull/*/head',
           )
@@ -93,6 +95,8 @@ jobs:
           missing = [marker for marker in required if marker not in combined]
           if missing:
               raise SystemExit(f'missing always-on worker markers: {missing}')
+          if 'persistent worker reached' in deterministic and 'persistent hard error recovery' not in deterministic:
+              raise SystemExit('5.2 stack-termination path was not replaced by 5.3')
           if 'kris_qwen_worker_v53.py' not in legacy:
               raise SystemExit('legacy worker entry no longer forwards to deterministic 5.3')
           print('QWEN_WORKER_5_3_ALWAYS_ON_PASS')
@@ -128,9 +132,44 @@ jobs:
 
           path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
           text = path.read_text(encoding='utf-8')
-          marker = '## Always-on Product protocol (executed worker 5.3.0 / controller 2.2.0)'
-          if marker not in text:
-              text += '''\n\n## Always-on Product protocol (executed worker 5.3.0 / controller 2.2.0)\n\nThe phone launcher executes `tool/kris_qwen_worker_v53.py` as worker **5.3.0**. Normal `IDLE` is a red-alert condition, not a steady state: successful jobs chain immediately, eligible context-independent R1 review Work Orders are woken into dispatchable authority, HELPER_READY source is integrated through a bounded canonical Product lane, and continuous integration is settled only after exact tri-platform Product CI. When the governed frontier is genuinely empty, the worker may create one bounded `PRODUCT_DEFECT_REPAIR` Work Order only against an existing ACTIVE canonical Product PR through the existing Mission Runtime CAS path. Continuous seeding prefers actual `lib/`, `test/`, `native/`, `services/`, and `automation_host/` Product paths and excludes Mission/Qwen/branch-hygiene/source-manifest tooling from fallback work. Path authority, WIP limits, semaphores, exact-head review independence, canonical Product CI, and protected-main restrictions remain fail-closed. Documentation-only, formatting-only, governance-only and no-op continuous work are explicitly disallowed. Persistent shared-control/fleet stalls are re-polled at no more than 30-second backoff instead of sleeping for five minutes.\n\nThe launcher executes `tool/kris_qwen_control.py.compat.py` as controller **2.2.0**. Automatic update supervision is enabled by default and checks the configured remote Qwen branch every 30 seconds. A newer remote head is fetched and checked for dirty/non-fast-forward hazards before the current worker is drained; unsafe updates keep the current Qwen alive and surface an `UPDATE_BLOCKED_*` status. Safe updates reuse the existing drain, fast-forward, refreshed version-probe and restart path. If the worker exits unexpectedly while the tracked branch is current, the controller starts it again. `kris_qwen_worker_v53.py` is recognized as the managed worker process, so duplicate auto-starts are rejected. A deliberate Safe stop pauses both automatic restart and automatic update until Run current Qwen or Fetch latest + run Qwen is requested.\n\nThe large retained base worker/controller source files still carry their prior 5.2.2/2.1.0 labels during this compatibility rollout. Those labels are not the phone execution version; the launcher binds the 5.3/2.2 entries above.\n'''
+
+          hard_truth = (
+              'Repeated hard Work Order errors do not terminate the persistent stack. '
+              'After the configured threshold, worker 5.3 reports `RED_ALERT_HARD_ERROR`, '
+              'keeps the model/worker stack alive, and re-resolves within a maximum 30-second backoff.'
+          )
+          if hard_truth not in text:
+              anchor = (
+                  'Successful Work Orders chain immediately. The normal 60-second inter-job sleep '
+                  'is removed by the 5.3 execution adapter.\n'
+              )
+              if anchor not in text:
+                  raise SystemExit('operator docs always-on chaining anchor missing')
+              text = text.replace(anchor, anchor + '\n' + hard_truth + '\n', 1)
+
+          old_update = '''Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 reuses the existing safe Fetch latest + run path:\n\n1. graceful worker drain;\n2. dirty-checkout refusal;\n3. fetch of the configured branch;\n4. fast-forward-only update;\n5. refreshed worker `version` probe;\n6. stack restart using the newly fetched worker entry.\n'''
+          new_update = '''Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 first validates the update **without draining the current Qwen worker**:\n\n1. dirty-checkout check;\n2. fetch of the configured branch without modifying the checkout;\n3. fast-forward ancestry validation.\n\nA dirty checkout reports `UPDATE_BLOCKED_DIRTY`; a divergent update reports `UPDATE_BLOCKED_NON_FAST_FORWARD`. In both cases the currently running Qwen worker is kept alive. Only a proven safe fast-forward update enters the existing controlled update path: graceful worker drain, fast-forward checkout update, refreshed worker `version` probe, and stack restart using the newly fetched worker entry.\n'''
+          if old_update in text:
+              text = text.replace(old_update, new_update, 1)
+          elif 'UPDATE_BLOCKED_DIRTY' not in text or 'UPDATE_BLOCKED_NON_FAST_FORWARD' not in text:
+              raise SystemExit('operator docs automatic-update section has unexpected shape')
+
+          old_stop = (
+              'If the tracked branch is already current but the worker process exited unexpectedly, '
+              'controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses automatic '
+              'worker restart until the operator explicitly selects Run current Qwen or Fetch latest + run Qwen.'
+          )
+          new_stop = (
+              'If the tracked branch is already current but the worker process exited unexpectedly, '
+              'controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses both '
+              'automatic update and automatic worker restart until the operator explicitly selects '
+              'Run current Qwen or Fetch latest + run Qwen.'
+          )
+          if old_stop in text:
+              text = text.replace(old_stop, new_stop, 1)
+          elif 'pauses both automatic update and automatic worker restart' not in text:
+              raise SystemExit('operator docs Safe stop section has unexpected shape')
+
           path.write_text(text, encoding='utf-8', newline='\n')
           PY
 
