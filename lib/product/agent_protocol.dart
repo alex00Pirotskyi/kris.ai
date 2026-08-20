@@ -274,7 +274,6 @@ class AgentProtocolAdapter {
       }
       final action = candidate['action']?.toString() ?? '';
       if (!const <String>{
-        'tool',
         'complete',
         'fail',
         'ask_user',
@@ -384,8 +383,10 @@ class AgentProtocolAdapter {
 
     if (decision.tool == 'research_search' &&
         item.allowedTools.contains('knowledge_search')) {
-      final secretReference = arguments['secretReferenceId']?.toString().trim() ?? '';
-      if (secretReference.isEmpty || _looksPlaceholderSecretReference(secretReference)) {
+      final secretReference =
+          arguments['secretReferenceId']?.toString().trim() ?? '';
+      if (secretReference.isEmpty ||
+          _looksPlaceholderSecretReference(secretReference)) {
         final query = arguments['query']?.toString().trim();
         return ToolDecision(
           tool: 'knowledge_search',
