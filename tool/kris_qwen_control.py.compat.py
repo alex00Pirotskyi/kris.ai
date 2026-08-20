@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import importlib.util
-import json
 import os
 import pathlib
 import shutil
@@ -12,7 +12,18 @@ import threading
 import time
 
 SOURCE = pathlib.Path(__file__).with_name("kris_qwen_control.py")
+CONTROLLER_ENTRY = pathlib.Path(__file__).resolve()
 TARGET_CONTROL_VERSION = "2.2.0"
+
+
+def controller_runtime_fingerprint(entry: pathlib.Path, source: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    for path in (entry, source):
+        if not path.is_file():
+            raise RuntimeError(f"controller runtime source missing: {path}")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def load_base():
@@ -54,6 +65,8 @@ class AlwaysOnQwenController(BaseController):
         super().__init__(cfg)
         self.auto_run_enabled = True
         self.auto_update_enabled = base.env_bool("KRIS_QWEN_AUTO_UPDATE", True)
+        self.self_restart_on_update = base.env_bool("KRIS_QWEN_CONTROLLER_SELF_RESTART", False)
+        self.controller_runtime_sha256 = controller_runtime_fingerprint(CONTROLLER_ENTRY, SOURCE)
         self.last_auto_update: dict | None = None
         try:
             interval = int(os.environ.get("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30"))
@@ -138,9 +151,10 @@ class AlwaysOnQwenController(BaseController):
             worker_version = base.worker_version_from_stdout(worker_result.stdout)
 
             controller_entry = probe_dir / "tool/kris_qwen_control.py.compat.py"
-            if not controller_entry.is_file():
+            controller_source = probe_dir / "tool/kris_qwen_control.py"
+            if not controller_entry.is_file() or not controller_source.is_file():
                 raise base.ControllerError(
-                    f"candidate controller compatibility entry is missing at {candidate_ref}"
+                    f"candidate controller runtime sources are missing at {candidate_ref}"
                 )
             controller_result = base.run(
                 [self.cfg.python, str(controller_entry), "--version"],
@@ -159,6 +173,9 @@ class AlwaysOnQwenController(BaseController):
             return {
                 "workerVersion": worker_version,
                 "controllerVersion": controller_version,
+                "controllerRuntimeSha256": controller_runtime_fingerprint(
+                    controller_entry, controller_source
+                ),
                 "candidate": candidate_ref,
             }
         finally:
@@ -247,6 +264,16 @@ class AlwaysOnQwenController(BaseController):
             )
         return {"before": before, "after": after, "changed": True}
 
+    def _controller_reload_required(self, probe: dict | None) -> bool:
+        if not isinstance(probe, dict):
+            return False
+        candidate = str(probe.get("controllerRuntimeSha256") or "")
+        return bool(candidate and candidate != self.controller_runtime_sha256)
+
+    def _exit_for_supervisor_restart(self) -> None:
+        time.sleep(0.75)
+        os._exit(0)
+
     def _fetch_latest_and_run_job(self) -> None:
         git_result = None
         update_probe = None
@@ -275,11 +302,20 @@ class AlwaysOnQwenController(BaseController):
             )
             with self.lock:
                 started = self._start_worker_unlocked()
+            reload_required = self._controller_reload_required(update_probe)
             self._record_operation(
                 state="IDLE", kind="FETCH_LATEST_AND_RUN", git=git_result,
                 candidateProbe=update_probe, result=started,
+                controllerReloadRequired=reload_required,
+                controllerSupervisorRestart=self.self_restart_on_update and reload_required,
                 completedAt=base.utc_iso(), error=None,
             )
+            if reload_required and self.self_restart_on_update:
+                threading.Thread(
+                    target=self._exit_for_supervisor_restart,
+                    name="kris-qwen-controller-supervisor-restart",
+                    daemon=True,
+                ).start()
         except Exception as exc:
             recovery = None
             recovery_error = None
@@ -347,10 +383,12 @@ class AlwaysOnQwenController(BaseController):
     def status(self):
         result = super().status()
         result["controllerVersion"] = TARGET_CONTROL_VERSION
+        result["controllerRuntimeSha256"] = self.controller_runtime_sha256
         result["autoUpdate"] = {
             "enabled": self.auto_update_enabled,
             "intervalSeconds": self.auto_update_seconds,
             "autoRunEnabled": self.auto_run_enabled,
+            "selfRestartOnControllerUpdate": self.self_restart_on_update,
             "last": self.last_auto_update,
         }
         return result
