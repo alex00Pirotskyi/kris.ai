@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "release/evidence/P11-001/dependency-status.json",
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "branch": "agent/e/native-parity-readiness",
+  "createdAt": "2026-08-20T08:10:41Z",
+  "executionRole": "REVIEWER",
+  "expiresAt": "2026-08-20T10:10:41Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-010",
+  "productPr": 71,
+  "refreshedAt": "2026-08-20T08:10:41Z",
+  "resourceId": null,
+  "runtimeGeneration": 654,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P11-001-2FEF52C2",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P11-001-PR139-R1-7C51A2E4",
+  "workerIdentity": "ELASTIC-QWEN-DEDFA4C8"
+}

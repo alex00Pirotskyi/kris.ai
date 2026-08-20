@@ -1,11 +1,11 @@
 {
-  "activeSemaphoreId": null,
+  "activeSemaphoreId": "SEM-QWEN-P11-001-2FEF52C2",
   "allowedPaths": [
     "tool/worker_e_dependency_binding.py",
     "tool/worker_e_native_parity_readiness_test.py",
     "release/evidence/P11-001/dependency-status.json"
   ],
-  "assignedWorker": null,
+  "assignedWorker": "ELASTIC-QWEN-DEDFA4C8",
   "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
   "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
   "createdAt": "2026-08-11T08:04:00Z",
@@ -32,8 +32,8 @@
   "roadmapTask": "P11-001",
   "runtimeGeneration": 566,
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "REVIEW",
-  "updatedAt": "2026-08-20T08:10:04Z",
+  "updatedAt": "2026-08-20T08:10:41Z",
   "workOrderId": "WO-P11-001-PR139-R1-7C51A2E4"
 }
