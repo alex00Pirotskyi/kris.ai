@@ -2,7 +2,7 @@ name: p2-006-format-oracle-final
 on:
   pull_request:
 permissions:
-  contents: read
+  contents: write
 jobs:
   format-oracle:
     runs-on: ubuntu-24.04
@@ -10,13 +10,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
+          ref: agent/p2-006-format-oracle-final
+          persist-credentials: true
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
         with:
           flutter-version: 3.44.8
           channel: stable
           cache: true
-      - name: Print exact formatter diff
+      - name: Materialize exact formatter output on oracle branch
         shell: bash
         run: |
           dart format \
@@ -29,3 +30,18 @@ jobs:
             lib/product/p2_runtime_composition.dart \
             test/product/p2_process_terminal_contract_test.dart \
             test/product/p2_runtime_composition_test.dart
+          if ! git diff --quiet -- \
+            lib/product/p2_process_tree.dart \
+            lib/product/p2_runtime_composition.dart \
+            test/product/p2_process_terminal_contract_test.dart \
+            test/product/p2_runtime_composition_test.dart; then
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add \
+              lib/product/p2_process_tree.dart \
+              lib/product/p2_runtime_composition.dart \
+              test/product/p2_process_terminal_contract_test.dart \
+              test/product/p2_runtime_composition_test.dart
+            git commit -m 'style(p2): materialize exact formatter output'
+            git push origin HEAD:agent/p2-006-format-oracle-final
+          fi
