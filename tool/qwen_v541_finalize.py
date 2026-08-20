@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pathlib
-import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -19,56 +18,22 @@ def write(relative: str, text: str) -> None:
 
 
 def materialize_controller() -> None:
-    source = ROOT / "tool/kris_qwen_control.py"
-    retained = ROOT / "tool/kris_qwen_control_v21_base.py"
-    if retained.exists():
-        raise SystemExit("retained controller base already exists before finalization")
-    shutil.copy2(source, retained)
-    write(
-        "tool/kris_qwen_control.py",
-        '''#!/usr/bin/env python3
-from __future__ import annotations
-
-import importlib.util
-import pathlib
-import sys
-
-RETAINED = pathlib.Path(__file__).with_name("kris_qwen_control_v21_base.py")
-
-
-def _load_retained():
-    spec = importlib.util.spec_from_file_location("kris_qwen_control_v21_retained", RETAINED)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load retained KRIS Qwen controller base")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-_retained = _load_retained()
-_raw_print = print
-
-
-def _safe_print(*args, **kwargs):
-    first = str(args[0]) if args else ""
-    if "PHONE CONTROL TOKEN" in first:
-        return _raw_print(
-            "Phone control token value omitted from logs; read it from the configured token file.",
-            file=kwargs.get("file"),
-            flush=kwargs.get("flush", False),
-        )
-    return _raw_print(*args, **kwargs)
-
-
-_retained.print = _safe_print
-for _name, _value in vars(_retained).items():
-    if not _name.startswith("__"):
-        globals()[_name] = _value
-
-print = _safe_print
-''',
+    # Keep the canonical controller module identity intact. Existing controller
+    # tests and controller 2.2 monkey-patch globals on this module directly.
+    # Only remove the one unsafe bearer-token print from the retained 2.1 base.
+    path = ROOT / "tool/kris_qwen_control.py"
+    text = path.read_text(encoding="utf-8")
+    text = one(
+        text,
+        '        print("\\nPHONE CONTROL TOKEN (keep private):", controller.token, flush=True)\n',
+        '        print(\n            "\\nPhone control token value omitted from logs; read it from configured token file:",\n            controller.token_path,\n            flush=True,\n        )\n',
+        "controller token redaction",
     )
+    text = text.replace(
+        'placeholder="Paste token from server terminal"',
+        'placeholder="Paste token from controller token file"',
+    )
+    write("tool/kris_qwen_control.py", text)
 
 
 def materialize_worker() -> None:
@@ -211,10 +176,12 @@ def cleanup_transports() -> None:
     for relative in (
         "tool/kris_qwen_control_secure.py",
         "tool/kris_qwen_control_secure_test.py",
+        "tool/kris_qwen_control_v21_base.py",
         ".github/workflows/qwen-v541-hotfix-validation.yml",
         ".github/workflows/qwen-v541-finalize.yml",
         ".github/workflows/qwen-v541-pr-finalize.yml",
         ".github/workflows/qwen-v541-pr-finalize-v2.yml",
+        ".github/workflows/qwen-v541-pr-finalize-v3.yml",
         "tool/qwen_v541_finalize.py",
     ):
         try:
