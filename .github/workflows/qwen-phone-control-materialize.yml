@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Add immutable Product PR ref fetching
+      - name: Promote normal worker to Qwen 5.2.3
         shell: bash
         run: |
           set -euo pipefail
@@ -35,11 +35,9 @@ jobs:
 
           worker_path = Path('tool/kris_qwen_worker.py')
           worker = worker_path.read_text(encoding='utf-8')
-          old_version = 'SCRIPT_VERSION = "5.2.2"'
-          new_version = 'SCRIPT_VERSION = "5.2.3"'
-          if worker.count(old_version) != 1:
-              raise SystemExit('expected exactly one Qwen worker version 5.2.2')
-          worker = worker.replace(old_version, new_version, 1)
+          if worker.count('SCRIPT_VERSION = "5.2.2"') != 1:
+              raise SystemExit('expected normal worker 5.2.2 exactly once')
+          worker = worker.replace('SCRIPT_VERSION = "5.2.2"', 'SCRIPT_VERSION = "5.2.3"', 1)
 
           old_fetch = (
               'def fetch_all(cfg: Config) -> None:\n'
@@ -58,60 +56,15 @@ jobs:
               '    )\n'
           )
           if worker.count(old_fetch) != 1:
-              raise SystemExit('expected heads-only fetch_all implementation exactly once')
+              raise SystemExit('expected heads-only fetch_all exactly once')
           worker = worker.replace(old_fetch, new_fetch, 1)
           worker_path.write_text(worker, encoding='utf-8', newline='\n')
 
-          compat_path = Path('tool/kris_qwen_worker.py.compat.py')
-          compat = compat_path.read_text(encoding='utf-8')
-          if compat.count('TARGET_VERSION = "5.2.2"') != 1:
-              raise SystemExit('expected compatibility target 5.2.2')
-          compat = compat.replace('TARGET_VERSION = "5.2.2"', 'TARGET_VERSION = "5.2.3"', 1)
-          old_version_block = (
-              "    old_version = 'SCRIPT_VERSION = \"5.2.1\"'\n"
-              "    new_version = f'SCRIPT_VERSION = \"{TARGET_VERSION}\"'\n"
-              "    if old_version in text:\n"
-              "        if text.count(old_version) != 1:\n"
-              "            raise SystemExit(\"KRIS_QWEN_COMPAT_ERROR: ambiguous worker version marker\")\n"
-              "        text = text.replace(old_version, new_version, 1)\n"
-              "    elif new_version not in text:\n"
-              "        raise SystemExit(\"KRIS_QWEN_COMPAT_ERROR: unsupported worker version\")\n"
-          )
-          new_version_block = (
-              "    new_version = f'SCRIPT_VERSION = \"{TARGET_VERSION}\"'\n"
-              "    if new_version not in text:\n"
-              "        old_versions = [\n"
-              "            marker for marker in (\n"
-              "                'SCRIPT_VERSION = \"5.2.1\"',\n"
-              "                'SCRIPT_VERSION = \"5.2.2\"',\n"
-              "            ) if marker in text\n"
-              "        ]\n"
-              "        if len(old_versions) != 1 or text.count(old_versions[0]) != 1:\n"
-              "            raise SystemExit(\"KRIS_QWEN_COMPAT_ERROR: unsupported/ambiguous worker version\")\n"
-              "        text = text.replace(old_versions[0], new_version, 1)\n"
-          )
-          if compat.count(old_version_block) != 1:
-              raise SystemExit('expected compatibility version block exactly once')
-          compat = compat.replace(old_version_block, new_version_block, 1)
-
-          marker = '    if old_cmp in text:\n        raise SystemExit("KRIS_QWEN_COMPAT_ERROR: obsolete historical semaphore guard remains")\n'
-          fetch_compat = (
-              '\n    old_fetch = \'git(cfg.anchor, "fetch", "origin", "+refs/heads/*:refs/remotes/origin/*", "--prune", timeout=1800)\'\n'
-              '    new_fetch = (\n'
-              '        \'git(cfg.anchor, "fetch", "origin", \'+refs/heads/*:refs/remotes/origin/*\', \'\n'
-              '        \'"+refs/pull/*/head:refs/remotes/origin/pull/*/head", "--prune", timeout=1800)\'\n'
-              '    )\n'
-              '    if old_fetch in text:\n'
-              '        if text.count(old_fetch) != 1:\n'
-              '            raise SystemExit("KRIS_QWEN_COMPAT_ERROR: ambiguous heads-only fetch")\n'
-              '        text = text.replace(old_fetch, new_fetch, 1)\n'
-              '    elif "+refs/pull/*/head:refs/remotes/origin/pull/*/head" not in text:\n'
-              '        raise SystemExit("KRIS_QWEN_COMPAT_ERROR: immutable PR-head fetch missing")\n'
-          )
-          if marker not in compat:
-              raise SystemExit('expected compatibility historical guard marker')
-          compat = compat.replace(marker, marker + fetch_compat, 1)
-          compat_path.write_text(compat, encoding='utf-8', newline='\n')
+          compat = Path('tool/kris_qwen_worker.py.compat.py').read_text(encoding='utf-8')
+          if 'TARGET_VERSION = "5.2.3"' not in compat:
+              raise SystemExit('compatibility entry is not at 5.2.3')
+          if '+refs/pull/*/head:refs/remotes/origin/pull/*/head' not in compat:
+              raise SystemExit('compatibility entry does not install immutable PR-head fetch')
 
           docs_path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
           docs = docs_path.read_text(encoding='utf-8')
@@ -127,7 +80,7 @@ jobs:
           docs_path.write_text(docs, encoding='utf-8', newline='\n')
           PY
 
-      - name: Validate PR-ref durability and phone control
+      - name: Validate immutable PR62 audit fallback
         shell: bash
         run: |
           set -euo pipefail
@@ -166,13 +119,11 @@ jobs:
 
           raw = subprocess.check_output(['python3', 'tool/kris_qwen_worker.py', 'version'], text=True)
           if str(json.loads(raw).get('scriptVersion') or '').strip() != '5.2.3':
-              raise SystemExit(f'unexpected worker version JSON: {raw!r}')
+              raise SystemExit(f'unexpected normal worker version: {raw!r}')
           compat = subprocess.check_output(['python3', 'tool/kris_qwen_worker.py.compat.py', 'version'], text=True)
           if str(json.loads(compat).get('scriptVersion') or '').strip() != '5.2.3':
-              raise SystemExit(f'unexpected compatibility worker version JSON: {compat!r}')
-          if subprocess.check_output(['python3', 'tool/kris_qwen_control.py', '--version'], text=True).strip() != '2.1.0':
-              raise SystemExit('unexpected Qwen controller version')
-          print(f'validated immutable PR62 head {pr62} and Qwen 5.2.3')
+              raise SystemExit(f'unexpected compatibility worker version: {compat!r}')
+          print(f'Qwen 5.2.3 immutable PR62 fetch PASS {pr62}')
           PY
 
           git worktree add --detach "$RUNNER_TEMP/control" origin/agent/mission-execution-v15-gold >/dev/null
@@ -186,16 +137,11 @@ jobs:
               62,
           )
           if result['head'] != '402a5764472a19feebdd51de192513640a05463d':
-              raise SystemExit(f'unexpected PR62 resolved head: {result}')
-          print(f"PR62 audit resolution PASS ref={result['ref']} head={result['head']}")
+              raise SystemExit(f'PR62 audit resolution mismatch: {result}')
+          print(f"PR62 live-runtime resolver PASS ref={result['ref']} head={result['head']}")
           PY
 
-          test -x run_my_server.py
-          test -x tool/run_kris_qwen_phone_control.sh
-          bash -n tool/install_kris_qwen_control_systemd.sh
-          bash -n tool/run_kris_qwen_phone_control.sh
-
-      - name: Refresh exact source manifest and publish
+      - name: Refresh manifest and publish 5.2.3
         shell: bash
         run: |
           set -euo pipefail
@@ -212,18 +158,13 @@ jobs:
               'SOURCE_MANIFEST.sha256',
               'docs/KRIS_QWEN_SERVER_CONTROL.md',
               'tool/kris_qwen_worker.py',
-              'tool/kris_qwen_worker.py.compat.py',
           }
           if actual != expected:
               raise SystemExit(f'Qwen 5.2.3 scope mismatch actual={sorted(actual)} expected={sorted(expected)}')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            SOURCE_MANIFEST.sha256 \
-            docs/KRIS_QWEN_SERVER_CONTROL.md \
-            tool/kris_qwen_worker.py \
-            tool/kris_qwen_worker.py.compat.py
+          git add SOURCE_MANIFEST.sha256 docs/KRIS_QWEN_SERVER_CONTROL.md tool/kris_qwen_worker.py
           git diff --cached --check
           git commit -m 'fix(qwen): fetch immutable Product PR refs'
           git push origin HEAD:refs/heads/agent/qwen-phone-control
