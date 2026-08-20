@@ -271,7 +271,7 @@ class AgentDecisionCodec {
     final schema = Map<String, dynamic>.from(
       definitions[definitionName] as Map,
     );
-    final normalized = <String, dynamic>{'protocolVersion': '1.0.0', ...json};
+    final normalized = _compatibilityNormalized(action, json);
     final issues = JsonSchemaValidator.validate(normalized, schema);
     if (issues.isNotEmpty) {
       throw AgentDecisionException(
@@ -323,5 +323,96 @@ class AgentDecisionCodec {
         ),
       _ => throw StateError('unreachable AgentDecision action: $action'),
     };
+  }
+
+  Map<String, dynamic> _compatibilityNormalized(
+    String action,
+    Map<String, dynamic> json,
+  ) {
+    String firstText(Iterable<String> keys) {
+      for (final key in keys) {
+        final value = json[key]?.toString().trim() ?? '';
+        if (value.isNotEmpty) {
+          return value;
+        }
+      }
+      return '';
+    }
+
+    final protocolVersion = firstText(const <String>['protocolVersion']);
+    final reason = firstText(const <String>['reason']);
+    switch (action) {
+      case 'tool':
+        return <String, dynamic>{
+          'protocolVersion': protocolVersion.isEmpty ? '1.0.0' : protocolVersion,
+          'action': 'tool',
+          'tool': firstText(const <String>['tool', 'toolName', 'tool_name']),
+          'arguments': json['arguments'] is Map
+              ? Map<String, dynamic>.from(json['arguments'] as Map)
+              : <String, dynamic>{},
+          if (reason.isNotEmpty) 'reason': reason,
+        };
+      case 'complete':
+        var summary = firstText(const <String>[
+          'summary',
+          'answer',
+          'message',
+          'final',
+          'finalAnswer',
+          'final_answer',
+          'finalResponse',
+          'final_response',
+          'result',
+          'response',
+        ]);
+        if (summary.isEmpty && reason.isNotEmpty) {
+          summary = reason;
+        }
+        if (summary.isEmpty) {
+          summary = 'Work item completed; objective evidence must still be verified.';
+        }
+        return <String, dynamic>{
+          'protocolVersion': protocolVersion.isEmpty ? '1.0.0' : protocolVersion,
+          'action': 'complete',
+          'summary': summary,
+          if (reason.isNotEmpty) 'reason': reason,
+        };
+      case 'fail':
+        final summary = firstText(const <String>[
+          'summary',
+          'error',
+          'message',
+          'result',
+          'response',
+        ]);
+        return <String, dynamic>{
+          'protocolVersion': protocolVersion.isEmpty ? '1.0.0' : protocolVersion,
+          'action': 'fail',
+          if (summary.isNotEmpty) 'summary': summary,
+          if (reason.isNotEmpty) 'reason': reason,
+          if (firstText(const <String>['code']).isNotEmpty)
+            'code': firstText(const <String>['code']),
+          'retryable': json['retryable'] == true,
+        };
+      case 'ask_user':
+        return <String, dynamic>{
+          'protocolVersion': protocolVersion.isEmpty ? '1.0.0' : protocolVersion,
+          'action': 'ask_user',
+          'question': firstText(const <String>['question']),
+          if (json['choices'] is List) 'choices': json['choices'],
+          if (reason.isNotEmpty) 'reason': reason,
+        };
+      case 'delegate':
+        return <String, dynamic>{
+          'protocolVersion': protocolVersion.isEmpty ? '1.0.0' : protocolVersion,
+          'action': 'delegate',
+          'delegateTo': firstText(const <String>['delegateTo']),
+          'task': firstText(const <String>['task']),
+          if (json['inputs'] is Map) 'inputs': json['inputs'],
+          if (reason.isNotEmpty) 'reason': reason,
+        };
+      default:
+        return <String, dynamic>{'protocolVersion': '1.0.0', ...json};
+    }
   }
 }
