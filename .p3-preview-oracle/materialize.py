@@ -1,0 +1,90 @@
+from pathlib import Path
+
+product = Path('lib/product/browser/web_preview.dart')
+text = product.read_text()
+
+imports_old = "import '../domain.dart';\nimport '../workspace_tools.dart';"
+imports_new = "import '../p2_effect_boundary.dart';\nimport '../p2_process_tree.dart';\nimport '../p2_pty_service.dart';\nimport '../storage_security.dart' show ProductException;\nimport '../workspace_tools.dart';"
+if imports_old not in text:
+    raise SystemExit('preview import anchor missing')
+text = text.replace(imports_old, imports_new, 1)
+
+host_anchor = "abstract interface class P3PreviewProcessHost {\n  Future<P3PreviewProcessSession> start(P3DevServerConfig config);\n  Future<void> stop(P3PreviewProcessSession session, Duration grace);\n}"
+if host_anchor not in text:
+    raise SystemExit('preview host anchor missing')
+text = text.replace(
+    host_anchor,
+    host_anchor + Path('.p3-preview-oracle/adapter.dart.txt').read_text(),
+    1,
+)
+
+source_change_old = "      staticPreview.notifyReload();\n      return staticPreview.snapshot;"
+source_change_new = "      await staticPreview.notifyReload();\n      return staticPreview.snapshot;"
+if source_change_old not in text:
+    raise SystemExit('preview source-change reload anchor missing')
+text = text.replace(source_change_old, source_change_new, 1)
+
+sse_old = "        response.write('retry: 500\\n\\n');\n        await response.flush();\n        _reloadClients.add(response);\n        response.done.whenComplete(() => _reloadClients.remove(response));\n        return;"
+sse_new = "        response.bufferOutput = false;\n        _reloadClients.add(response);\n        try {\n          response.write('retry: 500\\n\\n');\n          await response.flush();\n        } catch (_) {\n          _reloadClients.remove(response);\n          rethrow;\n        }\n        return;"
+if sse_old not in text:
+    raise SystemExit('preview SSE registration anchor missing')
+text = text.replace(sse_old, sse_new, 1)
+
+notify_old = "  void notifyReload() {\n    if (lifecycle != P3PreviewLifecycle.ready) {\n      throw StateError('web_preview_not_ready');\n    }\n    revision += 1;\n    for (final response in _reloadClients.toList()) {\n      try {\n        response.write('data: $revision\\n\\n');\n        response.flush();\n      } catch (_) {\n        _reloadClients.remove(response);\n      }\n    }\n  }"
+notify_new = "  Future<void> notifyReload() async {\n    if (lifecycle != P3PreviewLifecycle.ready) {\n      throw StateError('web_preview_not_ready');\n    }\n    revision += 1;\n    for (final response in _reloadClients.toList()) {\n      try {\n        response.write('data: $revision\\n\\n');\n        await response.flush();\n      } catch (_) {\n        _reloadClients.remove(response);\n      }\n    }\n  }"
+if notify_old not in text:
+    raise SystemExit('preview reload notification anchor missing')
+text = text.replace(notify_old, notify_new, 1)
+
+brace_replacements = {
+    "  if (_isHtml(lower)) return ContentType.html;": "  if (_isHtml(lower)) {\n    return ContentType.html;\n  }",
+    "  if (lower.endsWith('.css')) return ContentType('text', 'css', charset: 'utf-8');": "  if (lower.endsWith('.css')) {\n    return ContentType('text', 'css', charset: 'utf-8');\n  }",
+    "  if (lower.endsWith('.json')) return ContentType.json;": "  if (lower.endsWith('.json')) {\n    return ContentType.json;\n  }",
+    "  if (lower.endsWith('.svg')) return ContentType('image', 'svg+xml');": "  if (lower.endsWith('.svg')) {\n    return ContentType('image', 'svg+xml');\n  }",
+    "  if (lower.endsWith('.png')) return ContentType('image', 'png');": "  if (lower.endsWith('.png')) {\n    return ContentType('image', 'png');\n  }",
+    "  if (lower.endsWith('.gif')) return ContentType('image', 'gif');": "  if (lower.endsWith('.gif')) {\n    return ContentType('image', 'gif');\n  }",
+    "  if (lower.endsWith('.webp')) return ContentType('image', 'webp');": "  if (lower.endsWith('.webp')) {\n    return ContentType('image', 'webp');\n  }",
+}
+for old, new in brace_replacements.items():
+    if old not in text:
+        raise SystemExit(f'preview brace target missing: {old}')
+    text = text.replace(old, new, 1)
+product.write_text(text)
+
+test = Path('test/product/browser/web_preview_test.dart')
+test_text = test.read_text()
+test_import_old = "import 'package:kristin_local_agent/product/browser/web_preview.dart';\nimport 'package:kristin_local_agent/product/workspace_tools.dart';"
+test_import_new = "import 'package:kristin_local_agent/product/browser/web_preview.dart';\nimport 'package:kristin_local_agent/product/p2_effect_boundary.dart';\nimport 'package:kristin_local_agent/product/p2_process_tree.dart';\nimport 'package:kristin_local_agent/product/p2_pty_service.dart';\nimport 'package:kristin_local_agent/product/workspace_tools.dart';"
+if test_import_old not in test_text:
+    raise SystemExit('preview test import anchor missing')
+test_text = test_text.replace(test_import_old, test_import_new, 1)
+
+const_target = "() => const P3DevServerConfig("
+if const_target not in test_text:
+    raise SystemExit('preview const config target missing')
+test_text = test_text.replace(const_target, "() => P3DevServerConfig(", 1)
+
+handshake_old = "    final lines = response\n        .transform(utf8.decoder)\n        .transform(const LineSplitter())\n        .where((line) => line.startsWith('data:'));\n    final firstReload = lines.first.timeout(const Duration(seconds: 2));"
+handshake_new = "    final lines = response\n        .transform(utf8.decoder)\n        .transform(const LineSplitter())\n        .asBroadcastStream();\n    await lines\n        .firstWhere((line) => line == 'retry: 500')\n        .timeout(const Duration(seconds: 2));\n    final firstReload = lines\n        .firstWhere((line) => line.startsWith('data:'))\n        .timeout(const Duration(seconds: 2));"
+if handshake_old not in test_text:
+    raise SystemExit('preview SSE test handshake anchor missing')
+test_text = test_text.replace(handshake_old, handshake_new, 1)
+
+main_end = '\n}\n\nFuture<void> _serveReadiness'
+if main_end not in test_text:
+    raise SystemExit('preview test main anchor missing')
+test_text = test_text.replace(
+    main_end,
+    Path('.p3-preview-oracle/tests.dart.txt').read_text() + main_end,
+    1,
+)
+
+helper_anchor = 'final class _RecordingProcessHost implements P3PreviewProcessHost {'
+if helper_anchor not in test_text:
+    raise SystemExit('preview test helper anchor missing')
+test_text = test_text.replace(
+    helper_anchor,
+    Path('.p3-preview-oracle/helpers.dart.txt').read_text() + '\n' + helper_anchor,
+    1,
+)
+test.write_text(test_text)
