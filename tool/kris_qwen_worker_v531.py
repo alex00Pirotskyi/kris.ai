@@ -6,7 +6,7 @@ import pathlib
 import sys
 
 SOURCE = pathlib.Path(__file__).with_name("kris_qwen_worker.py")
-V53_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_worker_v53.py")
+V53_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_worker_v53_base.py")
 RECONCILE_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_reconcile.py")
 TARGET_VERSION = "5.3.1"
 
@@ -31,7 +31,7 @@ def replace_exact(text: str, old: str, new: str, label: str) -> str:
 
 
 def transform(text: str) -> str:
-    v53 = load_module(V53_ENTRY, "kris_qwen_v53_base_transform", "5.3 base transformer")
+    v53 = load_module(V53_ENTRY, "kris_qwen_v53_base_transform", "retained 5.3 base transformer")
     reconcile = load_module(
         RECONCILE_ENTRY,
         "kris_qwen_v53_reconcile_runtime",
