@@ -1,6 +1,6 @@
 # ADR-0005 — Browser Profile and Research Storage
 
-**Status:** ACCEPTED  
+**Status:** PROPOSED
 **Owner tasks:** `P3-008`, `P4-011`
 
 ## Decision

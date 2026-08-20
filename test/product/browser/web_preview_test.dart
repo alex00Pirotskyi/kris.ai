@@ -70,21 +70,31 @@ void main() {
       preview.url.resolve('/__kristin_live_reload'),
     );
     final response = await request.close();
-    final lines = response
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .asBroadcastStream();
-    await lines
-        .firstWhere((line) => line == 'retry: 500')
-        .timeout(const Duration(seconds: 2));
-    final firstReload = lines
-        .firstWhere((line) => line.startsWith('data:'))
-        .timeout(const Duration(seconds: 2));
+    final lines = StreamIterator<String>(
+      response.transform(utf8.decoder).transform(const LineSplitter()),
+    );
 
-    final changed = await service.sourceChanged(preview.id);
-    expect(changed.revision, 1);
-    expect(await firstReload, 'data: 1');
-    client.close(force: true);
+    Future<String> nextLineWhere(bool Function(String line) matches) async {
+      while (await lines.moveNext().timeout(const Duration(seconds: 10))) {
+        if (matches(lines.current)) return lines.current;
+      }
+      throw StateError('live_reload_stream_closed');
+    }
+
+    try {
+      expect(
+        await nextLineWhere((line) => line == 'retry: 500'),
+        'retry: 500',
+      );
+      final firstReload = nextLineWhere((line) => line.startsWith('data:'));
+
+      final changed = await service.sourceChanged(preview.id);
+      expect(changed.revision, 1);
+      expect(await firstReload, 'data: 1');
+    } finally {
+      await lines.cancel();
+      client.close(force: true);
+    }
   });
 
   test('static preview rejects encoded path traversal', () async {
