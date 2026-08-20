@@ -18,7 +18,7 @@ jobs:
           flutter-version: 3.44.8
           channel: stable
           cache: true
-      - name: Guard stale stream callbacks and validate terminal behavior
+      - name: Make local detach cleanup non-blocking and validate
         shell: bash
         run: |
           flutter pub get
@@ -26,17 +26,11 @@ jobs:
           from pathlib import Path
           path = Path('lib/product/p2_owner_workspace.dart')
           text = path.read_text()
-          old_error = "        if (identical(_outputSubscriptions[tab.id], subscription)) {\n          _outputSubscriptions.remove(tab.id);\n        }\n        _recordOutputFailure(tab.id, error);"
-          new_error = "        if (!identical(_outputSubscriptions[tab.id], subscription)) return;\n        _outputSubscriptions.remove(tab.id);\n        _recordOutputFailure(tab.id, error);"
-          old_done = "        if (identical(_outputSubscriptions[tab.id], subscription)) {\n          _outputSubscriptions.remove(tab.id);\n        }\n        _connectionLabels[tab.id] = 'Disconnected';"
-          new_done = "        if (!identical(_outputSubscriptions[tab.id], subscription)) return;\n        _outputSubscriptions.remove(tab.id);\n        _connectionLabels[tab.id] = 'Disconnected';"
-          if old_error not in text:
-              raise SystemExit('stream error callback target missing')
-          if old_done not in text:
-              raise SystemExit('stream done callback target missing')
-          text = text.replace(old_error, new_error, 1)
-          text = text.replace(old_done, new_done, 1)
-          path.write_text(text)
+          old = "    final cancellation = _cancelLocalOutput(selected.id);\n    widget.terminalModel.setAttached(selected.id, false);\n    _connectionLabels[selected.id] = 'Detached';\n    if (mounted) setState(() {});\n    await cancellation;"
+          new = "    unawaited(_cancelLocalOutput(selected.id));\n    widget.terminalModel.setAttached(selected.id, false);\n    _connectionLabels[selected.id] = 'Detached';\n    if (mounted) setState(() {});"
+          if old not in text:
+              raise SystemExit('blocking detach cleanup target missing')
+          path.write_text(text.replace(old, new, 1))
           PY
           dart format lib/product/p2_owner_workspace.dart
           set +e
@@ -50,5 +44,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add lib/product/p2_owner_workspace.dart p2-012-layout-fix-diagnostic.txt
-          git commit -m 'fix(p2): ignore stale terminal stream callbacks'
+          git commit -m 'fix(p2): do not block reattach on local stream cleanup'
           git push origin HEAD:agent/p2-012-layout-fix-oracle-v2
