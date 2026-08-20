@@ -1,5 +1,4 @@
 {
-  "activeSemaphoreId": "SEM-QWEN-P11-001-B12E717D",
   "allowedPaths": [
     "tool/worker_e*.py",
     "release/evidence/P11-*/**",
@@ -26,8 +25,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "INTEGRATING",
+  "status": "VALIDATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-20T13:03:39Z",
+  "updatedAt": "2026-08-20T13:03:58Z",
   "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }

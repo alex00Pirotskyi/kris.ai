@@ -1,21 +1,23 @@
 {
-  "schemaVersion": 1,
-  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4",
-  "mission": "MISSION-010",
-  "roadmapTask": "P11-001",
-  "parentProductPr": 71,
-  "priority": 92,
-  "type": "PRODUCT_DEFECT_REPAIR",
-  "objective": "Repair the exact-current P11-001 immutable-review provenance defects identified by context-independent R1 on canonical PR #71 head 1383b8c4dff657020eb6873d01d370ffbfb30b72 / tree 01821da30672d2275b69ee3dcfc83c5dbb10ccdc. Exact helper PR #139 is frozen at head 1403f42d27a838ff7cdb2684832c6855023670cf / tree 03dd2b8ab0bdc4416b966fbcf7a76773a157987d. The helper changes only tool/worker_e_dependency_binding.py, tool/worker_e_native_parity_readiness_test.py, and release/evidence/P11-001/dependency-status.json; it restores the previously proven closed reviewRequirement semantics from historical source 5cd9cd6f76b146a21a7df2971722bf9189cc6b61 and adds adversarial wrong-record-type plus surplus/omitted-scope regressions. Exact helper product-gates run 31470952181 is SUCCESS on Ubuntu, macOS, and Windows. Product bytes are now frozen pending fresh context-independent exact-head R1. Preserve P11 as SOURCE_FOUNDATION only. No Test Center/P8 authority, generated manifest, native behavior, support, acceptance, release, production, or GA state is changed by this source helper.",
-  "requestedRole": "BUILDER",
   "allowedPaths": [
     "tool/worker_e_dependency_binding.py",
     "tool/worker_e_native_parity_readiness_test.py",
     "release/evidence/P11-001/dependency-status.json"
   ],
+  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
   "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
   "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "createdAt": "2026-08-11T07:38:00Z",
+  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
   "dependencyRequirements": [],
+  "executionRole": "BUILDER",
+  "lastActor": "ELASTIC-QWEN-6CDAEA10:INTEGRATED_BY:WO-P11-001-INTEGRATE-REVIEW-BINDING",
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-010",
+  "objective": "Repair the exact-current P11-001 immutable-review provenance defects identified by context-independent R1 on canonical PR #71 head 1383b8c4dff657020eb6873d01d370ffbfb30b72 / tree 01821da30672d2275b69ee3dcfc83c5dbb10ccdc. Exact helper PR #139 is frozen at head 1403f42d27a838ff7cdb2684832c6855023670cf / tree 03dd2b8ab0bdc4416b966fbcf7a76773a157987d. The helper changes only tool/worker_e_dependency_binding.py, tool/worker_e_native_parity_readiness_test.py, and release/evidence/P11-001/dependency-status.json; it restores the previously proven closed reviewRequirement semantics from historical source 5cd9cd6f76b146a21a7df2971722bf9189cc6b61 and adds adversarial wrong-record-type plus surplus/omitted-scope regressions. Exact helper product-gates run 31470952181 is SUCCESS on Ubuntu, macOS, and Windows. Product bytes are now frozen pending fresh context-independent exact-head R1. Preserve P11 as SOURCE_FOUNDATION only. No Test Center/P8 authority, generated manifest, native behavior, support, acceptance, release, production, or GA state is changed by this source helper.",
+  "parentProductPr": 71,
+  "priority": 92,
+  "requestedRole": "BUILDER",
   "requiredTests": [
     "source diff from 1383b8c4dff657020eb6873d01d370ffbfb30b72 is exactly the three authorized paths",
     "immutable review requirement requires recordType=IndependentReview and exact reviewType/mission/task/pullRequest",
@@ -26,13 +28,10 @@
     "fresh context-independent exact-head R1 required before integration",
     "after integration, canonical Worker E materialize + tri-platform validation is required on the canonical P11 branch"
   ],
-  "maxChildWorkOrders": 0,
-  "status": "HELPER_READY",
-  "createdBy": "WRK-20260809T192000Z-7c51a2e4",
-  "createdAt": "2026-08-11T07:38:00Z",
-  "updatedAt": "2026-08-11T08:04:00Z",
-  "assignedWorker": "ELASTIC-GPT-7C51A2E4",
-  "executionRole": "BUILDER",
-  "activeSemaphoreId": null,
-  "lastActor": "ELASTIC-GPT-7C51A2E4:PR139_EXACT_PRODUCT_CI_GREEN:R1_REQUIRED"
+  "roadmapTask": "P11-001",
+  "schemaVersion": 1,
+  "status": "LANDED",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-20T13:03:58Z",
+  "workOrderId": "WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4"
 }
