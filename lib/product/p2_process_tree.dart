@@ -25,8 +25,7 @@ class P2ProcessIdentity {
   final String supervisorToken;
   final String platformGroupId;
 
-  String get stableKey =>
-      '$pid:$startToken:$supervisorToken:$platformGroupId';
+  String get stableKey => '$pid:$startToken:$supervisorToken:$platformGroupId';
 
   void validate() {
     if (pid <= 1) throw StateError('process_identity_pid');
