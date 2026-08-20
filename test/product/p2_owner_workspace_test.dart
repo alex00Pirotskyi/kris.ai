@@ -123,19 +123,18 @@ void main() {
       'echo hello',
     );
     await tester.tap(find.byTooltip('Send terminal input'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(actions.inputs, hasLength(1));
     expect(utf8.decode(actions.inputs.single.sublist(0, 10)), 'echo hello');
     expect(actions.inputs.single.last, 13);
 
     await tester.tap(find.text('Detach'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(actions.detachCount, 1);
     expect(model.selected?.attached, false);
 
     await tester.tap(find.text('Attach'));
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(model.selected?.attached, true);
     expect(
       actions.outputCursors['live-session'],
