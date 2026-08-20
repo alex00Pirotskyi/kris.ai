@@ -1,0 +1,77 @@
+name: p3-013-p2-adapter-oracle
+on:
+  pull_request:
+permissions:
+  contents: write
+jobs:
+  adapter-oracle:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p3-013-p2-adapter-oracle
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - name: Materialize and validate P2 preview adapter
+        shell: bash
+        run: |
+          flutter pub get
+          python - <<'PY'
+          from pathlib import Path
+
+          product = Path('lib/product/browser/web_preview.dart')
+          text = product.read_text()
+          imports_old = "import '../domain.dart';\nimport '../workspace_tools.dart';"
+          imports_new = "import '../domain.dart';\nimport '../p2_effect_boundary.dart';\nimport '../p2_process_tree.dart';\nimport '../p2_pty_service.dart';\nimport '../workspace_tools.dart';"
+          if imports_old not in text:
+              raise SystemExit('preview import anchor missing')
+          text = text.replace(imports_old, imports_new, 1)
+          host_anchor = "abstract interface class P3PreviewProcessHost {\n  Future<P3PreviewProcessSession> start(P3DevServerConfig config);\n  Future<void> stop(P3PreviewProcessSession session, Duration grace);\n}"
+          if host_anchor not in text:
+              raise SystemExit('preview host anchor missing')
+          text = text.replace(
+              host_anchor,
+              host_anchor + Path('.p3-preview-oracle/adapter.dart.txt').read_text(),
+              1,
+          )
+          product.write_text(text)
+
+          test = Path('test/product/browser/web_preview_test.dart')
+          test_text = test.read_text()
+          test_import_old = "import 'package:kristin_local_agent/product/browser/web_preview.dart';\nimport 'package:kristin_local_agent/product/workspace_tools.dart';"
+          test_import_new = "import 'package:kristin_local_agent/product/browser/web_preview.dart';\nimport 'package:kristin_local_agent/product/p2_effect_boundary.dart';\nimport 'package:kristin_local_agent/product/p2_process_tree.dart';\nimport 'package:kristin_local_agent/product/p2_pty_service.dart';\nimport 'package:kristin_local_agent/product/workspace_tools.dart';"
+          if test_import_old not in test_text:
+              raise SystemExit('preview test import anchor missing')
+          test_text = test_text.replace(test_import_old, test_import_new, 1)
+          main_end = '\n}\n\nFuture<void> _serveReadiness'
+          if main_end not in test_text:
+              raise SystemExit('preview test main anchor missing')
+          test_text = test_text.replace(
+              main_end,
+              Path('.p3-preview-oracle/tests.dart.txt').read_text() + main_end,
+              1,
+          )
+          helper_anchor = 'final class _RecordingProcessHost implements P3PreviewProcessHost {'
+          if helper_anchor not in test_text:
+              raise SystemExit('preview test helper anchor missing')
+          test_text = test_text.replace(
+              helper_anchor,
+              Path('.p3-preview-oracle/helpers.dart.txt').read_text() + '\n' + helper_anchor,
+              1,
+          )
+          test.write_text(test_text)
+          PY
+          dart format lib/product/browser/web_preview.dart test/product/browser/web_preview_test.dart
+          flutter analyze --no-pub
+          flutter test --no-pub test/product/browser/web_preview_test.dart --reporter expanded | tee p3-013-p2-adapter-diagnostic.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/product/browser/web_preview.dart test/product/browser/web_preview_test.dart p3-013-p2-adapter-diagnostic.txt
+          git commit -m 'feat(p3): bind preview to managed P2 process lifecycle'
+          git push origin HEAD:agent/p3-013-p2-adapter-oracle
