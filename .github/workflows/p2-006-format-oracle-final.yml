@@ -17,9 +17,10 @@ jobs:
           flutter-version: 3.44.8
           channel: stable
           cache: true
-      - name: Materialize exact formatter output on oracle branch
+      - name: Materialize exact production formatter output on oracle branch
         shell: bash
         run: |
+          flutter pub get
           dart format \
             lib/product/p2_process_tree.dart \
             lib/product/p2_runtime_composition.dart \
@@ -42,6 +43,6 @@ jobs:
               lib/product/p2_runtime_composition.dart \
               test/product/p2_process_terminal_contract_test.dart \
               test/product/p2_runtime_composition_test.dart
-            git commit -m 'style(p2): materialize exact formatter output'
+            git commit -m 'style(p2): materialize production formatter output'
             git push origin HEAD:agent/p2-006-format-oracle-final
           fi
