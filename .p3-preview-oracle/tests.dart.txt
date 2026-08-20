@@ -1,0 +1,73 @@
+
+  test('P2 managed preview host binds PTY launch and exact process stop',
+      () async {
+    final pty = _RecordingPreviewPtyBackend();
+    final processTree = _RecordingPreviewProcessTreeAdapter();
+    final completions = <String>[];
+    final host = P3P2ManagedPreviewProcessHost(
+      ptyBackend: pty,
+      processTreeAdapter: processTree,
+      authorizationFor: (_) => P3PreviewProcessAuthorization(
+        binding: _previewBinding(),
+        grantDigest: 'a' * 64,
+      ),
+      onProcessStopped: (sessionId, identity) async {
+        completions.add('$sessionId:${identity.stableKey}');
+      },
+    );
+    final config = P3DevServerConfig(
+      command: 'npm',
+      arguments: const <String>['run', 'dev'],
+      cwd: '.',
+      url: Uri.parse('http://127.0.0.1:4173/'),
+      environmentDelta: const <String, String?>{'MODE': 'preview'},
+    );
+
+    final session = await host.start(config);
+    expect(session.sessionId, 'managed-preview');
+    expect(session.processIdentity, _previewIdentity.stableKey);
+    expect(pty.lastRequest?.shell, 'npm');
+    expect(pty.lastRequest?.arguments, <String>['run', 'dev']);
+    expect(pty.lastRequest?.environmentDelta, <String, String?>{
+      'MODE': 'preview',
+    });
+    expect(pty.lastBinding?.operation, 'pty.open');
+    expect(pty.lastGrantDigest, 'a' * 64);
+    expect(processTree.calls, <String>['inspect']);
+
+    await host.stop(session, const Duration(milliseconds: 75));
+    expect(processTree.calls, <String>[
+      'inspect',
+      'inspect',
+      'stop:75',
+      'inspect',
+    ]);
+    expect(completions, <String>[
+      'managed-preview:${_previewIdentity.stableKey}',
+    ]);
+  });
+
+  test('P2 managed preview host rejects malformed authorization', () async {
+    final pty = _RecordingPreviewPtyBackend();
+    final host = P3P2ManagedPreviewProcessHost(
+      ptyBackend: pty,
+      processTreeAdapter: _RecordingPreviewProcessTreeAdapter(),
+      authorizationFor: (_) => P3PreviewProcessAuthorization(
+        binding: _previewBinding(),
+        grantDigest: 'not-a-digest',
+      ),
+      onProcessStopped: (_, __) async {},
+    );
+
+    await expectLater(
+      host.start(
+        P3DevServerConfig(
+          command: 'npm',
+          cwd: '.',
+          url: Uri.parse('http://127.0.0.1:4173/'),
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(pty.openCount, 0);
+  });
