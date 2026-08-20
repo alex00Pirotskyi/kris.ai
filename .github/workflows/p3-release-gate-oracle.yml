@@ -1,0 +1,37 @@
+name: P3 Release Gate Oracle
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+      - name: Run release validator with full diagnostics
+        shell: bash
+        run: |
+          set +e
+          python tool/validate_release.py --skip-tests
+          code=$?
+          echo "validate_release_exit=$code"
+          if [ -f release/validation_report.json ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('release/validation_report.json').read_text())
+          for row in data.get('checks', []):
+              if row.get('status') != 'passed':
+                  print(json.dumps(row, sort_keys=True))
+          PY
+          fi
+          exit "$code"
