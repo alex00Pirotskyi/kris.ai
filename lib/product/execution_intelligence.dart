@@ -643,11 +643,11 @@ class PhaseBudget {
 
   static PhaseBudget localExecution() => const PhaseBudget(
     phase: 'execution',
-    maxModelRequests: 4,
-    maxToolCalls: 12,
-    maxRepairs: 2,
-    maxOutputTokens: 1280,
-    maxContextCharacters: 16000,
+    maxModelRequests: 8,
+    maxToolCalls: 18,
+    maxRepairs: 6,
+    maxOutputTokens: 768,
+    maxContextCharacters: 6000,
     deadlineSeconds: 600,
   );
 
