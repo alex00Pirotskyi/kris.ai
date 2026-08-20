@@ -33,21 +33,32 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+
           path = Path('config/branch_hygiene.json')
           text = path.read_text(encoding='utf-8')
           blocks = (
-              '''    {\n      "name": "ci/direct-pr14-repair-trigger",\n      "reason": "Historical repair-status lineage retained until PR14 cleanup is fully closed."\n    },\n''',
-              '''    {\n      "name": "integration/p2-owner-risk-v71r12",\n      "reason": "Unique P1/P2 owner-risk evidence lineage pending current-schema migration."\n    },\n''',
+              (
+                  'ci/direct-pr14-repair-trigger',
+                  '''    {\n      "name": "ci/direct-pr14-repair-trigger",\n      "reason": "Historical repair-status lineage retained until PR14 cleanup is fully closed."\n    },\n''',
+              ),
+              (
+                  'integration/p2-owner-risk-v71r12',
+                  '''    {\n      "name": "integration/p2-owner-risk-v71r12",\n      "reason": "Unique P1/P2 owner-risk evidence lineage pending current-schema migration."\n    },\n''',
+              ),
           )
-          for block in blocks:
-              if text.count(block) != 1:
-                  raise SystemExit(f'branch-hygiene keep block missing/ambiguous: {block!r}')
-              text = text.replace(block, '', 1)
+          for name, block in blocks:
+              count = text.count(block)
+              if count > 1:
+                  raise SystemExit(f'branch-hygiene keep block duplicated: {name} count={count}')
+              if count == 1:
+                  text = text.replace(block, '', 1)
+              elif f'"name": "{name}"' in text:
+                  raise SystemExit(f'branch-hygiene retained ref has unexpected representation: {name}')
           path.write_text(text, encoding='utf-8', newline='\n')
           PY
           git diff --check
 
-      - name: Prove live branch-hygiene plan is now valid
+      - name: Prove live branch-hygiene plan is valid
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -80,8 +91,8 @@ jobs:
           python3 - <<'PY'
           import subprocess
           actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
-          expected = {'SOURCE_MANIFEST.sha256', 'config/branch_hygiene.json'}
-          if actual != expected:
+          allowed = {'SOURCE_MANIFEST.sha256', 'config/branch_hygiene.json'}
+          if not actual.issubset(allowed):
               raise SystemExit(f'hygiene reconciliation scope mismatch: {sorted(actual)}')
           PY
 
@@ -92,6 +103,10 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add SOURCE_MANIFEST.sha256 config/branch_hygiene.json
+          if git diff --cached --quiet; then
+            echo 'QWEN_BRANCH_HYGIENE_RECONCILED no publication required'
+            exit 0
+          fi
           git diff --cached --check
           git commit -m 'chore(repo): reconcile branch hygiene after safe reap'
           candidate="$(git rev-parse HEAD)"
