@@ -457,6 +457,9 @@ abstract final class AdaptiveMissionPlanner {
     ].join(' ').toLowerCase();
     final externalResearchRequested = _explicitExternalResearchIntent(promptText);
     final deploymentRequested = _explicitDeploymentIntent(promptText);
+    final webProductRequested = RegExp(
+      r'\b(?:web app|web application|website|browser app|browser application|html|css|javascript)\b',
+    ).hasMatch(promptText);
     final dropped = <String, PlanTaskRecord>{};
 
     for (final task in tasks) {
@@ -467,16 +470,12 @@ abstract final class AdaptiveMissionPlanner {
         task.instructions,
         ...task.expectedArtifacts,
       ].join(' ').toLowerCase();
-      final researchTask = task.allowedTools.any(
-            const <String>{'research_search', 'research_fetch'}.contains,
-          ) ||
-          RegExp(
-            r'\b(?:research|search the web|web research|online research|official sources?|current sources?|latest sources?)\b',
-          ).hasMatch(taskText);
-      final deploymentTask = task.allowedTools.contains('package_deployment') ||
-          RegExp(
-            r'\b(?:deploy(?:ment)?|publish|public hosting|hosting server|production environment|go live|ship live)\b',
-          ).hasMatch(taskText);
+      final researchTask = RegExp(
+        r'\b(?:research|search the web|web research|online research|official sources?|current sources?|latest sources?|documentation lookup)\b',
+      ).hasMatch(taskText);
+      final deploymentTask = RegExp(
+        r'\b(?:deploy(?:ment)?|publish|public hosting|hosting server|production environment|go live|ship live)\b',
+      ).hasMatch(taskText);
       if (researchTask && !externalResearchRequested) {
         dropped[task.id] = task;
         findings.add(
@@ -507,10 +506,13 @@ abstract final class AdaptiveMissionPlanner {
     if (dropped.length == tasks.length) {
       return tasks
           .map(
-            (task) => _stripUnrequestedCapabilities(
-              task,
-              externalResearchRequested: externalResearchRequested,
-              deploymentRequested: deploymentRequested,
+            (task) => _normalizeWorkspaceSetup(
+              _stripUnrequestedCapabilities(
+                task,
+                externalResearchRequested: externalResearchRequested,
+                deploymentRequested: deploymentRequested,
+              ),
+              webProductRequested: webProductRequested,
             ),
           )
           .toList(growable: false);
@@ -543,12 +545,51 @@ abstract final class AdaptiveMissionPlanner {
         parentId: parentId,
         clearParentId: task.parentId != null && parentId == null,
       );
-      return _stripUnrequestedCapabilities(
-        rewired,
-        externalResearchRequested: externalResearchRequested,
-        deploymentRequested: deploymentRequested,
+      return _normalizeWorkspaceSetup(
+        _stripUnrequestedCapabilities(
+          rewired,
+          externalResearchRequested: externalResearchRequested,
+          deploymentRequested: deploymentRequested,
+        ),
+        webProductRequested: webProductRequested,
       );
     }).toList(growable: false);
+  }
+
+  static PlanTaskRecord _normalizeWorkspaceSetup(
+    PlanTaskRecord task, {
+    required bool webProductRequested,
+  }) {
+    if (!webProductRequested || !task.allowedTools.contains('write_file')) {
+      return task;
+    }
+    final text = '${task.phase} ${task.title} ${task.objective}'.toLowerCase();
+    if (!RegExp(
+      r'\b(?:initialize|initialise|scaffold|bootstrap|project workspace|project setup|application scaffold)\b',
+    ).hasMatch(text)) {
+      return task;
+    }
+    return task.copyWith(
+      title: 'Create the minimal web application scaffold',
+      objective:
+          'Create real browser-loadable project files for the requested web application inside the selected project.',
+      instructions:
+          'Create the project directly with write_file using project-relative files. Do not write shell commands, framework commands, or a placeholder named project_root into a file. Start with index.html, styles.css, app.js, and README.md unless existing project evidence shows a different established structure. Inspect the created files before completing.',
+      expectedArtifacts: const <String>[
+        'index.html',
+        'styles.css',
+        'app.js',
+        'README.md',
+      ],
+      acceptanceCriteria: _uniqueStrings(<String>[
+        ...task.acceptanceCriteria,
+        'index.html, styles.css, and app.js exist as real project files rather than command text placeholders.',
+      ], limit: 10),
+      verificationSteps: _uniqueStrings(<String>[
+        ...task.verificationSteps,
+        'Inspect index.html, styles.css, and app.js and verify that they contain application source rather than shell commands.',
+      ], limit: 10),
+    );
   }
 
   static PlanTaskRecord _stripUnrequestedCapabilities(
