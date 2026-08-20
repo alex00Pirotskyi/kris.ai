@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 
 enum P2TerminalAction {
@@ -57,7 +59,9 @@ class P2TerminalTab {
 }
 
 class P2TerminalModel extends ChangeNotifier {
-  final List<P2TerminalTab> tabs = <P2TerminalTab>[];
+  final List<P2TerminalTab> _tabs = <P2TerminalTab>[];
+  late final List<P2TerminalTab> tabs =
+      UnmodifiableListView<P2TerminalTab>(_tabs);
   int _selectedIndex = 0;
 
   Map<P2TerminalAction, String> get shortcuts => const {
@@ -76,12 +80,12 @@ class P2TerminalModel extends ChangeNotifier {
   int get selectedIndex => _selectedIndex;
 
   set selectedIndex(int value) {
-    if (tabs.isEmpty) {
+    if (_tabs.isEmpty) {
       if (value != 0) throw RangeError.index(value, tabs, 'selectedIndex');
       _selectedIndex = 0;
       return;
     }
-    if (value < 0 || value >= tabs.length) {
+    if (value < 0 || value >= _tabs.length) {
       throw RangeError.index(value, tabs, 'selectedIndex');
     }
     if (_selectedIndex == value) return;
@@ -89,26 +93,27 @@ class P2TerminalModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  P2TerminalTab? get selected => tabs.isEmpty ? null : tabs[_selectedIndex];
+  P2TerminalTab? get selected =>
+      _tabs.isEmpty ? null : _tabs[_selectedIndex];
 
   void add(P2TerminalTab tab) {
     if (tab.id.trim().isEmpty ||
-        tabs.any((candidate) => candidate.id == tab.id)) {
+        _tabs.any((candidate) => candidate.id == tab.id)) {
       throw StateError('terminal_tab_identity_invalid');
     }
-    tabs.add(tab);
-    _selectedIndex = tabs.length - 1;
+    _tabs.add(tab);
+    _selectedIndex = _tabs.length - 1;
     notifyListeners();
   }
 
   void remove(String id) {
-    final index = tabs.indexWhere((tab) => tab.id == id);
+    final index = _tabs.indexWhere((tab) => tab.id == id);
     if (index < 0) return;
-    tabs.removeAt(index);
-    if (tabs.isEmpty) {
+    _tabs.removeAt(index);
+    if (_tabs.isEmpty) {
       _selectedIndex = 0;
-    } else if (_selectedIndex >= tabs.length) {
-      _selectedIndex = tabs.length - 1;
+    } else if (_selectedIndex >= _tabs.length) {
+      _selectedIndex = _tabs.length - 1;
     } else if (index < _selectedIndex) {
       _selectedIndex -= 1;
     }
@@ -116,21 +121,21 @@ class P2TerminalModel extends ChangeNotifier {
   }
 
   void select(String id) {
-    final index = tabs.indexWhere((tab) => tab.id == id);
+    final index = _tabs.indexWhere((tab) => tab.id == id);
     if (index < 0) throw StateError('terminal_tab_unknown');
     selectedIndex = index;
   }
 
   void setAttached(String id, bool attached) {
-    final index = tabs.indexWhere((tab) => tab.id == id);
+    final index = _tabs.indexWhere((tab) => tab.id == id);
     if (index < 0) throw StateError('terminal_tab_unknown');
-    final current = tabs[index];
+    final current = _tabs[index];
     if (current.attached == attached) return;
-    tabs[index] = current.copyWith(attached: attached);
+    _tabs[index] = current.copyWith(attached: attached);
     notifyListeners();
   }
 
-  Iterable<P2TerminalTab> search(String query) => tabs.where(
+  Iterable<P2TerminalTab> search(String query) => _tabs.where(
         (tab) => <String>[
           tab.title,
           tab.shell,
