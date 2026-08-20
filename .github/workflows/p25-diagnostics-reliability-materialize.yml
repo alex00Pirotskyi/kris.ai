@@ -117,12 +117,11 @@ jobs:
             exit 79
           }
 
-      - name: Remove temporary rescue workflows
+      - name: Remove one-shot materializer
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .github/workflows/p25-diagnostics-reliability-rescue.yml
-          rm -f .github/workflows/p25-diagnostics-reliability-materialize.yml
+          rm .github/workflows/p25-diagnostics-reliability-materialize.yml
 
       - name: Regenerate exact source authority twice
         shell: bash
@@ -151,7 +150,6 @@ jobs:
             lib/product/retry_policy.dart \
             lib/product/tool_schema.dart \
             test/product/p25_diagnostics_reliability_rescue_test.dart \
-            .github/workflows/p25-diagnostics-reliability-rescue.yml \
             .github/workflows/p25-diagnostics-reliability-materialize.yml
           python - <<'PY'
           import subprocess
@@ -164,7 +162,6 @@ jobs:
               'lib/product/retry_policy.dart',
               'lib/product/tool_schema.dart',
               'test/product/p25_diagnostics_reliability_rescue_test.dart',
-              '.github/workflows/p25-diagnostics-reliability-rescue.yml',
               '.github/workflows/p25-diagnostics-reliability-materialize.yml',
           }
           actual = set(subprocess.check_output(
