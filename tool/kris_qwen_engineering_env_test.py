@@ -29,14 +29,14 @@ def load_module(path: pathlib.Path, name: str):
 def transformed_namespace() -> dict[str, object]:
     module = load_module(V54, "kris_qwen_v54_test_transform")
     text = module.transform(BASE.read_text(encoding="utf-8"))
-    namespace: dict[str, object] = {
-        "__name__": "kris_qwen_v54_test_runtime",
-        "__file__": str(BASE),
-        "__package__": None,
-        "__cached__": None,
-    }
-    exec(compile(text, str(BASE), "exec"), namespace, namespace)
-    return namespace
+    name = "kris_qwen_v54_test_runtime"
+    runtime = types.ModuleType(name)
+    runtime.__file__ = str(BASE)
+    runtime.__package__ = None
+    runtime.__cached__ = None
+    sys.modules[name] = runtime
+    exec(compile(text, str(BASE), "exec"), runtime.__dict__, runtime.__dict__)
+    return runtime.__dict__
 
 
 class CatalogContractTest(unittest.TestCase):
