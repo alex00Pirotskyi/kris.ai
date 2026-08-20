@@ -76,10 +76,13 @@ void main() {
       );
 
       await manager.stop(identity, grace: const Duration(milliseconds: 10));
-      expect(
-        adapter.calls,
-        <String>['inspect', 'stop:10', 'inspect', 'kill', 'inspect'],
-      );
+      expect(adapter.calls, <String>[
+        'inspect',
+        'stop:10',
+        'inspect',
+        'kill',
+        'inspect',
+      ]);
       expect(adapter.killCount, 1);
     },
   );
@@ -88,10 +91,9 @@ void main() {
     'concurrent managed kills coalesce and still verify termination',
     () async {
       final barrier = Completer<void>();
-      final adapter = _RecordingProcessTreeAdapter(
-        <P2ProcessLifecycle>[P2ProcessLifecycle.killed],
-        killBarrier: barrier,
-      );
+      final adapter = _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
+        P2ProcessLifecycle.killed,
+      ], killBarrier: barrier);
       final manager = P2ProcessTreeManager(adapter);
       const identity = P2ProcessIdentity(
         pid: 2301,
@@ -113,10 +115,9 @@ void main() {
   test(
     'failed managed kill is removed from coalescing map and can retry',
     () async {
-      final adapter = _RecordingProcessTreeAdapter(
-        <P2ProcessLifecycle>[P2ProcessLifecycle.killed],
-        killFailures: 1,
-      );
+      final adapter = _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
+        P2ProcessLifecycle.killed,
+      ], killFailures: 1);
       final manager = P2ProcessTreeManager(adapter);
       const identity = P2ProcessIdentity(
         pid: 2401,
@@ -161,12 +162,7 @@ void main() {
         grantDigest: grantDigest,
       );
       final output = await service
-          .output(
-            'session-1',
-            0,
-            binding: binding,
-            grantDigest: grantDigest,
-          )
+          .output('session-1', 0, binding: binding, grantDigest: grantDigest)
           .single;
       expect(output, <int>[79, 75]);
       await service.resize(
@@ -242,17 +238,16 @@ void main() {
 }
 
 P2EffectBinding _binding(String operation) => P2EffectBinding(
-      runId: 'run',
-      taskId: 'P2-005',
-      actorId: 'owner_executor',
-      toolId: 'terminal',
-      accessProfileId: 'owner',
-      capabilityId: 'pty',
-      operation: operation,
-    );
+  runId: 'run',
+  taskId: 'P2-005',
+  actorId: 'owner_executor',
+  toolId: 'terminal',
+  accessProfileId: 'owner',
+  capabilityId: 'pty',
+  operation: operation,
+);
 
-final class _RecordingProcessTreeAdapter
-    implements P2NativeProcessTreeAdapter {
+final class _RecordingProcessTreeAdapter implements P2NativeProcessTreeAdapter {
   _RecordingProcessTreeAdapter(
     List<P2ProcessLifecycle> states, {
     this.killBarrier,
@@ -298,20 +293,20 @@ final class _RecordingPtyBackend implements P2PtyBackend {
   final List<String> calls = <String>[];
 
   P2PtySession session({int cursor = 0}) => P2PtySession(
-        sessionId: 'session-1',
-        runId: 'run',
-        taskId: 'P2-005',
-        actorId: 'owner_executor',
-        grantDigest: 'a' * 64,
-        processIdentity: const P2ProcessIdentity(
-          pid: 1234,
-          startToken: 'start',
-          supervisorToken: 'supervisor',
-          platformGroupId: '1234',
-        ),
-        state: P2PtyState.attached,
-        transcriptCursor: cursor,
-      );
+    sessionId: 'session-1',
+    runId: 'run',
+    taskId: 'P2-005',
+    actorId: 'owner_executor',
+    grantDigest: 'a' * 64,
+    processIdentity: const P2ProcessIdentity(
+      pid: 1234,
+      startToken: 'start',
+      supervisorToken: 'supervisor',
+      platformGroupId: '1234',
+    ),
+    state: P2PtyState.attached,
+    transcriptCursor: cursor,
+  );
 
   @override
   Future<P2PtySession> open(
