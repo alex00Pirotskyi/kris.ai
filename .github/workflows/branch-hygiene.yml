@@ -110,6 +110,114 @@ jobs:
           git commit -m 'chore(repo): refresh source manifest for branch hygiene'
           git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
 
+  qwen-v531-finalize:
+    name: qwen-v531-finalize
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.ref == 'agent/qwen-phone-control' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Capture exact candidate head
+        shell: bash
+        run: echo "CANDIDATE_BASE=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Execute Qwen 5.3.1 deployment contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            run_my_server.py \
+            tool/kris_qwen_worker.py.compat.py \
+            tool/kris_qwen_worker_v53.py \
+            tool/kris_qwen_worker_v53_base.py \
+            tool/kris_qwen_worker_v531.py \
+            tool/kris_qwen_v53_policy.py \
+            tool/kris_qwen_v53_recovery.py \
+            tool/kris_qwen_v53_reconcile.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_worker_v53.py version | tee "$RUNNER_TEMP/v531-version.json"
+          python - <<'PY'
+          import json, os, pathlib
+          value = json.loads(pathlib.Path(os.environ['RUNNER_TEMP'], 'v531-version.json').read_text(encoding='utf-8'))
+          assert value.get('scriptVersion') == '5.3.1', value
+          PY
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          test "$(python tool/kris_qwen_control.py.compat.py --version)" = '2.2.0'
+      - name: Reconcile only retired hygiene keep entries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          path = pathlib.Path('config/branch_hygiene.json')
+          value = json.loads(path.read_text(encoding='utf-8'))
+          retired = {'ci/direct-pr14-repair-trigger', 'integration/p2-owner-risk-v71r12'}
+          keep = value.get('keep')
+          if not isinstance(keep, list):
+              raise SystemExit('branch hygiene keep list is not an array')
+          names = [row.get('name') for row in keep if isinstance(row, dict)]
+          missing = sorted(retired - set(names))
+          if missing:
+              raise SystemExit(f'expected stale keep entries are already missing unexpectedly: {missing}')
+          value['keep'] = [row for row in keep if not (isinstance(row, dict) and row.get('name') in retired)]
+          path.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8', newline='\n')
+          PY
+          python tool/branch_hygiene.py --self-test
+          GITHUB_TOKEN='${{ github.token }}' python tool/branch_hygiene.py \
+            --config config/branch_hygiene.json \
+            --repository "$GITHUB_REPOSITORY" \
+            --receipt "$RUNNER_TEMP/qwen-hygiene.json"
+      - name: Restore permanent workflow and regenerate exact source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main:refs/remotes/origin/main --depth=1
+          git checkout origin/main -- .github/workflows/branch-hygiene.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp -s "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_source_manifest_test.py .
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
+          printf 'FINALIZE_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 3
+          test "${paths[0]}" = '.github/workflows/branch-hygiene.yml'
+          test "${paths[1]}" = 'SOURCE_MANIFEST.sha256'
+          test "${paths[2]}" = 'config/branch_hygiene.json'
+      - name: Publish exact finalization only if branch did not move
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote="$(git ls-remote --heads origin refs/heads/agent/qwen-phone-control | awk '{print $1}')"
+          test "$remote" = "$CANDIDATE_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            .github/workflows/branch-hygiene.yml \
+            SOURCE_MANIFEST.sha256 \
+            config/branch_hygiene.json
+          git diff --cached --check
+          git commit -m 'chore(qwen): finalize 5.3.1 source identity and hygiene'
+          candidate="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/agent/qwen-phone-control
+          echo "QWEN_V531_FINALIZED=$candidate"
+
   execute:
     name: branch-hygiene-execute
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
