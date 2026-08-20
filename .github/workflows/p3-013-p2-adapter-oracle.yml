@@ -28,7 +28,7 @@ jobs:
           product = Path('lib/product/browser/web_preview.dart')
           text = product.read_text()
           imports_old = "import '../domain.dart';\nimport '../workspace_tools.dart';"
-          imports_new = "import '../domain.dart';\nimport '../p2_effect_boundary.dart';\nimport '../p2_process_tree.dart';\nimport '../p2_pty_service.dart';\nimport '../workspace_tools.dart';"
+          imports_new = "import '../domain.dart';\nimport '../p2_effect_boundary.dart';\nimport '../p2_process_tree.dart';\nimport '../p2_pty_service.dart';\nimport '../storage_security.dart' show ProductException;\nimport '../workspace_tools.dart';"
           if imports_old not in text:
               raise SystemExit('preview import anchor missing')
           text = text.replace(imports_old, imports_new, 1)
@@ -40,6 +40,19 @@ jobs:
               host_anchor + Path('.p3-preview-oracle/adapter.dart.txt').read_text(),
               1,
           )
+          brace_replacements = {
+              "  if (_isHtml(lower)) return ContentType.html;": "  if (_isHtml(lower)) {\n    return ContentType.html;\n  }",
+              "  if (lower.endsWith('.css')) return ContentType('text', 'css', charset: 'utf-8');": "  if (lower.endsWith('.css')) {\n    return ContentType('text', 'css', charset: 'utf-8');\n  }",
+              "  if (lower.endsWith('.json')) return ContentType.json;": "  if (lower.endsWith('.json')) {\n    return ContentType.json;\n  }",
+              "  if (lower.endsWith('.svg')) return ContentType('image', 'svg+xml');": "  if (lower.endsWith('.svg')) {\n    return ContentType('image', 'svg+xml');\n  }",
+              "  if (lower.endsWith('.png')) return ContentType('image', 'png');": "  if (lower.endsWith('.png')) {\n    return ContentType('image', 'png');\n  }",
+              "  if (lower.endsWith('.gif')) return ContentType('image', 'gif');": "  if (lower.endsWith('.gif')) {\n    return ContentType('image', 'gif');\n  }",
+              "  if (lower.endsWith('.webp')) return ContentType('image', 'webp');": "  if (lower.endsWith('.webp')) {\n    return ContentType('image', 'webp');\n  }",
+          }
+          for old, new in brace_replacements.items():
+              if old not in text:
+                  raise SystemExit(f'preview brace target missing: {old}')
+              text = text.replace(old, new, 1)
           product.write_text(text)
 
           test = Path('test/product/browser/web_preview_test.dart')
@@ -49,6 +62,10 @@ jobs:
           if test_import_old not in test_text:
               raise SystemExit('preview test import anchor missing')
           test_text = test_text.replace(test_import_old, test_import_new, 1)
+          const_target = "() => const P3DevServerConfig("
+          if const_target not in test_text:
+              raise SystemExit('preview const config target missing')
+          test_text = test_text.replace(const_target, "() => P3DevServerConfig(", 1)
           main_end = '\n}\n\nFuture<void> _serveReadiness'
           if main_end not in test_text:
               raise SystemExit('preview test main anchor missing')
