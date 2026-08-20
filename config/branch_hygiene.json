@@ -481,14 +481,6 @@
       "reason": "Mutable Mission Execution runtime authority."
     },
     {
-      "name": "ci/direct-pr14-repair-trigger",
-      "reason": "Historical repair-status lineage retained until PR14 cleanup is fully closed."
-    },
-    {
-      "name": "integration/p2-owner-risk-v71r12",
-      "reason": "Unique P1/P2 owner-risk evidence lineage pending current-schema migration."
-    },
-    {
       "name": "main",
       "reason": "Protected default branch."
     }
