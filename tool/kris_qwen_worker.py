@@ -61,7 +61,7 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
 
-SCRIPT_VERSION = "5.2.1"
+SCRIPT_VERSION = "5.2.2"
 
 # Never hard-code GitHub credentials in this worker. Use GH_TOKEN /
 # GITHUB_TOKEN from the environment, or the normal `gh auth login` credential
@@ -1615,8 +1615,8 @@ def _audit_inactive_semaphore(project, item, work_orders):
                 raise ValueError(f"{label} invalid {key}: {value!r}: {exc}") from exc
     if {"createdAt", "refreshedAt"} <= set(parsed) and parsed["refreshedAt"] < parsed["createdAt"]:
         raise ValueError(f"{label} refreshedAt precedes createdAt")
-    if {"refreshedAt", "expiresAt"} <= set(parsed) and parsed["expiresAt"] <= parsed["refreshedAt"]:
-        raise ValueError(f"{label} expiresAt must be later than refreshedAt")
+    if {"refreshedAt", "expiresAt"} <= set(parsed) and parsed["expiresAt"] < parsed["refreshedAt"]:
+        raise ValueError(f"{label} expiresAt must not precede refreshedAt")
 
 def _load_semaphores_compat(project, work_orders, product_prs, now=None):
     now = now or rm.utc_now()

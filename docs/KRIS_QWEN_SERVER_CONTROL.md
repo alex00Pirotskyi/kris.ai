@@ -4,9 +4,11 @@ This is the operational controller for the repo-owned Qwen worker.
 
 ## Current implementation status
 
-As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate reports **5.2.1**. This patch keeps Mission runtime metadata backward-compatible: when schema-v1 `runtime/meta.json` does not contain `controlPlaneBranch`, the worker uses its configured/default control branch and still verifies that exact remote branch exists before proceeding. If the runtime metadata does name a control branch, that runtime-selected branch remains authoritative. Separate v6 experiments exist in Git history, but this delivery does not claim that design: the current worker source has not implemented those v6 invariants completely. The controller therefore reads the worker's real JSON `version` response instead of hard-coding a fictional v6 version.
+As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate reports **5.2.2**. This patch keeps Mission runtime metadata backward-compatible: when schema-v1 `runtime/meta.json` does not contain `controlPlaneBranch`, the worker uses its configured/default control branch and still verifies that exact remote branch exists before proceeding. If the runtime metadata does name a control branch, that runtime-selected branch remains authoritative. Separate v6 experiments exist in Git history, but this delivery does not claim that design: the current worker source has not implemented those v6 invariants completely. The controller therefore reads the worker's real JSON `version` response instead of hard-coding a fictional v6 version.
 
 The control layer is Python-standard-library only. Uvicorn/Gunicorn/Flask/FastAPI are not required.
+
+Qwen 5.2.2 also aligns its subprocess-only historical semaphore audit with the canonical Mission runtime semantics: immutable inactive history may record `expiresAt == refreshedAt`; `expiresAt < refreshedAt` is still rejected. Active/executable semaphore validation remains strict.
 
 ## Fastest way: run from the server and open it on your phone
 
