@@ -56,11 +56,11 @@ class P2ProcessIdentity {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'pid': pid,
-        'startToken': startToken,
-        'supervisorToken': supervisorToken,
-        'platformGroupId': platformGroupId,
-      };
+    'pid': pid,
+    'startToken': startToken,
+    'supervisorToken': supervisorToken,
+    'platformGroupId': platformGroupId,
+  };
 }
 
 abstract interface class P2NativeProcessTreeAdapter {
@@ -174,16 +174,17 @@ class P2ProcessTreeManager {
     if (existing != null) return existing;
 
     late final Future<void> operation;
-    operation = (() async {
-      await adapter.forceKill(identity);
-      final after = await adapter.inspect(identity);
-      _requireInspectable(after);
-      if (!terminalStates.contains(after)) {
-        throw StateError('process_tree_termination_unverified');
-      }
-    })().whenComplete(() {
-      if (identical(_kills[key], operation)) _kills.remove(key);
-    });
+    operation =
+        (() async {
+          await adapter.forceKill(identity);
+          final after = await adapter.inspect(identity);
+          _requireInspectable(after);
+          if (!terminalStates.contains(after)) {
+            throw StateError('process_tree_termination_unverified');
+          }
+        })().whenComplete(() {
+          if (identical(_kills[key], operation)) _kills.remove(key);
+        });
     _kills[key] = operation;
     return operation;
   }
