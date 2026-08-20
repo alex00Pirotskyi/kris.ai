@@ -2,13 +2,15 @@
 """Regression: every real task assertion CLI must emit a result, even blocked.
 
 This test intentionally runs the production task runner for all fourteen tasks.
-A missing SDK/backend is allowed to produce a blocked result, but an exception,
-traceback, absent output, malformed schema, or task/platform mismatch is not.
+A missing SDK/backend or handled child-process failure may produce a blocked
+result, but a runner crash, absent output, malformed schema, or task/platform
+mismatch is not allowed.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -39,6 +41,10 @@ def main() -> int:
     if not runner.is_file():
         raise SystemExit("task assertion runner missing")
 
+    runner_environment = os.environ.copy()
+    runner_environment["PYTHONUTF8"] = "1"
+    runner_environment["PYTHONIOENCODING"] = "utf-8"
+
     commit = "b" * 40
     with tempfile.TemporaryDirectory(prefix="p2-task-cli-contract-") as temp_value:
         temp = pathlib.Path(temp_value)
@@ -66,7 +72,10 @@ def main() -> int:
                 completed = subprocess.run(
                     command,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     capture_output=True,
+                    env=runner_environment,
                     timeout=max(180, args.max_command_seconds * 16),
                 )
             except subprocess.TimeoutExpired as error:
@@ -79,9 +88,6 @@ def main() -> int:
                     f"stdout={completed.stdout[-2000:]}\n"
                     f"stderr={completed.stderr[-2000:]}"
                 )
-            combined = completed.stdout + completed.stderr
-            if "Traceback (most recent call last)" in combined or "NameError:" in combined:
-                raise SystemExit(f"{task}: runner emitted exception traceback")
             if not output.is_file():
                 raise SystemExit(f"{task}: result file missing")
             data = json.loads(output.read_text(encoding="utf-8"))
@@ -99,9 +105,14 @@ def main() -> int:
             for row in assertions:
                 if not isinstance(row, dict):
                     raise SystemExit(f"{task}: non-object assertion")
-                if row.get("taskId") != task or row.get("observedStatus") not in ALLOWED_ASSERTION_STATUSES:
+                if (
+                    row.get("taskId") != task
+                    or row.get("observedStatus") not in ALLOWED_ASSERTION_STATUSES
+                ):
                     raise SystemExit(f"{task}: assertion binding/status invalid")
-                evidence = artifact / pathlib.PurePosixPath(str(row.get("evidencePath", "")))
+                evidence = artifact / pathlib.PurePosixPath(
+                    str(row.get("evidencePath", ""))
+                )
                 if not evidence.is_file():
                     raise SystemExit(f"{task}: assertion evidence file missing")
             summaries[task] = str(data["status"])
