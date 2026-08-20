@@ -336,11 +336,10 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
     final selected = _selected;
     if (selected == null || !selected.attached) return;
     await widget.actions.detach(selected);
-    final cancellation = _cancelLocalOutput(selected.id);
+    unawaited(_cancelLocalOutput(selected.id));
     widget.terminalModel.setAttached(selected.id, false);
     _connectionLabels[selected.id] = 'Detached';
     if (mounted) setState(() {});
-    await cancellation;
   }
 
   Future<void> _sendInput() async {
