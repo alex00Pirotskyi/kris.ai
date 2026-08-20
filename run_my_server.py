@@ -93,7 +93,8 @@ def main() -> int:
     controller = repo / "tool" / "kris_qwen_control.py"
     controller_entry = repo / "tool" / "kris_qwen_control.py.compat.py"
     worker = repo / "tool" / "kris_qwen_worker.py"
-    worker_policy = repo / "tool" / "kris_qwen_worker.py.compat.py"
+    worker_policy = repo / "tool" / "kris_qwen_v53_policy.py"
+    worker_legacy_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
     worker_entry = repo / "tool" / "kris_qwen_worker_v53.py"
 
     if not (repo / ".git").is_dir():
@@ -103,6 +104,7 @@ def main() -> int:
         and controller_entry.is_file()
         and worker.is_file()
         and worker_policy.is_file()
+        and worker_legacy_entry.is_file()
         and worker_entry.is_file()
     ):
         fail("Qwen controller/worker always-on compatibility files are missing from tool/")
