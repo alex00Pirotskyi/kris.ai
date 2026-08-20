@@ -266,8 +266,9 @@ final class P3BrowserReplayRecorder {
     String? detail,
     String? pageId,
   }) {
-    if (code.trim().isEmpty)
+    if (code.trim().isEmpty) {
       throw StateError('browser_replay_failure_code_invalid');
+    }
     final failure = <String, Object?>{
       'at': _timestamp(),
       'code': _boundedString(code),
