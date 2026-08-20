@@ -8,9 +8,10 @@ import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
 void main() {
   test('deterministic fixture is local-only and covers browser task surfaces',
       () {
-    final html = File('test/fixtures/p3_browser/index.html').readAsStringSync();
-    final script =
-        File('test/fixtures/p3_browser/fixture.js').readAsStringSync();
+    final html = File('test/product/browser/fixtures/p3_browser/index.html')
+        .readAsStringSync();
+    final script = File('test/product/browser/fixtures/p3_browser/fixture.js')
+        .readAsStringSync();
 
     expect(html, contains('Browser fixture'));
     expect(html, contains('profile-form'));
