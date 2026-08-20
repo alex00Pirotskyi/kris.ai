@@ -137,7 +137,10 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(model.selected?.attached, true);
-    expect(actions.outputCursors['live-session'], utf8.encode('hello λ\n').length);
+    expect(
+      actions.outputCursors['live-session'],
+      utf8.encode('hello λ\n').length,
+    );
   });
 
   test('terminal model emits changes for runtime tab lifecycle', () {
@@ -301,8 +304,7 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> detach(
@@ -337,8 +339,7 @@ class _PtyBackend implements P2PtyBackend {
     P2PtyOpenRequest request,
     P2EffectBinding binding,
     String grantDigest,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Stream<List<int>> output(
@@ -358,8 +359,7 @@ class _PtyBackend implements P2PtyBackend {
     int rows, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> terminate(
