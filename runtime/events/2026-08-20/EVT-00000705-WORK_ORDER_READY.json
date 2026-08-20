@@ -1,0 +1,15 @@
+{
+  "eventId": "EVT-00000705-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-010",
+  "payload": {
+    "parentWorkOrderId": null,
+    "requestedRole": "DEFECT_HUNTER",
+    "type": "PRODUCT_DEFECT_REPAIR"
+  },
+  "recordedAt": "2026-08-20T15:01:55Z",
+  "runtimeGeneration": 705,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260820T150152Z-1a6b7d88",
+  "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-E9F39E50"
+}
