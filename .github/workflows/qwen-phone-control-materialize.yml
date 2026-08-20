@@ -120,6 +120,7 @@ jobs:
           python3 -m py_compile \
             run_my_server.py \
             tool/kris_qwen_worker.py \
+            tool/kris_qwen_worker.py.compat.py \
             tool/kris_qwen_control.py \
             tool/kris_qwen_control_test.py
           python3 tool/kris_qwen_control_test.py
@@ -131,10 +132,14 @@ jobs:
           version = str(json.loads(raw).get('scriptVersion') or '').strip()
           if version != '5.2.2':
               raise SystemExit(f'unexpected worker version JSON: {raw!r}')
+          compat_raw = subprocess.check_output(['python3', 'tool/kris_qwen_worker.py.compat.py', 'version'], text=True)
+          compat_version = str(json.loads(compat_raw).get('scriptVersion') or '').strip()
+          if compat_version != '5.2.2':
+              raise SystemExit(f'unexpected compatibility worker version JSON: {compat_raw!r}')
           controller = subprocess.check_output(['python3', 'tool/kris_qwen_control.py', '--version'], text=True).strip()
           if controller != '2.1.0':
               raise SystemExit(f'unexpected Qwen controller version {controller!r}')
-          print(f'validated worker version {version}')
+          print(f'validated worker version {version} and compatibility entry {compat_version}')
           PY
           test -x run_my_server.py
           test -x tool/run_kris_qwen_phone_control.sh
@@ -163,3 +168,5 @@ jobs:
           git diff --cached --check
           git commit -m 'fix(qwen): align historical semaphore audit'
           git push origin HEAD:refs/heads/agent/qwen-phone-control
+
+# Retrigger after the compatibility entrypoint landed on the candidate branch.
