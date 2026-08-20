@@ -1,0 +1,132 @@
+name: Qwen Durable Supervisor Contract
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-phone-control-materializer'
+    paths:
+      - '.github/workflows/qwen-durable-supervisor-validate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qwen-durable-supervisor-validate
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out current phone-control candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-phone-control
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Compile and run controller contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            run_my_server.py \
+            tool/kris_qwen_control.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_test.py \
+            tool/kris_qwen_control_compat_test.py \
+            tool/kris_qwen_worker_v53.py \
+            tool/kris_qwen_v53_policy.py
+          python3 tool/kris_qwen_control_test.py
+          KRIS_QWEN_AUTO_UPDATE=0 python3 tool/kris_qwen_control_compat_test.py
+          python3 tool/kris_qwen_worker_v53.py version | grep -F '"scriptVersion": "5.3.0"'
+          [[ "$(python3 tool/kris_qwen_control.py.compat.py --version)" == '2.2.0' ]]
+
+      - name: Validate durable systemd installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          python3 - <<'PY'
+          from pathlib import Path
+
+          text = Path('tool/install_kris_qwen_control_systemd.sh').read_text(encoding='utf-8')
+          required = (
+              '--phone',
+              'SERVICE_USER="${KRIS_QWEN_SERVICE_USER:-${SUDO_USER:-root}}"',
+              'as_service_user gh auth status',
+              'KRIS_QWEN_WORKER_SCRIPT',
+              'kris_qwen_worker_v53.py',
+              'kris_qwen_control.py.compat.py',
+              'KRIS_QWEN_AUTO_UPDATE',
+              'KRIS_QWEN_AUTO_UPDATE_SECONDS',
+              'KRIS_QWEN_CONTROLLER_SELF_RESTART',
+              'StartLimitIntervalSec=0',
+              'Restart=always',
+              'KillMode=process',
+              'OOMPolicy=continue',
+              'systemctl enable --now kris-qwen-control.service',
+          )
+          missing = [marker for marker in required if marker not in text]
+          if missing:
+              raise SystemExit(f'durable service contract missing: {missing}')
+          if 'ExecStart=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py\n' in text:
+              raise SystemExit('systemd installer still executes base controller 2.1')
+          print('QWEN_DURABLE_SYSTEMD_CONTRACT_PASS')
+          PY
+
+      - name: Validate foreground launcher never disables durable service
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          text = Path('run_my_server.py').read_text(encoding='utf-8')
+          required = (
+              'def active_systemd_controller()',
+              'durable systemd controller is already active',
+              'Do not stop a running Qwen supervisor implicitly',
+              'install_kris_qwen_control_systemd.sh',
+              'KRIS_QWEN_CONTROLLER_SELF_RESTART',
+          )
+          missing = [marker for marker in required if marker not in text]
+          if missing:
+              raise SystemExit(f'launcher durable-service guard missing: {missing}')
+          if 'systemctl", "stop", SERVICE' in text:
+              raise SystemExit('foreground launcher still stops the durable controller service')
+          print('QWEN_DURABLE_LAUNCHER_CONTRACT_PASS')
+          PY
+
+      - name: Validate controller supervised self-reload contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          text = Path('tool/kris_qwen_control.py.compat.py').read_text(encoding='utf-8')
+          required = (
+              'controller_runtime_fingerprint',
+              'controllerRuntimeSha256',
+              'KRIS_QWEN_CONTROLLER_SELF_RESTART',
+              'controllerReloadRequired',
+              'controllerSupervisorRestart',
+              '_exit_for_supervisor_restart',
+              'os._exit(0)',
+              'UPDATE_BLOCKED_CANDIDATE_INVALID',
+              '_fast_forward_validated',
+          )
+          missing = [marker for marker in required if marker not in text]
+          if missing:
+              raise SystemExit(f'controller supervised reload contract missing: {missing}')
+          print('QWEN_CONTROLLER_SELF_RELOAD_CONTRACT_PASS')
+          PY
+
+      - name: Repository text checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
