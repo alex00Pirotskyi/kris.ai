@@ -1,11 +1,12 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P11-001-B12E717D",
   "allowedPaths": [
     "tool/worker_e*.py",
     "release/evidence/P11-*/**",
     ".github/workflows/worker-e*.yml",
     "native/**"
   ],
-  "assignedWorker": "ELASTIC-e168f3bb",
+  "assignedWorker": "ELASTIC-QWEN-6CDAEA10",
   "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
   "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
   "createdAt": "2026-08-07T12:15:00Z",
@@ -25,8 +26,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "INTEGRATING",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-20T09:11:06Z",
+  "updatedAt": "2026-08-20T13:03:39Z",
   "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }

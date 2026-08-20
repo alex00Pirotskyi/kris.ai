@@ -1,0 +1,26 @@
+{
+  "allowedPaths": [
+    ".github/workflows/worker-e*.yml",
+    "native/**",
+    "release/evidence/P11-*/**",
+    "tool/worker_e*.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+  "branch": "agent/e/native-parity-readiness",
+  "createdAt": "2026-08-20T13:03:39Z",
+  "executionRole": "INTEGRATOR",
+  "expiresAt": "2026-08-20T15:03:39Z",
+  "kind": "INTEGRATION",
+  "mission": "MISSION-010",
+  "productPr": 71,
+  "refreshedAt": "2026-08-20T13:03:39Z",
+  "resourceId": null,
+  "runtimeGeneration": 659,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P11-001-B12E717D",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING",
+  "workerIdentity": "ELASTIC-QWEN-6CDAEA10"
+}
