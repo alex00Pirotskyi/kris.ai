@@ -1,0 +1,147 @@
+exit=1
+--- failure markers ---
+4:══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+34:════════════════════════════════════════════════════════════════════════════════════════════════════
+36:  Test failed. See exception logs above.
+61:══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+91:════════════════════════════════════════════════════════════════════════════════════════════════════
+92:══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+93:The following TestFailure was thrown running a test:
+94:Expected: an object with length of <1>
+95:  Actual: []
+96:   Which: has length of <0>
+112:════════════════════════════════════════════════════════════════════════════════════════════════════
+113:══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+117:════════════════════════════════════════════════════════════════════════════════════════════════════
+119:  Test failed. See exception logs above.
+125:00:01 +4 -2: Some tests failed.
+--- log tail ---
+00:00 +0: loading /home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart
+00:00 +0: Owner onboarding never calls full access a sandbox
+00:00 +1: terminal actions are wired to typed callbacks
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 39 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column Column:file:///home/runner/work/kris.ai/kris.ai/lib/product/p2_owner_workspace.dart:588:14
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#0e127 OVERFLOWING:
+  needs compositing
+  creator: Column ← Padding ← Expanded ← Column ← LayoutBuilder ← Expanded ← Column ← Expanded ←
+    Column ← _ActionsScope ← Actions ← Semantics ← ⋯
+  parentData: offset=Offset(12.0, 8.0) (can use size)
+  constraints: BoxConstraints(w=776.0, h=73.0)
+  size: Size(776.0, 73.0)
+  direction: vertical
+  mainAxisAlignment: start
+  mainAxisSize: max
+  crossAxisAlignment: stretch
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +1 -1: terminal actions are wired to typed callbacks [E]
+  Test failed. See exception logs above.
+  The test description was: terminal actions are wired to typed callbacks
+  
+00:01 +1 -1: runtime terminal additions become visible and interactive
+
+Warning: A call to tap() with finder "Found 1 widget with widget matching predicate: [
+  RawTooltip-[LabeledGlobalKey<RawTooltipState>#eae0c]("Send terminal input", hover delay: 0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode: TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure: (TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@605220820':., state: RawTooltipState#7e77c),
+]" derived an Offset (Offset(764.0, 447.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: _RenderLayoutSurrogateProxyBox#7488b relayoutBoundary=up8
+The hit test result at that offset is: HitTestResult(_RenderInkFeatures#24144@Offset(764.0, 447.0), RenderPhysicalModel#dcf2a@Offset(764.0, 447.0), RenderSemanticsAnnotations#49a66@Offset(764.0, 447.0), RenderRepaintBoundary#aaade@Offset(764.0, 447.0), RenderIgnorePointer#c4a44@Offset(764.0, 447.0), RenderAnimatedOpacity#b4f49@Offset(764.0, 447.0), RenderAnimatedOpacity#bb1e8@Offset(764.0, 447.0), _RenderColoredBox#7facc@Offset(764.0, 447.0), RenderAnimatedOpacity#ecefc@Offset(764.0, 447.0), RenderIgnorePointer#3b67d@Offset(764.0, 447.0), RenderAnimatedOpacity#7bc48@Offset(764.0, 447.0), RenderRepaintBoundary#bd4bf@Offset(764.0, 447.0), RenderSemanticsAnnotations#e7c48@Offset(764.0, 447.0), RenderOffstage#ae005@Offset(764.0, 447.0), RenderSemanticsAnnotations#b2110@Offset(764.0, 447.0), _RenderTheater#fa423@Offset(764.0, 447.0), RenderAbsorbPointer#8e03b@Offset(764.0, 447.0), RenderPointerListener#92eed@Offset(764.0, 447.0), RenderSemanticsAnnotations#18db2@Offset(764.0, 447.0), RenderCustomPaint#41487@Offset(764.0, 447.0), RenderSemanticsAnnotations#b76de@Offset(764.0, 447.0), RenderSemanticsAnnotations#e21a3@Offset(764.0, 447.0), RenderSemanticsAnnotations#05b78@Offset(764.0, 447.0), RenderTapRegionSurface#bdf52@Offset(764.0, 447.0), RenderSemanticsAnnotations#e02aa@Offset(764.0, 447.0), RenderSemanticsAnnotations#6e7b7@Offset(764.0, 447.0), HitTestEntry<HitTestTarget>#314b8(_ReusableRenderView#931a8), HitTestEntry<HitTestTarget>#d433c(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure> (file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart:125:18)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 39 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column Column:file:///home/runner/work/kris.ai/kris.ai/lib/product/p2_owner_workspace.dart:588:14
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#df5c7 OVERFLOWING:
+  needs compositing
+  creator: Column ← Padding ← Expanded ← Column ← LayoutBuilder ← Expanded ← Column ← Expanded ←
+    Column ← _ActionsScope ← Actions ← Semantics ← ⋯
+  parentData: offset=Offset(12.0, 8.0) (can use size)
+  constraints: BoxConstraints(w=776.0, h=73.0)
+  size: Size(776.0, 73.0)
+  direction: vertical
+  mainAxisAlignment: start
+  mainAxisSize: max
+  crossAxisAlignment: stretch
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart:127:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart line 127
+The test description was:
+  runtime terminal additions become visible and interactive
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +1 -2: runtime terminal additions become visible and interactive [E]
+  Test failed. See exception logs above.
+  The test description was: runtime terminal additions become visible and interactive
+  
+00:01 +1 -2: terminal model emits changes for runtime tab lifecycle
+00:01 +2 -2: terminal tabs cannot mutate without model notification
+00:01 +3 -2: service actions invoke PTY stream input detach clipboard transcript and watchdog
+00:01 +4 -2: Some tests failed.
+
+Failing tests:
+  /home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart: runtime terminal additions become visible and interactive
+  /home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart: terminal actions are wired to typed callbacks
