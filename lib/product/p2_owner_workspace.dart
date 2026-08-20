@@ -277,15 +277,13 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
         }
       },
       onError: (Object error, StackTrace stackTrace) {
-        if (identical(_outputSubscriptions[tab.id], subscription)) {
-          _outputSubscriptions.remove(tab.id);
-        }
+        if (!identical(_outputSubscriptions[tab.id], subscription)) return;
+        _outputSubscriptions.remove(tab.id);
         _recordOutputFailure(tab.id, error);
       },
       onDone: () {
-        if (identical(_outputSubscriptions[tab.id], subscription)) {
-          _outputSubscriptions.remove(tab.id);
-        }
+        if (!identical(_outputSubscriptions[tab.id], subscription)) return;
+        _outputSubscriptions.remove(tab.id);
         _connectionLabels[tab.id] = 'Disconnected';
         final exists = widget.terminalModel.tabs.any(
           (candidate) => candidate.id == tab.id,
