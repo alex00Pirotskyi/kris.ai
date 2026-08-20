@@ -277,15 +277,13 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
         }
       },
       onError: (Object error, StackTrace stackTrace) {
-        if (identical(_outputSubscriptions[tab.id], subscription)) {
-          _outputSubscriptions.remove(tab.id);
-        }
+        if (!identical(_outputSubscriptions[tab.id], subscription)) return;
+        _outputSubscriptions.remove(tab.id);
         _recordOutputFailure(tab.id, error);
       },
       onDone: () {
-        if (identical(_outputSubscriptions[tab.id], subscription)) {
-          _outputSubscriptions.remove(tab.id);
-        }
+        if (!identical(_outputSubscriptions[tab.id], subscription)) return;
+        _outputSubscriptions.remove(tab.id);
         _connectionLabels[tab.id] = 'Disconnected';
         final exists = widget.terminalModel.tabs.any(
           (candidate) => candidate.id == tab.id,
@@ -338,7 +336,7 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
     final selected = _selected;
     if (selected == null || !selected.attached) return;
     await widget.actions.detach(selected);
-    await _cancelLocalOutput(selected.id);
+    unawaited(_cancelLocalOutput(selected.id));
     widget.terminalModel.setAttached(selected.id, false);
     _connectionLabels[selected.id] = 'Detached';
     if (mounted) setState(() {});
@@ -519,20 +517,25 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              if (constraints.maxWidth >= 900) {
+              final useSideBySide = constraints.maxWidth >= 900 ||
+                  (constraints.maxWidth >= 720 && constraints.maxHeight < 420);
+              if (useSideBySide) {
+                final tabListWidth =
+                    constraints.maxWidth >= 900 ? 330.0 : 260.0;
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    SizedBox(width: 330, child: _buildTabList(tabs)),
+                    SizedBox(width: tabListWidth, child: _buildTabList(tabs)),
                     const VerticalDivider(width: 1),
                     Expanded(child: _buildTerminalPane(context)),
                   ],
                 );
               }
+              final tabListHeight = constraints.maxHeight < 360 ? 96.0 : 180.0;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  SizedBox(height: 180, child: _buildTabList(tabs)),
+                  SizedBox(height: tabListHeight, child: _buildTabList(tabs)),
                   const Divider(height: 1),
                   Expanded(child: _buildTerminalPane(context)),
                 ],
