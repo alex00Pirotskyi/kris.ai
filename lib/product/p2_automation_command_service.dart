@@ -22,7 +22,7 @@ P2EffectBinding _commandBinding(P2EffectBinding source, String operation) =>
 /// The desktop authority issues the P1 policy/grant/consumption/IPC envelope;
 /// the supervised worker starts the process under the platform lifecycle
 /// supervisor and returns bounded output plus a structured effect receipt.
-final class P2AutomationFiniteCommandService {
+final class P2AutomationFiniteCommandService implements P2FiniteCommandService {
   P2AutomationFiniteCommandService({
     required this.host,
     required this.authority,
@@ -36,6 +36,7 @@ final class P2AutomationFiniteCommandService {
 
   P2EffectReceipt? get lastReceipt => _lastReceipt;
 
+  @override
   Future<P2CommandResult> run(
     P2CommandSpec spec, {
     required P2EffectBinding binding,
