@@ -91,12 +91,18 @@ def discover_ip() -> str | None:
 def main() -> int:
     repo = pathlib.Path(__file__).resolve().parent
     controller = repo / "tool" / "kris_qwen_control.py"
+    controller_entry = repo / "tool" / "kris_qwen_control.py.compat.py"
     worker = repo / "tool" / "kris_qwen_worker.py"
     worker_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
 
     if not (repo / ".git").is_dir():
         fail(f"not a Git checkout: {repo}")
-    if not controller.is_file() or not worker.is_file() or not worker_entry.is_file():
+    if not (
+        controller.is_file()
+        and controller_entry.is_file()
+        and worker.is_file()
+        and worker_entry.is_file()
+    ):
         fail("Qwen controller/worker compatibility files are missing from tool/")
 
     branch = os.environ.get("KRIS_QWEN_REPO_BRANCH", "").strip() or current_branch(repo)
@@ -119,6 +125,8 @@ def main() -> int:
     env["KRIS_QWEN_CONTROL_HOST"] = "0.0.0.0"
     env["KRIS_QWEN_CONTROL_PORT"] = str(port)
     env["KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP"] = "1"
+    env.setdefault("KRIS_QWEN_AUTO_UPDATE", "1")
+    env.setdefault("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30")
 
     ip = discover_ip()
     print()
@@ -126,6 +134,7 @@ def main() -> int:
     print(f"  repo:   {repo}")
     print(f"  branch: {branch}")
     print(f"  port:   {port}")
+    print("  mode:   always-on + automatic fast-forward updates")
     if ip:
         print(f"  open:   http://{ip}:{port}")
     else:
@@ -145,7 +154,7 @@ def main() -> int:
 
     os.execve(
         sys.executable,
-        [sys.executable, str(controller), "--phone", "--port", str(port)],
+        [sys.executable, str(controller_entry), "--phone", "--port", str(port)],
         env,
     )
     return 0
