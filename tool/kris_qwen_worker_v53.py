@@ -6,12 +6,12 @@ import pathlib
 import sys
 
 SOURCE = pathlib.Path(__file__).with_name("kris_qwen_worker.py")
-POLICY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_worker.py.compat.py")
+POLICY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_policy.py")
 TARGET_VERSION = "5.3.0"
 
 
 def load_policy_module():
-    spec = importlib.util.spec_from_file_location("kris_qwen_v53_policy", POLICY_ENTRY)
+    spec = importlib.util.spec_from_file_location("kris_qwen_v53_policy_runtime", POLICY_ENTRY)
     if spec is None or spec.loader is None:
         raise SystemExit("KRIS_QWEN_V53_ERROR: cannot load 5.3 policy module")
     module = importlib.util.module_from_spec(spec)
@@ -72,14 +72,14 @@ def transform(text: str) -> str:
     text = replace_exact(
         text,
         old_promote,
-        policy._PROMOTE_REPLACEMENT.rstrip("\n"),
+        policy.PROMOTE_REPLACEMENT.rstrip("\n"),
         "review promotion",
     )
 
     text = replace_exact(
         text,
         '\ndef system_prompt() -> str:\n',
-        '\n' + policy._ALWAYS_ON_BLOCK + 'def system_prompt() -> str:\n',
+        '\n' + policy.ALWAYS_ON_BLOCK + 'def system_prompt() -> str:\n',
         "always-on policy insertion",
     )
 
