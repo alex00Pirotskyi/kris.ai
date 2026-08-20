@@ -315,8 +315,13 @@ abstract final class AdaptiveMissionPlanner {
     final splitIds = <String>{};
     final aliases = <String, String>{};
     final merged = <PlanTaskRecord>[];
+    final sanitized = _sanitizeProposedTasks(
+      tasks: tasks,
+      prompt: prompt,
+      findings: findings,
+    );
 
-    for (final task in tasks) {
+    for (final task in sanitized) {
       PlanTaskRecord? duplicate;
       for (final candidate in merged.reversed) {
         if (_canMerge(candidate, task)) {
@@ -431,6 +436,143 @@ abstract final class AdaptiveMissionPlanner {
       findings: List<AdaptivePlanningFinding>.unmodifiable(findings),
     );
   }
+
+  static List<PlanTaskRecord> _sanitizeProposedTasks({
+    required List<PlanTaskRecord> tasks,
+    required PromptStudioDraft prompt,
+    required List<AdaptivePlanningFinding> findings,
+  }) {
+    if (tasks.isEmpty) {
+      return const <PlanTaskRecord>[];
+    }
+    final promptText = <String>[
+      prompt.title,
+      prompt.purpose,
+      prompt.systemPrompt,
+      prompt.userPrompt,
+      ...prompt.assumptions,
+      ...prompt.acceptanceCriteria,
+      ...prompt.outputExpectations,
+      ...prompt.guardrails,
+    ].join(' ').toLowerCase();
+    final externalResearchRequested = _explicitExternalResearchIntent(promptText);
+    final deploymentRequested = _explicitDeploymentIntent(promptText);
+    final dropped = <String, PlanTaskRecord>{};
+
+    for (final task in tasks) {
+      final taskText = <String>[
+        task.phase,
+        task.title,
+        task.objective,
+        task.instructions,
+        ...task.expectedArtifacts,
+      ].join(' ').toLowerCase();
+      final researchTask = task.allowedTools.any(
+            const <String>{'research_search', 'research_fetch'}.contains,
+          ) ||
+          RegExp(
+            r'\b(?:research|search the web|web research|online research|official sources?|current sources?|latest sources?)\b',
+          ).hasMatch(taskText);
+      final deploymentTask = task.allowedTools.contains('package_deployment') ||
+          RegExp(
+            r'\b(?:deploy(?:ment)?|publish|public hosting|hosting server|production environment|go live|ship live)\b',
+          ).hasMatch(taskText);
+      if (researchTask && !externalResearchRequested) {
+        dropped[task.id] = task;
+        findings.add(
+          AdaptivePlanningFinding(
+            id: 'pruned_research_${task.id}',
+            severity: AdaptiveFindingSeverity.info,
+            title: 'Removed unrequested external research',
+            detail:
+                '${task.title} introduced web research that is not part of the approved prompt. Its dependencies are rewired directly so execution does not spend model turns or secrets on invented discovery work.',
+            taskIds: <String>{task.id},
+          ),
+        );
+      } else if (deploymentTask && !deploymentRequested) {
+        dropped[task.id] = task;
+        findings.add(
+          AdaptivePlanningFinding(
+            id: 'pruned_deployment_${task.id}',
+            severity: AdaptiveFindingSeverity.info,
+            title: 'Removed unrequested deployment',
+            detail:
+                '${task.title} introduced hosting or deployment that the approved prompt did not request. Local preview and objective verification remain available without inventing an external release step.',
+            taskIds: <String>{task.id},
+          ),
+        );
+      }
+    }
+
+    if (dropped.length == tasks.length) {
+      return tasks
+          .map(
+            (task) => _stripUnrequestedCapabilities(
+              task,
+              externalResearchRequested: externalResearchRequested,
+              deploymentRequested: deploymentRequested,
+            ),
+          )
+          .toList(growable: false);
+    }
+
+    Set<String> expandDependency(String id, Set<String> visited) {
+      if (!visited.add(id)) {
+        return const <String>{};
+      }
+      final removed = dropped[id];
+      if (removed == null) {
+        return <String>{id};
+      }
+      return <String>{
+        for (final dependency in removed.dependencies)
+          ...expandDependency(dependency, <String>{...visited}),
+      };
+    }
+
+    return tasks.where((task) => !dropped.containsKey(task.id)).map((task) {
+      final dependencies = <String>{
+        for (final dependency in task.dependencies)
+          ...expandDependency(dependency, <String>{}),
+      }..remove(task.id);
+      final parentId = task.parentId != null && dropped.containsKey(task.parentId)
+          ? null
+          : task.parentId;
+      final rewired = task.copyWith(
+        dependencies: dependencies,
+        parentId: parentId,
+        clearParentId: task.parentId != null && parentId == null,
+      );
+      return _stripUnrequestedCapabilities(
+        rewired,
+        externalResearchRequested: externalResearchRequested,
+        deploymentRequested: deploymentRequested,
+      );
+    }).toList(growable: false);
+  }
+
+  static PlanTaskRecord _stripUnrequestedCapabilities(
+    PlanTaskRecord task, {
+    required bool externalResearchRequested,
+    required bool deploymentRequested,
+  }) {
+    final tools = <String>{...task.allowedTools};
+    if (!externalResearchRequested) {
+      tools.removeAll(const <String>{'research_search', 'research_fetch'});
+    }
+    if (!deploymentRequested) {
+      tools.remove('package_deployment');
+    }
+    return task.copyWith(allowedTools: tools);
+  }
+
+  static bool _explicitExternalResearchIntent(String text) => RegExp(
+    r'\b(?:research|search(?: the)? web|look up|lookup|browse online|find (?:current|latest|official) (?:docs?|documentation|sources?|information)|current documentation|latest documentation|official documentation|online sources?)\b',
+  ).hasMatch(text.toLowerCase());
+
+  static bool _explicitDeploymentIntent(String text) => RegExp(
+    r'\b(?:deploy(?:ment)?|publish|host(?:ing)?|production environment|publicly accessible|public hosting|go live|ship live)\b',
+  ).hasMatch(text.toLowerCase());
 
   static AdaptiveMissionPlan analyzePlan({
     required TaskPlanRecord plan,
@@ -1124,7 +1266,49 @@ abstract final class AdaptiveMissionPlanner {
       ...a.dependencies.difference(b.dependencies),
       ...b.dependencies.difference(a.dependencies),
     }.length;
-    return similarity >= 0.74 && dependencyDifference <= 1;
+    if (dependencyDifference > 1) {
+      return false;
+    }
+    final categoryA = _semanticTaskCategory(a);
+    final categoryB = _semanticTaskCategory(b);
+    if (categoryA != null && categoryA == categoryB) {
+      final artifactSimilarity = _jaccard(
+        _terms(a.expectedArtifacts.join(' ')),
+        _terms(b.expectedArtifacts.join(' ')),
+      );
+      if (const <String>{'design', 'verification'}.contains(categoryA) &&
+          (similarity >= 0.42 || artifactSimilarity >= 0.34)) {
+        return true;
+      }
+    }
+    return similarity >= 0.70;
+  }
+
+  static String? _semanticTaskCategory(PlanTaskRecord task) {
+    final text = <String>[
+      task.phase,
+      task.title,
+      task.objective,
+      task.instructions,
+      ...task.expectedArtifacts,
+    ].join(' ').toLowerCase();
+    if (RegExp(r'\b(?:wireframes?|mockups?|user flows?|ux flows?|screen flows?|prototype|design system)\b')
+        .hasMatch(text)) {
+      return 'design';
+    }
+    if (RegExp(r'\b(?:verify|verification|validation|regression|acceptance|test suite|quality gate)\b')
+        .hasMatch(text)) {
+      return 'verification';
+    }
+    if (RegExp(r'\b(?:research|search the web|online research|official sources?)\b')
+        .hasMatch(text)) {
+      return 'research';
+    }
+    if (RegExp(r'\b(?:deploy|deployment|publish|hosting|production environment)\b')
+        .hasMatch(text)) {
+      return 'deployment';
+    }
+    return null;
   }
 
   static PlanTaskRecord _mergeTasks(PlanTaskRecord a, PlanTaskRecord b) {
