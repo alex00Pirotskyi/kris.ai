@@ -101,8 +101,8 @@ void main() {
         'lifecycle': envelope.operation == 'process.inspect'
             ? 'running'
             : envelope.operation == 'process.kill'
-            ? 'killed'
-            : 'stopping',
+                ? 'killed'
+                : 'stopping',
         'receipt': testReceipt(envelope.binding, envelope.operation),
       },
     );
