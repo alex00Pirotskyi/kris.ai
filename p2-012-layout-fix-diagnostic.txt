@@ -1,0 +1,36 @@
+exit=1
+00:00 +0: loading /home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart
+00:00 +0: Owner onboarding never calls full access a sandbox
+00:00 +1: terminal actions are wired to typed callbacks
+00:01 +2: runtime terminal additions become visible and interactive
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <false>
+  Actual: <true>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart:134:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart line 134
+The test description was:
+  runtime terminal additions become visible and interactive
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +2 -1: runtime terminal additions become visible and interactive [E]
+  Test failed. See exception logs above.
+  The test description was: runtime terminal additions become visible and interactive
+  
+00:02 +2 -1: terminal model emits changes for runtime tab lifecycle
+00:02 +3 -1: terminal tabs cannot mutate without model notification
+00:02 +4 -1: service actions invoke PTY stream input detach clipboard transcript and watchdog
+00:02 +5 -1: Some tests failed.
+
+Failing tests:
+  /home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart: runtime terminal additions become visible and interactive
