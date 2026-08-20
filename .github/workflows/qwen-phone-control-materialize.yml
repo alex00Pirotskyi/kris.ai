@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Apply runtime control-plane compatibility repair
+      - name: Align historical semaphore audit with canonical runtime semantics
         shell: bash
         run: |
           set -euo pipefail
@@ -35,41 +35,31 @@ jobs:
 
           worker_path = Path('tool/kris_qwen_worker.py')
           worker = worker_path.read_text(encoding='utf-8')
-          old_version = 'SCRIPT_VERSION = "5.2.0"'
-          new_version = 'SCRIPT_VERSION = "5.2.1"'
-          if old_version not in worker:
-              raise SystemExit('expected Qwen worker version 5.2.0 not found')
+
+          old_version = 'SCRIPT_VERSION = "5.2.1"'
+          new_version = 'SCRIPT_VERSION = "5.2.2"'
+          if worker.count(old_version) != 1:
+              raise SystemExit('expected exactly one Qwen worker version 5.2.1')
           worker = worker.replace(old_version, new_version, 1)
 
-          old = (
-              '    branch = str(meta.get("controlPlaneBranch") or "").strip()\n'
-              '    if not branch:\n'
-              '        raise WorkerError("runtime/meta.json does not name controlPlaneBranch")\n'
+          old_guard = (
+              '    if {"refreshedAt", "expiresAt"} <= set(parsed) and '
+              'parsed["expiresAt"] <= parsed["refreshedAt"]:\n'
+              '        raise ValueError(f"{label} expiresAt must be later than refreshedAt")\n'
           )
-          new = (
-              '    branch = str(meta.get("controlPlaneBranch") or "").strip()\n'
-              '    if not branch:\n'
-              '        branch = str(cfg.control_branch or DEFAULT_CONTROL_BRANCH).strip()\n'
-              '        if not branch:\n'
-              '            raise WorkerError(\n'
-              '                "runtime/meta.json does not name controlPlaneBranch and no configured control branch is available"\n'
-              '            )\n'
+          new_guard = (
+              '    if {"refreshedAt", "expiresAt"} <= set(parsed) and '
+              'parsed["expiresAt"] < parsed["refreshedAt"]:\n'
+              '        raise ValueError(f"{label} expiresAt must not precede refreshedAt")\n'
           )
-          if old not in worker:
-              raise SystemExit('expected strict controlPlaneBranch block not found')
-          worker = worker.replace(old, new, 1)
+          if worker.count(old_guard) != 1:
+              raise SystemExit('expected exactly one strict inactive semaphore timestamp guard')
+          worker = worker.replace(old_guard, new_guard, 1)
           worker_path.write_text(worker, encoding='utf-8', newline='\n')
 
           docs_path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
           docs = docs_path.read_text(encoding='utf-8')
           old_status = (
-              'As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate still reports '
-              '**5.2.0**. Separate v6 experiments exist in Git history, but this delivery does not claim '
-              'that design: the current worker source has not implemented those v6 invariants completely. '
-              "The controller therefore reads the worker's real JSON `version` response instead of hard-coding "
-              'a fictional v6 version.\n'
-          )
-          new_status = (
               'As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate reports '
               '**5.2.1**. This patch keeps Mission runtime metadata backward-compatible: when schema-v1 '
               '`runtime/meta.json` does not contain `controlPlaneBranch`, the worker uses its configured/default '
@@ -79,8 +69,19 @@ jobs:
               "source has not implemented those v6 invariants completely. The controller therefore reads the worker's "
               'real JSON `version` response instead of hard-coding a fictional v6 version.\n'
           )
-          if old_status not in docs:
-              raise SystemExit('expected Qwen implementation-status paragraph not found')
+          new_status = (
+              'As of 2026-08-20, `tool/kris_qwen_worker.py` on the Qwen control candidate reports '
+              '**5.2.2**. The worker keeps schema-v1 Mission runtime compatibility without weakening executable '
+              'authority: a missing `controlPlaneBranch` falls back to the configured/default control branch and that '
+              'remote branch is still verified exactly. Historical/inactive semaphore timestamps now match the '
+              'canonical runtime audit semantics as well: `expiresAt == refreshedAt` is accepted for immutable '
+              'released history, while `expiresAt < refreshedAt` remains corruption. Executable/active semaphore '
+              'validation remains strict. Separate v6 experiments exist in Git history, but this delivery does not '
+              "claim that design. The controller reads the worker's real JSON `version` response rather than "
+              'hard-coding a fictional v6 version.\n'
+          )
+          if docs.count(old_status) != 1:
+              raise SystemExit('expected current Qwen implementation-status paragraph not found exactly once')
           docs_path.write_text(
               docs.replace(old_status, new_status, 1),
               encoding='utf-8',
@@ -88,7 +89,7 @@ jobs:
           )
           PY
 
-      - name: Validate worker compatibility behavior
+      - name: Validate compatibility source contract
         shell: bash
         run: |
           set -euo pipefail
@@ -99,6 +100,12 @@ jobs:
           from unittest import mock
 
           path = pathlib.Path('tool/kris_qwen_worker.py').resolve()
+          source = path.read_text(encoding='utf-8')
+          if 'parsed["expiresAt"] < parsed["refreshedAt"]' not in source:
+              raise SystemExit('historical semaphore equality compatibility guard missing')
+          if 'parsed["expiresAt"] <= parsed["refreshedAt"]' in source:
+              raise SystemExit('obsolete strict historical semaphore comparison remains')
+
           spec = importlib.util.spec_from_file_location('kris_qwen_worker_compat', path)
           if spec is None or spec.loader is None:
               raise SystemExit('cannot import Qwen worker')
@@ -115,7 +122,7 @@ jobs:
           responses = [
               mock.Mock(
                   returncode=0,
-                  stdout='{"runtimeGeneration":651,"schemaVersion":1}\n',
+                  stdout='{"runtimeGeneration":652,"schemaVersion":1}\n',
                   stderr='',
               ),
               mock.Mock(returncode=0, stdout='ok\n', stderr=''),
@@ -130,26 +137,79 @@ jobs:
           if 'origin/agent/mission-execution-v15-gold' not in verify_call.args:
               raise SystemExit(f'fallback branch was not remotely verified: {verify_call!r}')
 
-          cfg = Cfg()
-          responses = [
-              mock.Mock(
-                  returncode=0,
-                  stdout='{"runtimeGeneration":652,"schemaVersion":1,"controlPlaneBranch":"agent/runtime-selected"}\n',
-                  stderr='',
-              ),
-              mock.Mock(returncode=0, stdout='ok\n', stderr=''),
-          ]
-          with mock.patch.object(worker, 'git', side_effect=responses) as git_mock:
-              resolved = worker.resolve_control_plane(cfg)
-          if resolved != 'agent/runtime-selected' or cfg.control_branch != resolved:
-              raise SystemExit('runtime-selected control branch did not remain authoritative')
-          verify_call = git_mock.call_args_list[1]
-          if 'origin/agent/runtime-selected' not in verify_call.args:
-              raise SystemExit(f'runtime-selected branch was not remotely verified: {verify_call!r}')
-
-          if worker.SCRIPT_VERSION != '5.2.1':
+          if worker.SCRIPT_VERSION != '5.2.2':
               raise SystemExit(f'unexpected worker version {worker.SCRIPT_VERSION!r}')
-          print('validated runtime control-plane compatibility and strict remote verification')
+          print('validated Qwen 5.2.2 compatibility source contract')
+          PY
+
+      - name: Validate live Mission runtime through Qwen compatibility layer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util
+          import os
+          import pathlib
+          import sys
+
+          path = pathlib.Path('tool/kris_qwen_worker.py').resolve()
+          spec = importlib.util.spec_from_file_location('kris_qwen_worker_live', path)
+          if spec is None or spec.loader is None:
+              raise SystemExit('cannot import Qwen worker')
+          worker = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = worker
+          spec.loader.exec_module(worker)
+
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'qwen-live-preflight'
+          cfg = worker.Config(
+              root=root,
+              repo_full_name=worker.DEFAULT_REPO,
+              repo_url=worker.DEFAULT_REPO_URL,
+              control_branch=worker.DEFAULT_CONTROL_BRANCH,
+              runtime_branch=worker.DEFAULT_RUNTIME_BRANCH,
+              main_branch=worker.DEFAULT_MAIN_BRANCH,
+              model_base=worker.DEFAULT_MODEL_BASE,
+              model='qwen3-coder-30b-a3b-instruct',
+              api_key='',
+              allowed_types=set(worker.DEFAULT_ALLOWED_TYPES),
+              max_turns=28,
+              review_max_turns=48,
+              review_finalize_attempts=4,
+              review_cooldown_seconds=3600,
+              max_consecutive_errors=5,
+              max_tokens=4096,
+              temperature=0.15,
+              request_timeout=1800,
+              lease_hours=2,
+              heartbeat_minutes=10,
+              loop_sleep=60,
+              keep_worktrees=False,
+              dry_run=False,
+              skip_hygiene=False,
+              skip_audit=False,
+              model_path=None,
+              llama_server_bin='llama-server',
+              llama_bench_bin='llama-bench',
+              server_host='127.0.0.1',
+              server_port=8080,
+              ctx_size=0,
+              memory_reserve_gib=0.0,
+              prompt_cache_gib=0.0,
+              cpu_reserve_cores=0,
+              server_parallel=0,
+              numa_mode='auto',
+              model_sandbox='off',
+          )
+          worker.configure_github_auth()
+          worker.ensure_layout(cfg)
+          worker.refresh_snapshots(cfg)
+          state = worker.preflight(cfg)
+          generation = state.get('runtimeGeneration')
+          if not isinstance(generation, int) or generation < 652:
+              raise SystemExit(f'unexpected live runtime generation {generation!r}')
+          print(f'live Qwen compatibility preflight PASS generation={generation}')
           PY
 
       - name: Validate Qwen phone control and refresh exact source manifest
@@ -172,7 +232,7 @@ jobs:
           )
           value = json.loads(raw)
           version = str(value.get('scriptVersion') or '').strip()
-          if version != '5.2.1':
+          if version != '5.2.2':
               raise SystemExit(f'unexpected worker version JSON: {raw!r}')
           if subprocess.check_output(
               ['python3', 'tool/kris_qwen_control.py', '--version'],
@@ -215,5 +275,5 @@ jobs:
             docs/KRIS_QWEN_SERVER_CONTROL.md \
             tool/kris_qwen_worker.py
           git diff --cached --check
-          git commit -m 'fix(qwen): support legacy runtime control metadata'
+          git commit -m 'fix(qwen): align historical semaphore audit'
           git push origin HEAD:refs/heads/agent/qwen-phone-control
