@@ -40,20 +40,35 @@ def current_branch(repo: pathlib.Path) -> str:
     return branch
 
 
-def stop_old_systemd_controller() -> None:
+def active_systemd_controller() -> tuple[bool, bool]:
+    """Return (active, durable_always_on_unit) without mutating the service."""
     if shutil.which("systemctl") is None:
-        return
-    result = run(["systemctl", "is-active", SERVICE], check=False)
-    state = result.stdout.strip().lower()
-    if state in {"", "inactive", "unknown"}:
-        return
-    if hasattr(os, "geteuid") and os.geteuid() != 0:
-        fail(
-            f"{SERVICE} is {state}; stop it first with "
-            f"'sudo systemctl stop {SERVICE}' or run this launcher as root"
-        )
-    print(f"Stopping old {SERVICE} ({state}) so this script can own the HTTP port...")
-    run(["systemctl", "stop", SERVICE])
+        return False, False
+    active = run(["systemctl", "is-active", "--quiet", SERVICE], check=False)
+    if active.returncode != 0:
+        return False, False
+    unit = run(["systemctl", "cat", SERVICE], check=False)
+    text = unit.stdout if unit.returncode == 0 else ""
+    durable = (
+        "tool/kris_qwen_control.py.compat.py" in text
+        and "Restart=always" in text
+        and "StartLimitIntervalSec=0" in text
+    )
+    return True, durable
+
+
+def report_existing_durable_service() -> None:
+    print()
+    print("KRIS Qwen durable systemd controller is already active.")
+    print("Leaving it running; a second foreground controller is not started.")
+    print(f"  status: systemctl status {SERVICE} --no-pager")
+    print(f"  logs:   journalctl -u {SERVICE} -f")
+    print("  config: /etc/kris-qwen-control.env")
+    print()
+    print("For phone access, the service environment must use:")
+    print("  KRIS_QWEN_CONTROL_HOST=0.0.0.0")
+    print("  KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP=1")
+    print()
 
 
 def require_github_auth() -> None:
@@ -111,6 +126,16 @@ def main() -> int:
 
     branch = os.environ.get("KRIS_QWEN_REPO_BRANCH", "").strip() or current_branch(repo)
 
+    active_service, durable_service = active_systemd_controller()
+    if active_service:
+        if durable_service:
+            report_existing_durable_service()
+            return 0
+        fail(
+            f"legacy {SERVICE} is active. Do not stop a running Qwen supervisor implicitly. "
+            "Migrate it in place with 'sudo ./tool/install_kris_qwen_control_systemd.sh'."
+        )
+
     try:
         port = int(os.environ.get("KRIS_QWEN_CONTROL_PORT", str(DEFAULT_PORT)))
     except ValueError:
@@ -118,7 +143,6 @@ def main() -> int:
     if not 1 <= port <= 65535:
         fail("KRIS_QWEN_CONTROL_PORT must be between 1 and 65535")
 
-    stop_old_systemd_controller()
     require_github_auth()
     ensure_port_free(port)
 
@@ -131,6 +155,7 @@ def main() -> int:
     env["KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP"] = "1"
     env.setdefault("KRIS_QWEN_AUTO_UPDATE", "1")
     env.setdefault("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30")
+    env.setdefault("KRIS_QWEN_CONTROLLER_SELF_RESTART", "0")
 
     ip = discover_ip()
     print()
@@ -138,7 +163,8 @@ def main() -> int:
     print(f"  repo:   {repo}")
     print(f"  branch: {branch}")
     print(f"  port:   {port}")
-    print("  mode:   always-on + automatic fast-forward updates")
+    print("  mode:   foreground always-on worker + automatic safe updates")
+    print("  note:   durable controller crash recovery requires the systemd installer")
     if ip:
         print(f"  open:   http://{ip}:{port}")
     else:
