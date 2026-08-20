@@ -51,6 +51,7 @@ class AlwaysOnQwenController(BaseController):
         super().__init__(cfg)
         self.auto_run_enabled = True
         self.auto_update_enabled = base.env_bool("KRIS_QWEN_AUTO_UPDATE", True)
+        self.last_auto_update: dict | None = None
         try:
             interval = int(os.environ.get("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30"))
         except ValueError as exc:
@@ -96,6 +97,36 @@ class AlwaysOnQwenController(BaseController):
             raise base.ControllerError("remote Qwen branch returned invalid head SHA")
         return head
 
+    def _auto_update_preflight(self, local: str, advertised_remote: str) -> dict:
+        dirty = self._git("status", "--porcelain", "--untracked-files=all").stdout.strip()
+        if dirty:
+            return {
+                "status": "UPDATE_BLOCKED_DIRTY",
+                "local": local,
+                "remote": advertised_remote,
+                "detail": dirty[:6000],
+            }
+
+        self._git("fetch", "origin", self.cfg.repo_branch, "--prune", timeout=900)
+        fetched_remote = self._git("rev-parse", f"origin/{self.cfg.repo_branch}").stdout.strip()
+        if fetched_remote == local:
+            return {"status": "CURRENT", "local": local, "remote": fetched_remote}
+        ancestor = self._git(
+            "merge-base", "--is-ancestor", local, fetched_remote,
+            check=False,
+        )
+        if ancestor.returncode != 0:
+            return {
+                "status": "UPDATE_BLOCKED_NON_FAST_FORWARD",
+                "local": local,
+                "remote": fetched_remote,
+            }
+        return {
+            "status": "UPDATE_READY",
+            "local": local,
+            "remote": fetched_remote,
+        }
+
     def _auto_update_once(self) -> dict:
         if self.operation_running():
             return {"status": "BUSY"}
@@ -105,12 +136,15 @@ class AlwaysOnQwenController(BaseController):
         local = self._git_head()
         remote = self._remote_branch_head()
         if remote != local:
+            preflight = self._auto_update_preflight(local, remote)
+            if preflight["status"] != "UPDATE_READY":
+                return preflight
             queued = super().fetch_latest_and_run()
             return {
                 **queued,
                 "status": "UPDATE_QUEUED",
                 "local": local,
-                "remote": remote,
+                "remote": preflight["remote"],
             }
         if not self.worker_pid():
             started = super().start()
@@ -122,12 +156,16 @@ class AlwaysOnQwenController(BaseController):
             }
         return {"status": "CURRENT", "local": local, "remote": remote}
 
+    def _remember_auto_update(self, result: dict) -> None:
+        self.last_auto_update = {"at": base.utc_iso(), **result}
+
     def _auto_update_loop(self) -> None:
         time.sleep(1.0)
         while True:
             try:
-                self._auto_update_once()
+                self._remember_auto_update(self._auto_update_once())
             except Exception as exc:
+                self._remember_auto_update({"status": "ERROR", "error": str(exc)})
                 if not self.operation_running():
                     self._record_operation(
                         state="ERROR",
@@ -143,6 +181,7 @@ class AlwaysOnQwenController(BaseController):
             "enabled": self.auto_update_enabled,
             "intervalSeconds": self.auto_update_seconds,
             "autoRunEnabled": self.auto_run_enabled,
+            "last": self.last_auto_update,
         }
         return result
 
