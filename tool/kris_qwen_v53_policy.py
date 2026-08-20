@@ -10,8 +10,16 @@ CONTINUOUS_SOURCE_TYPES = {
     "PRODUCT_FEATURE", "PRODUCT_DEFECT_REPAIR", "PRODUCT_TEST", "CI_REPAIR",
     "BLOCKER_REMOVAL",
 }
-CONTINUOUS_CODE_PREFIXES = (
-    "lib/", "test/", "automation_host/", "services/", "native/", "tool/",
+CONTINUOUS_PRIMARY_CODE_PREFIXES = (
+    "lib/", "test/", "automation_host/", "services/", "native/",
+)
+CONTINUOUS_CODE_PREFIXES = CONTINUOUS_PRIMARY_CODE_PREFIXES + ("tool/",)
+CONTINUOUS_TOOL_DENY_PREFIXES = (
+    "tool/kris_qwen_",
+    "tool/mission_",
+    "tool/branch_hygiene",
+    "tool/p1a_",
+    "tool/workflow_integrity",
 )
 CONTINUOUS_SOURCE_MARKER = "CONTINUOUS-QWEN"
 CONTINUOUS_INTEGRATION_MARKER = "ALWAYS_ON_CONTINUOUS_INTEGRATION"
@@ -146,18 +154,40 @@ def _create_continuous_work_order(
     return False
 
 
+def _continuous_path_bucket(value: str) -> int | None:
+    value = str(value).strip()
+    if any(value.startswith(prefix) for prefix in CONTINUOUS_PRIMARY_CODE_PREFIXES):
+        return 0
+    if value.startswith("tool/"):
+        if any(value.startswith(prefix) for prefix in CONTINUOUS_TOOL_DENY_PREFIXES):
+            return None
+        return 1
+    return None
+
+
 def continuous_seed_allowed_paths(cfg: Config, product: dict[str, Any]) -> list[str]:
     parent_pr = int(product["productPr"])
-    paths: list[str] = []
+    primary: list[str] = []
+    fallback: list[str] = []
+
+    def collect(value: str) -> None:
+        bucket = _continuous_path_bucket(value)
+        if bucket is None:
+            return
+        target = primary if bucket == 0 else fallback
+        if value not in target:
+            target.append(value)
+
     for row in runtime_work_rows(cfg):
         if row.get("parentProductPr") != parent_pr or row.get("type") not in CONTINUOUS_SOURCE_TYPES:
             continue
         for raw in row.get("allowedPaths") or []:
-            value = str(raw)
-            if value.startswith(CONTINUOUS_CODE_PREFIXES) and value not in paths:
-                paths.append(value)
-    if paths:
-        return paths[:24]
+            collect(str(raw))
+    if primary:
+        return primary[:24]
+    if fallback:
+        return fallback[:24]
+
     branch = str(product["branch"])
     diff = git(
         cfg.anchor,
@@ -171,10 +201,8 @@ def continuous_seed_allowed_paths(cfg: Config, product: dict[str, Any]) -> list[
     if diff.returncode != 0:
         return []
     for raw in diff.stdout.splitlines():
-        value = raw.strip()
-        if value.startswith(CONTINUOUS_CODE_PREFIXES) and value not in paths:
-            paths.append(value)
-    return paths[:24]
+        collect(raw.strip())
+    return (primary or fallback)[:24]
 
 
 def continuous_source_work(row: dict[str, Any]) -> bool:
