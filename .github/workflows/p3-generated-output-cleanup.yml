@@ -1,0 +1,43 @@
+name: P3 Generated Output Cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/p3-generated-output-cleanup.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    if: github.actor != 'github-actions[bot]' && github.head_ref == 'agent/p3-phase-completion'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p3-phase-completion
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - name: Remove validator-generated unrelated deltas
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin main
+          git checkout origin/main -- release/FILE_ADAPTER_RESULTS.json release/KNOWLEDGE_MEMORY_V2_RESULTS.json
+          rm -f .github/workflows/p3-generated-output-cleanup.yml
+          python tool/p2_refresh_source_manifest.py .
+          flutter pub get
+          flutter test --no-pub test/product/source_contract_test.dart --reporter expanded
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          git commit -m 'chore(p3): remove unrelated validator output deltas'
+          git push origin HEAD:agent/p3-phase-completion
