@@ -6,12 +6,12 @@ on:
       - 'agent/p5-web-studio-runtime-integration'
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
-      - '.p5-web-studio-runtime-integration.fixpart*'
+      - '.p5-web-studio-runtime-integration.part*'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
-      - '.p5-web-studio-runtime-integration.fixpart*'
+      - '.p5-web-studio-runtime-integration.part*'
 
 permissions:
   contents: write
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .p5-web-studio-runtime-integration.fixpart* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          cat .p5-web-studio-runtime-integration.part* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
 
@@ -90,21 +90,15 @@ jobs:
       - name: P3 Node browser contracts
         shell: bash
         working-directory: automation_host
-        run: |
-          set -euo pipefail
-          npm test
+        run: npm test
 
       - name: P3 Dart browser contracts
         shell: bash
-        run: |
-          set -euo pipefail
-          flutter test --no-pub --concurrency=1 test/product/browser/browser_runtime_process_test.dart
+        run: flutter test --no-pub --concurrency=1 test/product/browser/browser_runtime_process_test.dart
 
       - name: P5 Experience contracts
         shell: bash
-        run: |
-          set -euo pipefail
-          flutter test --no-pub --concurrency=1 test/product/p5_information_architecture
+        run: flutter test --no-pub --concurrency=1 test/product/p5_information_architecture
 
       - name: Analyzer and formatting scope
         shell: bash
@@ -138,7 +132,7 @@ jobs:
             exit 79
           }
 
-      - name: Stage only the collision-safe product candidate
+      - name: Stage exact collision-safe candidate
         shell: bash
         run: |
           set -euo pipefail
@@ -203,7 +197,9 @@ jobs:
               ['git', 'diff', '--cached', '--name-only'], text=True
           ).splitlines())
           if actual != expected:
-              raise SystemExit(f'candidate scope mismatch: actual={sorted(actual)} expected={sorted(expected)}')
+              raise SystemExit(
+                  f'candidate scope mismatch: actual={sorted(actual)} expected={sorted(expected)}'
+              )
           print('P5 materializer exact staged scope: PASS')
           PY
 
