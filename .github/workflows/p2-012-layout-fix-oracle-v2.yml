@@ -18,26 +18,34 @@ jobs:
           flutter-version: 3.44.8
           channel: stable
           cache: true
-      - name: Synchronize async widget assertions and validate terminal behavior
+      - name: Publish detach state before local stream cleanup and validate
         shell: bash
         run: |
           flutter pub get
           python - <<'PY'
           from pathlib import Path
-          path = Path('test/product/p2_owner_workspace_test.dart')
-          text = path.read_text()
-          replacements = [
-              ("    await tester.tap(find.byTooltip('Send terminal input'));\n    await tester.pump();", "    await tester.tap(find.byTooltip('Send terminal input'));\n    await tester.pumpAndSettle();"),
-              ("    await tester.tap(find.text('Detach'));\n    await tester.pump();", "    await tester.tap(find.text('Detach'));\n    await tester.pumpAndSettle();"),
-              ("    await tester.tap(find.text('Attach'));\n    await tester.pump();\n    await tester.pump();", "    await tester.tap(find.text('Attach'));\n    await tester.pumpAndSettle();"),
+          owner = Path('lib/product/p2_owner_workspace.dart')
+          owner_text = owner.read_text()
+          old_detach = "    await widget.actions.detach(selected);\n    await _cancelLocalOutput(selected.id);\n    widget.terminalModel.setAttached(selected.id, false);\n    _connectionLabels[selected.id] = 'Detached';\n    if (mounted) setState(() {});"
+          new_detach = "    await widget.actions.detach(selected);\n    final cancellation = _cancelLocalOutput(selected.id);\n    widget.terminalModel.setAttached(selected.id, false);\n    _connectionLabels[selected.id] = 'Detached';\n    if (mounted) setState(() {});\n    await cancellation;"
+          if old_detach not in owner_text:
+              raise SystemExit('detach ordering target missing')
+          owner.write_text(owner_text.replace(old_detach, new_detach, 1))
+
+          test = Path('test/product/p2_owner_workspace_test.dart')
+          test_text = test.read_text()
+          reversions = [
+              ("    await tester.tap(find.byTooltip('Send terminal input'));\n    await tester.pumpAndSettle();", "    await tester.tap(find.byTooltip('Send terminal input'));\n    await tester.pump();"),
+              ("    await tester.tap(find.text('Detach'));\n    await tester.pumpAndSettle();", "    await tester.tap(find.text('Detach'));\n    await tester.pump();"),
+              ("    await tester.tap(find.text('Attach'));\n    await tester.pumpAndSettle();", "    await tester.tap(find.text('Attach'));\n    await tester.pump();\n    await tester.pump();"),
           ]
-          for old, new in replacements:
-              if old not in text:
-                  raise SystemExit(f'widget synchronization target missing: {old!r}')
-              text = text.replace(old, new, 1)
-          path.write_text(text)
+          for old, new in reversions:
+              if old not in test_text:
+                  raise SystemExit(f'original timing restoration target missing: {old!r}')
+              test_text = test_text.replace(old, new, 1)
+          test.write_text(test_text)
           PY
-          dart format test/product/p2_owner_workspace_test.dart
+          dart format lib/product/p2_owner_workspace.dart test/product/p2_owner_workspace_test.dart
           set +e
           flutter test --no-pub test/product/p2_owner_workspace_test.dart --reporter expanded > /tmp/p2-layout.log 2>&1
           status=$?
@@ -48,6 +56,6 @@ jobs:
           } > p2-012-layout-fix-diagnostic.txt
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add test/product/p2_owner_workspace_test.dart p2-012-layout-fix-diagnostic.txt
-          git commit -m 'test(p2): settle asynchronous terminal actions'
+          git add lib/product/p2_owner_workspace.dart test/product/p2_owner_workspace_test.dart p2-012-layout-fix-diagnostic.txt
+          git commit -m 'fix(p2): publish terminal detach before stream cleanup'
           git push origin HEAD:agent/p2-012-layout-fix-oracle-v2
