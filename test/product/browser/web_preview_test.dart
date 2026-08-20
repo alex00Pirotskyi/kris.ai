@@ -233,6 +233,32 @@ void main() {
     );
     expect(pty.openCount, 0);
   });
+
+  test('failed dev-server stop remains observable and retryable', () async {
+    final fixture = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    processHost
+      ..fixtureServer = fixture
+      ..ready = true;
+    unawaited(_serveReadiness(fixture, processHost));
+
+    final preview = await service.startDevServer(
+      P3DevServerConfig(
+        command: 'fixture-dev',
+        cwd: '.',
+        url: Uri.parse('http://127.0.0.1:${fixture.port}/'),
+      ),
+    );
+    processHost.stopFailures = 1;
+
+    await expectLater(service.stop(preview.id), throwsStateError);
+    final failed = service.snapshot(preview.id);
+    expect(failed.lifecycle, P3PreviewLifecycle.failed);
+    expect(failed.failureCode, 'web_preview_stop_failed');
+
+    await service.stop(preview.id);
+    expect(processHost.stops, 2);
+    expect(() => service.snapshot(preview.id), throwsStateError);
+  });
 }
 
 Future<void> _serveReadiness(
@@ -408,6 +434,7 @@ final class _RecordingProcessHost implements P3PreviewProcessHost {
   P3DevServerConfig? lastConfig;
   Duration? lastGrace;
   HttpServer? fixtureServer;
+  int stopFailures = 0;
 
   @override
   Future<P3PreviewProcessSession> start(P3DevServerConfig config) async {
@@ -426,6 +453,10 @@ final class _RecordingProcessHost implements P3PreviewProcessHost {
   ) async {
     stops += 1;
     lastGrace = grace;
+    if (stopFailures > 0) {
+      stopFailures -= 1;
+      throw StateError('fixture_stop_failed');
+    }
     final server = fixtureServer;
     fixtureServer = null;
     if (server != null) await server.close(force: true);

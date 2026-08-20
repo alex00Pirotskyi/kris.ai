@@ -449,12 +449,13 @@ final class P3LivePreviewService {
       await staticPreview.stop();
       return;
     }
-    final devPreview = _dev.remove(previewId);
+    final devPreview = _dev[previewId];
     if (devPreview == null) return;
     devPreview.lifecycle = P3PreviewLifecycle.stopping;
     try {
       await processHost.stop(devPreview.process, limits.stopGrace);
       devPreview.lifecycle = P3PreviewLifecycle.stopped;
+      _dev.remove(previewId);
     } catch (_) {
       devPreview.lifecycle = P3PreviewLifecycle.failed;
       devPreview.failureCode = 'web_preview_stop_failed';
