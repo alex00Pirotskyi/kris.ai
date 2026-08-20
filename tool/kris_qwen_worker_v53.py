@@ -9,6 +9,62 @@ SOURCE = pathlib.Path(__file__).with_name("kris_qwen_worker.py")
 POLICY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_policy.py")
 TARGET_VERSION = "5.3.0"
 
+PRODUCT_PATH_OVERRIDE = r'''
+CONTINUOUS_PRIMARY_CODE_PREFIXES = (
+    "lib/", "test/", "automation_host/", "services/", "native/",
+)
+CONTINUOUS_TOOL_DENY_PREFIXES = (
+    "tool/mission_",
+    "tool/kris_qwen",
+    "tool/branch_hygiene",
+    "tool/p1a_",
+)
+
+
+def continuous_seed_allowed_paths(cfg: Config, product: dict[str, Any]) -> list[str]:
+    """Select actual Product/test paths before bounded non-governance tooling."""
+    parent_pr = int(product["productPr"])
+    primary: list[str] = []
+    tooling: list[str] = []
+
+    def consider(raw: Any) -> None:
+        value = str(raw)
+        if value.startswith(CONTINUOUS_PRIMARY_CODE_PREFIXES):
+            if value not in primary:
+                primary.append(value)
+            return
+        if value.startswith("tool/") and not value.startswith(CONTINUOUS_TOOL_DENY_PREFIXES):
+            if value not in tooling:
+                tooling.append(value)
+
+    for row in runtime_work_rows(cfg):
+        if row.get("parentProductPr") != parent_pr or row.get("type") not in CONTINUOUS_SOURCE_TYPES:
+            continue
+        for raw in row.get("allowedPaths") or []:
+            consider(raw)
+    if primary:
+        return primary[:24]
+    if tooling:
+        return tooling[:12]
+
+    branch = str(product["branch"])
+    diff = git(
+        cfg.anchor,
+        "diff",
+        "--name-only",
+        f"origin/{cfg.main_branch}...origin/{branch}",
+        "--",
+        check=False,
+        timeout=120,
+    )
+    if diff.returncode != 0:
+        return []
+    for raw in diff.stdout.splitlines():
+        consider(raw.strip())
+    return primary[:24] if primary else tooling[:12]
+
+'''
+
 
 def load_policy_module():
     spec = importlib.util.spec_from_file_location("kris_qwen_v53_policy_runtime", POLICY_ENTRY)
@@ -79,12 +135,12 @@ def transform(text: str) -> str:
     text = replace_exact(
         text,
         '\ndef system_prompt() -> str:\n',
-        '\n' + policy.ALWAYS_ON_BLOCK + 'def system_prompt() -> str:\n',
+        '\n' + policy.ALWAYS_ON_BLOCK + PRODUCT_PATH_OVERRIDE + 'def system_prompt() -> str:\n',
         "always-on policy insertion",
     )
 
     old_housekeeping = '''        stranded_woken = wake_stranded_integrations(cfg)\n        if stranded_woken:\n            log.trace("integration-wake", f"woke stranded integration Work Orders: {stranded_woken}")\n            refresh_snapshots(cfg)\n        lease = reserve_work(cfg, worker_identity, work_execution_id)\n'''
-    new_housekeeping = '''        stranded_woken = wake_stranded_integrations(cfg)\n        if stranded_woken:\n            log.trace("integration-wake", f"woke stranded integration Work Orders: {stranded_woken}")\n            refresh_snapshots(cfg)\n        frontier_recovery = recover_continuous_frontier(cfg, worker_identity, log)\n        if frontier_recovery.get("wokenReviews") or frontier_recovery.get("seededWorkOrder"):\n            refresh_snapshots(cfg)\n        lease = reserve_work(cfg, worker_identity, work_execution_id)\n'''
+    new_housekeeping = '''        stranded_woken = wake_stranded_integrations(cfg)\n        if stranded_woken:\n            log.trace("integration-wake", f"woke stranded integration Work Orders: {stranded_woken}")\n            refresh_snapshots(cfg)\n        frontier_recovery = recover_continuous_frontier(cfg, worker_identity, log)\n        if any(frontier_recovery.values()):\n            refresh_snapshots(cfg)\n        lease = reserve_work(cfg, worker_identity, work_execution_id)\n'''
     text = replace_exact(text, old_housekeeping, new_housekeeping, "run_one frontier recovery")
 
     text = text.replace('write_worker_status(cfg, "IDLE"', 'write_worker_status(cfg, "CONTINUING"')
@@ -115,7 +171,10 @@ def transform(text: str) -> str:
         'SCRIPT_VERSION = "5.3.0"',
         '+refs/pull/*/head:refs/remotes/origin/pull/*/head',
         'def wake_pending_reviews(',
+        'def ensure_continuous_integration_lane(',
+        'def ensure_continuous_validation_lane(',
         'def seed_continuous_product_work(',
+        'CONTINUOUS_PRIMARY_CODE_PREFIXES',
         'RED_ALERT_FRONTIER',
         'Successful work chains immediately',
     )
