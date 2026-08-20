@@ -1,3 +1,4 @@
+# independent from Qwen source materialization so hygiene cannot starve behind CI
 name: Qwen Branch Hygiene Reconcile
 
 on:
@@ -12,7 +13,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: qwen-phone-control-materializer
+  group: qwen-branch-hygiene-reconcile
   cancel-in-progress: false
 
 jobs:
