@@ -7,13 +7,14 @@ import sys
 
 SOURCE = pathlib.Path(__file__).with_name("kris_qwen_worker.py")
 POLICY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_policy.py")
+RECOVERY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_recovery.py")
 TARGET_VERSION = "5.3.0"
 
 
-def load_policy_module():
-    spec = importlib.util.spec_from_file_location("kris_qwen_v53_policy_runtime", POLICY_ENTRY)
+def load_runtime_module(path: pathlib.Path, name: str, label: str):
+    spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise SystemExit("KRIS_QWEN_V53_ERROR: cannot load 5.3 policy module")
+        raise SystemExit(f"KRIS_QWEN_V53_ERROR: cannot load {label}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -28,14 +29,23 @@ def replace_exact(text: str, old: str, new: str, label: str) -> str:
 
 
 def transform(text: str) -> str:
-    policy = load_policy_module()
+    policy = load_runtime_module(
+        POLICY_ENTRY,
+        "kris_qwen_v53_policy_runtime",
+        "5.3 continuous Product policy",
+    )
+    recovery = load_runtime_module(
+        RECOVERY_ENTRY,
+        "kris_qwen_v53_recovery_runtime",
+        "5.3 continuous CI recovery policy",
+    )
 
     if all(
         marker in text
         for marker in (
             'SCRIPT_VERSION = "5.3.0"',
             'def wake_pending_reviews(',
-            'def seed_continuous_product_work(',
+            'def recover_continuous_red_helper_ci(',
             'RED_ALERT_FRONTIER',
             '+refs/pull/*/head:refs/remotes/origin/pull/*/head',
         )
@@ -79,7 +89,7 @@ def transform(text: str) -> str:
     text = replace_exact(
         text,
         '\ndef system_prompt() -> str:\n',
-        '\n' + policy.ALWAYS_ON_BLOCK + 'def system_prompt() -> str:\n',
+        '\n' + policy.ALWAYS_ON_BLOCK + recovery.CI_RECOVERY_BLOCK + 'def system_prompt() -> str:\n',
         "always-on policy insertion",
     )
 
@@ -141,7 +151,10 @@ def transform(text: str) -> str:
         'def wake_pending_reviews(',
         'def ensure_continuous_integration_lane(',
         'def ensure_continuous_validation_lane(',
-        'def seed_continuous_product_work(',
+        'def recover_continuous_red_helper_ci(',
+        'CONTINUOUS_HELPER_CI_REPAIR_MARKER',
+        'CONTINUOUS_CANONICAL_CI_REPAIR_MARKER',
+        'CONTINUOUS_SOURCE_WIP_LIMIT',
         'CONTINUOUS_PRIMARY_CODE_PREFIXES',
         'CONTINUOUS_TOOL_DENY_PREFIXES',
         'RED_ALERT_FRONTIER',
