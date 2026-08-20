@@ -24,105 +24,113 @@ void main() {
     expect(first.stableKey, isNot(second.stableKey));
   });
 
-  test('managed process adoption and readiness require verifiable identity',
-      () async {
-    final adapter = _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
-      P2ProcessLifecycle.starting,
-      P2ProcessLifecycle.running,
-    ]);
-    final manager = P2ProcessTreeManager(adapter);
-    const identity = P2ProcessIdentity(
-      pid: 2101,
-      startToken: 'start-2101',
-      supervisorToken: 'supervisor-2101',
-      platformGroupId: 'group-2101',
-    );
+  test(
+    'managed process adoption and readiness require verifiable identity',
+    () async {
+      final adapter = _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
+        P2ProcessLifecycle.starting,
+        P2ProcessLifecycle.running,
+      ]);
+      final manager = P2ProcessTreeManager(adapter);
+      const identity = P2ProcessIdentity(
+        pid: 2101,
+        startToken: 'start-2101',
+        supervisorToken: 'supervisor-2101',
+        platformGroupId: 'group-2101',
+      );
 
-    expect(await manager.adoptManaged(identity), same(identity));
-    expect(
-      await manager.waitUntilRunning(
-        identity,
-        timeout: const Duration(milliseconds: 100),
-        pollInterval: const Duration(microseconds: 1),
-      ),
-      P2ProcessLifecycle.running,
-    );
-    expect(adapter.calls, <String>['inspect', 'inspect']);
+      expect(await manager.adoptManaged(identity), same(identity));
+      expect(
+        await manager.waitUntilRunning(
+          identity,
+          timeout: const Duration(milliseconds: 100),
+          pollInterval: const Duration(microseconds: 1),
+        ),
+        P2ProcessLifecycle.running,
+      );
+      expect(adapter.calls, <String>['inspect', 'inspect']);
 
-    final unknown = P2ProcessTreeManager(
-      _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
-        P2ProcessLifecycle.unknown,
-      ]),
-    );
-    await expectLater(unknown.adoptManaged(identity), throwsStateError);
-  });
+      final unknown = P2ProcessTreeManager(
+        _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
+          P2ProcessLifecycle.unknown,
+        ]),
+      );
+      await expectLater(unknown.adoptManaged(identity), throwsStateError);
+    },
+  );
 
-  test('managed stop escalates to verified kill when grace stop is incomplete',
-      () async {
-    final adapter = _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
-      P2ProcessLifecycle.running,
-      P2ProcessLifecycle.stopping,
-      P2ProcessLifecycle.killed,
-    ]);
-    final manager = P2ProcessTreeManager(adapter);
-    const identity = P2ProcessIdentity(
-      pid: 2201,
-      startToken: 'start-2201',
-      supervisorToken: 'supervisor-2201',
-      platformGroupId: 'group-2201',
-    );
+  test(
+    'managed stop escalates to verified kill when grace stop is incomplete',
+    () async {
+      final adapter = _RecordingProcessTreeAdapter(<P2ProcessLifecycle>[
+        P2ProcessLifecycle.running,
+        P2ProcessLifecycle.stopping,
+        P2ProcessLifecycle.killed,
+      ]);
+      final manager = P2ProcessTreeManager(adapter);
+      const identity = P2ProcessIdentity(
+        pid: 2201,
+        startToken: 'start-2201',
+        supervisorToken: 'supervisor-2201',
+        platformGroupId: 'group-2201',
+      );
 
-    await manager.stop(identity, grace: const Duration(milliseconds: 10));
-    expect(
-      adapter.calls,
-      <String>['inspect', 'stop:10', 'inspect', 'kill', 'inspect'],
-    );
-    expect(adapter.killCount, 1);
-  });
+      await manager.stop(identity, grace: const Duration(milliseconds: 10));
+      expect(
+        adapter.calls,
+        <String>['inspect', 'stop:10', 'inspect', 'kill', 'inspect'],
+      );
+      expect(adapter.killCount, 1);
+    },
+  );
 
-  test('concurrent managed kills coalesce and still verify termination',
-      () async {
-    final barrier = Completer<void>();
-    final adapter = _RecordingProcessTreeAdapter(
-      <P2ProcessLifecycle>[P2ProcessLifecycle.killed],
-      killBarrier: barrier,
-    );
-    final manager = P2ProcessTreeManager(adapter);
-    const identity = P2ProcessIdentity(
-      pid: 2301,
-      startToken: 'start-2301',
-      supervisorToken: 'supervisor-2301',
-      platformGroupId: 'group-2301',
-    );
+  test(
+    'concurrent managed kills coalesce and still verify termination',
+    () async {
+      final barrier = Completer<void>();
+      final adapter = _RecordingProcessTreeAdapter(
+        <P2ProcessLifecycle>[P2ProcessLifecycle.killed],
+        killBarrier: barrier,
+      );
+      final manager = P2ProcessTreeManager(adapter);
+      const identity = P2ProcessIdentity(
+        pid: 2301,
+        startToken: 'start-2301',
+        supervisorToken: 'supervisor-2301',
+        platformGroupId: 'group-2301',
+      );
 
-    final first = manager.kill(identity);
-    final second = manager.kill(identity);
-    expect(identical(first, second), isTrue);
-    barrier.complete();
-    await Future.wait<void>(<Future<void>>[first, second]);
-    expect(adapter.killCount, 1);
-    expect(adapter.calls, <String>['kill', 'inspect']);
-  });
+      final first = manager.kill(identity);
+      final second = manager.kill(identity);
+      expect(identical(first, second), isTrue);
+      barrier.complete();
+      await Future.wait<void>(<Future<void>>[first, second]);
+      expect(adapter.killCount, 1);
+      expect(adapter.calls, <String>['kill', 'inspect']);
+    },
+  );
 
-  test('failed managed kill is removed from coalescing map and can retry',
-      () async {
-    final adapter = _RecordingProcessTreeAdapter(
-      <P2ProcessLifecycle>[P2ProcessLifecycle.killed],
-      killFailures: 1,
-    );
-    final manager = P2ProcessTreeManager(adapter);
-    const identity = P2ProcessIdentity(
-      pid: 2401,
-      startToken: 'start-2401',
-      supervisorToken: 'supervisor-2401',
-      platformGroupId: 'group-2401',
-    );
+  test(
+    'failed managed kill is removed from coalescing map and can retry',
+    () async {
+      final adapter = _RecordingProcessTreeAdapter(
+        <P2ProcessLifecycle>[P2ProcessLifecycle.killed],
+        killFailures: 1,
+      );
+      final manager = P2ProcessTreeManager(adapter);
+      const identity = P2ProcessIdentity(
+        pid: 2401,
+        startToken: 'start-2401',
+        supervisorToken: 'supervisor-2401',
+        platformGroupId: 'group-2401',
+      );
 
-    await expectLater(manager.kill(identity), throwsStateError);
-    await manager.kill(identity);
-    expect(adapter.killCount, 2);
-    expect(adapter.calls, <String>['kill', 'kill', 'inspect']);
-  });
+      await expectLater(manager.kill(identity), throwsStateError);
+      await manager.kill(identity);
+      expect(adapter.killCount, 2);
+      expect(adapter.calls, <String>['kill', 'kill', 'inspect']);
+    },
+  );
 
   test('terminal model exposes keyboard and emergency workflows', () {
     final model = P2TerminalModel();
@@ -131,104 +139,106 @@ void main() {
     expect(model.shortcuts.containsKey(P2TerminalAction.emergencyKill), isTrue);
   });
 
-  test('interactive PTY service exposes the complete managed lifecycle',
-      () async {
-    final backend = _RecordingPtyBackend();
-    final service = P2InteractivePtyService(backend);
-    final binding = _binding('pty.open');
-    final grantDigest = 'a' * 64;
+  test(
+    'interactive PTY service exposes the complete managed lifecycle',
+    () async {
+      final backend = _RecordingPtyBackend();
+      final service = P2InteractivePtyService(backend);
+      final binding = _binding('pty.open');
+      final grantDigest = 'a' * 64;
 
-    final opened = await service.open(
-      const P2PtyOpenRequest(shell: 'bash', cwd: '/workspace'),
-      binding,
-      grantDigest,
-    );
-    expect(opened.sessionId, 'session-1');
+      final opened = await service.open(
+        const P2PtyOpenRequest(shell: 'bash', cwd: '/workspace'),
+        binding,
+        grantDigest,
+      );
+      expect(opened.sessionId, 'session-1');
 
-    await service.input(
-      'session-1',
-      <int>[65, 10],
-      binding: binding,
-      grantDigest: grantDigest,
-    );
-    final output = await service
-        .output(
+      await service.input(
+        'session-1',
+        <int>[65, 10],
+        binding: binding,
+        grantDigest: grantDigest,
+      );
+      final output = await service
+          .output(
+            'session-1',
+            0,
+            binding: binding,
+            grantDigest: grantDigest,
+          )
+          .single;
+      expect(output, <int>[79, 75]);
+      await service.resize(
+        'session-1',
+        132,
+        44,
+        binding: binding,
+        grantDigest: grantDigest,
+      );
+      await service.detach(
+        'session-1',
+        binding: binding,
+        grantDigest: grantDigest,
+      );
+      final attached = await service.attach(
+        'session-1',
+        2,
+        binding: binding,
+        grantDigest: grantDigest,
+      );
+      expect(attached.transcriptCursor, 2);
+      await service.interrupt(
+        'session-1',
+        binding: binding,
+        grantDigest: grantDigest,
+      );
+      await service.terminate(
+        'session-1',
+        binding: binding,
+        grantDigest: grantDigest,
+      );
+
+      expect(backend.calls, <String>[
+        'open',
+        'input:2',
+        'output:0',
+        'resize:132x44',
+        'detach',
+        'attach:2',
+        'interrupt',
+        'terminate',
+      ]);
+      expect(
+        () => service.output(
           'session-1',
-          0,
+          -1,
           binding: binding,
           grantDigest: grantDigest,
-        )
-        .single;
-    expect(output, <int>[79, 75]);
-    await service.resize(
-      'session-1',
-      132,
-      44,
-      binding: binding,
-      grantDigest: grantDigest,
-    );
-    await service.detach(
-      'session-1',
-      binding: binding,
-      grantDigest: grantDigest,
-    );
-    final attached = await service.attach(
-      'session-1',
-      2,
-      binding: binding,
-      grantDigest: grantDigest,
-    );
-    expect(attached.transcriptCursor, 2);
-    await service.interrupt(
-      'session-1',
-      binding: binding,
-      grantDigest: grantDigest,
-    );
-    await service.terminate(
-      'session-1',
-      binding: binding,
-      grantDigest: grantDigest,
-    );
-
-    expect(backend.calls, <String>[
-      'open',
-      'input:2',
-      'output:0',
-      'resize:132x44',
-      'detach',
-      'attach:2',
-      'interrupt',
-      'terminate',
-    ]);
-    expect(
-      () => service.output(
-        'session-1',
-        -1,
-        binding: binding,
-        grantDigest: grantDigest,
-      ),
-      throwsStateError,
-    );
-    expect(
-      () => service.resize(
-        'session-1',
-        10,
-        1,
-        binding: binding,
-        grantDigest: grantDigest,
-      ),
-      throwsStateError,
-    );
-    expect(
-      () => service.input(
-        'session-1',
-        <int>[256],
-        binding: binding,
-        grantDigest: grantDigest,
-      ),
-      throwsStateError,
-    );
-  });
+        ),
+        throwsStateError,
+      );
+      expect(
+        () => service.resize(
+          'session-1',
+          10,
+          1,
+          binding: binding,
+          grantDigest: grantDigest,
+        ),
+        throwsStateError,
+      );
+      expect(
+        () => service.input(
+          'session-1',
+          <int>[256],
+          binding: binding,
+          grantDigest: grantDigest,
+        ),
+        throwsStateError,
+      );
+    },
+  );
 }
 
 P2EffectBinding _binding(String operation) => P2EffectBinding(
