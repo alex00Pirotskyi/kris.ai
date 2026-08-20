@@ -26,24 +26,14 @@ jobs:
           from pathlib import Path
           path = Path('lib/product/p2_owner_workspace.dart')
           text = path.read_text()
-          old = '''              if (constraints.maxWidth >= 900) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    SizedBox(width: 330, child: _buildTabList(tabs)),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: _buildTerminalPane(context)),
-                  ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  SizedBox(height: 180, child: _buildTabList(tabs)),
-                  const Divider(height: 1),
-                  Expanded(child: _buildTerminalPane(context)),
-                ],
-              );'''
+          start_marker = '              if (constraints.maxWidth >= 900) {'
+          end_marker = '            },\n          ),'
+          start = text.find(start_marker)
+          if start < 0:
+              raise SystemExit('layout start marker not found')
+          end = text.find(end_marker, start)
+          if end < 0:
+              raise SystemExit('layout end marker not found')
           new = '''              final useSideBySide = constraints.maxWidth >= 900 ||
                   (constraints.maxWidth >= 720 && constraints.maxHeight < 420);
               if (useSideBySide) {
@@ -65,12 +55,9 @@ jobs:
                   const Divider(height: 1),
                   Expanded(child: _buildTerminalPane(context)),
                 ],
-              );'''
-          if old not in text:
-              raise SystemExit('target layout block not found exactly once')
-          if text.count(old) != 1:
-              raise SystemExit('target layout block is ambiguous')
-          path.write_text(text.replace(old, new))
+              );
+'''
+          path.write_text(text[:start] + new + text[end:])
           PY
           dart format lib/product/p2_owner_workspace.dart
           set +e
