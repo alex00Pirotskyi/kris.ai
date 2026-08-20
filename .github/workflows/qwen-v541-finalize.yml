@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: qwen-v541-finalize
+  group: qwen-v541-finalize-v2
   cancel-in-progress: false
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.12.10'
           check-latest: false
-      - name: Capture candidate and apply bounded promotion edits
+      - name: Capture candidate and promote stable runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -76,96 +76,113 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          def replace_exact(path: str, old: str, new: str, label: str) -> None:
-              p = Path(path)
-              text = p.read_text(encoding='utf-8')
+          def one(text: str, old: str, new: str, label: str) -> str:
               count = text.count(old)
               if count != 1:
-                  raise SystemExit(f'{label}: expected one anchor, got {count}')
-              p.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+                  raise SystemExit(f'{label}: expected exactly one anchor, got {count}')
+              return text.replace(old, new, 1)
 
-          # Base controller: never print the bearer value into journald/stdout.
-          replace_exact(
-              'tool/kris_qwen_control.py',
+          # Controller: redact the token value at the source used by controller 2.2.
+          p = Path('tool/kris_qwen_control.py')
+          text = p.read_text(encoding='utf-8')
+          text = one(
+              text,
               '        print("\\nPHONE CONTROL TOKEN (keep private):", controller.token, flush=True)\n',
               '        print("\\nPhone control token value omitted from logs; read it from:", controller.token_path, flush=True)\n',
-              'controller token redaction',
+              'controller token print',
           )
+          text = text.replace('placeholder="Paste token from server terminal"', 'placeholder="Paste token from controller token file"')
+          p.write_text(text, encoding='utf-8', newline='\n')
 
-          # Foreground launcher truth.
+          # Foreground launcher truth; the base controller is now safe, so the existing 2.2 entry remains canonical.
           p = Path('run_my_server.py')
           text = p.read_text(encoding='utf-8')
           text = text.replace('5.3.1', '5.4.1')
-          text = text.replace(
-              '    print("The controller will print the control token below.")',
-              '    print("The control token value is never printed; read it from the controller token file.")',
+          text = one(
+              text,
+              '    print("The controller will print the control token below.")\n',
+              '    print("The control token value is never printed; read it from the controller token file.")\n',
+              'foreground token guidance',
           )
           p.write_text(text, encoding='utf-8', newline='\n')
 
-          # Durable installer: keep stable filename, add 5.4.1 entry/test and exact expectation.
+          # Durable installer: add 5.4.1 dependency/test and stable-version expectation.
           p = Path('tool/install_kris_qwen_control_systemd.sh')
           text = p.read_text(encoding='utf-8')
           text = text.replace('engineering worker 5.4 / controller 2.2', 'engineering worker 5.4.1 / controller 2.2')
-          text = text.replace('Qwen engineering 5.4 file', 'Qwen engineering 5.4.1 file')
-          text = text.replace(
-              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n',
-              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_worker_v541.py" \\\n',
+          text = one(
+              text,
+              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py"\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py"\n',
+              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py"\n  "${REPO_DIR}/tool/kris_qwen_worker_v541.py"\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py"\n',
+              'installer required worker',
           )
-          text = text.replace(
-              '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n',
-              '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n  "${REPO_DIR}/tool/kris_qwen_v541_test.py"\n',
-              1,
+          text = one(
+              text,
+              '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n)\n',
+              '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n  "${REPO_DIR}/tool/kris_qwen_v541_test.py"\n  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n  "${REPO_DIR}/tool/rotate_kris_qwen_control_token.sh"\n)\n',
+              'installer required tests',
           )
-          text = text.replace(
-              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py"',
-              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_worker_v541.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py"',
-              1,
+          text = one(
+              text,
+              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py" \\\n',
+              '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_worker_v541.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py" \\\n',
+              'installer compile worker',
           )
-          text = text.replace(
-              '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n\nWORKER_VERSION=',
-              '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v541_test.py"\n\nWORKER_VERSION=',
-              1,
+          text = one(
+              text,
+              '  "${REPO_DIR}/tool/kris_qwen_v531_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n',
+              '  "${REPO_DIR}/tool/kris_qwen_v531_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v541_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n',
+              'installer compile tests',
           )
           text = text.replace('"scriptVersion": "5.4.0"', '"scriptVersion": "5.4.1"')
           text = text.replace('Qwen worker 5.4 preflight failed', 'Qwen worker 5.4.1 preflight failed')
-          text = text.replace('Qwen worker 5.4 engineering-environment regression preflight failed.', 'Qwen worker 5.4 engineering-environment regression preflight failed.')
           marker = 'if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py" >/dev/null; then\n  echo "Qwen worker 5.4 engineering-environment regression preflight failed." >&2\n  exit 2\nfi\n'
-          if marker not in text:
-              raise SystemExit('installer engineering test anchor missing')
-          text = text.replace(marker, marker + 'if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v541_test.py" >/dev/null; then\n  echo "Qwen worker 5.4.1 deployment regression preflight failed." >&2\n  exit 2\nfi\n', 1)
-          text = text.replace('forwards to deterministic 5.4.', 'forwards to deterministic 5.4.1.')
-          text = text.replace(
-              'ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py\n',
-              'ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py\nExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v541_test.py\n',
-              1,
+          text = one(
+              text,
+              marker,
+              marker + 'if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v541_test.py" >/dev/null; then\n  echo "Qwen worker 5.4.1 deployment regression preflight failed." >&2\n  exit 2\nfi\nif ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py" >/dev/null; then\n  echo "Qwen controller token-redaction regression preflight failed." >&2\n  exit 2\nfi\n',
+              'installer runtime tests',
           )
-          text = text.replace('Worker:       5.4', 'Worker:       5.4.1')
-          text = text.replace('worker 5.4,', 'worker 5.4.1,')
-          text = text.replace('worker 5.4 engineering', 'worker 5.4.1 engineering')
+          text = text.replace('forwards to deterministic 5.4.', 'forwards to deterministic 5.4.1.')
+          text = one(
+              text,
+              'ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py\n',
+              'ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py\nExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v541_test.py\nExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py\n',
+              'systemd preflight tests',
+          )
+          text = text.replace('Worker:       5.4.0', 'Worker:       5.4.1')
+          text = text.replace('controller 2.2 / worker 5.4,', 'controller 2.2 / worker 5.4.1,')
+          text = text.replace('and the 5.4 engineering environment', 'and the 5.4.1 engineering environment')
           p.write_text(text, encoding='utf-8', newline='\n')
 
-          # Permanent Product Gate owns the regression after the temporary workflow is removed.
+          # Permanent Product Gate owns all incident regressions.
           p = Path('.github/workflows/ci.yml')
           text = p.read_text(encoding='utf-8')
           text = text.replace('Qwen 5.4 engineering worker regression', 'Qwen 5.4.1 engineering worker regression')
-          anchor = '            tool/kris_qwen_worker_v54.py \\\n'
-          if anchor not in text:
-              raise SystemExit('Product Gate v54 compile anchor missing')
-          text = text.replace(anchor, anchor + '            tool/kris_qwen_worker_v541.py \\\n', 1)
-          anchor = '            tool/kris_qwen_engineering_env_test.py\n'
-          if anchor not in text:
-              raise SystemExit('Product Gate engineering-test compile anchor missing')
-          text = text.replace(anchor, '            tool/kris_qwen_engineering_env_test.py \\\n            tool/kris_qwen_v541_test.py\n', 1)
-          marker = '          python tool/kris_qwen_engineering_env_test.py\n'
-          if marker not in text:
-              raise SystemExit('Product Gate engineering test run anchor missing')
-          text = text.replace(marker, marker + '          python tool/kris_qwen_v541_test.py\n', 1)
+          text = one(
+              text,
+              '            tool/kris_qwen_worker_v54.py \\\n',
+              '            tool/kris_qwen_worker_v54.py \\\n            tool/kris_qwen_worker_v541.py \\\n',
+              'ci compile v541',
+          )
+          text = one(
+              text,
+              '            tool/kris_qwen_engineering_env_test.py\n',
+              '            tool/kris_qwen_engineering_env_test.py \\\n            tool/kris_qwen_v541_test.py \\\n            tool/kris_qwen_control_token_redaction_test.py\n',
+              'ci compile incident tests',
+          )
+          text = one(
+              text,
+              '          python tool/kris_qwen_engineering_env_test.py\n',
+              '          python tool/kris_qwen_engineering_env_test.py\n          python tool/kris_qwen_v541_test.py\n          python tool/kris_qwen_control_token_redaction_test.py\n',
+              'ci run incident tests',
+          )
           text = text.replace('kris-qwen-v54-version.json', 'kris-qwen-v541-version.json')
           text = text.replace("value.get('scriptVersion') == '5.4.0'", "value.get('scriptVersion') == '5.4.1'")
           text = text.replace("endswith('kris_qwen_worker_v54.py')", "endswith('kris_qwen_worker_v541.py')")
           p.write_text(text, encoding='utf-8', newline='\n')
           PY
-      - name: Validate promoted 5.4.1 stable path
+      - name: Validate exact promoted runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -186,10 +203,12 @@ jobs:
             tool/kris_qwen_engineering_env_test.py \
             tool/kris_qwen_v541_test.py \
             tool/kris_qwen_control.py \
-            tool/kris_qwen_control.py.compat.py
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_token_redaction_test.py
           python tool/kris_qwen_v531_test.py
           python tool/kris_qwen_engineering_env_test.py
           python tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_control_token_redaction_test.py
           python tool/kris_qwen_control_test.py
           python tool/kris_qwen_control_compat_test.py
           python tool/kris_qwen_worker_v53.py version > "$RUNNER_TEMP/stable-v541.json"
@@ -200,15 +219,16 @@ jobs:
           assert str(value.get('path', '')).endswith('kris_qwen_worker_v541.py'), value
           PY
           ! grep -Fq 'PHONE CONTROL TOKEN (keep private):' tool/kris_qwen_control.py
-          ! grep -Fq 'print("The controller will print the control token below.")' run_my_server.py
+          ! grep -Fq 'controller.token, flush=True' tool/kris_qwen_control.py
           bash -n tool/install_kris_qwen_control_systemd.sh
+          bash -n tool/rotate_kris_qwen_control_token.sh
           test "$(python tool/kris_qwen_control.py.compat.py --version)" = '2.2.0'
-      - name: Remove temporary hotfix transports and regenerate exact source identity
+      - name: Remove transports and regenerate source identity
         shell: bash
         run: |
           set -euo pipefail
           rm -f tool/kris_qwen_control_secure.py tool/kris_qwen_control_secure_test.py
-          rm .github/workflows/qwen-v541-hotfix-validation.yml
+          rm -f .github/workflows/qwen-v541-hotfix-validation.yml
           rm .github/workflows/qwen-v541-finalize.yml
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
@@ -216,7 +236,7 @@ jobs:
           cmp -s "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
           python tool/p1a_text_eof_contract_test.py --project .
           git diff --check
-      - name: Publish only if branch did not move
+      - name: Publish CAS-safe final candidate
         shell: bash
         run: |
           set -euo pipefail
