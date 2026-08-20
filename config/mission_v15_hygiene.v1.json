@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "migration": {
+    "observedTotalBranchesAtCutoverStart": 56,
+    "maxTotalBranchesDuringMigration": 150,
+    "maxLegacyDebtBranchesDuringMigration": 25,
+    "maxActiveHelperBranches": 20,
+    "maxRuntimeTransactionBranchesDuringMigration": 5,
+    "runtimeTransactionBranchPrefix": "runtime/tx/",
+    "grandfatheredRuntimeTransactionBranches": [
+      "runtime/tx/p4-integrate-92-gen1",
+      "runtime/tx/p4-integrate-92-gen2",
+      "runtime/tx/p5-integrate-94-gen2",
+      "runtime/tx/p5-integrate-94-gen3",
+      "runtime/tx/p11-integrate-95-gen4"
+    ]
+  },
+  "branchCapacity": {
+    "softTotalBranchTarget": 80,
+    "hardNewBranchCreationCeiling": 150,
+    "enforcementScope": "NEW_BRANCH_CREATION_ONLY",
+    "genericPreflight": "REPORT_CAPACITY_DO_NOT_BLOCK_UNRELATED_EXECUTION"
+  },
+  "incidentCleanupExactBranches": [
+    "THIS_MUST_NOT_BE_CREATED",
+    "bad_probe_again",
+    "noop_should_not_exist"
+  ],
+  "runtimeAtomicity": {
+    "enforceFromGeneration": 545,
+    "runtimePathPrefix": "runtime/",
+    "eventPathPrefix": "runtime/events/"
+  },
+  "target": {
+    "longLivedCanonicalBranches": 15,
+    "activeHelperBranches": 20,
+    "temporaryValidationBranches": 5,
+    "legacyDebtBranches": 0,
+    "runtimeTransactionBranches": 0
+  },
+  "legacyDebtPatterns": [
+    "*-backup*",
+    "*-prestack-*",
+    "automation/*",
+    "ci/*",
+    "temp/*",
+    "validated/*",
+    "validation/*"
+  ],
+  "helperPattern": "agent/help/*"
+}

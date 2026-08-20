@@ -1,0 +1,30 @@
+{
+  "branch": "main",
+  "commit": "eddf1fdac3dd3412358a576e45b82e99528cfed4",
+  "evidence": [
+    "Pre-landing canonical Product PR #96 finalized candidate ec5086210a778b8a1be51f22b9cd81f735956034, tree 33bea41e73a68b30f1f17f09323824d81a6419d1.",
+    "Pre-landing workflow_dispatch product-gates run 31203644993 executed on exact candidate ec5086210a778b8a1be51f22b9cd81f735956034 and completed SUCCESS on Ubuntu, macOS, and Windows through formatter, fatal analysis, full Flutter tests, architecture/security validation, and native release builds.",
+    "SOURCE_MANIFEST.sha256 was materialized deterministically as the only generated-file change after the tested P7 product slice, producing finalized candidate ec5086210a778b8a1be51f22b9cd81f735956034.",
+    "Repository policy disallows merge commits and allows squash/rebase; PR #96 therefore squash-merged to protected main commit eddf1fdac3dd3412358a576e45b82e99528cfed4 with tree 33bea41e73a68b30f1f17f09323824d81a6419d1.",
+    "Post-landing main-push product-gates run 31205307906 executed on exact protected-main commit eddf1fdac3dd3412358a576e45b82e99528cfed4 and completed SUCCESS on Ubuntu, macOS, and Windows through formatter, fatal analysis, full Flutter tests, architecture/security validation, and native release builds.",
+    "Mission Execution 1.5 runtime generation 46 records EVT-00000046-LANDED_MAIN with accepted=false and supportPromotion=false; the parent P7 closure Work Order remains REVIEW."
+  ],
+  "mergeMethod": "squash",
+  "mergedMainCommit": "eddf1fdac3dd3412358a576e45b82e99528cfed4",
+  "mission": "MISSION-007",
+  "nextAction": "Remain in REVIEW. Complete the remaining independent review and roadmap acceptance/certification gates separately. Do not infer behavioral, platform, certification, release-support, production-readiness, or GA support from this source landing.",
+  "postLandingProductGatesRun": 31205307906,
+  "preLandingCandidateCommit": "ec5086210a778b8a1be51f22b9cd81f735956034",
+  "preLandingCandidateTree": "33bea41e73a68b30f1f17f09323824d81a6419d1",
+  "preLandingProductGatesRun": 31203644993,
+  "pullRequest": 96,
+  "recordedAt": "2026-08-07T18:22:00Z",
+  "schemaVersion": 1,
+  "sourceLanding": "LANDED_MAIN",
+  "status": "REVIEW",
+  "supportPromotion": false,
+  "task": "P7-001",
+  "tree": "33bea41e73a68b30f1f17f09323824d81a6419d1",
+  "workExecutionId": "WRK-20260807T182200Z-7a3f9c21",
+  "worker": "I"
+}

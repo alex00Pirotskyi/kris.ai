@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
-"""Runtime claim/helper coordination for autonomous mission workers.
+"""Runtime coordination for autonomous mission workers.
 
-A mission claim is the leadership/integration lock. A helper lease is a bounded
-write lock for one task on a separate branch. Helper leases are constrained by
-the mission delivery policy (the mission's maximum repository authority), never
-by another mission and never beyond their explicit allowedPaths.
-
-This tool is deterministic and local. Creation is only a proposal until the
-lease file is committed to the canonical mission-system branch with a normal
-fast-forward update, that branch is re-fetched, and validation passes again.
+Mission claims are leadership/integration authority. Helper leases are the
+backward-compatible v1 bounded write locks. Mission Execution 1.5 extends the
+same engine with Work Orders, scoped semaphore invariants and path-aware
+frontier reporting without adding a second runtime stack.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import fnmatch
 import json
 import pathlib
 import re
 import sys
 from typing import Any
 
-from mission_delivery_lib import load_latest_records, load_model, normalize_path
+from mission_delivery_lib import (
+    DeliveryError,
+    load_latest_records,
+    load_model,
+    normalize_path,
+    run_git,
+)
 
 ROOT = pathlib.Path("docs/roadmap/missions")
 CLAIMS = ROOT / "claims"
@@ -66,8 +69,64 @@ def prefixes_overlap(left: str, right: str) -> bool:
     return bool(a and b and (a == b or a.startswith(b + "/") or b.startswith(a + "/")))
 
 
+def _has_glob(value: str) -> bool:
+    return any(token in value for token in ("*", "?", "["))
+
+
+def _concrete_path_matches_pattern(path: str, pattern: str) -> bool:
+    """Match one concrete repository path against a segment-safe glob pattern.
+
+    ``fnmatch`` is applied one path segment at a time so ``*`` cannot cross a
+    directory boundary. A segment that is exactly ``**`` may consume zero or
+    more complete path segments. This matches the repository ownership syntax
+    without turning basename globs such as ``tool/test_center*.py`` into the
+    unrelated directory prefix ``tool/test_center/**``.
+    """
+    path_parts = normalize_path(path).split("/")
+    pattern_parts = normalize_path(pattern).split("/")
+    memo: dict[tuple[int, int], bool] = {}
+
+    def match(path_index: int, pattern_index: int) -> bool:
+        key = (path_index, pattern_index)
+        if key in memo:
+            return memo[key]
+        if pattern_index == len(pattern_parts):
+            result = path_index == len(path_parts)
+        else:
+            token = pattern_parts[pattern_index]
+            if token == "**":
+                if pattern_index == len(pattern_parts) - 1:
+                    result = True
+                else:
+                    result = any(
+                        match(next_index, pattern_index + 1)
+                        for next_index in range(path_index, len(path_parts) + 1)
+                    )
+            elif path_index >= len(path_parts):
+                result = False
+            else:
+                result = fnmatch.fnmatchcase(path_parts[path_index], token) and match(
+                    path_index + 1, pattern_index + 1
+                )
+        memo[key] = result
+        return result
+
+    return match(0, 0)
+
+
 def pattern_within(child: str, parent: str) -> bool:
-    cfx, pfx = static_prefix(child), static_prefix(parent)
+    child_normalized = normalize_path(child)
+    parent_normalized = normalize_path(parent)
+    # Concrete paths are the common authorization case. Match them against the
+    # actual parent glob rather than approximating the glob as a directory
+    # prefix. This is fail-closed across path separators.
+    if not _has_glob(child_normalized):
+        return _concrete_path_matches_pattern(child_normalized, parent_normalized)
+    # Pattern-vs-pattern containment remains deliberately conservative. Exact
+    # equality is safe; otherwise retain the historical static-prefix rule.
+    if child_normalized == parent_normalized:
+        return True
+    cfx, pfx = static_prefix(child_normalized), static_prefix(parent_normalized)
     return bool(cfx and pfx and (cfx == pfx or cfx.startswith(pfx + "/")))
 
 
@@ -105,7 +164,40 @@ def mission_maximum_patterns(model: dict[str, Any], mission: str) -> list[str]:
     return list(model["config"]["missionPathPolicies"][mission]["owned"])
 
 
-def validate_lease(lease: dict[str, Any], model: dict[str, Any], claims: dict[str, dict[str, Any]]) -> None:
+def verify_git_base(project: pathlib.Path, base_commit: str, base_tree: str) -> None:
+    """Bind a reservation to a real immutable Git commit/tree."""
+    if not re.fullmatch(r"[0-9a-f]{40}", str(base_commit)):
+        raise ValueError("helper baseCommit must be a full lowercase Git object id")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(base_tree)):
+        raise ValueError("helper baseTree must be a full lowercase Git object id")
+    try:
+        run_git(project, "cat-file", "-e", f"{base_commit}^{{commit}}")
+        actual_tree = run_git(project, "rev-parse", f"{base_commit}^{{tree}}")
+    except DeliveryError as exc:
+        raise ValueError(f"helper baseCommit does not resolve to a commit: {base_commit}") from exc
+    if actual_tree != base_tree:
+        raise ValueError(
+            f"helper baseCommit/baseTree mismatch: {base_commit} -> {actual_tree}, recorded {base_tree}"
+        )
+
+
+def verify_candidate_ancestry(project: pathlib.Path, base_commit: str, candidate_head: str) -> None:
+    """Require a helper/integration candidate to descend from its reserved base."""
+    try:
+        run_git(project, "cat-file", "-e", f"{candidate_head}^{{commit}}")
+        run_git(project, "merge-base", "--is-ancestor", base_commit, candidate_head)
+    except DeliveryError as exc:
+        raise ValueError(
+            f"candidate {candidate_head} does not descend from reserved base {base_commit}"
+        ) from exc
+
+
+def validate_lease(
+    lease: dict[str, Any],
+    model: dict[str, Any],
+    claims: dict[str, dict[str, Any]],
+    project: pathlib.Path | None = None,
+) -> None:
     required = {
         "schemaVersion", "leaseId", "mission", "task", "ownerWorker", "helperWorker",
         "workExecutionId", "branch", "baseCommit", "baseTree", "allowedPaths", "status",
@@ -130,6 +222,8 @@ def validate_lease(lease: dict[str, Any], model: dict[str, Any], claims: dict[st
         raise ValueError(f"helper lease is stale relative to durable claim head for {mission}")
     if lease["status"] not in ACTIVE | FINAL:
         raise ValueError(f"unsupported helper lease status: {lease['status']}")
+    if lease["status"] == "ACTIVE" and lease.get("branch") == claim.get("branch"):
+        raise ValueError("active helper lease must use a branch separate from the mission owner branch")
     allowed = lease.get("allowedPaths") or []
     if not allowed:
         raise ValueError("helper lease allowedPaths must be non-empty")
@@ -140,23 +234,40 @@ def validate_lease(lease: dict[str, Any], model: dict[str, Any], claims: dict[st
     created, refreshed, expires = map(parse_time, (lease["createdAt"], lease["refreshedAt"], lease["expiresAt"]))
     if refreshed < created or expires <= refreshed:
         raise ValueError("helper lease timestamp ordering is invalid")
+    if project is not None:
+        verify_git_base(project, lease["baseCommit"], lease["baseTree"])
 
 
-def active_leases(project: pathlib.Path, model: dict[str, Any], claims: dict[str, dict[str, Any]], now: dt.datetime | None = None) -> list[dict[str, Any]]:
+def active_leases(
+    project: pathlib.Path,
+    model: dict[str, Any],
+    claims: dict[str, dict[str, Any]],
+    now: dt.datetime | None = None,
+) -> list[dict[str, Any]]:
     now = now or utc_now()
     active: list[dict[str, Any]] = []
+    branches: dict[str, str] = {}
     for lease in load_leases(project):
-        validate_lease(lease, model, claims)
+        validate_lease(lease, model, claims, project)
         if lease["status"] == "ACTIVE" and parse_time(lease["expiresAt"]) > now:
+            branch = lease["branch"]
+            prior = branches.get(branch)
+            if prior is not None:
+                raise ValueError(
+                    f"active helper branch reused by multiple leases: {branch} ({prior}, {lease['leaseId']})"
+                )
+            branches[branch] = lease["leaseId"]
             active.append(lease)
     for index, left in enumerate(active):
-        for right in active[index + 1 :]:
+        for right in active[index + 1:]:
             if left["mission"] != right["mission"]:
                 continue
             for a in left["allowedPaths"]:
                 for b in right["allowedPaths"]:
                     if prefixes_overlap(a, b):
-                        raise ValueError(f"active helper collision: {left['leaseId']} {a} vs {right['leaseId']} {b}")
+                        raise ValueError(
+                            f"active helper collision: {left['leaseId']} {a} vs {right['leaseId']} {b}"
+                        )
     return active
 
 
@@ -174,6 +285,21 @@ def helper_path(project: pathlib.Path, mission: str, lease_id: str) -> pathlib.P
     return project / LEASES / mission / f"{lease_id}.json"
 
 
+def _dependency_state(
+    project: pathlib.Path,
+    model: dict[str, Any],
+    task_id: str,
+) -> tuple[list[str], dict[str, dict[str, Any]]]:
+    """Backward-compatible acceptance dependency view used by frontier reporting."""
+    latest = load_latest_records(project, model)
+    missing = [
+        dep
+        for dep in model["tasks"][task_id].get("dependencies", [])
+        if latest.get(dep, {}).get("status") not in ACCEPTED
+    ]
+    return missing, latest
+
+
 def create_helper(project: pathlib.Path, args: argparse.Namespace) -> pathlib.Path:
     runtime = validate_runtime(project)
     model, claims = runtime["model"], runtime["claims"]
@@ -182,6 +308,11 @@ def create_helper(project: pathlib.Path, args: argparse.Namespace) -> pathlib.Pa
         raise ValueError(f"mission is not durably claimed: {args.mission}")
     if args.task not in model["tasks"] or model["tasks"][args.task].get("mission") != args.mission:
         raise ValueError(f"task {args.task} does not belong to {args.mission}")
+    if args.branch == claim.get("branch"):
+        raise ValueError("helper branch must be separate from the durable mission owner branch")
+    if any(lease["branch"] == args.branch for lease in runtime["leases"]):
+        raise ValueError(f"helper branch already has an active lease: {args.branch}")
+    verify_git_base(project, args.base_commit, args.base_tree)
     target = helper_path(project, args.mission, args.lease_id)
     if target.exists():
         raise ValueError(f"helper lease already exists: {target.relative_to(project)}")
@@ -205,14 +336,16 @@ def create_helper(project: pathlib.Path, args: argparse.Namespace) -> pathlib.Pa
         "parentClaimHead": claim.get("head"),
         "nextAction": args.next_action,
     }
-    validate_lease(lease, model, claims)
+    validate_lease(lease, model, claims, project)
     for existing in runtime["leases"]:
         if existing["mission"] != args.mission:
             continue
         for left in lease["allowedPaths"]:
             for right in existing["allowedPaths"]:
                 if prefixes_overlap(left, right):
-                    raise ValueError(f"requested helper path collides with {existing['leaseId']}: {left} vs {right}")
+                    raise ValueError(
+                        f"requested helper path collides with {existing['leaseId']}: {left} vs {right}"
+                    )
     write_json(target, lease)
     return target
 
@@ -233,9 +366,21 @@ def mutate_helper(project: pathlib.Path, args: argparse.Namespace, status: str |
         lease["status"] = status
         lease["expiresAt"] = iso(now + dt.timedelta(seconds=1))
         lease["nextAction"] = args.next_action
-    validate_lease(lease, runtime["model"], runtime["claims"])
+    validate_lease(lease, runtime["model"], runtime["claims"], project)
     write_json(target, lease)
     return target
+
+
+def matching_helper_leases(
+    leases: list[dict[str, Any]],
+    mission: str,
+    branch: str,
+) -> list[dict[str, Any]]:
+    return [
+        lease
+        for lease in leases
+        if lease.get("mission") == mission and lease.get("branch") == branch
+    ]
 
 
 def frontier(project: pathlib.Path) -> dict[str, Any]:
@@ -243,7 +388,15 @@ def frontier(project: pathlib.Path) -> dict[str, Any]:
     model, claims, leases = runtime["model"], runtime["claims"], runtime["leases"]
     latest = load_latest_records(project, model)
     priorities = model["config"].get("priorityOrder", {})
-    leased = {(lease["mission"], lease["task"]) for lease in leases}
+    scopes: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for lease in leases:
+        scopes.setdefault((lease["mission"], lease["task"]), []).append(
+            {
+                "leaseId": lease["leaseId"],
+                "branch": lease["branch"],
+                "allowedPaths": list(lease["allowedPaths"]),
+            }
+        )
     rows = []
     for task in model["tasks"].values():
         mission = task["mission"]
@@ -251,28 +404,44 @@ def frontier(project: pathlib.Path) -> dict[str, Any]:
         status = record.get("status", "NOT_EVALUATED")
         if status in ACCEPTED:
             continue
-        missing = [dep for dep in task.get("dependencies", []) if latest.get(dep, {}).get("status") not in ACCEPTED]
+        missing = [
+            dep
+            for dep in task.get("dependencies", [])
+            if latest.get(dep, {}).get("status") not in ACCEPTED
+        ]
         if missing:
             continue
         claim = claims.get(mission)
-        helper_busy = (mission, task["id"]) in leased
+        active_scopes = scopes.get((mission, task["id"]), [])
         priority = model["missions"][mission].get("priority")
-        rows.append({
-            "mission": mission,
-            "task": task["id"],
-            "title": task.get("title"),
-            "status": status,
-            "claimed": bool(claim),
-            "claimWorker": claim.get("worker") if claim else None,
-            "helperLeaseActive": helper_busy,
-            "action": "HELPER_CANDIDATE" if claim and not helper_busy else ("MISSION_CLAIM_CANDIDATE" if not claim else "OWNER_CONTINUE"),
-            "priority": priority,
-            "priorityOrder": priorities.get(priority, 999),
-        })
+        if not claim:
+            action = "MISSION_CLAIM_CANDIDATE"
+        elif active_scopes:
+            action = "HELPER_CANDIDATE_ADDITIONAL_NON_OVERLAPPING_SCOPE"
+        else:
+            action = "HELPER_CANDIDATE"
+        rows.append(
+            {
+                "mission": mission,
+                "task": task["id"],
+                "title": task.get("title"),
+                "status": status,
+                "claimed": bool(claim),
+                "claimWorker": claim.get("worker") if claim else None,
+                "activeHelperScopes": active_scopes,
+                "action": action,
+                "priority": priority,
+                "priorityOrder": priorities.get(priority, 999),
+            }
+        )
     rows.sort(key=lambda row: (row["priorityOrder"], row["mission"], row["task"]))
     return {
-        "schemaVersion": 1,
-        "meaning": "Dependency-satisfied roadmap tasks from durable records; live Git/CI/ownership still must be re-resolved before writes.",
+        "schemaVersion": 2,
+        "meaning": (
+            "Dependency-satisfied roadmap tasks from durable records. "
+            "Active helper scopes are path reservations, not whole-task occupancy. "
+            "Live Git/CI/ownership must still be re-resolved before writes."
+        ),
         "activeClaimCount": len(claims),
         "activeHelperLeaseCount": len(leases),
         "candidateCount": len(rows),
@@ -304,13 +473,19 @@ def main() -> int:
         item.add_argument("--mission", required=True)
         item.add_argument("--helper-worker", required=True)
         item.add_argument("--hours", type=int, default=4)
-        item.add_argument("--next-action", default="Re-resolve live state and continue the highest-priority safe action.")
+        item.add_argument(
+            "--next-action",
+            default="Re-resolve live state and continue the highest-priority safe action.",
+        )
     args = parser.parse_args()
     project = pathlib.Path(args.project).resolve()
     try:
         if args.command == "validate":
             runtime = validate_runtime(project)
-            print(f"MISSION_RUNTIME_VALID claims={len(runtime['claims'])} active_helper_leases={len(runtime['leases'])}")
+            print(
+                f"MISSION_RUNTIME_VALID claims={len(runtime['claims'])} "
+                f"active_helper_leases={len(runtime['leases'])}"
+            )
         elif args.command == "next-work":
             print(json.dumps(frontier(project), indent=2, sort_keys=True))
         elif args.command == "helper-create":

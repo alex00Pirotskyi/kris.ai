@@ -1,0 +1,55 @@
+name: Mission V1.5 Governance Drift
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      runtime_ref:
+        description: Mission runtime branch
+        required: false
+        default: agent/mission-runtime
+        type: string
+      threshold:
+        description: Maximum governance-only additions for product Work Orders
+        required: false
+        default: '200'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Fetch runtime and all branches
+        shell: bash
+        run: |
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
+          git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
+      - name: Enforce Work-Order-aware governance budget
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          python tool/mission_v15_governance_drift.py \
+            --repository-project . \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --base '${{ github.event.pull_request.base.sha }}' \
+            --head '${{ github.event.pull_request.head.sha }}' \
+            --head-branch '${{ github.head_ref }}' \
+            --threshold '${{ github.event.inputs.threshold || '200' }}' \
+            --output "$RUNNER_TEMP/governance-drift.json"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: mission-v15-governance-drift-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/governance-drift.json

@@ -1,0 +1,86 @@
+name: Mission V1.5 Helper Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact helper candidate commit
+        required: true
+        type: string
+      base_branch:
+        description: Canonical Product PR branch
+        required: true
+        type: string
+      head_branch:
+        description: Helper branch
+        required: true
+        type: string
+      runtime_ref:
+        description: Mission runtime branch
+        required: false
+        default: agent/mission-runtime
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  helper-scope:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'agent/help/')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.candidate_sha || github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Resolve exact helper identity
+        id: helper
+        shell: bash
+        run: |
+          expected='${{ github.event.inputs.candidate_sha || github.event.pull_request.head.sha }}'
+          test "$(git rev-parse HEAD)" = "$expected"
+          echo "sha=$expected" >> "$GITHUB_OUTPUT"
+          echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+          echo "base_branch=${{ github.event.inputs.base_branch || github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          echo "head_branch=${{ github.event.inputs.head_branch || github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+      - name: Fetch Mission Execution runtime
+        shell: bash
+        run: |
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
+          git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
+      - name: Validate Work Order and WRITE semaphore authority
+        shell: bash
+        run: |
+          python tool/mission_v15_helper_validate.py \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --repository-project . \
+            --base-branch '${{ steps.helper.outputs.base_branch }}' \
+            --head-branch '${{ steps.helper.outputs.head_branch }}' \
+            --candidate-commit '${{ steps.helper.outputs.sha }}' \
+            --candidate-tree '${{ steps.helper.outputs.tree }}' \
+            --output "$RUNNER_TEMP/helper-authority.json"
+      - name: Generate source manifest twice without requiring committed equality
+        shell: bash
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/committed-manifest"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/generated-first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/generated-first" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/generated-source-manifest.sha256"
+          cp "$RUNNER_TEMP/committed-manifest" SOURCE_MANIFEST.sha256
+      - name: Verify helper gate is non-mutating
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-v15-helper-${{ steps.helper.outputs.sha }}
+          path: |
+            ${{ runner.temp }}/helper-authority.json
+            ${{ runner.temp }}/generated-source-manifest.sha256

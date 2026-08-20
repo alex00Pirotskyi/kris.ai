@@ -1,0 +1,32 @@
+{
+  "expectedJobs": [
+    {
+      "id": 94280025064,
+      "name": "validate-ubuntu"
+    },
+    {
+      "id": 94280025058,
+      "name": "validate-windows"
+    },
+    {
+      "id": 94280025041,
+      "name": "validate-macos"
+    }
+  ],
+  "landingBaseCommit": "74e242ce1427f76a0c2031264fe8acd4919394bf",
+  "landingSemaphoreId": "SEM-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1",
+  "landingWorkOrderId": "WO-P6-001-CURRENT-MAIN-LANDING-B6E4C9A1",
+  "mergedMainCommit": "3cdae267902d467126ed637c22f05a802cb8f739",
+  "mergedMainTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
+  "mission": "MISSION-006",
+  "productGatesRun": 31646142828,
+  "productPr": 76,
+  "requestId": "REQ-P6-001-3CDAE267-B6E4C9A1",
+  "runtimeCommit": "e19a35b2a5faf37867316ae27ff7020cffdde545",
+  "runtimeGeneration": 545,
+  "schemaVersion": 1,
+  "sourceBranch": "agent/g/mission-006-model-routing",
+  "sourceCommit": "7b00b83c8f2dbfbb9865ae7a76f402acf4ff4f29",
+  "sourceTree": "0d5f19883612fba07c61ed537749dbdaa00c3692",
+  "task": "P6-001"
+}

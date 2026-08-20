@@ -1,0 +1,130 @@
+name: Mission V1.5 Runtime Invariants
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mission-v15-connector-authority-relay.yml'
+      - 'tool/mission_runtime_control.py'
+      - 'tool/mission_runtime_model.py'
+      - 'tool/mission_orchestrator.py'
+      - 'tool/mission_delivery_strict.py'
+      - 'tool/mission_review_carry_forward.py'
+      - 'tool/mission_v15_authority_append.py'
+      - 'tool/mission_v15_authority_test.py'
+      - 'tool/mission_v15_connector_authority_apply.py'
+      - 'tool/mission_v15_connector_json_authority_apply.py'
+      - 'tool/mission_v15_connector_json_authority_test.py'
+      - 'tool/mission_v15_exact_product_ci_dispatch.py'
+      - 'tool/mission_v15_exact_product_ci_dispatch_test.py'
+      - 'tool/mission_v15_legacy_branch_reap.py'
+      - 'tool/mission_v15_legacy_branch_reap_test.py'
+      - 'tool/mission_v15_release_validator_policy_apply.py'
+      - 'tool/mission_v15_release_validator_policy_test.py'
+      - 'tool/mission_v15_source_manifest_release_apply.py'
+      - 'tool/mission_v15_source_manifest_release_test.py'
+      - 'tool/mission_v15_runtime_atomicity.py'
+      - 'tool/mission_v15_runtime_atomicity_test.py'
+      - 'tool/mission_v15_governance_drift.py'
+      - 'tool/mission_v15_helper_validate.py'
+      - 'tool/mission_v15_hygiene.py'
+      - 'tool/mission_v15_landing_gate.py'
+      - 'tool/mission_v15_landing_test.py'
+      - 'tool/mission_v15_live_runtime_audit.py'
+      - 'tool/mission_v15_product_gate.py'
+      - 'tool/mission_v15_regression_test.py'
+      - 'tool/mission_v15_scale_test.py'
+      - 'tool/mission_v15_supersession_invariant.py'
+      - 'tool/mission_v15_supersession_test.py'
+      - 'schemas/mission_*'
+      - 'config/mission_v15_*.json'
+      - 'docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md'
+      - 'docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md'
+      - 'docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-invariants:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Assert exact source head
+        shell: bash
+        run: |
+          expected='${{ github.event.pull_request.head.sha || github.sha }}'
+          test "$(git rev-parse HEAD)" = "$expected"
+      - name: Compile all Mission Execution 1.5 controls
+        run: >-
+          python -m py_compile
+          tool/mission_runtime_control.py
+          tool/mission_runtime_model.py
+          tool/mission_orchestrator.py
+          tool/mission_delivery_strict.py
+          tool/mission_review_carry_forward.py
+          tool/mission_v15_authority_append.py
+          tool/mission_v15_authority_test.py
+          tool/mission_v15_connector_authority_apply.py
+          tool/mission_v15_connector_json_authority_apply.py
+          tool/mission_v15_connector_json_authority_test.py
+          tool/mission_v15_exact_product_ci_dispatch.py
+          tool/mission_v15_exact_product_ci_dispatch_test.py
+          tool/mission_v15_legacy_branch_reap.py
+          tool/mission_v15_legacy_branch_reap_test.py
+          tool/mission_v15_release_validator_policy_apply.py
+          tool/mission_v15_release_validator_policy_test.py
+          tool/mission_v15_source_manifest_release_apply.py
+          tool/mission_v15_source_manifest_release_test.py
+          tool/mission_v15_runtime_atomicity.py
+          tool/mission_v15_runtime_atomicity_test.py
+          tool/mission_v15_governance_drift.py
+          tool/mission_v15_helper_validate.py
+          tool/mission_v15_hygiene.py
+          tool/mission_v15_landing_gate.py
+          tool/mission_v15_landing_test.py
+          tool/mission_v15_live_runtime_audit.py
+          tool/mission_v15_product_gate.py
+          tool/mission_v15_regression_test.py
+          tool/mission_v15_scale_test.py
+          tool/mission_v15_supersession_invariant.py
+          tool/mission_v15_supersession_test.py
+      - name: Run runtime/review negative regressions
+        run: python tool/mission_v15_regression_test.py
+      - name: Run shared-authority adversarial regressions
+        run: python tool/mission_v15_authority_test.py
+      - name: Run explicit JSON authority regressions
+        run: python tool/mission_v15_connector_json_authority_test.py
+      - name: Run exact Product PR CI dispatch regressions
+        run: python tool/mission_v15_exact_product_ci_dispatch_test.py
+      - name: Run legacy branch reaper regressions
+        run: python tool/mission_v15_legacy_branch_reap_test.py
+      - name: Run release-validator policy regressions
+        run: python tool/mission_v15_release_validator_policy_test.py
+      - name: Run source-manifest RELEASE regressions
+        run: python tool/mission_v15_source_manifest_release_test.py
+      - name: Run runtime atomicity regressions
+        run: python tool/mission_v15_runtime_atomicity_test.py
+      - name: Run source-landing semantic regressions
+        run: python tool/mission_v15_landing_test.py
+      - name: Run concurrency/dispatch regressions
+        run: python tool/mission_v15_scale_test.py
+      - name: Run Work Order supersession regressions
+        run: python tool/mission_v15_supersession_test.py
+      - name: Validate legacy runtime compatibility
+        run: python tool/mission_runtime_control.py --project . validate
+      - name: Validate strict delivery
+        run: python tool/mission_delivery_strict.py --project . validate
+      - name: Verify non-mutation
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"

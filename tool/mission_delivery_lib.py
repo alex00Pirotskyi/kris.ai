@@ -33,7 +33,9 @@ REGISTRY = pathlib.Path("docs/roadmap/missions/MISSION_REGISTRY.json")
 TASKS = pathlib.Path("docs/roadmap/missions/ROADMAP_TASK_ASSIGNMENT.json")
 INTERLOCKS = pathlib.Path("docs/roadmap/missions/MISSION_INTERLOCKS.json")
 MISSION_CONFIG = pathlib.Path("config/mission_execution.v1.json")
-WORK_ID_RE = re.compile(r"^WRK-\d{8}T\d{6}Z-[0-9a-f]{8}$")
+# Historical append-only records may contain uppercase hex suffixes; new IDs
+# remain lowercase-canonical because execution_id() uses hashlib.hexdigest().
+WORK_ID_RE = re.compile(r"^WRK-\d{8}T\d{6}Z-[0-9a-fA-F]{8}$")
 TASK_ID_RE = re.compile(r"^P\d+-\d+$")
 MISSION_ID_RE = re.compile(r"^MISSION-\d{3}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")

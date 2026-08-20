@@ -1,0 +1,81 @@
+name: Mission V1.5 Product Integration
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact Product PR candidate commit
+        required: true
+        type: string
+      product_pr:
+        description: Canonical Product PR number
+        required: true
+        type: string
+      runtime_ref:
+        description: Mission runtime branch
+        required: false
+        default: agent/mission-runtime
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  product-integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.candidate_sha || github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Resolve exact candidate identity
+        id: candidate
+        shell: bash
+        run: |
+          expected='${{ github.event.inputs.candidate_sha || github.event.pull_request.head.sha || github.sha }}'
+          test "$(git rev-parse HEAD)" = "$expected"
+          echo "sha=$expected" >> "$GITHUB_OUTPUT"
+          echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+          echo "product_pr=${{ github.event.inputs.product_pr || github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+      - name: Fetch Mission Execution runtime and product refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
+          git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
+      - name: Validate canonical Product PR and runtime state
+        shell: bash
+        run: |
+          python tool/mission_v15_product_gate.py \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --repository-project . \
+            --product-pr '${{ steps.candidate.outputs.product_pr }}' \
+            --candidate-commit '${{ steps.candidate.outputs.sha }}' \
+            --candidate-tree '${{ steps.candidate.outputs.tree }}' \
+            --output "$RUNNER_TEMP/product-gate.json"
+      - name: Validate delivery truth
+        run: python tool/mission_delivery_strict.py --project . validate
+      - name: Generate source manifest twice
+        shell: bash
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.committed"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.candidate"
+          cp "$RUNNER_TEMP/source-manifest.committed" SOURCE_MANIFEST.sha256
+      - name: Verify non-mutation
+        shell: bash
+        run: test -z "$(git status --porcelain=v1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-v15-product-integration-${{ steps.candidate.outputs.sha }}
+          path: |
+            ${{ runner.temp }}/product-gate.json
+            ${{ runner.temp }}/source-manifest.candidate

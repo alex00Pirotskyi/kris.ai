@@ -1,0 +1,99 @@
+name: Mission V1.5 Hygiene
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mission-v15-hygiene.yml'
+      - 'config/mission_v15_hygiene.v1.json'
+      - 'tool/mission_v15_hygiene.py'
+      - 'tool/mission_v15_live_runtime_audit.py'
+      - 'tool/mission_v15_live_runtime_audit_test.py'
+      - 'tool/mission_v15_runtime_atomicity.py'
+      - 'tool/mission_v15_supersession_invariant.py'
+      - 'tool/mission_v15_supersession_test.py'
+      - 'tool/mission_runtime_model.py'
+      - 'docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md'
+      - 'docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md'
+      - 'runtime/**'
+  push:
+    branches:
+      - agent/mission-runtime
+    paths:
+      - '.github/workflows/mission-v15-hygiene.yml'
+      - 'tool/mission_v15_live_runtime_audit.py'
+      - 'tool/mission_v15_live_runtime_audit_test.py'
+      - 'tool/mission_v15_supersession_invariant.py'
+      - 'tool/mission_v15_supersession_test.py'
+      - 'runtime/**'
+  workflow_dispatch:
+    inputs:
+      runtime_ref:
+        description: Mission runtime branch
+        required: false
+        default: agent/mission-runtime
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Fetch branches, immutable PR heads and runtime
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            '+refs/heads/*:refs/remotes/origin/*' \
+            '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
+          runtime_ref='${{ github.event.inputs.runtime_ref || 'agent/mission-runtime' }}'
+          git worktree add --detach "$RUNNER_TEMP/mission-runtime" "refs/remotes/origin/$runtime_ref"
+      - name: Run immutable Product-head resolution regressions
+        shell: bash
+        run: python tool/mission_v15_live_runtime_audit_test.py
+      - name: Run Work Order supersession regressions
+        shell: bash
+        run: python tool/mission_v15_supersession_test.py
+      - name: Audit branch growth and runtime hygiene
+        shell: bash
+        run: |
+          python tool/mission_v15_hygiene.py \
+            --repository-project . \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --config config/mission_v15_hygiene.v1.json \
+            --output "$RUNNER_TEMP/hygiene.json"
+      - name: Reject runtime and Product PR divergence
+        shell: bash
+        run: |
+          python tool/mission_v15_live_runtime_audit.py \
+            --repository-project . \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --output "$RUNNER_TEMP/live-runtime.json"
+      - name: Audit runtime generation atomicity
+        shell: bash
+        run: |
+          python tool/mission_v15_runtime_atomicity.py \
+            --runtime-project "$RUNNER_TEMP/mission-runtime" \
+            --config config/mission_v15_hygiene.v1.json \
+            --output "$RUNNER_TEMP/runtime-atomicity.json"
+      - name: Audit Work Order supersession integrity
+        shell: bash
+        run: |
+          python tool/mission_v15_supersession_invariant.py \
+            --project "$RUNNER_TEMP/mission-runtime" \
+            --output "$RUNNER_TEMP/supersession.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-v15-hygiene
+          path: |
+            ${{ runner.temp }}/hygiene.json
+            ${{ runner.temp }}/live-runtime.json
+            ${{ runner.temp }}/runtime-atomicity.json
+            ${{ runner.temp }}/supersession.json

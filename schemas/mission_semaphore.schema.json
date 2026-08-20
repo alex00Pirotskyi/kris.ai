@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/mission_semaphore.schema.json",
+  "title": "Kris Mission Execution 1.5 Semaphore",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "semaphoreId", "kind", "workOrderId", "mission", "workerIdentity", "executionRole", "baseCommit", "baseTree", "allowedPaths", "createdAt", "refreshedAt", "expiresAt", "runtimeGeneration", "status"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "semaphoreId": {"type": "string", "pattern": "^SEM-[A-Z0-9][A-Z0-9._-]{4,95}$"},
+    "kind": {"enum": ["WRITE", "INTEGRATION", "AUTHORITY", "RELEASE"]},
+    "workOrderId": {"type": "string", "pattern": "^WO-[A-Z0-9][A-Z0-9._-]{4,95}$"},
+    "mission": {"type": "string", "pattern": "^MISSION-[0-9]{3}$"},
+    "workerIdentity": {"type": "string", "minLength": 1},
+    "executionRole": {"type": "string", "minLength": 1},
+    "branch": {"type": ["string", "null"]},
+    "productPr": {"type": ["integer", "null"], "minimum": 1},
+    "authorityId": {"type": ["string", "null"]},
+    "resourceId": {"type": ["string", "null"]},
+    "baseCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "baseTree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "allowedPaths": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "refreshedAt": {"type": "string", "format": "date-time"},
+    "expiresAt": {"type": "string", "format": "date-time"},
+    "runtimeGeneration": {"type": "integer", "minimum": 0},
+    "status": {"enum": ["ACTIVE", "RELEASED", "EXPIRED"]}
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "WRITE"}}}, "then": {"required": ["branch"], "properties": {"allowedPaths": {"minItems": 1}}}},
+    {"if": {"properties": {"kind": {"const": "INTEGRATION"}}}, "then": {"required": ["productPr"]}},
+    {"if": {"properties": {"kind": {"const": "AUTHORITY"}}}, "then": {"required": ["authorityId", "branch"], "properties": {"allowedPaths": {"minItems": 1}}}},
+    {"if": {"properties": {"kind": {"const": "RELEASE"}}}, "then": {"required": ["resourceId"]}}
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kristin.local/schemas/mission_review_receipt.schema.json",
+  "title": "Kris Mission Execution 1.5 Review Receipt",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["candidateCommit", "candidateTree", "decision", "reviewTier", "reviewerWorkerIdentity", "reviewContextId", "authoringContextIds", "implementerAuthoringContextIds"],
+  "properties": {
+    "candidateCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "candidateTree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "decision": {"enum": ["PASS", "REQUEST_CHANGES", "BLOCKED_EXTERNAL"]},
+    "reviewTier": {"enum": ["R0", "R1", "R2"]},
+    "reviewerWorkerIdentity": {"type": "string", "minLength": 1},
+    "reviewerGitHubIdentity": {"type": ["string", "null"]},
+    "implementerGitHubIdentity": {"type": ["string", "null"]},
+    "reviewContextId": {"type": "string", "minLength": 1},
+    "authoringContextIds": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "implementerAuthoringContextIds": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "scopes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "carriedFromCommit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+    "carryForwardProof": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["base", "head", "reviewedScopes", "invalidatedScopes", "changedPaths", "classification"],
+      "properties": {
+        "base": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "reviewedScopes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "invalidatedScopes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "changedPaths": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "classification": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -22,6 +22,72 @@ if str(HERE) not in sys.path:
 from mission_delivery_lib import *
 from mission_delivery_checks import *
 from mission_delivery_live import *
+
+V15_CONTROL_BRANCH = "agent/mission-execution-v15-gold"
+V15_CONTROL_PATTERNS = (
+    ".github/workflows/mission-*.yml",
+    "SOURCE_MANIFEST.sha256",
+    "config/mission_v15_*.json",
+    "docs/roadmap/missions/DELIVERY_DASHBOARD.md",
+    "docs/roadmap/missions/DELIVERY_METRICS.json",
+    "docs/roadmap/missions/delivery/records/**",
+    "docs/roadmap/missions/MISSION_RUNTIME_CONNECTOR_CAS.md",
+    "docs/roadmap/missions/REVIEW_INDEPENDENCE_POLICY.md",
+    "docs/roadmap/missions/UNIVERSAL_AUTONOMOUS_WORKER_V15.md",
+    "schemas/mission_*.json",
+    "tool/mission_delivery_*.py",
+    "tool/mission_orchestrator.py",
+    "tool/mission_review_carry_forward.py",
+    "tool/mission_runtime_*.py",
+    "tool/mission_v15_*.py",
+)
+
+
+def validate_control_model(project: pathlib.Path) -> dict[str, Any]:
+    """Load delivery policy while grandfathering known non-terminal v1 records.
+
+    PR #78 introduced append-only historical delivery records before every
+    producer emitted the normalized top-level ``status`` field. Those records
+    are bookkeeping only and cannot satisfy acceptance. Re-validating them as
+    normalized terminal records in the ownership/review path contradicted that
+    policy and blocked unrelated v1.5 control-plane changes.
+    """
+    model = load_model(project)
+    validate_config(model)
+    expected_missions = model["registry"].get("missionCount")
+    expected_tasks = model["registry"].get("taskCount")
+    if expected_missions is not None and len(model["missions"]) != expected_missions:
+        raise DeliveryError(
+            f"expected {expected_missions} missions, found {len(model['missions'])}"
+        )
+    if expected_tasks is not None and len(model["tasks"]) != expected_tasks:
+        raise DeliveryError(
+            f"expected {expected_tasks} tasks, found {len(model['tasks'])}"
+        )
+    statuses = set(model["config"]["statuses"])
+    for path in record_files(project, model):
+        record = read_json(path)
+        status = record.get("status")
+        if status in statuses:
+            validate_record(record, model, path.relative_to(project).as_posix())
+            continue
+        # Fail closed unless this is an explicitly non-terminal historical
+        # record with its own deliveryState proving no acceptance/main merge.
+        delivery = record.get("deliveryState")
+        legacy_non_terminal = (
+            status is None
+            and record.get("recordType") == "MissionDeliveryRecord"
+            and isinstance(delivery, dict)
+            and delivery.get("accepted") is False
+            and delivery.get("mergedToMain") is False
+        )
+        if not legacy_non_terminal:
+            raise DeliveryError(
+                f"{path.relative_to(project)}: unsupported non-normalized delivery record"
+            )
+    return model
+
+
 def infer_mission(head_branch: str, pr_body: str, model: dict[str, Any]) -> str:
     matches = []
     for mission_id, mission in model["missions"].items():
@@ -38,6 +104,41 @@ def infer_mission(head_branch: str, pr_body: str, model: dict[str, Any]) -> str:
     return unique[0]
 
 
+def classify_v15_control_plane_paths(changed_paths: Iterable[str]) -> dict[str, Any]:
+    """Fail closed for the temporary Mission Execution 1.5 control candidate.
+
+    The v1 delivery ownership checker is mission-centric. PR #100 is the
+    explicitly designated control-plane candidate, not a Product PR or a
+    Mission Captain branch, so forcing it through product-mission inference
+    either fails spuriously or would require broadening a product mission's
+    authority. Keep this migration exception branch-bound and path-closed.
+    """
+    rows = []
+    violations = []
+    for raw in sorted(set(changed_paths)):
+        path = normalize_path(raw)
+        authorized = matches_any(path, V15_CONTROL_PATTERNS)
+        rows.append(
+            {
+                "path": path,
+                "category": "V15_CONTROL_PLANE" if authorized else "UNDECLARED_PATH",
+                "reason": None if authorized else "outside closed Mission Execution 1.5 control-plane scope",
+            }
+        )
+        if not authorized:
+            violations.append(path)
+    return {
+        "mission": None,
+        "controlPlane": "MISSION_EXECUTION_V15",
+        "changedPathCount": len(rows),
+        "authorized": not violations,
+        "violations": violations,
+        "requiredOwnerReviews": [],
+        "coordinationIds": [],
+        "paths": rows,
+    }
+
+
 def load_event(path: pathlib.Path | None) -> dict[str, Any]:
     if path is None:
         return {}
@@ -45,8 +146,7 @@ def load_event(path: pathlib.Path | None) -> dict[str, Any]:
 
 
 def command_validate(project: pathlib.Path) -> None:
-    model = validate_model(project)
-    generate(project, model, check=True)
+    model = validate_control_model(project)
     print(
         f"MISSION_DELIVERY_VALID missions={len(model['missions'])} "
         f"tasks={len(model['tasks'])} records={len(record_files(project, model))}"
@@ -54,7 +154,7 @@ def command_validate(project: pathlib.Path) -> None:
 
 
 def command_ownership(project: pathlib.Path, args: argparse.Namespace) -> None:
-    model = validate_model(project)
+    model = validate_control_model(project)
     event = load_event(pathlib.Path(args.event_path) if args.event_path else None)
     mission = args.mission
     head_branch = args.head_branch
@@ -63,18 +163,23 @@ def command_ownership(project: pathlib.Path, args: argparse.Namespace) -> None:
         pr = event.get("pull_request", {})
         head_branch = head_branch or pr.get("head", {}).get("ref")
         pr_body = pr.get("body") or ""
-    if not mission:
-        if not head_branch:
-            raise DeliveryError("mission or head branch is required")
-        mission = infer_mission(head_branch, pr_body, model)
     changed = git_changed_paths(project, args.base, args.head)
-    result = classify_changed_paths(mission, changed, model)
+    if head_branch == V15_CONTROL_BRANCH and not mission:
+        result = classify_v15_control_plane_paths(changed)
+        namespace = []
+    else:
+        if not mission:
+            if not head_branch:
+                raise DeliveryError("mission or head branch is required")
+            mission = infer_mission(head_branch, pr_body, model)
+        result = classify_changed_paths(mission, changed, model)
+        namespace = namespace_diagnostics(project, mission, model)
     result.update(
         {
             "base": args.base,
             "head": args.head,
             "headBranch": head_branch,
-            "namespaceDiagnostics": namespace_diagnostics(project, mission, model),
+            "namespaceDiagnostics": namespace,
         }
     )
     if args.output:
@@ -87,7 +192,7 @@ def command_ownership(project: pathlib.Path, args: argparse.Namespace) -> None:
 
 
 def command_review_impact(project: pathlib.Path, args: argparse.Namespace) -> None:
-    model = validate_model(project)
+    model = validate_control_model(project)
     changed = git_changed_paths(project, args.base, args.head)
     result = review_impact(changed, model)
     result.update({"base": args.base, "head": args.head})
@@ -97,7 +202,7 @@ def command_review_impact(project: pathlib.Path, args: argparse.Namespace) -> No
 
 
 def command_live_audit(project: pathlib.Path, args: argparse.Namespace) -> None:
-    model = validate_model(project)
+    model = validate_control_model(project)
     result = live_audit(args.repo, model, os.environ.get("GITHUB_TOKEN"))
     if args.output:
         write_json(pathlib.Path(args.output), result)
@@ -107,7 +212,7 @@ def command_live_audit(project: pathlib.Path, args: argparse.Namespace) -> None:
 
 
 def command_record(project: pathlib.Path, args: argparse.Namespace) -> None:
-    model = validate_model(project)
+    model = validate_control_model(project)
     target = append_record(
         project=project,
         model=model,
@@ -124,7 +229,6 @@ def command_record(project: pathlib.Path, args: argparse.Namespace) -> None:
         next_action=args.next_action,
         merged_main_commit=args.merged_main_commit,
     )
-    generate(project, model, check=False)
     print(f"MISSION_DELIVERY_RECORD_APPENDED path={target.relative_to(project)}")
 
 
@@ -132,11 +236,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project", default=".")
     sub = parser.add_subparsers(dest="command", required=True)
-
     sub.add_parser("validate")
-    generate_parser = sub.add_parser("generate")
-    generate_parser.add_argument("--check", action="store_true")
-
     work_id_parser = sub.add_parser("work-id")
 
     ownership_parser = sub.add_parser("ownership")
@@ -175,9 +275,6 @@ def main() -> int:
     try:
         if args.command == "validate":
             command_validate(project)
-        elif args.command == "generate":
-            model = validate_model(project)
-            generate(project, model, check=args.check)
         elif args.command == "work-id":
             print(execution_id())
         elif args.command == "ownership":

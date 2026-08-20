@@ -1,10 +1,11 @@
 {
   "acceptedTaskCount": 0,
   "blockedTaskCount": 5,
-  "explicitRecordCount": 6,
+  "explicitRecordCount": 7,
   "generatedAt": "DETERMINISTIC_FROM_RECORDS",
   "implementationTaskCount": 0,
-  "inReviewTaskCount": 0,
+  "inReviewTaskCount": 1,
+  "landedMainTaskCount": 1,
   "legacyOtherTaskCount": 1,
   "mergedMainTaskCount": 0,
   "missions": [
@@ -12,9 +13,10 @@
       "acceptedTasks": 0,
       "blockedTasks": 1,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-001",
@@ -24,10 +26,18 @@
           "nextAction": "MISSION-015 assigns tool/worker_a_test_center_v1.py, tool/worker_a_test_center_v1_test.py, and .github/workflows/worker-a-test-center-integration.yml exactly to MISSION-001. Worker A then creates agent/a/mission-001-test-center-env-isolation from frozen 89a1533, applies the durable patch, regenerates the final source manifest twice, runs ownership/review-impact and exact-head CI, and requests fresh Worker B/J/I review.",
           "path": "docs/roadmap/missions/delivery/records/MISSION-001/20260806T214012Z-P2-004.json",
           "recordedAt": "2026-08-06T21:40:12Z",
+          "sourceLanding": "NOT_LANDED",
+          "sourceLandingRecordPath": null,
           "status": "BLOCKED",
           "task": "P2-004"
         }
       ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 36,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 1,
@@ -49,9 +59,10 @@
       "acceptedTasks": 0,
       "blockedTasks": 1,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-002",
@@ -61,10 +72,18 @@
           "nextAction": "Materialize the canonical manifest on the ownership-clean branch, trigger and inspect exact-head CI, rerun ownership and review-impact checks, then request fresh independent review.",
           "path": "docs/roadmap/missions/delivery/records/MISSION-002/20260806T191130Z-P8-001.json",
           "recordedAt": "2026-08-06T19:11:30Z",
+          "sourceLanding": "NOT_LANDED",
+          "sourceLandingRecordPath": null,
           "status": "BLOCKED_EXTERNAL",
           "task": "P8-001"
         }
       ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 15,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -86,14 +105,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-003",
       "notEvaluatedTasks": 18,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 18,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -115,14 +141,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "REVIEW",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-004",
       "notEvaluatedTasks": 22,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 22,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -144,9 +177,10 @@
       "acceptedTasks": 0,
       "blockedTasks": 1,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-005",
@@ -156,10 +190,18 @@
           "nextAction": "Resolve MISSION-001 source-inventory ownership, Worker B/P8 exact REQUEST_CHANGES, and MISSION-015 materializer stale-state regression. Then construct the ownership-clean P5/P8 union, regenerate P5/root manifests canonically, settle exact P5/P8/product/P2 CI and review-impact, and request fresh independent review.",
           "path": "docs/roadmap/missions/delivery/records/P5-001/20260806T231743Z-WRK-20260806T201211Z-19E2373A.json",
           "recordedAt": "2026-08-06T23:17:43Z",
+          "sourceLanding": "NOT_LANDED",
+          "sourceLandingRecordPath": null,
           "status": "BLOCKED_EXTERNAL",
           "task": "P5-001"
         }
       ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 33,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -181,9 +223,10 @@
       "acceptedTasks": 0,
       "blockedTasks": 1,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-006",
@@ -193,10 +236,18 @@
           "nextAction": "Worker A grants/reviews the exact source-inventory append; regenerate SOURCE_MANIFEST.sha256 twice through its canonical owner; execute exact P6/affected CI; Worker B repairs its authority-lane blocker, publishes P6-TC-001 and reviews the exact integration; then obtain fresh independent P6 review. Do not merge or begin P6-002/P18-001 before these gates pass.",
           "path": "docs/roadmap/missions/delivery/records/MISSION-006/20260806T231500Z-P6-001.json",
           "recordedAt": "2026-08-06T23:15:00Z",
+          "sourceLanding": "NOT_LANDED",
+          "sourceLandingRecordPath": null,
           "status": "BLOCKED",
           "task": "P6-001"
         }
       ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 26,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 1,
@@ -218,14 +269,31 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
-      "inReviewTasks": 0,
+      "inReviewTasks": 1,
+      "landedMainTasks": 1,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-007",
-      "notEvaluatedTasks": 36,
-      "records": [],
+      "notEvaluatedTasks": 35,
+      "records": [
+        {
+          "nextAction": "Remain in REVIEW. Complete the remaining independent review and roadmap acceptance/certification gates separately. Do not infer behavioral, platform, certification, release-support, production-readiness, or GA support from this source landing.",
+          "path": "docs/roadmap/missions/delivery/records/MISSION-007/20260807T182200Z-P7-001.json",
+          "recordedAt": "2026-08-07T18:22:00Z",
+          "sourceLanding": "LANDED_MAIN",
+          "sourceLandingRecordPath": "docs/roadmap/missions/delivery/records/MISSION-007/20260807T182200Z-P7-001.json",
+          "status": "REVIEW",
+          "task": "P7-001"
+        }
+      ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 1,
+        "NOT_LANDED": 35,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -234,8 +302,8 @@
         "IMPLEMENTATION": 0,
         "LEGACY_OTHER": 0,
         "MERGED_MAIN": 0,
-        "NOT_EVALUATED": 36,
-        "REVIEW": 0,
+        "NOT_EVALUATED": 35,
+        "REVIEW": 1,
         "SUPERSEDED": 0,
         "VALIDATION": 0
       },
@@ -247,14 +315,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-008",
       "notEvaluatedTasks": 16,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 16,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -276,14 +351,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-009",
       "notEvaluatedTasks": 22,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 22,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -305,9 +387,10 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 1,
       "mergedMainTasks": 0,
       "mission": "MISSION-010",
@@ -318,10 +401,18 @@
           "path": "docs/roadmap/missions/delivery/records/MISSION-010/20260806T213115Z-P11-001-latest-owner-reconciliation.json",
           "rawStatus": null,
           "recordedAt": "2026-08-06T21:31:15Z",
+          "sourceLanding": "NOT_LANDED",
+          "sourceLandingRecordPath": null,
           "status": "LEGACY_OTHER",
           "task": "P11-001"
         }
       ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 25,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -343,14 +434,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-011",
       "notEvaluatedTasks": 38,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 38,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -372,14 +470,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-012",
       "notEvaluatedTasks": 14,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 14,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -401,14 +506,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-013",
       "notEvaluatedTasks": 14,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 14,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -430,14 +542,21 @@
       "acceptedTasks": 0,
       "blockedTasks": 0,
       "claimStatus": "UNCLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-014",
       "notEvaluatedTasks": 32,
       "records": [],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 32,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -459,9 +578,10 @@
       "acceptedTasks": 0,
       "blockedTasks": 1,
       "claimStatus": "CLAIMED",
-      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_CLAIMS_HELPER_LEASES_AND_GIT",
+      "frontierState": "DERIVE_LIVE_FROM_TASK_RECORDS_RUNTIME_WORK_ORDERS_SEMAPHORES_AND_GIT",
       "implementationTasks": 0,
       "inReviewTasks": 0,
+      "landedMainTasks": 0,
       "legacyOtherTasks": 0,
       "mergedMainTasks": 0,
       "mission": "MISSION-015",
@@ -471,10 +591,18 @@
           "nextAction": "Use a writer with a true file-backed Git blob or contents input. Starting from cb5e16c232c7a2309632a3fc0dcccd8d6e9d0bd7 / 9497333f131ccddcb229aa5b179927aeac8dfd31, publish only SOURCE_MANIFEST.sha256 and require GitHub to return blob e94c5ab44ea19321bf4e6976c54ea30fc8b0b4b3 before creating the commit. Then run exact-head P24 Ubuntu, Windows, macOS and product-gates, and request Worker B and Worker I review for that same commit/tree.",
           "path": "docs/roadmap/missions/delivery/records/MISSION-015/20260806T203500Z-P24-001.json",
           "recordedAt": "2026-08-06T20:35:00Z",
+          "sourceLanding": "NOT_LANDED",
+          "sourceLandingRecordPath": null,
           "status": "BLOCKED_EXTERNAL",
           "task": "P24-001"
         }
       ],
+      "sourceLandingCounts": {
+        "HELPER": 0,
+        "LANDED_MAIN": 0,
+        "NOT_LANDED": 12,
+        "PRODUCT_PR": 0
+      },
       "statusCounts": {
         "ACCEPTED": 0,
         "BLOCKED": 0,
@@ -493,10 +621,15 @@
       "worker": "J"
     }
   ],
-  "notEvaluatedTaskCount": 353,
-  "progressMeaning": "Accepted or merged roadmap tasks only; legacy non-terminal records remain bookkeeping and do not become acceptance proof.",
+  "notEvaluatedTaskCount": 352,
+  "progressMeaning": "Accepted progress counts only strict-provenance ACCEPTED/MERGED_MAIN. LANDED_MAIN is an orthogonal source-delivery metric and never implies acceptance, certification, platform or release support.",
   "progressPercentage": 0.0,
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "sourceLandingCounts": {
+    "LANDED_MAIN": 1,
+    "NOT_LANDED": 358
+  },
+  "sourceLandingPercentage": 0.28,
   "statusCounts": {
     "ACCEPTED": 0,
     "BLOCKED": 2,
@@ -504,8 +637,8 @@
     "IMPLEMENTATION": 0,
     "LEGACY_OTHER": 1,
     "MERGED_MAIN": 0,
-    "NOT_EVALUATED": 353,
-    "REVIEW": 0
+    "NOT_EVALUATED": 352,
+    "REVIEW": 1
   },
   "taskCount": 359
 }

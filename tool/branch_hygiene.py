@@ -22,6 +22,7 @@ import datetime as dt
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -110,6 +111,25 @@ class GitHubClient:
         if status == 404:
             return "already_absent"
         raise HygieneError(f"unexpected DELETE status {status} for {branch}")
+
+    def ref_sha(self, branch: str) -> str | None:
+        encoded = urllib.parse.quote(f"heads/{branch}", safe="/")
+        value = self.get_json(f"/repos/{self.repository}/git/ref/{encoded}")
+        if value is None:
+            return None
+        if not isinstance(value, Mapping):
+            raise HygieneError(f"exact ref lookup returned invalid data for {branch}")
+        obj = value.get("object")
+        if not isinstance(obj, Mapping):
+            raise HygieneError(f"exact ref object is missing for {branch}")
+        sha = obj.get("sha")
+        if (
+            not isinstance(sha, str)
+            or len(sha) != 40
+            or any(ch not in "0123456789abcdef" for ch in sha)
+        ):
+            raise HygieneError(f"exact ref SHA is invalid for {branch}")
+        return sha
 
     def repository_info(self) -> Mapping[str, Any]:
         value = self.get_json(f"/repos/{self.repository}")
@@ -304,6 +324,34 @@ def _preflight(
     return plan, errors
 
 
+def _confirm_exact_ref_absent(
+    client: GitHubClient,
+    candidate: Candidate,
+    *,
+    attempts: int = 6,
+    delay_seconds: float = 0.5,
+) -> list[str | None]:
+    """Prove exact ref absence without trusting the eventually-consistent branch list."""
+    if attempts <= 0:
+        raise HygieneError("exact-ref absence attempts must be positive")
+    observations: list[str | None] = []
+    for attempt in range(attempts):
+        observed = client.ref_sha(candidate.name)
+        observations.append(observed)
+        if observed is None:
+            return observations
+        if observed != candidate.expected_sha:
+            raise HygieneError(
+                f"candidate ref changed or was recreated for {candidate.name}: "
+                f"{observed} != {candidate.expected_sha}"
+            )
+        if attempt + 1 < attempts and delay_seconds > 0:
+            time.sleep(delay_seconds * (attempt + 1))
+    raise HygieneError(
+        f"candidate ref remains after deletion: {candidate.name}@{candidate.expected_sha}"
+    )
+
+
 def _receipt_base(
     *,
     repository: str,
@@ -408,16 +456,39 @@ def _run_remote(args: argparse.Namespace) -> int:
             execution_errors.append(str(exc))
         results.append(result)
 
-    after = client.list_branches()
-    after_names = {row.name for row in after}
-    residual = sorted(
-        row.name for row in candidates if row.name in after_names
-    )
-    if residual:
-        execution_errors.append(f"candidate branches remain after deletion: {residual}")
+    confirmed_absent: list[str] = []
+    exact_ref_observations: dict[str, list[str | None]] = {}
+    result_by_name = {str(row["name"]): row for row in results}
+    for candidate in candidates:
+        result = result_by_name[candidate.name]
+        if result.get("result") == "error":
+            continue
+        try:
+            observations = _confirm_exact_ref_absent(client, candidate)
+            exact_ref_observations[candidate.name] = observations
+            confirmed_absent.append(candidate.name)
+        except HygieneError as exc:
+            exact_ref_observations[candidate.name] = []
+            execution_errors.append(str(exc))
+
+    after_names: set[str] = set()
+    after_count: int | None = None
+    branch_list_warning: str | None = None
+    try:
+        after = client.list_branches()
+        after_names = {row.name for row in after}
+        after_count = len(after)
+        stale_rows = sorted(set(confirmed_absent) & after_names)
+        if stale_rows:
+            branch_list_warning = (
+                "post-delete branch listing lagged exact-ref state for: "
+                + ",".join(stale_rows)
+            )
+    except HygieneError as exc:
+        branch_list_warning = f"post-delete branch listing unavailable: {exc}"
 
     receipt["results"] = results
-    receipt["afterBranchCount"] = len(after)
+    receipt["afterBranchCount"] = after_count
     receipt["deleted"] = sorted(
         str(row["name"]) for row in results if row.get("result") == "deleted"
     )
@@ -426,7 +497,11 @@ def _run_remote(args: argparse.Namespace) -> int:
         for row in results
         if row.get("result") == "already_absent"
     )
-    receipt["remainingBranches"] = sorted(after_names)
+    receipt["confirmedAbsent"] = sorted(confirmed_absent)
+    receipt["exactRefObservations"] = exact_ref_observations
+    receipt["remainingBranches"] = sorted(after_names) if after_count is not None else None
+    if branch_list_warning:
+        receipt["postDeleteBranchListWarning"] = branch_list_warning
     if execution_errors:
         receipt["status"] = "partial_failure"
         receipt["errors"] = execution_errors
@@ -509,6 +584,36 @@ def _self_test() -> int:
     )
     assert not errors
     assert plan[0]["preflight"] == "already_absent"
+
+    class FakeRefClient:
+        def __init__(self, values: list[str | None]) -> None:
+            self.values = list(values)
+
+        def ref_sha(self, branch: str) -> str | None:
+            del branch
+            if not self.values:
+                return None
+            return self.values.pop(0)
+
+    observations = _confirm_exact_ref_absent(
+        FakeRefClient(["a" * 40, None]),  # type: ignore[arg-type]
+        candidates[0],
+        attempts=2,
+        delay_seconds=0,
+    )
+    assert observations == ["a" * 40, None]
+
+    try:
+        _confirm_exact_ref_absent(
+            FakeRefClient(["d" * 40]),  # type: ignore[arg-type]
+            candidates[0],
+            attempts=1,
+            delay_seconds=0,
+        )
+    except HygieneError as exc:
+        assert "changed or was recreated" in str(exc)
+    else:
+        raise AssertionError("recreated exact ref was accepted as absent")
 
     duplicate = json.loads(json.dumps(valid))
     duplicate["delete"].append(dict(duplicate["delete"][0]))

@@ -6,9 +6,19 @@ on:
       - '.github/workflows/mission-execution-control.yml'
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
+      - 'config/mission_delivery.v1.json'
+      - 'config/mission_v15_authorities.v1.json'
+      - 'config/mission_v15_hygiene.v1.json'
       - 'tool/mission_control.py'
+      - 'tool/mission_materialize_safe.py'
+      - 'tool/mission_runtime_control.py'
+      - 'tool/mission_runtime_model.py'
+      - 'tool/mission_runtime_history_compat_test.py'
+      - 'tool/mission_orchestrator.py'
+      - 'tool/mission_v15_authority_config_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
+      - 'schemas/mission_*.json'
       - 'SOURCE_MANIFEST.sha256'
   push:
     branches: [main]
@@ -16,9 +26,15 @@ on:
       - '.github/workflows/mission-execution-control.yml'
       - '.github/workflows/mission-execution-materialize.yml'
       - 'config/mission_execution.v1.json'
+      - 'config/mission_delivery.v1.json'
+      - 'config/mission_v15_authorities.v1.json'
       - 'tool/mission_control.py'
+      - 'tool/mission_materialize_safe.py'
+      - 'tool/mission_v15_authority_config_test.py'
+      - 'tool/mission_runtime_history_compat_test.py'
       - 'docs/roadmap/anarchy/phases/**'
       - 'docs/roadmap/missions/**'
+      - 'schemas/mission_*.json'
       - 'SOURCE_MANIFEST.sha256'
   workflow_dispatch:
 
@@ -36,22 +52,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.10'
-      - name: Validate mission execution model
-        run: python tool/mission_control.py --project . validate
-      - name: Verify deterministic generated views
-        run: python tool/mission_control.py --project . bootstrap --check
-      - name: Verify canonical source manifest
+      - name: Assert exact source head
         shell: bash
         run: |
-          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.before"
-          python tool/p1a_refresh_source_manifest.py .
-          cmp "$RUNNER_TEMP/source-manifest.before" SOURCE_MANIFEST.sha256
-      - name: Verify repository whitespace
-        run: git diff --check
-      - name: Verify non-mutation
+          expected='${{ github.event.pull_request.head.sha || github.sha }}'
+          test "$(git rev-parse HEAD)" = "$expected"
+      - name: Validate shared-authority configuration
+        run: python -m unittest -v tool/mission_v15_authority_config_test.py
+      - name: Validate Mission Execution runtime history compatibility
+        run: python -m unittest -v tool/mission_runtime_history_compat_test.py
+      - name: Validate static topology with durable runtime overlay
+        run: python tool/mission_materialize_safe.py --project . validate
+      - name: Verify deterministic safe static views
+        run: python tool/mission_materialize_safe.py --project . materialize --check
+      - name: Generate canonical source-manifest candidate twice
         shell: bash
-        run: test -z "$(git status --porcelain=v1)"
+        run: |
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.committed"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.candidate"
+          cp "$RUNNER_TEMP/source-manifest.committed" SOURCE_MANIFEST.sha256
+      - name: Verify repository whitespace and non-mutation
+        shell: bash
+        run: |
+          git diff --check
+          test -z "$(git status --porcelain=v1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mission-execution-source-manifest-${{ matrix.os }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/source-manifest.candidate
