@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BASE_MAIN_SHA: 26fd52f4bbb9906955d4b7d8c0e81e0fed6f180a
+  BASE_MAIN_SHA: 2c9ebd663cd6474a2a70d12fe9aec42a3a871607
   BRANCH_NAME: agent/p5-web-studio-runtime-integration
   SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
