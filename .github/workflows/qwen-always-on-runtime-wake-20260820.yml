@@ -32,33 +32,36 @@ jobs:
           git fetch origin '+refs/heads/agent/mission-runtime:refs/remotes/origin/agent/mission-runtime'
           git worktree add --detach "$RUNNER_TEMP/runtime" origin/agent/mission-runtime
 
-      - name: Wake exact stranded P11 R1
+      - name: Wake reviewed P11 helper integration
         shell: bash
         run: |
           set -euo pipefail
           runtime="$RUNNER_TEMP/runtime"
-          work='WO-P11-001-PR139-R1-7C51A2E4'
-          work_path="$runtime/runtime/work-orders/MISSION-010/$work.json"
+          review='WO-P11-001-PR139-R1-7C51A2E4'
+          source='WO-P11-001-REVIEW-BINDING-CLOSED-7C51A2E4'
+          integration='WO-P11-001-INTEGRATE-REVIEW-BINDING'
+          review_status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$runtime/runtime/work-orders/MISSION-010/$review.json")"
+          source_status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$runtime/runtime/work-orders/MISSION-010/$source.json")"
+          integration_path="$runtime/runtime/work-orders/MISSION-010/$integration.json"
+          integration_status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$integration_path")"
           generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["runtimeGeneration"])' "$runtime/runtime/meta.json")"
-          status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$work_path")"
-          echo "runtimeGeneration=$generation workStatus=$status"
-          if [[ "$status" == 'READY' || "$status" == 'RESERVED' || "$status" == 'IN_PROGRESS' || "$status" == 'LANDED' ]]; then
-            echo "Work Order already dispatchable/owned/terminal; no mutation required."
+          echo "runtimeGeneration=$generation review=$review_status source=$source_status integration=$integration_status"
+          [[ "$review_status" == 'LANDED' ]]
+          [[ "$source_status" == 'HELPER_READY' ]]
+          if [[ "$integration_status" == 'READY' || "$integration_status" == 'RESERVED' || "$integration_status" == 'IN_PROGRESS' || "$integration_status" == 'INTEGRATING' || "$integration_status" == 'VALIDATING' || "$integration_status" == 'LANDED' ]]; then
+            echo 'Integration already dispatchable/owned/advanced.'
             exit 0
           fi
-          if [[ "$status" != 'REVIEW' ]]; then
-            echo "Unexpected stranded review status: $status" >&2
-            exit 1
-          fi
+          [[ "$integration_status" == 'BLOCKED' ]]
           python3 tool/mission_orchestrator.py \
             --project "$runtime" transition \
-            --work-order "$work" \
+            --work-order "$integration" \
             --next-status READY \
-            --actor 'QWEN_ALWAYS_ON_RECOVERY:REVIEW_TO_READY' \
-            --work-id "WRK-QWEN-ALWAYS-ON-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --actor 'QWEN_ALWAYS_ON_RECOVERY:REVIEWED_HELPER_TO_INTEGRATION' \
+            --work-id "WRK-QWEN-INTEGRATION-WAKE-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --expected-generation "$generation"
           next_generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["runtimeGeneration"])' "$runtime/runtime/meta.json")"
-          next_status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$work_path")"
+          next_status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$integration_path")"
           [[ "$next_status" == 'READY' ]]
           [[ "$next_generation" -eq $((generation + 1)) ]]
           python3 tool/mission_orchestrator.py --project "$runtime" doctor
@@ -77,10 +80,10 @@ jobs:
           git -C "$runtime" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git -C "$runtime" add -- runtime
           git -C "$runtime" diff --cached --check
-          git -C "$runtime" commit -m 'mission-runtime: wake Qwen review frontier'
+          git -C "$runtime" commit -m 'mission-runtime: wake reviewed P11 integration'
           candidate="$(git -C "$runtime" rev-parse HEAD)"
           git -C "$runtime" push origin HEAD:refs/heads/agent/mission-runtime
           git fetch origin '+refs/heads/agent/mission-runtime:refs/remotes/origin/agent/mission-runtime'
           remote="$(git rev-parse origin/agent/mission-runtime)"
           [[ "$remote" == "$candidate" ]]
-          echo "QWEN_RUNTIME_WAKE_PASS candidate=$candidate"
+          echo "QWEN_INTEGRATION_WAKE_PASS candidate=$candidate"
