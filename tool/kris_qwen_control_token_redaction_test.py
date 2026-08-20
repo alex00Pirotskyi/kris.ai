@@ -15,7 +15,7 @@ class ControllerTokenRedactionContractTest(unittest.TestCase):
         self.assertNotIn('PHONE CONTROL TOKEN (keep private):', text)
         self.assertNotIn('controller.token, flush=True', text)
         self.assertIn('token value omitted from logs', text.lower())
-        self.assertIn('controller.token_path', text)
+        self.assertIn('configured token file', text.lower())
 
     def test_rotation_helper_never_echoes_token_contents(self):
         text = ROTATOR.read_text(encoding="utf-8")
