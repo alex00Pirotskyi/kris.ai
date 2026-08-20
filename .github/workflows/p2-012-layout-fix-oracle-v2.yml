@@ -23,6 +23,7 @@ jobs:
         run: |
           flutter pub get
           python - <<'PY'
+          import base64
           from pathlib import Path
           path = Path('lib/product/p2_owner_workspace.dart')
           text = path.read_text()
@@ -34,30 +35,9 @@ jobs:
           end = text.find(end_marker, start)
           if end < 0:
               raise SystemExit('layout end marker not found')
-          new = '''              final useSideBySide = constraints.maxWidth >= 900 ||
-                  (constraints.maxWidth >= 720 && constraints.maxHeight < 420);
-              if (useSideBySide) {
-                final tabListWidth = constraints.maxWidth >= 900 ? 330.0 : 260.0;
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    SizedBox(width: tabListWidth, child: _buildTabList(tabs)),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: _buildTerminalPane(context)),
-                  ],
-                );
-              }
-              final tabListHeight = constraints.maxHeight < 360 ? 96.0 : 180.0;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  SizedBox(height: tabListHeight, child: _buildTabList(tabs)),
-                  const Divider(height: 1),
-                  Expanded(child: _buildTerminalPane(context)),
-                ],
-              );
-'''
-          path.write_text(text[:start] + new + text[end:])
+          payload = 'ICAgICAgICAgICAgICBmaW5hbCB1c2VTaWRlQnlTaWRlID0gY29uc3RyYWludHMubWF4V2lkdGggPj0gOTAwIHx8CiAgICAgICAgICAgICAgICAgIChjb25zdHJhaW50cy5tYXhXaWR0aCA+PSA3MjAgJiYgY29uc3RyYWludHMubWF4SGVpZ2h0IDwgNDIwKTsKICAgICAgICAgICAgICBpZiAodXNlU2lkZUJ5U2lkZSkgewogICAgICAgICAgICAgICAgZmluYWwgdGFiTGlzdFdpZHRoID0gY29uc3RyYWludHMubWF4V2lkdGggPj0gOTAwID8gMzMwLjAgOiAyNjAuMDsKICAgICAgICAgICAgICAgIHJldHVybiBSb3coCiAgICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0cmV0Y2gsCiAgICAgICAgICAgICAgICAgIGNoaWxkcmVuOiA8V2lkZ2V0PlsKICAgICAgICAgICAgICAgICAgICBTaXplZEJveCh3aWR0aDogdGFiTGlzdFdpZHRoLCBjaGlsZDogX2J1aWxkVGFiTGlzdCh0YWJzKSksCiAgICAgICAgICAgICAgICAgICAgY29uc3QgVmVydGljYWxEaXZpZGVyKHdpZHRoOiAxKSwKICAgICAgICAgICAgICAgICAgICBFeHBhbmRlZChjaGlsZDogX2J1aWxkVGVybWluYWxQYW5lKGNvbnRleHQpKSwKICAgICAgICAgICAgICAgICAgXSwKICAgICAgICAgICAgICAgICk7CiAgICAgICAgICAgICAgfQogICAgICAgICAgICAgIGZpbmFsIHRhYkxpc3RIZWlnaHQgPSBjb25zdHJhaW50cy5tYXhIZWlnaHQgPCAzNjAgPyA5Ni4wIDogMTgwLjA7CiAgICAgICAgICAgICAgcmV0dXJuIENvbHVtbigKICAgICAgICAgICAgICAgIGNyb3NzQXhpc0FsaWdubWVudDogQ3Jvc3NBeGlzQWxpZ25tZW50LnN0cmV0Y2gsCiAgICAgICAgICAgICAgICBjaGlsZHJlbjogPFdpZGdldD5bCiAgICAgICAgICAgICAgICAgIFNpemVkQm94KGhlaWdodDogdGFiTGlzdEhlaWdodCwgY2hpbGQ6IF9idWlsZFRhYkxpc3QodGFicykpLAogICAgICAgICAgICAgICAgICBjb25zdCBEaXZpZGVyKGhlaWdodDogMSksCiAgICAgICAgICAgICAgICAgIEV4cGFuZGVkKGNoaWxkOiBfYnVpbGRUZXJtaW5hbFBhbmUoY29udGV4dCkpLAogICAgICAgICAgICAgICAgXSwKICAgICAgICAgICAgICApOwo='
+          replacement = base64.b64decode(payload).decode()
+          path.write_text(text[:start] + replacement + text[end:])
           PY
           dart format lib/product/p2_owner_workspace.dart
           set +e
