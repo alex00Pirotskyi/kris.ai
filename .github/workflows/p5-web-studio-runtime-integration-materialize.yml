@@ -6,12 +6,12 @@ on:
       - 'agent/p5-web-studio-runtime-integration'
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
-      - '.p5-web-studio-runtime-integration.b64'
+      - '.p5-web-studio-runtime-integration.part*'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
-      - '.p5-web-studio-runtime-integration.b64'
+      - '.p5-web-studio-runtime-integration.part*'
 
 permissions:
   contents: write
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode .p5-web-studio-runtime-integration.b64 | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          cat .p5-web-studio-runtime-integration.part* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
 
@@ -117,7 +117,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm .p5-web-studio-runtime-integration.b64
+          rm -f .p5-web-studio-runtime-integration.b64
+          rm -f .p5-web-studio-runtime-integration.part*
           rm .github/workflows/p5-web-studio-runtime-integration-materialize.yml
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first"
@@ -155,6 +156,11 @@ jobs:
             test/product/p5_information_architecture/p5_source_boundary_test.dart \
             test/product/p5_information_architecture/p5_navigation_test.dart \
             .p5-web-studio-runtime-integration.b64 \
+            .p5-web-studio-runtime-integration.part00 \
+            .p5-web-studio-runtime-integration.part01 \
+            .p5-web-studio-runtime-integration.part02 \
+            .p5-web-studio-runtime-integration.part03 \
+            .p5-web-studio-runtime-integration.part04 \
             .github/workflows/p5-web-studio-runtime-integration-materialize.yml
           python - <<'PY'
           import subprocess
@@ -173,6 +179,11 @@ jobs:
               'test/product/p5_information_architecture/p5_source_boundary_test.dart',
               'test/product/p5_information_architecture/p5_navigation_test.dart',
               '.p5-web-studio-runtime-integration.b64',
+              '.p5-web-studio-runtime-integration.part00',
+              '.p5-web-studio-runtime-integration.part01',
+              '.p5-web-studio-runtime-integration.part02',
+              '.p5-web-studio-runtime-integration.part03',
+              '.p5-web-studio-runtime-integration.part04',
               '.github/workflows/p5-web-studio-runtime-integration-materialize.yml',
           }
           actual = set(subprocess.check_output(
