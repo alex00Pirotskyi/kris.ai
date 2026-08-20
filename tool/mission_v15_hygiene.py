@@ -36,6 +36,16 @@ def _matches(branch: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(branch, pattern) for pattern in patterns)
 
 
+
+def _is_immutable_pull_head_ref(branch: str) -> bool:
+    parts = branch.split("/")
+    return (
+        len(parts) == 3
+        and parts[0] == "pull"
+        and parts[1].isdigit()
+        and parts[2] == "head"
+    )
+
 def _positive_int(value: object, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise ValueError(f"{label} must be a positive integer")
@@ -117,7 +127,16 @@ def audit(
         "--format=%(refname:strip=3)",
         "refs/remotes/origin",
     )
-    branches = sorted({branch for branch in refs if branch != "HEAD"})
+    immutable_pull_head_refs = sorted(
+        branch for branch in refs if _is_immutable_pull_head_ref(branch)
+    )
+    branches = sorted(
+        {
+            branch
+            for branch in refs
+            if branch != "HEAD" and not _is_immutable_pull_head_ref(branch)
+        }
+    )
     # Local default main may not appear under refs/remotes/origin when a caller
     # intentionally fetched only named branches. Count it if available.
     if "main" not in branches:
@@ -188,6 +207,7 @@ def audit(
     result = {
         "schemaVersion": 1,
         "totalBranchCount": len(branches),
+        "immutablePullHeadRefCount": len(immutable_pull_head_refs),
         "legacyDebtBranchCount": len(debt),
         "legacyDebtBranches": debt,
         "helperBranchCount": len(helpers),
