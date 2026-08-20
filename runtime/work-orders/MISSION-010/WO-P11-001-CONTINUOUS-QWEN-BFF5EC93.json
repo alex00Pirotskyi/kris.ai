@@ -1,0 +1,29 @@
+{
+  "allowedPaths": [
+    "tool/worker_e*.py",
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py"
+  ],
+  "baseCommit": "f5d2e747edd463877c1fa0df7db4a6211b16d51b",
+  "baseTree": "893f8ab6fbd266684dc8ee658e70a6a540e5bed3",
+  "createdAt": "2026-08-20T14:21:21Z",
+  "createdBy": "ELASTIC-QWEN-D258C6D2",
+  "dependencyRequirements": [],
+  "maxChildWorkOrders": 0,
+  "mission": "MISSION-010",
+  "objective": "Always-on Product hardening. Inspect exact current Product source/tests inside allowedPaths, identify one concrete correctness, performance, reliability, UX-facing behavior, or missing-regression defect that can be proven locally, and implement the smallest durable code/test fix. Do not create documentation-only, formatting-only, governance-only, or no-op changes.",
+  "parentProductPr": 71,
+  "priority": 85,
+  "requestedRole": "DEFECT_HUNTER",
+  "requiredTests": [
+    "run at least one focused local product/source regression or analyzer command and require exit 0",
+    "final changed paths remain inside exact Work Order allowedPaths",
+    "no documentation-only or no-op candidate is allowed"
+  ],
+  "roadmapTask": "P11-001",
+  "schemaVersion": 1,
+  "status": "READY",
+  "type": "PRODUCT_DEFECT_REPAIR",
+  "updatedAt": "2026-08-20T14:21:24Z",
+  "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-BFF5EC93"
+}
