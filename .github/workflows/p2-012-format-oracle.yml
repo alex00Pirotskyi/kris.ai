@@ -1,0 +1,44 @@
+name: p2-012-format-oracle
+on:
+  pull_request:
+permissions:
+  contents: write
+jobs:
+  format-oracle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p2-012-format-oracle
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - name: Materialize exact production formatter output
+        shell: bash
+        run: |
+          flutter pub get
+          dart format \
+            lib/product/p2_terminal_model.dart \
+            lib/product/p2_owner_workspace.dart \
+            test/product/p2_owner_workspace_test.dart
+          git diff -- \
+            lib/product/p2_terminal_model.dart \
+            lib/product/p2_owner_workspace.dart \
+            test/product/p2_owner_workspace_test.dart
+          if ! git diff --quiet -- \
+            lib/product/p2_terminal_model.dart \
+            lib/product/p2_owner_workspace.dart \
+            test/product/p2_owner_workspace_test.dart; then
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add \
+              lib/product/p2_terminal_model.dart \
+              lib/product/p2_owner_workspace.dart \
+              test/product/p2_owner_workspace_test.dart
+            git commit -m 'style(p2): materialize production Owner terminal formatting'
+            git push origin HEAD:agent/p2-012-format-oracle
+          fi
