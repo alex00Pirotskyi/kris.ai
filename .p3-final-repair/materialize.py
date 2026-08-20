@@ -3,7 +3,7 @@ from pathlib import Path
 adr = Path('docs/adr/ADR-0005-browser-storage.md')
 adr_text = adr.read_text(encoding='utf-8')
 old_status = '**Status:** ACCEPTED  '
-new_status = '**Status:** PROPOSED  '
+new_status = '**Status:** PROPOSED'
 if old_status not in adr_text:
     raise SystemExit('ADR-0005 accepted status anchor missing')
 adr.write_text(adr_text.replace(old_status, new_status, 1), encoding='utf-8', newline='\n')
