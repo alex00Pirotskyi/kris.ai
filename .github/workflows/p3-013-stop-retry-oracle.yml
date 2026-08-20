@@ -1,0 +1,33 @@
+name: p3-013-stop-retry-oracle
+on:
+  pull_request:
+permissions:
+  contents: write
+jobs:
+  oracle:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p3-013-stop-retry-oracle
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - name: Materialize and validate retry-safe stop
+        shell: bash
+        run: |
+          flutter pub get
+          python .p3-stop-oracle/materialize.py
+          dart format lib/product/browser/web_preview.dart test/product/browser/web_preview_test.dart
+          flutter analyze --no-pub
+          flutter test --no-pub test/product/browser/web_preview_test.dart --reporter expanded
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/product/browser/web_preview.dart test/product/browser/web_preview_test.dart
+          git commit -m 'fix(p3): keep failed preview stop retryable'
+          git push origin HEAD:agent/p3-013-stop-retry-oracle
