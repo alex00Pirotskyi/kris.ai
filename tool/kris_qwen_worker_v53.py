@@ -156,6 +156,16 @@ def transform(text: str) -> str:
     new_no_work = '''                    except NoEligibleWork as exc:\n                        consecutive_errors = 0\n                        transient_signature = ""\n                        transient_count = 0\n                        red_alert_retry = min(5, max(1, int(cfg.loop_sleep)))\n                        write_worker_status(\n                            cfg, "RED_ALERT_FRONTIER", reason=str(exc), redAlert=True,\n                            retrySeconds=red_alert_retry, jobsCompleted=jobs,\n                        )\n                        print(f"[red-alert] no executable Product frontier: {exc}; aggressive retry in {red_alert_retry}s")\n                        if interruptible_sleep(cfg, red_alert_retry):\n                            continue\n                        continue\n'''
     text = replace_exact(text, old_no_work, new_no_work, "NoEligibleWork red alert")
 
+    persistent_backoff = 'backoff = max(300, int(cfg.loop_sleep) * 5)'
+    if text.count(persistent_backoff) != 2:
+        raise SystemExit(
+            "KRIS_QWEN_V53_ERROR: expected exactly two five-minute persistent backoff anchors"
+        )
+    text = text.replace(
+        persistent_backoff,
+        'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
+    )
+
     old_tail = '''                    if interruptible_sleep(cfg, cfg.loop_sleep):\n                        continue\n'''
     if text.count(old_tail) < 1:
         raise SystemExit("KRIS_QWEN_V53_ERROR: persistent loop sleep anchor missing")
@@ -176,6 +186,7 @@ def transform(text: str) -> str:
         'def seed_continuous_product_work(',
         'CONTINUOUS_PRIMARY_CODE_PREFIXES',
         'RED_ALERT_FRONTIER',
+        'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
         'Successful work chains immediately',
     )
     missing = [marker for marker in required if marker not in text]
