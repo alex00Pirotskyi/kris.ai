@@ -87,7 +87,7 @@ jobs:
               'RED_ALERT_FRONTIER',
               'RED_ALERT_HARD_ERROR',
               'RED_ALERT_MODEL_SERVER',
-              'managedServer\\": \\"RESTARTED',
+              '"managedServer": "RESTARTED"',
               'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
               'stack stays alive',
               'Successful work chains immediately',
