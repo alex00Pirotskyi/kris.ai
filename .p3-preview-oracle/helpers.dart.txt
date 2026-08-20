@@ -1,0 +1,136 @@
+
+const P2ProcessIdentity _previewIdentity = P2ProcessIdentity(
+  pid: 4101,
+  startToken: 'preview-start',
+  supervisorToken: 'preview-supervisor',
+  platformGroupId: 'preview-group',
+);
+
+P2EffectBinding _previewBinding() => const P2EffectBinding(
+      runId: 'run-preview',
+      taskId: 'P3-013',
+      actorId: 'desktop_host',
+      toolId: 'web_preview',
+      accessProfileId: 'owner',
+      capabilityId: 'pty',
+      operation: 'pty.open',
+    );
+
+final class _RecordingPreviewPtyBackend implements P2PtyBackend {
+  int openCount = 0;
+  P2PtyOpenRequest? lastRequest;
+  P2EffectBinding? lastBinding;
+  String? lastGrantDigest;
+
+  @override
+  Future<P2PtySession> open(
+    P2PtyOpenRequest request,
+    P2EffectBinding binding,
+    String grantDigest,
+  ) async {
+    openCount += 1;
+    lastRequest = request;
+    lastBinding = binding;
+    lastGrantDigest = grantDigest;
+    return P2PtySession(
+      sessionId: 'managed-preview',
+      runId: binding.runId,
+      taskId: binding.taskId,
+      actorId: binding.actorId,
+      grantDigest: grantDigest,
+      processIdentity: _previewIdentity,
+      state: P2PtyState.attached,
+      transcriptCursor: 0,
+    );
+  }
+
+  @override
+  Future<void> terminate(
+    String sessionId, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) async {}
+
+  @override
+  Future<P2PtySession> attach(
+    String sessionId,
+    int fromCursor, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> detach(
+    String sessionId, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> input(
+    String sessionId,
+    List<int> bytes, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> interrupt(
+    String sessionId, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Stream<List<int>> output(
+    String sessionId,
+    int fromCursor, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      const Stream<List<int>>.empty();
+
+  @override
+  Future<void> resize(
+    String sessionId,
+    int columns,
+    int rows, {
+    required P2EffectBinding binding,
+    required String grantDigest,
+  }) =>
+      throw UnimplementedError();
+}
+
+final class _RecordingPreviewProcessTreeAdapter
+    implements P2NativeProcessTreeAdapter {
+  final List<String> calls = <String>[];
+  P2ProcessLifecycle state = P2ProcessLifecycle.running;
+
+  @override
+  Future<P2ProcessLifecycle> inspect(P2ProcessIdentity identity) async {
+    expect(identity.stableKey, _previewIdentity.stableKey);
+    calls.add('inspect');
+    return state;
+  }
+
+  @override
+  Future<void> requestStop(
+    P2ProcessIdentity identity,
+    Duration grace,
+  ) async {
+    expect(identity.stableKey, _previewIdentity.stableKey);
+    calls.add('stop:${grace.inMilliseconds}');
+    state = P2ProcessLifecycle.stopped;
+  }
+
+  @override
+  Future<void> forceKill(P2ProcessIdentity identity) async {
+    expect(identity.stableKey, _previewIdentity.stableKey);
+    calls.add('kill');
+    state = P2ProcessLifecycle.killed;
+  }
+}
