@@ -11,7 +11,7 @@ for arg in "$@"; do
       cat <<'EOF'
 Usage: install_kris_qwen_control_systemd.sh [--phone]
 
-Installs the durable systemd supervisor for Qwen worker 5.3 / controller 2.2.
+Installs the durable systemd supervisor for Qwen worker 5.3.1 / controller 2.2.
 
   --phone   bind the controller to 0.0.0.0 with explicit remote-HTTP opt-in.
             Use only on a trusted LAN/VPN; never expose port 8090 publicly.
@@ -79,12 +79,16 @@ required=(
   "${REPO_DIR}/tool/kris_qwen_worker.py"
   "${REPO_DIR}/tool/kris_qwen_worker.py.compat.py"
   "${REPO_DIR}/tool/kris_qwen_worker_v53.py"
+  "${REPO_DIR}/tool/kris_qwen_worker_v53_base.py"
+  "${REPO_DIR}/tool/kris_qwen_worker_v531.py"
   "${REPO_DIR}/tool/kris_qwen_v53_policy.py"
   "${REPO_DIR}/tool/kris_qwen_v53_recovery.py"
+  "${REPO_DIR}/tool/kris_qwen_v53_reconcile.py"
+  "${REPO_DIR}/tool/kris_qwen_v531_test.py"
 )
 for path in "${required[@]}"; do
   if [[ ! -f "${path}" ]]; then
-    echo "Missing repo-owned Qwen always-on file: ${path}" >&2
+    echo "Missing repo-owned Qwen always-on 5.3.1 file: ${path}" >&2
     exit 2
   fi
 done
@@ -106,9 +110,25 @@ fi
 as_service_user gh auth setup-git --hostname github.com >/dev/null
 as_service_user git config --global --add safe.directory "${REPO_DIR}"
 
+as_service_user "${PYTHON_BIN}" -m py_compile \
+  "${REPO_DIR}/run_my_server.py" \
+  "${REPO_DIR}/tool/kris_qwen_worker.py.compat.py" \
+  "${REPO_DIR}/tool/kris_qwen_worker_v53.py" \
+  "${REPO_DIR}/tool/kris_qwen_worker_v53_base.py" \
+  "${REPO_DIR}/tool/kris_qwen_worker_v531.py" \
+  "${REPO_DIR}/tool/kris_qwen_v53_policy.py" \
+  "${REPO_DIR}/tool/kris_qwen_v53_recovery.py" \
+  "${REPO_DIR}/tool/kris_qwen_v53_reconcile.py" \
+  "${REPO_DIR}/tool/kris_qwen_control.py.compat.py" \
+  "${REPO_DIR}/tool/kris_qwen_v531_test.py"
+
 WORKER_VERSION="$(as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_worker_v53.py" version)"
-if ! grep -Fq '"scriptVersion": "5.3.0"' <<<"${WORKER_VERSION}"; then
-  echo "Qwen worker 5.3 preflight failed: ${WORKER_VERSION}" >&2
+if ! grep -Fq '"scriptVersion": "5.3.1"' <<<"${WORKER_VERSION}"; then
+  echo "Qwen worker 5.3.1 preflight failed: ${WORKER_VERSION}" >&2
+  exit 2
+fi
+if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v531_test.py" >/dev/null; then
+  echo "Qwen worker 5.3.1 regression preflight failed." >&2
   exit 2
 fi
 CONTROLLER_VERSION="$(as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control.py.compat.py" --version)"
@@ -133,6 +153,8 @@ mandatory = {
     "KRIS_QWEN_REPO_DIR": os.environ["REPO_DIR"],
     "KRIS_QWEN_REPO_BRANCH": os.environ["CURRENT_BRANCH"],
     "KRIS_QWEN_PYTHON": os.environ["PYTHON_BIN"],
+    # Keep the stable v53 filename. It forwards to deterministic 5.3.1 so
+    # previously configured controllers and PID matching remain compatible.
     "KRIS_QWEN_WORKER_SCRIPT": str(pathlib.Path(os.environ["REPO_DIR"]) / "tool/kris_qwen_worker_v53.py"),
     "KRIS_QWEN_AUTO_UPDATE": "1",
     "KRIS_QWEN_AUTO_UPDATE_SECONDS": "30",
@@ -196,6 +218,7 @@ Environment=HOME=${SERVICE_HOME}
 Environment=GH_CONFIG_DIR=${SERVICE_HOME}/.config/gh
 Environment=GIT_TERMINAL_PROMPT=0
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_worker_v53.py version
+ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v531_test.py
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py.compat.py --version
 ExecStart=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py.compat.py
 Restart=always
@@ -230,7 +253,7 @@ TOKEN_FILE="${QWEN_ROOT}/controller/control-token"
 echo
 echo "KRIS Qwen durable always-on control installed."
 echo "Service user: ${SERVICE_USER}"
-echo "Worker:       5.3.0"
+echo "Worker:       5.3.1"
 echo "Controller:   2.2.0"
 echo "Branch:       ${CURRENT_BRANCH}"
 echo "Mode:         $([[ "${PHONE_MODE}" == "1" ]] && echo 'trusted-LAN/VPN phone' || echo 'loopback')"
@@ -240,7 +263,7 @@ echo "Environment:  ${ENV_FILE}"
 echo "Token file:   ${TOKEN_FILE}"
 echo
 echo "Controller crashes are restarted by systemd. Worker crashes/model-server failures"
-echo "are recovered by controller 2.2 / worker 5.3, and safe branch updates are automatic."
+echo "are recovered by controller 2.2 / worker 5.3.1, and safe branch updates are automatic."
 if [[ "${PHONE_MODE}" == "1" ]]; then
   echo
 echo "Phone mode is enabled. Use only on a trusted LAN/VPN."
