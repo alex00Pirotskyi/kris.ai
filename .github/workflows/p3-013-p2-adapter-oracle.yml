@@ -28,7 +28,7 @@ jobs:
           product = Path('lib/product/browser/web_preview.dart')
           text = product.read_text()
           imports_old = "import '../domain.dart';\nimport '../workspace_tools.dart';"
-          imports_new = "import '../domain.dart';\nimport '../p2_effect_boundary.dart';\nimport '../p2_process_tree.dart';\nimport '../p2_pty_service.dart';\nimport '../storage_security.dart' show ProductException;\nimport '../workspace_tools.dart';"
+          imports_new = "import '../p2_effect_boundary.dart';\nimport '../p2_process_tree.dart';\nimport '../p2_pty_service.dart';\nimport '../storage_security.dart' show ProductException;\nimport '../workspace_tools.dart';"
           if imports_old not in text:
               raise SystemExit('preview import anchor missing')
           text = text.replace(imports_old, imports_new, 1)
