@@ -151,6 +151,12 @@ def transform(text: str) -> str:
         '    parser.add_argument("--loop-sleep", type=int, default=int(os.environ.get("KRIS_QWEN_LOOP_SLEEP", "2")), help="red-alert/transient polling interval only; successful jobs chain immediately")\n',
         "loop sleep default",
     )
+    text = replace_exact(
+        text,
+        '    parser.add_argument("--max-consecutive-errors", type=int, default=int(os.environ.get("KRIS_QWEN_MAX_CONSECUTIVE_ERRORS", "5")), help="persistent loop exits only after this many consecutive Qwen/job hard errors; shared runtime validation drift does not consume this budget")\n',
+        '    parser.add_argument("--max-consecutive-errors", type=int, default=int(os.environ.get("KRIS_QWEN_MAX_CONSECUTIVE_ERRORS", "5")), help="threshold before repeated hard Work Order errors become RED_ALERT_HARD_ERROR; the persistent stack keeps running")\n',
+        "hard error threshold help",
+    )
 
     old_no_work = '''                    except NoEligibleWork as exc:\n                        consecutive_errors = 0\n                        transient_signature = ""\n                        transient_count = 0\n                        write_worker_status(cfg, "CONTINUING", reason=str(exc), jobsCompleted=jobs)\n                        print(f"[idle] {exc}; retrying in {cfg.loop_sleep}s")\n'''
     new_no_work = '''                    except NoEligibleWork as exc:\n                        consecutive_errors = 0\n                        transient_signature = ""\n                        transient_count = 0\n                        red_alert_retry = min(5, max(1, int(cfg.loop_sleep)))\n                        write_worker_status(\n                            cfg, "RED_ALERT_FRONTIER", reason=str(exc), redAlert=True,\n                            retrySeconds=red_alert_retry, jobsCompleted=jobs,\n                        )\n                        print(f"[red-alert] no executable Product frontier: {exc}; aggressive retry in {red_alert_retry}s")\n                        if interruptible_sleep(cfg, red_alert_retry):\n                            continue\n                        continue\n'''
@@ -165,6 +171,10 @@ def transform(text: str) -> str:
         persistent_backoff,
         'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
     )
+
+    old_hard_error = '''                    except WorkerError as exc:\n                        consecutive_errors += 1\n                        write_worker_status(cfg, "RECOVERING", error=str(exc), consecutiveErrors=consecutive_errors, jobsCompleted=jobs)\n                        print(\n                            f"[job-error] {exc}; consecutive={consecutive_errors}/{cfg.max_consecutive_errors}",\n                            file=sys.stderr,\n                        )\n                        if consecutive_errors >= max(1, cfg.max_consecutive_errors):\n                            raise WorkerError(\n                                f"persistent worker reached {consecutive_errors} consecutive hard Work Order errors; "\n                                f"last error: {exc}"\n                            )\n                        backoff = min(max(15, cfg.loop_sleep) * consecutive_errors, 300)\n                        print(f"[recover] re-resolving frontier in {backoff}s instead of terminating stack")\n                        if interruptible_sleep(cfg, backoff):\n                            continue\n                        continue\n'''
+    new_hard_error = '''                    except WorkerError as exc:\n                        consecutive_errors += 1\n                        persistent_hard_error = consecutive_errors >= max(1, cfg.max_consecutive_errors)\n                        backoff = min(30, max(5, int(cfg.loop_sleep) * min(consecutive_errors, 15)))\n                        status_state = "RED_ALERT_HARD_ERROR" if persistent_hard_error else "RECOVERING"\n                        write_worker_status(\n                            cfg, status_state, error=str(exc),\n                            consecutiveErrors=consecutive_errors,\n                            persistentHardError=persistent_hard_error,\n                            retrySeconds=backoff, jobsCompleted=jobs,\n                        )\n                        tag = "red-alert-hard-error" if persistent_hard_error else "job-error"\n                        print(\n                            f"[{tag}] {exc}; consecutive={consecutive_errors}/"\n                            f"{cfg.max_consecutive_errors}; re-resolving in {backoff}s; stack stays alive",\n                            file=sys.stderr,\n                        )\n                        if interruptible_sleep(cfg, backoff):\n                            continue\n                        continue\n'''
+    text = replace_exact(text, old_hard_error, new_hard_error, "persistent hard error recovery")
 
     old_tail = '''                    if interruptible_sleep(cfg, cfg.loop_sleep):\n                        continue\n'''
     if text.count(old_tail) < 1:
@@ -186,7 +196,9 @@ def transform(text: str) -> str:
         'def seed_continuous_product_work(',
         'CONTINUOUS_PRIMARY_CODE_PREFIXES',
         'RED_ALERT_FRONTIER',
+        'RED_ALERT_HARD_ERROR',
         'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
+        'stack stays alive',
         'Successful work chains immediately',
     )
     missing = [marker for marker in required if marker not in text]
