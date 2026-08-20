@@ -181,6 +181,27 @@ void main() {
     expect(model.selected?.attached, false);
   });
 
+  test('terminal tabs cannot mutate without model notification', () {
+    final model = P2TerminalModel();
+    expect(
+      () => model.tabs.add(
+        const P2TerminalTab(
+          id: 'silent',
+          title: 'Silent',
+          shell: 'bash',
+          cwd: '/',
+          runId: 'run',
+          taskId: 'task',
+          grantId: 'grant',
+          attached: true,
+          accessibilityLabel: 'silent terminal',
+        ),
+      ),
+      throwsUnsupportedError,
+    );
+    expect(model.tabs, isEmpty);
+  });
+
   test(
     'service actions invoke PTY stream input detach clipboard transcript and watchdog',
     () async {
