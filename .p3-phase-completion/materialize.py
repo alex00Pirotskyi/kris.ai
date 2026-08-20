@@ -61,6 +61,23 @@ workspace_text = workspace_text.replace(
 )
 workspace.write_text(workspace_text)
 
+phase_test = Path('test/product/browser/browser_phase_completion_test.dart')
+phase_text = phase_test.read_text()
+image_old = "const screenshot = <int>[0xff, 0xd8, 0xff, 0xd9];"
+image_new = """final screenshot = base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlB+qAAAAAASUVORK5CYII=',
+  );"""
+if image_old not in phase_text:
+    raise SystemExit('P3 workspace test image anchor missing')
+phase_text = phase_text.replace(image_old, image_new, 1)
+phase_text = phase_text.replace("'mediaType': 'image/jpeg',", "'mediaType': 'image/png',", 1)
+assert_old = "expect(find.textContaining('desktop 1440×900'), findsOneWidget);"
+assert_new = "expect(find.text('desktop 1440×900'), findsOneWidget);"
+if assert_old not in phase_text:
+    raise SystemExit('P3 workspace test assertion anchor missing')
+phase_text = phase_text.replace(assert_old, assert_new, 1)
+phase_test.write_text(phase_text)
+
 required = [
     'lib/product/browser/browser_control_plane.dart',
     'lib/product/browser/browser_profile_store.dart',
