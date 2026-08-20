@@ -6,13 +6,13 @@
     "native/**"
   ],
   "assignedWorker": "ELASTIC-e168f3bb",
-  "baseCommit": "8dbe9063e37714dad959573bd2441286265c9402",
-  "baseTree": "ae0d24152ddd93f002627b9bc21d8d567908dd7f",
+  "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+  "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
   "createdAt": "2026-08-07T12:15:00Z",
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "QWEN_ALWAYS_ON_RECOVERY:REVIEWED_HELPER_TO_INTEGRATION",
+  "lastActor": "QWEN_ALWAYS_ON_RECOVERY:REBIND_READY_TO_CANONICAL",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-010",
   "objective": "Integrate the bounded P11 immutable-review purpose/scope repair into canonical Product PR #71, collapse superseded helper variants to one consumed source state, rerun Worker E dependency/readiness regressions, and retain R2 native/security review as an external high-risk gate.",
@@ -27,6 +27,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-20T08:18:38Z",
+  "updatedAt": "2026-08-20T09:08:38Z",
   "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }

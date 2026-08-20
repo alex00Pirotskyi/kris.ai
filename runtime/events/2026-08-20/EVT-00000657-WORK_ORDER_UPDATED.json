@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00000657-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "QWEN_ALWAYS_ON_RECOVERY:REBIND_READY_TO_CANONICAL",
+    "baseCommit": "1383b8c4dff657020eb6873d01d370ffbfb30b72",
+    "baseTree": "01821da30672d2275b69ee3dcfc83c5dbb10ccdc",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-20T09:08:38Z",
+  "runtimeGeneration": 657,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-QWEN-P11-REBIND-20260820T090838Z",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
+}
