@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib.util
 import os
 import pathlib
+import sys
 import threading
 import time
 
@@ -16,6 +17,7 @@ def load_base():
     if spec is None or spec.loader is None:
         raise SystemExit("KRIS_QWEN_CONTROL_COMPAT_ERROR: cannot load base controller")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
