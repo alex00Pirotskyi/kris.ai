@@ -5,8 +5,8 @@
     "sha256": "72d49987b5bcd7244af3934440733ae8b4462162c8c77a3595f455067cc6c8a2"
   },
   "baseAuthority": {
-    "declaredInputFingerprint": "532f73ad316f6887ce1fdf3f7252ee371ad1d4e98062b1e3e3a9673c1da64818",
-    "manifestSha256": "ff7d6d1fb0b2f3a17d89f412557cd00bb1ed39f9ba2beae4f8e12f0f20f96d48",
+    "declaredInputFingerprint": "73ce3a534aa8a3de35005c88747e1b60a453247305876352630008973f0e6961",
+    "manifestSha256": "1be0665a9f896d86817b7e917cbb9e0b89eae553a1028d64d45bf2446446f981",
     "path": "config/toolchains.lock.json",
     "sourceCommit": "53a7d661cda1f714bbe3ff83c8e06d99cb433a20"
   },
@@ -14,7 +14,7 @@
     "pinnedBy": "flutter-sdk",
     "version": "3.12.2"
   },
-  "declaredInputFingerprint": "9dbef7d492717f527afcecfbceaa44003c12cf5cb98b0d25e21b1f1d4f486b62",
+  "declaredInputFingerprint": "01034803bbec2594ac9bad1944670aeec2e7b2a38d3e38cc8a87c5079fb50142",
   "flutter": {
     "channel": "stable",
     "version": "3.44.8"
