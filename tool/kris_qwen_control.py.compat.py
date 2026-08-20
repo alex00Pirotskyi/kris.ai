@@ -27,6 +27,25 @@ base.CONTROL_VERSION = TARGET_CONTROL_VERSION
 BaseController = base.QwenController
 
 
+def always_on_worker_pid(pid: int | None) -> bool:
+    if not base.pid_alive(pid):
+        return False
+    cmd = base.process_cmdline(int(pid)).lower()
+    if "python" not in cmd:
+        return False
+    return any(
+        marker in cmd
+        for marker in (
+            "kris_qwen_worker.py",
+            "kris_qwen_worker_v53.py",
+        )
+    )
+
+
+base.is_qwen_worker_pid = always_on_worker_pid
+base.ControlHandler.server_version = "KrisQwenControl/2.2"
+
+
 class AlwaysOnQwenController(BaseController):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -80,18 +99,20 @@ class AlwaysOnQwenController(BaseController):
     def _auto_update_once(self) -> dict:
         if self.operation_running():
             return {"status": "BUSY"}
+        if not self.auto_run_enabled:
+            return {"status": "PAUSED"}
         self._validate_repo()
         local = self._git_head()
         remote = self._remote_branch_head()
         if remote != local:
             queued = super().fetch_latest_and_run()
             return {
+                **queued,
                 "status": "UPDATE_QUEUED",
                 "local": local,
                 "remote": remote,
-                **queued,
             }
-        if self.auto_run_enabled and not self.worker_pid():
+        if not self.worker_pid():
             started = super().start()
             return {
                 "status": "AUTO_STARTED",
