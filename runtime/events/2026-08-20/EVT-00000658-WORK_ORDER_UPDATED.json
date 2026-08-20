@@ -1,0 +1,17 @@
+{
+  "eventId": "EVT-00000658-WORK_ORDER_UPDATED",
+  "eventType": "WORK_ORDER_UPDATED",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "QWEN_ALWAYS_ON_RECOVERY:BIND_REVIEWED_HELPER_PR139",
+    "helperPr": 139,
+    "helperHead": "1403f42d27a838ff7cdb2684832c6855023670cf",
+    "helperTree": "03dd2b8ab0bdc4416b966fbcf7a76773a157987d",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-20T09:11:06Z",
+  "runtimeGeneration": 658,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-QWEN-P11-BIND-PR139-20260820T091106Z",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
+}

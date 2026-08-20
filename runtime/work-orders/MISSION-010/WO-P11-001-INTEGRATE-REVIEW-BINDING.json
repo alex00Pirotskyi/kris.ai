@@ -12,10 +12,10 @@
   "createdBy": "MISSION_EXECUTION_V15_BOOTSTRAP",
   "dependencyRequirements": [],
   "executionRole": "INTEGRATOR",
-  "lastActor": "QWEN_ALWAYS_ON_RECOVERY:REBIND_READY_TO_CANONICAL",
+  "lastActor": "QWEN_ALWAYS_ON_RECOVERY:BIND_REVIEWED_HELPER_PR139",
   "maxChildWorkOrders": 1,
   "mission": "MISSION-010",
-  "objective": "Integrate the bounded P11 immutable-review purpose/scope repair into canonical Product PR #71, collapse superseded helper variants to one consumed source state, rerun Worker E dependency/readiness regressions, and retain R2 native/security review as an external high-risk gate.",
+  "objective": "Integrate reviewed helper PR #139 at exact head 1403f42d27a838ff7cdb2684832c6855023670cf / tree 03dd2b8ab0bdc4416b966fbcf7a76773a157987d into canonical Product PR #71. The helper is the bounded P11 immutable-review purpose/scope repair already promoted to HELPER_READY after fresh context-independent R1. Collapse superseded helper variants to one consumed source state, rerun Worker E dependency/readiness regressions, and retain R2 native/security review as an external high-risk gate. No Test Center owner, support, acceptance, release, production, or GA claim is implied.",
   "parentProductPr": 71,
   "priority": 94,
   "requestedRole": "INTEGRATOR",
@@ -27,6 +27,6 @@
   "schemaVersion": 1,
   "status": "READY",
   "type": "INTEGRATION",
-  "updatedAt": "2026-08-20T09:08:38Z",
+  "updatedAt": "2026-08-20T09:11:06Z",
   "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
 }
