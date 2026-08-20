@@ -93,8 +93,7 @@ class P2TerminalModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  P2TerminalTab? get selected =>
-      _tabs.isEmpty ? null : _tabs[_selectedIndex];
+  P2TerminalTab? get selected => _tabs.isEmpty ? null : _tabs[_selectedIndex];
 
   void add(P2TerminalTab tab) {
     if (tab.id.trim().isEmpty ||
