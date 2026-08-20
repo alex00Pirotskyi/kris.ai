@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'adaptive_mission_planning.dart';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'models_research.dart';
@@ -874,6 +875,21 @@ $intake
     void Function(String delta)? onTextDelta,
   }) async {
     final limit = maxLeafTasks.clamp(1, 100).toInt();
+    final forecast = AdaptiveMissionPlanner.preview(
+      prompt: promptVersion.draft,
+      model: model,
+      depth: depth,
+      maxTasks: limit,
+    );
+    final hardOutputCeiling = limit <= 7
+        ? 3072
+        : limit <= 15
+            ? 4096
+            : 8192;
+    final adaptiveOutputTokenBudget = min(
+      hardOutputCeiling,
+      max(1280, forecast.outputTokens.high + 192),
+    );
     final commandId = newId('plan_generation');
     final toolNames = tools.names.toList()..sort();
     final settings = _settings;
@@ -885,6 +901,14 @@ You are the task-planning model inside Kristin Local Agent $kristinVersion.
 Convert the approved prompt into an executable, dependency-valid task plan.
 Return exactly one JSON object and no Markdown.
 The task count is adaptive: use one task for truly atomic work and more tasks only when they reduce risk or improve verification. Never exceed $limit tasks.
+Design a compact mission skeleton before individual runner packets.
+Use the phase field as a stable mission name. Keep each mission coherent and normally between one and four tasks.
+Return compact packet specifications, not repeated project context. Shared prompt context is materialized later as a mission capsule.
+Prefer a small ready frontier and dependency-gated later packets. Hoist shared prerequisites into the earliest mission instead of repeating them.
+Merge overlapping tasks. Split a task only when implementation and objective proof cannot fit reliably in one packet.
+Keep instructions under 520 characters, acceptanceCriteria and verificationSteps to at most four each, and expectedArtifacts to at most six.
+Estimate complexity, turns, tool calls, uncertainty, risk, and confidence realistically. Do not optimize those numbers merely to look inexpensive.
+The deterministic adaptive planner will calculate token ranges, critical path, risk-based test coverage, context savings, and final runner packets after validation.
 Allowed tool names are: ${jsonEncode(toolNames)}
 $capabilityPolicy
 The model may propose tools but cannot grant permissions; Kristin will intersect every proposal with the governed registry and infer missing capabilities required by the task text.
@@ -933,21 +957,24 @@ ${depth.name}
 MAXIMUM LEAF TASKS
 $limit
 
+ADAPTIVE FORECAST
+Expected missions: ${forecast.expectedMissionCount}
+Expected tasks: ${forecast.expectedTaskCount}
+Output budget: ${forecast.outputTokens.low}-${forecast.outputTokens.high} tokens
+Shared context capsule: approximately ${forecast.sharedContextTokens} tokens
+Forecast confidence: ${(forecast.confidence * 100).round()}%
+
 APPROVED PROMPT VERSION
 ${const JsonEncoder.withIndent(' ').convert(promptVersion.toJson())}
 
-Generate an appropriately sized plan. The maximum is a ceiling, not a target.
+Generate an appropriately sized mission skeleton. The maximum is a ceiling, not a target. Stay inside the adaptive output budget and avoid prose outside the schema.
 ''';
 
     const maxAttempts = 2;
     Object? lastError;
     String lastResponse = '';
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
-      final outputTokens = limit <= 7
-          ? 3072
-          : limit <= 15
-              ? 4096
-              : min(8192, 4096 + ((limit - 15) * 128));
+      final outputTokens = adaptiveOutputTokenBudget;
       try {
         onProgress?.call(
           ModelGenerationProgress(
@@ -1028,6 +1055,10 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
         if (errors.isNotEmpty) {
           throw ProductException('task_plan_invalid', errors.join(' '));
         }
+        final adaptive = AdaptiveMissionPlanner.analyzePlan(
+          plan: plan,
+          prompt: promptVersion.draft,
+        );
         await repositories.taskPlans.put(plan);
         await audit.append('task_plan.generated', plan.id, <String, dynamic>{
           'promptId': plan.promptId,
@@ -1039,15 +1070,33 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
           'highRiskTasks': plan.highRiskTasks,
           'contentHash': plan.contentHash,
           'attempt': attempt,
+          'adaptivePlanner': AdaptiveMissionPlanner.schemaVersion,
+          'missionCount': adaptive.missions.length,
+          'readyFrontierCount': adaptive.readyFrontier.length,
+          'criticalPath': adaptive.criticalPath,
+          'estimatedTokens': adaptive.economics.toJson(),
+          'verificationCoverage': adaptive.verificationCoverage,
+          'testRecommendationCount': adaptive.tests.length,
+          'contextTokensSaved': adaptive.contextTokensSaved,
         });
         await events.publish('task_plan.generated', plan.id, <String, dynamic>{
           'plan': plan.toJson(),
+          'adaptiveSummary': <String, dynamic>{
+            'schemaVersion': AdaptiveMissionPlanner.schemaVersion,
+            'missions': adaptive.missions.length,
+            'readyFrontier': adaptive.readyFrontier.toList()..sort(),
+            'criticalPath': adaptive.criticalPath,
+            'estimatedTokens': adaptive.economics.toJson(),
+            'verificationCoverage': adaptive.verificationCoverage,
+            'testRecommendations': adaptive.tests.length,
+          },
         });
         try {
           onProgress?.call(
             ModelGenerationProgress(
               stage: 'plan_ready',
-              message: '${plan.tasks.length} validated tasks are ready.',
+              message:
+                  '${adaptive.missions.length} missions and ${plan.tasks.length} validated packets are ready.',
               attempt: attempt,
               maxAttempts: maxAttempts,
             ),
@@ -1183,6 +1232,10 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
         "The selected project is Kristin's own source checkout. Create or select a separate project folder before compiling a mutating task plan.",
       );
     }
+    final adaptivePlan = AdaptiveMissionPlanner.analyzePlan(
+      plan: plan,
+      prompt: promptVersion.draft,
+    );
     final all = <String, PlanTaskRecord>{
       for (final item in plan.tasks) item.id: item,
     };
@@ -1225,15 +1278,7 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
       return WorkItem(
         id: task.id,
         title: task.title,
-        description: '''
-Phase: ${task.phase}
-Objective: ${task.objective}
-Instructions: ${task.instructions}
-Verification: ${task.verificationSteps.join(' | ')}
-Expected artifacts: ${task.expectedArtifacts.join(' | ')}
-Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.risk.name}; confidence: ${(task.estimateConfidence * 100).round()}%.
-'''
-            .trim(),
+        description: adaptivePlan.runnerPacketFor(task.id),
         dependencies: task.dependencies.where(allowedIds.contains).toSet(),
         allowedTools: allowedTools,
         acceptanceCriteria: task.acceptanceCriteria,
@@ -1306,7 +1351,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       contractId: contract.id,
       complexity: tasks.map((item) => item.complexity).reduce(max),
       rationale:
-          '${plan.rationale} Compiled deterministically from ${tasks.length} approved generated tasks.',
+          '${plan.rationale} Compiled through ${AdaptiveMissionPlanner.schemaVersion} into ${adaptivePlan.missions.length} missions, ${tasks.length} selected runner packets, a likely ${adaptivePlan.economics.likely}-token envelope, and ${(adaptivePlan.verificationCoverage * 100).round()}% estimated verification coverage.',
       items: workItems,
       createdAt: DateTime.now().toUtc(),
     );
@@ -1324,6 +1369,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
         'model': model.toJson(),
         'contractRevision': contract.revision,
         'effectiveMode': effectiveMode.name,
+        'adaptivePlanner': AdaptiveMissionPlanner.schemaVersion,
       }),
     );
     final existing = (await repositories.commands.all())
@@ -1347,6 +1393,11 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       'promptVersionId': promptVersion.id,
       'taskPlanId': plan.id,
       'workItems': workItems.length,
+      'adaptivePlanner': AdaptiveMissionPlanner.schemaVersion,
+      'missionCount': adaptivePlan.missions.length,
+      'readyFrontierCount': adaptivePlan.readyFrontier.length,
+      'estimatedTokens': adaptivePlan.economics.toJson(),
+      'verificationCoverage': adaptivePlan.verificationCoverage,
       'permissions': requiredPermissions.map((item) => item.name).toList()
         ..sort(),
     });
@@ -1357,6 +1408,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       'complexity': executionPlan.complexity,
       'generatedTaskPlan': true,
       'taskPlanId': plan.id,
+      'adaptivePlanner': AdaptiveMissionPlanner.schemaVersion,
+      'missionCount': adaptivePlan.missions.length,
+      'estimatedTokens': adaptivePlan.economics.toJson(),
     });
     return prepared;
   }
@@ -1668,10 +1722,14 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       );
     }
 
-    final deduplicatedTasks = _deduplicateCapabilityTasks(tasks);
+    final optimization = AdaptiveMissionPlanner.optimizeTasks(
+      tasks: tasks,
+      prompt: promptVersion.draft,
+      maxTasks: maxLeafTasks,
+    );
     tasks
       ..clear()
-      ..addAll(deduplicatedTasks);
+      ..addAll(optimization.tasks);
 
     final effectiveGeneratedMode = _effectivePlanMode(
       promptVersion.draft,
@@ -1707,11 +1765,25 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       }
     }
 
+    final optimizationNotes = <String>[
+      if (optimization.mergedTaskIds.isNotEmpty)
+        '${optimization.mergedTaskIds.length} overlapping packet${optimization.mergedTaskIds.length == 1 ? '' : 's'} merged',
+      if (optimization.splitTaskIds.isNotEmpty)
+        '${optimization.splitTaskIds.length} oversized packet${optimization.splitTaskIds.length == 1 ? '' : 's'} split behind verification gates',
+      if (optimization.verificationGateAdded)
+        'integrated final verification gate added',
+    ];
+    final generatedRationale = json['rationale']?.toString().trim() ?? '';
+    final adaptiveRationale = <String>[
+      if (generatedRationale.isNotEmpty) generatedRationale,
+      if (optimizationNotes.isNotEmpty)
+        'Adaptive optimization: ${optimizationNotes.join('; ')}.',
+    ].join(' ');
     final hashPayload = <String, dynamic>{
       'promptVersionId': promptVersion.id,
       'projectId': projectId,
       'title': json['title']?.toString() ?? promptVersion.draft.title,
-      'rationale': json['rationale']?.toString() ?? '',
+      'rationale': adaptiveRationale,
       'depth': depth.name,
       'maxLeafTasks': maxLeafTasks,
       'tasks': tasks.map((item) => item.toJson()).toList(),
@@ -1727,7 +1799,7 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
       title: json['title']?.toString().trim().isNotEmpty == true
           ? json['title'].toString().trim()
           : promptVersion.draft.title,
-      rationale: json['rationale']?.toString().trim() ?? '',
+      rationale: adaptiveRationale,
       depth: depth,
       maxLeafTasks: maxLeafTasks,
       tasks: tasks,

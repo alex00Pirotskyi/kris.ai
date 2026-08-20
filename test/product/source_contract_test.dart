@@ -126,6 +126,8 @@ void main() {
     test('only the governed library source is analyzer-visible', () {
       const expected = <String>{
         'lib/main.dart',
+        'lib/product/adaptive_mission_planning.dart',
+        'lib/product/adaptive_mission_ui.dart',
         'lib/product/agent_decision.dart',
         'lib/product/agent_protocol.dart',
         'lib/product/api_server.dart',

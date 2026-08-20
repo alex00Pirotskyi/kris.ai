@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'adaptive_mission_planning.dart';
+import 'adaptive_mission_ui.dart';
 import 'api_server.dart';
 import 'domain.dart';
 import 'extensions_index.dart';
@@ -3885,7 +3887,8 @@ class _ChatStudioState extends State<ChatStudio> {
       promptGenerationMessage = switch (promptStudioOperationKind) {
         _PromptStudioOperationKind.clarification =>
           'Kristin is shaping the answer choices.',
-        _PromptStudioOperationKind.taskPlan => 'The task graph is arriving.',
+        _PromptStudioOperationKind.taskPlan =>
+          'The adaptive mission skeleton is arriving.',
         _ => 'The prompt draft is arriving.',
       };
     });
@@ -4295,7 +4298,7 @@ class _ChatStudioState extends State<ChatStudio> {
       _PromptStudioOperationKind.taskPlan,
       cancellation,
       stopwatch,
-      'Turning the prompt into a compact task graph',
+      'Designing adaptive missions, economics, and tests',
     );
     try {
       final plan = await runtime.generateTaskPlan(
@@ -4313,9 +4316,14 @@ class _ChatStudioState extends State<ChatStudio> {
       if (!mounted || cancellation.isCompleted) {
         return;
       }
+      final adaptive = AdaptiveMissionPlanner.analyzePlan(
+        plan: plan,
+        prompt: generatedPromptDraft!,
+      );
       setState(() {
         generatedTaskPlan = plan;
-        status = '${plan.tasks.length} validated tasks ready for review';
+        status =
+            '${adaptive.missions.length} missions, ${plan.tasks.length} packets, and ${adaptive.tests.length} test recommendations are ready';
       });
     } on ProductException catch (failure) {
       if (!mounted) {
@@ -4559,7 +4567,7 @@ class _ChatStudioState extends State<ChatStudio> {
       _PromptStudioOperationKind.improve => 'Improving prompt',
       _PromptStudioOperationKind.simplify => 'Simplifying prompt',
       _PromptStudioOperationKind.addDetail => 'Adding detail',
-      _PromptStudioOperationKind.taskPlan => 'Building task plan',
+      _PromptStudioOperationKind.taskPlan => 'Designing missions',
       null => 'Prompt Studio',
     };
     final icon = switch (kind) {
@@ -4569,7 +4577,7 @@ class _ChatStudioState extends State<ChatStudio> {
     };
     final previewLabel = switch (kind) {
       _PromptStudioOperationKind.clarification => 'Live choice draft',
-      _PromptStudioOperationKind.taskPlan => 'Live task-plan draft',
+      _PromptStudioOperationKind.taskPlan => 'Live mission skeleton',
       _ => 'Live prompt draft',
     };
     final progress = _promptStudioStageProgress(promptGenerationStage);
@@ -4885,7 +4893,7 @@ class _ChatStudioState extends State<ChatStudio> {
                 FilledButton.icon(
                   onPressed: busy ? null : _generateStudioTaskPlan,
                   icon: const Icon(Icons.account_tree_outlined),
-                  label: const Text('Build task plan'),
+                  label: const Text('Design missions & tests'),
                 ),
                 OutlinedButton.icon(
                   onPressed: busy ? null : () => _saveGeneratedPromptDraft(),
@@ -4910,147 +4918,147 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _generatedTaskPlanCard(TaskPlanRecord plan) {
-    final phases = <String, List<PlanTaskRecord>>{};
-    for (final task in plan.tasks) {
-      phases.putIfAbsent(task.phase, () => <PlanTaskRecord>[]).add(task);
-    }
     final active = currentRun != null &&
         const <RunState>{
           RunState.running,
           RunState.paused,
           RunState.cancelling,
         }.contains(currentRun!.state);
+    final prompt = generatedPromptDraft;
+    if (prompt == null) {
+      return const SizedBox.shrink();
+    }
+    final adaptive = AdaptiveMissionPlanner.analyzePlan(
+      plan: plan,
+      prompt: prompt,
+    );
+    final model = selectedModel ?? plan.model;
+    final readyIds = adaptive.readyFrontier;
     return Card(
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(Icons.account_tree_outlined),
-                const SizedBox(width: 10),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(Icons.route_outlined),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
                         plan.title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
                             ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(plan.rationale),
                     ],
                   ),
                 ),
-                _statusPill(
-                  '${plan.enabledTasks.length}/${plan.tasks.length} tasks',
-                  Icons.task_alt,
-                ),
-                const SizedBox(width: 6),
                 _statusPill('Plan v${plan.revision}', Icons.history_outlined),
               ],
             ),
-            const SizedBox(height: 13),
+            const SizedBox(height: 14),
             Wrap(
               spacing: 7,
               runSpacing: 7,
               children: <Widget>[
-                Chip(label: Text('${plan.totalEffortPoints} effort points')),
-                Chip(label: Text('Max complexity ${plan.maxComplexity}/10')),
-                Chip(label: Text('${plan.highRiskTasks} high-risk')),
-                Chip(label: Text('${phases.length} phases')),
-                Chip(label: Text('${plan.depth.name} depth')),
+                Chip(
+                  avatar: const Icon(Icons.flag_outlined, size: 17),
+                  label: Text('${adaptive.missions.length} missions'),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.playlist_play, size: 17),
+                  label: Text('${readyIds.length} ready packets'),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.data_usage_outlined, size: 17),
+                  label: Text('${adaptive.economics.likely} likely tokens'),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.fact_check_outlined, size: 17),
+                  label: Text(
+                    '${(adaptive.verificationCoverage * 100).round()}% verification coverage',
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: <Widget>[
                 FilledButton.icon(
+                  onPressed: busy || active || readyIds.isEmpty
+                      ? null
+                      : () => _prepareStudioTaskPlan(
+                            selectedTaskIds: readyIds,
+                            start: true,
+                          ),
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(
+                    readyIds.length == 1
+                        ? 'Run ready packet'
+                        : 'Run ${readyIds.length} ready packets',
+                  ),
+                ),
+                FilledButton.tonalIcon(
                   onPressed: busy || active
                       ? null
                       : () => _prepareStudioTaskPlan(start: true),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Run all tasks'),
+                  icon: const Icon(Icons.rocket_launch_outlined),
+                  label: const Text('Run all missions'),
                 ),
                 OutlinedButton.icon(
                   onPressed: busy ? null : () => _prepareStudioTaskPlan(),
                   icon: const Icon(Icons.fact_check_outlined),
-                  label: const Text('Review execution plan'),
+                  label: const Text('Review execution contract'),
                 ),
                 if (active)
                   OutlinedButton.icon(
                     onPressed: busy ? null : () => _controlRun('cancel'),
                     icon: const Icon(Icons.stop_circle_outlined),
-                    label: const Text('Stop all running tasks'),
+                    label: const Text('Stop running missions'),
                   ),
               ],
             ),
-            const SizedBox(height: 12),
-            ...phases.entries.map(
-              (entry) => Card(
-                margin: const EdgeInsets.only(top: 8),
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                child: ExpansionTile(
-                  initiallyExpanded: phases.length <= 4,
-                  leading: const Icon(Icons.folder_copy_outlined),
-                  title: Text(
-                    entry.key,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+            const SizedBox(height: 16),
+            AdaptiveMissionInspector(
+              plan: plan,
+              prompt: prompt,
+              model: model,
+              busy: busy || active,
+              onEditTask: (taskId) {
+                final task = plan.tasks
+                    .where((candidate) => candidate.id == taskId)
+                    .firstOrNull;
+                if (task != null) {
+                  unawaited(_editGeneratedPlanTask(task));
+                }
+              },
+              onRunTasks: (taskIds) {
+                unawaited(
+                  _prepareStudioTaskPlan(
+                    selectedTaskIds: taskIds,
+                    start: true,
                   ),
-                  subtitle: Text(
-                    '${entry.value.where((task) => task.enabled).length}/${entry.value.length} enabled tasks',
-                  ),
-                  children: entry.value.map((task) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text('${plan.tasks.indexOf(task) + 1}'),
-                      ),
-                      title: Text(task.title),
-                      subtitle: Text(
-                        '${task.objective}\n${task.enabled ? 'Enabled' : 'Disabled'}${task.manual ? ' · manual' : ''} · Complexity ${task.complexity}/10 · ${task.effortPoints} points · ${task.risk.name} risk · ${(task.estimateConfidence * 100).round()}% confidence'
-                        '${task.dependencies.isEmpty ? '' : '\nDepends on: ${task.dependencies.join(', ')}'}',
-                      ),
-                      isThreeLine: true,
-                      enabled: task.enabled,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Tooltip(
-                            message:
-                                'Edit this task and save a new plan revision',
-                            child: IconButton(
-                              onPressed: busy
-                                  ? null
-                                  : () => _editGeneratedPlanTask(task),
-                              icon: const Icon(Icons.edit_outlined),
-                            ),
-                          ),
-                          Tooltip(
-                            message: task.enabled
-                                ? 'Run selected task + dependencies'
-                                : 'Enable this task before running it',
-                            child: IconButton(
-                              onPressed: busy || active || !task.enabled
-                                  ? null
-                                  : () => _prepareStudioTaskPlan(
-                                        selectedTaskIds: <String>{task.id},
-                                        start: true,
-                                      ),
-                              icon: const Icon(Icons.play_circle_outline),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -5065,7 +5073,7 @@ class _ChatStudioState extends State<ChatStudio> {
         _pageHeader(
           title: 'Prompt Studio',
           subtitle:
-              'A question-first workbench: clarify the important choices, generate a final prompt, shape a visible task graph, then run it under Kristin’s governed controls.',
+              'A question-first product workshop: clarify decisions, refine the final prompt, optimize adaptive missions and tests, inspect token economics, then launch the ready frontier under governed controls.',
           actions: <Widget>[
             OutlinedButton.icon(
               onPressed: busy ? null : _resetPromptStudioSession,
@@ -5090,31 +5098,38 @@ class _ChatStudioState extends State<ChatStudio> {
     final hasIdea = promptGoalController.text.trim().isNotEmpty;
     final hasChoices = promptClarificationAnswers.isNotEmpty;
     final hasPrompt = generatedPromptDraft != null;
-    final hasPlan = generatedTaskPlan != null;
+    final hasMissions = generatedTaskPlan != null;
+    final hasLaunch = prepared != null || currentRun != null;
     final steps = <({String label, String detail, bool done, bool active})>[
       (
         label: 'Idea',
         detail: 'Describe the outcome',
         done: hasIdea,
-        active: !hasChoices,
+        active: !hasIdea,
       ),
       (
         label: 'Choices',
-        detail: 'Answer 2–5 decisions',
+        detail: 'Resolve material decisions',
         done: hasChoices,
-        active: hasIdea && !hasPrompt,
+        active: hasIdea && !hasChoices,
       ),
       (
         label: 'Prompt',
-        detail: 'Review and refine',
+        detail: 'Review the definition of done',
         done: hasPrompt,
-        active: hasChoices && !hasPlan,
+        active: hasChoices && !hasPrompt,
       ),
       (
-        label: 'Tasks',
-        detail: 'Validate the run graph',
-        done: hasPlan,
-        active: hasPrompt,
+        label: 'Missions',
+        detail: 'Optimize packets, economics, and tests',
+        done: hasMissions,
+        active: hasPrompt && !hasMissions,
+      ),
+      (
+        label: 'Launch',
+        detail: 'Run the ready frontier or full graph',
+        done: hasLaunch,
+        active: hasMissions && !hasLaunch,
       ),
     ];
     return Card(
@@ -5123,9 +5138,11 @@ class _ChatStudioState extends State<ChatStudio> {
         padding: const EdgeInsets.all(14),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final width = constraints.maxWidth >= 760
-                ? (constraints.maxWidth - 30) / 4
-                : constraints.maxWidth;
+            final width = constraints.maxWidth >= 980
+                ? (constraints.maxWidth - 40) / 5
+                : constraints.maxWidth >= 660
+                    ? (constraints.maxWidth - 10) / 2
+                    : constraints.maxWidth;
             return Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -5316,6 +5333,11 @@ class _ChatStudioState extends State<ChatStudio> {
   Widget _promptStudioControlRail() {
     final project = selectedProject;
     final model = selectedModel;
+    final prompt = generatedPromptDraft;
+    final plan = generatedTaskPlan;
+    final adaptive = plan == null || prompt == null
+        ? null
+        : AdaptiveMissionPlanner.analyzePlan(plan: plan, prompt: prompt);
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -5324,7 +5346,7 @@ class _ChatStudioState extends State<ChatStudio> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text(
-              'Session controls',
+              'Mission controls',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -5358,7 +5380,13 @@ class _ChatStudioState extends State<ChatStudio> {
                   ? null
                   : (value) {
                       if (value != null) {
-                        setState(() => generatedPlanningDepth = value);
+                        setState(() {
+                          generatedPlanningDepth = value;
+                          generatedTaskPlan = null;
+                          prepared = null;
+                          currentRun = null;
+                          selectedRunId = null;
+                        });
                       }
                     },
             ),
@@ -5366,14 +5394,14 @@ class _ChatStudioState extends State<ChatStudio> {
             DropdownButtonFormField<int>(
               initialValue: generatedMaxTasks,
               decoration: const InputDecoration(
-                labelText: 'Task ceiling',
+                labelText: 'Runner-packet ceiling',
                 prefixIcon: Icon(Icons.format_list_numbered),
               ),
               items: const <int>[1, 3, 5, 7, 10, 15, 25]
                   .map(
                     (value) => DropdownMenuItem<int>(
                       value: value,
-                      child: Text('$value task${value == 1 ? '' : 's'}'),
+                      child: Text('$value packet${value == 1 ? '' : 's'}'),
                     ),
                   )
                   .toList(),
@@ -5381,21 +5409,60 @@ class _ChatStudioState extends State<ChatStudio> {
                   ? null
                   : (value) {
                       if (value != null) {
-                        setState(() => generatedMaxTasks = value);
+                        setState(() {
+                          generatedMaxTasks = value;
+                          generatedTaskPlan = null;
+                          prepared = null;
+                          currentRun = null;
+                          selectedRunId = null;
+                        });
                       }
                     },
             ),
             const Divider(height: 26),
+            if (prompt != null && model != null)
+              AdaptivePlanningPreview(
+                prompt: prompt,
+                model: model,
+                depth: generatedPlanningDepth,
+                maxTasks: generatedMaxTasks,
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'A token and mission forecast appears after the final prompt is available.',
+                ),
+              ),
+            if (adaptive != null) ...<Widget>[
+              const SizedBox(height: 12),
+              _statusPill(
+                '${adaptive.missions.length} missions · ${adaptive.readyFrontier.length} ready',
+                Icons.flag_outlined,
+              ),
+              const SizedBox(height: 7),
+              _statusPill(
+                '${adaptive.economics.low}-${adaptive.economics.high} execution tokens',
+                Icons.data_usage_outlined,
+              ),
+            ],
+            const Divider(height: 26),
             const Text(
-              'Optimized local path',
+              'Adaptive planner',
               style: TextStyle(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 7),
             const Text(
-              '• Choice pass: up to 1,024 tokens\n'
-              '• Prompt pass: up to 2,048 tokens\n'
-              '• One bounded repair only\n'
-              '• Active Ollama session is reused',
+              '• Generates a compact mission skeleton first\n'
+              '• Merges overlap and splits oversized packets\n'
+              '• Hoists shared context into mission capsules\n'
+              '• Estimates input, output, tool, and retry tokens\n'
+              '• Builds a risk-based test matrix and critical path\n'
+              '• Stops and replans when a packet crosses its high range',
             ),
             const SizedBox(height: 14),
             OutlinedButton.icon(
