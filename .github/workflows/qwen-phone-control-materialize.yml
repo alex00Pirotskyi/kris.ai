@@ -26,18 +26,21 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Verify clean compatibility rollout surface
+      - name: Verify clean always-on rollout surface
         shell: bash
         run: |
           set -euo pipefail
           test ! -e .github/workflows/qwen-always-on-materialize.yml
           test ! -e .github/workflows/qwen-always-on-anchor-audit.yml
+          test -f tool/kris_qwen_worker.py
           test -f tool/kris_qwen_worker.py.compat.py
+          test -f tool/kris_qwen_worker_v53.py
+          test -f tool/kris_qwen_control.py
           test -f tool/kris_qwen_control.py.compat.py
           test -f run_my_server.py
           git diff --check
 
-      - name: Compile and verify executed worker 5.3
+      - name: Compile and execute deterministic worker 5.3
         shell: bash
         run: |
           set -euo pipefail
@@ -45,19 +48,22 @@ jobs:
             run_my_server.py \
             tool/kris_qwen_worker.py \
             tool/kris_qwen_worker.py.compat.py \
+            tool/kris_qwen_worker_v53.py \
             tool/kris_qwen_control.py \
             tool/kris_qwen_control.py.compat.py \
             tool/kris_qwen_control_test.py
           python3 tool/kris_qwen_control_test.py
-          python3 tool/kris_qwen_worker.py.compat.py version | tee "$RUNNER_TEMP/worker-version.json"
+          python3 tool/kris_qwen_worker_v53.py version | tee "$RUNNER_TEMP/worker-version.json"
           python3 - <<'PY'
           import json
+          import os
           import pathlib
 
-          value = json.loads(pathlib.Path(__import__('os').environ['RUNNER_TEMP'], 'worker-version.json').read_text(encoding='utf-8'))
+          value = json.loads(pathlib.Path(os.environ['RUNNER_TEMP'], 'worker-version.json').read_text(encoding='utf-8'))
           if value.get('scriptVersion') != '5.3.0':
-              raise SystemExit(f"executed compatibility worker is not 5.3.0: {value}")
-          text = pathlib.Path('tool/kris_qwen_worker.py.compat.py').read_text(encoding='utf-8')
+              raise SystemExit(f"executed worker entry is not 5.3.0: {value}")
+          deterministic = pathlib.Path('tool/kris_qwen_worker_v53.py').read_text(encoding='utf-8')
+          policy = pathlib.Path('tool/kris_qwen_worker.py.compat.py').read_text(encoding='utf-8')
           for marker in (
               'TARGET_VERSION = "5.3.0"',
               'def wake_pending_reviews',
@@ -66,7 +72,7 @@ jobs:
               'Successful work chains immediately',
               '+refs/pull/*/head:refs/remotes/origin/pull/*/head',
           ):
-              if marker not in text:
+              if marker not in deterministic and marker not in policy:
                   raise SystemExit(f'missing always-on worker marker: {marker}')
           print('QWEN_WORKER_5_3_ALWAYS_ON_PASS')
           PY
@@ -77,8 +83,8 @@ jobs:
           set -euo pipefail
           KRIS_QWEN_AUTO_UPDATE=0 python3 - <<'PY'
           import importlib.util
-          import os
           import pathlib
+          import sys
           import tempfile
           from unittest import mock
 
@@ -87,6 +93,7 @@ jobs:
           if spec is None or spec.loader is None:
               raise SystemExit('cannot import controller compatibility entry')
           module = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = module
           spec.loader.exec_module(module)
           if module.TARGET_CONTROL_VERSION != '2.2.0' or module.base.CONTROL_VERSION != '2.2.0':
               raise SystemExit('controller compatibility entry is not 2.2.0')
@@ -96,7 +103,7 @@ jobs:
               cfg = module.base.Config(
                   repo_dir=pathlib.Path.cwd(),
                   repo_branch='agent/qwen-phone-control',
-                  worker_script=pathlib.Path.cwd() / 'tool' / 'kris_qwen_worker.py.compat.py',
+                  worker_script=pathlib.Path.cwd() / 'tool' / 'kris_qwen_worker_v53.py',
                   root=root / 'worker-root',
                   bind_host='127.0.0.1',
                   port=8090,
@@ -106,6 +113,7 @@ jobs:
                   worker_extra_args=(),
               )
               controller = module.AlwaysOnQwenController(cfg)
+
               with mock.patch.object(controller, '_validate_repo'), mock.patch.object(
                   controller, '_git_head', return_value='a' * 40
               ), mock.patch.object(
@@ -145,7 +153,7 @@ jobs:
           print('QWEN_CONTROLLER_2_2_AUTO_UPDATE_PASS')
           PY
 
-      - name: Verify launcher executes compatibility entries
+      - name: Verify launcher binds exact always-on entries
         shell: bash
         run: |
           set -euo pipefail
@@ -154,7 +162,8 @@ jobs:
           text = Path('run_my_server.py').read_text(encoding='utf-8')
           required = (
               'kris_qwen_control.py.compat.py',
-              'kris_qwen_worker.py.compat.py',
+              'kris_qwen_worker_v53.py',
+              'KRIS_QWEN_WORKER_SCRIPT',
               'KRIS_QWEN_AUTO_UPDATE',
               'KRIS_QWEN_AUTO_UPDATE_SECONDS',
           )
@@ -173,7 +182,7 @@ jobs:
           path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
           text = path.read_text(encoding='utf-8')
           marker = '## Always-on Product protocol (executed worker 5.3.0 / controller 2.2.0)'
-          section = '''\n\n## Always-on Product protocol (executed worker 5.3.0 / controller 2.2.0)\n\nThe phone launcher executes `tool/kris_qwen_worker.py.compat.py` as worker **5.3.0**. Normal `IDLE` is a red-alert condition, not a steady state: successful jobs chain immediately, eligible context-independent R1 review Work Orders are woken into dispatchable authority, reviewed HELPER_READY source can wake its integration lane, and when the governed frontier is genuinely empty the worker may create one bounded `PRODUCT_DEFECT_REPAIR` Work Order only against an existing ACTIVE canonical Product PR through the existing Mission Runtime `work-create` CAS path. Path authority, WIP limits, semaphores, exact-head review independence and protected-main restrictions remain fail-closed. Documentation-only, formatting-only, governance-only and no-op continuous work are explicitly disallowed.\n\nThe launcher executes `tool/kris_qwen_control.py.compat.py` as controller **2.2.0**. Automatic update supervision is enabled by default and checks the configured remote Qwen branch every 30 seconds (configurable by `KRIS_QWEN_AUTO_UPDATE_SECONDS`). A newer remote head reuses the existing safe Fetch latest + run path: graceful worker drain, dirty-checkout refusal, fast-forward-only update, refreshed worker version probe and stack restart. If the worker exits unexpectedly while the tracked branch is current, the controller starts it again. A deliberate Safe stop pauses automatic restart until Run current Qwen or Fetch latest + run Qwen is requested.\n\nThe large retained base worker/controller source files still carry their prior 5.2.2/2.1.0 labels during this compatibility rollout. Those labels are not the phone execution version; the launcher binds the compatibility entries above.\n'''
+          section = '''\n\n## Always-on Product protocol (executed worker 5.3.0 / controller 2.2.0)\n\nThe phone launcher executes `tool/kris_qwen_worker_v53.py` as worker **5.3.0**. Normal `IDLE` is a red-alert condition, not a steady state: successful jobs chain immediately, eligible context-independent R1 review Work Orders are woken into dispatchable authority, reviewed HELPER_READY source can wake its integration lane, and when the governed frontier is genuinely empty the worker may create one bounded `PRODUCT_DEFECT_REPAIR` Work Order only against an existing ACTIVE canonical Product PR through the existing Mission Runtime `work-create` CAS path. Path authority, WIP limits, semaphores, exact-head review independence and protected-main restrictions remain fail-closed. Documentation-only, formatting-only, governance-only and no-op continuous work are explicitly disallowed.\n\nThe launcher executes `tool/kris_qwen_control.py.compat.py` as controller **2.2.0**. Automatic update supervision is enabled by default and checks the configured remote Qwen branch every 30 seconds (configurable by `KRIS_QWEN_AUTO_UPDATE_SECONDS`). A newer remote head reuses the existing safe Fetch latest + run path: graceful worker drain, dirty-checkout refusal, fast-forward-only update, refreshed worker version probe and stack restart. If the worker exits unexpectedly while the tracked branch is current, the controller starts it again. A deliberate Safe stop pauses automatic restart until Run current Qwen or Fetch latest + run Qwen is requested.\n\nThe large retained base worker/controller source files still carry their prior 5.2.2/2.1.0 labels during this compatibility rollout. Those labels are not the phone execution version; the launcher binds the 5.3/2.2 entries above.\n'''
           if marker not in text:
               text += section
           path.write_text(text, encoding='utf-8', newline='\n')
@@ -190,6 +199,8 @@ jobs:
           python3 tool/p1a_source_manifest_test.py .
           python3 tool/p1a_text_eof_contract_test.py --project .
           git diff --check
+          grep -F 'tool/kris_qwen_worker_v53.py' SOURCE_MANIFEST.sha256
+          grep -F 'tool/kris_qwen_control.py.compat.py' SOURCE_MANIFEST.sha256
           python3 - <<'PY'
           import subprocess
           actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
