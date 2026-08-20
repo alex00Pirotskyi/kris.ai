@@ -1,0 +1,262 @@
+name: P5 Web Studio Runtime Integration V3 Materializer
+
+on:
+  push:
+    branches:
+      - 'agent/p5-web-studio-runtime-integration'
+    paths:
+      - '.github/workflows/p5-web-studio-runtime-v3-materialize.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p5-web-studio-runtime-v3-materialize
+  cancel-in-progress: false
+
+env:
+  BASE_MAIN_SHA: 26fd52f4bbb9906955d4b7d8c0e81e0fed6f180a
+  BRANCH_NAME: agent/p5-web-studio-runtime-integration
+  SOURCE_SHA: ${{ github.sha }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact transport head and collision base
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git merge-base HEAD origin/main)" = "$BASE_MAIN_SHA"
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Install exact dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+
+      - name: Materialize exact immutable payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import pathlib
+          import urllib.request
+
+          shas = [
+              'a62867a0231135da1de2de367b6241b5397a1be1',
+              'd35e890d8abc8e0c7689b1609116382ffad9a4f5',
+              'be39394c8b2cecdbe6b14b4b5da6e1b6970ed755',
+              '4da6cac59227c5e30ae2186c50e1924f24eaeea2',
+              'eb107508c01f49f1af3ace8f9abedc8be4a836cc',
+              '695ef238cb63d6f3d04bbfd1d45a38a76efc99cd',
+              'c2af74f91686a65889018d86472c6f3a5dd779fe',
+              'f59afae1d0ecf3bd4866d79850476525ac277351',
+              '684858294bd4dbdbce7d4de1930346da60713659',
+              '33d820530296334912ef08c43ca0b9b777bd7c4c',
+              'c6d7978289b7495b6849ee3108240ed5838fa78d',
+              'b4a6d0cd429eab1ee5e82ce4799ffec565799113',
+              '96dcabf3c7f42acced973b003f63d727a0e3bdda',
+              '8de9db01672648775655f282b0a785c991224dd6',
+              'e90e4dd18f0bf1d54c48e57c4754769765850d12',
+              'd42df00c792362523e08d3aaed2e36d824e9d598',
+          ]
+          api = os.environ['GITHUB_API_URL']
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          payload = pathlib.Path(os.environ['RUNNER_TEMP']) / 'p5-web-studio-v3.gz'
+          with payload.open('wb') as output:
+              for sha in shas:
+                  request = urllib.request.Request(
+                      f'{api}/repos/{repo}/git/blobs/{sha}',
+                      headers={
+                          'Authorization': f'Bearer {token}',
+                          'Accept': 'application/vnd.github+json',
+                          'X-GitHub-Api-Version': '2022-11-28',
+                      },
+                  )
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      value = json.load(response)
+                  if value.get('sha') != sha or value.get('encoding') != 'base64':
+                      raise SystemExit(f'blob identity mismatch: {sha}')
+                  output.write(base64.b64decode(value['content']))
+          if payload.stat().st_size != 14473:
+              raise SystemExit(
+                  f'payload size mismatch: {payload.stat().st_size} != 14473'
+              )
+          print(f'P5 immutable payload: PASS bytes={payload.stat().st_size}')
+          PY
+          gzip --test "$RUNNER_TEMP/p5-web-studio-v3.gz"
+          gzip --decompress --stdout "$RUNNER_TEMP/p5-web-studio-v3.gz" > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+
+      - name: Format exact affected Dart scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/ui.dart \
+            lib/product/p5_information_architecture \
+            lib/product/browser/browser_runtime.dart \
+            test/product/p5_information_architecture \
+            test/product/browser/browser_runtime_process_test.dart
+
+      - name: P3 Node browser contracts
+        shell: bash
+        working-directory: automation_host
+        run: npm test
+
+      - name: P3 Dart browser contracts
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 test/product/browser/browser_runtime_process_test.dart
+
+      - name: P5 Experience contracts
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 test/product/p5_information_architecture
+
+      - name: Analyzer and repository format scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/dart_format_scope.py --check
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Remove transport and regenerate source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .p5-web-studio-runtime-integration.b64
+          rm -f .p5-web-studio-runtime-integration.part*
+          rm -f .p5-web-studio-runtime-integration.fixpart*
+          rm -f .p5-web-studio-runtime-integration.verifiedpart*
+          rm -f .p5-web-studio-runtime-integration.v3*
+          rm -f .github/workflows/p5-web-studio-runtime-integration-materialize.yml
+          rm -f .github/workflows/p5-web-studio-runtime-v3-materialize.yml
+          test -z "$(find . -maxdepth 1 -name '.p5-web-studio-runtime-integration*' -print -quit)"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+
+      - name: Abort if protected main moved
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA" || {
+            echo 'Protected main moved during materialization; refusing stale publication.' >&2
+            exit 79
+          }
+
+      - name: Stage and verify exact candidate scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A -- \
+            SOURCE_MANIFEST.sha256 \
+            automation_host/src/browser-runtime.mjs \
+            automation_host/src/browser-runtime.test.mjs \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart \
+            lib/product/ui.dart \
+            lib/product/p5_information_architecture/p5_models.dart \
+            lib/product/p5_information_architecture/p5_fixtures.dart \
+            lib/product/p5_information_architecture/p5_prototype.dart \
+            lib/product/p5_information_architecture/p5_support_workspaces.dart \
+            lib/product/p5_information_architecture/p5_verification_workspaces.dart \
+            test/product/p5_information_architecture/p5_source_boundary_test.dart \
+            test/product/p5_information_architecture/p5_navigation_test.dart \
+            test/product/p5_information_architecture/p5_state_controller_test.dart \
+            test/product/p5_information_architecture/p5_accessibility_test.dart \
+            '.p5-web-studio-runtime-integration*' \
+            .github/workflows/p5-web-studio-runtime-integration-materialize.yml \
+            .github/workflows/p5-web-studio-runtime-v3-materialize.yml
+          python - <<'PY'
+          import subprocess
+          required = {
+              'SOURCE_MANIFEST.sha256',
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
+              'lib/product/ui.dart',
+              'lib/product/p5_information_architecture/p5_models.dart',
+              'lib/product/p5_information_architecture/p5_fixtures.dart',
+              'lib/product/p5_information_architecture/p5_prototype.dart',
+              'lib/product/p5_information_architecture/p5_support_workspaces.dart',
+              'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
+              'test/product/p5_information_architecture/p5_source_boundary_test.dart',
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_state_controller_test.dart',
+              'test/product/p5_information_architecture/p5_accessibility_test.dart',
+          }
+          actual = set(
+              subprocess.check_output(
+                  ['git', 'diff', '--cached', '--name-only'], text=True
+              ).splitlines()
+          )
+          missing = required - actual
+          unexpected = {
+              path for path in actual
+              if path not in required
+              and not path.startswith('.p5-web-studio-runtime-integration')
+              and path not in {
+                  '.github/workflows/p5-web-studio-runtime-integration-materialize.yml',
+                  '.github/workflows/p5-web-studio-runtime-v3-materialize.yml',
+              }
+          }
+          if missing or unexpected:
+              raise SystemExit(
+                  f'candidate scope mismatch: missing={sorted(missing)} '
+                  f'unexpected={sorted(unexpected)} actual={sorted(actual)}'
+              )
+          print(f'P5 exact staged scope: PASS files={len(actual)}')
+          PY
+
+      - name: Publish clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Kristin P5 Integration Worker'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'feat(p5): connect Web Studio to landed P2/P3 runtime'
+          test -z "$(git status --porcelain)"
+          git push origin "HEAD:refs/heads/$BRANCH_NAME"
+          echo "candidate=$(git rev-parse HEAD)"
+          echo "tree=$(git rev-parse HEAD^{tree})"
