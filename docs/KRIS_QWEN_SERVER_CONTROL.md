@@ -1,140 +1,143 @@
 # KRIS Qwen server control
 
-This is the operational controller for the repo-owned Qwen worker.
+This is the repository-owned phone controller for the local Qwen Mission Execution worker.
 
-## Current implementation status
-
-As of 2026-08-19, `tool/kris_qwen_worker.py` on the Qwen control candidate reports **5.2.2**. This patch keeps Mission runtime metadata backward-compatible: when schema-v1 `runtime/meta.json` does not contain `controlPlaneBranch`, the worker uses its configured/default control branch and still verifies that exact remote branch exists before proceeding. If the runtime metadata does name a control branch, that runtime-selected branch remains authoritative. Separate v6 experiments exist in Git history, but this delivery does not claim that design: the current worker source has not implemented those v6 invariants completely. The controller therefore reads the worker's real JSON `version` response instead of hard-coding a fictional v6 version.
-
-The control layer is Python-standard-library only. Uvicorn/Gunicorn/Flask/FastAPI are not required.
-
-Qwen 5.2.2 also aligns its subprocess-only historical semaphore audit with the canonical Mission runtime semantics: immutable inactive history may record `expiresAt == refreshedAt`; `expiresAt < refreshedAt` is still rejected. Active/executable semaphore validation remains strict.
-
-## Fastest way: run from the server and open it on your phone
+## Operator flow
 
 From the server checkout:
 
 ```bash
-chmod +x tool/run_kris_qwen_phone_control.sh
-./tool/run_kris_qwen_phone_control.sh
+git pull --ff-only
+./run_my_server.py
 ```
 
-The script follows the branch currently checked out on the server unless `KRIS_QWEN_REPO_BRANCH` is set. It prints:
+The launcher verifies GitHub CLI authentication, owns the configured HTTP port, enables trusted-LAN phone mode, and starts the always-on controller/worker entries.
 
-- one or more `http://SERVER-IP:8090` URLs;
-- the control-token file path;
-- the control token for this installation.
+## Executed versions
 
-Open the printed URL on your phone, paste the token into **Control token**, then press:
+The phone execution path is compatibility-layered while the large retained source files remain stable:
 
-**Fetch latest + run Qwen**
+- executed worker: `tool/kris_qwen_worker_v53.py` — **5.3.0**;
+- legacy worker path: `tool/kris_qwen_worker.py.compat.py` — forwards to the deterministic 5.3 entry so an already-running 2.1 controller that remembers the old path reaches the same worker after Fetch latest;
+- retained base worker: `tool/kris_qwen_worker.py` — still labeled **5.2.2** during rollout;
+- executed controller: `tool/kris_qwen_control.py.compat.py` — **2.2.0**;
+- retained base controller: `tool/kris_qwen_control.py` — still labeled **2.1.0** during rollout.
 
-That operation:
+The worker version shown by the phone flow is derived from the executed worker entry, not the retained base-file label.
 
-1. safely drains a currently running Qwen worker;
-2. refuses to touch a dirty server checkout;
-3. runs `git fetch origin <configured-branch>`;
-4. accepts only a fast-forward update;
-5. fast-forwards the checkout;
-6. executes the refreshed worker's `version` command and parses its JSON `scriptVersion`;
-7. verifies `gh auth status`;
-8. starts the refreshed `tool/kris_qwen_worker.py stack`.
+## Always-on Product protocol
 
-The controller process itself does not need to restart when the worker file changes. The new worker process is loaded from the refreshed bytes on disk.
+Normal `IDLE` is a **red-alert condition**, not a steady state. Qwen is expected to be continuously doing one of these things:
 
-Other buttons:
+- implementing Product source;
+- writing or strengthening Product tests;
+- repairing a demonstrated defect;
+- integrating an exact-green helper into a canonical Product branch;
+- running exact Product CI;
+- performing a context-independent R1 technical review it is allowed to perform;
+- actively recovering a runtime/control-plane blocker;
+- deriving the next bounded Product hardening Work Order through existing Mission Runtime authority.
 
-- **Run current Qwen** — starts the worker already present in the checkout without fetching.
-- **Safe stop** — uses `kris_qwen_worker.py control stop`; it does not hard-kill the worker.
+Successful Work Orders chain immediately. The normal 60-second inter-job sleep is removed by the 5.3 execution adapter.
+
+### Review wake
+
+Mission Runtime historically allowed a Work Order to be `type=REVIEW` while its runtime state was `REVIEW`; however `next-work` dispatches only state `READY`, and semaphore reservation accepts only `READY` or `IN_PROGRESS`. Worker 5.3 therefore wakes an eligible pending context-independent R1 from `REVIEW` to `READY` before dispatch.
+
+It does not wake review work that explicitly requires a distinct external GitHub identity, and it retains the existing refusal to R1-review `agent/local-qwen/**` helpers authored by local Qwen itself.
+
+### Helper integration
+
+A reviewed or exact-green `HELPER_READY` source candidate is not treated as finished. Worker 5.3 can bind a scope-compatible sibling helper to the same canonical Product PR when older runtime history did not record a formal parent/child relationship.
+
+For continuous Product hardening, an exact-green helper gets a bounded integration lane. Integration remains non-force, exact-head guarded, and path-scoped. A helper is marked `LANDED` only after its bytes are actually reconciled into the canonical Product branch.
+
+### Post-integration exact Product CI
+
+Continuous integration does not self-certify just because helper CI was green. When the canonical Product branch reaches `VALIDATING`, worker 5.3 creates a read-only `CI_REPAIR` Work Order through Mission Runtime for exact `workflow_dispatch` Product Gates. Ubuntu, Windows, and macOS must all complete successfully.
+
+The integration Work Order is reconciled from that exact CI result:
+
+- exact Product CI green → integration `LANDED`;
+- exact Product CI red → integration `BLOCKED`.
+
+Only after that terminal result can the continuous Product loop seed more work on that Product PR.
+
+### Governed frontier seeding
+
+If no dispatchable GREEN Work Order exists, worker 5.3 may create **one** bounded `PRODUCT_DEFECT_REPAIR` Work Order through the existing `mission_orchestrator.py work-create` CAS path, and only when all of these conditions hold:
+
+- the Product PR is already canonical in `agent/mission-runtime`;
+- the Product record is `ACTIVE`;
+- the GitHub PR is still open;
+- the runtime Product branch matches the GitHub PR head branch;
+- the exact live branch SHA equals the GitHub PR head SHA;
+- no active Work Order already occupies that Product lane;
+- allowed paths come only from governed Product/source paths or the current Product diff and remain inside code/test-oriented prefixes;
+- Mission Runtime path validation, WIP limits, semaphore collision checks, and exact Git base/tree verification all pass.
+
+The seeded objective explicitly forbids documentation-only, formatting-only, governance-only, and no-op work. It requires a concrete correctness, performance, reliability, UX-facing behavior, or missing-regression target plus focused local validation.
+
+If no safe authority exists, the worker reports `RED_ALERT_FRONTIER` and aggressively re-resolves instead of reporting normal idle.
+
+## Automatic update and restart
+
+Controller 2.2 enables automatic supervision by default:
+
+```text
+KRIS_QWEN_AUTO_UPDATE=1
+KRIS_QWEN_AUTO_UPDATE_SECONDS=30
+```
+
+Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 reuses the existing safe Fetch latest + run path:
+
+1. graceful worker drain;
+2. dirty-checkout refusal;
+3. fetch of the configured branch;
+4. fast-forward-only update;
+5. refreshed worker `version` probe;
+6. stack restart using the newly fetched worker entry.
+
+There is no reset-hard, rebase, force checkout, force push, or arbitrary branch mutation in this path.
+
+If the tracked branch is already current but the worker process exited unexpectedly, controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses automatic worker restart until the operator explicitly selects Run current Qwen or Fetch latest + run Qwen.
+
+The controller process itself must be loaded once with 2.2. Future worker branch changes are then detected automatically; repeated manual Fetch latest presses are not part of the normal protocol.
 
 ## Security boundary
 
-Phone mode intentionally binds to `0.0.0.0`, but it is an explicit opt-in. Every API operation requires a long random bearer token and same-origin browser requests. The token is never embedded in dashboard HTML; the browser keeps it only in `sessionStorage`.
+Phone mode intentionally binds to `0.0.0.0`, but every API operation requires a long random bearer token and same-origin browser requests. The token is not embedded in dashboard HTML.
 
-**Plain HTTP does not encrypt the token. Use phone mode only on a trusted LAN or private VPN such as Tailscale. Do not expose port 8090 directly to the public Internet.**
-
-For an Internet-hosted server without a VPN, keep the controller loopback-only and use a tunnel instead.
-
-## Direct controller commands
-
-Loopback-only:
-
-```bash
-python3 tool/kris_qwen_control.py
-```
-
-Phone/trusted-LAN mode:
-
-```bash
-python3 tool/kris_qwen_control.py --phone
-```
-
-Explicit host:
-
-```bash
-python3 tool/kris_qwen_control.py --host 192.168.1.20 --allow-remote-http
-```
-
-Status:
-
-```bash
-python3 tool/kris_qwen_control.py --status
-python3 tool/kris_qwen_worker.py version
-```
-
-Environment overrides:
-
-```text
-KRIS_QWEN_REPO_DIR
-KRIS_QWEN_REPO_BRANCH
-KRIS_QWEN_ROOT
-KRIS_QWEN_PYTHON
-KRIS_QWEN_CONTROL_HOST
-KRIS_QWEN_CONTROL_PORT
-KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP
-KRIS_QWEN_STOP_TIMEOUT
-KRIS_QWEN_WORKER_ARGS
-```
+Plain HTTP does not encrypt the token. Use phone mode only on a trusted LAN or private VPN such as Tailscale. Do not expose port 8090 directly to the public Internet.
 
 ## Fetch safety rules
 
-**Fetch latest + run** never uses `git reset --hard`, rebase, force checkout, or force push. It fails closed if:
+Automatic/manual fetch-run never uses `git reset --hard`, rebase, force checkout, or force push. It fails closed if:
 
 - the server checkout is dirty;
 - the checkout is not on the configured branch;
 - the remote update is not a fast-forward;
-- the worker `version` entry point is missing/broken;
-- GitHub CLI authentication is unavailable to the server process;
-- the current worker does not reach a safe stop before the configured timeout.
+- the executed worker version entry is missing/broken;
+- GitHub CLI authentication is unavailable;
+- the current worker cannot reach a safe stop before the configured timeout.
 
-If safe stop times out, the controller leaves the worker alive and reports the failure.
+## Resource behavior
 
-## Optional systemd controller
+The managed llama.cpp server remains resource-tuned from the actual host at startup. It reads CPU affinity, physical cores, logical CPUs, NUMA, and live memory; reuses `llama-bench` tuning only while the machine/model fingerprint remains valid; and derives generation/batch/build/HTTP threads, context size, prompt-cache budget, system reserve, parallel slots, and NUMA behavior.
 
-A persistent loopback controller can be installed with:
+This is startup/restart adaptation rather than second-by-second retuning while the model server is resident.
 
-```bash
-chmod +x tool/install_kris_qwen_control_systemd.sh
-sudo ./tool/install_kris_qwen_control_systemd.sh
-```
+## Safety boundary for always-on execution
 
-The installer defaults to loopback-only. To make the installed service reachable over a trusted private network, edit `/etc/kris-qwen-control.env`:
+Always-on does not mean uncontrolled. Qwen still may not:
 
-```text
-KRIS_QWEN_CONTROL_HOST=0.0.0.0
-KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP=1
-```
+- write directly to protected `main`;
+- force-push;
+- change branch protection;
+- manufacture R2 identity independence;
+- self-certify R1 for its own local-Qwen helper;
+- promote acceptance/support/release/GA without the separate required authority;
+- bypass Work Order allowed paths or semaphore authority;
+- mutate Product source from an exact-CI-only lane.
 
-then:
-
-```bash
-sudo systemctl restart kris-qwen-control
-```
-
-The foreground `run_kris_qwen_phone_control.sh` path is simpler when you only want to open the panel temporarily.
-
-## Worker status note
-
-The current 5.2 worker includes the repeated `control-plane-invalid:*` backoff behavior: after repeated identical Mission Execution authority failures it surfaces a stable blocked/recovering state instead of continuously burning fresh executions.
-
-That behavior is separate from historical/in-progress v6 design work. This PR does not ship or claim those v6 invariants.
+`IDLE` is removed as a normal business outcome, but fail-closed authority remains mandatory.
