@@ -110,8 +110,10 @@ def main() -> int:
     worker = repo / "tool" / "kris_qwen_worker.py"
     worker_policy = repo / "tool" / "kris_qwen_v53_policy.py"
     worker_recovery = repo / "tool" / "kris_qwen_v53_recovery.py"
+    worker_reconcile = repo / "tool" / "kris_qwen_v53_reconcile.py"
+    worker_v53 = repo / "tool" / "kris_qwen_worker_v53.py"
     worker_legacy_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
-    worker_entry = repo / "tool" / "kris_qwen_worker_v53.py"
+    worker_entry = repo / "tool" / "kris_qwen_worker_v531.py"
 
     if not (repo / ".git").is_dir():
         fail(f"not a Git checkout: {repo}")
@@ -121,10 +123,12 @@ def main() -> int:
         and worker.is_file()
         and worker_policy.is_file()
         and worker_recovery.is_file()
+        and worker_reconcile.is_file()
+        and worker_v53.is_file()
         and worker_legacy_entry.is_file()
         and worker_entry.is_file()
     ):
-        fail("Qwen controller/worker always-on compatibility files are missing from tool/")
+        fail("Qwen controller/worker always-on 5.3.1 compatibility files are missing from tool/")
 
     branch = os.environ.get("KRIS_QWEN_REPO_BRANCH", "").strip() or current_branch(repo)
 
@@ -165,6 +169,7 @@ def main() -> int:
     print(f"  repo:   {repo}")
     print(f"  branch: {branch}")
     print(f"  port:   {port}")
+    print("  worker: 5.3.1")
     print("  mode:   foreground always-on worker + automatic safe updates")
     print("  note:   durable controller crash recovery requires the systemd installer")
     if ip:
