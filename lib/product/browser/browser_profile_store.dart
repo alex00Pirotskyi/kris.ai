@@ -29,8 +29,7 @@ final class P3BrowserProfileStore {
     }
   }
 
-  static final RegExp _profileId =
-      RegExp(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
+  static final RegExp _profileId = RegExp(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
 
   final Directory root;
   final P3BrowserProfileCipher cipher;
@@ -181,7 +180,9 @@ final class P3BrowserProfileStore {
       final name = entity.uri.pathSegments
           .where((segment) => segment.isNotEmpty)
           .lastOrNull;
-      if (name != null && _profileId.hasMatch(name) && await _file(name).exists()) {
+      if (name != null &&
+          _profileId.hasMatch(name) &&
+          await _file(name).exists()) {
         ids.add(name);
       }
     }

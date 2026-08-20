@@ -87,10 +87,14 @@ final class P3BrowserWorkspace extends StatelessWidget {
                 tabs: <Widget>[
                   Tab(text: 'Page', icon: Icon(Icons.public)),
                   Tab(text: 'DOM', icon: Icon(Icons.account_tree_outlined)),
-                  Tab(text: 'Accessibility', icon: Icon(Icons.accessibility_new)),
+                  Tab(
+                      text: 'Accessibility',
+                      icon: Icon(Icons.accessibility_new)),
                   Tab(text: 'Console', icon: Icon(Icons.terminal)),
                   Tab(text: 'Network', icon: Icon(Icons.swap_vert)),
-                  Tab(text: 'Test tools', icon: Icon(Icons.fact_check_outlined)),
+                  Tab(
+                      text: 'Test tools',
+                      icon: Icon(Icons.fact_check_outlined)),
                 ],
               ),
               Expanded(
@@ -171,24 +175,26 @@ final class _Toolbar extends StatelessWidget {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
-            DropdownButton<P3BrowserViewportPreset>(
-              value: controller.viewport,
-              tooltip: 'Responsive viewport preset',
-              items: P3BrowserViewportPreset.values
-                  .map(
-                    (value) => DropdownMenuItem<P3BrowserViewportPreset>(
-                      value: value,
-                      child: Text(
-                        '${value.name} ${value.width}×${value.height}',
+            Tooltip(
+              message: 'Responsive viewport preset',
+              child: DropdownButton<P3BrowserViewportPreset>(
+                value: controller.viewport,
+                items: P3BrowserViewportPreset.values
+                    .map(
+                      (value) => DropdownMenuItem<P3BrowserViewportPreset>(
+                        value: value,
+                        child: Text(
+                          '${value.name} ${value.width}×${value.height}',
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(growable: false),
-              onChanged: (value) {
-                if (value == null) return;
-                controller.setViewport(value);
-                onViewportPreset?.call(value);
-              },
+                    )
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value == null) return;
+                  controller.setViewport(value);
+                  onViewportPreset?.call(value);
+                },
+              ),
             ),
             IconButton(
               tooltip: 'Refresh observation',
@@ -260,7 +266,7 @@ final class _PagePanel extends StatelessWidget {
               : InteractiveViewer(
                   minScale: 0.25,
                   maxScale: 4,
-                  child: Image.memory(bytes!, fit: BoxFit.contain),
+                  child: Image.memory(bytes, fit: BoxFit.contain),
                 ),
         );
         final text = Card(
@@ -299,7 +305,8 @@ final class _JsonPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final encoded = const JsonEncoder.withIndent('  ').convert(value ?? <String, Object?>{});
+    final encoded = const JsonEncoder.withIndent('  ')
+        .convert(value ?? <String, Object?>{});
     final bounded = encoded.length > 512 * 1024
         ? '${encoded.substring(0, 512 * 1024)}\n…truncated…'
         : encoded;
@@ -340,7 +347,9 @@ final class _TestToolsPanel extends StatelessWidget {
           ListTile(
             leading: Icon(check.$2 ? Icons.check_circle : Icons.error_outline),
             title: Text(check.$1),
-            subtitle: check.$2 ? null : const Text('Needs attention before completion.'),
+            subtitle: check.$2
+                ? null
+                : const Text('Needs attention before completion.'),
           ),
         const Divider(),
         SelectableText(

@@ -6,9 +6,11 @@ import 'package:kristin_local_agent/product/browser/browser_profile_store.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
 
 void main() {
-  test('deterministic fixture is local-only and covers browser task surfaces', () {
+  test('deterministic fixture is local-only and covers browser task surfaces',
+      () {
     final html = File('test/fixtures/p3_browser/index.html').readAsStringSync();
-    final script = File('test/fixtures/p3_browser/fixture.js').readAsStringSync();
+    final script =
+        File('test/fixtures/p3_browser/fixture.js').readAsStringSync();
 
     expect(html, contains('Browser fixture'));
     expect(html, contains('profile-form'));
@@ -60,7 +62,8 @@ void main() {
     );
   });
 
-  test('takeover state machine blocks automation until fresh observation resume',
+  test(
+      'takeover state machine blocks automation until fresh observation resume',
       () {
     final controller = P3BrowserTakeoverController();
     controller.applyVisualResult(

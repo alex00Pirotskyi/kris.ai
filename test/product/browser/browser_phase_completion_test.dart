@@ -10,7 +10,8 @@ import 'package:kristin_local_agent/product/browser/browser_workspace.dart';
 import 'package:kristin_local_agent/product/crypto_utils.dart';
 
 void main() {
-  test('P3 auth profile store encrypts and authenticates profile state', () async {
+  test('P3 auth profile store encrypts and authenticates profile state',
+      () async {
     final root = await Directory.systemTemp.createTemp('p3-profile-store-');
     addTearDown(() async {
       if (await root.exists()) await root.delete(recursive: true);
@@ -41,7 +42,8 @@ void main() {
     expect(await store.get('primary'), isNull);
   });
 
-  test('P3 takeover requires a fresh observation before automation resumes', () {
+  test('P3 takeover requires a fresh observation before automation resumes',
+      () {
     final controller = P3BrowserTakeoverController();
     controller.applyVisualResult(
       P3BrowserVisualActionResult(
@@ -139,13 +141,15 @@ void main() {
     await tester.tap(find.text('Test tools'));
     await tester.pumpAndSettle();
     expect(find.text('Responsive and accessibility checks'), findsOneWidget);
-    expect(find.textContaining('desktop 1440×900'), findsOneWidget);
+    expect(find.text('desktop 1440×900'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
 
 P3BrowserPageObservation _observation() {
-  const screenshot = <int>[0xff, 0xd8, 0xff, 0xd9];
+  final screenshot = base64Decode(
+    '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==',
+  );
   final observation = <String, Object?>{
     'schemaVersion': '1.0.0',
     'url': 'https://fixture.invalid/',
