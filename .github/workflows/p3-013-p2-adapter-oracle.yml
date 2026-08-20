@@ -35,16 +35,22 @@ jobs:
           host_anchor = "abstract interface class P3PreviewProcessHost {\n  Future<P3PreviewProcessSession> start(P3DevServerConfig config);\n  Future<void> stop(P3PreviewProcessSession session, Duration grace);\n}"
           if host_anchor not in text:
               raise SystemExit('preview host anchor missing')
-          text = text.replace(
-              host_anchor,
-              host_anchor + Path('.p3-preview-oracle/adapter.dart.txt').read_text(),
-              1,
-          )
+          text = text.replace(host_anchor, host_anchor + Path('.p3-preview-oracle/adapter.dart.txt').read_text(), 1)
+          source_change_old = "      staticPreview.notifyReload();\n      return staticPreview.snapshot;"
+          source_change_new = "      await staticPreview.notifyReload();\n      return staticPreview.snapshot;"
+          if source_change_old not in text:
+              raise SystemExit('preview source-change reload anchor missing')
+          text = text.replace(source_change_old, source_change_new, 1)
           sse_old = "        response.write('retry: 500\\n\\n');\n        await response.flush();\n        _reloadClients.add(response);\n        response.done.whenComplete(() => _reloadClients.remove(response));\n        return;"
           sse_new = "        _reloadClients.add(response);\n        response.done.whenComplete(() => _reloadClients.remove(response));\n        try {\n          response.write('retry: 500\\n\\n');\n          await response.flush();\n        } catch (_) {\n          _reloadClients.remove(response);\n          rethrow;\n        }\n        return;"
           if sse_old not in text:
               raise SystemExit('preview SSE registration anchor missing')
           text = text.replace(sse_old, sse_new, 1)
+          notify_old = "  void notifyReload() {\n    if (lifecycle != P3PreviewLifecycle.ready) {\n      throw StateError('web_preview_not_ready');\n    }\n    revision += 1;\n    for (final response in _reloadClients.toList()) {\n      try {\n        response.write('data: $revision\\n\\n');\n        response.flush();\n      } catch (_) {\n        _reloadClients.remove(response);\n      }\n    }\n  }"
+          notify_new = "  Future<void> notifyReload() async {\n    if (lifecycle != P3PreviewLifecycle.ready) {\n      throw StateError('web_preview_not_ready');\n    }\n    revision += 1;\n    for (final response in _reloadClients.toList()) {\n      try {\n        response.write('data: $revision\\n\\n');\n        await response.flush();\n      } catch (_) {\n        _reloadClients.remove(response);\n      }\n    }\n  }"
+          if notify_old not in text:
+              raise SystemExit('preview reload notification anchor missing')
+          text = text.replace(notify_old, notify_new, 1)
           brace_replacements = {
               "  if (_isHtml(lower)) return ContentType.html;": "  if (_isHtml(lower)) {\n    return ContentType.html;\n  }",
               "  if (lower.endsWith('.css')) return ContentType('text', 'css', charset: 'utf-8');": "  if (lower.endsWith('.css')) {\n    return ContentType('text', 'css', charset: 'utf-8');\n  }",
@@ -74,19 +80,11 @@ jobs:
           main_end = '\n}\n\nFuture<void> _serveReadiness'
           if main_end not in test_text:
               raise SystemExit('preview test main anchor missing')
-          test_text = test_text.replace(
-              main_end,
-              Path('.p3-preview-oracle/tests.dart.txt').read_text() + main_end,
-              1,
-          )
+          test_text = test_text.replace(main_end, Path('.p3-preview-oracle/tests.dart.txt').read_text() + main_end, 1)
           helper_anchor = 'final class _RecordingProcessHost implements P3PreviewProcessHost {'
           if helper_anchor not in test_text:
               raise SystemExit('preview test helper anchor missing')
-          test_text = test_text.replace(
-              helper_anchor,
-              Path('.p3-preview-oracle/helpers.dart.txt').read_text() + '\n' + helper_anchor,
-              1,
-          )
+          test_text = test_text.replace(helper_anchor, Path('.p3-preview-oracle/helpers.dart.txt').read_text() + '\n' + helper_anchor, 1)
           test.write_text(test_text)
           PY
           dart format lib/product/browser/web_preview.dart test/product/browser/web_preview_test.dart
