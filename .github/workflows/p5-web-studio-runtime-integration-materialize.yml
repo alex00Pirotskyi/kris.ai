@@ -6,12 +6,12 @@ on:
       - 'agent/p5-web-studio-runtime-integration'
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
-      - '.p5-web-studio-runtime-integration.verifiedpart*'
+      - '.p5-web-studio-runtime-integration.part*'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
-      - '.p5-web-studio-runtime-integration.verifiedpart*'
+      - '.p5-web-studio-runtime-integration.part*'
 
 permissions:
   contents: write
@@ -72,9 +72,99 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .p5-web-studio-runtime-integration.verifiedpart* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          cat .p5-web-studio-runtime-integration.part* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+
+      - name: Align P5 tests with live Web Studio semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          accessibility = Path('test/product/p5_information_architecture/p5_accessibility_test.dart')
+          expected_accessibility = 'ef8599d34758c0ac3cff49fcf514df160e5d5bd5'
+          actual_accessibility = subprocess.check_output(
+              ['git', 'hash-object', str(accessibility)], text=True
+          ).strip()
+          if actual_accessibility != expected_accessibility:
+              raise SystemExit(
+                  f'P5 accessibility collision: expected={expected_accessibility} actual={actual_accessibility}'
+              )
+
+          navigation = Path('test/product/p5_information_architecture/p5_navigation_test.dart')
+          nav_text = navigation.read_text(encoding='utf-8')
+          pattern = re.compile(
+              r"^  testWidgets\('Web Studio unavailable state has an exit', \(tester\) async \{.*?^  \}\);\n",
+              re.MULTILINE | re.DOTALL,
+          )
+          replacement = (
+              "  testWidgets('Web Studio opens from capabilities and has a navigation exit',\n"
+              "      (tester) async {\n"
+              "    final controller = P5InformationArchitectureController()\n"
+              "      ..changeExperienceLevel(P5ExperienceLevel.advanced)\n"
+              "      ..selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);\n"
+              "    addTearDown(controller.dispose);\n"
+              "    await pumpPrototype(tester, controller);\n\n"
+              "    await tapKey(tester, const Key('capability-webStudio'));\n"
+              "    expect(controller.state.workspace, P5WorkspaceId.webStudio);\n"
+              "    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);\n\n"
+              "    await tapKey(tester, const Key('history-back'));\n"
+              "    expect(controller.state.workspace, P5WorkspaceId.capabilitiesIntegrations);\n"
+              "    expect(controller.sideEffects.isZero, isTrue);\n"
+              "  });\n"
+          )
+          nav_text, count = pattern.subn(replacement, nav_text, count=1)
+          if count != 1:
+              raise SystemExit('stale Web Studio navigation contract not found exactly once')
+          navigation.write_text(nav_text, encoding='utf-8', newline='\n')
+
+          text = accessibility.read_text(encoding='utf-8')
+          old_owner = 'Owner Mode status: Blocked by environment. Presentation only.'
+          new_owner = 'Owner Mode status: Blocked by environment.'
+          if text.count(old_owner) != 1:
+              raise SystemExit('stale Owner Mode accessibility label not found exactly once')
+          text = text.replace(old_owner, new_owner, 1)
+
+          access_pattern = re.compile(
+              r"^    controller\.selectWorkspace\(P5WorkspaceId\.capabilitiesIntegrations\);\n"
+              r"    await tester\.pumpAndSettle\(\);\n"
+              r"    final webCapability = find\.byKey\(const Key\('capability-webStudio'\)\);\n"
+              r"    await tester\.ensureVisible\(webCapability\);\n"
+              r"    await tester\.tap\(webCapability\);\n"
+              r"    await tester\.pumpAndSettle\(\);\n\n"
+              r"    expect\(\n"
+              r"      find\.bySemanticsLabel\(\n"
+              r"        'Web Studio is BLOCKED_BY_DEPENDENCY\. P3-001 browser runtime is not implemented\.',\n"
+              r"      \),\n"
+              r"      findsOneWidget,\n"
+              r"    \);\n",
+              re.MULTILINE,
+          )
+          access_replacement = (
+              "    controller.selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);\n"
+              "    await tester.pumpAndSettle();\n"
+              "    expect(\n"
+              "      find.bySemanticsLabel(\n"
+              "        'Web Studio: EXPERIMENTAL. P3-002 through P3-006B browser sessions, observations, actions, downloads, and uploads are landed and can be consumed by Experience.',\n"
+              "      ),\n"
+              "      findsOneWidget,\n"
+              "    );\n\n"
+              "    final webCapability = find.byKey(const Key('capability-webStudio'));\n"
+              "    await tester.ensureVisible(webCapability);\n"
+              "    await tester.tap(webCapability);\n"
+              "    await tester.pumpAndSettle();\n"
+              "    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);\n"
+          )
+          text, count = access_pattern.subn(access_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('stale Web Studio accessibility contract not found exactly once')
+          accessibility.write_text(text, encoding='utf-8', newline='\n')
+          print('P5 live-semantics test alignment: PASS')
+          PY
 
       - name: Apply pinned Dart formatter
         shell: bash
@@ -151,6 +241,7 @@ jobs:
             lib/product/p5_information_architecture/p5_verification_workspaces.dart \
             test/product/p5_information_architecture/p5_source_boundary_test.dart \
             test/product/p5_information_architecture/p5_navigation_test.dart \
+            test/product/p5_information_architecture/p5_accessibility_test.dart \
             test/product/p5_information_architecture/p5_state_controller_test.dart \
             .p5-web-studio-runtime-integration.b64 \
             .p5-web-studio-runtime-integration.part00 \
@@ -185,6 +276,7 @@ jobs:
               'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
               'test/product/p5_information_architecture/p5_source_boundary_test.dart',
               'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_accessibility_test.dart',
               'test/product/p5_information_architecture/p5_state_controller_test.dart',
               '.p5-web-studio-runtime-integration.b64',
               '.p5-web-studio-runtime-integration.part00',
