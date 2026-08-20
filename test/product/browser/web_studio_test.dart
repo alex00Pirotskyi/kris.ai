@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/web_studio.dart';
 import 'package:kristin_local_agent/product/crypto_utils.dart';
-import 'package:kristin_local_agent/product/domain.dart';
+import 'package:kristin_local_agent/product/storage_security.dart'
+    show ProductException;
 import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 void main() {

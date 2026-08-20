@@ -160,8 +160,10 @@ class P2WorkerGrantProof {
     }
     final decisionScope = policyDecision['effectiveScope'];
     final legacyEffect = policyDecision['effect'];
+    final grantOperation = grantBinding['operation'];
     if (grantBinding.isEmpty ||
-        grantBinding['operation'] == null ||
+        (grantOperation != null &&
+            (grantOperation is! String || grantOperation.isEmpty)) ||
         policyDecision['status'] != 'allow' ||
         policyDecision['decisionId'] != policyDecisionId ||
         policyDecision['binding'] is! Map ||
@@ -546,10 +548,27 @@ class P2AutomationEnvelope {
         effectPermit.expiresAt.toUtc() != deadline.toUtc()) {
       throw StateError('deadline_binding_mismatch');
     }
+    final rawGrantBinding = grantProof.capabilityGrant['binding'];
+    if (rawGrantBinding is! Map) {
+      throw StateError('grant_binding_invalid');
+    }
+    final grantBinding = Map<String, Object?>.from(rawGrantBinding);
+    final expectedGrantBinding = <String, String>{
+      'runId': binding.runId,
+      'taskId': binding.taskId,
+      'actorId': binding.actorId,
+      'toolId': binding.toolId,
+      'accessProfileId': binding.accessProfileId,
+    };
+    for (final entry in expectedGrantBinding.entries) {
+      if (grantBinding[entry.key] != entry.value) {
+        throw StateError('grant_binding_${entry.key}_mismatch');
+      }
+    }
+    final grantOperation = grantBinding['operation'];
     if (operation != binding.operation ||
         effectPermit.operation != operation ||
-        (grantProof.capabilityGrant['binding'] as Map)['operation'] !=
-            operation) {
+        (grantOperation != null && grantOperation != operation)) {
       throw StateError('operation_binding_mismatch');
     }
     grantProof.validate(now, requestId);
