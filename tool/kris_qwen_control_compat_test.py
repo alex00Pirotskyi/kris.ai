@@ -49,6 +49,14 @@ class WorkerPidCompatibilityTest(unittest.TestCase):
         ):
             self.assertTrue(control.always_on_worker_pid(1234))
 
+    def test_legacy_entry_remains_recognized(self) -> None:
+        with mock.patch.object(control.base, "pid_alive", return_value=True), mock.patch.object(
+            control.base,
+            "process_cmdline",
+            return_value="python3 /repo/tool/kris_qwen_worker.py.compat.py stack --root /tmp/qwen",
+        ):
+            self.assertTrue(control.always_on_worker_pid(1234))
+
     def test_unrelated_python_process_is_rejected(self) -> None:
         with mock.patch.object(control.base, "pid_alive", return_value=True), mock.patch.object(
             control.base,
@@ -71,11 +79,54 @@ class AutoUpdateContractTest(unittest.TestCase):
             ), mock.patch.object(
                 controller, "_remote_branch_head", return_value="b" * 40
             ), mock.patch.object(
+                controller,
+                "_auto_update_preflight",
+                return_value={"status": "UPDATE_READY", "local": "a" * 40, "remote": "b" * 40},
+            ), mock.patch.object(
                 control.BaseController, "fetch_latest_and_run", return_value={"status": "QUEUED"}
             ) as fetch:
                 result = controller._auto_update_once()
             self.assertEqual(result["status"], "UPDATE_QUEUED")
+            self.assertEqual(result["remote"], "b" * 40)
             fetch.assert_called_once_with()
+
+    def test_dirty_checkout_blocks_auto_update_before_drain(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = self.controller(pathlib.Path(raw))
+            calls: list[tuple[str, ...]] = []
+
+            def fake_git(*args, check=True, timeout=300):
+                calls.append(tuple(args))
+                if args == ("status", "--porcelain", "--untracked-files=all"):
+                    return mock.Mock(returncode=0, stdout=" M local.txt\n", stderr="")
+                raise AssertionError(args)
+
+            with mock.patch.object(controller, "_git", side_effect=fake_git):
+                result = controller._auto_update_preflight("a" * 40, "b" * 40)
+            self.assertEqual(result["status"], "UPDATE_BLOCKED_DIRTY")
+            self.assertEqual(calls, [("status", "--porcelain", "--untracked-files=all")])
+
+    def test_non_fast_forward_blocks_auto_update_before_drain(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = self.controller(pathlib.Path(raw))
+            calls: list[tuple[str, ...]] = []
+
+            def fake_git(*args, check=True, timeout=300):
+                calls.append(tuple(args))
+                if args == ("status", "--porcelain", "--untracked-files=all"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("fetch", "origin", "agent/qwen-phone-control", "--prune"):
+                    return mock.Mock(returncode=0, stdout="", stderr="")
+                if args == ("rev-parse", "origin/agent/qwen-phone-control"):
+                    return mock.Mock(returncode=0, stdout="b" * 40 + "\n", stderr="")
+                if args == ("merge-base", "--is-ancestor", "a" * 40, "b" * 40):
+                    return mock.Mock(returncode=1, stdout="", stderr="")
+                raise AssertionError(args)
+
+            with mock.patch.object(controller, "_git", side_effect=fake_git):
+                result = controller._auto_update_preflight("a" * 40, "b" * 40)
+            self.assertEqual(result["status"], "UPDATE_BLOCKED_NON_FAST_FORWARD")
+            self.assertIn(("merge-base", "--is-ancestor", "a" * 40, "b" * 40), calls)
 
     def test_current_branch_auto_starts_stopped_worker(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
