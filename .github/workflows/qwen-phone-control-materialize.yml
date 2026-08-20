@@ -26,94 +26,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Align historical semaphore audit with canonical runtime semantics
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          worker_path = Path('tool/kris_qwen_worker.py')
-          worker = worker_path.read_text(encoding='utf-8')
-          if worker.count('SCRIPT_VERSION = "5.2.1"') != 1:
-              raise SystemExit('expected exactly one Qwen worker version 5.2.1')
-          worker = worker.replace('SCRIPT_VERSION = "5.2.1"', 'SCRIPT_VERSION = "5.2.2"', 1)
-
-          old_cmp = 'parsed["expiresAt"] <= parsed["refreshedAt"]'
-          new_cmp = 'parsed["expiresAt"] < parsed["refreshedAt"]'
-          if worker.count(old_cmp) != 1:
-              raise SystemExit('expected exactly one strict inactive semaphore timestamp comparison')
-          worker = worker.replace(old_cmp, new_cmp, 1)
-          old_msg = 'expiresAt must be later than refreshedAt'
-          if worker.count(old_msg) != 1:
-              raise SystemExit('expected exactly one historical timestamp error message')
-          worker = worker.replace(old_msg, 'expiresAt must not precede refreshedAt', 1)
-          worker_path.write_text(worker, encoding='utf-8', newline='\n')
-
-          docs_path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
-          docs = docs_path.read_text(encoding='utf-8')
-          if docs.count('reports **5.2.1**') != 1:
-              raise SystemExit('expected current Qwen docs version marker')
-          docs = docs.replace('reports **5.2.1**', 'reports **5.2.2**', 1)
-          marker = 'The control layer is Python-standard-library only. Uvicorn/Gunicorn/Flask/FastAPI are not required.\n'
-          note = (
-              '\nQwen 5.2.2 also aligns its subprocess-only historical semaphore audit with the canonical '
-              'Mission runtime semantics: immutable inactive history may record `expiresAt == refreshedAt`; '
-              '`expiresAt < refreshedAt` is still rejected. Active/executable semaphore validation remains strict.\n'
-          )
-          if note.strip() not in docs:
-              if marker not in docs:
-                  raise SystemExit('expected control-layer documentation marker')
-              docs = docs.replace(marker, marker + note, 1)
-          docs_path.write_text(docs, encoding='utf-8', newline='\n')
-          PY
-
-      - name: Validate compatibility source contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import importlib.util
-          import pathlib
-          import sys
-          from unittest import mock
-
-          path = pathlib.Path('tool/kris_qwen_worker.py').resolve()
-          source = path.read_text(encoding='utf-8')
-          if 'parsed["expiresAt"] < parsed["refreshedAt"]' not in source:
-              raise SystemExit('historical semaphore equality compatibility guard missing')
-          if 'parsed["expiresAt"] <= parsed["refreshedAt"]' in source:
-              raise SystemExit('obsolete strict historical semaphore comparison remains')
-
-          spec = importlib.util.spec_from_file_location('kris_qwen_worker_compat', path)
-          if spec is None or spec.loader is None:
-              raise SystemExit('cannot import Qwen worker')
-          worker = importlib.util.module_from_spec(spec)
-          sys.modules[spec.name] = worker
-          spec.loader.exec_module(worker)
-
-          class Cfg:
-              anchor = pathlib.Path('/tmp/kris-qwen-anchor')
-              runtime_branch = 'agent/mission-runtime'
-              control_branch = 'agent/mission-execution-v15-gold'
-
-          cfg = Cfg()
-          responses = [
-              mock.Mock(returncode=0, stdout='{"runtimeGeneration":652,"schemaVersion":1}\n', stderr=''),
-              mock.Mock(returncode=0, stdout='ok\n', stderr=''),
-          ]
-          with mock.patch.object(worker, 'git', side_effect=responses) as git_mock:
-              resolved = worker.resolve_control_plane(cfg)
-          if resolved != 'agent/mission-execution-v15-gold' or cfg.control_branch != resolved:
-              raise SystemExit(f'legacy runtime metadata fallback failed: {resolved!r}')
-          if 'origin/agent/mission-execution-v15-gold' not in git_mock.call_args_list[1].args:
-              raise SystemExit('fallback control branch was not remotely verified')
-          if worker.SCRIPT_VERSION != '5.2.2':
-              raise SystemExit(f'unexpected worker version {worker.SCRIPT_VERSION!r}')
-          print('validated Qwen 5.2.2 compatibility source contract')
-          PY
-
-      - name: Validate Qwen phone control and refresh exact source manifest
+      - name: Verify Qwen 5.2.2 compatibility source
         shell: bash
         run: |
           set -euo pipefail
@@ -126,25 +39,36 @@ jobs:
           python3 tool/kris_qwen_control_test.py
           python3 - <<'PY'
           import json
+          import pathlib
           import subprocess
 
+          source = pathlib.Path('tool/kris_qwen_worker.py').read_text(encoding='utf-8')
+          if 'SCRIPT_VERSION = "5.2.2"' not in source:
+              raise SystemExit('Qwen worker 5.2.2 marker missing')
+          if 'parsed["expiresAt"] < parsed["refreshedAt"]' not in source:
+              raise SystemExit('canonical historical semaphore comparison missing')
+          if 'parsed["expiresAt"] <= parsed["refreshedAt"]' in source:
+              raise SystemExit('obsolete strict historical semaphore comparison remains')
+
           raw = subprocess.check_output(['python3', 'tool/kris_qwen_worker.py', 'version'], text=True)
-          version = str(json.loads(raw).get('scriptVersion') or '').strip()
-          if version != '5.2.2':
+          if str(json.loads(raw).get('scriptVersion') or '').strip() != '5.2.2':
               raise SystemExit(f'unexpected worker version JSON: {raw!r}')
-          compat_raw = subprocess.check_output(['python3', 'tool/kris_qwen_worker.py.compat.py', 'version'], text=True)
-          compat_version = str(json.loads(compat_raw).get('scriptVersion') or '').strip()
-          if compat_version != '5.2.2':
-              raise SystemExit(f'unexpected compatibility worker version JSON: {compat_raw!r}')
-          controller = subprocess.check_output(['python3', 'tool/kris_qwen_control.py', '--version'], text=True).strip()
-          if controller != '2.1.0':
-              raise SystemExit(f'unexpected Qwen controller version {controller!r}')
-          print(f'validated worker version {version} and compatibility entry {compat_version}')
+          compat = subprocess.check_output(['python3', 'tool/kris_qwen_worker.py.compat.py', 'version'], text=True)
+          if str(json.loads(compat).get('scriptVersion') or '').strip() != '5.2.2':
+              raise SystemExit(f'unexpected compatibility worker version JSON: {compat!r}')
+          if subprocess.check_output(['python3', 'tool/kris_qwen_control.py', '--version'], text=True).strip() != '2.1.0':
+              raise SystemExit('unexpected Qwen controller version')
+          print('verified Qwen 5.2.2 and compatibility entry')
           PY
           test -x run_my_server.py
           test -x tool/run_kris_qwen_phone_control.sh
           bash -n tool/install_kris_qwen_control_systemd.sh
           bash -n tool/run_kris_qwen_phone_control.sh
+
+      - name: Refresh exact source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
           python3 tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
           python3 tool/p1a_refresh_source_manifest.py .
@@ -153,20 +77,14 @@ jobs:
           git diff --check
           python3 - <<'PY'
           import subprocess
-          expected = {
-              'SOURCE_MANIFEST.sha256',
-              'docs/KRIS_QWEN_SERVER_CONTROL.md',
-              'tool/kris_qwen_worker.py',
-          }
           actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          expected = {'SOURCE_MANIFEST.sha256'}
           if actual != expected:
-              raise SystemExit(f'Qwen materializer scope mismatch actual={sorted(actual)} expected={sorted(expected)}')
+              raise SystemExit(f'manifest refresh scope mismatch actual={sorted(actual)} expected={sorted(expected)}')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256 docs/KRIS_QWEN_SERVER_CONTROL.md tool/kris_qwen_worker.py
+          git add SOURCE_MANIFEST.sha256
           git diff --cached --check
-          git commit -m 'fix(qwen): align historical semaphore audit'
+          git commit -m 'chore(qwen): refresh compatibility entry manifest'
           git push origin HEAD:refs/heads/agent/qwen-phone-control
-
-# Retrigger after the compatibility entrypoint landed on the candidate branch.
