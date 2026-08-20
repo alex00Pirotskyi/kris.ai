@@ -1,0 +1,659 @@
+name: Qwen Always-On Materialize From Gold
+
+on:
+  push:
+    branches:
+      - agent/mission-execution-v15-gold
+    paths:
+      - .github/workflows/qwen-always-on-materialize-from-gold.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qwen-always-on-materialize-from-gold
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out Qwen candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-phone-control
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Patch worker controller tests and compat
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def sub1(text: str, pattern: str, replacement: str, label: str, flags: int = 0) -> str:
+              out, count = re.subn(pattern, replacement, text, count=1, flags=flags)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one replacement, got {count}')
+              return out
+
+          worker_path = Path('tool/kris_qwen_worker.py')
+          worker = worker_path.read_text(encoding='utf-8')
+          worker = sub1(worker, r'SCRIPT_VERSION = "5\.2\.2"', 'SCRIPT_VERSION = "5.3.0"', 'worker-version')
+          worker = sub1(
+              worker,
+              r'def fetch_all\(cfg: Config\) -> None:\n(?:    .*\n)+?(?=\ndef )',
+              '''def fetch_all(cfg: Config) -> None:\n    git(\n        cfg.anchor,\n        "fetch",\n        "origin",\n        "+refs/heads/*:refs/remotes/origin/*",\n        "+refs/pull/*/head:refs/remotes/origin/pull/*/head",\n        "--prune",\n        timeout=1800,\n    )\n\n''',
+              'fetch-all',
+          )
+
+          replacement_promote = r'''def promote_reviewed_source_work(cfg: Config, lease: WorkLease, target_head: str) -> None:
+    candidates = [
+        w for w in runtime_work_rows(cfg)
+        if w.get("mission") == lease.work.get("mission")
+        and w.get("parentProductPr") == lease.work.get("parentProductPr")
+        and w.get("status") in {"REVIEW", "HELPER_READY"}
+        and w.get("type") in {"PRODUCT_FEATURE", "PRODUCT_DEFECT_REPAIR", "PRODUCT_TEST", "CI_REPAIR", "BLOCKER_REMOVAL"}
+        and sorted(w.get("allowedPaths") or []) == sorted(lease.work.get("allowedPaths") or [])
+    ]
+    if len(candidates) != 1:
+        return
+    source_work = candidates[0]
+    if source_work.get("status") == "REVIEW":
+        transition_work_order_cas(
+            cfg,
+            str(source_work["workOrderId"]),
+            "HELPER_READY",
+            f"ELASTIC-QWEN-V53:R1_PASS:{target_head}",
+            make_work_execution_id(),
+        )
+        refresh_snapshots(cfg)
+        source_work = next(
+            row for row in runtime_work_rows(cfg)
+            if row.get("workOrderId") == source_work.get("workOrderId")
+        )
+    integrations = sorted(
+        (
+            row for row in runtime_work_rows(cfg)
+            if row.get("parentProductPr") == source_work.get("parentProductPr")
+            and row.get("type") == "INTEGRATION"
+            and row.get("status") in {"VALIDATING", "BLOCKED"}
+            and not row.get("activeSemaphoreId")
+        ),
+        key=lambda row: (-int(row.get("priority", 0)), str(row.get("workOrderId"))),
+    )
+    if integrations:
+        transition_work_order_cas(
+            cfg,
+            str(integrations[0]["workOrderId"]),
+            "READY",
+            f"ELASTIC-QWEN-V53:REVIEWED_HELPER_INTEGRATION_WAKE:{target_head}",
+            make_work_execution_id(),
+        )
+        refresh_snapshots(cfg)
+'''
+          worker = sub1(
+              worker,
+              r'def promote_reviewed_source_work\(cfg: Config, lease: WorkLease, target_head: str\) -> None:\n.*?(?=\ndef integrate_helper_candidate\()',
+              replacement_promote + '\n',
+              'promote-reviewed-source',
+              re.S,
+          )
+
+          always_on = r'''
+CONTINUOUS_ACTIVE_WORK_STATES = {
+    "READY", "RESERVED", "IN_PROGRESS", "HELPER_READY", "INTEGRATING",
+    "VALIDATING", "REVIEW",
+}
+CONTINUOUS_SOURCE_TYPES = {
+    "PRODUCT_FEATURE", "PRODUCT_DEFECT_REPAIR", "PRODUCT_TEST", "CI_REPAIR",
+    "BLOCKER_REMOVAL",
+}
+CONTINUOUS_CODE_PREFIXES = (
+    "lib/", "test/", "automation_host/", "services/", "native/", "tool/",
+)
+
+
+def review_requires_external_identity(work: dict[str, Any]) -> bool:
+    if str(work.get("externalReviewerGitHub") or "").strip():
+        return True
+    text = (str(work.get("objective") or "") + "\n" + "\n".join(
+        str(x) for x in work.get("requiredTests", [])
+    )).lower()
+    return any(
+        marker in text
+        for marker in (
+            "must be submitted by github identity",
+            "distinct external reviewer identity",
+            "externalreviewergithub",
+            "requires github identity alex11",
+        )
+    )
+
+
+def wake_pending_reviews(cfg: Config) -> list[str]:
+    rows = sorted(
+        (
+            row for row in runtime_work_rows(cfg)
+            if row.get("status") == "REVIEW"
+            and row.get("type") == "REVIEW"
+            and not row.get("activeSemaphoreId")
+        ),
+        key=lambda row: (-int(row.get("priority", 0)), str(row.get("workOrderId"))),
+    )
+    for row in rows:
+        work_id = str(row.get("workOrderId") or "")
+        if not work_id or local_cooldown_active(cfg, work_id):
+            continue
+        if review_requires_external_identity(row):
+            continue
+        try:
+            if not review_is_independent_enough(cfg, row):
+                continue
+            _, _, target_head = review_target(cfg, row)
+            transition_work_order_cas(
+                cfg,
+                work_id,
+                "READY",
+                f"ELASTIC-QWEN-V53:AUTO_WAKE_REVIEW:{target_head}",
+                make_work_execution_id(),
+            )
+            return [work_id]
+        except (CASLost, TransientFleetState):
+            refresh_snapshots(cfg)
+            return []
+        except Exception:
+            continue
+    return []
+
+
+def continuous_seed_allowed_paths(cfg: Config, product: dict[str, Any]) -> list[str]:
+    parent_pr = int(product["productPr"])
+    paths: list[str] = []
+    for row in runtime_work_rows(cfg):
+        if row.get("parentProductPr") != parent_pr or row.get("type") not in CONTINUOUS_SOURCE_TYPES:
+            continue
+        for raw in row.get("allowedPaths") or []:
+            value = str(raw)
+            if value.startswith(CONTINUOUS_CODE_PREFIXES) and value not in paths:
+                paths.append(value)
+    if paths:
+        return paths[:24]
+    branch = str(product["branch"])
+    diff = git(
+        cfg.anchor,
+        "diff",
+        "--name-only",
+        f"origin/{cfg.main_branch}...origin/{branch}",
+        "--",
+        check=False,
+        timeout=120,
+    )
+    if diff.returncode != 0:
+        return []
+    for raw in diff.stdout.splitlines():
+        value = raw.strip()
+        if value.startswith(CONTINUOUS_CODE_PREFIXES) and value not in paths:
+            paths.append(value)
+    return paths[:24]
+
+
+def seed_continuous_product_work(cfg: Config, worker_identity: str) -> str | None:
+    products = []
+    for path in sorted((cfg.runtime / "runtime/integration/product-prs").glob("*.json")):
+        product = read_json(path)
+        if product.get("status") == "ACTIVE":
+            products.append(product)
+    products.sort(key=lambda row: (str(row.get("mission")), str(row.get("task"))))
+    all_work = runtime_work_rows(cfg)
+    for product in products:
+        parent_pr = product.get("productPr")
+        if not isinstance(parent_pr, int) or parent_pr <= 0:
+            continue
+        if any(
+            row.get("parentProductPr") == parent_pr
+            and row.get("status") in CONTINUOUS_ACTIVE_WORK_STATES
+            for row in all_work
+        ):
+            continue
+        branch = str(product.get("branch") or "")
+        if not branch:
+            continue
+        try:
+            info = gh_pr_info(cfg, parent_pr)
+            live_head = git(cfg.anchor, "rev-parse", f"origin/{branch}").stdout.strip()
+        except Exception:
+            continue
+        if (
+            info.get("state") != "OPEN"
+            or str(info.get("headRefName") or "") != branch
+            or str(info.get("headRefOid") or "") != live_head
+        ):
+            continue
+        allowed_paths = continuous_seed_allowed_paths(cfg, product)
+        if not allowed_paths:
+            continue
+        live_tree = exact_tree(cfg.anchor, live_head)
+        for attempt in range(1, 5):
+            refresh_snapshots(cfg)
+            generation = runtime_generation(cfg)
+            work_id = f"WO-{slug(str(product['task']), 18).upper()}-CONTINUOUS-QWEN-{short_id(8).upper()}"
+            spec = {
+                "schemaVersion": 1,
+                "workOrderId": work_id,
+                "mission": product["mission"],
+                "roadmapTask": product["task"],
+                "parentProductPr": parent_pr,
+                "priority": 85,
+                "type": "PRODUCT_DEFECT_REPAIR",
+                "objective": (
+                    "Always-on Product hardening. Inspect exact current Product source/tests inside allowedPaths, "
+                    "identify one concrete correctness, performance, reliability, UX-facing behavior, or missing-"
+                    "regression defect that can be proven locally, and implement the smallest durable code/test fix. "
+                    "Do not create documentation-only, formatting-only, governance-only, or no-op changes."
+                ),
+                "requestedRole": "DEFECT_HUNTER",
+                "allowedPaths": allowed_paths,
+                "baseCommit": live_head,
+                "baseTree": live_tree,
+                "dependencyRequirements": [],
+                "requiredTests": [
+                    "run at least one focused local product/source regression or analyzer command and require exit 0",
+                    "final changed paths remain inside exact Work Order allowedPaths",
+                    "no documentation-only or no-op candidate is allowed",
+                ],
+                "maxChildWorkOrders": 1,
+                "status": "READY",
+                "createdBy": worker_identity,
+                "createdAt": utc_iso(),
+            }
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False, suffix=".json") as fh:
+                json.dump(spec, fh, indent=2, sort_keys=True)
+                fh.write("\n")
+                spec_path = fh.name
+            try:
+                result = control_python(
+                    cfg,
+                    "mission_orchestrator.py",
+                    "--project", str(cfg.runtime),
+                    "work-create",
+                    "--spec", spec_path,
+                    "--work-id", make_work_execution_id(),
+                    "--expected-generation", str(generation),
+                    check=False,
+                )
+            finally:
+                pathlib.Path(spec_path).unlink(missing_ok=True)
+            if result.returncode != 0:
+                if git(cfg.runtime, "status", "--porcelain", check=False).stdout.strip():
+                    git(cfg.runtime, "reset", "--hard", f"origin/{cfg.runtime_branch}", check=False)
+                    git(cfg.runtime, "clean", "-fd", check=False)
+                if "runtime generation moved" in result.combined(4000) and attempt < 4:
+                    continue
+                break
+            try:
+                commit_runtime_transition(cfg, f"mission-runtime: seed always-on Product hardening {work_id}")
+            except CASLost:
+                if attempt < 4:
+                    continue
+                return None
+            refresh_snapshots(cfg)
+            resilient_preflight(cfg)
+            return work_id
+    return None
+
+
+def recover_continuous_frontier(cfg: Config, worker_identity: str, log: JsonlLog) -> dict[str, Any]:
+    woken_reviews = wake_pending_reviews(cfg)
+    if woken_reviews:
+        log.trace("review-wake", f"woke pending R1 review Work Orders: {woken_reviews}")
+        refresh_snapshots(cfg)
+    front = dispatcher(cfg, worker_identity)
+    if select_safe_candidate(cfg, front, cfg.allowed_types) is not None:
+        return {"wokenReviews": woken_reviews, "seededWorkOrder": None}
+    seeded = seed_continuous_product_work(cfg, worker_identity)
+    if seeded:
+        log.trace("frontier-seed", f"created bounded always-on Product hardening Work Order: {seeded}")
+        refresh_snapshots(cfg)
+    return {"wokenReviews": woken_reviews, "seededWorkOrder": seeded}
+
+'''
+          worker = sub1(
+              worker,
+              r'\ndef validate_authority_append_safety\(cfg: Config, lease: WorkLease\) -> None:\n',
+              '\n' + always_on + 'def validate_authority_append_safety(cfg: Config, lease: WorkLease) -> None:\n',
+              'insert-always-on',
+          )
+          worker = sub1(
+              worker,
+              r'(        stranded_woken = wake_stranded_integrations\(cfg\)\n        if stranded_woken:\n            log\.trace\("integration-wake", f"woke stranded integration Work Orders: \{stranded_woken\}"\)\n            refresh_snapshots\(cfg\)\n)(        lease = reserve_work\(cfg, worker_identity, work_execution_id\)\n)',
+              r'\1        frontier_recovery = recover_continuous_frontier(cfg, worker_identity, log)\n        if frontier_recovery.get("wokenReviews") or frontier_recovery.get("seededWorkOrder"):\n            refresh_snapshots(cfg)\n\2',
+              'run-one-frontier',
+          )
+          worker = worker.replace('write_worker_status(cfg, "IDLE"', 'write_worker_status(cfg, "CONTINUING"')
+          worker = sub1(
+              worker,
+              r'parser\.add_argument\("--loop-sleep", type=int, default=int\(os\.environ\.get\("KRIS_QWEN_LOOP_SLEEP", "60"\)\)\)',
+              'parser.add_argument("--loop-sleep", type=int, default=int(os.environ.get("KRIS_QWEN_LOOP_SLEEP", "2")), help="red-alert/transient polling interval only; successful jobs chain immediately")',
+              'loop-sleep-default',
+          )
+          worker = sub1(
+              worker,
+              r'(                    except NoEligibleWork as exc:\n)(.*?)(?=                    except )',
+              r'''\1                        consecutive_errors = 0
+                        transient_signature = ""
+                        transient_count = 0
+                        red_alert_retry = min(5, max(1, int(cfg.loop_sleep)))
+                        write_worker_status(
+                            cfg, "RED_ALERT_FRONTIER", reason=str(exc), redAlert=True,
+                            retrySeconds=red_alert_retry, jobsCompleted=jobs,
+                        )
+                        print(f"[red-alert] no executable Product frontier: {exc}; aggressive retry in {red_alert_retry}s")
+                        if interruptible_sleep(cfg, red_alert_retry):
+                            continue
+                        continue
+''',
+              'no-eligible-red-alert',
+              re.S,
+          )
+          sleep_block = '                    if interruptible_sleep(cfg, cfg.loop_sleep):\n                        continue\n'
+          pos = worker.rfind(sleep_block)
+          if pos < 0:
+              raise SystemExit('outer inter-job sleep block not found')
+          worker = worker[:pos] + '                    # Successful work chains immediately; no normal idle sleep.\n                    continue\n' + worker[pos + len(sleep_block):]
+          for marker in (
+              'SCRIPT_VERSION = "5.3.0"',
+              '+refs/pull/*/head:refs/remotes/origin/pull/*/head',
+              'def wake_pending_reviews(',
+              'def seed_continuous_product_work(',
+              'RED_ALERT_FRONTIER',
+              'Successful work chains immediately',
+          ):
+              if marker not in worker:
+                  raise SystemExit(f'missing worker marker {marker}')
+          worker_path.write_text(worker, encoding='utf-8', newline='\n')
+
+          compat_path = Path('tool/kris_qwen_worker.py.compat.py')
+          compat = compat_path.read_text(encoding='utf-8')
+          compat = sub1(compat, r'TARGET_VERSION = "5\.2\.3"', 'TARGET_VERSION = "5.3.0"', 'compat-version')
+          compat = sub1(
+              compat,
+              r'def load_source\(\) -> str:\n.*?(?=\n\ndef main\(\) -> None:)',
+              '''def load_source() -> str:\n    text = SOURCE.read_text(encoding="utf-8")\n    required = (\n        'SCRIPT_VERSION = "5.3.0"',\n        '+refs/pull/*/head:refs/remotes/origin/pull/*/head',\n        'def wake_pending_reviews(',\n        'def seed_continuous_product_work(',\n        'RED_ALERT_FRONTIER',\n    )\n    missing = [marker for marker in required if marker not in text]\n    if missing:\n        raise SystemExit(f"KRIS_QWEN_COMPAT_ERROR: normal 5.3 always-on source missing markers: {missing}")\n    return text\n''',
+              'compat-loader',
+              re.S,
+          )
+          compat_path.write_text(compat, encoding='utf-8', newline='\n')
+
+          control_path = Path('tool/kris_qwen_control.py')
+          control = control_path.read_text(encoding='utf-8')
+          control = sub1(control, r'CONTROL_VERSION = "2\.1\.0"', 'CONTROL_VERSION = "2.2.0"', 'control-version')
+          control = sub1(
+              control,
+              r'(    worker_extra_args: tuple\[str, \.\.\.\]\n)',
+              r'\1    auto_update: bool\n    auto_update_seconds: int\n',
+              'control-fields',
+          )
+          control = sub1(
+              control,
+              r'(            worker_extra_args=tuple\(shlex\.split\(os\.environ\.get\("KRIS_QWEN_WORKER_ARGS", ""\)\)\),\n)(        \)\n)',
+              r'\1            auto_update=env_bool("KRIS_QWEN_AUTO_UPDATE", True),\n            auto_update_seconds=max(10, int(os.environ.get("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30"))),\n\2',
+              'control-env',
+          )
+          control = sub1(
+              control,
+              r'(        self\.token = self\._load_or_create_token\(\)\n)',
+              r'''\1        self.auto_run_enabled = True
+        self.auto_update_thread: threading.Thread | None = None
+        if self.cfg.auto_update:
+            self.auto_update_thread = threading.Thread(
+                target=self._auto_update_loop,
+                name="kris-qwen-auto-update",
+                daemon=True,
+            )
+            self.auto_update_thread.start()
+''',
+              'control-thread-init',
+          )
+          control = sub1(
+              control,
+              r'(    def start\(self\) -> dict\[str, Any\]:\n        with self\.lock:\n            if self\.operation_running\(\):\n                raise ControllerError\("another controller operation is already running"\)\n)(            result = self\._start_worker_unlocked\(\)\n)',
+              r'\1            self.auto_run_enabled = True\n\2',
+              'control-start-auto-run',
+          )
+          control = sub1(
+              control,
+              r'(    def request_safe_stop\(self, reason: str = "Qwen phone control safe stop"\) -> dict\[str, Any\]:\n)',
+              r'''    def pause_and_request_safe_stop(self) -> dict[str, Any]:
+        self.auto_run_enabled = False
+        return self.request_safe_stop("Qwen phone control safe stop")
+
+\1''',
+              'control-pause-method',
+          )
+
+          job_match = re.search(
+              r'    def _fetch_latest_and_run_job\(self\) -> None:\n.*?(?=    def fetch_latest_and_run\(self\) -> dict\[str, Any\]:)',
+              control,
+              flags=re.S,
+          )
+          if not job_match:
+              raise SystemExit('fetch-run job block not found')
+          job = job_match.group(0)
+          job = job.replace('def _fetch_latest_and_run_job(self) -> None:', 'def _fetch_latest_and_run_job(self, kind: str = "FETCH_LATEST_AND_RUN") -> None:')
+          job = job.replace('kind="FETCH_LATEST_AND_RUN"', 'kind=kind')
+          control = control[:job_match.start()] + job + control[job_match.end():]
+
+          replacement_fetch = r'''    def _queue_fetch_latest_and_run(self, kind: str) -> dict[str, Any]:
+        with self.lock:
+            if self.operation_running():
+                raise ControllerError("another controller operation is already running")
+            self.auto_run_enabled = True
+            self.operation_thread = threading.Thread(
+                target=self._fetch_latest_and_run_job,
+                args=(kind,),
+                name=f"kris-qwen-fetch-run-{kind.lower()}",
+                daemon=True,
+            )
+            self._record_operation(state="QUEUED", kind=kind, result=None, error=None)
+            self.operation_thread.start()
+            return {"status": "QUEUED", "kind": kind}
+
+    def fetch_latest_and_run(self) -> dict[str, Any]:
+        return self._queue_fetch_latest_and_run("FETCH_LATEST_AND_RUN")
+
+    def _remote_branch_head(self) -> str:
+        result = self._git(
+            "ls-remote", "--heads", "origin", f"refs/heads/{self.cfg.repo_branch}",
+            timeout=120,
+        )
+        rows = [line.split() for line in result.stdout.splitlines() if line.strip()]
+        if len(rows) != 1 or len(rows[0]) < 2:
+            raise ControllerError(f"cannot resolve unique remote head for {self.cfg.repo_branch}")
+        return rows[0][0]
+
+    def _auto_update_once(self) -> dict[str, Any]:
+        if self.operation_running():
+            return {"status": "BUSY"}
+        self._validate_repo()
+        local = self._git_head()
+        remote = self._remote_branch_head()
+        if remote != local:
+            return {"status": "UPDATE_QUEUED", "local": local, "remote": remote, **self._queue_fetch_latest_and_run("AUTO_UPDATE")}
+        if self.auto_run_enabled and not self.worker_pid():
+            with self.lock:
+                if not self.operation_running() and not self.worker_pid():
+                    started = self._start_worker_unlocked()
+                    self._record_operation(state="IDLE", kind="AUTO_START", result=started, error=None)
+                    return {"status": "AUTO_STARTED", "local": local, "remote": remote}
+        return {"status": "CURRENT", "local": local, "remote": remote}
+
+    def _auto_update_loop(self) -> None:
+        time.sleep(1.0)
+        while True:
+            try:
+                self._auto_update_once()
+            except Exception as exc:
+                if not self.operation_running():
+                    self._record_operation(state="ERROR", kind="AUTO_UPDATE", error=str(exc))
+            time.sleep(self.cfg.auto_update_seconds)
+'''
+          control = sub1(
+              control,
+              r'    def fetch_latest_and_run\(self\) -> dict\[str, Any\]:\n.*?(?=\n\nclass ControllerHandler)',
+              replacement_fetch,
+              'control-fetch-and-watcher',
+              re.S,
+          )
+          control = sub1(
+              control,
+              r'(        elif path == "/api/stop":\n)(            result = self\.controller\.request_safe_stop\(\)\n)',
+              r'\1            result = self.controller.pause_and_request_safe_stop()\n',
+              'manual-stop-pause',
+          )
+          control = sub1(
+              control,
+              r'(            "operation": dict\(self\.operation\), "git": self\.git_status\(\),\n)',
+              r'''\1            "autoUpdate": {
+                "enabled": self.cfg.auto_update,
+                "intervalSeconds": self.cfg.auto_update_seconds,
+                "autoRunEnabled": self.auto_run_enabled,
+            },
+''',
+              'control-status-auto-update',
+          )
+          control_path.write_text(control, encoding='utf-8', newline='\n')
+
+          test_path = Path('tool/kris_qwen_control_test.py')
+          tests = test_path.read_text(encoding='utf-8')
+          tests = sub1(
+              tests,
+              r'(        worker_extra_args=\(\),\n)(    \)\n)',
+              r'\1        auto_update=False,\n        auto_update_seconds=30,\n\2',
+              'test-config',
+          )
+          extra_tests = r'''
+
+class AutoUpdateTest(unittest.TestCase):
+    def test_remote_change_queues_safe_auto_update(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = control.QwenController(config(pathlib.Path(raw)))
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "_git_head", return_value="old"
+            ), mock.patch.object(
+                controller, "_remote_branch_head", return_value="new"
+            ), mock.patch.object(
+                controller, "_queue_fetch_latest_and_run", return_value={"status": "QUEUED", "kind": "AUTO_UPDATE"}
+            ) as queued:
+                result = controller._auto_update_once()
+            self.assertEqual(result["status"], "UPDATE_QUEUED")
+            queued.assert_called_once_with("AUTO_UPDATE")
+
+    def test_current_remote_keeps_running_worker(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = control.QwenController(config(pathlib.Path(raw)))
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "_git_head", return_value="same"
+            ), mock.patch.object(
+                controller, "_remote_branch_head", return_value="same"
+            ), mock.patch.object(controller, "worker_pid", return_value=1234), mock.patch.object(
+                controller, "_queue_fetch_latest_and_run"
+            ) as queued:
+                result = controller._auto_update_once()
+            self.assertEqual(result["status"], "CURRENT")
+            queued.assert_not_called()
+
+    def test_current_remote_auto_starts_unexpected_stop(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = control.QwenController(config(pathlib.Path(raw)))
+            with mock.patch.object(controller, "_validate_repo"), mock.patch.object(
+                controller, "_git_head", return_value="same"
+            ), mock.patch.object(
+                controller, "_remote_branch_head", return_value="same"
+            ), mock.patch.object(controller, "worker_pid", return_value=None), mock.patch.object(
+                controller, "_start_worker_unlocked", return_value={"status": "STARTED", "pid": 42}
+            ) as start:
+                result = controller._auto_update_once()
+            self.assertEqual(result["status"], "AUTO_STARTED")
+            start.assert_called_once()
+'''
+          tests = sub1(
+              tests,
+              r'\n\nif __name__ == "__main__":\n',
+              extra_tests + '\n\nif __name__ == "__main__":\n',
+              'append-auto-update-tests',
+          )
+          test_path.write_text(tests, encoding='utf-8', newline='\n')
+
+          docs_path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
+          docs = docs_path.read_text(encoding='utf-8')
+          marker = '## Always-on Product protocol (5.3 / controller 2.2)'
+          if marker not in docs:
+              docs += '''\n\n## Always-on Product protocol (5.3 / controller 2.2)\n\nNormal `IDLE` is a red-alert condition rather than a steady state. Successful Work Orders chain immediately. The worker wakes eligible context-independent R1 review lanes, wakes reviewed helper integration lanes, and when the governed frontier is genuinely empty it can create one bounded `PRODUCT_DEFECT_REPAIR` Work Order only against an existing ACTIVE canonical Product PR through the existing Mission Runtime `work-create` CAS path. Runtime path policy, WIP limits, semaphores, exact-head review independence, and protected-main restrictions remain fail-closed.\n\nController 2.2 enables automatic update monitoring by default. It periodically compares the configured remote Qwen branch head to the local checkout. A newer head uses the same graceful drain, clean-checkout refusal, fast-forward-only update, version probe, and stack restart as the manual Fetch latest flow. An unexpectedly stopped worker is started again unless the operator explicitly used Safe stop, which pauses automatic restart until Run current Qwen or Fetch latest + run Qwen is selected.\n'''
+          docs_path.write_text(docs, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Remove temporary feature-branch transports
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/qwen-always-on-materialize.yml
+          rm -f .github/workflows/qwen-always-on-anchor-audit.yml
+          rm -f qwen-always-on-anchor-audit.json
+
+      - name: Validate candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile run_my_server.py tool/kris_qwen_worker.py tool/kris_qwen_worker.py.compat.py tool/kris_qwen_control.py tool/kris_qwen_control_test.py
+          python3 tool/kris_qwen_control_test.py
+          python3 tool/kris_qwen_worker.py version > /tmp/worker-version.json
+          python3 tool/kris_qwen_worker.py.compat.py version > /tmp/compat-version.json
+          python3 - <<'PY'
+          import json
+          for path in ('/tmp/worker-version.json', '/tmp/compat-version.json'):
+              value = json.load(open(path, encoding='utf-8'))
+              assert value['scriptVersion'] == '5.3.0', value
+          control = open('tool/kris_qwen_control.py', encoding='utf-8').read()
+          assert 'CONTROL_VERSION = "2.2.0"' in control
+          worker = open('tool/kris_qwen_worker.py', encoding='utf-8').read()
+          for marker in ('def wake_pending_reviews(', 'def seed_continuous_product_work(', 'RED_ALERT_FRONTIER', '+refs/pull/*/head:refs/remotes/origin/pull/*/head'):
+              assert marker in worker, marker
+          PY
+          git diff --check
+
+      - name: Regenerate and validate source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 /tmp/manifest.first
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp -s /tmp/manifest.first SOURCE_MANIFEST.sha256
+          python3 tool/p1a_source_manifest_test.py .
+          git diff --check
+
+      - name: Publish exact Qwen candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          changed="$(git diff --cached --name-only | sort)"
+          allowed=$'.github/workflows/qwen-always-on-anchor-audit.yml\n.github/workflows/qwen-always-on-materialize.yml\nSOURCE_MANIFEST.sha256\ndocs/KRIS_QWEN_SERVER_CONTROL.md\ntool/kris_qwen_control.py\ntool/kris_qwen_control_test.py\ntool/kris_qwen_worker.py\ntool/kris_qwen_worker.py.compat.py'
+          if [[ "$changed" != "$allowed" ]]; then
+            echo 'Unexpected candidate scope:' >&2
+            printf '%s\n' "$changed" >&2
+            exit 1
+          fi
+          git commit -m 'feat(qwen): enforce always-on product execution'
+          candidate="$(git rev-parse HEAD)"
+          git push origin HEAD:refs/heads/agent/qwen-phone-control
+          git fetch origin '+refs/heads/agent/qwen-phone-control:refs/remotes/origin/agent/qwen-phone-control'
+          [[ "$(git rev-parse origin/agent/qwen-phone-control)" == "$candidate" ]]
+          echo "QWEN_ALWAYS_ON_PASS candidate=$candidate"
