@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import pathlib
+import shutil
 import sys
+import tempfile
 import threading
 import time
 
@@ -97,6 +100,75 @@ class AlwaysOnQwenController(BaseController):
             raise base.ControllerError("remote Qwen branch returned invalid head SHA")
         return head
 
+    def _candidate_worker_relative(self) -> pathlib.Path:
+        try:
+            return self.cfg.worker_script.resolve().relative_to(self.cfg.repo_dir.resolve())
+        except ValueError as exc:
+            raise base.ControllerError(
+                f"configured worker entry is outside repository: {self.cfg.worker_script}"
+            ) from exc
+
+    def _probe_candidate_entries(self, candidate_ref: str) -> dict:
+        self.cfg.state_dir.mkdir(parents=True, exist_ok=True)
+        probe_dir = pathlib.Path(
+            tempfile.mkdtemp(prefix="candidate-probe-", dir=str(self.cfg.state_dir))
+        )
+        probe_dir.rmdir()
+        added = False
+        try:
+            self._git(
+                "worktree", "add", "--detach", str(probe_dir), candidate_ref,
+                timeout=300,
+            )
+            added = True
+            worker = probe_dir / self._candidate_worker_relative()
+            if not worker.is_file():
+                raise base.ControllerError(
+                    f"candidate worker entry is missing at {candidate_ref}: {worker.relative_to(probe_dir)}"
+                )
+            worker_result = base.run(
+                [self.cfg.python, str(worker), "version"],
+                cwd=probe_dir, check=False, timeout=180,
+            )
+            if worker_result.returncode != 0:
+                detail = (worker_result.stderr or worker_result.stdout).strip()
+                raise base.ControllerError(
+                    f"candidate worker version probe failed at {candidate_ref}: {detail[-6000:]}"
+                )
+            worker_version = base.worker_version_from_stdout(worker_result.stdout)
+
+            controller_entry = probe_dir / "tool/kris_qwen_control.py.compat.py"
+            if not controller_entry.is_file():
+                raise base.ControllerError(
+                    f"candidate controller compatibility entry is missing at {candidate_ref}"
+                )
+            controller_result = base.run(
+                [self.cfg.python, str(controller_entry), "--version"],
+                cwd=probe_dir, check=False, timeout=120,
+            )
+            if controller_result.returncode != 0:
+                detail = (controller_result.stderr or controller_result.stdout).strip()
+                raise base.ControllerError(
+                    f"candidate controller version probe failed at {candidate_ref}: {detail[-6000:]}"
+                )
+            controller_version = controller_result.stdout.strip()
+            if not controller_version:
+                raise base.ControllerError(
+                    f"candidate controller returned an empty version at {candidate_ref}"
+                )
+            return {
+                "workerVersion": worker_version,
+                "controllerVersion": controller_version,
+                "candidate": candidate_ref,
+            }
+        finally:
+            if added:
+                self._git(
+                    "worktree", "remove", "--force", str(probe_dir),
+                    check=False, timeout=180,
+                )
+            shutil.rmtree(probe_dir, ignore_errors=True)
+
     def _auto_update_preflight(self, local: str, advertised_remote: str) -> dict:
         dirty = self._git("status", "--porcelain", "--untracked-files=all").stdout.strip()
         if dirty:
@@ -121,11 +193,108 @@ class AlwaysOnQwenController(BaseController):
                 "local": local,
                 "remote": fetched_remote,
             }
+        try:
+            probe = self._probe_candidate_entries(fetched_remote)
+        except Exception as exc:
+            return {
+                "status": "UPDATE_BLOCKED_CANDIDATE_INVALID",
+                "local": local,
+                "remote": fetched_remote,
+                "detail": str(exc)[:6000],
+            }
         return {
             "status": "UPDATE_READY",
             "local": local,
             "remote": fetched_remote,
+            "probe": probe,
         }
+
+    def _fast_forward_validated(self, expected_remote: str) -> dict:
+        self._record_operation(state="FETCHING", kind="FETCH_LATEST_AND_RUN")
+        self._validate_repo()
+        dirty = self._git("status", "--porcelain", "--untracked-files=all").stdout.strip()
+        if dirty:
+            raise base.ControllerError(
+                "validated update aborted because checkout became dirty before fast-forward:\n"
+                + dirty[:6000]
+            )
+        before = self._git_head()
+        live_remote = self._remote_branch_head()
+        if live_remote != expected_remote:
+            raise base.ControllerError(
+                "validated update aborted because remote moved during graceful drain: "
+                f"validated={expected_remote} live={live_remote}"
+            )
+        ancestor = self._git(
+            "merge-base", "--is-ancestor", before, expected_remote,
+            check=False,
+        )
+        if ancestor.returncode != 0:
+            raise base.ControllerError(
+                f"validated candidate is no longer a fast-forward: local={before} candidate={expected_remote}"
+            )
+        if before == expected_remote:
+            return {"before": before, "after": before, "changed": False}
+        self._record_operation(
+            state="UPDATING", kind="FETCH_LATEST_AND_RUN",
+            before=before, remote=expected_remote,
+        )
+        self._git("merge", "--ff-only", expected_remote, timeout=900)
+        after = self._git_head()
+        if after != expected_remote:
+            raise base.ControllerError(
+                f"fast-forward did not reach validated candidate: expected={expected_remote} actual={after}"
+            )
+        return {"before": before, "after": after, "changed": True}
+
+    def _fetch_latest_and_run_job(self) -> None:
+        git_result = None
+        update_probe = None
+        try:
+            self._validate_repo()
+            local = self._git_head()
+            advertised_remote = self._remote_branch_head()
+            validated_remote = local
+            if advertised_remote != local:
+                preflight = self._auto_update_preflight(local, advertised_remote)
+                if preflight.get("status") != "UPDATE_READY":
+                    raise base.ControllerError(
+                        f"{preflight.get('status')}: {preflight.get('detail') or preflight}"
+                    )
+                validated_remote = str(preflight["remote"])
+                update_probe = preflight.get("probe")
+
+            pid = self.worker_pid()
+            if pid:
+                self.request_safe_stop("Fetch latest + run requested from phone control")
+            self._wait_for_worker_exit(pid)
+            git_result = self._fast_forward_validated(validated_remote)
+            self._record_operation(
+                state="STARTING", kind="FETCH_LATEST_AND_RUN",
+                git=git_result, candidateProbe=update_probe,
+            )
+            with self.lock:
+                started = self._start_worker_unlocked()
+            self._record_operation(
+                state="IDLE", kind="FETCH_LATEST_AND_RUN", git=git_result,
+                candidateProbe=update_probe, result=started,
+                completedAt=base.utc_iso(), error=None,
+            )
+        except Exception as exc:
+            recovery = None
+            recovery_error = None
+            try:
+                if not self.worker_pid():
+                    with self.lock:
+                        recovery = self._start_worker_unlocked()
+            except Exception as restart_exc:
+                recovery_error = str(restart_exc)
+            self._record_operation(
+                state="ERROR", kind="FETCH_LATEST_AND_RUN",
+                git=git_result, candidateProbe=update_probe,
+                recovery=recovery, recoveryError=recovery_error,
+                error=str(exc), completedAt=base.utc_iso(),
+            )
 
     def _auto_update_once(self) -> dict:
         if self.operation_running():
@@ -145,6 +314,7 @@ class AlwaysOnQwenController(BaseController):
                 "status": "UPDATE_QUEUED",
                 "local": local,
                 "remote": preflight["remote"],
+                "probe": preflight.get("probe"),
             }
         if not self.worker_pid():
             started = super().start()
