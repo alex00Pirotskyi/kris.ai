@@ -23,13 +23,38 @@ jobs:
             os: macos-15
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
+      - name: Qwen 5.3.1 always-on worker regression
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python -m py_compile \
+            run_my_server.py \
+            tool/kris_qwen_worker.py.compat.py \
+            tool/kris_qwen_worker_v53.py \
+            tool/kris_qwen_worker_v53_base.py \
+            tool/kris_qwen_worker_v531.py \
+            tool/kris_qwen_v53_policy.py \
+            tool/kris_qwen_v53_recovery.py \
+            tool/kris_qwen_v53_reconcile.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_worker_v53.py version | tee /tmp/kris-qwen-v531-version.json
+          python - <<'PY'
+          import json
+          import pathlib
+          value = json.loads(pathlib.Path('/tmp/kris-qwen-v531-version.json').read_text(encoding='utf-8'))
+          assert value.get('scriptVersion') == '5.3.1', value
+          PY
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.0' ]]
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
