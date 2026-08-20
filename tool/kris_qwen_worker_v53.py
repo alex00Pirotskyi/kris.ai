@@ -10,6 +10,19 @@ POLICY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_policy.py")
 RECOVERY_ENTRY = pathlib.Path(__file__).with_name("kris_qwen_v53_recovery.py")
 TARGET_VERSION = "5.3.0"
 
+MISSION_WIP_SNAPSHOT_BLOCK = r'''
+# WIP_SNAPSHOT_FROM_MISSION_V15
+# Efficiency/backpressure snapshot only. Canonical mission_orchestrator.py
+# work-create validation remains authoritative for every actual Work Order.
+BUILD_TYPES = {"PRODUCT_FEATURE", "PRODUCT_DEFECT_REPAIR", "PRODUCT_TEST"}
+ACTIVE_WORK = {
+    "READY", "RESERVED", "IN_PROGRESS", "HELPER_READY", "INTEGRATING",
+    "VALIDATING", "REVIEW",
+}
+HELPER_READY_LIMIT = 2
+ACTIVE_BUILD_LIMIT = 3
+'''
+
 
 def load_runtime_module(path: pathlib.Path, name: str, label: str):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -89,7 +102,7 @@ def transform(text: str) -> str:
     text = replace_exact(
         text,
         '\ndef system_prompt() -> str:\n',
-        '\n' + policy.ALWAYS_ON_BLOCK + recovery.CI_RECOVERY_BLOCK + 'def system_prompt() -> str:\n',
+        '\n' + policy.ALWAYS_ON_BLOCK + MISSION_WIP_SNAPSHOT_BLOCK + recovery.CI_RECOVERY_BLOCK + 'def system_prompt() -> str:\n',
         "always-on policy insertion",
     )
 
@@ -155,6 +168,7 @@ def transform(text: str) -> str:
         'CONTINUOUS_HELPER_CI_REPAIR_MARKER',
         'CONTINUOUS_CANONICAL_CI_REPAIR_MARKER',
         'CONTINUOUS_SOURCE_WIP_LIMIT',
+        'WIP_SNAPSHOT_FROM_MISSION_V15',
         'CONTINUOUS_PRIMARY_CODE_PREFIXES',
         'CONTINUOUS_TOOL_DENY_PREFIXES',
         'RED_ALERT_FRONTIER',
