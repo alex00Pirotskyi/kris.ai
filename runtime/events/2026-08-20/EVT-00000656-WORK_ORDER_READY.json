@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000656-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "QWEN_ALWAYS_ON_RECOVERY:REVIEWED_HELPER_TO_INTEGRATION",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-20T08:18:38Z",
+  "runtimeGeneration": 656,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-QWEN-INTEGRATION-WAKE-32347971457-1",
+  "workOrderId": "WO-P11-001-INTEGRATE-REVIEW-BINDING"
+}
