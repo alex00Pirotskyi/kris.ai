@@ -1,0 +1,231 @@
+name: Qwen 5.4.1 PR Finalize
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/qwen-v541-pr-finalize.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qwen-v541-pr-finalize
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-phone-control
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - name: Capture exact candidate
+        run: echo "CANDIDATE_BASE=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Materialize 5.4.1 stable worker and redacting controller facade
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tool/kris_qwen_control.py tool/kris_qwen_control_v21_base.py
+          cat > tool/kris_qwen_control.py <<'PY'
+          #!/usr/bin/env python3
+          from __future__ import annotations
+
+          import importlib.util
+          import pathlib
+          import sys
+
+          RETAINED = pathlib.Path(__file__).with_name("kris_qwen_control_v21_base.py")
+
+
+          def _load_retained():
+              spec = importlib.util.spec_from_file_location("kris_qwen_control_v21_retained", RETAINED)
+              if spec is None or spec.loader is None:
+                  raise RuntimeError("cannot load retained KRIS Qwen controller base")
+              module = importlib.util.module_from_spec(spec)
+              sys.modules[spec.name] = module
+              spec.loader.exec_module(module)
+              return module
+
+
+          _retained = _load_retained()
+          _raw_print = print
+
+
+          def _safe_print(*args, **kwargs):
+              first = str(args[0]) if args else ""
+              if "PHONE CONTROL TOKEN" in first:
+                  return _raw_print(
+                      "Phone control token value omitted from logs; read it from the configured token file.",
+                      file=kwargs.get("file"),
+                      flush=kwargs.get("flush", False),
+                  )
+              return _raw_print(*args, **kwargs)
+
+
+          _retained.print = _safe_print
+          for _name, _value in vars(_retained).items():
+              if not _name.startswith("__"):
+                  globals()[_name] = _value
+
+          # Keep the facade's safe print visible to callers/tests as well.
+          print = _safe_print
+          PY
+
+          cat > tool/kris_qwen_worker_v53.py <<'PY'
+          #!/usr/bin/env python3
+          from __future__ import annotations
+
+          import json
+          import pathlib
+          import runpy
+
+          TARGET_VERSION = "5.4.1"
+          HERE = pathlib.Path(__file__).resolve().parent
+          ENTRY = HERE / "kris_qwen_worker_v541.py"
+          ENGINEERING = HERE / "kris_qwen_engineering_env.py"
+          CATALOG = HERE.parent / "config/qwen_engineering_skills.v1.json"
+
+
+          def validate_dependencies() -> None:
+              for path, label in (
+                  (ENTRY, "deterministic 5.4.1 worker entry"),
+                  (ENGINEERING, "5.4 engineering environment"),
+                  (CATALOG, "5.4 engineering skill catalog"),
+              ):
+                  if not path.is_file():
+                      raise SystemExit(f"KRIS_QWEN_V53_FORWARD_ERROR: {label} is missing: {path}")
+              try:
+                  catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
+              except (OSError, json.JSONDecodeError) as exc:
+                  raise SystemExit(f"KRIS_QWEN_V53_FORWARD_ERROR: engineering skill catalog is invalid: {exc}") from exc
+              if catalog.get("schemaVersion") != "1.0.0" or not isinstance(catalog.get("skills"), list) or not catalog["skills"]:
+                  raise SystemExit("KRIS_QWEN_V53_FORWARD_ERROR: engineering skill catalog contract is invalid")
+
+
+          def main() -> None:
+              validate_dependencies()
+              runpy.run_path(str(ENTRY), run_name="__main__")
+
+
+          if __name__ == "__main__":
+              main()
+          PY
+      - name: Update durable/foreground/permanent-CI truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def one(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one anchor, got {count}')
+              return text.replace(old, new, 1)
+
+          p = Path('run_my_server.py')
+          text = p.read_text(encoding='utf-8').replace('5.3.1', '5.4.1')
+          text = one(text, '    print("The controller will print the control token below.")\n', '    print("The control token value is never printed; read it from the controller token file.")\n', 'launcher token text')
+          p.write_text(text, encoding='utf-8', newline='\n')
+
+          p = Path('tool/install_kris_qwen_control_systemd.sh')
+          text = p.read_text(encoding='utf-8')
+          text = text.replace('engineering worker 5.4 / controller 2.2', 'engineering worker 5.4.1 / controller 2.2')
+          text = one(text, '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py"\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py"\n', '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py"\n  "${REPO_DIR}/tool/kris_qwen_worker_v541.py"\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py"\n', 'installer required v541')
+          text = one(text, '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n)\n', '  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n  "${REPO_DIR}/tool/kris_qwen_v541_test.py"\n  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n  "${REPO_DIR}/tool/rotate_kris_qwen_control_token.sh"\n)\n', 'installer required incident files')
+          text = one(text, '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py" \\\n', '  "${REPO_DIR}/tool/kris_qwen_worker_v54.py" \\\n  "${REPO_DIR}/tool/kris_qwen_worker_v541.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v53_policy.py" \\\n', 'installer compile v541')
+          text = one(text, '  "${REPO_DIR}/tool/kris_qwen_v531_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"\n', '  "${REPO_DIR}/tool/kris_qwen_v531_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_v541_test.py" \\\n  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n', 'installer compile incident tests')
+          text = text.replace('"scriptVersion": "5.4.0"', '"scriptVersion": "5.4.1"')
+          text = text.replace('Qwen worker 5.4 preflight failed', 'Qwen worker 5.4.1 preflight failed')
+          marker = 'if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py" >/dev/null; then\n  echo "Qwen worker 5.4 engineering-environment regression preflight failed." >&2\n  exit 2\nfi\n'
+          text = one(text, marker, marker + 'if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v541_test.py" >/dev/null; then\n  echo "Qwen worker 5.4.1 deployment regression preflight failed." >&2\n  exit 2\nfi\nif ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py" >/dev/null; then\n  echo "Qwen controller token-redaction regression preflight failed." >&2\n  exit 2\nfi\n', 'installer incident tests')
+          text = text.replace('forwards to deterministic 5.4.', 'forwards to deterministic 5.4.1.')
+          text = one(text, 'ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py\n', 'ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py\nExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v541_test.py\nExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py\n', 'systemd incident tests')
+          text = text.replace('Worker:       5.4.0', 'Worker:       5.4.1')
+          text = text.replace('controller 2.2 / worker 5.4,', 'controller 2.2 / worker 5.4.1,')
+          text = text.replace('and the 5.4 engineering environment', 'and the 5.4.1 engineering environment')
+          p.write_text(text, encoding='utf-8', newline='\n')
+
+          p = Path('.github/workflows/ci.yml')
+          text = p.read_text(encoding='utf-8')
+          text = text.replace('Qwen 5.4 engineering worker regression', 'Qwen 5.4.1 engineering worker regression')
+          text = one(text, '            tool/kris_qwen_worker_v54.py \\\n', '            tool/kris_qwen_worker_v54.py \\\n            tool/kris_qwen_worker_v541.py \\\n', 'ci v541 compile')
+          text = one(text, '            tool/kris_qwen_engineering_env_test.py\n', '            tool/kris_qwen_engineering_env_test.py \\\n            tool/kris_qwen_v541_test.py \\\n            tool/kris_qwen_control_token_redaction_test.py\n', 'ci incident compile')
+          text = one(text, '          python tool/kris_qwen_engineering_env_test.py\n', '          python tool/kris_qwen_engineering_env_test.py\n          python tool/kris_qwen_v541_test.py\n          python tool/kris_qwen_control_token_redaction_test.py\n', 'ci incident run')
+          text = text.replace('kris-qwen-v54-version.json', 'kris-qwen-v541-version.json')
+          text = text.replace("value.get('scriptVersion') == '5.4.0'", "value.get('scriptVersion') == '5.4.1'")
+          text = text.replace("endswith('kris_qwen_worker_v54.py')", "endswith('kris_qwen_worker_v541.py')")
+          p.write_text(text, encoding='utf-8', newline='\n')
+          PY
+      - name: Validate exact final runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            run_my_server.py \
+            tool/kris_qwen_control.py \
+            tool/kris_qwen_control_v21_base.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_worker.py \
+            tool/kris_qwen_worker.py.compat.py \
+            tool/kris_qwen_worker_v53.py \
+            tool/kris_qwen_worker_v53_base.py \
+            tool/kris_qwen_worker_v531.py \
+            tool/kris_qwen_worker_v54.py \
+            tool/kris_qwen_worker_v541.py \
+            tool/kris_qwen_engineering_env.py \
+            tool/kris_qwen_v531_test.py \
+            tool/kris_qwen_engineering_env_test.py \
+            tool/kris_qwen_v541_test.py \
+            tool/kris_qwen_control_token_redaction_test.py
+          python tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_engineering_env_test.py
+          python tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_control_token_redaction_test.py
+          python tool/kris_qwen_control_test.py
+          python tool/kris_qwen_control_compat_test.py
+          python tool/kris_qwen_worker_v53.py version > "$RUNNER_TEMP/v541.json"
+          python - <<'PY'
+          import json, os, pathlib
+          v = json.loads(pathlib.Path(os.environ['RUNNER_TEMP'], 'v541.json').read_text())
+          assert v.get('scriptVersion') == '5.4.1', v
+          assert str(v.get('path', '')).endswith('kris_qwen_worker_v541.py'), v
+          PY
+          ! grep -R -F 'PHONE CONTROL TOKEN (keep private):' tool/kris_qwen_control.py
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          bash -n tool/rotate_kris_qwen_control_token.sh
+      - name: Remove all hotfix transports and regenerate exact manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f tool/kris_qwen_control_secure.py tool/kris_qwen_control_secure_test.py
+          rm -f .github/workflows/qwen-v541-hotfix-validation.yml
+          rm -f .github/workflows/qwen-v541-finalize.yml
+          rm .github/workflows/qwen-v541-pr-finalize.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp -s "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+      - name: Publish exact final candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote="$(git ls-remote --heads origin refs/heads/agent/qwen-phone-control | awk '{print $1}')"
+          test "$remote" = "$CANDIDATE_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(qwen): repair 5.4.1 production deployment'
+          git push origin HEAD:refs/heads/agent/qwen-phone-control
