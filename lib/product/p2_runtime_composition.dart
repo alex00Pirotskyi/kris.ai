@@ -452,18 +452,6 @@ final class P2AutomationProcessTreeAdapter
   }
 
   @override
-  Future<P2ProcessIdentity> register(int pid) async {
-    final response = await _invoke(pid, 'process.register', <String, Object?>{
-      'pid': pid,
-    });
-    final identity = response['processIdentity'];
-    if (response['status'] != 'ok' || identity is! Map) {
-      throw StateError('process_register_failed');
-    }
-    return P2ProcessIdentity.fromJson(Map<String, Object?>.from(identity));
-  }
-
-  @override
   Future<P2ProcessLifecycle> inspect(P2ProcessIdentity identity) async {
     final response = await _invoke(
       identity.pid,
