@@ -1,4 +1,4 @@
-# validation target: Qwen 5.3 never-idle / never-stop phone execution
+# validation target: Qwen 5.3 never-idle / never-stop / self-healing phone execution
 name: Qwen Phone Control Materializer
 
 on:
@@ -86,6 +86,8 @@ jobs:
               'CONTINUOUS_TOOL_DENY_PREFIXES',
               'RED_ALERT_FRONTIER',
               'RED_ALERT_HARD_ERROR',
+              'RED_ALERT_MODEL_SERVER',
+              'managedServer\\": \\"RESTARTED',
               'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
               'stack stays alive',
               'Successful work chains immediately',
@@ -138,14 +140,26 @@ jobs:
               'After the configured threshold, worker 5.3 reports `RED_ALERT_HARD_ERROR`, '
               'keeps the model/worker stack alive, and re-resolves within a maximum 30-second backoff.'
           )
+          chaining_anchor = (
+              'Successful Work Orders chain immediately. The normal 60-second inter-job sleep '
+              'is removed by the 5.3 execution adapter.\n'
+          )
           if hard_truth not in text:
-              anchor = (
-                  'Successful Work Orders chain immediately. The normal 60-second inter-job sleep '
-                  'is removed by the 5.3 execution adapter.\n'
-              )
-              if anchor not in text:
+              if chaining_anchor not in text:
                   raise SystemExit('operator docs always-on chaining anchor missing')
-              text = text.replace(anchor, anchor + '\n' + hard_truth + '\n', 1)
+              text = text.replace(chaining_anchor, chaining_anchor + '\n' + hard_truth + '\n', 1)
+
+          model_truth = (
+              'In managed `stack` mode, worker 5.3 also supervises its `llama-server` child. '
+              'A dead child is restarted before the next Work Order; an unreachable managed model '
+              'endpoint is recycled through `RED_ALERT_MODEL_SERVER` recovery instead of leaving '
+              'a live worker process attached to a dead model server.'
+          )
+          if model_truth not in text:
+              anchor = hard_truth + '\n'
+              if anchor not in text:
+                  raise SystemExit('operator docs hard-error truth anchor missing')
+              text = text.replace(anchor, anchor + '\n' + model_truth + '\n', 1)
 
           old_update = '''Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 reuses the existing safe Fetch latest + run path:\n\n1. graceful worker drain;\n2. dirty-checkout refusal;\n3. fetch of the configured branch;\n4. fast-forward-only update;\n5. refreshed worker `version` probe;\n6. stack restart using the newly fetched worker entry.\n'''
           new_update = '''Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 first validates the update **without draining the current Qwen worker**:\n\n1. dirty-checkout check;\n2. fetch of the configured branch without modifying the checkout;\n3. fast-forward ancestry validation.\n\nA dirty checkout reports `UPDATE_BLOCKED_DIRTY`; a divergent update reports `UPDATE_BLOCKED_NON_FAST_FORWARD`. In both cases the currently running Qwen worker is kept alive. Only a proven safe fast-forward update enters the existing controlled update path: graceful worker drain, fast-forward checkout update, refreshed worker `version` probe, and stack restart using the newly fetched worker entry.\n'''
