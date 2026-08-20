@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p2_effect_boundary.dart';
@@ -60,6 +63,7 @@ void main() {
         ),
       ),
     );
+    await tester.pump();
     await tester.tap(find.text('Interrupt'));
     await tester.pump();
     expect(actions.interruptCount, 1);
@@ -68,8 +72,114 @@ void main() {
     expect(actions.terminateCount, 1);
   });
 
+  testWidgets('runtime terminal additions become visible and interactive', (
+    tester,
+  ) async {
+    final controller = P2OwnerModeController((_) async {}, () async {});
+    await controller.enable(
+      unattended: false,
+      approvalPolicy: P2OwnerApprovalPolicy.everyHighRiskEffect,
+      acknowledged: true,
+    );
+    final model = P2TerminalModel();
+    final actions = _Actions();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: P2OwnerWorkspace(
+            controller: controller,
+            terminalModel: model,
+            actions: actions,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('No managed terminal session is active.'), findsOneWidget);
+
+    model.add(
+      const P2TerminalTab(
+        id: 'live-session',
+        title: 'Live terminal',
+        shell: 'bash',
+        cwd: '/workspace',
+        runId: 'run-live',
+        taskId: 'P2-012',
+        grantId: 'grant-live',
+        attached: true,
+        accessibilityLabel: 'live owner terminal',
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Live terminal'), findsWidgets);
+    expect(actions.outputCursors['live-session'], 0);
+
+    actions.emit('live-session', utf8.encode('hello λ\n'));
+    await tester.pump();
+    expect(find.textContaining('hello λ'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('owner-terminal-input')),
+      'echo hello',
+    );
+    await tester.tap(find.byTooltip('Send terminal input'));
+    await tester.pump();
+    expect(actions.inputs, hasLength(1));
+    expect(utf8.decode(actions.inputs.single.sublist(0, 10)), 'echo hello');
+    expect(actions.inputs.single.last, 13);
+
+    await tester.tap(find.text('Detach'));
+    await tester.pump();
+    expect(actions.detachCount, 1);
+    expect(model.selected?.attached, false);
+
+    await tester.tap(find.text('Attach'));
+    await tester.pump();
+    await tester.pump();
+    expect(model.selected?.attached, true);
+    expect(actions.outputCursors['live-session'], utf8.encode('hello λ\n').length);
+  });
+
+  test('terminal model emits changes for runtime tab lifecycle', () {
+    final model = P2TerminalModel();
+    var notifications = 0;
+    model.addListener(() => notifications++);
+    model.add(
+      const P2TerminalTab(
+        id: 'one',
+        title: 'One',
+        shell: 'bash',
+        cwd: '/',
+        runId: 'run',
+        taskId: 'task',
+        grantId: 'grant',
+        attached: true,
+        accessibilityLabel: 'terminal one',
+      ),
+    );
+    model.add(
+      const P2TerminalTab(
+        id: 'two',
+        title: 'Two',
+        shell: 'bash',
+        cwd: '/',
+        runId: 'run',
+        taskId: 'task',
+        grantId: 'grant',
+        attached: false,
+        accessibilityLabel: 'terminal two',
+      ),
+    );
+    model.select('one');
+    model.setAttached('one', false);
+    model.remove('two');
+    expect(notifications, 5);
+    expect(model.selected?.id, 'one');
+    expect(model.selected?.attached, false);
+  });
+
   test(
-    'service actions invoke PTY, clipboard, transcript, and watchdog',
+    'service actions invoke PTY stream input detach clipboard transcript and watchdog',
     () async {
       final pty = _PtyBackend();
       final transport = _WatchdogTransport();
@@ -107,11 +217,17 @@ void main() {
         writeClipboardText: (text) async => clipboard.add(text),
         writeTranscriptFile: (_, bytes) async => saved.add(bytes),
       );
+      expect(await actions.output(tab, 7).single, <int>[79, 75]);
+      await actions.input(tab, <int>[65, 13]);
+      await actions.detach(tab);
       await actions.copySelection(tab);
       await actions.saveTranscript(tab);
       await actions.interrupt(tab);
       await actions.terminateTree(tab);
       await actions.emergencyPauseAndKill();
+      expect(pty.outputCursor, 7);
+      expect(pty.inputBytes, <int>[65, 13]);
+      expect(pty.detachCount, 1);
       expect(clipboard, <String>['hi']);
       expect(saved, <List<int>>[
         <int>[1, 2, 3],
@@ -126,6 +242,35 @@ void main() {
 class _Actions implements P2OwnerWorkspaceActions {
   int interruptCount = 0;
   int terminateCount = 0;
+  int detachCount = 0;
+  final List<List<int>> inputs = <List<int>>[];
+  final Map<String, int> outputCursors = <String, int>{};
+  final Map<String, StreamController<List<int>>> _streams =
+      <String, StreamController<List<int>>>{};
+
+  @override
+  Stream<List<int>> output(P2TerminalTab tab, int fromCursor) {
+    outputCursors[tab.id] = fromCursor;
+    return _streams
+        .putIfAbsent(tab.id, () => StreamController<List<int>>.broadcast())
+        .stream;
+  }
+
+  void emit(String tabId, List<int> bytes) {
+    _streams
+        .putIfAbsent(tabId, () => StreamController<List<int>>.broadcast())
+        .add(bytes);
+  }
+
+  @override
+  Future<void> input(P2TerminalTab tab, List<int> bytes) async {
+    inputs.add(List<int>.of(bytes));
+  }
+
+  @override
+  Future<void> detach(P2TerminalTab tab) async {
+    detachCount++;
+  }
 
   @override
   Future<void> copySelection(P2TerminalTab tab) async {}
@@ -146,6 +291,9 @@ class _Actions implements P2OwnerWorkspaceActions {
 class _PtyBackend implements P2PtyBackend {
   int interruptCount = 0;
   int terminateCount = 0;
+  int detachCount = 0;
+  int? outputCursor;
+  List<int>? inputBytes;
 
   @override
   Future<P2PtySession> attach(
@@ -161,8 +309,9 @@ class _PtyBackend implements P2PtyBackend {
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) async {
+    detachCount++;
+  }
 
   @override
   Future<void> input(
@@ -170,8 +319,9 @@ class _PtyBackend implements P2PtyBackend {
     List<int> bytes, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) async {
+    inputBytes = List<int>.of(bytes);
+  }
 
   @override
   Future<void> interrupt(
@@ -196,8 +346,10 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      const Stream<List<int>>.empty();
+  }) {
+    outputCursor = fromCursor;
+    return Stream<List<int>>.value(<int>[79, 75]);
+  }
 
   @override
   Future<void> resize(
