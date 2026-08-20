@@ -67,8 +67,12 @@ class WorkerPidCompatibilityTest(unittest.TestCase):
 
 
 class AutoUpdateContractTest(unittest.TestCase):
-    def controller(self, root: pathlib.Path):
-        with mock.patch.dict(os.environ, {"KRIS_QWEN_AUTO_UPDATE": "0"}, clear=False):
+    def controller(self, root: pathlib.Path, *, self_restart: bool = False):
+        env = {
+            "KRIS_QWEN_AUTO_UPDATE": "0",
+            "KRIS_QWEN_CONTROLLER_SELF_RESTART": "1" if self_restart else "0",
+        }
+        with mock.patch.dict(os.environ, env, clear=False):
             return control.AlwaysOnQwenController(config(root))
 
     def test_candidate_entries_are_executed_in_detached_probe(self) -> None:
@@ -87,6 +91,10 @@ class AutoUpdateContractTest(unittest.TestCase):
                         "print('2.2.0')\n",
                         encoding="utf-8",
                     )
+                    (target / "tool/kris_qwen_control.py").write_text(
+                        "CONTROL_VERSION = '2.2.0'\n",
+                        encoding="utf-8",
+                    )
                     return mock.Mock(returncode=0, stdout="", stderr="")
                 if args[:3] == ("worktree", "remove", "--force"):
                     return mock.Mock(returncode=0, stdout="", stderr="")
@@ -97,6 +105,19 @@ class AutoUpdateContractTest(unittest.TestCase):
             self.assertEqual(result["workerVersion"], "5.3.0")
             self.assertEqual(result["controllerVersion"], "2.2.0")
             self.assertEqual(result["candidate"], "b" * 40)
+            self.assertEqual(len(result["controllerRuntimeSha256"]), 64)
+
+    def test_controller_reload_detects_runtime_byte_change(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = self.controller(pathlib.Path(raw), self_restart=True)
+            self.assertTrue(controller.self_restart_on_update)
+            self.assertFalse(controller._controller_reload_required(None))
+            self.assertFalse(controller._controller_reload_required({
+                "controllerRuntimeSha256": controller.controller_runtime_sha256,
+            }))
+            self.assertTrue(controller._controller_reload_required({
+                "controllerRuntimeSha256": "f" * 64,
+            }))
 
     def test_remote_change_queues_safe_fetch_run(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -110,7 +131,10 @@ class AutoUpdateContractTest(unittest.TestCase):
                 "_auto_update_preflight",
                 return_value={
                     "status": "UPDATE_READY", "local": "a" * 40, "remote": "b" * 40,
-                    "probe": {"workerVersion": "5.3.0", "controllerVersion": "2.2.0"},
+                    "probe": {
+                        "workerVersion": "5.3.0", "controllerVersion": "2.2.0",
+                        "controllerRuntimeSha256": "f" * 64,
+                    },
                 },
             ), mock.patch.object(
                 control.BaseController, "fetch_latest_and_run", return_value={"status": "QUEUED"}
@@ -223,7 +247,10 @@ class AutoUpdateContractTest(unittest.TestCase):
                 controller, "_auto_update_preflight",
                 return_value={
                     "status": "UPDATE_READY", "local": old, "remote": new,
-                    "probe": {"workerVersion": "5.3.0", "controllerVersion": "2.2.0"},
+                    "probe": {
+                        "workerVersion": "5.3.0", "controllerVersion": "2.2.0",
+                        "controllerRuntimeSha256": "f" * 64,
+                    },
                 },
             ), mock.patch.object(controller, "worker_pid", side_effect=[1234, None]), mock.patch.object(
                 controller, "request_safe_stop"
