@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/adaptive_mission_planning.dart';
 import 'package:kristin_local_agent/product/agent_decision.dart';
@@ -5,6 +7,7 @@ import 'package:kristin_local_agent/product/agent_protocol.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/execution_intelligence.dart';
 import 'package:kristin_local_agent/product/retry_policy.dart';
+import 'package:kristin_local_agent/product/tool_schema.dart';
 
 void main() {
   group('P25 diagnostic reliability rescue', () {
@@ -66,6 +69,46 @@ void main() {
       expect(budget.maxToolCalls, greaterThanOrEqualTo(18));
       expect(budget.maxOutputTokens, lessThanOrEqualTo(768));
       expect(budget.maxContextCharacters, lessThanOrEqualTo(6000));
+    });
+
+    test('model tool descriptors stay compact while canonical schemas stay full',
+        () {
+      const registry = ToolSchemaRegistry();
+      const tools = <String>{
+        'list_directory',
+        'read_file',
+        'inspect_file',
+        'write_file',
+        'run_command',
+        'verify_project',
+      };
+      final model = registry.descriptors(
+        allowlist: tools,
+        dialect: ToolDescriptorDialect.model,
+      );
+      final canonical = registry.descriptors(
+        allowlist: tools,
+        dialect: ToolDescriptorDialect.canonical,
+      );
+      final modelJson = jsonEncode(model);
+      final canonicalJson = jsonEncode(canonical);
+
+      expect(modelJson.length, lessThan(canonicalJson.length * 0.6));
+      for (final descriptor in model) {
+        expect(descriptor, isNot(contains('inputSchema')));
+        expect(descriptor, isNot(contains('outputSchema')));
+        expect(descriptor['arguments'], isA<Map>());
+        final arguments = Map<String, dynamic>.from(
+          descriptor['arguments'] as Map,
+        );
+        expect(arguments, contains('required'));
+        expect(arguments, contains('types'));
+        expect(arguments, contains('example'));
+      }
+      for (final descriptor in canonical) {
+        expect(descriptor, contains('inputSchema'));
+        expect(descriptor, contains('outputSchema'));
+      }
     });
 
     test('known deterministic failures are never blind transient retries', () {
@@ -160,6 +203,35 @@ void main() {
         ),
         isTrue,
       );
+    });
+
+    test('web project setup creates source artifacts instead of command text', () {
+      final result = AdaptiveMissionPlanner.optimizeTasks(
+        tasks: <PlanTaskRecord>[
+          _task(
+            id: 'setup',
+            phase: 'Setup',
+            title: 'Initialize project workspace',
+            objective: 'Scaffold the web application project.',
+            tools: const <String>{'write_file', 'inspect_file'},
+            artifacts: const <String>['project_root'],
+          ),
+        ],
+        prompt: _prompt(
+          'Build a simple web app where I upload MP3 files and receive downloadable URLs.',
+        ),
+        maxTasks: 6,
+      );
+
+      final setup = result.tasks.singleWhere((task) => task.id == 'setup');
+      expect(setup.title, 'Create the minimal web application scaffold');
+      expect(
+        setup.expectedArtifacts,
+        containsAll(<String>['index.html', 'styles.css', 'app.js', 'README.md']),
+      );
+      expect(setup.expectedArtifacts, isNot(contains('project_root')));
+      expect(setup.instructions, contains('Do not write shell commands'));
+      expect(setup.instructions, contains('index.html'));
     });
 
     test('explicit research and deployment intent remains available', () {
