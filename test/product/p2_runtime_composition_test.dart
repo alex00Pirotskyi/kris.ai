@@ -92,6 +92,60 @@ void main() {
     },
   );
 
+  test('process adapter accepts only host-issued managed identities', () async {
+    final authority = TestEnvelopeAuthority();
+    final journal = TestJournal();
+    final client = TestAutomationHostClient(
+      (envelope) => <String, Object?>{
+        'status': 'ok',
+        'lifecycle': envelope.operation == 'process.inspect'
+            ? 'running'
+            : envelope.operation == 'process.kill'
+                ? 'killed'
+                : 'stopping',
+        'receipt': testReceipt(envelope.binding, envelope.operation),
+      },
+    );
+    const identity = P2ProcessIdentity(
+      pid: 303,
+      startToken: 'start-303',
+      supervisorToken: 'supervisor-303',
+      platformGroupId: 'group-303',
+    );
+    final adapter = P2AutomationProcessTreeAdapter(
+      host: client,
+      authority: authority,
+      journal: journal,
+      authorizationFor: (pid, operation) => P2ProcessAuthorization(
+        binding: testBinding(operation, taskId: 'P2-006'),
+        grantDigest:
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      ),
+    );
+
+    expect(await adapter.inspect(identity), P2ProcessLifecycle.running);
+    await adapter.requestStop(identity, const Duration(milliseconds: 250));
+    await adapter.forceKill(identity);
+
+    expect(client.calls.map((item) => item.operation), <String>[
+      'process.inspect',
+      'process.stop',
+      'process.kill',
+    ]);
+    expect(
+      client.calls.every(
+        (item) => item.payload['processIdentity'].toString().isNotEmpty,
+      ),
+      isTrue,
+    );
+    expect(
+      client.calls.any((item) => item.operation == 'process.register'),
+      isFalse,
+    );
+    expect(journal.receipts, hasLength(3));
+    await client.close();
+  });
+
   test('watchdog transport uses authenticated composition boundary', () async {
     final authority = TestEnvelopeAuthority();
     final journal = TestJournal();
