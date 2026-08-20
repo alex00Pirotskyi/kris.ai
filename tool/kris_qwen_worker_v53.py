@@ -5,16 +5,16 @@ import json
 import pathlib
 import runpy
 
-TARGET_VERSION = "5.4.0"
+TARGET_VERSION = "5.4.1"
 HERE = pathlib.Path(__file__).resolve().parent
-ENTRY = HERE / "kris_qwen_worker_v54.py"
+ENTRY = HERE / "kris_qwen_worker_v541.py"
 ENGINEERING = HERE / "kris_qwen_engineering_env.py"
 CATALOG = HERE.parent / "config/qwen_engineering_skills.v1.json"
 
 
 def validate_dependencies() -> None:
     for path, label in (
-        (ENTRY, "deterministic 5.4 worker entry"),
+        (ENTRY, "deterministic 5.4.1 worker entry"),
         (ENGINEERING, "5.4 engineering environment"),
         (CATALOG, "5.4 engineering skill catalog"),
     ):
