@@ -36,14 +36,6 @@ def review_requires_external_identity(work: dict[str, Any]) -> bool:
 
 
 def helper_ready_children(cfg: Config, work: dict[str, Any]) -> list[dict[str, Any]]:
-    """Prefer declared children, then a uniquely scope-compatible Product helper.
-
-    Older runtime records sometimes created a HELPER_READY source lane as a
-    sibling of the INTEGRATION Work Order instead of a formal child. Leaving
-    that source invisible strands verified Product bytes forever. The fallback
-    remains bounded to the same canonical Product PR and the integration
-    Work Order's allowed path envelope.
-    """
     direct = [
         row for row in work_children(cfg, str(work["workOrderId"]))
         if row.get("status") == "HELPER_READY"
@@ -69,23 +61,6 @@ def helper_ready_children(cfg: Config, work: dict[str, Any]) -> list[dict[str, A
     return sorted(
         candidates,
         key=lambda row: (-int(row.get("priority", 0)), str(row.get("workOrderId"))),
-    )
-
-
-def review_requires_external_identity(work: dict[str, Any]) -> bool:
-    if str(work.get("externalReviewerGitHub") or "").strip():
-        return True
-    text = (str(work.get("objective") or "") + "\n" + "\n".join(
-        str(x) for x in work.get("requiredTests", [])
-    )).lower()
-    return any(
-        marker in text
-        for marker in (
-            "must be submitted by github identity",
-            "distinct external reviewer identity",
-            "externalreviewergithub",
-            "requires github identity alex11",
-        )
     )
 
 
@@ -266,9 +241,8 @@ def ensure_continuous_integration_lane(cfg: Config, worker_identity: str) -> str
             "objective": (
                 f"{CONTINUOUS_INTEGRATION_MARKER} sourceWorkOrder={helper['workOrderId']}. "
                 "Integrate exactly one scope-compatible HELPER_READY Product hardening candidate into the "
-                "canonical Product branch. Preserve all source outside the helper/integration path envelope. "
-                "After the canonical push, exact tri-platform Product CI remains mandatory before this "
-                "integration can become LANDED."
+                "canonical Product branch. Preserve source outside the helper/integration path envelope. "
+                "Exact tri-platform Product CI remains mandatory before this integration becomes LANDED."
             ),
             "requestedRole": "INTEGRATOR",
             "allowedPaths": list(helper.get("allowedPaths") or []),
