@@ -1,6 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PHONE_MODE=0
+for arg in "$@"; do
+  case "${arg}" in
+    --phone)
+      PHONE_MODE=1
+      ;;
+    --help|-h)
+      cat <<'EOF'
+Usage: install_kris_qwen_control_systemd.sh [--phone]
+
+Installs the durable systemd supervisor for Qwen worker 5.3 / controller 2.2.
+
+  --phone   bind the controller to 0.0.0.0 with explicit remote-HTTP opt-in.
+            Use only on a trusted LAN/VPN; never expose port 8090 publicly.
+EOF
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: ${arg}" >&2
+      exit 2
+      ;;
+  esac
+done
+
 if [[ "${EUID}" -ne 0 ]]; then
   exec sudo -E bash "$0" "$@"
 fi
@@ -92,7 +116,7 @@ if [[ "${CONTROLLER_VERSION}" != "2.2.0" ]]; then
   exit 2
 fi
 
-export REPO_DIR CURRENT_BRANCH SERVICE_HOME PYTHON_BIN ENV_FILE
+export REPO_DIR CURRENT_BRANCH SERVICE_HOME PYTHON_BIN ENV_FILE PHONE_MODE
 "${PYTHON_BIN}" - <<'PY'
 from __future__ import annotations
 
@@ -113,6 +137,10 @@ mandatory = {
     "KRIS_QWEN_AUTO_UPDATE_SECONDS": "30",
     "KRIS_QWEN_CONTROLLER_SELF_RESTART": "1",
 }
+if os.environ.get("PHONE_MODE") == "1":
+    mandatory["KRIS_QWEN_CONTROL_HOST"] = "0.0.0.0"
+    mandatory["KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP"] = "1"
+
 defaults = {
     "KRIS_QWEN_ROOT": str(pathlib.Path(os.environ["SERVICE_HOME"]) / "kris-qwen-worker"),
     "KRIS_QWEN_CONTROL_HOST": "127.0.0.1",
@@ -204,6 +232,7 @@ echo "Service user: ${SERVICE_USER}"
 echo "Worker:       5.3.0"
 echo "Controller:   2.2.0"
 echo "Branch:       ${CURRENT_BRANCH}"
+echo "Mode:         $([[ "${PHONE_MODE}" == "1" ]] && echo 'trusted-LAN/VPN phone' || echo 'loopback')"
 echo "Status:       systemctl status kris-qwen-control --no-pager"
 echo "Logs:         journalctl -u kris-qwen-control -f"
 echo "Environment:  ${ENV_FILE}"
@@ -211,10 +240,13 @@ echo "Token file:   ${TOKEN_FILE}"
 echo
 echo "Controller crashes are restarted by systemd. Worker crashes/model-server failures"
 echo "are recovered by controller 2.2 / worker 5.3, and safe branch updates are automatic."
-echo
-echo "For phone access on a trusted LAN/VPN set these in ${ENV_FILE}:"
-echo "  KRIS_QWEN_CONTROL_HOST=0.0.0.0"
-echo "  KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP=1"
-echo "Then run: sudo systemctl restart kris-qwen-control"
+if [[ "${PHONE_MODE}" == "1" ]]; then
+  echo
+echo "Phone mode is enabled. Use only on a trusted LAN/VPN."
+else
+  echo
+echo "For phone access on a trusted LAN/VPN rerun:"
+  echo "  sudo ./tool/install_kris_qwen_control_systemd.sh --phone"
+fi
 echo
 echo "Do not expose the plain-HTTP control port directly to the public Internet."
