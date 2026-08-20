@@ -1,4 +1,5 @@
 import 'p2_effect_boundary.dart';
+import 'p2_effect_receipt.dart';
 import 'p2_process_tree.dart';
 
 class P2CommandSpec {
