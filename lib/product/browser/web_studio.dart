@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import '../crypto_utils.dart';
-import '../domain.dart';
+import '../storage_security.dart' show ProductException;
 import '../workspace_tools.dart';
 
 enum P3WebStudioLanguage {
