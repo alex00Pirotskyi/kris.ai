@@ -5,11 +5,11 @@ exit=1
 00:01 +2: runtime terminal additions become visible and interactive
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
-Expected: <false>
-  Actual: <true>
+Expected: <true>
+  Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart:134:5)
+#4      main.<anonymous closure> (file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart:139:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -19,7 +19,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart line 134
+  file:///home/runner/work/kris.ai/kris.ai/test/product/p2_owner_workspace_test.dart line 139
 The test description was:
   runtime terminal additions become visible and interactive
 ════════════════════════════════════════════════════════════════════════════════════════════════════
