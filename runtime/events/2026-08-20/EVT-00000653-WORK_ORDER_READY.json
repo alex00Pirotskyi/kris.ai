@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00000653-WORK_ORDER_READY",
+  "eventType": "WORK_ORDER_READY",
+  "mission": "MISSION-010",
+  "payload": {
+    "actor": "QWEN_ALWAYS_ON_RECOVERY:REVIEW_TO_READY",
+    "nextStatus": "READY"
+  },
+  "recordedAt": "2026-08-20T08:10:04Z",
+  "runtimeGeneration": 653,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-QWEN-ALWAYS-ON-32347367480-1",
+  "workOrderId": "WO-P11-001-PR139-R1-7C51A2E4"
+}
