@@ -92,11 +92,12 @@ def main() -> int:
     repo = pathlib.Path(__file__).resolve().parent
     controller = repo / "tool" / "kris_qwen_control.py"
     worker = repo / "tool" / "kris_qwen_worker.py"
+    worker_entry = repo / "tool" / "kris_qwen_worker.py.compat.py"
 
     if not (repo / ".git").is_dir():
         fail(f"not a Git checkout: {repo}")
-    if not controller.is_file() or not worker.is_file():
-        fail("Qwen controller/worker files are missing from tool/")
+    if not controller.is_file() or not worker.is_file() or not worker_entry.is_file():
+        fail("Qwen controller/worker compatibility files are missing from tool/")
 
     branch = os.environ.get("KRIS_QWEN_REPO_BRANCH", "").strip() or current_branch(repo)
 
@@ -114,6 +115,7 @@ def main() -> int:
     env = dict(os.environ)
     env["KRIS_QWEN_REPO_DIR"] = str(repo)
     env["KRIS_QWEN_REPO_BRANCH"] = branch
+    env["KRIS_QWEN_WORKER_SCRIPT"] = str(worker_entry)
     env["KRIS_QWEN_CONTROL_HOST"] = "0.0.0.0"
     env["KRIS_QWEN_CONTROL_PORT"] = str(port)
     env["KRIS_QWEN_CONTROL_ALLOW_REMOTE_HTTP"] = "1"
