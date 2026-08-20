@@ -1,0 +1,182 @@
+name: Qwen P11 READY Rebind
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-phone-control-materializer'
+    paths:
+      - '.github/workflows/qwen-p11-ready-rebind.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qwen-p11-ready-rebind
+  cancel-in-progress: false
+
+jobs:
+  rebind:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository transport
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Fetch exact Mission authority and immutable Product refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin \
+            '+refs/heads/*:refs/remotes/origin/*' \
+            '+refs/pull/*/head:refs/remotes/origin/pull/*/head' \
+            --prune
+          git worktree add --detach "$RUNNER_TEMP/runtime" origin/agent/mission-runtime
+          git worktree add --detach "$RUNNER_TEMP/control" origin/agent/mission-execution-v15-gold
+          git worktree add --detach "$RUNNER_TEMP/main" origin/main
+
+      - name: Rebind exact stranded READY integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import pathlib
+          import subprocess
+
+          runtime = pathlib.Path(os.environ['RUNNER_TEMP']) / 'runtime'
+          meta_path = runtime / 'runtime/meta.json'
+          product_path = runtime / 'runtime/integration/product-prs/P11-001.json'
+          work_path = runtime / 'runtime/work-orders/MISSION-010/WO-P11-001-INTEGRATE-REVIEW-BINDING.json'
+
+          meta = json.loads(meta_path.read_text(encoding='utf-8'))
+          product = json.loads(product_path.read_text(encoding='utf-8'))
+          work = json.loads(work_path.read_text(encoding='utf-8'))
+
+          expected_head = '1383b8c4dff657020eb6873d01d370ffbfb30b72'
+          expected_tree = '01821da30672d2275b69ee3dcfc83c5dbb10ccdc'
+          expected_branch = 'agent/e/native-parity-readiness'
+          actor = 'QWEN_ALWAYS_ON_RECOVERY:REBIND_READY_TO_CANONICAL'
+
+          if work.get('status') in {'RESERVED', 'INTEGRATING', 'IN_PROGRESS', 'LANDED'}:
+              print(f"P11 integration already owned/advanced: {work.get('status')}")
+              raise SystemExit(0)
+          if work.get('status') != 'READY':
+              raise SystemExit(f"unexpected P11 integration status: {work.get('status')}")
+          if work.get('activeSemaphoreId'):
+              raise SystemExit(f"READY integration unexpectedly owns semaphore: {work.get('activeSemaphoreId')}")
+          if product.get('branch') != expected_branch or product.get('observedHead') != expected_head:
+              raise SystemExit(f"P11 Product authority moved: {product}")
+
+          live_head = subprocess.check_output(
+              ['git', 'rev-parse', f'origin/{expected_branch}^{{commit}}'], text=True
+          ).strip()
+          live_tree = subprocess.check_output(
+              ['git', 'rev-parse', f'{live_head}^{{tree}}'], text=True
+          ).strip()
+          if (live_head, live_tree) != (expected_head, expected_tree):
+              raise SystemExit(
+                  f'live P11 Product identity mismatch: head={live_head} tree={live_tree}'
+              )
+
+          if work.get('baseCommit') == expected_head and work.get('baseTree') == expected_tree:
+              print('P11 integration READY base already canonical; no mutation required.')
+              raise SystemExit(0)
+
+          before_generation = meta.get('runtimeGeneration')
+          if not isinstance(before_generation, int):
+              raise SystemExit(f'invalid runtime generation: {before_generation!r}')
+          generation = before_generation + 1
+          now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+
+          work['baseCommit'] = expected_head
+          work['baseTree'] = expected_tree
+          work['updatedAt'] = now
+          work['lastActor'] = actor
+          work_path.write_text(json.dumps(work, indent=2, sort_keys=True) + '\n', encoding='utf-8', newline='\n')
+
+          meta['runtimeGeneration'] = generation
+          meta['updatedAt'] = now
+          meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + '\n', encoding='utf-8', newline='\n')
+
+          event = {
+              'schemaVersion': 1,
+              'eventId': f'EVT-{generation:08d}-WORK_ORDER_UPDATED',
+              'eventType': 'WORK_ORDER_UPDATED',
+              'runtimeGeneration': generation,
+              'recordedAt': now,
+              'workExecutionId': f'WRK-QWEN-P11-REBIND-{os.environ["GITHUB_RUN_ID"]}-{os.environ["GITHUB_RUN_ATTEMPT"]}',
+              'workOrderId': work['workOrderId'],
+              'mission': work['mission'],
+              'payload': {
+                  'nextStatus': 'READY',
+                  'actor': actor,
+                  'baseCommit': expected_head,
+                  'baseTree': expected_tree,
+              },
+          }
+          event_path = runtime / 'runtime/events' / now[:10] / f'{event["eventId"]}.json'
+          event_path.parent.mkdir(parents=True, exist_ok=True)
+          if event_path.exists():
+              raise SystemExit(f'event generation collision: {event_path}')
+          event_path.write_text(json.dumps(event, indent=2, sort_keys=True) + '\n', encoding='utf-8', newline='\n')
+          print(
+              f'P11_READY_REBOUND generation={generation} head={expected_head} tree={expected_tree}'
+          )
+          PY
+
+      - name: Validate runtime and live Product bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime="$RUNNER_TEMP/runtime"
+          control="$RUNNER_TEMP/control"
+          main="$RUNNER_TEMP/main"
+          if [[ -z "$(git -C "$runtime" status --porcelain -- runtime)" ]]; then
+            echo 'No runtime mutation required.'
+            exit 0
+          fi
+          python3 "$control/tool/mission_orchestrator.py" --project "$runtime" doctor
+          python3 "$control/tool/mission_v15_live_runtime_audit.py" \
+            --repository-project "$main" \
+            --runtime-project "$runtime"
+          git -C "$runtime" diff --check
+          python3 - <<'PY'
+          import os, pathlib, subprocess
+          runtime = pathlib.Path(os.environ['RUNNER_TEMP']) / 'runtime'
+          paths = set(subprocess.check_output(
+              ['git', '-C', str(runtime), 'status', '--porcelain'], text=True
+          ).splitlines())
+          names = {row[3:] for row in paths if len(row) >= 4}
+          allowed_prefixes = {
+              'runtime/meta.json',
+              'runtime/work-orders/MISSION-010/WO-P11-001-INTEGRATE-REVIEW-BINDING.json',
+          }
+          bad = [name for name in names if name not in allowed_prefixes and not name.startswith('runtime/events/')]
+          if bad:
+              raise SystemExit(f'unexpected runtime rebind paths: {bad}')
+          PY
+
+      - name: Publish runtime CAS commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime="$RUNNER_TEMP/runtime"
+          if [[ -z "$(git -C "$runtime" status --porcelain -- runtime)" ]]; then
+            echo 'QWEN_P11_READY_REBIND no publication required'
+            exit 0
+          fi
+          git -C "$runtime" config user.name 'github-actions[bot]'
+          git -C "$runtime" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$runtime" add -- runtime
+          git -C "$runtime" diff --cached --check
+          git -C "$runtime" commit -m 'mission-runtime: rebind P11 READY integration base'
+          candidate="$(git -C "$runtime" rev-parse HEAD)"
+          git -C "$runtime" push origin HEAD:refs/heads/agent/mission-runtime
+          git fetch origin '+refs/heads/agent/mission-runtime:refs/remotes/origin/agent/mission-runtime'
+          [[ "$(git rev-parse origin/agent/mission-runtime)" == "$candidate" ]]
+          echo "QWEN_P11_READY_REBIND_PASS candidate=$candidate"
