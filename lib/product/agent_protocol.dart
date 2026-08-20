@@ -274,6 +274,7 @@ class AgentProtocolAdapter {
       }
       final action = candidate['action']?.toString() ?? '';
       if (!const <String>{
+        'tool',
         'complete',
         'fail',
         'ask_user',
@@ -285,10 +286,6 @@ class AgentProtocolAdapter {
         typedDecision = decisionCodec.decodeCanonical(candidate);
         break;
       } on AgentDecisionException catch (error) {
-        // Canonical complete/fail decisions may still be legacy-compatible
-        // (for example, `answer` instead of `summary`). Future-only
-        // ask_user/delegate decisions have no safe legacy representation, so
-        // retain their precise schema error if compatibility parsing fails.
         if (const <String>{'ask_user', 'delegate'}.contains(action)) {
           canonicalDecisionError ??= error;
         }
@@ -328,6 +325,7 @@ class AgentProtocolAdapter {
       );
     }
     if (decision case ToolDecision toolDecision) {
+      toolDecision = _repairDeterministicToolChoice(toolDecision, item);
       if (!item.allowedTools.contains(toolDecision.tool)) {
         throw AgentDecisionException(
           code: 'model_tool_not_allowed',
@@ -356,6 +354,65 @@ class AgentProtocolAdapter {
       );
     }
     return decisionCodec.decodeCanonical(decision.toJson());
+  }
+
+  ToolDecision _repairDeterministicToolChoice(
+    ToolDecision decision,
+    WorkItem item,
+  ) {
+    final arguments = Map<String, dynamic>.from(decision.arguments);
+    final path = arguments['path'] == null
+        ? ''
+        : canonicalModelPathToken(arguments['path'].toString());
+    if (const <String>{'inspect_file', 'read_file'}.contains(decision.tool) &&
+        (path.isEmpty || path == '.') &&
+        item.allowedTools.contains('list_directory')) {
+      return ToolDecision(
+        tool: 'list_directory',
+        arguments: const <String, dynamic>{
+          'path': '.',
+          'recursive': false,
+          'maxEntries': 200,
+        },
+        protocolVersion: decision.protocolVersion,
+        reason: <String>[
+          decision.reason.trim(),
+          'Deterministic compatibility repair: the project root is a directory, so root-file inspection was replaced with a bounded directory listing.',
+        ].where((value) => value.isNotEmpty).join(' '),
+      );
+    }
+
+    if (decision.tool == 'research_search' &&
+        item.allowedTools.contains('knowledge_search')) {
+      final secretReference = arguments['secretReferenceId']?.toString().trim() ?? '';
+      if (secretReference.isEmpty || _looksPlaceholderSecretReference(secretReference)) {
+        final query = arguments['query']?.toString().trim();
+        return ToolDecision(
+          tool: 'knowledge_search',
+          arguments: <String, dynamic>{
+            'query': query?.isNotEmpty == true ? query : _taskQuery(item),
+            'includeEpisodes': true,
+            'includeUnsuccessfulEpisodes': false,
+          },
+          protocolVersion: decision.protocolVersion,
+          reason: <String>[
+            decision.reason.trim(),
+            'Deterministic compatibility repair: no trustworthy configured search-secret reference was supplied, so the invented external-search call was replaced with project-local knowledge retrieval.',
+          ].where((value) => value.isNotEmpty).join(' '),
+        );
+      }
+    }
+    return decision;
+  }
+
+  bool _looksPlaceholderSecretReference(String value) {
+    final normalized = value.trim().toLowerCase();
+    return normalized.isEmpty ||
+        RegExp(
+          r'^(?:secret|secret[_-]?ref|secret[_-]?reference|api[_-]?key|search[_-]?key|token)(?:[_-]?(?:id|123|example|placeholder|test|demo))*$',
+        ).hasMatch(normalized) ||
+        RegExp(r'^(?:secret[_-]?ref|secret[_-]?reference)[_-]?\d+$')
+            .hasMatch(normalized);
   }
 
   AgentAction _parseLegacyAction(
@@ -504,9 +561,11 @@ class AgentProtocolAdapter {
     }
     if (action.kind == 'complete') {
       if (action.summary.trim().isEmpty) {
-        throw ProductException(
-          'model_completion_invalid',
-          'A completion action requires a non-empty summary.',
+        return AgentAction(
+          kind: 'complete',
+          summary:
+              'Work item completed; objective evidence must still be verified.',
+          reason: action.reason,
         );
       }
       return action;
@@ -573,6 +632,10 @@ class AgentProtocolAdapter {
     final specialization = _specializeCommandTool(tool, arguments, item);
     tool = specialization.tool;
     arguments = specialization.arguments;
+    var summary = action.summary;
+    if (kind == 'complete' && summary.trim().isEmpty) {
+      summary = _completionSummary(candidate, item);
+    }
     final baseCompatibilityReason = action.reason.trim().isEmpty &&
             kind == 'tool' &&
             taskIntentTool != null &&
@@ -588,8 +651,28 @@ class AgentProtocolAdapter {
       tool: tool,
       arguments: arguments,
       reason: compatibilityReason,
-      summary: action.summary,
+      summary: summary,
     );
+  }
+
+  String _completionSummary(Map<String, dynamic> candidate, WorkItem item) {
+    for (final key in const <String>[
+      'summary',
+      'answer',
+      'message',
+      'final',
+      'final_answer',
+      'finalAnswer',
+      'response',
+      'result',
+      'reason',
+    ]) {
+      final value = candidate[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value.toLowerCase() != 'success') {
+        return value;
+      }
+    }
+    return 'Completed ${item.title}; objective evidence must still be verified.';
   }
 
   String? _resolveTaskIntent(String value, WorkItem item) {
@@ -601,7 +684,7 @@ class AgentProtocolAdapter {
     }
     final label = '${item.title} ${item.description}'.toLowerCase();
     final informationTask = RegExp(
-      r'\b(?:research|online|web|documentation|information|requirements?|specifications?|frameworks?|libraries|tools)\b',
+      r'\b(?:research|online research|documentation|information|requirements?|specifications?|frameworks?|libraries|tools)\b',
     ).hasMatch(label);
     if (informationTask && item.allowedTools.contains('knowledge_search')) {
       return 'knowledge_search';
