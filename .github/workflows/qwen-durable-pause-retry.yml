@@ -17,6 +17,7 @@ concurrency:
 env:
   EXPECTED_PRODUCT_HEAD: 9efd037f3f95473d6b9e2facb2a6fda83cd5a018
   PRODUCT_BRANCH: agent/qwen-phone-control
+  STAGING_PATH: automation/staged/qwen-durable-pause-9efd037
 
 jobs:
   heartbeat:
@@ -151,7 +152,8 @@ jobs:
           printf 'base=%s\nbranch=%s\nfiles=5\ncontroller=2.2.1\n' \
             "${EXPECTED_PRODUCT_HEAD}" "${PRODUCT_BRANCH}" \
             > verified-tree/METADATA.txt
-          find verified-tree -type f -print0 | sort -z | xargs -0 sha256sum \
+          find verified-tree -type f ! -name ARTIFACT_SHA256SUMS.txt -print0 \
+            | sort -z | xargs -0 sha256sum \
             > verified-tree/ARTIFACT_SHA256SUMS.txt
 
       - name: Upload exact verified candidate
@@ -162,6 +164,37 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
+
+      - name: Check out blob staging branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/qwen-phone-control-materializer
+          path: staging-branch
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Publish exact verified blobs to staging namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="staging-branch/${STAGING_PATH}"
+          rm -rf "${target}"
+          mkdir -p "${target}"
+          cp verified-tree/.github/workflows/ci.yml "${target}/ci.yml"
+          cp verified-tree/SOURCE_MANIFEST.sha256 "${target}/SOURCE_MANIFEST.sha256"
+          cp verified-tree/tool/install_kris_qwen_control_systemd.sh "${target}/install_kris_qwen_control_systemd.sh"
+          cp verified-tree/tool/kris_qwen_control.py.compat.py "${target}/kris_qwen_control.py.compat.py"
+          cp verified-tree/tool/kris_qwen_control_compat_test.py "${target}/kris_qwen_control_compat_test.py"
+          cp verified-tree/METADATA.txt "${target}/METADATA.txt"
+          cp verified-tree/ARTIFACT_SHA256SUMS.txt "${target}/ARTIFACT_SHA256SUMS.txt"
+          git -C staging-branch config user.name 'github-actions[bot]'
+          git -C staging-branch config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C staging-branch add -- "${STAGING_PATH}"
+          git -C staging-branch diff --cached --check
+          if ! git -C staging-branch diff --cached --quiet; then
+            git -C staging-branch commit -m 'chore(qwen): stage verified durable-pause blobs'
+            git -C staging-branch push origin HEAD:automation/qwen-phone-control-materializer
+          fi
 
       - name: Verify product branch remained untouched
         working-directory: product
