@@ -63,38 +63,25 @@ void main() {
     expect(missing.statusCode, HttpStatus.notFound);
   });
 
-  test('static preview hot reload emits revision event', () async {
+  test('static preview hot reload exposes monotonic revision polling',
+      () async {
     final preview = await service.startStatic();
-    final client = HttpClient();
-    final request = await client.getUrl(
-      preview.url.resolve('/__kristin_live_reload'),
-    );
-    final response = await request.close();
-    final lines = StreamIterator<String>(
-      response.transform(utf8.decoder).transform(const LineSplitter()),
-    );
+    final reloadUri = preview.url.resolve('/__kristin_live_reload');
 
-    Future<String> nextLineWhere(bool Function(String line) matches) async {
-      while (await lines.moveNext().timeout(const Duration(seconds: 10))) {
-        if (matches(lines.current)) return lines.current;
-      }
-      throw StateError('live_reload_stream_closed');
-    }
+    final initial = await _get(reloadUri);
+    expect(initial.statusCode, HttpStatus.ok);
+    expect(jsonDecode(initial.body), <String, Object?>{'revision': 0});
 
-    try {
-      expect(
-        await nextLineWhere((line) => line == 'retry: 500'),
-        'retry: 500',
-      );
-      final firstReload = nextLineWhere((line) => line.startsWith('data:'));
+    final changed = await service.sourceChanged(preview.id);
+    expect(changed.revision, 1);
 
-      final changed = await service.sourceChanged(preview.id);
-      expect(changed.revision, 1);
-      expect(await firstReload, 'data: 1');
-    } finally {
-      await lines.cancel();
-      client.close(force: true);
-    }
+    final updated = await _get(reloadUri);
+    expect(updated.statusCode, HttpStatus.ok);
+    expect(jsonDecode(updated.body), <String, Object?>{'revision': 1});
+
+    final refreshedPage = await _get(preview.url);
+    expect(refreshedPage.body, contains('var revision=1'));
+    expect(refreshedPage.body, contains('fetch("/__kristin_live_reload"'));
   });
 
   test('static preview rejects encoded path traversal', () async {
