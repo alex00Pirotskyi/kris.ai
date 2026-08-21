@@ -1,4 +1,4 @@
 workflow=Qwen Durable Pause Artifact
-trigger=ad433a86e800b96c516b19c5ad8995c9481d5f7f
-run=32457760042
+trigger=3b3e5fe4de182962fc36fe0be30ea94499916c6c
+run=32457931319
 productHead=9efd037f3f95473d6b9e2facb2a6fda83cd5a018
