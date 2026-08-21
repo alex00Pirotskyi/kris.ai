@@ -56,7 +56,80 @@ def always_on_worker_pid(pid: int | None) -> bool:
     )
 
 
+TRUSTED_CONTROL_NETWORKS = tuple(
+    base.ipaddress.ip_network(value)
+    for value in (
+        "127.0.0.0/8",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "169.254.0.0/16",
+        "100.64.0.0/10",
+        "::1/128",
+        "fc00::/7",
+        "fe80::/10",
+    )
+)
+
+
+def is_trusted_control_peer(value: str) -> bool:
+    try:
+        address = base.ipaddress.ip_address(str(value).split("%", 1)[0])
+    except ValueError:
+        return False
+    if getattr(address, "ipv4_mapped", None) is not None:
+        address = address.ipv4_mapped
+    return any(address.version == network.version and address in network for network in TRUSTED_CONTROL_NETWORKS)
+
+
+_base_discover_phone_urls = base.discover_phone_urls
+
+
+def trusted_discover_phone_urls(port: int) -> list[str]:
+    rows: list[str] = []
+    for url in _base_discover_phone_urls(port):
+        try:
+            host = base.urlsplit(url).hostname or ""
+        except ValueError:
+            continue
+        if is_trusted_control_peer(host):
+            rows.append(url)
+    return rows
+
+
+_base_origin_allowed = base.ControlHandler._origin_allowed
+_base_do_get = base.ControlHandler.do_GET
+
+
+def _trusted_peer_allowed(handler) -> bool:
+    try:
+        peer = str(handler.client_address[0])
+    except (AttributeError, IndexError, TypeError):
+        return False
+    return is_trusted_control_peer(peer)
+
+
+def _trusted_origin_allowed(handler) -> bool:
+    if not _trusted_peer_allowed(handler):
+        return False
+    return _base_origin_allowed(handler)
+
+
+def _trusted_do_get(handler) -> None:
+    if not _trusted_peer_allowed(handler):
+        handler._json(
+            base.HTTPStatus.FORBIDDEN,
+            {"error": "public controller peers are rejected; use loopback, trusted LAN, VPN, or Tailscale"},
+        )
+        return
+    _base_do_get(handler)
+
+
 base.is_qwen_worker_pid = always_on_worker_pid
+base.discover_phone_urls = trusted_discover_phone_urls
+base.ControlHandler._peer_allowed = _trusted_peer_allowed
+base.ControlHandler._origin_allowed = _trusted_origin_allowed
+base.ControlHandler.do_GET = _trusted_do_get
 base.ControlHandler.server_version = "KrisQwenControl/2.2"
 
 
@@ -384,6 +457,7 @@ class AlwaysOnQwenController(BaseController):
         result = super().status()
         result["controllerVersion"] = TARGET_CONTROL_VERSION
         result["controllerRuntimeSha256"] = self.controller_runtime_sha256
+        result["peerPolicy"] = "loopback-private-lan-vpn-tailscale-only"
         result["autoUpdate"] = {
             "enabled": self.auto_update_enabled,
             "intervalSeconds": self.auto_update_seconds,
