@@ -1,0 +1,257 @@
+name: Owner P25 Recovery Materializer V4
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/owner-p25-recovery-materialize-v4.yml
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-p25-recovery-materialize-v4.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: owner-p25-recovery-materializer-v4
+  cancel-in-progress: false
+
+env:
+  HEALTHY_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
+  P25_SALVAGE: 64286a2110fd9d852dbbeb7653e5896866b0c4ac
+  STAGING_PATH: automation/staged/p25-main-recovery-278aecc-v4
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - name: Check out recovery branch for blob staging
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/owner-recovery
+          path: recovery
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Check out exact healthy main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 278aeccfa013411bc7cf23b4a34199718327f4b2
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Merge proven P25 product and strip transport debt
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${HEALTHY_MAIN}"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "${HEALTHY_MAIN}"
+          git fetch origin "${P25_SALVAGE}"
+          git config user.name 'Owner P25 Recovery'
+          git config user.email 'owner-p25-recovery@users.noreply.github.com'
+
+          set +e
+          git merge --no-commit --no-ff "${P25_SALVAGE}"
+          rc=$?
+          set -e
+          test "${rc}" -eq 1
+          mapfile -t conflicts < <(git diff --name-only --diff-filter=U)
+          test "${#conflicts[@]}" -eq 1
+          test "${conflicts[0]}" = 'SOURCE_MANIFEST.sha256'
+
+          git checkout --ours SOURCE_MANIFEST.sha256
+          git add -- SOURCE_MANIFEST.sha256
+          git rm -f -- \
+            .github/workflows/p25-001-direct-trigger.yml \
+            .github/workflows/p25-001-materialize.yml \
+            .p25/direct-materialize-trigger
+
+          test -f .github/workflows/p25-prompt-studio.yml
+          grep -F 'contents: read' .github/workflows/p25-prompt-studio.yml
+          test ! -e .p25
+          test ! -e .p25-redesign
+          test ! -e .p25-adaptive
+          git diff --name-only --diff-filter=U | test ! -s /dev/stdin
+
+      - name: Canonically format recovered P25 Dart source
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/chat_studio.dart \
+            lib/product/execution_intelligence.dart \
+            lib/product/models_research.dart \
+            lib/product/planning_runtime.dart \
+            lib/product/product_runtime.dart \
+            lib/product/prompt_planning.dart \
+            test/product/p25_fast_path_contract_test.dart
+          git add -- \
+            lib/product/chat_studio.dart \
+            lib/product/execution_intelligence.dart \
+            lib/product/models_research.dart \
+            lib/product/planning_runtime.dart \
+            lib/product/product_runtime.dart \
+            lib/product/prompt_planning.dart \
+            test/product/p25_fast_path_contract_test.dart
+          python tool/dart_format_scope.py --check
+          git diff --cached --check
+
+      - name: Refresh canonical manifest after final source formatting
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git add -- SOURCE_MANIFEST.sha256
+          git diff --cached --check
+
+      - name: Validate P25 roadmap and Test Station
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p25_prompt_studio_roadmap_test.py --project .
+          python tool/p25_prompt_studio_test_station.py --project . --profile contract --check
+          python tool/roadmap_control_test.py
+          python tool/p0_008_roadmap_test.py --project .
+          python tool/roadmap_control.py validate --project . --strict
+
+      - name: Validate canonical Test Center and assurance hierarchy
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/test_center_contracts.py check --project .
+          python -m unittest -v tool/test_center_contracts_test.py
+          python tool/test_center_assurance_hierarchy.py check --project .
+          python tool/test_center_assurance_hierarchy.py check-report --project . --report release/evidence/TEST_CENTER/P8-001/fixtures/assurance-execution-report.pass.json
+          python -m unittest -v tool/test_center_assurance_hierarchy_test.py
+          python -m unittest -v tool/test_center_assurance_enforcement_test.py
+
+      - name: Validate recovered Prompt Studio behavior
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          python tool/dart_format_scope.py --check
+          flutter test --reporter expanded \
+            test/product/p25_fast_path_contract_test.dart \
+            test/product/prompt_studio_v2_test.dart \
+            test/product/model/model_registry_test.dart \
+            test/product/budget_diagnostics_test.dart \
+            test/product/execution_reliability_test.dart
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+          git diff --cached --check
+
+      - name: Verify manifest is stable after all validation
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.after-tests.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/SOURCE_MANIFEST.after-tests.sha256" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --cached --check
+          test -z "$(git diff --name-only)"
+
+      - name: Prove valuable source present and transport absent
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "${HEALTHY_MAIN}"
+          for path in \
+            lib/product/chat_studio.dart \
+            lib/product/execution_intelligence.dart \
+            lib/product/models_research.dart \
+            lib/product/planning_runtime.dart \
+            lib/product/product_runtime.dart \
+            lib/product/prompt_planning.dart \
+            test/product/p25_fast_path_contract_test.dart \
+            docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md \
+            docs/roadmap/p25/manifest.v1.json \
+            docs/roadmap/p25/performance_budget.v1.json \
+            docs/roadmap/p25/prompt_studio_test_station.v1.json \
+            tool/p25_prompt_studio_roadmap_test.py \
+            tool/p25_prompt_studio_test_station.py \
+            .github/workflows/p25-prompt-studio.yml; do
+            test -f "${path}"
+            git diff --cached --name-only | grep -Fx "${path}"
+          done
+          if git diff --cached --name-only | grep -E '^\.p25|^\.github/workflows/p25-001-(direct-trigger|materialize)\.yml$'; then
+            echo 'obsolete P25 transport survived recovery' >&2
+            exit 1
+          fi
+          git diff --cached --check
+
+      - name: Stage exact verified candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf verified-tree
+          mkdir -p verified-tree
+          cd candidate
+          git diff --cached --name-only -z | while IFS= read -r -d '' path; do
+            test -f "${path}"
+            mkdir -p "../verified-tree/$(dirname "${path}")"
+            cp -p "${path}" "../verified-tree/${path}"
+          done
+          cd ..
+          printf 'base=%s\nsalvage=%s\n' "${HEALTHY_MAIN}" "${P25_SALVAGE}" > verified-tree/RECOVERY_METADATA.txt
+          find verified-tree -type f ! -name RECOVERY_SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > verified-tree/RECOVERY_SHA256SUMS.txt
+
+      - name: Upload exact verified candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p25-main-recovery-278aecc-v4
+          path: verified-tree
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish verified blobs to recovery namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="recovery/${STAGING_PATH}"
+          rm -rf "${target}"
+          mkdir -p "${target}"
+          cp -a verified-tree/. "${target}/"
+          git -C recovery config user.name 'github-actions[bot]'
+          git -C recovery config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C recovery add -- "${STAGING_PATH}"
+          git -C recovery diff --cached --check
+          if ! git -C recovery diff --cached --quiet; then
+            git -C recovery commit -m 'chore(p25): stage verified current-main recovery v4'
+            git -C recovery push origin HEAD:automation/owner-recovery
+          fi
+
+      - name: Verify protected main remained unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C candidate ls-remote origin refs/heads/main | cut -f1)" = "${HEALTHY_MAIN}"
