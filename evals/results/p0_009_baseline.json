@@ -76,22 +76,20 @@
     {
       "assuranceLevel": "source_contract",
       "category": "analysis",
-      "evidenceSha256": "1b88640258e29c393e37415884e750be0ba381a1108ef339bb180bbdf70307e7",
+      "evidenceSha256": "216e7172e84e5f36185baa4734f98e169495d220019851e9e73c17c68fb9f6b0",
       "id": "analysis.offline_system_contract",
       "observations": {
-        "exitCode": 0,
-        "selected": {
-          "$.failed": 0,
-          "$.passed": {
-            "minimum": 1,
-            "satisfied": true
-          }
-        }
+        "exitCode": 1,
+        "failures": [
+          "exitCode=1 expected=0",
+          "$.failed=None expected=0",
+          "$.passed=None expected>=1"
+        ]
       },
       "proofKind": "source_inspection",
-      "reason": "command_expectations_satisfied",
-      "score": 1.0,
-      "status": "passed",
+      "reason": "expectation_failed",
+      "score": 0.0,
+      "status": "failed",
       "title": "Offline cumulative source-contract analysis"
     },
     {
@@ -278,13 +276,13 @@
       "id": "analysis",
       "measuredCaseCount": 1,
       "name": "Analysis",
-      "readiness": 0.5,
-      "score": 1.0,
+      "readiness": 0.0,
+      "score": 0.0,
       "statusCounts": {
         "error": 0,
-        "failed": 0,
+        "failed": 1,
         "not_run": 1,
-        "passed": 1,
+        "passed": 0,
         "unavailable": 0,
         "unsupported": 0
       }
@@ -369,7 +367,7 @@
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "719a911dd34fbe60748fe15366af17f355360aad652f74580f8a60cf5fcccd9a",
+  "resultFingerprint": "55f1209ed283da418b04e3062a8e465d1f9e7efb8d3f74cd57f37a9cd685f8be",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
   "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
@@ -381,16 +379,16 @@
     "caseCount": 12,
     "coverage": 0.5,
     "measuredCaseCount": 6,
-    "readiness": 0.5,
+    "readiness": 0.416667,
     "recordingStatus": "complete",
-    "score": 0.75,
+    "score": 0.625,
     "sourceContractCaseCount": 1,
-    "sourceContractPassedCount": 1,
+    "sourceContractPassedCount": 0,
     "statusCounts": {
       "error": 0,
-      "failed": 0,
+      "failed": 1,
       "not_run": 3,
-      "passed": 6,
+      "passed": 5,
       "unavailable": 1,
       "unsupported": 2
     }

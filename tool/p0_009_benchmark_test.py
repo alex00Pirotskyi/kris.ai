@@ -14,6 +14,7 @@ from typing import Any
 SUPPORTED_ROADMAP_VERSIONS = {
     "3.1.5-p0-009-initial-benchmark",
     "3.1.6-p0-010-generated-state-hygiene",
+    "3.1.7-p25-prompt-studio-product-rescue",
 }
 
 

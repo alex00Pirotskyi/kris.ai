@@ -4,8 +4,8 @@
 - Mode: `portable`
 - Cases: **12**
 - Measured coverage: **50.0%**
-- Scored readiness: **50.0%**
-- Result fingerprint: `719a911dd34fbe60748fe15366af17f355360aad652f74580f8a60cf5fcccd9a`
+- Scored readiness: **41.7%**
+- Result fingerprint: `55f1209ed283da418b04e3062a8e465d1f9e7efb8d3f74cd57f37a9cd685f8be`
 
 > This is a reproducible starting measurement, not a production-readiness claim. Unsupported, unavailable, failed, and model-not-run cases remain visible and do not count as passing.
 
@@ -14,7 +14,7 @@
 | Category | Cases | Measured | Coverage | Score | Readiness |
 |---|---:|---:|---:|---:|---:|
 | Coding | 2 | 1 | 50.0% | 100.0% | 50.0% |
-| Analysis | 2 | 1 | 50.0% | 100.0% | 50.0% |
+| Analysis | 2 | 1 | 50.0% | 0.0% | 0.0% |
 | Path safety | 2 | 1 | 50.0% | 100.0% | 50.0% |
 | Crash recovery | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | Browser capability honesty | 2 | 0 | 0.0% | 0.0% | 0.0% |
@@ -27,7 +27,7 @@
 | `coding.python_bugfix_task` | coding | benchmark_task | **not_run** | — | model_candidate_not_supplied |
 | `coding.protocol_contract_gate` | coding | behavioral | **passed** | 100.0% | command_expectations_satisfied |
 | `analysis.architecture_review_task` | analysis | benchmark_task | **not_run** | — | model_candidate_not_supplied |
-| `analysis.offline_system_contract` | analysis | source_contract | **passed** | 100.0% | command_expectations_satisfied |
+| `analysis.offline_system_contract` | analysis | source_contract | **failed** | 0.0% | expectation_failed |
 | `path_safety.generated_state_policy` | path_safety | behavioral | **passed** | 100.0% | all_path_expectations_satisfied |
 | `path_safety.flutter_workspace_behavior` | path_safety | behavioral | **unavailable** | — | portable_baseline_excludes_sdk |
 | `crash_recovery.sqlite_workflow_kernel` | crash_recovery | behavioral | **passed** | 100.0% | command_expectations_satisfied |
