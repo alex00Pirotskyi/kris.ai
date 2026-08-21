@@ -1,6 +1,9 @@
 name: Owner P25 Recovery Diagnose
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/owner-p25-recovery-diagnose.yml
   push:
     branches:
       - automation/owner-recovery
