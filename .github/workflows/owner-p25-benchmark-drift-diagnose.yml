@@ -1,0 +1,166 @@
+name: Owner P25 Benchmark Drift Diagnose
+
+on:
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-p25-benchmark-drift-diagnose.yml
+
+permissions:
+  contents: write
+
+env:
+  P25_HEAD: 13d8b9b4c82ec839c47db9f72b95e184380dba5c
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out exact P25 head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 13d8b9b4c82ec839c47db9f72b95e184380dba5c
+          path: candidate
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out report branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/owner-recovery
+          path: report
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Install exact Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Capture clean benchmark and source contract
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${P25_HEAD}"
+          python tool/benchmark_runner.py run --project . --output "${RUNNER_TEMP}/clean.json" --markdown '' --mode portable --strict-infrastructure
+          python tool/system_test.py --project . --json > "${RUNNER_TEMP}/system-clean.json"
+
+      - name: Reproduce normal Product Gate generated state
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter create --project-name kristin_local_agent --org local.kristin --platforms=linux .
+          flutter pub get
+          python tool/v71r12_bootstrap_hosted_python.py --project . >/dev/null
+          python tool/capture_ci_environment.py --output "release/evidence/P0-003/ci-environment-Linux.json" >/dev/null
+          python tool/toolchain_lock_test.py --json-output "release/evidence/P0-004/toolchain-Linux.json" >/dev/null
+          python tool/v1_trust_disablement_test.py >/dev/null
+          python tool/p0_003_repair_test.py >/dev/null
+          python tool/policy_support_test.py >/dev/null
+          python tool/repository_governance_test.py --json-output release/evidence/P0-006/local_governance_results.json >/dev/null
+          python -m unittest -q tool/github_governance_client_test.py
+          python tool/generate_v170_contracts.py --check >/dev/null
+          python tool/generate_v180_contracts.py --check >/dev/null
+          python tool/generate_v190_contracts.py --check >/dev/null
+          python tool/roadmap_control_test.py >/dev/null
+          python tool/p0_008_roadmap_test.py --project . >/dev/null
+          python tool/roadmap_control.py validate --project . --strict >/dev/null
+
+      - name: Capture post-setup benchmark, source contract, and filesystem delta
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/benchmark_runner.py run --project . --output "${RUNNER_TEMP}/post.json" --markdown '' --mode portable --strict-infrastructure
+          python tool/system_test.py --project . --json > "${RUNNER_TEMP}/system-post.json"
+          git status --porcelain=v1 --untracked-files=all > "${RUNNER_TEMP}/status.txt"
+          git ls-files --others --exclude-standard > "${RUNNER_TEMP}/untracked.txt"
+          git ls-files --modified > "${RUNNER_TEMP}/modified.txt"
+          git ls-files --ignored --exclude-standard -o > "${RUNNER_TEMP}/ignored-untracked.txt"
+
+      - name: Build exact drift report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import os
+
+          temp = pathlib.Path(os.environ['RUNNER_TEMP'])
+          clean = json.loads((temp / 'clean.json').read_text(encoding='utf-8'))
+          post = json.loads((temp / 'post.json').read_text(encoding='utf-8'))
+          sc = json.loads((temp / 'system-clean.json').read_text(encoding='utf-8'))
+          sp = json.loads((temp / 'system-post.json').read_text(encoding='utf-8'))
+
+          clean_cases = {row['id']: row for row in clean.get('cases', [])}
+          post_cases = {row['id']: row for row in post.get('cases', [])}
+          changed_cases = {}
+          for case_id in sorted(set(clean_cases) | set(post_cases)):
+              a = clean_cases.get(case_id)
+              b = post_cases.get(case_id)
+              if a != b:
+                  changed_cases[case_id] = {'clean': a, 'post': b}
+
+          clean_results = {row.get('name'): row for row in sc.get('results', []) if isinstance(row, dict)}
+          post_results = {row.get('name'): row for row in sp.get('results', []) if isinstance(row, dict)}
+          changed_system = {}
+          for name in sorted(set(clean_results) | set(post_results), key=lambda x: str(x)):
+              a = clean_results.get(name)
+              b = post_results.get(name)
+              if a != b:
+                  changed_system[str(name)] = {'clean': a, 'post': b}
+
+          def lines(name):
+              path = temp / name
+              return path.read_text(encoding='utf-8', errors='replace').splitlines() if path.exists() else []
+
+          report = {
+              'schemaVersion': 1,
+              'head': '13d8b9b4c82ec839c47db9f72b95e184380dba5c',
+              'cleanFingerprint': clean.get('resultFingerprint'),
+              'postFingerprint': post.get('resultFingerprint'),
+              'cleanBenchmarkInputsSha256': clean.get('benchmarkInputsSha256'),
+              'postBenchmarkInputsSha256': post.get('benchmarkInputsSha256'),
+              'cleanFixtureSha256': clean.get('fixtureSha256'),
+              'postFixtureSha256': post.get('fixtureSha256'),
+              'changedCases': changed_cases,
+              'cleanSystemPassed': sc.get('passed'),
+              'cleanSystemFailed': sc.get('failed'),
+              'postSystemPassed': sp.get('passed'),
+              'postSystemFailed': sp.get('failed'),
+              'changedSystemResults': changed_system,
+              'gitStatus': lines('status.txt'),
+              'untrackedSourceVisible': lines('untracked.txt'),
+              'modifiedTracked': lines('modified.txt'),
+              'ignoredUntrackedSample': lines('ignored-untracked.txt')[:300],
+          }
+          out = pathlib.Path('report/.owner-p25-benchmark-drift-diagnosis.json')
+          out.write_text(json.dumps(report, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Publish diagnosis only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C report config user.name 'github-actions[bot]'
+          git -C report config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C report add -- .owner-p25-benchmark-drift-diagnosis.json
+          git -C report diff --cached --check
+          if ! git -C report diff --cached --quiet; then
+            git -C report commit -m 'chore(owner): record P25 benchmark generated-state drift'
+            git -C report push origin HEAD:automation/owner-recovery
+          fi
