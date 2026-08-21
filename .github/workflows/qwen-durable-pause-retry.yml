@@ -80,8 +80,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile ../automation-source/automation/qwen_durable_pause_materializer.py
-          python3 ../automation-source/automation/qwen_durable_pause_materializer.py .
+          python3 -m py_compile \
+            ../automation-source/automation/qwen_durable_pause_materializer.py \
+            ../automation-source/automation/qwen_durable_pause_materializer_v2.py
+          python3 ../automation-source/automation/qwen_durable_pause_materializer_v2.py .
           git diff --check
 
       - name: Validate durable-pause contracts
