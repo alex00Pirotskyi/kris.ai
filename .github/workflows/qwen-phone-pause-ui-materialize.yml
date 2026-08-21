@@ -1,0 +1,216 @@
+name: Qwen Phone Pause UI Materializer
+
+on:
+  push:
+    branches:
+      - 'automation/qwen-phone-control-materializer'
+    paths:
+      - '.github/workflows/qwen-phone-pause-ui-materialize.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qwen-phone-pause-ui-materializer
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PRODUCT_HEAD: 9044e058e0d3e95dd6e11760f95443663a7abfd7
+  PRODUCT_BRANCH: agent/qwen-phone-control
+  STAGING_PATH: automation/staged/qwen-phone-pause-ui-9044e
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out automation branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/qwen-phone-control-materializer
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Record materializer run
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'workflow=%s\ntrigger=%s\nrun=%s\nproductHead=%s\n' \
+            "${GITHUB_WORKFLOW}" "${GITHUB_SHA}" "${GITHUB_RUN_ID}" \
+            "${EXPECTED_PRODUCT_HEAD}" \
+            > .github/qwen-phone-pause-ui-heartbeat.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/qwen-phone-pause-ui-heartbeat.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(qwen): record phone-pause UI materializer run'
+            git push origin HEAD:automation/qwen-phone-control-materializer
+          fi
+
+  materialize:
+    needs: heartbeat
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out materializer source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/qwen-phone-control-materializer
+          path: automation-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out exact Qwen candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/qwen-phone-control
+          path: product
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact unchanged product head
+        working-directory: product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_PRODUCT_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${PRODUCT_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_PRODUCT_HEAD}"
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Materialize controller 2.2.2 phone intent UI
+        working-directory: product
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ../automation-source/automation/qwen_phone_pause_ui_materializer.py
+          python3 ../automation-source/automation/qwen_phone_pause_ui_materializer.py .
+          git diff --check
+
+      - name: Validate controller, UI, security, installer, and docs
+        working-directory: product
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            tool/kris_qwen_control.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_compat_test.py \
+            tool/kris_qwen_control_token_redaction_test.py
+          python3 tool/kris_qwen_control_compat_test.py
+          python3 tool/kris_qwen_control_token_redaction_test.py
+          test "$(python3 tool/kris_qwen_control.py.compat.py --version)" = "2.2.2"
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          grep -F 'Pause automation + safe stop' tool/kris_qwen_control.py.compat.py
+          grep -F 'test_active_stopped_controller_can_be_paused_from_phone' tool/kris_qwen_control_compat_test.py
+          grep -F 'test_malformed_json_durable_state_fails_closed' tool/kris_qwen_control_compat_test.py
+          grep -F 'tool/kris_qwen_worker_v541.py' docs/KRIS_QWEN_SERVER_CONTROL.md
+          grep -F 'tool/kris_qwen_worker_v541.py' docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md
+          if grep -R -n -F 'executed controller: `tool/kris_qwen_control.py.compat.py` — **2.2.0**' docs; then
+            echo 'stale executed controller documentation remains' >&2
+            exit 1
+          fi
+          git diff --check
+
+      - name: Regenerate and verify canonical source manifest
+        working-directory: product
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
+          python3 tool/p1a_refresh_source_manifest.py .
+          cmp -s "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python3 tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+          python3 - <<'PY'
+          import subprocess
+
+          actual = set(
+              subprocess.check_output(
+                  ["git", "diff", "--name-only"],
+                  text=True,
+              ).splitlines()
+          )
+          expected = {
+              ".github/workflows/ci.yml",
+              "SOURCE_MANIFEST.sha256",
+              "docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md",
+              "docs/KRIS_QWEN_SERVER_CONTROL.md",
+              "tool/install_kris_qwen_control_systemd.sh",
+              "tool/kris_qwen_control.py.compat.py",
+              "tool/kris_qwen_control_compat_test.py",
+          }
+          if actual != expected:
+              raise SystemExit(
+                  f"phone-pause UI scope mismatch actual={sorted(actual)} "
+                  f"expected={sorted(expected)}"
+              )
+          PY
+
+      - name: Stage exact verified seven-file tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p verified-tree/.github/workflows verified-tree/docs verified-tree/tool
+          cp product/.github/workflows/ci.yml verified-tree/.github/workflows/ci.yml
+          cp product/SOURCE_MANIFEST.sha256 verified-tree/SOURCE_MANIFEST.sha256
+          cp product/docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md verified-tree/docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md
+          cp product/docs/KRIS_QWEN_SERVER_CONTROL.md verified-tree/docs/KRIS_QWEN_SERVER_CONTROL.md
+          cp product/tool/install_kris_qwen_control_systemd.sh verified-tree/tool/install_kris_qwen_control_systemd.sh
+          cp product/tool/kris_qwen_control.py.compat.py verified-tree/tool/kris_qwen_control.py.compat.py
+          cp product/tool/kris_qwen_control_compat_test.py verified-tree/tool/kris_qwen_control_compat_test.py
+          printf 'base=%s\nbranch=%s\nfiles=7\ncontroller=2.2.2\n' \
+            "${EXPECTED_PRODUCT_HEAD}" "${PRODUCT_BRANCH}" \
+            > verified-tree/METADATA.txt
+          find verified-tree -type f ! -name ARTIFACT_SHA256SUMS.txt -print0 \
+            | sort -z | xargs -0 sha256sum \
+            > verified-tree/ARTIFACT_SHA256SUMS.txt
+
+      - name: Upload exact verified candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: qwen-phone-pause-ui-9044e
+          path: verified-tree
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Check out blob staging branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/qwen-phone-control-materializer
+          path: staging-branch
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Publish exact verified blobs to staging namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="staging-branch/${STAGING_PATH}"
+          rm -rf "${target}"
+          mkdir -p "${target}"
+          cp verified-tree/.github/workflows/ci.yml "${target}/ci.yml"
+          cp verified-tree/SOURCE_MANIFEST.sha256 "${target}/SOURCE_MANIFEST.sha256"
+          cp verified-tree/docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md "${target}/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md"
+          cp verified-tree/docs/KRIS_QWEN_SERVER_CONTROL.md "${target}/KRIS_QWEN_SERVER_CONTROL.md"
+          cp verified-tree/tool/install_kris_qwen_control_systemd.sh "${target}/install_kris_qwen_control_systemd.sh"
+          cp verified-tree/tool/kris_qwen_control.py.compat.py "${target}/kris_qwen_control.py.compat.py"
+          cp verified-tree/tool/kris_qwen_control_compat_test.py "${target}/kris_qwen_control_compat_test.py"
+          cp verified-tree/METADATA.txt "${target}/METADATA.txt"
+          cp verified-tree/ARTIFACT_SHA256SUMS.txt "${target}/ARTIFACT_SHA256SUMS.txt"
+          git -C staging-branch config user.name 'github-actions[bot]'
+          git -C staging-branch config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C staging-branch add -- "${STAGING_PATH}"
+          git -C staging-branch diff --cached --check
+          if ! git -C staging-branch diff --cached --quiet; then
+            git -C staging-branch commit -m 'chore(qwen): stage verified phone-pause UI blobs'
+            git -C staging-branch push origin HEAD:automation/qwen-phone-control-materializer
+          fi
+
+      - name: Verify product branch remained untouched
+        working-directory: product
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_head="$(git ls-remote origin "refs/heads/${PRODUCT_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_PRODUCT_HEAD}"
