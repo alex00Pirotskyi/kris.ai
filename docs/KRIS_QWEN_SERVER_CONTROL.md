@@ -17,11 +17,12 @@ The launcher verifies GitHub CLI authentication, owns the configured HTTP port, 
 
 The phone execution path is compatibility-layered while the large retained source files remain stable:
 
-- executed worker: `tool/kris_qwen_worker_v53.py` — **5.3.0**;
-- legacy worker path: `tool/kris_qwen_worker.py.compat.py` — forwards to the deterministic 5.3 entry so an already-running 2.1 controller that remembers the old path reaches the same worker after Fetch latest;
-- retained base worker: `tool/kris_qwen_worker.py` — still labeled **5.2.2** during rollout;
-- executed controller: `tool/kris_qwen_control.py.compat.py` — **2.2.0**;
-- retained base controller: `tool/kris_qwen_control.py` — still labeled **2.1.0** during rollout.
+- stable controller-facing worker: `tool/kris_qwen_worker_v53.py` — forwards to the deterministic 5.4.1 entry;
+- executed worker: `tool/kris_qwen_worker_v541.py` — **5.4.1**;
+- legacy worker path: `tool/kris_qwen_worker.py.compat.py` — forwards to the same stable 5.4.1 path so older controller configuration reaches current worker bytes after Fetch latest;
+- retained base worker: `tool/kris_qwen_worker.py` — compatibility/transformation base, not the reported executed version;
+- executed controller: `tool/kris_qwen_control.py.compat.py` — **2.2.2**;
+- retained base controller: `tool/kris_qwen_control.py` — compatibility base, not the reported executed version.
 
 The worker version shown by the phone flow is derived from the executed worker entry, not the retained base-file label.
 
@@ -38,23 +39,23 @@ Normal `IDLE` is a **red-alert condition**, not a steady state. Qwen is expected
 - actively recovering a runtime/control-plane blocker;
 - deriving the next bounded Product hardening Work Order through existing Mission Runtime authority.
 
-Successful Work Orders chain immediately. The normal 60-second inter-job sleep is removed by the 5.3 execution adapter.
+Successful Work Orders chain immediately. The normal 60-second inter-job sleep is removed by the 5.4.1 execution adapter.
 
 ### Review wake
 
-Mission Runtime historically allowed a Work Order to be `type=REVIEW` while its runtime state was `REVIEW`; however `next-work` dispatches only state `READY`, and semaphore reservation accepts only `READY` or `IN_PROGRESS`. Worker 5.3 therefore wakes an eligible pending context-independent R1 from `REVIEW` to `READY` before dispatch.
+Mission Runtime historically allowed a Work Order to be `type=REVIEW` while its runtime state was `REVIEW`; however `next-work` dispatches only state `READY`, and semaphore reservation accepts only `READY` or `IN_PROGRESS`. Worker 5.4.1 therefore wakes an eligible pending context-independent R1 from `REVIEW` to `READY` before dispatch.
 
 It does not wake review work that explicitly requires a distinct external GitHub identity, and it retains the existing refusal to R1-review `agent/local-qwen/**` helpers authored by local Qwen itself.
 
 ### Helper integration
 
-A reviewed or exact-green `HELPER_READY` source candidate is not treated as finished. Worker 5.3 can bind a scope-compatible sibling helper to the same canonical Product PR when older runtime history did not record a formal parent/child relationship.
+A reviewed or exact-green `HELPER_READY` source candidate is not treated as finished. Worker 5.4.1 can bind a scope-compatible sibling helper to the same canonical Product PR when older runtime history did not record a formal parent/child relationship.
 
 For continuous Product hardening, an exact-green helper gets a bounded integration lane. Integration remains non-force, exact-head guarded, and path-scoped. A helper is marked `LANDED` only after its bytes are actually reconciled into the canonical Product branch.
 
 ### Post-integration exact Product CI
 
-Continuous integration does not self-certify just because helper CI was green. When the canonical Product branch reaches `VALIDATING`, worker 5.3 creates a read-only `CI_REPAIR` Work Order through Mission Runtime for exact `workflow_dispatch` Product Gates. Ubuntu, Windows, and macOS must all complete successfully.
+Continuous integration does not self-certify just because helper CI was green. When the canonical Product branch reaches `VALIDATING`, worker 5.4.1 creates a read-only `CI_REPAIR` Work Order through Mission Runtime for exact `workflow_dispatch` Product Gates. Ubuntu, Windows, and macOS must all complete successfully.
 
 The integration Work Order is reconciled from that exact CI result:
 
@@ -65,7 +66,7 @@ Only after that terminal result can the continuous Product loop seed more work o
 
 ### Governed frontier seeding
 
-If no dispatchable GREEN Work Order exists, worker 5.3 may create **one** bounded `PRODUCT_DEFECT_REPAIR` Work Order through the existing `mission_orchestrator.py work-create` CAS path, and only when all of these conditions hold:
+If no dispatchable GREEN Work Order exists, worker 5.4.1 may create **one** bounded `PRODUCT_DEFECT_REPAIR` Work Order through the existing `mission_orchestrator.py work-create` CAS path, and only when all of these conditions hold:
 
 - the Product PR is already canonical in `agent/mission-runtime`;
 - the Product record is `ACTIVE`;
@@ -82,14 +83,14 @@ If no safe authority exists, the worker reports `RED_ALERT_FRONTIER` and aggress
 
 ## Automatic update and restart
 
-Controller 2.2 enables automatic supervision by default:
+Controller 2.2.2 enables automatic supervision by default:
 
 ```text
 KRIS_QWEN_AUTO_UPDATE=1
 KRIS_QWEN_AUTO_UPDATE_SECONDS=30
 ```
 
-Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 reuses the existing safe Fetch latest + run path:
+Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2.2 reuses the existing safe Fetch latest + run path:
 
 1. graceful worker drain;
 2. dirty-checkout refusal;
@@ -100,9 +101,11 @@ Every interval it resolves the remote head of the configured Qwen branch. If the
 
 There is no reset-hard, rebase, force checkout, force push, or arbitrary branch mutation in this path.
 
-If the tracked branch is already current but the worker process exited unexpectedly, controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses automatic worker restart until the operator explicitly selects Run current Qwen or Fetch latest + run Qwen.
+If the tracked branch is already current but the worker process exited unexpectedly, controller 2.2.2 starts it again automatically while automation is **ACTIVE**. **Pause automation + safe stop** atomically persists operator intent in `<state_dir>/auto-run-state.json`, pauses automatic updates and restarts across controller/systemd restarts, and safely stops a running worker. Run current Qwen or Fetch latest + run Qwen explicitly returns automation to **ACTIVE**. Invalid or malformed durable state fails closed to **PAUSED**.
 
-The controller process itself must be loaded once with 2.2. Future worker branch changes are then detected automatically; repeated manual Fetch latest presses are not part of the normal protocol.
+The phone dashboard exposes **ACTIVE**, **PAUSED**, or **ERROR** plus the persisted intent reason. The pause control remains available when automation is active even if the worker is already stopped, preventing the controller from silently restarting it before the operator can pause it.
+
+The controller process itself must be loaded once with 2.2.2. Future worker/controller branch changes are then detected automatically; repeated manual Fetch latest presses are not part of the normal protocol.
 
 ## Security boundary
 

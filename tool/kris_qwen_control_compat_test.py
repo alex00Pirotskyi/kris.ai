@@ -67,6 +67,32 @@ class WorkerPidCompatibilityTest(unittest.TestCase):
             self.assertFalse(control.always_on_worker_pid(1234))
 
 
+class DashboardOperatorIntentContractTest(unittest.TestCase):
+    def test_dashboard_exposes_durable_automation_intent(self) -> None:
+        html = control.base.DASHBOARD_HTML
+        self.assertIn("Pause automation + safe stop", html)
+        self.assertIn("cell('Automation'", html)
+        self.assertIn("au.autoRunEnabled===false?'PAUSED'", html)
+        self.assertIn("automationError||op.error||w.versionError||''", html)
+        self.assertNotIn('id="stop">Safe stop</button>', html)
+
+    def test_active_stopped_controller_can_be_paused_from_phone(self) -> None:
+        html = control.base.DASHBOARD_HTML
+        self.assertIn(
+            "q('#stop').disabled=busy||(!w.running&&au.autoRunEnabled===false)",
+            html,
+        )
+        self.assertNotIn("q('#stop').disabled=!w.running", html)
+
+    def test_dashboard_uses_executed_controller_version(self) -> None:
+        self.assertEqual(control.TARGET_CONTROL_VERSION, "2.2.2")
+        self.assertEqual(control.base.CONTROL_VERSION, "2.2.2")
+        self.assertIn(
+            "s.controlVersion||s.controllerVersion||'?'",
+            control.base.DASHBOARD_HTML,
+        )
+
+
 class AutoUpdateContractTest(unittest.TestCase):
     def controller(self, root: pathlib.Path, *, self_restart: bool = False):
         env = {
@@ -385,6 +411,28 @@ class AutoUpdateContractTest(unittest.TestCase):
                 "invalid_durable_state_fail_closed",
             )
 
+    def test_malformed_json_durable_state_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = pathlib.Path(raw)
+            cfg = config(root)
+            cfg.state_dir.mkdir(parents=True, exist_ok=True)
+            state = cfg.state_dir / "auto-run-state.json"
+            state.write_text("{not-json", encoding="utf-8")
+            env = {
+                "KRIS_QWEN_AUTO_UPDATE": "0",
+                "KRIS_QWEN_CONTROLLER_SELF_RESTART": "0",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                controller = control.AlwaysOnQwenController(cfg)
+            self.assertFalse(controller.auto_run_enabled)
+            self.assertIsNotNone(controller.auto_run_state_error)
+            rewritten = json.loads(state.read_text(encoding="utf-8"))
+            self.assertFalse(rewritten["autoRunEnabled"])
+            self.assertEqual(
+                rewritten["reason"],
+                "invalid_durable_state_fail_closed",
+            )
+
     def test_status_exposes_durable_operator_intent(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             controller = self.controller(pathlib.Path(raw))
@@ -394,7 +442,10 @@ class AutoUpdateContractTest(unittest.TestCase):
                 "status",
                 return_value={},
             ):
-                status = controller.status()["autoUpdate"]
+                snapshot = controller.status()
+            status = snapshot["autoUpdate"]
+            self.assertEqual(snapshot["controlVersion"], "2.2.2")
+            self.assertEqual(snapshot["controllerVersion"], "2.2.2")
             self.assertFalse(status["autoRunEnabled"])
             self.assertEqual(
                 status["operatorIntent"]["reason"],

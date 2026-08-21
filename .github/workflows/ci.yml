@@ -67,7 +67,7 @@ jobs:
           assert str(value.get('path', '')).endswith('kris_qwen_worker_v541.py'), value
           PY
           bash -n tool/install_kris_qwen_control_systemd.sh
-          [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.1' ]]
+          [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.2' ]]
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:

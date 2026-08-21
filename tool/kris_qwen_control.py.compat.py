@@ -13,7 +13,7 @@ import time
 
 SOURCE = pathlib.Path(__file__).with_name("kris_qwen_control.py")
 CONTROLLER_ENTRY = pathlib.Path(__file__).resolve()
-TARGET_CONTROL_VERSION = "2.2.1"
+TARGET_CONTROL_VERSION = "2.2.2"
 
 
 def controller_runtime_fingerprint(entry: pathlib.Path, source: pathlib.Path) -> str:
@@ -101,6 +101,44 @@ _base_origin_allowed = base.ControlHandler._origin_allowed
 _base_do_get = base.ControlHandler.do_GET
 
 
+def operator_aware_dashboard_html(source: str) -> str:
+    replacements = (
+        (
+            '<button class="danger" id="stop">Safe stop</button>',
+            '<button class="danger" id="stop">Pause automation + safe stop</button>',
+        ),
+        (
+            "const s=await api('/api/status');const w=s.worker||{},op=s.operation||{},git=s.git||{},ws=w.operatorStatus||{};",
+            "const s=await api('/api/status');const w=s.worker||{},op=s.operation||{},git=s.git||{},ws=w.operatorStatus||{},au=s.autoUpdate||{},intent=au.operatorIntent||{},automationError=au.operatorIntentError||'',automationState=automationError?'ERROR':au.autoRunEnabled===false?'PAUSED':au.autoRunEnabled===true?'ACTIVE':'UNKNOWN';",
+        ),
+        (
+            "q('#summary').innerHTML=cell('Worker',",
+            "q('#summary').innerHTML=cell('Automation',automationState+(intent.reason?` · ${intent.reason}`:''),automationError?'bad':automationState==='ACTIVE'?'good':'warn')+cell('Worker',",
+        ),
+        (
+            "cell('Control',`v${s.controlVersion}`);",
+            "cell('Control',`v${s.controlVersion||s.controllerVersion||'?'}`);",
+        ),
+        (
+            "q('#error').textContent=op.error||w.versionError||'';",
+            "q('#error').textContent=automationError||op.error||w.versionError||'';",
+        ),
+        (
+            "q('#stop').disabled=!w.running",
+            "q('#stop').disabled=busy||(!w.running&&au.autoRunEnabled===false)",
+        ),
+    )
+    rendered = source
+    for old, new in replacements:
+        count = rendered.count(old)
+        if count != 1:
+            raise RuntimeError(
+                f"Qwen dashboard contract drift: expected one anchor, found {count}: {old[:80]}"
+            )
+        rendered = rendered.replace(old, new, 1)
+    return rendered
+
+
 def _trusted_peer_allowed(handler) -> bool:
     try:
         peer = str(handler.client_address[0])
@@ -130,7 +168,8 @@ base.discover_phone_urls = trusted_discover_phone_urls
 base.ControlHandler._peer_allowed = _trusted_peer_allowed
 base.ControlHandler._origin_allowed = _trusted_origin_allowed
 base.ControlHandler.do_GET = _trusted_do_get
-base.ControlHandler.server_version = "KrisQwenControl/2.2.1"
+base.DASHBOARD_HTML = operator_aware_dashboard_html(base.DASHBOARD_HTML)
+base.ControlHandler.server_version = "KrisQwenControl/2.2.2"
 
 
 class AlwaysOnQwenController(BaseController):
@@ -512,6 +551,7 @@ class AlwaysOnQwenController(BaseController):
 
     def status(self):
         result = super().status()
+        result["controlVersion"] = TARGET_CONTROL_VERSION
         result["controllerVersion"] = TARGET_CONTROL_VERSION
         result["controllerRuntimeSha256"] = self.controller_runtime_sha256
         result["peerPolicy"] = "loopback-private-lan-vpn-tailscale-only"

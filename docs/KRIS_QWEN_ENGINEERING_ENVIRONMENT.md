@@ -1,8 +1,8 @@
-# KRIS Qwen Engineering Environment 5.4
+# KRIS Qwen Engineering Environment 5.4.1
 
 ## Purpose
 
-Qwen 5.4 turns the local Mission Execution worker from a bounded generic coding loop into a bounded product-engineering environment. It keeps all 5.3.1 authority, reconciliation, self-healing, review-independence, branch, semaphore, and CI truth boundaries.
+Qwen 5.4.1 turns the local Mission Execution worker from a bounded generic coding loop into a bounded product-engineering environment. It keeps all 5.3.1 authority, reconciliation, self-healing, review-independence, branch, semaphore, and CI truth boundaries.
 
 The engineering environment does not grant new repository authority. It improves what Qwen can understand and validate inside an already-authorized Work Order.
 
@@ -10,7 +10,7 @@ The engineering environment does not grant new repository authority. It improves
 
 ```text
 Mission Work Order
-  -> Qwen 5.4 skill router
+  -> Qwen 5.4.1 skill router
   -> selected controller-owned engineering guidance
   -> repository context on demand
   -> bounded model action
@@ -20,7 +20,7 @@ Mission Work Order
   -> hosted CI / review / integration
 ```
 
-The stable launcher filename remains `tool/kris_qwen_worker_v53.py` for controller/process compatibility. After 5.4 rollout that stable entry forwards to `tool/kris_qwen_worker_v54.py`.
+The stable launcher filename remains `tool/kris_qwen_worker_v53.py` for controller/process compatibility. The stable entry forwards to `tool/kris_qwen_worker_v541.py`, the executed 5.4.1 worker.
 
 ## Skill router
 
@@ -45,7 +45,7 @@ Skill instructions are controller-owned engineering procedure. Documents loaded 
 
 ## Engineering actions
 
-Qwen 5.4 adds these bounded actions:
+Qwen 5.4.1 adds these bounded actions:
 
 - `list_skills` — list the engineering skills and show which ones were routed to the current Work Order;
 - `read_skill` — load one skill's guidance plus bounded repository context;
@@ -108,7 +108,7 @@ The build directory is under the repository's ignored `build/` state. Platform q
 
 The browser skill points Qwen at the repository's P3 browser recipes and current product architecture. It can run canonical browser-runtime Node tests and inspect browser/Web Studio source, DOM/accessibility-oriented contracts, console/network behavior, replay, preview, upload, and download logic.
 
-The local Qwen model is text-only. It does **not** gain pixel vision in 5.4.
+The local Qwen model is text-only. It does **not** gain pixel vision in 5.4.1.
 
 `ui_map` and browser observations improve visual-product engineering by exposing textual layout, widget, accessibility, visible-text, DOM, console, network, screenshot-hash, and golden-test structure. They do not let Qwen judge whether a screenshot looks attractive or whether spacing is visually ideal.
 
