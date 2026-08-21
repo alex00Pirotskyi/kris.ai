@@ -1,4 +1,4 @@
 workflow=Qwen Durable Pause Retry
-trigger=dff57a88699368c638276f68ae520f45fbcd1741
-run=32457299997
+trigger=b8dc28da2a1c2d095ceb6bafca9eaf13016990dd
+run=32457474456
 productHead=9efd037f3f95473d6b9e2facb2a6fda83cd5a018
