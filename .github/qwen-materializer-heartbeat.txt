@@ -1,0 +1,3 @@
+workflow=Qwen Materializer Heartbeat
+trigger=59f4050287d88cf5f6fbddf6af89d23bfabfa8a8
+run=32456744755
