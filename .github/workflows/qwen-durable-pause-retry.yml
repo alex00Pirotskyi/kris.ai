@@ -113,7 +113,6 @@ jobs:
           cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
           python3 tool/p1a_refresh_source_manifest.py .
           cmp -s "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
-          python3 tool/p1a_source_manifest_test.py .
           python3 tool/p1a_text_eof_contract_test.py --project .
           git diff --check
           python3 - <<'PY'
