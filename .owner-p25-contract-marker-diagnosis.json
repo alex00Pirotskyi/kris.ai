@@ -1,0 +1,11 @@
+{
+  "head": "31714a77b2f0fbf08f0c6b895fa5ef00aa82a960",
+  "ollamaContractMissing": [
+    ".clamp(2, 3)"
+  ],
+  "promptControlMissing": [
+    "Generate prompt",
+    "Generate task list"
+  ],
+  "schemaVersion": 1
+}
