@@ -1,0 +1,35 @@
+name: Owner source snapshot
+
+on:
+  push:
+    branches:
+      - agent/owner-source-snapshot
+    paths:
+      - .github/workflows/owner-source-snapshot.yml
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "fb4798b7a15a2ba36b6faeef5fe88c5763fdd254"
+          git ls-files -z | tar --null -T - -czf "$RUNNER_TEMP/kristin-source.tar.gz"
+      - name: Upload exact tracked source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: owner-source-snapshot
+          path: ${{ runner.temp }}/kristin-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
