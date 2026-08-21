@@ -141,6 +141,9 @@ jobs:
        github.base_ref == 'agent/b/test-center-contracts-and-review' &&
        github.head_ref == 'agent/b/p8-cleanup-safety-anchor' &&
        github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'pull_request' &&
+       github.head_ref == 'agent/qwen-phone-control' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
       (github.event_name == 'push' &&
        github.ref == 'refs/heads/agent/b/test-center-contracts-and-review')
     permissions:
