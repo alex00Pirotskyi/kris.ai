@@ -1,0 +1,92 @@
+name: Owner P25 System Contract Diagnose
+
+on:
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-p25-system-contract-diagnose.yml
+
+permissions:
+  contents: write
+
+env:
+  P25_HEAD: 31714a77b2f0fbf08f0c6b895fa5ef00aa82a960
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact P25 head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 31714a77b2f0fbf08f0c6b895fa5ef00aa82a960
+          path: candidate
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out report branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/owner-recovery
+          path: report
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Capture exact system-test failures
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${P25_HEAD}"
+          set +e
+          python3 tool/system_test.py --project . --json > "${RUNNER_TEMP}/system-test.json" 2> "${RUNNER_TEMP}/system-test.stderr"
+          rc=$?
+          set -e
+          python3 - "${RUNNER_TEMP}/system-test.json" "${RUNNER_TEMP}/system-test.stderr" "${rc}" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          stdout_path = pathlib.Path(sys.argv[1])
+          stderr_path = pathlib.Path(sys.argv[2])
+          rc = int(sys.argv[3])
+          stdout = stdout_path.read_text(encoding='utf-8', errors='replace')
+          stderr = stderr_path.read_text(encoding='utf-8', errors='replace')
+          try:
+              payload = json.loads(stdout)
+          except Exception as exc:
+              payload = {
+                  'parseError': f'{type(exc).__name__}: {exc}',
+                  'rawStdout': stdout[-20000:],
+              }
+          results = payload.get('results', []) if isinstance(payload, dict) else []
+          failed = [row for row in results if isinstance(row, dict) and not row.get('passed')]
+          report = {
+              'schemaVersion': 1,
+              'head': '31714a77b2f0fbf08f0c6b895fa5ef00aa82a960',
+              'exitCode': rc,
+              'caseCount': payload.get('caseCount') if isinstance(payload, dict) else None,
+              'passedCount': payload.get('passedCount') if isinstance(payload, dict) else None,
+              'failedCount': payload.get('failedCount') if isinstance(payload, dict) else None,
+              'failedResults': failed,
+              'stderrTail': stderr[-12000:],
+          }
+          out = pathlib.Path('../report/.owner-p25-system-contract-diagnosis.json')
+          out.write_text(json.dumps(report, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Publish diagnosis only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C report config user.name 'github-actions[bot]'
+          git -C report config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C report add -- .owner-p25-system-contract-diagnosis.json
+          git -C report diff --cached --check
+          if ! git -C report diff --cached --quiet; then
+            git -C report commit -m 'chore(owner): record P25 system-contract diagnosis'
+            git -C report push origin HEAD:automation/owner-recovery
+          fi
