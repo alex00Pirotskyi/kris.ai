@@ -8,7 +8,7 @@ on:
       - '.github/workflows/qwen-durable-pause-retry.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: qwen-durable-pause-artifact
@@ -19,7 +19,33 @@ env:
   PRODUCT_BRANCH: agent/qwen-phone-control
 
 jobs:
+  heartbeat:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out automation branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/qwen-phone-control-materializer
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Record artifact run
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'workflow=%s\ntrigger=%s\nrun=%s\nproductHead=%s\n' \
+            "${GITHUB_WORKFLOW}" "${GITHUB_SHA}" "${GITHUB_RUN_ID}" \
+            "${EXPECTED_PRODUCT_HEAD}" \
+            > .github/qwen-durable-pause-artifact-heartbeat.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/qwen-durable-pause-artifact-heartbeat.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(qwen): record durable-pause artifact run'
+            git push origin HEAD:automation/qwen-phone-control-materializer
+          fi
+
   materialize:
+    needs: heartbeat
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
