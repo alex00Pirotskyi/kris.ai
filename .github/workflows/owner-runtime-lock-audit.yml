@@ -1,0 +1,102 @@
+name: Owner Mission Runtime Lock Audit
+
+on:
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-runtime-lock-audit.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out mission runtime authority
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/mission-runtime
+          path: runtime-authority
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out owner recovery branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/owner-recovery
+          path: report-branch
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Resolve currently live semaphores
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import pathlib
+
+          root = pathlib.Path('runtime-authority')
+          now = dt.datetime.now(dt.timezone.utc)
+          active = []
+          all_rows = 0
+          for path in sorted((root / 'runtime/semaphores').rglob('*.json')):
+              try:
+                  row = json.loads(path.read_text(encoding='utf-8'))
+              except Exception:
+                  continue
+              if not isinstance(row, dict):
+                  continue
+              all_rows += 1
+              status = str(row.get('status') or '').upper()
+              expires_raw = row.get('expiresAt')
+              expires = None
+              if isinstance(expires_raw, str) and expires_raw.strip():
+                  try:
+                      expires = dt.datetime.fromisoformat(expires_raw.replace('Z', '+00:00'))
+                  except ValueError:
+                      expires = None
+              live = status == 'ACTIVE' and (expires is None or expires > now)
+              if live:
+                  active.append({
+                      'path': path.relative_to(root).as_posix(),
+                      'semaphoreId': row.get('semaphoreId'),
+                      'mission': row.get('mission'),
+                      'workOrderId': row.get('workOrderId'),
+                      'workExecutionId': row.get('workExecutionId'),
+                      'workerIdentity': row.get('workerIdentity'),
+                      'productPr': row.get('productPr'),
+                      'status': status,
+                      'expiresAt': expires_raw,
+                  })
+          meta_path = root / 'runtime/meta.json'
+          meta = json.loads(meta_path.read_text(encoding='utf-8')) if meta_path.exists() else {}
+          report = {
+              'schemaVersion': 1,
+              'auditedAt': now.isoformat().replace('+00:00', 'Z'),
+              'runtimeGeneration': meta.get('runtimeGeneration'),
+              'semaphoreRowsScanned': all_rows,
+              'liveSemaphoreCount': len(active),
+              'liveSemaphores': active,
+          }
+          out = pathlib.Path('report-branch/.owner-runtime-lock-audit.json')
+          out.write_text(json.dumps(report, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Publish audit result only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C report-branch config user.name 'github-actions[bot]'
+          git -C report-branch config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C report-branch add -- .owner-runtime-lock-audit.json
+          git -C report-branch diff --cached --check
+          if ! git -C report-branch diff --cached --quiet; then
+            git -C report-branch commit -m 'chore(owner): record live mission-runtime lock audit'
+            git -C report-branch push origin HEAD:automation/owner-recovery
+          fi
