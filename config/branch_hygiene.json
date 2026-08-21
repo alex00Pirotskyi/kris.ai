@@ -230,31 +230,31 @@
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4",
-      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v5",
-      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v6",
-      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v7",
-      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
       "expectedSha": "bf084fcc0ee8987009ec9dbf0c6f7413f5d3fd22",
       "name": "integration/p0-001-p0-008-stage-a-v3.1.4-v8",
-      "reason": "Duplicate P0-001\u2013P0-008 stage ref; the accepted successor is preserved on protected main."
+      "reason": "Duplicate P0-001–P0-008 stage ref; the accepted successor is preserved on protected main."
     },
     {
       "class": "superseded-integration",
@@ -479,14 +479,6 @@
     {
       "name": "agent/mission-runtime",
       "reason": "Mutable Mission Execution runtime authority."
-    },
-    {
-      "name": "ci/direct-pr14-repair-trigger",
-      "reason": "Historical repair-status lineage retained until PR14 cleanup is fully closed."
-    },
-    {
-      "name": "integration/p2-owner-risk-v71r12",
-      "reason": "Unique P1/P2 owner-risk evidence lineage pending current-schema migration."
     },
     {
       "name": "main",
