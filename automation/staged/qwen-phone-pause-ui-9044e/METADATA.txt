@@ -1,0 +1,4 @@
+base=9044e058e0d3e95dd6e11760f95443663a7abfd7
+branch=agent/qwen-phone-control
+files=7
+controller=2.2.2

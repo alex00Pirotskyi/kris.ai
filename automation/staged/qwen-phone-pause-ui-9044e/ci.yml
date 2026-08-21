@@ -1,0 +1,211 @@
+name: product-gates
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: validate-${{ matrix.lane }}
+    # Required check contexts: validate-ubuntu, validate-windows, validate-macos
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: ubuntu
+            os: ubuntu-24.04
+          - lane: windows
+            os: windows-2025
+          - lane: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Qwen 5.4.1 engineering worker regression
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            run_my_server.py \
+            tool/kris_qwen_worker.py.compat.py \
+            tool/kris_qwen_worker_v53.py \
+            tool/kris_qwen_worker_v53_base.py \
+            tool/kris_qwen_worker_v531.py \
+            tool/kris_qwen_worker_v54.py \
+            tool/kris_qwen_worker_v541.py \
+            tool/kris_qwen_v53_policy.py \
+            tool/kris_qwen_v53_recovery.py \
+            tool/kris_qwen_v53_reconcile.py \
+            tool/kris_qwen_engineering_env.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_compat_test.py \
+            tool/kris_qwen_v531_test.py \
+            tool/kris_qwen_engineering_env_test.py \
+            tool/kris_qwen_v541_test.py \
+            tool/kris_qwen_control_token_redaction_test.py
+          python tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_engineering_env_test.py
+          python tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_control_compat_test.py
+          python tool/kris_qwen_control_token_redaction_test.py
+          python tool/kris_qwen_worker_v53.py version | tee /tmp/kris-qwen-v541-version.json
+          python - <<'PY'
+          import json
+          import pathlib
+          value = json.loads(pathlib.Path('/tmp/kris-qwen-v541-version.json').read_text(encoding='utf-8'))
+          assert value.get('scriptVersion') == '5.4.1', value
+          assert str(value.get('path', '')).endswith('kris_qwen_worker_v541.py'), value
+          PY
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.2' ]]
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          pub-cache-key: 'flutter-pub-:os:-:channel:-:version:-:arch:-:hash:'
+      - name: Install Linux desktop build dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            libstdc++-12-dev
+
+      - name: Generate native runner
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) platforms=linux ;;
+            Windows) platforms=windows ;;
+            macOS) platforms=macos ;;
+          esac
+          flutter create --project-name kristin_local_agent --org local.kristin --platforms="$platforms" .
+      - run: flutter pub get
+
+      - name: Install hash-locked P1/P2 Python test dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+
+      - name: Capture CI environment
+        run: python tool/capture_ci_environment.py --output "release/evidence/P0-003/ci-environment-${{ runner.os }}.json" --print
+
+      - name: Validate locked toolchain
+        run: python tool/toolchain_lock_test.py --json-output "release/evidence/P0-004/toolchain-${{ runner.os }}.json"
+
+      - name: Upload P0-004 toolchain receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p0-004-toolchain-${{ matrix.lane }}
+          path: release/evidence/P0-004/toolchain-${{ runner.os }}.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload P0-003 CI environment
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: p0-003-ci-environment-${{ matrix.lane }}
+          path: release/evidence/P0-003/ci-environment-${{ runner.os }}.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: P0-002 trust retirement
+        run: python tool/v1_trust_disablement_test.py
+
+      - name: P0-003 integration repair
+        run: python tool/p0_003_repair_test.py
+
+      - name: P0-005 policy and support truth
+        run: python tool/policy_support_test.py
+
+      - name: P0-006 repository governance contract
+        run: python tool/repository_governance_test.py --json-output release/evidence/P0-006/local_governance_results.json
+
+      - name: P0-006 GitHub governance client fixtures
+        run: python -m unittest -v tool/github_governance_client_test.py
+
+      - name: V1.7 generated contracts
+        run: python tool/generate_v170_contracts.py --check
+
+      - name: V1.8 generated contracts
+        run: python tool/generate_v180_contracts.py --check
+
+      - name: V1.9 generated contracts
+        run: python tool/generate_v190_contracts.py --check
+      - name: P0-008 roadmap control plane
+        run: |
+          python tool/roadmap_control_test.py
+          python tool/p0_008_roadmap_test.py --project .
+          python tool/roadmap_control.py validate --project . --strict
+      - name: P0-010 generated-state hygiene
+        run: |
+          python tool/source_tree_policy_test.py
+          python tool/generated_state_guard_test.py
+          python tool/p0_010_generated_state_test.py --project .
+          python tool/generated_state_guard.py audit --project . --strict
+      - name: Generated protocol contracts
+        run: python tool/protocol_contract_test.py
+
+      - name: P0-009 reproducible benchmark baseline
+        run: |
+          python tool/benchmark_runner_test.py
+          python tool/p0_009_benchmark_test.py --project .
+          python tool/benchmark_runner.py check --project .
+      - name: P0-007 assurance classification
+        run: python tool/p0_007_assurance_test.py --project .
+      - name: Generated workflow migrations
+        run: python tool/generate_workflow_migrations.py --check
+      - name: Durable workflow kernel
+        run: python tool/workflow_kernel_test.py --project .
+      - name: Prompt Studio 2 contracts
+        run: python tool/generate_prompt_studio_contracts.py --check
+      - name: Prompt Studio 2 fixtures
+        run: python tool/generate_prompt_studio_fixtures.py --check
+      - name: Prompt Studio 2 compiler gate
+        run: python tool/prompt_studio_v2_test.py
+      - run: python tool/dart_format_scope.py --check
+      - run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - run: flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: P1-002 access profile v2
+        run: |
+          python tool/access_profile_v2_test.py
+          python tool/p1_002_access_profile_test.py --project .
+      - name: P1 full trust closure
+        run: |
+          python tool/integration_train_test.py --project .
+          python tool/p1_exit_gate_test.py --project .
+      - name: P1-004 deterministic policy engine
+        run: |
+          python tool/deterministic_policy_engine_test.py
+          python tool/p1_004_policy_engine_test.py --project .
+      - name: P1-003 capability grant v2
+        run: |
+          python tool/capability_grant_v2_test.py
+          python tool/p1_003_capability_grant_test.py --project .
+      - name: P1-001 runtime boundary contract
+        run: python tool/p1_001_runtime_boundary_test.py --project .
+      - name: Architecture and security gate
+        run: python tool/validate_release.py --skip-tests
+      - name: Native release build
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) flutter build linux --release ;;
+            Windows) flutter build windows --release ;;
+            macOS) flutter build macos --release ;;
+          esac
