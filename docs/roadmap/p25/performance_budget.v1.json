@@ -1,0 +1,19 @@
+{
+  "budgetId": "p25.prompt-studio-performance-v1",
+  "changePolicy": "Relaxation requires measured evidence and reviewed architecture rationale.",
+  "metrics": {
+    "cancelAcknowledgementP95Ms": 250,
+    "coldSimplePromptP95Ms": 90000,
+    "durableOperationCreationP95Ms": 250,
+    "firstVisibleActivityP95Ms": 500,
+    "fullRepairCallsMax": 1,
+    "maximumInvisibleEventGapMs": 3000,
+    "normalFullGenerationCallsMax": 1,
+    "providerCancellationP95Ms": 2000,
+    "silentRetriesMax": 0,
+    "uiAcknowledgementP95Ms": 100,
+    "warmSimplePromptP50Ms": 20000,
+    "warmSimplePromptP95Ms": 45000
+  },
+  "schemaVersion": "1.0.0"
+}

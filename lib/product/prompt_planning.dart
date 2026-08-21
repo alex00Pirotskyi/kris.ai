@@ -11,6 +11,228 @@ import 'workspace_tools.dart';
 typedef ModelGenerationDelegate = Future<ModelGenerationResult> Function(
     ModelGenerationRequest request);
 
+final class PromptClarificationOption {
+  const PromptClarificationOption({
+    required this.id,
+    required this.label,
+    required this.description,
+    required this.recommended,
+  });
+
+  final String id;
+  final String label;
+  final String description;
+  final bool recommended;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'label': label,
+        'description': description,
+        'recommended': recommended,
+      };
+}
+
+final class PromptClarificationQuestion {
+  const PromptClarificationQuestion({
+    required this.id,
+    required this.question,
+    required this.whyItMatters,
+    required this.options,
+  });
+
+  final String id;
+  final String question;
+  final String whyItMatters;
+  final List<PromptClarificationOption> options;
+
+  PromptClarificationOption get recommendedOption =>
+      options.where((option) => option.recommended).firstOrNull ??
+      options.first;
+
+  List<String> validate() {
+    final errors = <String>[];
+    if (question.trim().isEmpty) {
+      errors.add('$id needs a question.');
+    }
+    if (options.length < 2 || options.length > 5) {
+      errors.add('$id needs between 2 and 5 options.');
+    }
+    final labels = options.map((option) => option.label.toLowerCase()).toList();
+    if (labels.toSet().length != labels.length) {
+      errors.add('$id has duplicate option labels.');
+    }
+    if (options.any((option) => option.label.trim().isEmpty)) {
+      errors.add('$id has an empty option label.');
+    }
+    return errors;
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'question': question,
+        'whyItMatters': whyItMatters,
+        'options':
+            options.map((option) => option.toJson()).toList(growable: false),
+      };
+}
+
+final class PromptClarificationSession {
+  const PromptClarificationSession({
+    required this.id,
+    required this.goalHash,
+    required this.brief,
+    required this.questions,
+    required this.model,
+    required this.createdAt,
+    this.fallbackUsed = false,
+  });
+
+  final String id;
+  final String goalHash;
+  final String brief;
+  final List<PromptClarificationQuestion> questions;
+  final ModelIdentity model;
+  final DateTime createdAt;
+  final bool fallbackUsed;
+
+  factory PromptClarificationSession.fromModelJson(
+    Map<String, dynamic> json, {
+    required String goal,
+    required ModelIdentity model,
+  }) {
+    final rawQuestions = json['questions'] is List
+        ? (json['questions'] as List)
+            .whereType<Map>()
+            .map(mapValue)
+            .take(5)
+            .toList()
+        : <Map<String, dynamic>>[];
+    final questions = <PromptClarificationQuestion>[];
+    for (var questionIndex = 0;
+        questionIndex < rawQuestions.length;
+        questionIndex++) {
+      final rawQuestion = rawQuestions[questionIndex];
+      final rawOptions = rawQuestion['options'] is List
+          ? (rawQuestion['options'] as List)
+              .whereType<Map>()
+              .map(mapValue)
+              .take(5)
+              .toList()
+          : <Map<String, dynamic>>[];
+      final seenLabels = <String>{};
+      final parsedOptions = <PromptClarificationOption>[];
+      for (final rawOption in rawOptions) {
+        final label = rawOption['label']?.toString().trim() ?? '';
+        if (label.isEmpty || !seenLabels.add(label.toLowerCase())) {
+          continue;
+        }
+        parsedOptions.add(
+          PromptClarificationOption(
+            id: 'q${questionIndex + 1}_o${parsedOptions.length + 1}',
+            label: label,
+            description: rawOption['description']?.toString().trim() ?? '',
+            recommended: rawOption['recommended'] == true,
+          ),
+        );
+      }
+      if (parsedOptions.length < 2) {
+        throw ProductException(
+          'prompt_clarification_options_invalid',
+          'Every clarification question needs at least two distinct options.',
+        );
+      }
+      final preferredIndex = parsedOptions.indexWhere(
+        (option) => option.recommended,
+      );
+      final normalizedOptions = <PromptClarificationOption>[
+        for (var optionIndex = 0;
+            optionIndex < parsedOptions.length;
+            optionIndex++)
+          PromptClarificationOption(
+            id: parsedOptions[optionIndex].id,
+            label: parsedOptions[optionIndex].label,
+            description: parsedOptions[optionIndex].description,
+            recommended:
+                optionIndex == (preferredIndex < 0 ? 0 : preferredIndex),
+          ),
+      ];
+      questions.add(
+        PromptClarificationQuestion(
+          id: 'question_${questionIndex + 1}',
+          question: rawQuestion['question']?.toString().trim() ?? '',
+          whyItMatters: rawQuestion['whyItMatters']?.toString().trim() ?? '',
+          options: List<PromptClarificationOption>.unmodifiable(
+            normalizedOptions,
+          ),
+        ),
+      );
+    }
+    final session = PromptClarificationSession(
+      id: newId('prompt_clarification'),
+      goalHash: Sha256.text(goal.trim()),
+      brief: json['brief']?.toString().trim() ?? '',
+      questions: List<PromptClarificationQuestion>.unmodifiable(questions),
+      model: model,
+      createdAt: DateTime.now().toUtc(),
+    );
+    final errors = session.validate();
+    if (errors.isNotEmpty) {
+      throw ProductException(
+        'prompt_clarification_invalid',
+        errors.join(' '),
+      );
+    }
+    return session;
+  }
+
+  List<String> validate() {
+    final errors = <String>[];
+    if (questions.length < 2 || questions.length > 5) {
+      errors.add('Prompt clarification needs between 2 and 5 questions.');
+    }
+    final ids = questions.map((question) => question.id).toList();
+    if (ids.toSet().length != ids.length) {
+      errors.add('Prompt clarification question IDs must be unique.');
+    }
+    for (final question in questions) {
+      errors.addAll(question.validate());
+    }
+    return errors;
+  }
+
+  List<String> missingAnswerIds(Map<String, String> answers) => questions
+      .where((question) => answers[question.id]?.trim().isNotEmpty != true)
+      .map((question) => question.id)
+      .toList(growable: false);
+
+  Map<String, dynamic> answeredJson(Map<String, String> answers) =>
+      <String, dynamic>{
+        'sessionId': id,
+        'goalHash': goalHash,
+        'brief': brief,
+        'questions': questions
+            .map(
+              (question) => <String, dynamic>{
+                ...question.toJson(),
+                'answer': answers[question.id]?.trim() ?? '',
+              },
+            )
+            .toList(growable: false),
+      };
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'goalHash': goalHash,
+        'brief': brief,
+        'questions': questions
+            .map((question) => question.toJson())
+            .toList(growable: false),
+        'model': model.toJson(),
+        'createdAt': createdAt.toIso8601String(),
+        'fallbackUsed': fallbackUsed,
+      };
+}
+
 class PromptPlanningService {
   PromptPlanningService({
     required this.models,
@@ -36,11 +258,13 @@ class PromptPlanningService {
   ProductSettings get _settings =>
       _settingsProvider?.call() ?? const ProductSettings();
 
-  Future<PromptStudioDraft> generatePrompt({
+  Future<PromptClarificationSession> generateClarification({
     required String goal,
     required ModelIdentity model,
-    PromptGenerationAction action = PromptGenerationAction.generate,
-    PromptStudioDraft? current,
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+    void Function(ModelGenerationProgress progress)? onProgress,
+    void Function(String delta)? onTextDelta,
   }) async {
     final normalizedGoal = goal.trim();
     if (normalizedGoal.length < 5) {
@@ -55,11 +279,321 @@ class PromptPlanningService {
         'The prompt goal exceeds the 20,000-character limit.',
       );
     }
+    final commandId = newId('prompt_clarification');
+    try {
+      onProgress?.call(
+        const ModelGenerationProgress(
+          stage: 'clarification_started',
+          message:
+              'Finding the few decisions that materially change the result.',
+        ),
+      );
+    } catch (_) {
+      // UI progress callbacks must never change clarification generation.
+    }
+    final generation = await _generate(
+      ModelGenerationRequest(
+        identity: model,
+        systemPrompt: '''
+You are the interactive intake model inside Kristin Local Agent $kristinVersion.
+Read the user's idea and identify only decisions whose answers materially improve the final prompt.
+Return exactly one compact JSON object and no Markdown.
+Ask between 2 and 5 questions. Each question must offer between 2 and 5 concise, mutually distinct options.
+Mark exactly one sensible default option as recommended.
+Do not ask for facts already stated by the user.
+Do not include an Other option; the product UI adds it automatically.
+Use this schema:
+{
+  "brief": "one sentence explaining what is already clear",
+  "questions": [
+    {
+      "question": "material decision",
+      "whyItMatters": "one short explanation",
+      "options": [
+        {
+          "label": "short choice",
+          "description": "what this choice changes",
+          "recommended": true
+        }
+      ]
+    }
+  ]
+}
+Prioritize scope, target users or platform, data and integration boundaries, quality tradeoffs, and first-release expectations.
+''',
+        userPrompt: '''
+IDEA
+$normalizedGoal
+
+Return the compact clarification JSON now.
+''',
+        commandId: commandId,
+        temperature: 0.15,
+        maxOutputTokens: 1024,
+        cancellation: cancellation,
+        isCancelled: isCancelled,
+        onTextDelta: onTextDelta,
+        onProgress: (progress) {
+          try {
+            onProgress?.call(progress);
+          } catch (_) {
+            // UI progress callbacks must never change clarification generation.
+          }
+          unawaited(
+            _publishModelProgress(
+              commandId: commandId,
+              operation: 'prompt_clarification',
+              model: model,
+              progress: progress,
+            ),
+          );
+        },
+      ),
+    );
+    var fallbackUsed = false;
+    late PromptClarificationSession session;
+    try {
+      onProgress?.call(
+        const ModelGenerationProgress(
+          stage: 'clarification_validating',
+          message: 'Checking that every question has useful bounded choices.',
+        ),
+      );
+      final raw = _extractJsonObject(generation.text);
+      final candidate =
+          raw['clarification'] is Map ? mapValue(raw['clarification']) : raw;
+      session = PromptClarificationSession.fromModelJson(
+        candidate,
+        goal: normalizedGoal,
+        model: model,
+      );
+    } catch (error) {
+      fallbackUsed = true;
+      session = _fallbackClarification(
+        normalizedGoal,
+        model,
+        reason: redactor.redact('$error'),
+      );
+    }
+    if (fallbackUsed) {
+      session = PromptClarificationSession(
+        id: session.id,
+        goalHash: session.goalHash,
+        brief: session.brief,
+        questions: session.questions,
+        model: session.model,
+        createdAt: session.createdAt,
+        fallbackUsed: true,
+      );
+    }
+    await audit.append(
+      'prompt.clarification_generated',
+      session.id,
+      <String, dynamic>{
+        'goalHash': session.goalHash,
+        'model': model.toJson(),
+        'questionCount': session.questions.length,
+        'fallbackUsed': fallbackUsed,
+        'responseHash': Sha256.text(generation.text),
+      },
+    );
+    await events.publish(
+      'prompt.clarification_ready',
+      session.id,
+      <String, dynamic>{
+        'questionCount': session.questions.length,
+        'fallbackUsed': fallbackUsed,
+      },
+    );
+    try {
+      onProgress?.call(
+        ModelGenerationProgress(
+          stage: 'clarification_ready',
+          message: '${session.questions.length} focused decisions are ready.',
+        ),
+      );
+    } catch (_) {
+      // UI progress callbacks must never change clarification generation.
+    }
+    return session;
+  }
+
+  PromptClarificationSession _fallbackClarification(
+    String goal,
+    ModelIdentity model, {
+    required String reason,
+  }) {
+    PromptClarificationQuestion question(
+      int index,
+      String text,
+      String why,
+      List<({String label, String description})> values,
+      int recommended,
+    ) =>
+        PromptClarificationQuestion(
+          id: 'question_$index',
+          question: text,
+          whyItMatters: why,
+          options: List<PromptClarificationOption>.unmodifiable(
+            <PromptClarificationOption>[
+              for (var optionIndex = 0;
+                  optionIndex < values.length;
+                  optionIndex++)
+                PromptClarificationOption(
+                  id: 'q${index}_o${optionIndex + 1}',
+                  label: values[optionIndex].label,
+                  description: values[optionIndex].description,
+                  recommended: optionIndex == recommended,
+                ),
+            ],
+          ),
+        );
+
+    return PromptClarificationSession(
+      id: newId('prompt_clarification'),
+      goalHash: Sha256.text(goal),
+      brief:
+          'Kristin prepared a safe default intake because the model response could not be structured (${_preview(reason, limit: 120)}).',
+      questions: <PromptClarificationQuestion>[
+        question(
+          1,
+          'What should the first result optimize for?',
+          'This controls how much scope and polish belongs in the first pass.',
+          const <({String label, String description})>[
+            (
+              label: 'Working first version',
+              description:
+                  'Prioritize a usable implementation and fast feedback.',
+            ),
+            (
+              label: 'Production-ready result',
+              description:
+                  'Prioritize robustness, edge cases, and maintainability.',
+            ),
+            (
+              label: 'Plan and architecture only',
+              description: 'Produce a reviewable design before implementation.',
+            ),
+          ],
+          0,
+        ),
+        question(
+          2,
+          'Which tradeoff should Kristin prefer when choices conflict?',
+          'The final prompt needs an explicit tie-breaker for implementation decisions.',
+          const <({String label, String description})>[
+            (
+              label: 'Reliability and correctness',
+              description:
+                  'Prefer predictable behavior and stronger verification.',
+            ),
+            (
+              label: 'Speed and simplicity',
+              description:
+                  'Prefer the smallest implementation that solves the goal.',
+            ),
+            (
+              label: 'UI and product polish',
+              description:
+                  'Prefer a refined user experience and visual consistency.',
+            ),
+          ],
+          0,
+        ),
+        question(
+          3,
+          'How should uncertainty be handled during execution?',
+          'This sets the interaction style when the implementation reaches an unclear decision.',
+          const <({String label, String description})>[
+            (
+              label: 'Use sensible defaults and continue',
+              description: 'Keep momentum and report assumptions clearly.',
+            ),
+            (
+              label: 'Stop before material decisions',
+              description:
+                  'Require review before changing scope or architecture.',
+            ),
+            (
+              label: 'Implement alternatives for comparison',
+              description:
+                  'Create bounded options when a decision is genuinely ambiguous.',
+            ),
+          ],
+          0,
+        ),
+      ],
+      model: model,
+      createdAt: DateTime.now().toUtc(),
+      fallbackUsed: true,
+    );
+  }
+
+  Future<PromptStudioDraft> generatePrompt({
+    required String goal,
+    required ModelIdentity model,
+    PromptGenerationAction action = PromptGenerationAction.generate,
+    PromptStudioDraft? current,
+    String feedback = '',
+    PromptClarificationSession? clarification,
+    Map<String, String> clarificationAnswers = const <String, String>{},
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+    void Function(ModelGenerationProgress progress)? onProgress,
+    void Function(String delta)? onTextDelta,
+  }) async {
+    final normalizedGoal = goal.trim();
+    final normalizedFeedback = feedback.trim();
+    final normalizedAnswers = <String, String>{
+      for (final entry in clarificationAnswers.entries)
+        if (entry.value.trim().isNotEmpty) entry.key: entry.value.trim(),
+    };
+    if (normalizedGoal.length < 5) {
+      throw ProductException(
+        'prompt_goal_too_short',
+        'Describe what the prompt should help Kristin build or accomplish.',
+      );
+    }
+    if (normalizedGoal.length > 20000) {
+      throw ProductException(
+        'prompt_goal_too_long',
+        'The prompt goal exceeds the 20,000-character limit.',
+      );
+    }
+    if (normalizedFeedback.length > 4000) {
+      throw ProductException(
+        'prompt_feedback_too_long',
+        'Prompt feedback exceeds the 4,000-character limit.',
+      );
+    }
     if (action != PromptGenerationAction.generate && current == null) {
       throw ProductException(
         'prompt_current_missing',
         'An existing generated prompt is required for this improvement action.',
       );
+    }
+    if (clarification != null) {
+      final clarificationErrors = clarification.validate();
+      if (clarificationErrors.isNotEmpty) {
+        throw ProductException(
+          'prompt_clarification_invalid',
+          clarificationErrors.join(' '),
+        );
+      }
+      if (clarification.goalHash != Sha256.text(normalizedGoal)) {
+        throw ProductException(
+          'prompt_clarification_stale',
+          'The idea changed after clarification. Generate fresh questions first.',
+        );
+      }
+      final missing = clarification.missingAnswerIds(normalizedAnswers);
+      if (missing.isNotEmpty) {
+        throw ProductException(
+          'prompt_clarification_incomplete',
+          'Answer every clarification question before generating the final prompt.',
+          details: <String, dynamic>{'missingQuestionIds': missing},
+        );
+      }
     }
 
     final commandId = newId('prompt_generation');
@@ -86,19 +620,25 @@ The output must use this schema:
 }
 Use {{variable_name}} placeholders only for values the user is likely to change.
 Acceptance criteria must be independently verifiable.
-Keep each list bounded to at most 20 items.
+Keep the draft compact: use at most 8 acceptance criteria and 6 items in any other list.
+When STRUCTURED INTAKE is supplied, every answer is an explicit user decision. Integrate those decisions, do not ask them again, and return clarifyingQuestions as an empty array.
 ''';
 
     final actionInstruction = switch (action) {
       PromptGenerationAction.generate =>
-        'Generate a new structured prompt from the goal.',
+        'Generate a new structured prompt from the goal and approved intake.',
       PromptGenerationAction.improve =>
-        'Improve clarity, completeness, and verifiability while preserving the current intent.',
+        'Improve clarity, completeness, and verifiability while preserving the current intent and approved intake decisions.',
       PromptGenerationAction.simplify =>
-        'Remove repetition and unnecessary constraints while preserving essential behavior.',
+        'Remove repetition and unnecessary constraints while preserving essential behavior and approved intake decisions.',
       PromptGenerationAction.addDetail =>
-        'Add implementation detail, edge cases, and stronger acceptance criteria without changing the requested product.',
+        'Add implementation detail, edge cases, and stronger acceptance criteria without changing the requested product or approved intake decisions.',
     };
+    final intake = clarification == null
+        ? 'None'
+        : const JsonEncoder.withIndent(' ').convert(
+            clarification.answeredJson(normalizedAnswers),
+          );
     var user = '''
 ACTION
 $actionInstruction
@@ -106,15 +646,45 @@ $actionInstruction
 PLAIN-LANGUAGE GOAL
 $normalizedGoal
 
-CURRENT DRAFT
-${current == null ? 'None' : const JsonEncoder.withIndent('  ').convert(current.toJson())}
+STRUCTURED INTAKE
+$intake
 
-Return one JSON object matching the required schema.
+CURRENT DRAFT
+${current == null ? 'None' : const JsonEncoder.withIndent(' ').convert(current.toJson())}
+
+DIRECT REVISION FEEDBACK
+${normalizedFeedback.isEmpty ? 'None' : normalizedFeedback}
+
+Return one compact JSON object matching the required schema.
 ''';
 
+    const maxAttempts = 2;
+    final outputTokenBudget = switch (action) {
+      PromptGenerationAction.simplify => 1536,
+      PromptGenerationAction.addDetail => 3072,
+      _ => 2048,
+    };
     Object? lastError;
     String lastResponse = '';
-    for (var attempt = 1; attempt <= 3; attempt++) {
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        onProgress?.call(
+          ModelGenerationProgress(
+            stage: attempt == 1
+                ? 'draft_generation_started'
+                : 'draft_repair_started',
+            message: attempt == 1
+                ? action == PromptGenerationAction.generate
+                    ? 'Writing the final prompt from your approved choices.'
+                    : 'Applying the requested prompt revision.'
+                : 'Repairing the draft once after validation.',
+            attempt: attempt,
+            maxAttempts: maxAttempts,
+          ),
+        );
+      } catch (_) {
+        // UI progress callbacks must never change prompt generation.
+      }
       final generation = await _generate(
         ModelGenerationRequest(
           identity: model,
@@ -122,8 +692,24 @@ Return one JSON object matching the required schema.
           userPrompt: user,
           commandId: commandId,
           temperature: action == PromptGenerationAction.generate ? 0.2 : 0.1,
-          maxOutputTokens: 6144,
+          maxOutputTokens: outputTokenBudget,
+          cancellation: cancellation,
+          isCancelled: isCancelled,
+          onTextDelta: onTextDelta,
           onProgress: (progress) {
+            try {
+              onProgress?.call(
+                ModelGenerationProgress(
+                  stage: progress.stage,
+                  message: progress.message,
+                  attempt: attempt,
+                  maxAttempts: maxAttempts,
+                  elapsed: progress.elapsed,
+                ),
+              );
+            } catch (_) {
+              // UI progress callbacks must never change prompt generation.
+            }
             unawaited(
               _publishModelProgress(
                 commandId: commandId,
@@ -137,9 +723,25 @@ Return one JSON object matching the required schema.
       );
       lastResponse = generation.text;
       try {
+        try {
+          onProgress?.call(
+            ModelGenerationProgress(
+              stage: 'draft_validating',
+              message:
+                  'Checking structure, constraints, and acceptance criteria.',
+              attempt: attempt,
+              maxAttempts: maxAttempts,
+            ),
+          );
+        } catch (_) {
+          // UI progress callbacks must never change prompt generation.
+        }
         final raw = _extractJsonObject(generation.text);
         final candidate = raw['prompt'] is Map ? mapValue(raw['prompt']) : raw;
-        final draft = _boundedDraft(PromptStudioDraft.fromJson(candidate));
+        var draft = _boundedDraft(PromptStudioDraft.fromJson(candidate));
+        if (clarification != null) {
+          draft = draft.copyWith(clarifyingQuestions: const <String>[]);
+        }
         final errors = draft.validate();
         if (errors.isNotEmpty) {
           throw ProductException('prompt_generation_invalid', errors.join(' '));
@@ -150,17 +752,34 @@ Return one JSON object matching the required schema.
           'model': model.toJson(),
           'draftHash': Sha256.text(canonicalJson(draft.toJson())),
           'attempt': attempt,
+          'clarificationSessionId': clarification?.id,
+          'clarificationAnswersHash': normalizedAnswers.isEmpty
+              ? null
+              : Sha256.text(canonicalJson(normalizedAnswers)),
         });
         await events.publish('prompt.generated', commandId, <String, dynamic>{
           'action': action.name,
           'title': draft.title,
           'mode': draft.mode.name,
           'acceptanceCriteria': draft.acceptanceCriteria.length,
+          'clarificationResolved': clarification != null,
         });
+        try {
+          onProgress?.call(
+            ModelGenerationProgress(
+              stage: 'draft_ready',
+              message: 'The prompt is ready for review.',
+              attempt: attempt,
+              maxAttempts: maxAttempts,
+            ),
+          );
+        } catch (_) {
+          // UI progress callbacks must never change prompt generation.
+        }
         return draft;
       } catch (error) {
         lastError = error;
-        if (attempt >= 3) {
+        if (attempt >= maxAttempts) {
           break;
         }
         user = '''
@@ -170,15 +789,18 @@ Response hash: ${Sha256.text(lastResponse)}
 Bounded response preview:
 ${_preview(lastResponse, limit: 3500)}
 
-Correct only the schema or content defects. Return one complete JSON object matching the original schema.
+Correct only the schema or content defects. Preserve every structured-intake decision. Return one complete JSON object matching the original schema.
 Original goal:
 $normalizedGoal
+
+STRUCTURED INTAKE
+$intake
 ''';
       }
     }
     throw ProductException(
       'prompt_generation_invalid',
-      'The selected model did not produce a valid Prompt Studio draft after three bounded attempts.',
+      'The selected model did not produce a valid Prompt Studio draft after one generation and one bounded repair.',
       details: <String, dynamic>{
         'lastError': redactor.redact('$lastError'),
         'lastResponseHash': Sha256.text(lastResponse),
@@ -246,6 +868,10 @@ $normalizedGoal
     required ModelIdentity model,
     PlanningDepth depth = PlanningDepth.auto,
     int maxLeafTasks = 25,
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+    void Function(ModelGenerationProgress progress)? onProgress,
+    void Function(String delta)? onTextDelta,
   }) async {
     final limit = maxLeafTasks.clamp(1, 100).toInt();
     final commandId = newId('plan_generation');
@@ -308,15 +934,36 @@ MAXIMUM LEAF TASKS
 $limit
 
 APPROVED PROMPT VERSION
-${const JsonEncoder.withIndent('  ').convert(promptVersion.toJson())}
+${const JsonEncoder.withIndent(' ').convert(promptVersion.toJson())}
 
 Generate an appropriately sized plan. The maximum is a ceiling, not a target.
 ''';
 
+    const maxAttempts = 2;
     Object? lastError;
     String lastResponse = '';
-    for (var attempt = 1; attempt <= 3; attempt++) {
-      final outputTokens = min(32000, 5000 + (limit * 260));
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      final outputTokens = limit <= 7
+          ? 3072
+          : limit <= 15
+              ? 4096
+              : min(8192, 4096 + ((limit - 15) * 128));
+      try {
+        onProgress?.call(
+          ModelGenerationProgress(
+            stage: attempt == 1
+                ? 'plan_generation_started'
+                : 'plan_repair_started',
+            message: attempt == 1
+                ? 'Drafting the task graph and verification path.'
+                : 'Repairing the task graph once after validation.',
+            attempt: attempt,
+            maxAttempts: maxAttempts,
+          ),
+        );
+      } catch (_) {
+        // UI progress callbacks must never change task planning.
+      }
       final generation = await _generate(
         ModelGenerationRequest(
           identity: model,
@@ -325,7 +972,23 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
           commandId: commandId,
           temperature: 0.1,
           maxOutputTokens: outputTokens,
+          cancellation: cancellation,
+          isCancelled: isCancelled,
+          onTextDelta: onTextDelta,
           onProgress: (progress) {
+            try {
+              onProgress?.call(
+                ModelGenerationProgress(
+                  stage: progress.stage,
+                  message: progress.message,
+                  attempt: attempt,
+                  maxAttempts: maxAttempts,
+                  elapsed: progress.elapsed,
+                ),
+              );
+            } catch (_) {
+              // UI progress callbacks must never change task planning.
+            }
             unawaited(
               _publishModelProgress(
                 commandId: commandId,
@@ -339,6 +1002,18 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
       );
       lastResponse = generation.text;
       try {
+        try {
+          onProgress?.call(
+            ModelGenerationProgress(
+              stage: 'plan_validation_started',
+              message: 'Checking task IDs, dependencies, tools, and evidence.',
+              attempt: attempt,
+              maxAttempts: maxAttempts,
+            ),
+          );
+        } catch (_) {
+          // UI progress callbacks must never change task planning.
+        }
         final raw = _extractJsonObject(generation.text);
         final candidate = raw['plan'] is Map ? mapValue(raw['plan']) : raw;
         final plan = _planFromJson(
@@ -368,10 +1043,22 @@ Generate an appropriately sized plan. The maximum is a ceiling, not a target.
         await events.publish('task_plan.generated', plan.id, <String, dynamic>{
           'plan': plan.toJson(),
         });
+        try {
+          onProgress?.call(
+            ModelGenerationProgress(
+              stage: 'plan_ready',
+              message: '${plan.tasks.length} validated tasks are ready.',
+              attempt: attempt,
+              maxAttempts: maxAttempts,
+            ),
+          );
+        } catch (_) {
+          // UI progress callbacks must never change task planning.
+        }
         return plan;
       } catch (error) {
         lastError = error;
-        if (attempt >= 3) {
+        if (attempt >= maxAttempts) {
           break;
         }
         user = '''
@@ -387,7 +1074,7 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
     }
     throw ProductException(
       'task_plan_invalid',
-      'The selected model did not produce a valid task plan after three bounded attempts.',
+      'The selected model did not produce a valid task plan after one generation and one bounded repair.',
       details: <String, dynamic>{
         'lastError': redactor.redact('$lastError'),
         'lastResponseHash': Sha256.text(lastResponse),
@@ -702,27 +1389,27 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
   }
 
   PromptStudioDraft _boundedDraft(PromptStudioDraft draft) {
-    List<String> bounded(List<String> values) => values
+    List<String> bounded(List<String> values, {int limit = 6}) => values
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toSet()
-        .take(20)
+        .take(limit)
         .toList(growable: false);
     return draft.copyWith(
       title: draft.title.trim(),
       purpose: draft.purpose.trim(),
       systemPrompt: draft.systemPrompt.trim(),
       userPrompt: draft.userPrompt.trim(),
-      variables: bounded(draft.variables)
+      variables: bounded(draft.variables, limit: 12)
           .where((item) => RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(item))
           .toList(growable: false),
       assumptions: bounded(draft.assumptions),
-      clarifyingQuestions: bounded(draft.clarifyingQuestions),
-      acceptanceCriteria: bounded(draft.acceptanceCriteria),
+      clarifyingQuestions: bounded(draft.clarifyingQuestions, limit: 3),
+      acceptanceCriteria: bounded(draft.acceptanceCriteria, limit: 8),
       outputExpectations: bounded(draft.outputExpectations),
       guardrails: bounded(draft.guardrails),
-      stopConditions: bounded(draft.stopConditions),
-      evaluationCases: bounded(draft.evaluationCases),
+      stopConditions: bounded(draft.stopConditions, limit: 4),
+      evaluationCases: bounded(draft.evaluationCases, limit: 4),
     );
   }
 
@@ -972,8 +1659,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
                   .toInt(),
           maxAttempts: alignedManual
               ? 1
-              : (int.tryParse(raw['maxAttempts']?.toString() ?? '') ?? 2)
-                  .clamp(2, 3)
+              : (int.tryParse(raw['maxAttempts']?.toString() ?? '') ?? 1)
+                  .clamp(1, 2)
                   .toInt(),
           enabled: raw['enabled'] != false,
           manual: alignedManual,

@@ -8,7 +8,10 @@ import 'package:flutter/services.dart';
 import 'api_server.dart';
 import 'domain.dart';
 import 'extensions_index.dart';
+import 'models_research.dart';
 import 'product_runtime.dart';
+import 'prompt_planning.dart';
+import 'storage_security.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
@@ -26,6 +29,15 @@ enum _StudioArea {
 enum _LogView { simple, technical, raw }
 
 enum _KnowledgeView { overview, sources, notes, memory }
+
+enum _PromptStudioOperationKind {
+  clarification,
+  generate,
+  improve,
+  simplify,
+  addDetail,
+  taskPlan,
+}
 
 class _NavigationItem {
   const _NavigationItem({
@@ -107,12 +119,15 @@ class ChatStudio extends StatefulWidget {
 
 class _ChatStudioState extends State<ChatStudio> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey promptStudioOperationKey = GlobalKey();
   final TextEditingController composerController = TextEditingController();
   final TextEditingController chatSearchController = TextEditingController();
   final TextEditingController knowledgeSearchController =
       TextEditingController();
   final TextEditingController logSearchController = TextEditingController();
   final TextEditingController promptGoalController = TextEditingController();
+  final TextEditingController promptFeedbackController =
+      TextEditingController();
   final FocusNode composerFocus = FocusNode();
 
   StreamSubscription<EventEnvelope>? eventSubscription;
@@ -140,7 +155,19 @@ class _ChatStudioState extends State<ChatStudio> {
   PromptVersionRecord? generatedPromptVersion;
   TaskPlanRecord? generatedTaskPlan;
   PlanningDepth generatedPlanningDepth = PlanningDepth.auto;
-  int generatedMaxTasks = 25;
+  int generatedMaxTasks = 7;
+  Completer<void>? promptGenerationCancellation;
+  Stopwatch? promptGenerationStopwatch;
+  String promptGenerationStage = 'idle';
+  String promptGenerationMessage = '';
+  String promptGenerationPreview = '';
+  int promptGenerationCharacters = 0;
+  int promptGenerationAttempt = 1;
+  int promptGenerationMaxAttempts = 1;
+  _PromptStudioOperationKind? promptStudioOperationKind;
+  PromptClarificationSession? promptClarificationSession;
+  Map<String, String> promptClarificationAnswers = <String, String>{};
+  String promptClarificationGoal = '';
   List<KnowledgeEntry> knowledge = <KnowledgeEntry>[];
   List<ResearchArchiveRecord> researchArchive = <ResearchArchiveRecord>[];
   List<MemoryEpisode> memoryEpisodes = <MemoryEpisode>[];
@@ -162,6 +189,11 @@ class _ChatStudioState extends State<ChatStudio> {
   final Set<PermissionScope> approvedScopes = <PermissionScope>{};
 
   ProductRuntime get runtime => widget.runtime;
+
+  bool get promptGenerationActive => promptGenerationCancellation != null;
+
+  Duration get promptGenerationElapsed =>
+      promptGenerationStopwatch?.elapsed ?? Duration.zero;
 
   ProjectRecord? get selectedProject =>
       projects.where((project) => project.id == selectedProjectId).firstOrNull;
@@ -199,6 +231,9 @@ class _ChatStudioState extends State<ChatStudio> {
       if (mounted && projectProcessStatusValue?.running == true) {
         unawaited(_refreshProjectProcess(silent: true));
       }
+      if (mounted && promptGenerationActive) {
+        setState(() {});
+      }
     });
     unawaited(_load());
   }
@@ -207,11 +242,16 @@ class _ChatStudioState extends State<ChatStudio> {
   void dispose() {
     eventSubscription?.cancel();
     refreshTimer?.cancel();
+    final promptCancellation = promptGenerationCancellation;
+    if (promptCancellation != null && !promptCancellation.isCompleted) {
+      promptCancellation.complete();
+    }
     composerController.dispose();
     chatSearchController.dispose();
     knowledgeSearchController.dispose();
     logSearchController.dispose();
     promptGoalController.dispose();
+    promptFeedbackController.dispose();
     composerFocus.dispose();
     super.dispose();
   }
@@ -3773,37 +3813,400 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  Future<void> _generateStudioPrompt(PromptGenerationAction action) async {
+  void _beginPromptStudioOperation(
+    _PromptStudioOperationKind kind,
+    Completer<void> cancellation,
+    Stopwatch stopwatch,
+    String message,
+  ) {
+    setState(() {
+      busy = true;
+      error = null;
+      status = message;
+      promptStudioOperationKind = kind;
+      promptGenerationCancellation = cancellation;
+      promptGenerationStopwatch = stopwatch;
+      promptGenerationStage = 'starting';
+      promptGenerationMessage = message;
+      promptGenerationPreview = '';
+      promptGenerationCharacters = 0;
+      promptGenerationAttempt = 1;
+      promptGenerationMaxAttempts = 1;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final operationContext = promptStudioOperationKey.currentContext;
+      if (operationContext != null) {
+        Scrollable.ensureVisible(
+          operationContext,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          alignment: 0.12,
+        );
+      }
+    });
+  }
+
+  void _updatePromptStudioProgress(
+    Completer<void> cancellation,
+    ModelGenerationProgress progress,
+  ) {
+    if (!mounted || !identical(promptGenerationCancellation, cancellation)) {
+      return;
+    }
+    setState(() {
+      if (progress.stage.contains('repair_started')) {
+        promptGenerationPreview = '';
+        promptGenerationCharacters = 0;
+      }
+      promptGenerationStage = progress.stage;
+      promptGenerationMessage = progress.message;
+      promptGenerationAttempt = progress.attempt;
+      promptGenerationMaxAttempts = progress.maxAttempts;
+      status = progress.message;
+    });
+  }
+
+  void _appendPromptStudioDelta(
+    Completer<void> cancellation,
+    String delta,
+  ) {
+    if (!mounted ||
+        delta.isEmpty ||
+        !identical(promptGenerationCancellation, cancellation)) {
+      return;
+    }
+    setState(() {
+      promptGenerationCharacters += delta.length;
+      final combined = '$promptGenerationPreview$delta';
+      promptGenerationPreview = combined.length <= 1800
+          ? combined
+          : combined.substring(combined.length - 1800);
+      promptGenerationStage = 'streaming';
+      promptGenerationMessage = switch (promptStudioOperationKind) {
+        _PromptStudioOperationKind.clarification =>
+          'Kristin is shaping the answer choices.',
+        _PromptStudioOperationKind.taskPlan => 'The task graph is arriving.',
+        _ => 'The prompt draft is arriving.',
+      };
+    });
+  }
+
+  void _finishPromptStudioOperation(
+    Completer<void> cancellation,
+    Stopwatch stopwatch,
+  ) {
+    stopwatch.stop();
+    if (!mounted || !identical(promptGenerationCancellation, cancellation)) {
+      return;
+    }
+    setState(() {
+      busy = false;
+      promptGenerationCancellation = null;
+      promptGenerationStopwatch = null;
+      promptStudioOperationKind = null;
+    });
+  }
+
+  Future<void> _startPromptStudioFlow() async {
+    if (promptGenerationActive) {
+      return;
+    }
     var model = selectedModel;
     if (model == null) {
       await _openSettings(initialSection: 1);
       model = selectedModel;
     }
+    final activeModel = model;
+    if (activeModel == null) {
+      _showError('Connect and select an AI model before shaping the idea.');
+      return;
+    }
+    final goal = promptGoalController.text.trim();
+    if (goal.length < 5) {
+      _showError('Describe the idea before Kristin prepares the decisions.');
+      return;
+    }
+    final existing = promptClarificationSession;
+    final session = existing != null && promptClarificationGoal == goal
+        ? existing
+        : await _generatePromptClarification(activeModel, goal);
+    if (session == null || !mounted) {
+      return;
+    }
+    final answers = await showDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _PromptClarificationDialog(
+        session: session,
+        initialAnswers: promptClarificationAnswers,
+      ),
+    );
+    if (answers == null || !mounted) {
+      setState(() {
+        status = 'Choices are ready whenever you want to continue';
+      });
+      return;
+    }
+    setState(() {
+      promptClarificationSession = session;
+      promptClarificationAnswers = Map<String, String>.from(answers);
+      promptClarificationGoal = goal;
+      generatedPromptVersion = null;
+      generatedTaskPlan = null;
+    });
+    await _generateStudioPrompt(
+      PromptGenerationAction.generate,
+      clarification: session,
+      clarificationAnswers: answers,
+    );
+  }
+
+  Future<PromptClarificationSession?> _generatePromptClarification(
+    ModelIdentity model,
+    String goal,
+  ) async {
+    final cancellation = Completer<void>();
+    final stopwatch = Stopwatch()..start();
+    _beginPromptStudioOperation(
+      _PromptStudioOperationKind.clarification,
+      cancellation,
+      stopwatch,
+      'Finding the decisions that matter',
+    );
+    try {
+      final session = await runtime.generatePromptClarification(
+        goal: goal,
+        model: model,
+        cancellation: cancellation.future,
+        isCancelled: () => cancellation.isCompleted,
+        onProgress: (progress) =>
+            _updatePromptStudioProgress(cancellation, progress),
+        onTextDelta: (delta) => _appendPromptStudioDelta(cancellation, delta),
+      );
+      if (!mounted || cancellation.isCompleted) {
+        return null;
+      }
+      setState(() {
+        promptClarificationSession = session;
+        promptClarificationAnswers = <String, String>{};
+        promptClarificationGoal = goal;
+        status = '${session.questions.length} focused choices are ready';
+      });
+      return session;
+    } on ProductException catch (failure) {
+      if (!mounted) {
+        return null;
+      }
+      setState(() {
+        if (failure.code == 'cancelled' || cancellation.isCompleted) {
+          status = 'Prompt Studio stopped';
+          error = null;
+        } else {
+          error = runtime.redactor.redact('$failure');
+          status = 'Kristin needs your help';
+        }
+      });
+      return null;
+    } catch (failure) {
+      if (mounted) {
+        setState(() {
+          error = runtime.redactor.redact('$failure');
+          status = 'Kristin needs your help';
+        });
+      }
+      return null;
+    } finally {
+      _finishPromptStudioOperation(cancellation, stopwatch);
+    }
+  }
+
+  Future<void> _editPromptClarification() async {
+    final session = promptClarificationSession;
+    if (session == null || promptGenerationActive) {
+      return;
+    }
+    final answers = await showDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _PromptClarificationDialog(
+        session: session,
+        initialAnswers: promptClarificationAnswers,
+      ),
+    );
+    if (answers == null || !mounted) {
+      return;
+    }
+    setState(() {
+      promptClarificationAnswers = Map<String, String>.from(answers);
+      generatedPromptVersion = null;
+      generatedTaskPlan = null;
+    });
+    await _generateStudioPrompt(
+      PromptGenerationAction.generate,
+      clarification: session,
+      clarificationAnswers: answers,
+    );
+  }
+
+  void _onPromptGoalChanged(String value) {
+    final normalized = value.trim();
+    final stale = promptClarificationGoal.isNotEmpty &&
+        normalized != promptClarificationGoal;
+    setState(() {
+      if (stale) {
+        promptClarificationSession = null;
+        promptClarificationAnswers = <String, String>{};
+        promptClarificationGoal = '';
+        generatedPromptDraft = null;
+        generatedPromptRecord = null;
+        generatedPromptVersion = null;
+        generatedTaskPlan = null;
+        promptFeedbackController.clear();
+        status = 'Idea changed — Kristin will prepare fresh choices';
+      }
+    });
+  }
+
+  void _resetPromptStudioSession() {
+    if (promptGenerationActive) {
+      _cancelStudioPromptGeneration();
+    }
+    setState(() {
+      promptGoalController.clear();
+      promptFeedbackController.clear();
+      promptClarificationSession = null;
+      promptClarificationAnswers = <String, String>{};
+      promptClarificationGoal = '';
+      generatedPromptDraft = null;
+      generatedPromptRecord = null;
+      generatedPromptVersion = null;
+      generatedTaskPlan = null;
+      prepared = null;
+      error = null;
+      status = 'Start with a new idea';
+    });
+  }
+
+  Future<void> _generateStudioPrompt(
+    PromptGenerationAction action, {
+    String feedback = '',
+    PromptClarificationSession? clarification,
+    Map<String, String> clarificationAnswers = const <String, String>{},
+  }) async {
+    if (promptGenerationActive) {
+      return;
+    }
+    var model = selectedModel;
     if (model == null) {
+      await _openSettings(initialSection: 1);
+      model = selectedModel;
+    }
+    final activeModel = model;
+    if (activeModel == null) {
       _showError('Connect and select an AI model before generating a prompt.');
       return;
     }
     final goal = promptGoalController.text.trim();
-    final draft = await _perform<PromptStudioDraft>(
-      action == PromptGenerationAction.generate
-          ? 'Generating an editable prompt'
-          : 'Improving the generated prompt',
-      () => runtime.generatePromptDraft(
+    final activeClarification = clarification ?? promptClarificationSession;
+    final activeAnswers = clarificationAnswers.isNotEmpty
+        ? clarificationAnswers
+        : promptClarificationAnswers;
+    final kind = switch (action) {
+      PromptGenerationAction.generate => _PromptStudioOperationKind.generate,
+      PromptGenerationAction.improve => _PromptStudioOperationKind.improve,
+      PromptGenerationAction.simplify => _PromptStudioOperationKind.simplify,
+      PromptGenerationAction.addDetail => _PromptStudioOperationKind.addDetail,
+    };
+    final startingMessage = switch (action) {
+      PromptGenerationAction.generate =>
+        'Writing the final prompt from your choices',
+      PromptGenerationAction.improve => 'Improving the prompt with AI',
+      PromptGenerationAction.simplify => 'Simplifying the prompt',
+      PromptGenerationAction.addDetail => 'Adding useful detail',
+    };
+    final cancellation = Completer<void>();
+    final stopwatch = Stopwatch()..start();
+    _beginPromptStudioOperation(
+      kind,
+      cancellation,
+      stopwatch,
+      startingMessage,
+    );
+    try {
+      final draft = await runtime.generatePromptDraft(
         goal: goal,
-        model: model!,
+        model: activeModel,
         action: action,
         current: generatedPromptDraft,
-      ),
-    );
-    if (draft == null || !mounted) {
+        feedback: feedback,
+        clarification: activeClarification,
+        clarificationAnswers: activeAnswers,
+        cancellation: cancellation.future,
+        isCancelled: () => cancellation.isCompleted,
+        onProgress: (progress) =>
+            _updatePromptStudioProgress(cancellation, progress),
+        onTextDelta: (delta) => _appendPromptStudioDelta(cancellation, delta),
+      );
+      if (!mounted || cancellation.isCompleted) {
+        return;
+      }
+      setState(() {
+        generatedPromptDraft = draft;
+        generatedPromptVersion = null;
+        generatedTaskPlan = null;
+        promptFeedbackController.clear();
+        status = action == PromptGenerationAction.generate
+            ? 'Final prompt ready for review'
+            : 'Prompt revision ready for review';
+      });
+    } on ProductException catch (failure) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        if (failure.code == 'cancelled' || cancellation.isCompleted) {
+          status = 'Prompt Studio stopped';
+          error = null;
+        } else {
+          error = runtime.redactor.redact('$failure');
+          status = 'Kristin needs your help';
+        }
+      });
+    } catch (failure) {
+      if (mounted) {
+        setState(() {
+          error = runtime.redactor.redact('$failure');
+          status = 'Kristin needs your help';
+        });
+      }
+    } finally {
+      _finishPromptStudioOperation(cancellation, stopwatch);
+    }
+  }
+
+  void _cancelStudioPromptGeneration() {
+    final cancellation = promptGenerationCancellation;
+    if (cancellation == null || cancellation.isCompleted) {
       return;
     }
-    setState(() {
-      generatedPromptDraft = draft;
-      generatedPromptVersion = null;
-      generatedTaskPlan = null;
-      status = 'Prompt draft ready for review';
-    });
+    cancellation.complete();
+    if (mounted) {
+      setState(() {
+        status = 'Stopping the active Prompt Studio operation';
+        promptGenerationMessage = 'Cancelling the active model request safely.';
+      });
+    }
+  }
+
+  void _applyPromptFeedback() {
+    final feedback = promptFeedbackController.text.trim();
+    if (feedback.isEmpty) {
+      _showError('Answer a question or describe the change you want first.');
+      return;
+    }
+    unawaited(
+      _generateStudioPrompt(PromptGenerationAction.improve, feedback: feedback),
+    );
   }
 
   Future<void> _editGeneratedPromptDraft() async {
@@ -3868,6 +4271,9 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<void> _generateStudioTaskPlan() async {
+    if (promptGenerationActive) {
+      return;
+    }
     final project = selectedProject;
     final model = selectedModel;
     if (project == null) {
@@ -3880,26 +4286,60 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     var version = generatedPromptVersion;
     version ??= await _saveGeneratedPromptDraft();
-    if (version == null) {
+    if (version == null || !mounted) {
       return;
     }
-    final plan = await _perform<TaskPlanRecord>(
-      'Generating and validating the task plan',
-      () => runtime.generateTaskPlan(
-        promptVersion: version!,
+    final cancellation = Completer<void>();
+    final stopwatch = Stopwatch()..start();
+    _beginPromptStudioOperation(
+      _PromptStudioOperationKind.taskPlan,
+      cancellation,
+      stopwatch,
+      'Turning the prompt into a compact task graph',
+    );
+    try {
+      final plan = await runtime.generateTaskPlan(
+        promptVersion: version,
         projectId: project.id,
         model: model,
         depth: generatedPlanningDepth,
         maxLeafTasks: generatedMaxTasks,
-      ),
-    );
-    if (plan == null || !mounted) {
-      return;
+        cancellation: cancellation.future,
+        isCancelled: () => cancellation.isCompleted,
+        onProgress: (progress) =>
+            _updatePromptStudioProgress(cancellation, progress),
+        onTextDelta: (delta) => _appendPromptStudioDelta(cancellation, delta),
+      );
+      if (!mounted || cancellation.isCompleted) {
+        return;
+      }
+      setState(() {
+        generatedTaskPlan = plan;
+        status = '${plan.tasks.length} validated tasks ready for review';
+      });
+    } on ProductException catch (failure) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        if (failure.code == 'cancelled' || cancellation.isCompleted) {
+          status = 'Task-plan generation stopped';
+          error = null;
+        } else {
+          error = runtime.redactor.redact('$failure');
+          status = 'Kristin needs your help';
+        }
+      });
+    } catch (failure) {
+      if (mounted) {
+        setState(() {
+          error = runtime.redactor.redact('$failure');
+          status = 'Kristin needs your help';
+        });
+      }
+    } finally {
+      _finishPromptStudioOperation(cancellation, stopwatch);
     }
-    setState(() {
-      generatedTaskPlan = plan;
-      status = '${plan.tasks.length} validated tasks ready for review';
-    });
   }
 
   Future<void> _editGeneratedPlanTask(PlanTaskRecord task) async {
@@ -4005,30 +4445,43 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Widget _aiPromptComposerCard() {
     final model = selectedModel;
+    final hasPendingChoices = promptClarificationSession != null &&
+        promptClarificationAnswers.isEmpty;
     return Card(
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(Icons.auto_awesome_outlined),
-                const SizedBox(width: 10),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(Icons.lightbulb_outline),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Generate a prompt from your idea',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                        'Start with the outcome',
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       const Text(
-                        'Describe the outcome in normal language. Kristin asks the selected model for a structured, editable prompt before any task is executed.',
+                        'Kristin first turns ambiguity into 2–5 concrete choices. After you answer, it writes the final prompt instead of guessing silently.',
                       ),
                     ],
                   ),
@@ -4041,80 +4494,35 @@ class _ChatStudioState extends State<ChatStudio> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             TextField(
               controller: promptGoalController,
-              minLines: 3,
-              maxLines: 8,
+              onChanged: _onPromptGoalChanged,
+              minLines: 4,
+              maxLines: 10,
               decoration: const InputDecoration(
-                labelText: 'What should Kristin help you build or do?',
+                labelText: 'Describe the result you want',
                 hintText:
-                    'Build a modern calculator app with standard and scientific functions, keyboard support, tests, and a clear run guide.',
+                    'Example: Build a polished local desktop calculator with scientific functions, keyboard support, tests, and a clear run guide.',
+                helperText:
+                    'You do not need to specify every detail — the next step asks only the decisions that matter.',
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 10,
+              runSpacing: 10,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
-                SizedBox(
-                  width: 220,
-                  child: DropdownButtonFormField<PlanningDepth>(
-                    initialValue: generatedPlanningDepth,
-                    decoration: const InputDecoration(
-                      labelText: 'Planning depth',
-                    ),
-                    items: PlanningDepth.values
-                        .map(
-                          (item) => DropdownMenuItem<PlanningDepth>(
-                            value: item,
-                            child: Text(item.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: busy
-                        ? null
-                        : (value) {
-                            if (value != null) {
-                              setState(() => generatedPlanningDepth = value);
-                            }
-                          },
-                  ),
-                ),
-                SizedBox(
-                  width: 220,
-                  child: DropdownButtonFormField<int>(
-                    initialValue: generatedMaxTasks,
-                    decoration: const InputDecoration(
-                      labelText: 'Maximum tasks',
-                    ),
-                    items: const <int>[1, 5, 10, 25, 50, 75, 100]
-                        .map(
-                          (value) => DropdownMenuItem<int>(
-                            value: value,
-                            child: Text('$value task${value == 1 ? '' : 's'}'),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: busy
-                        ? null
-                        : (value) {
-                            if (value != null) {
-                              setState(() => generatedMaxTasks = value);
-                            }
-                          },
-                  ),
-                ),
                 FilledButton.icon(
-                  onPressed: busy
-                      ? null
-                      : () => _generateStudioPrompt(
-                            PromptGenerationAction.generate,
-                          ),
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Generate prompt'),
+                  onPressed: busy ? null : _startPromptStudioFlow,
+                  icon: const Icon(Icons.tune),
+                  label: Text(
+                    hasPendingChoices
+                        ? 'Answer ${promptClarificationSession!.questions.length} choices'
+                        : 'Shape this idea',
+                  ),
                 ),
                 if (model == null)
                   OutlinedButton.icon(
@@ -4122,6 +4530,12 @@ class _ChatStudioState extends State<ChatStudio> {
                         busy ? null : () => _openSettings(initialSection: 1),
                     icon: const Icon(Icons.settings_outlined),
                     label: const Text('Connect model'),
+                  ),
+                if (promptClarificationSession != null)
+                  TextButton.icon(
+                    onPressed: busy ? null : _editPromptClarification,
+                    icon: const Icon(Icons.fact_check_outlined),
+                    label: const Text('Review choices'),
                   ),
               ],
             ),
@@ -4131,10 +4545,38 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  Widget _generatedPromptCard(PromptStudioDraft draft) {
-    final version = generatedPromptVersion;
+  Widget _promptGenerationStatusCard() {
+    final elapsed = promptGenerationElapsed;
+    final minutes = elapsed.inMinutes;
+    final seconds = elapsed.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final attempt = promptGenerationMaxAttempts > 1
+        ? ' · attempt $promptGenerationAttempt/$promptGenerationMaxAttempts'
+        : '';
+    final kind = promptStudioOperationKind;
+    final label = switch (kind) {
+      _PromptStudioOperationKind.clarification => 'Preparing choices',
+      _PromptStudioOperationKind.generate => 'Writing final prompt',
+      _PromptStudioOperationKind.improve => 'Improving prompt',
+      _PromptStudioOperationKind.simplify => 'Simplifying prompt',
+      _PromptStudioOperationKind.addDetail => 'Adding detail',
+      _PromptStudioOperationKind.taskPlan => 'Building task plan',
+      null => 'Prompt Studio',
+    };
+    final icon = switch (kind) {
+      _PromptStudioOperationKind.clarification => Icons.tune,
+      _PromptStudioOperationKind.taskPlan => Icons.account_tree_outlined,
+      _ => Icons.auto_awesome,
+    };
+    final previewLabel = switch (kind) {
+      _PromptStudioOperationKind.clarification => 'Live choice draft',
+      _PromptStudioOperationKind.taskPlan => 'Live task-plan draft',
+      _ => 'Live prompt draft',
+    };
+    final progress = _promptStudioStageProgress(promptGenerationStage);
     return Card(
+      key: promptStudioOperationKey,
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -4142,69 +4584,264 @@ class _ChatStudioState extends State<ChatStudio> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                const Icon(Icons.edit_note_outlined),
-                const SizedBox(width: 10),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    draft.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        label,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        promptGenerationMessage.isEmpty
+                            ? 'Preparing the selected model.'
+                            : promptGenerationMessage,
+                      ),
+                    ],
                   ),
                 ),
-                _statusPill(modeLabel(draft.mode), Icons.tune_outlined),
-                const SizedBox(width: 6),
-                _statusPill(
-                  version == null
-                      ? 'Unsaved draft'
-                      : 'Prompt v${version.versionNumber}',
-                  version == null
-                      ? Icons.edit_outlined
-                      : Icons.verified_outlined,
+                OutlinedButton.icon(
+                  onPressed: promptGenerationCancellation?.isCompleted == true
+                      ? null
+                      : _cancelStudioPromptGeneration,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  label: const Text('Stop'),
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            LinearProgressIndicator(value: progress),
             const SizedBox(height: 8),
-            Text(draft.purpose),
-            if (draft.clarifyingQuestions.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 14),
-              Text(
-                'Clarifying questions',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                _statusPill(
+                  promptGenerationStage.replaceAll('_', ' '),
+                  Icons.sync,
+                ),
+                _statusPill('$minutes:$seconds$attempt', Icons.timer_outlined),
+                _statusPill(
+                  '$promptGenerationCharacters streamed characters',
+                  Icons.data_object,
+                ),
+              ],
+            ),
+            if (promptGenerationPreview.trim().isNotEmpty) ...<Widget>[
+              const SizedBox(height: 13),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                initiallyExpanded: kind == _PromptStudioOperationKind.taskPlan,
+                leading: const Icon(Icons.visibility_outlined),
+                title: Text(previewLabel),
+                subtitle: const Text(
+                  'Partial structured output; the final result is validated before use.',
+                ),
+                children: <Widget>[
+                  _codeBox(promptGenerationPreview, maxLines: 10),
+                ],
               ),
-              const SizedBox(height: 5),
-              ...draft.clarifyingQuestions.take(5).map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text('• $item'),
-                    ),
-                  ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  double? _promptStudioStageProgress(String stage) {
+    final value = stage.toLowerCase();
+    if (value.contains('ready') || value.contains('completed')) {
+      return 1;
+    }
+    if (value.contains('validat')) {
+      return 0.86;
+    }
+    if (value.contains('first_token') || value.contains('stream')) {
+      return 0.58;
+    }
+    if (value.contains('generation_started') ||
+        value.contains('draft_generation') ||
+        value.contains('plan_generation')) {
+      return 0.42;
+    }
+    if (value.contains('load') || value.contains('request_open')) {
+      return 0.28;
+    }
+    if (value.contains('clarification_started') || value == 'starting') {
+      return 0.12;
+    }
+    return null;
+  }
+
+  Widget _generatedPromptCard(PromptStudioDraft draft) {
+    final version = generatedPromptVersion;
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(Icons.edit_note_outlined),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        draft.title,
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(draft.purpose),
+                    ],
+                  ),
+                ),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: <Widget>[
+                    _statusPill(modeLabel(draft.mode), Icons.tune_outlined),
+                    _statusPill(
+                      version == null
+                          ? 'Unsaved draft'
+                          : 'Prompt v${version.versionNumber}',
+                      version == null
+                          ? Icons.edit_outlined
+                          : Icons.verified_outlined,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (promptClarificationAnswers.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const Icon(Icons.checklist_rtl_outlined),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        '${promptClarificationAnswers.length} product decisions are embedded in this prompt.',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: busy ? null : _editPromptClarification,
+                      child: const Text('Edit choices'),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 14),
             Text(
               'Acceptance criteria',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 7),
             ...draft.acceptanceCriteria.take(8).map(
                   (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('✓ $item'),
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(Icons.check_circle_outline, size: 18),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(item)),
+                      ],
+                    ),
                   ),
                 ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 10),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.code_outlined),
+              title: const Text('Inspect the full prompt'),
+              subtitle: const Text(
+                'System instructions, task template, variables, guardrails, and expected output.',
+              ),
+              children: <Widget>[
+                _codeBox(
+                  'SYSTEM\n${draft.systemPrompt}\n\nUSER TEMPLATE\n${draft.userPrompt}',
+                  maxLines: 18,
+                ),
+                if (draft.variables.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: draft.variables
+                        .map((variable) => Chip(label: Text('{{$variable}}')))
+                        .toList(),
+                  ),
+                ],
+              ],
+            ),
+            const Divider(height: 30),
+            TextField(
+              controller: promptFeedbackController,
+              minLines: 2,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Direct revision request',
+                hintText:
+                    'Example: Keep the scope Windows-only, reduce the first release to four screens, and strengthen offline tests.',
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: <Widget>[
                 FilledButton.tonalIcon(
-                  onPressed: busy ? null : _editGeneratedPromptDraft,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Adjust prompt'),
+                  onPressed: busy ? null : _applyPromptFeedback,
+                  icon: const Icon(Icons.forum_outlined),
+                  label: const Text('Apply revision'),
                 ),
                 OutlinedButton.icon(
                   onPressed: busy
@@ -4231,7 +4868,24 @@ class _ChatStudioState extends State<ChatStudio> {
                             PromptGenerationAction.addDetail,
                           ),
                   icon: const Icon(Icons.add_box_outlined),
-                  label: const Text('Add detail'),
+                  label: const Text('Add useful detail'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: busy ? null : _editGeneratedPromptDraft,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit manually'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                FilledButton.icon(
+                  onPressed: busy ? null : _generateStudioTaskPlan,
+                  icon: const Icon(Icons.account_tree_outlined),
+                  label: const Text('Build task plan'),
                 ),
                 OutlinedButton.icon(
                   onPressed: busy ? null : () => _saveGeneratedPromptDraft(),
@@ -4241,11 +4895,6 @@ class _ChatStudioState extends State<ChatStudio> {
                         ? 'Save prompt version'
                         : 'Save new version',
                   ),
-                ),
-                FilledButton.icon(
-                  onPressed: busy ? null : _generateStudioTaskPlan,
-                  icon: const Icon(Icons.account_tree_outlined),
-                  label: const Text('Generate task list'),
                 ),
                 TextButton.icon(
                   onPressed: _useGeneratedPromptInChat,
@@ -4411,181 +5060,428 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Widget _promptStudioPage() {
     return _page(
-      maxWidth: 1180,
+      maxWidth: 1280,
       children: <Widget>[
         _pageHeader(
           title: 'Prompt Studio',
           subtitle:
-              'Turn a plain-language idea into an editable AI-generated prompt, a validated 1–100 task plan, and a governed run you can start or stop.',
+              'A question-first workbench: clarify the important choices, generate a final prompt, shape a visible task graph, then run it under Kristin’s governed controls.',
           actions: <Widget>[
-            FilledButton.icon(
+            OutlinedButton.icon(
+              onPressed: busy ? null : _resetPromptStudioSession,
+              icon: const Icon(Icons.restart_alt),
+              label: const Text('Start over'),
+            ),
+            FilledButton.tonalIcon(
               onPressed: busy ? null : () => _editPrompt(),
-              icon: const Icon(Icons.add),
-              label: const Text('New prompt'),
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Manual prompt'),
             ),
           ],
         ),
-        _aiPromptComposerCard(),
-        if (generatedPromptDraft != null)
-          _generatedPromptCard(generatedPromptDraft!),
-        if (generatedTaskPlan != null)
-          _generatedTaskPlanCard(generatedTaskPlan!),
-        _metricRow(<_MetricData>[
-          _MetricData(
-            label: 'Saved prompts',
-            value: '${prompts.length}',
-            icon: Icons.edit_note_outlined,
-          ),
-          _MetricData(
-            label: 'Starter templates',
-            value: '${studioTemplates.length}',
-            icon: Icons.auto_awesome_mosaic_outlined,
-          ),
-          const _MetricData(
-            label: 'Versioning',
-            value: 'Enabled',
-            icon: Icons.history_outlined,
-          ),
-        ]),
-        Text(
-          'Your prompts',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        if (prompts.isEmpty)
-          _emptyPanel(
-            icon: Icons.edit_note_outlined,
-            title: 'Create your first reusable prompt',
-            message:
-                'Save instructions, variables, and a task mode. Each edit creates a new version number.',
-            actionLabel: 'Create prompt',
-            onAction: _editPrompt,
-          )
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth >= 880
-                  ? (constraints.maxWidth - 12) / 2
-                  : constraints.maxWidth;
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: prompts
-                    .map(
-                      (prompt) =>
-                          SizedBox(width: width, child: _promptCard(prompt)),
-                    )
-                    .toList(),
-              );
-            },
-          ),
-        const SizedBox(height: 6),
-        Text(
-          'Starter templates',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        LayoutBuilder(
+        _promptStudioJourneyCard(),
+        _promptStudioWorkbench(),
+        _promptStudioLibraryCard(),
+      ],
+    );
+  }
+
+  Widget _promptStudioJourneyCard() {
+    final hasIdea = promptGoalController.text.trim().isNotEmpty;
+    final hasChoices = promptClarificationAnswers.isNotEmpty;
+    final hasPrompt = generatedPromptDraft != null;
+    final hasPlan = generatedTaskPlan != null;
+    final steps = <({String label, String detail, bool done, bool active})>[
+      (
+        label: 'Idea',
+        detail: 'Describe the outcome',
+        done: hasIdea,
+        active: !hasChoices,
+      ),
+      (
+        label: 'Choices',
+        detail: 'Answer 2–5 decisions',
+        done: hasChoices,
+        active: hasIdea && !hasPrompt,
+      ),
+      (
+        label: 'Prompt',
+        detail: 'Review and refine',
+        done: hasPrompt,
+        active: hasChoices && !hasPlan,
+      ),
+      (
+        label: 'Tasks',
+        detail: 'Validate the run graph',
+        done: hasPlan,
+        active: hasPrompt,
+      ),
+    ];
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: LayoutBuilder(
           builder: (context, constraints) {
-            final width = constraints.maxWidth >= 960
-                ? (constraints.maxWidth - 24) / 3
-                : constraints.maxWidth >= 620
-                    ? (constraints.maxWidth - 12) / 2
-                    : constraints.maxWidth;
+            final width = constraints.maxWidth >= 760
+                ? (constraints.maxWidth - 30) / 4
+                : constraints.maxWidth;
             return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: studioTemplates.map((template) {
-                return SizedBox(
-                  width: width,
-                  child: Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Row(
-                            children: <Widget>[
-                              Icon(template.icon),
-                              const SizedBox(width: 9),
-                              Expanded(
-                                child: Text(
-                                  template.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(template.description),
-                          const SizedBox(height: 13),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: template.tags
-                                .map((tag) => Chip(label: Text(tag)))
-                                .toList(),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: <Widget>[
-                              FilledButton.tonal(
-                                onPressed: () {
-                                  setState(() {
-                                    composerController.text = template.prompt;
-                                    taskMode = SimpleTaskMode.choose;
-                                    chosenMode = template.suggestedMode;
-                                    area = _StudioArea.chat;
-                                  });
-                                  composerFocus.requestFocus();
-                                },
-                                child: const Text('Use in chat'),
-                              ),
-                              OutlinedButton(
-                                onPressed: () =>
-                                    _editPrompt(template: template),
-                                child: const Text('Save a copy'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                for (var index = 0; index < steps.length; index++)
+                  SizedBox(
+                    width: width,
+                    child: _promptStudioJourneyStep(
+                      index + 1,
+                      steps[index].label,
+                      steps[index].detail,
+                      done: steps[index].done,
+                      active: steps[index].active,
                     ),
                   ),
-                );
-              }).toList(),
+              ],
             );
           },
         ),
-        Card(
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(18),
+      ),
+    );
+  }
+
+  Widget _promptStudioJourneyStep(
+    int number,
+    String label,
+    String detail, {
+    required bool done,
+    required bool active,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: done
+            ? colors.primaryContainer.withValues(alpha: 0.55)
+            : active
+                ? colors.secondaryContainer.withValues(alpha: 0.55)
+                : colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: active ? colors.primary : colors.outlineVariant,
+        ),
+      ),
+      child: Row(
+        children: <Widget>[
+          CircleAvatar(
+            radius: 16,
+            child: done ? const Icon(Icons.check, size: 18) : Text('$number'),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  'Agent configuration roadmap',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'v1.0 keeps model output reviewable: generated prompts are editable, accepted prompt revisions are immutable, task plans are schema-validated and dependency-checked, and the deterministic compiler intersects proposed tools with Kristin’s governed permission registry before execution.',
-                ),
+                Text(label,
+                    style: const TextStyle(fontWeight: FontWeight.w900)),
+                Text(detail, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _promptStudioWorkbench() {
+    final main = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _aiPromptComposerCard(),
+        if (promptClarificationAnswers.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 14),
+          _promptDecisionSummaryCard(),
+        ],
+        if (promptGenerationActive) ...<Widget>[
+          const SizedBox(height: 14),
+          _promptGenerationStatusCard(),
+        ],
+        if (generatedPromptDraft != null) ...<Widget>[
+          const SizedBox(height: 14),
+          _generatedPromptCard(generatedPromptDraft!),
+        ],
+        if (generatedTaskPlan != null) ...<Widget>[
+          const SizedBox(height: 14),
+          _generatedTaskPlanCard(generatedTaskPlan!),
+        ],
       ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 980) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              main,
+              const SizedBox(height: 14),
+              _promptStudioControlRail(),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(flex: 7, child: main),
+            const SizedBox(width: 16),
+            SizedBox(width: 310, child: _promptStudioControlRail()),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _promptDecisionSummaryCard() {
+    final session = promptClarificationSession;
+    if (session == null) {
+      return const SizedBox.shrink();
+    }
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Icon(Icons.fact_check_outlined),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Decisions captured',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                      ),
+                      if (session.brief.isNotEmpty) Text(session.brief),
+                    ],
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: busy ? null : _editPromptClarification,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...session.questions.map((question) {
+              final answer = promptClarificationAnswers[question.id] ?? '';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(Icons.arrow_right, size: 19),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            question.question,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(answer),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _promptStudioControlRail() {
+    final project = selectedProject;
+    final model = selectedModel;
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              'Session controls',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            _statusPill(
+              project?.name ?? 'No project selected',
+              Icons.folder_outlined,
+            ),
+            const SizedBox(height: 8),
+            _statusPill(
+              model?.name ?? 'No model selected',
+              Icons.memory_outlined,
+            ),
+            const Divider(height: 26),
+            DropdownButtonFormField<PlanningDepth>(
+              initialValue: generatedPlanningDepth,
+              decoration: const InputDecoration(
+                labelText: 'Planning depth',
+                prefixIcon: Icon(Icons.layers_outlined),
+              ),
+              items: PlanningDepth.values
+                  .map(
+                    (item) => DropdownMenuItem<PlanningDepth>(
+                      value: item,
+                      child: Text(item.name),
+                    ),
+                  )
+                  .toList(),
+              onChanged: busy
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        setState(() => generatedPlanningDepth = value);
+                      }
+                    },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              initialValue: generatedMaxTasks,
+              decoration: const InputDecoration(
+                labelText: 'Task ceiling',
+                prefixIcon: Icon(Icons.format_list_numbered),
+              ),
+              items: const <int>[1, 3, 5, 7, 10, 15, 25]
+                  .map(
+                    (value) => DropdownMenuItem<int>(
+                      value: value,
+                      child: Text('$value task${value == 1 ? '' : 's'}'),
+                    ),
+                  )
+                  .toList(),
+              onChanged: busy
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        setState(() => generatedMaxTasks = value);
+                      }
+                    },
+            ),
+            const Divider(height: 26),
+            const Text(
+              'Optimized local path',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              '• Choice pass: up to 1,024 tokens\n'
+              '• Prompt pass: up to 2,048 tokens\n'
+              '• One bounded repair only\n'
+              '• Active Ollama session is reused',
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: busy ? null : () => _openSettings(initialSection: 1),
+              icon: const Icon(Icons.settings_outlined),
+              label: const Text('Model settings'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _promptStudioLibraryCard() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: ExpansionTile(
+        leading: const Icon(Icons.library_books_outlined),
+        title: const Text(
+          'Prompt library',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        subtitle: Text(
+          '${prompts.length} saved prompts · ${studioTemplates.length} starter templates',
+        ),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        children: <Widget>[
+          if (prompts.isEmpty)
+            _emptyPanel(
+              icon: Icons.edit_note_outlined,
+              title: 'No saved prompts yet',
+              message:
+                  'Save the generated prompt when it becomes a reusable workflow.',
+              actionLabel: 'Create manually',
+              onAction: _editPrompt,
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth >= 820
+                    ? (constraints.maxWidth - 12) / 2
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: prompts
+                      .map(
+                        (prompt) => SizedBox(
+                          width: width,
+                          child: _promptCard(prompt),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
+          const Divider(height: 30),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Starter ideas',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...studioTemplates.map(
+            (template) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(template.icon),
+              title: Text(template.title),
+              subtitle: Text(template.description),
+              trailing: OutlinedButton(
+                onPressed: busy
+                    ? null
+                    : () {
+                        promptGoalController.text = template.prompt;
+                        _onPromptGoalChanged(template.prompt);
+                      },
+                child: const Text('Use as idea'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -6461,6 +7357,282 @@ class _ChatStudioState extends State<ChatStudio> {
         EvidenceKind.deployment => Icons.inventory_2_outlined,
         EvidenceKind.audit => Icons.verified_user_outlined,
       };
+}
+
+class _PromptClarificationDialog extends StatefulWidget {
+  const _PromptClarificationDialog({
+    required this.session,
+    required this.initialAnswers,
+  });
+
+  final PromptClarificationSession session;
+  final Map<String, String> initialAnswers;
+
+  @override
+  State<_PromptClarificationDialog> createState() =>
+      _PromptClarificationDialogState();
+}
+
+class _PromptClarificationDialogState
+    extends State<_PromptClarificationDialog> {
+  static const String otherId = '__other__';
+
+  final Map<String, String> selectedOptionIds = <String, String>{};
+  final Map<String, TextEditingController> otherControllers =
+      <String, TextEditingController>{};
+  int currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final question in widget.session.questions) {
+      final initial = widget.initialAnswers[question.id]?.trim() ?? '';
+      final matching = question.options
+          .where((option) => option.label == initial)
+          .firstOrNull;
+      if (matching != null) {
+        selectedOptionIds[question.id] = matching.id;
+        otherControllers[question.id] = TextEditingController();
+      } else if (initial.isNotEmpty) {
+        selectedOptionIds[question.id] = otherId;
+        otherControllers[question.id] = TextEditingController(text: initial);
+      } else {
+        selectedOptionIds[question.id] = question.recommendedOption.id;
+        otherControllers[question.id] = TextEditingController();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in otherControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  String _answerFor(PromptClarificationQuestion question) {
+    final selected = selectedOptionIds[question.id];
+    if (selected == otherId) {
+      return otherControllers[question.id]?.text.trim() ?? '';
+    }
+    return question.options
+            .where((option) => option.id == selected)
+            .firstOrNull
+            ?.label ??
+        '';
+  }
+
+  bool get _currentComplete =>
+      _answerFor(widget.session.questions[currentIndex]).isNotEmpty;
+
+  void _useRecommendedForAll() {
+    setState(() {
+      for (final question in widget.session.questions) {
+        selectedOptionIds[question.id] = question.recommendedOption.id;
+        otherControllers[question.id]?.clear();
+      }
+    });
+  }
+
+  void _continue() {
+    if (!_currentComplete) {
+      return;
+    }
+    if (currentIndex < widget.session.questions.length - 1) {
+      setState(() => currentIndex++);
+      return;
+    }
+    final answers = <String, String>{
+      for (final question in widget.session.questions)
+        question.id: _answerFor(question),
+    };
+    if (answers.values.any((answer) => answer.trim().isEmpty)) {
+      return;
+    }
+    Navigator.of(context).pop(answers);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final question = widget.session.questions[currentIndex];
+    final selected = selectedOptionIds[question.id];
+    final progress = (currentIndex + 1) / widget.session.questions.length;
+    return AlertDialog(
+      titlePadding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      title: Row(
+        children: <Widget>[
+          const Icon(Icons.tune),
+          const SizedBox(width: 10),
+          const Expanded(child: Text('Shape the final prompt')),
+          TextButton.icon(
+            onPressed: _useRecommendedForAll,
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('Use smart defaults'),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 720,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              LinearProgressIndicator(value: progress),
+              const SizedBox(height: 8),
+              Text(
+                'Decision ${currentIndex + 1} of ${widget.session.questions.length}',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                question.question,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              if (question.whyItMatters.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 6),
+                Text(question.whyItMatters),
+              ],
+              const SizedBox(height: 16),
+              ...question.options.map((option) {
+                final active = selected == option.id;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    color: active
+                        ? Theme.of(context).colorScheme.secondaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerLow,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => setState(() {
+                        selectedOptionIds[question.id] = option.id;
+                      }),
+                      child: Padding(
+                        padding: const EdgeInsets.all(13),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Icon(
+                              active
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Text(
+                                          option.label,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                      if (option.recommended)
+                                        const Chip(
+                                          visualDensity: VisualDensity.compact,
+                                          label: Text('Recommended'),
+                                        ),
+                                    ],
+                                  ),
+                                  if (option.description.isNotEmpty)
+                                    Text(option.description),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              Card(
+                margin: EdgeInsets.zero,
+                color: selected == otherId
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : Theme.of(context).colorScheme.surfaceContainerLow,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => setState(() {
+                    selectedOptionIds[question.id] = otherId;
+                  }),
+                  child: Padding(
+                    padding: const EdgeInsets.all(13),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          selected == otherId
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Other — write my own answer',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (selected == otherId) ...<Widget>[
+                const SizedBox(height: 10),
+                TextField(
+                  controller: otherControllers[question.id],
+                  autofocus: true,
+                  minLines: 2,
+                  maxLines: 4,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    labelText: 'Your answer',
+                    hintText: 'Describe the choice Kristin should use.',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        if (currentIndex > 0)
+          OutlinedButton.icon(
+            onPressed: () => setState(() => currentIndex--),
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Back'),
+          ),
+        FilledButton.icon(
+          onPressed: _currentComplete ? _continue : null,
+          icon: Icon(
+            currentIndex == widget.session.questions.length - 1
+                ? Icons.auto_awesome
+                : Icons.arrow_forward,
+          ),
+          label: Text(
+            currentIndex == widget.session.questions.length - 1
+                ? 'Generate final prompt'
+                : 'Next choice',
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _MetricData {

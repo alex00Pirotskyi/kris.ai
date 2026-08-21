@@ -7,7 +7,7 @@
 **Target:** top-tier, high-end consumer-ready, maximum-capability AI operating system for Windows, macOS, Linux, web, mobile companions, and headless/fleet nodes; with full-computer **Owner Mode**, native desktop control, interactive terminal, universal API connectivity, browser automation, central orchestration of OpenAI, Gemini, Claude, local and custom AI providers through API/browser/local transports, a portable Tool/Skill/Capability Operating System, complete application generation, modern content manufacturing, multimodal realtime chat, durable research/data, cloud deployment, signed releases, secure updates, zero-hassle onboarding, medium-machine support, and measurable consumer trust and agent quality
 **Primary implementers:** any capable implementation AI (including ChatGPT, Claude, or future agents) operating against the repository through bounded, evidence-producing work packets
 **Human role:** product owner, credential holder, release authority, and final approver for identity, signing, legal, payment, MFA, and production-promotion actions
-**Roadmap version:** `3.1.6-p0-010-generated-state-hygiene`
+**Roadmap version:** `3.1.7-p25-prompt-studio-product-rescue`
 **Supersedes:** roadmap versions `1.0.0`, `2.0.0`, `2.1.0`, and `3.0.0`; this file is the sole implementation authority until replaced by a signed ADR and a newer master manifest
 
 > **Master authority:** commit this document as `docs/roadmap/MASTER.md`. Every previous roadmap must contain a `SUPERSEDED` pointer to this file. The generated `docs/roadmap/roadmap.yaml` manifest is the machine-readable dependency authority; this Markdown remains the human-readable product and engineering constitution. It defines architecture, task order, deliverables, tests, evidence, AI prompts, release gates, consumer requirements, Tool/Skill/Capability semantics, and operating rules.
@@ -9228,3 +9228,11 @@ Can a future AI execute one task without reading the full roadmap?
 ```
 
 If any mandatory answer is missing, the build is an internal preview, alpha, beta, or RC—not the top-tier consumer GA.
+
+## P25 — Prompt Studio product rescue
+
+P25 is the governed rescue program for Prompt Studio speed, visibility, live clarification, cancellation, recovery, understandable editing, canonical plan semantics, and token-efficient runner packets. The normative program is `docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md`; its accepted decision is `docs/roadmap/decisions/ADR-P25-001-prompt-studio-product-rescue.md`.
+
+P25 extends the human constitution without widening the P0/P1 bootstrap scope of `docs/roadmap/roadmap.yaml`. P24 owns the future all-phase machine roadmap; `docs/roadmap/p25/manifest.v1.json` is the bounded P25 machine extension. Only `P25-001` is initially READY.
+
+Every P25 worker must run the repository-owned Prompt Studio Test Station and preserve assurance-class boundaries. Source tests do not certify packaged behavior, platform support, release support, production readiness, release, or GA.

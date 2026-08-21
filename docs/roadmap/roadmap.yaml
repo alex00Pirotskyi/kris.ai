@@ -2,7 +2,7 @@
   "authority": {
     "human": "docs/roadmap/MASTER.md",
     "machine": "docs/roadmap/roadmap.yaml",
-    "masterSha256": "ccb14d19077ae12d34afa40a006dd4c5649081cc3627ab384e154eb246d6b3e4",
+    "masterSha256": "a1660b8b2fea03c55c20485428d0eeb97c35239da01a477157b8af62be093430",
     "scope": [
       "P0",
       "P1"
@@ -24,7 +24,7 @@
       "status": "DONE"
     }
   },
-  "roadmapVersion": "3.1.6-p0-010-generated-state-hygiene",
+  "roadmapVersion": "3.1.7-p25-prompt-studio-product-rescue",
   "schemaVersion": "1.0.0",
   "statusValues": [
     "NOT_STARTED",
@@ -303,7 +303,7 @@
         "P1-002",
         "P1-003"
       ],
-      "doneWhen": "Policy property tests prove deny-by-default and Owner Mode’s intended authority.",
+      "doneWhen": "Policy property tests prove deny-by-default and Owner Mode\u2019s intended authority.",
       "evidence": [
         "release/evidence/P1-004/manifest.json",
         "release/evidence/P1-004/test-results.json",
