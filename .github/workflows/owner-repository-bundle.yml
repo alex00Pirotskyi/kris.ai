@@ -1,0 +1,44 @@
+name: Owner full repository bundle export
+
+on:
+  pull_request:
+    branches:
+      - agent/p4-phase-completion
+    paths:
+      - .github/workflows/owner-repository-bundle.yml
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    if: github.repository == 'alex00Pirotskyi/kris.ai'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact transport head with full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Create and verify full Git bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "5ffdbf4b97ec72617e920164e98cb08dcbf37ec0"
+          git bundle create "${RUNNER_TEMP}/kris-ai.bundle" --all
+          git bundle verify "${RUNNER_TEMP}/kris-ai.bundle"
+          test -s "${RUNNER_TEMP}/kris-ai.bundle"
+          sha256sum "${RUNNER_TEMP}/kris-ai.bundle"
+
+      - name: Upload full repository bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: owner-full-repository-bundle
+          path: ${{ runner.temp }}/kris-ai.bundle
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
