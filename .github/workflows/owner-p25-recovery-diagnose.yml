@@ -1,0 +1,42 @@
+name: Owner P25 Recovery Diagnose
+
+on:
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-p25-recovery-diagnose.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact healthy main base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 278aeccfa013411bc7cf23b4a34199718327f4b2
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Diagnose P25 salvage merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin 64286a2110fd9d852dbbeb7653e5896866b0c4ac
+          git config user.name 'Owner Recovery Diagnostic'
+          git config user.email 'owner-recovery@users.noreply.github.com'
+          set +e
+          git merge --no-commit --no-ff 64286a2110fd9d852dbbeb7653e5896866b0c4ac
+          rc=$?
+          set -e
+          echo "MERGE_RC=${rc}"
+          echo '--- CONFLICTS ---'
+          git diff --name-only --diff-filter=U || true
+          echo '--- STATUS ---'
+          git status --short
+          echo '--- UNMERGED INDEX ---'
+          git ls-files -u || true
+          git merge --abort || true
