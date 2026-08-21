@@ -1,0 +1,111 @@
+name: Repository rehabilitation P211 diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'agent/repo-rehab-export-p211'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.1.0
+        with:
+          node-version: '24.18.0'
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Install exact dependencies
+        shell: bash
+        run: |
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
+      - name: Capture each failing contract independently
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import subprocess
+
+          root = pathlib.Path.cwd()
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'p211-diagnostics'
+          output.mkdir(parents=True, exist_ok=True)
+          commands = [
+              ('toolchain-lock', ['python', 'tool/toolchain_lock_test.py', '--source-only']),
+              ('p2-toolchain-extension', ['python', 'tool/p2_toolchain_extension_test.py', '--project', '.']),
+              ('p2-source-inventory', ['python', 'tool/p2_source_inventory_test.py', '--project', '.']),
+              ('p2-evidence-contract', ['python', 'tool/p2_evidence_contract_test.py']),
+              ('p2-patch-composition', ['python', 'tool/p2_patch_application_composition_test.py']),
+              ('p2-runtime-resource', ['python', 'tool/p2_runtime_resource_contract_test.py']),
+              ('p2-shared-authority', ['python', 'tool/p2_shared_p1_authority_contract_test.py', '--project', '.', '--owner-risk-qa']),
+              ('p2-runner-attestation', ['python', 'tool/p2_runner_attestation_contract_test.py']),
+              ('p2-post-run-cleanup', ['python', 'tool/p2_post_run_cleanup_contract_test.py']),
+              ('p2-strict-finalizer', ['python', 'tool/p2_strict_finalizer_contract_test.py', '--project', '.']),
+              ('p2-task-assertion', ['python', 'tool/p2_task_assertion_cli_test.py', '--project', '.']),
+              ('dart-format-scope', ['python', 'tool/dart_format_scope.py', '--check']),
+              ('flutter-analyze', ['flutter', 'analyze', '--no-pub', '--fatal-warnings', '--fatal-infos']),
+              ('flutter-product-tests', ['flutter', 'test', '--no-pub', '--concurrency=1', '--reporter', 'expanded', 'test/product']),
+              ('flutter-full-tests', ['flutter', 'test', '--no-pub', '--concurrency=1', '--reporter', 'expanded']),
+              ('automation-host-tests', ['npm', 'test', '--prefix', 'automation_host']),
+          ]
+          results = []
+          for name, command in commands:
+              log = output / f'{name}.log'
+              with log.open('w', encoding='utf-8') as handle:
+                  handle.write('$ ' + ' '.join(command) + '\n\n')
+                  handle.flush()
+                  completed = subprocess.run(
+                      command,
+                      cwd=root,
+                      stdout=handle,
+                      stderr=subprocess.STDOUT,
+                      text=True,
+                      check=False,
+                  )
+              results.append({'name': name, 'exitCode': completed.returncode, 'log': log.name})
+              print(f'{name}: {completed.returncode}')
+          diff = subprocess.run(
+              ['git', 'status', '--porcelain'],
+              cwd=root,
+              capture_output=True,
+              text=True,
+              check=False,
+          )
+          (output / 'git-status.txt').write_text(diff.stdout, encoding='utf-8')
+          results.append({'name': 'git-status-clean', 'exitCode': 0 if not diff.stdout else 1, 'log': 'git-status.txt'})
+          (output / 'summary.json').write_text(
+              json.dumps(results, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          if any(item['exitCode'] != 0 for item in results):
+              raise SystemExit(1)
+          PY
+      - name: Upload complete diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: repo-rehab-p211-diagnostics
+          path: ${{ runner.temp }}/p211-diagnostics/
+          if-no-files-found: error
+          retention-days: 1
