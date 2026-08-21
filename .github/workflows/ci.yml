@@ -48,6 +48,7 @@ jobs:
             tool/kris_qwen_v53_reconcile.py \
             tool/kris_qwen_engineering_env.py \
             tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_compat_test.py \
             tool/kris_qwen_v531_test.py \
             tool/kris_qwen_engineering_env_test.py \
             tool/kris_qwen_v541_test.py \
@@ -55,6 +56,7 @@ jobs:
           python tool/kris_qwen_v531_test.py
           python tool/kris_qwen_engineering_env_test.py
           python tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_control_compat_test.py
           python tool/kris_qwen_control_token_redaction_test.py
           python tool/kris_qwen_worker_v53.py version | tee /tmp/kris-qwen-v541-version.json
           python - <<'PY'
@@ -65,7 +67,7 @@ jobs:
           assert str(value.get('path', '')).endswith('kris_qwen_worker_v541.py'), value
           PY
           bash -n tool/install_kris_qwen_control_systemd.sh
-          [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.0' ]]
+          [[ "$(python tool/kris_qwen_control.py.compat.py --version)" == '2.2.1' ]]
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:

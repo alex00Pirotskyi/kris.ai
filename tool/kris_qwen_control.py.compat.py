@@ -13,7 +13,7 @@ import time
 
 SOURCE = pathlib.Path(__file__).with_name("kris_qwen_control.py")
 CONTROLLER_ENTRY = pathlib.Path(__file__).resolve()
-TARGET_CONTROL_VERSION = "2.2.0"
+TARGET_CONTROL_VERSION = "2.2.1"
 
 
 def controller_runtime_fingerprint(entry: pathlib.Path, source: pathlib.Path) -> str:
@@ -130,13 +130,15 @@ base.discover_phone_urls = trusted_discover_phone_urls
 base.ControlHandler._peer_allowed = _trusted_peer_allowed
 base.ControlHandler._origin_allowed = _trusted_origin_allowed
 base.ControlHandler.do_GET = _trusted_do_get
-base.ControlHandler.server_version = "KrisQwenControl/2.2"
+base.ControlHandler.server_version = "KrisQwenControl/2.2.1"
 
 
 class AlwaysOnQwenController(BaseController):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.auto_run_enabled = True
+        self.auto_run_state_error: str | None = None
+        self.auto_run_state: dict = {}
+        self.auto_run_enabled = self._load_auto_run_enabled()
         self.auto_update_enabled = base.env_bool("KRIS_QWEN_AUTO_UPDATE", True)
         self.self_restart_on_update = base.env_bool("KRIS_QWEN_CONTROLLER_SELF_RESTART", False)
         self.controller_runtime_sha256 = controller_runtime_fingerprint(CONTROLLER_ENTRY, SOURCE)
@@ -155,17 +157,72 @@ class AlwaysOnQwenController(BaseController):
             )
             self.auto_update_thread.start()
 
+    @property
+    def auto_run_state_path(self) -> pathlib.Path:
+        return self.cfg.state_dir / "auto-run-state.json"
+
+    def _write_auto_run_state(self, enabled: bool, reason: str) -> dict:
+        row = {
+            "schemaVersion": 1,
+            "autoRunEnabled": bool(enabled),
+            "reason": str(reason).strip()[:512] or "unspecified",
+            "updatedAt": base.utc_iso(),
+        }
+        base.atomic_write_json(self.auto_run_state_path, row)
+        self.auto_run_state = row
+        self.auto_run_enabled = bool(enabled)
+        self.auto_run_state_error = None
+        return row
+
+    def _load_auto_run_enabled(self) -> bool:
+        path = self.auto_run_state_path
+        if not path.exists():
+            self._write_auto_run_state(True, "initial_default_enabled")
+            return True
+        row = base.read_json(path)
+        valid = (
+            isinstance(row, dict)
+            and row.get("schemaVersion") == 1
+            and isinstance(row.get("autoRunEnabled"), bool)
+            and isinstance(row.get("reason"), str)
+            and bool(str(row.get("reason")).strip())
+            and isinstance(row.get("updatedAt"), str)
+            and bool(str(row.get("updatedAt")).strip())
+        )
+        if not valid:
+            detail = (
+                "invalid durable auto-run state; automatic update and restart "
+                "remain paused until an explicit Run current Qwen or "
+                "Fetch latest + run Qwen"
+            )
+            self._write_auto_run_state(
+                False,
+                "invalid_durable_state_fail_closed",
+            )
+            self.auto_run_state_error = detail
+            return False
+        self.auto_run_state = dict(row)
+        self.auto_run_enabled = bool(row["autoRunEnabled"])
+        return self.auto_run_enabled
+
+    def _set_auto_run_enabled(self, enabled: bool, reason: str) -> dict:
+        with self.lock:
+            return self._write_auto_run_state(enabled, reason)
+
     def start(self):
-        self.auto_run_enabled = True
+        self._set_auto_run_enabled(True, "operator_run_current")
         return super().start()
 
     def request_safe_stop(self, reason: str = "Qwen phone control safe stop"):
         if reason == "Qwen phone control safe stop":
-            self.auto_run_enabled = False
+            self._set_auto_run_enabled(False, "operator_safe_stop")
         return super().request_safe_stop(reason)
 
     def fetch_latest_and_run(self):
-        self.auto_run_enabled = True
+        self._set_auto_run_enabled(
+            True,
+            "operator_fetch_latest_and_run",
+        )
         return super().fetch_latest_and_run()
 
     def _remote_branch_head(self) -> str:
@@ -462,6 +519,9 @@ class AlwaysOnQwenController(BaseController):
             "enabled": self.auto_update_enabled,
             "intervalSeconds": self.auto_update_seconds,
             "autoRunEnabled": self.auto_run_enabled,
+            "operatorIntent": dict(self.auto_run_state),
+            "operatorIntentPath": str(self.auto_run_state_path),
+            "operatorIntentError": self.auto_run_state_error,
             "selfRestartOnControllerUpdate": self.self_restart_on_update,
             "last": self.last_auto_update,
         }

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import pathlib
 import sys
@@ -20,10 +21,10 @@ spec.loader.exec_module(control)
 
 def config(root: pathlib.Path):
     repo = root / "repo"
-    repo.mkdir()
-    (repo / ".git").mkdir()
+    repo.mkdir(exist_ok=True)
+    (repo / ".git").mkdir(exist_ok=True)
     worker = repo / "tool" / "kris_qwen_worker_v53.py"
-    worker.parent.mkdir()
+    worker.parent.mkdir(exist_ok=True)
     worker.write_text("#!/usr/bin/env python3\n", encoding="utf-8")
     return control.base.ControlConfig(
         repo_dir=repo,
@@ -298,6 +299,111 @@ class AutoUpdateContractTest(unittest.TestCase):
             validate.assert_not_called()
             fetch.assert_not_called()
             start.assert_not_called()
+
+    def test_operator_pause_survives_controller_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = pathlib.Path(raw)
+            controller = self.controller(root)
+            result = controller.request_safe_stop()
+            self.assertEqual(result["status"], "ALREADY_STOPPED")
+            self.assertFalse(controller.auto_run_enabled)
+            persisted = json.loads(
+                controller.auto_run_state_path.read_text(encoding="utf-8")
+            )
+            self.assertFalse(persisted["autoRunEnabled"])
+            self.assertEqual(persisted["reason"], "operator_safe_stop")
+
+            restarted = self.controller(root)
+            self.assertFalse(restarted.auto_run_enabled)
+            with mock.patch.object(restarted, "_validate_repo") as validate:
+                self.assertEqual(
+                    restarted._auto_update_once(),
+                    {"status": "PAUSED"},
+                )
+            validate.assert_not_called()
+
+    def test_explicit_run_actions_clear_durable_pause(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = pathlib.Path(raw)
+            controller = self.controller(root)
+            controller._set_auto_run_enabled(False, "test_pause")
+
+            restarted = self.controller(root)
+            with mock.patch.object(
+                control.BaseController,
+                "start",
+                return_value={"status": "STARTED", "pid": 42},
+            ):
+                self.assertEqual(restarted.start()["status"], "STARTED")
+            after_start = self.controller(root)
+            self.assertTrue(after_start.auto_run_enabled)
+            self.assertEqual(
+                after_start.auto_run_state["reason"],
+                "operator_run_current",
+            )
+
+            after_start._set_auto_run_enabled(False, "test_pause_again")
+            paused_again = self.controller(root)
+            with mock.patch.object(
+                control.BaseController,
+                "fetch_latest_and_run",
+                return_value={"status": "QUEUED"},
+            ):
+                self.assertEqual(
+                    paused_again.fetch_latest_and_run()["status"],
+                    "QUEUED",
+                )
+            after_fetch = self.controller(root)
+            self.assertTrue(after_fetch.auto_run_enabled)
+            self.assertEqual(
+                after_fetch.auto_run_state["reason"],
+                "operator_fetch_latest_and_run",
+            )
+
+    def test_invalid_durable_state_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = pathlib.Path(raw)
+            cfg = config(root)
+            cfg.state_dir.mkdir(parents=True, exist_ok=True)
+            state = cfg.state_dir / "auto-run-state.json"
+            state.write_text(
+                '{"schemaVersion":1,"autoRunEnabled":"yes"}' + chr(10),
+                encoding="utf-8",
+            )
+            env = {
+                "KRIS_QWEN_AUTO_UPDATE": "0",
+                "KRIS_QWEN_CONTROLLER_SELF_RESTART": "0",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                controller = control.AlwaysOnQwenController(cfg)
+            self.assertFalse(controller.auto_run_enabled)
+            self.assertIsNotNone(controller.auto_run_state_error)
+            rewritten = json.loads(state.read_text(encoding="utf-8"))
+            self.assertFalse(rewritten["autoRunEnabled"])
+            self.assertEqual(
+                rewritten["reason"],
+                "invalid_durable_state_fail_closed",
+            )
+
+    def test_status_exposes_durable_operator_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            controller = self.controller(pathlib.Path(raw))
+            controller._set_auto_run_enabled(False, "test_status")
+            with mock.patch.object(
+                control.BaseController,
+                "status",
+                return_value={},
+            ):
+                status = controller.status()["autoUpdate"]
+            self.assertFalse(status["autoRunEnabled"])
+            self.assertEqual(
+                status["operatorIntent"]["reason"],
+                "test_status",
+            )
+            self.assertEqual(
+                status["operatorIntentPath"],
+                str(controller.auto_run_state_path),
+            )
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ for arg in "$@"; do
       cat <<'EOF'
 Usage: install_kris_qwen_control_systemd.sh [--phone]
 
-Installs the durable systemd supervisor for Qwen engineering worker 5.4.1 / controller 2.2.
+Installs the durable systemd supervisor for Qwen engineering worker 5.4.1 / controller 2.2.1.
 
   --phone   bind the controller to 0.0.0.0 with explicit remote-HTTP opt-in.
             Use only on a trusted LAN/VPN; never expose port 8090 publicly.
@@ -91,6 +91,7 @@ required=(
   "${REPO_DIR}/tool/kris_qwen_v531_test.py"
   "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py"
   "${REPO_DIR}/tool/kris_qwen_v541_test.py"
+  "${REPO_DIR}/tool/kris_qwen_control_compat_test.py"
   "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"
   "${REPO_DIR}/tool/rotate_kris_qwen_control_token.sh"
 )
@@ -134,6 +135,7 @@ as_service_user "${PYTHON_BIN}" -m py_compile \
   "${REPO_DIR}/tool/kris_qwen_v531_test.py" \
   "${REPO_DIR}/tool/kris_qwen_engineering_env_test.py" \
   "${REPO_DIR}/tool/kris_qwen_v541_test.py" \
+  "${REPO_DIR}/tool/kris_qwen_control_compat_test.py" \
   "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"
 
 WORKER_VERSION="$(as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_worker_v53.py" version)"
@@ -153,13 +155,17 @@ if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v541_test.py" >
   echo "Qwen worker 5.4.1 deployment regression preflight failed." >&2
   exit 2
 fi
+if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_compat_test.py" >/dev/null; then
+  echo "Qwen controller durable-pause regression preflight failed." >&2
+  exit 2
+fi
 if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py" >/dev/null; then
   echo "Qwen controller token-redaction regression preflight failed." >&2
   exit 2
 fi
 CONTROLLER_VERSION="$(as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control.py.compat.py" --version)"
-if [[ "${CONTROLLER_VERSION}" != "2.2.0" ]]; then
-  echo "Qwen controller 2.2 preflight failed: ${CONTROLLER_VERSION}" >&2
+if [[ "${CONTROLLER_VERSION}" != "2.2.1" ]]; then
+  echo "Qwen controller 2.2.1 preflight failed: ${CONTROLLER_VERSION}" >&2
   exit 2
 fi
 
@@ -247,6 +253,7 @@ ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_worker_v53.py version
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v531_test.py
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_engineering_env_test.py
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v541_test.py
+ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_compat_test.py
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py
 ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py.compat.py --version
 ExecStart=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control.py.compat.py
@@ -283,7 +290,7 @@ echo
 echo "KRIS Qwen durable always-on engineering control installed."
 echo "Service user: ${SERVICE_USER}"
 echo "Worker:       5.4.1"
-echo "Controller:   2.2.0"
+echo "Controller:   2.2.1"
 echo "Branch:       ${CURRENT_BRANCH}"
 echo "Mode:         $([[ "${PHONE_MODE}" == "1" ]] && echo 'trusted-LAN/VPN phone' || echo 'loopback')"
 echo "Status:       systemctl status kris-qwen-control --no-pager"
@@ -292,7 +299,7 @@ echo "Environment:  ${ENV_FILE}"
 echo "Token file:   ${TOKEN_FILE}"
 echo
 echo "Controller crashes are restarted by systemd. Worker crashes/model-server failures"
-echo "are recovered by controller 2.2 / worker 5.4.1, safe branch updates are automatic,"
+echo "are recovered by controller 2.2.1 / worker 5.4.1, safe branch updates are automatic,"
 echo "and the 5.4.1 engineering environment provides bounded skills/build/test recipes."
 if [[ "${PHONE_MODE}" == "1" ]]; then
   echo
