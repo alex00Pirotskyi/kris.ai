@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0.0",
+  "cases": [
+    {
+      "id": "current-official",
+      "question": "What changed in the current Flutter browser tooling?",
+      "requiredQueryKinds": ["precision", "official", "freshness"],
+      "expectedTerms": ["Flutter", "browser"],
+      "requiresFreshness": true
+    },
+    {
+      "id": "technical-reference",
+      "question": "How does a BLE GATT notification flow work?",
+      "requiredQueryKinds": ["precision", "recall", "official", "follow_up"],
+      "expectedTerms": ["BLE", "GATT", "notification"],
+      "requiresFreshness": false
+    },
+    {
+      "id": "ambiguous-comparison",
+      "question": "Compare two local data stores for an offline desktop app",
+      "requiredQueryKinds": ["precision", "recall", "follow_up"],
+      "expectedTerms": ["data", "stores", "offline"],
+      "requiresFreshness": false
+    },
+    {
+      "id": "local-question",
+      "question": "Find official local accessibility guidance in Nha Trang",
+      "requiredQueryKinds": ["precision", "official", "follow_up"],
+      "expectedTerms": ["accessibility", "Nha", "Trang"],
+      "requiresFreshness": false
+    }
+  ],
+  "thresholds": {
+    "plannerCoverage": 1.0,
+    "citationBinding": 1.0,
+    "immutableSourceVersion": 1.0,
+    "crawlRobotsCompliance": 1.0,
+    "datasetReproducibility": 1.0
+  }
+}

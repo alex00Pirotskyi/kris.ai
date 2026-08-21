@@ -523,8 +523,16 @@ final class _P3StaticPreview {
   });
 
   static const String reloadPath = '/__kristin_live_reload';
-  static const String reloadScript =
-      '<script data-kristin-live-reload>(function(){var e=new EventSource("/__kristin_live_reload");e.onmessage=function(){location.reload();};})();</script>';
+
+  String get reloadScript => '<script data-kristin-live-reload>(function(){'
+      'var revision=$revision;var stopped=false;'
+      'async function poll(){if(stopped){return;}try{'
+      'var response=await fetch("$reloadPath",{cache:"no-store"});'
+      'if(response.ok){var state=await response.json();'
+      'if(Number.isInteger(state.revision)){'
+      'if(state.revision>revision){stopped=true;location.reload();return;}'
+      'revision=state.revision;}}}catch(_){}setTimeout(poll,500);}'
+      'poll();})();</script>';
 
   final String id;
   final HttpServer server;
@@ -536,7 +544,7 @@ final class _P3StaticPreview {
   final int maxReloadClients;
   final WorkspaceBoundary boundary;
 
-  final Set<HttpResponse> _reloadClients = <HttpResponse>{};
+  int _activeReloadPolls = 0;
   P3PreviewLifecycle lifecycle = P3PreviewLifecycle.ready;
   int revision = 0;
   bool _stopped = false;
@@ -563,12 +571,6 @@ final class _P3StaticPreview {
         unawaited(_handle(request));
       }
     } finally {
-      for (final response in _reloadClients.toList()) {
-        try {
-          await response.close();
-        } catch (_) {}
-      }
-      _reloadClients.clear();
       if (!_stopped) lifecycle = P3PreviewLifecycle.failed;
     }
   }
@@ -581,31 +583,10 @@ final class _P3StaticPreview {
         return;
       }
       if (request.uri.path == reloadPath) {
-        if (request.method == 'HEAD') {
-          request.response.statusCode = HttpStatus.ok;
-          await request.response.close();
-          return;
-        }
-        if (_reloadClients.length >= maxReloadClients) {
-          request.response.statusCode = HttpStatus.serviceUnavailable;
-          await request.response.close();
-          return;
-        }
-        final response = request.response;
-        response.statusCode = HttpStatus.ok;
-        response.headers
-          ..contentType = ContentType('text', 'event-stream', charset: 'utf-8')
-          ..set(HttpHeaders.cacheControlHeader, 'no-store')
-          ..set(HttpHeaders.connectionHeader, 'keep-alive');
-        response.bufferOutput = false;
-        _reloadClients.add(response);
-        try {
-          response.write('retry: 500\n\n');
-          await response.flush();
-        } catch (_) {
-          _reloadClients.remove(response);
-          rethrow;
-        }
+        await _serveReloadState(
+          request.response,
+          headOnly: request.method == 'HEAD',
+        );
         return;
       }
 
@@ -656,6 +637,33 @@ final class _P3StaticPreview {
     }
   }
 
+  Future<void> _serveReloadState(
+    HttpResponse response, {
+    required bool headOnly,
+  }) async {
+    if (_activeReloadPolls >= maxReloadClients) {
+      response.statusCode = HttpStatus.serviceUnavailable;
+      await response.close();
+      return;
+    }
+    _activeReloadPolls += 1;
+    try {
+      final body = utf8.encode(
+        '${jsonEncode(<String, int>{'revision': revision})}\n',
+      );
+      response.statusCode = HttpStatus.ok;
+      response.headers
+        ..contentType = ContentType.json
+        ..set(HttpHeaders.cacheControlHeader, 'no-store')
+        ..set('X-Content-Type-Options', 'nosniff');
+      response.contentLength = body.length;
+      if (!headOnly) response.add(body);
+      await response.close();
+    } finally {
+      _activeReloadPolls -= 1;
+    }
+  }
+
   String _injectReload(String html) {
     final bodyIndex = html.toLowerCase().lastIndexOf('</body>');
     if (bodyIndex < 0) return '$html$reloadScript';
@@ -667,26 +675,12 @@ final class _P3StaticPreview {
       throw StateError('web_preview_not_ready');
     }
     revision += 1;
-    for (final response in _reloadClients.toList()) {
-      try {
-        response.write('data: $revision\n\n');
-        await response.flush();
-      } catch (_) {
-        _reloadClients.remove(response);
-      }
-    }
   }
 
   Future<void> stop() async {
     if (_stopped) return;
     _stopped = true;
     lifecycle = P3PreviewLifecycle.stopping;
-    for (final response in _reloadClients.toList()) {
-      try {
-        await response.close();
-      } catch (_) {}
-    }
-    _reloadClients.clear();
     await server.close(force: true);
     lifecycle = P3PreviewLifecycle.stopped;
   }
