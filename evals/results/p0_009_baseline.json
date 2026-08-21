@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "e68c792969516dac851846641e96287af057f46e3bf93eef1ff08c2ad9bc425b",
+  "benchmarkInputsSha256": "6edaf3169165d5c141b77d045db9632283a0ab97fabbd8ac85e45e469985d044",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -369,7 +369,7 @@
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "719a911dd34fbe60748fe15366af17f355360aad652f74580f8a60cf5fcccd9a",
+  "resultFingerprint": "b40c1bb87281f0a419c67abfb4c89d71d0fa692bf209fdb2caf22175bde31bf5",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
   "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
