@@ -88,7 +88,15 @@ jobs:
           test ! -e .p25
           test ! -e .p25-redesign
           test ! -e .p25-adaptive
-          git diff --name-only --diff-filter=U | test ! -s /dev/stdin
+          test -z "$(git diff --name-only --diff-filter=U)"
+
+      - name: Resolve pinned packages before canonical formatting
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          test -z "$(git diff --name-only)"
 
       - name: Canonically format recovered P25 Dart source
         working-directory: candidate
@@ -112,6 +120,7 @@ jobs:
             lib/product/prompt_planning.dart \
             test/product/p25_fast_path_contract_test.dart
           python tool/dart_format_scope.py --check
+          test -z "$(git diff --name-only)"
           git diff --cached --check
 
       - name: Refresh canonical manifest after final source formatting
@@ -155,15 +164,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          flutter pub get
           python tool/dart_format_scope.py --check
-          flutter test --reporter expanded \
+          flutter test --no-pub --reporter expanded \
             test/product/p25_fast_path_contract_test.dart \
             test/product/prompt_studio_v2_test.dart \
             test/product/model/model_registry_test.dart \
             test/product/budget_diagnostics_test.dart \
             test/product/execution_reliability_test.dart
           flutter analyze --no-pub --fatal-warnings --fatal-infos
+          test -z "$(git diff --name-only)"
           git diff --cached --check
 
       - name: Verify manifest is stable after all validation
