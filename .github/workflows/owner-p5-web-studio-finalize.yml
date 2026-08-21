@@ -1,0 +1,138 @@
+name: Owner P5 Web Studio finalizer
+
+on:
+  pull_request:
+    branches:
+      - agent/p4-phase-completion
+    paths:
+      - .github/workflows/owner-p5-web-studio-finalize.yml
+      - .owner-p5-web-studio-test-patch.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: owner-p5-web-studio-finalizer
+  cancel-in-progress: false
+
+env:
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+  EXPECTED_PARENT: 78775a0b69d026bc9623b0d9c0cd6436d3e40ecb
+  EXPECTED_BRANCH: agent/owner-p5-completion
+  PAYLOAD_COMMIT: 302b8ece1c17820c04778ddfc100cee5ddd17fad
+  FINALIZER_PATH: .github/workflows/owner-p5-web-studio-finalize.yml
+  PATCH_PATH: .owner-p5-web-studio-test-patch.py
+
+jobs:
+  finalize:
+    if: github.repository == 'alex00Pirotskyi/kris.ai'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - name: Check out exact guarded transport
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact parent and payload authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_SHA}"
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT}"
+          test -z "$(git status --short)"
+          git fetch --no-tags origin "${PAYLOAD_COMMIT}"
+          test "$(git rev-parse FETCH_HEAD)" = "${PAYLOAD_COMMIT}"
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+
+      - name: Set up pinned Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Install exact dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+
+      - name: Reconstruct and apply reviewed Web Studio payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "${RUNNER_TEMP}/p5-web-studio.b64"
+          for part in 00 01 02 03 04; do
+            git show "${PAYLOAD_COMMIT}:.p5-web-studio-runtime-integration.verifiedpart${part}" >> "${RUNNER_TEMP}/p5-web-studio.b64"
+          done
+          base64 --decode "${RUNNER_TEMP}/p5-web-studio.b64" > "${RUNNER_TEMP}/p5-web-studio.gz"
+          test "$(sha256sum "${RUNNER_TEMP}/p5-web-studio.gz" | cut -d' ' -f1)" = "011355938806af49f689878f4db3c49f7a87b79e3f467044f68b01e9f98e8192"
+          gzip --test "${RUNNER_TEMP}/p5-web-studio.gz"
+          gzip --decompress --stdout "${RUNNER_TEMP}/p5-web-studio.gz" > "${RUNNER_TEMP}/apply_p5_web_studio_integration.py"
+          python -m py_compile "${RUNNER_TEMP}/apply_p5_web_studio_integration.py"
+          python "${RUNNER_TEMP}/apply_p5_web_studio_integration.py"
+          python -m py_compile "${PATCH_PATH}"
+          python "${PATCH_PATH}"
+
+      - name: Format and validate integrated product
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/ui.dart \
+            lib/product/p5_information_architecture \
+            lib/product/browser/browser_runtime.dart \
+            test/product/p5_information_architecture \
+            test/product/browser/browser_runtime_process_test.dart
+          npm test --prefix automation_host
+          flutter test --no-pub --concurrency=1 test/product/browser/browser_runtime_process_test.dart
+          flutter test --no-pub --concurrency=1 test/product/p5_information_architecture
+          python tool/dart_format_scope.py --check
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+          git diff --check
+
+      - name: Remove transport and finalize canonical source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm "${FINALIZER_PATH}" "${PATCH_PATH}"
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp --silent "${RUNNER_TEMP}/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+          test ! -e "${FINALIZER_PATH}"
+          test ! -e "${PATCH_PATH}"
+          test -n "$(git status --short)"
+
+      - name: Publish clean Web Studio integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${EXPECTED_BRANCH}"
+          test "$(git rev-parse "origin/${EXPECTED_BRANCH}")" = "${SOURCE_SHA}"
+          git config user.name 'Kristin Owner P5 Integrator'
+          git config user.email '177022051+alex00Pirotskyi@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat(p5): connect Experience Web Studio to governed P2/P3 runtime'
+          test -z "$(git status --porcelain)"
+          git push origin "HEAD:${EXPECTED_BRANCH}"
