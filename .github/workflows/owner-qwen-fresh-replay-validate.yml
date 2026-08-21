@@ -1,0 +1,269 @@
+name: Owner Fresh Qwen Replay Validate
+
+on:
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-qwen-fresh-replay-validate.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: owner-qwen-fresh-replay-validate
+  cancel-in-progress: false
+
+env:
+  P25_HEAD: 4b42e1d35bc83800839da0d606acfd528affc91c
+  OLD_QWEN_HEAD: e6284689333f34401981dd4ef218e5b34c47f13b
+  STAGING_PATH: automation/staged/qwen-fresh-replay-p25-4b42e1d
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out exact P25 candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 4b42e1d35bc83800839da0d606acfd528affc91c
+          path: candidate
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out hardened historical Qwen source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: e6284689333f34401981dd4ef218e5b34c47f13b
+          path: old-qwen
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out owner recovery branch for verified staging
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/owner-recovery
+          path: recovery
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install exact Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Replay only Qwen-owned source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C candidate rev-parse HEAD)" = "${P25_HEAD}"
+          test "$(git -C old-qwen rev-parse HEAD)" = "${OLD_QWEN_HEAD}"
+          files=(
+            config/qwen_engineering_skills.v1.json
+            docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md
+            docs/KRIS_QWEN_SERVER_CONTROL.md
+            run_my_server.py
+            tool/install_kris_qwen_control_systemd.sh
+            tool/kris_qwen_control.py
+            tool/kris_qwen_control.py.compat.py
+            tool/kris_qwen_control_compat_test.py
+            tool/kris_qwen_control_test.py
+            tool/kris_qwen_control_token_redaction_test.py
+            tool/kris_qwen_engineering_env.py
+            tool/kris_qwen_engineering_env_test.py
+            tool/kris_qwen_v531_test.py
+            tool/kris_qwen_v53_policy.py
+            tool/kris_qwen_v53_reconcile.py
+            tool/kris_qwen_v53_recovery.py
+            tool/kris_qwen_v541_test.py
+            tool/kris_qwen_worker.py
+            tool/kris_qwen_worker.py.compat.py
+            tool/kris_qwen_worker_v53.py
+            tool/kris_qwen_worker_v531.py
+            tool/kris_qwen_worker_v53_base.py
+            tool/kris_qwen_worker_v54.py
+            tool/kris_qwen_worker_v541.py
+            tool/rotate_kris_qwen_control_token.sh
+            tool/run_kris_qwen_phone_control.sh
+          )
+          for path in "${files[@]}"; do
+            test -f "old-qwen/${path}"
+            test ! -e "candidate/${path}"
+            mkdir -p "candidate/$(dirname "${path}")"
+            cp -p "old-qwen/${path}" "candidate/${path}"
+          done
+
+      - name: Add only the current Qwen regression hook to Product Gates
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/ci.yml')
+          text = path.read_text(encoding='utf-8')
+          anchor = """      - name: Set up Flutter\n        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0\n"""
+          block = """      - name: Qwen 5.4.1 engineering worker regression\n        if: runner.os == 'Linux'\n        shell: bash\n        run: |\n          set -euo pipefail\n          python -m py_compile \\\n            run_my_server.py \\\n            tool/kris_qwen_worker.py.compat.py \\\n            tool/kris_qwen_worker_v53.py \\\n            tool/kris_qwen_worker_v53_base.py \\\n            tool/kris_qwen_worker_v531.py \\\n            tool/kris_qwen_worker_v54.py \\\n            tool/kris_qwen_worker_v541.py \\\n            tool/kris_qwen_v53_policy.py \\\n            tool/kris_qwen_v53_recovery.py \\\n            tool/kris_qwen_v53_reconcile.py \\\n            tool/kris_qwen_engineering_env.py \\\n            tool/kris_qwen_control.py.compat.py \\\n            tool/kris_qwen_control_compat_test.py \\\n            tool/kris_qwen_v531_test.py \\\n            tool/kris_qwen_engineering_env_test.py \\\n            tool/kris_qwen_v541_test.py \\\n            tool/kris_qwen_control_token_redaction_test.py\n          python tool/kris_qwen_v531_test.py\n          python tool/kris_qwen_engineering_env_test.py\n          python tool/kris_qwen_v541_test.py\n          python tool/kris_qwen_control_compat_test.py\n          python tool/kris_qwen_control_token_redaction_test.py\n          python tool/kris_qwen_worker_v53.py version | tee /tmp/kris-qwen-v541-version.json\n          python - <<'PY_QWEN_VERSION'\n          import json\n          import pathlib\n          value = json.loads(pathlib.Path('/tmp/kris-qwen-v541-version.json').read_text(encoding='utf-8'))\n          assert value.get('scriptVersion') == '5.4.1', value\n          assert str(value.get('path', '')).endswith('kris_qwen_worker_v541.py'), value\n          PY_QWEN_VERSION\n          bash -n tool/install_kris_qwen_control_systemd.sh\n          [[ \"$(python tool/kris_qwen_control.py.compat.py --version)\" == '2.2.2' ]]\n"""
+          if text.count(anchor) != 1:
+              raise SystemExit(f'current CI Flutter anchor drifted: {text.count(anchor)}')
+          if 'Qwen 5.4.1 engineering worker regression' in text:
+              raise SystemExit('current P25 CI unexpectedly already contains Qwen hook')
+          path.write_text(text.replace(anchor, block + anchor, 1), encoding='utf-8', newline='\n')
+          PY
+          git diff --check
+
+      - name: Regenerate canonical manifest for fresh combined source
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "${RUNNER_TEMP}/manifest.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+
+      - name: Validate Qwen worker controller engineering and phone security
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            run_my_server.py \
+            tool/kris_qwen_worker.py.compat.py \
+            tool/kris_qwen_worker_v53.py \
+            tool/kris_qwen_worker_v53_base.py \
+            tool/kris_qwen_worker_v531.py \
+            tool/kris_qwen_worker_v54.py \
+            tool/kris_qwen_worker_v541.py \
+            tool/kris_qwen_v53_policy.py \
+            tool/kris_qwen_v53_recovery.py \
+            tool/kris_qwen_v53_reconcile.py \
+            tool/kris_qwen_engineering_env.py \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_compat_test.py \
+            tool/kris_qwen_control_test.py \
+            tool/kris_qwen_control_token_redaction_test.py \
+            tool/kris_qwen_v531_test.py \
+            tool/kris_qwen_engineering_env_test.py \
+            tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_v531_test.py
+          python tool/kris_qwen_engineering_env_test.py
+          python tool/kris_qwen_v541_test.py
+          python tool/kris_qwen_control_compat_test.py
+          python tool/kris_qwen_control_token_redaction_test.py
+          test "$(python tool/kris_qwen_control.py.compat.py --version)" = '2.2.2'
+          python tool/kris_qwen_worker_v53.py version > "${RUNNER_TEMP}/qwen-version.json"
+          python3 - "${RUNNER_TEMP}/qwen-version.json" <<'PY'
+          import json, pathlib, sys
+          value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          assert value.get('scriptVersion') == '5.4.1', value
+          assert str(value.get('path','')).endswith('kris_qwen_worker_v541.py'), value
+          PY
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          bash -n tool/rotate_kris_qwen_control_token.sh
+          bash -n tool/run_kris_qwen_phone_control.sh
+
+      - name: Validate P25 and cumulative source contracts remain healthy
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/system_test.py --project . --json > "${RUNNER_TEMP}/system.json"
+          python3 - "${RUNNER_TEMP}/system.json" <<'PY'
+          import json, pathlib, sys
+          value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          assert value.get('failed') == 0, value
+          PY
+          python tool/benchmark_runner.py check --project .
+          python tool/p0_010_generated_state_test.py --project . >/dev/null
+          python tool/p25_prompt_studio_roadmap_test.py --project .
+          python tool/p25_prompt_studio_test_station.py --project . --profile contract --check >/dev/null
+          python tool/test_center_contracts.py check --project .
+          python tool/test_center_assurance_hierarchy.py check --project .
+          git diff --check
+
+      - name: Prove exact replay scope
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only | sort > "${RUNNER_TEMP}/actual.txt"
+          cat > "${RUNNER_TEMP}/expected.txt" <<'EOF'
+          .github/workflows/ci.yml
+          SOURCE_MANIFEST.sha256
+          config/qwen_engineering_skills.v1.json
+          docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md
+          docs/KRIS_QWEN_SERVER_CONTROL.md
+          run_my_server.py
+          tool/install_kris_qwen_control_systemd.sh
+          tool/kris_qwen_control.py
+          tool/kris_qwen_control.py.compat.py
+          tool/kris_qwen_control_compat_test.py
+          tool/kris_qwen_control_test.py
+          tool/kris_qwen_control_token_redaction_test.py
+          tool/kris_qwen_engineering_env.py
+          tool/kris_qwen_engineering_env_test.py
+          tool/kris_qwen_v531_test.py
+          tool/kris_qwen_v53_policy.py
+          tool/kris_qwen_v53_reconcile.py
+          tool/kris_qwen_v53_recovery.py
+          tool/kris_qwen_v541_test.py
+          tool/kris_qwen_worker.py
+          tool/kris_qwen_worker.py.compat.py
+          tool/kris_qwen_worker_v53.py
+          tool/kris_qwen_worker_v531.py
+          tool/kris_qwen_worker_v53_base.py
+          tool/kris_qwen_worker_v54.py
+          tool/kris_qwen_worker_v541.py
+          tool/rotate_kris_qwen_control_token.sh
+          tool/run_kris_qwen_phone_control.sh
+          EOF
+          sed -i 's/^          //' "${RUNNER_TEMP}/expected.txt"
+          sort -o "${RUNNER_TEMP}/expected.txt" "${RUNNER_TEMP}/expected.txt"
+          diff -u "${RUNNER_TEMP}/expected.txt" "${RUNNER_TEMP}/actual.txt"
+          git diff --check
+
+      - name: Stage exact verified replay artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf verified-tree
+          mkdir -p verified-tree
+          cd candidate
+          while IFS= read -r path; do
+            test -f "${path}"
+            mkdir -p "../verified-tree/$(dirname "${path}")"
+            cp -p "${path}" "../verified-tree/${path}"
+          done < "${RUNNER_TEMP}/actual.txt"
+          cd ..
+          printf 'base=%s\nsourceQwen=%s\nworker=5.4.1\ncontroller=2.2.2\n' "${P25_HEAD}" "${OLD_QWEN_HEAD}" > verified-tree/REPLAY_METADATA.txt
+          find verified-tree -type f ! -name REPLAY_SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > verified-tree/REPLAY_SHA256SUMS.txt
+
+      - name: Upload exact verified fresh-Qwen replay
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: qwen-fresh-replay-p25-4b42e1d
+          path: verified-tree
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish verified replay blobs to recovery namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="recovery/${STAGING_PATH}"
+          rm -rf "${target}"
+          mkdir -p "${target}"
+          cp -a verified-tree/. "${target}/"
+          git -C recovery config user.name 'github-actions[bot]'
+          git -C recovery config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C recovery add -- "${STAGING_PATH}"
+          git -C recovery diff --cached --check
+          if ! git -C recovery diff --cached --quiet; then
+            git -C recovery commit -m 'chore(qwen): stage verified fresh replay on P25'
+            git -C recovery push origin HEAD:automation/owner-recovery
+          fi
