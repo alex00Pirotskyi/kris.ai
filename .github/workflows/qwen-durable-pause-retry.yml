@@ -1,4 +1,4 @@
-name: Qwen Durable Pause Retry
+name: Qwen Durable Pause Artifact
 
 on:
   push:
@@ -8,10 +8,10 @@ on:
       - '.github/workflows/qwen-durable-pause-retry.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: qwen-durable-pause-retry
+  group: qwen-durable-pause-artifact
   cancel-in-progress: false
 
 env:
@@ -19,33 +19,7 @@ env:
   PRODUCT_BRANCH: agent/qwen-phone-control
 
 jobs:
-  heartbeat:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out automation branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: automation/qwen-phone-control-materializer
-          fetch-depth: 0
-          persist-credentials: true
-      - name: Record retry run
-        shell: bash
-        run: |
-          set -euo pipefail
-          printf 'workflow=%s\ntrigger=%s\nrun=%s\nproductHead=%s\n' \
-            "${GITHUB_WORKFLOW}" "${GITHUB_SHA}" "${GITHUB_RUN_ID}" \
-            "${EXPECTED_PRODUCT_HEAD}" \
-            > .github/qwen-durable-pause-retry-heartbeat.txt
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .github/qwen-durable-pause-retry-heartbeat.txt
-          if ! git diff --cached --quiet; then
-            git commit -m 'chore(qwen): record durable-pause retry run'
-            git push origin HEAD:automation/qwen-phone-control-materializer
-          fi
-
   materialize:
-    needs: heartbeat
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -63,7 +37,7 @@ jobs:
           ref: agent/qwen-phone-control
           path: product
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Verify exact unchanged product head
         working-directory: product
@@ -138,27 +112,35 @@ jobs:
               )
           PY
 
-      - name: Publish exact durable-pause candidate
+      - name: Stage exact verified five-file tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p verified-tree/.github/workflows verified-tree/tool
+          cp product/.github/workflows/ci.yml verified-tree/.github/workflows/ci.yml
+          cp product/SOURCE_MANIFEST.sha256 verified-tree/SOURCE_MANIFEST.sha256
+          cp product/tool/install_kris_qwen_control_systemd.sh verified-tree/tool/install_kris_qwen_control_systemd.sh
+          cp product/tool/kris_qwen_control.py.compat.py verified-tree/tool/kris_qwen_control.py.compat.py
+          cp product/tool/kris_qwen_control_compat_test.py verified-tree/tool/kris_qwen_control_compat_test.py
+          printf 'base=%s\nbranch=%s\nfiles=5\ncontroller=2.2.1\n' \
+            "${EXPECTED_PRODUCT_HEAD}" "${PRODUCT_BRANCH}" \
+            > verified-tree/METADATA.txt
+          find verified-tree -type f -print0 | sort -z | xargs -0 sha256sum \
+            > verified-tree/ARTIFACT_SHA256SUMS.txt
+
+      - name: Upload exact verified candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: qwen-durable-pause-9efd037
+          path: verified-tree
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Verify product branch remained untouched
         working-directory: product
         shell: bash
         run: |
           set -euo pipefail
           remote_head="$(git ls-remote origin "refs/heads/${PRODUCT_BRANCH}" | cut -f1)"
           test "${remote_head}" = "${EXPECTED_PRODUCT_HEAD}"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- \
-            .github/workflows/ci.yml \
-            SOURCE_MANIFEST.sha256 \
-            tool/install_kris_qwen_control_systemd.sh \
-            tool/kris_qwen_control.py.compat.py \
-            tool/kris_qwen_control_compat_test.py
-          git diff --cached --check
-          test "$(git diff --cached --name-only | wc -l)" -eq 5
-          git commit -m 'fix(qwen): persist operator safe stop'
-          candidate="$(git rev-parse HEAD)"
-          git push origin "HEAD:refs/heads/${PRODUCT_BRANCH}"
-          git fetch origin "+refs/heads/${PRODUCT_BRANCH}:refs/remotes/origin/${PRODUCT_BRANCH}"
-          remote="$(git rev-parse "origin/${PRODUCT_BRANCH}")"
-          test "${remote}" = "${candidate}"
-          echo "QWEN_DURABLE_PAUSE_PUBLISHED candidate=${candidate}"
