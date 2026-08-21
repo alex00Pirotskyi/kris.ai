@@ -1,0 +1,117 @@
+name: Owner P25 Contract Marker Diagnose
+
+on:
+  push:
+    branches:
+      - automation/owner-recovery
+    paths:
+      - .github/workflows/owner-p25-contract-marker-diagnose.yml
+
+permissions:
+  contents: write
+
+env:
+  P25_HEAD: 31714a77b2f0fbf08f0c6b895fa5ef00aa82a960
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact P25 candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 31714a77b2f0fbf08f0c6b895fa5ef00aa82a960
+          path: candidate
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check out report branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: automation/owner-recovery
+          path: report
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Resolve missing compatibility markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          root = pathlib.Path('candidate')
+          def read(path):
+              return (root / path).read_text(encoding='utf-8')
+
+          studio = read('lib/product/chat_studio.dart')
+          controls = [
+              'Generate prompt',
+              'Generate task list',
+              'Run all tasks',
+              'Run selected task + dependencies',
+              'Stop all running tasks',
+              'Save new plan revision',
+          ]
+          control_missing = [marker for marker in controls if marker not in studio]
+
+          combined = ''.join([
+              read('lib/product/models_research.dart'),
+              read('lib/product/storage_security.dart'),
+              read('lib/product/product_runtime.dart'),
+              read('lib/product/planning_runtime.dart'),
+              read('lib/product/prompt_planning.dart'),
+              read('lib/product/deployment_support.dart'),
+              read('test/product/execution_reliability_test.dart'),
+              read('test/product/v1_product_preview_test.dart'),
+          ])
+          ollama_markers = [
+              'class ModelGenerationProgress',
+              'defaultLoadTimeout = const Duration(minutes: 8)',
+              'defaultLoadRetries = 1',
+              "'prompt': ''",
+              "'stream': false",
+              'load_retry_scheduled',
+              '_closeOnCancellation',
+              '_remainingUntil',
+              '_shorterDuration',
+              'ollamaLoadTimeoutSeconds',
+              'ollamaLoadRetries',
+              'ollamaKeepAliveMinutes',
+              'cancellation: control.cancellation.cancelled',
+              'provider already performs its configured bounded cold-load retry',
+              '### Model availability and cold-load recovery',
+              'Run local usability and interaction verification',
+              'Capability alignment replaces the unsupported human-study instruction',
+              'Do not recruit participants',
+              '.clamp(2, 3)',
+              'manual: alignedManual',
+              'Ollama retries a transient cold-load timeout inside one model turn',
+              'cancelling a run closes an in-flight Ollama cold load',
+          ]
+          ollama_missing = [marker for marker in ollama_markers if marker not in combined]
+          report = {
+              'schemaVersion': 1,
+              'head': '31714a77b2f0fbf08f0c6b895fa5ef00aa82a960',
+              'promptControlMissing': control_missing,
+              'ollamaContractMissing': ollama_missing,
+          }
+          path = pathlib.Path('report/.owner-p25-contract-marker-diagnosis.json')
+          path.write_text(json.dumps(report, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Publish marker diagnosis
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C report config user.name 'github-actions[bot]'
+          git -C report config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C report add -- .owner-p25-contract-marker-diagnosis.json
+          git -C report diff --cached --check
+          if ! git -C report diff --cached --quiet; then
+            git -C report commit -m 'chore(owner): record P25 missing contract markers'
+            git -C report push origin HEAD:automation/owner-recovery
+          fi
