@@ -1,5 +1,5 @@
-# validation target: Qwen 5.3 never-idle / never-stop / self-healing phone execution
-name: Qwen Phone Control Materializer
+# validation target: Qwen controller 2.2.1 durable operator pause
+name: Qwen Durable Pause Materializer
 
 on:
   push:
@@ -19,216 +19,639 @@ jobs:
   materialize:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      EXPECTED_HEAD: 9efd037f3f95473d6b9e2facb2a6fda83cd5a018
+      PRODUCT_BRANCH: agent/qwen-phone-control
     steps:
-      - name: Check out exact phone-control candidate
+      - name: Check out exact Qwen candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: agent/qwen-phone-control
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Verify clean always-on rollout surface
+      - name: Verify exact unchanged product head
         shell: bash
         run: |
           set -euo pipefail
-          test ! -e .github/workflows/qwen-always-on-materialize.yml
-          test ! -e .github/workflows/qwen-always-on-anchor-audit.yml
-          for path in \
-            run_my_server.py \
-            tool/kris_qwen_worker.py \
-            tool/kris_qwen_worker.py.compat.py \
-            tool/kris_qwen_worker_v53.py \
-            tool/kris_qwen_v53_policy.py \
-            tool/kris_qwen_control.py \
-            tool/kris_qwen_control.py.compat.py \
-            tool/kris_qwen_control_test.py \
-            tool/kris_qwen_control_compat_test.py; do
-            test -f "$path"
-          done
-          git diff --check
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD}"
+          remote_head="$(git ls-remote origin "refs/heads/${PRODUCT_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
+          test -z "$(git status --porcelain --untracked-files=all)"
 
-      - name: Compile and execute deterministic worker 5.3
+      - name: Materialize durable Safe stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import pathlib
+          import textwrap
+
+          def replace_count(
+              path: str,
+              old: str,
+              new: str,
+              expected: int,
+              label: str,
+          ) -> None:
+              target = pathlib.Path(path)
+              text = target.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != expected:
+                  raise SystemExit(
+                      f"{label}: expected {expected} anchors in {path}, found {count}"
+                  )
+              target.write_text(
+                  text.replace(old, new),
+                  encoding="utf-8",
+                  newline="\n",
+              )
+
+          def replace_exact(path: str, old: str, new: str, label: str) -> None:
+              replace_count(path, old, new, 1, label)
+
+          replace_exact(
+              "tool/kris_qwen_control.py.compat.py",
+              'TARGET_CONTROL_VERSION = "2.2.0"',
+              'TARGET_CONTROL_VERSION = "2.2.1"',
+              "controller version",
+          )
+          replace_exact(
+              "tool/kris_qwen_control.py.compat.py",
+              'base.ControlHandler.server_version = "KrisQwenControl/2.2"',
+              'base.ControlHandler.server_version = "KrisQwenControl/2.2.1"',
+              "controller HTTP identity",
+          )
+
+          old_controller = '''class AlwaysOnQwenController(BaseController):
+              def __init__(self, cfg):
+                  super().__init__(cfg)
+                  self.auto_run_enabled = True
+                  self.auto_update_enabled = base.env_bool("KRIS_QWEN_AUTO_UPDATE", True)
+                  self.self_restart_on_update = base.env_bool("KRIS_QWEN_CONTROLLER_SELF_RESTART", False)
+                  self.controller_runtime_sha256 = controller_runtime_fingerprint(CONTROLLER_ENTRY, SOURCE)
+                  self.last_auto_update: dict | None = None
+                  try:
+                      interval = int(os.environ.get("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30"))
+                  except ValueError as exc:
+                      raise base.ControllerError("KRIS_QWEN_AUTO_UPDATE_SECONDS must be an integer") from exc
+                  self.auto_update_seconds = max(10, interval)
+                  self.auto_update_thread = None
+                  if self.auto_update_enabled:
+                      self.auto_update_thread = threading.Thread(
+                          target=self._auto_update_loop,
+                          name="kris-qwen-auto-update",
+                          daemon=True,
+                      )
+                      self.auto_update_thread.start()
+
+              def start(self):
+                  self.auto_run_enabled = True
+                  return super().start()
+
+              def request_safe_stop(self, reason: str = "Qwen phone control safe stop"):
+                  if reason == "Qwen phone control safe stop":
+                      self.auto_run_enabled = False
+                  return super().request_safe_stop(reason)
+
+              def fetch_latest_and_run(self):
+                  self.auto_run_enabled = True
+                  return super().fetch_latest_and_run()
+          '''
+          new_controller = '''class AlwaysOnQwenController(BaseController):
+              def __init__(self, cfg):
+                  super().__init__(cfg)
+                  self.auto_run_state_error: str | None = None
+                  self.auto_run_state: dict = {}
+                  self.auto_run_enabled = self._load_auto_run_enabled()
+                  self.auto_update_enabled = base.env_bool("KRIS_QWEN_AUTO_UPDATE", True)
+                  self.self_restart_on_update = base.env_bool("KRIS_QWEN_CONTROLLER_SELF_RESTART", False)
+                  self.controller_runtime_sha256 = controller_runtime_fingerprint(CONTROLLER_ENTRY, SOURCE)
+                  self.last_auto_update: dict | None = None
+                  try:
+                      interval = int(os.environ.get("KRIS_QWEN_AUTO_UPDATE_SECONDS", "30"))
+                  except ValueError as exc:
+                      raise base.ControllerError("KRIS_QWEN_AUTO_UPDATE_SECONDS must be an integer") from exc
+                  self.auto_update_seconds = max(10, interval)
+                  self.auto_update_thread = None
+                  if self.auto_update_enabled:
+                      self.auto_update_thread = threading.Thread(
+                          target=self._auto_update_loop,
+                          name="kris-qwen-auto-update",
+                          daemon=True,
+                      )
+                      self.auto_update_thread.start()
+
+              @property
+              def auto_run_state_path(self) -> pathlib.Path:
+                  return self.cfg.state_dir / "auto-run-state.json"
+
+              def _write_auto_run_state(self, enabled: bool, reason: str) -> dict:
+                  row = {
+                      "schemaVersion": 1,
+                      "autoRunEnabled": bool(enabled),
+                      "reason": str(reason).strip()[:512] or "unspecified",
+                      "updatedAt": base.utc_iso(),
+                  }
+                  base.atomic_write_json(self.auto_run_state_path, row)
+                  self.auto_run_state = row
+                  self.auto_run_enabled = bool(enabled)
+                  self.auto_run_state_error = None
+                  return row
+
+              def _load_auto_run_enabled(self) -> bool:
+                  path = self.auto_run_state_path
+                  if not path.exists():
+                      self._write_auto_run_state(True, "initial_default_enabled")
+                      return True
+                  row = base.read_json(path)
+                  valid = (
+                      isinstance(row, dict)
+                      and row.get("schemaVersion") == 1
+                      and isinstance(row.get("autoRunEnabled"), bool)
+                      and isinstance(row.get("reason"), str)
+                      and bool(str(row.get("reason")).strip())
+                      and isinstance(row.get("updatedAt"), str)
+                      and bool(str(row.get("updatedAt")).strip())
+                  )
+                  if not valid:
+                      detail = (
+                          "invalid durable auto-run state; automatic update and restart "
+                          "remain paused until an explicit Run current Qwen or Fetch latest + run Qwen"
+                      )
+                      self._write_auto_run_state(False, "invalid_durable_state_fail_closed")
+                      self.auto_run_state_error = detail
+                      return False
+                  self.auto_run_state = dict(row)
+                  self.auto_run_enabled = bool(row["autoRunEnabled"])
+                  return self.auto_run_enabled
+
+              def _set_auto_run_enabled(self, enabled: bool, reason: str) -> dict:
+                  with self.lock:
+                      return self._write_auto_run_state(enabled, reason)
+
+              def start(self):
+                  self._set_auto_run_enabled(True, "operator_run_current")
+                  return super().start()
+
+              def request_safe_stop(self, reason: str = "Qwen phone control safe stop"):
+                  if reason == "Qwen phone control safe stop":
+                      self._set_auto_run_enabled(False, "operator_safe_stop")
+                  return super().request_safe_stop(reason)
+
+              def fetch_latest_and_run(self):
+                  self._set_auto_run_enabled(True, "operator_fetch_latest_and_run")
+                  return super().fetch_latest_and_run()
+          '''
+          replace_exact(
+              "tool/kris_qwen_control.py.compat.py",
+              old_controller,
+              new_controller,
+              "durable operator intent controller",
+          )
+
+          old_status = '''        result["autoUpdate"] = {
+                      "enabled": self.auto_update_enabled,
+                      "intervalSeconds": self.auto_update_seconds,
+                      "autoRunEnabled": self.auto_run_enabled,
+                      "selfRestartOnControllerUpdate": self.self_restart_on_update,
+                      "last": self.last_auto_update,
+                  }
+          '''
+          new_status = '''        result["autoUpdate"] = {
+                      "enabled": self.auto_update_enabled,
+                      "intervalSeconds": self.auto_update_seconds,
+                      "autoRunEnabled": self.auto_run_enabled,
+                      "operatorIntent": dict(self.auto_run_state),
+                      "operatorIntentPath": str(self.auto_run_state_path),
+                      "operatorIntentError": self.auto_run_state_error,
+                      "selfRestartOnControllerUpdate": self.self_restart_on_update,
+                      "last": self.last_auto_update,
+                  }
+          '''
+          replace_exact(
+              "tool/kris_qwen_control.py.compat.py",
+              old_status,
+              new_status,
+              "durable operator intent status",
+          )
+
+          replace_exact(
+              "tool/kris_qwen_control_compat_test.py",
+              "import importlib.util\nimport os\n",
+              "import importlib.util\nimport json\nimport os\n",
+              "controller test json import",
+          )
+          replace_exact(
+              "tool/kris_qwen_control_compat_test.py",
+              '''    repo.mkdir()
+              (repo / ".git").mkdir()
+              worker = repo / "tool" / "kris_qwen_worker_v53.py"
+              worker.parent.mkdir()
+          ''',
+              '''    repo.mkdir(exist_ok=True)
+              (repo / ".git").mkdir(exist_ok=True)
+              worker = repo / "tool" / "kris_qwen_worker_v53.py"
+              worker.parent.mkdir(exist_ok=True)
+          ''',
+              "restart-safe controller fixture",
+          )
+          replace_exact(
+              "tool/kris_qwen_control_compat_test.py",
+              "                    \"import json\\nprint(json.dumps({'scriptVersion':'5.3.0'}))\\n\",\n",
+              "                    \"import json\\nprint(json.dumps({'scriptVersion':'5.4.1'}))\\n\",\n",
+              "candidate worker fixture version",
+          )
+          replace_exact(
+              "tool/kris_qwen_control_compat_test.py",
+              "                        \"print('2.2.0')\\n\",\n",
+              "                        \"print('2.2.1')\\n\",\n",
+              "candidate controller fixture version",
+          )
+          replace_exact(
+              "tool/kris_qwen_control_compat_test.py",
+              '            self.assertEqual(result["workerVersion"], "5.3.0")\n'
+              '            self.assertEqual(result["controllerVersion"], "2.2.0")\n',
+              '            self.assertEqual(result["workerVersion"], "5.4.1")\n'
+              '            self.assertEqual(result["controllerVersion"], "2.2.1")\n',
+              "candidate version assertions",
+          )
+          replace_count(
+              "tool/kris_qwen_control_compat_test.py",
+              '                        "workerVersion": "5.3.0", "controllerVersion": "2.2.0",\n',
+              '                        "workerVersion": "5.4.1", "controllerVersion": "2.2.1",\n',
+              2,
+              "auto-update candidate fixture version",
+          )
+          replace_exact(
+              "tool/kris_qwen_control_compat_test.py",
+              '''    def test_operator_pause_blocks_restart_and_remote_update(self) -> None:
+                  with tempfile.TemporaryDirectory() as raw:
+                      controller = self.controller(pathlib.Path(raw))
+                      controller.auto_run_enabled = False
+                      with mock.patch.object(controller, "_validate_repo") as validate, mock.patch.object(
+                          control.BaseController, "fetch_latest_and_run"
+                      ) as fetch, mock.patch.object(control.BaseController, "start") as start:
+                          result = controller._auto_update_once()
+                      self.assertEqual(result, {"status": "PAUSED"})
+                      validate.assert_not_called()
+                      fetch.assert_not_called()
+                      start.assert_not_called()
+          ''',
+              '''    def test_operator_pause_blocks_restart_and_remote_update(self) -> None:
+                  with tempfile.TemporaryDirectory() as raw:
+                      controller = self.controller(pathlib.Path(raw))
+                      controller._set_auto_run_enabled(False, "test_pause")
+                      with mock.patch.object(controller, "_validate_repo") as validate, mock.patch.object(
+                          control.BaseController, "fetch_latest_and_run"
+                      ) as fetch, mock.patch.object(control.BaseController, "start") as start:
+                          result = controller._auto_update_once()
+                      self.assertEqual(result, {"status": "PAUSED"})
+                      validate.assert_not_called()
+                      fetch.assert_not_called()
+                      start.assert_not_called()
+
+              def test_operator_pause_survives_controller_restart(self) -> None:
+                  with tempfile.TemporaryDirectory() as raw:
+                      root = pathlib.Path(raw)
+                      controller = self.controller(root)
+                      with mock.patch.object(
+                          control.BaseController,
+                          "request_safe_stop",
+                          return_value={"status": "STOP_REQUESTED", "pid": 1234},
+                      ):
+                          result = controller.request_safe_stop()
+                      self.assertEqual(result["status"], "STOP_REQUESTED")
+                      self.assertFalse(controller.auto_run_enabled)
+                      persisted = json.loads(
+                          controller.auto_run_state_path.read_text(encoding="utf-8")
+                      )
+                      self.assertFalse(persisted["autoRunEnabled"])
+                      self.assertEqual(persisted["reason"], "operator_safe_stop")
+
+                      restarted = self.controller(root)
+                      self.assertFalse(restarted.auto_run_enabled)
+                      with mock.patch.object(restarted, "_validate_repo") as validate:
+                          self.assertEqual(restarted._auto_update_once(), {"status": "PAUSED"})
+                      validate.assert_not_called()
+
+              def test_explicit_run_actions_clear_durable_pause(self) -> None:
+                  with tempfile.TemporaryDirectory() as raw:
+                      root = pathlib.Path(raw)
+                      controller = self.controller(root)
+                      controller._set_auto_run_enabled(False, "test_pause")
+
+                      restarted = self.controller(root)
+                      with mock.patch.object(
+                          control.BaseController,
+                          "start",
+                          return_value={"status": "STARTED", "pid": 42},
+                      ):
+                          self.assertEqual(restarted.start()["status"], "STARTED")
+                      after_start = self.controller(root)
+                      self.assertTrue(after_start.auto_run_enabled)
+                      self.assertEqual(
+                          after_start.auto_run_state["reason"],
+                          "operator_run_current",
+                      )
+
+                      after_start._set_auto_run_enabled(False, "test_pause_again")
+                      paused_again = self.controller(root)
+                      with mock.patch.object(
+                          control.BaseController,
+                          "fetch_latest_and_run",
+                          return_value={"status": "QUEUED"},
+                      ):
+                          self.assertEqual(
+                              paused_again.fetch_latest_and_run()["status"],
+                              "QUEUED",
+                          )
+                      after_fetch = self.controller(root)
+                      self.assertTrue(after_fetch.auto_run_enabled)
+                      self.assertEqual(
+                          after_fetch.auto_run_state["reason"],
+                          "operator_fetch_latest_and_run",
+                      )
+
+              def test_invalid_durable_state_fails_closed(self) -> None:
+                  with tempfile.TemporaryDirectory() as raw:
+                      root = pathlib.Path(raw)
+                      cfg = config(root)
+                      cfg.state_dir.mkdir(parents=True, exist_ok=True)
+                      state = cfg.state_dir / "auto-run-state.json"
+                      state.write_text(
+                          '{"schemaVersion":1,"autoRunEnabled":"yes"}\\n',
+                          encoding="utf-8",
+                      )
+
+                      controller = self.controller(root)
+                      self.assertFalse(controller.auto_run_enabled)
+                      self.assertIsNotNone(controller.auto_run_state_error)
+                      rewritten = json.loads(state.read_text(encoding="utf-8"))
+                      self.assertFalse(rewritten["autoRunEnabled"])
+                      self.assertEqual(
+                          rewritten["reason"],
+                          "invalid_durable_state_fail_closed",
+                      )
+          ''',
+              "durable pause controller tests",
+          )
+
+          replace_exact(
+              ".github/workflows/ci.yml",
+              "            tool/kris_qwen_control.py.compat.py \\\n"
+              "            tool/kris_qwen_v531_test.py \\\n",
+              "            tool/kris_qwen_control.py.compat.py \\\n"
+              "            tool/kris_qwen_control_compat_test.py \\\n"
+              "            tool/kris_qwen_v531_test.py \\\n",
+              "CI controller test compile",
+          )
+          replace_exact(
+              ".github/workflows/ci.yml",
+              "          python tool/kris_qwen_v541_test.py\n"
+              "          python tool/kris_qwen_control_token_redaction_test.py\n",
+              "          python tool/kris_qwen_v541_test.py\n"
+              "          python tool/kris_qwen_control_compat_test.py\n"
+              "          python tool/kris_qwen_control_token_redaction_test.py\n",
+              "CI durable controller regression",
+          )
+          replace_exact(
+              ".github/workflows/ci.yml",
+              "[[ \"$(python tool/kris_qwen_control.py.compat.py --version)\" == '2.2.0' ]]",
+              "[[ \"$(python tool/kris_qwen_control.py.compat.py --version)\" == '2.2.1' ]]",
+              "CI controller version",
+          )
+
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              "Qwen engineering worker 5.4.1 / controller 2.2.",
+              "Qwen engineering worker 5.4.1 / controller 2.2.1.",
+              "installer help controller version",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              '  "${REPO_DIR}/tool/kris_qwen_v541_test.py"\n'
+              '  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n',
+              '  "${REPO_DIR}/tool/kris_qwen_v541_test.py"\n'
+              '  "${REPO_DIR}/tool/kris_qwen_control_compat_test.py"\n'
+              '  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n',
+              "installer required durable controller test",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              '  "${REPO_DIR}/tool/kris_qwen_v541_test.py" \\\n'
+              '  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n',
+              '  "${REPO_DIR}/tool/kris_qwen_v541_test.py" \\\n'
+              '  "${REPO_DIR}/tool/kris_qwen_control_compat_test.py" \\\n'
+              '  "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py"\n',
+              "installer compile durable controller test",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              textwrap.dedent(
+                  '''\
+                  if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v541_test.py" >/dev/null; then
+                    echo "Qwen worker 5.4.1 deployment regression preflight failed." >&2
+                    exit 2
+                  fi
+                  if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py" >/dev/null; then
+                  '''
+              ),
+              textwrap.dedent(
+                  '''\
+                  if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_v541_test.py" >/dev/null; then
+                    echo "Qwen worker 5.4.1 deployment regression preflight failed." >&2
+                    exit 2
+                  fi
+                  if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_compat_test.py" >/dev/null; then
+                    echo "Qwen controller durable-pause regression preflight failed." >&2
+                    exit 2
+                  fi
+                  if ! as_service_user "${PYTHON_BIN}" "${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py" >/dev/null; then
+                  '''
+              ),
+              "installer durable controller preflight",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              'if [[ "${CONTROLLER_VERSION}" != "2.2.0" ]]; then\n'
+              '  echo "Qwen controller 2.2 preflight failed: ${CONTROLLER_VERSION}" >&2\n',
+              'if [[ "${CONTROLLER_VERSION}" != "2.2.1" ]]; then\n'
+              '  echo "Qwen controller 2.2.1 preflight failed: ${CONTROLLER_VERSION}" >&2\n',
+              "installer controller version check",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              "ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v541_test.py\n"
+              "ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py\n",
+              "ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_v541_test.py\n"
+              "ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_compat_test.py\n"
+              "ExecStartPre=${PYTHON_BIN} ${REPO_DIR}/tool/kris_qwen_control_token_redaction_test.py\n",
+              "systemd durable controller preflight",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              'echo "Controller:   2.2.0"',
+              'echo "Controller:   2.2.1"',
+              "installer result controller version",
+          )
+          replace_exact(
+              "tool/install_kris_qwen_control_systemd.sh",
+              "are recovered by controller 2.2 / worker 5.4.1, safe branch updates are automatic,",
+              "are recovered by controller 2.2.1 / worker 5.4.1, safe branch updates are automatic,",
+              "installer recovery controller version",
+          )
+
+          old_versions = textwrap.dedent(
+              '''\
+              - executed worker: `tool/kris_qwen_worker_v53.py` — **5.3.0**;
+              - legacy worker path: `tool/kris_qwen_worker.py.compat.py` — forwards to the deterministic 5.3 entry so an already-running 2.1 controller that remembers the old path reaches the same worker after Fetch latest;
+              - retained base worker: `tool/kris_qwen_worker.py` — still labeled **5.2.2** during rollout;
+              - executed controller: `tool/kris_qwen_control.py.compat.py` — **2.2.0**;
+              - retained base controller: `tool/kris_qwen_control.py` — still labeled **2.1.0** during rollout.
+              '''
+          )
+          new_versions = textwrap.dedent(
+              '''\
+              - executed worker: `tool/kris_qwen_worker_v53.py` — stable compatibility entry forwarding to **5.4.1**;
+              - deterministic worker entry: `tool/kris_qwen_worker_v541.py` — executed worker **5.4.1**;
+              - legacy worker path: `tool/kris_qwen_worker.py.compat.py` — forwards to the same stable 5.4.1 entry so older controller configuration reaches current worker bytes after Fetch latest;
+              - retained base worker: `tool/kris_qwen_worker.py` — transformation base and not the reported executed version;
+              - executed controller: `tool/kris_qwen_control.py.compat.py` — **2.2.1**;
+              - retained base controller: `tool/kris_qwen_control.py` — compatibility base and not the reported executed version.
+              '''
+          )
+          replace_exact(
+              "docs/KRIS_QWEN_SERVER_CONTROL.md",
+              old_versions,
+              new_versions,
+              "operator docs executed versions",
+          )
+          replace_exact(
+              "docs/KRIS_QWEN_SERVER_CONTROL.md",
+              "Controller 2.2 enables automatic supervision by default:",
+              "Controller 2.2.1 enables automatic supervision by default:",
+              "operator docs automatic controller version",
+          )
+          replace_exact(
+              "docs/KRIS_QWEN_SERVER_CONTROL.md",
+              "controller 2.2 reuses the existing safe Fetch latest + run path:",
+              "controller 2.2.1 reuses the existing safe Fetch latest + run path:",
+              "operator docs update controller version",
+          )
+          old_pause = (
+              "If the tracked branch is already current but the worker process exited unexpectedly, "
+              "controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses automatic "
+              "worker restart until the operator explicitly selects Run current Qwen or Fetch latest + run Qwen."
+          )
+          new_pause = (
+              "If the tracked branch is already current but the worker process exited unexpectedly, "
+              "controller 2.2.1 starts it again automatically. A deliberate **Safe stop** persists "
+              "operator intent in `KRIS_QWEN_CONTROL_STATE_DIR/auto-run-state.json` "
+              "(by default `<KRIS_QWEN_ROOT>/controller/auto-run-state.json`) and pauses both automatic "
+              "update and automatic worker restart. Controller crashes, systemd restarts, and controller "
+              "self-updates preserve the pause. Only Run current Qwen or Fetch latest + run Qwen clears it. "
+              "Invalid durable state fails closed to paused."
+          )
+          replace_exact(
+              "docs/KRIS_QWEN_SERVER_CONTROL.md",
+              old_pause,
+              new_pause,
+              "operator docs durable pause",
+          )
+
+          replace_exact(
+              "docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md",
+              "The stable launcher filename remains `tool/kris_qwen_worker_v53.py` for controller/process compatibility. After 5.4 rollout that stable entry forwards to `tool/kris_qwen_worker_v54.py`.",
+              "The stable launcher filename remains `tool/kris_qwen_worker_v53.py` for controller/process compatibility. It now forwards to `tool/kris_qwen_worker_v541.py`, the executed 5.4.1 worker.",
+              "engineering docs stable worker truth",
+          )
+          PY
+
+      - name: Validate controller and deployment contracts
         shell: bash
         run: |
           set -euo pipefail
           python3 -m py_compile \
-            run_my_server.py \
-            tool/kris_qwen_worker.py \
-            tool/kris_qwen_worker.py.compat.py \
-            tool/kris_qwen_worker_v53.py \
-            tool/kris_qwen_v53_policy.py \
             tool/kris_qwen_control.py \
             tool/kris_qwen_control.py.compat.py \
-            tool/kris_qwen_control_test.py \
-            tool/kris_qwen_control_compat_test.py
-          python3 tool/kris_qwen_control_test.py
+            tool/kris_qwen_control_compat_test.py \
+            tool/kris_qwen_control_token_redaction_test.py
           python3 tool/kris_qwen_control_compat_test.py
-          python3 tool/kris_qwen_worker_v53.py version | tee "$RUNNER_TEMP/worker-version.json"
-          python3 - <<'PY'
-          import json
-          import os
-          import pathlib
+          python3 tool/kris_qwen_control_token_redaction_test.py
+          test "$(python3 tool/kris_qwen_control.py.compat.py --version)" = "2.2.1"
+          bash -n tool/install_kris_qwen_control_systemd.sh
+          grep -F 'TARGET_CONTROL_VERSION = "2.2.1"' tool/kris_qwen_control.py.compat.py
+          grep -F 'auto-run-state.json' tool/kris_qwen_control.py.compat.py
+          grep -F 'test_operator_pause_survives_controller_restart' tool/kris_qwen_control_compat_test.py
+          if grep -R -n -F '2.2.0' \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_compat_test.py \
+            tool/install_kris_qwen_control_systemd.sh \
+            docs/KRIS_QWEN_SERVER_CONTROL.md \
+            .github/workflows/ci.yml; then
+            echo "stale controller 2.2.0 execution truth remains" >&2
+            exit 1
+          fi
+          git diff --check
 
-          value = json.loads(pathlib.Path(os.environ['RUNNER_TEMP'], 'worker-version.json').read_text(encoding='utf-8'))
-          if value.get('scriptVersion') != '5.3.0':
-              raise SystemExit(f"executed worker entry is not 5.3.0: {value}")
-
-          deterministic = pathlib.Path('tool/kris_qwen_worker_v53.py').read_text(encoding='utf-8')
-          policy = pathlib.Path('tool/kris_qwen_v53_policy.py').read_text(encoding='utf-8')
-          legacy = pathlib.Path('tool/kris_qwen_worker.py.compat.py').read_text(encoding='utf-8')
-          required = (
-              'TARGET_VERSION = "5.3.0"',
-              'def wake_pending_reviews',
-              'def ensure_continuous_integration_lane',
-              'def ensure_continuous_validation_lane',
-              'def seed_continuous_product_work',
-              'CONTINUOUS_PRIMARY_CODE_PREFIXES',
-              'CONTINUOUS_TOOL_DENY_PREFIXES',
-              'RED_ALERT_FRONTIER',
-              'RED_ALERT_HARD_ERROR',
-              'RED_ALERT_MODEL_SERVER',
-              '"managedServer": "RESTARTED"',
-              'backoff = min(30, max(5, int(cfg.loop_sleep) * 5))',
-              'stack stays alive',
-              'Successful work chains immediately',
-              '+refs/pull/*/head:refs/remotes/origin/pull/*/head',
-          )
-          combined = deterministic + '\n' + policy
-          missing = [marker for marker in required if marker not in combined]
-          if missing:
-              raise SystemExit(f'missing always-on worker markers: {missing}')
-          if 'persistent worker reached' in deterministic and 'persistent hard error recovery' not in deterministic:
-              raise SystemExit('5.2 stack-termination path was not replaced by 5.3')
-          if 'kris_qwen_worker_v53.py' not in legacy:
-              raise SystemExit('legacy worker entry no longer forwards to deterministic 5.3')
-          print('QWEN_WORKER_5_3_ALWAYS_ON_PASS')
-          PY
-
-      - name: Verify launcher binds exact always-on entries
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          text = Path('run_my_server.py').read_text(encoding='utf-8')
-          required = (
-              'kris_qwen_control.py.compat.py',
-              'kris_qwen_worker_v53.py',
-              'kris_qwen_v53_policy.py',
-              'KRIS_QWEN_WORKER_SCRIPT',
-              'KRIS_QWEN_AUTO_UPDATE',
-              'KRIS_QWEN_AUTO_UPDATE_SECONDS',
-          )
-          missing = [marker for marker in required if marker not in text]
-          if missing:
-              raise SystemExit(f'launcher missing always-on bindings: {missing}')
-          print('QWEN_ALWAYS_ON_LAUNCHER_PASS')
-          PY
-
-      - name: Refresh operator truth text
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('docs/KRIS_QWEN_SERVER_CONTROL.md')
-          text = path.read_text(encoding='utf-8')
-
-          hard_truth = (
-              'Repeated hard Work Order errors do not terminate the persistent stack. '
-              'After the configured threshold, worker 5.3 reports `RED_ALERT_HARD_ERROR`, '
-              'keeps the model/worker stack alive, and re-resolves within a maximum 30-second backoff.'
-          )
-          chaining_anchor = (
-              'Successful Work Orders chain immediately. The normal 60-second inter-job sleep '
-              'is removed by the 5.3 execution adapter.\n'
-          )
-          if hard_truth not in text:
-              if chaining_anchor not in text:
-                  raise SystemExit('operator docs always-on chaining anchor missing')
-              text = text.replace(chaining_anchor, chaining_anchor + '\n' + hard_truth + '\n', 1)
-
-          model_truth = (
-              'In managed `stack` mode, worker 5.3 also supervises its `llama-server` child. '
-              'A dead child is restarted before the next Work Order; an unreachable managed model '
-              'endpoint is recycled through `RED_ALERT_MODEL_SERVER` recovery instead of leaving '
-              'a live worker process attached to a dead model server.'
-          )
-          if model_truth not in text:
-              anchor = hard_truth + '\n'
-              if anchor not in text:
-                  raise SystemExit('operator docs hard-error truth anchor missing')
-              text = text.replace(anchor, anchor + '\n' + model_truth + '\n', 1)
-
-          old_update = '''Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 reuses the existing safe Fetch latest + run path:\n\n1. graceful worker drain;\n2. dirty-checkout refusal;\n3. fetch of the configured branch;\n4. fast-forward-only update;\n5. refreshed worker `version` probe;\n6. stack restart using the newly fetched worker entry.\n'''
-          new_update = '''Every interval it resolves the remote head of the configured Qwen branch. If the remote head differs from the local checkout, controller 2.2 first validates the update **without draining the current Qwen worker**:\n\n1. dirty-checkout check;\n2. fetch of the configured branch without modifying the checkout;\n3. fast-forward ancestry validation.\n\nA dirty checkout reports `UPDATE_BLOCKED_DIRTY`; a divergent update reports `UPDATE_BLOCKED_NON_FAST_FORWARD`. In both cases the currently running Qwen worker is kept alive. Only a proven safe fast-forward update enters the existing controlled update path: graceful worker drain, fast-forward checkout update, refreshed worker `version` probe, and stack restart using the newly fetched worker entry.\n'''
-          if old_update in text:
-              text = text.replace(old_update, new_update, 1)
-          elif 'UPDATE_BLOCKED_DIRTY' not in text or 'UPDATE_BLOCKED_NON_FAST_FORWARD' not in text:
-              raise SystemExit('operator docs automatic-update section has unexpected shape')
-
-          old_stop = (
-              'If the tracked branch is already current but the worker process exited unexpectedly, '
-              'controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses automatic '
-              'worker restart until the operator explicitly selects Run current Qwen or Fetch latest + run Qwen.'
-          )
-          new_stop = (
-              'If the tracked branch is already current but the worker process exited unexpectedly, '
-              'controller 2.2 starts it again automatically. A deliberate **Safe stop** pauses both '
-              'automatic update and automatic worker restart until the operator explicitly selects '
-              'Run current Qwen or Fetch latest + run Qwen.'
-          )
-          if old_stop in text:
-              text = text.replace(old_stop, new_stop, 1)
-          elif 'pauses both automatic update and automatic worker restart' not in text:
-              raise SystemExit('operator docs Safe stop section has unexpected shape')
-
-          path.write_text(text, encoding='utf-8', newline='\n')
-          PY
-
-      - name: Regenerate manifest twice and validate repository contracts
+      - name: Regenerate canonical manifest twice
         shell: bash
         run: |
           set -euo pipefail
           python3 tool/p1a_refresh_source_manifest.py .
-          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          cp SOURCE_MANIFEST.sha256 "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256"
           python3 tool/p1a_refresh_source_manifest.py .
-          cmp -s "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          cmp -s "${RUNNER_TEMP}/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
           python3 tool/p1a_source_manifest_test.py .
           python3 tool/p1a_text_eof_contract_test.py --project .
           git diff --check
-          for path in \
-            tool/kris_qwen_worker_v53.py \
-            tool/kris_qwen_v53_policy.py \
-            tool/kris_qwen_control.py.compat.py \
-            tool/kris_qwen_control_compat_test.py; do
-            grep -F "$path" SOURCE_MANIFEST.sha256
-          done
           python3 - <<'PY'
           import subprocess
-          actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
-          allowed = {'SOURCE_MANIFEST.sha256', 'docs/KRIS_QWEN_SERVER_CONTROL.md'}
-          if not actual or 'SOURCE_MANIFEST.sha256' not in actual or not actual.issubset(allowed):
-              raise SystemExit(f'finalization scope mismatch actual={sorted(actual)} allowed={sorted(allowed)}')
+
+          actual = set(
+              subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
+          )
+          expected = {
+              ".github/workflows/ci.yml",
+              "SOURCE_MANIFEST.sha256",
+              "docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md",
+              "docs/KRIS_QWEN_SERVER_CONTROL.md",
+              "tool/install_kris_qwen_control_systemd.sh",
+              "tool/kris_qwen_control.py.compat.py",
+              "tool/kris_qwen_control_compat_test.py",
+          }
+          if actual != expected:
+              raise SystemExit(
+                  f"durable-pause materialization scope mismatch actual={sorted(actual)} "
+                  f"expected={sorted(expected)}"
+              )
           PY
 
-      - name: Publish validated always-on manifest candidate
+      - name: Publish exact durable-pause candidate
         shell: bash
         run: |
           set -euo pipefail
+          remote_head="$(git ls-remote origin "refs/heads/${PRODUCT_BRANCH}" | cut -f1)"
+          test "${remote_head}" = "${EXPECTED_HEAD}"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256 docs/KRIS_QWEN_SERVER_CONTROL.md
-          if git diff --cached --quiet; then
-            echo 'QWEN_ALWAYS_ON_VALIDATED no publication required'
-            exit 0
-          fi
+          git add -- \
+            .github/workflows/ci.yml \
+            SOURCE_MANIFEST.sha256 \
+            docs/KRIS_QWEN_ENGINEERING_ENVIRONMENT.md \
+            docs/KRIS_QWEN_SERVER_CONTROL.md \
+            tool/install_kris_qwen_control_systemd.sh \
+            tool/kris_qwen_control.py.compat.py \
+            tool/kris_qwen_control_compat_test.py
           git diff --cached --check
-          git commit -m 'feat(qwen): validate always-on phone execution'
+          test "$(git diff --cached --name-only | wc -l)" -eq 7
+          git commit -m 'fix(qwen): persist operator safe stop'
           candidate="$(git rev-parse HEAD)"
-          git push origin HEAD:refs/heads/agent/qwen-phone-control
-          git fetch origin '+refs/heads/agent/qwen-phone-control:refs/remotes/origin/agent/qwen-phone-control'
-          remote="$(git rev-parse origin/agent/qwen-phone-control)"
-          [[ "$remote" == "$candidate" ]]
-          echo "QWEN_ALWAYS_ON_VALIDATED candidate=$candidate"
+          git push origin "HEAD:refs/heads/${PRODUCT_BRANCH}"
+          git fetch origin "+refs/heads/${PRODUCT_BRANCH}:refs/remotes/origin/${PRODUCT_BRANCH}"
+          remote="$(git rev-parse "origin/${PRODUCT_BRANCH}")"
+          test "${remote}" = "${candidate}"
+          echo "QWEN_DURABLE_PAUSE_PUBLISHED candidate=${candidate}"
