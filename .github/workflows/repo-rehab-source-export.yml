@@ -1,0 +1,66 @@
+name: Repository rehabilitation source export
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.head_ref == 'agent/repo-rehab-export-p211'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Export exact tracked source without this diagnostic workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import subprocess
+          import zipfile
+
+          excluded = {'.github/workflows/repo-rehab-source-export.yml'}
+          tracked = subprocess.check_output(['git', 'ls-files', '-z']).split(b'\0')
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'kris-p211-source.zip'
+          source_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD^'], text=True).strip()
+          source_tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
+          with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+              for raw in tracked:
+                  if not raw:
+                      continue
+                  path = raw.decode('utf-8')
+                  if path in excluded:
+                      continue
+                  archive.write(path, path)
+              archive.writestr(
+                  '_rehab_export_metadata.json',
+                  json.dumps(
+                      {
+                          'sourceCommit': source_sha,
+                          'exportCommit': subprocess.check_output(
+                              ['git', 'rev-parse', 'HEAD'], text=True
+                          ).strip(),
+                          'exportTree': source_tree,
+                          'excluded': sorted(excluded),
+                      },
+                      indent=2,
+                      sort_keys=True,
+                  ) + '\n',
+              )
+          print(output)
+          PY
+      - name: Upload source archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: repo-rehab-p211-source
+          path: ${{ runner.temp }}/kris-p211-source.zip
+          if-no-files-found: error
+          retention-days: 1
