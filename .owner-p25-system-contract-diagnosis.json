@@ -1,0 +1,21 @@
+{
+  "caseCount": null,
+  "exitCode": 1,
+  "failedCount": null,
+  "failedResults": [
+    {
+      "detail": "Prompt generation, plan generation, selective execution, stop, and immutable-edit controls are visible in Prompt Studio.",
+      "name": "Prompt-to-Task user controls",
+      "passed": false
+    },
+    {
+      "detail": "Cold Ollama loads are prewarmed, retried inside one model request, cancellable from Stop, observable in diagnostics, and unsupported human-study tasks are rewritten into local objective verification.",
+      "name": "Ollama cold-load resilience and capability-safe planning",
+      "passed": false
+    }
+  ],
+  "head": "31714a77b2f0fbf08f0c6b895fa5ef00aa82a960",
+  "passedCount": null,
+  "schemaVersion": 1,
+  "stderrTail": ""
+}
