@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry with on-disk roundtrip separated from prototype restore-wiring diagnostics.
+# Retry with file-backed production persistence and deterministic injected widget persistence.
 
 on:
   pull_request:
