@@ -116,4 +116,29 @@ replace_exact(
     2,
 )
 
+replace_once(
+    'test/product/p5_information_architecture/p5_shell_layout_test.dart',
+    '''    addTearDown(() => root.delete(recursive: true));
+
+    final controller = P5InformationArchitectureController();
+''',
+    '''    addTearDown(() => root.delete(recursive: true));
+    final diskRestored = await tester.runAsync(
+      () => P5ShellLayoutStore(applicationDataRootPath: root.path).load(),
+    );
+    expect(diskRestored?.toJson(), expected.toJson());
+
+    final controller = P5InformationArchitectureController();
+''',
+)
+
+replace_once(
+    'test/product/p5_information_architecture/p5_shell_layout_test.dart',
+    '''    expect(controller.shellLayout, expected);
+''',
+    '''    expect(controller.state.recoveryMessage, isNull);
+    expect(controller.shellLayout.toJson(), expected.toJson());
+''',
+)
+
 print('P5_004_BOUNDARY_COMPACT_POSTPATCH_APPLIED')
