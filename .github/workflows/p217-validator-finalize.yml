@@ -66,26 +66,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t paths < <(git diff --name-only "$BASE_MAIN_SHA" | sort)
-          expected=(
-            SOURCE_MANIFEST.sha256
-            automation_host/src/browser-runtime.mjs
-            automation_host/src/browser-runtime.test.mjs
-            lib/product/browser/browser_runtime.dart
-            lib/product/p5_information_architecture/p5_fixtures.dart
-            lib/product/p5_information_architecture/p5_models.dart
-            lib/product/p5_information_architecture/p5_prototype.dart
-            lib/product/p5_information_architecture/p5_support_workspaces.dart
-            lib/product/p5_information_architecture/p5_verification_workspaces.dart
-            lib/product/ui.dart
-            test/product/browser/browser_runtime_process_test.dart
-            test/product/p5_information_architecture/p5_accessibility_test.dart
-            test/product/p5_information_architecture/p5_navigation_test.dart
-            test/product/p5_information_architecture/p5_source_boundary_test.dart
-            test/product/p5_information_architecture/p5_state_controller_test.dart
-            tool/validate_release.py
-          )
-          test "${paths[*]}" = "${expected[*]}"
+          git diff --name-only "$BASE_MAIN_SHA" | sort > "$RUNNER_TEMP/actual.paths"
+          cat > "$RUNNER_TEMP/expected.paths" <<'EOF'
+          SOURCE_MANIFEST.sha256
+          automation_host/src/browser-runtime.mjs
+          automation_host/src/browser-runtime.test.mjs
+          lib/product/browser/browser_runtime.dart
+          lib/product/p5_information_architecture/p5_fixtures.dart
+          lib/product/p5_information_architecture/p5_models.dart
+          lib/product/p5_information_architecture/p5_prototype.dart
+          lib/product/p5_information_architecture/p5_support_workspaces.dart
+          lib/product/p5_information_architecture/p5_verification_workspaces.dart
+          lib/product/ui.dart
+          test/product/browser/browser_runtime_process_test.dart
+          test/product/p5_information_architecture/p5_accessibility_test.dart
+          test/product/p5_information_architecture/p5_navigation_test.dart
+          test/product/p5_information_architecture/p5_source_boundary_test.dart
+          test/product/p5_information_architecture/p5_state_controller_test.dart
+          tool/validate_release.py
+          EOF
+          sort -o "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/expected.paths"
+          diff -u "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/actual.paths"
       - name: Publish clean validator-aligned candidate
         shell: bash
         run: |
