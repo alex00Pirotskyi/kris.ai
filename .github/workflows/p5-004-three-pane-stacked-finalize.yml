@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry with explicit clamp conversion and analyzer-clean shell declarations.
+# Retry with exact tracked-plus-untracked durable scope accounting.
 
 on:
   pull_request:
@@ -133,7 +133,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff --name-only "$BASE_MAIN_SHA" | sort > "$RUNNER_TEMP/actual.paths"
+          {
+            git diff --name-only "$BASE_MAIN_SHA"
+            git ls-files --others --exclude-standard
+          } | sort -u > "$RUNNER_TEMP/actual.paths"
           cat > "$RUNNER_TEMP/expected.paths" <<'EOF'
           SOURCE_MANIFEST.sha256
           lib/product/p5_information_architecture/p5_controller.dart
