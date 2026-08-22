@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry after separating fake-time resize coverage from filesystem reopen coverage.
+# Retry with zero-footprint closed panes plus prototype-boundary/compact-drawer repair.
 
 on:
   pull_request:
@@ -18,6 +18,7 @@ env:
   PATCH_PATH: .repo-p5-004-finalize.py
   ANCHOR_FIX_PATH: .repo-p5-004-anchor-fix.py
   LAYOUT_FIX_PATH: .repo-p5-004-layout-contract-fix.py
+  POST_FIX_PATH: .repo-p5-004-postpatch.py
   FINALIZER_PATH: .github/workflows/p5-004-three-pane-stacked-finalize.yml
 
 jobs:
@@ -42,6 +43,7 @@ jobs:
           test -f "$PATCH_PATH"
           test -f "$ANCHOR_FIX_PATH"
           test -f "$LAYOUT_FIX_PATH"
+          test -f "$POST_FIX_PATH"
           test -f "$FINALIZER_PATH"
           test -z "$(git status --short)"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -58,11 +60,12 @@ jobs:
         run: |
           set -euo pipefail
           flutter pub get
-          python -m py_compile "$ANCHOR_FIX_PATH" "$PATCH_PATH" "$LAYOUT_FIX_PATH"
+          python -m py_compile "$ANCHOR_FIX_PATH" "$PATCH_PATH" "$LAYOUT_FIX_PATH" "$POST_FIX_PATH"
           python "$ANCHOR_FIX_PATH"
           python "$PATCH_PATH"
           python "$LAYOUT_FIX_PATH"
-          git rm -f "$PATCH_PATH" "$ANCHOR_FIX_PATH" "$LAYOUT_FIX_PATH" "$FINALIZER_PATH"
+          python "$POST_FIX_PATH"
+          git rm -f "$PATCH_PATH" "$ANCHOR_FIX_PATH" "$LAYOUT_FIX_PATH" "$POST_FIX_PATH" "$FINALIZER_PATH"
           dart format \
             lib/product/p5_information_architecture/p5_controller.dart \
             lib/product/p5_information_architecture/p5_prototype.dart \
