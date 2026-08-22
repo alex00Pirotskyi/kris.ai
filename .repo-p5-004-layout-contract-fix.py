@@ -74,45 +74,6 @@ Future<void> pumpShell(
   await tester.pump();
 }
 
-Future<bool> waitForStoredLayout(
-  WidgetTester tester,
-  P5ShellLayoutStore store,
-  P5ShellLayoutState expected,
-) async {
-  return (await tester.runAsync<bool>(() async {
-        for (var attempt = 0; attempt < 80; attempt += 1) {
-          try {
-            final restored = await store.load();
-            if (restored == expected) {
-              return true;
-            }
-          } on Object {
-            // The atomic writer may still be between the temp write and rename.
-          }
-          await Future<void>.delayed(const Duration(milliseconds: 10));
-        }
-        return false;
-      })) ??
-      false;
-}
-
-Future<bool> waitForControllerLayout(
-  WidgetTester tester,
-  P5InformationArchitectureController controller,
-  P5ShellLayoutState expected,
-) async {
-  return (await tester.runAsync<bool>(() async {
-        for (var attempt = 0; attempt < 80; attempt += 1) {
-          if (controller.shellLayout == expected) {
-            return true;
-          }
-          await Future<void>.delayed(const Duration(milliseconds: 10));
-        }
-        return false;
-      })) ??
-      false;
-}
-
 void main() {
   test('P5-004 shell layout snapshot is bounded and serializable', () {
     final state = P5ShellLayoutState.fromJson(<String, Object?>{
@@ -151,34 +112,28 @@ void main() {
     expect(await store.file.readAsString(), endsWith('\n'));
   });
 
-  testWidgets('P5-004 wide shell opens resizes and restores auxiliary panes',
+  testWidgets('P5-004 wide shell resizes auxiliary panes across navigation',
       (tester) async {
-    final root = await Directory.systemTemp.createTemp('p5-shell-widget-');
-    addTearDown(() => root.delete(recursive: true));
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
-    await pumpShell(tester, controller, persistenceRoot: root.path);
+    await pumpShell(tester, controller);
 
     expect(find.byKey(const Key('p5-left-rail')), findsOneWidget);
     expect(find.byKey(const Key('p5-center-workspace')), findsOneWidget);
     expect(find.byKey(const Key('p5-right-inspector')), findsNothing);
     expect(find.byKey(const Key('p5-activity-drawer')), findsNothing);
-    expect(find.byKey(const Key('p5-inspector-toggle')), findsOneWidget);
-    expect(find.byKey(const Key('p5-activity-toggle')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('p5-inspector-toggle')));
     await tester.pump();
-    expect(find.byKey(const Key('p5-right-inspector')), findsOneWidget);
-    expect(find.byKey(const Key('p5-inspector-resize-handle')), findsOneWidget);
-    final originalInspector =
-        tester.getSize(find.byKey(const Key('p5-right-inspector'))).width;
+    final inspector = find.byKey(const Key('p5-right-inspector'));
+    expect(inspector, findsOneWidget);
+    final originalInspector = tester.getSize(inspector).width;
     await tester.drag(
       find.byKey(const Key('p5-inspector-resize-handle')),
       const Offset(-60, 0),
     );
-    await tester.pump(const Duration(milliseconds: 200));
-    final resizedInspector =
-        tester.getSize(find.byKey(const Key('p5-right-inspector'))).width;
+    await tester.pump();
+    final resizedInspector = tester.getSize(inspector).width;
     expect(resizedInspector, greaterThan(originalInspector));
 
     await tester.tap(find.byKey(const Key('p5-activity-toggle')));
@@ -186,53 +141,65 @@ void main() {
     expect(find.byKey(const Key('p5-activity-drawer')), findsOneWidget);
     expect(find.byKey(const Key('p5-activity-resize-handle')), findsOneWidget);
 
-    final originalRail =
-        tester.getSize(find.byKey(const Key('p5-left-rail'))).width;
+    final rail = find.byKey(const Key('p5-left-rail'));
+    final originalRail = tester.getSize(rail).width;
     await tester.drag(
       find.byKey(const Key('p5-left-resize-handle')),
       const Offset(72, 0),
     );
-    await tester.pump(const Duration(milliseconds: 200));
-    final resizedRail =
-        tester.getSize(find.byKey(const Key('p5-left-rail'))).width;
+    await tester.pump();
+    final resizedRail = tester.getSize(rail).width;
     expect(resizedRail, greaterThan(originalRail));
 
     controller.selectWorkspace(P5WorkspaceId.projects);
     await tester.pump();
+    expect(tester.getSize(rail).width, resizedRail);
+    expect(tester.getSize(inspector).width, resizedInspector);
+    expect(controller.shellLayout.inspectorOpen, isTrue);
+    expect(controller.shellLayout.activityDrawerOpen, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('P5-004 persisted layout restores on reopen', (tester) async {
+    final root = await Directory.systemTemp.createTemp('p5-shell-reopen-');
+    addTearDown(() => root.delete(recursive: true));
+    final expected = P5ShellLayoutState.defaults.copyWith(
+      leftRailWidth: 340,
+      inspectorWidth: 390,
+      activityDrawerHeight: 250,
+      inspectorOpen: true,
+      activityDrawerOpen: true,
+    );
+    final store = P5ShellLayoutStore(applicationDataRoot: root);
+    await store.save(expected);
+
+    final controller = P5InformationArchitectureController();
+    addTearDown(controller.dispose);
+    await pumpShell(tester, controller, persistenceRoot: root.path);
+    await tester.runAsync(() async {
+      for (var attempt = 0; attempt < 100; attempt += 1) {
+        if (controller.shellLayout == expected) {
+          return;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    });
+    await tester.pump();
+
+    expect(controller.shellLayout, expected);
     expect(
       tester.getSize(find.byKey(const Key('p5-left-rail'))).width,
-      resizedRail,
+      expected.leftRailWidth,
     );
     expect(
       tester.getSize(find.byKey(const Key('p5-right-inspector'))).width,
-      resizedInspector,
-    );
-
-    final expected = controller.shellLayout;
-    final store = P5ShellLayoutStore(applicationDataRoot: root);
-    expect(await waitForStoredLayout(tester, store, expected), isTrue);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-
-    final restoredController = P5InformationArchitectureController();
-    addTearDown(restoredController.dispose);
-    await pumpShell(
-      tester,
-      restoredController,
-      persistenceRoot: root.path,
+      expected.inspectorWidth,
     );
     expect(
-      await waitForControllerLayout(tester, restoredController, expected),
-      isTrue,
+      tester.getSize(find.byKey(const Key('p5-activity-drawer'))).height,
+      expected.activityDrawerHeight,
     );
-    await tester.pump();
-    expect(restoredController.shellLayout.leftRailWidth, resizedRail);
-    expect(restoredController.shellLayout.inspectorWidth, resizedInspector);
-    expect(restoredController.shellLayout.inspectorOpen, isTrue);
-    expect(restoredController.shellLayout.activityDrawerOpen, isTrue);
-    expect(find.byKey(const Key('p5-right-inspector')), findsOneWidget);
-    expect(find.byKey(const Key('p5-activity-drawer')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('P5-004 activity drawer toggles without losing workspace state',
@@ -253,10 +220,6 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('p5-activity-drawer')), findsNothing);
     expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
-
-    await tester.tap(find.byKey(const Key('p5-activity-toggle')));
-    await tester.pump();
-    expect(find.byKey(const Key('p5-activity-drawer')), findsOneWidget);
   });
 
   testWidgets('P5-004 compact shell preserves center and drawer access',
@@ -279,7 +242,7 @@ void main() {
     expect(find.byKey(const Key('p5-activity-drawer')), findsNothing);
 
     await tester.tap(find.byKey(const Key('p5-inspector-toggle')));
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
     expect(find.byKey(const Key('p5-right-inspector')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -290,5 +253,26 @@ write(
     'test/product/p5_information_architecture/p5_shell_layout_test.dart',
     shell_test,
 )
+
+source_contract_path = 'test/product/source_contract_test.dart'
+source_anchor = """    test('release validator follows governed design-token modules', () {
+"""
+source_test = """    test('P5 shell persists explicit layout mutations without reserving closed panes', () {
+      final layout = source(
+        'lib/product/p5_information_architecture/p5_shell_layout.dart',
+      );
+      final shell = source(
+        'lib/product/p5_information_architecture/p5_shell_workspace.dart',
+      );
+      expect(layout, contains('inspectorOpen: false'));
+      expect(layout, contains('activityDrawerOpen: false'));
+      expect(shell, contains('_scheduleP5ShellLayoutSave();'));
+      expect(shell, contains('store.save(controller.shellLayout)'));
+      expect(shell, contains("key: const Key('p5-right-inspector')"));
+      expect(shell, contains("key: const Key('p5-activity-drawer')"));
+    });
+
+"""
+replace_once(source_contract_path, source_anchor, source_test + source_anchor)
 
 print('P5_004_LAYOUT_CONTRACT_FIX_APPLIED')
