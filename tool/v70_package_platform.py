@@ -37,6 +37,29 @@ def copy_tree(source: pathlib.Path, destination: pathlib.Path) -> None:
     shutil.copytree(source, destination, symlinks=True)
 
 
+def ensure_macos_node_pty_spawn_helpers(runtime_destination: pathlib.Path) -> list[pathlib.Path]:
+    prebuilds = (
+        runtime_destination
+        / "automation_host"
+        / "node_modules"
+        / "node-pty"
+        / "prebuilds"
+    )
+    helpers = sorted(prebuilds.glob("darwin-*/spawn-helper"), key=lambda item: item.as_posix())
+    if not helpers:
+        fail("macOS node-pty spawn-helper missing from staged runtime")
+    repaired: list[pathlib.Path] = []
+    for helper in helpers:
+        if helper.is_symlink() or not helper.is_file():
+            fail(f"macOS node-pty spawn-helper is not a regular file: {helper}")
+        mode = stat.S_IMODE(helper.stat().st_mode)
+        helper.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        if not os.access(helper, os.X_OK):
+            fail(f"macOS node-pty spawn-helper is not executable after staging repair: {helper}")
+        repaired.append(helper)
+    return repaired
+
+
 def locate_app(root: pathlib.Path, platform: str) -> tuple[pathlib.Path, str]:
     if platform == "windows":
         roots = [path for path in root.glob("build/windows/**/runner/Release") if path.is_dir()]
@@ -104,7 +127,11 @@ def zip_payload(source: pathlib.Path, archive: pathlib.Path) -> None:
     temporary.replace(archive)
 
 
-def ad_hoc_sign_macos(app_bundle: pathlib.Path, p1a_native: pathlib.Path) -> str:
+def ad_hoc_sign_macos(
+    app_bundle: pathlib.Path,
+    p1a_native: pathlib.Path,
+    runtime_executables: list[pathlib.Path] | tuple[pathlib.Path, ...] = (),
+) -> str:
     def execute(argv: list[str]) -> None:
         result = subprocess.run(argv, text=True, encoding="utf-8", errors="replace", capture_output=True)
         if result.returncode:
@@ -112,6 +139,11 @@ def ad_hoc_sign_macos(app_bundle: pathlib.Path, p1a_native: pathlib.Path) -> str
 
     subprocess.run(["xattr", "-cr", str(app_bundle)], text=True, encoding="utf-8", errors="replace", capture_output=True)
     for binary in sorted((path for path in p1a_native.rglob("*") if path.is_file() and os.access(path, os.X_OK)), key=lambda item: item.as_posix()):
+        execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(binary)])
+        execute(["codesign", "--verify", "--strict", "--verbose=2", str(binary)])
+    for binary in sorted(runtime_executables, key=lambda item: item.as_posix()):
+        if not binary.is_file() or not os.access(binary, os.X_OK):
+            fail(f"macOS staged runtime executable is invalid before signing: {binary}")
         execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(binary)])
         execute(["codesign", "--verify", "--strict", "--verbose=2", str(binary)])
     execute(["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none", str(app_bundle)])
@@ -203,7 +235,9 @@ def main() -> int:
         copy_tree(app_source, app_destination)
         runtime_destination = app_destination / "runtime/p2/current"
     copy_tree(runtime_stage / "runtime", runtime_destination)
+    macos_spawn_helpers: list[pathlib.Path] = []
     if args.platform == "macos":
+        macos_spawn_helpers = ensure_macos_node_pty_spawn_helpers(runtime_destination)
         windows_only_conpty = (
             runtime_destination
             / "automation_host"
@@ -218,7 +252,11 @@ def main() -> int:
     copy_tree(runtime_stage / "p1a-native", p1a_destination)
     qa_code_signing = "unsigned-owner-risk-qa"
     if args.platform == "macos":
-        qa_code_signing = ad_hoc_sign_macos(app_destination / app_source.name, p1a_destination)
+        qa_code_signing = ad_hoc_sign_macos(
+            app_destination / app_source.name,
+            p1a_destination,
+            runtime_executables=macos_spawn_helpers,
+        )
     write_launchers(payload, args.platform, app_executable, args.source_commit, args.source_tree)
 
     qa_dir = payload / "qa"
@@ -264,6 +302,10 @@ def main() -> int:
         "manualQaMatrixIncluded": True,
         "p1P2FeatureCoverageIncluded": True,
         "qaCodeSigning": qa_code_signing,
+        "macosNodePtySpawnHelpers": [
+            item.relative_to(runtime_destination).as_posix()
+            for item in macos_spawn_helpers
+        ],
         "appExecutable": app_executable,
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }

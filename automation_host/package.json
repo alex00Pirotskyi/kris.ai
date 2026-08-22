@@ -10,6 +10,9 @@
     "node-pty": "1.1.0",
     "playwright-core": "1.61.1"
   },
+  "allowScripts": {
+    "node-pty@1.1.0": true
+  },
   "scripts": {
     "start": "node src/host.mjs",
     "test": "node --test src/*.test.mjs",
