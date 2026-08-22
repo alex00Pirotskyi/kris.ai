@@ -159,7 +159,8 @@ final class P3BrowserQualitySnapshot {
       _identity.hasMatch(observationId),
       'browser_quality_observation_id_invalid',
     );
-    _require(url.hasScheme && url.host.isNotEmpty, 'browser_quality_url_invalid');
+    _require(
+        url.hasScheme && url.host.isNotEmpty, 'browser_quality_url_invalid');
     _requireSha256(
       screenshotSha256,
       'browser_quality_screenshot_hash_invalid',
@@ -480,7 +481,8 @@ abstract final class P3BrowserTaskRecipes {
     P3BrowserTaskRecipe(
       id: 'p3.recipe.authenticated-download',
       kind: P3BrowserTaskRecipeKind.authenticatedDownload,
-      description: 'Authenticate locally, verify identity, quarantine download.',
+      description:
+          'Authenticate locally, verify identity, quarantine download.',
       steps: <P3BrowserTaskRecipeStep>[
         P3BrowserTaskRecipeStep(
           id: 'authenticate',
@@ -504,7 +506,8 @@ abstract final class P3BrowserTaskRecipes {
     P3BrowserTaskRecipe(
       id: 'p3.recipe.web-testing',
       kind: P3BrowserTaskRecipeKind.webTesting,
-      description: 'Exercise responsive, visual, accessibility, link and form checks.',
+      description:
+          'Exercise responsive, visual, accessibility, link and form checks.',
       steps: <P3BrowserTaskRecipeStep>[
         P3BrowserTaskRecipeStep(
           id: 'responsive',
@@ -531,7 +534,8 @@ abstract final class P3BrowserTaskRecipes {
     P3BrowserTaskRecipe(
       id: 'p3.recipe.data-extraction',
       kind: P3BrowserTaskRecipeKind.dataExtraction,
-      description: 'Observe structured rows, paginate or scroll, emit bounded data.',
+      description:
+          'Observe structured rows, paginate or scroll, emit bounded data.',
       steps: <P3BrowserTaskRecipeStep>[
         P3BrowserTaskRecipeStep(
           id: 'observe',
@@ -579,7 +583,8 @@ final class P3BrowserRecipeReceipt {
     required String qualityReportSha256,
     required List<String> completedStepIds,
   }) {
-    _require(_identity.hasMatch(sessionId), 'browser_recipe_session_id_invalid');
+    _require(
+        _identity.hasMatch(sessionId), 'browser_recipe_session_id_invalid');
     _require(_identity.hasMatch(pageId), 'browser_recipe_page_id_invalid');
     _requireSha256(
       observationSha256,

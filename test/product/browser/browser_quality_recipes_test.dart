@@ -16,7 +16,8 @@ void main() {
       expect(P3BrowserAuditViewport.mobile.height, 844);
     });
 
-    test('quality report binds screenshot DOM accessibility links and forms', () {
+    test('quality report binds screenshot DOM accessibility links and forms',
+        () {
       final snapshot = P3BrowserQualitySnapshot(
         pageId: 'page-1',
         observationId: 'observation-1',
@@ -61,7 +62,8 @@ void main() {
       );
 
       expect(report.passed, isTrue);
-      expect(report.snapshot.snapshotSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
+      expect(
+          report.snapshot.snapshotSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
       expect(report.reportSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
       expect(
         P3BrowserQualityReport(
@@ -157,7 +159,8 @@ void main() {
       );
     });
 
-    test('tab confusion stale targets and cross-profile access fail closed', () {
+    test('tab confusion stale targets and cross-profile access fail closed',
+        () {
       guard.requireFreshTarget(
         activePageId: 'page-a',
         targetPageId: 'page-a',
@@ -251,11 +254,14 @@ void main() {
       );
       for (final recipe in P3BrowserTaskRecipes.all) {
         expect(recipe.steps, isNotEmpty);
-        expect(recipe.steps.every((step) => step.requiresFreshObservation), isTrue);
+        expect(recipe.steps.every((step) => step.requiresFreshObservation),
+            isTrue);
       }
     });
 
-    test('recipe receipts bind recipe session page observation quality and output', () {
+    test(
+        'recipe receipts bind recipe session page observation quality and output',
+        () {
       final recipe = P3BrowserTaskRecipes.byKind(
         P3BrowserTaskRecipeKind.dataExtraction,
       );
@@ -338,7 +344,8 @@ void main() {
       'request-takeover',
       'fixture-data',
     ]) {
-      expect(html, contains(marker), reason: 'missing fixture surface: $marker');
+      expect(html, contains(marker),
+          reason: 'missing fixture surface: $marker');
     }
     expect(script, contains("window.open('popup.html'"));
     expect(script, contains('appendScrollBatch'));
