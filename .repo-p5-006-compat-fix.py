@@ -34,39 +34,11 @@ replace_once(
     """                      FilledButton.icon(
                         key: const Key('review-plan-button'),
                         onPressed: controller.canReviewPlan
-                            ? () =>
-                                controller.apply(P5PrototypeAction.reviewPlan)
-                            : null,
-                        icon: const Icon(Icons.fact_check_outlined),
-                        label: const Text('Review concise plan'),
-                      ),
 """,
-    """                      Shortcuts(
-                        shortcuts: const <ShortcutActivator, Intent>{
-                          SingleActivator(LogicalKeyboardKey.enter):
-                              _P5ReviewPlanIntent(),
-                        },
-                        child: Actions(
-                          actions: <Type, Action<Intent>>{
-                            _P5ReviewPlanIntent:
-                                CallbackAction<_P5ReviewPlanIntent>(
-                              onInvoke: (_) {
-                                controller.apply(P5PrototypeAction.reviewPlan);
-                                return null;
-                              },
-                            ),
-                          },
-                          child: FilledButton.icon(
-                            key: const Key('review-plan-button'),
-                            onPressed: controller.canReviewPlan
-                                ? () => controller
-                                    .apply(P5PrototypeAction.reviewPlan)
-                                : null,
-                            icon: const Icon(Icons.fact_check_outlined),
-                            label: const Text('Review concise plan'),
-                          ),
-                        ),
-                      ),
+    """                      FilledButton.icon(
+                        key: const Key('review-plan-button'),
+                        focusNode: _reviewPlanFocusNode,
+                        onPressed: controller.canReviewPlan
 """,
 )
 
@@ -78,19 +50,55 @@ replace_once(
 """,
 )
 
+prototype_path = 'lib/product/p5_information_architecture/p5_prototype.dart'
 replace_once(
-    'lib/product/p5_information_architecture/p5_components.dart',
-    """class _P5LaunchComposerIntent extends Intent {
-  const _P5LaunchComposerIntent();
-}
+    prototype_path,
+    """  late final TextEditingController _composerCriteriaController =
+      TextEditingController(
+    text: widget.controller.state.acceptanceCriteria.join('\\n'),
+  );
+  final TextEditingController _webProfileController =
 """,
-    """class _P5ReviewPlanIntent extends Intent {
-  const _P5ReviewPlanIntent();
-}
-
-class _P5LaunchComposerIntent extends Intent {
-  const _P5LaunchComposerIntent();
-}
+    """  late final TextEditingController _composerCriteriaController =
+      TextEditingController(
+    text: widget.controller.state.acceptanceCriteria.join('\\n'),
+  );
+  late final FocusNode _reviewPlanFocusNode;
+  final TextEditingController _webProfileController =
+""",
+)
+replace_once(
+    prototype_path,
+    """  void initState() {
+    super.initState();
+    widget.globalAutonomy?.registerBrowserEmergencyStop(
+""",
+    """  void initState() {
+    super.initState();
+    _reviewPlanFocusNode = FocusNode(
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.enter &&
+            controller.canReviewPlan) {
+          controller.apply(P5PrototypeAction.reviewPlan);
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+    );
+    widget.globalAutonomy?.registerBrowserEmergencyStop(
+""",
+)
+replace_once(
+    prototype_path,
+    """    _composerAttachmentsController.dispose();
+    _composerCriteriaController.dispose();
+    _webProfileController.dispose();
+""",
+    """    _composerAttachmentsController.dispose();
+    _composerCriteriaController.dispose();
+    _reviewPlanFocusNode.dispose();
+    _webProfileController.dispose();
 """,
 )
 
