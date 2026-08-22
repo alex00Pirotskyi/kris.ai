@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      EXPECTED_PARENT: e7d27ca11a5c884c03cf8363cb109ae28eed1318
+      EXPECTED_PARENT: f46b9cb5c363526d18f81663935ad27c3ff039f2
       EXPECTED_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
       EXPECTED_BRANCH: agent/owner-p25-current-main
       PATCH_PATH: .repo-rehab-p211-finalize.py
@@ -91,6 +91,8 @@ jobs:
           test -z "$(git diff --name-only --diff-filter=U)"
           mapfile -t paths < <(git status --short | sed -E 's/^...//' | sort)
           expected=(
+            .github/workflows/owner-p211-finalize.yml
+            .repo-rehab-p211-finalize.py
             SOURCE_MANIFEST.sha256
             evals/results/P0_009_BASELINE.md
             evals/results/p0_009_baseline.json
