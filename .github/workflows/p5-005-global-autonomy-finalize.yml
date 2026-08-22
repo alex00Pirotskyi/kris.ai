@@ -1,5 +1,5 @@
 name: P5-005 global autonomy finalizer
-# Retry after removing unavailable ProductException presentation dependency.
+# Retry with non-lazy status strip and pinned global action controls.
 
 on:
   pull_request:
@@ -17,6 +17,7 @@ env:
   SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
   PATCH_PATH: .repo-p5-005-finalize.py
   COMPILE_FIX_PATH: .repo-p5-005-compile-fix.py
+  BAR_FIX_PATH: .repo-p5-005-bar-layout-fix.py
   FINALIZER_PATH: .github/workflows/p5-005-global-autonomy-finalize.yml
 
 jobs:
@@ -40,6 +41,7 @@ jobs:
           test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
           test -f "$PATCH_PATH"
           test -f "$COMPILE_FIX_PATH"
+          test -f "$BAR_FIX_PATH"
           test -f "$FINALIZER_PATH"
           test -z "$(git status --short)"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -56,10 +58,11 @@ jobs:
         run: |
           set -euo pipefail
           flutter pub get
-          python -m py_compile "$PATCH_PATH" "$COMPILE_FIX_PATH"
+          python -m py_compile "$PATCH_PATH" "$COMPILE_FIX_PATH" "$BAR_FIX_PATH"
           python "$PATCH_PATH"
           python "$COMPILE_FIX_PATH"
-          git rm -f "$PATCH_PATH" "$COMPILE_FIX_PATH" "$FINALIZER_PATH"
+          python "$BAR_FIX_PATH"
+          git rm -f "$PATCH_PATH" "$COMPILE_FIX_PATH" "$BAR_FIX_PATH" "$FINALIZER_PATH"
           dart format \
             lib/product/p5_global_autonomy.dart \
             lib/product/ui.dart \
