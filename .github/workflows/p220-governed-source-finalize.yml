@@ -1,4 +1,5 @@
 name: P220 governed-source finalizer
+# Registered-workflow retrigger only; durable source scope remains unchanged.
 
 on:
   pull_request:
