@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'api_server.dart';
+import 'browser/browser_runtime.dart';
 import 'chat_studio.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
@@ -88,6 +90,7 @@ class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
           P5DesignSystem.themeTransitionDuration(reducedMotion),
       themeAnimationCurve: Curves.easeOutCubic,
       home: KristinMainShell(
+        runtime: widget.runtime,
         ownerMode: widget.runtime.p2OwnerMode,
         chat: ChatStudio(
           runtime: widget.runtime,
@@ -102,10 +105,12 @@ class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
 class KristinMainShell extends StatefulWidget {
   const KristinMainShell({
     super.key,
+    this.runtime,
     required this.ownerMode,
     required this.chat,
   });
 
+  final ProductRuntime? runtime;
   final P2ProductRuntimeOwnerModeHandle ownerMode;
   final Widget chat;
 
@@ -133,10 +138,30 @@ class _KristinMainShellState extends State<KristinMainShell> {
   Widget build(BuildContext context) {
     final qaPreview = widget.ownerMode.runtimeProvenance['qaPreview'] == true;
     final ownerAvailable = widget.ownerMode.available;
+    final productRuntime = widget.runtime;
     final pages = <Widget>[
       widget.chat,
       P5InformationArchitecturePrototype(
         controller: _experienceController,
+        ownerMode: widget.ownerMode,
+        browserRuntimeAvailable:
+            productRuntime?.p3BrowserRuntime.available ?? false,
+        browserRuntimeStatusCode: productRuntime?.p3BrowserRuntime.statusCode ??
+            'p3_runtime_not_bound',
+        browserRuntimeProvenance: productRuntime?.p3BrowserRuntime.provenance ??
+            const <String, Object?>{},
+        browserSessionStarter: productRuntime == null
+            ? null
+            : () => P3BrowserRuntimeService(
+                  applicationDataRoot: productRuntime.directories.root,
+                ).startSessions(
+                  stateDirectory: Directory(
+                    '${productRuntime.directories.cache.path}'
+                    '${Platform.pathSeparator}p5-web-studio-browser',
+                  ),
+                  requestTimeout: const Duration(seconds: 60),
+                ),
+        onOpenOwnerMode: () => _selectDestination(2),
       ),
       widget.ownerMode.buildWorkspace(
         key: const ValueKey<String>('kristin-owner-mode-workspace'),

@@ -186,6 +186,89 @@ extension _P5VerificationWorkspaces
   }
 
   Widget _ownerModeWorkspace(BuildContext context) {
+    final liveHandle = widget.ownerMode;
+    if (liveHandle != null) {
+      final active = liveHandle.runtime;
+      final available = liveHandle.available;
+      final settings = active?.controller.current;
+      final supervision = active?.supervisionSnapshot();
+      final terminalCount = active?.terminalModel.tabs.length ?? 0;
+      final status = !available
+          ? 'Unavailable'
+          : settings!.enabled
+              ? (settings.unattended ? 'Enabled unattended' : 'Enabled')
+              : 'Available, off';
+      return _scrollWorkspace(
+        context,
+        children: <Widget>[
+          const _WorkspaceHeader(
+            title: 'Owner Mode',
+            subtitle:
+                'Live status from the shipped P2 runtime. Authority-changing controls remain in the top-level Owner Mode workspace.',
+            icon: Icons.admin_panel_settings_outlined,
+          ),
+          Card(
+            key: const Key('owner-mode-live-state-card'),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    status,
+                    key: const Key('owner-mode-live-state-label'),
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    available
+                        ? 'Approval: ${settings!.approvalPolicy.name} • '
+                            'terminals: $terminalCount • supervised trees: '
+                            '${(supervision?['watchdogIds'] as List?)?.length ?? 0}'
+                        : liveHandle.recoveryMessage,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: <Widget>[
+                      _StatusChip(
+                        label: liveHandle.completionEligible
+                            ? 'P1 authority eligible'
+                            : 'No production completion claim',
+                        icon: Icons.verified_user_outlined,
+                      ),
+                      _StatusChip(
+                        label: 'Runtime: '
+                            '${available ? 'available' : liveHandle.diagnosticCode}',
+                        icon: available
+                            ? Icons.check_circle_outline
+                            : Icons.gpp_bad_outlined,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const _BoundaryNotice(
+                    message:
+                        'Experience reads P2 state only. Enabling, disabling, terminal control, emergency kill, and approvals continue through the existing real Owner Mode workspace.',
+                  ),
+                  if (widget.onOpenOwnerMode != null) ...<Widget>[
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      key: const Key('open-real-owner-mode'),
+                      onPressed: widget.onOpenOwnerMode,
+                      icon: const Icon(Icons.open_in_new),
+                      label: const Text('Open real Owner Mode'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     final state = controller.state.ownerModeState;
     return _scrollWorkspace(
       context,

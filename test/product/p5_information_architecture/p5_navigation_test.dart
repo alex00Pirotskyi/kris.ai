@@ -34,6 +34,21 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
+  testWidgets('advanced Experience exposes Web Studio honestly',
+      (tester) async {
+    final controller = P5InformationArchitectureController()
+      ..changeExperienceLevel(P5ExperienceLevel.advanced)
+      ..selectWorkspace(P5WorkspaceId.webStudio);
+    addTearDown(controller.dispose);
+    await pumpPrototype(tester, controller);
+
+    expect(controller.state.workspace, P5WorkspaceId.webStudio);
+    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);
+    expect(find.byKey(const Key('web-browser-start-stop')), findsOneWidget);
+    expect(find.textContaining('P3 p3_runtime_not_bound'), findsOneWidget);
+    expect(controller.sideEffects.isZero, isTrue);
+  });
+
   testWidgets(
       'simple task cannot bypass advanced evidence and can open verification',
       (tester) async {
@@ -321,16 +336,19 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('Web Studio unavailable state has an exit', (tester) async {
+  testWidgets('Web Studio opens from capabilities and has a navigation exit',
+      (tester) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)
       ..selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
+
     await tapKey(tester, const Key('capability-webStudio'));
-    expect(find.text('BLOCKED_BY_DEPENDENCY'), findsOneWidget);
-    await tester.tap(find.text('Back to Capabilities'));
-    await tester.pumpAndSettle();
+    expect(controller.state.workspace, P5WorkspaceId.webStudio);
+    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);
+
+    await tapKey(tester, const Key('history-back'));
     expect(controller.state.workspace, P5WorkspaceId.capabilitiesIntegrations);
     expect(controller.sideEffects.isZero, isTrue);
   });
