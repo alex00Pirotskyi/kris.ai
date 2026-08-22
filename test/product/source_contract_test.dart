@@ -223,6 +223,8 @@ void main() {
         'lib/product/p5_information_architecture/p5_fixtures.dart',
         'lib/product/p5_information_architecture/p5_models.dart',
         'lib/product/p5_information_architecture/p5_prototype.dart',
+        'lib/product/p5_information_architecture/p5_shell_layout.dart',
+        'lib/product/p5_information_architecture/p5_shell_workspace.dart',
         'lib/product/p5_information_architecture/p5_support_workspaces.dart',
         'lib/product/p5_information_architecture/p5_task_workspaces.dart',
         'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
@@ -247,6 +249,23 @@ void main() {
       expect(chatOffset, greaterThanOrEqualTo(0));
       expect(experienceOffset, greaterThan(chatOffset));
       expect(ownerOffset, greaterThan(experienceOffset));
+    });
+
+    test(
+        'P5 shell persists explicit layout mutations without reserving closed panes',
+        () {
+      final layout = source(
+        'lib/product/p5_information_architecture/p5_shell_layout.dart',
+      );
+      final shell = source(
+        'lib/product/p5_information_architecture/p5_shell_workspace.dart',
+      );
+      expect(layout, contains('inspectorOpen: false'));
+      expect(layout, contains('activityDrawerOpen: false'));
+      expect(shell, contains('_scheduleP5ShellLayoutSave();'));
+      expect(shell, contains('store.save(controller.shellLayout)'));
+      expect(shell, contains("key: const Key('p5-right-inspector')"));
+      expect(shell, contains("key: const Key('p5-activity-drawer')"));
     });
 
     test('release validator follows governed design-token modules', () {

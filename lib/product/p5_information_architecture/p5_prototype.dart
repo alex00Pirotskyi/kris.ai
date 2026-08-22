@@ -10,11 +10,13 @@ import '../p2_product_runtime_bootstrap.dart';
 import 'p5_controller.dart';
 import 'p5_fixtures.dart';
 import 'p5_models.dart';
+import 'p5_shell_layout.dart';
 
 part 'p5_task_workspaces.dart';
 part 'p5_verification_workspaces.dart';
 part 'p5_support_workspaces.dart';
 part 'p5_components.dart';
+part 'p5_shell_workspace.dart';
 
 class P5InformationArchitectureApp extends StatefulWidget {
   const P5InformationArchitectureApp({
@@ -78,6 +80,7 @@ class P5InformationArchitecturePrototype extends StatefulWidget {
     this.browserRuntimeAvailable = false,
     this.browserRuntimeStatusCode = 'p3_runtime_not_bound',
     this.browserRuntimeProvenance = const <String, Object?>{},
+    this.layoutPersistence,
     this.onOpenOwnerMode,
   });
 
@@ -87,6 +90,7 @@ class P5InformationArchitecturePrototype extends StatefulWidget {
   final bool browserRuntimeAvailable;
   final String browserRuntimeStatusCode;
   final Map<String, Object?> browserRuntimeProvenance;
+  final P5ShellLayoutPersistence? layoutPersistence;
   final VoidCallback? onOpenOwnerMode;
 
   @override
@@ -134,6 +138,8 @@ class _P5InformationArchitecturePrototypeState
   List<P3BrowserDownloadReceipt> _webDownloads = <P3BrowserDownloadReceipt>[];
   List<P3BrowserUploadReceipt> _webUploads = <P3BrowserUploadReceipt>[];
   final List<String> _webActivity = <String>[];
+  P5ShellLayoutPersistence? _shellLayoutStore;
+  Timer? _shellLayoutSaveDebounce;
 
   P5InformationArchitectureController get controller => widget.controller;
 
@@ -154,7 +160,14 @@ class _P5InformationArchitecturePrototypeState
   }
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_initializeP5ShellLayout());
+  }
+
+  @override
   void dispose() {
+    _shellLayoutSaveDebounce?.cancel();
     unawaited(_webBrowser?.close());
     _taskController.dispose();
     _webProfileController.dispose();
@@ -237,7 +250,8 @@ class _P5InformationArchitecturePrototypeState
   }
 
   Widget _buildShell(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 900;
+    final compact = MediaQuery.sizeOf(context).width <
+        P5ShellLayoutState.minimumThreePaneWidth;
     final state = controller.state;
     return Scaffold(
       drawer: compact
@@ -245,6 +259,12 @@ class _P5InformationArchitecturePrototypeState
               child: SafeArea(
                 child: _navigation(context, closeDrawerAfterSelection: true),
               ),
+            )
+          : null,
+      endDrawer: compact
+          ? Drawer(
+              key: const Key('p5-right-inspector'),
+              child: _buildP5Inspector(context, state),
             )
           : null,
       appBar: AppBar(
@@ -277,6 +297,36 @@ class _P5InformationArchitecturePrototypeState
             onPressed: controller.canGoForward ? controller.forward : null,
             icon: const Icon(Icons.arrow_forward),
           ),
+          Builder(
+            builder: (buttonContext) => IconButton(
+              key: const Key('p5-inspector-toggle'),
+              tooltip: compact
+                  ? 'Open inspector'
+                  : controller.shellLayout.inspectorOpen
+                      ? 'Hide inspector'
+                      : 'Show inspector',
+              onPressed: compact
+                  ? () => Scaffold.of(buttonContext).openEndDrawer()
+                  : () => _updateP5ShellLayout(
+                        controller.shellLayout.copyWith(
+                          inspectorOpen: !controller.shellLayout.inspectorOpen,
+                        ),
+                      ),
+              icon: const Icon(Icons.tune_outlined),
+            ),
+          ),
+          IconButton(
+            key: const Key('p5-activity-toggle'),
+            tooltip: controller.shellLayout.activityDrawerOpen
+                ? 'Collapse activity drawer'
+                : 'Expand activity drawer',
+            onPressed: () => _updateP5ShellLayout(
+              controller.shellLayout.copyWith(
+                activityDrawerOpen: !controller.shellLayout.activityDrawerOpen,
+              ),
+            ),
+            icon: const Icon(Icons.timeline_outlined),
+          ),
           if (!compact) _experienceSelector(context),
           const SizedBox(width: 8),
           Semantics(
@@ -291,37 +341,10 @@ class _P5InformationArchitecturePrototypeState
           const SizedBox(width: 12),
         ],
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          if (!compact)
-            SizedBox(
-              width: 276,
-              child: Material(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                child: SafeArea(
-                  top: false,
-                  child: _navigation(context),
-                ),
-              ),
-            ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _contextBar(context),
-                Expanded(
-                  child: KeyedSubtree(
-                    key: ValueKey<String>(
-                      'workspace-content-${state.workspace.name}',
-                    ),
-                    child: _workspace(context, state.workspace),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: _buildP5ThreePaneBody(
+        context,
+        compact: compact,
+        state: state,
       ),
     );
   }
