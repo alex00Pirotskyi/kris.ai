@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../access_profile_v2.dart';
+
 enum P5ExperienceLevel { simple, advanced, developer }
 
 enum P5WorkspaceId {
@@ -103,6 +105,36 @@ extension P5ComposerProfileLabel on P5ComposerProfile {
         P5ComposerProfile.owner => 'Owner',
         P5ComposerProfile.ownerUnattended => 'Owner unattended',
         P5ComposerProfile.isolatedUntrusted => 'Isolated untrusted',
+      };
+
+  AccessProfileId get accessProfileId => switch (this) {
+        P5ComposerProfile.project => AccessProfileId.project,
+        P5ComposerProfile.owner => AccessProfileId.owner,
+        P5ComposerProfile.ownerUnattended => AccessProfileId.ownerUnattended,
+        P5ComposerProfile.isolatedUntrusted =>
+          AccessProfileId.isolatedUntrusted,
+      };
+
+  ApprovalPolicy get approvalPolicy => switch (this) {
+        P5ComposerProfile.project => ApprovalPolicy.highRiskOnly,
+        P5ComposerProfile.owner => ApprovalPolicy.highRiskOnly,
+        P5ComposerProfile.ownerUnattended => ApprovalPolicy.never,
+        P5ComposerProfile.isolatedUntrusted => ApprovalPolicy.always,
+      };
+
+  String get approvalPolicyLabel => switch (approvalPolicy) {
+        ApprovalPolicy.always => 'ALWAYS',
+        ApprovalPolicy.highRiskOnly => 'HIGH_RISK_ONLY',
+        ApprovalPolicy.never => 'NEVER',
+      };
+
+  String get approvalPolicyExplanation => switch (approvalPolicy) {
+        ApprovalPolicy.always =>
+          'Approval prompts are required by this profile before governed effects proceed.',
+        ApprovalPolicy.highRiskOnly =>
+          'High-risk effects require approval. Lower-risk effects still require deterministic policy authorization.',
+        ApprovalPolicy.never =>
+          'No approval prompts are required by this profile. This does not grant capabilities, widen the profile ceiling, or bypass deterministic policy and overlay denials.',
       };
 }
 
