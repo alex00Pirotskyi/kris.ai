@@ -78,6 +78,37 @@ replace_once(
 ''',
 )
 
+replace_once(
+    'test/product/p5_information_architecture/p5_shell_layout_test.dart',
+    '''    final root = await Directory.systemTemp.createTemp('p5-shell-reopen-');
+    addTearDown(() => root.delete(recursive: true));
+    final expected = P5ShellLayoutState.defaults.copyWith(
+      leftRailWidth: 340,
+      inspectorWidth: 390,
+      activityDrawerHeight: 250,
+      inspectorOpen: true,
+      activityDrawerOpen: true,
+    );
+    final store = P5ShellLayoutStore(applicationDataRoot: root);
+    await store.save(expected);
+''',
+    '''    late Directory root;
+    final expected = P5ShellLayoutState.defaults.copyWith(
+      leftRailWidth: 340,
+      inspectorWidth: 390,
+      activityDrawerHeight: 250,
+      inspectorOpen: true,
+      activityDrawerOpen: true,
+    );
+    await tester.runAsync(() async {
+      root = await Directory.systemTemp.createTemp('p5-shell-reopen-');
+      final store = P5ShellLayoutStore(applicationDataRoot: root);
+      await store.save(expected);
+    });
+    addTearDown(() => root.delete(recursive: true));
+''',
+)
+
 replace_exact(
     'test/product/p5_information_architecture/p5_shell_layout_test.dart',
     'P5ShellLayoutStore(applicationDataRoot: root)',
