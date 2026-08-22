@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry after preserving the established primary-workspace width by default.
+# Retry after separating fake-time resize coverage from filesystem reopen coverage.
 
 on:
   pull_request:
