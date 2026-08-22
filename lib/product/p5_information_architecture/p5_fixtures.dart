@@ -112,6 +112,83 @@ class P5PrototypeFixtures {
     ),
   ];
 
+  static const int timelineEventCount = 10000;
+
+  static int timelineVisibleCount(P5TimelineCategory? filter) {
+    if (filter == null) {
+      return timelineEventCount;
+    }
+    final categoryCount = P5TimelineCategory.values.length;
+    return ((timelineEventCount - 1 - filter.index) ~/ categoryCount) + 1;
+  }
+
+  static P5TimelineEvent timelineEventAt({
+    required String runId,
+    required int visibleIndex,
+    P5TimelineCategory? filter,
+  }) {
+    if (!runs.any((run) => run.id == runId)) {
+      throw ArgumentError.value(
+        runId,
+        'runId',
+        'Timeline events exist only for deterministic saved-run fixtures.',
+      );
+    }
+    final visibleCount = timelineVisibleCount(filter);
+    if (visibleIndex < 0 || visibleIndex >= visibleCount) {
+      throw RangeError.range(visibleIndex, 0, visibleCount - 1, 'visibleIndex');
+    }
+    final categoryCount = P5TimelineCategory.values.length;
+    final zeroBasedSequence = filter == null
+        ? visibleIndex
+        : (visibleIndex * categoryCount) + filter.index;
+    final category =
+        filter ?? P5TimelineCategory.values[zeroBasedSequence % categoryCount];
+    final sequence = zeroBasedSequence + 1;
+    final title = switch (category) {
+      P5TimelineCategory.model => 'Model proposal recorded',
+      P5TimelineCategory.policy => 'Policy decision recorded',
+      P5TimelineCategory.file => 'File observation recorded',
+      P5TimelineCategory.terminal => 'Terminal receipt recorded',
+      P5TimelineCategory.browser => 'Browser action recorded',
+      P5TimelineCategory.web => 'Web research step recorded',
+      P5TimelineCategory.evidence => 'Evidence reference recorded',
+      P5TimelineCategory.verification => 'Verification result recorded',
+      P5TimelineCategory.retry => 'Retry decision recorded',
+      P5TimelineCategory.rollback => 'Rollback checkpoint recorded',
+    };
+    final detail = switch (category) {
+      P5TimelineCategory.model =>
+        'Deterministic saved-run fixture model event; no live model call is claimed.',
+      P5TimelineCategory.policy =>
+        'Deterministic saved-run fixture policy event; no new authority is granted.',
+      P5TimelineCategory.file =>
+        'Deterministic saved-run fixture file event; no filesystem mutation occurred.',
+      P5TimelineCategory.terminal =>
+        'Deterministic saved-run fixture terminal event; no process was started.',
+      P5TimelineCategory.browser =>
+        'Deterministic saved-run fixture browser event; no browser action was executed.',
+      P5TimelineCategory.web =>
+        'Deterministic saved-run fixture web event; no network request was executed.',
+      P5TimelineCategory.evidence =>
+        'Deterministic saved-run fixture evidence event; not a live evidence-store receipt.',
+      P5TimelineCategory.verification =>
+        'Deterministic saved-run fixture verification event; not a certification claim.',
+      P5TimelineCategory.retry =>
+        'Deterministic saved-run fixture retry event; no operation was repeated.',
+      P5TimelineCategory.rollback =>
+        'Deterministic saved-run fixture rollback event; no rollback was executed.',
+    };
+    return P5TimelineEvent(
+      runId: runId,
+      sequence: sequence,
+      category: category,
+      timestampLabel: 'T+${zeroBasedSequence}s',
+      title: title,
+      detail: detail,
+    );
+  }
+
   static const List<P5VerificationFixture> verificationResults =
       <P5VerificationFixture>[
     P5VerificationFixture(
