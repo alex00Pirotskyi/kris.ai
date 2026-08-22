@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      EXPECTED_PARENT: f7a195e04326b1a06e18c1d693ab8002fd9af8a7
+      EXPECTED_PARENT: 5966a0892b0f9e9d2260e514c402daf1adf9c534
       EXPECTED_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
       EXPECTED_BRANCH: agent/owner-p25-current-main
       PATCH_PATH: .repo-rehab-p211-finalize.py
@@ -52,7 +52,7 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Apply repair and remove transport before generation
+      - name: Apply bounded repair and remove transport
         shell: bash
         run: |
           set -euo pipefail
@@ -72,7 +72,7 @@ jobs:
           python tool/v71r12_bootstrap_hosted_python.py --project .
           flutter pub get
           npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
-      - name: Validate source and roadmap contracts
+      - name: Validate source roadmap and analysis
         shell: bash
         run: |
           set -euo pipefail
@@ -82,30 +82,8 @@ jobs:
           python tool/roadmap_control.py validate --project . --strict
           python tool/p25_prompt_studio_roadmap_test.py --project .
           python tool/p25_prompt_studio_test_station.py --project . --profile contract
-      - name: Validate Dart format and analysis
-        shell: bash
-        run: |
-          set -euo pipefail
           python tool/dart_format_scope.py --check
           flutter analyze --no-pub --fatal-warnings --fatal-infos
-      - name: Validate Flutter source contract test
-        shell: bash
-        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/source_contract_test.dart
-      - name: Validate Flutter P25 fast-path test
-        shell: bash
-        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/p25_fast_path_contract_test.dart
-      - name: Validate Flutter Prompt Studio v2 test
-        shell: bash
-        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/prompt_studio_v2_test.dart
-      - name: Validate Flutter execution reliability test
-        shell: bash
-        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/execution_reliability_test.dart
-      - name: Validate Flutter v1 product preview test
-        shell: bash
-        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/v1_product_preview_test.dart
-      - name: Validate all product Flutter tests
-        shell: bash
-        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product
       - name: Validate complete Flutter suite
         shell: bash
         run: flutter test --no-pub --concurrency=1 --reporter expanded
@@ -130,6 +108,7 @@ jobs:
             evals/results/p0_009_baseline.json
             lib/product/prompt_planning.dart
             test/product/source_contract_test.dart
+            tool/validate_release.py
           )
           test "${paths[*]}" = "${expected[*]}"
       - name: Publish exact clean candidate
@@ -142,7 +121,7 @@ jobs:
           git config user.name 'alex00Pirotskyi'
           git config user.email '177022051+alex00Pirotskyi@users.noreply.github.com'
           git add -A
-          git commit -m 'fix(p25): preserve execution retries and align exact-head tests'
+          git commit -m 'fix(p25): preserve execution retries and align exact-head contracts'
           candidate="$(git rev-parse HEAD)"
           git push origin "HEAD:${EXPECTED_BRANCH}"
           echo "Published candidate ${candidate}"
