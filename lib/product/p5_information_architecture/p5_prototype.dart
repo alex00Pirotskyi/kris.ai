@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../browser/browser_runtime.dart';
 import '../p2_product_runtime_bootstrap.dart';
+import '../p5_global_autonomy.dart';
 
 import 'p5_controller.dart';
 import 'p5_fixtures.dart';
@@ -81,6 +82,7 @@ class P5InformationArchitecturePrototype extends StatefulWidget {
     this.browserRuntimeStatusCode = 'p3_runtime_not_bound',
     this.browserRuntimeProvenance = const <String, Object?>{},
     this.layoutPersistence,
+    this.globalAutonomy,
     this.onOpenOwnerMode,
   });
 
@@ -91,6 +93,7 @@ class P5InformationArchitecturePrototype extends StatefulWidget {
   final String browserRuntimeStatusCode;
   final Map<String, Object?> browserRuntimeProvenance;
   final P5ShellLayoutPersistence? layoutPersistence;
+  final P5GlobalAutonomyBinding? globalAutonomy;
   final VoidCallback? onOpenOwnerMode;
 
   @override
@@ -162,11 +165,34 @@ class _P5InformationArchitecturePrototypeState
   @override
   void initState() {
     super.initState();
+    widget.globalAutonomy?.registerBrowserEmergencyStop(
+      _p5EmergencyStopBrowser,
+    );
     unawaited(_initializeP5ShellLayout());
+  }
+
+  Future<void> _p5EmergencyStopBrowser() async {
+    final process = _webBrowser;
+    _webBrowser = null;
+    if (process != null) await process.close();
+    if (mounted) {
+      mutatePresentation(() {
+        _webSessions = <P3BrowserSessionInfo>[];
+        _webPages = <P3BrowserPageInfo>[];
+        _webSelectedSessionId = null;
+        _webSelectedPageId = null;
+        _webObservation = null;
+        _webDownloads = <P3BrowserDownloadReceipt>[];
+        _webUploads = <P3BrowserUploadReceipt>[];
+      });
+    }
+    widget.globalAutonomy?.updateBrowserSessionCount(0);
   }
 
   @override
   void dispose() {
+    widget.globalAutonomy?.registerBrowserEmergencyStop(null);
+    widget.globalAutonomy?.updateBrowserSessionCount(0);
     _shellLayoutSaveDebounce?.cancel();
     unawaited(_webBrowser?.close());
     _taskController.dispose();

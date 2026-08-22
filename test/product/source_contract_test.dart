@@ -218,6 +218,7 @@ void main() {
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
         'lib/product/p5_design_tokens.dart',
+        'lib/product/p5_global_autonomy.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
         'lib/product/p5_information_architecture/p5_controller.dart',
         'lib/product/p5_information_architecture/p5_fixtures.dart',
@@ -266,6 +267,24 @@ void main() {
       expect(shell, contains('store.save(controller.shellLayout)'));
       expect(shell, contains("key: const Key('p5-right-inspector')"));
       expect(shell, contains("key: const Key('p5-activity-drawer')"));
+    });
+
+    test(
+        'P5 global autonomy is shell-owned and delegates governed runtime effects',
+        () {
+      final ui = source('lib/product/ui.dart');
+      final autonomy = source('lib/product/p5_global_autonomy.dart');
+      final prototype = source(
+        'lib/product/p5_information_architecture/p5_prototype.dart',
+      );
+      expect(ui, contains('P5GlobalAutonomyBar(binding: _autonomyBinding)'));
+      expect(ui, contains('globalAutonomy: _autonomyBinding'));
+      expect(autonomy, contains('_runtime.pause(runId)'));
+      expect(autonomy, contains('_runtime.cancel(runId)'));
+      expect(autonomy, contains('emergencyPauseAndKillAll()'));
+      expect(autonomy, contains("takeoverLabel: 'Not globally bound'"));
+      expect(prototype, contains('registerBrowserEmergencyStop'));
+      expect(prototype, contains('updateBrowserSessionCount(0)'));
     });
 
     test('release validator follows governed design-token modules', () {
