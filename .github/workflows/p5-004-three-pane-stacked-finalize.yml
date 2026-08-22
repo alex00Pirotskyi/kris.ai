@@ -1,4 +1,5 @@
 name: P5-004 current-main three-pane finalizer
+# Retry after preserving the established primary-workspace width by default.
 
 on:
   pull_request:
