@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      EXPECTED_PARENT: 67fbf75bb91924a8ce910de01d191c39076ee8ce
+      EXPECTED_PARENT: 306b03bfaf6cdaff4231becc332290c613617045
       EXPECTED_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
       EXPECTED_BRANCH: agent/owner-p25-current-main
       PATCH_PATH: .repo-rehab-p211-finalize.py
@@ -88,21 +88,33 @@ jobs:
           set -euo pipefail
           python tool/dart_format_scope.py --check
           flutter analyze --no-pub --fatal-warnings --fatal-infos
-      - name: Validate Flutter tests
+      - name: Validate Flutter source contract test
         shell: bash
-        run: |
-          set -euo pipefail
-          flutter test --no-pub --concurrency=1 --reporter expanded
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/source_contract_test.dart
+      - name: Validate Flutter P25 fast-path test
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/p25_fast_path_contract_test.dart
+      - name: Validate Flutter Prompt Studio v2 test
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/prompt_studio_v2_test.dart
+      - name: Validate Flutter execution reliability test
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/execution_reliability_test.dart
+      - name: Validate Flutter v1 product preview test
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/v1_product_preview_test.dart
+      - name: Validate all product Flutter tests
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product
+      - name: Validate complete Flutter suite
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded
       - name: Validate automation host tests
         shell: bash
-        run: |
-          set -euo pipefail
-          npm test --prefix automation_host
+        run: npm test --prefix automation_host
       - name: Validate release source contract
         shell: bash
-        run: |
-          set -euo pipefail
-          python tool/validate_release.py --skip-tests
+        run: python tool/validate_release.py --skip-tests
       - name: Validate exact candidate diff
         shell: bash
         run: |
