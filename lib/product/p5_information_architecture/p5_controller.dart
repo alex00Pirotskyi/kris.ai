@@ -44,6 +44,9 @@ class P5InformationArchitectureController extends ChangeNotifier {
   bool get canEditTaskDraft => !_runContextLocked;
   bool get canChangeProjectContext => !_runContextLocked;
   bool get canSelectSavedRun => !_runContextLocked;
+  bool get canEditComposerContext => !_runContextLocked;
+  bool get canLaunchComposer =>
+      !_runLifecycleLocked && _state.selectedRunId == null;
 
   bool get _runLifecycleLocked => const <P5RunPresentationState>{
         P5RunPresentationState.running,
@@ -130,6 +133,115 @@ class P5InformationArchitectureController extends ChangeNotifier {
     }
     _state = _state.copyWith(taskDraft: value, planReviewed: false);
     notifyListeners();
+  }
+
+  void updateComposerProfile(P5ComposerProfile value) {
+    if (_composerMutationBlocked() || value == _state.composerProfile) {
+      return;
+    }
+    _commitComposerMutation(_state.copyWith(composerProfile: value));
+  }
+
+  void updateComposerModel(P5ComposerModel value) {
+    if (_composerMutationBlocked() || value == _state.composerModel) {
+      return;
+    }
+    _commitComposerMutation(_state.copyWith(composerModel: value));
+  }
+
+  void updateComposerAccess(P5ComposerAccess value) {
+    if (_composerMutationBlocked() || value == _state.composerAccess) {
+      return;
+    }
+    _commitComposerMutation(_state.copyWith(composerAccess: value));
+  }
+
+  void updateComposerLaunchTiming(P5ComposerLaunchTiming value) {
+    if (_composerMutationBlocked() || value == _state.composerLaunchTiming) {
+      return;
+    }
+    _commitComposerMutation(_state.copyWith(composerLaunchTiming: value));
+  }
+
+  void updateComposerBudget(P5ComposerBudget value) {
+    if (_composerMutationBlocked() || value == _state.composerBudget) {
+      return;
+    }
+    _commitComposerMutation(_state.copyWith(composerBudget: value));
+  }
+
+  void updateComposerAttachments(Iterable<String> values) {
+    if (_composerMutationBlocked()) {
+      return;
+    }
+    final normalized = _boundedComposerValues(
+      values,
+      maxItems: 8,
+      maxCharacters: 160,
+    );
+    if (listEquals(normalized, _state.attachments)) {
+      return;
+    }
+    _commitComposerMutation(_state.copyWith(attachments: normalized));
+  }
+
+  void updateAcceptanceCriteria(Iterable<String> values) {
+    if (_composerMutationBlocked()) {
+      return;
+    }
+    final normalized = _boundedComposerValues(
+      values,
+      maxItems: 8,
+      maxCharacters: 240,
+    );
+    if (listEquals(normalized, _state.acceptanceCriteria)) {
+      return;
+    }
+    _commitComposerMutation(
+      _state.copyWith(acceptanceCriteria: normalized),
+    );
+  }
+
+  void launchComposer() {
+    if (!canLaunchComposer) {
+      _state = _state.copyWith(
+        recoveryMessage:
+            'Composer launch cannot replace an active or resumable run. Use the run controls first.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (_state.selectedProjectId == null || _state.taskDraft.trim().isEmpty) {
+      _state = _state.copyWith(
+        recoveryMessage: 'Choose a project and enter a task before launch.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (_state.composerLaunchTiming != P5ComposerLaunchTiming.runNow) {
+      _state = _state.copyWith(
+        recoveryMessage:
+            'Scheduling is not bound to a runtime yet. No task was started or scheduled.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (!_state.planReviewed || _state.selectedRunId != null) {
+      apply(P5PrototypeAction.reviewPlan);
+    }
+    if (!_state.planReviewed) {
+      return;
+    }
+    if (_state.planOnly) {
+      _state = _state.copyWith(
+        runState: P5RunPresentationState.planOnly,
+        recoveryMessage:
+            'Plan-only launch completed review without starting execution.',
+      );
+      notifyListeners();
+      return;
+    }
+    apply(P5PrototypeAction.startRun);
   }
 
   void selectProject(String? projectId) {
@@ -642,6 +754,54 @@ class P5InformationArchitectureController extends ChangeNotifier {
         notifyListeners();
         return;
     }
+  }
+
+  bool _composerMutationBlocked() {
+    if (!_runContextLocked) {
+      return false;
+    }
+    _state = _state.copyWith(
+      recoveryMessage:
+          'Composer context cannot change while a simulated run is active. Use the run controls first.',
+    );
+    notifyListeners();
+    return true;
+  }
+
+  void _commitComposerMutation(P5PresentationState next) {
+    _state = next.copyWith(
+      planReviewed: false,
+      verificationRequested: false,
+      recoveryMessage:
+          'Composer context updated. Review the plan before launch.',
+    );
+    notifyListeners();
+  }
+
+  List<String> _boundedComposerValues(
+    Iterable<String> values, {
+    required int maxItems,
+    required int maxCharacters,
+  }) {
+    final result = <String>[];
+    final seen = <String>{};
+    for (final raw in values) {
+      var value = raw.trim();
+      if (value.isEmpty) {
+        continue;
+      }
+      if (value.length > maxCharacters) {
+        value = value.substring(0, maxCharacters).trimRight();
+      }
+      if (!seen.add(value)) {
+        continue;
+      }
+      result.add(value);
+      if (result.length >= maxItems) {
+        break;
+      }
+    }
+    return List<String>.unmodifiable(result);
   }
 
   P5ProjectFixture? _projectFixture(String projectId) {

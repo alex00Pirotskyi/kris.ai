@@ -177,6 +177,10 @@ class _P5ForwardIntent extends Intent {
   const _P5ForwardIntent();
 }
 
+class _P5LaunchComposerIntent extends Intent {
+  const _P5LaunchComposerIntent();
+}
+
 class _P5WorkspaceIntent extends Intent {
   const _P5WorkspaceIntent(this.workspace);
 

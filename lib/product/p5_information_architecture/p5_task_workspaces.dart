@@ -29,6 +29,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
           )
         else ...<Widget>[
           Card(
+            key: const Key('p5-task-composer'),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -45,9 +46,11 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     decoration: const InputDecoration(
                       labelText: 'Task',
                       hintText: 'Describe a result in plain language',
+                      helperText:
+                          'Ctrl+Enter or Cmd+Enter launches this composer.',
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Semantics(
                     toggled: state.planOnly,
                     label:
@@ -55,6 +58,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     child: CheckboxListTile(
                       key: const Key('plan-only-toggle'),
                       contentPadding: EdgeInsets.zero,
+                      dense: true,
                       value: state.planOnly,
                       title: const Text('Plan only'),
                       subtitle: const Text(
@@ -67,37 +71,252 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           : null,
                     ),
                   ),
+                  const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: <Widget>[
-                      FilledButton.icon(
-                        key: const Key('review-plan-button'),
-                        onPressed: controller.canReviewPlan
-                            ? () =>
-                                controller.apply(P5PrototypeAction.reviewPlan)
-                            : null,
-                        icon: const Icon(Icons.fact_check_outlined),
-                        label: const Text('Review concise plan'),
-                      ),
+                      if (state.runState != P5RunPresentationState.completed ||
+                          state.selectedRunId == null)
+                        FilledButton.icon(
+                          key: const Key('review-plan-button'),
+                          onPressed: controller.canReviewPlan
+                              ? () => controller.apply(
+                                    P5PrototypeAction.reviewPlan,
+                                  )
+                              : null,
+                          icon: const Icon(Icons.fact_check_outlined),
+                          label: const Text('Review concise plan'),
+                        ),
                       OutlinedButton.icon(
                         key: const Key('start-run-button'),
-                        onPressed: controller.canStartRun
-                            ? () => controller.apply(P5PrototypeAction.startRun)
+                        onPressed: controller.canLaunchComposer
+                            ? controller.launchComposer
                             : null,
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Start simulated run'),
+                        icon: Icon(
+                          state.composerLaunchTiming ==
+                                  P5ComposerLaunchTiming.runNow
+                              ? Icons.play_arrow
+                              : Icons.schedule_outlined,
+                        ),
+                        label: Text(
+                          state.composerLaunchTiming ==
+                                  P5ComposerLaunchTiming.runNow
+                              ? (state.planOnly
+                                  ? 'Review plan only'
+                                  : 'Run now')
+                              : 'Request schedule',
+                        ),
                       ),
                     ],
+                  ),
+                  if (state.planReviewed) ...<Widget>[
+                    const SizedBox(height: 14),
+                    _planCard(context),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          _runControlCard(context),
+          Card(
+            key: const Key('p5-task-composer-details'),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    'Task context and constraints',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'These selections describe task intent. They do not grant runtime authority.',
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 14,
+                    runSpacing: 14,
+                    children: <Widget>[
+                      _composerSelect<String>(
+                        key: const Key('composer-project'),
+                        label: 'Project',
+                        value: state.selectedProjectId!,
+                        values: P5PrototypeFixtures.projects
+                            .map((item) => item.id)
+                            .toList(growable: false),
+                        itemLabel: (id) => P5PrototypeFixtures.projects
+                            .firstWhere((item) => item.id == id)
+                            .name,
+                        onChanged: controller.canChangeProjectContext
+                            ? (value) {
+                                if (value != null) {
+                                  controller.selectProject(value);
+                                }
+                              }
+                            : null,
+                      ),
+                      _composerSelect<P5ComposerProfile>(
+                        key: const Key('composer-profile'),
+                        label: 'Profile',
+                        value: state.composerProfile,
+                        values: P5ComposerProfile.values,
+                        itemLabel: (value) => value.label,
+                        onChanged: controller.canEditComposerContext
+                            ? (value) {
+                                if (value != null) {
+                                  controller.updateComposerProfile(value);
+                                }
+                              }
+                            : null,
+                      ),
+                      _composerSelect<P5ComposerModel>(
+                        key: const Key('composer-model'),
+                        label: 'Model',
+                        value: state.composerModel,
+                        values: P5ComposerModel.values,
+                        itemLabel: (value) => value.label,
+                        onChanged: controller.canEditComposerContext
+                            ? (value) {
+                                if (value != null) {
+                                  controller.updateComposerModel(value);
+                                }
+                              }
+                            : null,
+                      ),
+                      _composerSelect<P5ComposerAccess>(
+                        key: const Key('composer-access'),
+                        label: 'Access request',
+                        value: state.composerAccess,
+                        values: P5ComposerAccess.values,
+                        itemLabel: (value) => value.label,
+                        onChanged: controller.canEditComposerContext
+                            ? (value) {
+                                if (value != null) {
+                                  controller.updateComposerAccess(value);
+                                }
+                              }
+                            : null,
+                      ),
+                      _composerSelect<P5ComposerBudget>(
+                        key: const Key('composer-budget'),
+                        label: 'Budget',
+                        value: state.composerBudget,
+                        values: P5ComposerBudget.values,
+                        itemLabel: (value) => value.label,
+                        onChanged: controller.canEditComposerContext
+                            ? (value) {
+                                if (value != null) {
+                                  controller.updateComposerBudget(value);
+                                }
+                              }
+                            : null,
+                      ),
+                      _composerSelect<P5ComposerLaunchTiming>(
+                        key: const Key('composer-timing'),
+                        label: 'Timing',
+                        value: state.composerLaunchTiming,
+                        values: P5ComposerLaunchTiming.values,
+                        itemLabel: (value) => value.label,
+                        onChanged: controller.canEditComposerContext
+                            ? (value) {
+                                if (value != null) {
+                                  controller.updateComposerLaunchTiming(value);
+                                }
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 14,
+                    runSpacing: 14,
+                    children: <Widget>[
+                      SizedBox(
+                        width: 360,
+                        child: TextField(
+                          key: const Key('composer-attachments'),
+                          controller: _composerAttachmentsController,
+                          enabled: controller.canEditComposerContext,
+                          minLines: 2,
+                          maxLines: 4,
+                          onChanged: (value) =>
+                              controller.updateComposerAttachments(
+                            const LineSplitter().convert(value),
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Attachment references',
+                            helperText:
+                                '${state.attachments.length}/8 references • one per line',
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 420,
+                        child: TextField(
+                          key: const Key('composer-criteria'),
+                          controller: _composerCriteriaController,
+                          enabled: controller.canEditComposerContext,
+                          minLines: 2,
+                          maxLines: 4,
+                          onChanged: (value) =>
+                              controller.updateAcceptanceCriteria(
+                            const LineSplitter().convert(value),
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Acceptance criteria',
+                            helperText:
+                                '${state.acceptanceCriteria.length}/8 criteria • one per line',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const _BoundaryNotice(
+                    message:
+                        'Profile, model, access, budget, attachments, criteria, and schedule are task intent only in this P5 slice. They do not grant runtime authority. Scheduling remains unbound and fails closed.',
                   ),
                 ],
               ),
             ),
           ),
-          if (state.planReviewed) _planCard(context),
-          _runControlCard(context),
         ],
       ],
+    );
+  }
+
+  Widget _composerSelect<T>({
+    required Key key,
+    required String label,
+    required T value,
+    required List<T> values,
+    required String Function(T value) itemLabel,
+    required ValueChanged<T?>? onChanged,
+  }) {
+    return SizedBox(
+      width: 220,
+      child: InputDecorator(
+        decoration: InputDecoration(labelText: label),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<T>(
+            key: key,
+            value: value,
+            isExpanded: true,
+            items: values
+                .map(
+                  (item) => DropdownMenuItem<T>(
+                    value: item,
+                    child: Text(itemLabel(item)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: onChanged,
+          ),
+        ),
+      ),
     );
   }
 
@@ -114,6 +333,24 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
             const Text('1. Inspect the selected project context.'),
             const Text('2. Propose bounded changes and expected evidence.'),
             const Text('3. Verify selected checks and preserve receipts.'),
+            const SizedBox(height: 10),
+            Text(
+              'Profile: ${controller.state.composerProfile.label} • '
+              'Model: ${controller.state.composerModel.label} • '
+              'Access: ${controller.state.composerAccess.label}',
+            ),
+            Text(
+              'Budget: ${controller.state.composerBudget.label} • '
+              'Timing: ${controller.state.composerLaunchTiming.label}',
+            ),
+            if (controller.state.attachments.isNotEmpty)
+              Text('Attachments: ${controller.state.attachments.join(', ')}'),
+            if (controller.state.acceptanceCriteria.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 6),
+              const Text('Acceptance criteria:'),
+              for (final criterion in controller.state.acceptanceCriteria)
+                Text('• $criterion'),
+            ],
             const SizedBox(height: 10),
             const _BoundaryNotice(
               message:
@@ -185,6 +422,17 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                     ),
                   if (state.runState ==
                       P5RunPresentationState.completed) ...<Widget>[
+                    if (state.selectedRunId != null)
+                      FilledButton.icon(
+                        key: const Key('review-plan-button'),
+                        onPressed: controller.canReviewPlan
+                            ? () => controller.apply(
+                                  P5PrototypeAction.reviewPlan,
+                                )
+                            : null,
+                        icon: const Icon(Icons.fact_check_outlined),
+                        label: const Text('Review new plan'),
+                      ),
                     FilledButton.tonalIcon(
                       key: const Key('open-evidence-button'),
                       onPressed: () =>

@@ -106,6 +106,14 @@ class _P5InformationArchitecturePrototypeState
   late final TextEditingController _taskController = TextEditingController(
     text: widget.controller.state.taskDraft,
   );
+  late final TextEditingController _composerAttachmentsController =
+      TextEditingController(
+    text: widget.controller.state.attachments.join('\n'),
+  );
+  late final TextEditingController _composerCriteriaController =
+      TextEditingController(
+    text: widget.controller.state.acceptanceCriteria.join('\n'),
+  );
   final TextEditingController _webProfileController =
       TextEditingController(text: 'work');
   final TextEditingController _webUrlController =
@@ -196,6 +204,8 @@ class _P5InformationArchitecturePrototypeState
     _shellLayoutSaveDebounce?.cancel();
     unawaited(_webBrowser?.close());
     _taskController.dispose();
+    _composerAttachmentsController.dispose();
+    _composerCriteriaController.dispose();
     _webProfileController.dispose();
     _webUrlController.dispose();
     _webLocatorController.dispose();
@@ -242,6 +252,10 @@ class _P5InformationArchitecturePrototypeState
           control: true,
           shift: true,
         ): const _P5WorkspaceIntent(P5WorkspaceId.verificationCenter),
+        const SingleActivator(LogicalKeyboardKey.enter, control: true):
+            const _P5LaunchComposerIntent(),
+        const SingleActivator(LogicalKeyboardKey.enter, meta: true):
+            const _P5LaunchComposerIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
@@ -260,6 +274,14 @@ class _P5InformationArchitecturePrototypeState
           _P5WorkspaceIntent: CallbackAction<_P5WorkspaceIntent>(
             onInvoke: (intent) {
               controller.selectWorkspace(intent.workspace);
+              return null;
+            },
+          ),
+          _P5LaunchComposerIntent: CallbackAction<_P5LaunchComposerIntent>(
+            onInvoke: (_) {
+              if (controller.state.workspace == P5WorkspaceId.homeChat) {
+                controller.launchComposer();
+              }
               return null;
             },
           ),
