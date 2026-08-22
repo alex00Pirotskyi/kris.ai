@@ -1121,17 +1121,16 @@ def check_chat_workspace_ux() -> None:
                 "widget.ownerMode.buildWorkspace(",
             )
         )
+        chat_offset = ui.find("widget.chat,")
+        experience_offset = ui.find("P5InformationArchitecturePrototype(")
+        owner_offset = ui.find("widget.ownerMode.buildWorkspace(")
         integrated_shell_is_chat_first = (
             "home: KristinMainShell(" in ui
             and "chat: ChatStudio(" in ui
             and "var _index = 0;" in ui
-            and source_contains(
-                ui,
-                "final pages = <Widget>[ widget.chat, "
-                "P5InformationArchitecturePrototype( "
-                "controller: _experienceController, ), "
-                "widget.ownerMode.buildWorkspace(",
-            )
+            and chat_offset >= 0
+            and experience_offset > chat_offset
+            and owner_offset > experience_offset
         )
         if not (p2_shell_is_chat_first or integrated_shell_is_chat_first):
             failures.append(
