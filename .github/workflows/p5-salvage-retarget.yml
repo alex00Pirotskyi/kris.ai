@@ -1,0 +1,81 @@
+name: P5 Web Studio salvage retarget
+
+on:
+  push:
+    branches:
+      - agent/p5-web-studio-salvage-replay-20260822
+    paths:
+      - .github/workflows/p5-salvage-retarget.yml
+
+permissions:
+  contents: write
+
+jobs:
+  retarget:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      EXPECTED_PARENT: 501284ccc30d7437601343485a4e16630e1f6591
+      EXPECTED_MAIN: ac7531f9c192caf90699b53ddb7fdcdd16f24208
+      TARGET_BRANCH: agent/p5-web-studio-salvage-replay-20260822
+      MATERIALIZER: .github/workflows/p5-web-studio-runtime-integration-materialize.yml
+      BOOTSTRAP: .github/workflows/p5-salvage-retarget.yml
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify exact replay transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT}"
+          test "$(git diff --name-only HEAD^ HEAD)" = "${BOOTSTRAP}"
+          git fetch --no-tags origin main "${TARGET_BRANCH}"
+          test "$(git rev-parse origin/main)" = "${EXPECTED_MAIN}"
+          test "$(git rev-parse origin/${TARGET_BRANCH})" = "$(git rev-parse HEAD)"
+          test -f "${MATERIALIZER}"
+          test -f .p5-web-studio-runtime-integration.part00
+          test -z "$(git status --short)"
+      - name: Retarget historical fail-closed materializer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/p5-web-studio-runtime-integration-materialize.yml')
+          text = path.read_text(encoding='utf-8')
+          old_main = 'BASE_MAIN_SHA: 2c9ebd663cd6474a2a70d12fe9aec42a3a871607'
+          new_main = 'BASE_MAIN_SHA: ac7531f9c192caf90699b53ddb7fdcdd16f24208'
+          old_branch = 'agent/p5-web-studio-runtime-integration'
+          new_branch = 'agent/p5-web-studio-salvage-replay-20260822'
+          if text.count(old_main) != 1:
+              raise SystemExit(f'P5 base guard collision count={text.count(old_main)}')
+          if text.count(old_branch) != 2:
+              raise SystemExit(f'P5 branch guard collision count={text.count(old_branch)}')
+          text = text.replace(old_main, new_main, 1)
+          text = text.replace(old_branch, new_branch)
+          path.write_text(text, encoding='utf-8')
+          PY
+          git rm -f "${BOOTSTRAP}"
+          git diff --check
+          mapfile -t paths < <(git status --short | sed -E 's/^...//' | sort)
+          expected=(
+            .github/workflows/p5-salvage-retarget.yml
+            .github/workflows/p5-web-studio-runtime-integration-materialize.yml
+          )
+          test "${paths[*]}" = "${expected[*]}"
+      - name: Publish retargeted one-shot materializer
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main "${TARGET_BRANCH}"
+          test "$(git rev-parse origin/main)" = "${EXPECTED_MAIN}"
+          test "$(git rev-parse origin/${TARGET_BRANCH})" = "$(git rev-parse HEAD)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A "${BOOTSTRAP}" "${MATERIALIZER}"
+          git commit -m 'chore(p5): retarget guarded Web Studio salvage materializer'
+          git push origin "HEAD:${TARGET_BRANCH}"
