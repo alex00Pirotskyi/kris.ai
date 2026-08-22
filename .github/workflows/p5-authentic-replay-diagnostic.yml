@@ -40,7 +40,7 @@ jobs:
             test -s ".p5-web-studio-runtime-integration.part${part}"
           done
           test -z "$(git status --short)"
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      - uses: actions/setup-python@5fda3b95a4eaa91299a34e894583c3862153e4b97
         with:
           python-version: '3.12.10'
           check-latest: false
@@ -75,6 +75,28 @@ jobs:
             | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
           python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+      - name: Inspect salvaged Web Studio semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '--- Web Studio source semantics ---'
+          grep -R -n -C 5 --fixed-strings 'Web Studio' \
+            lib/product/p5_information_architecture/p5_fixtures.dart \
+            lib/product/p5_information_architecture/p5_support_workspaces.dart \
+            lib/product/p5_information_architecture/p5_prototype.dart \
+            lib/product/p5_information_architecture/p5_models.dart || true
+          echo '--- EXPERIMENTAL semantics ---'
+          grep -R -n -C 5 --fixed-strings 'EXPERIMENTAL' \
+            lib/product/p5_information_architecture/p5_fixtures.dart \
+            lib/product/p5_information_architecture/p5_support_workspaces.dart \
+            lib/product/p5_information_architecture/p5_prototype.dart \
+            lib/product/p5_information_architecture/p5_models.dart || true
+          echo '--- P3-002 semantics ---'
+          grep -R -n -C 5 --fixed-strings 'P3-002' \
+            lib/product/p5_information_architecture/p5_fixtures.dart \
+            lib/product/p5_information_architecture/p5_support_workspaces.dart \
+            lib/product/p5_information_architecture/p5_prototype.dart \
+            lib/product/p5_information_architecture/p5_models.dart || true
       - name: Report exact product delta without publication
         shell: bash
         run: |
