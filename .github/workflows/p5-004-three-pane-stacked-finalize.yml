@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry with persisted-layout filesystem setup isolated from widget-test fake time.
+# Retry with on-disk roundtrip separated from prototype restore-wiring diagnostics.
 
 on:
   pull_request:
