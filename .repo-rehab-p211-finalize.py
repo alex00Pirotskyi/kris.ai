@@ -20,13 +20,16 @@ prompt_path.write_text(prompt.replace(old_retry, new_retry), encoding='utf-8')
 
 contract_path = Path('test/product/source_contract_test.dart')
 contract = contract_path.read_text(encoding='utf-8')
-old_label = "      expect(studio, contains(\"'Generate prompt'\"));\n"
-new_label = "      expect(studio, contains(\"'Generate final prompt'\"));\n"
-if contract.count(old_label) != 1:
-    raise SystemExit('P211 Prompt Studio label anchor mismatch')
-contract_path.write_text(
-    contract.replace(old_label, new_label),
-    encoding='utf-8',
-)
+replacements = {
+    "      expect(studio, contains(\"'Generate prompt'\"));\n":
+        "      expect(studio, contains(\"'Generate final prompt'\"));\n",
+    "      expect(studio, contains(\"'Generate task list'\"));\n":
+        "      expect(studio, contains(\"'Review execution plan'\"));\n",
+}
+for old_label, new_label in replacements.items():
+    if contract.count(old_label) != 1:
+        raise SystemExit(f'P211 Prompt Studio label anchor mismatch: {old_label.strip()}')
+    contract = contract.replace(old_label, new_label)
+contract_path.write_text(contract, encoding='utf-8')
 
 print('Applied the bounded P211 retry and source-contract repair.')
