@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'browser_quality.dart';
 import 'browser_runtime.dart';
 
 enum P3BrowserWorkspaceSection {
@@ -334,6 +335,10 @@ final class _TestToolsPanel extends StatelessWidget {
       ('Desktop viewport preset available', true),
       ('Tablet viewport preset available', true),
       ('Mobile viewport preset available', true),
+      ('Screenshot diff contract available', true),
+      ('Link and form checks available', true),
+      ('Prompt-injection and stale-target guards available', true),
+      ('Receipt-producing task recipes available', true),
     ];
     return ListView(
       padding: const EdgeInsets.all(12),
@@ -355,6 +360,27 @@ final class _TestToolsPanel extends StatelessWidget {
         SelectableText(
           'Active preset: ${controller.viewport.name} '
           '${controller.viewport.width}×${controller.viewport.height}',
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Deterministic task recipes',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            for (final recipe in P3BrowserTaskRecipes.all)
+              Tooltip(
+                message: recipe.description,
+                child: Chip(
+                  key: Key('browser-recipe-${recipe.kind.name}'),
+                  avatar: const Icon(Icons.receipt_long_outlined, size: 18),
+                  label: Text(recipe.kind.name),
+                ),
+              ),
+          ],
         ),
       ],
     );
