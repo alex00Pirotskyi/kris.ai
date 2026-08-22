@@ -1,5 +1,5 @@
 name: P5-006 composer finalizer
-# Retry with stable lifecycle and keyboard-review compatibility.
+# Retry with review-button FocusNode Enter handling and completed-run launch lock.
 
 on:
   pull_request:
