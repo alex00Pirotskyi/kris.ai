@@ -1,0 +1,90 @@
+name: P5 authentic Web Studio salvage diagnostic
+
+on:
+  push:
+    branches:
+      - agent/p5-web-studio-authentic-replay-20260822
+    paths:
+      - .github/workflows/p5-authentic-replay-diagnostic.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/p5-authentic-replay-diagnostic.yml
+
+permissions:
+  contents: read
+
+env:
+  BASE_MAIN_SHA: d2ea234ea5297fabcf0fa0a5ec3395b98486ed0c
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact current-main replay boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git merge-base HEAD origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          for part in 00 01 02 03 04; do
+            test -s ".p5-web-studio-runtime-integration.part${part}"
+          done
+          test -z "$(git status --short)"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Install exact source dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+      - name: Decode and execute authentic guarded product patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat \
+            .p5-web-studio-runtime-integration.part00 \
+            .p5-web-studio-runtime-integration.part01 \
+            .p5-web-studio-runtime-integration.part02 \
+            .p5-web-studio-runtime-integration.part03 \
+            .p5-web-studio-runtime-integration.part04 \
+            | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+      - name: Report exact product delta without publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          echo '--- changed paths ---'
+          git diff --name-status
+          echo '--- diff stat ---'
+          git diff --stat
+          echo '--- source hashes ---'
+          git diff --name-only | while IFS= read -r path; do
+            test -f "$path" && printf '%s  %s\n' "$(git hash-object "$path")" "$path" || true
+          done
