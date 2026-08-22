@@ -3,7 +3,7 @@ name: P5 Web Studio Runtime Integration Materializer
 on:
   push:
     branches:
-      - 'agent/p5-web-studio-runtime-integration'
+      - 'agent/p5-web-studio-salvage-replay-20260822'
     paths:
       - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
       - '.p5-web-studio-runtime-integration.part*'
@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BASE_MAIN_SHA: 2c9ebd663cd6474a2a70d12fe9aec42a3a871607
-  BRANCH_NAME: agent/p5-web-studio-runtime-integration
+  BASE_MAIN_SHA: ac7531f9c192caf90699b53ddb7fdcdd16f24208
+  BRANCH_NAME: agent/p5-web-studio-salvage-replay-20260822
   SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
