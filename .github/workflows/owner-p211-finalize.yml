@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      EXPECTED_PARENT: f46b9cb5c363526d18f81663935ad27c3ff039f2
+      EXPECTED_PARENT: 67fbf75bb91924a8ce910de01d191c39076ee8ce
       EXPECTED_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
       EXPECTED_BRANCH: agent/owner-p25-current-main
       PATCH_PATH: .repo-rehab-p211-finalize.py
@@ -72,7 +72,7 @@ jobs:
           python tool/v71r12_bootstrap_hosted_python.py --project .
           flutter pub get
           npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
-      - name: Validate exact clean candidate
+      - name: Validate source and roadmap contracts
         shell: bash
         run: |
           set -euo pipefail
@@ -82,11 +82,31 @@ jobs:
           python tool/roadmap_control.py validate --project . --strict
           python tool/p25_prompt_studio_roadmap_test.py --project .
           python tool/p25_prompt_studio_test_station.py --project . --profile contract
+      - name: Validate Dart format and analysis
+        shell: bash
+        run: |
+          set -euo pipefail
           python tool/dart_format_scope.py --check
           flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Validate Flutter tests
+        shell: bash
+        run: |
+          set -euo pipefail
           flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: Validate automation host tests
+        shell: bash
+        run: |
+          set -euo pipefail
           npm test --prefix automation_host
+      - name: Validate release source contract
+        shell: bash
+        run: |
+          set -euo pipefail
           python tool/validate_release.py --skip-tests
+      - name: Validate exact candidate diff
+        shell: bash
+        run: |
+          set -euo pipefail
           git diff --check
           test -z "$(git diff --name-only --diff-filter=U)"
           mapfile -t paths < <(git status --short | sed -E 's/^...//' | sort)
