@@ -67,14 +67,34 @@ jobs:
             lib/product/ui.dart \
             test/product/p5_information_architecture/p5_shell_layout_test.dart \
             test/product/source_contract_test.dart
-      - name: Validate focused and full product contracts
+      - name: Bootstrap hosted test dependencies
         shell: bash
         run: |
           set -euo pipefail
           python tool/v71r12_bootstrap_hosted_python.py --project .
-          flutter test --no-pub --concurrency=1 test/product/p5_information_architecture
-          flutter test --no-pub --concurrency=1 --reporter expanded
-          flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Focused P5 information-architecture tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 7m \
+            flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/p5_information_architecture
+      - name: Full Flutter regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 15m \
+            flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: Analyzer contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 8m \
+            flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Source identity and release validator
+        shell: bash
+        run: |
+          set -euo pipefail
           python tool/p1a_refresh_source_manifest.py .
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
           python tool/p1a_refresh_source_manifest.py .
