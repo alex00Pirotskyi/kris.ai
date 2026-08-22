@@ -21,6 +21,16 @@ def replace_once(path: str, old: str, new: str) -> None:
     write(path, text.replace(old, new, 1))
 
 
+def replace_exact(path: str, old: str, new: str, expected_count: int) -> None:
+    text = read(path)
+    count = text.count(old)
+    if count != expected_count:
+        raise SystemExit(
+            f'{path}: expected {expected_count} postpatch anchors, found {count}'
+        )
+    write(path, text.replace(old, new))
+
+
 replace_once(
     'lib/product/p5_information_architecture/p5_shell_layout.dart',
     '''class P5ShellLayoutStore {
@@ -68,15 +78,11 @@ replace_once(
 ''',
 )
 
-replace_once(
+replace_exact(
     'test/product/p5_information_architecture/p5_shell_layout_test.dart',
     'P5ShellLayoutStore(applicationDataRoot: root)',
     'P5ShellLayoutStore(applicationDataRootPath: root.path)',
-)
-replace_once(
-    'test/product/p5_information_architecture/p5_shell_layout_test.dart',
-    'P5ShellLayoutStore(applicationDataRoot: root)',
-    'P5ShellLayoutStore(applicationDataRootPath: root.path)',
+    2,
 )
 
 print('P5_004_BOUNDARY_COMPACT_POSTPATCH_APPLIED')
