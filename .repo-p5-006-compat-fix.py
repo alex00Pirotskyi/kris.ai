@@ -13,6 +13,16 @@ def replace_once(path: str, old: str, new: str) -> None:
 task_path = 'lib/product/p5_information_architecture/p5_task_workspaces.dart'
 replace_once(
     task_path,
+    """        else ...<Widget>[
+          Card(
+""",
+    """        else ...<Widget>[
+          if (state.planReviewed) _planCard(context),
+          Card(
+""",
+)
+replace_once(
+    task_path,
     """                      FilledButton.tonalIcon(
                         key: const Key('review-plan-button'),
 """,
@@ -31,14 +41,10 @@ replace_once(
 )
 replace_once(
     task_path,
-    """                      FilledButton.icon(
-                        key: const Key('review-plan-button'),
-                        onPressed: controller.canReviewPlan
+    """          if (state.planReviewed) _planCard(context),
+          _runControlCard(context),
 """,
-    """                      FilledButton.icon(
-                        key: const Key('review-plan-button'),
-                        focusNode: _reviewPlanFocusNode,
-                        onPressed: controller.canReviewPlan
+    """          _runControlCard(context),
 """,
 )
 
@@ -47,58 +53,6 @@ replace_once(
     "  bool get canLaunchComposer => !_runLifecycleLocked;\n",
     """  bool get canLaunchComposer =>
       !_runLifecycleLocked && _state.selectedRunId == null;
-""",
-)
-
-prototype_path = 'lib/product/p5_information_architecture/p5_prototype.dart'
-replace_once(
-    prototype_path,
-    """  late final TextEditingController _composerCriteriaController =
-      TextEditingController(
-    text: widget.controller.state.acceptanceCriteria.join('\\n'),
-  );
-  final TextEditingController _webProfileController =
-""",
-    """  late final TextEditingController _composerCriteriaController =
-      TextEditingController(
-    text: widget.controller.state.acceptanceCriteria.join('\\n'),
-  );
-  late final FocusNode _reviewPlanFocusNode;
-  final TextEditingController _webProfileController =
-""",
-)
-replace_once(
-    prototype_path,
-    """  void initState() {
-    super.initState();
-    widget.globalAutonomy?.registerBrowserEmergencyStop(
-""",
-    """  void initState() {
-    super.initState();
-    _reviewPlanFocusNode = FocusNode(
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.enter &&
-            controller.canReviewPlan) {
-          controller.apply(P5PrototypeAction.reviewPlan);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-    );
-    widget.globalAutonomy?.registerBrowserEmergencyStop(
-""",
-)
-replace_once(
-    prototype_path,
-    """    _composerAttachmentsController.dispose();
-    _composerCriteriaController.dispose();
-    _webProfileController.dispose();
-""",
-    """    _composerAttachmentsController.dispose();
-    _composerCriteriaController.dispose();
-    _reviewPlanFocusNode.dispose();
-    _webProfileController.dispose();
 """,
 )
 
