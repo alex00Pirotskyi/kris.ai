@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      EXPECTED_PARENT: 5966a0892b0f9e9d2260e514c402daf1adf9c534
+      EXPECTED_PARENT: d005e03950ab6398f5a88d444eb5daa48f97cc94
       EXPECTED_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
       EXPECTED_BRANCH: agent/owner-p25-current-main
       PATCH_PATH: .repo-rehab-p211-finalize.py
@@ -90,9 +90,13 @@ jobs:
       - name: Validate automation host tests
         shell: bash
         run: npm test --prefix automation_host
-      - name: Validate release source contract
+      - name: Validate release source contract without retaining reports
         shell: bash
-        run: python tool/validate_release.py --skip-tests
+        run: |
+          set -euo pipefail
+          python tool/validate_release.py --skip-tests
+          git restore --worktree -- release
+          git clean -fd -- release
       - name: Validate exact candidate diff
         shell: bash
         run: |
