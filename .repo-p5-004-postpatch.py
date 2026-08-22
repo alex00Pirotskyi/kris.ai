@@ -21,69 +21,79 @@ def replace_once(path: str, old: str, new: str) -> None:
     write(path, text.replace(old, new, 1))
 
 
-replace_once(
-    'lib/product/p5_information_architecture/p5_shell_layout.dart',
-    '''class P5ShellLayoutStore {
-  P5ShellLayoutStore({required Directory applicationDataRoot})
-      : _root = applicationDataRoot;
+def replace_tail(path: str, marker: str, replacement: str) -> None:
+    text = read(path)
+    if text.count(marker) != 1:
+        raise SystemExit(f'{path}: expected one tail marker')
+    index = text.index(marker)
+    write(path, text[:index] + replacement)
 
-  final Directory _root;
-''',
+
+def replace_line_containing(path: str, needle: str, replacement: str) -> None:
+    text = read(path)
+    lines = text.splitlines()
+    matches = [index for index, line in enumerate(lines) if needle in line]
+    if len(matches) != 1:
+        raise SystemExit(
+            f'{path}: expected one line containing {needle!r}, found {len(matches)}'
+        )
+    index = matches[0]
+    indent = lines[index][: len(lines[index]) - len(lines[index].lstrip())]
+    lines[index] = indent + replacement
+    write(path, '\n'.join(lines) + '\n')
+
+
+layout_path = 'lib/product/p5_information_architecture/p5_shell_layout.dart'
+replace_once(
+    layout_path,
+    "import 'dart:convert';\nimport 'dart:io';\n\nimport 'package:flutter/foundation.dart';\n",
+    "import 'dart:convert';\n\nimport 'package:flutter/foundation.dart';\n",
+)
+replace_tail(
+    layout_path,
+    'class P5ShellLayoutStore {',
     '''abstract interface class P5ShellLayoutPersistence {
   Future<P5ShellLayoutState?> load();
   Future<void> save(P5ShellLayoutState state);
 }
-
-class P5ShellLayoutStore implements P5ShellLayoutPersistence {
-  P5ShellLayoutStore({required String applicationDataRootPath})
-      : _root = Directory(applicationDataRootPath);
-
-  final Directory _root;
 ''',
 )
 
+prototype_path = 'lib/product/p5_information_architecture/p5_prototype.dart'
 replace_once(
-    'lib/product/p5_information_architecture/p5_prototype.dart',
+    prototype_path,
     "import 'dart:convert';\nimport 'dart:io';\n",
     "import 'dart:convert';\n",
 )
-
 replace_once(
-    'lib/product/p5_information_architecture/p5_prototype.dart',
+    prototype_path,
     '''    this.browserRuntimeProvenance = const <String, Object?>{},
     this.layoutPersistenceRootPath,
     this.onOpenOwnerMode,
 ''',
     '''    this.browserRuntimeProvenance = const <String, Object?>{},
-    this.layoutPersistenceRootPath,
     this.layoutPersistence,
     this.onOpenOwnerMode,
 ''',
 )
-
 replace_once(
-    'lib/product/p5_information_architecture/p5_prototype.dart',
+    prototype_path,
     '''  final Map<String, Object?> browserRuntimeProvenance;
   final String? layoutPersistenceRootPath;
   final VoidCallback? onOpenOwnerMode;
 ''',
     '''  final Map<String, Object?> browserRuntimeProvenance;
-  final String? layoutPersistenceRootPath;
   final P5ShellLayoutPersistence? layoutPersistence;
   final VoidCallback? onOpenOwnerMode;
 ''',
 )
-
 replace_once(
-    'lib/product/p5_information_architecture/p5_prototype.dart',
-    '''  P5ShellLayoutStore? _shellLayoutStore;
-''',
-    '''  P5ShellLayoutPersistence? _shellLayoutStore;
-''',
+    prototype_path,
+    '  P5ShellLayoutStore? _shellLayoutStore;\n',
+    '  P5ShellLayoutPersistence? _shellLayoutStore;\n',
 )
-
 replace_once(
-    'lib/product/p5_information_architecture/p5_prototype.dart',
+    prototype_path,
     '''      endDrawer: compact
           ? Drawer(
               child: _buildP5Inspector(context, state),
@@ -99,8 +109,9 @@ replace_once(
 ''',
 )
 
+workspace_path = 'lib/product/p5_information_architecture/p5_shell_workspace.dart'
 replace_once(
-    'lib/product/p5_information_architecture/p5_shell_workspace.dart',
+    workspace_path,
     '''  Future<void> _initializeP5ShellLayout() async {
     final rootPath = widget.layoutPersistenceRootPath;
     if (rootPath == null || rootPath.trim().isEmpty) {
@@ -110,17 +121,95 @@ replace_once(
     _shellLayoutStore = store;
 ''',
     '''  Future<void> _initializeP5ShellLayout() async {
-    final rootPath = widget.layoutPersistenceRootPath;
-    final store = widget.layoutPersistence ??
-        (rootPath == null || rootPath.trim().isEmpty
-            ? null
-            : P5ShellLayoutStore(applicationDataRootPath: rootPath));
+    final store = widget.layoutPersistence;
     if (store == null) {
       return;
     }
     _shellLayoutStore = store;
 ''',
 )
+
+ui_path = 'lib/product/ui.dart'
+replace_once(
+    ui_path,
+    "import 'p5_information_architecture/p5_prototype.dart';\n",
+    "import 'p5_information_architecture/p5_prototype.dart';\nimport 'p5_information_architecture/p5_shell_layout.dart';\n",
+)
+replace_line_containing(
+    ui_path,
+    'layoutPersistenceRootPath:',
+    '''layoutPersistence: productRuntime == null
+        ? null
+        : P5ApplicationShellLayoutPersistence(
+            applicationDataRoot: productRuntime.directories.root,
+          ),''',
+)
+
+adapter = r'''class P5ApplicationShellLayoutPersistence
+    implements P5ShellLayoutPersistence {
+  P5ApplicationShellLayoutPersistence({required Directory applicationDataRoot})
+      : _root = applicationDataRoot;
+
+  final Directory _root;
+
+  File get file => File(
+        '${_root.path}${Platform.pathSeparator}ui'
+        '${Platform.pathSeparator}p5-shell-layout.v1.json',
+      );
+
+  @override
+  Future<P5ShellLayoutState?> load() async {
+    final target = file;
+    final type = await FileSystemEntity.type(target.path, followLinks: false);
+    if (type == FileSystemEntityType.notFound) {
+      return null;
+    }
+    if (type != FileSystemEntityType.file) {
+      throw const FileSystemException(
+        'P5 shell layout path is not a regular file.',
+      );
+    }
+    final decoded = jsonDecode(await target.readAsString());
+    return P5ShellLayoutState.fromJson(decoded);
+  }
+
+  @override
+  Future<void> save(P5ShellLayoutState state) async {
+    final target = file;
+    final directory = target.parent;
+    await directory.create(recursive: true);
+    final directoryType =
+        await FileSystemEntity.type(directory.path, followLinks: false);
+    if (directoryType != FileSystemEntityType.directory) {
+      throw const FileSystemException(
+        'P5 shell layout directory is not a regular directory.',
+      );
+    }
+    final targetType =
+        await FileSystemEntity.type(target.path, followLinks: false);
+    if (targetType != FileSystemEntityType.notFound &&
+        targetType != FileSystemEntityType.file) {
+      throw const FileSystemException(
+        'P5 shell layout target is not a regular file.',
+      );
+    }
+    final temporary = File('${target.path}.tmp');
+    final temporaryType =
+        await FileSystemEntity.type(temporary.path, followLinks: false);
+    if (temporaryType != FileSystemEntityType.notFound) {
+      await temporary.delete(recursive: true);
+    }
+    final encoded = const JsonEncoder.withIndent('  ').convert(state.toJson());
+    await temporary.writeAsString('$encoded\n', flush: true);
+    if (await target.exists()) {
+      await target.delete();
+    }
+    await temporary.rename(target.path);
+  }
+}
+
+'''
+replace_once(ui_path, 'ThemeData _studioTheme(\n', adapter + 'ThemeData _studioTheme(\n')
 
 shell_test = r'''import 'dart:io';
 
@@ -131,6 +220,7 @@ import 'package:kristin_local_agent/product/p5_information_architecture/p5_contr
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_models.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_prototype.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_shell_layout.dart';
+import 'package:kristin_local_agent/product/ui.dart';
 
 final class _MemoryShellLayoutPersistence
     implements P5ShellLayoutPersistence {
@@ -154,7 +244,6 @@ Future<void> pumpShell(
   WidgetTester tester,
   P5InformationArchitectureController controller, {
   Size size = const Size(1440, 960),
-  String? persistenceRoot,
   P5ShellLayoutPersistence? persistence,
 }) async {
   tester.view.physicalSize = size;
@@ -165,7 +254,6 @@ Future<void> pumpShell(
     MaterialApp(
       home: P5InformationArchitecturePrototype(
         controller: controller,
-        layoutPersistenceRootPath: persistenceRoot,
         layoutPersistence: persistence,
       ),
     ),
@@ -194,10 +282,12 @@ void main() {
     expect(P5ShellLayoutState.defaults.activityDrawerOpen, isFalse);
   });
 
-  test('P5-004 shell layout file store round-trips app-owned state', () async {
+  test('P5-004 application file adapter round-trips app-owned state', () async {
     final root = await Directory.systemTemp.createTemp('p5-shell-layout-');
     addTearDown(() => root.delete(recursive: true));
-    final store = P5ShellLayoutStore(applicationDataRootPath: root.path);
+    final store = P5ApplicationShellLayoutPersistence(
+      applicationDataRoot: root,
+    );
     final state = P5ShellLayoutState.defaults.copyWith(
       leftRailWidth: 334,
       inspectorWidth: 377,
@@ -349,4 +439,4 @@ write(
     shell_test,
 )
 
-print('P5_004_PERSISTENCE_BOUNDARY_POSTPATCH_APPLIED')
+print('P5_004_APP_OWNED_PERSISTENCE_POSTPATCH_APPLIED')
