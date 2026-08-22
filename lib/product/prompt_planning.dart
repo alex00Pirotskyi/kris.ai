@@ -1659,8 +1659,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
                   .toInt(),
           maxAttempts: alignedManual
               ? 1
-              : (int.tryParse(raw['maxAttempts']?.toString() ?? '') ?? 1)
-                  .clamp(1, 2)
+              : (int.tryParse(raw['maxAttempts']?.toString() ?? '') ?? 2)
+                  .clamp(2, 3)
                   .toInt(),
           enabled: raw['enabled'] != false,
           manual: alignedManual,

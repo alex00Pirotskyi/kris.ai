@@ -1908,8 +1908,8 @@ def check_v1_product_preview() -> None:
         "Prompt Studio controls": (
             studio,
             (
-                "'Generate prompt'",
-                "'Generate task list'",
+                "'Generate final prompt'",
+                "'Review execution plan'",
                 "'Run all tasks'",
                 "'Run selected task + dependencies'",
                 "'Stop all running tasks'",
