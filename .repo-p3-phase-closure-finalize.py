@@ -64,11 +64,13 @@ replace_once(
           runSpacing: 8,
           children: <Widget>[
             for (final recipe in P3BrowserTaskRecipes.all)
-              Chip(
-                key: Key('browser-recipe-${recipe.kind.name}'),
-                avatar: const Icon(Icons.receipt_long_outlined, size: 18),
-                label: Text(recipe.kind.name),
-                tooltip: recipe.description,
+              Tooltip(
+                message: recipe.description,
+                child: Chip(
+                  key: Key('browser-recipe-${recipe.kind.name}'),
+                  avatar: const Icon(Icons.receipt_long_outlined, size: 18),
+                  label: Text(recipe.kind.name),
+                ),
               ),
           ],
         ),
