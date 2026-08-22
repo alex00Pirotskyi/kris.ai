@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kristin P3 popup fixture</title>
+</head>
+<body>
+  <main>
+    <h1>Local popup</h1>
+    <p id="popup-status" aria-live="polite">popup-ready</p>
+    <button id="popup-action" type="button">Complete popup action</button>
+  </main>
+  <script>
+    document.querySelector('#popup-action').addEventListener('click', () => {
+      document.querySelector('#popup-status').textContent = 'popup-complete';
+    });
+  </script>
+</body>
+</html>
