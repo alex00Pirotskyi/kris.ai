@@ -134,6 +134,7 @@ void main() {
         'lib/product/browser/browser_runtime_process.dart',
         'lib/product/browser/browser_control_plane.dart',
         'lib/product/browser/browser_profile_store.dart',
+        'lib/product/browser/browser_quality.dart',
         'lib/product/browser/browser_replay.dart',
         'lib/product/browser/browser_workspace.dart',
         'lib/product/browser/web_preview.dart',
