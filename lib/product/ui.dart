@@ -12,6 +12,7 @@ import 'domain.dart';
 import 'product_runtime.dart';
 import 'p2_product_runtime_bootstrap.dart';
 import 'p5_design_tokens.dart';
+import 'p5_global_autonomy.dart';
 import 'p5_information_architecture/p5_controller.dart';
 import 'p5_information_architecture/p5_prototype.dart';
 import 'p5_information_architecture/p5_shell_layout.dart';
@@ -109,11 +110,13 @@ class KristinMainShell extends StatefulWidget {
     this.runtime,
     required this.ownerMode,
     required this.chat,
+    this.autonomyBinding,
   });
 
   final ProductRuntime? runtime;
   final P2ProductRuntimeOwnerModeHandle ownerMode;
   final Widget chat;
+  final P5GlobalAutonomyBinding? autonomyBinding;
 
   @override
   State<KristinMainShell> createState() => _KristinMainShellState();
@@ -122,15 +125,24 @@ class KristinMainShell extends StatefulWidget {
 class _KristinMainShellState extends State<KristinMainShell> {
   var _index = 0;
   late final P5InformationArchitectureController _experienceController;
+  late final P5GlobalAutonomyBinding _autonomyBinding;
+  late final bool _ownsAutonomyBinding;
 
   @override
   void initState() {
     super.initState();
     _experienceController = P5InformationArchitectureController();
+    _ownsAutonomyBinding = widget.autonomyBinding == null;
+    _autonomyBinding = widget.autonomyBinding ??
+        P5GlobalAutonomyController.product(
+          runtime: widget.runtime,
+          ownerMode: widget.ownerMode,
+        );
   }
 
   @override
   void dispose() {
+    if (_ownsAutonomyBinding) _autonomyBinding.dispose();
     _experienceController.dispose();
     super.dispose();
   }
@@ -145,6 +157,7 @@ class _KristinMainShellState extends State<KristinMainShell> {
       P5InformationArchitecturePrototype(
         controller: _experienceController,
         ownerMode: widget.ownerMode,
+        globalAutonomy: _autonomyBinding,
         browserRuntimeAvailable:
             productRuntime?.p3BrowserRuntime.available ?? false,
         browserRuntimeStatusCode: productRuntime?.p3BrowserRuntime.statusCode ??
@@ -174,48 +187,54 @@ class _KristinMainShellState extends State<KristinMainShell> {
       ),
     ];
     final wide = MediaQuery.sizeOf(context).width >= 1100;
+    final workspaceBody = wide
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              NavigationRail(
+                selectedIndex: _index,
+                labelType: NavigationRailLabelType.all,
+                onDestinationSelected: _selectDestination,
+                destinations: <NavigationRailDestination>[
+                  const NavigationRailDestination(
+                    icon: Icon(Icons.chat_bubble_outline),
+                    selectedIcon: Icon(Icons.chat_bubble),
+                    label: Text('Chat'),
+                  ),
+                  const NavigationRailDestination(
+                    icon: Icon(Icons.dashboard_customize_outlined),
+                    selectedIcon: Icon(Icons.dashboard_customize),
+                    label: Text('Experience'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(
+                      ownerAvailable
+                          ? Icons.admin_panel_settings_outlined
+                          : Icons.gpp_bad_outlined,
+                    ),
+                    selectedIcon: Icon(
+                      ownerAvailable
+                          ? Icons.admin_panel_settings
+                          : Icons.gpp_bad,
+                    ),
+                    label: const Text('Owner Mode'),
+                  ),
+                ],
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(
+                child: IndexedStack(index: _index, children: pages),
+              ),
+            ],
+          )
+        : IndexedStack(index: _index, children: pages);
     final shell = Scaffold(
-      body: wide
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                NavigationRail(
-                  selectedIndex: _index,
-                  labelType: NavigationRailLabelType.all,
-                  onDestinationSelected: _selectDestination,
-                  destinations: <NavigationRailDestination>[
-                    const NavigationRailDestination(
-                      icon: Icon(Icons.chat_bubble_outline),
-                      selectedIcon: Icon(Icons.chat_bubble),
-                      label: Text('Chat'),
-                    ),
-                    const NavigationRailDestination(
-                      icon: Icon(Icons.dashboard_customize_outlined),
-                      selectedIcon: Icon(Icons.dashboard_customize),
-                      label: Text('Experience'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(
-                        ownerAvailable
-                            ? Icons.admin_panel_settings_outlined
-                            : Icons.gpp_bad_outlined,
-                      ),
-                      selectedIcon: Icon(
-                        ownerAvailable
-                            ? Icons.admin_panel_settings
-                            : Icons.gpp_bad,
-                      ),
-                      label: const Text('Owner Mode'),
-                    ),
-                  ],
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(
-                  child: IndexedStack(index: _index, children: pages),
-                ),
-              ],
-            )
-          : IndexedStack(index: _index, children: pages),
+      body: Column(
+        children: <Widget>[
+          P5GlobalAutonomyBar(binding: _autonomyBinding),
+          Expanded(child: workspaceBody),
+        ],
+      ),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(

@@ -1023,21 +1023,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
       });
 
   Future<void> _stopWebBrowser() =>
-      _runWeb('browser service stopped', () async {
-        final process = _webBrowser;
-        _webBrowser = null;
-        if (process != null) await process.close();
-        if (!mounted) return;
-        mutatePresentation(() {
-          _webSessions = <P3BrowserSessionInfo>[];
-          _webPages = <P3BrowserPageInfo>[];
-          _webSelectedSessionId = null;
-          _webSelectedPageId = null;
-          _webObservation = null;
-          _webDownloads = <P3BrowserDownloadReceipt>[];
-          _webUploads = <P3BrowserUploadReceipt>[];
-        });
-      });
+      _runWeb('browser service stopped', _p5EmergencyStopBrowser);
 
   Future<void> _refreshWebState() =>
       _runWeb('browser state refreshed', _refreshWebStateImpl);
@@ -1077,6 +1063,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
       _webDownloads = downloads;
       _webUploads = uploads;
     });
+    widget.globalAutonomy?.updateBrowserSessionCount(sessions.length);
   }
 
   Future<void> _openWebSession() => _runWeb('browser session opened', () async {
