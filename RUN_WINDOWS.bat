@@ -1,12 +1,11 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-echo Starting Kristin v1.0 Prompt-to-Task Product Preview...
-call "%~dp0tool\run_windows.cmd"
-set "RC=%ERRORLEVEL%"
-if not "%RC%"=="0" (
-  echo.
-  echo Kristin did not start. Review the first error above.
-  pause
+echo Starting Kristin...
+where py >nul 2>nul
+if not errorlevel 1 (
+  py -3 dev.py run windows
+  exit /b %ERRORLEVEL%
 )
-exit /b %RC%
+python dev.py run windows
+exit /b %ERRORLEVEL%
