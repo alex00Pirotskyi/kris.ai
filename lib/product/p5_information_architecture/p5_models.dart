@@ -87,6 +87,57 @@ enum P5OwnerModePresentationState {
   error,
 }
 
+enum P5ComposerProfile { project, owner, ownerUnattended, isolatedUntrusted }
+
+enum P5ComposerModel { automatic, localFast, localDeep }
+
+enum P5ComposerAccess { profileDefault, readOnly, requestAdditional }
+
+enum P5ComposerLaunchTiming { runNow, laterToday, tomorrowMorning }
+
+enum P5ComposerBudget { focused, balanced, thorough }
+
+extension P5ComposerProfileLabel on P5ComposerProfile {
+  String get label => switch (this) {
+        P5ComposerProfile.project => 'Project',
+        P5ComposerProfile.owner => 'Owner',
+        P5ComposerProfile.ownerUnattended => 'Owner unattended',
+        P5ComposerProfile.isolatedUntrusted => 'Isolated untrusted',
+      };
+}
+
+extension P5ComposerModelLabel on P5ComposerModel {
+  String get label => switch (this) {
+        P5ComposerModel.automatic => 'Automatic',
+        P5ComposerModel.localFast => 'Local fast',
+        P5ComposerModel.localDeep => 'Local deep',
+      };
+}
+
+extension P5ComposerAccessLabel on P5ComposerAccess {
+  String get label => switch (this) {
+        P5ComposerAccess.profileDefault => 'Profile default',
+        P5ComposerAccess.readOnly => 'Read only',
+        P5ComposerAccess.requestAdditional => 'Request additional',
+      };
+}
+
+extension P5ComposerLaunchTimingLabel on P5ComposerLaunchTiming {
+  String get label => switch (this) {
+        P5ComposerLaunchTiming.runNow => 'Run now',
+        P5ComposerLaunchTiming.laterToday => 'Later today',
+        P5ComposerLaunchTiming.tomorrowMorning => 'Tomorrow morning',
+      };
+}
+
+extension P5ComposerBudgetLabel on P5ComposerBudget {
+  String get label => switch (this) {
+        P5ComposerBudget.focused => 'Focused',
+        P5ComposerBudget.balanced => 'Balanced',
+        P5ComposerBudget.thorough => 'Thorough',
+      };
+}
+
 enum P5PrototypeAction {
   createSampleProject,
   clearProject,
@@ -369,6 +420,13 @@ class P5PresentationState {
     required this.planReviewed,
     required this.planOnly,
     required this.taskDraft,
+    required this.composerProfile,
+    required this.composerModel,
+    required this.composerAccess,
+    required this.composerLaunchTiming,
+    required this.composerBudget,
+    required this.attachments,
+    required this.acceptanceCriteria,
     required this.recoveryMessage,
     required this.verificationRequested,
   });
@@ -386,6 +444,13 @@ class P5PresentationState {
   final bool planReviewed;
   final bool planOnly;
   final String taskDraft;
+  final P5ComposerProfile composerProfile;
+  final P5ComposerModel composerModel;
+  final P5ComposerAccess composerAccess;
+  final P5ComposerLaunchTiming composerLaunchTiming;
+  final P5ComposerBudget composerBudget;
+  final List<String> attachments;
+  final List<String> acceptanceCriteria;
   final String? recoveryMessage;
   final bool verificationRequested;
 
@@ -406,6 +471,13 @@ class P5PresentationState {
     bool? planReviewed,
     bool? planOnly,
     String? taskDraft,
+    P5ComposerProfile? composerProfile,
+    P5ComposerModel? composerModel,
+    P5ComposerAccess? composerAccess,
+    P5ComposerLaunchTiming? composerLaunchTiming,
+    P5ComposerBudget? composerBudget,
+    List<String>? attachments,
+    List<String>? acceptanceCriteria,
     Object? recoveryMessage = _notProvided,
     bool? verificationRequested,
   }) {
@@ -427,6 +499,13 @@ class P5PresentationState {
       planReviewed: planReviewed ?? this.planReviewed,
       planOnly: planOnly ?? this.planOnly,
       taskDraft: taskDraft ?? this.taskDraft,
+      composerProfile: composerProfile ?? this.composerProfile,
+      composerModel: composerModel ?? this.composerModel,
+      composerAccess: composerAccess ?? this.composerAccess,
+      composerLaunchTiming: composerLaunchTiming ?? this.composerLaunchTiming,
+      composerBudget: composerBudget ?? this.composerBudget,
+      attachments: attachments ?? this.attachments,
+      acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
       recoveryMessage: identical(recoveryMessage, _notProvided)
           ? this.recoveryMessage
           : recoveryMessage as String?,

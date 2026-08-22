@@ -307,6 +307,15 @@ class P5PrototypeFixtures {
       planReviewed: false,
       planOnly: false,
       taskDraft: 'Review the current navigation and verification experience.',
+      composerProfile: P5ComposerProfile.project,
+      composerModel: P5ComposerModel.automatic,
+      composerAccess: P5ComposerAccess.profileDefault,
+      composerLaunchTiming: P5ComposerLaunchTiming.runNow,
+      composerBudget: P5ComposerBudget.balanced,
+      attachments: <String>[],
+      acceptanceCriteria: <String>[
+        'Requested outcome is explicit and independently verifiable.',
+      ],
       recoveryMessage: null,
       verificationRequested: false,
     );
