@@ -40,6 +40,7 @@ import {
   sanitizeUploadFilename,
   validateDownloadLimits,
   validateDownloadReceipt,
+  validateLocalNavigationRequest,
   validateManifestBinding,
   validatePageDownloadRequest,
   validatePageUploadRequest,
@@ -140,6 +141,37 @@ function sessionArgs(f, overrides = {}) {
     '--max-persistent-profiles', String(quotas.maxPersistentProfiles),
   ];
 }
+
+test('local navigation contract is loopback-only and bounded', () => {
+  assert.deepEqual(
+    validateLocalNavigationRequest({
+      url: 'http://127.0.0.1:3000/index.html',
+      timeoutMs: 30_000,
+    }),
+    {
+      url: 'http://127.0.0.1:3000/index.html',
+      timeoutMs: 30_000,
+    },
+  );
+  assert.equal(
+    validateLocalNavigationRequest({
+      url: 'about:blank',
+      timeoutMs: 100,
+    }).url,
+    'about:blank',
+  );
+  for (const url of [
+    'https://example.com/',
+    'file:///tmp/index.html',
+    'javascript:alert(1)',
+    'http://user:secret@127.0.0.1:3000/',
+  ]) {
+    assert.throws(
+      () => validateLocalNavigationRequest({ url, timeoutMs: 30_000 }),
+      /browser_local_navigation_target_forbidden/u,
+    );
+  }
+});
 
 test('parseArgs accepts only the exact absolute probe contract', async () => {
   const f = await fixture();

@@ -1,5 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../browser/browser_runtime.dart';
+import '../p2_product_runtime_bootstrap.dart';
 
 import 'p5_controller.dart';
 import 'p5_fixtures.dart';
@@ -61,13 +67,27 @@ class _P5InformationArchitectureAppState
   }
 }
 
+typedef P5BrowserSessionStarter = Future<P3BrowserSessionProcess> Function();
+
 class P5InformationArchitecturePrototype extends StatefulWidget {
   const P5InformationArchitecturePrototype({
     super.key,
     required this.controller,
+    this.ownerMode,
+    this.browserSessionStarter,
+    this.browserRuntimeAvailable = false,
+    this.browserRuntimeStatusCode = 'p3_runtime_not_bound',
+    this.browserRuntimeProvenance = const <String, Object?>{},
+    this.onOpenOwnerMode,
   });
 
   final P5InformationArchitectureController controller;
+  final P2ProductRuntimeOwnerModeHandle? ownerMode;
+  final P5BrowserSessionStarter? browserSessionStarter;
+  final bool browserRuntimeAvailable;
+  final String browserRuntimeStatusCode;
+  final Map<String, Object?> browserRuntimeProvenance;
+  final VoidCallback? onOpenOwnerMode;
 
   @override
   State<P5InformationArchitecturePrototype> createState() =>
@@ -79,12 +99,73 @@ class _P5InformationArchitecturePrototypeState
   late final TextEditingController _taskController = TextEditingController(
     text: widget.controller.state.taskDraft,
   );
+  final TextEditingController _webProfileController =
+      TextEditingController(text: 'work');
+  final TextEditingController _webUrlController =
+      TextEditingController(text: 'http://127.0.0.1:3000/');
+  final TextEditingController _webLocatorController =
+      TextEditingController(text: 'body');
+  final TextEditingController _webRoleController =
+      TextEditingController(text: 'button');
+  final TextEditingController _webActionValueController =
+      TextEditingController();
+  final TextEditingController _webTargetController = TextEditingController();
+  final TextEditingController _webUploadPathController =
+      TextEditingController();
+  final TextEditingController _webUploadNameController =
+      TextEditingController(text: 'upload.bin');
+  final TextEditingController _webUploadMimeController =
+      TextEditingController(text: 'application/octet-stream');
+
+  P3BrowserSessionProcess? _webBrowser;
+  P3BrowserSessionKind _webSessionKind = P3BrowserSessionKind.ephemeral;
+  P3BrowserActionKind _webAction = P3BrowserActionKind.click;
+  String _webLocatorStrategy = 'css';
+  String _webPanel = 'Browser';
+  bool _webDownloadsEnabled = true;
+  bool _webUploadsEnabled = true;
+  bool _webBusy = false;
+  String? _webError;
+  List<P3BrowserSessionInfo> _webSessions = <P3BrowserSessionInfo>[];
+  List<P3BrowserPageInfo> _webPages = <P3BrowserPageInfo>[];
+  String? _webSelectedSessionId;
+  String? _webSelectedPageId;
+  P3BrowserPageObservation? _webObservation;
+  List<P3BrowserDownloadReceipt> _webDownloads = <P3BrowserDownloadReceipt>[];
+  List<P3BrowserUploadReceipt> _webUploads = <P3BrowserUploadReceipt>[];
+  final List<String> _webActivity = <String>[];
 
   P5InformationArchitectureController get controller => widget.controller;
 
+  void mutatePresentation(VoidCallback update) {
+    if (!mounted) {
+      return;
+    }
+    setState(update);
+  }
+
+  String get _liveOwnerLabel {
+    final handle = widget.ownerMode;
+    if (handle == null) return controller.state.ownerModeState.label;
+    if (!handle.available) return 'Unavailable';
+    final settings = handle.runtime!.controller.current;
+    if (!settings.enabled) return 'Available, off';
+    return settings.unattended ? 'Enabled unattended' : 'Enabled';
+  }
+
   @override
   void dispose() {
+    unawaited(_webBrowser?.close());
     _taskController.dispose();
+    _webProfileController.dispose();
+    _webUrlController.dispose();
+    _webLocatorController.dispose();
+    _webRoleController.dispose();
+    _webActionValueController.dispose();
+    _webTargetController.dispose();
+    _webUploadPathController.dispose();
+    _webUploadNameController.dispose();
+    _webUploadMimeController.dispose();
     super.dispose();
   }
 
@@ -172,9 +253,14 @@ class _P5InformationArchitecturePrototypeState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(state.workspace.label, key: const Key('workspace-title')),
-            const Text(
-              'P5-001 presentation prototype — no runtime authority',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+            Text(
+              widget.ownerMode == null && widget.browserSessionStarter == null
+                  ? 'P5 presentation prototype — runtime not bound'
+                  : 'Experience workspace — live P2/P3 runtime integration',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -195,11 +281,10 @@ class _P5InformationArchitecturePrototypeState
           const SizedBox(width: 8),
           Semantics(
             liveRegion: true,
-            label:
-                'Owner Mode status: ${state.ownerModeState.label}. Presentation only.',
+            label: 'Owner Mode status: $_liveOwnerLabel.',
             child: _StatusChip(
               key: const Key('global-owner-status'),
-              label: 'Owner: ${state.ownerModeState.label}',
+              label: 'Owner: $_liveOwnerLabel',
               icon: Icons.admin_panel_settings_outlined,
             ),
           ),
@@ -373,9 +458,13 @@ class _P5InformationArchitecturePrototypeState
                 label: state.runState.label,
                 icon: Icons.timeline_outlined,
               ),
-              const _StatusChip(
-                label: 'Local in-memory fixtures',
-                icon: Icons.memory_outlined,
+              _StatusChip(
+                label: widget.browserSessionStarter == null
+                    ? 'Local in-memory fixtures'
+                    : 'Live ProductRuntime',
+                icon: widget.browserSessionStarter == null
+                    ? Icons.memory_outlined
+                    : Icons.hub_outlined,
               ),
               if (state.recoveryMessage != null)
                 ConstrainedBox(
@@ -403,7 +492,7 @@ class _P5InformationArchitecturePrototypeState
       P5WorkspaceId.modelsProviders => _modelsWorkspace(context),
       P5WorkspaceId.capabilitiesIntegrations => _capabilitiesWorkspace(context),
       P5WorkspaceId.settingsDiagnostics => _settingsWorkspace(context),
-      P5WorkspaceId.webStudio => _futureCapabilityWorkspace(context, workspace),
+      P5WorkspaceId.webStudio => _webStudioWorkspace(context),
       P5WorkspaceId.searchResearch =>
         _futureCapabilityWorkspace(context, workspace),
       P5WorkspaceId.nativeAutomation =>

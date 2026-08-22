@@ -219,6 +219,39 @@ Map<String, Object?> _observationEnvelope() {
 }
 
 void main() {
+  test('local navigation request is loopback-only and bounded', () {
+    expect(
+      const P3BrowserLocalNavigationRequest(
+        url: 'http://127.0.0.1:3000/index.html',
+      ).toJson(),
+      <String, Object?>{
+        'url': 'http://127.0.0.1:3000/index.html',
+        'timeoutMs': 30000,
+      },
+    );
+    expect(
+      const P3BrowserLocalNavigationRequest(url: 'about:blank').toJson()['url'],
+      'about:blank',
+    );
+    for (final value in <String>[
+      'https://example.com/',
+      'file:///tmp/index.html',
+      'javascript:alert(1)',
+      'http://user:secret@127.0.0.1:3000/',
+    ]) {
+      expect(
+        () => P3BrowserLocalNavigationRequest(url: value).toJson(),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_local_navigation_target_forbidden',
+          ),
+        ),
+      );
+    }
+  });
+
   test('probe launch plan uses only bundled node and browser paths', () async {
     final temp = await Directory.systemTemp.createTemp('p3-launch-plan-');
     addTearDown(() => temp.delete(recursive: true));

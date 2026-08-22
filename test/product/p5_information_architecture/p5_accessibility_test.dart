@@ -151,24 +151,25 @@ void main() {
     );
     expect(
       find.bySemanticsLabel(
-        'Owner Mode status: Blocked by environment. Presentation only.',
+        'Owner Mode status: Blocked by environment.',
       ),
       findsOneWidget,
     );
 
     controller.selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);
     await tester.pumpAndSettle();
+    expect(
+      find.bySemanticsLabel(
+        'Web Studio: EXPERIMENTAL. P3-002 through P3-006B browser sessions, observations, actions, downloads, and uploads are landed and consumable from Experience.',
+      ),
+      findsOneWidget,
+    );
+
     final webCapability = find.byKey(const Key('capability-webStudio'));
     await tester.ensureVisible(webCapability);
     await tester.tap(webCapability);
     await tester.pumpAndSettle();
-
-    expect(
-      find.bySemanticsLabel(
-        'Web Studio is BLOCKED_BY_DEPENDENCY. P3-001 browser runtime is not implemented.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);
     expect(controller.sideEffects, P5SideEffectLedger.zero);
     semantics.dispose();
   });

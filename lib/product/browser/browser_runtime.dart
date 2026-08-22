@@ -941,6 +941,51 @@ final class P3BrowserPageObservation {
   final Map<String, Object?> observation;
 }
 
+final class P3BrowserLocalNavigationRequest {
+  const P3BrowserLocalNavigationRequest({
+    required this.url,
+    this.timeout = const Duration(seconds: 30),
+  });
+
+  final String url;
+  final Duration timeout;
+
+  Map<String, Object?> toJson() {
+    final value = url.trim();
+    final parsed = Uri.tryParse(value);
+    final localHost = parsed != null &&
+        const <String>{'localhost', '127.0.0.1', '::1'}
+            .contains(parsed.host.toLowerCase());
+    final aboutBlank = parsed != null &&
+        parsed.scheme == 'about' &&
+        parsed.path == 'blank' &&
+        parsed.query.isEmpty &&
+        parsed.fragment.isEmpty;
+    final localHttp = parsed != null &&
+        const <String>{'http', 'https'}.contains(parsed.scheme) &&
+        localHost &&
+        parsed.userInfo.isEmpty;
+    if (value.isEmpty ||
+        value.contains('\u0000') ||
+        utf8.encode(value).length > 8192 ||
+        !(aboutBlank || localHttp)) {
+      throw const P3BrowserRuntimeException(
+        'browser_local_navigation_target_forbidden',
+      );
+    }
+    if (timeout < const Duration(milliseconds: 100) ||
+        timeout > const Duration(seconds: 60)) {
+      throw const P3BrowserRuntimeException(
+        'browser_local_navigation_timeout_invalid',
+      );
+    }
+    return <String, Object?>{
+      'url': parsed.toString(),
+      'timeoutMs': timeout.inMilliseconds,
+    };
+  }
+}
+
 enum P3BrowserActionKind {
   click,
   fill,
@@ -2598,6 +2643,25 @@ final class P3BrowserSessionProcess {
       _protocolViolation('browser_page_response_identity_mismatch');
     }
     return pages;
+  }
+
+  Future<P3BrowserPageObservation> navigateLocalPage(
+    String sessionId,
+    String pageId,
+    P3BrowserLocalNavigationRequest request,
+  ) async {
+    final result = await _request('page.navigateLocal', <String, Object?>{
+      'sessionId': sessionId,
+      'pageId': pageId,
+      'navigationRequest': request.toJson(),
+    });
+    final observation = _decodeResponse(
+      () => P3BrowserPageObservation.fromJson(result),
+    );
+    if (observation.sessionId != sessionId || observation.pageId != pageId) {
+      _protocolViolation('browser_observation_identity_mismatch');
+    }
+    return observation;
   }
 
   Future<P3BrowserPageObservation> observePage(

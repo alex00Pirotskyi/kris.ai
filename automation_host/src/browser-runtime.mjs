@@ -1919,6 +1919,51 @@ export async function performVerifiedVisualAction(
   };
 }
 
+const LOCAL_NAVIGATION_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '[::1]',
+  '::1',
+]);
+
+export function validateLocalNavigationRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set(['url', 'timeoutMs']),
+    'browser_local_navigation_request_invalid',
+  );
+  if (
+    typeof value.url !== 'string' ||
+    value.url.length < 1 ||
+    Buffer.byteLength(value.url, 'utf8') > 8192 ||
+    value.url.includes('\0') ||
+    !Number.isSafeInteger(value.timeoutMs) ||
+    value.timeoutMs < 100 ||
+    value.timeoutMs > 60_000
+  ) {
+    fail('browser_local_navigation_request_invalid');
+  }
+  let parsed;
+  try {
+    parsed = new URL(value.url);
+  } catch {
+    fail('browser_local_navigation_target_forbidden');
+  }
+  const aboutBlank = parsed.protocol === 'about:' && parsed.href === 'about:blank';
+  const localHttp =
+    (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+    LOCAL_NAVIGATION_HOSTS.has(parsed.hostname.toLowerCase()) &&
+    parsed.username === '' &&
+    parsed.password === '';
+  if (!(aboutBlank || localHttp)) {
+    fail('browser_local_navigation_target_forbidden');
+  }
+  return Object.freeze({
+    url: parsed.toString(),
+    timeoutMs: value.timeoutMs,
+  });
+}
+
 export class BrowserSessionRegistry {
   constructor({
     browser,
@@ -2513,6 +2558,22 @@ export class BrowserSessionRegistry {
     return { pageId, sessionId };
   }
 
+  async navigateLocalPage(sessionId, pageId, rawRequest) {
+    const request = validateLocalNavigationRequest(rawRequest);
+    const session = this._session(sessionId);
+    assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+    const page = session.pages.get(pageId);
+    if (!page) fail('browser_page_not_found', pageId);
+    if (typeof page.goto !== 'function') {
+      fail('browser_navigation_api_unavailable');
+    }
+    await page.goto(request.url, {
+      waitUntil: 'domcontentloaded',
+      timeout: request.timeoutMs,
+    });
+    return this.observePage(sessionId, pageId);
+  }
+
   async observePage(sessionId, pageId) {
   const session = this._session(sessionId);
   assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
@@ -2750,6 +2811,12 @@ export class BrowserSessionRegistry {
         return this.openPage(message.sessionId);
       case 'page.list':
         return { pages: this.listPages(message.sessionId) };
+      case 'page.navigateLocal':
+        return this.navigateLocalPage(
+          message.sessionId,
+          message.pageId,
+          message.navigationRequest,
+        );
       case 'page.observe':
         return this.observePage(message.sessionId, message.pageId);
       case 'page.action':
