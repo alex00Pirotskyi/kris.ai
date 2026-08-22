@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry with explicit two-call store migration after zero-footprint/boundary repairs.
+# Retry with persisted-layout filesystem setup isolated from widget-test fake time.
 
 on:
   pull_request:
