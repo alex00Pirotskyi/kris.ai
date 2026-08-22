@@ -10,7 +10,7 @@ void main() {
 
     expect(
       () => controller.transitionWorkspaceState(
-        P5WorkspaceId.webStudio,
+        P5WorkspaceId.searchResearch,
         P5WorkspaceState.running,
       ),
       throwsA(isA<P5InvalidTransition>()),

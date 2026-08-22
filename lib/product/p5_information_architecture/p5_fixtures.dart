@@ -39,7 +39,7 @@ class P5PrototypeFixtures {
     P5WorkspaceDefinition(
       id: P5WorkspaceId.ownerMode,
       description:
-          'See truthful availability and presentation-only lifecycle states.',
+          'Inspect the real P2 Owner Mode state without duplicating its controls.',
       minimumLevel: P5ExperienceLevel.simple,
       primary: true,
     ),
@@ -61,7 +61,8 @@ class P5PrototypeFixtures {
     ),
     P5WorkspaceDefinition(
       id: P5WorkspaceId.webStudio,
-      description: 'Future browser workspace placeholder.',
+      description:
+          'Use the application-owned P3 browser runtime while editor and preview panels land independently.',
       minimumLevel: P5ExperienceLevel.advanced,
     ),
     P5WorkspaceDefinition(
@@ -166,10 +167,11 @@ class P5PrototypeFixtures {
   static const List<P5CapabilityFixture> capabilities = <P5CapabilityFixture>[
     P5CapabilityFixture(
       workspace: P5WorkspaceId.webStudio,
-      state: P5CapabilityPresentationState.blockedByDependency,
-      reason: 'P3-001 browser runtime is not implemented.',
+      state: P5CapabilityPresentationState.experimental,
+      reason:
+          'P3-002 through P3-006B browser sessions, observations, actions, downloads, and uploads are landed and consumable from Experience.',
       nextRequirement:
-          'A real bundled browser runtime must pass clean-machine tests.',
+          'Complete P3-007/P3-009/P3-011 and land the independently owned editor, preview, and inspector slices before claiming the full roadmap Web Studio.',
     ),
     P5CapabilityFixture(
       workspace: P5WorkspaceId.searchResearch,
@@ -286,7 +288,7 @@ class P5PrototypeFixtures {
       P5WorkspaceId.modelsProviders: P5WorkspaceState.ready,
       P5WorkspaceId.capabilitiesIntegrations: P5WorkspaceState.ready,
       P5WorkspaceId.settingsDiagnostics: P5WorkspaceState.ready,
-      P5WorkspaceId.webStudio: P5WorkspaceState.unavailable,
+      P5WorkspaceId.webStudio: P5WorkspaceState.ready,
       P5WorkspaceId.searchResearch: P5WorkspaceState.unavailable,
       P5WorkspaceId.nativeAutomation: P5WorkspaceState.unavailable,
       P5WorkspaceId.devices: P5WorkspaceState.unavailable,

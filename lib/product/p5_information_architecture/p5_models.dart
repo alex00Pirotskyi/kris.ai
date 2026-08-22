@@ -131,7 +131,6 @@ extension P5WorkspaceIdLabel on P5WorkspaceId {
       };
 
   bool get isFutureCapability => const <P5WorkspaceId>{
-        P5WorkspaceId.webStudio,
         P5WorkspaceId.searchResearch,
         P5WorkspaceId.nativeAutomation,
         P5WorkspaceId.devices,
