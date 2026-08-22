@@ -2,13 +2,28 @@ import 'package:flutter/foundation.dart';
 
 import 'p5_fixtures.dart';
 import 'p5_models.dart';
+import 'p5_shell_layout.dart';
 
 class P5InformationArchitectureController extends ChangeNotifier {
-  P5InformationArchitectureController({P5PresentationState? initialState})
-      : _state = initialState ?? P5PrototypeFixtures.initialState();
+  P5InformationArchitectureController({
+    P5PresentationState? initialState,
+    P5ShellLayoutState? initialShellLayout,
+  })  : _state = initialState ?? P5PrototypeFixtures.initialState(),
+        _shellLayout = initialShellLayout ?? P5ShellLayoutState.defaults;
 
   P5PresentationState _state;
+  P5ShellLayoutState _shellLayout;
   P5PresentationState get state => _state;
+  P5ShellLayoutState get shellLayout => _shellLayout;
+
+  void updateShellLayout(P5ShellLayoutState next) {
+    final normalized = next.normalized();
+    if (_shellLayout == normalized) {
+      return;
+    }
+    _shellLayout = normalized;
+    notifyListeners();
+  }
 
   P5SideEffectLedger get sideEffects => P5SideEffectLedger.zero;
 

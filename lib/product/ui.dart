@@ -14,6 +14,7 @@ import 'p2_product_runtime_bootstrap.dart';
 import 'p5_design_tokens.dart';
 import 'p5_information_architecture/p5_controller.dart';
 import 'p5_information_architecture/p5_prototype.dart';
+import 'p5_information_architecture/p5_shell_layout.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
@@ -150,6 +151,11 @@ class _KristinMainShellState extends State<KristinMainShell> {
             'p3_runtime_not_bound',
         browserRuntimeProvenance: productRuntime?.p3BrowserRuntime.provenance ??
             const <String, Object?>{},
+        layoutPersistence: productRuntime == null
+            ? null
+            : P5ApplicationShellLayoutPersistence(
+                applicationDataRoot: productRuntime.directories.root,
+              ),
         browserSessionStarter: productRuntime == null
             ? null
             : () => P3BrowserRuntimeService(
@@ -252,6 +258,68 @@ class _KristinMainShellState extends State<KristinMainShell> {
   void _selectDestination(int value) {
     if (value == _index) return;
     setState(() => _index = value);
+  }
+}
+
+class P5ApplicationShellLayoutPersistence implements P5ShellLayoutPersistence {
+  P5ApplicationShellLayoutPersistence({required Directory applicationDataRoot})
+      : _root = applicationDataRoot;
+
+  final Directory _root;
+
+  File get file => File(
+        '${_root.path}${Platform.pathSeparator}ui'
+        '${Platform.pathSeparator}p5-shell-layout.v1.json',
+      );
+
+  @override
+  Future<P5ShellLayoutState?> load() async {
+    final target = file;
+    final type = await FileSystemEntity.type(target.path, followLinks: false);
+    if (type == FileSystemEntityType.notFound) {
+      return null;
+    }
+    if (type != FileSystemEntityType.file) {
+      throw const FileSystemException(
+        'P5 shell layout path is not a regular file.',
+      );
+    }
+    final decoded = jsonDecode(await target.readAsString());
+    return P5ShellLayoutState.fromJson(decoded);
+  }
+
+  @override
+  Future<void> save(P5ShellLayoutState state) async {
+    final target = file;
+    final directory = target.parent;
+    await directory.create(recursive: true);
+    final directoryType =
+        await FileSystemEntity.type(directory.path, followLinks: false);
+    if (directoryType != FileSystemEntityType.directory) {
+      throw const FileSystemException(
+        'P5 shell layout directory is not a regular directory.',
+      );
+    }
+    final targetType =
+        await FileSystemEntity.type(target.path, followLinks: false);
+    if (targetType != FileSystemEntityType.notFound &&
+        targetType != FileSystemEntityType.file) {
+      throw const FileSystemException(
+        'P5 shell layout target is not a regular file.',
+      );
+    }
+    final temporary = File('${target.path}.tmp');
+    final temporaryType =
+        await FileSystemEntity.type(temporary.path, followLinks: false);
+    if (temporaryType != FileSystemEntityType.notFound) {
+      await temporary.delete(recursive: true);
+    }
+    final encoded = const JsonEncoder.withIndent('  ').convert(state.toJson());
+    await temporary.writeAsString('$encoded\n', flush: true);
+    if (await target.exists()) {
+      await target.delete();
+    }
+    await temporary.rename(target.path);
   }
 }
 

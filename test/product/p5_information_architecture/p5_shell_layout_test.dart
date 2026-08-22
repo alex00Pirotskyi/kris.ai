@@ -1,63 +1,36 @@
-from pathlib import Path
+import 'dart:io';
 
-ROOT = Path('.')
-
-
-def read(path: str) -> str:
-    return (ROOT / path).read_text(encoding='utf-8')
-
-
-def write(path: str, content: str) -> None:
-    (ROOT / path).write_text(content, encoding='utf-8', newline='\n')
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    text = read(path)
-    count = text.count(old)
-    if count != 1:
-        raise SystemExit(f'{path}: expected one anchor, found {count}')
-    write(path, text.replace(old, new, 1))
-
-
-layout_path = 'lib/product/p5_information_architecture/p5_shell_layout.dart'
-replace_once(
-    layout_path,
-    '    inspectorOpen: true,\n    activityDrawerOpen: true,\n',
-    '    inspectorOpen: false,\n    activityDrawerOpen: false,\n',
-)
-
-workspace_path = 'lib/product/p5_information_architecture/p5_shell_workspace.dart'
-replace_once(
-    workspace_path,
-    """            ] else
-              _buildP5CollapsedActivityBar(context, state),
-""",
-    """            ],
-""",
-)
-workspace = read(workspace_path)
-start_marker = '  Widget _buildP5CollapsedActivityBar('
-end_marker = '\n}\n\nclass _P5ResizeHandle'
-start = workspace.find(start_marker)
-end = workspace.find(end_marker, start)
-if start < 0 or end < 0:
-    raise SystemExit('p5_shell_workspace.dart: collapsed activity bar span not found')
-write(workspace_path, workspace[:start] + workspace[end:])
-
-shell_test = r'''import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_controller.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_models.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_prototype.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_shell_layout.dart';
+import 'package:kristin_local_agent/product/ui.dart';
+
+final class _MemoryShellLayoutPersistence implements P5ShellLayoutPersistence {
+  _MemoryShellLayoutPersistence(this.value);
+
+  P5ShellLayoutState? value;
+  int saveCount = 0;
+
+  @override
+  Future<P5ShellLayoutState?> load() =>
+      SynchronousFuture<P5ShellLayoutState?>(value);
+
+  @override
+  Future<void> save(P5ShellLayoutState state) async {
+    value = state;
+    saveCount += 1;
+  }
+}
 
 Future<void> pumpShell(
   WidgetTester tester,
   P5InformationArchitectureController controller, {
   Size size = const Size(1440, 960),
-  String? persistenceRoot,
+  P5ShellLayoutPersistence? persistence,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -67,7 +40,7 @@ Future<void> pumpShell(
     MaterialApp(
       home: P5InformationArchitecturePrototype(
         controller: controller,
-        layoutPersistenceRootPath: persistenceRoot,
+        layoutPersistence: persistence,
       ),
     ),
   );
@@ -95,10 +68,12 @@ void main() {
     expect(P5ShellLayoutState.defaults.activityDrawerOpen, isFalse);
   });
 
-  test('P5-004 shell layout store round-trips app-owned state', () async {
+  test('P5-004 application file adapter round-trips app-owned state', () async {
     final root = await Directory.systemTemp.createTemp('p5-shell-layout-');
     addTearDown(() => root.delete(recursive: true));
-    final store = P5ShellLayoutStore(applicationDataRoot: root);
+    final store = P5ApplicationShellLayoutPersistence(
+      applicationDataRoot: root,
+    );
     final state = P5ShellLayoutState.defaults.copyWith(
       leftRailWidth: 334,
       inspectorWidth: 377,
@@ -108,15 +83,16 @@ void main() {
     );
     expect(await store.load(), isNull);
     await store.save(state);
-    expect(await store.load(), state);
+    expect((await store.load())?.toJson(), state.toJson());
     expect(await store.file.readAsString(), endsWith('\n'));
   });
 
-  testWidgets('P5-004 wide shell resizes auxiliary panes across navigation',
+  testWidgets('P5-004 wide shell resizes and persists across navigation',
       (tester) async {
+    final persistence = _MemoryShellLayoutPersistence(null);
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
-    await pumpShell(tester, controller);
+    await pumpShell(tester, controller, persistence: persistence);
 
     expect(find.byKey(const Key('p5-left-rail')), findsOneWidget);
     expect(find.byKey(const Key('p5-center-workspace')), findsOneWidget);
@@ -157,12 +133,16 @@ void main() {
     expect(tester.getSize(inspector).width, resizedInspector);
     expect(controller.shellLayout.inspectorOpen, isTrue);
     expect(controller.shellLayout.activityDrawerOpen, isTrue);
+
+    await tester.pump(const Duration(milliseconds: 180));
+    await tester.pump();
+    expect(persistence.saveCount, greaterThan(0));
+    expect(persistence.value?.toJson(), controller.shellLayout.toJson());
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('P5-004 persisted layout restores on reopen', (tester) async {
-    final root = await Directory.systemTemp.createTemp('p5-shell-reopen-');
-    addTearDown(() => root.delete(recursive: true));
+  testWidgets('P5-004 persisted layout restores through persistence contract',
+      (tester) async {
     final expected = P5ShellLayoutState.defaults.copyWith(
       leftRailWidth: 340,
       inspectorWidth: 390,
@@ -170,23 +150,14 @@ void main() {
       inspectorOpen: true,
       activityDrawerOpen: true,
     );
-    final store = P5ShellLayoutStore(applicationDataRoot: root);
-    await store.save(expected);
-
+    final persistence = _MemoryShellLayoutPersistence(expected);
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
-    await pumpShell(tester, controller, persistenceRoot: root.path);
-    await tester.runAsync(() async {
-      for (var attempt = 0; attempt < 100; attempt += 1) {
-        if (controller.shellLayout == expected) {
-          return;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      }
-    });
-    await tester.pump();
 
-    expect(controller.shellLayout, expected);
+    await pumpShell(tester, controller, persistence: persistence);
+
+    expect(controller.state.recoveryMessage, isNull);
+    expect(controller.shellLayout.toJson(), expected.toJson());
     expect(
       tester.getSize(find.byKey(const Key('p5-left-rail'))).width,
       expected.leftRailWidth,
@@ -242,37 +213,8 @@ void main() {
     expect(find.byKey(const Key('p5-activity-drawer')), findsNothing);
 
     await tester.tap(find.byKey(const Key('p5-inspector-toggle')));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('p5-right-inspector')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
-'''
-
-write(
-    'test/product/p5_information_architecture/p5_shell_layout_test.dart',
-    shell_test,
-)
-
-source_contract_path = 'test/product/source_contract_test.dart'
-source_anchor = """    test('release validator follows governed design-token modules', () {
-"""
-source_test = """    test('P5 shell persists explicit layout mutations without reserving closed panes', () {
-      final layout = source(
-        'lib/product/p5_information_architecture/p5_shell_layout.dart',
-      );
-      final shell = source(
-        'lib/product/p5_information_architecture/p5_shell_workspace.dart',
-      );
-      expect(layout, contains('inspectorOpen: false'));
-      expect(layout, contains('activityDrawerOpen: false'));
-      expect(shell, contains('_scheduleP5ShellLayoutSave();'));
-      expect(shell, contains('store.save(controller.shellLayout)'));
-      expect(shell, contains("key: const Key('p5-right-inspector')"));
-      expect(shell, contains("key: const Key('p5-activity-drawer')"));
-    });
-
-"""
-replace_once(source_contract_path, source_anchor, source_test + source_anchor)
-
-print('P5_004_LAYOUT_CONTRACT_FIX_APPLIED')
