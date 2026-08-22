@@ -40,7 +40,7 @@ jobs:
             test -s ".p5-web-studio-runtime-integration.part${part}"
           done
           test -z "$(git status --short)"
-      - uses: actions/setup-python@5fda3b95a4eaa91299a34e894583c3862153e4b97
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12.10'
           check-latest: false
