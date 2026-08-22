@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry with explicit double conversion on the activity-drawer clamp.
+# Retry with explicit clamp conversion and analyzer-clean shell declarations.
 
 on:
   pull_request:
