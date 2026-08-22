@@ -1,5 +1,5 @@
 name: P5-004 current-main three-pane finalizer
-# Retry with zero-footprint closed panes plus prototype-boundary/compact-drawer repair.
+# Retry with explicit two-call store migration after zero-footprint/boundary repairs.
 
 on:
   pull_request:
