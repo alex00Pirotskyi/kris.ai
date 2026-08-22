@@ -1,0 +1,44 @@
+name: P217 release validator diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/p217-release-validator-diagnostic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+      - name: Install validator parser dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Run release validator and print only failed checks
+        shell: bash
+        run: |
+          set +e
+          python tool/validate_release.py --skip-tests > "$RUNNER_TEMP/validator.log" 2>&1
+          rc=$?
+          echo "validator_rc=$rc"
+          grep -E -i '(^|[^a-z])(fail|failed|missing|unexpected|inventory|error|forbidden|stale)([^a-z]|$)' "$RUNNER_TEMP/validator.log" | tail -n 200 || true
+          echo '--- report failed checks ---'
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('release/validation_report.json')
+          if path.exists():
+              data = json.loads(path.read_text(encoding='utf-8'))
+              for item in data.get('checks', []):
+                  if item.get('status') != 'passed':
+                      print(json.dumps(item, sort_keys=True))
+          PY
+          exit "$rc"
