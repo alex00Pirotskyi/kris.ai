@@ -1,5 +1,5 @@
 name: P5-006 composer finalizer
-# Retry with review-button FocusNode Enter handling and completed-run launch lock.
+# Retry with reviewed plan promoted ahead of the tall composer in the lazy workspace.
 
 on:
   pull_request:
