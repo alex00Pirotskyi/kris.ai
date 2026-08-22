@@ -860,8 +860,8 @@ void main() {
       expect(tools, contains("'path_outside_project'"));
       expect(tools, contains("'tool.path_normalized'"));
       expect(coordinator, contains("'tool.path_rebased_to_active_project'"));
-      expect(studio, contains("'Generate prompt'"));
-      expect(studio, contains("'Generate task list'"));
+      expect(studio, contains("'Generate final prompt'"));
+      expect(studio, contains("'Review execution plan'"));
       expect(studio, contains("'Run all tasks'"));
       expect(studio, contains("'Stop all running tasks'"));
       expect(api, contains("'/v1/prompts/generate'"));

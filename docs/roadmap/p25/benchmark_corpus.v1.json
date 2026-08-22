@@ -1,0 +1,546 @@
+{
+  "cases": [
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a concise prompt for a searchable notes list.",
+      "id": "simple-001",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local calculator.",
+      "id": "simple-002",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for safe file renaming in one folder.",
+      "id": "simple-003",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a desktop timer.",
+      "id": "simple-004",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local contact list.",
+      "id": "simple-005",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a Markdown preview app.",
+      "id": "simple-006",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local expense tracker.",
+      "id": "simple-007",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a CSV duplicate detector.",
+      "id": "simple-008",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local photo organizer.",
+      "id": "simple-009",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a text comparison tool.",
+      "id": "simple-010",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local inventory list.",
+      "id": "simple-011",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local bookmark manager.",
+      "id": "simple-012",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a JSON formatter.",
+      "id": "simple-013",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a desktop unit converter.",
+      "id": "simple-014",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local habit tracker.",
+      "id": "simple-015",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a meeting-notes generator.",
+      "id": "simple-016",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for an image metadata viewer.",
+      "id": "simple-017",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a local recipe catalog.",
+      "id": "simple-018",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for a log filter.",
+      "id": "simple-019",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "simple",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        3
+      ],
+      "expectsClarification": false,
+      "goal": "Create a prompt for an offline kanban board.",
+      "id": "simple-020",
+      "maxQuestions": 1
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Build an inventory app.",
+      "id": "ambiguous-001",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Create a customer portal.",
+      "id": "ambiguous-002",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Make a deployment tool.",
+      "id": "ambiguous-003",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Build a research assistant.",
+      "id": "ambiguous-004",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Create a business dashboard.",
+      "id": "ambiguous-005",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Make a file synchronization app.",
+      "id": "ambiguous-006",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Build a team chat product.",
+      "id": "ambiguous-007",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Create a model manager.",
+      "id": "ambiguous-008",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Make an automated browser workflow.",
+      "id": "ambiguous-009",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "ambiguous",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        1,
+        7
+      ],
+      "expectsClarification": true,
+      "goal": "Build a backup system.",
+      "id": "ambiguous-010",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a local-first inventory app with import, export, search, audit history, and recovery.",
+      "id": "normal-001",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a project explorer with filters, durable selection, and safe bulk operations.",
+      "id": "normal-002",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan an offline-first CRM with reminders and encrypted backups.",
+      "id": "normal-003",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a desktop research workspace with source capture and citations.",
+      "id": "normal-004",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a local AI model lifecycle manager.",
+      "id": "normal-005",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a desktop terminal workspace with PTY reconnect and cleanup.",
+      "id": "normal-006",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a browser automation feature with observations, actions, quarantine, and takeover.",
+      "id": "normal-007",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a prompt-authoring workspace with live questions, editing, and compilation.",
+      "id": "normal-008",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a privacy-safe diagnostics center.",
+      "id": "normal-009",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "normal",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        3,
+        7
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a project runner with lifecycle and evidence.",
+      "id": "normal-010",
+      "maxQuestions": 2
+    },
+    {
+      "complexity": "complex",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        7,
+        15
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a signed Windows release with installer, updater, rollback, SBOM, and provenance.",
+      "id": "complex-001",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "complex",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        7,
+        15
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a cross-platform local AI operating system with models, tools, browser, terminal, research, and evidence.",
+      "id": "complex-002",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "complex",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        7,
+        15
+      ],
+      "expectsClarification": false,
+      "goal": "Plan multi-provider model orchestration with permissions, budgets, fallback, and audit.",
+      "id": "complex-003",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "complex",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        7,
+        15
+      ],
+      "expectsClarification": false,
+      "goal": "Plan an application factory that designs, builds, tests, packages, and verifies desktop applications.",
+      "id": "complex-004",
+      "maxQuestions": 3
+    },
+    {
+      "complexity": "complex",
+      "expectedFullGenerationCalls": 1,
+      "expectedTaskRange": [
+        7,
+        15
+      ],
+      "expectsClarification": false,
+      "goal": "Plan a formal assurance center spanning source through release evidence.",
+      "id": "complex-005",
+      "maxQuestions": 3
+    }
+  ],
+  "corpusId": "p25.prompt-studio-benchmark-v1",
+  "schemaVersion": "1.0.0"
+}

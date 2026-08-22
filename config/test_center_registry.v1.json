@@ -1,14 +1,26 @@
 {
   "affectedTestMappings": [
     {
-      "excludedPaths": ["release/evidence/generated/**"],
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.test-center-contracts",
-      "pathPatterns": ["config/test_center_registry.v1.json", "docs/testing/**", "schemas/test_center.v1.json", "tool/test_center_contracts.py"],
+      "pathPatterns": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
       "priority": 10,
-      "testIds": ["tc.test-center.contracts", "tc.test-center.semantic-regressions"]
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
     },
     {
-      "excludedPaths": ["release/evidence/generated/**"],
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
       "mappingId": "affected.p8-formal-test-hierarchy",
       "pathPatterns": [
         "config/test_center_assurance_hierarchy.v1.json",
@@ -29,13 +41,24 @@
         "tool/test_center_contracts.py"
       ],
       "priority": 15,
-      "testIds": ["tc.p8.formal-test-hierarchy", "tc.p8.formal-test-hierarchy-regressions"]
+      "testIds": [
+        "tc.p8.formal-test-hierarchy",
+        "tc.p8.formal-test-hierarchy-regressions"
+      ]
     },
     {
       "mappingId": "affected.testing-evidence-bridges",
-      "pathPatterns": ["schemas/assurance_report.v1.json", "schemas/project_profile.v2.json", "schemas/verification_report.v1.json", "tool/assurance_model.py"],
+      "pathPatterns": [
+        "schemas/assurance_report.v1.json",
+        "schemas/project_profile.v2.json",
+        "schemas/verification_report.v1.json",
+        "tool/assurance_model.py"
+      ],
       "priority": 20,
-      "testIds": ["tc.test-center.contracts", "tc.test-center.semantic-regressions"]
+      "testIds": [
+        "tc.test-center.contracts",
+        "tc.test-center.semantic-regressions"
+      ]
     },
     {
       "excludedPaths": [
@@ -203,33 +226,103 @@
         "tc.p4-001.normalized-result-state-preservation",
         "tc.p4-001.network-free-determinism"
       ]
+    },
+    {
+      "excludedPaths": [
+        "release/evidence/generated/**"
+      ],
+      "mappingId": "affected.p25-prompt-studio-governance",
+      "pathPatterns": [
+        ".github/workflows/p25-prompt-studio.yml",
+        "config/test_center_assurance_hierarchy.v1.json",
+        "config/test_center_registry.v1.json",
+        "docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md",
+        "docs/roadmap/p25/**",
+        "docs/roadmap/decisions/ADR-P25-001-prompt-studio-product-rescue.md",
+        "docs/testing/TEST_CENTER_P25_PROMPT_STUDIO.md",
+        "tasks/planned/P25-*.md",
+        "tool/p25_prompt_studio_*.py"
+      ],
+      "priority": 250,
+      "testIds": [
+        "tc.p25.roadmap-contract",
+        "tc.p25.test-station-contract"
+      ]
     }
   ],
   "projectTestProfiles": [
     {
-      "affectedPaths": ["config/test_center_registry.v1.json", "docs/testing/**", "schemas/test_center.v1.json", "tool/test_center_contracts.py"],
-      "argv": ["python", "tool/test_center_contracts.py", "check", "--project", "."],
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "docs/testing/**",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py"
+      ],
+      "argv": [
+        "python",
+        "tool/test_center_contracts.py",
+        "check",
+        "--project",
+        "."
+      ],
       "assuranceClass": "source_contract",
-      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
       "evidenceDestination": "release/evidence/worker-b/test-center-contract-validation.json",
       "expectedOutputs": [],
-      "inputPaths": ["config/test_center_registry.v1.json", "schemas/test_center.v1.json"],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json"
+      ],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": ["linux", "macos", "windows"],
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
       "stableCheckId": "tc.test-center.contracts",
       "timeoutSeconds": 60,
       "workingDirectory": "."
     },
     {
-      "affectedPaths": ["config/test_center_registry.v1.json", "schemas/test_center.v1.json", "tool/test_center_contracts.py", "tool/test_center_contracts_test.py"],
-      "argv": ["python", "-m", "unittest", "-v", "tool/test_center_contracts_test.py"],
+      "affectedPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_contracts_test.py"
+      ],
       "assuranceClass": "source_contract",
-      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
       "evidenceDestination": "release/evidence/generated/worker-b/test-center-semantic-regressions.json",
       "expectedOutputs": [],
-      "inputPaths": ["config/test_center_registry.v1.json", "schemas/test_center.v1.json", "tool/test_center_contracts.py", "tool/test_center_contracts_test.py"],
+      "inputPaths": [
+        "config/test_center_registry.v1.json",
+        "schemas/test_center.v1.json",
+        "tool/test_center_contracts.py",
+        "tool/test_center_contracts_test.py"
+      ],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": ["linux", "macos", "windows"],
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
       "stableCheckId": "tc.test-center.semantic-regressions",
       "timeoutSeconds": 120,
       "workingDirectory": "."
@@ -252,9 +345,20 @@
         "tool/test_center_assurance_semantics.py",
         "tool/test_center_contracts.py"
       ],
-      "argv": ["python", "tool/test_center_assurance_hierarchy.py", "check", "--project", "."],
+      "argv": [
+        "python",
+        "tool/test_center_assurance_hierarchy.py",
+        "check",
+        "--project",
+        "."
+      ],
       "assuranceClass": "source_contract",
-      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
       "evidenceDestination": "release/evidence/TEST_CENTER/P8-001/formal-test-hierarchy-validation.json",
       "expectedOutputs": [],
       "inputPaths": [
@@ -274,7 +378,11 @@
         "tool/test_center_contracts.py"
       ],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": ["linux", "macos", "windows"],
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
       "stableCheckId": "tc.p8.formal-test-hierarchy",
       "timeoutSeconds": 60,
       "workingDirectory": "."
@@ -297,9 +405,21 @@
         "tool/test_center_assurance_semantics.py",
         "tool/test_center_contracts.py"
       ],
-      "argv": ["python", "-m", "unittest", "-v", "tool/test_center_assurance_hierarchy_test.py", "tool/test_center_assurance_enforcement_test.py"],
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tool/test_center_assurance_hierarchy_test.py",
+        "tool/test_center_assurance_enforcement_test.py"
+      ],
       "assuranceClass": "behavioral",
-      "environmentAllowlist": ["CI", "GITHUB_ACTIONS", "RUNNER_ARCH", "RUNNER_OS"],
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
       "evidenceDestination": "release/evidence/generated/worker-b/p8-001-formal-hierarchy-regressions.json",
       "expectedOutputs": [],
       "inputPaths": [
@@ -326,7 +446,11 @@
         "tool/test_center_contracts.py"
       ],
       "mutationPolicy": "NON_MUTATING",
-      "platforms": ["linux", "macos", "windows"],
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
       "stableCheckId": "tc.p8.formal-test-hierarchy-regressions",
       "timeoutSeconds": 120,
       "workingDirectory": "."
@@ -1356,15 +1480,132 @@
       "stableCheckId": "tc.p4-001.normalized-result-state-preservation",
       "timeoutSeconds": 180,
       "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md",
+        "docs/roadmap/p25/**",
+        "tasks/planned/P25-*.md",
+        "config/test_center_registry.v1.json",
+        "config/test_center_assurance_hierarchy.v1.json",
+        "tool/p25_prompt_studio_roadmap_test.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p25_prompt_studio_roadmap_test.py",
+        "--project",
+        "."
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P25-001/test-station/roadmap-contract.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "docs/roadmap/P25_PROMPT_STUDIO_PRODUCT_RESCUE.md",
+        "docs/roadmap/p25/**",
+        "tasks/planned/P25-*.md",
+        "config/test_center_registry.v1.json",
+        "config/test_center_assurance_hierarchy.v1.json",
+        "tool/p25_prompt_studio_roadmap_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p25.roadmap-contract",
+      "timeoutSeconds": 120,
+      "workingDirectory": "."
+    },
+    {
+      "affectedPaths": [
+        "docs/roadmap/p25/prompt_studio_test_station.v1.json",
+        "tool/p25_prompt_studio_test_station.py",
+        "tool/p25_prompt_studio_roadmap_test.py"
+      ],
+      "argv": [
+        "python",
+        "tool/p25_prompt_studio_test_station.py",
+        "--project",
+        ".",
+        "--profile",
+        "contract",
+        "--check"
+      ],
+      "assuranceClass": "source_contract",
+      "environmentAllowlist": [
+        "CI",
+        "GITHUB_ACTIONS",
+        "RUNNER_ARCH",
+        "RUNNER_OS"
+      ],
+      "evidenceDestination": "release/evidence/P25-001/test-station/test-station-contract.json",
+      "expectedOutputs": [],
+      "inputPaths": [
+        "docs/roadmap/p25/prompt_studio_test_station.v1.json",
+        "tool/p25_prompt_studio_test_station.py",
+        "tool/p25_prompt_studio_roadmap_test.py"
+      ],
+      "mutationPolicy": "NON_MUTATING",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "stableCheckId": "tc.p25.test-station-contract",
+      "timeoutSeconds": 240,
+      "workingDirectory": "."
     }
   ],
   "registryId": "test-center.canonical-v1",
   "schemaVersion": "1.0.0",
   "testCases": [
-    {"assuranceClass":"source_contract","displayName":"Canonical Test Center contract check","mandatory":true,"moduleId":"tm.test-center","purpose":"Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.","roadmapTaskIds":[],"testId":"tc.test-center.contracts"},
-    {"assuranceClass":"source_contract","displayName":"Test Center semantic regression suite","mandatory":true,"moduleId":"tm.test-center","purpose":"Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.","roadmapTaskIds":[],"testId":"tc.test-center.semantic-regressions"},
-    {"assuranceClass":"source_contract","displayName":"P8-001 formal Test Center hierarchy","mandatory":true,"moduleId":"tm.reliability-security-diagnostics","purpose":"Enforce the canonical eight-level assurance hierarchy, exact ordering, report fields, fail-closed level handling, and complete stable-test binding coverage.","roadmapTaskIds":["P8-001"],"testId":"tc.p8.formal-test-hierarchy"},
-    {"assuranceClass":"behavioral","displayName":"P8-001 hierarchy semantic regressions","mandatory":true,"moduleId":"tm.reliability-security-diagnostics","purpose":"Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, evidence-contract drift, and support-promoting source checks are rejected.","roadmapTaskIds":["P8-001"],"testId":"tc.p8.formal-test-hierarchy-regressions"},
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Canonical Test Center contract check",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Validate schema structure, stable identities, safe argv profiles, deterministic affected-test mappings, and state-domain separation without mutating the repository.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.contracts"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "Test Center semantic regression suite",
+      "mandatory": true,
+      "moduleId": "tm.test-center",
+      "purpose": "Reject unsafe profiles, invalid result coercion, cross-commit evidence, incomplete certification, and invalid Testing Studio presentation records.",
+      "roadmapTaskIds": [],
+      "testId": "tc.test-center.semantic-regressions"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P8-001 formal Test Center hierarchy",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Enforce the canonical eight-level assurance hierarchy, exact ordering, report fields, fail-closed level handling, and complete stable-test binding coverage.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy"
+    },
+    {
+      "assuranceClass": "behavioral",
+      "displayName": "P8-001 hierarchy semantic regressions",
+      "mandatory": true,
+      "moduleId": "tm.reliability-security-diagnostics",
+      "purpose": "Execute deterministic mutations proving that unknown levels, missing bindings, invalid predecessors, evidence-contract drift, and support-promoting source checks are rejected.",
+      "roadmapTaskIds": [
+        "P8-001"
+      ],
+      "testId": "tc.p8.formal-test-hierarchy-regressions"
+    },
     {
       "assuranceClass": "source_contract",
       "displayName": "Search request schema",
@@ -1562,11 +1803,53 @@
         "P4-001"
       ],
       "testId": "tc.p4-001.normalized-result-state-preservation"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P25 roadmap and traceability contract",
+      "mandatory": true,
+      "moduleId": "tm.p25.prompt-studio",
+      "purpose": "Validate the bounded P25 roadmap extension, task DAG, budgets, corpus, and Test Center bindings.",
+      "roadmapTaskIds": [
+        "P25-001"
+      ],
+      "testId": "tc.p25.roadmap-contract"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P25 Prompt Studio Test Station contract",
+      "mandatory": true,
+      "moduleId": "tm.p25.prompt-studio",
+      "purpose": "Validate profile selection, safe argv execution, blocked states, and source non-mutation.",
+      "roadmapTaskIds": [
+        "P25-001"
+      ],
+      "testId": "tc.p25.test-station-contract"
     }
   ],
   "testModules": [
-    {"assuranceClasses":["source_contract","behavioral","platform","release"],"displayName":"Canonical Test Center","moduleId":"tm.test-center","owner":"Worker B / shared testing architecture","purpose":"Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."},
-    {"assuranceClasses":["source_contract","behavioral"],"displayName":"Reliability, Security & Diagnostics","moduleId":"tm.reliability-security-diagnostics","owner":"Worker B / MISSION-002","purpose":"Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."},
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral",
+        "platform",
+        "release"
+      ],
+      "displayName": "Canonical Test Center",
+      "moduleId": "tm.test-center",
+      "owner": "Worker B / shared testing architecture",
+      "purpose": "Provide stable test identity, non-mutating project profiles, normalized execution evidence, certification, capability support, Development Verification, and Testing Studio metadata without becoming roadmap or worker authority."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral"
+      ],
+      "displayName": "Reliability, Security & Diagnostics",
+      "moduleId": "tm.reliability-security-diagnostics",
+      "owner": "Worker B / MISSION-002",
+      "purpose": "Provide the P8 verification backbone, beginning with a machine-enforced hierarchy that keeps source, unit, component, integration, platform, adversarial, benchmark, and release assurance distinct."
+    },
     {
       "assuranceClasses": [
         "source_contract"
@@ -1575,6 +1858,17 @@
       "moduleId": "tm.p4-001.search-provider-interface",
       "owner": "Worker C / P4-001 source-contract lane",
       "purpose": "Verify the provider-neutral, source-only search contract, strict validation boundary, deterministic fixture adapters, and canonical execution evidence without claiming live search behavior."
+    },
+    {
+      "assuranceClasses": [
+        "source_contract",
+        "behavioral",
+        "platform"
+      ],
+      "displayName": "P25 Prompt Studio Product Rescue",
+      "moduleId": "tm.p25.prompt-studio",
+      "owner": "P25 product and Test Center lane",
+      "purpose": "Verify Prompt Studio rescue contracts, deterministic behavior, owner-machine benchmarks, and packaged journeys without promoting evidence above its assurance class."
     }
   ],
   "testingStudioPresentationRecords": [
@@ -1587,7 +1881,16 @@
       "evidenceLinks": [],
       "lastExactCommitResult": null,
       "phase": "Shared testing architecture",
-      "platformMatrix": {"observed":["linux"],"required":["linux","macos","windows"]},
+      "platformMatrix": {
+        "observed": [
+          "linux"
+        ],
+        "required": [
+          "linux",
+          "macos",
+          "windows"
+        ]
+      },
       "presentationId": "presentation.test-center.development-verification",
       "purpose": "Expose Test Me, Quick Check, Development Verification, Affected Tests, Platform Certification, Evidence, and Release Readiness using separate state domains.",
       "requiredNextAction": "Run both stable checks on the exact candidate across the required platform matrix before certification.",

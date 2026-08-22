@@ -637,6 +637,16 @@ class PhaseBudget {
     }
   }
 
+  static PhaseBudget localExecution() => const PhaseBudget(
+        phase: 'execution',
+        maxModelRequests: 4,
+        maxToolCalls: 12,
+        maxRepairs: 2,
+        maxOutputTokens: 1280,
+        maxContextCharacters: 16000,
+        deadlineSeconds: 600,
+      );
+
   Map<String, dynamic> toJson() => <String, dynamic>{
         'phase': phase,
         'maxModelRequests': maxModelRequests,

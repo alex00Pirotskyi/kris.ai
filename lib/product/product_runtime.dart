@@ -89,14 +89,13 @@ final class P3ProductRuntimeBrowserHandle {
 
   String get statusCode => _closed ? 'p3_product_runtime_closed' : _statusCode;
 
-  Map<String, Object?> get provenance => Map<String, Object?>.unmodifiable(
-        <String, Object?>{
-          ..._provenance,
-          'available': available,
-          'statusCode': statusCode,
-          'p3_002SessionServiceImplemented': false,
-        },
-      );
+  Map<String, Object?> get provenance =>
+      Map<String, Object?>.unmodifiable(<String, Object?>{
+        ..._provenance,
+        'available': available,
+        'statusCode': statusCode,
+        'p3_002SessionServiceImplemented': false,
+      });
 
   Future<P3BrowserRuntimeProbeResult> probe({
     Duration startupTimeout = const Duration(seconds: 30),
@@ -914,17 +913,48 @@ class ProductRuntime {
     return prompt;
   }
 
+  Future<PromptClarificationSession> generatePromptClarification({
+    required String goal,
+    required ModelIdentity model,
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+    void Function(ModelGenerationProgress progress)? onProgress,
+    void Function(String delta)? onTextDelta,
+  }) =>
+      promptPlanning.generateClarification(
+        goal: goal,
+        model: model,
+        cancellation: cancellation,
+        isCancelled: isCancelled,
+        onProgress: onProgress,
+        onTextDelta: onTextDelta,
+      );
+
   Future<PromptStudioDraft> generatePromptDraft({
     required String goal,
     required ModelIdentity model,
     PromptGenerationAction action = PromptGenerationAction.generate,
     PromptStudioDraft? current,
+    String feedback = '',
+    PromptClarificationSession? clarification,
+    Map<String, String> clarificationAnswers = const <String, String>{},
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+    void Function(ModelGenerationProgress progress)? onProgress,
+    void Function(String delta)? onTextDelta,
   }) =>
       promptPlanning.generatePrompt(
         goal: goal,
         model: model,
         action: action,
         current: current,
+        feedback: feedback,
+        clarification: clarification,
+        clarificationAnswers: clarificationAnswers,
+        cancellation: cancellation,
+        isCancelled: isCancelled,
+        onProgress: onProgress,
+        onTextDelta: onTextDelta,
       );
 
   Future<({PromptTemplateRecord prompt, PromptVersionRecord version})>
@@ -966,6 +996,10 @@ class ProductRuntime {
     required ModelIdentity model,
     PlanningDepth depth = PlanningDepth.auto,
     int maxLeafTasks = 25,
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+    void Function(ModelGenerationProgress progress)? onProgress,
+    void Function(String delta)? onTextDelta,
   }) =>
       promptPlanning.generateTaskPlan(
         promptVersion: promptVersion,
@@ -973,6 +1007,10 @@ class ProductRuntime {
         model: model,
         depth: depth,
         maxLeafTasks: maxLeafTasks,
+        cancellation: cancellation,
+        isCancelled: isCancelled,
+        onProgress: onProgress,
+        onTextDelta: onTextDelta,
       );
 
   Future<List<TaskPlanRecord>> listTaskPlans({

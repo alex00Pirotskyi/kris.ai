@@ -2541,6 +2541,9 @@ class RunCoordinator {
     required String leaseOwner,
   }) async {
     final settings = settingsProvider();
+    final executionPhaseBudget = run.command.model.providerId == 'ollama'
+        ? PhaseBudget.localExecution()
+        : PhaseBudget.defaults('execution');
     final conversational = run.command.contract.mode == CommandMode.ask &&
         isConversationalRequest(run.command.contract.request) &&
         progress.item.allowedTools.isEmpty;
@@ -2585,7 +2588,7 @@ class RunCoordinator {
             );
         knowledgeContext = knowledge.buildCitedContext(
           retrieval,
-          maxCharacters: 24000,
+          maxCharacters: min(24000, executionPhaseBudget.maxContextCharacters),
         );
         if (cached == null && retrieval.hits.isNotEmpty) {
           await _evidence(
@@ -2783,7 +2786,6 @@ class RunCoordinator {
       planHash: Sha256.text(canonicalJson(current.command.plan.toJson())),
     );
     _enforceBudget(current, started);
-    final executionPhaseBudget = PhaseBudget.defaults('execution');
     final phaseRepairCeiling = min(
       current.budget.maxRepairs,
       current.repairs + executionPhaseBudget.maxRepairs,

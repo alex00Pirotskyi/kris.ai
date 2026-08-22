@@ -51,6 +51,7 @@ class ModelGenerationRequest {
     this.cancellation,
     this.isCancelled,
     this.onProgress,
+    this.onTextDelta,
   });
 
   final ModelIdentity identity;
@@ -67,12 +68,24 @@ class ModelGenerationRequest {
   final Future<void>? cancellation;
   final bool Function()? isCancelled;
   final void Function(ModelGenerationProgress progress)? onProgress;
+  final void Function(String delta)? onTextDelta;
 
   bool get cancelled => isCancelled?.call() ?? false;
 
   void throwIfCancelled() {
     if (cancelled) {
       throw ProductException('cancelled', 'Execution was cancelled.');
+    }
+  }
+
+  void reportTextDelta(String delta) {
+    if (delta.isEmpty) {
+      return;
+    }
+    try {
+      onTextDelta?.call(delta);
+    } catch (_) {
+      // Streaming UI callbacks must never change the model result.
     }
   }
 }
@@ -135,6 +148,10 @@ class OllamaProvider implements LanguageModelProvider {
   final Duration defaultLoadTimeout;
   final int defaultLoadRetries;
   final int keepAliveMinutes;
+  final Map<String, DateTime> _warmUntilByModel = <String, DateTime>{};
+  List<ModelIdentity>? _discoveryCache;
+  DateTime? _discoveryCacheExpiresAt;
+  Future<List<ModelIdentity>>? _discoveryInFlight;
 
   @override
   String get id => 'ollama';
@@ -146,7 +163,34 @@ class OllamaProvider implements LanguageModelProvider {
       );
 
   @override
-  Future<List<ModelIdentity>> discover() async {
+  Future<List<ModelIdentity>> discover() {
+    final now = DateTime.now().toUtc();
+    final cached = _discoveryCache;
+    final expiresAt = _discoveryCacheExpiresAt;
+    if (cached != null && expiresAt != null && expiresAt.isAfter(now)) {
+      return Future<List<ModelIdentity>>.value(cached);
+    }
+    final active = _discoveryInFlight;
+    if (active != null) {
+      return active;
+    }
+    final future = _discoverFresh();
+    _discoveryInFlight = future;
+    return future.then((models) {
+      final frozen = List<ModelIdentity>.unmodifiable(models);
+      _discoveryCache = frozen;
+      _discoveryCacheExpiresAt = DateTime.now().toUtc().add(
+            const Duration(seconds: 15),
+          );
+      return frozen;
+    }).whenComplete(() {
+      if (identical(_discoveryInFlight, future)) {
+        _discoveryInFlight = null;
+      }
+    });
+  }
+
+  Future<List<ModelIdentity>> _discoverFresh() async {
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
     try {
       final request = await client
@@ -225,12 +269,36 @@ class OllamaProvider implements LanguageModelProvider {
     }
 
     final started = DateTime.now().toUtc();
-    final warmup = await _warmModel(
-      request,
-      exact,
-      loadTimeout: loadTimeout,
-      loadRetries: loadRetries,
-    );
+    final warmUntil = _warmUntilByModel[_warmKey(exact)];
+    final canReuseWarmSession = warmUntil != null &&
+        warmUntil.isAfter(
+          DateTime.now().toUtc().add(const Duration(seconds: 30)),
+        );
+    late final _OllamaWarmupOutcome warmup;
+    if (canReuseWarmSession) {
+      warmup = const _OllamaWarmupOutcome(
+        attempts: 0,
+        duration: Duration.zero,
+        providerLoadDurationNanoseconds: null,
+      );
+      _report(
+        request,
+        ModelGenerationProgress(
+          stage: 'load_reused',
+          message:
+              'Using the active Ollama keep-alive session; Ollama will reload automatically if needed.',
+          elapsed: DateTime.now().toUtc().difference(started),
+        ),
+      );
+    } else {
+      warmup = await _warmModel(
+        request,
+        exact,
+        loadTimeout: loadTimeout,
+        loadRetries: loadRetries,
+      );
+      _markModelWarm(exact);
+    }
     request.throwIfCancelled();
     final generationStarted = DateTime.now().toUtc();
     final firstTokenDeadline = generationStarted.add(request.firstTokenTimeout);
@@ -422,6 +490,7 @@ class OllamaProvider implements LanguageModelProvider {
           if (fragment.isNotEmpty) {
             firstTokenAt ??= DateTime.now().toUtc();
             output.write(fragment);
+            request.reportTextDelta(fragment);
           }
           finalPayload = payload;
           done = payload['done'] == true;
@@ -438,6 +507,7 @@ class OllamaProvider implements LanguageModelProvider {
         );
       }
       final completedAt = DateTime.now().toUtc();
+      _markModelWarm(exact);
       return ModelGenerationResult(
         text: generatedText,
         identity: exact,
@@ -452,6 +522,7 @@ class OllamaProvider implements LanguageModelProvider {
         ),
         providerDetails: <String, dynamic>{
           'provider': 'ollama',
+          'warmupSkippedForActiveKeepAlive': warmup.attempts == 0,
           'warmupAttempts': warmup.attempts,
           'warmupDurationMs': warmup.duration.inMilliseconds,
           if (warmup.providerLoadDurationNanoseconds != null)
@@ -686,6 +757,15 @@ class OllamaProvider implements LanguageModelProvider {
     );
   }
 
+  String _warmKey(ModelIdentity identity) =>
+      '${identity.providerId}\u0000${identity.name}\u0000${identity.digest}';
+
+  void _markModelWarm(ModelIdentity identity) {
+    _warmUntilByModel[_warmKey(identity)] = DateTime.now().toUtc().add(
+          Duration(minutes: keepAliveMinutes.clamp(1, 120).toInt()),
+        );
+  }
+
   Duration _remainingUntil(
     DateTime deadline, {
     required String code,
@@ -918,6 +998,7 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
       }
       final usage =
           decoded is Map ? mapValue(decoded['usage']) : <String, dynamic>{};
+      request.reportTextDelta(text);
       return ModelGenerationResult(
         text: text,
         identity: request.identity,
@@ -955,16 +1036,45 @@ class OpenAiCompatibleProvider implements LanguageModelProvider {
 
 class ModelRegistry {
   ModelRegistry({
-    required this.settings,
+    required ProductSettings settings,
     required this.vault,
     required this.redactor,
-  });
+  }) : _settings = settings;
 
-  ProductSettings settings;
+  ProductSettings _settings;
   final SecretVault vault;
   final SecretRedactor redactor;
+  List<LanguageModelProvider>? _providerCache;
+  String? _providerCacheFingerprint;
+
+  ProductSettings get settings => _settings;
+
+  set settings(ProductSettings value) {
+    final changed =
+        _providerFingerprint(value) != _providerFingerprint(_settings);
+    _settings = value;
+    if (changed) {
+      _providerCache = null;
+      _providerCacheFingerprint = null;
+    }
+  }
+
+  String _providerFingerprint(ProductSettings value) =>
+      canonicalJson(<String, dynamic>{
+        'ollamaBaseUrl': value.ollamaBaseUrl,
+        'ollamaLoadTimeoutSeconds': value.ollamaLoadTimeoutSeconds,
+        'ollamaLoadRetries': value.ollamaLoadRetries,
+        'ollamaKeepAliveMinutes': value.ollamaKeepAliveMinutes,
+        'openAiCompatibleBaseUrl': value.openAiCompatibleBaseUrl,
+        'openAiApiKeyReferenceId': value.openAiApiKeyReferenceId,
+      });
 
   List<LanguageModelProvider> providers() {
+    final fingerprint = _providerFingerprint(settings);
+    final cached = _providerCache;
+    if (cached != null && _providerCacheFingerprint == fingerprint) {
+      return cached;
+    }
     final result = <LanguageModelProvider>[];
     final ollamaUri = Uri.tryParse(settings.ollamaBaseUrl);
     if (ollamaUri != null && ollamaUri.host.isNotEmpty) {
@@ -991,7 +1101,10 @@ class ModelRegistry {
         ),
       );
     }
-    return result;
+    final frozen = List<LanguageModelProvider>.unmodifiable(result);
+    _providerCache = frozen;
+    _providerCacheFingerprint = fingerprint;
+    return frozen;
   }
 
   Future<List<ModelIdentity>> discover() async {

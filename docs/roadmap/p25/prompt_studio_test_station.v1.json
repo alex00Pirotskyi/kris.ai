@@ -1,0 +1,115 @@
+{
+  "cases": [
+    {
+      "assuranceLevel": "architecture_lint",
+      "caseId": "p25-roadmap-contract",
+      "command": [
+        "python3",
+        "tool/p25_prompt_studio_roadmap_test.py",
+        "--project",
+        "."
+      ],
+      "completionEligible": true,
+      "taskIds": [
+        "P25-001"
+      ],
+      "testId": "tc.p25.roadmap-contract"
+    },
+    {
+      "assuranceLevel": "architecture_lint",
+      "caseId": "p25-test-station-contract",
+      "command": [
+        "python3",
+        "tool/p25_prompt_studio_test_station.py",
+        "--project",
+        ".",
+        "--profile",
+        "contract",
+        "--check"
+      ],
+      "completionEligible": true,
+      "taskIds": [
+        "P25-001"
+      ],
+      "testId": "tc.p25.test-station-contract"
+    },
+    {
+      "assuranceLevel": "unit",
+      "caseId": "p25-latency-trace",
+      "command": [
+        "flutter",
+        "test",
+        "test/product/p25_prompt_studio_latency_test.dart"
+      ],
+      "completionEligible": true,
+      "implementationPath": "test/product/p25_prompt_studio_latency_test.dart",
+      "taskIds": [
+        "P25-001"
+      ],
+      "testId": "tc.p25.latency-trace"
+    },
+    {
+      "assuranceLevel": "benchmark",
+      "caseId": "p25-owner-phi-benchmark",
+      "command": [
+        "dart",
+        "run",
+        "tool/p25_prompt_studio_benchmark.dart"
+      ],
+      "completionEligible": false,
+      "implementationPath": "tool/p25_prompt_studio_benchmark.dart",
+      "taskIds": [
+        "P25-001"
+      ],
+      "testId": "tc.p25.owner-phi-benchmark"
+    },
+    {
+      "assuranceLevel": "platform",
+      "caseId": "p25-packaged-windows",
+      "command": [
+        "python3",
+        "tool/p25_prompt_studio_packaged_windows.py",
+        "--check"
+      ],
+      "completionEligible": false,
+      "implementationPath": "tool/p25_prompt_studio_packaged_windows.py",
+      "taskIds": [
+        "P25-011"
+      ],
+      "testId": "tc.p25.packaged-windows"
+    }
+  ],
+  "profiles": [
+    {
+      "caseIds": [
+        "p25-roadmap-contract",
+        "p25-test-station-contract"
+      ],
+      "description": "Portable P25 roadmap and Test Station contract.",
+      "profileId": "contract"
+    },
+    {
+      "caseIds": [
+        "p25-latency-trace"
+      ],
+      "description": "Deterministic Prompt Studio latency and retry behavior.",
+      "profileId": "latency-unit"
+    },
+    {
+      "caseIds": [
+        "p25-owner-phi-benchmark"
+      ],
+      "description": "Real local Phi/Ollama benchmark on owner hardware.",
+      "profileId": "local-phi-cpu"
+    },
+    {
+      "caseIds": [
+        "p25-packaged-windows"
+      ],
+      "description": "Installed Windows Prompt Studio journey.",
+      "profileId": "packaged-windows"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "suiteId": "p25.prompt-studio-test-station-v1"
+}

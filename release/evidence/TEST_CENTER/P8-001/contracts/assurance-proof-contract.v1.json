@@ -1,45 +1,315 @@
 {
-  "schemaVersion": "1.0.0",
   "contractId": "test-center.assurance-proof-contract-v1",
-  "hierarchyId": "test-center.assurance-hierarchy-v1",
   "evidenceContracts": [
-    {"category":"exact_candidate_identity","mediaType":"application/json","jsonKind":"EXACT_CANDIDATE_IDENTITY","requiredJsonFields":["schemaVersion","kind","commit","tree"],"valueBindings":{"commit":"candidateCommit","tree":"candidateTree"},"requiredConstants":{}},
-    {"category":"machine_readable_result","mediaType":"application/json","jsonKind":"MACHINE_READABLE_RESULT","requiredJsonFields":["schemaVersion","kind","resultId","resultState"],"valueBindings":{"resultId":"executionResult.resultId","resultState":"executionResult.resultState"},"requiredConstants":{}},
-    {"category":"deterministic_fixture","mediaType":"application/json","jsonKind":"DETERMINISTIC_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture","seed"],"valueBindings":{},"requiredConstants":{}},
-    {"category":"component_fixture","mediaType":"application/json","jsonKind":"COMPONENT_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture"],"valueBindings":{},"requiredConstants":{}},
-    {"category":"integration_fixture","mediaType":"application/json","jsonKind":"INTEGRATION_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture"],"valueBindings":{},"requiredConstants":{}},
-    {"category":"cleanup_receipt","mediaType":"application/json","jsonKind":"CLEANUP_RECEIPT","requiredJsonFields":["schemaVersion","kind","cleanupState"],"valueBindings":{},"requiredConstants":{"cleanupState":"CLEAN"}},
-    {"category":"native_platform_receipt","mediaType":"application/json","jsonKind":"NATIVE_PLATFORM_RECEIPT","requiredJsonFields":["schemaVersion","kind","platform"],"valueBindings":{"platform":"executionResult.platform"},"requiredConstants":{}},
-    {"category":"seeded_attack_fixture","mediaType":"application/json","jsonKind":"SEEDED_ATTACK_FIXTURE","requiredJsonFields":["schemaVersion","kind","fixture","seed"],"valueBindings":{},"requiredConstants":{}},
-    {"category":"recovery_receipt","mediaType":"application/json","jsonKind":"RECOVERY_RECEIPT","requiredJsonFields":["schemaVersion","kind","recoveryState"],"valueBindings":{},"requiredConstants":{"recoveryState":"PASS"}},
-    {"category":"versioned_corpus","mediaType":"application/json","jsonKind":"VERSIONED_CORPUS","requiredJsonFields":["schemaVersion","kind","corpusId","version"],"valueBindings":{},"requiredConstants":{}},
-    {"category":"environment_identity","mediaType":"application/json","jsonKind":"ENVIRONMENT_IDENTITY","requiredJsonFields":["schemaVersion","kind","environmentDigest"],"valueBindings":{"environmentDigest":"executionResult.environment.digest"},"requiredConstants":{}},
-    {"category":"release_candidate_identity","mediaType":"application/json","jsonKind":"RELEASE_CANDIDATE_IDENTITY","requiredJsonFields":["schemaVersion","kind","commit","tree"],"valueBindings":{"commit":"candidateCommit","tree":"candidateTree"},"requiredConstants":{}},
-    {"category":"independent_review","mediaType":"application/json","jsonKind":"INDEPENDENT_REVIEW","requiredJsonFields":["schemaVersion","kind","reviewedCommit","reviewedTree","decision"],"valueBindings":{"reviewedCommit":"candidateCommit","reviewedTree":"candidateTree"},"requiredConstants":{"decision":"PASS"}},
-    {"category":"support_matrix","mediaType":"application/json","jsonKind":"SUPPORT_MATRIX","requiredJsonFields":["schemaVersion","kind","candidateCommit","candidateTree","status","supportRequirementId","requiredPlatforms","requiredCapabilities","matrix"],"valueBindings":{"candidateCommit":"candidateCommit","candidateTree":"candidateTree"},"requiredConstants":{"status":"PASS","supportRequirementId":"test-center.registry-profile-platform-lineage-v1"}}
+    {
+      "category": "exact_candidate_identity",
+      "jsonKind": "EXACT_CANDIDATE_IDENTITY",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "commit",
+        "tree"
+      ],
+      "valueBindings": {
+        "commit": "candidateCommit",
+        "tree": "candidateTree"
+      }
+    },
+    {
+      "category": "machine_readable_result",
+      "jsonKind": "MACHINE_READABLE_RESULT",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "resultId",
+        "resultState"
+      ],
+      "valueBindings": {
+        "resultId": "executionResult.resultId",
+        "resultState": "executionResult.resultState"
+      }
+    },
+    {
+      "category": "deterministic_fixture",
+      "jsonKind": "DETERMINISTIC_FIXTURE",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "fixture",
+        "seed"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "component_fixture",
+      "jsonKind": "COMPONENT_FIXTURE",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "fixture"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "integration_fixture",
+      "jsonKind": "INTEGRATION_FIXTURE",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "fixture"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "cleanup_receipt",
+      "jsonKind": "CLEANUP_RECEIPT",
+      "mediaType": "application/json",
+      "requiredConstants": {
+        "cleanupState": "CLEAN"
+      },
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "cleanupState"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "native_platform_receipt",
+      "jsonKind": "NATIVE_PLATFORM_RECEIPT",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "platform"
+      ],
+      "valueBindings": {
+        "platform": "executionResult.platform"
+      }
+    },
+    {
+      "category": "seeded_attack_fixture",
+      "jsonKind": "SEEDED_ATTACK_FIXTURE",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "fixture",
+        "seed"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "recovery_receipt",
+      "jsonKind": "RECOVERY_RECEIPT",
+      "mediaType": "application/json",
+      "requiredConstants": {
+        "recoveryState": "PASS"
+      },
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "recoveryState"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "versioned_corpus",
+      "jsonKind": "VERSIONED_CORPUS",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "corpusId",
+        "version"
+      ],
+      "valueBindings": {}
+    },
+    {
+      "category": "environment_identity",
+      "jsonKind": "ENVIRONMENT_IDENTITY",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "environmentDigest"
+      ],
+      "valueBindings": {
+        "environmentDigest": "executionResult.environment.digest"
+      }
+    },
+    {
+      "category": "release_candidate_identity",
+      "jsonKind": "RELEASE_CANDIDATE_IDENTITY",
+      "mediaType": "application/json",
+      "requiredConstants": {},
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "commit",
+        "tree"
+      ],
+      "valueBindings": {
+        "commit": "candidateCommit",
+        "tree": "candidateTree"
+      }
+    },
+    {
+      "category": "independent_review",
+      "jsonKind": "INDEPENDENT_REVIEW",
+      "mediaType": "application/json",
+      "requiredConstants": {
+        "decision": "PASS"
+      },
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "reviewedCommit",
+        "reviewedTree",
+        "decision"
+      ],
+      "valueBindings": {
+        "reviewedCommit": "candidateCommit",
+        "reviewedTree": "candidateTree"
+      }
+    },
+    {
+      "category": "support_matrix",
+      "jsonKind": "SUPPORT_MATRIX",
+      "mediaType": "application/json",
+      "requiredConstants": {
+        "status": "PASS",
+        "supportRequirementId": "test-center.registry-profile-platform-lineage-v1"
+      },
+      "requiredJsonFields": [
+        "schemaVersion",
+        "kind",
+        "candidateCommit",
+        "candidateTree",
+        "status",
+        "supportRequirementId",
+        "requiredPlatforms",
+        "requiredCapabilities",
+        "matrix"
+      ],
+      "valueBindings": {
+        "candidateCommit": "candidateCommit",
+        "candidateTree": "candidateTree"
+      }
+    }
   ],
+  "hierarchyId": "test-center.assurance-hierarchy-v1",
   "lineageBindings": [
-    {"testId":"tc.test-center.contracts","lineageId":"test-center.contracts"},
-    {"testId":"tc.test-center.semantic-regressions","lineageId":"test-center.contracts"},
-    {"testId":"tc.p8.formal-test-hierarchy","lineageId":"p8.formal-test-hierarchy"},
-    {"testId":"tc.p8.formal-test-hierarchy-regressions","lineageId":"p8.formal-test-hierarchy"},
-    {"testId":"tc.p4-001.request-schema","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.result-schema","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.page-schema","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.provider-error-schema","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.url-fail-closed","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.credential-rejection","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.secret-normalization","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.provider-metadata-isolation","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.stable-query-identity","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.stable-result-identity","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.cursor-provider-binding","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.capability-negotiation","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.rate-limit-representation","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.partial-failure-representation","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.fixture-provider-parity","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.network-free-determinism","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.unfetched-snippet-classification","lineageId":"p4-001.search-provider-interface"},
-    {"testId":"tc.p4-001.normalized-result-state-preservation","lineageId":"p4-001.search-provider-interface"}
-  ]
+    {
+      "lineageId": "test-center.contracts",
+      "testId": "tc.test-center.contracts"
+    },
+    {
+      "lineageId": "test-center.contracts",
+      "testId": "tc.test-center.semantic-regressions"
+    },
+    {
+      "lineageId": "p8.formal-test-hierarchy",
+      "testId": "tc.p8.formal-test-hierarchy"
+    },
+    {
+      "lineageId": "p8.formal-test-hierarchy",
+      "testId": "tc.p8.formal-test-hierarchy-regressions"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.request-schema"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.result-schema"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.page-schema"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.provider-error-schema"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.url-fail-closed"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.credential-rejection"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.secret-normalization"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.provider-metadata-isolation"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.stable-query-identity"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.stable-result-identity"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.cursor-provider-binding"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.capability-negotiation"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.rate-limit-representation"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.partial-failure-representation"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.fixture-provider-parity"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.network-free-determinism"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.unfetched-snippet-classification"
+    },
+    {
+      "lineageId": "p4-001.search-provider-interface",
+      "testId": "tc.p4-001.normalized-result-state-preservation"
+    },
+    {
+      "lineageId": "p25.prompt-studio-product-rescue",
+      "testId": "tc.p25.roadmap-contract"
+    },
+    {
+      "lineageId": "p25.prompt-studio-product-rescue",
+      "testId": "tc.p25.test-station-contract"
+    }
+  ],
+  "schemaVersion": "1.0.0"
 }

@@ -1,7 +1,7 @@
 # Kristin Roadmap Handoff
 
 **Roadmap authority:** `DERIVED`
-**Roadmap version:** `3.1.6-p0-010-generated-state-hygiene`
+**Roadmap version:** `3.1.7-p25-prompt-studio-product-rescue`
 
 ## Startup sequence for a new AI session
 

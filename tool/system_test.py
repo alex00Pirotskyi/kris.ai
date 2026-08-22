@@ -410,8 +410,8 @@ def main() -> int:
             contains_all(
                 studio,
                 (
-                    "Generate prompt",
-                    "Generate task list",
+                    "Shape this idea",
+                    "Build task plan",
                     "Run all tasks",
                     "Run selected task + dependencies",
                     "Stop all running tasks",
@@ -837,7 +837,7 @@ def main() -> int:
                     "Run local usability and interaction verification",
                     "Capability alignment replaces the unsupported human-study instruction",
                     "Do not recruit participants",
-                    ".clamp(2, 3)",
+                    ".clamp(1, 2)",
                     "manual: alignedManual",
                     "Ollama retries a transient cold-load timeout inside one model turn",
                     "cancelling a run closes an in-flight Ollama cold load",
