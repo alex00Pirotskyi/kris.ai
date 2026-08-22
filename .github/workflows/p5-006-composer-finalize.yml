@@ -1,4 +1,5 @@
 name: P5-006 composer finalizer
+# Retry with stable lifecycle and keyboard-review compatibility.
 
 on:
   pull_request:
