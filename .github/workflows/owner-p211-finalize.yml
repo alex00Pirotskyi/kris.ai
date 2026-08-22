@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      EXPECTED_PARENT: 306b03bfaf6cdaff4231becc332290c613617045
+      EXPECTED_PARENT: f7a195e04326b1a06e18c1d693ab8002fd9af8a7
       EXPECTED_MAIN: 278aeccfa013411bc7cf23b4a34199718327f4b2
       EXPECTED_BRANCH: agent/owner-p25-current-main
       PATCH_PATH: .repo-rehab-p211-finalize.py
