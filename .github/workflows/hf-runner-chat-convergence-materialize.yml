@@ -65,6 +65,10 @@ jobs:
                   "          status = '$activity completed';\n        });\n      }\n      return result;\n    } catch (failure) {\n      if (mounted) {\n        setState(() {\n          error = runtime.redactor.redact(\n            ProductErrorNormalizer.userMessage(failure),\n          );\n          status = 'Kristin needs your help';",
               )''',
               ),
+              (
+                  r'''        _runGraphPanel(run),\n        const SizedBox(height: 14),\n''',
+                  r'''                        _runGraphPanel(run),\n                        const SizedBox(height: 14),\n''',
+              ),
           ]
           for old, new in repairs:
               if text.count(old) != 1:
