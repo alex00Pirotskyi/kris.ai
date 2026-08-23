@@ -25,61 +25,94 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
 
           def replace_exact(path, old, new, count=1):
-              target = Path(path)
-              text = target.read_text(encoding='utf-8')
+              text = read(path)
               actual = text.count(old)
               if actual != count:
-                  raise SystemExit(f'{path}: expected {count} matches, found {actual}')
-              target.write_text(text.replace(old, new), encoding='utf-8')
+                  raise SystemExit(f'{path}: expected {count} exact matches, found {actual}')
+              write(path, text.replace(old, new))
 
-          replace_exact(
-              'lib/product/workspace_tools.dart',
-              "import 'product_error_normalizer.dart';\nimport 'retry_policy.dart';",
+          path = 'lib/product/workspace_tools.dart'
+          text = read(path)
+          import_anchor = "import 'product_error_normalizer.dart';\nimport 'retry_policy.dart';"
+          if text.count(import_anchor) != 1:
+              raise SystemExit(f'{path}: process-launch import anchor mismatch')
+          text = text.replace(
+              import_anchor,
               "import 'product_error_normalizer.dart';\nimport 'process_launch.dart';\nimport 'retry_policy.dart';",
           )
-
-          replace_exact(
-              'lib/product/workspace_tools.dart',
-              """process = await Process.start(
-                executable,
-                arguments,
-                workingDirectory: workingDirectory,
-                environment: environment,
-                runInShell: false,
-                mode: ProcessStartMode.normal,
-              );""",
-              """final launch = await resolveProcessLaunchTarget(executable);
-              process = await Process.start(
-                launch.executable,
-                arguments,
-                workingDirectory: workingDirectory,
-                environment: environment,
-                runInShell: launch.runInShell,
-                mode: ProcessStartMode.normal,
-              );""",
-              count=2,
+          launch_pattern = re.compile(
+              r'(?m)^(?P<indent>[ \t]*)process = await Process\.start\(\n'
+              r'(?P<argindent>[ \t]*)executable,\n'
+              r'(?P<body>.*?)'
+              r'(?P<shellindent>[ \t]*)runInShell: false,\n'
+              r'(?P<tail>.*?)'
+              r'(?P=indent)\);',
+              re.S,
           )
+          matches = list(launch_pattern.finditer(text))
+          if len(matches) != 2:
+              raise SystemExit(f'{path}: expected 2 guarded process launches, found {len(matches)}')
 
-          replace_exact(
-              'lib/product/prompt_planning.dart',
-              """      var title = raw['title']?.toString().trim() ?? '';
-              var instructions = raw['instructions']?.toString().trim() ?? '';""",
-              """      var title = raw['title']?.toString().trim() ?? '';
-              if (title.isEmpty && raw['manual'] == true) {
-                title = 'Manual checkpoint';
-              }
-              var instructions = raw['instructions']?.toString().trim() ?? '';""",
-          )
+          def repair_launch(match):
+              indent = match.group('indent')
+              return (
+                  f"{indent}final launch = await resolveProcessLaunchTarget(executable);\n"
+                  f"{indent}process = await Process.start(\n"
+                  f"{match.group('argindent')}launch.executable,\n"
+                  f"{match.group('body')}"
+                  f"{match.group('shellindent')}runInShell: launch.runInShell,\n"
+                  f"{match.group('tail')}"
+                  f"{indent});"
+              )
 
-          replace_exact(
-              'lib/product/domain.dart',
-              "      title: json['title']?.toString() ?? 'Task',",
-              """      title: json['title']?.toString().trim().isNotEmpty == true
-                  ? json['title'].toString().trim()
-                  : (json['manual'] == true ? 'Manual checkpoint' : 'Task'),""",
+          text = launch_pattern.sub(repair_launch, text)
+          write(path, text)
+
+          path = 'lib/product/prompt_planning.dart'
+          text = read(path)
+          title_pattern = re.compile(
+              r"(?m)^(?P<indent>[ \t]*)var title = raw\['title'\]\?\.toString\(\)\.trim\(\) \?\? '';\n"
           )
+          matches = list(title_pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'{path}: expected 1 generated-task title anchor, found {len(matches)}')
+          text = title_pattern.sub(
+              lambda match: (
+                  match.group(0)
+                  + f"{match.group('indent')}if (title.isEmpty && raw['manual'] == true) {{\n"
+                  + f"{match.group('indent')}  title = 'Manual checkpoint';\n"
+                  + f"{match.group('indent')}}}\n"
+              ),
+              text,
+          )
+          write(path, text)
+
+          path = 'lib/product/domain.dart'
+          text = read(path)
+          domain_pattern = re.compile(
+              r"(?m)^(?P<indent>[ \t]*)title: json\['title'\]\?\.toString\(\) \?\? 'Task',\n"
+          )
+          matches = list(domain_pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'{path}: expected 1 PlanTaskRecord title fallback, found {len(matches)}')
+          text = domain_pattern.sub(
+              lambda match: (
+                  f"{match.group('indent')}title: json['title']?.toString().trim().isNotEmpty == true\n"
+                  f"{match.group('indent')}    ? json['title'].toString().trim()\n"
+                  f"{match.group('indent')}    : (json['manual'] == true ? 'Manual checkpoint' : 'Task'),\n"
+              ),
+              text,
+          )
+          write(path, text)
 
           replace_exact(
               'lib/product/p5_global_autonomy.dart',
@@ -92,10 +125,12 @@ jobs:
               "label: 'Running model: ${snapshot.modelLabel}',",
           )
 
-          replace_exact(
-              'test/product/hf_runner_chat_convergence_test.dart',
-              """  test('timeline projection keeps durable and live activity together', () {""",
-              """  test('manual task deserialization gives blank checkpoints a name', () {
+          path = 'test/product/hf_runner_chat_convergence_test.dart'
+          text = read(path)
+          test_anchor = "  test('timeline projection keeps durable and live activity together', () {"
+          if text.count(test_anchor) != 1:
+              raise SystemExit(f'{path}: timeline insertion anchor mismatch')
+          manual_test = """  test('manual task deserialization gives blank checkpoints a name', () {
             final task = PlanTaskRecord.fromJson(const <String, dynamic>{
               'id': 'manual-task',
               'title': '   ',
@@ -106,20 +141,24 @@ jobs:
             expect(task.manual, isTrue);
           });
 
-          test('timeline projection keeps durable and live activity together', () {""",
-          )
+          """
+          text = text.replace(test_anchor, manual_test + test_anchor)
+          write(path, text)
 
-          replace_exact(
-              'test/product/p5_global_autonomy_test.dart',
-              """    expect(find.byKey(const Key('p5-global-model')), findsOneWidget);
-            expect(find.byKey(const Key('p5-global-sessions')), findsOneWidget);""",
-              """    expect(find.byKey(const Key('p5-global-model')), findsOneWidget);
-            expect(
-              find.text('Running model: ollama/test-model@digest'),
-              findsOneWidget,
-            );
-            expect(find.byKey(const Key('p5-global-sessions')), findsOneWidget);""",
+          path = 'test/product/p5_global_autonomy_test.dart'
+          text = read(path)
+          model_expect = "    expect(find.byKey(const Key('p5-global-model')), findsOneWidget);\n"
+          if text.count(model_expect) != 1:
+              raise SystemExit(f'{path}: model-chip test anchor mismatch')
+          text = text.replace(
+              model_expect,
+              model_expect
+              + "    expect(\n"
+              + "      find.text('Running model: ollama/test-model@digest'),\n"
+              + "      findsOneWidget,\n"
+              + "    );\n",
           )
+          write(path, text)
           PY
 
       - name: Set up Flutter
