@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 
 # Compatibility marker for the already-registered v3 qualifier pre-step:
@@ -8,8 +10,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAYLOAD = ROOT / 'tool' / 'runner_attempt_ledger_finalize_payload.py'
+BASE_MAIN = '559e1c8de68824f73a004ca209ebdc1a138ca422'
 V7_MIGRATION_DIGEST = '966ca51bd07ea48e2349123d4dd8a73dcd8bb4aa177f5fc70c2b62a07738aa29'
 V6_MIGRATION_DIGEST = 'df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261'
+ALLOWED_STAGING_PATHS = {
+    '.github/workflows/runner-attempt-ledger-finalize-v3.yml',
+    'lib/product/runner_attempt_ledger.dart',
+    'migrations/workflow/007_runner_attempt_ledger.sql',
+    'test/product/runner_attempt_ledger_test.dart',
+    'tool/runner_attempt_ledger_finalize.py',
+    'tool/runner_attempt_ledger_finalize_payload.py',
+}
 
 
 def replace_once(text: str, old: str, new: str, label: str) -> str:
@@ -17,6 +28,47 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     if count != 1:
         raise SystemExit(f'{label}: expected exactly one match, found {count}')
     return text.replace(old, new, 1)
+
+
+def restore_branch_isolation() -> None:
+    changed = subprocess.check_output(
+        ['git', 'diff', '--name-only', f'{BASE_MAIN}...HEAD'],
+        cwd=ROOT,
+        text=True,
+        encoding='utf-8',
+    ).splitlines()
+    restored: list[str] = []
+    removed: list[str] = []
+    for relative in changed:
+        relative = relative.strip().replace('\\', '/')
+        if not relative or relative in ALLOWED_STAGING_PATHS:
+            continue
+        exists_in_base = subprocess.run(
+            ['git', 'cat-file', '-e', f'{BASE_MAIN}:{relative}'],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode == 0
+        if exists_in_base:
+            subprocess.run(
+                ['git', 'checkout', BASE_MAIN, '--', relative],
+                cwd=ROOT,
+                check=True,
+            )
+            restored.append(relative)
+            continue
+        path = ROOT / relative
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists() or path.is_symlink():
+            path.unlink()
+        removed.append(relative)
+    if restored or removed:
+        print(
+            'runner hotfix isolation restored '
+            f'{len(restored)} tracked and removed {len(removed)} added unrelated paths'
+        )
 
 
 def patch_generated_runtime() -> None:
@@ -90,9 +142,9 @@ def patch_offline_contracts() -> None:
     )
     old_schema_marker = '"generatedWorkflowSchemaVersion = 6" in workflow_migrations'
     schema_marker_count = text.count(old_schema_marker)
-    if schema_marker_count != 2:
+    if schema_marker_count != 3:
         raise SystemExit(
-            f'schema-v6 source-contract markers: expected 2, found {schema_marker_count}'
+            f'schema-v6 source-contract markers: expected 3, found {schema_marker_count}'
         )
     text = text.replace(
         old_schema_marker,
@@ -148,7 +200,76 @@ def patch_offline_contracts() -> None:
     version_control.write_text(metadata, encoding='utf-8', newline='\n')
 
 
+def patch_release_contracts() -> None:
+    validator = ROOT / 'tool' / 'validate_release.py'
+    text = validator.read_text(encoding='utf-8')
+    text = replace_once(
+        text,
+        'if payload.get("schemaVersion") != 6:',
+        'if payload.get("schemaVersion") != 7:',
+        'release validator workflow schema',
+    )
+    text = replace_once(
+        text,
+        'failures.append("workflow schema version must be 6")',
+        'failures.append("workflow schema version must be 7")',
+        'release validator schema diagnostic',
+    )
+    text = replace_once(
+        text,
+        f'if payload.get("migrationDigest") != "{V6_MIGRATION_DIGEST}":',
+        f'if payload.get("migrationDigest") != "{V7_MIGRATION_DIGEST}":',
+        'release validator migration digest',
+    )
+    validator.write_text(text, encoding='utf-8', newline='\n')
+
+    release_py = ROOT / 'tool' / 'release.py'
+    release_text = release_py.read_text(encoding='utf-8')
+    release_text = replace_once(
+        release_text,
+        '        "workflow_schema_version": 6,',
+        '        "workflow_schema_version": 7,',
+        'release metadata workflow schema',
+    )
+    release_text = replace_once(
+        release_text,
+        f'        "workflow_migration_digest": "{V6_MIGRATION_DIGEST}",',
+        f'        "workflow_migration_digest": "{V7_MIGRATION_DIGEST}",',
+        'release metadata workflow digest',
+    )
+    release_text = replace_once(
+        release_text,
+        '        "durable_task_attempts": True,',
+        '        "durable_task_attempts": True,\n        "durable_agent_action_attempts": True,',
+        'release metadata agent-action ledger',
+    )
+    release_py.write_text(release_text, encoding='utf-8', newline='\n')
+
+    release_json = ROOT / 'RELEASE.json'
+    release_json_text = release_json.read_text(encoding='utf-8')
+    release_json_text = replace_once(
+        release_json_text,
+        '  "workflow_schema_version": 6,',
+        '  "workflow_schema_version": 7,',
+        'checked-in release workflow schema',
+    )
+    release_json_text = replace_once(
+        release_json_text,
+        f'  "workflow_migration_digest": "{V6_MIGRATION_DIGEST}",',
+        f'  "workflow_migration_digest": "{V7_MIGRATION_DIGEST}",',
+        'checked-in release workflow digest',
+    )
+    release_json_text = replace_once(
+        release_json_text,
+        '  "durable_task_attempts": true,',
+        '  "durable_task_attempts": true,\n  "durable_agent_action_attempts": true,',
+        'checked-in release agent-action ledger',
+    )
+    release_json.write_text(release_json_text, encoding='utf-8', newline='\n')
+
+
 def main() -> int:
+    restore_branch_isolation()
     text = PAYLOAD.read_text(encoding='utf-8')
 
     start = "    methods = r'''\n"
@@ -193,6 +314,7 @@ def main() -> int:
     patch_generated_runtime()
     patch_source_contract_inventory()
     patch_offline_contracts()
+    patch_release_contracts()
 
     PAYLOAD.unlink()
     return 0
