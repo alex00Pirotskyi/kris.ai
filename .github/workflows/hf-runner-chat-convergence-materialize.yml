@@ -77,6 +77,25 @@ jobs:
           path.write_text(text, encoding='utf-8')
           PY
           python3 .repo-hf-runner-chat-convergence.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/product/product_runtime.dart')
+          text = path.read_text(encoding='utf-8')
+          needle = "    final tools = ToolRegistry.standard();\\n    final liveRunSignals = LiveRunSignalBus();"
+          if text.count(needle) != 1:
+              raise SystemExit(f'product runtime escaped-newline repair anchor mismatch: {text.count(needle)}')
+          start = text.index(needle)
+          end = text.find('\n', start)
+          if end < 0:
+              end = len(text)
+          physical_line = text[start:end]
+          repaired_line = physical_line.replace(r'\n', '\n')
+          path.write_text(text[:start] + repaired_line + text[end:], encoding='utf-8')
+          PY
+          echo '--- product_runtime materialized region ---'
+          nl -ba lib/product/product_runtime.dart | sed -n '320,430p'
+          echo '--- chat_studio materialized region ---'
+          nl -ba lib/product/chat_studio.dart | sed -n '2040,2140p'
           rm -f .repo-hf-runner-chat-convergence.py
           rm -rf .hf-runner-materializer
           rm -f .github/workflows/hf-runner-chat-convergence-materialize.yml
