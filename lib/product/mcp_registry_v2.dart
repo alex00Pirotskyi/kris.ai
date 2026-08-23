@@ -60,14 +60,20 @@ class McpServerDescriptorV2 {
   factory McpServerDescriptorV2.fromPayload(Map<String, Object?> payload) {
     String requiredString(String key) {
       final value = payload[key]?.toString().trim() ?? '';
-      if (value.isEmpty) throw FormatException('mcp_descriptor_$key_required');
+      if (value.isEmpty) {
+        throw FormatException('mcp_descriptor_$key_required');
+      }
       return value;
     }
 
     Set<String> strings(String key) {
       final raw = payload[key];
-      if (raw == null) return const <String>{};
-      if (raw is! List) throw FormatException('mcp_descriptor_$key_invalid');
+      if (raw == null) {
+        return const <String>{};
+      }
+      if (raw is! List) {
+        throw FormatException('mcp_descriptor_$key_invalid');
+      }
       final values = raw.map((item) => item.toString().trim()).where((item) => item.isNotEmpty).toList();
       if (values.toSet().length != values.length) {
         throw FormatException('mcp_descriptor_${key}_duplicates');
@@ -89,7 +95,9 @@ class McpServerDescriptorV2 {
       throw const FormatException('mcp_descriptor_transport_unsupported');
     }
     final tools = strings('tools');
-    if (tools.isEmpty) throw const FormatException('mcp_descriptor_tools_required');
+    if (tools.isEmpty) {
+      throw const FormatException('mcp_descriptor_tools_required');
+    }
     final rawArguments = payload['arguments'];
     if (rawArguments != null && rawArguments is! List) {
       throw const FormatException('mcp_descriptor_arguments_invalid');
@@ -425,7 +433,9 @@ class McpRegistryV2 {
 
   Future<bool> health(String id) async {
     final current = await _required(id);
-    if (current.state != McpLifecycleStateV2.running) return false;
+    if (current.state != McpLifecycleStateV2.running) {
+      return false;
+    }
     return _backend.healthy(id);
   }
 
@@ -442,7 +452,9 @@ class McpRegistryV2 {
 
   Future<McpRegistryRecordV2> _required(String id) async {
     final record = await _repository.get(id);
-    if (record == null) throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');
+    if (record == null) {
+      throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');
+    }
     return record;
   }
 }

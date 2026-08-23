@@ -155,7 +155,7 @@ def patch_planning_runtime() -> None:
     replace_once(
         path,
         "import 'agent_protocol.dart';\n",
-        "import 'agent_context_v2.dart';\nimport 'agent_protocol.dart';\nimport 'agent_protocol_v3.dart';\n",
+        "import 'agent_context_v2.dart';\nimport 'agent_protocol_v3.dart';\n",
         "planning provenance and protocol imports",
     )
     replace_once(
