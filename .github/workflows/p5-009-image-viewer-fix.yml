@@ -1,9 +1,9 @@
 name: P5-009 real image viewer finalizer
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/p5-009-evidence-viewers-20260823
+      - main
     paths:
       - .repo-p5-009-image-viewer-fix.py
       - .github/workflows/p5-009-image-viewer-fix.yml
@@ -16,6 +16,7 @@ env:
   TARGET_BRANCH: agent/p5-009-evidence-viewers-20260823
   PATCH_PATH: .repo-p5-009-image-viewer-fix.py
   WORKFLOW_PATH: .github/workflows/p5-009-image-viewer-fix.yml
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
 
 jobs:
   finalize:
@@ -24,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.SOURCE_SHA }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -33,10 +34,10 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --no-tags origin main "$TARGET_BRANCH"
-          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
           test "$(git merge-base HEAD origin/main)" = "$BASE_MAIN_SHA"
-          test "$(git rev-parse origin/$TARGET_BRANCH)" = "${{ github.sha }}"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
           test -f "$PATCH_PATH"
           test -f "$WORKFLOW_PATH"
           test -z "$(git status --short)"
@@ -111,7 +112,7 @@ jobs:
           cmp "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
           python tool/p1a_text_eof_contract_test.py --project .
           python tool/validate_release.py --skip-tests
-          git restore --source="${{ github.sha }}" --staged --worktree -- \
+          git restore --source="$SOURCE_SHA" --staged --worktree -- \
             release/FILE_ADAPTER_RESULTS.json \
             release/KNOWLEDGE_MEMORY_V2_RESULTS.json
           git diff --check
@@ -132,6 +133,7 @@ jobs:
           lib/product/p5_information_architecture/p5_verification_workspaces.dart
           test/product/p5_information_architecture/p5_evidence_viewers_test.dart
           EOF
+          sort -o "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/expected.paths"
           diff -u "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/actual.paths"
           test ! -e "$PATCH_PATH"
           test ! -e "$WORKFLOW_PATH"
@@ -141,6 +143,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git fetch --no-tags origin main "$TARGET_BRANCH"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add \
