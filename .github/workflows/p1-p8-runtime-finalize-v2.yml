@@ -231,7 +231,7 @@ jobs:
       - name: Complete Flutter regression
         run: flutter test --no-pub --concurrency=1 --reporter compact
       - name: Deterministic release validator
-        run: python tool/validate_release.py --project . --skip-secrets
+        run: python tool/validate_release.py
       - name: Workflow integrity
         run: ruby tool/workflow_integrity_test.rb
       - name: Publish clean runtime candidate
