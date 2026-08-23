@@ -15,7 +15,12 @@ CODE_SHA = "a" * 64
 TEST_SHA = "b" * 64
 
 
-def envelope(*, code_sha: str = CODE_SHA, capabilities: list[str] | None = None) -> dict[str, object]:
+def envelope(
+    *,
+    version: str = "2.0.0",
+    code_sha: str = CODE_SHA,
+    capabilities: list[str] | None = None,
+) -> dict[str, object]:
     return sign_manifest(
         {
             "schemaVersion": "2.0.0",
@@ -29,10 +34,12 @@ def envelope(*, code_sha: str = CODE_SHA, capabilities: list[str] | None = None)
                 "extensionType": "plugin",
                 "id": "release-helper",
                 "publisher": "example.publisher",
-                "version": "2.0.0",
+                "version": version,
                 "codeSha256": code_sha,
                 "testsSha256": TEST_SHA,
-                "requestedCapabilities": capabilities or ["read_project", "write_artifact"],
+                "requestedCapabilities": capabilities
+                if capabilities is not None
+                else ["read_project", "write_artifact"],
                 "compatibility": [">=2.0.0", "<3.0.0"],
                 "entryPoint": "bin/release_helper",
             },
@@ -74,10 +81,61 @@ def main() -> int:
         actual_tests_sha256=TEST_SHA,
     )
     assert installed.manifest.identity == "example.publisher/release-helper"
-    assert registry.capabilities(installed.manifest.identity) == ("read_project", "write_artifact")
+    assert registry.capabilities(installed.manifest.identity) == (
+        "read_project",
+        "write_artifact",
+    )
     assert registry.inspect(installed.manifest.identity)["enabled"] is False
-    registry.enable(installed.manifest.identity)
+    assert registry.inspect(installed.manifest.identity)["capabilityReviewRequired"] is True
+    expect_error(
+        lambda: registry.enable(installed.manifest.identity),
+        "extension_capability_review_required",
+    )
+    registry.enable(installed.manifest.identity, capabilities_approved=True)
     assert registry.inspect(installed.manifest.identity)["enabled"] is True
+
+    unchanged = registry.update(
+        installed.manifest.identity,
+        envelope(version="2.1.0"),
+        keyring=keyring(),
+        now=now,
+        actual_code_sha256=CODE_SHA,
+        actual_tests_sha256=TEST_SHA,
+    )
+    assert unchanged.manifest.version == "2.1.0"
+    assert unchanged.enabled is True
+    assert unchanged.capability_review_required is False
+
+    widened = registry.update(
+        installed.manifest.identity,
+        envelope(
+            version="2.2.0",
+            capabilities=["network_access", "read_project", "write_artifact"],
+        ),
+        keyring=keyring(),
+        now=now,
+        actual_code_sha256=CODE_SHA,
+        actual_tests_sha256=TEST_SHA,
+    )
+    assert widened.enabled is False
+    assert widened.capability_review_required is True
+    assert registry.capabilities(installed.manifest.identity) == (
+        "network_access",
+        "read_project",
+        "write_artifact",
+    )
+    expect_error(
+        lambda: registry.update(
+            installed.manifest.identity,
+            envelope(version="2.1.5"),
+            keyring=keyring(),
+            now=now,
+            actual_code_sha256=CODE_SHA,
+            actual_tests_sha256=TEST_SHA,
+        ),
+        "extension_update_version_not_newer",
+    )
+    registry.enable(installed.manifest.identity, capabilities_approved=True)
     registry.disable(installed.manifest.identity)
     assert registry.inspect(installed.manifest.identity)["enabled"] is False
 
@@ -96,7 +154,18 @@ def main() -> int:
     expect_error(lambda: registry.enable(installed.manifest.identity), "extension_revoked")
     expect_error(
         lambda: registry.install(
-            envelope(),
+            envelope(version="3.0.0"),
+            keyring=keyring(),
+            now=now,
+            actual_code_sha256=CODE_SHA,
+            actual_tests_sha256=TEST_SHA,
+        ),
+        "extension_identity_revoked",
+    )
+    expect_error(
+        lambda: registry.update(
+            installed.manifest.identity,
+            envelope(version="3.0.0"),
             keyring=keyring(),
             now=now,
             actual_code_sha256=CODE_SHA,
@@ -111,8 +180,11 @@ def main() -> int:
         exported = target.read_text(encoding="utf-8")
         assert '"requestedCapabilities"' in exported
         assert '"revoked": true' in exported
+        assert '"capabilityReviewRequired"' in exported
 
-    print("PASS extension registry v2: signed identity, exact capabilities, revoke and digest checks")
+    print(
+        "PASS extension registry v2: signed install/update, exact capabilities, review, revoke and digest checks"
+    )
     return 0
 
 
