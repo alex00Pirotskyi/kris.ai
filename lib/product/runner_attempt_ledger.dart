@@ -163,12 +163,10 @@ class RunnerAttemptLedgerPolicy {
       final outcome = branch['outcome']?.toString() ?? '';
       if (outcome == 'tool_error' || outcome == 'deterministic_error') {
         final errorCode = branch['errorCode']?.toString() ?? '';
-        if (errorCode == 'tool_result_not_ok') {
-          yield branch;
-          continue;
-        }
         final retryability = taxonomy.classify(errorCode).retryability;
-        if (retryability == 'transient' || retryability == 'resource') {
+        if (retryability == 'transient' ||
+            retryability == 'resource' ||
+            retryability == 'state_conflict') {
           continue;
         }
       }
