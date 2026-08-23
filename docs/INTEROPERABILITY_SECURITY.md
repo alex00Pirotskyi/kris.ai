@@ -18,9 +18,13 @@ Kristin's P7 adapter pins `A2A-Version: 1.0`. Agent cards must declare the pinne
 
 Streaming task snapshots require monotonically increasing revisions. A terminal task cannot later change terminal state. Disconnecting before a terminal state produces `unknown`, never false completion.
 
-The execution bridge no longer accepts `KRISTIN_A2A_TARGET_JSON`; raw environment data cannot select an executable. An agent is resolved from a Signed Manifest v2 registry under trust domain `kristin.a2a` and intended use `a2a_agent_registry`. The signed descriptor fixes executable, working directory, capabilities, timeout, and output limits. Its canonical SHA-256 is verified before execution.
+The execution bridge no longer accepts `KRISTIN_A2A_TARGET_JSON`; raw environment data cannot select an executable. An agent is resolved from a Signed Manifest v2 registry under trust domain `kristin.a2a` and intended use `a2a_agent_registry`. The signed descriptor fixes executable, working directory, capabilities, network ceiling, execution mode, timeout, and output limits. Its canonical SHA-256 is verified before execution.
 
-Each delegation grant is bound to an exact agent ID, task ID, capability set, deadline, timeout, and output limit. The request must be a subset of both the grant and the registered descriptor. Cascading delegation is disabled at the bridge. Agent stdout must be a bounded JSON object; arbitrary text is not promoted to trusted control data.
+Delegation authority is also a Signed Manifest v2 envelope. The bridge verifies intended use `a2a_delegation_grant` in trust domain `kristin.a2a` before reading the grant payload. A grant binds the exact agent ID, task ID, capability set, input/output artifacts, network destinations, secret identities, deadline, step budget, idempotency key, timeout, output limit, downstream-delegation policy, and host-execution permission. Request scope must be a subset of both the signed grant and the registered descriptor. This bridge has no secret broker, so any delegated secret request fails closed rather than leaking a credential through the environment.
+
+Execution mode is explicit. `isolated` uses the existing Linux namespace sandbox with a read-only workspace and network namespace; requested network access is denied in that mode. `owner_host` is permitted only when the signed delegation explicitly grants host execution. Unsupported isolated platforms fail closed instead of silently falling back to host execution.
+
+Agent stdout remains untrusted. Before a response can be returned as reconciled, the bridge checks task identity, state, used capabilities, output-artifact identities, step budget, and required completion artifacts against the signed delegation. A timeout after execution starts is classified as `a2a_outcome_unknown` and must be reconciled before retry. Successful output is labelled `untrusted_a2a_output`; a remote or local agent cannot self-certify wider authority by returning a forged `completed` object.
 
 ## Plugins and skills
 
@@ -42,7 +46,7 @@ Operators should treat all MCP/A2A/extension output as untrusted input until pro
 
 ## Revocation and incident response
 
-1. Revoke the MCP trust, A2A registry identity, or extension identity immediately.
+1. Revoke the MCP trust, A2A registry identity, delegation key, or extension identity immediately.
 2. Stop active sessions/tasks and mark unresolved external effects `unknown` or `reconciliation_required` rather than retrying them.
 3. Preserve redacted audit and trace receipts.
 4. Rotate affected trust keys or service identities when compromise is suspected.
