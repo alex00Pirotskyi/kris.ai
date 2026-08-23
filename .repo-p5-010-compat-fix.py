@@ -41,6 +41,16 @@ replace_once(
 """,
 )
 replace_once(
+    'lib/product/ui.dart',
+    "import 'p5_information_architecture/p5_controller.dart';\n",
+    "import 'p5_information_architecture/p5_controller.dart';\nimport 'p5_information_architecture/p5_models.dart';\n",
+)
+replace_once(
+    'test/product/source_contract_test.dart',
+    "      expect(ui, contains('P5GlobalAutonomyBar(binding: _autonomyBinding)'));\n",
+    "      expect(\n        ui,\n        matches(\n          RegExp(\n            r'P5GlobalAutonomyBar\\(\\s*binding: _autonomyBinding,\\s*'\n            r'onOpenCommands: _openCommandPalette,\\s*\\)',\n          ),\n        ),\n      );\n",
+)
+replace_once(
     'test/product/p5_command_palette_test.dart',
     "find.byKey(const Key('p5-global-emergency'))",
     "find.byKey(const Key('p5-global-kill'))",
