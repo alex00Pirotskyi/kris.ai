@@ -8,10 +8,18 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/p6-p8-production-gates.yml'
+      - 'lib/product/agent_context_v2.dart'
       - 'lib/product/agent_decision_v3.dart'
+      - 'lib/product/agent_protocol_v3.dart'
+      - 'lib/product/mcp_registry_v2.dart'
       - 'lib/product/p5_performance_budget.dart'
+      - 'lib/product/p8_effect_journal_adapter.dart'
       - 'lib/product/p8_external_effects.dart'
       - 'lib/product/p8_observability.dart'
+      - 'lib/product/p2_product_runtime_bootstrap.dart'
+      - 'lib/product/product_runtime.dart'
+      - 'lib/product/planning_runtime.dart'
+      - 'lib/product/storage_security.dart'
       - 'tool/agent_safety_v2.py'
       - 'tool/agent_benchmark_signing.py'
       - 'tool/a2a_bridge.py'
@@ -26,8 +34,12 @@ on:
       - 'release/evidence/P8/**'
       - 'release/security/**'
       - 'docs/INTEROPERABILITY_SECURITY.md'
+      - 'test/product/agent_context_v2_test.dart'
       - 'test/product/agent_decision_v3_test.dart'
+      - 'test/product/agent_protocol_v3_test.dart'
+      - 'test/product/mcp_registry_v2_test.dart'
       - 'test/product/p5_performance_budget_test.dart'
+      - 'test/product/p8_effect_journal_adapter_test.dart'
       - 'test/product/p8_external_effects_test.dart'
       - 'test/product/p8_observability_test.dart'
       - 'test/product/p8_research_adversarial_test.dart'
@@ -99,22 +111,38 @@ jobs:
         run: |
           set -euo pipefail
           dart format \
+            lib/product/agent_context_v2.dart \
             lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/mcp_registry_v2.dart \
             lib/product/p5_performance_budget.dart \
+            lib/product/p8_effect_journal_adapter.dart \
             lib/product/p8_external_effects.dart \
             lib/product/p8_observability.dart \
+            test/product/agent_context_v2_test.dart \
             test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
             test/product/p5_performance_budget_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
             test/product/p8_research_adversarial_test.dart
           git diff --exit-code -- \
+            lib/product/agent_context_v2.dart \
             lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/mcp_registry_v2.dart \
             lib/product/p5_performance_budget.dart \
+            lib/product/p8_effect_journal_adapter.dart \
             lib/product/p8_external_effects.dart \
             lib/product/p8_observability.dart \
+            test/product/agent_context_v2_test.dart \
             test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
             test/product/p5_performance_budget_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
             test/product/p8_research_adversarial_test.dart
@@ -122,8 +150,12 @@ jobs:
         shell: bash
         run: |
           flutter test --concurrency=1 \
+            test/product/agent_context_v2_test.dart \
             test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
             test/product/p5_performance_budget_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
             test/product/p8_research_adversarial_test.dart
