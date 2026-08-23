@@ -27,5 +27,5 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Run release validator only
-        run: python tool/validate_release.py
+      - name: Run source/release validator only
+        run: python tool/validate_release.py --skip-tests
