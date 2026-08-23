@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - hotfix/runner-attempt-ledger-v2
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: hotfix/runner-attempt-ledger-v2
           fetch-depth: 0
           persist-credentials: true
 
@@ -85,4 +89,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "fix(runner): prune repeated action branches"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin HEAD:hotfix/runner-attempt-ledger-v2
