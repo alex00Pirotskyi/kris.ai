@@ -1,0 +1,96 @@
+name: Runner Chat Convergence Rebase Qualification
+
+on:
+  push:
+    branches:
+      - hotfix/runner-chat-convergence-20260823
+    paths:
+      - .github/workflows/hf-runner-rebase-qualify.yml
+
+permissions:
+  contents: write
+
+jobs:
+  qualify-and-clean:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: hotfix/runner-chat-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Remove transport and refresh reconciled manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/hf-runner-rebase-qualify.yml
+          python3 tool/p2_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python3 tool/p2_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+      - name: Resolve Flutter dependencies
+        run: flutter pub get
+      - name: Focused hotfix contracts
+        run: flutter test --no-pub test/product/hf_runner_chat_convergence_test.dart
+      - name: Source governance contract
+        run: flutter test --no-pub test/product/source_contract_test.dart
+      - name: Fatal static analysis
+        run: flutter analyze --no-pub --fatal-infos --fatal-warnings
+      - name: Complete Flutter regression
+        run: flutter test --no-pub --concurrency=1
+      - name: Deterministic release validator
+        run: python3 tool/validate_release.py
+      - name: Restore nondeterministic evidence and verify exact durable scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout origin/main -- release/FILE_ADAPTER_RESULTS.json release/KNOWLEDGE_MEMORY_V2_RESULTS.json
+          python3 tool/p2_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.final.first"
+          python3 tool/p2_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/manifest.final.first" SOURCE_MANIFEST.sha256
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              'SOURCE_MANIFEST.sha256',
+              'docs/HF_RUNNER_CHAT_CONVERGENCE.md',
+              'lib/product/chat_studio.dart',
+              'lib/product/conversation_orchestrator.dart',
+              'lib/product/planning_runtime.dart',
+              'lib/product/product_error_normalizer.dart',
+              'lib/product/product_runtime.dart',
+              'lib/product/project_provisioning.dart',
+              'lib/product/run_execution_projection.dart',
+              'lib/product/run_live_signals.dart',
+              'lib/product/run_preflight.dart',
+              'lib/product/run_steering.dart',
+              'test/product/hf_runner_chat_convergence_test.dart',
+              'test/product/source_contract_test.dart',
+          }
+          actual = set(subprocess.check_output(
+              ['git', 'diff', '--name-only', 'origin/main'], text=True
+          ).splitlines())
+          actual.update(subprocess.check_output(
+              ['git', 'ls-files', '--others', '--exclude-standard'], text=True
+          ).splitlines())
+          if actual != expected:
+              raise SystemExit(
+                  f'exact post-P5-009 scope mismatch\nmissing={sorted(expected-actual)}\nextra={sorted(actual-expected)}'
+              )
+          PY
+      - name: Publish reconciled qualified candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(hf-runner): qualify against P5-009 main"
+          git push origin HEAD:hotfix/runner-chat-convergence-20260823
