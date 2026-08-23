@@ -1,4 +1,4 @@
-name: P1-P8 Focused Runtime Diagnostic
+name: P1-P8 MCP Runtime Diagnostic
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -25,12 +25,6 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - name: Install locked Python trust dependencies
-        run: python tool/v71r12_bootstrap_hosted_python.py --project .
       - name: Resolve dependencies
         run: flutter pub get
       - name: Apply runtime integration patch
@@ -39,44 +33,29 @@ jobs:
           set -euo pipefail
           python -m py_compile tool/p1_p8_runtime_finalize.py
           python tool/p1_p8_runtime_finalize.py
-          dart format \
-            lib/product/agent_context_v2.dart \
-            lib/product/agent_decision_v3.dart \
-            lib/product/agent_protocol_v3.dart \
-            lib/product/model/model_registry.dart \
-            lib/product/model/model_routing_v2.dart \
-            lib/product/mcp_registry_v2.dart \
-            lib/product/p2_product_runtime_bootstrap.dart \
-            lib/product/p8_effect_journal_adapter.dart \
-            lib/product/p8_external_effects.dart \
-            lib/product/p8_observability.dart \
-            lib/product/planning_runtime.dart \
-            lib/product/product_runtime.dart \
-            lib/product/storage_security.dart \
-            test/product/agent_context_v2_test.dart \
-            test/product/agent_decision_v3_test.dart \
-            test/product/agent_protocol_v3_test.dart \
-            test/product/model/model_routing_v2_test.dart \
-            test/product/mcp_registry_v2_test.dart \
-            test/product/p8_effect_journal_adapter_test.dart \
-            test/product/p8_external_effects_test.dart \
-            test/product/p8_observability_test.dart \
-            test/product/p8_product_runtime_telemetry_test.dart
-      - name: Diagnose agent context v2
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/agent_context_v2_test.dart
-      - name: Diagnose decision v3
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/agent_decision_v3_test.dart
-      - name: Diagnose protocol v3
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/agent_protocol_v3_test.dart
-      - name: Diagnose model role routing
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/model/model_routing_v2_test.dart
-      - name: Diagnose MCP registry v2
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/mcp_registry_v2_test.dart
-      - name: Diagnose reconciled effect journal
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_effect_journal_adapter_test.dart
-      - name: Diagnose external effects state machine
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_external_effects_test.dart
-      - name: Diagnose observability core
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_observability_test.dart
-      - name: Diagnose ProductRuntime telemetry
-        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_product_runtime_telemetry_test.dart
+          dart format lib/product/mcp_registry_v2.dart test/product/mcp_registry_v2_test.dart
+      - name: MCP signed install and owner-host execution
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter compact
+          --plain-name "signed install persists canonical identity and owner-host execution"
+          test/product/mcp_registry_v2_test.dart
+      - name: MCP tampered descriptor rejection
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter compact
+          --plain-name "tampered signed descriptor is rejected before registration"
+          test/product/mcp_registry_v2_test.dart
+      - name: MCP isolated backend denial
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter compact
+          --plain-name "isolated descriptor fails closed when no sandbox backend is available"
+          test/product/mcp_registry_v2_test.dart
+      - name: MCP owner-host explicit grant
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter compact
+          --plain-name "owner-host execution requires an explicit owner-host grant"
+          test/product/mcp_registry_v2_test.dart
+      - name: MCP executable drift revocation
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter compact
+          --plain-name "executable identity drift revokes the server before execution"
+          test/product/mcp_registry_v2_test.dart
