@@ -36,10 +36,13 @@ jobs:
           set -euo pipefail
           test "$(git merge-base HEAD a6ba51ea89fbb692882a159f4c4b6041af1b53af)" = "a6ba51ea89fbb692882a159f4c4b6041af1b53af"
           test -f .repo-hf-runner-hardening.py
+          test -f .repo-hf-runner-hardening-script-fix.py
       - name: Apply fail-closed hardening patch
         shell: bash
         run: |
           set -euo pipefail
+          python3 .repo-hf-runner-hardening-script-fix.py
+          rm -f .repo-hf-runner-hardening-script-fix.py
           python3 .repo-hf-runner-hardening.py
           rm -f .repo-hf-runner-hardening.py
           rm -f .github/workflows/hf-runner-hardening.yml
