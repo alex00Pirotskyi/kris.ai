@@ -28,6 +28,12 @@ void main() {
       await build.create(recursive: true);
       await File('${build.path}${Platform.pathSeparator}artifact.bin')
           .writeAsBytes(<int>[1, 2, 3, 4]);
+      final nodeModules = Directory(
+        '${root.path}${Platform.pathSeparator}node_modules',
+      );
+      await nodeModules.create(recursive: true);
+      await File('${nodeModules.path}${Platform.pathSeparator}package.js')
+          .writeAsString('generated cache\n');
 
       expect(await policy.workspaceSha256(root), initial);
 
