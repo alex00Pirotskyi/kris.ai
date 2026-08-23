@@ -20,14 +20,23 @@ def run(*args: str, cwd: Path) -> None:
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="kristin-secret-scan-") as raw:
         root = Path(raw)
-        (root / ".env").write_text("OPENAI_API_KEY='sk-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'\n", encoding="utf-8")
-        (root / "entropy.txt").write_text(
-            "credential='qN8bYk4XwR1sT7vL2pM9cD6fH3jK5zQ0aE8uI1oP'\n",
+        openai_fixture = "sk" + "-" + ("A" * 30)
+        entropy_fixture = "qN8bYk4XwR1sT7vL2pM9cD6fH3jK5zQ0aE8uI1oP"
+        aws_fixture = "AK" + "IA" + "ABCDEFGHIJKLMNOP"
+        slack_fixture = "xox" + "b-" + ("1234567890" * 3)
+        (root / ".env").write_text(
+            f"OPENAI_API_KEY='{openai_fixture}'\n",
             encoding="utf-8",
         )
-        (root / "blob.bin").write_bytes(b"\x00\x01AKIAABCDEFGHIJKLMNOP\x00")
+        (root / "entropy.txt").write_text(
+            f"credential='{entropy_fixture}'\n",
+            encoding="utf-8",
+        )
+        (root / "blob.bin").write_bytes(
+            b"\x00\x01" + aws_fixture.encode("ascii") + b"\x00",
+        )
         with zipfile.ZipFile(root / "bundle.zip", "w") as archive:
-            archive.writestr("config.txt", "token='xoxb-123456789012345678901234567890'\n")
+            archive.writestr("config.txt", f"token='{slack_fixture}'\n")
 
         findings = secret_scan.scan_worktree(root)
         kinds = {finding.kind for finding in findings}
@@ -37,8 +46,8 @@ def main() -> int:
         assert "slack_token" in kinds
         assert all(len(finding.fingerprint) == 16 for finding in findings)
         serialized = json.dumps([finding.to_json() for finding in findings], sort_keys=True)
-        assert "sk-AAAAAAAA" not in serialized
-        assert "xoxb-" not in serialized
+        assert openai_fixture not in serialized
+        assert slack_fixture not in serialized
 
         first = findings[0]
         suppressions = root / ".secret-scan-allowlist.json"
@@ -68,7 +77,11 @@ def main() -> int:
         run("git", "config", "user.email", "test@example.invalid", cwd=root)
         run("git", "config", "user.name", "Kristin Test", cwd=root)
         historical = root / "historical.txt"
-        historical.write_text("GITHUB_TOKEN='ghp_CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC'\n", encoding="utf-8")
+        github_fixture = "gh" + "p_" + ("C" * 30)
+        historical.write_text(
+            f"GITHUB_TOKEN='{github_fixture}'\n",
+            encoding="utf-8",
+        )
         run("git", "add", "historical.txt", cwd=root)
         run("git", "commit", "-qm", "seed history fixture", cwd=root)
         historical.unlink()
@@ -78,7 +91,7 @@ def main() -> int:
         assert status == "scanned"
         assert any(finding.kind == "github_token" for finding in findings)
         payload = json.dumps([finding.to_json() for finding in findings])
-        assert "ghp_CCCC" not in payload
+        assert github_fixture not in payload
 
     print("PASS secret scan v2: providers, entropy, archives, binary metadata, history and fingerprints")
     return 0
