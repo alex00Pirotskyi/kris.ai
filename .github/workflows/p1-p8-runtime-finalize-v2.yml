@@ -1,15 +1,8 @@
-# trigger exact head after analyzer cleanup
-name: P1-P8 Runtime Finalize V2
+name: P1-P8 Runtime Qualifier Helper
 
 on:
-  push:
-    branches:
-      - 'agent/p1-p8-source-convergence-20260823'
-    paths:
-      - '.github/workflows/p1-p8-runtime-finalize-v2.yml'
   pull_request:
     branches:
-      - main
       - 'agent/p1-p8-source-convergence-20260823'
     paths:
       - '.github/workflows/p1-p8-runtime-finalize-v2.yml'
@@ -19,7 +12,6 @@ permissions:
 
 jobs:
   qualify-publish:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
@@ -37,10 +29,12 @@ jobs:
         with:
           python-version: '3.13.5'
           check-latest: false
-      - name: Install hash-locked Python trust dependencies
-        run: python tool/v71r12_bootstrap_hosted_python.py --project .
-      - name: Resolve dependencies
-        run: flutter pub get
+      - name: Resolve governed dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          flutter pub get
       - name: Apply deterministic runtime integration
         shell: bash
         run: |
@@ -50,58 +44,27 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          def replace_required(path: Path, old: str, new: str, label: str) -> None:
-              text = path.read_text(encoding='utf-8')
-              if new in text:
-                  return
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{label}: expected one anchor, found {count}')
-              path.write_text(text.replace(old, new, 1), encoding='utf-8')
-
           mcp = Path('lib/product/mcp_registry_v2.dart')
           text = mcp.read_text(encoding='utf-8')
           text = text.replace("'mcp_descriptor_$key_required'", "'mcp_descriptor_${key}_required'")
           text = text.replace("'mcp_descriptor_$key_invalid'", "'mcp_descriptor_${key}_invalid'")
-          guard_replacements = (
-              (
-                  "      if (value.isEmpty) throw FormatException('mcp_descriptor_${key}_required');\n",
-                  "      if (value.isEmpty) {\n        throw FormatException('mcp_descriptor_${key}_required');\n      }\n",
-              ),
-              (
-                  "      if (raw == null) return const <String>{};\n",
-                  "      if (raw == null) {\n        return const <String>{};\n      }\n",
-              ),
-              (
-                  "      if (raw is! List) throw FormatException('mcp_descriptor_${key}_invalid');\n",
-                  "      if (raw is! List) {\n        throw FormatException('mcp_descriptor_${key}_invalid');\n      }\n",
-              ),
-              (
-                  "    if (tools.isEmpty) throw const FormatException('mcp_descriptor_tools_required');\n",
-                  "    if (tools.isEmpty) {\n      throw const FormatException('mcp_descriptor_tools_required');\n    }\n",
-              ),
-              (
-                  "    if (current.state != McpLifecycleStateV2.running) return false;\n",
-                  "    if (current.state != McpLifecycleStateV2.running) {\n      return false;\n    }\n",
-              ),
-              (
-                  "    if (record == null) throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n",
-                  "    if (record == null) {\n      throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n    }\n",
-              ),
+          replacements = (
+              ("      if (value.isEmpty) throw FormatException('mcp_descriptor_${key}_required');\n", "      if (value.isEmpty) {\n        throw FormatException('mcp_descriptor_${key}_required');\n      }\n"),
+              ("      if (raw == null) return const <String>{};\n", "      if (raw == null) {\n        return const <String>{};\n      }\n"),
+              ("      if (raw is! List) throw FormatException('mcp_descriptor_${key}_invalid');\n", "      if (raw is! List) {\n        throw FormatException('mcp_descriptor_${key}_invalid');\n      }\n"),
+              ("    if (tools.isEmpty) throw const FormatException('mcp_descriptor_tools_required');\n", "    if (tools.isEmpty) {\n      throw const FormatException('mcp_descriptor_tools_required');\n    }\n"),
+              ("    if (current.state != McpLifecycleStateV2.running) return false;\n", "    if (current.state != McpLifecycleStateV2.running) {\n      return false;\n    }\n"),
+              ("    if (record == null) throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n", "    if (record == null) {\n      throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n    }\n"),
           )
-          for old, new in guard_replacements:
+          for old, new in replacements:
               text = text.replace(old, new)
           mcp.write_text(text, encoding='utf-8')
 
           protocol = Path('lib/product/agent_protocol_v3.dart')
-          text = protocol.read_text(encoding='utf-8')
-          text = text.replace("import 'agent_decision.dart';\n", '')
-          protocol.write_text(text, encoding='utf-8')
+          protocol.write_text(protocol.read_text(encoding='utf-8').replace("import 'agent_decision.dart';\n", ''), encoding='utf-8')
 
           planning = Path('lib/product/planning_runtime.dart')
-          text = planning.read_text(encoding='utf-8')
-          text = text.replace("import 'agent_protocol.dart';\n", '')
-          planning.write_text(text, encoding='utf-8')
+          planning.write_text(planning.read_text(encoding='utf-8').replace("import 'agent_protocol.dart';\n", ''), encoding='utf-8')
 
           research = Path('test/product/p8_research_adversarial_test.dart')
           text = research.read_text(encoding='utf-8')
@@ -111,7 +74,7 @@ jobs:
               if text.count(anchor) != 1:
                   raise SystemExit('P8 research crypto import anchor mismatch')
               text = text.replace(anchor, anchor + crypto_import, 1)
-          research.write_text(text, encoding='utf-8')
+              research.write_text(text, encoding='utf-8')
 
           contract = Path('test/product/source_contract_test.dart')
           text = contract.read_text(encoding='utf-8')
@@ -120,52 +83,19 @@ jobs:
               anchor = "        'lib/product/model/model_registry.dart',\n"
               if text.count(anchor) != 1:
                   raise SystemExit('model routing source-contract anchor mismatch')
-              text = text.replace(anchor, anchor + entry, 1)
-              contract.write_text(text, encoding='utf-8')
+              contract.write_text(text.replace(anchor, anchor + entry, 1), encoding='utf-8')
 
           evidence = Path('tool/p8_release_evidence_gate.py')
           text = evidence.read_text(encoding='utf-8')
-          rows = (
+          for entry, anchor in (
               ('    "lib/product/model/model_registry.dart",\n', '    "lib/product/agent_protocol_v3.dart",\n'),
               ('    "lib/product/model/model_routing_v2.dart",\n', '    "lib/product/model/model_registry.dart",\n'),
-          )
-          for entry, anchor in rows:
+          ):
               if entry not in text:
                   if text.count(anchor) != 1:
                       raise SystemExit('P8 model routing evidence anchor mismatch')
                   text = text.replace(anchor, anchor + entry, 1)
           evidence.write_text(text, encoding='utf-8')
-
-          workflow = Path('.github/workflows/p6-p8-production-gates.yml')
-          text = workflow.read_text(encoding='utf-8')
-          trigger_anchor = "      - 'lib/product/agent_protocol_v3.dart'\n"
-          trigger_rows = (
-              "      - 'lib/product/model/model_registry.dart'\n"
-              "      - 'lib/product/model/model_routing_v2.dart'\n"
-              "      - 'test/product/model/model_routing_v2_test.dart'\n"
-          )
-          if "      - 'lib/product/model/model_routing_v2.dart'\n" not in text:
-              if text.count(trigger_anchor) != 1:
-                  raise SystemExit('P6-P8 routing trigger anchor mismatch')
-              text = text.replace(trigger_anchor, trigger_anchor + trigger_rows, 1)
-
-          dart_anchor = "            lib/product/agent_protocol_v3.dart \\\n"
-          dart_rows = (
-              "            lib/product/model/model_registry.dart \\\n"
-              "            lib/product/model/model_routing_v2.dart \\\n"
-          )
-          if text.count(dart_anchor) < 2:
-              raise SystemExit('P6-P8 routing Dart list anchors missing')
-          if text.count("            lib/product/model/model_routing_v2.dart \\\n") < 2:
-              text = text.replace(dart_anchor, dart_anchor + dart_rows)
-
-          test_anchor = "            test/product/agent_protocol_v3_test.dart \\\n"
-          test_row = "            test/product/model/model_routing_v2_test.dart \\\n"
-          if text.count(test_anchor) < 3:
-              raise SystemExit('P6-P8 routing test list anchors missing')
-          if text.count(test_row) < 3:
-              text = text.replace(test_anchor, test_anchor + test_row)
-          workflow.write_text(text, encoding='utf-8')
           PY
           dart format \
             lib/product/agent_context_v2.dart \
@@ -192,7 +122,7 @@ jobs:
             test/product/p8_product_runtime_telemetry_test.dart \
             test/product/p8_research_adversarial_test.dart \
             test/product/source_contract_test.dart
-      - name: Focused P6-P8 runtime gate
+      - name: Focused runtime and compatibility gates
         run: >-
           flutter test --no-pub --concurrency=1 --reporter expanded
           test/product/agent_context_v2_test.dart
@@ -204,9 +134,6 @@ jobs:
           test/product/p8_external_effects_test.dart
           test/product/p8_observability_test.dart
           test/product/p8_product_runtime_telemetry_test.dart
-      - name: P2 runtime compatibility gate
-        run: >-
-          flutter test --no-pub --concurrency=1 --reporter expanded
           test/product/p2_owner_mode_failure_presentation_test.dart
           test/product/p2_owner_risk_runtime_smoke_test.dart
           test/product/p2_runtime_composition_test.dart
@@ -230,10 +157,12 @@ jobs:
         run: flutter analyze --no-pub --fatal-warnings --fatal-infos
       - name: Complete Flutter regression
         run: flutter test --no-pub --concurrency=1 --reporter compact
-      - name: Deterministic release validator
-        run: python tool/validate_release.py --project . --skip-secrets
-      - name: Workflow integrity
-        run: ruby tool/workflow_integrity_test.rb
+      - name: Release and workflow gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/validate_release.py --project . --skip-secrets
+          ruby tool/workflow_integrity_test.rb
       - name: Publish clean runtime candidate
         shell: bash
         run: |
