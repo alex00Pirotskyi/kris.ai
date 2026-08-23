@@ -1,0 +1,54 @@
+name: P1-P8 Focused P8 Runtime Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p1-p8-p8-focused-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Apply runtime integration patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tool/p1_p8_runtime_finalize.py
+          python tool/p1_p8_runtime_finalize.py
+          dart format \
+            lib/product/p2_product_runtime_bootstrap.dart \
+            lib/product/p8_effect_journal_adapter.dart \
+            lib/product/p8_external_effects.dart \
+            lib/product/p8_observability.dart \
+            lib/product/product_runtime.dart \
+            lib/product/storage_security.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_product_runtime_telemetry_test.dart
+      - name: P8 reconciled effect journal
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_effect_journal_adapter_test.dart
+      - name: P8 external effects state machine
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_external_effects_test.dart
+      - name: P8 observability core
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_observability_test.dart
+      - name: P8 ProductRuntime telemetry
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_product_runtime_telemetry_test.dart
