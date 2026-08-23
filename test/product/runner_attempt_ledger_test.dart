@@ -82,7 +82,7 @@ void main() {
       expect(policy.decisionSha256(first), policy.decisionSha256(second));
     });
 
-    test('does not close transient or resource failures', () {
+    test('does not close retryable or unclassified failures', () {
       const transient = <String, dynamic>{
         'outcome': 'tool_error',
         'errorCode': 'provider_connection_failed',
@@ -101,14 +101,37 @@ void main() {
             'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
         'action': <String, dynamic>{'action': 'tool', 'tool': 'run_command'},
       };
-      final branches = <Map<String, dynamic>>[transient, resource];
+      const stateConflict = <String, dynamic>{
+        'outcome': 'tool_error',
+        'errorCode': 'stale_content',
+        'actionSha256':
+            '1111111111111111111111111111111111111111111111111111111111111111',
+        'decisionSha256':
+            '2222222222222222222222222222222222222222222222222222222222222222',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'write_file'},
+      };
+      const failedResult = <String, dynamic>{
+        'outcome': 'tool_error',
+        'errorCode': 'tool_result_not_ok',
+        'actionSha256':
+            '3333333333333333333333333333333333333333333333333333333333333333',
+        'decisionSha256':
+            '4444444444444444444444444444444444444444444444444444444444444444',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'run_command'},
+      };
+      final branches = <Map<String, dynamic>>[
+        transient,
+        resource,
+        stateConflict,
+        failedResult,
+      ];
 
       expect(policy.closedActionHashes(branches), isEmpty);
       expect(policy.closedDecisionHashes(branches), isEmpty);
       expect(policy.closedBranchPrompt(branches), isEmpty);
     });
 
-    test('closes deterministic corrections and observed failed results', () {
+    test('closes deterministic corrections and verification failures', () {
       const correction = <String, dynamic>{
         'outcome': 'tool_error',
         'errorCode': 'path_missing',
@@ -118,21 +141,21 @@ void main() {
             'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
         'action': <String, dynamic>{'action': 'tool', 'tool': 'inspect_file'},
       };
-      const failedResult = <String, dynamic>{
+      const verification = <String, dynamic>{
         'outcome': 'tool_error',
-        'errorCode': 'tool_result_not_ok',
+        'errorCode': 'verification_failed',
         'actionSha256':
-            '1111111111111111111111111111111111111111111111111111111111111111',
+            '5555555555555555555555555555555555555555555555555555555555555555',
         'decisionSha256':
-            '2222222222222222222222222222222222222222222222222222222222222222',
-        'action': <String, dynamic>{'action': 'tool', 'tool': 'run_command'},
+            '6666666666666666666666666666666666666666666666666666666666666666',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'verify_project'},
       };
-      final branches = <Map<String, dynamic>>[correction, failedResult];
+      final branches = <Map<String, dynamic>>[correction, verification];
 
       expect(policy.closedActionHashes(branches), hasLength(2));
       expect(policy.closedDecisionHashes(branches), hasLength(2));
       expect(policy.closedBranchPrompt(branches), contains('path_missing'));
-      expect(policy.closedBranchPrompt(branches), contains('tool_result_not_ok'));
+      expect(policy.closedBranchPrompt(branches), contains('verification_failed'));
     });
 
     test('world state ignores evidence-only churn', () {
