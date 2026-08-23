@@ -38,15 +38,15 @@ class RunnerAttemptLedgerPolicy {
   String? _explicitCommand(String description) {
     final patterns = <RegExp>[
       RegExp(
-        r"\brun\s+(?:the\s+)?command\s+'([^'\r\n]+)'",
+        r"^\s*run\s+(?:the\s+)?command\s+'([^'\r\n]+)'\.?\s*$",
         caseSensitive: false,
       ),
       RegExp(
-        r'\brun\s+(?:the\s+)?command\s+"([^"\r\n]+)"',
+        r'^\s*run\s+(?:the\s+)?command\s+"([^"\r\n]+)"\.?\s*$',
         caseSensitive: false,
       ),
       RegExp(
-        r'\brun\s+(?:the\s+)?command\s+`([^`\r\n]+)`',
+        r'^\s*run\s+(?:the\s+)?command\s+`([^`\r\n]+)`\.?\s*$',
         caseSensitive: false,
       ),
     ];
@@ -89,7 +89,7 @@ class RunnerAttemptLedgerPolicy {
         escaping = false;
         continue;
       }
-      if (character == r'\') {
+      if (character == r'\\') {
         escaping = true;
         continue;
       }
