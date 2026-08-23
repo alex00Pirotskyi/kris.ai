@@ -30,7 +30,7 @@ class AgentDecisionV3 {
   AgentDecisionV3({
     required this.kind,
     this.operation,
-    this.arguments = const <String, Object?>{},
+    Map<String, Object?> arguments = const <String, Object?>{},
     this.expectedPostcondition,
     this.idempotencyKey,
     this.summary,
@@ -42,7 +42,7 @@ class AgentDecisionV3 {
     this.waitUntil,
     this.waitHandle,
     this.reason = '',
-  }) {
+  }) : arguments = Map<String, Object?>.unmodifiable(arguments) {
     _validate();
   }
 
