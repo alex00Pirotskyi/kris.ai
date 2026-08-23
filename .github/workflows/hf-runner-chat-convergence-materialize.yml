@@ -60,6 +60,7 @@ jobs:
               text = text.replace(old, new)
           path.write_text(text, encoding='utf-8')
           PY
+          grep -n -C 24 "Kristin needs your help" .repo-hf-runner-chat-convergence.py || true
           python3 .repo-hf-runner-chat-convergence.py
           rm -f .repo-hf-runner-chat-convergence.py
           rm -rf .hf-runner-materializer
