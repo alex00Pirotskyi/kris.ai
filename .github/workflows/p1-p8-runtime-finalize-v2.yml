@@ -1,0 +1,120 @@
+name: P1-P8 Runtime Finalize V2
+
+on:
+  push:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p1-p8-runtime-finalize-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  qualify-publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Apply deterministic runtime integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tool/p1_p8_runtime_finalize.py
+          python tool/p1_p8_runtime_finalize.py
+          dart format \
+            lib/product/agent_context_v2.dart \
+            lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/mcp_registry_v2.dart \
+            lib/product/p2_product_runtime_bootstrap.dart \
+            lib/product/p8_effect_journal_adapter.dart \
+            lib/product/p8_external_effects.dart \
+            lib/product/p8_observability.dart \
+            lib/product/planning_runtime.dart \
+            lib/product/product_runtime.dart \
+            lib/product/storage_security.dart \
+            test/product/agent_context_v2_test.dart \
+            test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_product_runtime_telemetry_test.dart \
+            test/product/source_contract_test.dart
+      - name: Focused P6-P8 runtime gate
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/agent_context_v2_test.dart
+          test/product/agent_decision_v3_test.dart
+          test/product/agent_protocol_v3_test.dart
+          test/product/mcp_registry_v2_test.dart
+          test/product/p8_effect_journal_adapter_test.dart
+          test/product/p8_external_effects_test.dart
+          test/product/p8_observability_test.dart
+          test/product/p8_product_runtime_telemetry_test.dart
+      - name: P2 runtime compatibility gate
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/p2_product_runtime_bootstrap_test.dart
+          test/product/p2_runtime_composition_test.dart
+          test/product/p2_product_runtime_integration_test.dart
+      - name: P6-P8 Python contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_install_doctor_test.py
+          python tool/agent_safety_v2_test.py
+          python tool/agent_benchmark_signing_test.py
+          python tool/a2a_protocol_v1_test.py
+          python tool/a2a_bridge_test.py
+          python tool/extension_registry_v2_test.py
+          python tool/secret_scan_test.py
+          python tool/dependency_policy_test.py
+          python tool/p8_soak_gate_test.py
+          python tool/p8_terminal_fault_harness_test.py
+          python tool/p8_workflow_chaos_test.py
+          python tool/p8_release_evidence_gate_test.py
+      - name: Fatal static analysis
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Complete Flutter regression
+        run: flutter test --no-pub --concurrency=1 --reporter compact
+      - name: Deterministic release validator
+        run: python tool/validate_release.py --project . --skip-secrets
+      - name: Workflow integrity
+        run: ruby tool/workflow_integrity_test.rb
+      - name: Publish clean runtime candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p1-p8-runtime-finalize-v2.yml
+          rm -f tool/p1_p8_runtime_finalize.py
+          python tool/p2_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p2_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          python tool/dart_format_scope.py --check
+          flutter test --no-pub --concurrency=1 test/product/source_contract_test.dart
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(train): bind P6-P8 runtime and retire duplicate P5 probe'
+          git push origin HEAD:agent/p1-p8-source-convergence-20260823
