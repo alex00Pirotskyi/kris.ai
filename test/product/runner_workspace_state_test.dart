@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kristin_local_agent/product/execution_intelligence.dart';
 import 'package:kristin_local_agent/product/runner_attempt_ledger.dart';
 
 void main() {
@@ -56,5 +57,30 @@ void main() {
         await root.delete(recursive: true);
       }
     }
+  });
+
+  test('material workspace digest participates in world-state identity', () {
+    const semantic = SemanticProgressSnapshot(
+      artifacts: <String, String>{},
+      evidenceIds: <String>{'evidence-only'},
+      satisfiedCriteria: <String>{},
+      externalState: <String>{},
+      planHash: 'plan',
+    );
+
+    final before = policy.worldStateSha256(
+      semantic,
+      mutationEpoch: 0,
+      workspaceSha256:
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+    final after = policy.worldStateSha256(
+      semantic,
+      mutationEpoch: 0,
+      workspaceSha256:
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    );
+
+    expect(after, isNot(before));
   });
 }
