@@ -113,6 +113,7 @@ void main() {
       const failedResult = <String, dynamic>{
         'outcome': 'tool_error',
         'errorCode': 'tool_result_not_ok',
+        'tool': 'run_command',
         'actionSha256':
             '3333333333333333333333333333333333333333333333333333333333333333',
         'decisionSha256':
@@ -144,18 +145,34 @@ void main() {
       const verification = <String, dynamic>{
         'outcome': 'tool_error',
         'errorCode': 'verification_failed',
+        'tool': 'verify_project',
         'actionSha256':
             '5555555555555555555555555555555555555555555555555555555555555555',
         'decisionSha256':
             '6666666666666666666666666666666666666666666666666666666666666666',
         'action': <String, dynamic>{'action': 'tool', 'tool': 'verify_project'},
       };
-      final branches = <Map<String, dynamic>>[correction, verification];
+      const genericVerificationFailure = <String, dynamic>{
+        'outcome': 'tool_error',
+        'errorCode': 'tool_result_not_ok',
+        'tool': 'verify_project',
+        'actionSha256':
+            '7777777777777777777777777777777777777777777777777777777777777777',
+        'decisionSha256':
+            '8888888888888888888888888888888888888888888888888888888888888888',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'verify_project'},
+      };
+      final branches = <Map<String, dynamic>>[
+        correction,
+        verification,
+        genericVerificationFailure,
+      ];
 
-      expect(policy.closedActionHashes(branches), hasLength(2));
-      expect(policy.closedDecisionHashes(branches), hasLength(2));
+      expect(policy.closedActionHashes(branches), hasLength(3));
+      expect(policy.closedDecisionHashes(branches), hasLength(3));
       expect(policy.closedBranchPrompt(branches), contains('path_missing'));
       expect(policy.closedBranchPrompt(branches), contains('verification_failed'));
+      expect(policy.closedBranchPrompt(branches), contains('tool_result_not_ok'));
     });
 
     test('world state ignores evidence-only churn', () {
