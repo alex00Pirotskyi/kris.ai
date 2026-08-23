@@ -1,0 +1,14 @@
+{
+  "assertion": "Cross-profile ciphertext transplantation is rejected and browser profile storage remains authenticated and application-owned.",
+  "baseMainSha": "b1bc568d8b69534eb65a0cfc7b86dfcebe893051",
+  "commands": [
+    "flutter test --no-pub --reporter expanded test/product/browser/browser_profile_isolation_test.dart test/product/browser/browser_phase_completion_test.dart test/product/browser/browser_security_suite_test.dart test/product/research/research_runtime_test.dart",
+    "flutter test --no-pub --concurrency=1 --reporter expanded test/product/browser test/product/research",
+    "flutter analyze --no-pub --fatal-warnings --fatal-infos",
+    "flutter test --no-pub --concurrency=1 --reporter expanded"
+  ],
+  "result": "passed",
+  "runner": "github-actions:ubuntu-24.04",
+  "schemaVersion": "1.0.0",
+  "taskId": "P3-008"
+}
