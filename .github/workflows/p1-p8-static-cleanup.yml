@@ -1,0 +1,117 @@
+name: P1-P8 Static Cleanup
+
+on:
+  push:
+    branches:
+      - agent/p1-p8-source-convergence-20260823
+    paths:
+      - '.github/workflows/p1-p8-static-cleanup.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p1-p8-static-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Apply analyzer-safe durable cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str, label: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding='utf-8')
+              if new in text and old not in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one anchor, found {count}')
+              target.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'lib/product/agent_protocol_v3.dart',
+              "import 'agent_decision.dart';\n",
+              '',
+              'agent protocol v3 legacy import',
+          )
+
+          replace_once(
+              'test/product/p8_research_adversarial_test.dart',
+              "import 'package:flutter_test/flutter_test.dart';\n",
+              "import 'package:flutter_test/flutter_test.dart';\nimport 'package:kristin_local_agent/product/crypto_utils.dart';\n",
+              'research redactor import',
+          )
+
+          mcp = Path('lib/product/mcp_registry_v2.dart')
+          text = mcp.read_text(encoding='utf-8')
+          replacements = (
+              (
+                  "      if (value.isEmpty) throw FormatException('mcp_descriptor_$key_required');\n",
+                  "      if (value.isEmpty) {\n        throw FormatException('mcp_descriptor_$key_required');\n      }\n",
+              ),
+              (
+                  "      if (raw == null) return const <String>{};\n",
+                  "      if (raw == null) {\n        return const <String>{};\n      }\n",
+              ),
+              (
+                  "      if (raw is! List) throw FormatException('mcp_descriptor_$key_invalid');\n",
+                  "      if (raw is! List) {\n        throw FormatException('mcp_descriptor_$key_invalid');\n      }\n",
+              ),
+              (
+                  "    if (tools.isEmpty) throw const FormatException('mcp_descriptor_tools_required');\n",
+                  "    if (tools.isEmpty) {\n      throw const FormatException('mcp_descriptor_tools_required');\n    }\n",
+              ),
+              (
+                  "    if (current.state != McpLifecycleStateV2.running) return false;\n",
+                  "    if (current.state != McpLifecycleStateV2.running) {\n      return false;\n    }\n",
+              ),
+              (
+                  "    if (record == null) throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n",
+                  "    if (record == null) {\n      throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n    }\n",
+              ),
+          )
+          for old, new in replacements:
+              if old in text:
+                  text = text.replace(old, new, 1)
+              elif new not in text:
+                  raise SystemExit(f'MCP analyzer anchor missing: {old.strip()}')
+          mcp.write_text(text, encoding='utf-8')
+
+          finalizer = Path('tool/p1_p8_runtime_finalize.py')
+          text = finalizer.read_text(encoding='utf-8')
+          old = "        \"import 'agent_context_v2.dart';\\nimport 'agent_protocol.dart';\\nimport 'agent_protocol_v3.dart';\\n\",\n"
+          new = "        \"import 'agent_context_v2.dart';\\nimport 'agent_protocol_v3.dart';\\n\",\n"
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('planning runtime finalizer import anchor missing')
+          finalizer.write_text(text, encoding='utf-8')
+          PY
+          python -m py_compile tool/p1_p8_runtime_finalize.py
+          python tool/p2_refresh_source_manifest.py .
+          rm -f .github/workflows/p1-p8-static-cleanup.yml
+          python tool/p2_refresh_source_manifest.py .
+          git diff --check
+      - name: Publish analyzer cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(train): clear runtime analyzer gate'
+          git push origin HEAD:agent/p1-p8-source-convergence-20260823
