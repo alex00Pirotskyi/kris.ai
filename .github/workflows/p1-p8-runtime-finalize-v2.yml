@@ -1,4 +1,4 @@
-# clean helper transport for P1-P8 runtime convergence
+# qualify live P1-P8 train f787f329 after soak-fixture repair
 name: P1-P8 Runtime Finalize V2
 
 on:
