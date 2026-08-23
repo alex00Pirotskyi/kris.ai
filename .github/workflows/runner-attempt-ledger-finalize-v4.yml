@@ -5,9 +5,6 @@ on:
   push:
     branches:
       - hotfix/runner-attempt-ledger-v4-agent-isolated
-  pull_request:
-    branches:
-      - hotfix/runner-attempt-ledger-v4-agent-isolated
   workflow_dispatch:
 
 permissions:
@@ -39,6 +36,26 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
+
+      - name: Repair and syntax-check one-shot finalizer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tool/runner_attempt_ledger_finalize.py')
+          text = path.read_text(encoding='utf-8')
+          start = "    methods = r'''\n"
+          end = "      });\n'''\n    text = text.replace(marker, methods + marker, 1)"
+          if text.count(start) != 1 or text.count(end) != 1:
+              raise SystemExit('durable workflow generated-string delimiter marker changed')
+          text = text.replace(start, '    methods = r"""\n', 1)
+          text = text.replace(
+              end,
+              '      });\n"""\n    text = text.replace(marker, methods + marker, 1)',
+              1,
+          )
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
+          python -m py_compile tool/runner_attempt_ledger_finalize.py
 
       - name: Unlock authoritative finalizer payload
         run: |
@@ -81,6 +98,7 @@ jobs:
               text = text.replace(old, new, 1)
           path.write_text(text, encoding='utf-8', newline='\n')
           PY
+          python -m py_compile tool/runner_attempt_ledger_finalize.py
 
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
