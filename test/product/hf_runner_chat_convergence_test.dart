@@ -288,6 +288,15 @@ void main() {
     expect(task.manual, isTrue);
   });
 
+  test('blank non-manual task titles remain invalid', () {
+    final task = PlanTaskRecord.fromJson(const <String, dynamic>{
+      'id': 'non-manual-task',
+      'title': '   ',
+      'manual': false,
+    });
+    expect(task.title.trim(), isEmpty);
+  });
+
   test('timeline projection keeps durable and live activity together', () {
     final event = EventEnvelope(
       sequence: 1,
