@@ -410,6 +410,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
     );
     if (evidence == null) {
       _state = _state.copyWith(
+        selectedEvidenceId: null,
         recoveryMessage:
             'Evidence "$evidenceId" is not part of saved run "$runId".',
       );

@@ -44,6 +44,12 @@ void main() {
     );
 
     controller.selectRun('run.p5-complete-001');
+    final jsonEvidence = P5PrototypeFixtures.evidenceForRun(
+      'run.p5-complete-001',
+    ).singleWhere((item) => item.kind == P5EvidenceKind.json);
+    controller.selectEvidence(jsonEvidence.id);
+    expect(controller.state.selectedEvidenceId, jsonEvidence.id);
+
     controller.selectEvidence('evidence.run.other.json');
     expect(controller.state.selectedEvidenceId, isNull);
     expect(
@@ -73,6 +79,16 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const Key('saved-run-evidence-index')), findsOneWidget);
+    expect(
+      find.byKey(const Key('evidence-viewer-textMetadata')),
+      findsNothing,
+    );
+    expect(
+      find.text(
+        'Choose a supported saved-run evidence type to open its viewer.',
+      ),
+      findsOneWidget,
+    );
     for (final kind in P5EvidenceKind.values) {
       final item = find.byKey(Key('evidence-item-${kind.name}'));
       expect(item, findsOneWidget);

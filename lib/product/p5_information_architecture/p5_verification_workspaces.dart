@@ -150,12 +150,11 @@ extension _P5VerificationWorkspaces
     final evidence = savedRun == null
         ? const <P5EvidenceFixture>[]
         : P5PrototypeFixtures.evidenceForRun(savedRun.id);
-    final selected = savedRun == null
+    final selected = savedRun == null || state.selectedEvidenceId == null
         ? null
         : evidence
-                .where((item) => item.id == state.selectedEvidenceId)
-                .firstOrNull ??
-            evidence.firstOrNull;
+            .where((item) => item.id == state.selectedEvidenceId)
+            .firstOrNull;
     return _scrollWorkspace(
       context,
       children: <Widget>[
