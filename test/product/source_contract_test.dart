@@ -224,6 +224,7 @@ void main() {
         'lib/product/p2_runtime_resource_resolver.dart',
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
+        'lib/product/p5_command_palette.dart',
         'lib/product/p5_design_tokens.dart',
         'lib/product/p5_global_autonomy.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
@@ -284,7 +285,9 @@ void main() {
       final prototype = source(
         'lib/product/p5_information_architecture/p5_prototype.dart',
       );
-      expect(ui, contains('P5GlobalAutonomyBar(binding: _autonomyBinding)'));
+      expect(ui, contains('P5GlobalAutonomyBar('));
+      expect(ui, contains('binding: _autonomyBinding'));
+      expect(ui, contains('onOpenCommands: _openCommandPalette'));
       expect(ui, contains('globalAutonomy: _autonomyBinding'));
       expect(autonomy, contains('_runtime.pause(runId)'));
       expect(autonomy, contains('_runtime.cancel(runId)'));

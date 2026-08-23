@@ -12,8 +12,10 @@ import 'domain.dart';
 import 'product_runtime.dart';
 import 'p2_product_runtime_bootstrap.dart';
 import 'p5_design_tokens.dart';
+import 'p5_command_palette.dart';
 import 'p5_global_autonomy.dart';
 import 'p5_information_architecture/p5_controller.dart';
+import 'p5_information_architecture/p5_models.dart';
 import 'p5_information_architecture/p5_prototype.dart';
 import 'p5_information_architecture/p5_shell_layout.dart';
 import 'ui_advanced.dart';
@@ -147,6 +149,37 @@ class _KristinMainShellState extends State<KristinMainShell> {
     super.dispose();
   }
 
+  Future<void> _openCommandPalette() async {
+    final command = await showDialog<P5CommandDefinition>(
+      context: context,
+      builder: (dialogContext) => P5CommandPaletteDialog(
+        commands: P5CommandCatalog.primary,
+        onSelected: (selected) => Navigator.of(dialogContext).pop(selected),
+      ),
+    );
+    if (!mounted || command == null) {
+      return;
+    }
+    _invokeCommand(command);
+  }
+
+  void _invokeCommand(P5CommandDefinition command) {
+    switch (command.actionKind) {
+      case P5CommandActionKind.shellDestination:
+        _selectDestination(command.shellIndex!);
+        return;
+      case P5CommandActionKind.experienceWorkspace:
+        _selectDestination(1);
+        _experienceController.selectWorkspace(command.workspace!);
+        return;
+      case P5CommandActionKind.launchExperienceTask:
+        _selectDestination(1);
+        _experienceController.selectWorkspace(P5WorkspaceId.homeChat);
+        _experienceController.launchComposer();
+        return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final qaPreview = widget.ownerMode.runtimeProvenance['qaPreview'] == true;
@@ -231,7 +264,10 @@ class _KristinMainShellState extends State<KristinMainShell> {
     final shell = Scaffold(
       body: Column(
         children: <Widget>[
-          P5GlobalAutonomyBar(binding: _autonomyBinding),
+          P5GlobalAutonomyBar(
+            binding: _autonomyBinding,
+            onOpenCommands: _openCommandPalette,
+          ),
           Expanded(child: workspaceBody),
         ],
       ),
@@ -265,12 +301,17 @@ class _KristinMainShellState extends State<KristinMainShell> {
               ],
             ),
     );
-    if (!qaPreview) return shell;
+    final commandShell = P5CommandPaletteShortcutScope(
+      onOpenPalette: _openCommandPalette,
+      onSelectShellDestination: _selectDestination,
+      child: shell,
+    );
+    if (!qaPreview) return commandShell;
     return Banner(
       message: 'OWNER-RISK QA — SECURITY EVIDENCE WAIVED',
       location: BannerLocation.topEnd,
       color: Colors.deepOrange,
-      child: shell,
+      child: commandShell,
     );
   }
 
