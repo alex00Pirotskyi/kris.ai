@@ -1,4 +1,4 @@
-# direct contained P1-P8 runtime convergence after focused-gate repair
+# direct P1-P8 runtime convergence after soak-fixture repair
 name: P1-P8 Runtime Finalize V2
 
 on:
