@@ -70,6 +70,71 @@ void main() {
       expect(policy.deterministicAction(item), isNull);
     });
 
+    test('normalizes equivalent JSON decisions before hashing', () {
+      const first = '{"action":"tool","tool":"git_status","arguments":{}}';
+      const second = '''```json
+{
+  "arguments": {},
+  "tool": "git_status",
+  "action": "tool"
+}
+```''';
+      expect(policy.decisionSha256(first), policy.decisionSha256(second));
+    });
+
+    test('does not close transient or resource failures', () {
+      const transient = <String, dynamic>{
+        'outcome': 'tool_error',
+        'errorCode': 'provider_connection_failed',
+        'actionSha256':
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        'decisionSha256':
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'research_fetch'},
+      };
+      const resource = <String, dynamic>{
+        'outcome': 'deterministic_error',
+        'errorCode': 'resource_unavailable',
+        'actionSha256':
+            'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+        'decisionSha256':
+            'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'run_command'},
+      };
+      final branches = <Map<String, dynamic>>[transient, resource];
+
+      expect(policy.closedActionHashes(branches), isEmpty);
+      expect(policy.closedDecisionHashes(branches), isEmpty);
+      expect(policy.closedBranchPrompt(branches), isEmpty);
+    });
+
+    test('closes deterministic corrections and observed failed results', () {
+      const correction = <String, dynamic>{
+        'outcome': 'tool_error',
+        'errorCode': 'path_missing',
+        'actionSha256':
+            'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        'decisionSha256':
+            'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'inspect_file'},
+      };
+      const failedResult = <String, dynamic>{
+        'outcome': 'tool_error',
+        'errorCode': 'tool_result_not_ok',
+        'actionSha256':
+            '1111111111111111111111111111111111111111111111111111111111111111',
+        'decisionSha256':
+            '2222222222222222222222222222222222222222222222222222222222222222',
+        'action': <String, dynamic>{'action': 'tool', 'tool': 'run_command'},
+      };
+      final branches = <Map<String, dynamic>>[correction, failedResult];
+
+      expect(policy.closedActionHashes(branches), hasLength(2));
+      expect(policy.closedDecisionHashes(branches), hasLength(2));
+      expect(policy.closedBranchPrompt(branches), contains('path_missing'));
+      expect(policy.closedBranchPrompt(branches), contains('tool_result_not_ok'));
+    });
+
     test('world state ignores evidence-only churn', () {
       const first = SemanticProgressSnapshot(
         artifacts: <String, String>{'pubspec.yaml': 'a'},
