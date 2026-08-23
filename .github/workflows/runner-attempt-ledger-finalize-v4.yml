@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - hotfix/runner-attempt-ledger-v4-agent-isolated
+  pull_request:
+    branches:
+      - hotfix/runner-attempt-ledger-v4-agent-isolated
   workflow_dispatch:
 
 permissions:
