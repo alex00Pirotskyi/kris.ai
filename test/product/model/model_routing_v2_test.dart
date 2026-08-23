@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/key_registry_v2.dart';
 import 'package:kristin_local_agent/product/model/model.dart';
-import 'package:kristin_local_agent/product/model/model_routing_v2.dart';
 
 const String _digest =
     'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
