@@ -1,6 +1,9 @@
 name: P1 Authority Service Amendment
 
 on:
+  push:
+    branches:
+      - preflight/p1a-v66-runner-ledger-qualifier
   pull_request:
     branches: [main]
   workflow_dispatch:
