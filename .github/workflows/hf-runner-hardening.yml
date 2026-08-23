@@ -1,4 +1,4 @@
-# qualification trigger after bounded anchor repairs
+# qualification trigger after analyzer-safe clamp repair
 name: Runner Chat Convergence Hardening
 
 on:
