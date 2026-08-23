@@ -1,0 +1,31 @@
+name: P1-P8 Release Validator Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p1-p8-release-validator-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Run release validator only
+        run: python tool/validate_release.py
