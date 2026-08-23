@@ -1,4 +1,4 @@
-# synchronized P1-P8 runtime convergence trigger
+# synchronized P1-P8 runtime convergence after role-routing fixture repair
 name: P1-P8 Runtime Finalize V2
 
 on:
