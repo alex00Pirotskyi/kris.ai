@@ -1,4 +1,4 @@
-# synchronized P1-P8 runtime convergence after durable role-routing and P2 gate repair
+# direct contained P1-P8 runtime convergence after focused-gate repair
 name: P1-P8 Runtime Finalize V2
 
 on:
@@ -20,7 +20,7 @@ permissions:
 jobs:
   qualify-publish:
     if: github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -49,6 +49,12 @@ jobs:
           python tool/p1_p8_runtime_finalize.py
           python3 - <<'PY'
           from pathlib import Path
+
+          mcp = Path('lib/product/mcp_registry_v2.dart')
+          text = mcp.read_text(encoding='utf-8')
+          text = text.replace("'mcp_descriptor_$key_required'", "'mcp_descriptor_${key}_required'")
+          text = text.replace("'mcp_descriptor_$key_invalid'", "'mcp_descriptor_${key}_invalid'")
+          mcp.write_text(text, encoding='utf-8')
 
           contract = Path('test/product/source_contract_test.dart')
           text = contract.read_text(encoding='utf-8')
