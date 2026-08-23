@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' show FrameTiming;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -289,7 +287,7 @@ final class P5UiPerformanceMonitor extends ChangeNotifier {
     if (input.isEmpty) return null;
     final sorted = List<double>.from(input)..sort();
     final index = ((sorted.length - 1) * percentile).ceil();
-    return sorted[index.clamp(0, sorted.length - 1)];
+    return sorted[index.clamp(0, sorted.length - 1).toInt()];
   }
 
   static P5UiPerformanceMetric _upperBoundMetric({
