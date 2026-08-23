@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'crypto_utils.dart';
 import 'domain.dart';
@@ -7,6 +8,23 @@ import 'retry_policy.dart';
 
 class RunnerAttemptLedgerPolicy {
   const RunnerAttemptLedgerPolicy();
+
+  static const Set<String> _ignoredWorkspaceSegments = <String>{
+    '.git',
+    '.dart_tool',
+    'build',
+    'node_modules',
+    '.venv',
+    'venv',
+    '__pycache__',
+    '.pytest_cache',
+    '.idea',
+    '.vscode',
+    '.kristin',
+    'coverage',
+    'dist',
+    'target',
+  };
 
   AgentAction? deterministicAction(WorkItem item) {
     if (!item.allowedTools.contains('run_command')) {
@@ -155,6 +173,59 @@ class RunnerAttemptLedgerPolicy {
     }
   }
 
+  Future<String> workspaceSha256(
+    Directory root, {
+    int maxFiles = 25000,
+    int maxFileBytes = 2 * 1024 * 1024,
+  }) async {
+    final absoluteRoot = root.absolute;
+    if (!await absoluteRoot.exists()) {
+      throw ProductException(
+        'attempt_ledger_workspace_missing',
+        'The active project root is unavailable for state fingerprinting.',
+      );
+    }
+    final entries = <String>[];
+    var fileCount = 0;
+
+    Future<void> visit(Directory directory, String prefix) async {
+      await for (final entity in directory.list(followLinks: false)) {
+        final name = entity.uri.pathSegments
+            .where((segment) => segment.isNotEmpty)
+            .last;
+        final relative = prefix.isEmpty ? name : '$prefix/$name';
+        if (entity is Directory) {
+          if (_ignoredWorkspaceSegments.contains(name)) {
+            continue;
+          }
+          await visit(entity, relative);
+          continue;
+        }
+        if (entity is! File) {
+          continue;
+        }
+        if (++fileCount > maxFiles) {
+          throw ProductException(
+            'attempt_ledger_workspace_limit',
+            'The project exceeds the bounded runner state fingerprint limit.',
+            details: <String, dynamic>{'limit': maxFiles},
+          );
+        }
+        final stat = await entity.stat();
+        if (stat.size > maxFileBytes) {
+          entries.add('$relative:oversize:${stat.size}');
+          continue;
+        }
+        final bytes = await entity.readAsBytes();
+        entries.add('$relative:${Sha256.hex(bytes)}');
+      }
+    }
+
+    await visit(absoluteRoot, '');
+    entries.sort();
+    return Sha256.text(canonicalJson(entries));
+  }
+
   Iterable<Map<String, dynamic>> _prunableBranches(
     Iterable<Map<String, dynamic>> branches,
   ) sync* {
@@ -210,6 +281,7 @@ class RunnerAttemptLedgerPolicy {
   String worldStateSha256(
     SemanticProgressSnapshot snapshot, {
     required int mutationEpoch,
+    String workspaceSha256 = '',
   }) {
     final artifacts = snapshot.artifacts.entries.toList()
       ..sort((left, right) => left.key.compareTo(right.key));
@@ -217,6 +289,7 @@ class RunnerAttemptLedgerPolicy {
     final externalState = snapshot.externalState.toList()..sort();
     return Sha256.text(
       canonicalJson(<String, dynamic>{
+        'workspaceSha256': workspaceSha256,
         'artifacts': <String, String>{
           for (final entry in artifacts) entry.key: entry.value,
         },
