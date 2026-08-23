@@ -1,0 +1,36 @@
+{
+  "acceptance": {
+    "criterion": "Cross-profile leakage tests pass.",
+    "proof": [
+      "test/product/browser/browser_profile_isolation_test.dart",
+      "test/product/browser/browser_phase_completion_test.dart",
+      "test/product/browser/browser_security_suite_test.dart"
+    ]
+  },
+  "baseMainSha": "b1bc568d8b69534eb65a0cfc7b86dfcebe893051",
+  "claims": {
+    "associatedDataBindsExactProfileIdentity": true,
+    "crossProfileCiphertextRejected": true,
+    "persistentProfilePlaintextWrittenByStore": false,
+    "profileIdsBoundedToApplicationRoot": true
+  },
+  "implementation": [
+    "lib/product/browser/browser_profile_store.dart"
+  ],
+  "sourceHistory": [
+    {
+      "mergeCommit": "6a4e799dda354d905d90bf46073f3497988fc91f",
+      "pullRequest": 204,
+      "role": "P3 phase source delivery"
+    },
+    {
+      "pullRequest": 220,
+      "role": "P3 browser security and quality closure"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "status": "implemented",
+  "taskId": "P3-008",
+  "testResults": "release/evidence/P3-008/test-results.json",
+  "truthBoundary": "This packet establishes the P3-008 browser profile storage contract and ADR-0005 acceptance evidence. It does not claim packaged release support, production promotion, GA, or identity-independent security review."
+}
