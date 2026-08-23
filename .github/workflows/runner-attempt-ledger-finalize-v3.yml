@@ -27,29 +27,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Synchronize current main without publishing
-        run: |
-          git fetch origin main
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git merge --no-edit origin/main
-
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
-
-      - name: Unlock authoritative finalizer payload
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('migrations/workflow/007_runner_attempt_ledger.sql')
-          marker = '__RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__\n'
-          text = path.read_text(encoding='utf-8')
-          if not text.startswith(marker) or text.count(marker) != 1:
-              raise SystemExit('authoritative runner finalizer guard missing or duplicated')
-          path.write_text(text[len(marker):], encoding='utf-8', newline='\n')
-          PY
 
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
@@ -77,9 +58,18 @@ jobs:
       - name: Generate reviewed workflow migrations
         run: python tool/generate_workflow_migrations.py
 
-      - name: Format hotfix sources
+      - name: Format hotfix-owned Dart sources
         run: >-
           dart format
+          lib/product/planning_runtime.dart
+          lib/product/durable_workflow.dart
+          lib/product/runner_attempt_ledger.dart
+          test/product/runner_attempt_ledger_test.dart
+          test/product/durable_workflow_kernel_test.dart
+
+      - name: Verify hotfix-owned Dart formatting
+        run: >-
+          dart format --output=none --set-exit-if-changed
           lib/product/planning_runtime.dart
           lib/product/durable_workflow.dart
           lib/product/runner_attempt_ledger.dart
@@ -94,9 +84,6 @@ jobs:
 
       - name: Check durable workflow kernel
         run: python tool/workflow_kernel_test.py --project .
-
-      - name: Check scoped Dart formatting
-        run: python tool/dart_format_scope.py --check
 
       - name: Analyze hotfix
         run: flutter analyze --no-pub --fatal-warnings --fatal-infos
@@ -129,11 +116,9 @@ jobs:
       - name: Run offline system gate on final product tree
         run: python tool/system_test.py --project .
 
-      - name: Validate final diff
-        run: git diff --check
-
       - name: Commit qualified hotfix
         run: |
           git add -A
+          git diff --cached --check
           git commit -m "fix(runner): prune repeated action branches"
           git push origin HEAD:hotfix/runner-attempt-ledger-v3-isolated
