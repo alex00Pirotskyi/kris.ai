@@ -10,7 +10,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAYLOAD = ROOT / 'tool' / 'runner_attempt_ledger_finalize_payload.py'
-BASE_MAIN = '559e1c8de68824f73a004ca209ebdc1a138ca422'
 V7_MIGRATION_DIGEST = '966ca51bd07ea48e2349123d4dd8a73dcd8bb4aa177f5fc70c2b62a07738aa29'
 V6_MIGRATION_DIGEST = 'df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261'
 ALLOWED_STAGING_PATHS = {
@@ -30,9 +29,22 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
+def current_main_base() -> str:
+    base = subprocess.check_output(
+        ['git', 'merge-base', 'HEAD', 'origin/main'],
+        cwd=ROOT,
+        text=True,
+        encoding='utf-8',
+    ).strip()
+    if len(base) != 40:
+        raise SystemExit(f'invalid current-main merge base: {base!r}')
+    return base
+
+
 def restore_branch_isolation() -> None:
+    base_main = current_main_base()
     changed = subprocess.check_output(
-        ['git', 'diff', '--name-only', f'{BASE_MAIN}...HEAD'],
+        ['git', 'diff', '--name-only', f'{base_main}...HEAD'],
         cwd=ROOT,
         text=True,
         encoding='utf-8',
@@ -44,7 +56,7 @@ def restore_branch_isolation() -> None:
         if not relative or relative in ALLOWED_STAGING_PATHS:
             continue
         exists_in_base = subprocess.run(
-            ['git', 'cat-file', '-e', f'{BASE_MAIN}:{relative}'],
+            ['git', 'cat-file', '-e', f'{base_main}:{relative}'],
             cwd=ROOT,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -52,7 +64,7 @@ def restore_branch_isolation() -> None:
         ).returncode == 0
         if exists_in_base:
             subprocess.run(
-                ['git', 'checkout', BASE_MAIN, '--', relative],
+                ['git', 'checkout', base_main, '--', relative],
                 cwd=ROOT,
                 check=True,
             )
@@ -142,13 +154,19 @@ def patch_offline_contracts() -> None:
     )
     old_schema_marker = '"generatedWorkflowSchemaVersion = 6" in workflow_migrations'
     schema_marker_count = text.count(old_schema_marker)
-    if schema_marker_count != 3:
+    if schema_marker_count != 2:
         raise SystemExit(
-            f'schema-v6 source-contract markers: expected 3, found {schema_marker_count}'
+            f'schema-v6 source-contract markers: expected 2, found {schema_marker_count}'
         )
     text = text.replace(
         old_schema_marker,
         '"generatedWorkflowSchemaVersion = 7" in workflow_migrations',
+    )
+    text = replace_once(
+        text,
+        '"generatedWorkflowSchemaVersion = 6",',
+        '"generatedWorkflowSchemaVersion = 7",',
+        'V1.9 workflow schema marker',
     )
     text = replace_once(
         text,
