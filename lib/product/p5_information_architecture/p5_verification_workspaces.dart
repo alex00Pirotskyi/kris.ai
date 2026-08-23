@@ -316,24 +316,46 @@ extension _P5VerificationWorkspaces
   ) {
     switch (fixture.kind) {
       case P5EvidenceKind.image:
-        return Container(
-          key: const Key('evidence-image-preview'),
-          height: 180,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            border: Border.all(color: Theme.of(context).dividerColor),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Icon(Icons.image_outlined, size: 64),
-              const SizedBox(height: 8),
-              const Text('640 × 360 deterministic image preview'),
-              Text(fixture.content.split('\n').last),
-            ],
-          ),
-        );
+        try {
+          final imageBytes = base64Decode(fixture.content);
+          return Container(
+            key: const Key('evidence-image-preview'),
+            height: 180,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).dividerColor),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Semantics(
+                  image: true,
+                  label: 'Deterministic saved-run image preview',
+                  child: Image.memory(
+                    imageBytes,
+                    key: const Key('p5-evidence-image-bytes'),
+                    width: 160,
+                    height: 90,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.none,
+                    gaplessPlayback: true,
+                    errorBuilder: (context, error, stackTrace) => const Text(
+                      'Saved image bytes could not be decoded.',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text('64 × 36 deterministic PNG fixture preview'),
+              ],
+            ),
+          );
+        } on FormatException {
+          return const _BoundaryNotice(
+            message:
+                'Saved image evidence is malformed and cannot be previewed.',
+          );
+        }
       case P5EvidenceKind.markdown:
         return Column(
           key: const Key('evidence-markdown-preview'),

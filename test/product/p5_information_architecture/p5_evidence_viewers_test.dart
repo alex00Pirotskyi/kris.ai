@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_controller.dart';
@@ -18,6 +20,16 @@ void main() {
       expect(kinds, containsAll(P5EvidenceKind.values));
       expect(evidence.every((item) => item.runId == run.id), isTrue);
       expect(evidence.every((item) => item.byteLength > 0), isTrue);
+      final image = evidence.singleWhere(
+        (item) => item.kind == P5EvidenceKind.image,
+      );
+      final imageBytes = base64Decode(image.content);
+      expect(image.mediaType, 'image/png');
+      expect(image.byteLength, imageBytes.length);
+      expect(
+        imageBytes.take(8),
+        orderedEquals(<int>[137, 80, 78, 71, 13, 10, 26, 10]),
+      );
     }
     expect(P5PrototypeFixtures.evidenceForRun('run.unknown'), isEmpty);
   });
@@ -70,6 +82,20 @@ void main() {
       final viewer = find.byKey(Key('evidence-viewer-${kind.name}'));
       expect(viewer, findsOneWidget);
       expect(controller.state.selectedEvidenceId, contains(kind.name));
+      if (kind == P5EvidenceKind.image) {
+        final image = find.descendant(
+          of: viewer,
+          matching: find.byKey(const Key('p5-evidence-image-bytes')),
+        );
+        expect(image, findsOneWidget);
+        final widget = tester.widget<Image>(image);
+        expect(widget.image, isA<MemoryImage>());
+        final provider = widget.image as MemoryImage;
+        expect(
+          provider.bytes.take(8),
+          orderedEquals(<int>[137, 80, 78, 71, 13, 10, 26, 10]),
+        );
+      }
     }
 
     final selectedId = controller.state.selectedEvidenceId;

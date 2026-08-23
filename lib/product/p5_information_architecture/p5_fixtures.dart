@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'p5_models.dart';
 
 class P5PrototypeFixtures {
@@ -220,7 +222,7 @@ class P5PrototypeFixtures {
       P5EvidenceKind.binaryMetadata =>
         'bytes=4096\nmedia=application/octet-stream\nsha256=NOT_COMPUTED_FIXTURE',
       P5EvidenceKind.image =>
-        'dimensions=640x360\nalt=Deterministic saved-run image preview\nsource=fixture://evidence/$runId/preview.png',
+        'iVBORw0KGgoAAAANSUhEUgAAAEAAAAAkCAIAAAC2bqvFAAABJ0lEQVR4nO2ZwQ2DMAxFSdUxeusCZYBK7AHjwR5IDMBKPSBFVhIc+0dgqPJPIGLrv8QGAu71/jR31sPaQKkqgLWe9GSYVisfKo1964//awU2Ub6rKa6R26+AJcA2nYWNZwZA3Zcw2ADEjodpxTAMABijAMPZAIHFsW+Dm56WAQcAyjd2Hxz4YfK0IADQgnvuk6fytAhAsgVVGZLPSqyc1AB7Sfl1p5f4J722nHQAWAuWrw+TQQEgb0FJFK9gapgoKYCqBf1gzH0wno8SAUh8ZGsXe8nNRuUB5D7ilpD7gJUBAGYxHnPoBoMDgGuA1u7R2yMOQHgfYGJP2NxlSug0H7DyTXxl901yU081LzOWt/t2WKBWdVNvLUe/TtcvcwZy9f+AsSqAtX4jOZqZSB0k/gAAAABJRU5ErkJggg==',
       P5EvidenceKind.markdown =>
         '# Saved run summary\n\n- Run: $runId\n- State: deterministic fixture\n- Production evidence: not claimed',
       P5EvidenceKind.json =>
@@ -251,7 +253,9 @@ class P5PrototypeFixtures {
       kind: kind,
       title: '${kind.label} viewer fixture',
       mediaType: mediaType,
-      byteLength: content.length,
+      byteLength: kind == P5EvidenceKind.image
+          ? base64Decode(content).length
+          : utf8.encode(content).length,
       summary:
           '${kind.label} evidence saved with deterministic run fixture $runId.',
       content: content,
