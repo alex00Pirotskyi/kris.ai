@@ -1,4 +1,4 @@
-# direct P1-P8 runtime convergence after sustained-soak repair
+# direct P1-P8 runtime convergence after analyzer cleanup
 name: P1-P8 Runtime Finalize V2
 
 on:
@@ -50,11 +50,68 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
+          def replace_required(path: Path, old: str, new: str, label: str) -> None:
+              text = path.read_text(encoding='utf-8')
+              if new in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one anchor, found {count}')
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
           mcp = Path('lib/product/mcp_registry_v2.dart')
           text = mcp.read_text(encoding='utf-8')
           text = text.replace("'mcp_descriptor_$key_required'", "'mcp_descriptor_${key}_required'")
           text = text.replace("'mcp_descriptor_$key_invalid'", "'mcp_descriptor_${key}_invalid'")
+          guard_replacements = (
+              (
+                  "      if (value.isEmpty) throw FormatException('mcp_descriptor_${key}_required');\n",
+                  "      if (value.isEmpty) {\n        throw FormatException('mcp_descriptor_${key}_required');\n      }\n",
+              ),
+              (
+                  "      if (raw == null) return const <String>{};\n",
+                  "      if (raw == null) {\n        return const <String>{};\n      }\n",
+              ),
+              (
+                  "      if (raw is! List) throw FormatException('mcp_descriptor_${key}_invalid');\n",
+                  "      if (raw is! List) {\n        throw FormatException('mcp_descriptor_${key}_invalid');\n      }\n",
+              ),
+              (
+                  "    if (tools.isEmpty) throw const FormatException('mcp_descriptor_tools_required');\n",
+                  "    if (tools.isEmpty) {\n      throw const FormatException('mcp_descriptor_tools_required');\n    }\n",
+              ),
+              (
+                  "    if (current.state != McpLifecycleStateV2.running) return false;\n",
+                  "    if (current.state != McpLifecycleStateV2.running) {\n      return false;\n    }\n",
+              ),
+              (
+                  "    if (record == null) throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n",
+                  "    if (record == null) {\n      throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n    }\n",
+              ),
+          )
+          for old, new in guard_replacements:
+              text = text.replace(old, new)
           mcp.write_text(text, encoding='utf-8')
+
+          protocol = Path('lib/product/agent_protocol_v3.dart')
+          text = protocol.read_text(encoding='utf-8')
+          text = text.replace("import 'agent_decision.dart';\n", '')
+          protocol.write_text(text, encoding='utf-8')
+
+          planning = Path('lib/product/planning_runtime.dart')
+          text = planning.read_text(encoding='utf-8')
+          text = text.replace("import 'agent_protocol.dart';\n", '')
+          planning.write_text(text, encoding='utf-8')
+
+          research = Path('test/product/p8_research_adversarial_test.dart')
+          text = research.read_text(encoding='utf-8')
+          crypto_import = "import 'package:kristin_local_agent/product/crypto_utils.dart';\n"
+          if crypto_import not in text:
+              anchor = "import 'package:flutter_test/flutter_test.dart';\n"
+              if text.count(anchor) != 1:
+                  raise SystemExit('P8 research crypto import anchor mismatch')
+              text = text.replace(anchor, anchor + crypto_import, 1)
+          research.write_text(text, encoding='utf-8')
 
           contract = Path('test/product/source_contract_test.dart')
           text = contract.read_text(encoding='utf-8')
@@ -133,6 +190,7 @@ jobs:
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
             test/product/p8_product_runtime_telemetry_test.dart \
+            test/product/p8_research_adversarial_test.dart \
             test/product/source_contract_test.dart
       - name: Focused P6-P8 runtime gate
         run: >-
