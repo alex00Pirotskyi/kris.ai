@@ -39,6 +39,18 @@ jobs:
         with:
           python-version: '3.12.10'
 
+      - name: Unlock authoritative finalizer payload
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('migrations/workflow/007_runner_attempt_ledger.sql')
+          marker = '__RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__\n'
+          text = path.read_text(encoding='utf-8')
+          if not text.startswith(marker) or text.count(marker) != 1:
+              raise SystemExit('authoritative runner finalizer guard missing or duplicated')
+          path.write_text(text[len(marker):], encoding='utf-8', newline='\n')
+          PY
+
       - name: Bind finalizer to normalized decisions and complete branch recall
         run: |
           python - <<'PY'
