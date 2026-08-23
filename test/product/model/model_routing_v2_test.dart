@@ -21,7 +21,7 @@ const String _authoritySignature =
 ModelBenchmarkTrustContext _trust() {
   final keys = ProtectedKeyRegistryV2()
     ..register(
-      const ProtectedKeyHandleV2(
+      ProtectedKeyHandleV2(
         keyId: _authorityKeyId,
         purpose: ModelBenchmarkTrustContext.signerPurpose,
         provider: 'ephemeral_test',
@@ -79,7 +79,7 @@ ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence.fromJson(
 
 ModelDefinitionRegistry _registry() => ModelDefinitionRegistry(
       providers: <ModelProviderDescriptor>[
-        const ModelProviderDescriptor(
+        ModelProviderDescriptor(
           providerId: 'ollama.local',
           displayName: 'Local Ollama',
           dataBoundary: ModelDataBoundary.localOnly,
@@ -93,7 +93,7 @@ ModelDefinitionRegistry _registry() => ModelDefinitionRegistry(
           digest: _digest,
           parameterSize: '14B',
           quantization: 'Q4_K_M',
-          limits: const ModelLimits(
+          limits: ModelLimits(
             evidenceLevel: ModelEvidenceLevel.measured,
             contextWindowTokens: 32768,
             maxOutputTokens: 4096,
@@ -101,7 +101,7 @@ ModelDefinitionRegistry _registry() => ModelDefinitionRegistry(
             maxToolCallsPerTurn: 0,
             supportsStreaming: true,
           ),
-          toolProfile: const ModelToolProfile(
+          toolProfile: ModelToolProfile(
             evidenceLevel: ModelEvidenceLevel.measured,
             supportsToolCalling: false,
             supportsStructuredOutput: true,
@@ -204,7 +204,7 @@ void main() {
       );
     });
 
-    test('router selects first exact model that has task-class approval', () {
+    test('router selects first exact model with task-class approval', () {
       final policy = _policy(
         executorPreferences: <String>[
           'ollama.local/missing@$_digest',
