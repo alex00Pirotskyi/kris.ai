@@ -40,9 +40,10 @@ class AgentContextEnvelope {
     required this.source,
     required this.trust,
     required String content,
-    this.metadata = const <String, Object?>{},
+    Map<String, Object?> metadata = const <String, Object?>{},
   })  : content = content,
-        contentSha256 = Sha256.text(content) {
+        contentSha256 = Sha256.text(content),
+        metadata = Map<String, Object?>.unmodifiable(metadata) {
     if (!_trustAllowedForSource(source, trust)) {
       throw StateError('agent_context_trust_source_mismatch');
     }
