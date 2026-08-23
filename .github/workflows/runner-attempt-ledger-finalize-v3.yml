@@ -1,9 +1,6 @@
 name: runner-attempt-ledger-finalize-v3
 
 on:
-  push:
-    branches:
-      - hotfix/runner-attempt-ledger-v3-isolated
   pull_request:
     branches:
       - main
