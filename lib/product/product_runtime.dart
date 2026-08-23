@@ -343,6 +343,31 @@ class ProductRuntime {
         final stopwatch = Stopwatch()..start();
         try {
           final provider = models.providerFor(model);
+          if (model.providerId == 'ollama') {
+            final discovered = await provider.discover().timeout(
+                  const Duration(seconds: 12),
+                );
+            final exact = discovered.where((candidate) {
+              if (candidate.name != model.name) return false;
+              if (model.digest.isEmpty || candidate.digest.isEmpty) return true;
+              return candidate.digest == model.digest;
+            }).firstOrNull;
+            stopwatch.stop();
+            return RunCapabilityProbeResult(
+              key: requirement.key,
+              label: requirement.label,
+              ok: exact != null,
+              required: requirement.required,
+              message: exact != null
+                  ? '${model.name} is installed and the Ollama service is reachable.'
+                  : '${model.name} is not available with the selected identity.',
+              durationMilliseconds: stopwatch.elapsedMilliseconds,
+              details: <String, dynamic>{
+                'model': model.toJson(),
+                'probe': 'discovery',
+              },
+            );
+          }
           final result = await provider.generate(
             ModelGenerationRequest(
               identity: model,

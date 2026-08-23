@@ -197,6 +197,7 @@ class _ChatStudioState extends State<ChatStudio> {
   ConversationIntent? conversationIntent;
   bool embeddedClarificationActive = false;
   String liveAssistantText = '';
+  String liveAssistantProtocolText = '';
   String liveAssistantStage = '';
   String liveAssistantMessage = '';
   String liveToolLabel = '';
@@ -409,10 +410,22 @@ class _ChatStudioState extends State<ChatStudio> {
         switch (signal.kind) {
           case LiveRunSignalKind.modelTextDelta:
             final delta = signal.data['delta']?.toString() ?? '';
-            final combined = '$liveAssistantText$delta';
-            liveAssistantText = combined.length <= 12000
-                ? combined
-                : combined.substring(combined.length - 12000);
+            final rawCombined = '$liveAssistantProtocolText$delta';
+            liveAssistantProtocolText = rawCombined.length <= 16000
+                ? rawCombined
+                : rawCombined.substring(rawCombined.length - 16000);
+            final conversational =
+                currentRun?.command.contract.mode == CommandMode.ask &&
+                    isConversationalRequest(
+                      conversationUserRequest ??
+                          currentRun?.command.contract.request ??
+                          '',
+                    );
+            liveAssistantText = conversational
+                ? ConversationStreamProjector.visibleText(
+                    liveAssistantProtocolText,
+                  )
+                : liveAssistantProtocolText;
             liveAssistantStage = 'streaming';
           case LiveRunSignalKind.modelProgress:
             liveAssistantStage = signal.data['stage']?.toString() ?? 'model';
@@ -710,6 +723,7 @@ class _ChatStudioState extends State<ChatStudio> {
       conversationUserRequest = request;
       conversationIntent = intent;
       liveAssistantText = '';
+      liveAssistantProtocolText = '';
       liveAssistantStage = '';
       liveAssistantMessage = '';
       liveToolLabel = '';
@@ -960,6 +974,7 @@ class _ChatStudioState extends State<ChatStudio> {
       selectedWorkItemId = run.items.firstOrNull?.item.id;
       evidence = <EvidenceRecord>[];
       liveAssistantText = '';
+      liveAssistantProtocolText = '';
       liveAssistantStage = 'preflight';
       liveAssistantMessage = 'Checking required capabilities before execution.';
       selectedRunLiveSignals = <LiveRunSignal>[];
@@ -1068,6 +1083,18 @@ class _ChatStudioState extends State<ChatStudio> {
             fresh.command.contract.requiredPermissions,
           ),
         );
+        currentRun = fresh;
+        selectedRunId = fresh.id;
+        selectedWorkItemId = fresh.items.firstOrNull?.item.id;
+        liveAssistantText = '';
+        liveAssistantProtocolText = '';
+        liveAssistantStage = 'preflight';
+        liveAssistantMessage =
+            'Checking required capabilities before execution.';
+        liveToolLabel = '';
+        liveToolOutput = '';
+        selectedRunLiveSignals = <LiveRunSignal>[];
+        selectedRunEvents = <EventEnvelope>[];
         unawaited(runtime.execute(fresh.id));
         await Future<void>.delayed(const Duration(milliseconds: 180));
         return await runtime.getRun(fresh.id) ?? fresh;

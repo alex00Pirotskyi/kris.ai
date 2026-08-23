@@ -18,6 +18,25 @@ void main() {
     expect(intent.projectMayBeProvisioned, isFalse);
   });
 
+  test('conversation stream projector hides protocol JSON while streaming', () {
+    expect(
+      ConversationStreamProjector.visibleText(
+        '{"protocolVersion":"1.0.0","action":"complete","summary":"Hel',
+      ),
+      'Hel',
+    );
+    expect(
+      ConversationStreamProjector.visibleText(
+        '{"action":"complete","summary":"Hello\\nthere"}',
+      ),
+      'Hello\nthere',
+    );
+    expect(
+      ConversationStreamProjector.visibleText('Hello directly'),
+      'Hello directly',
+    );
+  });
+
   test('underspecified build naturally requests clarification', () {
     const orchestrator = ConversationOrchestrator();
     final intent = orchestrator.classify('build me an app', CommandMode.build);
