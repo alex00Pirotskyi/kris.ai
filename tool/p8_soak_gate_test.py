@@ -49,12 +49,24 @@ def main() -> int:
     assert short["passed"] is False
     assert "soak_duration_insufficient" in short["failures"]
 
-    bad = list(healthy)
+    bad = [
+        soak.SoakSample(
+            timestamp=item.timestamp,
+            rss_bytes=200 * 1024 * 1024 + index * 8 * 1024 * 1024,
+            open_handles=100 + index * 6,
+            active_runs=item.active_runs,
+            completed_runs=item.completed_runs,
+            failed_runs=0,
+            unauthorized_effects=0,
+            crashes=0,
+        )
+        for index, item in enumerate(healthy)
+    ]
     final = bad[-1]
     bad[-1] = soak.SoakSample(
         timestamp=final.timestamp,
-        rss_bytes=2 * 1024 * 1024 * 1024,
-        open_handles=5000,
+        rss_bytes=final.rss_bytes,
+        open_handles=final.open_handles,
         active_runs=0,
         completed_runs=1000,
         failed_runs=100,
