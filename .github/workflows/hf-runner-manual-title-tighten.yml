@@ -25,21 +25,17 @@ jobs:
 
           domain = Path('lib/product/domain.dart')
           text = domain.read_text(encoding='utf-8')
-          old = """      title: json['title']?.toString().trim().isNotEmpty == true
-                  ? json['title'].toString().trim()
-                  : (json['manual'] == true ? 'Manual checkpoint' : 'Task'),"""
-          new = """      title: json['title']?.toString().trim().isNotEmpty == true
-                  ? json['title'].toString().trim()
-                  : (json['manual'] == true
-                      ? 'Manual checkpoint'
-                      : (json['title']?.toString() ?? 'Task')),"""
+          old = ": (json['manual'] == true ? 'Manual checkpoint' : 'Task'),"
+          new = """: (json['manual'] == true
+                    ? 'Manual checkpoint'
+                    : (json['title']?.toString() ?? 'Task')),"""
           if text.count(old) != 1:
               raise SystemExit('domain manual-title fallback anchor mismatch')
           domain.write_text(text.replace(old, new), encoding='utf-8')
 
           test = Path('test/product/hf_runner_chat_convergence_test.dart')
           text = test.read_text(encoding='utf-8')
-          anchor = """  test('timeline projection keeps durable and live activity together', () {"""
+          anchor = "  test('timeline projection keeps durable and live activity together', () {"
           regression = """  test('blank non-manual task titles remain invalid', () {
             final task = PlanTaskRecord.fromJson(const <String, dynamic>{
               'id': 'non-manual-task',
