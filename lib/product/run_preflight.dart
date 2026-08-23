@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'domain.dart';
+import 'process_launch.dart';
 import 'storage_security.dart';
 
 enum RunPreflightVerdict { ready, readyWithWarnings, blocked }
@@ -196,8 +197,7 @@ class RunCapabilityResolver {
     if (tools.contains('git_status') || tools.contains('git_diff')) {
       executable('git', required: false);
     }
-    if (RegExp(r'\b(flutter web|web app|website|browser|preview)\b')
-        .hasMatch(request)) {
+    if (tools.any(_isBrowserTool)) {
       add(const RunCapabilityRequirement(
         key: 'browser',
         label: 'Browser runtime',
@@ -239,6 +239,13 @@ class RunCapabilityResolver {
     final values = requirements.values.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
     return List.unmodifiable(values);
+  }
+
+  bool _isBrowserTool(String tool) {
+    final normalized = tool.trim().toLowerCase();
+    return normalized == 'browser' ||
+        normalized.startsWith('browser_') ||
+        normalized.startsWith('browser.');
   }
 }
 
@@ -338,7 +345,7 @@ class RunPreflightService {
               requirement, true, 'Project workspace is writable.', stopwatch);
         case RunCapabilityKind.executable:
           final executable = requirement.executable ?? '';
-          final resolved = await _resolveExecutable(executable);
+          final resolved = await resolveExecutableOnPath(executable);
           if (resolved == null) {
             return _result(
               requirement,
@@ -351,7 +358,7 @@ class RunPreflightService {
             resolved,
             _versionArguments(executable),
             workingDirectory: project.rootPath,
-            runInShell: false,
+            runInShell: requiresWindowsCommandShell(resolved),
           ).timeout(const Duration(seconds: 12));
           final ok = result.exitCode == 0;
           return _result(
@@ -480,30 +487,5 @@ class RunPreflightService {
       return const <String>['--version'];
     }
     return const <String>['--version'];
-  }
-
-  Future<String?> _resolveExecutable(String executable) async {
-    if (executable.trim().isEmpty) return null;
-    final direct = File(executable);
-    if (direct.isAbsolute && await direct.exists()) return direct.path;
-    final path = Platform.environment['PATH'] ?? '';
-    final extensions = Platform.isWindows
-        ? (Platform.environment['PATHEXT'] ?? '.EXE;.CMD;.BAT;.COM')
-            .split(';')
-            .where((item) => item.isNotEmpty)
-            .toList()
-        : const <String>[''];
-    for (final directory in path.split(Platform.isWindows ? ';' : ':')) {
-      if (directory.trim().isEmpty) continue;
-      for (final extension in extensions) {
-        final hasExtension = Platform.isWindows &&
-            executable.toLowerCase().endsWith(extension.toLowerCase());
-        final candidate = File(
-          '$directory${Platform.pathSeparator}$executable${hasExtension ? '' : extension}',
-        );
-        if (await candidate.exists()) return candidate.path;
-      }
-    }
-    return null;
   }
 }
