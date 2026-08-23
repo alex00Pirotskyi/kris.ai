@@ -14,10 +14,7 @@ void main() {
         isTrue,
       );
       expect(
-        requiresWindowsCommandShell(
-          r'C:\tools\bootstrap.CMD',
-          isWindows: true,
-        ),
+        requiresWindowsCommandShell(r'C:\tools\bootstrap.CMD', isWindows: true),
         isTrue,
       );
       expect(
@@ -28,10 +25,7 @@ void main() {
         isFalse,
       );
       expect(
-        requiresWindowsCommandShell(
-          r'C:\tools\native.exe',
-          isWindows: true,
-        ),
+        requiresWindowsCommandShell(r'C:\tools\native.exe', isWindows: true),
         isFalse,
       );
     });
@@ -49,7 +43,9 @@ void main() {
   });
 
   test('native resolved executable remains a direct launch target', () async {
-    final launch = await resolveProcessLaunchTarget(Platform.resolvedExecutable);
+    final launch = await resolveProcessLaunchTarget(
+      Platform.resolvedExecutable,
+    );
     expect(launch.executable, Platform.resolvedExecutable);
     expect(launch.runInShell, isFalse);
   });
@@ -60,8 +56,9 @@ void main() {
       if (!Platform.isWindows) {
         return;
       }
-      final directory =
-          await Directory.systemTemp.createTemp('kristin-process-launch-');
+      final directory = await Directory.systemTemp.createTemp(
+        'kristin-process-launch-',
+      );
       addTearDown(() => directory.delete(recursive: true));
       final script = File(
         '${directory.path}${Platform.pathSeparator}kristin-launch-test.cmd',
