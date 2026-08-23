@@ -21,6 +21,18 @@ extension ExternalEffectStateWire on ExternalEffectState {
         ExternalEffectState.reconciliationRequired =>
           'reconciliation_required',
       };
+
+  static ExternalEffectState parse(String value) => switch (value) {
+        'planned' => ExternalEffectState.planned,
+        'authorized' => ExternalEffectState.authorized,
+        'started' => ExternalEffectState.started,
+        'observed' => ExternalEffectState.observed,
+        'committed' => ExternalEffectState.committed,
+        'compensated' => ExternalEffectState.compensated,
+        'unknown' => ExternalEffectState.unknown,
+        'reconciliation_required' => ExternalEffectState.reconciliationRequired,
+        _ => throw const FormatException('external_effect_state_invalid'),
+      };
 }
 
 class ExternalEffectTransition {
@@ -42,6 +54,20 @@ class ExternalEffectTransition {
         'evidenceId': evidenceId,
         'recordedAt': recordedAt.toUtc().toIso8601String(),
       };
+
+  factory ExternalEffectTransition.fromJson(Map<String, Object?> json) {
+    final evidenceId = json['evidenceId']?.toString().trim() ?? '';
+    final recordedAt = DateTime.tryParse(json['recordedAt']?.toString() ?? '')?.toUtc();
+    if (evidenceId.isEmpty || recordedAt == null) {
+      throw const FormatException('external_effect_transition_invalid');
+    }
+    return ExternalEffectTransition(
+      from: ExternalEffectStateWire.parse(json['from']?.toString() ?? ''),
+      to: ExternalEffectStateWire.parse(json['to']?.toString() ?? ''),
+      evidenceId: evidenceId,
+      recordedAt: recordedAt,
+    );
+  }
 }
 
 class ExternalEffectReceipt {
@@ -49,7 +75,49 @@ class ExternalEffectReceipt {
     required this.effectId,
     required this.idempotencyKey,
     this.initialState = ExternalEffectState.planned,
-  }) : _state = initialState;
+  }) : _state = initialState {
+    if (effectId.trim().isEmpty || idempotencyKey.trim().isEmpty) {
+      throw StateError('external_effect_identity_required');
+    }
+  }
+
+  factory ExternalEffectReceipt.fromJson(Map<String, Object?> json) {
+    if (json['schemaVersion'] != '1.0.0') {
+      throw const FormatException('external_effect_schema_invalid');
+    }
+    final effectId = json['effectId']?.toString().trim() ?? '';
+    final idempotencyKey = json['idempotencyKey']?.toString().trim() ?? '';
+    final rawTransitions = json['transitions'];
+    if (effectId.isEmpty || idempotencyKey.isEmpty || rawTransitions is! List) {
+      throw const FormatException('external_effect_receipt_invalid');
+    }
+    final receipt = ExternalEffectReceipt(
+      effectId: effectId,
+      idempotencyKey: idempotencyKey,
+    );
+    for (final raw in rawTransitions) {
+      if (raw is! Map) {
+        throw const FormatException('external_effect_transition_invalid');
+      }
+      final transition = ExternalEffectTransition.fromJson(
+        <String, Object?>{
+          for (final entry in raw.entries) entry.key.toString(): entry.value,
+        },
+      );
+      if (transition.from != receipt.state) {
+        throw const FormatException('external_effect_transition_chain_invalid');
+      }
+      receipt.transition(
+        transition.to,
+        evidenceId: transition.evidenceId,
+        recordedAt: transition.recordedAt,
+      );
+    }
+    if (receipt.state.wireName != json['state']?.toString()) {
+      throw const FormatException('external_effect_state_mismatch');
+    }
+    return receipt;
+  }
 
   final String effectId;
   final String idempotencyKey;
