@@ -1,0 +1,51 @@
+name: P1-P8 Runtime Validator CLI Fix
+
+on:
+  push:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p1-p8-runtime-validator-cli-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Align disposable Runtime release validator command
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/p1-p8-runtime-finalize-v2.yml')
+          text = path.read_text(encoding='utf-8')
+          old = '        run: python tool/validate_release.py --project . --skip-secrets\n'
+          new = '        run: python tool/validate_release.py\n'
+          if old not in text:
+              if new in text:
+                  raise SystemExit(0)
+              raise SystemExit('Runtime validator command anchor missing')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Publish clean CLI repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p1-p8-runtime-validator-cli-fix.yml
+          python tool/p2_refresh_source_manifest.py .
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'ci(train): align Runtime release validator CLI'
+          git push origin HEAD:agent/p1-p8-source-convergence-20260823
