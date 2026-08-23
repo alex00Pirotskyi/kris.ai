@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'execution_intelligence.dart';
+import 'retry_policy.dart';
 
 class RunnerAttemptLedgerPolicy {
   const RunnerAttemptLedgerPolicy();
@@ -154,20 +155,41 @@ class RunnerAttemptLedgerPolicy {
     }
   }
 
+  Iterable<Map<String, dynamic>> _prunableBranches(
+    Iterable<Map<String, dynamic>> branches,
+  ) sync* {
+    const taxonomy = WorkflowRetryTaxonomy();
+    for (final branch in branches) {
+      final outcome = branch['outcome']?.toString() ?? '';
+      if (outcome == 'tool_error' || outcome == 'deterministic_error') {
+        final errorCode = branch['errorCode']?.toString() ?? '';
+        if (errorCode == 'tool_result_not_ok') {
+          yield branch;
+          continue;
+        }
+        final retryability = taxonomy.classify(errorCode).retryability;
+        if (retryability == 'transient' || retryability == 'resource') {
+          continue;
+        }
+      }
+      yield branch;
+    }
+  }
+
   Set<String> closedActionHashes(Iterable<Map<String, dynamic>> branches) =>
-      branches
+      _prunableBranches(branches)
           .map((branch) => branch['actionSha256']?.toString() ?? '')
           .where((hash) => hash.length == 64)
           .toSet();
 
   Set<String> closedDecisionHashes(Iterable<Map<String, dynamic>> branches) =>
-      branches
+      _prunableBranches(branches)
           .map((branch) => branch['decisionSha256']?.toString() ?? '')
           .where((hash) => hash.length == 64)
           .toSet();
 
   String closedBranchPrompt(Iterable<Map<String, dynamic>> branches) {
-    final rows = branches.take(5).toList(growable: false);
+    final rows = _prunableBranches(branches).take(5).toList(growable: false);
     if (rows.isEmpty) {
       return '';
     }
