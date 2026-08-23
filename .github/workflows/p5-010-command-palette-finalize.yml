@@ -124,7 +124,9 @@ jobs:
           python tool/validate_release.py --skip-tests
           git restore --source="$SOURCE_SHA" --staged --worktree -- \
             release/FILE_ADAPTER_RESULTS.json \
-            release/KNOWLEDGE_MEMORY_V2_RESULTS.json
+            release/KNOWLEDGE_MEMORY_V2_RESULTS.json \
+            release/VALIDATION_REPORT.md \
+            release/validation_report.json
           git diff --check
 
       - name: Assert exact six-file durable scope
@@ -144,6 +146,10 @@ jobs:
           test/product/source_contract_test.dart
           EOF
           sort -o "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/expected.paths"
+          printf '%s\n' '--- P5-010 actual durable paths ---'
+          cat "$RUNNER_TEMP/actual.paths"
+          printf '%s\n' '--- P5-010 git status ---'
+          git status --short
           diff -u "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/actual.paths"
           test ! -e "$PATCH_PATH"
           test ! -e "$FIX_PATH"
