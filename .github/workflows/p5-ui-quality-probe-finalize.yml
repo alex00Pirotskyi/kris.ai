@@ -27,7 +27,7 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Normalize bounded source
+      - name: Repair bounded P5 quality defects
         shell: bash
         run: |
           set -euo pipefail
@@ -39,8 +39,51 @@ jobs:
           old = 'return sorted[index.clamp(0, sorted.length - 1)];'
           new = 'return sorted[index.clamp(0, sorted.length - 1).toInt()];'
           if old in text:
-              text = text.replace(old, new, 1)
-              quality.write_text(text, encoding='utf-8')
+              quality.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          perf = Path('test/product/p5_ui_performance_test.dart')
+          text = perf.read_text(encoding='utf-8')
+          old = '''      final semantics = tester.ensureSemantics();\n      addTearDown(semantics.dispose);\n'''
+          if old in text:
+              text = text.replace(old, '''      final semantics = tester.ensureSemantics();\n''', 1)
+          tail = '''      expect(find.text('Large-list mounted item peak'), findsOneWidget);\n    });\n'''
+          replacement = '''      expect(find.text('Large-list mounted item peak'), findsOneWidget);\n      semantics.dispose();\n    });\n'''
+          if '      semantics.dispose();\n    });\n' not in text[text.find("performance dashboard exposes measured state semantically"):]:
+              if text.count(tail) != 1:
+                  raise SystemExit('performance semantics anchor mismatch')
+              text = text.replace(tail, replacement, 1)
+          perf.write_text(text, encoding='utf-8')
+
+          prototype = Path('lib/product/p5_information_architecture/p5_prototype.dart')
+          text = prototype.read_text(encoding='utf-8')
+          state_anchor = '''    final state = controller.state;\n    return Scaffold(\n'''
+          state_replacement = '''    final state = controller.state;\n    final accessibilityCompact =\n        MediaQuery.textScalerOf(context).scale(1) >= 1.5;\n    return Scaffold(\n'''
+          if 'final accessibilityCompact =' not in text:
+              if text.count(state_anchor) != 1:
+                  raise SystemExit('P5 shell state anchor mismatch')
+              text = text.replace(state_anchor, state_replacement, 1)
+
+          old_title = '''      appBar: AppBar(\n        titleSpacing: compact ? 0 : 20,\n        title: Column(\n          crossAxisAlignment: CrossAxisAlignment.start,\n          children: <Widget>[\n            Text(state.workspace.label, key: const Key('workspace-title')),\n            Text(\n              widget.ownerMode == null && widget.browserSessionStarter == null\n                  ? 'P5 presentation prototype — runtime not bound'\n                  : 'Experience workspace — live P2/P3 runtime integration',\n              style: const TextStyle(\n                fontSize: 12,\n                fontWeight: FontWeight.normal,\n              ),\n            ),\n          ],\n        ),\n'''
+          new_title = '''      appBar: AppBar(\n        titleSpacing: compact ? 0 : 20,\n        toolbarHeight: accessibilityCompact ? 72 : null,\n        title: accessibilityCompact\n            ? Text(\n                state.workspace.label,\n                key: const Key('workspace-title'),\n                maxLines: 1,\n                overflow: TextOverflow.ellipsis,\n              )\n            : Column(\n                crossAxisAlignment: CrossAxisAlignment.start,\n                children: <Widget>[\n                  Text(\n                    state.workspace.label,\n                    key: const Key('workspace-title'),\n                  ),\n                  Text(\n                    widget.ownerMode == null &&\n                            widget.browserSessionStarter == null\n                        ? 'P5 presentation prototype — runtime not bound'\n                        : 'Experience workspace — live P2/P3 runtime integration',\n                    style: const TextStyle(\n                      fontSize: 12,\n                      fontWeight: FontWeight.normal,\n                    ),\n                  ),\n                ],\n              ),\n'''
+          if old_title in text:
+              text = text.replace(old_title, new_title, 1)
+          elif 'toolbarHeight: accessibilityCompact ? 72 : null' not in text:
+              raise SystemExit('P5 AppBar title anchor mismatch')
+
+          old_history = '''          IconButton(\n            key: const Key('history-back'),\n            tooltip: 'Back (Escape or Alt+Left)',\n            onPressed: controller.canGoBack ? controller.back : null,\n            icon: const Icon(Icons.arrow_back),\n          ),\n          IconButton(\n            key: const Key('history-forward'),\n            tooltip: 'Forward (Alt+Right)',\n            onPressed: controller.canGoForward ? controller.forward : null,\n            icon: const Icon(Icons.arrow_forward),\n          ),\n'''
+          new_history = '''          if (accessibilityCompact)\n            PopupMenuButton<String>(\n              key: const Key('p5-history-menu'),\n              tooltip: 'Navigation history',\n              icon: const Icon(Icons.history),\n              onSelected: (value) {\n                if (value == 'back') controller.back();\n                if (value == 'forward') controller.forward();\n              },\n              itemBuilder: (context) => <PopupMenuEntry<String>>[\n                PopupMenuItem<String>(\n                  value: 'back',\n                  enabled: controller.canGoBack,\n                  child: const Text('Back'),\n                ),\n                PopupMenuItem<String>(\n                  value: 'forward',\n                  enabled: controller.canGoForward,\n                  child: const Text('Forward'),\n                ),\n              ],\n            )\n          else ...<Widget>[\n            IconButton(\n              key: const Key('history-back'),\n              tooltip: 'Back (Escape or Alt+Left)',\n              onPressed: controller.canGoBack ? controller.back : null,\n              icon: const Icon(Icons.arrow_back),\n            ),\n            IconButton(\n              key: const Key('history-forward'),\n              tooltip: 'Forward (Alt+Right)',\n              onPressed: controller.canGoForward ? controller.forward : null,\n              icon: const Icon(Icons.arrow_forward),\n            ),\n          ],\n'''
+          if old_history in text:
+              text = text.replace(old_history, new_history, 1)
+          elif "key: const Key('p5-history-menu')" not in text:
+              raise SystemExit('P5 history action anchor mismatch')
+
+          old_status = '''          if (!compact) _experienceSelector(context),\n          const SizedBox(width: 8),\n          Semantics(\n            liveRegion: true,\n            label: 'Owner Mode status: $_liveOwnerLabel.',\n            child: _StatusChip(\n              key: const Key('global-owner-status'),\n              label: 'Owner: $_liveOwnerLabel',\n              icon: Icons.admin_panel_settings_outlined,\n            ),\n          ),\n          const SizedBox(width: 12),\n'''
+          new_status = '''          if (!compact && !accessibilityCompact) _experienceSelector(context),\n          if (!accessibilityCompact) const SizedBox(width: 8),\n          Semantics(\n            liveRegion: true,\n            label: 'Owner Mode status: $_liveOwnerLabel.',\n            child: accessibilityCompact\n                ? IconButton(\n                    key: const Key('global-owner-status'),\n                    tooltip: 'Owner Mode: $_liveOwnerLabel',\n                    onPressed: widget.onOpenOwnerMode,\n                    icon: const Icon(Icons.admin_panel_settings_outlined),\n                  )\n                : _StatusChip(\n                    key: const Key('global-owner-status'),\n                    label: 'Owner: $_liveOwnerLabel',\n                    icon: Icons.admin_panel_settings_outlined,\n                  ),\n          ),\n          const SizedBox(width: 8),\n'''
+          if old_status in text:
+              text = text.replace(old_status, new_status, 1)
+          elif 'if (!compact && !accessibilityCompact)' not in text:
+              raise SystemExit('P5 owner status anchor mismatch')
+          prototype.write_text(text, encoding='utf-8')
 
           contract = Path('test/product/source_contract_test.dart')
           text = contract.read_text(encoding='utf-8')
@@ -54,6 +97,7 @@ jobs:
           PY
           dart format \
             lib/product/p5_ui_quality.dart \
+            lib/product/p5_information_architecture/p5_prototype.dart \
             test/product/p5_accessibility_compliance_test.dart \
             test/product/p5_ui_performance_test.dart \
             test/product/p5_ux_regression_gate_test.dart \
@@ -87,5 +131,5 @@ jobs:
           git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'test(p5): qualify accessibility performance and UX gates'
+          git commit -m 'fix(p5): close text-scale accessibility and quality gates'
           git push origin HEAD:agent/p5-012-014-quality-closure-20260823
