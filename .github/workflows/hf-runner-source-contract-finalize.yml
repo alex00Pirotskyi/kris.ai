@@ -1,0 +1,60 @@
+name: hf-runner-source-contract-finalize
+
+on:
+  push:
+    branches:
+      - hotfix/runner-capability-followup
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: hotfix/runner-capability-followup
+          fetch-depth: 0
+
+      - name: Register process launcher as governed source
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('test/product/source_contract_test.dart')
+          text = path.read_text(encoding='utf-8')
+          anchor = "        'lib/product/project_provisioning.dart',\n        'lib/product/run_execution_projection.dart',"
+          replacement = "        'lib/product/project_provisioning.dart',\n        'lib/product/process_launch.dart',\n        'lib/product/run_execution_projection.dart',"
+          if text.count(anchor) != 1:
+              raise SystemExit(f'governed source anchor mismatch: {text.count(anchor)}')
+          if 'lib/product/process_launch.dart' in text:
+              raise SystemExit('process_launch.dart is already registered')
+          path.write_text(text.replace(anchor, replacement), encoding='utf-8')
+          PY
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - run: flutter pub get
+      - run: dart format test/product/source_contract_test.dart
+      - run: python tool/dart_format_scope.py --check
+      - run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/source_contract_test.dart test/product/process_launch_test.dart
+      - run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Commit governed source registration and remove qualifier
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/hf-runner-source-contract-finalize.yml
+          git add test/product/source_contract_test.dart
+          git diff --cached --check
+          git commit -m "test(runner): register process launcher source"
+          git push origin HEAD:hotfix/runner-capability-followup
