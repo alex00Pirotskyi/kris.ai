@@ -43,8 +43,9 @@ def main() -> int:
 
     short = soak.evaluate(
         healthy[:10],
-        soak.SoakBudget(required_seconds=3600, minimum_samples=10),
+        soak.SoakBudget(required_seconds=2 * 60 * 60, minimum_samples=10),
     )
+    assert short["observedDurationSeconds"] == 108 * 60
     assert short["passed"] is False
     assert "soak_duration_insufficient" in short["failures"]
 
