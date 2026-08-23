@@ -36,6 +36,18 @@ jobs:
           cache: true
           pub-cache: true
 
+      - name: Bind finalizer to normalized decision fingerprints
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tool/runner_attempt_ledger_finalize.py')
+          text = path.read_text(encoding='utf-8')
+          old = "      final decisionSha256 = Sha256.text(generation.text);"
+          new = "      final decisionSha256 = attemptLedgerPolicy.decisionSha256(generation.text);"
+          assert text.count(old) == 1, 'decision fingerprint patch marker changed'
+          path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          PY
+
       - name: Apply coordinated runner hotfix
         run: python tool/runner_attempt_ledger_finalize.py
 
@@ -74,18 +86,18 @@ jobs:
           test/product/execution_reliability_test.dart
           test/product/budget_diagnostics_test.dart
 
-      - name: Run offline system gate
-        run: python tool/system_test.py --project .
-
-      - name: Validate diff
-        run: git diff --check
-
       - name: Remove one-shot finalizer
         run: |
           git rm tool/runner_attempt_ledger_finalize.py
           git rm .github/workflows/runner-attempt-ledger-finalize-v3.yml
           test ! -e tool/runner_attempt_ledger_finalize.py
           test ! -e .github/workflows/runner-attempt-ledger-finalize-v3.yml
+
+      - name: Run offline system gate on final product tree
+        run: python tool/system_test.py --project .
+
+      - name: Validate final diff
+        run: git diff --check
 
       - name: Commit qualified hotfix
         run: |
