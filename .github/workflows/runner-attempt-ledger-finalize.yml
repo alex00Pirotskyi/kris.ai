@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: runner-attempt-ledger-finalize
+  cancel-in-progress: true
+
 jobs:
   finalize:
     if: github.actor != 'github-actions[bot]'
@@ -22,6 +26,13 @@ jobs:
           ref: hotfix/runner-attempt-ledger-v2
           fetch-depth: 0
           persist-credentials: true
+
+      - name: Synchronize current main without publishing
+        run: |
+          git fetch origin main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge --no-edit origin/main
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -73,7 +84,7 @@ jobs:
           test/product/durable_workflow_kernel_test.dart
           test/product/execution_reliability_test.dart
 
-      - name: Validate diff
+      - name: Validate qualified source diff
         run: git diff --check
 
       - name: Remove one-shot finalizer and staging
@@ -87,10 +98,18 @@ jobs:
           test ! -e .github/workflows/runner-attempt-ledger-finalize.yml
           test ! -e .repo-hotfix/runner-attempt-ledger
 
+      - name: Refresh canonical source manifest
+        run: python tool/p2_refresh_source_manifest.py .
+
+      - name: Validate post-cleanup repository state
+        run: |
+          python tool/source_tree_policy_test.py
+          python tool/generated_state_guard_test.py
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+
       - name: Commit qualified hotfix
         run: |
           git add -A
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "fix(runner): prune repeated action branches"
           git push origin HEAD:hotfix/runner-attempt-ledger-v2
