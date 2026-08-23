@@ -57,6 +57,23 @@ void main() {
       }
     });
 
+    test('decision arguments cannot change after validation', () {
+      final source = <String, Object?>{'command': 'git status'};
+      final decision = AgentDecisionV3(
+        kind: AgentDecisionV3Kind.terminal,
+        operation: 'terminal.exec',
+        arguments: source,
+        expectedPostcondition: 'Command exits with captured status.',
+      );
+
+      source['command'] = 'unexpected replacement';
+      expect(decision.arguments['command'], 'git status');
+      expect(
+        () => decision.arguments['command'] = 'mutated after trust',
+        throwsUnsupportedError,
+      );
+    });
+
     test('effect decisions require objective postconditions', () {
       expect(
         () => AgentDecisionV3(
