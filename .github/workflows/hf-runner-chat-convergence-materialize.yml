@@ -39,16 +39,26 @@ jobs:
           from pathlib import Path
           path = Path('.repo-hf-runner-chat-convergence.py')
           text = path.read_text(encoding='utf-8')
-          old = r'''        'test/product/source_contract_test.dart',
+          repairs = [
+              (
+                  r'''        'test/product/source_contract_test.dart',
                   "        'lib/product/workspace_tools.dart',\n",
-          '''
-          new = r'''        'test/product/source_contract_test.dart',
+          ''',
+                  r'''        'test/product/source_contract_test.dart',
                   "        'lib/product/ui_components.dart',\n"
                   "        'lib/product/workspace_tools.dart',\n",
-          '''
-          if text.count(old) != 1:
-              raise SystemExit(f'materializer repair anchor mismatch: {text.count(old)}')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+          ''',
+              ),
+              (
+                  r'''  Future<RunRecord> retryRun(String sourceRunId) async {\n''',
+                  r'''  Future<RunRecord> retryRun(String runId) async {\n''',
+              ),
+          ]
+          for old, new in repairs:
+              if text.count(old) != 1:
+                  raise SystemExit(f'materializer repair anchor mismatch: {old!r} count={text.count(old)}')
+              text = text.replace(old, new)
+          path.write_text(text, encoding='utf-8')
           PY
           python3 .repo-hf-runner-chat-convergence.py
           rm -f .repo-hf-runner-chat-convergence.py
