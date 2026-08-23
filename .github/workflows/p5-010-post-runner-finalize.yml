@@ -1,0 +1,170 @@
+name: P5-010 post-runner reconciliation finalizer
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .repo-p5-010-post-runner-finalize.py
+      - .github/workflows/p5-010-post-runner-finalize.yml
+
+permissions:
+  contents: write
+
+env:
+  BASE_MAIN_SHA: baea6fee4ad55037a64a99012a9367892d40880c
+  TARGET_BRANCH: agent/p5-010-command-palette-20260823
+  PATCH_PATH: .repo-p5-010-post-runner-finalize.py
+  WORKFLOW_PATH: .github/workflows/p5-010-post-runner-finalize.yml
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact reconciled transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main "$TARGET_BRANCH"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git merge-base HEAD origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
+          test -f "$PATCH_PATH"
+          test -f "$WORKFLOW_PATH"
+          test -z "$(git status --short)"
+          git diff --name-only "$BASE_MAIN_SHA" | sort > "$RUNNER_TEMP/pre.paths"
+          cat > "$RUNNER_TEMP/expected.pre.paths" <<'EOF'
+          .github/workflows/p5-010-post-runner-finalize.yml
+          .repo-p5-010-post-runner-finalize.py
+          lib/product/p5_command_palette.dart
+          lib/product/p5_global_autonomy.dart
+          lib/product/ui.dart
+          test/product/p5_command_palette_test.dart
+          EOF
+          sort -o "$RUNNER_TEMP/expected.pre.paths" "$RUNNER_TEMP/expected.pre.paths"
+          diff -u "$RUNNER_TEMP/expected.pre.paths" "$RUNNER_TEMP/pre.paths"
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Apply combined-tree source contracts and remove transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          python -m py_compile "$PATCH_PATH"
+          python "$PATCH_PATH"
+          git rm -f "$PATCH_PATH" "$WORKFLOW_PATH"
+          dart format \
+            lib/product/p5_command_palette.dart \
+            lib/product/p5_global_autonomy.dart \
+            lib/product/ui.dart \
+            test/product/p5_command_palette_test.dart \
+            test/product/source_contract_test.dart
+
+      - name: Bootstrap hosted test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+
+      - name: Focused P5-010 and Runner reconciliation contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 10m \
+            flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/p5_command_palette_test.dart \
+            test/product/p5_global_autonomy_test.dart \
+            test/product/p5_main_shell_integration_test.dart \
+            test/product/p5_information_architecture/p5_accessibility_test.dart \
+            test/product/hf_runner_chat_convergence_test.dart \
+            test/product/source_contract_test.dart
+
+      - name: Full P5 information architecture suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 12m \
+            flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/p5_information_architecture
+
+      - name: Full Flutter regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 18m \
+            flutter test --no-pub --concurrency=1 --reporter expanded
+
+      - name: Fatal analyzer contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 8m \
+            flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Deterministic source identity and release validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          python tool/validate_release.py --skip-tests
+          git restore --source="$SOURCE_SHA" --staged --worktree -- \
+            release/FILE_ADAPTER_RESULTS.json \
+            release/KNOWLEDGE_MEMORY_V2_RESULTS.json
+          git diff --check
+
+      - name: Assert exact combined six-file durable scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only "$BASE_MAIN_SHA" | sort > "$RUNNER_TEMP/actual.paths"
+          cat > "$RUNNER_TEMP/expected.paths" <<'EOF'
+          SOURCE_MANIFEST.sha256
+          lib/product/p5_command_palette.dart
+          lib/product/p5_global_autonomy.dart
+          lib/product/ui.dart
+          test/product/p5_command_palette_test.dart
+          test/product/source_contract_test.dart
+          EOF
+          sort -o "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/expected.paths"
+          diff -u "$RUNNER_TEMP/expected.paths" "$RUNNER_TEMP/actual.paths"
+          test ! -e "$PATCH_PATH"
+          test ! -e "$WORKFLOW_PATH"
+          test -z "$(git ls-files --others --exclude-standard)"
+
+      - name: Publish exact clean reconciled candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main "$TARGET_BRANCH"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'chore(p5-010): reconcile command palette with runner hotfix main'
+          git push origin "HEAD:$TARGET_BRANCH"
