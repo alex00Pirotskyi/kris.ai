@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "1.0.0",
+  "phase": "P8-001",
+  "assuranceLevels": [
+    {
+      "id": "architecture_lint",
+      "claimScope": "source_and_wiring_only",
+      "behavioralProof": false,
+      "entryPoints": [
+        "tool/system_test.py",
+        "tool/source_tree_policy_test.py"
+      ]
+    },
+    {
+      "id": "unit",
+      "claimScope": "deterministic_in_process_contracts",
+      "behavioralProof": false,
+      "entryPoints": [
+        "test/product/agent_decision_v3_test.dart",
+        "test/product/p8_external_effects_test.dart",
+        "tool/agent_safety_v2_test.py",
+        "tool/dependency_policy_test.py"
+      ]
+    },
+    {
+      "id": "component",
+      "claimScope": "bounded_component_behavior",
+      "behavioralProof": true,
+      "entryPoints": [
+        "automation_host/src/browser-runtime.test.mjs",
+        "automation_host/src/host.test.mjs",
+        "test/product/durable_workflow_kernel_test.dart"
+      ]
+    },
+    {
+      "id": "integration",
+      "claimScope": "multi_component_local_runtime",
+      "behavioralProof": true,
+      "entryPoints": [
+        "test/product/execution_reliability_test.dart",
+        "test/product/browser/browser_replay_test.dart",
+        "tool/a2a_bridge_test.py"
+      ]
+    },
+    {
+      "id": "platform",
+      "claimScope": "real_os_boundary_behavior",
+      "behavioralProof": true,
+      "entryPoints": [
+        ".github/workflows/p1-authority-amendment.yml",
+        ".github/workflows/p1-p2-owner-risk-promotion-v71r12.yml"
+      ],
+      "openEvidence": [
+        "P1A tri-platform certification remains blocked until signed Windows/macOS/Linux production receipts and independent review exist."
+      ]
+    },
+    {
+      "id": "adversarial",
+      "claimScope": "malicious_and_faulted_inputs",
+      "behavioralProof": true,
+      "entryPoints": [
+        "tool/agent_safety_v2_test.py",
+        "test/product/browser/browser_security_suite_test.dart",
+        "tool/a2a_bridge_test.py",
+        "tool/secret_scan_test.py"
+      ]
+    },
+    {
+      "id": "benchmark",
+      "claimScope": "measured_budget_and_model_results",
+      "behavioralProof": true,
+      "entryPoints": [
+        "tool/agent_benchmark_signing.py",
+        "test/product/p5_performance_budget_test.dart",
+        "tool/p8_soak_gate.py"
+      ],
+      "openEvidence": [
+        "A real 24-hour soak sample corpus is required before P8-011 can close."
+      ]
+    },
+    {
+      "id": "release",
+      "claimScope": "release_candidate_composition_and_evidence",
+      "behavioralProof": true,
+      "entryPoints": [
+        "tool/validate_release.py",
+        "tool/secret_scan.py",
+        "tool/dependency_policy.py",
+        "release/security/agentic-risk-map.v1.json",
+        "release/security/nist-ai-rmf-map.v1.json"
+      ],
+      "openEvidence": [
+        "P8-014 independent penetration test remains a release blocker."
+      ]
+    }
+  ]
+}
