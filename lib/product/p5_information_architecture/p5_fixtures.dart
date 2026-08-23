@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'p5_models.dart';
 
 class P5PrototypeFixtures {
@@ -186,6 +188,77 @@ class P5PrototypeFixtures {
       timestampLabel: 'T+${zeroBasedSequence}s',
       title: title,
       detail: detail,
+    );
+  }
+
+  static List<P5EvidenceFixture> evidenceForRun(String runId) {
+    if (!runs.any((run) => run.id == runId)) {
+      return const <P5EvidenceFixture>[];
+    }
+    return P5EvidenceKind.values
+        .map((kind) => _evidenceFixture(runId, kind))
+        .toList(growable: false);
+  }
+
+  static P5EvidenceFixture? evidenceById({
+    required String runId,
+    required String evidenceId,
+  }) {
+    for (final item in evidenceForRun(runId)) {
+      if (item.id == evidenceId) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  static P5EvidenceFixture _evidenceFixture(
+    String runId,
+    P5EvidenceKind kind,
+  ) {
+    final content = switch (kind) {
+      P5EvidenceKind.textMetadata =>
+        'charset=utf-8\nlines=42\nsource=fixture://evidence/$runId/notes.txt',
+      P5EvidenceKind.binaryMetadata =>
+        'bytes=4096\nmedia=application/octet-stream\nsha256=NOT_COMPUTED_FIXTURE',
+      P5EvidenceKind.image =>
+        'iVBORw0KGgoAAAANSUhEUgAAAEAAAAAkCAIAAAC2bqvFAAABJ0lEQVR4nO2ZwQ2DMAxFSdUxeusCZYBK7AHjwR5IDMBKPSBFVhIc+0dgqPJPIGLrv8QGAu71/jR31sPaQKkqgLWe9GSYVisfKo1964//awU2Ub6rKa6R26+AJcA2nYWNZwZA3Zcw2ADEjodpxTAMABijAMPZAIHFsW+Dm56WAQcAyjd2Hxz4YfK0IADQgnvuk6fytAhAsgVVGZLPSqyc1AB7Sfl1p5f4J722nHQAWAuWrw+TQQEgb0FJFK9gapgoKYCqBf1gzH0wno8SAUh8ZGsXe8nNRuUB5D7ilpD7gJUBAGYxHnPoBoMDgGuA1u7R2yMOQHgfYGJP2NxlSug0H7DyTXxl901yU081LzOWt/t2WKBWdVNvLUe/TtcvcwZy9f+AsSqAtX4jOZqZSB0k/gAAAABJRU5ErkJggg==',
+      P5EvidenceKind.markdown =>
+        '# Saved run summary\n\n- Run: $runId\n- State: deterministic fixture\n- Production evidence: not claimed',
+      P5EvidenceKind.json =>
+        '{"runId":"$runId","status":"fixture","verified":false}',
+      P5EvidenceKind.table =>
+        'name|state\nplan|stored\nverification|not_evaluated\nrelease|unsupported',
+      P5EvidenceKind.diff =>
+        '--- before.txt\n+++ after.txt\n-old value\n+new value',
+      P5EvidenceKind.citation =>
+        'title=Kristin deterministic citation\nsource=fixture://citation/$runId\nexcerpt=Saved-run citation fixture only.',
+      P5EvidenceKind.receipt =>
+        'receiptId=receipt.$runId\noperation=fixture.evidence.open\nresult=PASS_PRESENTATION_ONLY',
+    };
+    final mediaType = switch (kind) {
+      P5EvidenceKind.textMetadata => 'text/plain; charset=utf-8',
+      P5EvidenceKind.binaryMetadata => 'application/octet-stream',
+      P5EvidenceKind.image => 'image/png',
+      P5EvidenceKind.markdown => 'text/markdown',
+      P5EvidenceKind.json => 'application/json',
+      P5EvidenceKind.table => 'text/tabular',
+      P5EvidenceKind.diff => 'text/x-diff',
+      P5EvidenceKind.citation => 'application/vnd.kristin.citation',
+      P5EvidenceKind.receipt => 'application/vnd.kristin.receipt',
+    };
+    return P5EvidenceFixture(
+      id: 'evidence.$runId.${kind.name}',
+      runId: runId,
+      kind: kind,
+      title: '${kind.label} viewer fixture',
+      mediaType: mediaType,
+      byteLength: kind == P5EvidenceKind.image
+          ? base64Decode(content).length
+          : utf8.encode(content).length,
+      summary:
+          '${kind.label} evidence saved with deterministic run fixture $runId.',
+      content: content,
     );
   }
 
