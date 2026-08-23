@@ -34,10 +34,10 @@ jobs:
           python -m py_compile tool/p1_p8_runtime_finalize.py
           python tool/p1_p8_runtime_finalize.py
           dart format lib/product/mcp_registry_v2.dart test/product/mcp_registry_v2_test.dart
-      - name: MCP signed install and owner-host execution
+      - name: MCP signed descriptor persistence
         run: >-
           flutter test --no-pub --concurrency=1 --reporter compact
-          --plain-name "signed install persists canonical identity and owner-host execution"
+          --plain-name "signed descriptor persists exact identity and starts disabled"
           test/product/mcp_registry_v2_test.dart
       - name: MCP tampered descriptor rejection
         run: >-
@@ -47,12 +47,12 @@ jobs:
       - name: MCP isolated backend denial
         run: >-
           flutter test --no-pub --concurrency=1 --reporter compact
-          --plain-name "isolated descriptor fails closed when no sandbox backend is available"
+          --plain-name "isolated descriptor never falls back to host execution"
           test/product/mcp_registry_v2_test.dart
-      - name: MCP owner-host explicit grant
+      - name: MCP owner-host explicit grant and health
         run: >-
           flutter test --no-pub --concurrency=1 --reporter compact
-          --plain-name "owner-host execution requires an explicit owner-host grant"
+          --plain-name "owner-host execution requires an explicit grant and is auditable"
           test/product/mcp_registry_v2_test.dart
       - name: MCP executable drift revocation
         run: >-
