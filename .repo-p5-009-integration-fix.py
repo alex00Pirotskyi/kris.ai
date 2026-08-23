@@ -30,20 +30,20 @@ already_covered = [
     for index in targets
     if index + 1 < len(lines) and lines[index + 1].strip() == 'selectedEvidenceId: null,'
 ]
-if len(already_covered) != 1:
+if already_covered:
     raise SystemExit(
-        f'{controller}: expected exactly 1 already-covered evidence clear, '
+        f'{controller}: expected 0 pre-covered evidence clears at null-run boundaries, '
         f'found {len(already_covered)}'
     )
 output: list[str] = []
 inserted = 0
 for index, line in enumerate(lines):
     output.append(line)
-    if index not in targets or index in already_covered:
+    if index not in targets:
         continue
     indent = line[: len(line) - len(line.lstrip())]
     output.append(f'{indent}selectedEvidenceId: null,\n')
     inserted += 1
-if inserted != 9:
-    raise SystemExit(f'{controller}: expected to insert 9 evidence clears, inserted {inserted}')
+if inserted != 10:
+    raise SystemExit(f'{controller}: expected to insert 10 evidence clears, inserted {inserted}')
 controller.write_text(''.join(output), encoding='utf-8', newline='\n')
