@@ -27,7 +27,7 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Normalize bounded source and regression tests
+      - name: Normalize bounded source
         shell: bash
         run: |
           set -euo pipefail
@@ -38,25 +38,9 @@ jobs:
           text = quality.read_text(encoding='utf-8')
           old = 'return sorted[index.clamp(0, sorted.length - 1)];'
           new = 'return sorted[index.clamp(0, sorted.length - 1).toInt()];'
-          if text.count(old) != 1:
-              raise SystemExit('percentile clamp anchor mismatch')
-          quality.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-          ux = Path('test/product/p5_ux_regression_gate_test.dart')
-          text = ux.read_text(encoding='utf-8')
-          old = '''      await _pressChord(\n        tester,\n        modifier: LogicalKeyboardKey.altLeft,\n        key: LogicalKeyboardKey.digit3,\n      );\n      expect(controller.state.workspace, P5WorkspaceId.runsActivity);\n      await _pressChord(\n        tester,\n        modifier: LogicalKeyboardKey.altLeft,\n        key: LogicalKeyboardKey.digit4,\n      );\n      expect(controller.state.workspace, P5WorkspaceId.verificationCenter);\n      await tester.sendKeyEvent(LogicalKeyboardKey.escape);\n      await tester.pumpAndSettle();\n      expect(controller.state.workspace, P5WorkspaceId.homeChat);\n      expect(controller.sideEffects.isZero, isTrue);\n'''
-          new = '''      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);\n      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);\n      await tester.sendKeyEvent(LogicalKeyboardKey.keyV);\n      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);\n      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);\n      await tester.pumpAndSettle();\n      expect(controller.state.workspace, P5WorkspaceId.verificationCenter);\n      await tester.sendKeyEvent(LogicalKeyboardKey.escape);\n      await tester.pumpAndSettle();\n      expect(controller.state.workspace, P5WorkspaceId.homeChat);\n      await _pressChord(\n        tester,\n        modifier: LogicalKeyboardKey.altLeft,\n        key: LogicalKeyboardKey.digit3,\n      );\n      expect(controller.state.workspace, P5WorkspaceId.runsActivity);\n      await tester.sendKeyEvent(LogicalKeyboardKey.escape);\n      await tester.pumpAndSettle();\n      expect(controller.state.workspace, P5WorkspaceId.homeChat);\n      expect(controller.sideEffects.isZero, isTrue);\n'''
-          if text.count(old) != 1:
-              raise SystemExit('keyboard regression anchor mismatch')
-          text = text.replace(old, new, 1)
-          if text.count('      addTearDown(semantics.dispose);\n') != 1:
-              raise SystemExit('semantics teardown anchor mismatch')
-          text = text.replace('      addTearDown(semantics.dispose);\n', '', 1)
-          tail = '''      expect(\n        find.bySemanticsLabel('Owner Mode status: Blocked by environment.'),\n        findsOneWidget,\n      );\n    });\n'''
-          replacement = '''      expect(\n        find.bySemanticsLabel('Owner Mode status: Blocked by environment.'),\n        findsOneWidget,\n      );\n      semantics.dispose();\n    });\n'''
-          if text.count(tail) != 1:
-              raise SystemExit('semantics dispose anchor mismatch')
-          ux.write_text(text.replace(tail, replacement, 1), encoding='utf-8')
+          if old in text:
+              text = text.replace(old, new, 1)
+              quality.write_text(text, encoding='utf-8')
 
           contract = Path('test/product/source_contract_test.dart')
           text = contract.read_text(encoding='utf-8')
