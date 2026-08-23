@@ -87,6 +87,41 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+
+          durable_path = Path('lib/product/durable_workflow.dart')
+          durable = durable_path.read_text(encoding='utf-8')
+          durable_marker = "\n  Future<List<Map<String, dynamic>>> closedAgentActionBranches({"
+          durable_method = r'''
+
+  Future<Set<String>> successfulDeterministicActionHashes({
+    required String runId,
+    required String workItemId,
+  }) =>
+      _serialize<Set<String>>(() {
+        final rows = _database.select(
+          '''SELECT DISTINCT action_sha256
+             FROM agent_action_attempts
+             WHERE run_id = ? AND work_item_id = ?
+               AND outcome = 'deterministic_ok'
+               AND action_sha256 IS NOT NULL''',
+          <Object?>[runId, workItemId],
+        );
+        return rows
+            .map((row) => row['action_sha256']?.toString() ?? '')
+            .where((hash) => hash.length == 64)
+            .toSet();
+      });
+'''
+          if durable.count(durable_marker) != 1:
+              raise SystemExit(
+                  f'deterministic replay query marker changed: {durable.count(durable_marker)}'
+              )
+          durable_path.write_text(
+              durable.replace(durable_marker, durable_method + durable_marker, 1),
+              encoding='utf-8',
+              newline='\n',
+          )
+
           path = Path('lib/product/planning_runtime.dart')
           text = path.read_text(encoding='utf-8')
           replacements = []
@@ -95,9 +130,10 @@ jobs:
     _enforceBudget(current, started);
     final phaseRepairCeiling = min("""
           new = """    );
+    final workspaceStateTracker = RunnerWorkspaceStateTracker();
     Future<String> runnerWorkspaceSha256() async {
       try {
-        return await attemptLedgerPolicy.workspaceSha256(boundary.root);
+        return await workspaceStateTracker.sha256(boundary.root);
       } catch (error) {
         await _bestEffortEvent(
           'work_item.workspace_fingerprint_failed',
@@ -112,7 +148,11 @@ jobs:
         return Sha256.text('runner-workspace-fingerprint-unavailable');
       }
     }
-    final successfulDeterministicActionHashes = <String>{};
+    final successfulDeterministicActionHashes =
+        await repositories.workflow.successfulDeterministicActionHashes(
+      runId: current.id,
+      workItemId: progress.item.id,
+    );
     _enforceBudget(current, started);
     final phaseRepairCeiling = min("""
           replacements.append((old, new, 'workspace fingerprint helper'))
@@ -170,11 +210,27 @@ jobs:
           replacements.append((old, new, 'post-action material state'))
 
           old = """      stalledTurns = semanticDelta.semanticProgress ? 0 : stalledTurns + 1;"""
-          new = """      if (deterministicSelected && result.ok) {
+          new = """      if (deterministicSelected && result.ok && materialProgress) {
         successfulDeterministicActionHashes.add(actionSha256ForLedger);
       }
-      stalledTurns = semanticDelta.semanticProgress ? 0 : stalledTurns + 1;"""
-          replacements.append((old, new, 'successful deterministic replay memory'))
+      stalledTurns = materialProgress ? 0 : stalledTurns + 1;"""
+          replacements.append((old, new, 'material progress stall reset'))
+
+          old = """        semanticProgress: semanticDelta.semanticProgress,"""
+          new = """        semanticProgress: materialProgress,"""
+          replacements.append((old, new, 'material convergence input'))
+
+          old = """          ...semanticDelta.toJson(),
+          'convergenceAction': convergenceDecision.action.name,"""
+          new = """          ...semanticDelta.toJson(),
+          'materialProgress': materialProgress,
+          'workspaceStateChanged': afterWorkspaceSha256 != workspaceSha256,
+          'convergenceAction': convergenceDecision.action.name,"""
+          replacements.append((old, new, 'material progress diagnostics'))
+
+          old = """      if (!semanticDelta.semanticProgress) {"""
+          new = """      if (!materialProgress) {"""
+          replacements.append((old, new, 'material convergence branch'))
 
           for old, new, label in replacements:
               if text.count(old) != 1:
