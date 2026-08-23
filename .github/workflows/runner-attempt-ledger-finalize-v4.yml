@@ -1,0 +1,181 @@
+name: runner-attempt-ledger-finalize-v4
+
+on:
+  push:
+    branches:
+      - hotfix/runner-attempt-ledger-v4-agent-isolated
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: runner-attempt-ledger-finalize-v4
+  cancel-in-progress: true
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: hotfix/runner-attempt-ledger-v4-agent-isolated
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Synchronize current main without publishing
+        run: |
+          git fetch origin main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge --no-edit origin/main
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Unlock authoritative finalizer payload
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('migrations/workflow/007_runner_attempt_ledger.sql')
+          marker = '__RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__\n'
+          text = path.read_text(encoding='utf-8')
+          if not text.startswith(marker) or text.count(marker) != 1:
+              raise SystemExit('authoritative runner finalizer guard missing or duplicated')
+          path.write_text(text[len(marker):], encoding='utf-8', newline='\n')
+          PY
+
+      - name: Bind finalizer to normalized decisions and complete branch recall
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tool/runner_attempt_ledger_finalize.py')
+          text = path.read_text(encoding='utf-8')
+          replacements = (
+              (
+                  "      final decisionSha256 = Sha256.text(generation.text);",
+                  "      final decisionSha256 = attemptLedgerPolicy.decisionSha256(generation.text);",
+                  'decision fingerprint',
+              ),
+              (
+                  "        final boundedLimit = limit.clamp(1, 20).toInt();",
+                  "        final boundedLimit = limit.clamp(1, 100).toInt();",
+                  'closed branch storage bound',
+              ),
+              (
+                  "        limit: 5,\n      );",
+                  "        limit: 100,\n      );",
+                  'closed branch runtime recall',
+              ),
+          )
+          for old, new, label in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'{label} patch marker changed: {text.count(old)}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Apply coordinated runner hotfix
+        run: python tool/runner_attempt_ledger_finalize.py
+
+      - name: Bind successful finite commands to material state
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('lib/product/planning_runtime.dart')
+          text = path.read_text(encoding='utf-8')
+          old = """        externalState: <String>{
+          ...semanticSnapshot.externalState,
+          if (result.data['processId'] != null)
+            'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
+        },"""
+          new = """        externalState: <String>{
+          ...semanticSnapshot.externalState,
+          if (result.data['processId'] != null)
+            'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
+          if (action.tool == 'run_command' && result.ok)
+            'command:$actionSha256ForLedger:$resultHash',
+        },"""
+          if text.count(old) != 1:
+              raise SystemExit(f'finite command material-state marker changed: {text.count(old)}')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          PY
+
+      - name: Generate reviewed workflow migrations
+        run: python tool/generate_workflow_migrations.py
+
+      - name: Format hotfix-owned Dart sources
+        run: >-
+          dart format
+          lib/product/planning_runtime.dart
+          lib/product/durable_workflow.dart
+          lib/product/runner_attempt_ledger.dart
+          test/product/runner_attempt_ledger_test.dart
+          test/product/durable_workflow_kernel_test.dart
+
+      - name: Verify hotfix-owned Dart formatting
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          lib/product/planning_runtime.dart
+          lib/product/durable_workflow.dart
+          lib/product/runner_attempt_ledger.dart
+          test/product/runner_attempt_ledger_test.dart
+          test/product/durable_workflow_kernel_test.dart
+
+      - name: Resolve Flutter packages
+        run: flutter pub get
+
+      - name: Check generated migrations
+        run: python tool/generate_workflow_migrations.py --check
+
+      - name: Check durable workflow kernel
+        run: python tool/workflow_kernel_test.py --project .
+
+      - name: Analyze hotfix
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Run runner and durability regressions
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/runner_attempt_ledger_test.dart
+          test/product/durable_workflow_kernel_test.dart
+          test/product/execution_reliability_test.dart
+          test/product/budget_diagnostics_test.dart
+
+      - name: Remove one-shot finalizer
+        run: |
+          git rm -f tool/runner_attempt_ledger_finalize.py
+          git rm -f .github/workflows/runner-attempt-ledger-finalize-v4.yml
+          test ! -e tool/runner_attempt_ledger_finalize.py
+          test ! -e .github/workflows/runner-attempt-ledger-finalize-v4.yml
+
+      - name: Refresh canonical source manifest
+        run: python tool/p2_refresh_source_manifest.py .
+
+      - name: Validate post-cleanup repository state
+        run: |
+          python tool/source_tree_policy_test.py
+          python tool/generated_state_guard_test.py
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+
+      - name: Run offline system gate on final product tree
+        run: python tool/system_test.py --project .
+
+      - name: Commit qualified hotfix
+        run: |
+          git add -A
+          git diff --cached --check
+          git commit -m "fix(runner): prune repeated action branches"
+          git push origin HEAD:hotfix/runner-attempt-ledger-v4-agent-isolated
