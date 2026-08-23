@@ -37,6 +37,8 @@ jobs:
         with:
           python-version: '3.13.5'
           check-latest: false
+      - name: Install hash-locked Python trust dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
       - name: Resolve dependencies
         run: flutter pub get
       - name: Apply deterministic runtime integration
