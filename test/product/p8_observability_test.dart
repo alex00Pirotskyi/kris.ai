@@ -55,7 +55,11 @@ void main() {
       expect(event.traceId, 'trace-1');
       expect(event.hashedAttributes['projectPath'], isNot(r'C:\secret\workspace'));
       expect(event.hashedAttributes['projectPath'], hasLength(64));
-      expect(buffer.openTelemetryEnvelope()['spans'], isA<List<Object?>>());
+      final envelope = buffer.openTelemetryEnvelope();
+      expect(envelope['spans'], isA<List<Object?>>());
+      expect(envelope['metrics'], isA<List<Object?>>());
+      expect(envelope['logs'], isA<List<Object?>>());
+      expect(envelope.toString(), isNot(contains(r'C:\secret\workspace')));
     });
 
     test('unknown attributes are rejected instead of leaking content', () {
@@ -109,9 +113,16 @@ void main() {
             type: types[index],
             correlationId: 'run-sensitive-id',
             timestamp: DateTime.utc(2026, 8, 23, 12),
-            data: const <String, dynamic>{
+            data: <String, dynamic>{
               'prompt': 'must never enter telemetry',
               'path': r'C:\private\project',
+              'durationMilliseconds': 5 + index,
+              'attempt': index + 1,
+              if (index == 0)
+                'model': const <String, dynamic>{
+                  'providerId': 'ollama',
+                  'name': 'qwen',
+                },
             },
           ),
         );
@@ -140,11 +151,19 @@ void main() {
           P8TelemetryCategory.update,
         }),
       );
+      expect(buffer.events.first.durationMicros, 5000);
+      expect(buffer.events.first.safeAttributes['modelProvider'], 'ollama');
+      expect(buffer.events.first.safeAttributes['modelName'], 'qwen');
+      expect(buffer.events.first.safeAttributes['attempt'], 1);
       final encoded = buffer.preview().toString();
       expect(encoded, isNot(contains('must never enter telemetry')));
       expect(encoded, isNot(contains(r'C:\private\project')));
       expect(encoded, isNot(contains('run-sensitive-id')));
       expect(buffer.events.first.runId, hasLength(64));
+      final otel = buffer.openTelemetryEnvelope();
+      expect((otel['metrics']! as List<Object?>), isNotEmpty);
+      expect((otel['logs']! as List<Object?>), hasLength(types.length));
+      expect(otel.toString(), isNot(contains('must never enter telemetry')));
     });
 
     test('opting out clears buffered telemetry and resets dropped counts', () {
