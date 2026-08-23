@@ -34,13 +34,13 @@ class FileAdapterDescriptor {
   final bool sandboxRequired;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'tier': tier.name,
-        'sandboxRequired': sandboxRequired,
-        'extensions': extensions.toList()..sort(),
-        'mediaTypes': mediaTypes.toList()..sort(),
-        'capabilities': capabilities.map((item) => item.name).toList()..sort(),
-      };
+    'id': id,
+    'tier': tier.name,
+    'sandboxRequired': sandboxRequired,
+    'extensions': extensions.toList()..sort(),
+    'mediaTypes': mediaTypes.toList()..sort(),
+    'capabilities': capabilities.map((item) => item.name).toList()..sort(),
+  };
 }
 
 class FileInspectionResult {
@@ -59,201 +59,202 @@ class FileInspectionResult {
   final Map<String, dynamic> metadata;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'adapter': adapter.toJson(),
-        'path': path,
-        'sizeBytes': sizeBytes,
-        'sha256': sha256,
-        'metadata': metadata,
-      };
+    'adapter': adapter.toJson(),
+    'path': path,
+    'sizeBytes': sizeBytes,
+    'sha256': sha256,
+    'metadata': metadata,
+  };
 }
 
 class FileAdapterRegistry {
   const FileAdapterRegistry();
 
   List<FileAdapterDescriptor> get all => const <FileAdapterDescriptor>[
-        FileAdapterDescriptor(
-          id: 'text',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'txt', 'md', 'log'},
-          mediaTypes: <String>{'text/plain', 'text/markdown'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'json',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'json'},
-          mediaTypes: <String>{'application/json'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'yaml',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'yaml', 'yml'},
-          mediaTypes: <String>{'application/yaml', 'text/yaml'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'xml',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'xml'},
-          mediaTypes: <String>{'application/xml', 'text/xml'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'csv',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'csv'},
-          mediaTypes: <String>{'text/csv'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'image',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'png', 'jpg', 'jpeg', 'gif', 'webp'},
-          mediaTypes: <String>{
-            'image/png',
-            'image/jpeg',
-            'image/gif',
-            'image/webp',
-          },
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'zip',
-          tier: FileAdapterTier.native,
-          extensions: <String>{'zip'},
-          mediaTypes: <String>{'application/zip'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-        ),
-        FileAdapterDescriptor(
-          id: 'pdf',
-          tier: FileAdapterTier.sandboxedCore,
-          extensions: <String>{'pdf'},
-          mediaTypes: <String>{'application/pdf'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-          sandboxRequired: true,
-        ),
-        FileAdapterDescriptor(
-          id: 'ooxml',
-          tier: FileAdapterTier.sandboxedCore,
-          extensions: <String>{'docx', 'xlsx', 'pptx'},
-          mediaTypes: <String>{
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          },
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-          sandboxRequired: true,
-        ),
-        FileAdapterDescriptor(
-          id: 'opendocument',
-          tier: FileAdapterTier.sandboxedCore,
-          extensions: <String>{'odt'},
-          mediaTypes: <String>{'application/vnd.oasis.opendocument.text'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-          sandboxRequired: true,
-        ),
-        FileAdapterDescriptor(
-          id: 'rtf',
-          tier: FileAdapterTier.sandboxedCore,
-          extensions: <String>{'rtf'},
-          mediaTypes: <String>{'application/rtf', 'text/rtf'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-          sandboxRequired: true,
-        ),
-        FileAdapterDescriptor(
-          id: 'epub',
-          tier: FileAdapterTier.sandboxedCore,
-          extensions: <String>{'epub'},
-          mediaTypes: <String>{'application/epub+zip'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-          sandboxRequired: true,
-        ),
-        FileAdapterDescriptor(
-          id: 'email',
-          tier: FileAdapterTier.sandboxedCore,
-          extensions: <String>{'eml'},
-          mediaTypes: <String>{'message/rfc822'},
-          capabilities: <FileAdapterCapability>{
-            FileAdapterCapability.detect,
-            FileAdapterCapability.inspect,
-            FileAdapterCapability.extract,
-            FileAdapterCapability.preview,
-            FileAdapterCapability.validate,
-          },
-          sandboxRequired: true,
-        ),
-      ];
+    FileAdapterDescriptor(
+      id: 'text',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'txt', 'md', 'log'},
+      mediaTypes: <String>{'text/plain', 'text/markdown'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'json',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'json'},
+      mediaTypes: <String>{'application/json'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'yaml',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'yaml', 'yml'},
+      mediaTypes: <String>{'application/yaml', 'text/yaml'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'xml',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'xml'},
+      mediaTypes: <String>{'application/xml', 'text/xml'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'csv',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'csv'},
+      mediaTypes: <String>{'text/csv'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'image',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'png', 'jpg', 'jpeg', 'gif', 'webp'},
+      mediaTypes: <String>{
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/webp',
+      },
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'zip',
+      tier: FileAdapterTier.native,
+      extensions: <String>{'zip'},
+      mediaTypes: <String>{'application/zip'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+    ),
+    FileAdapterDescriptor(
+      id: 'pdf',
+      tier: FileAdapterTier.sandboxedCore,
+      extensions: <String>{'pdf'},
+      mediaTypes: <String>{'application/pdf'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+      sandboxRequired: true,
+    ),
+    FileAdapterDescriptor(
+      id: 'ooxml',
+      tier: FileAdapterTier.sandboxedCore,
+      extensions: <String>{'docx', 'xlsx', 'pptx'},
+      mediaTypes: <String>{
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      },
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+      sandboxRequired: true,
+    ),
+    FileAdapterDescriptor(
+      id: 'opendocument',
+      tier: FileAdapterTier.sandboxedCore,
+      extensions: <String>{'odt'},
+      mediaTypes: <String>{'application/vnd.oasis.opendocument.text'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+      sandboxRequired: true,
+    ),
+    FileAdapterDescriptor(
+      id: 'rtf',
+      tier: FileAdapterTier.sandboxedCore,
+      extensions: <String>{'rtf'},
+      mediaTypes: <String>{'application/rtf', 'text/rtf'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+      sandboxRequired: true,
+    ),
+    FileAdapterDescriptor(
+      id: 'epub',
+      tier: FileAdapterTier.sandboxedCore,
+      extensions: <String>{'epub'},
+      mediaTypes: <String>{'application/epub+zip'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+      sandboxRequired: true,
+    ),
+    FileAdapterDescriptor(
+      id: 'email',
+      tier: FileAdapterTier.sandboxedCore,
+      extensions: <String>{'eml'},
+      mediaTypes: <String>{'message/rfc822'},
+      capabilities: <FileAdapterCapability>{
+        FileAdapterCapability.detect,
+        FileAdapterCapability.inspect,
+        FileAdapterCapability.extract,
+        FileAdapterCapability.preview,
+        FileAdapterCapability.validate,
+      },
+      sandboxRequired: true,
+    ),
+  ];
 
   FileAdapterDescriptor detect(File file) {
-    final extension =
-        file.path.contains('.') ? file.path.split('.').last.toLowerCase() : '';
+    final extension = file.path.contains('.')
+        ? file.path.split('.').last.toLowerCase()
+        : '';
     for (final adapter in all) {
       if (adapter.extensions.contains(extension)) {
         return adapter;
@@ -292,7 +293,8 @@ class FileAdapterRegistry {
     }
     if (adapter.id == 'email') {
       final text = utf8.decode(bytes, allowMalformed: true);
-      final subject = RegExp(
+      final subject =
+          RegExp(
             r'^subject:\s*(.+)$',
             caseSensitive: false,
             multiLine: true,
@@ -339,12 +341,14 @@ class FileAdapterRegistry {
           }
           break;
         case 'image':
-          final isPng = bytes.length >= 4 &&
+          final isPng =
+              bytes.length >= 4 &&
               bytes[0] == 0x89 &&
               bytes[1] == 0x50 &&
               bytes[2] == 0x4E &&
               bytes[3] == 0x47;
-          final isJpeg = bytes.length >= 3 &&
+          final isJpeg =
+              bytes.length >= 3 &&
               bytes[0] == 0xFF &&
               bytes[1] == 0xD8 &&
               bytes[2] == 0xFF;
@@ -363,9 +367,11 @@ class FileAdapterRegistry {
         case 'ooxml':
         case 'opendocument':
         case 'epub':
-          final header =
-              bytes.length >= 4 ? bytes.take(4).toList() : const <int>[];
-          final isZip = header.length == 4 &&
+          final header = bytes.length >= 4
+              ? bytes.take(4).toList()
+              : const <int>[];
+          final isZip =
+              header.length == 4 &&
               header[0] == 0x50 &&
               header[1] == 0x4B &&
               header[2] == 0x03 &&

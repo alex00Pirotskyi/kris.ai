@@ -104,8 +104,9 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
     super.initState();
     selectedProjectId = widget.initialProjectId;
     selectedModelId = widget.initialModelId;
-    section =
-        widget.initialSection.clamp(0, _settingsSections.length - 1).toInt();
+    section = widget.initialSection
+        .clamp(0, _settingsSections.length - 1)
+        .toInt();
     _seedSettings();
     unawaited(_load());
   }
@@ -115,8 +116,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
     apiPortController.text = settings.apiPort.toString();
     originsController.text = settings.allowedOrigins.join('\n');
     ollamaController.text = settings.ollamaBaseUrl;
-    ollamaLoadTimeoutController.text =
-        settings.ollamaLoadTimeoutSeconds.toString();
+    ollamaLoadTimeoutController.text = settings.ollamaLoadTimeoutSeconds
+        .toString();
     ollamaLoadRetriesController.text = settings.ollamaLoadRetries.toString();
     ollamaKeepAliveController.text = settings.ollamaKeepAliveMinutes.toString();
     compatibleController.text = settings.openAiCompatibleBaseUrl;
@@ -253,7 +254,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
     await _perform<void>('Saving settings', () async {
       final settings = runtime.settings.copyWith(
         apiEnabled: apiEnabled,
-        apiPort: int.tryParse(apiPortController.text.trim()) ??
+        apiPort:
+            int.tryParse(apiPortController.text.trim()) ??
             runtime.settings.apiPort,
         allowedOrigins: originsController.text
             .split(RegExp(r'[\r\n]+'))
@@ -263,13 +265,13 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
         ollamaBaseUrl: ollamaController.text.trim(),
         ollamaLoadTimeoutSeconds:
             int.tryParse(ollamaLoadTimeoutController.text.trim()) ??
-                runtime.settings.ollamaLoadTimeoutSeconds,
+            runtime.settings.ollamaLoadTimeoutSeconds,
         ollamaLoadRetries:
             int.tryParse(ollamaLoadRetriesController.text.trim()) ??
-                runtime.settings.ollamaLoadRetries,
+            runtime.settings.ollamaLoadRetries,
         ollamaKeepAliveMinutes:
             int.tryParse(ollamaKeepAliveController.text.trim()) ??
-                runtime.settings.ollamaKeepAliveMinutes,
+            runtime.settings.ollamaKeepAliveMinutes,
         openAiCompatibleBaseUrl: compatibleController.text.trim(),
         openAiApiKeyReferenceId: selectedOpenAiSecretReferenceId ?? '',
         localOnly: localOnly,
@@ -504,13 +506,13 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
   }
 
   Widget _content() => switch (section) {
-        0 => _generalPage(),
-        1 => _modelsPage(),
-        2 => _sourcesPage(),
-        3 => _privacyPage(),
-        4 => _integrationsPage(),
-        _ => _developerPage(),
-      };
+    0 => _generalPage(),
+    1 => _modelsPage(),
+    2 => _sourcesPage(),
+    3 => _privacyPage(),
+    4 => _integrationsPage(),
+    _ => _developerPage(),
+  };
 
   Widget _generalPage() {
     return _scroll(<Widget>[
@@ -677,9 +679,11 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
               key: ValueKey<String?>(
                 'openai-secret:$selectedOpenAiSecretReferenceId',
               ),
-              initialValue: secretReferences.any(
-                (reference) => reference.id == selectedOpenAiSecretReferenceId,
-              )
+              initialValue:
+                  secretReferences.any(
+                    (reference) =>
+                        reference.id == selectedOpenAiSecretReferenceId,
+                  )
                   ? selectedOpenAiSecretReferenceId
                   : null,
               decoration: const InputDecoration(
@@ -929,13 +933,14 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                     : () {
                         unawaited(
                           _perform<void>('Registering a secret name', () async {
-                            final reference =
-                                await runtime.registerSecretReference(
-                              label: secretLabelController.text,
-                              environmentKey: secretEnvironmentController.text,
-                            );
-                            secretReferences =
-                                await runtime.listSecretReferences();
+                            final reference = await runtime
+                                .registerSecretReference(
+                                  label: secretLabelController.text,
+                                  environmentKey:
+                                      secretEnvironmentController.text,
+                                );
+                            secretReferences = await runtime
+                                .listSecretReferences();
                             selectedSecretReferenceId = reference.id;
                             secretLabelController.clear();
                             secretEnvironmentController.clear();
@@ -951,9 +956,10 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
               key: ValueKey<String?>(
                 'session-secret:$selectedSecretReferenceId',
               ),
-              initialValue: secretReferences.any(
-                (reference) => reference.id == selectedSecretReferenceId,
-              )
+              initialValue:
+                  secretReferences.any(
+                    (reference) => reference.id == selectedSecretReferenceId,
+                  )
                   ? selectedSecretReferenceId
                   : null,
               decoration: const InputDecoration(
@@ -1286,8 +1292,8 @@ class _AdvancedSettingsPageState extends State<AdvancedSettingsPage> {
                                     .map((item) => item.trim())
                                     .where((item) => item.isNotEmpty)
                                     .toSet(),
-                                protocolVersion:
-                                    mcpProtocolController.text.trim(),
+                                protocolVersion: mcpProtocolController.text
+                                    .trim(),
                               );
                               mcpTrust = await runtime.listMcpTrust();
                               mcpLabelController.clear();

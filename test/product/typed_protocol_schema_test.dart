@@ -105,14 +105,18 @@ void main() {
 
     test('provider and MCP descriptors come from the same contract', () {
       const schemas = ToolSchemaRegistry();
-      final openAi = schemas.descriptors(
-        allowlist: const <String>{'write_file'},
-        dialect: ToolDescriptorDialect.openAiCompatible,
-      ).single;
-      final mcp = schemas.descriptors(
-        allowlist: const <String>{'write_file'},
-        dialect: ToolDescriptorDialect.mcp,
-      ).single;
+      final openAi = schemas
+          .descriptors(
+            allowlist: const <String>{'write_file'},
+            dialect: ToolDescriptorDialect.openAiCompatible,
+          )
+          .single;
+      final mcp = schemas
+          .descriptors(
+            allowlist: const <String>{'write_file'},
+            dialect: ToolDescriptorDialect.mcp,
+          )
+          .single;
 
       expect(openAi['type'], 'function');
       expect(
@@ -373,10 +377,12 @@ void main() {
       const aliases = <String>['content', 'body', 'fileContent', 'new_content'];
 
       for (var index = 0; index < 300; index++) {
-        final content = 'case-$index-${random.nextInt(1 << 30)}\n'
+        final content =
+            'case-$index-${random.nextInt(1 << 30)}\n'
             "${List<String>.filled(random.nextInt(80), 'x').join()}";
-        final path =
-            index.isEven ? '`docs/fuzz-$index.md`' : 'docs/fuzz-$index.md';
+        final path = index.isEven
+            ? '`docs/fuzz-$index.md`'
+            : 'docs/fuzz-$index.md';
         final payload = <String, dynamic>{
           'action': 'tool_call',
           'tool': index % 5 == 0 ? 'write' : 'write_file',
@@ -388,8 +394,8 @@ void main() {
         final wrapped = switch (index % 4) {
           0 => jsonEncode(payload),
           1 => jsonEncode(<String, dynamic>{
-              'message': <String, dynamic>{'content': jsonEncode(payload)},
-            }),
+            'message': <String, dynamic>{'content': jsonEncode(payload)},
+          }),
           2 => 'analysis before action\n```json\n${jsonEncode(payload)}\n```',
           _ => jsonEncode(<String, dynamic>{'decision': payload}),
         };

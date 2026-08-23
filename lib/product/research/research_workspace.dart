@@ -122,7 +122,9 @@ final class P4ResearchWorkspace extends StatelessWidget {
               child: TabBarView(
                 children: <Widget>[
                   _ResearchSearchPanel(
-                      controller: controller, onSearch: onSearch),
+                    controller: controller,
+                    onSearch: onSearch,
+                  ),
                   _ResearchResults(controller: controller),
                   _ResearchSource(controller: controller),
                   _ResearchExtraction(controller: controller),
@@ -163,39 +165,41 @@ final class _ResearchToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: <Widget>[
-            FilledButton.icon(
-              onPressed: controller.query.trim().isEmpty
-                  ? null
-                  : () => onSearch?.call(controller.query),
-              icon: const Icon(Icons.search),
-              label: const Text('Search'),
-            ),
-            OutlinedButton.icon(
-              onPressed: onCrawl,
-              icon: const Icon(Icons.account_tree_outlined),
-              label: const Text('Crawl'),
-            ),
-            OutlinedButton.icon(
-              onPressed: onExport,
-              icon: const Icon(Icons.download_outlined),
-              label: const Text('Export'),
-            ),
-            Chip(label: Text('${controller.sources.length} immutable sources')),
-            Chip(label: Text('${controller.citations.length} citations')),
-          ],
+    padding: const EdgeInsets.all(12),
+    child: Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        FilledButton.icon(
+          onPressed: controller.query.trim().isEmpty
+              ? null
+              : () => onSearch?.call(controller.query),
+          icon: const Icon(Icons.search),
+          label: const Text('Search'),
         ),
-      );
+        OutlinedButton.icon(
+          onPressed: onCrawl,
+          icon: const Icon(Icons.account_tree_outlined),
+          label: const Text('Crawl'),
+        ),
+        OutlinedButton.icon(
+          onPressed: onExport,
+          icon: const Icon(Icons.download_outlined),
+          label: const Text('Export'),
+        ),
+        Chip(label: Text('${controller.sources.length} immutable sources')),
+        Chip(label: Text('${controller.citations.length} citations')),
+      ],
+    ),
+  );
 }
 
 final class _ResearchSearchPanel extends StatelessWidget {
-  const _ResearchSearchPanel(
-      {required this.controller, required this.onSearch});
+  const _ResearchSearchPanel({
+    required this.controller,
+    required this.onSearch,
+  });
   final P4ResearchWorkspaceController controller;
   final ValueChanged<String>? onSearch;
 
@@ -232,26 +236,26 @@ final class _ResearchResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView.builder(
-        itemCount: controller.sources.length,
-        itemBuilder: (context, index) {
-          final source = controller.sources[index];
-          final citationCount = controller.citations
-              .where((item) => item.fetchVersionId == source.id)
-              .length;
-          return ListTile(
-            selected: controller.selectedFetchId == source.id,
-            leading: const Icon(Icons.article_outlined),
-            title: Text(source.title),
-            subtitle: Text(
-              '${source.canonicalUrl}\n'
-              '${source.fetchedAt.toLocal()} · ${source.trustLabel} · '
-              '${source.extractionHash.substring(0, 12)} · $citationCount citations',
-            ),
-            isThreeLine: true,
-            onTap: () => controller.selectSource(source.id),
-          );
-        },
+    itemCount: controller.sources.length,
+    itemBuilder: (context, index) {
+      final source = controller.sources[index];
+      final citationCount = controller.citations
+          .where((item) => item.fetchVersionId == source.id)
+          .length;
+      return ListTile(
+        selected: controller.selectedFetchId == source.id,
+        leading: const Icon(Icons.article_outlined),
+        title: Text(source.title),
+        subtitle: Text(
+          '${source.canonicalUrl}\n'
+          '${source.fetchedAt.toLocal()} · ${source.trustLabel} · '
+          '${source.extractionHash.substring(0, 12)} · $citationCount citations',
+        ),
+        isThreeLine: true,
+        onTap: () => controller.selectSource(source.id),
       );
+    },
+  );
 }
 
 P4FetchVersion? _selected(P4ResearchWorkspaceController controller) {
@@ -287,7 +291,7 @@ final class _ResearchExtraction extends StatelessWidget {
         source == null
             ? 'Select a source.'
             : 'Immutable extraction ${source.extractionHash}\n'
-                'Object ${source.extractionObjectSha256}',
+                  'Object ${source.extractionObjectSha256}',
       ),
     );
   }
@@ -298,19 +302,19 @@ final class _ResearchCitations extends StatelessWidget {
   final P4ResearchWorkspaceController controller;
   @override
   Widget build(BuildContext context) => ListView(
-        children: <Widget>[
-          for (final citation in controller.citations)
-            ListTile(
-              leading: const Icon(Icons.format_quote),
-              title: Text(citation.claim),
-              subtitle: Text(
-                '${citation.fetchVersionId} · ${citation.start}:${citation.end}\n'
-                'quote ${citation.quoteHash.substring(0, 12)}',
-              ),
-              isThreeLine: true,
-            ),
-        ],
-      );
+    children: <Widget>[
+      for (final citation in controller.citations)
+        ListTile(
+          leading: const Icon(Icons.format_quote),
+          title: Text(citation.claim),
+          subtitle: Text(
+            '${citation.fetchVersionId} · ${citation.start}:${citation.end}\n'
+            'quote ${citation.quoteHash.substring(0, 12)}',
+          ),
+          isThreeLine: true,
+        ),
+    ],
+  );
 }
 
 final class _ResearchCrawl extends StatelessWidget {
@@ -319,12 +323,12 @@ final class _ResearchCrawl extends StatelessWidget {
   final VoidCallback? onCrawl;
   @override
   Widget build(BuildContext context) => Center(
-        child: FilledButton.tonalIcon(
-          onPressed: onCrawl,
-          icon: const Icon(Icons.play_arrow),
-          label: const Text('Start bounded crawl'),
-        ),
-      );
+    child: FilledButton.tonalIcon(
+      onPressed: onCrawl,
+      icon: const Icon(Icons.play_arrow),
+      label: const Text('Start bounded crawl'),
+    ),
+  );
 }
 
 final class _ResearchCollections extends StatelessWidget {
@@ -332,9 +336,10 @@ final class _ResearchCollections extends StatelessWidget {
   final P4ResearchWorkspaceController controller;
   @override
   Widget build(BuildContext context) => Center(
-        child: Text(
-            '${controller.sources.length} sources available for collections'),
-      );
+    child: Text(
+      '${controller.sources.length} sources available for collections',
+    ),
+  );
 }
 
 final class _ResearchChanges extends StatelessWidget {
@@ -342,21 +347,23 @@ final class _ResearchChanges extends StatelessWidget {
   final P4ResearchWorkspaceController controller;
   @override
   Widget build(BuildContext context) => ListView(
-        children: <Widget>[
-          for (final change in controller.changes)
-            ListTile(
-              leading: Icon(change.changed
-                  ? Icons.change_circle_outlined
-                  : Icons.check_circle_outline),
-              title: Text(change.canonicalUrl),
-              subtitle: Text(
-                change.changed
-                    ? '${change.beforeHash?.substring(0, 12)} → ${change.afterHash.substring(0, 12)}'
-                    : 'No content change',
-              ),
-            ),
-        ],
-      );
+    children: <Widget>[
+      for (final change in controller.changes)
+        ListTile(
+          leading: Icon(
+            change.changed
+                ? Icons.change_circle_outlined
+                : Icons.check_circle_outline,
+          ),
+          title: Text(change.canonicalUrl),
+          subtitle: Text(
+            change.changed
+                ? '${change.beforeHash?.substring(0, 12)} → ${change.afterHash.substring(0, 12)}'
+                : 'No content change',
+          ),
+        ),
+    ],
+  );
 }
 
 final class _ResearchExport extends StatelessWidget {
@@ -365,12 +372,12 @@ final class _ResearchExport extends StatelessWidget {
   final VoidCallback? onExport;
   @override
   Widget build(BuildContext context) => Center(
-        child: FilledButton.icon(
-          onPressed: controller.sources.isEmpty ? null : onExport,
-          icon: const Icon(Icons.archive_outlined),
-          label: const Text('Export provenance bundle'),
-        ),
-      );
+    child: FilledButton.icon(
+      onPressed: controller.sources.isEmpty ? null : onExport,
+      icon: const Icon(Icons.archive_outlined),
+      label: const Text('Export provenance bundle'),
+    ),
+  );
 }
 
 final class P4DataWorkspaceController extends ChangeNotifier {
@@ -408,73 +415,77 @@ final class P4DataWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: controller,
-        builder: (context, _) {
-          final selected = controller.selected;
-          return DefaultTabController(
-            length: 7,
-            child: Column(
-              children: <Widget>[
-                SizedBox(
-                  height: 56,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    children: <Widget>[
-                      for (final version in controller.versions)
-                        Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: ChoiceChip(
-                            label: Text(version.id.substring(0, 18)),
-                            selected: selected?.id == version.id,
-                            onSelected: (_) => controller.select(version.id),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const TabBar(
-                  isScrollable: true,
-                  tabs: <Widget>[
-                    Tab(text: 'Table'),
-                    Tab(text: 'Schema'),
-                    Tab(text: 'Recipe'),
-                    Tab(text: 'Quality'),
-                    Tab(text: 'Provenance'),
-                    Tab(text: 'Version diff'),
-                    Tab(text: 'Export'),
-                  ],
-                ),
-                Expanded(
-                  child: selected == null
-                      ? const Center(child: Text('No dataset selected.'))
-                      : TabBarView(
-                          children: <Widget>[
-                            _VirtualTable(version: selected),
-                            _JsonValue(value: selected.schema),
-                            _JsonValue(
-                                value: selected.transforms
-                                    .map((e) => e.toJson())
-                                    .toList()),
-                            _QualityPanel(version: selected),
-                            _JsonValue(value: <String, Object?>{
-                              'sourceHashes': selected.sourceHashes,
-                              'manifestHash': selected.manifestHash
-                            }),
-                            _JsonValue(value: <String, Object?>{
-                              'parentVersionId': selected.parentVersionId,
-                              'versionId': selected.id
-                            }),
-                            _DatasetExport(
-                                version: selected, onExport: onExport),
-                          ],
-                        ),
-                ),
+    animation: controller,
+    builder: (context, _) {
+      final selected = controller.selected;
+      return DefaultTabController(
+        length: 7,
+        child: Column(
+          children: <Widget>[
+            SizedBox(
+              height: 56,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                children: <Widget>[
+                  for (final version in controller.versions)
+                    Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: ChoiceChip(
+                        label: Text(version.id.substring(0, 18)),
+                        selected: selected?.id == version.id,
+                        onSelected: (_) => controller.select(version.id),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const TabBar(
+              isScrollable: true,
+              tabs: <Widget>[
+                Tab(text: 'Table'),
+                Tab(text: 'Schema'),
+                Tab(text: 'Recipe'),
+                Tab(text: 'Quality'),
+                Tab(text: 'Provenance'),
+                Tab(text: 'Version diff'),
+                Tab(text: 'Export'),
               ],
             ),
-          );
-        },
+            Expanded(
+              child: selected == null
+                  ? const Center(child: Text('No dataset selected.'))
+                  : TabBarView(
+                      children: <Widget>[
+                        _VirtualTable(version: selected),
+                        _JsonValue(value: selected.schema),
+                        _JsonValue(
+                          value: selected.transforms
+                              .map((e) => e.toJson())
+                              .toList(),
+                        ),
+                        _QualityPanel(version: selected),
+                        _JsonValue(
+                          value: <String, Object?>{
+                            'sourceHashes': selected.sourceHashes,
+                            'manifestHash': selected.manifestHash,
+                          },
+                        ),
+                        _JsonValue(
+                          value: <String, Object?>{
+                            'parentVersionId': selected.parentVersionId,
+                            'versionId': selected.id,
+                          },
+                        ),
+                        _DatasetExport(version: selected, onExport: onExport),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       );
+    },
+  );
 }
 
 final class _VirtualTable extends StatelessWidget {
@@ -491,9 +502,11 @@ final class _VirtualTable extends StatelessWidget {
           final values = index == 0
               ? fields
               : fields
-                  .map((field) =>
-                      version.rows[index - 1][field]?.toString() ?? '')
-                  .toList();
+                    .map(
+                      (field) =>
+                          version.rows[index - 1][field]?.toString() ?? '',
+                    )
+                    .toList();
           return Row(
             children: <Widget>[
               for (final value in values)
@@ -523,10 +536,9 @@ final class _JsonValue extends StatelessWidget {
   final Object value;
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child:
-            SelectableText(const JsonEncoder.withIndent('  ').convert(value)),
-      );
+    padding: const EdgeInsets.all(12),
+    child: SelectableText(const JsonEncoder.withIndent('  ').convert(value)),
+  );
 }
 
 final class _QualityPanel extends StatelessWidget {
@@ -535,7 +547,7 @@ final class _QualityPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final missing = <String, int>{
-      for (final field in version.schema.keys) field: 0
+      for (final field in version.schema.keys) field: 0,
     };
     for (final row in version.rows) {
       for (final field in version.schema.keys) {
@@ -547,11 +559,14 @@ final class _QualityPanel extends StatelessWidget {
     return ListView(
       children: <Widget>[
         ListTile(
-            title: const Text('Rows'),
-            trailing: Text('${version.rows.length}')),
+          title: const Text('Rows'),
+          trailing: Text('${version.rows.length}'),
+        ),
         for (final entry in missing.entries)
           ListTile(
-              title: Text(entry.key), trailing: Text('${entry.value} missing')),
+            title: Text(entry.key),
+            trailing: Text('${entry.value} missing'),
+          ),
       ],
     );
   }
@@ -563,21 +578,15 @@ final class _DatasetExport extends StatelessWidget {
   final ValueChanged<String>? onExport;
   @override
   Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          for (final format in const <String>[
-            'jsonl',
-            'csv',
-            'markdown',
-            'sqlite'
-          ])
-            ListTile(
-              leading: const Icon(Icons.download),
-              title: Text(format.toUpperCase()),
-              subtitle:
-                  Text('Manifest ${version.manifestHash.substring(0, 12)}'),
-              onTap: () => onExport?.call(format),
-            ),
-        ],
-      );
+    padding: const EdgeInsets.all(16),
+    children: <Widget>[
+      for (final format in const <String>['jsonl', 'csv', 'markdown', 'sqlite'])
+        ListTile(
+          leading: const Icon(Icons.download),
+          title: Text(format.toUpperCase()),
+          subtitle: Text('Manifest ${version.manifestHash.substring(0, 12)}'),
+          onTap: () => onExport?.call(format),
+        ),
+    ],
+  );
 }

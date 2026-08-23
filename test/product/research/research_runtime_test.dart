@@ -9,62 +9,71 @@ import 'package:kristin_local_agent/product/research/research_workspace.dart';
 
 void main() {
   test(
-      'content store deduplicates immutable objects and preserves fetch versions',
-      () async {
-    final root = await Directory.systemTemp.createTemp('p4-store-');
-    addTearDown(() async {
-      if (await root.exists()) await root.delete(recursive: true);
-    });
-    final store = P4ResearchContentStore(
-      root,
-      clock: () => DateTime.utc(2026, 8, 20, 7),
-    );
-    final first =
-        await store.putObject(utf8.encode('same'), mediaType: 'text/plain');
-    final second =
-        await store.putObject(utf8.encode('same'), mediaType: 'text/plain');
-    expect(first.sha256, second.sha256);
-    expect(await File(first.path).readAsString(), 'same');
+    'content store deduplicates immutable objects and preserves fetch versions',
+    () async {
+      final root = await Directory.systemTemp.createTemp('p4-store-');
+      addTearDown(() async {
+        if (await root.exists()) await root.delete(recursive: true);
+      });
+      final store = P4ResearchContentStore(
+        root,
+        clock: () => DateTime.utc(2026, 8, 20, 7),
+      );
+      final first = await store.putObject(
+        utf8.encode('same'),
+        mediaType: 'text/plain',
+      );
+      final second = await store.putObject(
+        utf8.encode('same'),
+        mediaType: 'text/plain',
+      );
+      expect(first.sha256, second.sha256);
+      expect(await File(first.path).readAsString(), 'same');
 
-    final fetch = await store.saveFetch(
-      url: 'https://example.com/source',
-      canonicalUrl: 'https://example.com/source',
-      rawBytes: utf8.encode('<p>Evidence text</p>'),
-      extraction: <String, Object?>{'text': 'Evidence text'},
-      title: 'Evidence',
-      trustLabel: 'fixture',
-    );
-    final listed = await store.listFetches();
-    expect(listed.single.id, fetch.id);
-    expect(listed.single.extractionHash, fetch.extractionHash);
+      final fetch = await store.saveFetch(
+        url: 'https://example.com/source',
+        canonicalUrl: 'https://example.com/source',
+        rawBytes: utf8.encode('<p>Evidence text</p>'),
+        extraction: <String, Object?>{'text': 'Evidence text'},
+        title: 'Evidence',
+        trustLabel: 'fixture',
+      );
+      final listed = await store.listFetches();
+      expect(listed.single.id, fetch.id);
+      expect(listed.single.extractionHash, fetch.extractionHash);
 
-    final citation = await store.createCitation(
-      fetch: fetch,
-      extractedText: 'Evidence text',
-      claim: 'The fixture contains evidence.',
-      start: 0,
-      end: 8,
-    );
-    expect(citation.fetchVersionId, fetch.id);
-    expect(citation.extractionHash, fetch.extractionHash);
-  });
+      final citation = await store.createCitation(
+        fetch: fetch,
+        extractedText: 'Evidence text',
+        claim: 'The fixture contains evidence.',
+        start: 0,
+        end: 8,
+      );
+      expect(citation.fetchVersionId, fetch.id);
+      expect(citation.extractionHash, fetch.extractionHash);
+    },
+  );
 
   test('lexical search is scoped and semantic index is optional', () async {
     final index = P4LexicalIndex()
-      ..upsert(const P4LexicalDocument(
-        id: 'a',
-        scope: 'project-a',
-        title: 'Flutter BLE reference',
-        text: 'Bluetooth low energy reference details',
-        metadata: <String, Object?>{},
-      ))
-      ..upsert(const P4LexicalDocument(
-        id: 'b',
-        scope: 'project-b',
-        title: 'Flutter BLE hidden',
-        text: 'Should never cross scope',
-        metadata: <String, Object?>{},
-      ));
+      ..upsert(
+        const P4LexicalDocument(
+          id: 'a',
+          scope: 'project-a',
+          title: 'Flutter BLE reference',
+          text: 'Bluetooth low energy reference details',
+          metadata: <String, Object?>{},
+        ),
+      )
+      ..upsert(
+        const P4LexicalDocument(
+          id: 'b',
+          scope: 'project-b',
+          title: 'Flutter BLE hidden',
+          text: 'Should never cross scope',
+          metadata: <String, Object?>{},
+        ),
+      );
     final lexical = await index.search('Flutter BLE', scope: 'project-a');
     expect(lexical.map((hit) => hit.document.id), <String>['a']);
 
@@ -77,90 +86,89 @@ void main() {
     expect(semantic.single.document.id, 'a');
     index.semantic = null;
     expect(
-        (await index.search('reference', scope: 'project-a'))
-            .single
-            .document
-            .id,
-        'a');
+      (await index.search('reference', scope: 'project-a')).single.document.id,
+      'a',
+    );
   });
 
-  test('dataset recipe is reproducible and exports reopen with provenance',
-      () async {
-    final root = await Directory.systemTemp.createTemp('p4-dataset-');
-    addTearDown(() async {
-      if (await root.exists()) await root.delete(recursive: true);
-    });
-    final engine = P4DatasetEngine();
-    final transforms = <P4DatasetTransform>[
-      const P4DatasetTransform(
-        P4DatasetTransformKind.normalizeText,
-        <String, Object?>{'field': 'name'},
-      ),
-      const P4DatasetTransform(
-        P4DatasetTransformKind.dedupe,
-        <String, Object?>{
-          'fields': <String>['name']
-        },
-      ),
-      const P4DatasetTransform(
-        P4DatasetTransformKind.sort,
-        <String, Object?>{'field': 'name'},
-      ),
-      const P4DatasetTransform(
-        P4DatasetTransformKind.validateRequired,
-        <String, Object?>{
-          'fields': <String>['name']
-        },
-      ),
-    ];
-    final rows = <Map<String, Object?>>[
-      <String, Object?>{'name': '  Beta ', 'count': 2},
-      <String, Object?>{'name': 'Alpha', 'count': 1},
-      <String, Object?>{'name': 'Beta', 'count': 2},
-    ];
-    final first = engine.create(
-      datasetId: 'fixture',
-      rows: rows,
-      schema: const <String, String>{'name': 'string', 'count': 'int'},
-      sourceHashes: <String>['a' * 64],
-      transforms: transforms,
-      createdAt: DateTime.utc(2026, 8, 20),
-    );
-    final second = engine.create(
-      datasetId: 'fixture',
-      rows: rows,
-      schema: const <String, String>{'name': 'string', 'count': 'int'},
-      sourceHashes: <String>['a' * 64],
-      transforms: transforms,
-      createdAt: DateTime.utc(2026, 8, 20),
-    );
-    expect(first.manifestHash, second.manifestHash);
-    expect(first.rows.map((row) => row['name']), <Object?>['Alpha', 'Beta']);
-
-    final jsonl = File('${root.path}/data.jsonl');
-    final csv = File('${root.path}/data.csv');
-    final markdown = File('${root.path}/data.md');
-    final sqlite = File('${root.path}/data.sqlite');
-    await engine.export(first, jsonl, format: 'jsonl');
-    await engine.export(first, csv, format: 'csv');
-    await engine.export(first, markdown, format: 'markdown');
-    await engine.export(first, sqlite, format: 'sqlite');
-    expect((await jsonl.readAsLines()).length, 2);
-    expect(await csv.readAsString(), contains('"Alpha"'));
-    expect(await markdown.readAsString(), contains('| Alpha |'));
-    final db = sqlite3.open(sqlite.path);
-    try {
-      expect(db.select('SELECT COUNT(*) AS c FROM data').single['c'], 2);
-      expect(
-        db
-            .select("SELECT value FROM manifest WHERE key='manifestHash'")
-            .single['value'],
-        first.manifestHash,
+  test(
+    'dataset recipe is reproducible and exports reopen with provenance',
+    () async {
+      final root = await Directory.systemTemp.createTemp('p4-dataset-');
+      addTearDown(() async {
+        if (await root.exists()) await root.delete(recursive: true);
+      });
+      final engine = P4DatasetEngine();
+      final transforms = <P4DatasetTransform>[
+        const P4DatasetTransform(
+          P4DatasetTransformKind.normalizeText,
+          <String, Object?>{'field': 'name'},
+        ),
+        const P4DatasetTransform(
+          P4DatasetTransformKind.dedupe,
+          <String, Object?>{
+            'fields': <String>['name'],
+          },
+        ),
+        const P4DatasetTransform(P4DatasetTransformKind.sort, <String, Object?>{
+          'field': 'name',
+        }),
+        const P4DatasetTransform(
+          P4DatasetTransformKind.validateRequired,
+          <String, Object?>{
+            'fields': <String>['name'],
+          },
+        ),
+      ];
+      final rows = <Map<String, Object?>>[
+        <String, Object?>{'name': '  Beta ', 'count': 2},
+        <String, Object?>{'name': 'Alpha', 'count': 1},
+        <String, Object?>{'name': 'Beta', 'count': 2},
+      ];
+      final first = engine.create(
+        datasetId: 'fixture',
+        rows: rows,
+        schema: const <String, String>{'name': 'string', 'count': 'int'},
+        sourceHashes: <String>['a' * 64],
+        transforms: transforms,
+        createdAt: DateTime.utc(2026, 8, 20),
       );
-    } finally {
-      db.dispose();
-    }
-  });
+      final second = engine.create(
+        datasetId: 'fixture',
+        rows: rows,
+        schema: const <String, String>{'name': 'string', 'count': 'int'},
+        sourceHashes: <String>['a' * 64],
+        transforms: transforms,
+        createdAt: DateTime.utc(2026, 8, 20),
+      );
+      expect(first.manifestHash, second.manifestHash);
+      expect(first.rows.map((row) => row['name']), <Object?>['Alpha', 'Beta']);
+
+      final jsonl = File('${root.path}/data.jsonl');
+      final csv = File('${root.path}/data.csv');
+      final markdown = File('${root.path}/data.md');
+      final sqlite = File('${root.path}/data.sqlite');
+      await engine.export(first, jsonl, format: 'jsonl');
+      await engine.export(first, csv, format: 'csv');
+      await engine.export(first, markdown, format: 'markdown');
+      await engine.export(first, sqlite, format: 'sqlite');
+      expect((await jsonl.readAsLines()).length, 2);
+      expect(await csv.readAsString(), contains('"Alpha"'));
+      expect(await markdown.readAsString(), contains('| Alpha |'));
+      final db = sqlite3.open(sqlite.path);
+      try {
+        expect(db.select('SELECT COUNT(*) AS c FROM data').single['c'], 2);
+        expect(
+          db
+              .select("SELECT value FROM manifest WHERE key='manifestHash'")
+              .single['value'],
+          first.manifestHash,
+        );
+      } finally {
+        db.dispose();
+      }
+    },
+  );
 
   test('freshness monitor reports precise extraction hash changes', () {
     final monitor = P4FreshnessMonitor();
@@ -185,8 +193,9 @@ void main() {
     expect(changed.beforeHash, 'a' * 64);
   });
 
-  testWidgets('Research workspace exposes source and citation inspection',
-      (tester) async {
+  testWidgets('Research workspace exposes source and citation inspection', (
+    tester,
+  ) async {
     final controller = P4ResearchWorkspaceController();
     final fetch = _fetch();
     controller
@@ -225,8 +234,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Data workspace virtualizes large fixture table and exports',
-      (tester) async {
+  testWidgets('Data workspace virtualizes large fixture table and exports', (
+    tester,
+  ) async {
     final version = P4DatasetEngine().create(
       datasetId: 'large',
       rows: List<Map<String, Object?>>.generate(
@@ -264,16 +274,16 @@ void main() {
 }
 
 P4FetchVersion _fetch() => P4FetchVersion(
-      id: 'fetch-fixture',
-      url: 'https://example.com/source',
-      canonicalUrl: 'https://example.com/source',
-      fetchedAt: DateTime.utc(2026, 8, 20),
-      rawObjectSha256: 'a' * 64,
-      extractionObjectSha256: 'b' * 64,
-      extractionHash: 'b' * 64,
-      title: 'Fixture source',
-      trustLabel: 'fixture',
-    );
+  id: 'fetch-fixture',
+  url: 'https://example.com/source',
+  canonicalUrl: 'https://example.com/source',
+  fetchedAt: DateTime.utc(2026, 8, 20),
+  rawObjectSha256: 'a' * 64,
+  extractionObjectSha256: 'b' * 64,
+  extractionHash: 'b' * 64,
+  title: 'Fixture source',
+  trustLabel: 'fixture',
+);
 
 final class _SemanticIndex implements P4SemanticIndex {
   _SemanticIndex(this.ids);
@@ -283,6 +293,5 @@ final class _SemanticIndex implements P4SemanticIndex {
     String query, {
     required String scope,
     int limit = 20,
-  }) async =>
-      ids.take(limit).toList();
+  }) async => ids.take(limit).toList();
 }

@@ -9,15 +9,14 @@ void main() {
     CapabilityDoctorStatus status = CapabilityDoctorStatus.ready,
     bool required = false,
     CapabilityDoctorAction action = CapabilityDoctorAction.none,
-  }) =>
-      CapabilityDoctorCheck(
-        id: id,
-        title: id,
-        status: status,
-        message: '$id status',
-        required: required,
-        action: action,
-      );
+  }) => CapabilityDoctorCheck(
+    id: id,
+    title: id,
+    status: status,
+    message: '$id status',
+    required: required,
+    action: action,
+  );
 
   test('P5-011 core readiness requires storage and model only', () {
     final report = CapabilityDoctorReport(
@@ -86,28 +85,26 @@ void main() {
       ],
     );
 
-    expect(
-      report.actionable.map((item) => item.id).toList(),
-      <String>['model', 'search'],
-    );
+    expect(report.actionable.map((item) => item.id).toList(), <String>[
+      'model',
+      'search',
+    ]);
   });
 
   test('P5-011 rejects duplicate capability identities', () {
     expect(
       () => CapabilityDoctorReport(
         depth: CapabilityDoctorDepth.quick,
-        checks: <CapabilityDoctorCheck>[
-          check('model'),
-          check('model'),
-        ],
+        checks: <CapabilityDoctorCheck>[check('model'), check('model')],
       ),
       throwsArgumentError,
     );
   });
 
   test('P5-011 runtime and Chat wiring preserve task preflight', () async {
-    final runtime =
-        await File('lib/product/product_runtime.dart').readAsString();
+    final runtime = await File(
+      'lib/product/product_runtime.dart',
+    ).readAsString();
     final chat = await File('lib/product/chat_studio.dart').readAsString();
 
     expect(runtime, contains('inspectCapabilities({'));

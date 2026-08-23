@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "6edaf3169165d5c141b77d045db9632283a0ab97fabbd8ac85e45e469985d044",
+  "benchmarkInputsSha256": "41b62d9028cd682d075158131524f194f4d7e2de16e3c7164acfdcae972c97b1",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -76,20 +76,22 @@
     {
       "assuranceLevel": "source_contract",
       "category": "analysis",
-      "evidenceSha256": "216e7172e84e5f36185baa4734f98e169495d220019851e9e73c17c68fb9f6b0",
+      "evidenceSha256": "1b88640258e29c393e37415884e750be0ba381a1108ef339bb180bbdf70307e7",
       "id": "analysis.offline_system_contract",
       "observations": {
-        "exitCode": 1,
-        "failures": [
-          "exitCode=1 expected=0",
-          "$.failed=None expected=0",
-          "$.passed=None expected>=1"
-        ]
+        "exitCode": 0,
+        "selected": {
+          "$.failed": 0,
+          "$.passed": {
+            "minimum": 1,
+            "satisfied": true
+          }
+        }
       },
       "proofKind": "source_inspection",
-      "reason": "expectation_failed",
-      "score": 0.0,
-      "status": "failed",
+      "reason": "command_expectations_satisfied",
+      "score": 1.0,
+      "status": "passed",
       "title": "Offline cumulative source-contract analysis"
     },
     {
@@ -125,7 +127,7 @@
     {
       "assuranceLevel": "behavioral",
       "category": "crash_recovery",
-      "evidenceSha256": "5e427c00e5748231d6daf0b7e232cd128cf8e1ddbee3da5efada01b3bca8f61c",
+      "evidenceSha256": "b16f62c5d39ae89c3d8b00e84abdf1cdca25f0c18f4b9119e37e2480401d9dc2",
       "id": "crash_recovery.sqlite_workflow_kernel",
       "observations": {
         "exitCode": 0,
@@ -133,7 +135,7 @@
           "$.database.integrity": "ok",
           "$.failed": 0,
           "$.passed": 14,
-          "$.schemaVersion": 6
+          "$.schemaVersion": 7
         }
       },
       "proofKind": "executed_behavior",
@@ -276,13 +278,13 @@
       "id": "analysis",
       "measuredCaseCount": 1,
       "name": "Analysis",
-      "readiness": 0.0,
-      "score": 0.0,
+      "readiness": 0.5,
+      "score": 1.0,
       "statusCounts": {
         "error": 0,
-        "failed": 1,
+        "failed": 0,
         "not_run": 1,
-        "passed": 0,
+        "passed": 1,
         "unavailable": 0,
         "unsupported": 0
       }
@@ -367,10 +369,10 @@
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "c70529f579a2ce03fef196090b889b3d2002d39c460abac454fa5fbf692aa314",
+  "resultFingerprint": "628ce61043733ec061f7a305360f5a421b56841065539a1b383c4b7404380e06",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
-  "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
+  "suiteSha256": "e0a24b9dfe09952e1efb4b84473ad8564a72927b98156d931a008c14cc8c17be",
   "suiteVersion": "1.0.0",
   "summary": {
     "behavioralCaseCount": 6,
@@ -379,16 +381,16 @@
     "caseCount": 12,
     "coverage": 0.5,
     "measuredCaseCount": 6,
-    "readiness": 0.416667,
+    "readiness": 0.5,
     "recordingStatus": "complete",
-    "score": 0.625,
+    "score": 0.75,
     "sourceContractCaseCount": 1,
-    "sourceContractPassedCount": 0,
+    "sourceContractPassedCount": 1,
     "statusCounts": {
       "error": 0,
-      "failed": 1,
+      "failed": 0,
       "not_run": 3,
-      "passed": 5,
+      "passed": 6,
       "unavailable": 1,
       "unsupported": 2
     }

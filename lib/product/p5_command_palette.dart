@@ -34,12 +34,12 @@ class P5CommandDefinition {
   final String? shortcutSignature;
 
   String get searchableText => <String>[
-        id,
-        label,
-        description,
-        ...keywords,
-        if (shortcutLabel != null) shortcutLabel!,
-      ].join(' ').toLowerCase();
+    id,
+    label,
+    description,
+    ...keywords,
+    if (shortcutLabel != null) shortcutLabel!,
+  ].join(' ').toLowerCase();
 }
 
 class P5CommandCatalog {
@@ -279,18 +279,18 @@ class P5CommandPaletteShortcutScope extends StatelessWidget {
         actions: <Type, Action<Intent>>{
           P5OpenCommandPaletteIntent:
               CallbackAction<P5OpenCommandPaletteIntent>(
-            onInvoke: (_) {
-              onOpenPalette();
-              return null;
-            },
-          ),
+                onInvoke: (_) {
+                  onOpenPalette();
+                  return null;
+                },
+              ),
           P5SelectShellDestinationIntent:
               CallbackAction<P5SelectShellDestinationIntent>(
-            onInvoke: (intent) {
-              onSelectShellDestination(intent.index);
-              return null;
-            },
-          ),
+                onInvoke: (intent) {
+                  onSelectShellDestination(intent.index);
+                  return null;
+                },
+              ),
         },
         child: child,
       ),
@@ -356,11 +356,11 @@ class _P5CommandPaletteDialogState extends State<P5CommandPaletteDialog> {
         actions: <Type, Action<Intent>>{
           _P5DismissCommandPaletteIntent:
               CallbackAction<_P5DismissCommandPaletteIntent>(
-            onInvoke: (_) {
-              Navigator.of(context).maybePop();
-              return null;
-            },
-          ),
+                onInvoke: (_) {
+                  Navigator.of(context).maybePop();
+                  return null;
+                },
+              ),
         },
         child: Dialog(
           key: const Key('p5-command-palette'),

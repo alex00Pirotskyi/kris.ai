@@ -50,10 +50,7 @@ class ProductErrorNormalizer {
         details: <String, dynamic>{'path': error.path ?? ''},
       );
     }
-    return ProductException(
-      'operation_failed',
-      error.toString(),
-    );
+    return ProductException('operation_failed', error.toString());
   }
 
   static String userMessage(Object error) {

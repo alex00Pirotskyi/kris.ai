@@ -53,6 +53,7 @@ def main() -> int:
         "lib/product/durable_workflow.dart",
         "lib/product/repository.dart",
         "lib/product/retry_policy.dart",
+        "lib/product/runner_attempt_ledger.dart",
         "lib/product/generated/workflow_migrations.g.dart",
         "migrations/workflow/001_core.sql",
         "migrations/workflow/002_idempotency_checkpoints.sql",
@@ -158,6 +159,7 @@ def main() -> int:
         "schemas/fleet_profile.v1.json",
         "schemas/support_compatibility_policy.v1.json",
         "migrations/workflow/006_interoperability_admin.sql",
+        "migrations/workflow/007_runner_attempt_ledger.sql",
         "docs/V1.9.0_INTEROPERABILITY_ADMIN_RELEASE_OPS.md",
         "docs/V1.5.1_SANDBOX_BACKFILL.md",
         "docs/V1.6.0_PROJECT_MANAGER_2.md",
@@ -837,7 +839,7 @@ def main() -> int:
                     "Run local usability and interaction verification",
                     "Capability alignment replaces the unsupported human-study instruction",
                     "Do not recruit participants",
-                    ".clamp(1, 2)",
+                    ".clamp(2, 3)",
                     "manual: alignedManual",
                     "Ollama retries a transient cold-load timeout inside one model turn",
                     "cancelling a run closes an in-flight Ollama cold load",
@@ -1179,11 +1181,11 @@ def main() -> int:
                     "class WorkflowRetryTaxonomy",
                 ),
             )
-            and "generatedWorkflowSchemaVersion = 6" in workflow_migrations
-            and "df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261" in workflow_migrations
+            and "generatedWorkflowSchemaVersion = 7" in workflow_migrations
+            and "966ca51bd07ea48e2349123d4dd8a73dcd8bb4aa177f5fc70c2b62a07738aa29" in workflow_migrations
             and "Crash after idempotent result replays once" in workflow_kernel_gate
             and "restores an existing database when a legacy import fails" in durable_behavioral
-            and kernel_metadata.get("schemaVersion") == 6
+            and kernel_metadata.get("schemaVersion") == 7
             and kernel_metadata.get("appendOnlyRunEvents") is True
             and kernel_metadata.get("durableIdempotency") is True
             and kernel_metadata.get("startupRollback") is True
@@ -1291,7 +1293,7 @@ def main() -> int:
                     "const String interoperabilityV19Version = '1.9.0+190'",
                     "const String releaseOperationsV19Version = '1.9.0+190'",
                     "const String v190ContractsSha256",
-                    "generatedWorkflowSchemaVersion = 6",
+                    "generatedWorkflowSchemaVersion = 7",
                 ),
             )
             and "CREATE TABLE IF NOT EXISTS audit_records" in read(root, "migrations/workflow/006_interoperability_admin.sql"),
@@ -1306,7 +1308,7 @@ def main() -> int:
             and "ProjectManagerV2Service" in runtime
             and "executionIntelligence: executionIntelligence" in runtime
             and "projectManagerV2: projectManagerV2" in runtime
-            and "generatedWorkflowSchemaVersion = 6" in workflow_migrations,
+            and "generatedWorkflowSchemaVersion = 7" in workflow_migrations,
             "One ProductRuntime composes the typed protocol, SQLite kernel, Linux sandbox, Prompt Studio 2, Project Manager 2, and execution-intelligence services.",
         )
     )
@@ -1326,7 +1328,7 @@ def main() -> int:
             and '"--concurrency=1"' in read(root, "tool/kristin_cli.py")
             and '(("SOURCE_DATE_EPOCH", "1784678400"),)' in read(root, "tool/kristin_cli.py")
             and 'env["SOURCE_DATE_EPOCH"] = "1784678400"' in read(root, "tool/release.py"),
-            "Runtime, package, CLI, schema-v6 persistence, Project Manager 2, execution intelligence, and v1.8 knowledge/file-adapter versions agree on the cumulative contract.",
+            "Runtime, package, CLI, schema-v7 persistence, Project Manager 2, execution intelligence, and v1.8 knowledge/file-adapter versions agree on the cumulative contract.",
         )
     )
     return _finish(results, args.json)

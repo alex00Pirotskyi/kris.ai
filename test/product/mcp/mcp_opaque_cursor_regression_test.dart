@@ -106,10 +106,7 @@ void main() {
 
       final meta = params['_meta'] as Map<String, dynamic>;
       expect(meta['com.example.mcp/context'], 'allowed');
-      expect(
-        meta['com.example/context'],
-        <String, dynamic>{'trace': true},
-      );
+      expect(meta['com.example/context'], <String, dynamic>{'trace': true});
     });
   });
 }

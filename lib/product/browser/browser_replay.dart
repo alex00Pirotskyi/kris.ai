@@ -261,11 +261,7 @@ final class P3BrowserReplayRecorder {
     );
   }
 
-  void recordFailure({
-    required String code,
-    String? detail,
-    String? pageId,
-  }) {
+  void recordFailure({required String code, String? detail, String? pageId}) {
     if (code.trim().isEmpty) {
       throw StateError('browser_replay_failure_code_invalid');
     }
@@ -294,22 +290,22 @@ final class P3BrowserReplayRecorder {
     var exportDropped = 0;
 
     Map<String, Object?> base() => <String, Object?>{
-          'schemaVersion': '1.0.0',
-          'bundleType': 'kristin-p3-browser-failure-replay-v1',
-          'runId': runId,
-          'sessionId': sessionId,
-          'failed': true,
-          'failure': Map<String, Object?>.from(failure),
-          'trace': trace,
-          'console': console,
-          'network': network,
-          'dropped': <String, Object?>{
-            'trace': _traceDropped,
-            'console': _consoleDropped,
-            'network': _networkDropped,
-            'export': exportDropped,
-          },
-        };
+      'schemaVersion': '1.0.0',
+      'bundleType': 'kristin-p3-browser-failure-replay-v1',
+      'runId': runId,
+      'sessionId': sessionId,
+      'failed': true,
+      'failure': Map<String, Object?>.from(failure),
+      'trace': trace,
+      'console': console,
+      'network': network,
+      'dropped': <String, Object?>{
+        'trace': _traceDropped,
+        'console': _consoleDropped,
+        'network': _networkDropped,
+        'export': exportDropped,
+      },
+    };
 
     Map<String, Object?> finalize() {
       final withoutHash = base();
@@ -344,10 +340,7 @@ final class P3BrowserReplayRecorder {
 }
 
 final class P3RecordedBrowserSession {
-  P3RecordedBrowserSession({
-    required this.process,
-    required this.recorder,
-  });
+  P3RecordedBrowserSession({required this.process, required this.recorder});
 
   final P3BrowserSessionProcess process;
   final P3BrowserReplayRecorder recorder;

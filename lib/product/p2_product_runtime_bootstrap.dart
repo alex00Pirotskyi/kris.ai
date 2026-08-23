@@ -64,10 +64,7 @@ final class P2ProductRuntimeOwnerModeHandle {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  recoveryMessage,
-                  textAlign: TextAlign.center,
-                ),
+                Text(recoveryMessage, textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 SelectableText('Diagnostic: $diagnosticCode'),
               ],
@@ -105,8 +102,7 @@ final class P2ProductRuntimeOwnerModeHandle {
   Future<void> close() async => runtime?.close();
   static P2ProductRuntimeOwnerModeHandle active(
     P2ProductRuntimeOwnerMode runtime,
-  ) =>
-      P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
+  ) => P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
   static P2ProductRuntimeOwnerModeHandle blocked(String code) =>
       P2ProductRuntimeOwnerModeHandle._(
         runtime: null,
@@ -116,10 +112,7 @@ final class P2ProductRuntimeOwnerModeHandle {
   static String _normalizedFailureCode(String code) {
     final normalized = code
         .trim()
-        .replaceFirst(
-          RegExp(r'^Bad[ _]state[:_ ]+', caseSensitive: false),
-          '',
-        )
+        .replaceFirst(RegExp(r'^Bad[ _]state[:_ ]+', caseSensitive: false), '')
         .replaceAll(RegExp(r'[^A-Za-z0-9_.:-]'), '_')
         .replaceAll(RegExp(r'_+'), '_');
     return normalized.isEmpty ? 'owner_runtime_start_failed' : normalized;
@@ -149,7 +142,8 @@ final class P2ProductRuntimeBootstrap {
         'KRISTIN_QA_PREVIEW',
         defaultValue: false,
       );
-      final qaPreview = ownerRiskQa ||
+      final qaPreview =
+          ownerRiskQa ||
           (qaPreviewBuild &&
               p1AuthorityService?.service.provenance['qaPreview'] == true);
       if (!ownerRiskQa) {
@@ -158,7 +152,8 @@ final class P2ProductRuntimeBootstrap {
         }
         p1AuthorityService.validateForP2(allowQaPreview: qaPreview);
       }
-      final resolver = resourceResolver ??
+      final resolver =
+          resourceResolver ??
           P2ApplicationOwnedRuntimeResourceResolver(
             applicationDataRoot: dataRoot,
           );

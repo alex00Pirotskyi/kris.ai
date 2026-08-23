@@ -34,28 +34,27 @@ class LiveRunSignal {
   final Map<String, dynamic> data;
 
   LiveRunSignal copyWithSequence(int value) => LiveRunSignal(
-        sequence: value,
-        runId: runId,
-        workItemId: workItemId,
-        kind: kind,
-        timestamp: timestamp,
-        data: data,
-      );
+    sequence: value,
+    runId: runId,
+    workItemId: workItemId,
+    kind: kind,
+    timestamp: timestamp,
+    data: data,
+  );
 
   factory LiveRunSignal.phase({
     required String runId,
     required String phase,
     String? workItemId,
     String message = '',
-  }) =>
-      LiveRunSignal(
-        sequence: 0,
-        runId: runId,
-        workItemId: workItemId,
-        kind: LiveRunSignalKind.phase,
-        timestamp: DateTime.now().toUtc(),
-        data: <String, dynamic>{'phase': phase, 'message': message},
-      );
+  }) => LiveRunSignal(
+    sequence: 0,
+    runId: runId,
+    workItemId: workItemId,
+    kind: LiveRunSignalKind.phase,
+    timestamp: DateTime.now().toUtc(),
+    data: <String, dynamic>{'phase': phase, 'message': message},
+  );
 
   factory LiveRunSignal.modelProgress({
     required String runId,
@@ -64,35 +63,33 @@ class LiveRunSignal {
     required String stage,
     required String message,
     required int elapsedMilliseconds,
-  }) =>
-      LiveRunSignal(
-        sequence: 0,
-        runId: runId,
-        workItemId: workItemId,
-        kind: LiveRunSignalKind.modelProgress,
-        timestamp: DateTime.now().toUtc(),
-        data: <String, dynamic>{
-          'model': model.toJson(),
-          'stage': stage,
-          'message': message,
-          'elapsedMilliseconds': elapsedMilliseconds,
-        },
-      );
+  }) => LiveRunSignal(
+    sequence: 0,
+    runId: runId,
+    workItemId: workItemId,
+    kind: LiveRunSignalKind.modelProgress,
+    timestamp: DateTime.now().toUtc(),
+    data: <String, dynamic>{
+      'model': model.toJson(),
+      'stage': stage,
+      'message': message,
+      'elapsedMilliseconds': elapsedMilliseconds,
+    },
+  );
 
   factory LiveRunSignal.modelText({
     required String runId,
     required String workItemId,
     required ModelIdentity model,
     required String delta,
-  }) =>
-      LiveRunSignal(
-        sequence: 0,
-        runId: runId,
-        workItemId: workItemId,
-        kind: LiveRunSignalKind.modelTextDelta,
-        timestamp: DateTime.now().toUtc(),
-        data: <String, dynamic>{'model': model.toJson(), 'delta': delta},
-      );
+  }) => LiveRunSignal(
+    sequence: 0,
+    runId: runId,
+    workItemId: workItemId,
+    kind: LiveRunSignalKind.modelTextDelta,
+    timestamp: DateTime.now().toUtc(),
+    data: <String, dynamic>{'model': model.toJson(), 'delta': delta},
+  );
 
   factory LiveRunSignal.tool({
     required String runId,
@@ -100,15 +97,14 @@ class LiveRunSignal {
     required String tool,
     required LiveRunSignalKind kind,
     Map<String, dynamic> data = const <String, dynamic>{},
-  }) =>
-      LiveRunSignal(
-        sequence: 0,
-        runId: runId,
-        workItemId: workItemId,
-        kind: kind,
-        timestamp: DateTime.now().toUtc(),
-        data: <String, dynamic>{'tool': tool, ...data},
-      );
+  }) => LiveRunSignal(
+    sequence: 0,
+    runId: runId,
+    workItemId: workItemId,
+    kind: kind,
+    timestamp: DateTime.now().toUtc(),
+    data: <String, dynamic>{'tool': tool, ...data},
+  );
 }
 
 class LiveRunSignalBus {

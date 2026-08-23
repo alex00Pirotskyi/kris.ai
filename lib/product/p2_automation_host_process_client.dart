@@ -31,7 +31,7 @@ abstract interface class P2ProtectedAutomationBootstrapProvider {
 final class P2OneShotAutomationBootstrap
     implements P2ProtectedAutomationBootstrapProvider {
   P2OneShotAutomationBootstrap(Map<String, Object?> value)
-      : _value = Map<String, Object?>.from(value);
+    : _value = Map<String, Object?>.from(value);
 
   Map<String, Object?>? _value;
 
@@ -352,10 +352,10 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       : _process.pid;
   Map<String, Object?> get workerIdentity => _workerIdentityValue;
   Map<String, Object?> get bootstrapProvenance => <String, Object?>{
-        'schemaVersion': _bootstrap['schemaVersion'],
-        'workerSessionId': _expectedWorkerSessionId,
-        'verificationMode': _bootstrap['verificationMode'],
-      };
+    'schemaVersion': _bootstrap['schemaVersion'],
+    'workerSessionId': _expectedWorkerSessionId,
+    'verificationMode': _bootstrap['verificationMode'],
+  };
   bool get isClosed => _closed;
 
   @override
@@ -369,8 +369,8 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       throw const P2AutomationHostException('duplicate_request_id');
     }
     final remaining = envelope.deadline.toUtc().difference(
-          DateTime.now().toUtc(),
-        );
+      DateTime.now().toUtc(),
+    );
     if (remaining <= Duration.zero) {
       throw const P2AutomationHostException('deadline_expired');
     }
@@ -493,10 +493,12 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
                     identity['osIsolationWaived'] == true))) {
           _workerAuthorityDenial.complete(<String, Object?>{
             'authorityConnectionDenied': ownerRiskQa ? false : true,
-            'authorityDenialCode':
-                ownerRiskQa ? 'owner_risk_waived' : 'worker_principal_denied',
-            'authorityDenialObservedBy':
-                ownerRiskQa ? 'owner-risk-waiver' : 'restricted-launcher',
+            'authorityDenialCode': ownerRiskQa
+                ? 'owner_risk_waived'
+                : 'worker_principal_denied',
+            'authorityDenialObservedBy': ownerRiskQa
+                ? 'owner-risk-waiver'
+                : 'restricted-launcher',
             if (ownerRiskQa) 'ownerRiskQa': true,
             if (ownerRiskQa) 'osIsolationWaived': true,
             if (ownerRiskQa) 'currentAccountAuthority': true,
@@ -571,10 +573,7 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
           message['ownerRiskCurrentAccount'] == true,
           'ownerRiskCurrentAccount',
         );
-        requireField(
-          message['osIsolationWaived'] == true,
-          'osIsolationWaived',
-        );
+        requireField(message['osIsolationWaived'] == true, 'osIsolationWaived');
       } else {
         requireField(
           message['restrictedWorkerPrincipal'] == true,
@@ -654,17 +653,17 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     final expectedPlatform = Platform.isWindows
         ? 'windows'
         : Platform.isMacOS
-            ? 'macos'
-            : 'linux';
+        ? 'macos'
+        : 'linux';
     final ownerRiskQa =
         _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
     final expectedPrincipal = ownerRiskQa
         ? 'owner-risk-current-account'
         : Platform.isWindows
-            ? 'appcontainer'
-            : Platform.isMacOS
-                ? 'signed-app-sandbox-helper'
-                : 'dedicated-uid';
+        ? 'appcontainer'
+        : Platform.isMacOS
+        ? 'signed-app-sandbox-helper'
+        : 'dedicated-uid';
     final pid = message['pid'];
     final startToken = message['startToken']?.toString() ?? '';
     if (message['schemaVersion'] != '2.0.0' ||

@@ -238,14 +238,14 @@ void main() {
 }
 
 P2EffectBinding _binding(String operation) => P2EffectBinding(
-      runId: 'run',
-      taskId: 'P2-005',
-      actorId: 'owner_executor',
-      toolId: 'terminal',
-      accessProfileId: 'owner',
-      capabilityId: 'pty',
-      operation: operation,
-    );
+  runId: 'run',
+  taskId: 'P2-005',
+  actorId: 'owner_executor',
+  toolId: 'terminal',
+  accessProfileId: 'owner',
+  capabilityId: 'pty',
+  operation: operation,
+);
 
 final class _RecordingProcessTreeAdapter implements P2NativeProcessTreeAdapter {
   _RecordingProcessTreeAdapter(
@@ -264,8 +264,9 @@ final class _RecordingProcessTreeAdapter implements P2NativeProcessTreeAdapter {
   @override
   Future<P2ProcessLifecycle> inspect(P2ProcessIdentity identity) async {
     calls.add('inspect');
-    final index =
-        _inspectIndex < _states.length ? _inspectIndex : _states.length - 1;
+    final index = _inspectIndex < _states.length
+        ? _inspectIndex
+        : _states.length - 1;
     _inspectIndex += 1;
     return _states[index];
   }
@@ -292,20 +293,20 @@ final class _RecordingPtyBackend implements P2PtyBackend {
   final List<String> calls = <String>[];
 
   P2PtySession session({int cursor = 0}) => P2PtySession(
-        sessionId: 'session-1',
-        runId: 'run',
-        taskId: 'P2-005',
-        actorId: 'owner_executor',
-        grantDigest: 'a' * 64,
-        processIdentity: const P2ProcessIdentity(
-          pid: 1234,
-          startToken: 'start',
-          supervisorToken: 'supervisor',
-          platformGroupId: '1234',
-        ),
-        state: P2PtyState.attached,
-        transcriptCursor: cursor,
-      );
+    sessionId: 'session-1',
+    runId: 'run',
+    taskId: 'P2-005',
+    actorId: 'owner_executor',
+    grantDigest: 'a' * 64,
+    processIdentity: const P2ProcessIdentity(
+      pid: 1234,
+      startToken: 'start',
+      supervisorToken: 'supervisor',
+      platformGroupId: '1234',
+    ),
+    state: P2PtyState.attached,
+    transcriptCursor: cursor,
+  );
 
   @override
   Future<P2PtySession> open(

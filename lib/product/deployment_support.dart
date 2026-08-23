@@ -90,10 +90,13 @@ class DeterministicZipWriter {
   }
 
   String _safeName(String input) {
-    final normalized =
-        input.replaceAll('\\', '/').replaceFirst(RegExp(r'^/+'), '');
+    final normalized = input
+        .replaceAll('\\', '/')
+        .replaceFirst(RegExp(r'^/+'), '');
     if (normalized.isEmpty ||
-        normalized.split('/').any(
+        normalized
+            .split('/')
+            .any(
               (segment) => segment.isEmpty || segment == '.' || segment == '..',
             )) {
       throw ProductException(
@@ -105,15 +108,11 @@ class DeterministicZipWriter {
   }
 
   Uint8List _u16(int value) => (ByteData(
-        2,
-      )..setUint16(0, value & 0xffff, Endian.little))
-          .buffer
-          .asUint8List();
+    2,
+  )..setUint16(0, value & 0xffff, Endian.little)).buffer.asUint8List();
   Uint8List _u32(int value) => (ByteData(
-        4,
-      )..setUint32(0, value & 0xffffffff, Endian.little))
-          .buffer
-          .asUint8List();
+    4,
+  )..setUint32(0, value & 0xffffffff, Endian.little)).buffer.asUint8List();
 }
 
 class DeploymentPackage {
@@ -136,14 +135,14 @@ class DeploymentPackage {
   final List<Map<String, dynamic>> secretScanFindings;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'archivePath': archivePath,
-        'sha256': sha256,
-        'profile': profile,
-        'fileCount': fileCount,
-        'totalBytes': totalBytes,
-        'sbom': sbom,
-        'secretScanFindings': secretScanFindings,
-      };
+    'archivePath': archivePath,
+    'sha256': sha256,
+    'profile': profile,
+    'fileCount': fileCount,
+    'totalBytes': totalBytes,
+    'sbom': sbom,
+    'secretScanFindings': secretScanFindings,
+  };
 }
 
 class DeploymentService {
@@ -254,10 +253,7 @@ class DeploymentService {
       ZipEntryData(
         'KRISTIN_SBOM.json',
         utf8.encode(
-          '${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-                'format': 'Kristin-SBOM-1',
-                'components': sbom
-              })}\n',
+          '${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{'format': 'Kristin-SBOM-1', 'components': sbom})}\n',
         ),
       ),
     );
@@ -289,8 +285,8 @@ class DeploymentService {
 
   Future<String> _detectProfile(Directory root) async {
     Future<bool> file(String path) => File(
-          '${root.path}${Platform.pathSeparator}${path.replaceAll('/', Platform.pathSeparator)}',
-        ).exists();
+      '${root.path}${Platform.pathSeparator}${path.replaceAll('/', Platform.pathSeparator)}',
+    ).exists();
     if (await file('pubspec.yaml')) {
       return 'flutter';
     }
@@ -313,9 +309,7 @@ class DeploymentService {
         candidates
             .where((item) => item.existsSync())
             .map((item) => item.readAsString()),
-      ))
-          .join('\n')
-          .toLowerCase();
+      )).join('\n').toLowerCase();
       if (text.contains('python-telegram-bot') ||
           text.contains('aiogram') ||
           text.contains('telebot')) {
@@ -457,7 +451,8 @@ class DeploymentService {
             if (key.toString().isEmpty || value is! Map) {
               return;
             }
-            final name = value['name']?.toString() ??
+            final name =
+                value['name']?.toString() ??
                 key.toString().split('node_modules/').last;
             final version = value['version']?.toString() ?? 'unspecified';
             output.add(<String, String>{
@@ -486,7 +481,8 @@ class DeploymentService {
     );
   }
 
-  String _readme(String profile, String projectName) => '''
+  String _readme(String profile, String projectName) =>
+      '''
 # $projectName — governed deployment package
 
 This source package was created by Kristin Local Agent $kristinVersion after a bounded secret scan.
@@ -533,15 +529,17 @@ class SupportBundleService {
     final auditStatus = await audit.verify();
     final evidence = await repositories.evidence.all();
     evidence.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final focusedRuns = allRuns.where((run) {
-      if (runId != null && runId.trim().isNotEmpty) {
-        return run.id == runId;
-      }
-      if (projectId != null && projectId.trim().isNotEmpty) {
-        return run.command.contract.projectId == projectId;
-      }
-      return true;
-    }).toList(growable: false);
+    final focusedRuns = allRuns
+        .where((run) {
+          if (runId != null && runId.trim().isNotEmpty) {
+            return run.id == runId;
+          }
+          if (projectId != null && projectId.trim().isNotEmpty) {
+            return run.command.contract.projectId == projectId;
+          }
+          return true;
+        })
+        .toList(growable: false);
     final includedRunIds = (includeAllLogs ? allRuns : focusedRuns.take(200))
         .map((run) => run.id)
         .toSet();
@@ -607,8 +605,10 @@ class SupportBundleService {
               'id': project.id,
               'name': project.name,
               'pathFingerprint': Sha256.text(project.rootPath),
-              'pathLeaf':
-                  project.rootPath.replaceAll('\\', '/').split('/').last,
+              'pathLeaf': project.rootPath
+                  .replaceAll('\\', '/')
+                  .split('/')
+                  .last,
               'createdAt': project.createdAt.toIso8601String(),
               'updatedAt': project.updatedAt.toIso8601String(),
             },
@@ -1077,8 +1077,9 @@ All retained logs requested: $includeAllLogs
     for (final file in files.take(fileLimit)) {
       final bytes = await file.readAsBytes();
       final truncated = bytes.length > perFileLimit;
-      final selected =
-          truncated ? bytes.sublist(bytes.length - perFileLimit) : bytes;
+      final selected = truncated
+          ? bytes.sublist(bytes.length - perFileLimit)
+          : bytes;
       final relative = file.path
           .substring(directory.path.length)
           .replaceAll('\\', '/')

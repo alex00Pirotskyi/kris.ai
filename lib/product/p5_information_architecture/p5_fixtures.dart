@@ -212,10 +212,7 @@ class P5PrototypeFixtures {
     return null;
   }
 
-  static P5EvidenceFixture _evidenceFixture(
-    String runId,
-    P5EvidenceKind kind,
-  ) {
+  static P5EvidenceFixture _evidenceFixture(String runId, P5EvidenceKind kind) {
     final content = switch (kind) {
       P5EvidenceKind.textMetadata =>
         'charset=utf-8\nlines=42\nsource=fixture://evidence/$runId/notes.txt',
@@ -264,55 +261,55 @@ class P5PrototypeFixtures {
 
   static const List<P5VerificationFixture> verificationResults =
       <P5VerificationFixture>[
-    P5VerificationFixture(
-      testId: 'tc.p5-001.navigation.primary-workspaces',
-      title: 'Primary workspaces are reachable',
-      state: P5VerificationResultState.pass,
-      evidenceLabel: 'Widget result fixture',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.flow.simple-task',
-      title: 'Simple task flow',
-      state: P5VerificationResultState.pass,
-      evidenceLabel: 'Deterministic scenario fixture',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.flow.existing-run',
-      title: 'Existing run continuity',
-      state: P5VerificationResultState.flaky,
-      evidenceLabel: 'Retry required before certification',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.flow.owner-mode',
-      title: 'Owner Mode presentation boundary',
-      state: P5VerificationResultState.blocked,
-      evidenceLabel: 'Controlled behavior remains BLOCKED_EXTERNAL',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.flow.verification-center',
-      title: 'Verification domain separation',
-      state: P5VerificationResultState.pass,
-      evidenceLabel: 'Presentation contract fixture',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.state.transitions',
-      title: 'State-transition contract',
-      state: P5VerificationResultState.error,
-      evidenceLabel: 'Representative infrastructure error fixture',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.mode.progressive-disclosure',
-      title: 'Progressive disclosure',
-      state: P5VerificationResultState.skipped,
-      evidenceLabel: 'Representative skipped result fixture',
-    ),
-    P5VerificationFixture(
-      testId: 'tc.p5-001.capability.honest-unavailable',
-      title: 'Unavailable capability honest',
-      state: P5VerificationResultState.notImplemented,
-      evidenceLabel: 'Future capability is not implemented',
-    ),
-  ];
+        P5VerificationFixture(
+          testId: 'tc.p5-001.navigation.primary-workspaces',
+          title: 'Primary workspaces are reachable',
+          state: P5VerificationResultState.pass,
+          evidenceLabel: 'Widget result fixture',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.flow.simple-task',
+          title: 'Simple task flow',
+          state: P5VerificationResultState.pass,
+          evidenceLabel: 'Deterministic scenario fixture',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.flow.existing-run',
+          title: 'Existing run continuity',
+          state: P5VerificationResultState.flaky,
+          evidenceLabel: 'Retry required before certification',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.flow.owner-mode',
+          title: 'Owner Mode presentation boundary',
+          state: P5VerificationResultState.blocked,
+          evidenceLabel: 'Controlled behavior remains BLOCKED_EXTERNAL',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.flow.verification-center',
+          title: 'Verification domain separation',
+          state: P5VerificationResultState.pass,
+          evidenceLabel: 'Presentation contract fixture',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.state.transitions',
+          title: 'State-transition contract',
+          state: P5VerificationResultState.error,
+          evidenceLabel: 'Representative infrastructure error fixture',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.mode.progressive-disclosure',
+          title: 'Progressive disclosure',
+          state: P5VerificationResultState.skipped,
+          evidenceLabel: 'Representative skipped result fixture',
+        ),
+        P5VerificationFixture(
+          testId: 'tc.p5-001.capability.honest-unavailable',
+          title: 'Unavailable capability honest',
+          state: P5VerificationResultState.notImplemented,
+          evidenceLabel: 'Future capability is not implemented',
+        ),
+      ];
 
   static const List<P5CapabilityFixture> capabilities = <P5CapabilityFixture>[
     P5CapabilityFixture(
@@ -347,85 +344,85 @@ class P5PrototypeFixtures {
 
   static const List<P5FailureRecoveryFixture> failures =
       <P5FailureRecoveryFixture>[
-    P5FailureRecoveryFixture(
-      id: 'failure.no-project',
-      title: 'No project',
-      state: 'EMPTY',
-      message: 'Select or create a local project before starting a task.',
-      recoveryAction: 'Choose a sample project',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.no-model',
-      title: 'No model',
-      state: 'BLOCKED',
-      message: 'No model is configured. Planning cannot begin.',
-      recoveryAction: 'Open Models and Providers',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.offline',
-      title: 'Offline',
-      state: 'BLOCKED',
-      message:
-          'External providers are unavailable; local work remains visible.',
-      recoveryAction: 'Use local-only fixtures',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.permission-denied',
-      title: 'Permission denied',
-      state: 'ERROR',
-      message: 'The requested effect was not authorized.',
-      recoveryAction: 'Review the requested access',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.capability-blocked',
-      title: 'Capability blocked',
-      state: 'BLOCKED',
-      message: 'The capability dependency is not complete.',
-      recoveryAction: 'Open capability requirements',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.interrupted-run',
-      title: 'Interrupted run',
-      state: 'PAUSED',
-      message: 'A saved run can be reopened without losing context.',
-      recoveryAction: 'Resume the saved run',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.test-fail',
-      title: 'Test failed',
-      state: 'FAIL',
-      message: 'An assertion failed; certification remains not evaluated.',
-      recoveryAction: 'Open failing evidence',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.test-error',
-      title: 'Test error',
-      state: 'ERROR',
-      message: 'The runner failed before a valid assertion result.',
-      recoveryAction: 'Inspect runner diagnostics',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.test-skipped',
-      title: 'Test skipped',
-      state: 'SKIPPED',
-      message: 'A skipped test is not a pass.',
-      recoveryAction: 'Inspect skip reason',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.test-blocked',
-      title: 'Test blocked',
-      state: 'BLOCKED',
-      message: 'A declared dependency prevented execution.',
-      recoveryAction: 'Open dependency details',
-    ),
-    P5FailureRecoveryFixture(
-      id: 'failure.test-not-implemented',
-      title: 'Test not implemented',
-      state: 'NOT_IMPLEMENTED',
-      message: 'No executable check exists for this future behavior.',
-      recoveryAction: 'Open required next work',
-    ),
-  ];
+        P5FailureRecoveryFixture(
+          id: 'failure.no-project',
+          title: 'No project',
+          state: 'EMPTY',
+          message: 'Select or create a local project before starting a task.',
+          recoveryAction: 'Choose a sample project',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.no-model',
+          title: 'No model',
+          state: 'BLOCKED',
+          message: 'No model is configured. Planning cannot begin.',
+          recoveryAction: 'Open Models and Providers',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.offline',
+          title: 'Offline',
+          state: 'BLOCKED',
+          message:
+              'External providers are unavailable; local work remains visible.',
+          recoveryAction: 'Use local-only fixtures',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.permission-denied',
+          title: 'Permission denied',
+          state: 'ERROR',
+          message: 'The requested effect was not authorized.',
+          recoveryAction: 'Review the requested access',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.capability-blocked',
+          title: 'Capability blocked',
+          state: 'BLOCKED',
+          message: 'The capability dependency is not complete.',
+          recoveryAction: 'Open capability requirements',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.interrupted-run',
+          title: 'Interrupted run',
+          state: 'PAUSED',
+          message: 'A saved run can be reopened without losing context.',
+          recoveryAction: 'Resume the saved run',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.test-fail',
+          title: 'Test failed',
+          state: 'FAIL',
+          message: 'An assertion failed; certification remains not evaluated.',
+          recoveryAction: 'Open failing evidence',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.test-error',
+          title: 'Test error',
+          state: 'ERROR',
+          message: 'The runner failed before a valid assertion result.',
+          recoveryAction: 'Inspect runner diagnostics',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.test-skipped',
+          title: 'Test skipped',
+          state: 'SKIPPED',
+          message: 'A skipped test is not a pass.',
+          recoveryAction: 'Inspect skip reason',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.test-blocked',
+          title: 'Test blocked',
+          state: 'BLOCKED',
+          message: 'A declared dependency prevented execution.',
+          recoveryAction: 'Open dependency details',
+        ),
+        P5FailureRecoveryFixture(
+          id: 'failure.test-not-implemented',
+          title: 'Test not implemented',
+          state: 'NOT_IMPLEMENTED',
+          message: 'No executable check exists for this future behavior.',
+          recoveryAction: 'Open required next work',
+        ),
+      ];
 
   static P5PresentationState initialState() {
     const states = <P5WorkspaceId, P5WorkspaceState>{

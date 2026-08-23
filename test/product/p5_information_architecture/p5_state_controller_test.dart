@@ -43,12 +43,14 @@ void main() {
       final run = controller.state.selectedRunId;
       final owner = controller.state.ownerModeState;
       final sideEffects = controller.sideEffects;
-      final simpleIds =
-          controller.visibleWorkspaces.map((item) => item.id).toSet();
+      final simpleIds = controller.visibleWorkspaces
+          .map((item) => item.id)
+          .toSet();
 
       controller.changeExperienceLevel(P5ExperienceLevel.advanced);
-      final advancedIds =
-          controller.visibleWorkspaces.map((item) => item.id).toSet();
+      final advancedIds = controller.visibleWorkspaces
+          .map((item) => item.id)
+          .toSet();
       controller.changeExperienceLevel(P5ExperienceLevel.developer);
 
       expect(advancedIds.length, greaterThan(simpleIds.length));
@@ -98,31 +100,33 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('advanced workspace selection and deep links fail closed in Simple mode',
-      () {
-    final controller = P5InformationArchitectureController();
-    addTearDown(controller.dispose);
+  test(
+    'advanced workspace selection and deep links fail closed in Simple mode',
+    () {
+      final controller = P5InformationArchitectureController();
+      addTearDown(controller.dispose);
 
-    controller.selectWorkspace(P5WorkspaceId.evidence);
+      controller.selectWorkspace(P5WorkspaceId.evidence);
 
-    expect(controller.state.workspace, P5WorkspaceId.homeChat);
-    expect(controller.state.navigationHistory, <P5WorkspaceId>[
-      P5WorkspaceId.homeChat,
-    ]);
-    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+      expect(controller.state.workspace, P5WorkspaceId.homeChat);
+      expect(controller.state.navigationHistory, <P5WorkspaceId>[
+        P5WorkspaceId.homeChat,
+      ]);
+      expect(controller.state.recoveryMessage, contains('Advanced mode'));
 
-    controller.deepLink(
-      workspace: P5WorkspaceId.modelsProviders,
-      projectId: 'project.kristin-local',
-      runId: 'run.p5-existing-001',
-    );
+      controller.deepLink(
+        workspace: P5WorkspaceId.modelsProviders,
+        projectId: 'project.kristin-local',
+        runId: 'run.p5-existing-001',
+      );
 
-    expect(controller.state.workspace, P5WorkspaceId.homeChat);
-    expect(controller.state.selectedProjectId, 'project.kristin-local');
-    expect(controller.state.selectedRunId, 'run.p5-existing-001');
-    expect(controller.state.recoveryMessage, contains('Advanced mode'));
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      expect(controller.state.workspace, P5WorkspaceId.homeChat);
+      expect(controller.state.selectedProjectId, 'project.kristin-local');
+      expect(controller.state.selectedRunId, 'run.p5-existing-001');
+      expect(controller.state.recoveryMessage, contains('Advanced mode'));
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
   test('downgrade sanitizes advanced workspace history and reopen target', () {
     final controller = P5InformationArchitectureController()
@@ -157,13 +161,10 @@ void main() {
     controller.changeExperienceLevel(P5ExperienceLevel.simple);
 
     expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
-    expect(
-      controller.state.navigationHistory,
-      <P5WorkspaceId>[
-        P5WorkspaceId.homeChat,
-        P5WorkspaceId.verificationCenter,
-      ],
-    );
+    expect(controller.state.navigationHistory, <P5WorkspaceId>[
+      P5WorkspaceId.homeChat,
+      P5WorkspaceId.verificationCenter,
+    ]);
     expect(controller.canGoBack, isTrue);
 
     controller.back();
@@ -225,61 +226,65 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('reselecting the current project preserves active and saved run context',
-      () {
-    final controller = P5InformationArchitectureController();
-    addTearDown(controller.dispose);
+  test(
+    'reselecting the current project preserves active and saved run context',
+    () {
+      final controller = P5InformationArchitectureController();
+      addTearDown(controller.dispose);
 
-    controller.apply(P5PrototypeAction.reviewPlan);
-    controller.apply(P5PrototypeAction.startRun);
-    final activeRun = controller.state.selectedRunId;
-    expect(activeRun, 'run.p5-simulated-current');
-    expect(controller.state.runState, P5RunPresentationState.running);
+      controller.apply(P5PrototypeAction.reviewPlan);
+      controller.apply(P5PrototypeAction.startRun);
+      final activeRun = controller.state.selectedRunId;
+      expect(activeRun, 'run.p5-simulated-current');
+      expect(controller.state.runState, P5RunPresentationState.running);
 
-    controller.selectProject('project.kristin-local');
-    expect(controller.state.selectedRunId, activeRun);
-    expect(controller.state.runState, P5RunPresentationState.running);
+      controller.selectProject('project.kristin-local');
+      expect(controller.state.selectedRunId, activeRun);
+      expect(controller.state.runState, P5RunPresentationState.running);
 
-    controller.selectRun('run.p5-existing-001');
-    expect(controller.state.selectedRunId, activeRun);
-    expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('cannot change'));
+      controller.selectRun('run.p5-existing-001');
+      expect(controller.state.selectedRunId, activeRun);
+      expect(controller.state.runState, P5RunPresentationState.running);
+      expect(controller.state.recoveryMessage, contains('cannot change'));
 
-    controller.apply(P5PrototypeAction.completeRun);
-    expect(controller.state.runState, P5RunPresentationState.completed);
-    controller.selectRun('run.p5-existing-001');
-    expect(controller.state.runState, P5RunPresentationState.interrupted);
-    controller.selectProject('project.kristin-local');
-    expect(controller.state.selectedRunId, 'run.p5-existing-001');
-    expect(controller.state.runState, P5RunPresentationState.interrupted);
+      controller.apply(P5PrototypeAction.completeRun);
+      expect(controller.state.runState, P5RunPresentationState.completed);
+      controller.selectRun('run.p5-existing-001');
+      expect(controller.state.runState, P5RunPresentationState.interrupted);
+      controller.selectProject('project.kristin-local');
+      expect(controller.state.selectedRunId, 'run.p5-existing-001');
+      expect(controller.state.runState, P5RunPresentationState.interrupted);
 
-    controller.selectRun('run.missing');
-    expect(controller.state.selectedRunId, isNull);
-    expect(controller.state.runState, P5RunPresentationState.blocked);
-    controller.selectProject('project.kristin-local');
-    expect(controller.state.runState, P5RunPresentationState.planReady);
-    expect(controller.state.selectedRunId, isNull);
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      controller.selectRun('run.missing');
+      expect(controller.state.selectedRunId, isNull);
+      expect(controller.state.runState, P5RunPresentationState.blocked);
+      controller.selectProject('project.kristin-local');
+      expect(controller.state.runState, P5RunPresentationState.planReady);
+      expect(controller.state.selectedRunId, isNull);
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
-  test('mismatched project and run deep link clears incompatible run context',
-      () {
-    final controller = P5InformationArchitectureController();
-    addTearDown(controller.dispose);
+  test(
+    'mismatched project and run deep link clears incompatible run context',
+    () {
+      final controller = P5InformationArchitectureController();
+      addTearDown(controller.dispose);
 
-    controller.deepLink(
-      workspace: P5WorkspaceId.runsActivity,
-      projectId: 'project.sample-notes',
-      runId: 'run.p5-existing-001',
-    );
+      controller.deepLink(
+        workspace: P5WorkspaceId.runsActivity,
+        projectId: 'project.sample-notes',
+        runId: 'run.p5-existing-001',
+      );
 
-    expect(controller.state.workspace, P5WorkspaceId.homeChat);
-    expect(controller.state.selectedProjectId, 'project.sample-notes');
-    expect(controller.state.selectedRunId, isNull);
-    expect(controller.state.runState, P5RunPresentationState.blocked);
-    expect(controller.state.recoveryMessage, contains('does not belong'));
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      expect(controller.state.workspace, P5WorkspaceId.homeChat);
+      expect(controller.state.selectedProjectId, 'project.sample-notes');
+      expect(controller.state.selectedRunId, isNull);
+      expect(controller.state.runState, P5RunPresentationState.blocked);
+      expect(controller.state.recoveryMessage, contains('does not belong'));
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
   test('valid saved-run deep link restores deterministic fixture context', () {
     final controller = P5InformationArchitectureController();
@@ -329,41 +334,43 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('plan and start actions cannot replace active or resumable run state',
-      () {
-    final controller = P5InformationArchitectureController();
-    addTearDown(controller.dispose);
+  test(
+    'plan and start actions cannot replace active or resumable run state',
+    () {
+      final controller = P5InformationArchitectureController();
+      addTearDown(controller.dispose);
 
-    controller.apply(P5PrototypeAction.reviewPlan);
-    controller.apply(P5PrototypeAction.startRun);
-    expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.canReviewPlan, isFalse);
-    expect(controller.canStartRun, isFalse);
+      controller.apply(P5PrototypeAction.reviewPlan);
+      controller.apply(P5PrototypeAction.startRun);
+      expect(controller.state.runState, P5RunPresentationState.running);
+      expect(controller.canReviewPlan, isFalse);
+      expect(controller.canStartRun, isFalse);
 
-    controller.apply(P5PrototypeAction.reviewPlan);
-    expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage, contains('cannot replace'));
+      controller.apply(P5PrototypeAction.reviewPlan);
+      expect(controller.state.runState, P5RunPresentationState.running);
+      expect(controller.state.recoveryMessage, contains('cannot replace'));
 
-    controller.apply(P5PrototypeAction.pauseRun);
-    expect(controller.state.runState, P5RunPresentationState.paused);
-    controller.apply(P5PrototypeAction.startRun);
-    expect(controller.state.runState, P5RunPresentationState.paused);
-    expect(controller.state.recoveryMessage, contains('cannot replace'));
+      controller.apply(P5PrototypeAction.pauseRun);
+      expect(controller.state.runState, P5RunPresentationState.paused);
+      controller.apply(P5PrototypeAction.startRun);
+      expect(controller.state.runState, P5RunPresentationState.paused);
+      expect(controller.state.recoveryMessage, contains('cannot replace'));
 
-    controller.selectRun('run.p5-existing-001');
-    expect(controller.state.runState, P5RunPresentationState.paused);
-    expect(controller.state.recoveryMessage, contains('cannot change'));
+      controller.selectRun('run.p5-existing-001');
+      expect(controller.state.runState, P5RunPresentationState.paused);
+      expect(controller.state.recoveryMessage, contains('cannot change'));
 
-    controller.apply(P5PrototypeAction.resumeRun);
-    controller.apply(P5PrototypeAction.completeRun);
-    expect(controller.state.runState, P5RunPresentationState.completed);
-    controller.selectRun('run.p5-existing-001');
-    expect(controller.state.runState, P5RunPresentationState.interrupted);
-    controller.apply(P5PrototypeAction.reviewPlan);
-    expect(controller.state.runState, P5RunPresentationState.interrupted);
-    expect(controller.state.recoveryMessage, contains('cannot replace'));
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      controller.apply(P5PrototypeAction.resumeRun);
+      controller.apply(P5PrototypeAction.completeRun);
+      expect(controller.state.runState, P5RunPresentationState.completed);
+      controller.selectRun('run.p5-existing-001');
+      expect(controller.state.runState, P5RunPresentationState.interrupted);
+      controller.apply(P5PrototypeAction.reviewPlan);
+      expect(controller.state.runState, P5RunPresentationState.interrupted);
+      expect(controller.state.recoveryMessage, contains('cannot replace'));
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
   test('plan-only changes are fail-closed once a run exists', () {
     final controller = P5InformationArchitectureController();
@@ -392,33 +399,37 @@ void main() {
 
     expect(controller.state.planOnly, isFalse);
     expect(controller.state.runState, P5RunPresentationState.running);
-    expect(controller.state.recoveryMessage,
-        contains('before a simulated run starts'));
+    expect(
+      controller.state.recoveryMessage,
+      contains('before a simulated run starts'),
+    );
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  test('selected project and run persist across eligible navigation and reopen',
-      () {
-    final controller = P5InformationArchitectureController()
-      ..changeExperienceLevel(P5ExperienceLevel.advanced);
-    addTearDown(controller.dispose);
+  test(
+    'selected project and run persist across eligible navigation and reopen',
+    () {
+      final controller = P5InformationArchitectureController()
+        ..changeExperienceLevel(P5ExperienceLevel.advanced);
+      addTearDown(controller.dispose);
 
-    controller.selectRun('run.p5-existing-001');
-    controller.selectWorkspace(P5WorkspaceId.verificationCenter);
-    controller.selectWorkspace(P5WorkspaceId.evidence);
+      controller.selectRun('run.p5-existing-001');
+      controller.selectWorkspace(P5WorkspaceId.verificationCenter);
+      controller.selectWorkspace(P5WorkspaceId.evidence);
 
-    expect(controller.state.selectedProjectId, 'project.kristin-local');
-    expect(controller.state.selectedRunId, 'run.p5-existing-001');
-    expect(controller.state.workspace, P5WorkspaceId.evidence);
+      expect(controller.state.selectedProjectId, 'project.kristin-local');
+      expect(controller.state.selectedRunId, 'run.p5-existing-001');
+      expect(controller.state.workspace, P5WorkspaceId.evidence);
 
-    controller.back();
-    expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
-    expect(controller.state.selectedRunId, 'run.p5-existing-001');
+      controller.back();
+      expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
+      expect(controller.state.selectedRunId, 'run.p5-existing-001');
 
-    controller.forward();
-    expect(controller.state.workspace, P5WorkspaceId.evidence);
-    expect(controller.state.selectedProjectId, 'project.kristin-local');
-  });
+      controller.forward();
+      expect(controller.state.workspace, P5WorkspaceId.evidence);
+      expect(controller.state.selectedProjectId, 'project.kristin-local');
+    },
+  );
 
   test('prototype controller has no runtime side effects', () {
     final controller = P5InformationArchitectureController();
@@ -430,9 +441,7 @@ void main() {
     controller.apply(P5PrototypeAction.resumeRun);
     controller.apply(P5PrototypeAction.stopRun);
     controller.apply(P5PrototypeAction.completeRun);
-    controller.setOwnerModePresentation(
-      P5OwnerModePresentationState.running,
-    );
+    controller.setOwnerModePresentation(P5OwnerModePresentationState.running);
     controller.selectWorkspace(P5WorkspaceId.webStudio);
 
     expect(controller.sideEffects, P5SideEffectLedger.zero);

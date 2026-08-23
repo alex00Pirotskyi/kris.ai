@@ -33,8 +33,10 @@ void main() {
     expect(P5CommandCatalog.search('owner mode').first.id, 'shell.owner');
     expect(P5CommandCatalog.search('saved runs').first.id, 'experience.runs');
     expect(P5CommandCatalog.search('receipt').first.id, 'experience.evidence');
-    expect(P5CommandCatalog.search('Ctrl/Cmd+Enter').single.id,
-        'experience.launch-task');
+    expect(
+      P5CommandCatalog.search('Ctrl/Cmd+Enter').single.id,
+      'experience.launch-task',
+    );
     expect(P5CommandCatalog.search('no-such-command'), isEmpty);
   });
 
@@ -100,8 +102,9 @@ void main() {
     );
   });
 
-  testWidgets('P5-010 palette search launches first result with Enter',
-      (tester) async {
+  testWidgets('P5-010 palette search launches first result with Enter', (
+    tester,
+  ) async {
     P5CommandDefinition? selected;
     await tester.pumpWidget(
       MaterialApp(
@@ -126,8 +129,9 @@ void main() {
     expect(find.text('Ctrl/Cmd+3'), findsOneWidget);
   });
 
-  testWidgets('P5-010 global shortcuts open palette and switch shell',
-      (tester) async {
+  testWidgets('P5-010 global shortcuts open palette and switch shell', (
+    tester,
+  ) async {
     var paletteOpenCount = 0;
     var selectedShell = -1;
     await tester.pumpWidget(
@@ -135,10 +139,7 @@ void main() {
         home: P5CommandPaletteShortcutScope(
           onOpenPalette: () => paletteOpenCount++,
           onSelectShellDestination: (index) => selectedShell = index,
-          child: const Focus(
-            autofocus: true,
-            child: SizedBox.expand(),
-          ),
+          child: const Focus(autofocus: true, child: SizedBox.expand()),
         ),
       ),
     );
@@ -155,29 +156,31 @@ void main() {
     expect(selectedShell, 1);
   });
 
-  testWidgets('P5-010 palette is discoverable without hiding autonomy controls',
-      (tester) async {
-    final binding = _PaletteBinding();
-    addTearDown(binding.dispose);
-    var opens = 0;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: P5GlobalAutonomyBar(
-            binding: binding,
-            onOpenCommands: () => opens++,
+  testWidgets(
+    'P5-010 palette is discoverable without hiding autonomy controls',
+    (tester) async {
+      final binding = _PaletteBinding();
+      addTearDown(binding.dispose);
+      var opens = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: P5GlobalAutonomyBar(
+              binding: binding,
+              onOpenCommands: () => opens++,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(
-      find.byKey(const Key('p5-command-palette-button')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const Key('p5-global-status-scroll')), findsOneWidget);
-    expect(find.byKey(const Key('p5-global-kill')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('p5-command-palette-button')));
-    expect(opens, 1);
-  });
+      expect(
+        find.byKey(const Key('p5-command-palette-button')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('p5-global-status-scroll')), findsOneWidget);
+      expect(find.byKey(const Key('p5-global-kill')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('p5-command-palette-button')));
+      expect(opens, 1);
+    },
+  );
 }

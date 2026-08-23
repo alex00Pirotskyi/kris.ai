@@ -39,10 +39,10 @@ final class CapabilityDoctorReport {
     required this.depth,
     required List<CapabilityDoctorCheck> checks,
     DateTime? checkedAt,
-  })  : checks = List<CapabilityDoctorCheck>.unmodifiable(
-          _validatedChecks(checks),
-        ),
-        checkedAt = checkedAt ?? DateTime.now().toUtc();
+  }) : checks = List<CapabilityDoctorCheck>.unmodifiable(
+         _validatedChecks(checks),
+       ),
+       checkedAt = checkedAt ?? DateTime.now().toUtc();
 
   final CapabilityDoctorDepth depth;
   final List<CapabilityDoctorCheck> checks;
@@ -82,7 +82,10 @@ final class CapabilityDoctorReport {
     for (final check in input) {
       if (check.id.trim().isEmpty) {
         throw ArgumentError.value(
-            check.id, 'id', 'Capability check id is empty.');
+          check.id,
+          'id',
+          'Capability check id is empty.',
+        );
       }
       if (!ids.add(check.id)) {
         throw ArgumentError.value(

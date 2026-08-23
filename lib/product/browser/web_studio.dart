@@ -6,13 +6,7 @@ import '../crypto_utils.dart';
 import '../storage_security.dart' show ProductException;
 import '../workspace_tools.dart';
 
-enum P3WebStudioLanguage {
-  html,
-  css,
-  javascript,
-  json,
-  text,
-}
+enum P3WebStudioLanguage { html, css, javascript, json, text }
 
 final class P3WebStudioLimits {
   const P3WebStudioLimits({
@@ -314,8 +308,9 @@ final class P3WebStudioEditor {
   }
 
   Future<List<P3WebStudioFileNode>> fileTree({String root = '.'}) async {
-    final directory =
-        await boundary.directory(boundary.normalizeToolPath(root));
+    final directory = await boundary.directory(
+      boundary.normalizeToolPath(root),
+    );
     final result = <P3WebStudioFileNode>[];
     await _walkTree(directory, 0, result);
     result.sort((left, right) {
@@ -336,8 +331,9 @@ final class P3WebStudioEditor {
       return;
     }
     final entities = await directory.list(followLinks: false).toList();
-    entities
-        .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+    entities.sort(
+      (a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()),
+    );
     for (final entity in entities) {
       if (output.length >= limits.maxTreeEntries) return;
       if (entity is Link) continue;
@@ -535,8 +531,9 @@ final class P3WebStudioEditor {
     if (query.isEmpty || query.length > limits.maxQueryCharacters) {
       throw StateError('web_studio_search_query_invalid');
     }
-    final directory =
-        await boundary.directory(boundary.normalizeToolPath(root));
+    final directory = await boundary.directory(
+      boundary.normalizeToolPath(root),
+    );
     final matches = <P3WebStudioSearchMatch>[];
     var filesScanned = 0;
     var filesSkipped = 0;
@@ -546,8 +543,9 @@ final class P3WebStudioEditor {
     Future<void> scan(Directory current, int depth) async {
       if (truncated || depth > limits.maxTreeDepth) return;
       final entities = await current.list(followLinks: false).toList();
-      entities
-          .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+      entities.sort(
+        (a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()),
+      );
       for (final entity in entities) {
         if (truncated) return;
         if (entity is Link) continue;

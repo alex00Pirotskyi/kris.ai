@@ -56,14 +56,14 @@ class RunCapabilityProbeResult {
   final Map<String, dynamic> details;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'key': key,
-        'label': label,
-        'ok': ok,
-        'required': required,
-        'message': message,
-        'durationMilliseconds': durationMilliseconds,
-        if (details.isNotEmpty) 'details': details,
-      };
+    'key': key,
+    'label': label,
+    'ok': ok,
+    'required': required,
+    'message': message,
+    'durationMilliseconds': durationMilliseconds,
+    if (details.isNotEmpty) 'details': details,
+  };
 }
 
 class RunPreflightReceipt {
@@ -100,14 +100,14 @@ class RunPreflightReceipt {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'runId': runId,
-        'verdict': verdict.name,
-        'startedAt': startedAt.toIso8601String(),
-        'completedAt': completedAt.toIso8601String(),
-        'summary': summary,
-        'probes': probes.map((probe) => probe.toJson()).toList(),
-      };
+    'id': id,
+    'runId': runId,
+    'verdict': verdict.name,
+    'startedAt': startedAt.toIso8601String(),
+    'completedAt': completedAt.toIso8601String(),
+    'summary': summary,
+    'probes': probes.map((probe) => probe.toJson()).toList(),
+  };
 }
 
 class RunCapabilityResolver {
@@ -115,125 +115,154 @@ class RunCapabilityResolver {
 
   List<RunCapabilityRequirement> resolve(PreparedCommand command) {
     final request = command.contract.request.toLowerCase();
-    final tools =
-        command.plan.items.expand((item) => item.allowedTools).toSet();
+    final tools = command.plan.items
+        .expand((item) => item.allowedTools)
+        .toSet();
     final requirements = <String, RunCapabilityRequirement>{};
 
     void add(RunCapabilityRequirement requirement) {
       requirements[requirement.key] = requirement;
     }
 
-    add(const RunCapabilityRequirement(
-      key: 'model',
-      label: 'Selected AI model',
-      kind: RunCapabilityKind.model,
-      required: true,
-    ));
+    add(
+      const RunCapabilityRequirement(
+        key: 'model',
+        label: 'Selected AI model',
+        kind: RunCapabilityKind.model,
+        required: true,
+      ),
+    );
 
-    final conversational = command.contract.mode == CommandMode.ask &&
+    final conversational =
+        command.contract.mode == CommandMode.ask &&
         isConversationalRequest(command.contract.request);
     if (!conversational) {
-      add(const RunCapabilityRequirement(
-        key: 'workspace-read',
-        label: 'Project workspace',
-        kind: RunCapabilityKind.workspaceRead,
-        required: true,
-      ));
+      add(
+        const RunCapabilityRequirement(
+          key: 'workspace-read',
+          label: 'Project workspace',
+          kind: RunCapabilityKind.workspaceRead,
+          required: true,
+        ),
+      );
     }
     if (command.contract.mode == CommandMode.build ||
         command.contract.mode == CommandMode.fix) {
-      add(const RunCapabilityRequirement(
-        key: 'workspace-write',
-        label: 'Writable project workspace',
-        kind: RunCapabilityKind.workspaceWrite,
-        required: true,
-      ));
+      add(
+        const RunCapabilityRequirement(
+          key: 'workspace-write',
+          label: 'Writable project workspace',
+          kind: RunCapabilityKind.workspaceWrite,
+          required: true,
+        ),
+      );
     }
 
     void executable(String value, {bool required = true}) {
-      add(RunCapabilityRequirement(
-        key: 'exec-$value',
-        label: '$value executable',
-        kind: RunCapabilityKind.executable,
-        required: required,
-        executable: value,
-      ));
+      add(
+        RunCapabilityRequirement(
+          key: 'exec-$value',
+          label: '$value executable',
+          kind: RunCapabilityKind.executable,
+          required: required,
+          executable: value,
+        ),
+      );
     }
 
     if (RegExp(r'\bflutter\b').hasMatch(request)) {
       executable('flutter');
       executable('dart');
-      add(RunCapabilityRequirement(
-        key: 'package-pub',
-        label: 'pub.dev package network',
-        kind: RunCapabilityKind.packageNetwork,
-        required: false,
-        probeUri: Uri.parse('https://pub.dev'),
-      ));
+      add(
+        RunCapabilityRequirement(
+          key: 'package-pub',
+          label: 'pub.dev package network',
+          kind: RunCapabilityKind.packageNetwork,
+          required: false,
+          probeUri: Uri.parse('https://pub.dev'),
+        ),
+      );
     }
     if (RegExp(r'\b(python|pip)\b').hasMatch(request)) {
       executable(Platform.isWindows ? 'python' : 'python3');
-      add(RunCapabilityRequirement(
-        key: 'package-pypi',
-        label: 'PyPI package network',
-        kind: RunCapabilityKind.packageNetwork,
-        required: request.contains('install') || request.contains('package'),
-        probeUri: Uri.parse('https://pypi.org'),
-      ));
+      add(
+        RunCapabilityRequirement(
+          key: 'package-pypi',
+          label: 'PyPI package network',
+          kind: RunCapabilityKind.packageNetwork,
+          required: request.contains('install') || request.contains('package'),
+          probeUri: Uri.parse('https://pypi.org'),
+        ),
+      );
     }
-    if (RegExp(r'\b(node|npm|react|typescript|javascript)\b')
-        .hasMatch(request)) {
+    if (RegExp(
+      r'\b(node|npm|react|typescript|javascript)\b',
+    ).hasMatch(request)) {
       executable('node');
-      executable('npm',
-          required: request.contains('npm') || request.contains('package'));
-      add(RunCapabilityRequirement(
-        key: 'package-npm',
-        label: 'npm package network',
-        kind: RunCapabilityKind.packageNetwork,
-        required: request.contains('install') || request.contains('package'),
-        probeUri: Uri.parse('https://registry.npmjs.org'),
-      ));
+      executable(
+        'npm',
+        required: request.contains('npm') || request.contains('package'),
+      );
+      add(
+        RunCapabilityRequirement(
+          key: 'package-npm',
+          label: 'npm package network',
+          kind: RunCapabilityKind.packageNetwork,
+          required: request.contains('install') || request.contains('package'),
+          probeUri: Uri.parse('https://registry.npmjs.org'),
+        ),
+      );
     }
     if (tools.contains('git_status') || tools.contains('git_diff')) {
       executable('git', required: false);
     }
     if (tools.any(_isBrowserTool)) {
-      add(const RunCapabilityRequirement(
-        key: 'browser',
-        label: 'Browser runtime',
-        kind: RunCapabilityKind.browser,
-        required: true,
-      ));
+      add(
+        const RunCapabilityRequirement(
+          key: 'browser',
+          label: 'Browser runtime',
+          kind: RunCapabilityKind.browser,
+          required: true,
+        ),
+      );
     }
     if (tools.contains('research_search')) {
-      add(const RunCapabilityRequirement(
-        key: 'research-search',
-        label: 'Web search provider',
-        kind: RunCapabilityKind.researchSearch,
-        required: true,
-      ));
+      add(
+        const RunCapabilityRequirement(
+          key: 'research-search',
+          label: 'Web search provider',
+          kind: RunCapabilityKind.researchSearch,
+          required: true,
+        ),
+      );
     }
     if (tools.contains('research_fetch') ||
-        (command.contract.requiredPermissions
-                .contains(PermissionScope.networkResearch) &&
+        (command.contract.requiredPermissions.contains(
+              PermissionScope.networkResearch,
+            ) &&
             !tools.contains('research_search'))) {
-      add(RunCapabilityRequirement(
-        key: 'research-network',
-        label: 'Web research network',
-        kind: RunCapabilityKind.researchNetwork,
-        required: true,
-        probeUri: Uri.parse('https://example.com'),
-      ));
+      add(
+        RunCapabilityRequirement(
+          key: 'research-network',
+          label: 'Web research network',
+          kind: RunCapabilityKind.researchNetwork,
+          required: true,
+          probeUri: Uri.parse('https://example.com'),
+        ),
+      );
     }
-    if (command.contract.requiredPermissions
-        .contains(PermissionScope.networkPackages)) {
-      add(RunCapabilityRequirement(
-        key: 'package-network',
-        label: 'Package network',
-        kind: RunCapabilityKind.packageNetwork,
-        required: true,
-        probeUri: Uri.parse('https://example.com'),
-      ));
+    if (command.contract.requiredPermissions.contains(
+      PermissionScope.networkPackages,
+    )) {
+      add(
+        RunCapabilityRequirement(
+          key: 'package-network',
+          label: 'Package network',
+          kind: RunCapabilityKind.packageNetwork,
+          required: true,
+          probeUri: Uri.parse('https://example.com'),
+        ),
+      );
     }
 
     final values = requirements.values.toList()
@@ -249,17 +278,20 @@ class RunCapabilityResolver {
   }
 }
 
-typedef RunModelProbe = Future<RunCapabilityProbeResult> Function(
-  ModelIdentity model,
-  RunCapabilityRequirement requirement,
-);
-typedef RunBrowserProbe = Future<RunCapabilityProbeResult> Function(
-  RunCapabilityRequirement requirement,
-);
-typedef RunResearchSearchProbe = Future<RunCapabilityProbeResult> Function(
-  RunRecord run,
-  RunCapabilityRequirement requirement,
-);
+typedef RunModelProbe =
+    Future<RunCapabilityProbeResult> Function(
+      ModelIdentity model,
+      RunCapabilityRequirement requirement,
+    );
+typedef RunBrowserProbe =
+    Future<RunCapabilityProbeResult> Function(
+      RunCapabilityRequirement requirement,
+    );
+typedef RunResearchSearchProbe =
+    Future<RunCapabilityProbeResult> Function(
+      RunRecord run,
+      RunCapabilityRequirement requirement,
+    );
 typedef RunSettingsProvider = ProductSettings Function();
 
 class RunPreflightService {
@@ -284,21 +316,15 @@ class RunPreflightService {
     final started = DateTime.now().toUtc();
     final requirements = resolver.resolve(run.command);
     final probes = await Future.wait(
-      requirements.map(
-        (requirement) => _probe(
-          requirement,
-          run,
-          project,
-        ),
-      ),
+      requirements.map((requirement) => _probe(requirement, run, project)),
     );
     final requiredFailure = probes.any((probe) => probe.required && !probe.ok);
     final warning = probes.any((probe) => !probe.ok);
     final verdict = requiredFailure
         ? RunPreflightVerdict.blocked
         : warning
-            ? RunPreflightVerdict.readyWithWarnings
-            : RunPreflightVerdict.ready;
+        ? RunPreflightVerdict.readyWithWarnings
+        : RunPreflightVerdict.ready;
     return RunPreflightReceipt(
       id: newId('preflight'),
       runId: run.id,
@@ -324,17 +350,29 @@ class RunPreflightService {
         case RunCapabilityKind.workspaceRead:
           final root = Directory(project.rootPath).absolute;
           if (!await root.exists()) {
-            return _result(requirement, false,
-                'The project workspace does not exist.', stopwatch);
+            return _result(
+              requirement,
+              false,
+              'The project workspace does not exist.',
+              stopwatch,
+            );
           }
           await root.list(followLinks: false).take(1).toList();
           return _result(
-              requirement, true, 'Project workspace is readable.', stopwatch);
+            requirement,
+            true,
+            'Project workspace is readable.',
+            stopwatch,
+          );
         case RunCapabilityKind.workspaceWrite:
           final root = Directory(project.rootPath).absolute;
           if (!await root.exists()) {
-            return _result(requirement, false,
-                'The project workspace does not exist.', stopwatch);
+            return _result(
+              requirement,
+              false,
+              'The project workspace does not exist.',
+              stopwatch,
+            );
           }
           final probe = File(
             '${root.path}${Platform.pathSeparator}.kristin-preflight-${newId('probe')}.tmp',
@@ -342,7 +380,11 @@ class RunPreflightService {
           await probe.writeAsString('kristin-preflight\n', flush: true);
           await probe.delete();
           return _result(
-              requirement, true, 'Project workspace is writable.', stopwatch);
+            requirement,
+            true,
+            'Project workspace is writable.',
+            stopwatch,
+          );
         case RunCapabilityKind.executable:
           final executable = requirement.executable ?? '';
           final resolved = await resolveExecutableOnPath(executable);
@@ -403,8 +445,12 @@ class RunPreflightService {
           return _probeNetwork(requirement, stopwatch);
       }
     } on TimeoutException {
-      return _result(requirement, false,
-          '${requirement.label} readiness probe timed out.', stopwatch);
+      return _result(
+        requirement,
+        false,
+        '${requirement.label} readiness probe timed out.',
+        stopwatch,
+      );
     } on ProcessException catch (error) {
       return _result(
         requirement,
@@ -413,8 +459,12 @@ class RunPreflightService {
         stopwatch,
       );
     } on Object catch (error) {
-      return _result(requirement, false,
-          '${requirement.label} is not ready: $error', stopwatch);
+      return _result(
+        requirement,
+        false,
+        '${requirement.label} is not ready: $error',
+        stopwatch,
+      );
     }
   }
 
@@ -433,11 +483,13 @@ class RunPreflightService {
     }
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
-      final request =
-          await client.headUrl(uri).timeout(const Duration(seconds: 6));
+      final request = await client
+          .headUrl(uri)
+          .timeout(const Duration(seconds: 6));
       request.followRedirects = false;
-      final response =
-          await request.close().timeout(const Duration(seconds: 8));
+      final response = await request.close().timeout(
+        const Duration(seconds: 8),
+      );
       final ok = response.statusCode >= 200 && response.statusCode < 500;
       return _result(
         requirement,

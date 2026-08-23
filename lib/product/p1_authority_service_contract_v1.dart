@@ -106,20 +106,20 @@ class P1AuthorityServiceEndpointV1 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'platform': platform,
-        'transport': transport,
-        'address': address,
-        'serviceInstanceId': serviceInstanceId,
-        'serviceBuildSha256': serviceBuildSha256,
-        'connectorLibrarySha256': connectorLibrarySha256,
-        'installerSha256': installerSha256,
-        'serverIdentity': serverIdentity,
-        'osEnforcedIsolation': osEnforcedIsolation,
-        'workerPrincipalSeparated': workerPrincipalSeparated,
-        'typedOperationsOnly': typedOperationsOnly,
-        'nonExportableKeys': nonExportableKeys,
-      };
+    'schemaVersion': '2.0.0',
+    'platform': platform,
+    'transport': transport,
+    'address': address,
+    'serviceInstanceId': serviceInstanceId,
+    'serviceBuildSha256': serviceBuildSha256,
+    'connectorLibrarySha256': connectorLibrarySha256,
+    'installerSha256': installerSha256,
+    'serverIdentity': serverIdentity,
+    'osEnforcedIsolation': osEnforcedIsolation,
+    'workerPrincipalSeparated': workerPrincipalSeparated,
+    'typedOperationsOnly': typedOperationsOnly,
+    'nonExportableKeys': nonExportableKeys,
+  };
 }
 
 class P1AuthorityOwnerApprovalRequestV2 {
@@ -189,22 +189,21 @@ class P1AuthorityOwnerApprovalRequestV2 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aRecordOwnerApprovalOperationV2,
-        'requestId': requestId,
-        'approvalId': approvalId,
-        'interactionNonce': interactionNonce,
-        'interactionType': interactionType,
-        'binding': binding,
-        'effectOperation': effectOperation,
-        'payloadSha256': payloadSha256,
-        'uiSurfaceSha256': uiSurfaceSha256,
-        'confirmationTextSha256': confirmationTextSha256,
-        'userPresent': userPresent,
-        'expiresAtEpochSeconds':
-            expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aRecordOwnerApprovalOperationV2,
+    'requestId': requestId,
+    'approvalId': approvalId,
+    'interactionNonce': interactionNonce,
+    'interactionType': interactionType,
+    'binding': binding,
+    'effectOperation': effectOperation,
+    'payloadSha256': payloadSha256,
+    'uiSurfaceSha256': uiSurfaceSha256,
+    'confirmationTextSha256': confirmationTextSha256,
+    'userPresent': userPresent,
+    'expiresAtEpochSeconds': expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 class P1AuthorityEffectRequestV1 {
@@ -285,31 +284,31 @@ class P1AuthorityEffectRequestV1 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aAuthorizeEffectOperationV1,
-        'requestId': requestId,
-        'requestNonce': requestNonce,
-        'workerSessionId': workerSessionId,
-        'channelId': channelId,
-        'workerIdentity': workerIdentity,
-        'effectOperation': operation,
-        'binding': <String, Object?>{
-          'runId': runId,
-          'taskId': taskId,
-          'actorId': actorId,
-          'toolId': toolId,
-          'accessProfileId': accessProfileId,
-          'capabilityId': capabilityId,
-        },
-        'policyEffect': policyEffect,
-        'requestedBudgets': requestedBudgets,
-        'payload': payload,
-        'payloadSha256': payloadSha256,
-        'ownerApprovalId': ownerApprovalId,
-        'expectedRevocationEpoch': expectedRevocationEpoch,
-        'deadlineEpochSeconds': deadline.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aAuthorizeEffectOperationV1,
+    'requestId': requestId,
+    'requestNonce': requestNonce,
+    'workerSessionId': workerSessionId,
+    'channelId': channelId,
+    'workerIdentity': workerIdentity,
+    'effectOperation': operation,
+    'binding': <String, Object?>{
+      'runId': runId,
+      'taskId': taskId,
+      'actorId': actorId,
+      'toolId': toolId,
+      'accessProfileId': accessProfileId,
+      'capabilityId': capabilityId,
+    },
+    'policyEffect': policyEffect,
+    'requestedBudgets': requestedBudgets,
+    'payload': payload,
+    'payloadSha256': payloadSha256,
+    'ownerApprovalId': ownerApprovalId,
+    'expectedRevocationEpoch': expectedRevocationEpoch,
+    'deadlineEpochSeconds': deadline.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 class P1AuthorityEffectPermitV1 {
@@ -396,16 +395,15 @@ class P1AuthorityEffectOutcomeV1 {
   final String? behaviorSessionId;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aRecordEffectOutcomeOperationV1,
-        'requestId': requestId,
-        'permitId': permitId,
-        'status': status,
-        'receiptSha256': receiptSha256,
-        'finishedAtEpochSeconds':
-            finishedAt.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aRecordEffectOutcomeOperationV1,
+    'requestId': requestId,
+    'permitId': permitId,
+    'status': status,
+    'receiptSha256': receiptSha256,
+    'finishedAtEpochSeconds': finishedAt.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 abstract interface class P1AuthorityServiceConnectorV1 {
@@ -445,7 +443,8 @@ final class P1AuthorityServiceHandleV1 {
   void validateForP2({bool allowQaPreview = false}) {
     service.endpoint.validate();
     final provenance = service.provenance;
-    final qaPreviewAccepted = allowQaPreview &&
+    final qaPreviewAccepted =
+        allowQaPreview &&
         provenance['qaPreview'] == true &&
         provenance['qaPreviewVersion'] == '1.0.0' &&
         provenance['qaPreviewFormalCompletion'] == false &&
