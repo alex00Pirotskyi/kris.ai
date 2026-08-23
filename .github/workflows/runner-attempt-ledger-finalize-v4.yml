@@ -1,3 +1,4 @@
+# one-shot qualification trigger
 name: runner-attempt-ledger-finalize-v4
 
 on:
