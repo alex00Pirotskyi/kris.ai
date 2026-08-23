@@ -113,10 +113,6 @@ jobs:
               )
           chat_path.write_text(chat_text.replace(chat_needle, '', 1), encoding='utf-8')
           PY
-          echo '--- product_runtime materialized region ---'
-          nl -ba lib/product/product_runtime.dart | sed -n '320,430p'
-          echo '--- chat_studio materialized region ---'
-          nl -ba lib/product/chat_studio.dart | sed -n '2028,2132p'
           rm -f .repo-hf-runner-chat-convergence.py
           rm -rf .hf-runner-materializer
           rm -f .github/workflows/hf-runner-chat-convergence-materialize.yml
@@ -143,6 +139,22 @@ jobs:
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
           python3 tool/p2_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          echo '--- analyzer region chat 820-870 ---'
+          nl -ba lib/product/chat_studio.dart | sed -n '820,870p'
+          echo '--- analyzer region chat 2075-2120 ---'
+          nl -ba lib/product/chat_studio.dart | sed -n '2075,2120p'
+          echo '--- analyzer region chat 9108-9142 ---'
+          nl -ba lib/product/chat_studio.dart | sed -n '9108,9142p'
+          echo '--- analyzer region planning 2038-2072 ---'
+          nl -ba lib/product/planning_runtime.dart | sed -n '2038,2072p'
+          echo '--- analyzer region projection 145-165 ---'
+          nl -ba lib/product/run_execution_projection.dart | sed -n '145,165p'
+          echo '--- run_preflight imports ---'
+          sed -n '1,18p' lib/product/run_preflight.dart
+          echo '--- product_runtime imports ---'
+          sed -n '1,30p' lib/product/product_runtime.dart
+          echo '--- focused test imports ---'
+          sed -n '1,12p' test/product/hf_runner_chat_convergence_test.dart
       - name: Verify exact durable scope
         shell: bash
         run: |
