@@ -1,0 +1,136 @@
+name: Owner repository rehabilitation finalizer
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.head_ref == 'refactor/repository-rehabilitation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      EXPECTED_PARENT: dbed8389a5584d3b1a1da3ddc16df2e7b22bb3b8
+      EXPECTED_MAIN: ac7531f9c192caf90699b53ddb7fdcdd16f24208
+      EXPECTED_BRANCH: refactor/repository-rehabilitation
+      FINALIZER_PATH: .github/workflows/owner-repository-rehab-finalize.yml
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify exact bounded transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT}"
+          test "$(git diff --name-only HEAD^ HEAD)" = "${FINALIZER_PATH}"
+          git fetch --no-tags origin main "${EXPECTED_BRANCH}"
+          test "$(git rev-parse origin/main)" = "${EXPECTED_MAIN}"
+          test "$(git rev-parse origin/${EXPECTED_BRANCH})" = "$(git rev-parse HEAD)"
+          test -z "$(git status --short)"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+          check-latest: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.1.0
+        with:
+          node-version: '24.18.0'
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Remove transport and refresh source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -f "${FINALIZER_PATH}"
+          python tool/p2_refresh_source_manifest.py
+      - name: Install exact dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
+      - name: Validate developer entry point
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest -v tool/dev_entrypoint_test.py
+          python dev.py --help
+          python dev.py doctor linux
+      - name: Validate source inventory and roadmap
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p2_source_inventory_test.py --project .
+          python tool/p0_008_roadmap_test.py --project .
+          python tool/roadmap_control.py validate --project . --strict
+          python tool/p25_prompt_studio_roadmap_test.py --project .
+          python tool/p25_prompt_studio_test_station.py --project . --profile contract
+      - name: Validate Dart format and analysis
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/dart_format_scope.py --check
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Validate complete Flutter suite
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: Validate automation host
+        shell: bash
+        run: npm test --prefix automation_host
+      - name: Validate release source contract without retaining reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/validate_release.py --skip-tests
+          git restore --worktree -- release
+          git clean -fd -- release
+      - name: Validate exact rehabilitation diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git diff --name-only --diff-filter=U)"
+          mapfile -t status_paths < <(git status --short | sed -E 's/^...//' | sort)
+          status_expected=(
+            .github/workflows/owner-repository-rehab-finalize.yml
+            SOURCE_MANIFEST.sha256
+          )
+          test "${status_paths[*]}" = "${status_expected[*]}"
+          mapfile -t pr_paths < <(git diff --name-only "${EXPECTED_MAIN}" | sort)
+          pr_expected=(
+            README.md
+            RUN_LINUX.sh
+            RUN_MAC.command
+            RUN_WINDOWS.bat
+            SOURCE_MANIFEST.sha256
+            dev.py
+            tool/dev_entrypoint_test.py
+            tool/run_windows.cmd
+            tool/verify.cmd
+          )
+          test "${pr_paths[*]}" = "${pr_expected[*]}"
+      - name: Publish exact clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main "${EXPECTED_BRANCH}"
+          test "$(git rev-parse origin/main)" = "${EXPECTED_MAIN}"
+          test "$(git rev-parse origin/${EXPECTED_BRANCH})" = "$(git rev-parse HEAD)"
+          git config user.name 'alex00Pirotskyi'
+          git config user.email '177022051+alex00Pirotskyi@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor(dev): publish fast clean development path'
+          git push origin "HEAD:${EXPECTED_BRANCH}"

@@ -18,11 +18,13 @@ if errorlevel 1 exit /b 1
 
 where python >nul 2>nul
 if not errorlevel 1 (
+  set "PYTHON_KIND=python"
   python tool\protocol_contract_test.py
   if errorlevel 1 exit /b 1
 ) else (
   where py >nul 2>nul
   if not errorlevel 1 (
+    set "PYTHON_KIND=py"
     py -3 tool\protocol_contract_test.py
     if errorlevel 1 exit /b 1
   ) else (
@@ -37,44 +39,36 @@ if errorlevel 1 (
   exit /b 1
 )
 
-call dart format lib test tool\prune_stale_legacy.dart
+if "%PYTHON_KIND%"=="python" (
+  python tool\dart_format_scope.py --check
+) else (
+  py -3 tool\dart_format_scope.py --check
+)
 if errorlevel 1 (
-  echo ERROR: dart format failed. 1>&2
+  echo ERROR: Dart format scope check failed. 1>&2
   exit /b 1
 )
 
-call flutter analyze --fatal-warnings --fatal-infos
+call flutter analyze --no-pub --fatal-warnings --fatal-infos
 if errorlevel 1 (
   echo ERROR: flutter analyze failed. 1>&2
   exit /b 1
 )
 
-call flutter test --reporter expanded
+call flutter test --no-pub --concurrency=1 --reporter expanded
 if errorlevel 1 (
   echo ERROR: flutter test failed. 1>&2
   exit /b 1
 )
 
-where python >nul 2>nul
-if not errorlevel 1 (
+if "%PYTHON_KIND%"=="python" (
   python tool\validate_release.py --skip-tests
-  if errorlevel 1 (
-    echo ERROR: Supplemental release-source validation failed. 1>&2
-    exit /b 1
-  )
-  exit /b 0
-)
-
-where py >nul 2>nul
-if not errorlevel 1 (
+) else (
   py -3 tool\validate_release.py --skip-tests
-  if errorlevel 1 (
-    echo ERROR: Supplemental release-source validation failed. 1>&2
-    exit /b 1
-  )
-  exit /b 0
+)
+if errorlevel 1 (
+  echo ERROR: Supplemental release-source validation failed. 1>&2
+  exit /b 1
 )
 
-echo WARNING: Python 3 is unavailable, so the supplemental source gate was skipped.
-echo Flutter formatting, analysis, and tests passed.
 exit /b 0
