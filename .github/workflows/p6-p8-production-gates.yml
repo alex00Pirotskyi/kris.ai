@@ -21,10 +21,16 @@ on:
       - 'tool/secret_scan.py'
       - 'tool/dependency_policy.py'
       - 'tool/p8_soak_gate.py'
+      - 'tool/p8_terminal_fault_harness.py'
+      - 'tool/p8_release_evidence_gate.py'
+      - 'release/evidence/P8/**'
+      - 'release/security/**'
+      - 'docs/INTEROPERABILITY_SECURITY.md'
       - 'test/product/agent_decision_v3_test.dart'
       - 'test/product/p5_performance_budget_test.dart'
       - 'test/product/p8_external_effects_test.dart'
       - 'test/product/p8_observability_test.dart'
+      - 'test/product/p8_research_adversarial_test.dart'
       - 'tool/*_test.py'
 
 permissions:
@@ -61,9 +67,14 @@ jobs:
           python tool/secret_scan_test.py
           python tool/dependency_policy_test.py
           python tool/p8_soak_gate_test.py
+          python tool/p8_terminal_fault_harness_test.py
+          python tool/p8_release_evidence_gate_test.py
       - name: Run upgraded working-tree secret scan
         shell: bash
         run: python tool/secret_scan.py --project . --no-history --report "$RUNNER_TEMP/SECRET_SCAN.json"
+      - name: Verify convergence evidence truth boundary
+        shell: bash
+        run: python tool/p8_release_evidence_gate.py --project . --report "$RUNNER_TEMP/P8_RELEASE_EVIDENCE_GATE.json"
 
   flutter-contracts:
     name: flutter-contracts
@@ -95,7 +106,8 @@ jobs:
             test/product/agent_decision_v3_test.dart \
             test/product/p5_performance_budget_test.dart \
             test/product/p8_external_effects_test.dart \
-            test/product/p8_observability_test.dart
+            test/product/p8_observability_test.dart \
+            test/product/p8_research_adversarial_test.dart
           git diff --exit-code -- \
             lib/product/agent_decision_v3.dart \
             lib/product/p5_performance_budget.dart \
@@ -104,7 +116,8 @@ jobs:
             test/product/agent_decision_v3_test.dart \
             test/product/p5_performance_budget_test.dart \
             test/product/p8_external_effects_test.dart \
-            test/product/p8_observability_test.dart
+            test/product/p8_observability_test.dart \
+            test/product/p8_research_adversarial_test.dart
       - name: Run focused train contracts
         shell: bash
         run: |
@@ -112,7 +125,8 @@ jobs:
             test/product/agent_decision_v3_test.dart \
             test/product/p5_performance_budget_test.dart \
             test/product/p8_external_effects_test.dart \
-            test/product/p8_observability_test.dart
+            test/product/p8_observability_test.dart \
+            test/product/p8_research_adversarial_test.dart
       - name: Fatal analyzer
         shell: bash
         run: flutter analyze --fatal-infos --fatal-warnings
