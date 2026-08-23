@@ -1671,6 +1671,11 @@ class _ChatStudioState extends State<ChatStudio> {
         if (displayedRequest.trim().isNotEmpty)
           _messageBubble(assistant: false, child: Text(displayedRequest)),
         const SizedBox(height: 18),
+        if (capabilityDoctorReport?.depth ==
+            CapabilityDoctorDepth.full) ...<Widget>[
+          _capabilityDoctorCard(capabilityDoctorReport!),
+          const SizedBox(height: 18),
+        ],
         if ((promptGenerationActive || embeddedClarificationActive) &&
             command == null)
           _embeddedPromptConvergenceCard()

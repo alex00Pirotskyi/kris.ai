@@ -139,6 +139,7 @@ void main() {
         'lib/product/browser/browser_workspace.dart',
         'lib/product/browser/web_preview.dart',
         'lib/product/browser/web_studio.dart',
+        'lib/product/capability_doctor.dart',
         'lib/product/chat_studio.dart',
         'lib/product/crypto_utils.dart',
         'lib/product/deployment_support.dart',

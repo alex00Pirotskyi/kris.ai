@@ -118,6 +118,14 @@ void main() {
     expect(chat, contains('_capabilityDoctorCard('));
     expect(
       chat,
+      matches(
+        RegExp(
+          r'capabilityDoctorReport\?\.depth\s*==\s*CapabilityDoctorDepth\.full',
+        ),
+      ),
+    );
+    expect(
+      chat,
       contains(
         'Exact task capabilities are rechecked by the mandatory run preflight',
       ),
