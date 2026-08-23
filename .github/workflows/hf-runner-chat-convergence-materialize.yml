@@ -138,7 +138,7 @@ jobs:
           )
           replace_once(
               'lib/product/chat_studio.dart',
-              "    if (signal.kind == LiveRunSignalKind.modelTextDelta)\n      return 'model streaming';",
+              "    if (signal.kind == LiveRunSignalKind.modelTextDelta) return 'model streaming';",
               "    if (signal.kind == LiveRunSignalKind.modelTextDelta) {\n      return 'model streaming';\n    }",
           )
 
@@ -155,7 +155,7 @@ jobs:
           )
           replace_once(
               'lib/product/run_execution_projection.dart',
-              "    if (type == 'run.preflight_blocked')\n      return 'Readiness check blocked the run';",
+              "    if (type == 'run.preflight_blocked') return 'Readiness check blocked the run';",
               "    if (type == 'run.preflight_blocked') {\n      return 'Readiness check blocked the run';\n    }",
           )
           replace_once(
