@@ -47,6 +47,7 @@ void main() {
       Platform.resolvedExecutable,
     );
     expect(launch.executable, Platform.resolvedExecutable);
+    expect(File(launch.executable).existsSync(), isTrue);
     expect(launch.runInShell, isFalse);
   });
 
