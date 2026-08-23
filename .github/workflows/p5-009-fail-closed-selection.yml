@@ -1,0 +1,169 @@
+name: P5-009 fail-closed evidence selection finalizer
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .repo-p5-009-fail-closed-selection.py
+      - .github/workflows/p5-009-fail-closed-selection.yml
+
+permissions:
+  contents: write
+
+env:
+  BASE_MAIN_SHA: e851e60d6feead7f3850b5745eb1df62cdc9a170
+  CLEAN_HEAD_SHA: 4432b906242c44318678fe04168578f4e246ab2e
+  TARGET_BRANCH: agent/p5-009-evidence-viewers-20260823
+  PATCH_PATH: .repo-p5-009-fail-closed-selection.py
+  WORKFLOW_PATH: .github/workflows/p5-009-fail-closed-selection.yml
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact repair transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main "$TARGET_BRANCH"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
+          test "$(git merge-base "$SOURCE_SHA" "$CLEAN_HEAD_SHA")" = "$CLEAN_HEAD_SHA"
+          test -f "$PATCH_PATH"
+          test -f "$WORKFLOW_PATH"
+          test -z "$(git status --short)"
+          git diff --name-only "$CLEAN_HEAD_SHA" "$SOURCE_SHA" | sort > "$RUNNER_TEMP/transport.paths"
+          cat > "$RUNNER_TEMP/expected.transport.paths" <<'EOF'
+          .github/workflows/p5-009-fail-closed-selection.yml
+          .repo-p5-009-fail-closed-selection.py
+          EOF
+          sort -o "$RUNNER_TEMP/expected.transport.paths" "$RUNNER_TEMP/expected.transport.paths"
+          diff -u "$RUNNER_TEMP/expected.transport.paths" "$RUNNER_TEMP/transport.paths"
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Apply fail-closed selection repair and remove transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          python -m py_compile "$PATCH_PATH"
+          python "$PATCH_PATH"
+          git rm -f "$PATCH_PATH" "$WORKFLOW_PATH"
+          dart format \
+            lib/product/p5_information_architecture/p5_controller.dart \
+            lib/product/p5_information_architecture/p5_verification_workspaces.dart \
+            test/product/p5_information_architecture/p5_evidence_viewers_test.dart
+
+      - name: Bootstrap hosted test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+
+      - name: Focused P5-009 fail-closed contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 7m \
+            flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/p5_information_architecture/p5_evidence_viewers_test.dart
+
+      - name: Full P5 information architecture suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 11m \
+            flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/p5_information_architecture
+
+      - name: Full Flutter regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 16m \
+            flutter test --no-pub --concurrency=1 --reporter expanded
+
+      - name: Fatal analyzer contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 8m \
+            flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Deterministic source identity and release validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/manifest.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/manifest.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          python tool/validate_release.py --skip-tests
+          git restore --source="$SOURCE_SHA" --staged --worktree -- \
+            release/FILE_ADAPTER_RESULTS.json \
+            release/KNOWLEDGE_MEMORY_V2_RESULTS.json
+          git diff --check
+
+      - name: Assert exact durable candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only "$CLEAN_HEAD_SHA" | sort > "$RUNNER_TEMP/incremental.paths"
+          cat > "$RUNNER_TEMP/expected.incremental.paths" <<'EOF'
+          SOURCE_MANIFEST.sha256
+          lib/product/p5_information_architecture/p5_controller.dart
+          lib/product/p5_information_architecture/p5_verification_workspaces.dart
+          test/product/p5_information_architecture/p5_evidence_viewers_test.dart
+          EOF
+          sort -o "$RUNNER_TEMP/expected.incremental.paths" "$RUNNER_TEMP/expected.incremental.paths"
+          diff -u "$RUNNER_TEMP/expected.incremental.paths" "$RUNNER_TEMP/incremental.paths"
+          { git diff --name-only "$BASE_MAIN_SHA"; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/full.paths"
+          cat > "$RUNNER_TEMP/expected.full.paths" <<'EOF'
+          SOURCE_MANIFEST.sha256
+          lib/product/p5_information_architecture/p5_controller.dart
+          lib/product/p5_information_architecture/p5_fixtures.dart
+          lib/product/p5_information_architecture/p5_models.dart
+          lib/product/p5_information_architecture/p5_verification_workspaces.dart
+          test/product/p5_information_architecture/p5_evidence_viewers_test.dart
+          EOF
+          sort -o "$RUNNER_TEMP/expected.full.paths" "$RUNNER_TEMP/expected.full.paths"
+          diff -u "$RUNNER_TEMP/expected.full.paths" "$RUNNER_TEMP/full.paths"
+          test ! -e "$PATCH_PATH"
+          test ! -e "$WORKFLOW_PATH"
+          test -z "$(git ls-files --others --exclude-standard)"
+
+      - name: Publish immutable repaired candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main "$TARGET_BRANCH"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse origin/$TARGET_BRANCH)" = "$SOURCE_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'fix(p5-009): fail closed on stale evidence selection'
+          git push origin "HEAD:$TARGET_BRANCH"
