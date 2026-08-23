@@ -31,7 +31,7 @@ replace_once(
 replace_once(
     'test/product/p5_capability_doctor_test.dart',
     "    expect(chat, contains('_capabilityDoctorCard('));\n",
-    "    expect(chat, contains('_capabilityDoctorCard('));\n    expect(\n      chat,\n      contains(\n        'capabilityDoctorReport?.depth == CapabilityDoctorDepth.full',\n      ),\n    );\n",
+    "    expect(chat, contains('_capabilityDoctorCard('));\n    expect(\n      chat,\n      matches(\n        RegExp(\n          r'capabilityDoctorReport\\?\\.depth\\s*==\\s*CapabilityDoctorDepth\\.full',\n        ),\n      ),\n    );\n",
 )
 
 replace_once(
