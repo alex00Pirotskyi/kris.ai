@@ -1,4 +1,5 @@
 __RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__
+-- Durable append-only per-action ledger used for same-material-state branch pruning.
 CREATE TABLE IF NOT EXISTS agent_action_attempts (
   id TEXT PRIMARY KEY,
   run_id TEXT NOT NULL,
