@@ -377,7 +377,9 @@ class P8ProductTelemetryBridge {
         value.contains('fetch.')) {
       return P8TelemetryCategory.web;
     }
-    if (value.contains('update') || value.contains('release.')) {
+    if (value.startsWith('update.') ||
+        value.startsWith('release.') ||
+        value.startsWith('application.update.')) {
       return P8TelemetryCategory.update;
     }
     if (value.contains('policy') ||
