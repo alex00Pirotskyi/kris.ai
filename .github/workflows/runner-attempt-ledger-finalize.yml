@@ -76,12 +76,16 @@ jobs:
       - name: Validate diff
         run: git diff --check
 
-      - name: Remove one-shot finalizer
+      - name: Remove one-shot finalizer and staging
         run: |
           git rm tool/runner_attempt_ledger_finalize.py
           git rm .github/workflows/runner-attempt-ledger-finalize.yml
+          if [ -d .repo-hotfix/runner-attempt-ledger ]; then
+            git rm -r .repo-hotfix/runner-attempt-ledger
+          fi
           test ! -e tool/runner_attempt_ledger_finalize.py
           test ! -e .github/workflows/runner-attempt-ledger-finalize.yml
+          test ! -e .repo-hotfix/runner-attempt-ledger
 
       - name: Commit qualified hotfix
         run: |
