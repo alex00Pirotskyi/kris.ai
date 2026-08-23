@@ -71,7 +71,7 @@
       "behavioralProof": true,
       "entryPoints": [
         "tool/agent_benchmark_signing.py",
-        "test/product/p5_performance_budget_test.dart",
+        "test/product/p5_ui_performance_test.dart",
         "tool/p8_soak_gate.py"
       ],
       "openEvidence": [
