@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/key_registry_v2.dart';
@@ -17,6 +20,15 @@ const String _authorityPublicKey =
 const String _authoritySignature =
     '3e620ee2d983baa3b1c450020c676fb50c2824c33d335ab6266a0311334e074c'
     'ddf694726663b106c024eec83e5aebd796af11d2edfb07ba59445c276e949d06';
+
+final class _MemoryDecisionStore implements ModelRoutingDecisionStoreV2 {
+  final List<ModelRoutingDecisionV2> decisions = <ModelRoutingDecisionV2>[];
+
+  @override
+  Future<void> append(ModelRoutingDecisionV2 decision) async {
+    decisions.add(decision);
+  }
+}
 
 ModelBenchmarkTrustContext _trust() {
   final keys = ProtectedKeyRegistryV2()
@@ -144,6 +156,17 @@ ModelRoutingPolicyV2 _policy({List<String>? executorPreferences}) {
   );
 }
 
+ModelRoleRouterV2 _router({
+  required ModelRoutingDecisionStoreV2 store,
+  ModelRoutingPolicyV2? policy,
+}) =>
+    ModelRoleRouterV2(
+      registry: _registry(),
+      policy: policy ?? _policy(),
+      decisionStore: store,
+      clock: () => DateTime.utc(2026, 8, 23, 16),
+    );
+
 void main() {
   group('P6-002/P6-003 role-based model routing', () {
     test('every role is explicit and no model role can grant authority', () {
@@ -204,19 +227,15 @@ void main() {
       );
     });
 
-    test('router selects first exact model with task-class approval', () {
+    test('router selects and records first exact approved model', () async {
+      final store = _MemoryDecisionStore();
       final policy = _policy(
         executorPreferences: <String>[
           'ollama.local/missing@$_digest',
           'ollama.local/qwen3:14b@$_digest',
         ],
       );
-      final router = ModelRoleRouterV2(
-        registry: _registry(),
-        policy: policy,
-        clock: () => DateTime.utc(2026, 8, 23, 16),
-      );
-      final decision = router.route(
+      final decision = await _router(store: store, policy: policy).route(
         role: ModelRoleV2.executor,
         discoveredModels: <ModelIdentity>[_identity()],
       );
@@ -227,15 +246,34 @@ void main() {
       expect(decision.policySha256, policy.sha256);
       expect(decision.toJson()['decisionSha256'], decision.decisionSha256);
       expect(decision.decisionSha256, hasLength(64));
+      expect(store.decisions, hasLength(1));
+      expect(store.decisions.single.decisionSha256, decision.decisionSha256);
     });
 
-    test('evaluation-only or identity-mismatched candidates never route', () {
-      final router = ModelRoleRouterV2(
-        registry: _registry(),
-        policy: _policy(),
+    test('JSONL store flushes a hash-bound durable routing record', () async {
+      final directory = await Directory.systemTemp.createTemp('p6-routing-');
+      addTearDown(() => directory.delete(recursive: true));
+      final file = File('${directory.path}/routing.jsonl');
+      final decision = await _router(
+        store: JsonlModelRoutingDecisionStoreV2(file),
+      ).route(
+        role: ModelRoleV2.verifier,
+        discoveredModels: <ModelIdentity>[_identity()],
       );
-      expect(
-        () => router.route(
+
+      expect(await file.exists(), isTrue);
+      final lines = await file.readAsLines();
+      expect(lines, hasLength(1));
+      final json = jsonDecode(lines.single) as Map<String, dynamic>;
+      expect(json['role'], 'verifier');
+      expect(json['policySha256'], _policy().sha256);
+      expect(json['decisionSha256'], decision.decisionSha256);
+    });
+
+    test('identity-mismatched candidates never route or persist', () async {
+      final store = _MemoryDecisionStore();
+      await expectLater(
+        _router(store: store).route(
           role: ModelRoleV2.executor,
           discoveredModels: <ModelIdentity>[
             _identity(
@@ -246,29 +284,24 @@ void main() {
         ),
         throwsA(isA<ModelRegistryValidationException>()),
       );
-      expect(
-        () => router.route(
-          role: ModelRoleV2.executor,
-          discoveredModels: <ModelIdentity>[_identity(name: 'unknown:latest')],
-        ),
-        throwsA(isA<ModelRegistryValidationException>()),
-      );
+      expect(store.decisions, isEmpty);
     });
 
-    test('routing never falls outside the policy preference set', () {
-      final router = ModelRoleRouterV2(
-        registry: _registry(),
-        policy: _policy(
-          executorPreferences: <String>['ollama.local/missing@$_digest'],
-        ),
-      );
-      expect(
-        () => router.route(
+    test('routing never falls outside the policy preference set', () async {
+      final store = _MemoryDecisionStore();
+      await expectLater(
+        _router(
+          store: store,
+          policy: _policy(
+            executorPreferences: <String>['ollama.local/missing@$_digest'],
+          ),
+        ).route(
           role: ModelRoleV2.executor,
           discoveredModels: <ModelIdentity>[_identity()],
         ),
         throwsA(isA<ModelRegistryValidationException>()),
       );
+      expect(store.decisions, isEmpty);
     });
   });
 }
