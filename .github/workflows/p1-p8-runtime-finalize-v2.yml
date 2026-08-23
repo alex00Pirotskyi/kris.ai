@@ -1,0 +1,183 @@
+name: P1-P8 Runtime Qualifier Helper
+
+on:
+  pull_request:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p1-p8-runtime-finalize-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  qualify-publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Resolve governed dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          flutter pub get
+      - name: Apply deterministic runtime integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tool/p1_p8_runtime_finalize.py
+          python tool/p1_p8_runtime_finalize.py
+          python3 - <<'PY'
+          from pathlib import Path
+
+          mcp = Path('lib/product/mcp_registry_v2.dart')
+          text = mcp.read_text(encoding='utf-8')
+          text = text.replace("'mcp_descriptor_$key_required'", "'mcp_descriptor_${key}_required'")
+          text = text.replace("'mcp_descriptor_$key_invalid'", "'mcp_descriptor_${key}_invalid'")
+          replacements = (
+              ("      if (value.isEmpty) throw FormatException('mcp_descriptor_${key}_required');\n", "      if (value.isEmpty) {\n        throw FormatException('mcp_descriptor_${key}_required');\n      }\n"),
+              ("      if (raw == null) return const <String>{};\n", "      if (raw == null) {\n        return const <String>{};\n      }\n"),
+              ("      if (raw is! List) throw FormatException('mcp_descriptor_${key}_invalid');\n", "      if (raw is! List) {\n        throw FormatException('mcp_descriptor_${key}_invalid');\n      }\n"),
+              ("    if (tools.isEmpty) throw const FormatException('mcp_descriptor_tools_required');\n", "    if (tools.isEmpty) {\n      throw const FormatException('mcp_descriptor_tools_required');\n    }\n"),
+              ("    if (current.state != McpLifecycleStateV2.running) return false;\n", "    if (current.state != McpLifecycleStateV2.running) {\n      return false;\n    }\n"),
+              ("    if (record == null) throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n", "    if (record == null) {\n      throw ProductException('mcp_server_unregistered', 'MCP server is not registered.');\n    }\n"),
+          )
+          for old, new in replacements:
+              text = text.replace(old, new)
+          mcp.write_text(text, encoding='utf-8')
+
+          protocol = Path('lib/product/agent_protocol_v3.dart')
+          protocol.write_text(protocol.read_text(encoding='utf-8').replace("import 'agent_decision.dart';\n", ''), encoding='utf-8')
+
+          planning = Path('lib/product/planning_runtime.dart')
+          planning.write_text(planning.read_text(encoding='utf-8').replace("import 'agent_protocol.dart';\n", ''), encoding='utf-8')
+
+          research = Path('test/product/p8_research_adversarial_test.dart')
+          text = research.read_text(encoding='utf-8')
+          crypto_import = "import 'package:kristin_local_agent/product/crypto_utils.dart';\n"
+          if crypto_import not in text:
+              anchor = "import 'package:flutter_test/flutter_test.dart';\n"
+              if text.count(anchor) != 1:
+                  raise SystemExit('P8 research crypto import anchor mismatch')
+              text = text.replace(anchor, anchor + crypto_import, 1)
+              research.write_text(text, encoding='utf-8')
+
+          contract = Path('test/product/source_contract_test.dart')
+          text = contract.read_text(encoding='utf-8')
+          entry = "        'lib/product/model/model_routing_v2.dart',\n"
+          if entry not in text:
+              anchor = "        'lib/product/model/model_registry.dart',\n"
+              if text.count(anchor) != 1:
+                  raise SystemExit('model routing source-contract anchor mismatch')
+              contract.write_text(text.replace(anchor, anchor + entry, 1), encoding='utf-8')
+
+          evidence = Path('tool/p8_release_evidence_gate.py')
+          text = evidence.read_text(encoding='utf-8')
+          for entry, anchor in (
+              ('    "lib/product/model/model_registry.dart",\n', '    "lib/product/agent_protocol_v3.dart",\n'),
+              ('    "lib/product/model/model_routing_v2.dart",\n', '    "lib/product/model/model_registry.dart",\n'),
+          ):
+              if entry not in text:
+                  if text.count(anchor) != 1:
+                      raise SystemExit('P8 model routing evidence anchor mismatch')
+                  text = text.replace(anchor, anchor + entry, 1)
+          evidence.write_text(text, encoding='utf-8')
+          PY
+          dart format \
+            lib/product/agent_context_v2.dart \
+            lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/model/model_registry.dart \
+            lib/product/model/model_routing_v2.dart \
+            lib/product/mcp_registry_v2.dart \
+            lib/product/p2_product_runtime_bootstrap.dart \
+            lib/product/p8_effect_journal_adapter.dart \
+            lib/product/p8_external_effects.dart \
+            lib/product/p8_observability.dart \
+            lib/product/planning_runtime.dart \
+            lib/product/product_runtime.dart \
+            lib/product/storage_security.dart \
+            test/product/agent_context_v2_test.dart \
+            test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/model/model_routing_v2_test.dart \
+            test/product/mcp_registry_v2_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_product_runtime_telemetry_test.dart \
+            test/product/p8_research_adversarial_test.dart \
+            test/product/source_contract_test.dart
+      - name: Focused runtime and compatibility gates
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/agent_context_v2_test.dart
+          test/product/agent_decision_v3_test.dart
+          test/product/agent_protocol_v3_test.dart
+          test/product/model/model_routing_v2_test.dart
+          test/product/mcp_registry_v2_test.dart
+          test/product/p8_effect_journal_adapter_test.dart
+          test/product/p8_external_effects_test.dart
+          test/product/p8_observability_test.dart
+          test/product/p8_product_runtime_telemetry_test.dart
+          test/product/p2_owner_mode_failure_presentation_test.dart
+          test/product/p2_owner_risk_runtime_smoke_test.dart
+          test/product/p2_runtime_composition_test.dart
+      - name: P6-P8 Python contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_install_doctor_test.py
+          python tool/agent_safety_v2_test.py
+          python tool/agent_benchmark_signing_test.py
+          python tool/a2a_protocol_v1_test.py
+          python tool/a2a_bridge_test.py
+          python tool/extension_registry_v2_test.py
+          python tool/secret_scan_test.py
+          python tool/dependency_policy_test.py
+          python tool/p8_soak_gate_test.py
+          python tool/p8_terminal_fault_harness_test.py
+          python tool/p8_workflow_chaos_test.py
+          python tool/p8_release_evidence_gate_test.py
+      - name: Fatal static analysis
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Complete Flutter regression
+        run: flutter test --no-pub --concurrency=1 --reporter compact
+      - name: Release and workflow gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/validate_release.py --project . --skip-secrets
+          ruby tool/workflow_integrity_test.rb
+      - name: Publish clean runtime candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p1-p8-runtime-finalize-v2.yml
+          rm -f tool/p1_p8_runtime_finalize.py
+          python tool/p2_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p2_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          python tool/dart_format_scope.py --check
+          flutter test --no-pub --concurrency=1 test/product/source_contract_test.dart
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(train): bind P6-P8 runtime and retire duplicate P5 probe'
+          git push origin HEAD:agent/p1-p8-source-convergence-20260823
