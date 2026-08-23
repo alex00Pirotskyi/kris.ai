@@ -11,6 +11,7 @@ import 'extensions_index.dart';
 import 'deployment_support.dart';
 import 'models_research.dart';
 import 'mcp.dart';
+import 'product_error_normalizer.dart';
 import 'retry_policy.dart';
 import 'storage_security.dart';
 import 'tool_schema.dart';
@@ -1100,18 +1101,24 @@ class ManagedProcessService {
     required Map<String, String> environment,
     required String runId,
     required String workItemId,
+    void Function(String stream, String delta)? onOutput,
   }) async {
     await logDirectory.create(recursive: true);
     final id = newId('process');
     final log = File('${logDirectory.path}${Platform.pathSeparator}$id.log');
-    final process = await Process.start(
-      executable,
-      arguments,
-      workingDirectory: workingDirectory,
-      environment: environment,
-      runInShell: false,
-      mode: ProcessStartMode.normal,
-    );
+    Process process;
+    try {
+      process = await Process.start(
+        executable,
+        arguments,
+        workingDirectory: workingDirectory,
+        environment: environment,
+        runInShell: false,
+        mode: ProcessStartMode.normal,
+      );
+    } on ProcessException catch (error) {
+      throw ProductErrorNormalizer.normalize(error, executable: executable);
+    }
     final record = _ManagedProcess(
       id: id,
       process: process,
@@ -1122,6 +1129,7 @@ class ManagedProcessService {
       workItemId: workItemId,
       startedAt: DateTime.now().toUtc(),
       log: log,
+      onOutput: onOutput,
     );
     _processes[id] = record;
     final stdoutPump = _pump(record, 'stdout', process.stdout);
@@ -1214,6 +1222,11 @@ class ManagedProcessService {
     if (text.length > 65536) {
       text = text.substring(0, 65536);
     }
+    try {
+      record.onOutput?.call(stream, text);
+    } catch (_) {
+      // Live presentation must never change process execution semantics.
+    }
     record.tail.write(text);
     if (record.tail.length > 131072) {
       final compacted = record.tail.toString();
@@ -1273,6 +1286,7 @@ class _ManagedProcess {
     required this.workItemId,
     required this.startedAt,
     required this.log,
+    this.onOutput,
   });
 
   final String id;
@@ -1284,6 +1298,7 @@ class _ManagedProcess {
   final String workItemId;
   final DateTime startedAt;
   final File log;
+  final void Function(String stream, String delta)? onOutput;
   final StringBuffer tail = StringBuffer();
   Future<void> pendingWrite = Future<void>.value();
   int? exitCode;
@@ -1315,6 +1330,7 @@ class ToolContext {
     required this.managedProcesses,
     required this.sourceIndex,
     required this.mcp,
+    this.onToolOutput,
   });
 
   final ProjectRecord project;
@@ -1338,6 +1354,7 @@ class ToolContext {
   final ManagedProcessService managedProcesses;
   final SourceIndexService sourceIndex;
   final McpTrustService mcp;
+  final void Function(String tool, String stream, String delta)? onToolOutput;
 }
 
 class ToolResult {
@@ -2381,6 +2398,8 @@ class ToolRegistry {
       timeout: timeout,
       cancellation: context.cancellation,
       redactor: context.redactor,
+      onOutput: (stream, delta) =>
+          context.onToolOutput?.call('run_command', stream, delta),
     );
     return ToolResult(
       ok: result['exitCode'] == 0,
@@ -2439,6 +2458,8 @@ class ToolRegistry {
       environment: environment,
       runId: context.runId,
       workItemId: context.workItem.id,
+      onOutput: (stream, delta) =>
+          context.onToolOutput?.call('start_process', stream, delta),
     );
     return ToolResult(
       ok: true,
@@ -2497,6 +2518,8 @@ class ToolRegistry {
       timeout: const Duration(seconds: 30),
       cancellation: context.cancellation,
       redactor: context.redactor,
+      onOutput: (stream, delta) =>
+          context.onToolOutput?.call('git_status', stream, delta),
     );
     final notRepository = _isNotGitRepository(result);
     return ToolResult(
@@ -2521,6 +2544,8 @@ class ToolRegistry {
       cancellation: context.cancellation,
       redactor: context.redactor,
       maxOutputBytes: 2 * 1024 * 1024,
+      onOutput: (stream, delta) =>
+          context.onToolOutput?.call('git_diff', stream, delta),
     );
     final notRepository = _isNotGitRepository(result);
     return ToolResult(
@@ -2721,6 +2746,11 @@ class ToolRegistry {
           cancellation: context.cancellation,
           redactor: context.redactor,
           maxOutputBytes: 4 * 1024 * 1024,
+          onOutput: (stream, delta) => context.onToolOutput?.call(
+            'verify_project',
+            stream,
+            '[${command.label}] $delta',
+          ),
         );
         final passed = result['exitCode'] == 0;
         allPassed = allPassed && passed;
@@ -3101,23 +3131,46 @@ class ToolRegistry {
     required CancellationSignal cancellation,
     required SecretRedactor redactor,
     int maxOutputBytes = 4 * 1024 * 1024,
+    void Function(String stream, String delta)? onOutput,
   }) async {
     cancellation.throwIfCancelled();
     final started = DateTime.now().toUtc();
-    final process = await Process.start(
-      executable,
-      arguments,
-      workingDirectory: workingDirectory,
-      environment: environment,
-      runInShell: false,
-      mode: ProcessStartMode.normal,
-    );
+    Process process;
+    try {
+      process = await Process.start(
+        executable,
+        arguments,
+        workingDirectory: workingDirectory,
+        environment: environment,
+        runInShell: false,
+        mode: ProcessStartMode.normal,
+      );
+    } on ProcessException catch (error) {
+      throw ProductErrorNormalizer.normalize(error, executable: executable);
+    }
     final stdoutBytes = BytesBuilder(copy: false);
     final stderrBytes = BytesBuilder(copy: false);
     var truncated = false;
 
-    Future<void> collect(Stream<List<int>> stream, BytesBuilder builder) async {
+    Future<void> collect(
+      Stream<List<int>> stream,
+      BytesBuilder builder,
+      String streamName,
+    ) async {
       await for (final chunk in stream) {
+        if (onOutput != null && chunk.isNotEmpty) {
+          var live = redactor.redact(utf8.decode(chunk, allowMalformed: true));
+          if (live.length > 65536) {
+            live = live.substring(0, 65536);
+          }
+          if (live.isNotEmpty) {
+            try {
+              onOutput(streamName, live);
+            } catch (_) {
+              // Live presentation must never change command execution semantics.
+            }
+          }
+        }
         if (builder.length + chunk.length <= maxOutputBytes) {
           builder.add(chunk);
         } else {
@@ -3130,8 +3183,8 @@ class ToolRegistry {
       }
     }
 
-    final output = collect(process.stdout, stdoutBytes);
-    final errors = collect(process.stderr, stderrBytes);
+    final output = collect(process.stdout, stdoutBytes, 'stdout');
+    final errors = collect(process.stderr, stderrBytes, 'stderr');
     // The subscription is cancelled in the finally block below.
     // ignore: cancel_subscriptions
     final cancelSubscription = cancellation.cancelled.asStream().listen((_) {

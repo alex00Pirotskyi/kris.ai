@@ -179,6 +179,13 @@ void main() {
         'lib/product/ui_advanced.dart',
         'lib/product/ui_components.dart',
         'lib/product/workspace_tools.dart',
+        'lib/product/conversation_orchestrator.dart',
+        'lib/product/product_error_normalizer.dart',
+        'lib/product/project_provisioning.dart',
+        'lib/product/run_execution_projection.dart',
+        'lib/product/run_live_signals.dart',
+        'lib/product/run_preflight.dart',
+        'lib/product/run_steering.dart',
         'lib/product/access_profile_v2.dart',
         'lib/product/capability_grant_v2.dart',
         'lib/product/deterministic_policy_engine.dart',
@@ -217,7 +224,6 @@ void main() {
         'lib/product/p2_runtime_resource_resolver.dart',
         'lib/product/p2_snapshot_undo.dart',
         'lib/product/p2_terminal_model.dart',
-        'lib/product/p5_command_palette.dart',
         'lib/product/p5_design_tokens.dart',
         'lib/product/p5_global_autonomy.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
@@ -278,15 +284,7 @@ void main() {
       final prototype = source(
         'lib/product/p5_information_architecture/p5_prototype.dart',
       );
-      expect(
-        ui,
-        matches(
-          RegExp(
-            r'P5GlobalAutonomyBar\(\s*binding: _autonomyBinding,\s*'
-            r'onOpenCommands: _openCommandPalette,\s*\)',
-          ),
-        ),
-      );
+      expect(ui, contains('P5GlobalAutonomyBar(binding: _autonomyBinding)'));
       expect(ui, contains('globalAutonomy: _autonomyBinding'));
       expect(autonomy, contains('_runtime.pause(runId)'));
       expect(autonomy, contains('_runtime.cancel(runId)'));

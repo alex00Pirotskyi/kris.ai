@@ -10,6 +10,10 @@ import 'domain.dart';
 import 'extensions_index.dart';
 import 'models_research.dart';
 import 'product_runtime.dart';
+import 'conversation_orchestrator.dart';
+import 'product_error_normalizer.dart';
+import 'run_execution_projection.dart';
+import 'run_live_signals.dart';
 import 'prompt_planning.dart';
 import 'storage_security.dart';
 import 'ui_advanced.dart';
@@ -131,7 +135,10 @@ class _ChatStudioState extends State<ChatStudio> {
   final FocusNode composerFocus = FocusNode();
 
   StreamSubscription<EventEnvelope>? eventSubscription;
+  StreamSubscription<LiveRunSignal>? liveRunSubscription;
   Timer? refreshTimer;
+  Timer? liveSignalFlushTimer;
+  final List<LiveRunSignal> pendingLiveSignals = <LiveRunSignal>[];
 
   _StudioArea area = _StudioArea.chat;
   _LogView logView = _LogView.simple;
@@ -186,6 +193,18 @@ class _ChatStudioState extends State<ChatStudio> {
   ProjectProcessStatus? projectProcessStatusValue;
   Map<String, dynamic>? auditReport;
   String? lastSupportBundlePath;
+  String? conversationUserRequest;
+  ConversationIntent? conversationIntent;
+  bool embeddedClarificationActive = false;
+  String liveAssistantText = '';
+  String liveAssistantProtocolText = '';
+  String liveAssistantStage = '';
+  String liveAssistantMessage = '';
+  String liveToolLabel = '';
+  String liveToolOutput = '';
+  String lastSteeringText = '';
+  List<LiveRunSignal> selectedRunLiveSignals = <LiveRunSignal>[];
+  List<EventEnvelope> selectedRunEvents = <EventEnvelope>[];
   final Set<PermissionScope> approvedScopes = <PermissionScope>{};
 
   ProductRuntime get runtime => widget.runtime;
@@ -216,6 +235,7 @@ class _ChatStudioState extends State<ChatStudio> {
     super.initState();
     skills = runtime.listBuiltInSkills();
     eventSubscription = runtime.eventStream.listen(_onEvent);
+    liveRunSubscription = runtime.liveRunStream.listen(_onLiveRunSignal);
     refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       final run = currentRun;
       if (mounted &&
@@ -241,7 +261,10 @@ class _ChatStudioState extends State<ChatStudio> {
   @override
   void dispose() {
     eventSubscription?.cancel();
+    liveRunSubscription?.cancel();
     refreshTimer?.cancel();
+    liveSignalFlushTimer?.cancel();
+    pendingLiveSignals.clear();
     final promptCancellation = promptGenerationCancellation;
     if (promptCancellation != null && !promptCancellation.isCompleted) {
       promptCancellation.complete();
@@ -279,7 +302,9 @@ class _ChatStudioState extends State<ChatStudio> {
     } catch (failure) {
       if (mounted) {
         setState(() {
-          error = runtime.redactor.redact('$failure');
+          error = runtime.redactor.redact(
+            ProductErrorNormalizer.userMessage(failure),
+          );
           status = 'Kristin needs your help';
         });
       }
@@ -351,6 +376,95 @@ class _ChatStudioState extends State<ChatStudio> {
     if (event.type.startsWith('project.')) {
       unawaited(_refreshProjectManager(silent: true));
     }
+    if (event.type == 'run.succeeded') {
+      unawaited(_refreshProjectManager(silent: true));
+    }
+  }
+
+  void _onLiveRunSignal(LiveRunSignal signal) {
+    if (!mounted) return;
+    final activeRunId = selectedRunId ?? currentRun?.id;
+    if (signal.runId != activeRunId) return;
+    pendingLiveSignals.add(signal);
+    liveSignalFlushTimer ??= Timer(
+      const Duration(milliseconds: 65),
+      _flushLiveRunSignals,
+    );
+  }
+
+  void _flushLiveRunSignals() {
+    liveSignalFlushTimer = null;
+    if (!mounted) {
+      pendingLiveSignals.clear();
+      return;
+    }
+    final activeRunId = selectedRunId ?? currentRun?.id;
+    final batch = pendingLiveSignals
+        .where((signal) => signal.runId == activeRunId)
+        .toList(growable: false);
+    pendingLiveSignals.clear();
+    if (batch.isEmpty) return;
+    setState(() {
+      for (final signal in batch) {
+        selectedRunLiveSignals.add(signal);
+        switch (signal.kind) {
+          case LiveRunSignalKind.modelTextDelta:
+            final delta = signal.data['delta']?.toString() ?? '';
+            final rawCombined = '$liveAssistantProtocolText$delta';
+            liveAssistantProtocolText = rawCombined.length <= 16000
+                ? rawCombined
+                : rawCombined.substring(rawCombined.length - 16000);
+            final conversational =
+                currentRun?.command.contract.mode == CommandMode.ask &&
+                    isConversationalRequest(
+                      conversationUserRequest ??
+                          currentRun?.command.contract.request ??
+                          '',
+                    );
+            liveAssistantText = conversational
+                ? ConversationStreamProjector.visibleText(
+                    liveAssistantProtocolText,
+                  )
+                : liveAssistantProtocolText;
+            liveAssistantStage = 'streaming';
+          case LiveRunSignalKind.modelProgress:
+            liveAssistantStage = signal.data['stage']?.toString() ?? 'model';
+            liveAssistantMessage = signal.data['message']?.toString() ?? '';
+          case LiveRunSignalKind.toolStarted:
+            liveToolLabel = signal.data['tool']?.toString() ?? 'tool';
+            liveToolOutput = '';
+          case LiveRunSignalKind.toolOutput:
+            liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
+            final delta = signal.data['delta']?.toString() ?? '';
+            final combined = '$liveToolOutput$delta';
+            liveToolOutput = combined.length <= 16000
+                ? combined
+                : combined.substring(combined.length - 16000);
+          case LiveRunSignalKind.toolCompleted:
+            liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
+            final output = signal.data['output']?.toString() ?? '';
+            if (output.isNotEmpty) liveToolOutput = output;
+          case LiveRunSignalKind.toolFailed:
+            liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
+            liveToolOutput = signal.data['detail']?.toString() ?? '';
+          case LiveRunSignalKind.preflight:
+          case LiveRunSignalKind.phase:
+            liveAssistantMessage = signal.data['message']?.toString() ?? '';
+          case LiveRunSignalKind.steeringQueued:
+            status = 'Direction queued for the next safe step';
+          case LiveRunSignalKind.steeringApplied:
+            status = 'Direction applied';
+          case LiveRunSignalKind.heartbeat:
+            break;
+        }
+      }
+      if (selectedRunLiveSignals.length > 2000) {
+        selectedRunLiveSignals.removeRange(
+          0,
+          selectedRunLiveSignals.length - 2000,
+        );
+      }
+    });
   }
 
   Future<void> _refreshRuns({bool silent = false}) async {
@@ -363,6 +477,10 @@ class _ChatStudioState extends State<ChatStudio> {
           currentRun = refreshed;
           selectedRunId = refreshed.id;
           evidence = await runtime.evidenceForRun(refreshed.id);
+          selectedRunEvents = await runtime.eventsForRun(
+            refreshed.id,
+            limit: 10000,
+          );
         }
       }
     }, silent: silent);
@@ -501,9 +619,17 @@ class _ChatStudioState extends State<ChatStudio> {
       }
     });
     final loaded = await runtime.evidenceForRun(run.id);
+    final runEvents = await runtime.eventsForRun(run.id, limit: 10000);
     if (mounted) {
       setState(() {
         evidence = loaded;
+        selectedRunEvents = runEvents;
+        selectedRunLiveSignals = <LiveRunSignal>[];
+        liveAssistantText = '';
+        liveAssistantStage = '';
+        liveAssistantMessage = '';
+        liveToolLabel = '';
+        liveToolOutput = '';
       });
     }
     await _refreshKnowledge(silent: true);
@@ -519,6 +645,17 @@ class _ChatStudioState extends State<ChatStudio> {
       evidence = <EvidenceRecord>[];
       approvedScopes.clear();
       composerController.clear();
+      conversationUserRequest = null;
+      conversationIntent = null;
+      embeddedClarificationActive = false;
+      liveAssistantText = '';
+      liveAssistantStage = '';
+      liveAssistantMessage = '';
+      liveToolLabel = '';
+      liveToolOutput = '';
+      lastSteeringText = '';
+      selectedRunEvents = <EventEnvelope>[];
+      selectedRunLiveSignals = <LiveRunSignal>[];
       error = null;
       status = 'New chat ready';
     });
@@ -536,7 +673,74 @@ class _ChatStudioState extends State<ChatStudio> {
         return;
       }
     }
-    await _prepareRequest(request);
+    final clarification = promptClarificationSession;
+    if (embeddedClarificationActive && clarification != null) {
+      final missing =
+          clarification.missingAnswerIds(promptClarificationAnswers);
+      final question = clarification.questions
+          .where((item) => missing.contains(item.id))
+          .firstOrNull;
+      if (question != null) {
+        _answerEmbeddedClarification(question, request);
+        composerController.clear();
+        final remaining =
+            clarification.missingAnswerIds(promptClarificationAnswers);
+        if (remaining.isEmpty) {
+          await _continueEmbeddedClarification();
+        } else if (mounted) {
+          setState(() {
+            status =
+                'Got it — ${remaining.length} focused choice${remaining.length == 1 ? '' : 's'} left';
+          });
+        }
+        return;
+      }
+    }
+    final active = currentRun;
+    if (active != null &&
+        const <RunState>{RunState.running, RunState.paused}
+            .contains(active.state)) {
+      final steering = await _perform<dynamic>(
+        'Queuing your direction',
+        () => runtime.steerRun(active.id, request),
+      );
+      if (steering != null && mounted) {
+        setState(() {
+          lastSteeringText = request;
+          composerController.clear();
+          status = 'Direction queued for the next safe step';
+        });
+      }
+      return;
+    }
+    final mode = resolveTaskMode(
+      request: request,
+      choice: taskMode,
+      chosenMode: chosenMode,
+    );
+    final intent = runtime.conversationOrchestrator.classify(request, mode);
+    setState(() {
+      conversationUserRequest = request;
+      conversationIntent = intent;
+      liveAssistantText = '';
+      liveAssistantProtocolText = '';
+      liveAssistantStage = '';
+      liveAssistantMessage = '';
+      liveToolLabel = '';
+      liveToolOutput = '';
+      lastSteeringText = '';
+      prepared = null;
+      currentRun = null;
+      selectedRunId = null;
+      selectedRunEvents = <EventEnvelope>[];
+      selectedRunLiveSignals = <LiveRunSignal>[];
+      composerController.clear();
+    });
+    if (intent.needsClarification) {
+      await _startEmbeddedClarification(request);
+      return;
+    }
+    await _prepareRequest(request, resolvedMode: mode);
   }
 
   Future<bool> _handleSlashCommand(String input) async {
@@ -600,13 +804,97 @@ class _ChatStudioState extends State<ChatStudio> {
     }
   }
 
-  Future<void> _prepareRequest(String request) async {
-    final project = selectedProject;
+  Future<void> _startEmbeddedClarification(String request) async {
+    var model = selectedModel;
+    if (model == null) {
+      await _openSettings(initialSection: 1);
+      model = selectedModel;
+    }
+    if (model == null) {
+      _showError('Connect an AI model before Kristin shapes the request.');
+      return;
+    }
+    promptGoalController.text = request;
+    final session = await _generatePromptClarification(model, request);
+    if (session == null || !mounted) return;
+    setState(() {
+      embeddedClarificationActive = true;
+      promptClarificationSession = session;
+      promptClarificationAnswers = <String, String>{};
+      promptClarificationGoal = request;
+      area = _StudioArea.chat;
+      status = 'A few focused choices will make this build much stronger';
+    });
+  }
+
+  void _answerEmbeddedClarification(
+    PromptClarificationQuestion question,
+    String answer,
+  ) {
+    setState(() {
+      promptClarificationAnswers[question.id] = answer;
+    });
+  }
+
+  Future<void> _continueEmbeddedClarification() async {
+    final session = promptClarificationSession;
+    if (session == null) return;
+    final missing = session.missingAnswerIds(promptClarificationAnswers);
+    if (missing.isNotEmpty) {
+      _showError('Answer the remaining clarification choices first.');
+      return;
+    }
+    await _generateStudioPrompt(
+      PromptGenerationAction.generate,
+      clarification: session,
+      clarificationAnswers: promptClarificationAnswers,
+    );
+    if (!mounted) return;
+    final draft = generatedPromptDraft;
+    final resolved = draft?.renderForChat() ??
+        '${conversationUserRequest ?? promptClarificationGoal}\n\nDecisions:\n${promptClarificationAnswers.values.map((value) => '- $value').join('\n')}';
+    final mode = draft?.mode ?? CommandMode.build;
+    setState(() {
+      embeddedClarificationActive = false;
+      status = 'Specification ready';
+    });
+    await _prepareRequest(resolved, resolvedMode: mode);
+  }
+
+  Future<void> _prepareRequest(
+    String request, {
+    CommandMode? resolvedMode,
+  }) async {
+    var project = selectedProject;
     final model = selectedModel;
-    if (project == null) {
+    final mode = resolvedMode ??
+        resolveTaskMode(
+          request: request,
+          choice: taskMode,
+          chosenMode: chosenMode,
+        );
+    final intent = conversationIntent ??
+        runtime.conversationOrchestrator.classify(request, mode);
+    if (project == null && intent.projectMayBeProvisioned) {
+      final created = await _perform<ProjectRecord>(
+        'Creating a workspace for this app',
+        () => runtime.provisionProjectForRequest(
+          request: conversationUserRequest ?? request,
+          suggestedName: generatedPromptDraft?.title,
+        ),
+      );
+      if (created == null || !mounted) return;
+      projects = await runtime.listProjects();
+      setState(() {
+        selectedProjectId = created.id;
+      });
+      project = created;
+    }
+    final activeProject = project;
+    if (activeProject == null) {
       setState(() {
         area = _StudioArea.projects;
-        error = 'Add or select a project first.';
+        error = 'Choose an existing project for this request.';
       });
       return;
     }
@@ -624,12 +912,8 @@ class _ChatStudioState extends State<ChatStudio> {
     final result = await _perform<PreparedCommand>(
       'Creating a clear plan',
       () => runtime.prepare(
-        projectId: project.id,
-        mode: resolveTaskMode(
-          request: request,
-          choice: taskMode,
-          chosenMode: chosenMode,
-        ),
+        projectId: activeProject.id,
+        mode: mode,
         request: request,
         model: activeModel,
       ),
@@ -689,6 +973,12 @@ class _ChatStudioState extends State<ChatStudio> {
       selectedRunId = run.id;
       selectedWorkItemId = run.items.firstOrNull?.item.id;
       evidence = <EvidenceRecord>[];
+      liveAssistantText = '';
+      liveAssistantProtocolText = '';
+      liveAssistantStage = 'preflight';
+      liveAssistantMessage = 'Checking required capabilities before execution.';
+      selectedRunLiveSignals = <LiveRunSignal>[];
+      selectedRunEvents = <EventEnvelope>[];
       unawaited(runtime.execute(run.id));
       await Future<void>.delayed(const Duration(milliseconds: 180));
       return await runtime.getRun(run.id) ?? run;
@@ -793,6 +1083,18 @@ class _ChatStudioState extends State<ChatStudio> {
             fresh.command.contract.requiredPermissions,
           ),
         );
+        currentRun = fresh;
+        selectedRunId = fresh.id;
+        selectedWorkItemId = fresh.items.firstOrNull?.item.id;
+        liveAssistantText = '';
+        liveAssistantProtocolText = '';
+        liveAssistantStage = 'preflight';
+        liveAssistantMessage =
+            'Checking required capabilities before execution.';
+        liveToolLabel = '';
+        liveToolOutput = '';
+        selectedRunLiveSignals = <LiveRunSignal>[];
+        selectedRunEvents = <EventEnvelope>[];
         unawaited(runtime.execute(fresh.id));
         await Future<void>.delayed(const Duration(milliseconds: 180));
         return await runtime.getRun(fresh.id) ?? fresh;
@@ -1340,18 +1642,29 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Widget _chatConversation() {
-    if (prepared == null && currentRun == null) {
+    if (prepared == null &&
+        currentRun == null &&
+        conversationUserRequest == null &&
+        !promptGenerationActive &&
+        !embeddedClarificationActive) {
       return _emptyChat();
     }
-    final command = currentRun?.command ?? prepared!;
+    final command = currentRun?.command ?? prepared;
+    final displayedRequest = conversationUserRequest ??
+        command?.contract.request ??
+        promptClarificationGoal;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _messageBubble(assistant: false, child: Text(command.contract.request)),
+        if (displayedRequest.trim().isNotEmpty)
+          _messageBubble(assistant: false, child: Text(displayedRequest)),
         const SizedBox(height: 18),
-        if (currentRun == null)
+        if ((promptGenerationActive || embeddedClarificationActive) &&
+            command == null)
+          _embeddedPromptConvergenceCard()
+        else if (command != null && currentRun == null)
           _planMessage(command)
-        else
+        else if (currentRun != null)
           _runMessage(currentRun!),
         const SizedBox(height: 18),
         if (currentRun != null &&
@@ -1362,6 +1675,104 @@ class _ChatStudioState extends State<ChatStudio> {
             }.contains(currentRun!.state))
           _resultMessage(currentRun!),
       ],
+    );
+  }
+
+  Widget _embeddedPromptConvergenceCard() {
+    final session = promptClarificationSession;
+    return _messageBubble(
+      assistant: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Icon(Icons.auto_fix_high_outlined),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  promptGenerationActive
+                      ? 'Shaping your request live'
+                      : 'A few choices before I build',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+              if (selectedModel != null)
+                _statusPill(selectedModel!.name, Icons.memory_outlined),
+            ],
+          ),
+          const SizedBox(height: 9),
+          if (promptGenerationMessage.isNotEmpty) Text(promptGenerationMessage),
+          if (promptGenerationActive) ...<Widget>[
+            const SizedBox(height: 10),
+            const LinearProgressIndicator(),
+          ],
+          if (promptGenerationPreview.trim().isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('View evolving specification'),
+              subtitle: Text('$promptGenerationCharacters streamed characters'),
+              children: <Widget>[
+                _codeBox(promptGenerationPreview, maxLines: 10),
+              ],
+            ),
+          ],
+          if (!promptGenerationActive && session != null) ...<Widget>[
+            const SizedBox(height: 12),
+            if (session.brief.isNotEmpty) Text(session.brief),
+            const SizedBox(height: 12),
+            ...session.questions.map((question) {
+              final answer = promptClarificationAnswers[question.id];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      question.question,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    if (question.whyItMatters.isNotEmpty)
+                      Text(
+                        question.whyItMatters,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children: question.options.map((option) {
+                        final selected = answer == option.label;
+                        return ChoiceChip(
+                          selected: selected,
+                          label: Text(
+                            option.recommended
+                                ? '${option.label} · Recommended'
+                                : option.label,
+                          ),
+                          onSelected: (_) => _answerEmbeddedClarification(
+                              question, option.label),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            FilledButton.icon(
+              onPressed:
+                  session.missingAnswerIds(promptClarificationAnswers).isEmpty
+                      ? _continueEmbeddedClarification
+                      : null,
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Use these choices and continue'),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1387,7 +1798,7 @@ class _ChatStudioState extends State<ChatStudio> {
           const SizedBox(height: 20),
           Text(
             selectedProject == null
-                ? 'Start with a project'
+                ? 'What should Kristin build or help with?'
                 : 'What are we building?',
             textAlign: TextAlign.center,
             style: Theme.of(
@@ -1399,8 +1810,8 @@ class _ChatStudioState extends State<ChatStudio> {
             constraints: const BoxConstraints(maxWidth: 620),
             child: Text(
               selectedProject == null
-                  ? 'Add an existing folder or create a new project. Then ask in plain language.'
-                  : 'Ask a question, create something, fix an error, or open Project Manager with /manager. Use /analyze, /test, /build, /run, and /stop for direct project actions.',
+                  ? 'Describe the result in plain language. For a new build Kristin can clarify the idea, create the project workspace automatically, verify required tools, and then start the run.'
+                  : 'Ask a question, create something, fix an error, or steer an active run directly from this conversation.',
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -1408,32 +1819,25 @@ class _ChatStudioState extends State<ChatStudio> {
             ),
           ),
           const SizedBox(height: 28),
-          if (selectedProject == null)
-            FilledButton.icon(
-              onPressed: () => setState(() => area = _StudioArea.projects),
-              icon: const Icon(Icons.create_new_folder_outlined),
-              label: const Text('Add a project'),
-            )
-          else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              alignment: WrapAlignment.center,
-              children: studioTemplates.take(4).map((template) {
-                return ActionChip(
-                  avatar: Icon(template.icon, size: 18),
-                  label: Text(template.title),
-                  onPressed: () {
-                    setState(() {
-                      composerController.text = template.prompt;
-                      taskMode = SimpleTaskMode.choose;
-                      chosenMode = template.suggestedMode;
-                    });
-                    composerFocus.requestFocus();
-                  },
-                );
-              }).toList(),
-            ),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: studioTemplates.take(4).map((template) {
+              return ActionChip(
+                avatar: Icon(template.icon, size: 18),
+                label: Text(template.title),
+                onPressed: () {
+                  setState(() {
+                    composerController.text = template.prompt;
+                    taskMode = SimpleTaskMode.choose;
+                    chosenMode = template.suggestedMode;
+                  });
+                  composerFocus.requestFocus();
+                },
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
@@ -1669,6 +2073,73 @@ class _ChatStudioState extends State<ChatStudio> {
               ),
             ),
           ),
+          if (liveAssistantMessage.isNotEmpty ||
+              liveAssistantText.isNotEmpty ||
+              liveToolLabel.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: <Widget>[
+                      _statusPill(
+                          run.command.model.name, Icons.memory_outlined),
+                      if (liveAssistantStage.isNotEmpty)
+                        _statusPill(
+                            liveAssistantStage, Icons.auto_awesome_outlined),
+                      if (liveToolLabel.isNotEmpty)
+                        _statusPill(liveToolLabel, Icons.build_outlined),
+                    ],
+                  ),
+                  if (liveAssistantMessage.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 7),
+                    Text(liveAssistantMessage),
+                  ],
+                  if (liveAssistantText.trim().isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 8),
+                    run.command.contract.mode == CommandMode.ask &&
+                            isConversationalRequest(
+                              conversationUserRequest ??
+                                  run.command.contract.request,
+                            )
+                        ? SelectableText(liveAssistantText)
+                        : ExpansionTile(
+                            tilePadding: EdgeInsets.zero,
+                            title: const Text('Live model output'),
+                            children: <Widget>[
+                              _codeBox(liveAssistantText, maxLines: 10),
+                            ],
+                          ),
+                  ],
+                  if (liveToolOutput.trim().isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 8),
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: const Text('Latest tool output'),
+                      children: <Widget>[
+                        _codeBox(liveToolOutput, maxLines: 10),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          if (lastSteeringText.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              'Queued direction: $lastSteeringText',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -1708,6 +2179,14 @@ class _ChatStudioState extends State<ChatStudio> {
                 icon: const Icon(Icons.account_tree_outlined),
                 label: const Text('View run'),
               ),
+              if (run.state == RunState.succeeded)
+                FilledButton.tonalIcon(
+                  onPressed: busy || projectProcessStatusValue?.running == true
+                      ? null
+                      : _startManagedProject,
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Run project'),
+                ),
               OutlinedButton.icon(
                 onPressed: () => setState(() => area = _StudioArea.logs),
                 icon: const Icon(Icons.terminal_outlined),
@@ -1722,6 +2201,10 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Widget _resultMessage(RunRecord run) {
     final successful = run.state == RunState.succeeded;
+    final conversational = run.command.contract.mode == CommandMode.ask &&
+        isConversationalRequest(
+          conversationUserRequest ?? run.command.contract.request,
+        );
     final summary = run.summary.trim().isNotEmpty
         ? run.summary.trim()
         : run.failure?.trim().isNotEmpty == true
@@ -1729,6 +2212,22 @@ class _ChatStudioState extends State<ChatStudio> {
             : successful
                 ? 'The run completed. Open the run view to inspect evidence and artifacts.'
                 : 'The run stopped before all work completed.';
+    if (conversational) {
+      return _messageBubble(
+        assistant: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              run.command.model.name,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            const SizedBox(height: 6),
+            SelectableText(summary),
+          ],
+        ),
+      );
+    }
     final artifacts = evidence
         .where(
           (item) => <EvidenceKind>{
@@ -3384,6 +3883,8 @@ class _ChatStudioState extends State<ChatStudio> {
                         const SizedBox(height: 14),
                         _runGraphPanel(run),
                         const SizedBox(height: 14),
+                        _realRunTimeline(run),
+                        const SizedBox(height: 14),
                         _workItemInspector(run),
                         const SizedBox(height: 70),
                       ],
@@ -3645,14 +4146,91 @@ class _ChatStudioState extends State<ChatStudio> {
           ),
           const Divider(height: 1),
           SizedBox(
-            height: 440,
+            height: MediaQuery.sizeOf(context).height < 760 ? 390 : 520,
             child: _RunGraph(
               run: run,
               selectedWorkItemId: selectedWorkItemId,
+              liveSignals: selectedRunLiveSignals,
               onSelected: (id) => setState(() => selectedWorkItemId = id),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _realRunTimeline(RunRecord run) {
+    final entries = RunExecutionProjection.merge(
+      events: _eventsForRun(run),
+      liveSignals: selectedRunLiveSignals,
+      limit: 10000,
+    );
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Icon(Icons.timeline_outlined),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Live run timeline',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+                _statusPill(
+                  run.state == RunState.running ? 'LIVE' : 'HISTORICAL',
+                  run.state == RunState.running
+                      ? Icons.sensors
+                      : Icons.history_outlined,
+                ),
+                const SizedBox(width: 7),
+                Text('${entries.length} events'),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 330,
+              child: entries.isEmpty
+                  ? const Center(child: Text('No run events recorded yet.'))
+                  : ListView.builder(
+                      itemCount: entries.length,
+                      itemExtent: 66,
+                      itemBuilder: (context, index) {
+                        final entry = entries[index];
+                        return ListTile(
+                          dense: true,
+                          leading: Icon(
+                            entry.live ? Icons.sensors : Icons.circle_outlined,
+                            size: 18,
+                          ),
+                          title: Text(
+                            entry.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${entry.category.name} · ${entry.timestamp.toLocal().toIso8601String()}${entry.detail.isEmpty ? '' : ' · ${entry.detail}'}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: entry.workItemId == null
+                              ? null
+                              : () => setState(
+                                    () => selectedWorkItemId = entry.workItemId,
+                                  ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3706,6 +4284,43 @@ class _ChatStudioState extends State<ChatStudio> {
             ),
             const SizedBox(height: 13),
             Text(selected.item.description),
+            if (selectedRunLiveSignals
+                .where((signal) => signal.workItemId == selected.item.id)
+                .isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              Builder(
+                builder: (context) {
+                  final signal = selectedRunLiveSignals
+                      .where((item) => item.workItemId == selected.item.id)
+                      .last;
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Live activity · ${run.command.model.name}',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          signal.data['message']?.toString() ??
+                              signal.data['tool']?.toString() ??
+                              signal.kind.name,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
             if (selected.item.dependencies.isNotEmpty) ...<Widget>[
               const SizedBox(height: 12),
               Text(
@@ -7158,10 +7773,16 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  List<EventEnvelope> _eventsForRun(RunRecord run) => events.where((event) {
-        return event.correlationId == run.id ||
-            event.data['runId']?.toString() == run.id;
-      }).toList(growable: false);
+  List<EventEnvelope> _eventsForRun(RunRecord run) {
+    if ((selectedRunId ?? currentRun?.id) == run.id &&
+        selectedRunEvents.isNotEmpty) {
+      return selectedRunEvents;
+    }
+    return events.where((event) {
+      return event.correlationId == run.id ||
+          event.data['runId']?.toString() == run.id;
+    }).toList(growable: false);
+  }
 
   String _humanEvent(EventEnvelope event) {
     final type = event.type;
@@ -7173,6 +7794,16 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     if (type == 'run.started') {
       return 'Kristin started working';
+    }
+    if (type == 'run.preflight_started') {
+      return 'Checking required capabilities';
+    }
+    if (type == 'run.preflight_completed') {
+      return event.data['summary']?.toString() ?? 'Readiness check completed';
+    }
+    if (type == 'run.preflight_blocked') {
+      return event.data['summary']?.toString() ??
+          'Readiness check blocked the run';
     }
     if (type == 'run.paused') {
       return 'Run paused';
@@ -8424,11 +9055,13 @@ class _RunGraph extends StatefulWidget {
   const _RunGraph({
     required this.run,
     required this.selectedWorkItemId,
+    required this.liveSignals,
     required this.onSelected,
   });
 
   final RunRecord run;
   final String? selectedWorkItemId;
+  final List<LiveRunSignal> liveSignals;
   final ValueChanged<String> onSelected;
 
   @override
@@ -8451,9 +9084,11 @@ class _RunGraphState extends State<_RunGraph> {
     if (items.isEmpty) {
       return const Center(child: Text('This run has no work items.'));
     }
-    const nodeWidth = 178.0;
-    const nodeHeight = 116.0;
-    const horizontalGap = 78.0;
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final accessibilityGrowth = (textScale - 1).clamp(0.0, 1.0).toDouble();
+    final nodeWidth = 204.0 + accessibilityGrowth * 56.0;
+    final nodeHeight = 148.0 + accessibilityGrowth * 82.0;
+    const horizontalGap = 86.0;
     const left = 70.0;
     const top = 68.0;
     final positions = <String, Offset>{};
@@ -8461,13 +9096,13 @@ class _RunGraphState extends State<_RunGraph> {
       final row = index % 2;
       positions[items[index].item.id] = Offset(
         left + index * (nodeWidth + horizontalGap),
-        top + row * 150,
+        top + row * (nodeHeight + 36),
       );
     }
     final canvasWidth = left * 2 +
         items.length * nodeWidth +
         (items.length - 1) * horizontalGap;
-    const canvasHeight = 390.0;
+    final canvasHeight = top * 2 + nodeHeight * 2 + 48;
     final colors = Theme.of(context).colorScheme;
     return Stack(
       children: <Widget>[
@@ -8506,6 +9141,11 @@ class _RunGraphState extends State<_RunGraph> {
                     child: _RunNode(
                       progress: progress,
                       selected: selected,
+                      modelName: widget.run.command.model.name,
+                      liveSignal: widget.liveSignals
+                          .where(
+                              (signal) => signal.workItemId == progress.item.id)
+                          .lastOrNull,
                       onTap: () => widget.onSelected(progress.item.id),
                     ),
                   );
@@ -8558,12 +9198,38 @@ class _RunNode extends StatelessWidget {
   const _RunNode({
     required this.progress,
     required this.selected,
+    required this.modelName,
+    required this.liveSignal,
     required this.onTap,
   });
 
   final WorkItemProgress progress;
   final bool selected;
+  final String modelName;
+  final LiveRunSignal? liveSignal;
   final VoidCallback onTap;
+
+  String _liveNodeLabel(LiveRunSignal signal) {
+    if (signal.kind == LiveRunSignalKind.modelTextDelta) {
+      return 'model streaming';
+    }
+    if (signal.kind == LiveRunSignalKind.modelProgress) {
+      return signal.data['stage']?.toString() ?? 'model working';
+    }
+    if (signal.kind == LiveRunSignalKind.toolStarted) {
+      return 'running ${signal.data['tool'] ?? 'tool'}';
+    }
+    if (signal.kind == LiveRunSignalKind.toolOutput) {
+      return '${signal.data['tool'] ?? 'tool'} · ${signal.data['stream'] ?? 'output'}';
+    }
+    if (signal.kind == LiveRunSignalKind.toolCompleted) {
+      return 'completed ${signal.data['tool'] ?? 'tool'}';
+    }
+    if (signal.kind == LiveRunSignalKind.toolFailed) {
+      return '${signal.data['tool'] ?? 'tool'} failed';
+    }
+    return signal.data['message']?.toString() ?? signal.kind.name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -8640,6 +9306,24 @@ class _RunNode extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
+              const SizedBox(height: 7),
+              Text(
+                modelName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              if (liveSignal != null) ...<Widget>[
+                const SizedBox(height: 3),
+                Text(
+                  _liveNodeLabel(liveSignal!),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ],
               const Spacer(),
               Text(
                 '${progress.item.allowedTools.length} tools · ${progress.item.dependencies.length} deps',
