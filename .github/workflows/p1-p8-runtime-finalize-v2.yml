@@ -1,4 +1,4 @@
-# synchronized P1-P8 runtime convergence after role-routing fixture repair
+# synchronized P1-P8 runtime convergence after durable role-routing repair
 name: P1-P8 Runtime Finalize V2
 
 on:
@@ -83,24 +83,17 @@ jobs:
               "            lib/product/model/model_registry.dart \\\n"
               "            lib/product/model/model_routing_v2.dart \\\n"
           )
-          if "            lib/product/model/model_routing_v2.dart \\\n" not in text:
-              if text.count(dart_anchor) < 1:
-                  raise SystemExit('P6-P8 routing format anchor mismatch')
-              text = text.replace(dart_anchor, dart_anchor + dart_rows, 1)
+          if text.count(dart_anchor) < 2:
+              raise SystemExit('P6-P8 routing Dart list anchors missing')
+          if text.count("            lib/product/model/model_routing_v2.dart \\\n") < 2:
+              text = text.replace(dart_anchor, dart_anchor + dart_rows)
 
           test_anchor = "            test/product/agent_protocol_v3_test.dart \\\n"
           test_row = "            test/product/model/model_routing_v2_test.dart \\\n"
-          occurrences = text.count(test_anchor)
-          if occurrences < 2:
-              raise SystemExit('P6-P8 routing test anchors missing')
-          if text.count(test_row) < 2:
-              first = text.find(test_anchor) + len(test_anchor)
-              text = text[:first] + test_row + text[first:]
-              second_anchor = text.find(test_anchor, first + len(test_row))
-              if second_anchor < 0:
-                  raise SystemExit('P6-P8 focused routing test anchor missing')
-              second = second_anchor + len(test_anchor)
-              text = text[:second] + test_row + text[second:]
+          if text.count(test_anchor) < 3:
+              raise SystemExit('P6-P8 routing test list anchors missing')
+          if text.count(test_row) < 3:
+              text = text.replace(test_anchor, test_anchor + test_row)
           workflow.write_text(text, encoding='utf-8')
           PY
           dart format \
