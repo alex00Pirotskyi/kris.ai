@@ -34,13 +34,17 @@ REPLAY_CATEGORIES = {
 }
 REQUIRED_SOURCE_ARTIFACTS = {
     "lib/product/p5_performance_budget.dart",
+    "lib/product/agent_context_v2.dart",
     "lib/product/agent_decision_v3.dart",
+    "lib/product/agent_protocol_v3.dart",
+    "lib/product/mcp_registry_v2.dart",
     "tool/agent_safety_v2.py",
     "tool/agent_benchmark_signing.py",
     "tool/a2a_protocol_v1.py",
     "tool/a2a_bridge.py",
     "tool/extension_registry_v2.py",
     "tool/p1a_install_doctor.py",
+    "lib/product/p8_effect_journal_adapter.dart",
     "lib/product/p8_external_effects.dart",
     "lib/product/p8_observability.dart",
     "tool/secret_scan.py",
