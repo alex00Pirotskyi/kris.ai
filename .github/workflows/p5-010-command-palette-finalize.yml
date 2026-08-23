@@ -124,7 +124,8 @@ jobs:
           python tool/validate_release.py --skip-tests
           git restore --source="$SOURCE_SHA" --staged --worktree -- \
             release/FILE_ADAPTER_RESULTS.json \
-            release/KNOWLEDGE_MEMORY_V2_RESULTS.json \
+            release/KNOWLEDGE_MEMORY_V2_RESULTS.json
+          rm -f \
             release/VALIDATION_REPORT.md \
             release/validation_report.json
           git diff --check
