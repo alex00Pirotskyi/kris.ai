@@ -146,6 +146,55 @@ class P5TimelineEvent {
   final String detail;
 }
 
+enum P5EvidenceKind {
+  textMetadata,
+  binaryMetadata,
+  image,
+  markdown,
+  json,
+  table,
+  diff,
+  citation,
+  receipt,
+}
+
+extension P5EvidenceKindLabel on P5EvidenceKind {
+  String get label => switch (this) {
+        P5EvidenceKind.textMetadata => 'Text metadata',
+        P5EvidenceKind.binaryMetadata => 'Binary metadata',
+        P5EvidenceKind.image => 'Image',
+        P5EvidenceKind.markdown => 'Markdown',
+        P5EvidenceKind.json => 'JSON',
+        P5EvidenceKind.table => 'Table',
+        P5EvidenceKind.diff => 'Diff',
+        P5EvidenceKind.citation => 'Citation',
+        P5EvidenceKind.receipt => 'Receipt',
+      };
+}
+
+@immutable
+class P5EvidenceFixture {
+  const P5EvidenceFixture({
+    required this.id,
+    required this.runId,
+    required this.kind,
+    required this.title,
+    required this.mediaType,
+    required this.byteLength,
+    required this.summary,
+    required this.content,
+  });
+
+  final String id;
+  final String runId;
+  final P5EvidenceKind kind;
+  final String title;
+  final String mediaType;
+  final int byteLength;
+  final String summary;
+  final String content;
+}
+
 extension P5ComposerProfileLabel on P5ComposerProfile {
   String get label => switch (this) {
         P5ComposerProfile.project => 'Project',
@@ -491,6 +540,7 @@ class P5PresentationState {
     required this.workspaceStates,
     required this.selectedProjectId,
     required this.selectedRunId,
+    this.selectedEvidenceId,
     required this.runState,
     required this.ownerModeState,
     required this.navigationHistory,
@@ -515,6 +565,7 @@ class P5PresentationState {
   final Map<P5WorkspaceId, P5WorkspaceState> workspaceStates;
   final String? selectedProjectId;
   final String? selectedRunId;
+  final String? selectedEvidenceId;
   final P5RunPresentationState runState;
   final P5OwnerModePresentationState ownerModeState;
   final List<P5WorkspaceId> navigationHistory;
@@ -542,6 +593,7 @@ class P5PresentationState {
     Map<P5WorkspaceId, P5WorkspaceState>? workspaceStates,
     Object? selectedProjectId = _notProvided,
     Object? selectedRunId = _notProvided,
+    Object? selectedEvidenceId = _notProvided,
     P5RunPresentationState? runState,
     P5OwnerModePresentationState? ownerModeState,
     List<P5WorkspaceId>? navigationHistory,
@@ -570,6 +622,9 @@ class P5PresentationState {
       selectedRunId: identical(selectedRunId, _notProvided)
           ? this.selectedRunId
           : selectedRunId as String?,
+      selectedEvidenceId: identical(selectedEvidenceId, _notProvided)
+          ? this.selectedEvidenceId
+          : selectedEvidenceId as String?,
       runState: runState ?? this.runState,
       ownerModeState: ownerModeState ?? this.ownerModeState,
       navigationHistory: navigationHistory ?? this.navigationHistory,

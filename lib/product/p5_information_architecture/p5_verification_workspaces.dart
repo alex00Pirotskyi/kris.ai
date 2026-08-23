@@ -141,15 +141,28 @@ extension _P5VerificationWorkspaces
   }
 
   Widget _evidenceWorkspace(BuildContext context) {
-    final advanced = controller.state.experienceLevel.index >=
-        P5ExperienceLevel.advanced.index;
+    final state = controller.state;
+    final advanced =
+        state.experienceLevel.index >= P5ExperienceLevel.advanced.index;
+    final savedRun = P5PrototypeFixtures.runs
+        .where((run) => run.id == state.selectedRunId)
+        .firstOrNull;
+    final evidence = savedRun == null
+        ? const <P5EvidenceFixture>[]
+        : P5PrototypeFixtures.evidenceForRun(savedRun.id);
+    final selected = savedRun == null
+        ? null
+        : evidence
+                .where((item) => item.id == state.selectedEvidenceId)
+                .firstOrNull ??
+            evidence.firstOrNull;
     return _scrollWorkspace(
       context,
       children: <Widget>[
         const _WorkspaceHeader(
           title: 'Evidence',
           subtitle:
-              'Receipts stay understandable in Simple while exact identity is progressively disclosed.',
+              'Reopen typed saved-run evidence without turning presentation fixtures into production claims.',
           icon: Icons.receipt_long_outlined,
         ),
         for (final item in const <(String, String, String)>[
@@ -177,12 +190,227 @@ extension _P5VerificationWorkspaces
               trailing: const Icon(Icons.open_in_new),
             ),
           ),
+        const SizedBox(height: 12),
+        if (savedRun == null)
+          const KeyedSubtree(
+            key: Key('evidence-no-saved-run'),
+            child: _BoundaryNotice(
+              message:
+                  'Select a saved run in Runs / Activity to reopen typed artifact, diff, citation, and receipt viewers. Current in-memory runs do not fabricate saved evidence.',
+            ),
+          )
+        else ...<Widget>[
+          Card(
+            key: const Key('saved-run-evidence-index'),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Saved evidence • ${savedRun.title}',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text('${evidence.length} supported viewer types'),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final index = SizedBox(
+                        height: 420,
+                        child: SingleChildScrollView(
+                          key: const Key('saved-run-evidence-scroll'),
+                          child: Column(
+                            children: <Widget>[
+                              for (final item in evidence)
+                                ListTile(
+                                  key: Key('evidence-item-${item.kind.name}'),
+                                  selected: item.id == selected?.id,
+                                  leading: Icon(_evidenceKindIcon(item.kind)),
+                                  title: Text(item.kind.label),
+                                  subtitle: Text(
+                                    advanced
+                                        ? '${item.summary}\n${item.mediaType} • ${item.byteLength} bytes'
+                                        : item.summary,
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () =>
+                                      controller.selectEvidence(item.id),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                      final viewer = selected == null
+                          ? const _BoundaryNotice(
+                              message:
+                                  'Choose a supported saved-run evidence type to open its viewer.',
+                            )
+                          : _evidenceViewer(context, selected);
+                      if (constraints.maxWidth >= 900) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(width: 360, child: index),
+                            const SizedBox(width: 16),
+                            Expanded(child: viewer),
+                          ],
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          index,
+                          const SizedBox(height: 12),
+                          viewer,
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const _BoundaryNotice(
           message:
-              'Evidence shown here is deterministic prototype data and never asserts production behavior.',
+              'Evidence shown here is deterministic saved-run fixture data. It does not claim a live evidence-store read, independent certification, or production support.',
         ),
       ],
     );
+  }
+
+  Widget _evidenceViewer(BuildContext context, P5EvidenceFixture fixture) {
+    return Card(
+      key: Key('evidence-viewer-${fixture.kind.name}'),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Icon(_evidenceKindIcon(fixture.kind)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    fixture.title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text('${fixture.mediaType} • ${fixture.byteLength} bytes'),
+            const SizedBox(height: 12),
+            _evidenceViewerBody(context, fixture),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _evidenceViewerBody(
+    BuildContext context,
+    P5EvidenceFixture fixture,
+  ) {
+    switch (fixture.kind) {
+      case P5EvidenceKind.image:
+        return Container(
+          key: const Key('evidence-image-preview'),
+          height: 180,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).dividerColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Icon(Icons.image_outlined, size: 64),
+              const SizedBox(height: 8),
+              const Text('640 × 360 deterministic image preview'),
+              Text(fixture.content.split('\n').last),
+            ],
+          ),
+        );
+      case P5EvidenceKind.markdown:
+        return Column(
+          key: const Key('evidence-markdown-preview'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: fixture.content.split('\n').map((line) {
+            if (line.startsWith('# ')) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  line.substring(2),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              );
+            }
+            return SelectableText(line);
+          }).toList(growable: false),
+        );
+      case P5EvidenceKind.table:
+        final rows = fixture.content
+            .split('\n')
+            .map((line) => line.split('|'))
+            .toList(growable: false);
+        final header = rows.first;
+        return SingleChildScrollView(
+          key: const Key('evidence-table-preview'),
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: header
+                .map((cell) => DataColumn(label: Text(cell)))
+                .toList(growable: false),
+            rows: rows
+                .skip(1)
+                .map(
+                  (row) => DataRow(
+                    cells: row
+                        .map((cell) => DataCell(Text(cell)))
+                        .toList(growable: false),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        );
+      case P5EvidenceKind.citation:
+        return Container(
+          key: const Key('evidence-citation-preview'),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).dividerColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: SelectableText(fixture.content),
+        );
+      case P5EvidenceKind.textMetadata:
+      case P5EvidenceKind.binaryMetadata:
+      case P5EvidenceKind.json:
+      case P5EvidenceKind.diff:
+      case P5EvidenceKind.receipt:
+        return SelectableText(
+          fixture.content,
+          key: Key('evidence-${fixture.kind.name}-preview'),
+          style: const TextStyle(fontFamily: 'monospace'),
+        );
+    }
+  }
+
+  IconData _evidenceKindIcon(P5EvidenceKind kind) {
+    return switch (kind) {
+      P5EvidenceKind.textMetadata => Icons.text_snippet_outlined,
+      P5EvidenceKind.binaryMetadata => Icons.data_object_outlined,
+      P5EvidenceKind.image => Icons.image_outlined,
+      P5EvidenceKind.markdown => Icons.article_outlined,
+      P5EvidenceKind.json => Icons.code_outlined,
+      P5EvidenceKind.table => Icons.table_chart_outlined,
+      P5EvidenceKind.diff => Icons.difference_outlined,
+      P5EvidenceKind.citation => Icons.format_quote_outlined,
+      P5EvidenceKind.receipt => Icons.receipt_long_outlined,
+    };
   }
 
   Widget _ownerModeWorkspace(BuildContext context) {
