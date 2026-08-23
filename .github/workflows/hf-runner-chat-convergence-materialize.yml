@@ -80,6 +80,14 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'post-materialization anchor mismatch: {path}: {old!r}: count={count}')
+              file.write_text(text.replace(old, new, 1), encoding='utf-8')
+
           runtime_path = Path('lib/product/product_runtime.dart')
           runtime_text = runtime_path.read_text(encoding='utf-8')
           runtime_needle = "    final tools = ToolRegistry.standard();\\n    final liveRunSignals = LiveRunSignalBus();"
@@ -112,6 +120,59 @@ jobs:
                   f'chat control-wrap repair anchor mismatch: {chat_text.count(chat_needle)}'
               )
           chat_path.write_text(chat_text.replace(chat_needle, '', 1), encoding='utf-8')
+
+          replace_once(
+              'lib/product/chat_studio.dart',
+              "    if (project == null) {\n      setState(() {\n        area = _StudioArea.projects;\n        error = 'Choose an existing project for this request.';\n      });\n      return;\n    }",
+              "    final activeProject = project;\n    if (activeProject == null) {\n      setState(() {\n        area = _StudioArea.projects;\n        error = 'Choose an existing project for this request.';\n      });\n      return;\n    }",
+          )
+          replace_once(
+              'lib/product/chat_studio.dart',
+              "        projectId: project.id,\n        mode: mode,\n        request: request,\n        model: activeModel,",
+              "        projectId: activeProject.id,\n        mode: mode,\n        request: request,\n        model: activeModel,",
+          )
+          replace_once(
+              'lib/product/chat_studio.dart',
+              "              label: const Text('View run'),\n              ),\n              if (successful)\n                FilledButton.tonalIcon(",
+              "              label: const Text('View run'),\n              ),\n              if (run.state == RunState.succeeded)\n                FilledButton.tonalIcon(",
+          )
+          replace_once(
+              'lib/product/chat_studio.dart',
+              "    if (signal.kind == LiveRunSignalKind.modelTextDelta)\n      return 'model streaming';",
+              "    if (signal.kind == LiveRunSignalKind.modelTextDelta) {\n      return 'model streaming';\n    }",
+          )
+
+          replace_once(
+              'lib/product/planning_runtime.dart',
+              "    final project = await repositories.projects.get(\n      run.command.contract.projectId,\n    );\n    if (project == null) {\n      return _failBeforeTransaction(\n        run,\n        'The active project no longer exists.',\n      );\n    }\n    final boundary = await WorkspaceBoundary.open(project.rootPath);",
+              "    final boundary = await WorkspaceBoundary.open(project.rootPath);",
+          )
+
+          replace_once(
+              'lib/product/product_runtime.dart',
+              "import 'run_execution_projection.dart';\n",
+              '',
+          )
+          replace_once(
+              'lib/product/run_execution_projection.dart',
+              "    if (type == 'run.preflight_blocked')\n      return 'Readiness check blocked the run';",
+              "    if (type == 'run.preflight_blocked') {\n      return 'Readiness check blocked the run';\n    }",
+          )
+          replace_once(
+              'lib/product/run_preflight.dart',
+              "import 'models_research.dart';\n",
+              '',
+          )
+          replace_once(
+              'lib/product/run_preflight.dart',
+              "import 'storage_security.dart';\n",
+              '',
+          )
+          replace_once(
+              'test/product/hf_runner_chat_convergence_test.dart',
+              "import 'dart:async';\n",
+              '',
+          )
           PY
           rm -f .repo-hf-runner-chat-convergence.py
           rm -rf .hf-runner-materializer
@@ -139,22 +200,6 @@ jobs:
           cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
           python3 tool/p2_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
-          echo '--- analyzer region chat 820-870 ---'
-          nl -ba lib/product/chat_studio.dart | sed -n '820,870p'
-          echo '--- analyzer region chat 2075-2120 ---'
-          nl -ba lib/product/chat_studio.dart | sed -n '2075,2120p'
-          echo '--- analyzer region chat 9108-9142 ---'
-          nl -ba lib/product/chat_studio.dart | sed -n '9108,9142p'
-          echo '--- analyzer region planning 2038-2072 ---'
-          nl -ba lib/product/planning_runtime.dart | sed -n '2038,2072p'
-          echo '--- analyzer region projection 145-165 ---'
-          nl -ba lib/product/run_execution_projection.dart | sed -n '145,165p'
-          echo '--- run_preflight imports ---'
-          sed -n '1,18p' lib/product/run_preflight.dart
-          echo '--- product_runtime imports ---'
-          sed -n '1,30p' lib/product/product_runtime.dart
-          echo '--- focused test imports ---'
-          sed -n '1,12p' test/product/hf_runner_chat_convergence_test.dart
       - name: Verify exact durable scope
         shell: bash
         run: |
