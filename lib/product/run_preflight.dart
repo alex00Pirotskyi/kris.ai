@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'domain.dart';
+import 'storage_security.dart';
 
 enum RunPreflightVerdict { ready, readyWithWarnings, blocked }
 
@@ -12,6 +13,7 @@ enum RunCapabilityKind {
   executable,
   browser,
   researchNetwork,
+  researchSearch,
   packageNetwork,
 }
 
@@ -203,10 +205,18 @@ class RunCapabilityResolver {
         required: true,
       ));
     }
-    if (command.contract.requiredPermissions
-            .contains(PermissionScope.networkResearch) ||
-        tools.contains('research_search') ||
-        tools.contains('research_fetch')) {
+    if (tools.contains('research_search')) {
+      add(const RunCapabilityRequirement(
+        key: 'research-search',
+        label: 'Web search provider',
+        kind: RunCapabilityKind.researchSearch,
+        required: true,
+      ));
+    }
+    if (tools.contains('research_fetch') ||
+        (command.contract.requiredPermissions
+                .contains(PermissionScope.networkResearch) &&
+            !tools.contains('research_search'))) {
       add(RunCapabilityRequirement(
         key: 'research-network',
         label: 'Web research network',
@@ -239,17 +249,26 @@ typedef RunModelProbe = Future<RunCapabilityProbeResult> Function(
 typedef RunBrowserProbe = Future<RunCapabilityProbeResult> Function(
   RunCapabilityRequirement requirement,
 );
+typedef RunResearchSearchProbe = Future<RunCapabilityProbeResult> Function(
+  RunRecord run,
+  RunCapabilityRequirement requirement,
+);
+typedef RunSettingsProvider = ProductSettings Function();
 
 class RunPreflightService {
   RunPreflightService({
     required this.resolver,
     required this.modelProbe,
     required this.browserProbe,
+    required this.researchSearchProbe,
+    required this.settingsProvider,
   });
 
   final RunCapabilityResolver resolver;
   final RunModelProbe modelProbe;
   final RunBrowserProbe browserProbe;
+  final RunResearchSearchProbe researchSearchProbe;
+  final RunSettingsProvider settingsProvider;
 
   Future<RunPreflightReceipt> check({
     required RunRecord run,
@@ -261,7 +280,7 @@ class RunPreflightService {
       requirements.map(
         (requirement) => _probe(
           requirement,
-          run.command.model,
+          run,
           project,
         ),
       ),
@@ -285,14 +304,14 @@ class RunPreflightService {
 
   Future<RunCapabilityProbeResult> _probe(
     RunCapabilityRequirement requirement,
-    ModelIdentity model,
+    RunRecord run,
     ProjectRecord project,
   ) async {
     final stopwatch = Stopwatch()..start();
     try {
       switch (requirement.kind) {
         case RunCapabilityKind.model:
-          return await modelProbe(model, requirement);
+          return await modelProbe(run.command.model, requirement);
         case RunCapabilityKind.browser:
           return await browserProbe(requirement);
         case RunCapabilityKind.workspaceRead:
@@ -344,37 +363,37 @@ class RunPreflightService {
             stopwatch,
             details: <String, dynamic>{'resolved': resolved},
           );
-        case RunCapabilityKind.researchNetwork:
-        case RunCapabilityKind.packageNetwork:
-          final uri = requirement.probeUri;
-          if (uri == null) {
-            return _result(requirement, true,
-                'No external endpoint probe is required.', stopwatch);
-          }
-          final client = HttpClient()
-            ..connectionTimeout = const Duration(seconds: 5);
-          try {
-            final request =
-                await client.headUrl(uri).timeout(const Duration(seconds: 6));
-            request.followRedirects = false;
-            final response =
-                await request.close().timeout(const Duration(seconds: 8));
-            final ok = response.statusCode >= 200 && response.statusCode < 500;
+        case RunCapabilityKind.researchSearch:
+          if (settingsProvider().localOnly) {
             return _result(
               requirement,
-              ok,
-              ok
-                  ? '${uri.host} is reachable.'
-                  : '${uri.host} returned HTTP ${response.statusCode}.',
+              false,
+              'Web search is required by this plan but Kristin is in local-only mode.',
               stopwatch,
-              details: <String, dynamic>{
-                'host': uri.host,
-                'status': response.statusCode
-              },
             );
-          } finally {
-            client.close(force: true);
           }
+          return await researchSearchProbe(run, requirement);
+        case RunCapabilityKind.researchNetwork:
+          if (settingsProvider().localOnly) {
+            return _result(
+              requirement,
+              false,
+              'Web research is required by this plan but Kristin is in local-only mode.',
+              stopwatch,
+            );
+          }
+          return _probeNetwork(requirement, stopwatch);
+        case RunCapabilityKind.packageNetwork:
+          final settings = settingsProvider();
+          if (settings.localOnly || !settings.allowPackageNetwork) {
+            return _result(
+              requirement,
+              false,
+              'Package network is unavailable because package downloads are disabled.',
+              stopwatch,
+            );
+          }
+          return _probeNetwork(requirement, stopwatch);
       }
     } on TimeoutException {
       return _result(requirement, false,
@@ -389,6 +408,44 @@ class RunPreflightService {
     } on Object catch (error) {
       return _result(requirement, false,
           '${requirement.label} is not ready: $error', stopwatch);
+    }
+  }
+
+  Future<RunCapabilityProbeResult> _probeNetwork(
+    RunCapabilityRequirement requirement,
+    Stopwatch stopwatch,
+  ) async {
+    final uri = requirement.probeUri;
+    if (uri == null) {
+      return _result(
+        requirement,
+        true,
+        'No external endpoint probe is required.',
+        stopwatch,
+      );
+    }
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+    try {
+      final request =
+          await client.headUrl(uri).timeout(const Duration(seconds: 6));
+      request.followRedirects = false;
+      final response =
+          await request.close().timeout(const Duration(seconds: 8));
+      final ok = response.statusCode >= 200 && response.statusCode < 500;
+      return _result(
+        requirement,
+        ok,
+        ok
+            ? '${uri.host} is reachable.'
+            : '${uri.host} returned HTTP ${response.statusCode}.',
+        stopwatch,
+        details: <String, dynamic>{
+          'host': uri.host,
+          'status': response.statusCode,
+        },
+      );
+    } finally {
+      client.close(force: true);
     }
   }
 

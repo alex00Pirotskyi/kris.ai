@@ -7,6 +7,7 @@ import 'package:kristin_local_agent/product/run_execution_projection.dart';
 import 'package:kristin_local_agent/product/run_live_signals.dart';
 import 'package:kristin_local_agent/product/run_preflight.dart';
 import 'package:kristin_local_agent/product/run_steering.dart';
+import 'package:kristin_local_agent/product/storage_security.dart';
 
 void main() {
   test('conversation orchestrator keeps hello on the fast chat path', () {
@@ -131,10 +132,110 @@ void main() {
         message: 'ready',
         durationMilliseconds: 1,
       ),
+      researchSearchProbe: (run, requirement) async => RunCapabilityProbeResult(
+        key: requirement.key,
+        label: requirement.label,
+        ok: true,
+        required: requirement.required,
+        message: 'ready',
+        durationMilliseconds: 1,
+      ),
+      settingsProvider: () => const ProductSettings(
+        localOnly: false,
+        allowPackageNetwork: true,
+      ),
     );
     final receipt = await service.check(run: run, project: project);
     expect(receipt.verdict, RunPreflightVerdict.blocked);
     expect(receipt.blockingFailures, isNotEmpty);
+  });
+
+  test('research plans require a real search-provider capability', () {
+    const resolver = RunCapabilityResolver();
+    final command = _command(
+      request: 'Research the current Flutter web documentation',
+      mode: CommandMode.ask,
+      allowedTools: const <String>{'research_search', 'research_fetch'},
+      requiredPermissions: const <PermissionScope>{
+        PermissionScope.networkResearch,
+        PermissionScope.secretUse,
+      },
+    );
+    final keys = resolver.resolve(command).map((item) => item.key).toSet();
+    expect(keys, contains('research-search'));
+    expect(keys, contains('research-network'));
+  });
+
+  test('local-only mode blocks required web search before execution', () async {
+    final root =
+        await Directory.systemTemp.createTemp('kristin-search-preflight-');
+    addTearDown(() => root.delete(recursive: true));
+    final project = ProjectRecord(
+      id: 'project',
+      name: 'test',
+      rootPath: root.path,
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
+    );
+    final command = _command(
+      request: 'Research current Flutter docs',
+      mode: CommandMode.ask,
+      allowedTools: const <String>{'research_search'},
+      requiredPermissions: const <PermissionScope>{
+        PermissionScope.networkResearch,
+        PermissionScope.secretUse,
+      },
+    );
+    final run = RunRecord(
+      id: 'run',
+      command: command,
+      state: RunState.prepared,
+      items: command.plan.items
+          .map((item) => WorkItemProgress(
+                item: item,
+                state: WorkItemState.queued,
+                attempts: 0,
+              ))
+          .toList(),
+      budget: const AutonomyBudget(),
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
+    );
+    var searchProbeCalled = false;
+    final service = RunPreflightService(
+      resolver: const RunCapabilityResolver(),
+      modelProbe: (model, requirement) async => RunCapabilityProbeResult(
+        key: requirement.key,
+        label: requirement.label,
+        ok: true,
+        required: requirement.required,
+        message: 'ready',
+        durationMilliseconds: 1,
+      ),
+      browserProbe: (requirement) async => RunCapabilityProbeResult(
+        key: requirement.key,
+        label: requirement.label,
+        ok: true,
+        required: requirement.required,
+        message: 'ready',
+        durationMilliseconds: 1,
+      ),
+      researchSearchProbe: (run, requirement) async {
+        searchProbeCalled = true;
+        return RunCapabilityProbeResult(
+          key: requirement.key,
+          label: requirement.label,
+          ok: true,
+          required: requirement.required,
+          message: 'ready',
+          durationMilliseconds: 1,
+        );
+      },
+      settingsProvider: () => const ProductSettings(localOnly: true),
+    );
+    final receipt = await service.check(run: run, project: project);
+    expect(receipt.verdict, RunPreflightVerdict.blocked);
+    expect(searchProbeCalled, isFalse);
   });
 
   test('timeline projection keeps durable and live activity together', () {
@@ -179,7 +280,12 @@ class _MissingExecutableResolver extends RunCapabilityResolver {
       ];
 }
 
-PreparedCommand _command({required String request, required CommandMode mode}) {
+PreparedCommand _command({
+  required String request,
+  required CommandMode mode,
+  Set<String>? allowedTools,
+  Set<PermissionScope>? requiredPermissions,
+}) {
   final model = ModelIdentity(
     providerId: 'ollama',
     name: 'phi4-mini:latest',
@@ -201,12 +307,13 @@ PreparedCommand _command({required String request, required CommandMode mode}) {
     ],
     constraints: const <String>[],
     researchQuestions: const <String>[],
-    requiredPermissions: mode == CommandMode.build
-        ? const <PermissionScope>{
-            PermissionScope.projectRead,
-            PermissionScope.projectWrite,
-          }
-        : const <PermissionScope>{},
+    requiredPermissions: requiredPermissions ??
+        (mode == CommandMode.build
+            ? const <PermissionScope>{
+                PermissionScope.projectRead,
+                PermissionScope.projectWrite,
+              }
+            : const <PermissionScope>{}),
     createdAt: DateTime.utc(2026, 8, 23),
   );
   final item = WorkItem(
@@ -214,9 +321,10 @@ PreparedCommand _command({required String request, required CommandMode mode}) {
     title: 'Work',
     description: 'Complete the requested work.',
     dependencies: const <String>{},
-    allowedTools: mode == CommandMode.ask
-        ? const <String>{}
-        : const <String>{'read_file', 'write_file', 'git_status'},
+    allowedTools: allowedTools ??
+        (mode == CommandMode.ask
+            ? const <String>{}
+            : const <String>{'read_file', 'write_file', 'git_status'}),
     acceptanceCriteria: const <String>['Result is verified.'],
     maxAttempts: 2,
   );

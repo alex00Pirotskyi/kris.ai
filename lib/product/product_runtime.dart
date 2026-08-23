@@ -338,6 +338,7 @@ class ProductRuntime {
     late ProductRuntime runtime;
     final runPreflight = RunPreflightService(
       resolver: const RunCapabilityResolver(),
+      settingsProvider: () => runtime._settings,
       modelProbe: (model, requirement) async {
         final stopwatch = Stopwatch()..start();
         try {
@@ -405,6 +406,75 @@ class ProductRuntime {
             ok: false,
             required: requirement.required,
             message: 'Browser runtime is not ready: $error',
+            durationMilliseconds: stopwatch.elapsedMilliseconds,
+          );
+        }
+      },
+      researchSearchProbe: (run, requirement) async {
+        final stopwatch = Stopwatch()..start();
+        try {
+          final references = await repositories.secretReferences.all();
+          int score(SecretReference reference) {
+            final text =
+                '${reference.environmentKey} ${reference.label} ${reference.description}'
+                    .toLowerCase();
+            if (reference.environmentKey.toUpperCase() ==
+                'BRAVE_SEARCH_API_KEY') {
+              return 0;
+            }
+            if (text.contains('brave') && text.contains('search')) return 1;
+            if (text.contains('brave')) return 2;
+            return 100;
+          }
+
+          final candidates = references
+              .where((item) => score(item) < 100)
+              .toList()
+            ..sort((left, right) => score(left).compareTo(score(right)));
+          if (candidates.isEmpty) {
+            stopwatch.stop();
+            return RunCapabilityProbeResult(
+              key: requirement.key,
+              label: requirement.label,
+              ok: false,
+              required: requirement.required,
+              message:
+                  'Web search is required, but no Brave Search secret reference is configured.',
+              durationMilliseconds: stopwatch.elapsedMilliseconds,
+            );
+          }
+          final reference = candidates.first;
+          final key = await secrets.resolve(
+            reference.id,
+            commandId: run.command.id,
+          );
+          final results = await research.braveSearch(
+            query: 'Kristin readiness probe',
+            apiKey: key,
+            count: 1,
+          );
+          stopwatch.stop();
+          return RunCapabilityProbeResult(
+            key: requirement.key,
+            label: requirement.label,
+            ok: true,
+            required: requirement.required,
+            message: 'Brave Search is configured and responding.',
+            durationMilliseconds: stopwatch.elapsedMilliseconds,
+            details: <String, dynamic>{
+              'referenceId': reference.id,
+              'resultCount': results.length,
+            },
+          );
+        } catch (error) {
+          stopwatch.stop();
+          return RunCapabilityProbeResult(
+            key: requirement.key,
+            label: requirement.label,
+            ok: false,
+            required: requirement.required,
+            message:
+                'Web search provider is not ready: ${redactor.redact('$error')}',
             durationMilliseconds: stopwatch.elapsedMilliseconds,
           );
         }

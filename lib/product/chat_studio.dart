@@ -137,6 +137,8 @@ class _ChatStudioState extends State<ChatStudio> {
   StreamSubscription<EventEnvelope>? eventSubscription;
   StreamSubscription<LiveRunSignal>? liveRunSubscription;
   Timer? refreshTimer;
+  Timer? liveSignalFlushTimer;
+  final List<LiveRunSignal> pendingLiveSignals = <LiveRunSignal>[];
 
   _StudioArea area = _StudioArea.chat;
   _LogView logView = _LogView.simple;
@@ -260,6 +262,8 @@ class _ChatStudioState extends State<ChatStudio> {
     eventSubscription?.cancel();
     liveRunSubscription?.cancel();
     refreshTimer?.cancel();
+    liveSignalFlushTimer?.cancel();
+    pendingLiveSignals.clear();
     final promptCancellation = promptGenerationCancellation;
     if (promptCancellation != null && !promptCancellation.isCompleted) {
       promptCancellation.complete();
@@ -380,44 +384,72 @@ class _ChatStudioState extends State<ChatStudio> {
     if (!mounted) return;
     final activeRunId = selectedRunId ?? currentRun?.id;
     if (signal.runId != activeRunId) return;
+    pendingLiveSignals.add(signal);
+    liveSignalFlushTimer ??= Timer(
+      const Duration(milliseconds: 65),
+      _flushLiveRunSignals,
+    );
+  }
+
+  void _flushLiveRunSignals() {
+    liveSignalFlushTimer = null;
+    if (!mounted) {
+      pendingLiveSignals.clear();
+      return;
+    }
+    final activeRunId = selectedRunId ?? currentRun?.id;
+    final batch = pendingLiveSignals
+        .where((signal) => signal.runId == activeRunId)
+        .toList(growable: false);
+    pendingLiveSignals.clear();
+    if (batch.isEmpty) return;
     setState(() {
-      selectedRunLiveSignals.add(signal);
+      for (final signal in batch) {
+        selectedRunLiveSignals.add(signal);
+        switch (signal.kind) {
+          case LiveRunSignalKind.modelTextDelta:
+            final delta = signal.data['delta']?.toString() ?? '';
+            final combined = '$liveAssistantText$delta';
+            liveAssistantText = combined.length <= 12000
+                ? combined
+                : combined.substring(combined.length - 12000);
+            liveAssistantStage = 'streaming';
+          case LiveRunSignalKind.modelProgress:
+            liveAssistantStage = signal.data['stage']?.toString() ?? 'model';
+            liveAssistantMessage = signal.data['message']?.toString() ?? '';
+          case LiveRunSignalKind.toolStarted:
+            liveToolLabel = signal.data['tool']?.toString() ?? 'tool';
+            liveToolOutput = '';
+          case LiveRunSignalKind.toolOutput:
+            liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
+            final delta = signal.data['delta']?.toString() ?? '';
+            final combined = '$liveToolOutput$delta';
+            liveToolOutput = combined.length <= 16000
+                ? combined
+                : combined.substring(combined.length - 16000);
+          case LiveRunSignalKind.toolCompleted:
+            liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
+            final output = signal.data['output']?.toString() ?? '';
+            if (output.isNotEmpty) liveToolOutput = output;
+          case LiveRunSignalKind.toolFailed:
+            liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
+            liveToolOutput = signal.data['detail']?.toString() ?? '';
+          case LiveRunSignalKind.preflight:
+          case LiveRunSignalKind.phase:
+            liveAssistantMessage = signal.data['message']?.toString() ?? '';
+          case LiveRunSignalKind.steeringQueued:
+            status = 'Direction queued for the next safe step';
+          case LiveRunSignalKind.steeringApplied:
+            status = 'Direction applied';
+          case LiveRunSignalKind.heartbeat:
+            break;
+        }
+      }
       if (selectedRunLiveSignals.length > 2000) {
         selectedRunLiveSignals.removeRange(
           0,
           selectedRunLiveSignals.length - 2000,
         );
-      }
-      switch (signal.kind) {
-        case LiveRunSignalKind.modelTextDelta:
-          final delta = signal.data['delta']?.toString() ?? '';
-          final combined = '$liveAssistantText$delta';
-          liveAssistantText = combined.length <= 12000
-              ? combined
-              : combined.substring(combined.length - 12000);
-          liveAssistantStage = 'streaming';
-        case LiveRunSignalKind.modelProgress:
-          liveAssistantStage = signal.data['stage']?.toString() ?? 'model';
-          liveAssistantMessage = signal.data['message']?.toString() ?? '';
-        case LiveRunSignalKind.toolStarted:
-          liveToolLabel = signal.data['tool']?.toString() ?? 'tool';
-          liveToolOutput = '';
-        case LiveRunSignalKind.toolCompleted:
-          liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
-          liveToolOutput = signal.data['output']?.toString() ?? '';
-        case LiveRunSignalKind.toolFailed:
-          liveToolLabel = signal.data['tool']?.toString() ?? liveToolLabel;
-          liveToolOutput = signal.data['detail']?.toString() ?? '';
-        case LiveRunSignalKind.preflight:
-        case LiveRunSignalKind.phase:
-          liveAssistantMessage = signal.data['message']?.toString() ?? '';
-        case LiveRunSignalKind.steeringQueued:
-          status = 'Direction queued for the next safe step';
-        case LiveRunSignalKind.steeringApplied:
-          status = 'Direction applied';
-        case LiveRunSignalKind.toolOutput:
-        case LiveRunSignalKind.heartbeat:
-          break;
       }
     });
   }
@@ -625,6 +657,29 @@ class _ChatStudioState extends State<ChatStudio> {
     if (request.startsWith('/')) {
       final handled = await _handleSlashCommand(request);
       if (handled) {
+        return;
+      }
+    }
+    final clarification = promptClarificationSession;
+    if (embeddedClarificationActive && clarification != null) {
+      final missing =
+          clarification.missingAnswerIds(promptClarificationAnswers);
+      final question = clarification.questions
+          .where((item) => missing.contains(item.id))
+          .firstOrNull;
+      if (question != null) {
+        _answerEmbeddedClarification(question, request);
+        composerController.clear();
+        final remaining =
+            clarification.missingAnswerIds(promptClarificationAnswers);
+        if (remaining.isEmpty) {
+          await _continueEmbeddedClarification();
+        } else if (mounted) {
+          setState(() {
+            status =
+                'Got it — ${remaining.length} focused choice${remaining.length == 1 ? '' : 's'} left';
+          });
+        }
         return;
       }
     }
@@ -9002,8 +9057,10 @@ class _RunGraphState extends State<_RunGraph> {
     if (items.isEmpty) {
       return const Center(child: Text('This run has no work items.'));
     }
-    const nodeWidth = 204.0;
-    const nodeHeight = 148.0;
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final accessibilityGrowth = (textScale - 1).clamp(0.0, 1.0).toDouble();
+    final nodeWidth = 204.0 + accessibilityGrowth * 56.0;
+    final nodeHeight = 148.0 + accessibilityGrowth * 82.0;
     const horizontalGap = 86.0;
     const left = 70.0;
     const top = 68.0;
@@ -9012,13 +9069,13 @@ class _RunGraphState extends State<_RunGraph> {
       final row = index % 2;
       positions[items[index].item.id] = Offset(
         left + index * (nodeWidth + horizontalGap),
-        top + row * 184,
+        top + row * (nodeHeight + 36),
       );
     }
     final canvasWidth = left * 2 +
         items.length * nodeWidth +
         (items.length - 1) * horizontalGap;
-    const canvasHeight = 470.0;
+    final canvasHeight = top * 2 + nodeHeight * 2 + 48;
     final colors = Theme.of(context).colorScheme;
     return Stack(
       children: <Widget>[
@@ -9134,6 +9191,9 @@ class _RunNode extends StatelessWidget {
     }
     if (signal.kind == LiveRunSignalKind.toolStarted) {
       return 'running ${signal.data['tool'] ?? 'tool'}';
+    }
+    if (signal.kind == LiveRunSignalKind.toolOutput) {
+      return '${signal.data['tool'] ?? 'tool'} · ${signal.data['stream'] ?? 'output'}';
     }
     if (signal.kind == LiveRunSignalKind.toolCompleted) {
       return 'completed ${signal.data['tool'] ?? 'tool'}';

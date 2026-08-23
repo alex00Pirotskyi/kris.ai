@@ -121,7 +121,10 @@ class ContractPlanner {
     if (RegExp(
       r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online|url|https)\b',
     ).hasMatch(lower)) {
-      permissions.add(PermissionScope.networkResearch);
+      permissions.addAll(<PermissionScope>{
+        PermissionScope.networkResearch,
+        PermissionScope.secretUse,
+      });
     }
     if (RegExp(
       r'\b(install|dependency|dependencies|package|npm|pnpm|yarn|pip|cargo|clone|pull)\b',
@@ -2000,6 +2003,35 @@ class RunCoordinator {
         'The selected project is no longer registered.',
       );
     }
+    final boundary = await WorkspaceBoundary.open(project.rootPath);
+    final mutatingRun = initial.command.contract.requiredPermissions.any(
+      const <PermissionScope>{
+        PermissionScope.projectWrite,
+        PermissionScope.projectDelete,
+      }.contains,
+    );
+    if (mutatingRun && await boundary.isKristinSourceCheckout()) {
+      final details = <String, dynamic>{
+        'runId': initial.id,
+        'projectId': project.id,
+        'projectPathHash': Sha256.text(boundary.root.path),
+        'reason': 'selected_project_is_kristin_source',
+      };
+      await _bestEffortAudit(
+        'run.self_project_target_rejected',
+        initial.id,
+        details,
+      );
+      await _bestEffortEvent(
+        'run.self_project_target_rejected',
+        initial.id,
+        details,
+      );
+      return _failBeforeTransaction(
+        initial,
+        "self_project_target_rejected: The selected project is Kristin's own source checkout. Create or select a separate project folder for the application, then prepare a fresh run.",
+      );
+    }
     final readiness = await preflight.check(run: initial, project: project);
     await _bestEffortEvent(
       'run.preflight_completed',
@@ -2053,35 +2085,6 @@ class RunCoordinator {
       'runId': run.id,
     });
 
-    final boundary = await WorkspaceBoundary.open(project.rootPath);
-    final mutatingRun = run.command.contract.requiredPermissions.any(
-      const <PermissionScope>{
-        PermissionScope.projectWrite,
-        PermissionScope.projectDelete,
-      }.contains,
-    );
-    if (mutatingRun && await boundary.isKristinSourceCheckout()) {
-      final details = <String, dynamic>{
-        'runId': run.id,
-        'projectId': project.id,
-        'projectPathHash': Sha256.text(boundary.root.path),
-        'reason': 'selected_project_is_kristin_source',
-      };
-      await _bestEffortAudit(
-        'run.self_project_target_rejected',
-        run.id,
-        details,
-      );
-      await _bestEffortEvent(
-        'run.self_project_target_rejected',
-        run.id,
-        details,
-      );
-      return _failBeforeTransaction(
-        run,
-        "self_project_target_rejected: The selected project is Kristin's own source checkout. Create or select a separate project folder for the application, then prepare a fresh run.",
-      );
-    }
     final checkpointRoot = Directory(
       '${directories.state.path}${Platform.pathSeparator}checkpoints',
     );
@@ -3655,6 +3658,20 @@ class RunCoordinator {
         managedProcesses: managedProcesses,
         sourceIndex: sourceIndex,
         mcp: mcp,
+        onToolOutput: (tool, stream, delta) {
+          liveSignals.publish(
+            LiveRunSignal.tool(
+              runId: current.id,
+              workItemId: progress.item.id,
+              tool: tool,
+              kind: LiveRunSignalKind.toolOutput,
+              data: <String, dynamic>{
+                'stream': stream,
+                'delta': delta,
+              },
+            ),
+          );
+        },
       );
       final liveTool = action.tool!;
       liveSignals.publish(
@@ -4432,6 +4449,20 @@ class RunCoordinator {
       managedProcesses: managedProcesses,
       sourceIndex: sourceIndex,
       mcp: mcp,
+      onToolOutput: (tool, stream, delta) {
+        liveSignals.publish(
+          LiveRunSignal.tool(
+            runId: run.id,
+            workItemId: item.id,
+            tool: tool,
+            kind: LiveRunSignalKind.toolOutput,
+            data: <String, dynamic>{
+              'stream': stream,
+              'delta': delta,
+            },
+          ),
+        );
+      },
     );
     final result = await tools.execute(
       'verify_project',

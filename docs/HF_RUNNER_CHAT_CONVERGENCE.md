@@ -19,7 +19,8 @@ This hotfix makes Chat the primary orchestration surface and turns the existing 
 
 ## Live versus durable telemetry
 
-High-frequency model text and tool activity use `LiveRunSignalBus`. Durable state transitions, readiness receipts, work items, tools, evidence, verification, retries, and steering application remain in the event journal.
+- High-frequency model/tool presentation uses `LiveRunSignalBus`; model tokens and redacted stdout/stderr chunks are UI-batched instead of journaled per token/chunk, while durable transitions, receipts, and applied steering stay in `EventJournal`.
+- Research preflight checks local-only policy, a configured Brave Search secret reference, and a real bounded provider request before a research run starts; package probes respect the package-network policy before touching registries.
 
 ## Manual acceptance
 
