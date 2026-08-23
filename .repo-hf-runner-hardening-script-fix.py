@@ -13,4 +13,11 @@ docs_new = '''"""High-frequency model text and tool activity use `LiveRunSignalB
 if text.count(docs_old) != 1:
     raise SystemExit(f'hardening docs anchor mismatch: {text.count(docs_old)}')
 text = text.replace(docs_old, docs_new, 1)
+
+clamp_old = "final accessibilityGrowth = (textScale - 1).clamp(0.0, 1.0);"
+clamp_new = "final accessibilityGrowth = (textScale - 1).clamp(0.0, 1.0).toDouble();"
+if text.count(clamp_old) != 1:
+    raise SystemExit(f'hardening clamp anchor mismatch: {text.count(clamp_old)}')
+text = text.replace(clamp_old, clamp_new, 1)
+
 path.write_text(text, encoding='utf-8')
