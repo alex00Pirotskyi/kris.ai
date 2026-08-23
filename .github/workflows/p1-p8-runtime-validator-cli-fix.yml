@@ -1,7 +1,7 @@
 name: P1-P8 Runtime Validator CLI Fix
 
 on:
-  push:
+  pull_request:
     branches:
       - 'agent/p1-p8-source-convergence-20260823'
     paths:
