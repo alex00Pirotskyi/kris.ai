@@ -6,12 +6,17 @@ on:
       - hotfix/runner-chat-convergence-20260823
     paths:
       - .github/workflows/hf-runner-hardening.yml
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   harden-qualify-publish:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 100
     steps:
