@@ -11,7 +11,7 @@ if title_count != 2:
 text = text.replace(old_title, new_title)
 
 old_initial_receipt = "    await _tapKey(tester, const Key('p5-evidence-artifact-receipt'));\n"
-new_initial_receipt = """    await tester.scrollUntilVisible(\n      find.byKey(const Key('p5-evidence-artifact-receipt')),\n      120,\n      scrollable: find.byKey(const Key('p5-evidence-artifact-list')),\n    );\n    await _tapKey(tester, const Key('p5-evidence-artifact-receipt'));\n"""
+new_initial_receipt = """    final initialArtifactScrollable = find.descendant(\n      of: find.byKey(const Key('p5-evidence-artifact-list')),\n      matching: find.byType(Scrollable),\n    );\n    expect(initialArtifactScrollable, findsOneWidget);\n    await tester.scrollUntilVisible(\n      find.byKey(const Key('p5-evidence-artifact-receipt')),\n      120,\n      scrollable: initialArtifactScrollable,\n    );\n    await _tapKey(tester, const Key('p5-evidence-artifact-receipt'));\n"""
 initial_receipt_count = text.count(old_initial_receipt)
 if initial_receipt_count != 1:
     raise SystemExit(
@@ -23,10 +23,15 @@ old_reopen_receipt = """    expect(
       findsOneWidget,
     );
 """
-new_reopen_receipt = """    await tester.scrollUntilVisible(
+new_reopen_receipt = """    final reopenedArtifactScrollable = find.descendant(
+      of: find.byKey(const Key('p5-evidence-artifact-list')),
+      matching: find.byType(Scrollable),
+    );
+    expect(reopenedArtifactScrollable, findsOneWidget);
+    await tester.scrollUntilVisible(
       find.byKey(const Key('p5-evidence-artifact-receipt')),
       120,
-      scrollable: find.byKey(const Key('p5-evidence-artifact-list')),
+      scrollable: reopenedArtifactScrollable,
     );
     await _tapKey(tester, const Key('p5-evidence-artifact-receipt'));
     expect(
@@ -42,4 +47,4 @@ if reopen_receipt_count != 1:
 text = text.replace(old_reopen_receipt, new_reopen_receipt)
 
 path.write_text(text, encoding='utf-8', newline='\n')
-print('P5_009_FOCUSED_TEST_PROVENANCE_LAZY_SCROLL_FIX_APPLIED')
+print('P5_009_FOCUSED_TEST_SCROLLABLE_DESCENDANT_FIX_APPLIED')
