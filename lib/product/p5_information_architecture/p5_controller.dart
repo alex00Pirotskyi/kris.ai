@@ -261,6 +261,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: null,
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
         planOnly: false,
@@ -276,6 +277,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: null,
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
         planOnly: false,
@@ -301,6 +303,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
     _state = _state.copyWith(
       selectedProjectId: fixture.id,
       selectedRunId: null,
+      selectedEvidenceId: null,
       runState: P5RunPresentationState.planReady,
       planReviewed: false,
       planOnly: false,
@@ -328,6 +331,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: projectId,
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: projectId == null
             ? P5RunPresentationState.blocked
             : P5RunPresentationState.planReady,
@@ -346,6 +350,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: _knownProjectIdOrNull(_state.selectedProjectId),
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
         planOnly: false,
@@ -368,11 +373,57 @@ class P5InformationArchitectureController extends ChangeNotifier {
     _state = _state.copyWith(
       selectedRunId: fixture.id,
       selectedProjectId: fixture.projectId,
+      selectedEvidenceId: null,
       runState: fixture.state,
       planReviewed: false,
       planOnly: false,
       verificationRequested: false,
       recoveryMessage: 'Run context restored without losing project.',
+    );
+    notifyListeners();
+  }
+
+  void selectEvidence(String? evidenceId) {
+    final runId = _state.selectedRunId;
+    final isSavedRun =
+        runId != null && P5PrototypeFixtures.runs.any((run) => run.id == runId);
+    if (!isSavedRun) {
+      _state = _state.copyWith(
+        selectedEvidenceId: null,
+        recoveryMessage:
+            'Typed evidence can only reopen from a deterministic saved run.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (evidenceId == null) {
+      if (_state.selectedEvidenceId == null) {
+        return;
+      }
+      _state = _state.copyWith(selectedEvidenceId: null, recoveryMessage: null);
+      notifyListeners();
+      return;
+    }
+    final evidence = P5PrototypeFixtures.evidenceById(
+      runId: runId,
+      evidenceId: evidenceId,
+    );
+    if (evidence == null) {
+      _state = _state.copyWith(
+        selectedEvidenceId: null,
+        recoveryMessage:
+            'Evidence "$evidenceId" is not part of saved run "$runId".',
+      );
+      notifyListeners();
+      return;
+    }
+    if (_state.selectedEvidenceId == evidence.id &&
+        _state.recoveryMessage == null) {
+      return;
+    }
+    _state = _state.copyWith(
+      selectedEvidenceId: evidence.id,
+      recoveryMessage: null,
     );
     notifyListeners();
   }
@@ -473,6 +524,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: null,
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
         planOnly: false,
@@ -490,6 +542,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         selectedProjectId:
             project?.id ?? _knownProjectIdOrNull(_state.selectedProjectId),
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
         planOnly: false,
@@ -505,6 +558,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: project.id,
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.blocked,
         planReviewed: false,
         planOnly: false,
@@ -530,6 +584,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
       _state = _state.copyWith(
         selectedProjectId: project.id,
         selectedRunId: null,
+        selectedEvidenceId: null,
         runState: P5RunPresentationState.planReady,
         planReviewed: false,
         planOnly: false,
@@ -608,6 +663,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
         } else {
           _state = _state.copyWith(
             selectedRunId: null,
+            selectedEvidenceId: null,
             planReviewed: true,
             runState: P5RunPresentationState.ready,
             verificationRequested: false,
