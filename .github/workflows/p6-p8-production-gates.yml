@@ -66,6 +66,8 @@ jobs:
         with:
           python-version: '3.13.5'
           check-latest: false
+      - name: Install hash-locked Python trust dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
       - name: Run P1A/P6/P7/P8 source contracts
         shell: bash
         run: |
