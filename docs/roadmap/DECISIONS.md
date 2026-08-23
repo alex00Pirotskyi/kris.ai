@@ -11,7 +11,7 @@ This ledger indexes decisions. The ADR files are authoritative for their individ
 | `ADR-0002` | Owner Mode and Access Profile v2 authority model | ACCEPTED | `P1-001`, `P1-002` | Yes |
 | `ADR-0003` | Signed Manifest v2 | PROPOSED | `P1-005` | No |
 | `ADR-0004` | Automation-host boundary; technology deferred | ACCEPTED | `P1-001`, `P2-004` | Yes for boundary; technology remains P2-004 |
-| `ADR-0005` | Browser profile and research storage | PROPOSED | `P3-008`, `P4-011` | No |
+| `ADR-0005` | Browser profile and research storage | ACCEPTED | `P3-008`, `P4-011` | Yes, for the accepted P3/P4 storage contracts |
 | `ADR-0006` | Secure update system | PROPOSED | `P1-008`, `P9-008` | No |
 | `ADR-P25-001` | Prompt Studio product rescue architecture | ACCEPTED | `P25-001`–`P25-011` | Yes, within P25 scope |
 
@@ -63,3 +63,9 @@ P1A-001 is a separately governed security amendment. It introduces an OS-isolate
 ## P2 automation host — V65
 
 P2 is a delegation-only Owner Mode consumer of the separately completed P1A authority service. Source landing on protected main remains incomplete and cannot unlock P3. P2 task state is carried by dedicated task/evidence packets and the signed aggregate exit graph; the historical P0/P1 bootstrap roadmap and generated views remain untouched.
+
+## ADR-0005 P3/P4 storage acceptance — 2026-08-23
+
+- `P3-008` evidence: `release/evidence/P3-008/manifest.json` and the governed browser profile isolation tests. Authenticated profile ciphertext is bound to the exact profile identity and cross-profile ciphertext transplantation fails closed.
+- `P4-011` evidence: `release/evidence/P4-011/manifest.json` and the governed research runtime tests. Content-addressed objects deduplicate by SHA-256 while immutable fetch/citation provenance remains distinct and recoverable.
+- `docs/adr/ADR-0005-browser-storage.md` is accepted for these storage contracts only. Release support, production promotion, identity-independent review and GA remain separate later gates.

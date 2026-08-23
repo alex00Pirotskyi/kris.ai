@@ -1,7 +1,9 @@
 # ADR-0005 — Browser Profile and Research Storage
 
-**Status:** PROPOSED
+**Status:** ACCEPTED
 **Owner tasks:** `P3-008`, `P4-011`
+**Accepted:** 2026-08-23
+**Acceptance evidence:** `release/evidence/P3-008/manifest.json`, `release/evidence/P4-011/manifest.json`
 
 ## Decision
 
@@ -19,6 +21,16 @@ Research evidence is content-addressed by canonical SHA-256 and stored under the
 - Export and deletion are explicit operations. Deleting a browser profile removes its durable authentication state; deleting research data follows the dataset/evidence retention contract rather than the browser profile lifecycle.
 - Model context receives only the bounded fields selected by the calling product workflow. Durable browser/research stores are not implicit prompt context.
 
+## Acceptance evidence
+
+`P3-008` is accepted only with the browser profile isolation evidence packet and its behavioral tests. The profile store writes ciphertext rather than plaintext, rejects unsafe profile identifiers, binds authenticated ciphertext to the exact profile identity through associated data, and fails closed when ciphertext from one valid profile is transplanted into another profile record.
+
+`P4-011` is accepted only with the research storage evidence packet and its behavioral tests. Identical content resolves to the same SHA-256 object identity while fetch-version records remain distinct provenance authorities; citations bind to immutable fetch/extraction identities instead of mutable live content.
+
+The closure candidate must pass the focused owner-task tests, the complete governed browser and research suites, fatal static analysis, the complete Flutter regression, and the deterministic release validator before these acceptance records may be published as a clean candidate.
+
 ## Consequences
 
 P3 can support reusable authenticated profiles without weakening the existing ephemeral-session default. P4 can deduplicate and version evidence deterministically while remaining local-first. Both phases share application-owned storage governance and hashing conventions without conflating secrets with research artifacts.
+
+ADR acceptance establishes implementation authority for the P3/P4 storage contracts only. It does not promote packaged-release support, production support, independent security-review identity, or GA status.
