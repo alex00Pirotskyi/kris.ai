@@ -277,6 +277,17 @@ void main() {
     expect(searchProbeCalled, isFalse);
   });
 
+  test('manual task deserialization gives blank checkpoints a name', () {
+    final task = PlanTaskRecord.fromJson(const <String, dynamic>{
+      'id': 'manual-task',
+      'title': '   ',
+      'instructions': 'Wait for explicit user approval.',
+      'manual': true,
+    });
+    expect(task.title, 'Manual checkpoint');
+    expect(task.manual, isTrue);
+  });
+
   test('timeline projection keeps durable and live activity together', () {
     final event = EventEnvelope(
       sequence: 1,
