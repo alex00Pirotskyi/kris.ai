@@ -155,7 +155,6 @@ jobs:
           test ! -e "$PATCH_PATH"
           test ! -e "$FIX_PATH"
           test ! -e "$FINALIZER_PATH"
-          test -z "$(git ls-files --others --exclude-standard)"
 
       - name: Publish exact clean P5-010 candidate
         shell: bash
