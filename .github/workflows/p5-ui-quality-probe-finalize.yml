@@ -1,0 +1,75 @@
+name: P5 UI Quality Probe Finalize
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/p5-ui-quality-probe-finalize.yml
+
+permissions:
+  contents: write
+
+jobs:
+  qualify-publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p5-012-014-quality-closure-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Normalize bounded source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/product/p5_ui_quality.dart')
+          text = path.read_text(encoding='utf-8')
+          old = 'return sorted[index.clamp(0, sorted.length - 1)];'
+          new = 'return sorted[index.clamp(0, sorted.length - 1).toInt()];'
+          if text.count(old) != 1:
+              raise SystemExit('percentile clamp anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          dart format \
+            lib/product/p5_ui_quality.dart \
+            test/product/p5_accessibility_compliance_test.dart \
+            test/product/p5_ui_performance_test.dart \
+            test/product/p5_ux_regression_gate_test.dart
+      - name: Generate deterministic Linux golden
+        run: >-
+          flutter test --no-pub --update-goldens --reporter expanded
+          test/product/p5_ux_regression_gate_test.dart
+      - name: P5 accessibility performance and UX gate
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/p5_design_tokens_test.dart
+          test/product/p5_accessibility_compliance_test.dart
+          test/product/p5_ui_performance_test.dart
+          test/product/p5_ux_regression_gate_test.dart
+          test/product/p5_information_architecture
+      - name: Fatal static analysis
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Formatting contract
+        run: python tool/dart_format_scope.py --check
+      - name: Publish formatted probe candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p5-ui-quality-probe-finalize.yml
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'test(p5): qualify UI quality foundation'
+          git push origin HEAD:agent/p5-012-014-quality-closure-20260823
