@@ -1,4 +1,4 @@
-# direct P1-P8 runtime convergence after analyzer cleanup
+# trigger exact head after analyzer cleanup
 name: P1-P8 Runtime Finalize V2
 
 on:
