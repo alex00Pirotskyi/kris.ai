@@ -14,11 +14,11 @@ old_receipt = """    expect(
       findsOneWidget,
     );
 """
-new_receipt = """    await tester.drag(
-      find.byKey(const Key('p5-evidence-artifact-list')),
-      const Offset(0, -600),
+new_receipt = """    await tester.scrollUntilVisible(
+      find.byKey(const Key('p5-evidence-artifact-receipt')),
+      120,
+      scrollable: find.byKey(const Key('p5-evidence-artifact-list')),
     );
-    await tester.pumpAndSettle();
     await _tapKey(tester, const Key('p5-evidence-artifact-receipt'));
     expect(
       find.byKey(const Key('p5-evidence-viewer-receipt')),
@@ -32,4 +32,4 @@ if receipt_count != 1:
         f'expected one post-reopen receipt materialization assertion, found {receipt_count}')
 text = text.replace(old_receipt, new_receipt)
 path.write_text(text, encoding='utf-8', newline='\n')
-print('P5_009_FOCUSED_TEST_SELECTOR_AND_SCROLL_FIX_APPLIED')
+print('P5_009_FOCUSED_TEST_SELECTOR_AND_LAZY_SCROLL_FIX_APPLIED')
