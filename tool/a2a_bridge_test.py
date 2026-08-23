@@ -144,11 +144,8 @@ def main() -> int:
         assert exceeded.returncode != 0
         assert "a2a_grant_capability_exceeded" in exceeded.stderr
 
-        bad_registry, bad_keyring = write_trust(temp / "bad", bad_descriptor_digest=True) if False else (None, None)
-
     with tempfile.TemporaryDirectory(prefix="kristin-a2a-bad-") as raw:
         temp = Path(raw)
-        temp.mkdir(parents=True, exist_ok=True)
         registry, keyring = write_trust(temp, bad_descriptor_digest=True)
         bad = run_bridge(registry, keyring, invocation_env())
         assert bad.returncode != 0
