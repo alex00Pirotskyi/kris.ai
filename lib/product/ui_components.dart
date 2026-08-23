@@ -231,7 +231,7 @@ String simpleModeLabel(SimpleTaskMode value) => switch (value) {
 
 String friendlyRunState(RunState state) => switch (state) {
       RunState.prepared => 'Plan ready',
-      RunState.awaitingApproval => 'Waiting for your approval',
+      RunState.awaitingApproval => 'Approval required to continue',
       RunState.queued => 'Ready to start',
       RunState.running => 'Kristin is working',
       RunState.paused => 'Paused',

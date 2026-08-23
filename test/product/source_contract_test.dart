@@ -183,6 +183,7 @@ void main() {
         'lib/product/conversation_orchestrator.dart',
         'lib/product/product_error_normalizer.dart',
         'lib/product/project_provisioning.dart',
+        'lib/product/process_launch.dart',
         'lib/product/run_execution_projection.dart',
         'lib/product/run_live_signals.dart',
         'lib/product/run_preflight.dart',

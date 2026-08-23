@@ -12,6 +12,7 @@ import 'deployment_support.dart';
 import 'models_research.dart';
 import 'mcp.dart';
 import 'product_error_normalizer.dart';
+import 'process_launch.dart';
 import 'retry_policy.dart';
 import 'storage_security.dart';
 import 'tool_schema.dart';
@@ -1108,12 +1109,13 @@ class ManagedProcessService {
     final log = File('${logDirectory.path}${Platform.pathSeparator}$id.log');
     Process process;
     try {
+      final launch = await resolveProcessLaunchTarget(executable);
       process = await Process.start(
-        executable,
+        launch.executable,
         arguments,
         workingDirectory: workingDirectory,
         environment: environment,
-        runInShell: false,
+        runInShell: launch.runInShell,
         mode: ProcessStartMode.normal,
       );
     } on ProcessException catch (error) {
@@ -3137,12 +3139,13 @@ class ToolRegistry {
     final started = DateTime.now().toUtc();
     Process process;
     try {
+      final launch = await resolveProcessLaunchTarget(executable);
       process = await Process.start(
-        executable,
+        launch.executable,
         arguments,
         workingDirectory: workingDirectory,
         environment: environment,
-        runInShell: false,
+        runInShell: launch.runInShell,
         mode: ProcessStartMode.normal,
       );
     } on ProcessException catch (error) {

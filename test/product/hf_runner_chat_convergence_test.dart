@@ -81,16 +81,36 @@ void main() {
     expect(second, isEmpty);
   });
 
-  test('capability resolver probes Flutter only when the request needs it', () {
+  test('capability resolver does not infer browser from web-app wording', () {
     const resolver = RunCapabilityResolver();
     final command = _command(
       request: 'Build a Flutter web app',
       mode: CommandMode.build,
     );
-    final keys = resolver.resolve(command).map((item) => item.key).toSet();
+    final requirements = resolver.resolve(command);
+    final keys = requirements.map((item) => item.key).toSet();
     expect(keys, contains('exec-flutter'));
     expect(keys, contains('exec-dart'));
-    expect(keys, contains('browser'));
+    expect(keys, isNot(contains('browser')));
+  });
+
+  test('capability resolver requires browser only when the plan uses it', () {
+    const resolver = RunCapabilityResolver();
+    final command = _command(
+      request: 'Validate the generated experience',
+      mode: CommandMode.build,
+      allowedTools: const <String>{
+        'read_file',
+        'write_file',
+        'browser_navigate',
+      },
+    );
+    final browser = resolver
+        .resolve(command)
+        .where((requirement) => requirement.key == 'browser')
+        .single;
+    expect(browser.required, isTrue);
+    expect(browser.kind, RunCapabilityKind.browser);
   });
 
   test('capability resolver does not probe Flutter for hello', () {
@@ -255,6 +275,60 @@ void main() {
     final receipt = await service.check(run: run, project: project);
     expect(receipt.verdict, RunPreflightVerdict.blocked);
     expect(searchProbeCalled, isFalse);
+  });
+
+  test('manual task deserialization gives blank checkpoints a name', () {
+    final task = PlanTaskRecord.fromJson(const <String, dynamic>{
+      'id': 'manual-task',
+      'title': '   ',
+      'instructions': 'Wait for explicit user approval.',
+      'manual': true,
+    });
+    expect(task.title, 'Manual checkpoint');
+    expect(task.manual, isTrue);
+  });
+
+  test('blank non-manual task titles remain invalid', () {
+    final task = PlanTaskRecord.fromJson(const <String, dynamic>{
+      'id': 'non-manual-task',
+      'title': '   ',
+      'manual': false,
+    });
+    expect(task.title.trim(), isEmpty);
+  });
+
+  test('awaiting approval chat card is actionable and recovery-safe', () {
+    final chatSource = File('lib/product/chat_studio.dart').readAsStringSync();
+    final presentationSource =
+        File('lib/product/ui_components.dart').readAsStringSync();
+
+    expect(
+      presentationSource,
+      contains("RunState.awaitingApproval => 'Approval required to continue'"),
+    );
+    expect(
+      chatSource,
+      contains("key: const Key('chat-run-approval-guidance')"),
+    );
+    expect(
+      chatSource,
+      contains("key: const Key('chat-run-approve-continue')"),
+    );
+    expect(chatSource, contains("label: const Text('Review & continue')"));
+    expect(chatSource, contains("'Starts after approval'"));
+    expect(
+      chatSource,
+      contains('Nothing will execute until you approve this run.'),
+    );
+    expect(
+      chatSource,
+      contains(
+          'approvedScopes.addAll(run.command.contract.requiredPermissions);'),
+    );
+    expect(
+      RegExp(r"liveAssistantProtocolText = '';").allMatches(chatSource).length,
+      greaterThanOrEqualTo(5),
+    );
   });
 
   test('timeline projection keeps durable and live activity together', () {

@@ -154,6 +154,10 @@ void main() {
 
     expect(find.byKey(const Key('p5-global-profile')), findsOneWidget);
     expect(find.byKey(const Key('p5-global-model')), findsOneWidget);
+    expect(
+      find.text('Running model: ollama/test-model@digest'),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('p5-global-sessions')), findsOneWidget);
     expect(find.byKey(const Key('p5-global-takeover')), findsOneWidget);
     expect(find.byKey(const Key('p5-global-network')), findsOneWidget);

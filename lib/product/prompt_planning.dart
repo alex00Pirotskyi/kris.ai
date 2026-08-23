@@ -1498,6 +1498,9 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
               .toSet()
           : allowedTools;
       var title = raw['title']?.toString().trim() ?? '';
+      if (title.isEmpty && raw['manual'] == true) {
+        title = 'Manual checkpoint';
+      }
       var instructions = raw['instructions']?.toString().trim() ?? '';
       var objective = raw['objective']?.toString().trim() ?? '';
       final taskText = '$title $objective $instructions '
