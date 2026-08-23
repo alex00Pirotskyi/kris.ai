@@ -192,7 +192,20 @@ class RunnerAttemptLedgerPolicy {
           .toSet();
 
   String closedBranchPrompt(Iterable<Map<String, dynamic>> branches) {
-    final rows = _prunableBranches(branches).take(5).toList(growable: false);
+    final rows = <Map<String, dynamic>>[];
+    final seen = <String>{};
+    for (final row in _prunableBranches(branches)) {
+      final actionHash = row['actionSha256']?.toString() ?? '';
+      final decisionHash = row['decisionSha256']?.toString() ?? '';
+      final key = actionHash.isNotEmpty ? 'action:$actionHash' : 'decision:$decisionHash';
+      if (!seen.add(key)) {
+        continue;
+      }
+      rows.add(row);
+      if (rows.length == 5) {
+        break;
+      }
+    }
     if (rows.isEmpty) {
       return '';
     }
