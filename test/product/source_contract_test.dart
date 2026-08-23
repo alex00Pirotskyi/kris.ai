@@ -174,6 +174,7 @@ void main() {
         'lib/product/release_operations_v19.dart',
         'lib/product/repository.dart',
         'lib/product/retry_policy.dart',
+        'lib/product/runner_attempt_ledger.dart',
         'lib/product/storage_security.dart',
         'lib/product/tool_schema.dart',
         'lib/product/ui.dart',
@@ -1842,11 +1843,11 @@ void main() {
       expect(coordinator, contains('acquireRunLease'));
       expect(coordinator, contains('recordTaskAttempt'));
       expect(retry, contains('class WorkflowRetryTaxonomy'));
-      expect(migrations, contains('generatedWorkflowSchemaVersion = 6'));
+      expect(migrations, contains('generatedWorkflowSchemaVersion = 7'));
       expect(
         migrations,
         contains(
-          'df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261',
+          '966ca51bd07ea48e2349123d4dd8a73dcd8bb4aa177f5fc70c2b62a07738aa29',
         ),
       );
       expect(cli, contains('--workflow-kernel'));
@@ -1855,7 +1856,7 @@ void main() {
         kernelGate,
         contains('Crash after idempotent result replays once'),
       );
-      expect(kernel['schemaVersion'], 6);
+      expect(kernel['schemaVersion'], 7);
       expect(kernel['appendOnlyRunEvents'], isTrue);
       expect(kernel['durableIdempotency'], isTrue);
       expect(kernel['startupRollback'], isTrue);

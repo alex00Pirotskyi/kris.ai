@@ -310,6 +310,7 @@ def test_schema_and_pragmas(database: Path) -> str:
             "runs",
             "run_events",
             "task_attempts",
+            "agent_action_attempts",
             "run_leases",
             "idempotency_records",
             "checkpoints",

@@ -15,8 +15,7 @@ void main() {
       const item = WorkItem(
         id: 'work-flutter-create',
         title: 'Initialize Flutter Project',
-        description:
-            "Run the command 'flutter create mp3_to_url_converter'.",
+        description: "Run the command 'flutter create mp3_to_url_converter'.",
         dependencies: <String>{},
         allowedTools: <String>{'run_command', 'inspect_file'},
         acceptanceCriteria: <String>['The Flutter project exists.'],
@@ -27,10 +26,10 @@ void main() {
       expect(action!.kind, 'tool');
       expect(action.tool, 'run_command');
       expect(action.arguments['executable'], 'flutter');
-      expect(
-        action.arguments['args'],
-        <String>['create', 'mp3_to_url_converter'],
-      );
+      expect(action.arguments['args'], <String>[
+        'create',
+        'mp3_to_url_converter',
+      ]);
     });
 
     test('does not deterministic-execute shell syntax', () {
@@ -155,7 +154,10 @@ void main() {
       expect(policy.closedActionHashes(branches), hasLength(2));
       expect(policy.closedDecisionHashes(branches), hasLength(2));
       expect(policy.closedBranchPrompt(branches), contains('path_missing'));
-      expect(policy.closedBranchPrompt(branches), contains('verification_failed'));
+      expect(
+        policy.closedBranchPrompt(branches),
+        contains('verification_failed'),
+      );
     });
 
     test('world state ignores evidence-only churn', () {
@@ -215,97 +217,99 @@ void main() {
     });
   });
 
-  test('durable ledger closes only failed or no-progress same-state branches',
-      () async {
-    final root = await Directory.systemTemp.createTemp('kristin-ledger-');
-    DurableWorkflowStore? store;
-    try {
-      store = await DurableWorkflowStore.open(
-        databaseFile: File(
-          '${root.path}${Platform.pathSeparator}workflow.sqlite3',
-        ),
-        migrationBackupDirectory: Directory(
-          '${root.path}${Platform.pathSeparator}backups',
-        ),
-      );
-      expect(store.schemaVersion, 7);
-      const state =
-          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-      const otherState =
-          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-      const decision =
-          'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
-      final action = <String, dynamic>{
-        'action': 'tool',
-        'tool': 'run_command',
-        'arguments': <String, dynamic>{
-          'executable': 'flutter',
-          'args': <String>['create', 'app'],
-        },
-      };
-      final actionSha = Sha256.text(canonicalJson(action));
-
-      await store.recordAgentActionAttempt(
-        runId: 'run-1',
-        workItemId: 'work-1',
-        workItemAttempt: 1,
-        turn: 1,
-        requestNumber: 1,
-        stateSha256: state,
-        decisionSha256: decision,
-        action: action,
-        actionSha256: actionSha,
-        tool: 'run_command',
-        outcome: 'tool_error',
-        errorCode: 'process_failed',
-        beforeSha256: state,
-        afterSha256: state,
-      );
-      await store.recordAgentActionAttempt(
-        runId: 'run-1',
-        workItemId: 'work-1',
-        workItemAttempt: 1,
-        turn: 2,
-        requestNumber: 2,
-        stateSha256: state,
-        decisionSha256:
-            'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-        action: <String, dynamic>{
+  test(
+    'durable ledger closes only failed or no-progress same-state branches',
+    () async {
+      final root = await Directory.systemTemp.createTemp('kristin-ledger-');
+      DurableWorkflowStore? store;
+      try {
+        store = await DurableWorkflowStore.open(
+          databaseFile: File(
+            '${root.path}${Platform.pathSeparator}workflow.sqlite3',
+          ),
+          migrationBackupDirectory: Directory(
+            '${root.path}${Platform.pathSeparator}backups',
+          ),
+        );
+        expect(store.schemaVersion, 7);
+        const state =
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+        const otherState =
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+        const decision =
+            'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+        final action = <String, dynamic>{
           'action': 'tool',
-          'tool': 'inspect_file',
-          'arguments': <String, dynamic>{'path': 'pubspec.yaml'},
-        },
-        actionSha256:
-            'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-        tool: 'inspect_file',
-        outcome: 'ok',
-        beforeSha256: state,
-        afterSha256: otherState,
-      );
+          'tool': 'run_command',
+          'arguments': <String, dynamic>{
+            'executable': 'flutter',
+            'args': <String>['create', 'app'],
+          },
+        };
+        final actionSha = Sha256.text(canonicalJson(action));
 
-      final closed = await store.closedAgentActionBranches(
-        runId: 'run-1',
-        workItemId: 'work-1',
-        stateSha256: state,
-      );
-      expect(closed, hasLength(1));
-      expect(closed.single['outcome'], 'tool_error');
-      expect(closed.single['actionSha256'], actionSha);
-      expect(closed.single['action'], action);
-
-      expect(
-        await store.closedAgentActionBranches(
+        await store.recordAgentActionAttempt(
           runId: 'run-1',
           workItemId: 'work-1',
-          stateSha256: otherState,
-        ),
-        isEmpty,
-      );
-    } finally {
-      await store?.close();
-      if (await root.exists()) {
-        await root.delete(recursive: true);
+          workItemAttempt: 1,
+          turn: 1,
+          requestNumber: 1,
+          stateSha256: state,
+          decisionSha256: decision,
+          action: action,
+          actionSha256: actionSha,
+          tool: 'run_command',
+          outcome: 'tool_error',
+          errorCode: 'process_failed',
+          beforeSha256: state,
+          afterSha256: state,
+        );
+        await store.recordAgentActionAttempt(
+          runId: 'run-1',
+          workItemId: 'work-1',
+          workItemAttempt: 1,
+          turn: 2,
+          requestNumber: 2,
+          stateSha256: state,
+          decisionSha256:
+              'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+          action: <String, dynamic>{
+            'action': 'tool',
+            'tool': 'inspect_file',
+            'arguments': <String, dynamic>{'path': 'pubspec.yaml'},
+          },
+          actionSha256:
+              'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          tool: 'inspect_file',
+          outcome: 'ok',
+          beforeSha256: state,
+          afterSha256: otherState,
+        );
+
+        final closed = await store.closedAgentActionBranches(
+          runId: 'run-1',
+          workItemId: 'work-1',
+          stateSha256: state,
+        );
+        expect(closed, hasLength(1));
+        expect(closed.single['outcome'], 'tool_error');
+        expect(closed.single['actionSha256'], actionSha);
+        expect(closed.single['action'], action);
+
+        expect(
+          await store.closedAgentActionBranches(
+            runId: 'run-1',
+            workItemId: 'work-1',
+            stateSha256: otherState,
+          ),
+          isEmpty,
+        );
+      } finally {
+        await store?.close();
+        if (await root.exists()) {
+          await root.delete(recursive: true);
+        }
       }
-    }
-  });
+    },
+  );
 }

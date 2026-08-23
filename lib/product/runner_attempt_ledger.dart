@@ -66,8 +66,17 @@ class RunnerAttemptLedgerPolicy {
     if (command.contains('\n') || command.contains('\r')) {
       return true;
     }
-    return const <String>['&&', '||', ';', '|', '>', '<', '`', r'$(', r'${']
-        .any(command.contains);
+    return const <String>[
+      '&&',
+      '||',
+      ';',
+      '|',
+      '>',
+      '<',
+      '`',
+      r'$(',
+      r'${',
+    ].any(command.contains);
   }
 
   List<String>? _tokenize(String command) {
@@ -121,22 +130,22 @@ class RunnerAttemptLedgerPolicy {
   }
 
   Map<String, dynamic> actionJson(AgentAction action) => <String, dynamic>{
-        'action': action.kind,
-        if (action.tool != null) 'tool': action.tool,
-        if (action.arguments.isNotEmpty) 'arguments': action.arguments,
-        if (action.reason.trim().isNotEmpty) 'reason': action.reason,
-        if (action.summary.trim().isNotEmpty) 'summary': action.summary,
-      };
+    'action': action.kind,
+    if (action.tool != null) 'tool': action.tool,
+    if (action.arguments.isNotEmpty) 'arguments': action.arguments,
+    if (action.reason.trim().isNotEmpty) 'reason': action.reason,
+    if (action.summary.trim().isNotEmpty) 'summary': action.summary,
+  };
 
   String actionSha256(AgentAction action) => Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'action': action.kind,
-          if (action.tool != null) 'tool': action.tool,
-          if (action.arguments.isNotEmpty) 'arguments': action.arguments,
-          if (action.kind != 'tool' && action.summary.trim().isNotEmpty)
-            'summary': action.summary.trim(),
-        }),
-      );
+    canonicalJson(<String, dynamic>{
+      'action': action.kind,
+      if (action.tool != null) 'tool': action.tool,
+      if (action.arguments.isNotEmpty) 'arguments': action.arguments,
+      if (action.kind != 'tool' && action.summary.trim().isNotEmpty)
+        'summary': action.summary.trim(),
+    }),
+  );
 
   String decisionSha256(String text) {
     var candidate = text.trim();
