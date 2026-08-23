@@ -18,15 +18,21 @@ replace_once(
 
 controller = Path('lib/product/p5_information_architecture/p5_controller.dart')
 text = controller.read_text(encoding='utf-8')
-needle = '        selectedRunId: null,\n'
-count = text.count(needle)
-if count != 10:
-    raise SystemExit(f'{controller}: expected 10 run-context clear anchors, found {count}')
-controller.write_text(
-    text.replace(
-        needle,
-        needle + '        selectedEvidenceId: null,\n',
-    ),
-    encoding='utf-8',
-    newline='\n',
+standard = '        selectedRunId: null,\n'
+deep = '          selectedRunId: null,\n'
+standard_count = text.count(standard)
+deep_count = text.count(deep)
+if standard_count != 9 or deep_count != 1:
+    raise SystemExit(
+        f'{controller}: expected run-context clear anchors 9+1, found '
+        f'{standard_count}+{deep_count}'
+    )
+text = text.replace(
+    standard,
+    standard + '        selectedEvidenceId: null,\n',
 )
+text = text.replace(
+    deep,
+    deep + '          selectedEvidenceId: null,\n',
+)
+controller.write_text(text, encoding='utf-8', newline='\n')
