@@ -155,7 +155,6 @@ jobs:
             lib/product/p5_information_architecture/p5_models.dart \
             lib/product/p5_information_architecture/p5_verification_workspaces.dart \
             test/product/p5_information_architecture/p5_evidence_viewers_test.dart
-          git add -u "$PATCH_PATH" "$WORKFLOW_PATH"
           git diff --cached --check
           test -n "$(git diff --cached --name-only)"
           git commit -m 'fix(p5-009): render deterministic image evidence'
