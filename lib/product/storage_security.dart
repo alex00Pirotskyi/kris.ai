@@ -245,6 +245,9 @@ class ProductSettings {
     this.maxResearchBytes = 2097152,
     this.maxResearchRedirects = 3,
     this.researchTimeoutSeconds = 20,
+    this.telemetryOptIn = false,
+    this.telemetryRetentionDays = 7,
+    this.telemetryMaxBufferedEvents = 20000,
   });
 
   final bool apiEnabled;
@@ -261,6 +264,9 @@ class ProductSettings {
   final int maxResearchBytes;
   final int maxResearchRedirects;
   final int researchTimeoutSeconds;
+  final bool telemetryOptIn;
+  final int telemetryRetentionDays;
+  final int telemetryMaxBufferedEvents;
 
   ProductSettings copyWith({
     bool? apiEnabled,
@@ -277,6 +283,9 @@ class ProductSettings {
     int? maxResearchBytes,
     int? maxResearchRedirects,
     int? researchTimeoutSeconds,
+    bool? telemetryOptIn,
+    int? telemetryRetentionDays,
+    int? telemetryMaxBufferedEvents,
   }) =>
       ProductSettings(
         apiEnabled: apiEnabled ?? this.apiEnabled,
@@ -298,6 +307,11 @@ class ProductSettings {
         maxResearchRedirects: maxResearchRedirects ?? this.maxResearchRedirects,
         researchTimeoutSeconds:
             researchTimeoutSeconds ?? this.researchTimeoutSeconds,
+        telemetryOptIn: telemetryOptIn ?? this.telemetryOptIn,
+        telemetryRetentionDays:
+            telemetryRetentionDays ?? this.telemetryRetentionDays,
+        telemetryMaxBufferedEvents:
+            telemetryMaxBufferedEvents ?? this.telemetryMaxBufferedEvents,
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -315,6 +329,9 @@ class ProductSettings {
         'maxResearchBytes': maxResearchBytes,
         'maxResearchRedirects': maxResearchRedirects,
         'researchTimeoutSeconds': researchTimeoutSeconds,
+        'telemetryOptIn': telemetryOptIn,
+        'telemetryRetentionDays': telemetryRetentionDays,
+        'telemetryMaxBufferedEvents': telemetryMaxBufferedEvents,
       };
 
   factory ProductSettings.fromJson(
@@ -355,6 +372,17 @@ class ProductSettings {
         researchTimeoutSeconds:
             int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ??
                 20,
+        telemetryOptIn: json['telemetryOptIn'] == true,
+        telemetryRetentionDays:
+            (int.tryParse(json['telemetryRetentionDays']?.toString() ?? '') ??
+                    7)
+                .clamp(0, 365)
+                .toInt(),
+        telemetryMaxBufferedEvents: (int.tryParse(
+                    json['telemetryMaxBufferedEvents']?.toString() ?? '') ??
+                20000)
+            .clamp(100, 100000)
+            .toInt(),
       );
 }
 

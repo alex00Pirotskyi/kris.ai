@@ -159,6 +159,7 @@ void main() {
         'lib/product/mcp.dart',
         'lib/product/model/model.dart',
         'lib/product/model/model_registry.dart',
+        'lib/product/model/model_routing_v2.dart',
         'lib/product/models_research.dart',
         'lib/product/planning_runtime.dart',
         'lib/product/product_runtime.dart',
@@ -240,6 +241,13 @@ void main() {
         'lib/product/p5_information_architecture/p5_support_workspaces.dart',
         'lib/product/p5_information_architecture/p5_task_workspaces.dart',
         'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
+        'lib/product/agent_context_v2.dart',
+        'lib/product/agent_decision_v3.dart',
+        'lib/product/agent_protocol_v3.dart',
+        'lib/product/mcp_registry_v2.dart',
+        'lib/product/p8_effect_journal_adapter.dart',
+        'lib/product/p8_external_effects.dart',
+        'lib/product/p8_observability.dart',
         'lib/product/mcp_protocol.dart',
       };
       final actual = activeDartFiles()

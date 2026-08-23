@@ -15,6 +15,7 @@ import 'p2_product_binding_context.dart';
 import 'p2_product_runtime_integration.dart';
 import 'p2_runtime_resource_resolver.dart';
 import 'p2_terminal_model.dart';
+import 'p8_effect_journal_adapter.dart';
 
 final class P2ProductRuntimeOwnerModeHandle {
   P2ProductRuntimeOwnerModeHandle._({
@@ -173,11 +174,18 @@ final class P2ProductRuntimeBootstrap {
         '${dataRoot.path}${Platform.pathSeparator}p2-authority',
       );
       await authorityDirectory.create(recursive: true);
-      final journal = P2JsonlEffectJournal(
+      final p2Journal = P2JsonlEffectJournal(
         File(
           '${dataRoot.path}${Platform.pathSeparator}logs${Platform.pathSeparator}p2-effects.jsonl',
         ),
       );
+      final journal = P8ReconciledEffectJournal(
+        downstream: p2Journal,
+        stateFile: File(
+          '${dataRoot.path}${Platform.pathSeparator}logs${Platform.pathSeparator}p8-external-effects.jsonl',
+        ),
+      );
+      await journal.initialize();
       final bindings = P2ProductBindingContext();
       final authorizations = P2ManagedAuthorizationRegistry();
       final runtime = await P2ProductRuntimeOwnerMode.start(
