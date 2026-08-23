@@ -117,7 +117,6 @@ void main() {
       monitor.sampleResidentMemory();
 
       final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -126,7 +125,8 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('p5-ui-performance-dashboard')), findsOneWidget);
+      expect(
+          find.byKey(const Key('p5-ui-performance-dashboard')), findsOneWidget);
       expect(find.text('PASS'), findsOneWidget);
       expect(
         find.bySemanticsLabel('UI performance dashboard: PASS'),
@@ -134,6 +134,7 @@ void main() {
       );
       expect(find.text('Frame time p95'), findsOneWidget);
       expect(find.text('Large-list mounted item peak'), findsOneWidget);
+      semantics.dispose();
     });
   });
 }

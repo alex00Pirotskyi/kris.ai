@@ -302,6 +302,8 @@ class _P5InformationArchitecturePrototypeState
     final compact = MediaQuery.sizeOf(context).width <
         P5ShellLayoutState.minimumThreePaneWidth;
     final state = controller.state;
+    final accessibilityCompact =
+        MediaQuery.textScalerOf(context).scale(1) >= 1.5;
     return Scaffold(
       drawer: compact
           ? Drawer(
@@ -318,34 +320,70 @@ class _P5InformationArchitecturePrototypeState
           : null,
       appBar: AppBar(
         titleSpacing: compact ? 0 : 20,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(state.workspace.label, key: const Key('workspace-title')),
-            Text(
-              widget.ownerMode == null && widget.browserSessionStarter == null
-                  ? 'P5 presentation prototype — runtime not bound'
-                  : 'Experience workspace — live P2/P3 runtime integration',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
+        toolbarHeight: accessibilityCompact ? 72 : null,
+        title: accessibilityCompact
+            ? Text(
+                state.workspace.label,
+                key: const Key('workspace-title'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    state.workspace.label,
+                    key: const Key('workspace-title'),
+                  ),
+                  Text(
+                    widget.ownerMode == null &&
+                            widget.browserSessionStarter == null
+                        ? 'P5 presentation prototype — runtime not bound'
+                        : 'Experience workspace — live P2/P3 runtime integration',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ],
               ),
+        actions: <Widget>[
+          if (accessibilityCompact)
+            PopupMenuButton<String>(
+              key: const Key('p5-history-menu'),
+              tooltip: 'Navigation history',
+              icon: const Icon(Icons.history),
+              onSelected: (value) {
+                if (value == 'back') controller.back();
+                if (value == 'forward') controller.forward();
+              },
+              itemBuilder: (context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'back',
+                  enabled: controller.canGoBack,
+                  child: const Text('Back'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'forward',
+                  enabled: controller.canGoForward,
+                  child: const Text('Forward'),
+                ),
+              ],
+            )
+          else ...<Widget>[
+            IconButton(
+              key: const Key('history-back'),
+              tooltip: 'Back (Escape or Alt+Left)',
+              onPressed: controller.canGoBack ? controller.back : null,
+              icon: const Icon(Icons.arrow_back),
+            ),
+            IconButton(
+              key: const Key('history-forward'),
+              tooltip: 'Forward (Alt+Right)',
+              onPressed: controller.canGoForward ? controller.forward : null,
+              icon: const Icon(Icons.arrow_forward),
             ),
           ],
-        ),
-        actions: <Widget>[
-          IconButton(
-            key: const Key('history-back'),
-            tooltip: 'Back (Escape or Alt+Left)',
-            onPressed: controller.canGoBack ? controller.back : null,
-            icon: const Icon(Icons.arrow_back),
-          ),
-          IconButton(
-            key: const Key('history-forward'),
-            tooltip: 'Forward (Alt+Right)',
-            onPressed: controller.canGoForward ? controller.forward : null,
-            icon: const Icon(Icons.arrow_forward),
-          ),
           Builder(
             builder: (buttonContext) => IconButton(
               key: const Key('p5-inspector-toggle'),
@@ -376,18 +414,25 @@ class _P5InformationArchitecturePrototypeState
             ),
             icon: const Icon(Icons.timeline_outlined),
           ),
-          if (!compact) _experienceSelector(context),
-          const SizedBox(width: 8),
+          if (!compact && !accessibilityCompact) _experienceSelector(context),
+          if (!accessibilityCompact) const SizedBox(width: 8),
           Semantics(
             liveRegion: true,
             label: 'Owner Mode status: $_liveOwnerLabel.',
-            child: _StatusChip(
-              key: const Key('global-owner-status'),
-              label: 'Owner: $_liveOwnerLabel',
-              icon: Icons.admin_panel_settings_outlined,
-            ),
+            child: accessibilityCompact
+                ? IconButton(
+                    key: const Key('global-owner-status'),
+                    tooltip: 'Owner Mode: $_liveOwnerLabel',
+                    onPressed: widget.onOpenOwnerMode,
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                  )
+                : _StatusChip(
+                    key: const Key('global-owner-status'),
+                    label: 'Owner: $_liveOwnerLabel',
+                    icon: Icons.admin_panel_settings_outlined,
+                  ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
         ],
       ),
       body: _buildP5ThreePaneBody(

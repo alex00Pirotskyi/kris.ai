@@ -228,6 +228,7 @@ void main() {
         'lib/product/p5_command_palette.dart',
         'lib/product/p5_design_tokens.dart',
         'lib/product/p5_global_autonomy.dart',
+        'lib/product/p5_ui_quality.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
         'lib/product/p5_information_architecture/p5_controller.dart',
         'lib/product/p5_information_architecture/p5_fixtures.dart',

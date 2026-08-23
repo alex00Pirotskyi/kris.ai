@@ -44,7 +44,8 @@ void main() {
       expect(controller.sideEffects.isZero, isTrue);
     });
 
-    testWidgets('blocked Owner Mode remains a truthful recoverable failure state',
+    testWidgets(
+        'blocked Owner Mode remains a truthful recoverable failure state',
         (tester) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1;

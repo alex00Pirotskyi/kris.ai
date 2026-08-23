@@ -6,7 +6,8 @@ import 'package:kristin_local_agent/product/p5_information_architecture/p5_proto
 
 void main() {
   group('P5-012 WCAG 2.2 AA automated compliance', () {
-    testWidgets('primary Experience workspace survives 200 percent text scaling',
+    testWidgets(
+        'primary Experience workspace survives 200 percent text scaling',
         (tester) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1;
@@ -63,7 +64,8 @@ void main() {
       expect(find.byKey(const Key('workspace-title')), findsOneWidget);
     });
 
-    testWidgets('theme-level interactive controls meet 44 CSS pixel target floor',
+    testWidgets(
+        'theme-level interactive controls meet 44 CSS pixel target floor',
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(

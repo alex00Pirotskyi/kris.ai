@@ -68,7 +68,8 @@ final class P5UiPerformanceSnapshot {
 
   bool get meetsInitialTargets =>
       allMeasured &&
-      metrics.every((metric) => metric.state == P5UiPerformanceMetricState.pass);
+      metrics
+          .every((metric) => metric.state == P5UiPerformanceMetricState.pass);
 
   int get failedCount => metrics
       .where((metric) => metric.state == P5UiPerformanceMetricState.fail)
