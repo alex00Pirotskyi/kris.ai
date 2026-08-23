@@ -165,41 +165,50 @@ class AgentDecisionV3 {
   }
 
   void _validate() {
-    switch (kind) {
-      case AgentDecisionV3Kind.terminal:
-      case AgentDecisionV3Kind.browser:
-      case AgentDecisionV3Kind.research:
-      case AgentDecisionV3Kind.data:
-        if (operation == null || operation!.trim().isEmpty) {
-          throw const FormatException('agent_decision_v3_operation_required');
-        }
-        if (expectedPostcondition == null ||
-            expectedPostcondition!.trim().isEmpty) {
-          throw const FormatException(
-            'agent_decision_v3_postcondition_required',
-          );
-        }
-      case AgentDecisionV3Kind.userTakeover:
-        if (question == null || question!.trim().isEmpty) {
-          throw const FormatException('agent_decision_v3_question_required');
-        }
-      case AgentDecisionV3Kind.wait:
-        if (waitUntil == null && (waitHandle == null || waitHandle!.isEmpty)) {
-          throw const FormatException('agent_decision_v3_wait_target_required');
-        }
-      case AgentDecisionV3Kind.delegate:
-        if (delegateTo == null || delegateTo!.isEmpty || task == null || task!.isEmpty) {
-          throw const FormatException('agent_decision_v3_delegate_target_required');
-        }
-      case AgentDecisionV3Kind.complete:
-        if (summary == null || summary!.trim().isEmpty) {
-          throw const FormatException('agent_decision_v3_summary_required');
-        }
-      case AgentDecisionV3Kind.fail:
-        if ((summary == null || summary!.trim().isEmpty) &&
-            (code == null || code!.trim().isEmpty)) {
-          throw const FormatException('agent_decision_v3_failure_detail_required');
-        }
+    final effectful = kind == AgentDecisionV3Kind.terminal ||
+        kind == AgentDecisionV3Kind.browser ||
+        kind == AgentDecisionV3Kind.research ||
+        kind == AgentDecisionV3Kind.data;
+    if (effectful) {
+      if (operation == null || operation!.trim().isEmpty) {
+        throw const FormatException('agent_decision_v3_operation_required');
+      }
+      if (expectedPostcondition == null ||
+          expectedPostcondition!.trim().isEmpty) {
+        throw const FormatException('agent_decision_v3_postcondition_required');
+      }
+      return;
+    }
+    if (kind == AgentDecisionV3Kind.userTakeover) {
+      if (question == null || question!.trim().isEmpty) {
+        throw const FormatException('agent_decision_v3_question_required');
+      }
+      return;
+    }
+    if (kind == AgentDecisionV3Kind.wait) {
+      if (waitUntil == null && (waitHandle == null || waitHandle!.isEmpty)) {
+        throw const FormatException('agent_decision_v3_wait_target_required');
+      }
+      return;
+    }
+    if (kind == AgentDecisionV3Kind.delegate) {
+      if (delegateTo == null ||
+          delegateTo!.isEmpty ||
+          task == null ||
+          task!.isEmpty) {
+        throw const FormatException('agent_decision_v3_delegate_target_required');
+      }
+      return;
+    }
+    if (kind == AgentDecisionV3Kind.complete) {
+      if (summary == null || summary!.trim().isEmpty) {
+        throw const FormatException('agent_decision_v3_summary_required');
+      }
+      return;
+    }
+    if ((summary == null || summary!.trim().isEmpty) &&
+        (code == null || code!.trim().isEmpty)) {
+      throw const FormatException('agent_decision_v3_failure_detail_required');
     }
   }
 
