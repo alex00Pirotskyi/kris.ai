@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import '../crypto_utils.dart';
 import '../domain.dart';
 import 'model_registry.dart';
@@ -95,7 +98,7 @@ class ModelRoutingPolicyV2 {
   ModelRoutingPolicyV2({
     required this.policyId,
     required this.revision,
-    required Iterable<ModelRoleRouteV2> routes,
+    required List<ModelRoleRouteV2> routes,
   }) : routes = Map<ModelRoleV2, ModelRoleRouteV2>.unmodifiable(
           <ModelRoleV2, ModelRoleRouteV2>{
             for (final route in routes) route.role: route,
@@ -106,8 +109,7 @@ class ModelRoutingPolicyV2 {
         'model routing policy identity is invalid',
       );
     }
-    final rows = routes.toList(growable: false);
-    if (rows.length != this.routes.length) {
+    if (routes.length != this.routes.length) {
       throw const ModelRegistryValidationException(
         'model routing policy contains duplicate roles',
       );
@@ -182,21 +184,48 @@ class ModelRoutingDecisionV2 {
       };
 }
 
+abstract interface class ModelRoutingDecisionStoreV2 {
+  Future<void> append(ModelRoutingDecisionV2 decision);
+}
+
+class JsonlModelRoutingDecisionStoreV2 implements ModelRoutingDecisionStoreV2 {
+  JsonlModelRoutingDecisionStoreV2(this.file);
+
+  final File file;
+  Future<void> _tail = Future<void>.value();
+
+  @override
+  Future<void> append(ModelRoutingDecisionV2 decision) {
+    final next = _tail.then((_) async {
+      await file.parent.create(recursive: true);
+      await file.writeAsString(
+        '${jsonEncode(decision.toJson())}\n',
+        mode: FileMode.append,
+        flush: true,
+      );
+    });
+    _tail = next.catchError((Object _) {});
+    return next;
+  }
+}
+
 class ModelRoleRouterV2 {
   ModelRoleRouterV2({
     required this.registry,
     required this.policy,
+    required this.decisionStore,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
   final ModelDefinitionRegistry registry;
   final ModelRoutingPolicyV2 policy;
+  final ModelRoutingDecisionStoreV2 decisionStore;
   final DateTime Function() _clock;
 
-  ModelRoutingDecisionV2 route({
+  Future<ModelRoutingDecisionV2> route({
     required ModelRoleV2 role,
     required Iterable<ModelIdentity> discoveredModels,
-  }) {
+  }) async {
     final route = policy.routeFor(role);
     final candidates = <String, ModelIdentity>{};
     for (final identity in discoveredModels) {
@@ -214,7 +243,7 @@ class ModelRoleRouterV2 {
           identity: identity,
           taskClassId: route.taskClassId,
         );
-        return ModelRoutingDecisionV2(
+        final decision = ModelRoutingDecisionV2(
           role: role,
           taskClassId: route.taskClassId,
           model: identity,
@@ -224,6 +253,8 @@ class ModelRoleRouterV2 {
           decidedAt: _clock().toUtc(),
           reason: 'first_policy_preference_with_exact_task_class_approval',
         );
+        await decisionStore.append(decision);
+        return decision;
       } on ModelRegistryValidationException catch (error) {
         rejected.add('$preferred:${Sha256.text(error.message)}');
       }
