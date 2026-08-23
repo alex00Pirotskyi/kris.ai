@@ -1,9 +1,6 @@
-name: runner-attempt-ledger-finalize-v3
+name: runner-attempt-ledger-sol-qualify
 
 on:
-  push:
-    branches:
-      - hotfix/runner-attempt-ledger-v3-isolated
   pull_request:
     branches:
       - main
@@ -13,33 +10,34 @@ permissions:
   contents: write
 
 concurrency:
-  group: runner-attempt-ledger-finalize-v3
+  group: runner-attempt-ledger-sol-7f31
   cancel-in-progress: true
 
 jobs:
-  finalize:
+  qualify:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: hotfix/runner-attempt-ledger-v3-isolated
+          ref: hotfix/runner-ledger-sol-7f31
           fetch-depth: 0
           persist-credentials: true
-
-      - name: Synchronize current main without publishing
-        run: |
-          git fetch origin main
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git merge --no-edit origin/main
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
 
-      - name: Unlock authoritative finalizer payload
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Unlock migration only inside qualification workspace
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -47,7 +45,7 @@ jobs:
           marker = '__RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__\n'
           text = path.read_text(encoding='utf-8')
           if not text.startswith(marker) or text.count(marker) != 1:
-              raise SystemExit('authoritative runner finalizer guard missing or duplicated')
+              raise SystemExit('runner ledger migration guard missing or duplicated')
           path.write_text(text[len(marker):], encoding='utf-8', newline='\n')
           PY
 
@@ -81,38 +79,109 @@ jobs:
           path.write_text(text, encoding='utf-8', newline='\n')
           PY
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: '3.44.8'
-          channel: stable
-          cache: true
-          pub-cache: true
-
       - name: Apply coordinated runner hotfix
         run: python tool/runner_attempt_ledger_finalize.py
 
-      - name: Bind successful finite commands to material state
+      - name: Bind pruning to objective workspace state
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path('lib/product/planning_runtime.dart')
           text = path.read_text(encoding='utf-8')
-          old = """        externalState: <String>{
-          ...semanticSnapshot.externalState,
-          if (result.data['processId'] != null)
-            'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
-        },"""
-          new = """        externalState: <String>{
-          ...semanticSnapshot.externalState,
-          if (result.data['processId'] != null)
-            'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
-          if (action.tool == 'run_command' && result.ok)
-            'command:$actionSha256ForLedger:$resultHash',
-        },"""
-          if text.count(old) != 1:
-              raise SystemExit(f'finite command material-state marker changed: {text.count(old)}')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+
+          replacements = []
+
+          old = """    );
+    _enforceBudget(current, started);
+    final phaseRepairCeiling = min("""
+          new = """    );
+    Future<String> runnerWorkspaceSha256() async {
+      try {
+        return await attemptLedgerPolicy.workspaceSha256(boundary.root);
+      } catch (error) {
+        await _bestEffortEvent(
+          'work_item.workspace_fingerprint_failed',
+          current.id,
+          <String, dynamic>{
+            'runId': current.id,
+            'workItemId': progress.item.id,
+            'attempt': progress.attempts,
+            'errorCode': _errorCode(error),
+          },
+        );
+        return Sha256.text('runner-workspace-fingerprint-unavailable');
+      }
+    }
+    final successfulDeterministicActionHashes = <String>{};
+    _enforceBudget(current, started);
+    final phaseRepairCeiling = min("""
+          replacements.append((old, new, 'workspace fingerprint helper'))
+
+          old = """      final stateSha256 = attemptLedgerPolicy.worldStateSha256(
+        semanticSnapshot,
+        mutationEpoch: current.mutations,
+      );"""
+          new = """      final workspaceSha256 = await runnerWorkspaceSha256();
+      final stateSha256 = attemptLedgerPolicy.worldStateSha256(
+        semanticSnapshot,
+        mutationEpoch: current.mutations,
+        workspaceSha256: workspaceSha256,
+      );"""
+          replacements.append((old, new, 'turn state fingerprint'))
+
+          old = """      if (closedActionHashes.contains(actionSha256ForLedger)) {"""
+          new = """      final deterministicReplay = action.tool == 'run_command' &&
+          successfulDeterministicActionHashes.contains(actionSha256ForLedger);
+      if (closedActionHashes.contains(actionSha256ForLedger) ||
+          deterministicReplay) {"""
+          replacements.append((old, new, 'deterministic replay guard'))
+
+          old = """          errorCode: 'agent_action_branch_closed',"""
+          new = """          errorCode: deterministicReplay
+              ? 'deterministic_command_already_executed'
+              : 'agent_action_branch_closed',"""
+          replacements.append((old, new, 'replay rejection code'))
+
+          old = """          'correction':
+              'This exact action already failed or produced no material progress from the current state. Choose a different allowed action.',"""
+          new = """          'correction': deterministicReplay
+              ? 'This deterministic command already completed successfully in this work item. Do not execute it again; inspect or verify the resulting workspace instead.'
+              : 'This exact action already failed or produced no material progress from the current state. Choose a different allowed action.',"""
+          replacements.append((old, new, 'replay correction'))
+
+          old = """      final materialProgress =
+          attemptLedgerPolicy.hasMaterialProgress(semanticDelta);
+      final afterStateSha256 = attemptLedgerPolicy.worldStateSha256(
+        nextSemanticSnapshot,
+        mutationEpoch: current.mutations,
+      );"""
+          new = """      final afterWorkspaceSha256 =
+          result.mutated || action.tool == 'run_command'
+              ? await runnerWorkspaceSha256()
+              : workspaceSha256;
+      final materialProgress =
+          attemptLedgerPolicy.hasMaterialProgress(semanticDelta) ||
+          afterWorkspaceSha256 != workspaceSha256;
+      final afterStateSha256 = attemptLedgerPolicy.worldStateSha256(
+        nextSemanticSnapshot,
+        mutationEpoch: current.mutations,
+        workspaceSha256: afterWorkspaceSha256,
+      );"""
+          replacements.append((old, new, 'post-action material state'))
+
+          old = """      stalledTurns = semanticDelta.semanticProgress ? 0 : stalledTurns + 1;"""
+          new = """      if (deterministicSelected && result.ok) {
+        successfulDeterministicActionHashes.add(actionSha256ForLedger);
+      }
+      stalledTurns = semanticDelta.semanticProgress ? 0 : stalledTurns + 1;"""
+          replacements.append((old, new, 'successful deterministic replay memory'))
+
+          for old, new, label in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'{label} patch marker changed: {text.count(old)}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8', newline='\n')
           PY
 
       - name: Generate reviewed workflow migrations
@@ -125,6 +194,7 @@ jobs:
           lib/product/durable_workflow.dart
           lib/product/runner_attempt_ledger.dart
           test/product/runner_attempt_ledger_test.dart
+          test/product/runner_workspace_state_test.dart
           test/product/durable_workflow_kernel_test.dart
 
       - name: Verify hotfix-owned Dart formatting
@@ -134,6 +204,7 @@ jobs:
           lib/product/durable_workflow.dart
           lib/product/runner_attempt_ledger.dart
           test/product/runner_attempt_ledger_test.dart
+          test/product/runner_workspace_state_test.dart
           test/product/durable_workflow_kernel_test.dart
 
       - name: Resolve Flutter packages
@@ -152,11 +223,12 @@ jobs:
         run: >-
           flutter test --no-pub --concurrency=1 --reporter expanded
           test/product/runner_attempt_ledger_test.dart
+          test/product/runner_workspace_state_test.dart
           test/product/durable_workflow_kernel_test.dart
           test/product/execution_reliability_test.dart
           test/product/budget_diagnostics_test.dart
 
-      - name: Remove one-shot finalizer
+      - name: Remove one-shot qualification scaffolding
         run: |
           git rm -f tool/runner_attempt_ledger_finalize.py
           git rm -f .github/workflows/runner-attempt-ledger-finalize-v3.yml
@@ -166,19 +238,19 @@ jobs:
       - name: Refresh canonical source manifest
         run: python tool/p2_refresh_source_manifest.py .
 
-      - name: Validate post-cleanup repository state
+      - name: Validate final product tree
         run: |
           python tool/source_tree_policy_test.py
           python tool/generated_state_guard_test.py
           python tool/generated_state_guard.py audit --project . --strict
+          python tool/system_test.py --project .
           git diff --check
-
-      - name: Run offline system gate on final product tree
-        run: python tool/system_test.py --project .
 
       - name: Commit qualified hotfix
         run: |
           git add -A
           git diff --cached --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "fix(runner): prune repeated action branches"
-          git push origin HEAD:hotfix/runner-attempt-ledger-v3-isolated
+          git push origin HEAD:hotfix/runner-ledger-sol-7f31
