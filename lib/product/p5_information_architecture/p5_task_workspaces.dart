@@ -534,6 +534,112 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
     );
   }
 
+  Widget _savedRunTimeline(BuildContext context, String runId) {
+    final filter = _timelineFilter;
+    final visibleCount = P5PrototypeFixtures.timelineVisibleCount(filter);
+    final filters = <P5TimelineCategory?>[
+      null,
+      ...P5TimelineCategory.values,
+    ];
+    return Container(
+      key: const Key('p5-run-timeline'),
+      height: 390,
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Icon(Icons.timeline_outlined),
+                const SizedBox(width: 8),
+                Text(
+                  'Unified saved-run timeline',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const Spacer(),
+                Text(
+                  'Showing $visibleCount of ${P5PrototypeFixtures.timelineEventCount}',
+                  key: const Key('p5-timeline-summary'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              key: const Key('p5-timeline-filter-scroll'),
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: <Widget>[
+                  for (final category in filters) ...<Widget>[
+                    ChoiceChip(
+                      key: Key(
+                        category == null
+                            ? 'p5-timeline-filter-all'
+                            : 'p5-timeline-filter-${category.name}',
+                      ),
+                      label: Text(category?.label ?? 'All'),
+                      selected: filter == category,
+                      onSelected: (_) => mutatePresentation(() {
+                        _timelineFilter = category;
+                      }),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Virtualized deterministic fixture events. Current runs never use this saved-run timeline.',
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 6),
+            Expanded(
+              child: ListView.builder(
+                key: const Key('p5-run-timeline-list'),
+                itemCount: visibleCount,
+                itemExtent: 64,
+                itemBuilder: (context, visibleIndex) {
+                  final event = P5PrototypeFixtures.timelineEventAt(
+                    runId: runId,
+                    visibleIndex: visibleIndex,
+                    filter: filter,
+                  );
+                  return Semantics(
+                    label:
+                        '${event.sequence}. ${event.category.label}. ${event.title}. ${event.detail}',
+                    child: ListTile(
+                      key: Key('p5-timeline-row-${event.sequence}'),
+                      dense: true,
+                      leading: SizedBox(
+                        width: 54,
+                        child: Text('#${event.sequence}'),
+                      ),
+                      title: Text(
+                        '${event.category.label} • ${event.title}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        '${event.timestampLabel} • ${event.detail}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _projectsWorkspace(BuildContext context) {
     final state = controller.state;
     return _scrollWorkspace(
@@ -644,7 +750,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                   const SizedBox(height: 8),
                   const _BoundaryNotice(
                     message:
-                        'Saved-run detail is rendered from deterministic fixture fields. No synthetic event timeline is invented.',
+                        'Saved-run detail and timeline are deterministic presentation fixtures. They are not EventJournal records, live evidence-store receipts, or certification evidence.',
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -676,6 +782,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  _savedRunTimeline(context, selectedSavedRun.id),
                 ],
               ),
             ),

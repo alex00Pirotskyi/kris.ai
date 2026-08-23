@@ -99,6 +99,53 @@ enum P5ComposerLaunchTiming { runNow, laterToday, tomorrowMorning }
 
 enum P5ComposerBudget { focused, balanced, thorough }
 
+enum P5TimelineCategory {
+  model,
+  policy,
+  file,
+  terminal,
+  browser,
+  web,
+  evidence,
+  verification,
+  retry,
+  rollback,
+}
+
+extension P5TimelineCategoryLabel on P5TimelineCategory {
+  String get label => switch (this) {
+        P5TimelineCategory.model => 'Model',
+        P5TimelineCategory.policy => 'Policy',
+        P5TimelineCategory.file => 'File',
+        P5TimelineCategory.terminal => 'Terminal',
+        P5TimelineCategory.browser => 'Browser',
+        P5TimelineCategory.web => 'Web',
+        P5TimelineCategory.evidence => 'Evidence',
+        P5TimelineCategory.verification => 'Verification',
+        P5TimelineCategory.retry => 'Retry',
+        P5TimelineCategory.rollback => 'Rollback',
+      };
+}
+
+@immutable
+class P5TimelineEvent {
+  const P5TimelineEvent({
+    required this.runId,
+    required this.sequence,
+    required this.category,
+    required this.timestampLabel,
+    required this.title,
+    required this.detail,
+  });
+
+  final String runId;
+  final int sequence;
+  final P5TimelineCategory category;
+  final String timestampLabel;
+  final String title;
+  final String detail;
+}
+
 extension P5ComposerProfileLabel on P5ComposerProfile {
   String get label => switch (this) {
         P5ComposerProfile.project => 'Project',

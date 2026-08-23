@@ -151,6 +151,7 @@ class _P5InformationArchitecturePrototypeState
   final List<String> _webActivity = <String>[];
   P5ShellLayoutPersistence? _shellLayoutStore;
   Timer? _shellLayoutSaveDebounce;
+  P5TimelineCategory? _timelineFilter;
 
   P5InformationArchitectureController get controller => widget.controller;
 
