@@ -476,7 +476,7 @@ class _P5GlobalAutonomyBarState extends State<P5GlobalAutonomyBar> {
             container: true,
             liveRegion: true,
             label: 'Global autonomy status. Profile ${snapshot.profileLabel}. '
-                'Model ${snapshot.modelLabel}. ${snapshot.sessionBreakdown}. '
+                'Running model ${snapshot.modelLabel}. ${snapshot.sessionBreakdown}. '
                 'Takeover ${snapshot.takeoverLabel}. Network ${snapshot.networkLabel}.',
             child: SafeArea(
               bottom: false,
@@ -508,7 +508,7 @@ class _P5GlobalAutonomyBarState extends State<P5GlobalAutonomyBar> {
                             _P5AutonomyStatusChip(
                               key: const Key('p5-global-model'),
                               icon: Icons.memory_outlined,
-                              label: 'Model: ${snapshot.modelLabel}',
+                              label: 'Running model: ${snapshot.modelLabel}',
                             ),
                             Tooltip(
                               message: snapshot.sessionBreakdown,

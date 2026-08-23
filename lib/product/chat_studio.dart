@@ -620,6 +620,10 @@ class _ChatStudioState extends State<ChatStudio> {
       selectedWorkItemId = run.items.firstOrNull?.item.id;
       currentRun = run;
       prepared = run.command;
+      approvedScopes.clear();
+      if (run.state == RunState.awaitingApproval) {
+        approvedScopes.addAll(run.command.contract.requiredPermissions);
+      }
       composerController.text = run.command.contract.request;
       if (openChat) {
         area = _StudioArea.chat;
@@ -633,6 +637,7 @@ class _ChatStudioState extends State<ChatStudio> {
         selectedRunEvents = runEvents;
         selectedRunLiveSignals = <LiveRunSignal>[];
         liveAssistantText = '';
+        liveAssistantProtocolText = '';
         liveAssistantStage = '';
         liveAssistantMessage = '';
         liveToolLabel = '';
@@ -656,6 +661,7 @@ class _ChatStudioState extends State<ChatStudio> {
       conversationIntent = null;
       embeddedClarificationActive = false;
       liveAssistantText = '';
+      liveAssistantProtocolText = '';
       liveAssistantStage = '';
       liveAssistantMessage = '';
       liveToolLabel = '';
@@ -2168,6 +2174,9 @@ class _ChatStudioState extends State<ChatStudio> {
         run.items.where((item) => item.state == WorkItemState.succeeded).length;
     final total = run.items.isEmpty ? 1 : run.items.length;
     final progress = completed / total;
+    final approvalGroups = run.state == RunState.awaitingApproval
+        ? groupPermissions(run.command.contract.requiredPermissions)
+        : const <AccessGroup>[];
     return _messageBubble(
       assistant: true,
       child: Column(
@@ -2218,7 +2227,10 @@ class _ChatStudioState extends State<ChatStudio> {
                       ),
                     ),
                     Text(
-                      friendlyWorkState(progressItem.state),
+                      run.state == RunState.awaitingApproval &&
+                              progressItem.state == WorkItemState.queued
+                          ? 'Starts after approval'
+                          : friendlyWorkState(progressItem.state),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -2226,9 +2238,56 @@ class _ChatStudioState extends State<ChatStudio> {
               ),
             ),
           ),
-          if (liveAssistantMessage.isNotEmpty ||
-              liveAssistantText.isNotEmpty ||
-              liveToolLabel.isNotEmpty) ...<Widget>[
+          if (run.state == RunState.awaitingApproval) ...<Widget>[
+            const SizedBox(height: 12),
+            Container(
+              key: const Key('chat-run-approval-guidance'),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Icon(Icons.lock_open_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'The plan is ready. Execution is paused before any requested tool access is granted.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (approvalGroups.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children: approvalGroups
+                          .map((group) => _statusPill(group.title, group.icon))
+                          .toList(growable: false),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Press Review & continue below. Sensitive access will get one final confirmation. Nothing will execute until you approve this run.',
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (run.state != RunState.awaitingApproval &&
+              (liveAssistantMessage.isNotEmpty ||
+                  liveAssistantText.isNotEmpty ||
+                  liveToolLabel.isNotEmpty)) ...<Widget>[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -2298,6 +2357,13 @@ class _ChatStudioState extends State<ChatStudio> {
             spacing: 8,
             runSpacing: 8,
             children: <Widget>[
+              if (run.state == RunState.awaitingApproval)
+                FilledButton.icon(
+                  key: const Key('chat-run-approve-continue'),
+                  onPressed: busy ? null : _startPrepared,
+                  icon: const Icon(Icons.lock_open_outlined),
+                  label: const Text('Review & continue'),
+                ),
               if (run.state == RunState.running)
                 OutlinedButton.icon(
                   onPressed: busy ? null : () => _controlRun('pause'),

@@ -2090,7 +2090,11 @@ class PlanTaskRecord {
       id: json['id']?.toString() ?? newId('task'),
       phase: json['phase']?.toString() ?? 'Implementation',
       parentId: parentId.isEmpty ? null : parentId,
-      title: json['title']?.toString() ?? 'Task',
+      title: json['title']?.toString().trim().isNotEmpty == true
+          ? json['title'].toString().trim()
+          : (json['manual'] == true
+              ? 'Manual checkpoint'
+              : (json['title']?.toString() ?? 'Task')),
       objective: json['objective']?.toString() ?? '',
       instructions: json['instructions']?.toString() ?? '',
       dependencies: stringList(json['dependencies']).toSet(),
