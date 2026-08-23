@@ -137,6 +137,23 @@ class RunnerAttemptLedgerPolicy {
         }),
       );
 
+  String decisionSha256(String text) {
+    var candidate = text.trim();
+    final fenced = RegExp(
+      r'```(?:json)?\s*([\s\S]*?)```',
+      caseSensitive: false,
+    ).firstMatch(candidate);
+    if (fenced != null) {
+      candidate = fenced.group(1)?.trim() ?? candidate;
+    }
+    try {
+      final decoded = jsonDecode(candidate);
+      return Sha256.text(canonicalJson(decoded));
+    } catch (_) {
+      return Sha256.text(candidate.replaceAll(RegExp(r'\s+'), ' ').trim());
+    }
+  }
+
   Set<String> closedActionHashes(Iterable<Map<String, dynamic>> branches) =>
       branches
           .map((branch) => branch['actionSha256']?.toString() ?? '')
