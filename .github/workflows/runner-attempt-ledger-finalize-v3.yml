@@ -88,8 +88,8 @@ jobs:
 
       - name: Remove one-shot finalizer
         run: |
-          git rm tool/runner_attempt_ledger_finalize.py
-          git rm .github/workflows/runner-attempt-ledger-finalize-v3.yml
+          git rm -f tool/runner_attempt_ledger_finalize.py
+          git rm -f .github/workflows/runner-attempt-ledger-finalize-v3.yml
           test ! -e tool/runner_attempt_ledger_finalize.py
           test ! -e .github/workflows/runner-attempt-ledger-finalize-v3.yml
 
