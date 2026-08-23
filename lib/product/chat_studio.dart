@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'api_server.dart';
+import 'capability_doctor.dart';
 import 'domain.dart';
 import 'extensions_index.dart';
 import 'models_research.dart';
@@ -190,6 +191,7 @@ class _ChatStudioState extends State<ChatStudio> {
   PreparedCommand? prepared;
   RunRecord? currentRun;
   ProjectDiagnosticReport? diagnosticReport;
+  CapabilityDoctorReport? capabilityDoctorReport;
   ProjectProcessStatus? projectProcessStatusValue;
   Map<String, dynamic>? auditReport;
   String? lastSupportBundlePath;
@@ -341,6 +343,11 @@ class _ChatStudioState extends State<ChatStudio> {
           projectId,
         );
       }
+      capabilityDoctorReport = await runtime.inspectCapabilities(
+        projectId: selectedProjectId,
+        discoveredModels: models,
+        projectReport: diagnosticReport,
+      );
     });
     if (mounted) {
       setState(() {
@@ -788,7 +795,7 @@ class _ChatStudioState extends State<ChatStudio> {
         setState(() => area = _StudioArea.logs);
         return true;
       case '/doctor':
-        await _runDoctor();
+        await _runCapabilityDoctor();
         return true;
       case '/test':
         await _runProjectTests();
@@ -1141,6 +1148,11 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     await _refreshRuns(silent: true);
     await _refreshKnowledge(silent: true);
+    capabilityDoctorReport = await runtime.inspectCapabilities(
+      projectId: selectedProjectId,
+      discoveredModels: models,
+      projectReport: diagnosticReport,
+    );
     if (mounted) {
       setState(() {});
     }
@@ -1665,6 +1677,11 @@ class _ChatStudioState extends State<ChatStudio> {
         if (displayedRequest.trim().isNotEmpty)
           _messageBubble(assistant: false, child: Text(displayedRequest)),
         const SizedBox(height: 18),
+        if (capabilityDoctorReport?.depth ==
+            CapabilityDoctorDepth.full) ...<Widget>[
+          _capabilityDoctorCard(capabilityDoctorReport!),
+          const SizedBox(height: 18),
+        ],
         if ((promptGenerationActive || embeddedClarificationActive) &&
             command == null)
           _embeddedPromptConvergenceCard()
@@ -1824,6 +1841,10 @@ class _ChatStudioState extends State<ChatStudio> {
               ).textTheme.bodyLarge?.copyWith(color: colors.onSurfaceVariant),
             ),
           ),
+          if (capabilityDoctorReport != null) ...<Widget>[
+            const SizedBox(height: 22),
+            _capabilityDoctorCard(capabilityDoctorReport!),
+          ],
           const SizedBox(height: 28),
           Wrap(
             spacing: 10,
@@ -1845,6 +1866,138 @@ class _ChatStudioState extends State<ChatStudio> {
             }).toList(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _capabilityDoctorCard(CapabilityDoctorReport report) {
+    final colors = Theme.of(context).colorScheme;
+    final modelNeedsSetup = report.byId('model')?.ready == false;
+    final projectNeedsSetup = report.byId('project')?.ready == false;
+    final optionalAttention =
+        report.checks.where((item) => !item.required && !item.ready).length;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 720),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(
+                    report.coreReady
+                        ? Icons.health_and_safety_outlined
+                        : Icons.warning_amber_outlined,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Kristin readiness',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                        ),
+                        Text(
+                          report.coreReady
+                              ? optionalAttention == 0
+                                  ? 'Core and optional capabilities are ready.'
+                                  : optionalAttention == 1
+                                      ? 'Core chat is ready · 1 optional capability needs attention.'
+                                      : 'Core chat is ready · $optionalAttention optional capabilities need attention.'
+                              : 'A required capability needs attention before relying on long runs.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  _statusPill(
+                    '${report.readyCount}/${report.checks.length} ready',
+                    report.coreReady
+                        ? Icons.check_circle_outline
+                        : Icons.error_outline,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...report.checks.map((check) {
+                final icon = switch (check.status) {
+                  CapabilityDoctorStatus.ready => Icons.check_circle_outline,
+                  CapabilityDoctorStatus.warning =>
+                    Icons.warning_amber_outlined,
+                  CapabilityDoctorStatus.blocked => Icons.error_outline,
+                };
+                final color = switch (check.status) {
+                  CapabilityDoctorStatus.ready => colors.primary,
+                  CapabilityDoctorStatus.warning => colors.tertiary,
+                  CapabilityDoctorStatus.blocked => colors.error,
+                };
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(icon, color: color, size: 20),
+                  title: Text(
+                    check.title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(check.message),
+                  trailing: check.required
+                      ? const Tooltip(
+                          message: 'Required for core readiness',
+                          child: Icon(Icons.lock_outline, size: 17),
+                        )
+                      : null,
+                );
+              }),
+              const SizedBox(height: 8),
+              Text(
+                report.depth == CapabilityDoctorDepth.full
+                    ? 'Full Doctor completed. Exact task capabilities are still rechecked by the mandatory run preflight immediately before execution.'
+                    : 'Quick startup check. Exact task capabilities are rechecked by the mandatory run preflight before execution.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  FilledButton.tonalIcon(
+                    onPressed: busy ? null : _runCapabilityDoctor,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Recheck all'),
+                  ),
+                  if (modelNeedsSetup)
+                    OutlinedButton.icon(
+                      onPressed:
+                          busy ? null : () => _openSettings(initialSection: 1),
+                      icon: const Icon(Icons.memory_outlined),
+                      label: const Text('Connect model'),
+                    ),
+                  if (projectNeedsSetup)
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          setState(() => area = _StudioArea.projects),
+                      icon: const Icon(Icons.folder_outlined),
+                      label: const Text('Projects'),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: busy ? null : () => _openSettings(),
+                    icon: const Icon(Icons.settings_outlined),
+                    label: const Text('Settings'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2988,7 +3141,7 @@ class _ChatStudioState extends State<ChatStudio> {
                   runSpacing: 9,
                   children: <Widget>[
                     OutlinedButton.icon(
-                      onPressed: busy ? null : _runDoctor,
+                      onPressed: busy ? null : _runProjectDoctor,
                       icon: const Icon(Icons.health_and_safety_outlined),
                       label: const Text('Doctor'),
                     ),
@@ -3344,7 +3497,28 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  Future<void> _runDoctor() async {
+  Future<void> _runCapabilityDoctor() async {
+    final report = await _perform<CapabilityDoctorReport>(
+      'Checking Kristin readiness',
+      () => runtime.inspectCapabilities(
+        projectId: selectedProjectId,
+        depth: CapabilityDoctorDepth.full,
+        projectReport: diagnosticReport,
+      ),
+    );
+    if (report != null && mounted) {
+      setState(() {
+        capabilityDoctorReport = report;
+        area = _StudioArea.chat;
+        composerController.clear();
+        status = report.coreReady
+            ? 'Kristin core readiness is healthy'
+            : 'Kristin readiness needs attention';
+      });
+    }
+  }
+
+  Future<void> _runProjectDoctor() async {
     final project = selectedProject;
     if (project == null) {
       _showError('Select a project first.');
@@ -3356,8 +3530,15 @@ class _ChatStudioState extends State<ChatStudio> {
       () => runtime.inspectProject(project.id, modelReady: models.isNotEmpty),
     );
     if (report != null && mounted) {
+      final readiness = await runtime.inspectCapabilities(
+        projectId: project.id,
+        discoveredModels: models,
+        projectReport: report,
+      );
+      if (!mounted) return;
       setState(() {
         diagnosticReport = report;
+        capabilityDoctorReport = readiness;
         area = _StudioArea.projects;
         composerController.text = '/doctor';
       });
@@ -3738,7 +3919,7 @@ class _ChatStudioState extends State<ChatStudio> {
         diagnosticReport = null;
       });
       await _refreshKnowledge(silent: true);
-      await _runDoctor();
+      await _runProjectDoctor();
     }
   }
 

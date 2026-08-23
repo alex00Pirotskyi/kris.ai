@@ -1,0 +1,31 @@
+{
+  "acceptance": {
+    "criterion": "Duplicate fetch content reuses objects without losing fetch provenance.",
+    "proof": [
+      "test/product/research/research_runtime_test.dart"
+    ]
+  },
+  "baseMainSha": "b1bc568d8b69534eb65a0cfc7b86dfcebe893051",
+  "claims": {
+    "contentAddressedBySha256": true,
+    "duplicateContentReusesObjects": true,
+    "fetchVersionsPreserveProvenance": true,
+    "historicalCitationIdentityPreserved": true,
+    "storageRemainsApplicationOwnedAndLocalFirst": true
+  },
+  "implementation": [
+    "lib/product/research/research_runtime.dart"
+  ],
+  "sourceHistory": [
+    {
+      "mergeCommit": "278aeccfa013411bc7cf23b4a34199718327f4b2",
+      "pullRequest": 205,
+      "role": "P4 phase source delivery"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "status": "implemented",
+  "taskId": "P4-011",
+  "testResults": "release/evidence/P4-011/test-results.json",
+  "truthBoundary": "This packet establishes the P4-011 research content-addressed storage contract and ADR-0005 acceptance evidence. It does not claim packaged release support, production promotion, independent human review, or GA."
+}
