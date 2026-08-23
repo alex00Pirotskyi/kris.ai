@@ -131,7 +131,13 @@ def iter_worktree_files(root: Path) -> Iterator[Path]:
         relative = path.relative_to(root)
         if any(part in SKIP_PARTS for part in relative.parts):
             continue
-        if is_generated_path(relative):
+        p = path
+        generated = (
+            is_generated_path(p.relative_to(ROOT))
+            if root == ROOT
+            else is_generated_path(relative)
+        )
+        if generated:
             continue
         yield path
 
