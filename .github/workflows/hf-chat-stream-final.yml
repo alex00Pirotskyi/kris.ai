@@ -1,11 +1,10 @@
 name: Runner Chat Final Streaming Qualification
 
 on:
-  push:
+  pull_request:
     branches:
-      - hotfix/runner-chat-convergence-20260823
-    paths:
-      - .github/workflows/hf-chat-stream-final.yml
+      - main
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
