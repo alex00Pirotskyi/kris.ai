@@ -30,6 +30,10 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git merge-base HEAD 07f76fc48b191f38c7623e967adeb267f7a8aa5a)" = "07f76fc48b191f38c7623e967adeb267f7a8aa5a"
+          test -f .repo-hf-chat-stream-final.py
+          test -f .repo-hf-chat-stream-script-fix.py
+          python3 .repo-hf-chat-stream-script-fix.py
+          rm -f .repo-hf-chat-stream-script-fix.py
           python3 .repo-hf-chat-stream-final.py
           rm -f .repo-hf-chat-stream-final.py
           rm -f .github/workflows/hf-chat-stream-final.yml
