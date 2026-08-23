@@ -169,6 +169,9 @@ jobs:
           actual = set(subprocess.check_output(
               ['git', 'diff', '--name-only', base], text=True
           ).splitlines())
+          actual.update(subprocess.check_output(
+              ['git', 'ls-files', '--others', '--exclude-standard'], text=True
+          ).splitlines())
           if actual != expected:
               raise SystemExit(
                   f'exact hotfix scope mismatch\nmissing={sorted(expected-actual)}\nextra={sorted(actual-expected)}'
