@@ -24,10 +24,59 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Synchronize current main without publishing
+        run: |
+          git fetch origin main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge --no-edit origin/main
+
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
+
+      - name: Unlock authoritative finalizer payload
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('migrations/workflow/007_runner_attempt_ledger.sql')
+          marker = '__RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__\n'
+          text = path.read_text(encoding='utf-8')
+          if not text.startswith(marker) or text.count(marker) != 1:
+              raise SystemExit('authoritative runner finalizer guard missing or duplicated')
+          path.write_text(text[len(marker):], encoding='utf-8', newline='\n')
+          PY
+
+      - name: Bind finalizer to normalized decisions and complete branch recall
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tool/runner_attempt_ledger_finalize.py')
+          text = path.read_text(encoding='utf-8')
+          replacements = (
+              (
+                  "      final decisionSha256 = Sha256.text(generation.text);",
+                  "      final decisionSha256 = attemptLedgerPolicy.decisionSha256(generation.text);",
+                  'decision fingerprint',
+              ),
+              (
+                  "        final boundedLimit = limit.clamp(1, 20).toInt();",
+                  "        final boundedLimit = limit.clamp(1, 100).toInt();",
+                  'closed branch storage bound',
+              ),
+              (
+                  "        limit: 5,\n      );",
+                  "        limit: 100,\n      );",
+                  'closed branch runtime recall',
+              ),
+          )
+          for old, new, label in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'{label} patch marker changed: {text.count(old)}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
 
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
@@ -37,20 +86,31 @@ jobs:
           cache: true
           pub-cache: true
 
-      - name: Bind finalizer to normalized decision fingerprints
+      - name: Apply coordinated runner hotfix
+        run: python tool/runner_attempt_ledger_finalize.py
+
+      - name: Bind successful finite commands to material state
         run: |
           python - <<'PY'
           from pathlib import Path
-          path = Path('tool/runner_attempt_ledger_finalize.py')
+          path = Path('lib/product/planning_runtime.dart')
           text = path.read_text(encoding='utf-8')
-          old = "      final decisionSha256 = Sha256.text(generation.text);"
-          new = "      final decisionSha256 = attemptLedgerPolicy.decisionSha256(generation.text);"
-          assert text.count(old) == 1, 'decision fingerprint patch marker changed'
+          old = """        externalState: <String>{
+          ...semanticSnapshot.externalState,
+          if (result.data['processId'] != null)
+            'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
+        },"""
+          new = """        externalState: <String>{
+          ...semanticSnapshot.externalState,
+          if (result.data['processId'] != null)
+            'process:${result.data['processId']}:${result.data['state'] ?? 'started'}',
+          if (action.tool == 'run_command' && result.ok)
+            'command:$actionSha256ForLedger:$resultHash',
+        },"""
+          if text.count(old) != 1:
+              raise SystemExit(f'finite command material-state marker changed: {text.count(old)}')
           path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
           PY
-
-      - name: Apply coordinated runner hotfix
-        run: python tool/runner_attempt_ledger_finalize.py
 
       - name: Generate reviewed workflow migrations
         run: python tool/generate_workflow_migrations.py
