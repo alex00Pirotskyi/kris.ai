@@ -1,0 +1,89 @@
+name: P7 MCP Lifecycle Finalize V2
+
+on:
+  push:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p7-mcp-lifecycle-finalize-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  qualify-publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Apply robust MCP lifecycle patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tool/p7_mcp_lifecycle_finalize_v2.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              '        "  Future<McpBackendReceiptV2> start({",\n        lifecycle,',
+              '        "  Future<McpBackendReceiptV2> start({\\n    required String id,",\n        lifecycle,',
+              1,
+          )
+          text = text.replace(
+              '        "  Future<McpBackendReceiptV2> start({",\n        "  Future<bool> health(String id)",',
+              '        "  Future<McpBackendReceiptV2> start({\\n    required String id,",\n        "  Future<bool> health(String id)",',
+              1,
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+          python -m py_compile tool/p7_mcp_lifecycle_finalize_v2.py
+          python tool/p7_mcp_lifecycle_finalize_v2.py
+          dart format lib/product/mcp_registry_v2.dart test/product/mcp_registry_v2_test.dart
+      - name: MCP lifecycle behavioral gate
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/mcp_registry_v2_test.dart
+      - name: P7 interoperability regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/a2a_protocol_v1_test.py
+          python tool/a2a_bridge_test.py
+          python tool/extension_registry_v2_test.py
+          python tool/interoperability_adversarial_test.py
+          python tool/p8_release_evidence_gate_test.py
+      - name: Fatal analyzer
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Publish durable MCP lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/p7-mcp-lifecycle-finalize.yml
+          rm -f .github/workflows/p7-mcp-lifecycle-finalize-v2.yml
+          rm -f tool/p7_mcp_lifecycle_finalize_v2.py
+          python tool/p2_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/source-manifest.first"
+          python tool/p2_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/source-manifest.first" SOURCE_MANIFEST.sha256
+          flutter test --no-pub --concurrency=1 test/product/source_contract_test.dart
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(p7): harden signed MCP lifecycle and grants'
+          git push origin HEAD:agent/p1-p8-source-convergence-20260823
