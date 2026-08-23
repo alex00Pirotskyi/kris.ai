@@ -27,13 +27,22 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Apply runtime integration patch
+      - name: Apply exact V2 runtime integration patch
         shell: bash
         run: |
           set -euo pipefail
           python -m py_compile tool/p1_p8_runtime_finalize.py
           python tool/p1_p8_runtime_finalize.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/product/mcp_registry_v2.dart')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace("'mcp_descriptor_$key_required'", "'mcp_descriptor_${key}_required'")
+          text = text.replace("'mcp_descriptor_$key_invalid'", "'mcp_descriptor_${key}_invalid'")
+          path.write_text(text, encoding='utf-8')
+          PY
           dart format \
+            lib/product/mcp_registry_v2.dart \
             lib/product/p2_product_runtime_bootstrap.dart \
             lib/product/p8_effect_journal_adapter.dart \
             lib/product/p8_external_effects.dart \
