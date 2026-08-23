@@ -39,10 +39,76 @@ jobs:
           set -euo pipefail
           python -m py_compile tool/p1_p8_runtime_finalize.py
           python tool/p1_p8_runtime_finalize.py
+          python3 - <<'PY'
+          from pathlib import Path
+
+          contract = Path('test/product/source_contract_test.dart')
+          text = contract.read_text(encoding='utf-8')
+          entry = "        'lib/product/model/model_routing_v2.dart',\n"
+          if entry not in text:
+              anchor = "        'lib/product/model/model_registry.dart',\n"
+              if text.count(anchor) != 1:
+                  raise SystemExit('model routing source-contract anchor mismatch')
+              text = text.replace(anchor, anchor + entry, 1)
+              contract.write_text(text, encoding='utf-8')
+
+          evidence = Path('tool/p8_release_evidence_gate.py')
+          text = evidence.read_text(encoding='utf-8')
+          rows = (
+              ('    "lib/product/model/model_registry.dart",\n', '    "lib/product/agent_protocol_v3.dart",\n'),
+              ('    "lib/product/model/model_routing_v2.dart",\n', '    "lib/product/model/model_registry.dart",\n'),
+          )
+          for entry, anchor in rows:
+              if entry not in text:
+                  if text.count(anchor) != 1:
+                      raise SystemExit('P8 model routing evidence anchor mismatch')
+                  text = text.replace(anchor, anchor + entry, 1)
+          evidence.write_text(text, encoding='utf-8')
+
+          workflow = Path('.github/workflows/p6-p8-production-gates.yml')
+          text = workflow.read_text(encoding='utf-8')
+          trigger_anchor = "      - 'lib/product/agent_protocol_v3.dart'\n"
+          trigger_rows = (
+              "      - 'lib/product/model/model_registry.dart'\n"
+              "      - 'lib/product/model/model_routing_v2.dart'\n"
+              "      - 'test/product/model/model_routing_v2_test.dart'\n"
+          )
+          if "      - 'lib/product/model/model_routing_v2.dart'\n" not in text:
+              if text.count(trigger_anchor) != 1:
+                  raise SystemExit('P6-P8 routing trigger anchor mismatch')
+              text = text.replace(trigger_anchor, trigger_anchor + trigger_rows, 1)
+
+          dart_anchor = "            lib/product/agent_protocol_v3.dart \\\n"
+          dart_rows = (
+              "            lib/product/model/model_registry.dart \\\n"
+              "            lib/product/model/model_routing_v2.dart \\\n"
+          )
+          if "            lib/product/model/model_routing_v2.dart \\\n" not in text:
+              if text.count(dart_anchor) < 1:
+                  raise SystemExit('P6-P8 routing format anchor mismatch')
+              text = text.replace(dart_anchor, dart_anchor + dart_rows, 1)
+
+          test_anchor = "            test/product/agent_protocol_v3_test.dart \\\n"
+          test_row = "            test/product/model/model_routing_v2_test.dart \\\n"
+          occurrences = text.count(test_anchor)
+          if occurrences < 2:
+              raise SystemExit('P6-P8 routing test anchors missing')
+          if text.count(test_row) < 2:
+              first = text.find(test_anchor) + len(test_anchor)
+              text = text[:first] + test_row + text[first:]
+              second_anchor = text.find(test_anchor, first + len(test_row))
+              if second_anchor < 0:
+                  raise SystemExit('P6-P8 focused routing test anchor missing')
+              second = second_anchor + len(test_anchor)
+              text = text[:second] + test_row + text[second:]
+          workflow.write_text(text, encoding='utf-8')
+          PY
           dart format \
             lib/product/agent_context_v2.dart \
             lib/product/agent_decision_v3.dart \
             lib/product/agent_protocol_v3.dart \
+            lib/product/model/model_registry.dart \
+            lib/product/model/model_routing_v2.dart \
             lib/product/mcp_registry_v2.dart \
             lib/product/p2_product_runtime_bootstrap.dart \
             lib/product/p8_effect_journal_adapter.dart \
@@ -54,6 +120,7 @@ jobs:
             test/product/agent_context_v2_test.dart \
             test/product/agent_decision_v3_test.dart \
             test/product/agent_protocol_v3_test.dart \
+            test/product/model/model_routing_v2_test.dart \
             test/product/mcp_registry_v2_test.dart \
             test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
@@ -66,6 +133,7 @@ jobs:
           test/product/agent_context_v2_test.dart
           test/product/agent_decision_v3_test.dart
           test/product/agent_protocol_v3_test.dart
+          test/product/model/model_routing_v2_test.dart
           test/product/mcp_registry_v2_test.dart
           test/product/p8_effect_journal_adapter_test.dart
           test/product/p8_external_effects_test.dart
