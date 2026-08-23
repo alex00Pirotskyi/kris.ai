@@ -90,9 +90,9 @@ def patch_offline_contracts() -> None:
     )
     old_schema_marker = '"generatedWorkflowSchemaVersion = 6" in workflow_migrations'
     schema_marker_count = text.count(old_schema_marker)
-    if schema_marker_count != 3:
+    if schema_marker_count != 2:
         raise SystemExit(
-            f'schema-v6 source-contract markers: expected 3, found {schema_marker_count}'
+            f'schema-v6 source-contract markers: expected 2, found {schema_marker_count}'
         )
     text = text.replace(
         old_schema_marker,
