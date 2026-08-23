@@ -1,4 +1,4 @@
-# synchronized P1-P8 runtime convergence after durable role-routing repair
+# synchronized P1-P8 runtime convergence after durable role-routing and P2 gate repair
 name: P1-P8 Runtime Finalize V2
 
 on:
@@ -135,9 +135,9 @@ jobs:
       - name: P2 runtime compatibility gate
         run: >-
           flutter test --no-pub --concurrency=1 --reporter expanded
-          test/product/p2_product_runtime_bootstrap_test.dart
+          test/product/p2_owner_mode_failure_presentation_test.dart
+          test/product/p2_owner_risk_runtime_smoke_test.dart
           test/product/p2_runtime_composition_test.dart
-          test/product/p2_product_runtime_integration_test.dart
       - name: P6-P8 Python contracts
         shell: bash
         run: |
