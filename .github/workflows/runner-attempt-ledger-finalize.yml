@@ -34,6 +34,19 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git merge --no-edit origin/main
 
+      - name: Unlock authoritative finalizer payload
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('migrations/workflow/007_runner_attempt_ledger.sql')
+          marker = '__RUNNER_ATTEMPT_LEDGER_FINALIZER_GUARD__\n'
+          text = path.read_text(encoding='utf-8')
+          if text.count(marker) != 1 or not text.startswith(marker):
+              raise SystemExit('authoritative runner finalizer guard missing or duplicated')
+          path.write_text(text[len(marker):], encoding='utf-8', newline='\n')
+          PY
+
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
