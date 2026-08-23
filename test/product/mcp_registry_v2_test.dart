@@ -194,8 +194,8 @@ void main() {
       );
       await registry.enable('server.test');
       await executable.writeAsString('changed executable bytes', flush: true);
-      expect(
-        () => registry.start(
+      await expectLater(
+        registry.start(
           id: 'server.test',
           grant: const McpExecutionGrantV2(
             projectId: 'project-1',
@@ -242,5 +242,6 @@ final class _FakeBackend implements McpExecutionBackendV2 {
   }
 
   @override
-  Future<bool> healthy(String serverId) async => started.contains(serverId) && !stopped.contains(serverId);
+  Future<bool> healthy(String serverId) async =>
+      started.contains(serverId) && !stopped.contains(serverId);
 }
