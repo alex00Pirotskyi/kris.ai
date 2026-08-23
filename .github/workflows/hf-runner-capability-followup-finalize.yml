@@ -1,0 +1,175 @@
+name: hf-runner-capability-followup-finalize
+
+on:
+  push:
+    branches:
+      - hotfix/runner-capability-followup
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: hotfix/runner-capability-followup
+          fetch-depth: 0
+
+      - name: Apply bounded durable repairs
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path, old, new, count=1):
+              target = Path(path)
+              text = target.read_text(encoding='utf-8')
+              actual = text.count(old)
+              if actual != count:
+                  raise SystemExit(f'{path}: expected {count} matches, found {actual}')
+              target.write_text(text.replace(old, new), encoding='utf-8')
+
+          replace_exact(
+              'lib/product/workspace_tools.dart',
+              "import 'product_error_normalizer.dart';\nimport 'retry_policy.dart';",
+              "import 'product_error_normalizer.dart';\nimport 'process_launch.dart';\nimport 'retry_policy.dart';",
+          )
+
+          replace_exact(
+              'lib/product/workspace_tools.dart',
+              """process = await Process.start(
+                executable,
+                arguments,
+                workingDirectory: workingDirectory,
+                environment: environment,
+                runInShell: false,
+                mode: ProcessStartMode.normal,
+              );""",
+              """final launch = await resolveProcessLaunchTarget(executable);
+              process = await Process.start(
+                launch.executable,
+                arguments,
+                workingDirectory: workingDirectory,
+                environment: environment,
+                runInShell: launch.runInShell,
+                mode: ProcessStartMode.normal,
+              );""",
+              count=2,
+          )
+
+          replace_exact(
+              'lib/product/prompt_planning.dart',
+              """      var title = raw['title']?.toString().trim() ?? '';
+              var instructions = raw['instructions']?.toString().trim() ?? '';""",
+              """      var title = raw['title']?.toString().trim() ?? '';
+              if (title.isEmpty && raw['manual'] == true) {
+                title = 'Manual checkpoint';
+              }
+              var instructions = raw['instructions']?.toString().trim() ?? '';""",
+          )
+
+          replace_exact(
+              'lib/product/domain.dart',
+              "      title: json['title']?.toString() ?? 'Task',",
+              """      title: json['title']?.toString().trim().isNotEmpty == true
+                  ? json['title'].toString().trim()
+                  : (json['manual'] == true ? 'Manual checkpoint' : 'Task'),""",
+          )
+
+          replace_exact(
+              'lib/product/p5_global_autonomy.dart',
+              "'Model ${snapshot.modelLabel}. ${snapshot.sessionBreakdown}. '",
+              "'Running model ${snapshot.modelLabel}. ${snapshot.sessionBreakdown}. '",
+          )
+          replace_exact(
+              'lib/product/p5_global_autonomy.dart',
+              "label: 'Model: ${snapshot.modelLabel}',",
+              "label: 'Running model: ${snapshot.modelLabel}',",
+          )
+
+          replace_exact(
+              'test/product/hf_runner_chat_convergence_test.dart',
+              """  test('timeline projection keeps durable and live activity together', () {""",
+              """  test('manual task deserialization gives blank checkpoints a name', () {
+            final task = PlanTaskRecord.fromJson(const <String, dynamic>{
+              'id': 'manual-task',
+              'title': '   ',
+              'instructions': 'Wait for explicit user approval.',
+              'manual': true,
+            });
+            expect(task.title, 'Manual checkpoint');
+            expect(task.manual, isTrue);
+          });
+
+          test('timeline projection keeps durable and live activity together', () {""",
+          )
+
+          replace_exact(
+              'test/product/p5_global_autonomy_test.dart',
+              """    expect(find.byKey(const Key('p5-global-model')), findsOneWidget);
+            expect(find.byKey(const Key('p5-global-sessions')), findsOneWidget);""",
+              """    expect(find.byKey(const Key('p5-global-model')), findsOneWidget);
+            expect(
+              find.text('Running model: ollama/test-model@digest'),
+              findsOneWidget,
+            );
+            expect(find.byKey(const Key('p5-global-sessions')), findsOneWidget);""",
+          )
+          PY
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - run: flutter pub get
+
+      - name: Format touched Dart sources
+        shell: bash
+        run: |
+          dart format \
+            lib/product/domain.dart \
+            lib/product/p5_global_autonomy.dart \
+            lib/product/process_launch.dart \
+            lib/product/prompt_planning.dart \
+            lib/product/run_preflight.dart \
+            lib/product/workspace_tools.dart \
+            test/product/hf_runner_chat_convergence_test.dart \
+            test/product/p5_global_autonomy_test.dart \
+            test/product/process_launch_test.dart
+
+      - name: Focused qualification
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/hf_runner_chat_convergence_test.dart
+          test/product/p5_global_autonomy_test.dart
+          test/product/process_launch_test.dart
+
+      - name: Analyzer qualification
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Commit durable repairs and remove qualifier
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/hf-runner-capability-followup-finalize.yml
+          git add \
+            lib/product/domain.dart \
+            lib/product/p5_global_autonomy.dart \
+            lib/product/process_launch.dart \
+            lib/product/prompt_planning.dart \
+            lib/product/run_preflight.dart \
+            lib/product/workspace_tools.dart \
+            test/product/hf_runner_chat_convergence_test.dart \
+            test/product/p5_global_autonomy_test.dart \
+            test/product/process_launch_test.dart
+          git diff --cached --check
+          git commit -m "fix(runner): repair capability and Windows follow-up"
+          git push origin HEAD:hotfix/runner-capability-followup
