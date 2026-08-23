@@ -17,22 +17,33 @@ replace_once(
 )
 
 controller = Path('lib/product/p5_information_architecture/p5_controller.dart')
-text = controller.read_text(encoding='utf-8')
-standard = '        selectedRunId: null,\n'
-deep = '          selectedRunId: null,\n'
-standard_count = text.count(standard)
-deep_count = text.count(deep)
-if standard_count != 9 or deep_count != 1:
+lines = controller.read_text(encoding='utf-8').splitlines(keepends=True)
+targets = [
+    index
+    for index, line in enumerate(lines)
+    if line.strip() == 'selectedRunId: null,'
+]
+if len(targets) != 10:
+    raise SystemExit(f'{controller}: expected 10 run-context clear lines, found {len(targets)}')
+already_covered = [
+    index
+    for index in targets
+    if index + 1 < len(lines) and lines[index + 1].strip() == 'selectedEvidenceId: null,'
+]
+if len(already_covered) != 1:
     raise SystemExit(
-        f'{controller}: expected run-context clear anchors 9+1, found '
-        f'{standard_count}+{deep_count}'
+        f'{controller}: expected exactly 1 already-covered evidence clear, '
+        f'found {len(already_covered)}'
     )
-text = text.replace(
-    standard,
-    standard + '        selectedEvidenceId: null,\n',
-)
-text = text.replace(
-    deep,
-    deep + '          selectedEvidenceId: null,\n',
-)
-controller.write_text(text, encoding='utf-8', newline='\n')
+output: list[str] = []
+inserted = 0
+for index, line in enumerate(lines):
+    output.append(line)
+    if index not in targets or index in already_covered:
+        continue
+    indent = line[: len(line) - len(line.lstrip())]
+    output.append(f'{indent}selectedEvidenceId: null,\n')
+    inserted += 1
+if inserted != 9:
+    raise SystemExit(f'{controller}: expected to insert 9 evidence clears, inserted {inserted}')
+controller.write_text(''.join(output), encoding='utf-8', newline='\n')
