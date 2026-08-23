@@ -1,13 +1,14 @@
 name: runner-attempt-ledger-sol-qualify
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - hotfix/runner-ledger-sol-7f31
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: runner-attempt-ledger-sol-7f31
@@ -88,7 +89,6 @@ jobs:
           from pathlib import Path
           path = Path('lib/product/planning_runtime.dart')
           text = path.read_text(encoding='utf-8')
-
           replacements = []
 
           old = """    );
@@ -180,7 +180,6 @@ jobs:
               if text.count(old) != 1:
                   raise SystemExit(f'{label} patch marker changed: {text.count(old)}')
               text = text.replace(old, new, 1)
-
           path.write_text(text, encoding='utf-8', newline='\n')
           PY
 
@@ -254,3 +253,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "fix(runner): prune repeated action branches"
           git push origin HEAD:hotfix/runner-ledger-sol-7f31
+
+      - name: Report qualification failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh pr comment 247 --body
+          "Runner attempt-ledger qualification failed in Actions run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}. The branch was not promoted; inspect this exact run before changing the candidate."
