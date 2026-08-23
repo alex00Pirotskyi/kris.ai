@@ -221,6 +221,7 @@ void main() {
         'lib/product/p5_global_autonomy.dart',
         'lib/product/p5_information_architecture/p5_components.dart',
         'lib/product/p5_information_architecture/p5_controller.dart',
+        'lib/product/p5_information_architecture/p5_evidence_viewers.dart',
         'lib/product/p5_information_architecture/p5_fixtures.dart',
         'lib/product/p5_information_architecture/p5_models.dart',
         'lib/product/p5_information_architecture/p5_prototype.dart',

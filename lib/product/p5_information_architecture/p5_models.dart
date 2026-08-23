@@ -146,6 +146,53 @@ class P5TimelineEvent {
   final String detail;
 }
 
+enum P5EvidenceViewKind {
+  text,
+  binaryMetadata,
+  image,
+  markdown,
+  json,
+  table,
+  diff,
+  citation,
+  receipt,
+}
+
+extension P5EvidenceViewKindLabel on P5EvidenceViewKind {
+  String get label => switch (this) {
+        P5EvidenceViewKind.text => 'Text',
+        P5EvidenceViewKind.binaryMetadata => 'Binary metadata',
+        P5EvidenceViewKind.image => 'Image',
+        P5EvidenceViewKind.markdown => 'Markdown',
+        P5EvidenceViewKind.json => 'JSON',
+        P5EvidenceViewKind.table => 'Table',
+        P5EvidenceViewKind.diff => 'Diff',
+        P5EvidenceViewKind.citation => 'Citation',
+        P5EvidenceViewKind.receipt => 'Receipt',
+      };
+}
+
+@immutable
+class P5EvidenceArtifactFixture {
+  const P5EvidenceArtifactFixture({
+    required this.id,
+    required this.runId,
+    required this.kind,
+    required this.title,
+    required this.mediaType,
+    required this.content,
+    this.metadata = const <String, String>{},
+  });
+
+  final String id;
+  final String runId;
+  final P5EvidenceViewKind kind;
+  final String title;
+  final String mediaType;
+  final String content;
+  final Map<String, String> metadata;
+}
+
 extension P5ComposerProfileLabel on P5ComposerProfile {
   String get label => switch (this) {
         P5ComposerProfile.project => 'Project',

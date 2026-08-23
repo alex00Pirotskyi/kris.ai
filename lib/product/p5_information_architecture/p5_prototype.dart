@@ -15,6 +15,7 @@ import 'p5_shell_layout.dart';
 
 part 'p5_task_workspaces.dart';
 part 'p5_verification_workspaces.dart';
+part 'p5_evidence_viewers.dart';
 part 'p5_support_workspaces.dart';
 part 'p5_components.dart';
 part 'p5_shell_workspace.dart';

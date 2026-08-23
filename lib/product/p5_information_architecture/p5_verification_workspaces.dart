@@ -141,45 +141,40 @@ extension _P5VerificationWorkspaces
   }
 
   Widget _evidenceWorkspace(BuildContext context) {
-    final advanced = controller.state.experienceLevel.index >=
-        P5ExperienceLevel.advanced.index;
+    final state = controller.state;
+    final selectedSavedRun = P5PrototypeFixtures.runs
+        .where((run) => run.id == state.selectedRunId)
+        .firstOrNull;
     return _scrollWorkspace(
       context,
       children: <Widget>[
         const _WorkspaceHeader(
           title: 'Evidence',
           subtitle:
-              'Receipts stay understandable in Simple while exact identity is progressively disclosed.',
+              'Reopen deterministic saved-run artifacts without changing runtime authority.',
           icon: Icons.receipt_long_outlined,
         ),
-        for (final item in const <(String, String, String)>[
-          (
-            'evidence.plan-receipt',
-            'Plan receipt',
-            'Goals, bounded steps, and requested access',
-          ),
-          (
-            'evidence.run-timeline',
-            'Run timeline',
-            'Deterministic fixture events with retained context',
-          ),
-          (
-            'evidence.verification-summary',
-            'Verification summary',
-            'Test states separated from certification and support',
-          ),
-        ])
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: Text(item.$2),
-              subtitle: Text(advanced ? '${item.$3}\n${item.$1}' : item.$3),
-              trailing: const Icon(Icons.open_in_new),
-            ),
+        if (selectedSavedRun == null)
+          _RecoveryCard(
+            key: const Key('evidence-saved-run-required'),
+            state: 'EMPTY',
+            title: 'Select a saved run',
+            message:
+                'Artifact viewers open only from deterministic saved-run evidence. Current in-memory runs do not fabricate saved evidence.',
+            actionLabel: 'Open saved runs',
+            onAction: () =>
+                controller.selectWorkspace(P5WorkspaceId.runsActivity),
+          )
+        else
+          _P5EvidenceBrowser(
+            key: ValueKey<String>('p5-evidence-browser-${selectedSavedRun.id}'),
+            run: selectedSavedRun,
+            artifacts: P5PrototypeFixtures.evidenceArtifactsForRun(
+                selectedSavedRun.id),
           ),
         const _BoundaryNotice(
           message:
-              'Evidence shown here is deterministic prototype data and never asserts production behavior.',
+              'All viewer content is deterministic prototype data. No live file, network, evidence-store, or certification claim is implied.',
         ),
       ],
     );

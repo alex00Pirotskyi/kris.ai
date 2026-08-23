@@ -189,6 +189,113 @@ class P5PrototypeFixtures {
     );
   }
 
+  static List<P5EvidenceArtifactFixture> evidenceArtifactsForRun(
+    String runId,
+  ) {
+    if (!runs.any((run) => run.id == runId)) {
+      return const <P5EvidenceArtifactFixture>[];
+    }
+    const fixtureOrigin = <String, String>{
+      'origin': 'deterministic saved-run fixture',
+      'authority': 'presentation only',
+    };
+    return <P5EvidenceArtifactFixture>[
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.text',
+        runId: runId,
+        kind: P5EvidenceViewKind.text,
+        title: 'Planner notes',
+        mediaType: 'text/plain',
+        content:
+            'Deterministic saved-run text fixture. No live file or evidence store is read.',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.binary-metadata',
+        runId: runId,
+        kind: P5EvidenceViewKind.binaryMetadata,
+        title: 'Binary attachment metadata',
+        mediaType: 'application/octet-stream',
+        content:
+            'Binary payload is intentionally not embedded in this presentation fixture.',
+        metadata: <String, String>{
+          ...fixtureOrigin,
+          'size': '4096 bytes (fixture)',
+          'content': 'metadata only',
+        },
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.image',
+        runId: runId,
+        kind: P5EvidenceViewKind.image,
+        title: 'Screenshot fixture',
+        mediaType: 'image/png',
+        content:
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.markdown',
+        runId: runId,
+        kind: P5EvidenceViewKind.markdown,
+        title: 'Markdown summary',
+        mediaType: 'text/markdown',
+        content:
+            '# Saved run evidence\n\n- deterministic fixture\n- no live side effect\n- no production claim',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.json',
+        runId: runId,
+        kind: P5EvidenceViewKind.json,
+        title: 'Structured result',
+        mediaType: 'application/json',
+        content:
+            '{"runId":"$runId","fixture":true,"state":"NOT_PRODUCTION_EVIDENCE"}',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.table',
+        runId: runId,
+        kind: P5EvidenceViewKind.table,
+        title: 'Verification table',
+        mediaType: 'application/vnd.kristin.table+json',
+        content:
+            '[["Check","State"],["Navigation","PASS"],["Certification","NOT_EVALUATED"]]',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.diff',
+        runId: runId,
+        kind: P5EvidenceViewKind.diff,
+        title: 'Fixture diff',
+        mediaType: 'text/x-diff',
+        content: '@@ -1 +1 @@\n-old fixture label\n+new fixture label',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.citation',
+        runId: runId,
+        kind: P5EvidenceViewKind.citation,
+        title: 'Citation fixture',
+        mediaType: 'application/vnd.kristin.citation+json',
+        content:
+            '{"title":"Fixture source","locator":"fixture://source/p5-009","span":"deterministic citation span"}',
+        metadata: fixtureOrigin,
+      ),
+      P5EvidenceArtifactFixture(
+        id: '$runId.evidence.receipt',
+        runId: runId,
+        kind: P5EvidenceViewKind.receipt,
+        title: 'Effect receipt fixture',
+        mediaType: 'application/vnd.kristin.receipt+json',
+        content:
+            '{"runId":"$runId","effectId":"fixture-effect-001","status":"SIMULATED","authority":"none"}',
+        metadata: fixtureOrigin,
+      ),
+    ];
+  }
+
   static const List<P5VerificationFixture> verificationResults =
       <P5VerificationFixture>[
     P5VerificationFixture(
