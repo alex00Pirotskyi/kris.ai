@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PAYLOAD = ROOT / 'tool' / 'runner_attempt_ledger_finalize_payload.py'
 V7_MIGRATION_DIGEST = '966ca51bd07ea48e2349123d4dd8a73dcd8bb4aa177f5fc70c2b62a07738aa29'
+V6_MIGRATION_DIGEST = 'df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261'
 
 
 def replace_once(text: str, old: str, new: str, label: str) -> str:
@@ -51,6 +52,24 @@ def patch_source_contract_inventory() -> None:
         "        'lib/product/retry_policy.dart',\n        'lib/product/runner_attempt_ledger.dart',\n        'lib/product/storage_security.dart',",
         'active Dart source inventory',
     )
+    text = replace_once(
+        text,
+        'generatedWorkflowSchemaVersion = 6',
+        'generatedWorkflowSchemaVersion = 7',
+        'source contract workflow schema',
+    )
+    text = replace_once(
+        text,
+        V6_MIGRATION_DIGEST,
+        V7_MIGRATION_DIGEST,
+        'source contract migration digest',
+    )
+    text = replace_once(
+        text,
+        "      expect(kernel['schemaVersion'], 6);",
+        "      expect(kernel['schemaVersion'], 7);",
+        'source contract durable schema metadata',
+    )
     path.write_text(text, encoding='utf-8', newline='\n')
 
 
@@ -81,7 +100,7 @@ def patch_offline_contracts() -> None:
     )
     text = replace_once(
         text,
-        '"df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261" in workflow_migrations',
+        f'"{V6_MIGRATION_DIGEST}" in workflow_migrations',
         f'"{V7_MIGRATION_DIGEST}" in workflow_migrations',
         'workflow migration digest contract',
     )
@@ -104,7 +123,7 @@ def patch_offline_contracts() -> None:
     metadata = version_control.read_text(encoding='utf-8')
     metadata = replace_once(
         metadata,
-        '    "migrationDigest": "df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261",',
+        f'    "migrationDigest": "{V6_MIGRATION_DIGEST}",',
         f'    "migrationDigest": "{V7_MIGRATION_DIGEST}",',
         'durable workflow migration digest metadata',
     )
