@@ -12,6 +12,9 @@ import 'deployment_support.dart';
 import 'models_research.dart';
 import 'mcp.dart';
 import 'retry_policy.dart';
+import 'run_live_signals.dart';
+import 'run_preflight.dart';
+import 'run_steering.dart';
 import 'storage_security.dart';
 import 'tool_schema.dart';
 import 'workspace_tools.dart';
@@ -1609,6 +1612,9 @@ class RunCoordinator {
     required this.skillRegistry,
     required this.mcp,
     required this.executionIntelligence,
+    required this.preflight,
+    required this.liveSignals,
+    required this.steering,
   });
 
   final AppDirectories directories;
@@ -1629,6 +1635,9 @@ class RunCoordinator {
   final SkillRegistry skillRegistry;
   final McpTrustService mcp;
   final ExecutionIntelligenceService executionIntelligence;
+  final RunPreflightService preflight;
+  final LiveRunSignalBus liveSignals;
+  final RunSteeringService steering;
   final ProjectResourceLocks _locks = ProjectResourceLocks();
   final Map<String, RunControl> _controls = <String, RunControl>{};
   final Map<String, Future<RunRecord>> _active = <String, Future<RunRecord>>{};
@@ -1697,6 +1706,34 @@ class RunCoordinator {
       return duplicate;
     }
     return _createFreshRun(command, budget: budget);
+  }
+
+  Future<RunSteeringInstruction> queueSteering(
+    String runId,
+    String text,
+  ) async {
+    final run = await repositories.runs.get(runId);
+    if (run == null) {
+      throw ProductException('run_missing', 'Run not found.');
+    }
+    if (!const <RunState>{RunState.running, RunState.paused}
+        .contains(run.state)) {
+      throw ProductException(
+        'run_not_steerable',
+        'Only an active or paused run can receive new direction.',
+      );
+    }
+    final instruction = steering.queue(runId, text);
+    await _bestEffortEvent(
+      'steering.queued',
+      runId,
+      <String, dynamic>{
+        'runId': runId,
+        'instructionId': instruction.id,
+        'text': instruction.text,
+      },
+    );
+    return instruction;
   }
 
   Future<RunRecord> retryRun(String runId) async {
@@ -1942,6 +1979,67 @@ class RunCoordinator {
     RunControl control,
     String leaseOwner,
   ) async {
+    liveSignals.publish(
+      LiveRunSignal.phase(
+        runId: initial.id,
+        phase: 'preflight',
+        message: 'Checking required capabilities before execution.',
+      ),
+    );
+    await _bestEffortEvent(
+      'run.preflight_started',
+      initial.id,
+      <String, dynamic>{'runId': initial.id},
+    );
+    final project = await repositories.projects.get(
+      initial.command.contract.projectId,
+    );
+    if (project == null) {
+      throw ProductException(
+        'project_missing',
+        'The selected project is no longer registered.',
+      );
+    }
+    final readiness = await preflight.check(run: initial, project: project);
+    await _bestEffortEvent(
+      'run.preflight_completed',
+      initial.id,
+      readiness.toJson(),
+    );
+    liveSignals.publish(
+      LiveRunSignal(
+        sequence: 0,
+        runId: initial.id,
+        kind: LiveRunSignalKind.preflight,
+        timestamp: DateTime.now().toUtc(),
+        data: <String, dynamic>{
+          'message': readiness.summary,
+          'verdict': readiness.verdict.name,
+          'probes': readiness.probes.map((probe) => probe.toJson()).toList(),
+        },
+      ),
+    );
+    if (readiness.blocked) {
+      final blocked = initial.copyWith(
+        state: RunState.failed,
+        failure: 'run_preflight_blocked: ${readiness.summary}',
+        completedAt: DateTime.now().toUtc(),
+      );
+      await _save(blocked);
+      await _bestEffortEvent(
+        'run.preflight_blocked',
+        blocked.id,
+        readiness.toJson(),
+      );
+      return blocked;
+    }
+    liveSignals.publish(
+      LiveRunSignal.phase(
+        runId: initial.id,
+        phase: 'execution',
+        message: 'Readiness checks passed. Starting execution.',
+      ),
+    );
     var run = initial.copyWith(
       state: RunState.running,
       startedAt: initial.startedAt ?? DateTime.now().toUtc(),
@@ -1955,15 +2053,6 @@ class RunCoordinator {
       'runId': run.id,
     });
 
-    final project = await repositories.projects.get(
-      run.command.contract.projectId,
-    );
-    if (project == null) {
-      return _failBeforeTransaction(
-        run,
-        'The active project no longer exists.',
-      );
-    }
     final boundary = await WorkspaceBoundary.open(project.rootPath);
     final mutatingRun = run.command.contract.requiredPermissions.any(
       const <PermissionScope>{
@@ -2819,7 +2908,7 @@ class RunCoordinator {
         descriptors,
         skillRegistry.contextFor(current.command.contract.request),
       );
-      final user = _userPrompt(
+      var user = _userPrompt(
         current,
         progress.item,
         knowledgeContext,
@@ -2829,6 +2918,28 @@ class RunCoordinator {
         itemMutations: itemMutations,
         inspectionEvidence: inspectionEvidence,
       );
+      final pendingSteering = steering.takePending(current.id);
+      if (pendingSteering.isNotEmpty) {
+        final directions = pendingSteering
+            .map((instruction) => '- ${instruction.text}')
+            .join('\n');
+        user =
+            '$user\n\nUSER STEERING RECEIVED DURING THIS RUN\n$directions\nApply these directions to future work only. Do not repeat or corrupt an in-flight side effect.';
+        steering.applied(
+          current.id,
+          pendingSteering,
+          workItemId: progress.item.id,
+        );
+        await _bestEffortEvent(
+          'steering.applied',
+          current.id,
+          <String, dynamic>{
+            'runId': current.id,
+            'workItemId': progress.item.id,
+            'instructionIds': pendingSteering.map((item) => item.id).toList(),
+          },
+        );
+      }
       final requestNumber = current.modelRequests + 1;
       current = current.copyWith(modelRequests: requestNumber);
       await _save(current);
@@ -2860,7 +2971,27 @@ class RunCoordinator {
                 : executionPhaseBudget.maxOutputTokens,
             cancellation: control.cancellation.cancelled,
             isCancelled: () => control.cancellation.isCancelled,
+            onTextDelta: (delta) {
+              liveSignals.publish(
+                LiveRunSignal.modelText(
+                  runId: current.id,
+                  workItemId: progress.item.id,
+                  model: current.command.model,
+                  delta: delta,
+                ),
+              );
+            },
             onProgress: (modelProgress) {
+              liveSignals.publish(
+                LiveRunSignal.modelProgress(
+                  runId: current.id,
+                  workItemId: progress.item.id,
+                  model: current.command.model,
+                  stage: modelProgress.stage,
+                  message: modelProgress.message,
+                  elapsedMilliseconds: modelProgress.elapsed.inMilliseconds,
+                ),
+              );
               unawaited(
                 _bestEffortEvent(
                   'model.${modelProgress.stage}',
@@ -3525,10 +3656,50 @@ class RunCoordinator {
         sourceIndex: sourceIndex,
         mcp: mcp,
       );
+      final liveTool = action.tool!;
+      liveSignals.publish(
+        LiveRunSignal.tool(
+          runId: current.id,
+          workItemId: progress.item.id,
+          tool: liveTool,
+          kind: LiveRunSignalKind.toolStarted,
+        ),
+      );
       ToolResult result;
       try {
-        result = await tools.execute(action.tool!, action.arguments, context);
+        result = await tools.execute(liveTool, action.arguments, context);
+        final output = result.data['output']?.toString() ??
+            result.data['stdout']?.toString() ??
+            result.data['text']?.toString() ??
+            '';
+        liveSignals.publish(
+          LiveRunSignal.tool(
+            runId: current.id,
+            workItemId: progress.item.id,
+            tool: liveTool,
+            kind: LiveRunSignalKind.toolCompleted,
+            data: <String, dynamic>{
+              'ok': result.ok,
+              if (output.isNotEmpty)
+                'output': output.length <= 4000
+                    ? output
+                    : output.substring(output.length - 4000),
+            },
+          ),
+        );
       } on ProductException catch (toolError) {
+        liveSignals.publish(
+          LiveRunSignal.tool(
+            runId: current.id,
+            workItemId: progress.item.id,
+            tool: liveTool,
+            kind: LiveRunSignalKind.toolFailed,
+            data: <String, dynamic>{
+              'errorCode': toolError.code,
+              'detail': toolError.message,
+            },
+          ),
+        );
         if (!_isRecoverableToolInputError(toolError) ||
             toolRepairAttempts >= 3 ||
             current.repairs >= phaseRepairCeiling) {

@@ -17,6 +17,11 @@ import 'prompt_planning.dart';
 import 'prompt_studio_v2.dart';
 import 'project_diagnostics.dart';
 import 'project_manager_v2.dart';
+import 'conversation_orchestrator.dart';
+import 'project_provisioning.dart';
+import 'run_live_signals.dart';
+import 'run_preflight.dart';
+import 'run_steering.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
@@ -172,6 +177,11 @@ class ProductRuntime {
     required this.diagnostics,
     required this.executionIntelligence,
     required this.projectManagerV2,
+    required this.liveRunSignals,
+    required this.runPreflight,
+    required this.conversationOrchestrator,
+    required this.projectProvisioning,
+    required this.runSteering,
     required this.runs,
     required ProductSettings settings,
   }) : _settings = settings;
@@ -201,6 +211,11 @@ class ProductRuntime {
   final ProjectDiagnosticsService diagnostics;
   final ExecutionIntelligenceService executionIntelligence;
   final ProjectManagerV2Service projectManagerV2;
+  final LiveRunSignalBus liveRunSignals;
+  final RunPreflightService runPreflight;
+  final ConversationOrchestrator conversationOrchestrator;
+  final ProjectProvisioningService projectProvisioning;
+  final RunSteeringService runSteering;
   final RunCoordinator runs;
   P3ProductRuntimeBrowserHandle? _p3BrowserRuntime;
   P3ProductRuntimeBrowserHandle get p3BrowserRuntime =>
@@ -222,6 +237,7 @@ class ProductRuntime {
 
   ProductSettings get settings => _settings;
   Stream<EventEnvelope> get eventStream => events.stream;
+  Stream<LiveRunSignal> get liveRunStream => liveRunSignals.stream;
 
   static Future<ProductRuntime> initialize({String? dataRoot}) async {
     final directories = await AppDirectories.create(overrideRoot: dataRoot);
@@ -314,7 +330,87 @@ class ProductRuntime {
       events,
     );
     final tools = ToolRegistry.standard();
+    final liveRunSignals = LiveRunSignalBus();
+    const conversationOrchestrator = ConversationOrchestrator();
+    final projectProvisioning = ProjectProvisioningService(
+      directories: directories,
+    );
     late ProductRuntime runtime;
+    final runPreflight = RunPreflightService(
+      resolver: const RunCapabilityResolver(),
+      modelProbe: (model, requirement) async {
+        final stopwatch = Stopwatch()..start();
+        try {
+          final provider = models.providerFor(model);
+          final result = await provider.generate(
+            ModelGenerationRequest(
+              identity: model,
+              systemPrompt:
+                  'You are a readiness probe. Return exactly {\\"status\\":\\"ready\\"}.',
+              userPrompt: 'Return readiness JSON now.',
+              commandId: newId('preflight_model'),
+              temperature: 0,
+              maxOutputTokens: 32,
+              firstTokenTimeout: const Duration(seconds: 45),
+              totalTimeout: const Duration(seconds: 90),
+            ),
+          );
+          stopwatch.stop();
+          return RunCapabilityProbeResult(
+            key: requirement.key,
+            label: requirement.label,
+            ok: result.text.trim().isNotEmpty,
+            required: requirement.required,
+            message: result.text.trim().isNotEmpty
+                ? '${model.name} is loaded and responding.'
+                : '${model.name} returned an empty readiness response.',
+            durationMilliseconds: stopwatch.elapsedMilliseconds,
+            details: <String, dynamic>{
+              'model': model.toJson(),
+              'firstTokenLatencyMs': result.firstTokenLatency.inMilliseconds,
+            },
+          );
+        } catch (error) {
+          stopwatch.stop();
+          return RunCapabilityProbeResult(
+            key: requirement.key,
+            label: requirement.label,
+            ok: false,
+            required: requirement.required,
+            message: '${model.name} is not ready: $error',
+            durationMilliseconds: stopwatch.elapsedMilliseconds,
+          );
+        }
+      },
+      browserProbe: (requirement) async {
+        final stopwatch = Stopwatch()..start();
+        try {
+          await runtime.p3BrowserRuntime.probe(
+            startupTimeout: const Duration(seconds: 20),
+          );
+          stopwatch.stop();
+          return RunCapabilityProbeResult(
+            key: requirement.key,
+            label: requirement.label,
+            ok: true,
+            required: requirement.required,
+            message: 'Browser runtime starts and shuts down cleanly.',
+            durationMilliseconds: stopwatch.elapsedMilliseconds,
+          );
+        } catch (error) {
+          stopwatch.stop();
+          return RunCapabilityProbeResult(
+            key: requirement.key,
+            label: requirement.label,
+            ok: false,
+            required: requirement.required,
+            message: 'Browser runtime is not ready: $error',
+            durationMilliseconds: stopwatch.elapsedMilliseconds,
+          );
+        }
+      },
+    );
+    final runSteering = RunSteeringService(liveSignals: liveRunSignals);
     final promptPlanning = PromptPlanningService(
       models: models,
       repositories: repositories,
@@ -357,6 +453,9 @@ class ProductRuntime {
       skillRegistry: const SkillRegistry(),
       mcp: mcp,
       executionIntelligence: executionIntelligence,
+      preflight: runPreflight,
+      liveSignals: liveRunSignals,
+      steering: runSteering,
     );
     runtime = ProductRuntime._(
       directories: directories,
@@ -384,6 +483,11 @@ class ProductRuntime {
       diagnostics: diagnostics,
       executionIntelligence: executionIntelligence,
       projectManagerV2: projectManagerV2,
+      liveRunSignals: liveRunSignals,
+      runPreflight: runPreflight,
+      conversationOrchestrator: conversationOrchestrator,
+      projectProvisioning: projectProvisioning,
+      runSteering: runSteering,
       runs: coordinator,
       settings: settings,
     );
@@ -419,8 +523,48 @@ class ProductRuntime {
     await audit.append('application.stopped', 'application', <String, dynamic>{
       'version': kristinVersion,
     });
+    await liveRunSignals.close();
     await events.close();
     await repositories.workflow.close();
+  }
+
+  Future<ProjectRecord> provisionProjectForRequest({
+    required String request,
+    String? suggestedName,
+  }) async {
+    final intent =
+        conversationOrchestrator.classify(request, CommandMode.build);
+    final location = await projectProvisioning.prepare(
+      suggestedName: suggestedName?.trim().isNotEmpty == true
+          ? suggestedName!
+          : intent.suggestedProjectName,
+    );
+    return addProject(name: location.name, rootPath: location.rootPath);
+  }
+
+  Future<RunSteeringInstruction> steerRun(String runId, String text) =>
+      runs.queueSteering(runId, text);
+
+  Future<List<EventEnvelope>> eventsForRun(
+    String runId, {
+    int limit = 10000,
+  }) async {
+    final result = <EventEnvelope>[];
+    var cursor = 0;
+    while (result.length < limit) {
+      final batch = await events.after(cursor, limit: 1000);
+      if (batch.isEmpty) break;
+      cursor = batch.last.sequence;
+      for (final event in batch) {
+        if (event.correlationId == runId ||
+            event.data['runId']?.toString() == runId) {
+          result.add(event);
+          if (result.length >= limit) break;
+        }
+      }
+      if (batch.length < 1000) break;
+    }
+    return List<EventEnvelope>.unmodifiable(result);
   }
 
   Future<List<ProjectRecord>> listProjects() async {
