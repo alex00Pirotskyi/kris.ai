@@ -79,6 +79,17 @@ class P8TraceEvent {
         'safeAttributes': safeAttributes,
         'hashedAttributes': hashedAttributes,
       };
+
+  Map<String, Object> toSafeLogJson() => <String, Object>{
+        'traceId': traceId,
+        'spanId': spanId,
+        'runId': runId,
+        'category': category.wireName,
+        'operation': operation,
+        'recordedAt': recordedAt.toUtc().toIso8601String(),
+        'status': status,
+        'safeAttributes': safeAttributes,
+      };
 }
 
 class P8TelemetryBuffer {
@@ -199,14 +210,39 @@ class P8TelemetryBuffer {
         'events': _events.map((event) => event.toJson()).toList(growable: false),
       };
 
-  Map<String, Object> openTelemetryEnvelope() => <String, Object>{
-        'resource': <String, Object>{
-          'service.name': 'kristin-desktop',
-          'telemetry.content.enabled': false,
-          'telemetry.opted_in': _policy.optedIn,
-        },
-        'spans': _events.map((event) => event.toJson()).toList(growable: false),
-      };
+  Map<String, Object> openTelemetryEnvelope() {
+    final metrics = <Map<String, Object>>[];
+    for (final category in P8TelemetryCategory.values) {
+      final matching = _events
+          .where((event) => event.category == category)
+          .toList(growable: false);
+      if (matching.isEmpty) continue;
+      metrics.add(<String, Object>{
+        'name': 'kristin.${category.wireName}.events',
+        'count': matching.length,
+        'errorCount': matching.where((event) => event.status == 'error').length,
+        'durationMicrosTotal': matching.fold<int>(
+          0,
+          (total, event) => total + event.durationMicros,
+        ),
+        'durationMicrosMax': matching
+            .map((event) => event.durationMicros)
+            .reduce((left, right) => left > right ? left : right),
+      });
+    }
+    return <String, Object>{
+      'resource': <String, Object>{
+        'service.name': 'kristin-desktop',
+        'telemetry.content.enabled': false,
+        'telemetry.opted_in': _policy.optedIn,
+      },
+      'spans': _events.map((event) => event.toJson()).toList(growable: false),
+      'metrics': metrics,
+      'logs': _events
+          .map((event) => event.toSafeLogJson())
+          .toList(growable: false),
+    };
+  }
 
   Future<void> export(File file) async {
     if (!_policy.optedIn) {
@@ -260,16 +296,71 @@ class P8ProductTelemetryBridge {
         lower.contains('error') ||
         lower.contains('denied') ||
         lower.contains('rejected');
+    final attributes = _safeAttributes(event.data);
+    attributes['success'] = !failed;
     buffer.record(
       traceId: runHash,
       spanId: Sha256.text('${event.sequence}:${event.id}').substring(0, 32),
       runId: runHash,
       category: category,
       operation: event.type,
-      durationMicros: 0,
+      durationMicros: _durationMicros(event.data),
       status: failed ? 'error' : 'event',
-      safeAttributes: <String, Object>{'success': !failed},
+      safeAttributes: attributes,
     );
+  }
+
+  static Map<String, Object> _safeAttributes(Map<String, dynamic> data) {
+    final result = <String, Object>{};
+    void copyString(String source, String target) {
+      final value = data[source]?.toString().trim() ?? '';
+      if (value.isNotEmpty) result[target] = value;
+    }
+
+    final attempt = data['attempt'];
+    if (attempt is num && attempt.isFinite) {
+      result['attempt'] = attempt.toInt();
+    }
+    final itemCount = data['itemCount'];
+    if (itemCount is num && itemCount.isFinite) {
+      result['itemCount'] = itemCount.toInt();
+    }
+    final bytesCount = data['bytesCount'];
+    if (bytesCount is num && bytesCount.isFinite) {
+      result['bytesCount'] = bytesCount.toInt();
+    }
+    copyString('tool', 'toolName');
+    copyString('errorCode', 'errorCode');
+    copyString('retryability', 'retryability');
+    copyString('effectState', 'effectState');
+    copyString('policyDecision', 'policyDecision');
+    copyString('httpStatusClass', 'httpStatusClass');
+
+    final model = data['model'];
+    if (model is Map) {
+      final provider = model['providerId']?.toString().trim() ?? '';
+      final name = model['name']?.toString().trim() ?? '';
+      if (provider.isNotEmpty) result['modelProvider'] = provider;
+      if (name.isNotEmpty) result['modelName'] = name;
+    }
+    return result;
+  }
+
+  static int _durationMicros(Map<String, dynamic> data) {
+    final micros = data['durationMicroseconds'];
+    if (micros is num && micros.isFinite && micros >= 0) {
+      return micros.toInt();
+    }
+    for (final key in const <String>[
+      'durationMilliseconds',
+      'elapsedMilliseconds',
+    ]) {
+      final milliseconds = data[key];
+      if (milliseconds is num && milliseconds.isFinite && milliseconds >= 0) {
+        return (milliseconds * Duration.microsecondsPerMillisecond).round();
+      }
+    }
+    return 0;
   }
 
   static P8TelemetryCategory? categoryForEventType(String type) {
