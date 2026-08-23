@@ -1,0 +1,157 @@
+name: hf-runner-approval-recovery-finalize
+
+on:
+  push:
+    branches:
+      - hotfix/runner-capability-followup
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: hotfix/runner-capability-followup
+          fetch-depth: 0
+
+      - name: Make awaiting approval actionable
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path_name: str, anchor: str, replacement: str) -> None:
+              path = Path(path_name)
+              text = path.read_text(encoding='utf-8')
+              count = text.count(anchor)
+              if count != 1:
+                  raise SystemExit(f'{path_name}: anchor mismatch: expected 1, got {count}')
+              path.write_text(text.replace(anchor, replacement), encoding='utf-8')
+
+          chat = 'lib/product/chat_studio.dart'
+
+          replace_once(
+              chat,
+              """      currentRun = run;\n      prepared = run.command;\n      composerController.text = run.command.contract.request;""",
+              """      currentRun = run;\n      prepared = run.command;\n      approvedScopes.clear();\n      if (run.state == RunState.awaitingApproval) {\n        approvedScopes.addAll(run.command.contract.requiredPermissions);\n      }\n      composerController.text = run.command.contract.request;""",
+          )
+
+          replace_once(
+              chat,
+              """        selectedRunLiveSignals = <LiveRunSignal>[];\n        liveAssistantText = '';\n        liveAssistantStage = '';""",
+              """        selectedRunLiveSignals = <LiveRunSignal>[];\n        liveAssistantText = '';\n        liveAssistantProtocolText = '';\n        liveAssistantStage = '';""",
+          )
+
+          replace_once(
+              chat,
+              """      conversationIntent = null;\n      embeddedClarificationActive = false;\n      liveAssistantText = '';\n      liveAssistantStage = '';""",
+              """      conversationIntent = null;\n      embeddedClarificationActive = false;\n      liveAssistantText = '';\n      liveAssistantProtocolText = '';\n      liveAssistantStage = '';""",
+          )
+
+          replace_once(
+              chat,
+              """    final total = run.items.isEmpty ? 1 : run.items.length;\n    final progress = completed / total;\n    return _messageBubble(""",
+              """    final total = run.items.isEmpty ? 1 : run.items.length;\n    final progress = completed / total;\n    final approvalGroups = run.state == RunState.awaitingApproval\n        ? groupPermissions(run.command.contract.requiredPermissions)\n        : const <AccessGroup>[];\n    return _messageBubble(""",
+          )
+
+          replace_once(
+              chat,
+              """                    Text(\n                      friendlyWorkState(progressItem.state),\n                      style: Theme.of(context).textTheme.bodySmall,\n                    ),""",
+              """                    Text(\n                      run.state == RunState.awaitingApproval &&\n                              progressItem.state == WorkItemState.queued\n                          ? 'Starts after approval'\n                          : friendlyWorkState(progressItem.state),\n                      style: Theme.of(context).textTheme.bodySmall,\n                    ),""",
+          )
+
+          replace_once(
+              chat,
+              """          ),\n          if (liveAssistantMessage.isNotEmpty ||\n              liveAssistantText.isNotEmpty ||\n              liveToolLabel.isNotEmpty) ...<Widget>[""",
+              """          ),\n          if (run.state == RunState.awaitingApproval) ...<Widget>[\n            const SizedBox(height: 12),\n            Container(\n              key: const Key('chat-run-approval-guidance'),\n              padding: const EdgeInsets.all(12),\n              decoration: BoxDecoration(\n                color: Theme.of(context).colorScheme.primaryContainer,\n                borderRadius: BorderRadius.circular(12),\n              ),\n              child: Column(\n                crossAxisAlignment: CrossAxisAlignment.stretch,\n                children: <Widget>[\n                  Row(\n                    crossAxisAlignment: CrossAxisAlignment.start,\n                    children: <Widget>[\n                      const Icon(Icons.lock_open_outlined, size: 20),\n                      const SizedBox(width: 8),\n                      Expanded(\n                        child: Text(\n                          'The plan is ready. Execution is paused before any requested tool access is granted.',\n                          style: Theme.of(context)\n                              .textTheme\n                              .bodyMedium\n                              ?.copyWith(fontWeight: FontWeight.w700),\n                        ),\n                      ),\n                    ],\n                  ),\n                  if (approvalGroups.isNotEmpty) ...<Widget>[\n                    const SizedBox(height: 10),\n                    Wrap(\n                      spacing: 7,\n                      runSpacing: 7,\n                      children: approvalGroups\n                          .map((group) => _statusPill(group.title, group.icon))\n                          .toList(growable: false),\n                    ),\n                  ],\n                  const SizedBox(height: 10),\n                  const Text(\n                    'Press Review & continue below. Sensitive access will get one final confirmation. Nothing will execute until you approve this run.',\n                  ),\n                ],\n              ),\n            ),\n          ],\n          if (run.state != RunState.awaitingApproval &&\n              (liveAssistantMessage.isNotEmpty ||\n                  liveAssistantText.isNotEmpty ||\n                  liveToolLabel.isNotEmpty)) ...<Widget>[""",
+          )
+
+          replace_once(
+              chat,
+              """          const SizedBox(height: 12),\n          Wrap(\n            spacing: 8,\n            runSpacing: 8,\n            children: <Widget>[\n              if (run.state == RunState.running)""",
+              """          const SizedBox(height: 12),\n          Wrap(\n            spacing: 8,\n            runSpacing: 8,\n            children: <Widget>[\n              if (run.state == RunState.awaitingApproval)\n                FilledButton.icon(\n                  key: const Key('chat-run-approve-continue'),\n                  onPressed: busy ? null : _startPrepared,\n                  icon: const Icon(Icons.lock_open_outlined),\n                  label: const Text('Review & continue'),\n                ),\n              if (run.state == RunState.running)""",
+          )
+
+          replace_once(
+              'lib/product/ui_components.dart',
+              "      RunState.awaitingApproval => 'Waiting for your approval',",
+              "      RunState.awaitingApproval => 'Approval required to continue',",
+          )
+
+          test_path = Path('test/product/hf_runner_chat_convergence_test.dart')
+          test_text = test_path.read_text(encoding='utf-8')
+          test_anchor = "  test('timeline projection keeps durable and live activity together', () {"
+          if test_text.count(test_anchor) != 1:
+              raise SystemExit(
+                  f'test/product/hf_runner_chat_convergence_test.dart: test anchor mismatch: {test_text.count(test_anchor)}'
+              )
+          addition = r'''  test('awaiting approval chat card is actionable and recovery-safe', () {
+    final chatSource = File('lib/product/chat_studio.dart').readAsStringSync();
+    final presentationSource =
+        File('lib/product/ui_components.dart').readAsStringSync();
+
+    expect(
+      presentationSource,
+      contains("RunState.awaitingApproval => 'Approval required to continue'"),
+    );
+    expect(
+      chatSource,
+      contains("key: const Key('chat-run-approval-guidance')"),
+    );
+    expect(
+      chatSource,
+      contains("key: const Key('chat-run-approve-continue')"),
+    );
+    expect(chatSource, contains("label: const Text('Review & continue')"));
+    expect(chatSource, contains("'Starts after approval'"));
+    expect(
+      chatSource,
+      contains('Nothing will execute until you approve this run.'),
+    );
+    expect(
+      chatSource,
+      contains('approvedScopes.addAll(run.command.contract.requiredPermissions);'),
+    );
+    expect(
+      RegExp(r"liveAssistantProtocolText = '';")
+          .allMatches(chatSource)
+          .length,
+      greaterThanOrEqualTo(5),
+    );
+  });
+
+'''
+          test_path.write_text(
+              test_text.replace(test_anchor, addition + test_anchor),
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - run: flutter pub get
+      - run: dart format lib/product/chat_studio.dart lib/product/ui_components.dart test/product/hf_runner_chat_convergence_test.dart
+      - run: python tool/dart_format_scope.py --check
+      - run: git diff --check
+      - run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/hf_runner_chat_convergence_test.dart test/product/source_contract_test.dart test/product/process_launch_test.dart test/product/p5_global_autonomy_test.dart
+      - run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Commit approval recovery and remove qualifier
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/hf-runner-approval-recovery-finalize.yml
+          git add lib/product/chat_studio.dart lib/product/ui_components.dart test/product/hf_runner_chat_convergence_test.dart
+          git diff --cached --check
+          git commit -m "fix(runner): make pending approval actionable"
+          git push origin HEAD:hotfix/runner-capability-followup
