@@ -22,8 +22,9 @@ void main() {
     );
   });
 
-  testWidgets('blocked Owner Mode explains recovery without raw Dart text',
-      (tester) async {
+  testWidgets('blocked Owner Mode explains recovery without raw Dart text', (
+    tester,
+  ) async {
     final handle = P2ProductRuntimeOwnerModeHandle.blocked(
       'Bad_state:_merged_p1a_service_unavailable',
     );

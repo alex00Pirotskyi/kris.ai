@@ -22,8 +22,8 @@ final class P3BrowserProfileStore {
     required this.cipher,
     this.maxStateBytes = 2 * 1024 * 1024,
     DateTime Function()? clock,
-  })  : root = root.absolute,
-        _clock = clock ?? DateTime.now {
+  }) : root = root.absolute,
+       _clock = clock ?? DateTime.now {
     if (maxStateBytes < 1024 || maxStateBytes > 16 * 1024 * 1024) {
       throw StateError('browser_profile_state_budget_invalid');
     }
@@ -48,17 +48,17 @@ final class P3BrowserProfileStore {
   }
 
   File _file(String profileId) => File(
-        '${root.path}${Platform.pathSeparator}$profileId'
-        '${Platform.pathSeparator}state.v1.json',
-      );
+    '${root.path}${Platform.pathSeparator}$profileId'
+    '${Platform.pathSeparator}state.v1.json',
+  );
 
   List<int> _associatedData(String profileId) => utf8.encode(
-        canonicalJson(<String, Object?>{
-          'schemaVersion': '1.0.0',
-          'recordType': 'kristin-p3-browser-auth-profile-v1',
-          'profileId': profileId,
-        }),
-      );
+    canonicalJson(<String, Object?>{
+      'schemaVersion': '1.0.0',
+      'recordType': 'kristin-p3-browser-auth-profile-v1',
+      'profileId': profileId,
+    }),
+  );
 
   Future<void> put(String profileId, Map<String, Object?> state) async {
     final id = _requireProfileId(profileId);

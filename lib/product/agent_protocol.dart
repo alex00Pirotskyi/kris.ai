@@ -122,10 +122,9 @@ const List<AgentProviderAdapter> _allProviderAdapters = <AgentProviderAdapter>[
 
 Iterable<AgentProviderAdapter> providerAdapters(
   AgentProviderProtocol provider,
-) =>
-    provider == AgentProviderProtocol.auto
-        ? _allProviderAdapters
-        : _allProviderAdapters.where((adapter) => adapter.protocol == provider);
+) => provider == AgentProviderProtocol.auto
+    ? _allProviderAdapters
+    : _allProviderAdapters.where((adapter) => adapter.protocol == provider);
 
 Map<String, dynamic> _providerMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
@@ -232,18 +231,17 @@ class AgentProtocolAdapter {
     required WorkItem item,
     required bool allowPlainCompletion,
     AgentProviderProtocol provider = AgentProviderProtocol.auto,
-  }) =>
-      parseDecision(
-        text,
-        item: item,
-        allowPlainCompletion: allowPlainCompletion,
-        provider: provider,
-        allowedKinds: const <AgentDecisionKind>{
-          AgentDecisionKind.tool,
-          AgentDecisionKind.complete,
-          AgentDecisionKind.fail,
-        },
-      ).toLegacyAction();
+  }) => parseDecision(
+    text,
+    item: item,
+    allowPlainCompletion: allowPlainCompletion,
+    provider: provider,
+    allowedKinds: const <AgentDecisionKind>{
+      AgentDecisionKind.tool,
+      AgentDecisionKind.complete,
+      AgentDecisionKind.fail,
+    },
+  ).toLegacyAction();
 
   AgentDecision parseDecision(
     String text, {
@@ -573,7 +571,8 @@ class AgentProtocolAdapter {
     final specialization = _specializeCommandTool(tool, arguments, item);
     tool = specialization.tool;
     arguments = specialization.arguments;
-    final baseCompatibilityReason = action.reason.trim().isEmpty &&
+    final baseCompatibilityReason =
+        action.reason.trim().isEmpty &&
             kind == 'tool' &&
             taskIntentTool != null &&
             tool == taskIntentTool
@@ -711,8 +710,8 @@ class AgentProtocolAdapter {
     final toolCalls = candidate['tool_calls'] is List
         ? candidate['tool_calls'] as List
         : candidate['toolCalls'] is List
-            ? candidate['toolCalls'] as List
-            : const <Object>[];
+        ? candidate['toolCalls'] as List
+        : const <Object>[];
     final firstToolCall = toolCalls.whereType<Map>().firstOrNull;
     final containers = <Map<String, dynamic>>[
       candidate,
@@ -946,7 +945,7 @@ class AgentProtocolAdapter {
   }
 
   ({String? tool, Map<String, dynamic> arguments, String reason})
-      _specializeCommandTool(
+  _specializeCommandTool(
     String? tool,
     Map<String, dynamic> arguments,
     WorkItem item,
@@ -955,8 +954,11 @@ class AgentProtocolAdapter {
       return (tool: tool, arguments: arguments, reason: '');
     }
     final executable = arguments['executable']?.toString().trim() ?? '';
-    final basename =
-        executable.replaceAll('\\', '/').split('/').last.toLowerCase();
+    final basename = executable
+        .replaceAll('\\', '/')
+        .split('/')
+        .last
+        .toLowerCase();
     final commandArguments = stringList(arguments['args'])
         .map((value) => value.trim())
         .where((value) => value.isNotEmpty)

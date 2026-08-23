@@ -25,10 +25,10 @@ class ProductException implements Exception {
 
 class AppDirectories {
   AppDirectories._(this.root)
-      : state = Directory('${root.path}${Platform.pathSeparator}state'),
-        logs = Directory('${root.path}${Platform.pathSeparator}logs'),
-        cache = Directory('${root.path}${Platform.pathSeparator}cache'),
-        support = Directory('${root.path}${Platform.pathSeparator}support');
+    : state = Directory('${root.path}${Platform.pathSeparator}state'),
+      logs = Directory('${root.path}${Platform.pathSeparator}logs'),
+      cache = Directory('${root.path}${Platform.pathSeparator}cache'),
+      support = Directory('${root.path}${Platform.pathSeparator}support');
 
   final Directory root;
   final Directory state;
@@ -41,7 +41,8 @@ class AppDirectories {
     if (overrideRoot != null && overrideRoot.trim().isNotEmpty) {
       base = overrideRoot;
     } else if (Platform.isWindows) {
-      base = Platform.environment['APPDATA'] ??
+      base =
+          Platform.environment['APPDATA'] ??
           Platform.environment['LOCALAPPDATA'] ??
           Directory.current.path;
       base = '$base${Platform.pathSeparator}KristinLocalAgent';
@@ -96,13 +97,12 @@ class AtomicJsonFile implements JsonDocumentRepository {
 
   Future<void> updateList(
     List<Object?> Function(List<Object?> current) update,
-  ) =>
-      synchronized(() async {
-        final raw = await _readUnlocked(fallback: const <Object>[]);
-        final current = raw is List ? List<Object?>.from(raw) : <Object?>[];
-        final next = update(current);
-        await _writeUnlocked(next);
-      });
+  ) => synchronized(() async {
+    final raw = await _readUnlocked(fallback: const <Object>[]);
+    final current = raw is List ? List<Object?>.from(raw) : <Object?>[];
+    final next = update(current);
+    await _writeUnlocked(next);
+  });
 
   Future<Object?> _readUnlocked({Object? fallback}) async {
     if (!await file.exists()) {
@@ -180,28 +180,28 @@ class PersistentCollection<T> implements EntityRepository<T> {
 
   @override
   Future<void> put(T item) => _mutate((items) {
-        final index = items.indexWhere(
-          (candidate) => idOf(candidate) == idOf(item),
-        );
-        if (index < 0) {
-          items.add(item);
-        } else {
-          items[index] = item;
-        }
-      });
+    final index = items.indexWhere(
+      (candidate) => idOf(candidate) == idOf(item),
+    );
+    if (index < 0) {
+      items.add(item);
+    } else {
+      items[index] = item;
+    }
+  });
 
   @override
   Future<void> putAll(Iterable<T> values) => _mutate((items) {
-        final current = <String, T>{for (final item in items) idOf(item): item};
-        for (final item in values) {
-          current[idOf(item)] = item;
-        }
-        items
-          ..clear()
-          ..addAll(
-            current.values.toList()..sort((a, b) => idOf(a).compareTo(idOf(b))),
-          );
-      });
+    final current = <String, T>{for (final item in items) idOf(item): item};
+    for (final item in values) {
+      current[idOf(item)] = item;
+    }
+    items
+      ..clear()
+      ..addAll(
+        current.values.toList()..sort((a, b) => idOf(a).compareTo(idOf(b))),
+      );
+  });
 
   @override
   Future<void> remove(String id) =>
@@ -277,85 +277,79 @@ class ProductSettings {
     int? maxResearchBytes,
     int? maxResearchRedirects,
     int? researchTimeoutSeconds,
-  }) =>
-      ProductSettings(
-        apiEnabled: apiEnabled ?? this.apiEnabled,
-        apiPort: apiPort ?? this.apiPort,
-        allowedOrigins: allowedOrigins ?? this.allowedOrigins,
-        ollamaBaseUrl: ollamaBaseUrl ?? this.ollamaBaseUrl,
-        ollamaLoadTimeoutSeconds:
-            ollamaLoadTimeoutSeconds ?? this.ollamaLoadTimeoutSeconds,
-        ollamaLoadRetries: ollamaLoadRetries ?? this.ollamaLoadRetries,
-        ollamaKeepAliveMinutes:
-            ollamaKeepAliveMinutes ?? this.ollamaKeepAliveMinutes,
-        openAiCompatibleBaseUrl:
-            openAiCompatibleBaseUrl ?? this.openAiCompatibleBaseUrl,
-        openAiApiKeyReferenceId:
-            openAiApiKeyReferenceId ?? this.openAiApiKeyReferenceId,
-        localOnly: localOnly ?? this.localOnly,
-        allowPackageNetwork: allowPackageNetwork ?? this.allowPackageNetwork,
-        maxResearchBytes: maxResearchBytes ?? this.maxResearchBytes,
-        maxResearchRedirects: maxResearchRedirects ?? this.maxResearchRedirects,
-        researchTimeoutSeconds:
-            researchTimeoutSeconds ?? this.researchTimeoutSeconds,
-      );
+  }) => ProductSettings(
+    apiEnabled: apiEnabled ?? this.apiEnabled,
+    apiPort: apiPort ?? this.apiPort,
+    allowedOrigins: allowedOrigins ?? this.allowedOrigins,
+    ollamaBaseUrl: ollamaBaseUrl ?? this.ollamaBaseUrl,
+    ollamaLoadTimeoutSeconds:
+        ollamaLoadTimeoutSeconds ?? this.ollamaLoadTimeoutSeconds,
+    ollamaLoadRetries: ollamaLoadRetries ?? this.ollamaLoadRetries,
+    ollamaKeepAliveMinutes:
+        ollamaKeepAliveMinutes ?? this.ollamaKeepAliveMinutes,
+    openAiCompatibleBaseUrl:
+        openAiCompatibleBaseUrl ?? this.openAiCompatibleBaseUrl,
+    openAiApiKeyReferenceId:
+        openAiApiKeyReferenceId ?? this.openAiApiKeyReferenceId,
+    localOnly: localOnly ?? this.localOnly,
+    allowPackageNetwork: allowPackageNetwork ?? this.allowPackageNetwork,
+    maxResearchBytes: maxResearchBytes ?? this.maxResearchBytes,
+    maxResearchRedirects: maxResearchRedirects ?? this.maxResearchRedirects,
+    researchTimeoutSeconds:
+        researchTimeoutSeconds ?? this.researchTimeoutSeconds,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'apiEnabled': apiEnabled,
-        'apiPort': apiPort,
-        'allowedOrigins': allowedOrigins.toList()..sort(),
-        'ollamaBaseUrl': ollamaBaseUrl,
-        'ollamaLoadTimeoutSeconds': ollamaLoadTimeoutSeconds,
-        'ollamaLoadRetries': ollamaLoadRetries,
-        'ollamaKeepAliveMinutes': ollamaKeepAliveMinutes,
-        'openAiCompatibleBaseUrl': openAiCompatibleBaseUrl,
-        'openAiApiKeyReferenceId': openAiApiKeyReferenceId,
-        'localOnly': localOnly,
-        'allowPackageNetwork': allowPackageNetwork,
-        'maxResearchBytes': maxResearchBytes,
-        'maxResearchRedirects': maxResearchRedirects,
-        'researchTimeoutSeconds': researchTimeoutSeconds,
-      };
+    'apiEnabled': apiEnabled,
+    'apiPort': apiPort,
+    'allowedOrigins': allowedOrigins.toList()..sort(),
+    'ollamaBaseUrl': ollamaBaseUrl,
+    'ollamaLoadTimeoutSeconds': ollamaLoadTimeoutSeconds,
+    'ollamaLoadRetries': ollamaLoadRetries,
+    'ollamaKeepAliveMinutes': ollamaKeepAliveMinutes,
+    'openAiCompatibleBaseUrl': openAiCompatibleBaseUrl,
+    'openAiApiKeyReferenceId': openAiApiKeyReferenceId,
+    'localOnly': localOnly,
+    'allowPackageNetwork': allowPackageNetwork,
+    'maxResearchBytes': maxResearchBytes,
+    'maxResearchRedirects': maxResearchRedirects,
+    'researchTimeoutSeconds': researchTimeoutSeconds,
+  };
 
   factory ProductSettings.fromJson(
     Map<String, dynamic> json,
-  ) =>
-      ProductSettings(
-        apiEnabled: json['apiEnabled'] == true,
-        apiPort: int.tryParse(json['apiPort']?.toString() ?? '') ?? 47831,
-        allowedOrigins: stringList(json['allowedOrigins']).toSet().isEmpty
-            ? const <String>{'http://127.0.0.1', 'http://localhost'}
-            : stringList(json['allowedOrigins']).toSet(),
-        ollamaBaseUrl:
-            json['ollamaBaseUrl']?.toString() ?? 'http://127.0.0.1:11434',
-        ollamaLoadTimeoutSeconds:
-            (int.tryParse(json['ollamaLoadTimeoutSeconds']?.toString() ?? '') ??
-                    480)
-                .clamp(60, 3600)
-                .toInt(),
-        ollamaLoadRetries:
-            (int.tryParse(json['ollamaLoadRetries']?.toString() ?? '') ?? 1)
-                .clamp(0, 2)
-                .toInt(),
-        ollamaKeepAliveMinutes:
-            (int.tryParse(json['ollamaKeepAliveMinutes']?.toString() ?? '') ??
-                    15)
-                .clamp(1, 120)
-                .toInt(),
-        openAiCompatibleBaseUrl:
-            json['openAiCompatibleBaseUrl']?.toString() ?? '',
-        openAiApiKeyReferenceId:
-            json['openAiApiKeyReferenceId']?.toString() ?? '',
-        localOnly: json['localOnly'] != false,
-        allowPackageNetwork: json['allowPackageNetwork'] == true,
-        maxResearchBytes:
-            int.tryParse(json['maxResearchBytes']?.toString() ?? '') ?? 2097152,
-        maxResearchRedirects:
-            int.tryParse(json['maxResearchRedirects']?.toString() ?? '') ?? 3,
-        researchTimeoutSeconds:
-            int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ??
-                20,
-      );
+  ) => ProductSettings(
+    apiEnabled: json['apiEnabled'] == true,
+    apiPort: int.tryParse(json['apiPort']?.toString() ?? '') ?? 47831,
+    allowedOrigins: stringList(json['allowedOrigins']).toSet().isEmpty
+        ? const <String>{'http://127.0.0.1', 'http://localhost'}
+        : stringList(json['allowedOrigins']).toSet(),
+    ollamaBaseUrl:
+        json['ollamaBaseUrl']?.toString() ?? 'http://127.0.0.1:11434',
+    ollamaLoadTimeoutSeconds:
+        (int.tryParse(json['ollamaLoadTimeoutSeconds']?.toString() ?? '') ??
+                480)
+            .clamp(60, 3600)
+            .toInt(),
+    ollamaLoadRetries:
+        (int.tryParse(json['ollamaLoadRetries']?.toString() ?? '') ?? 1)
+            .clamp(0, 2)
+            .toInt(),
+    ollamaKeepAliveMinutes:
+        (int.tryParse(json['ollamaKeepAliveMinutes']?.toString() ?? '') ?? 15)
+            .clamp(1, 120)
+            .toInt(),
+    openAiCompatibleBaseUrl: json['openAiCompatibleBaseUrl']?.toString() ?? '',
+    openAiApiKeyReferenceId: json['openAiApiKeyReferenceId']?.toString() ?? '',
+    localOnly: json['localOnly'] != false,
+    allowPackageNetwork: json['allowPackageNetwork'] == true,
+    maxResearchBytes:
+        int.tryParse(json['maxResearchBytes']?.toString() ?? '') ?? 2097152,
+    maxResearchRedirects:
+        int.tryParse(json['maxResearchRedirects']?.toString() ?? '') ?? 3,
+    researchTimeoutSeconds:
+        int.tryParse(json['researchTimeoutSeconds']?.toString() ?? '') ?? 20,
+  );
 }
 
 class ProductRepositories {
@@ -441,14 +435,13 @@ class ProductRepositories {
       required T Function(Map<String, dynamic>) fromJson,
       required Map<String, dynamic> Function(T value) toJson,
       required String Function(T value) idOf,
-    }) =>
-        SqliteEntityRepository<T>(
-          store: workflow,
-          collection: name,
-          fromJson: fromJson,
-          toJson: toJson,
-          idOf: idOf,
-        );
+    }) => SqliteEntityRepository<T>(
+      store: workflow,
+      collection: name,
+      fromJson: fromJson,
+      toJson: toJson,
+      idOf: idOf,
+    );
 
     return ProductRepositories._(
       workflow: workflow,
@@ -600,55 +593,57 @@ class EventJournal {
     Map<String, dynamic> data,
   ) {
     final completer = Completer<EventEnvelope>();
-    _tail = _tail.then((_) async {
-      final id = newId('event');
-      final timestamp = DateTime.now().toUtc();
-      final durable = workflow;
-      late EventEnvelope event;
-      if (durable != null) {
-        final stored = await durable.appendEvent(
-          id: id,
-          type: type,
-          correlationId: correlationId,
-          timestamp: timestamp,
-          data: data,
-        );
-        _sequence = stored.sequence;
-        event = stored.toEnvelope();
-      } else {
-        event = EventEnvelope(
-          sequence: ++_sequence,
-          id: id,
-          type: type,
-          correlationId: correlationId,
-          timestamp: timestamp,
-          data: data,
-        );
-      }
-      // JSONL remains a bounded compatibility mirror for existing support
-      // tooling. SQLite is the authoritative append-only event history, so a
-      // mirror failure must not make callers retry an event that is already
-      // durable and thereby create a duplicate logical transition.
-      try {
-        await file.writeAsString(
-          '${jsonEncode(event.toJson())}\n',
-          mode: FileMode.append,
-          flush: true,
-        );
-        if (_sequence % 250 == 0) {
-          await _compactMirror();
-        }
-      } catch (_) {
-        // Support export can rebuild the mirror from SQLite. The authoritative
-        // event has already committed and remains safe to acknowledge.
-      }
-      _controller.add(event);
-      completer.complete(event);
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) {
-        completer.completeError(error, stackTrace);
-      }
-    });
+    _tail = _tail
+        .then((_) async {
+          final id = newId('event');
+          final timestamp = DateTime.now().toUtc();
+          final durable = workflow;
+          late EventEnvelope event;
+          if (durable != null) {
+            final stored = await durable.appendEvent(
+              id: id,
+              type: type,
+              correlationId: correlationId,
+              timestamp: timestamp,
+              data: data,
+            );
+            _sequence = stored.sequence;
+            event = stored.toEnvelope();
+          } else {
+            event = EventEnvelope(
+              sequence: ++_sequence,
+              id: id,
+              type: type,
+              correlationId: correlationId,
+              timestamp: timestamp,
+              data: data,
+            );
+          }
+          // JSONL remains a bounded compatibility mirror for existing support
+          // tooling. SQLite is the authoritative append-only event history, so a
+          // mirror failure must not make callers retry an event that is already
+          // durable and thereby create a duplicate logical transition.
+          try {
+            await file.writeAsString(
+              '${jsonEncode(event.toJson())}\n',
+              mode: FileMode.append,
+              flush: true,
+            );
+            if (_sequence % 250 == 0) {
+              await _compactMirror();
+            }
+          } catch (_) {
+            // Support export can rebuild the mirror from SQLite. The authoritative
+            // event has already committed and remains safe to acknowledge.
+          }
+          _controller.add(event);
+          completer.complete(event);
+        })
+        .catchError((Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        });
     return completer.future;
   }
 
@@ -658,9 +653,7 @@ class EventJournal {
       return (await durable.eventsAfter(
         sequence,
         limit: limit,
-      ))
-          .map((event) => event.toEnvelope())
-          .toList(growable: false);
+      )).map((event) => event.toEnvelope()).toList(growable: false);
     }
     if (!await file.exists()) {
       return <EventEnvelope>[];
@@ -748,29 +741,31 @@ class AuditChain {
     Map<String, dynamic> data,
   ) {
     final completer = Completer<void>();
-    _tail = _tail.then((_) async {
-      final payload = <String, dynamic>{
-        'id': newId('audit'),
-        'timestamp': DateTime.now().toUtc().toIso8601String(),
-        'action': action,
-        'correlationId': correlationId,
-        'data': redactor.redactJson(data),
-        'previousHash': _lastHash,
-      };
-      final hash = Sha256.text(canonicalJson(payload));
-      final record = <String, dynamic>{...payload, 'hash': hash};
-      await file.writeAsString(
-        '${jsonEncode(record)}\n',
-        mode: FileMode.append,
-        flush: true,
-      );
-      _lastHash = hash;
-      completer.complete();
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) {
-        completer.completeError(error, stackTrace);
-      }
-    });
+    _tail = _tail
+        .then((_) async {
+          final payload = <String, dynamic>{
+            'id': newId('audit'),
+            'timestamp': DateTime.now().toUtc().toIso8601String(),
+            'action': action,
+            'correlationId': correlationId,
+            'data': redactor.redactJson(data),
+            'previousHash': _lastHash,
+          };
+          final hash = Sha256.text(canonicalJson(payload));
+          final record = <String, dynamic>{...payload, 'hash': hash};
+          await file.writeAsString(
+            '${jsonEncode(record)}\n',
+            mode: FileMode.append,
+            flush: true,
+          );
+          _lastHash = hash;
+          completer.complete();
+        })
+        .catchError((Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        });
     return completer.future;
   }
 
@@ -944,7 +939,8 @@ class SecretVault {
         'Unknown secret reference.',
       );
     }
-    final value = _sessionValues[referenceId] ??
+    final value =
+        _sessionValues[referenceId] ??
         Platform.environment[reference.environmentKey];
     if (value == null || value.isEmpty) {
       throw ProductException(

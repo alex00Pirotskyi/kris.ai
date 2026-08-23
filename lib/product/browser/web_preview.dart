@@ -125,19 +125,19 @@ final class P3PreviewProcessAuthorization {
     ];
     if (values.any((value) => value.trim().isEmpty) ||
         binding.operation != 'pty.open' ||
-        !RegExp(r'^[0-9a-f]{64}$', caseSensitive: false)
-            .hasMatch(grantDigest)) {
+        !RegExp(
+          r'^[0-9a-f]{64}$',
+          caseSensitive: false,
+        ).hasMatch(grantDigest)) {
       throw StateError('web_preview_process_authorization_invalid');
     }
   }
 }
 
-typedef P3PreviewProcessAuthorizationResolver = P3PreviewProcessAuthorization
-    Function(P3DevServerConfig config);
-typedef P3PreviewProcessCompletion = Future<void> Function(
-  String sessionId,
-  P2ProcessIdentity processIdentity,
-);
+typedef P3PreviewProcessAuthorizationResolver =
+    P3PreviewProcessAuthorization Function(P3DevServerConfig config);
+typedef P3PreviewProcessCompletion =
+    Future<void> Function(String sessionId, P2ProcessIdentity processIdentity);
 
 final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
   P3P2ManagedPreviewProcessHost({
@@ -163,8 +163,9 @@ final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
         shell: config.command,
         cwd: config.cwd,
         arguments: List<String>.unmodifiable(config.arguments),
-        environmentDelta:
-            Map<String, String?>.unmodifiable(config.environmentDelta),
+        environmentDelta: Map<String, String?>.unmodifiable(
+          config.environmentDelta,
+        ),
         transcriptBudgetBytes: 1024 * 1024,
       ),
       authorization.binding,
@@ -175,8 +176,9 @@ final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
       throw StateError('web_preview_process_session_duplicate');
     }
     try {
-      final identity =
-          await _processTrees.adoptManaged(session.processIdentity);
+      final identity = await _processTrees.adoptManaged(
+        session.processIdentity,
+      );
       _sessions[session.sessionId] = _P3P2ManagedPreviewSession(
         session: session,
         authorization: authorization,
@@ -213,10 +215,7 @@ final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
   }
 
   @override
-  Future<void> stop(
-    P3PreviewProcessSession session,
-    Duration grace,
-  ) async {
+  Future<void> stop(P3PreviewProcessSession session, Duration grace) async {
     final record = _sessions[session.sessionId];
     if (record == null) {
       throw StateError('web_preview_process_session_unknown');
@@ -280,8 +279,8 @@ final class P3LivePreviewService {
     this.limits = const P3PreviewLimits(),
     HttpClient Function()? httpClientFactory,
     DateTime Function()? clock,
-  })  : _httpClientFactory = httpClientFactory ?? HttpClient.new,
-        _clock = clock ?? DateTime.now {
+  }) : _httpClientFactory = httpClientFactory ?? HttpClient.new,
+       _clock = clock ?? DateTime.now {
     limits.validate();
   }
 
@@ -399,9 +398,7 @@ final class P3LivePreviewService {
             response.statusCode <= config.acceptedStatusMaximum) {
           return;
         }
-        lastError = StateError(
-          'readiness_status_${response.statusCode}',
-        );
+        lastError = StateError('readiness_status_${response.statusCode}');
       } catch (error) {
         lastError = error;
       } finally {
@@ -498,15 +495,15 @@ final class _P3DevPreview {
   String? failureCode;
 
   P3PreviewSnapshot get snapshot => P3PreviewSnapshot(
-        id: id,
-        kind: P3PreviewKind.devServer,
-        lifecycle: lifecycle,
-        url: config.url,
-        revision: revision,
-        startedAt: startedAt,
-        processSession: process,
-        failureCode: failureCode,
-      );
+    id: id,
+    kind: P3PreviewKind.devServer,
+    lifecycle: lifecycle,
+    url: config.url,
+    revision: revision,
+    startedAt: startedAt,
+    processSession: process,
+    failureCode: failureCode,
+  );
 }
 
 final class _P3StaticPreview {
@@ -524,7 +521,8 @@ final class _P3StaticPreview {
 
   static const String reloadPath = '/__kristin_live_reload';
 
-  String get reloadScript => '<script data-kristin-live-reload>(function(){'
+  String get reloadScript =>
+      '<script data-kristin-live-reload>(function(){'
       'var revision=$revision;var stopped=false;'
       'async function poll(){if(stopped){return;}try{'
       'var response=await fetch("$reloadPath",{cache:"no-store"});'
@@ -550,20 +548,20 @@ final class _P3StaticPreview {
   bool _stopped = false;
 
   Uri get url => Uri(
-        scheme: 'http',
-        host: InternetAddress.loopbackIPv4.address,
-        port: server.port,
-        path: '/$entryPoint',
-      );
+    scheme: 'http',
+    host: InternetAddress.loopbackIPv4.address,
+    port: server.port,
+    path: '/$entryPoint',
+  );
 
   P3PreviewSnapshot get snapshot => P3PreviewSnapshot(
-        id: id,
-        kind: P3PreviewKind.staticFiles,
-        lifecycle: lifecycle,
-        url: url,
-        revision: revision,
-        startedAt: startedAt,
-      );
+    id: id,
+    kind: P3PreviewKind.staticFiles,
+    lifecycle: lifecycle,
+    url: url,
+    revision: revision,
+    startedAt: startedAt,
+  );
 
   Future<void> serve() async {
     try {

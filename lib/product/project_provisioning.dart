@@ -47,9 +47,7 @@ class ProjectProvisioningService {
         ? Platform.environment['USERPROFILE']
         : Platform.environment['HOME'];
     if (home != null && home.trim().isNotEmpty) {
-      final documents = Directory(
-        '$home${Platform.pathSeparator}Documents',
-      );
+      final documents = Directory('$home${Platform.pathSeparator}Documents');
       if (await documents.exists()) {
         return Directory(
           '${documents.path}${Platform.pathSeparator}Kristin Projects',

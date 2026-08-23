@@ -74,9 +74,7 @@ final class P3BrowserRuntimeLaunchPlan {
       }
       final systemRoot = environment['SYSTEMROOT'];
       if (systemRoot == null || !_isAbsolute(systemRoot)) {
-        throw const P3BrowserRuntimeException(
-          'windows_system_root_required',
-        );
+        throw const P3BrowserRuntimeException('windows_system_root_required');
       }
     }
     final plan = P3BrowserRuntimeLaunchPlan(
@@ -173,9 +171,7 @@ final class P3BrowserRuntimeLaunchPlan {
     if (Platform.isWindows) {
       final systemRoot = environment['SYSTEMROOT'];
       if (systemRoot == null || !_isAbsolute(systemRoot)) {
-        throw const P3BrowserRuntimeException(
-          'windows_system_root_required',
-        );
+        throw const P3BrowserRuntimeException('windows_system_root_required');
       }
     }
   }

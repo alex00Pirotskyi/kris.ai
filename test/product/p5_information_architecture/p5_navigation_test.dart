@@ -5,7 +5,9 @@ import 'package:kristin_local_agent/product/p5_information_architecture/p5_model
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_prototype.dart';
 
 Future<void> pumpPrototype(
-    WidgetTester tester, P5InformationArchitectureController controller) async {
+  WidgetTester tester,
+  P5InformationArchitectureController controller,
+) async {
   tester.view.physicalSize = const Size(1440, 960);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -34,8 +36,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('advanced Experience exposes Web Studio honestly',
-      (tester) async {
+  testWidgets('advanced Experience exposes Web Studio honestly', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)
       ..selectWorkspace(P5WorkspaceId.webStudio);
@@ -50,26 +53,27 @@ void main() {
   });
 
   testWidgets(
-      'simple task cannot bypass advanced evidence and can open verification',
-      (tester) async {
-    final controller = P5InformationArchitectureController();
-    addTearDown(controller.dispose);
-    await pumpPrototype(tester, controller);
-    await tapKey(tester, const Key('review-plan-button'));
-    await tapKey(tester, const Key('start-run-button'));
-    await tapKey(tester, const Key('pause-run-button'));
-    await tapKey(tester, const Key('resume-run-button'));
-    await tapKey(tester, const Key('complete-run-button'));
-    await tapKey(tester, const Key('open-evidence-button'));
+    'simple task cannot bypass advanced evidence and can open verification',
+    (tester) async {
+      final controller = P5InformationArchitectureController();
+      addTearDown(controller.dispose);
+      await pumpPrototype(tester, controller);
+      await tapKey(tester, const Key('review-plan-button'));
+      await tapKey(tester, const Key('start-run-button'));
+      await tapKey(tester, const Key('pause-run-button'));
+      await tapKey(tester, const Key('resume-run-button'));
+      await tapKey(tester, const Key('complete-run-button'));
+      await tapKey(tester, const Key('open-evidence-button'));
 
-    expect(controller.state.workspace, P5WorkspaceId.homeChat);
-    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+      expect(controller.state.workspace, P5WorkspaceId.homeChat);
+      expect(controller.state.recoveryMessage, contains('Advanced mode'));
 
-    await tapKey(tester, const Key('run-verification-button'));
-    expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
-    expect(controller.state.verificationRequested, isTrue);
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      await tapKey(tester, const Key('run-verification-button'));
+      expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
+      expect(controller.state.verificationRequested, isTrue);
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
   testWidgets('advanced task can open evidence', (tester) async {
     final controller = P5InformationArchitectureController()
@@ -86,14 +90,16 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('plan-only control is disabled after a run starts',
-      (tester) async {
+  testWidgets('plan-only control is disabled after a run starts', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
 
-    CheckboxListTile planOnlyTile() => tester
-        .widget<CheckboxListTile>(find.byKey(const Key('plan-only-toggle')));
+    CheckboxListTile planOnlyTile() => tester.widget<CheckboxListTile>(
+      find.byKey(const Key('plan-only-toggle')),
+    );
 
     expect(planOnlyTile().onChanged, isNotNull);
     await tapKey(tester, const Key('review-plan-button'));
@@ -104,8 +110,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('plan and start controls cannot replace an active run',
-      (tester) async {
+  testWidgets('plan and start controls cannot replace an active run', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
@@ -113,10 +120,12 @@ void main() {
     await tapKey(tester, const Key('review-plan-button'));
     await tapKey(tester, const Key('start-run-button'));
 
-    FilledButton reviewButton() => tester
-        .widget<FilledButton>(find.byKey(const Key('review-plan-button')));
-    OutlinedButton startButton() => tester
-        .widget<OutlinedButton>(find.byKey(const Key('start-run-button')));
+    FilledButton reviewButton() => tester.widget<FilledButton>(
+      find.byKey(const Key('review-plan-button')),
+    );
+    OutlinedButton startButton() => tester.widget<OutlinedButton>(
+      find.byKey(const Key('start-run-button')),
+    );
 
     expect(controller.state.runState, P5RunPresentationState.running);
     expect(reviewButton().onPressed, isNull);
@@ -140,8 +149,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('current simulated run does not fabricate a saved timeline',
-      (tester) async {
+  testWidgets('current simulated run does not fabricate a saved timeline', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await pumpPrototype(tester, controller);
@@ -159,8 +169,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('saved run detail exposes resume only for interrupted fixture',
-      (tester) async {
+  testWidgets('saved run detail exposes resume only for interrupted fixture', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)
       ..selectWorkspace(P5WorkspaceId.runsActivity);
@@ -201,33 +212,35 @@ void main() {
   });
 
   testWidgets(
-      'interrupted-run recovery restores the deterministic saved fixture',
-      (tester) async {
-    final controller = P5InformationArchitectureController()
-      ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
-    addTearDown(controller.dispose);
-    await pumpPrototype(tester, controller);
+    'interrupted-run recovery restores the deterministic saved fixture',
+    (tester) async {
+      final controller = P5InformationArchitectureController()
+        ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+      addTearDown(controller.dispose);
+      await pumpPrototype(tester, controller);
 
-    expect(controller.state.runState, P5RunPresentationState.planReady);
-    expect(controller.state.selectedRunId, isNull);
+      expect(controller.state.runState, P5RunPresentationState.planReady);
+      expect(controller.state.selectedRunId, isNull);
 
-    final recovery = find.text('Resume the saved run');
-    await tester.ensureVisible(recovery);
-    await tester.tap(recovery);
-    await tester.pumpAndSettle();
+      final recovery = find.text('Resume the saved run');
+      await tester.ensureVisible(recovery);
+      await tester.tap(recovery);
+      await tester.pumpAndSettle();
 
-    expect(controller.state.selectedProjectId, 'project.kristin-local');
-    expect(controller.state.selectedRunId, 'run.p5-existing-001');
-    expect(controller.state.runState, P5RunPresentationState.running);
-    expect(
-      controller.state.recoveryMessage,
-      'Interrupted run restored from the saved fixture.',
-    );
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      expect(controller.state.selectedProjectId, 'project.kristin-local');
+      expect(controller.state.selectedRunId, 'run.p5-existing-001');
+      expect(controller.state.runState, P5RunPresentationState.running);
+      expect(
+        controller.state.recoveryMessage,
+        'Interrupted run restored from the saved fixture.',
+      );
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
-  testWidgets('advanced recovery destinations require explicit disclosure',
-      (tester) async {
+  testWidgets('advanced recovery destinations require explicit disclosure', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
     addTearDown(controller.dispose);
@@ -268,8 +281,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('permission recovery is honest about later-task ownership',
-      (tester) async {
+  testWidgets('permission recovery is honest about later-task ownership', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
     addTearDown(controller.dispose);
@@ -287,42 +301,44 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('failing evidence uses the Evidence workspace without elevation',
-      (tester) async {
-    final controller = P5InformationArchitectureController()
-      ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
-    addTearDown(controller.dispose);
-    await pumpPrototype(tester, controller);
+  testWidgets(
+    'failing evidence uses the Evidence workspace without elevation',
+    (tester) async {
+      final controller = P5InformationArchitectureController()
+        ..selectWorkspace(P5WorkspaceId.settingsDiagnostics);
+      addTearDown(controller.dispose);
+      await pumpPrototype(tester, controller);
 
-    final failureCard = find.byKey(const Key('failure.test-fail'));
-    await tester.scrollUntilVisible(
-      failureCard,
-      300,
-      scrollable: find.byType(Scrollable).last,
-    );
-    final evidenceRecovery = find.descendant(
-      of: failureCard,
-      matching: find.text('Open failing evidence'),
-    );
-    await tester.tap(evidenceRecovery);
-    await tester.pumpAndSettle();
+      final failureCard = find.byKey(const Key('failure.test-fail'));
+      await tester.scrollUntilVisible(
+        failureCard,
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      final evidenceRecovery = find.descendant(
+        of: failureCard,
+        matching: find.text('Open failing evidence'),
+      );
+      await tester.tap(evidenceRecovery);
+      await tester.pumpAndSettle();
 
-    expect(controller.state.experienceLevel, P5ExperienceLevel.simple);
-    expect(controller.state.workspace, P5WorkspaceId.settingsDiagnostics);
-    expect(controller.state.recoveryMessage, contains('Advanced mode'));
+      expect(controller.state.experienceLevel, P5ExperienceLevel.simple);
+      expect(controller.state.workspace, P5WorkspaceId.settingsDiagnostics);
+      expect(controller.state.recoveryMessage, contains('Advanced mode'));
 
-    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      failureCard,
-      300,
-      scrollable: find.byType(Scrollable).last,
-    );
-    await tester.tap(evidenceRecovery);
-    await tester.pumpAndSettle();
-    expect(controller.state.workspace, P5WorkspaceId.evidence);
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        failureCard,
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(evidenceRecovery);
+      await tester.pumpAndSettle();
+      expect(controller.state.workspace, P5WorkspaceId.evidence);
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
   testWidgets('Owner Mode remains presentation-only', (tester) async {
     final controller = P5InformationArchitectureController()
@@ -332,12 +348,15 @@ void main() {
     expect(find.textContaining('BLOCKED_EXTERNAL'), findsOneWidget);
     await tapKey(tester, const Key('owner-preview-running'));
     expect(
-        controller.state.ownerModeState, P5OwnerModePresentationState.running);
+      controller.state.ownerModeState,
+      P5OwnerModePresentationState.running,
+    );
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('Web Studio opens from capabilities and has a navigation exit',
-      (tester) async {
+  testWidgets('Web Studio opens from capabilities and has a navigation exit', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)
       ..selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);

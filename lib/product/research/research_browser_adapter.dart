@@ -27,15 +27,15 @@ final class P4RenderedResearchEvidence {
   final bool rendered;
 
   Map<String, Object?> toExtractionSeed() => <String, Object?>{
-        'sourceKind': 'rendered-browser',
-        'rendered': rendered,
-        'url': finalUrl.toString(),
-        'title': title,
-        'dom': dom,
-        'visibleText': visibleText,
-        'observationHash': observationHash,
-        'screenshotSha256': screenshotSha256,
-      };
+    'sourceKind': 'rendered-browser',
+    'rendered': rendered,
+    'url': finalUrl.toString(),
+    'title': title,
+    'dom': dom,
+    'visibleText': visibleText,
+    'observationHash': observationHash,
+    'screenshotSha256': screenshotSha256,
+  };
 }
 
 final class P4RenderedResearchFetcher {
@@ -63,10 +63,12 @@ final class P4RenderedResearchFetcher {
           dom['text'] is! String ||
           visible['text'] is! String ||
           screenshot['sha256'] is! String ||
-          !RegExp(r'^[0-9a-f]{64}$')
-              .hasMatch(screenshot['sha256']! as String)) {
+          !RegExp(
+            r'^[0-9a-f]{64}$',
+          ).hasMatch(screenshot['sha256']! as String)) {
         throw const P4ResearchException(
-            'research_rendered_observation_invalid');
+          'research_rendered_observation_invalid',
+        );
       }
       final title = payload['title']?.toString() ?? '';
       final domText = dom['text']! as String;
@@ -178,10 +180,12 @@ P4DatasetVersionDiff p4DiffDatasetVersions(
   P4DatasetVersion before,
   P4DatasetVersion after,
 ) {
-  final beforeRows =
-      before.rows.map((row) => Sha256.text(canonicalJson(row))).toSet();
-  final afterRows =
-      after.rows.map((row) => Sha256.text(canonicalJson(row))).toSet();
+  final beforeRows = before.rows
+      .map((row) => Sha256.text(canonicalJson(row)))
+      .toSet();
+  final afterRows = after.rows
+      .map((row) => Sha256.text(canonicalJson(row)))
+      .toSet();
   final added = afterRows.difference(beforeRows).toList()..sort();
   final removed = beforeRows.difference(afterRows).toList()..sort();
   return P4DatasetVersionDiff(

@@ -175,8 +175,9 @@ class ConversationOrchestrator {
         suggestedProjectName: '',
       );
     }
-    if (RegExp(r'\b(research|latest|current|look up|search the web)\b')
-        .hasMatch(lower)) {
+    if (RegExp(
+      r'\b(research|latest|current|look up|search the web)\b',
+    ).hasMatch(lower)) {
       return const ConversationIntent(
         kind: ConversationIntentKind.research,
         needsClarification: false,
@@ -184,7 +185,8 @@ class ConversationOrchestrator {
         suggestedProjectName: '',
       );
     }
-    final buildLike = mode == CommandMode.build ||
+    final buildLike =
+        mode == CommandMode.build ||
         RegExp(r'\b(build|create|make|develop|implement)\b').hasMatch(lower);
     if (buildLike) {
       final platformSignal = RegExp(
@@ -196,7 +198,8 @@ class ConversationOrchestrator {
       final scopeSignal = RegExp(
         r'\b(local|backend|account|login|database|offline|online|simple|prototype|production|polished|responsive)\b',
       ).hasMatch(lower);
-      final needsClarification = normalized.length < 90 ||
+      final needsClarification =
+          normalized.length < 90 ||
           !outcomeSignal ||
           (!platformSignal && !scopeSignal);
       return ConversationIntent(
@@ -217,22 +220,30 @@ class ConversationOrchestrator {
   String suggestProjectName(String request) {
     var value = request
         .replaceAll(
-            RegExp(r'\b(please|hey|kristin|can you|could you|i want you to)\b',
-                caseSensitive: false),
-            ' ')
+          RegExp(
+            r'\b(please|hey|kristin|can you|could you|i want you to)\b',
+            caseSensitive: false,
+          ),
+          ' ',
+        )
         .replaceAll(
-            RegExp(r'\b(build|create|make|develop|implement|me|a|an|the)\b',
-                caseSensitive: false),
-            ' ')
+          RegExp(
+            r'\b(build|create|make|develop|implement|me|a|an|the)\b',
+            caseSensitive: false,
+          ),
+          ' ',
+        )
         .replaceAll(RegExp(r'[^A-Za-z0-9 _-]+'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     if (value.isEmpty) return 'Kristin Project';
     final words = value.split(' ').take(5).toList();
-    value = words.map((word) {
-      if (word.isEmpty) return word;
-      return '${word[0].toUpperCase()}${word.substring(1)}';
-    }).join(' ');
+    value = words
+        .map((word) {
+          if (word.isEmpty) return word;
+          return '${word[0].toUpperCase()}${word.substring(1)}';
+        })
+        .join(' ');
     return value.length <= 54 ? value : value.substring(0, 54).trim();
   }
 }

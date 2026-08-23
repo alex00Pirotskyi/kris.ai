@@ -21,8 +21,7 @@ class P2EmergencyController {
   Future<void> arm(
     String id, {
     Duration timeout = const Duration(seconds: 5),
-  }) =>
-      transport.arm(watchdogId: id, heartbeatTimeout: timeout);
+  }) => transport.arm(watchdogId: id, heartbeatTimeout: timeout);
 
   Future<void> pauseAndKill(String id) async {
     if (!_killIssued.add(id)) return;

@@ -26,11 +26,13 @@ Future<void> _pump(
 
 void main() {
   test('P5-007 profile approval mapping matches governed P1 catalog', () {
-    final catalog = jsonDecode(
-      File('config/access_profiles.v2.json').readAsStringSync(),
-    ) as Map<String, dynamic>;
+    final catalog =
+        jsonDecode(File('config/access_profiles.v2.json').readAsStringSync())
+            as Map<String, dynamic>;
     expect(
-        catalog['authoritySemantics'], 'maximum_ceiling_not_capability_grant');
+      catalog['authoritySemantics'],
+      'maximum_ceiling_not_capability_grant',
+    );
     final profiles = <String, String>{};
     for (final raw in catalog['profiles'] as List<dynamic>) {
       final item = raw as Map<String, dynamic>;
@@ -56,11 +58,14 @@ void main() {
       );
     }
     expect(
-        P5ComposerProfile.ownerUnattended.approvalPolicy, ApprovalPolicy.never);
+      P5ComposerProfile.ownerUnattended.approvalPolicy,
+      ApprovalPolicy.never,
+    );
   });
 
-  testWidgets('P5-007 plan review exposes every governed review field',
-      (tester) async {
+  testWidgets('P5-007 plan review exposes every governed review field', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..updateComposerAttachments(const <String>['lib/example.dart'])
       ..updateAcceptanceCriteria(const <String>[
@@ -89,39 +94,53 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('P5-007 Owner unattended never policy is represented accurately',
-      (tester) async {
-    final controller = P5InformationArchitectureController()
-      ..updateComposerProfile(P5ComposerProfile.ownerUnattended)
-      ..apply(P5PrototypeAction.reviewPlan);
-    addTearDown(controller.dispose);
-    await _pump(tester, controller);
+  testWidgets(
+    'P5-007 Owner unattended never policy is represented accurately',
+    (tester) async {
+      final controller = P5InformationArchitectureController()
+        ..updateComposerProfile(P5ComposerProfile.ownerUnattended)
+        ..apply(P5PrototypeAction.reviewPlan);
+      addTearDown(controller.dispose);
+      await _pump(tester, controller);
 
-    expect(find.text('Approval policy: NEVER'), findsOneWidget);
-    expect(
-      find.textContaining('No approval prompts are required by this profile'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('does not grant capabilities'), findsOneWidget);
-    expect(find.textContaining('maximum authority ceilings'), findsOneWidget);
-    expect(controller.sideEffects.isZero, isTrue);
-  });
+      expect(find.text('Approval policy: NEVER'), findsOneWidget);
+      expect(
+        find.textContaining('No approval prompts are required by this profile'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('does not grant capabilities'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('maximum authority ceilings'), findsOneWidget);
+      expect(controller.sideEffects.isZero, isTrue);
+    },
+  );
 
-  testWidgets('P5-007 plan review never fabricates commands sites or low risk',
-      (tester) async {
-    final controller = P5InformationArchitectureController()
-      ..apply(P5PrototypeAction.reviewPlan);
-    addTearDown(controller.dispose);
-    await _pump(tester, controller);
+  testWidgets(
+    'P5-007 plan review never fabricates commands sites or low risk',
+    (tester) async {
+      final controller = P5InformationArchitectureController()
+        ..apply(P5PrototypeAction.reviewPlan);
+      addTearDown(controller.dispose);
+      await _pump(tester, controller);
 
-    expect(find.textContaining('None compiled in P5 presentation mode'),
-        findsOneWidget);
-    expect(
-        find.textContaining('None declared in this composer'), findsOneWidget);
-    expect(
+      expect(
+        find.textContaining('None compiled in P5 presentation mode'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('None declared in this composer'),
+        findsOneWidget,
+      );
+      expect(
         find.textContaining('Do not interpret presentation mode as low risk'),
-        findsOneWidget);
-    expect(
-        find.textContaining('No command authority is implied'), findsOneWidget);
-  });
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('No command authority is implied'),
+        findsOneWidget,
+      );
+    },
+  );
 }

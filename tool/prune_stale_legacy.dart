@@ -83,8 +83,9 @@ void main() {
     'projectRootExcluded': true,
     'quarantinedCount': preserved.length,
     'quarantinedPaths': preserved,
-    'archiveDirectory':
-        preserved.isEmpty ? null : _relativePath(root, archiveRoot),
+    'archiveDirectory': preserved.isEmpty
+        ? null
+        : _relativePath(root, archiveRoot),
     'discardedPaths': 0,
   };
   final reportFile = File(
@@ -133,16 +134,10 @@ Set<String> _governedDartFiles(Directory root) {
       'P2 governed source inventory must be a JSON object.',
     );
   }
-  for (final key in <String>[
-    'productionDart',
-    'testDart',
-    'supportDart',
-  ]) {
+  for (final key in <String>['productionDart', 'testDart', 'supportDart']) {
     final entries = decoded[key];
     if (entries is! List<Object?> || entries.isEmpty) {
-      throw FormatException(
-        'P2 governed source inventory is missing $key.',
-      );
+      throw FormatException('P2 governed source inventory is missing $key.');
     }
     for (final entry in entries) {
       final relative = _normalizeGovernedPath(entry, key);
@@ -153,9 +148,7 @@ Set<String> _governedDartFiles(Directory root) {
     }
   }
 
-  final manifest = File(
-    _join(root.path, 'SOURCE_MANIFEST.sha256'),
-  );
+  final manifest = File(_join(root.path, 'SOURCE_MANIFEST.sha256'));
   if (!manifest.existsSync()) {
     throw StateError(
       'SOURCE_MANIFEST.sha256 is missing; '
@@ -169,9 +162,7 @@ Set<String> _governedDartFiles(Directory root) {
     }
     final match = linePattern.firstMatch(line);
     if (match == null) {
-      throw FormatException(
-        'Malformed SOURCE_MANIFEST.sha256 line: $line',
-      );
+      throw FormatException('Malformed SOURCE_MANIFEST.sha256 line: $line');
     }
     final relative = _normalizeGovernedPath(
       match.group(1),

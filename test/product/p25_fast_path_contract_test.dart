@@ -91,8 +91,10 @@ void main() {
       );
       expect(session.questions, hasLength(2));
       expect(session.questions.first.options, hasLength(2));
-      expect(session.questions.first.recommendedOption.label,
-          'Working first version');
+      expect(
+        session.questions.first.recommendedOption.label,
+        'Working first version',
+      );
       expect(
         session.missingAnswerIds(<String, String>{
           'question_1': 'Working first version',
@@ -117,24 +119,21 @@ void main() {
       expect(source, contains("stage: 'plan_validation_started'"));
     });
 
-    test(
-      'Prompt Studio is question-first and shows every AI operation',
-      () {
-        final source = File('lib/product/chat_studio.dart').readAsStringSync();
-        expect(source, contains('int generatedMaxTasks = 7;'));
-        expect(source, contains('Future<void> _startPromptStudioFlow()'));
-        expect(source, contains('class _PromptClarificationDialog'));
-        expect(source, contains("'Other — write my own answer'"));
-        expect(source, contains("'Generate final prompt'"));
-        expect(source, contains('Widget _promptGenerationStatusCard()'));
-        expect(source, contains('_PromptStudioOperationKind.taskPlan'));
-        expect(source, contains("label: const Text('Stop')"));
-        expect(source, contains("label: const Text('Improve with AI')"));
-        expect(source, contains("label: const Text('Simplify')"));
-        expect(source, contains("label: const Text('Add useful detail')"));
-        expect(source, contains('onTextDelta: (delta)'));
-      },
-    );
+    test('Prompt Studio is question-first and shows every AI operation', () {
+      final source = File('lib/product/chat_studio.dart').readAsStringSync();
+      expect(source, contains('int generatedMaxTasks = 7;'));
+      expect(source, contains('Future<void> _startPromptStudioFlow()'));
+      expect(source, contains('class _PromptClarificationDialog'));
+      expect(source, contains("'Other — write my own answer'"));
+      expect(source, contains("'Generate final prompt'"));
+      expect(source, contains('Widget _promptGenerationStatusCard()'));
+      expect(source, contains('_PromptStudioOperationKind.taskPlan'));
+      expect(source, contains("label: const Text('Stop')"));
+      expect(source, contains("label: const Text('Improve with AI')"));
+      expect(source, contains("label: const Text('Simplify')"));
+      expect(source, contains("label: const Text('Add useful detail')"));
+      expect(source, contains('onTextDelta: (delta)'));
+    });
 
     test('Ollama runs select the local execution fast path', () {
       final source = File(

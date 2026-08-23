@@ -37,11 +37,7 @@ class _WorkspaceHeader extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    super.key,
-    required this.label,
-    required this.icon,
-  });
+  const _StatusChip({super.key, required this.label, required this.icon});
 
   final String label;
   final IconData icon;
@@ -116,10 +112,7 @@ class _RecoveryCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(message),
             const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: onAction,
-              child: Text(actionLabel),
-            ),
+            FilledButton.tonal(onPressed: onAction, child: Text(actionLabel)),
           ],
         ),
       ),
@@ -157,8 +150,10 @@ class _DomainCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
-                Text(value,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Text(detail),
               ],
             ),
@@ -188,41 +183,41 @@ class _P5WorkspaceIntent extends Intent {
 }
 
 IconData _workspaceIcon(P5WorkspaceId workspace) => switch (workspace) {
-      P5WorkspaceId.homeChat => Icons.chat_bubble_outline,
-      P5WorkspaceId.projects => Icons.folder_outlined,
-      P5WorkspaceId.runsActivity => Icons.timeline_outlined,
-      P5WorkspaceId.verificationCenter => Icons.verified_outlined,
-      P5WorkspaceId.evidence => Icons.receipt_long_outlined,
-      P5WorkspaceId.ownerMode => Icons.admin_panel_settings_outlined,
-      P5WorkspaceId.modelsProviders => Icons.memory_outlined,
-      P5WorkspaceId.capabilitiesIntegrations => Icons.extension_outlined,
-      P5WorkspaceId.settingsDiagnostics => Icons.settings_outlined,
-      P5WorkspaceId.webStudio => Icons.web_outlined,
-      P5WorkspaceId.searchResearch => Icons.search_outlined,
-      P5WorkspaceId.nativeAutomation => Icons.desktop_windows_outlined,
-      P5WorkspaceId.devices => Icons.devices_other_outlined,
-    };
+  P5WorkspaceId.homeChat => Icons.chat_bubble_outline,
+  P5WorkspaceId.projects => Icons.folder_outlined,
+  P5WorkspaceId.runsActivity => Icons.timeline_outlined,
+  P5WorkspaceId.verificationCenter => Icons.verified_outlined,
+  P5WorkspaceId.evidence => Icons.receipt_long_outlined,
+  P5WorkspaceId.ownerMode => Icons.admin_panel_settings_outlined,
+  P5WorkspaceId.modelsProviders => Icons.memory_outlined,
+  P5WorkspaceId.capabilitiesIntegrations => Icons.extension_outlined,
+  P5WorkspaceId.settingsDiagnostics => Icons.settings_outlined,
+  P5WorkspaceId.webStudio => Icons.web_outlined,
+  P5WorkspaceId.searchResearch => Icons.search_outlined,
+  P5WorkspaceId.nativeAutomation => Icons.desktop_windows_outlined,
+  P5WorkspaceId.devices => Icons.devices_other_outlined,
+};
 
 IconData _resultIcon(P5VerificationResultState state) => switch (state) {
-      P5VerificationResultState.pass => Icons.check_circle_outline,
-      P5VerificationResultState.fail => Icons.cancel_outlined,
-      P5VerificationResultState.error => Icons.error_outline,
-      P5VerificationResultState.skipped => Icons.skip_next_outlined,
-      P5VerificationResultState.blocked => Icons.block_outlined,
-      P5VerificationResultState.unknown => Icons.help_outline,
-      P5VerificationResultState.flaky => Icons.change_circle_outlined,
-      P5VerificationResultState.notImplemented => Icons.construction_outlined,
-    };
+  P5VerificationResultState.pass => Icons.check_circle_outline,
+  P5VerificationResultState.fail => Icons.cancel_outlined,
+  P5VerificationResultState.error => Icons.error_outline,
+  P5VerificationResultState.skipped => Icons.skip_next_outlined,
+  P5VerificationResultState.blocked => Icons.block_outlined,
+  P5VerificationResultState.unknown => Icons.help_outline,
+  P5VerificationResultState.flaky => Icons.change_circle_outlined,
+  P5VerificationResultState.notImplemented => Icons.construction_outlined,
+};
 
 String _shortcutFor(P5WorkspaceId workspace) => switch (workspace) {
-      P5WorkspaceId.homeChat => '1',
-      P5WorkspaceId.projects => '2',
-      P5WorkspaceId.runsActivity => '3',
-      P5WorkspaceId.verificationCenter => '4',
-      P5WorkspaceId.ownerMode => '5',
-      P5WorkspaceId.settingsDiagnostics => '6',
-      P5WorkspaceId.evidence => '7',
-      P5WorkspaceId.modelsProviders => '8',
-      P5WorkspaceId.capabilitiesIntegrations => '9',
-      _ => '—',
-    };
+  P5WorkspaceId.homeChat => '1',
+  P5WorkspaceId.projects => '2',
+  P5WorkspaceId.runsActivity => '3',
+  P5WorkspaceId.verificationCenter => '4',
+  P5WorkspaceId.ownerMode => '5',
+  P5WorkspaceId.settingsDiagnostics => '6',
+  P5WorkspaceId.evidence => '7',
+  P5WorkspaceId.modelsProviders => '8',
+  P5WorkspaceId.capabilitiesIntegrations => '9',
+  _ => '—',
+};

@@ -13,14 +13,14 @@ class PromptStudioV2ValidationException extends ProductException {
     required String document,
     required List<SchemaIssue> issues,
   }) : super(
-          '${document}_schema_invalid',
-          'The $document does not satisfy its versioned Prompt Studio 2 contract.',
-          details: <String, dynamic>{
-            'document': document,
-            'contractDigest': promptStudioContractDigest,
-            'issues': issues.map((item) => item.toJson()).toList(),
-          },
-        );
+         '${document}_schema_invalid',
+         'The $document does not satisfy its versioned Prompt Studio 2 contract.',
+         details: <String, dynamic>{
+           'document': document,
+           'contractDigest': promptStudioContractDigest,
+           'issues': issues.map((item) => item.toJson()).toList(),
+         },
+       );
 }
 
 class PromptStudioV2Contracts {
@@ -88,9 +88,7 @@ class ProductSpecificationV2 extends PromptStudioV2Document {
   String? get deploymentTarget {
     final value = _map(
       _value['deploymentBoundary'],
-    )['target']
-        ?.toString()
-        .trim();
+    )['target']?.toString().trim();
     return value == null || value.isEmpty ? null : value;
   }
 }
@@ -168,8 +166,8 @@ class PlanCompilerPolicyV2 {
           : false,
       legacyUnsandboxedExecutionApproved:
           value['legacyUnsandboxedExecutionApproved'] is bool
-              ? value['legacyUnsandboxedExecutionApproved'] as bool
-              : false,
+          ? value['legacyUnsandboxedExecutionApproved'] as bool
+          : false,
       networkAllowed: value['networkAllowed'] is bool
           ? value['networkAllowed'] as bool
           : false,
@@ -191,19 +189,18 @@ class PlanCompilerPolicyV2 {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'localOnly': localOnly,
-        'sandboxAvailable': sandboxAvailable,
-        'legacyUnsandboxedExecutionApproved':
-            legacyUnsandboxedExecutionApproved,
-        'networkAllowed': networkAllowed,
-        'humanWorkflowAvailable': humanWorkflowAvailable,
-        'selfModificationApproved': selfModificationApproved,
-        'deploymentTarget': deploymentTarget,
-        'maxTasks': maxTasks.clamp(1, 100).toInt(),
-        'maxTotalModelTurns': max(0, maxTotalModelTurns),
-        'maxTotalToolCalls': max(0, maxTotalToolCalls),
-        'maxTotalOutputBytes': max(0, maxTotalOutputBytes),
-      };
+    'localOnly': localOnly,
+    'sandboxAvailable': sandboxAvailable,
+    'legacyUnsandboxedExecutionApproved': legacyUnsandboxedExecutionApproved,
+    'networkAllowed': networkAllowed,
+    'humanWorkflowAvailable': humanWorkflowAvailable,
+    'selfModificationApproved': selfModificationApproved,
+    'deploymentTarget': deploymentTarget,
+    'maxTasks': maxTasks.clamp(1, 100).toInt(),
+    'maxTotalModelTurns': max(0, maxTotalModelTurns),
+    'maxTotalToolCalls': max(0, maxTotalToolCalls),
+    'maxTotalOutputBytes': max(0, maxTotalOutputBytes),
+  };
 }
 
 class PlanCompilationIssueV2 {
@@ -224,13 +221,13 @@ class PlanCompilationIssueV2 {
   final Map<String, dynamic> details;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'severity': severity,
-        'code': code,
-        'message': message,
-        if (taskId != null) 'taskId': taskId,
-        if (path != null) 'path': path,
-        if (details.isNotEmpty) 'details': details,
-      };
+    'severity': severity,
+    'code': code,
+    'message': message,
+    if (taskId != null) 'taskId': taskId,
+    if (path != null) 'path': path,
+    if (details.isNotEmpty) 'details': details,
+  };
 }
 
 class _CapabilityV2 {
@@ -589,10 +586,10 @@ class PromptStudioV2Compiler {
         }
         final covered = capabilityName == 'human.approval'
             ? manual ||
-                const <String>{
-                  'approval',
-                  'manual',
-                }.contains(task['taskType']?.toString())
+                  const <String>{
+                    'approval',
+                    'manual',
+                  }.contains(task['taskType']?.toString())
             : capability.tools.intersection(allowed).isNotEmpty;
         if (covered) {
           capabilityCovered += 1;
@@ -858,17 +855,18 @@ class PromptStudioV2Compiler {
       final status = !enabled
           ? 'disabled'
           : manual
-              ? 'manual'
-              : taskBlocks.isNotEmpty
-                  ? 'blocked'
-                  : 'ready';
+          ? 'manual'
+          : taskBlocks.isNotEmpty
+          ? 'blocked'
+          : 'ready';
       compiledTasks.add(<String, dynamic>{
         'id': taskId,
         'status': status,
         'inferredCapabilities': inferred.toList()..sort(),
         'requiredCapabilities': required.toList()..sort(),
         'allowedTools': allowed.toList()..sort(),
-        'approvalRequired': manual ||
+        'approvalRequired':
+            manual ||
             const <String>{'high', 'critical'}.contains(risk) ||
             const <String>{'secret', 'external', 'network'}.contains(boundary),
         'blockReasons': taskBlocks.toList()..sort(),
@@ -884,8 +882,9 @@ class PromptStudioV2Compiler {
     };
     for (final task in compiledTasks) {
       final taskId = task['id']?.toString() ?? '';
-      task['topologicalIndex'] =
-          order.contains(taskId) ? order.indexOf(taskId) : null;
+      task['topologicalIndex'] = order.contains(taskId)
+          ? order.indexOf(taskId)
+          : null;
       task['executionBatch'] = batchIndex[taskId];
     }
 
@@ -925,8 +924,9 @@ class PromptStudioV2Compiler {
     );
 
     final errors = issues.where((item) => item.severity == 'error').toList();
-    final warnings =
-        issues.where((item) => item.severity == 'warning').toList();
+    final warnings = issues
+        .where((item) => item.severity == 'warning')
+        .toList();
     final graphErrorCodes = <String>{
       'task_id_duplicate',
       'dependency_missing',
@@ -946,21 +946,26 @@ class PromptStudioV2Compiler {
       'deployment_target_missing',
       'plan_budget_exceeded',
     };
-    final graphErrors =
-        errors.where((item) => graphErrorCodes.contains(item.code)).length;
-    final policyErrors =
-        errors.where((item) => policyErrorCodes.contains(item.code)).length;
+    final graphErrors = errors
+        .where((item) => graphErrorCodes.contains(item.code))
+        .length;
+    final policyErrors = errors
+        .where((item) => policyErrorCodes.contains(item.code))
+        .length;
     final schemaScore = 20.0;
     final graphScore = max(0.0, 20.0 - graphErrors * 5.0);
     final capabilityScore = capabilityRequired == 0
         ? 20.0
         : 20.0 * capabilityCovered / capabilityRequired;
-    final verificationScore =
-        criteriaTotal == 0 ? 15.0 : 15.0 * criteriaVerified / criteriaTotal;
-    final artifactScore =
-        artifactsTotal == 0 ? 15.0 : 15.0 * artifactsValidated / artifactsTotal;
+    final verificationScore = criteriaTotal == 0
+        ? 15.0
+        : 15.0 * criteriaVerified / criteriaTotal;
+    final artifactScore = artifactsTotal == 0
+        ? 15.0
+        : 15.0 * artifactsValidated / artifactsTotal;
     final policyScore = max(0.0, 10.0 - policyErrors * 3.0);
-    final baseScore = schemaScore +
+    final baseScore =
+        schemaScore +
         graphScore +
         capabilityScore +
         verificationScore +
@@ -1079,7 +1084,7 @@ class PromptStudioV2Compiler {
   }
 
   (Map<String, _CapabilityV2>, Map<String, List<String>>, Map<String, String>)
-      _capabilities() {
+  _capabilities() {
     final catalog = PromptStudioV2Contracts.capabilityCatalog;
     final capabilities = <String, _CapabilityV2>{};
     for (final item in _maps(catalog['capabilities'])) {
@@ -1176,11 +1181,12 @@ class PromptStudioV2Compiler {
       return order == 0 ? left.compareTo(right) : order;
     }
 
-    var ready = indegree.entries
-        .where((entry) => entry.value == 0)
-        .map((entry) => entry.key)
-        .toList()
-      ..sort(compare);
+    var ready =
+        indegree.entries
+            .where((entry) => entry.value == 0)
+            .map((entry) => entry.key)
+            .toList()
+          ..sort(compare);
     final order = <String>[];
     final batches = <List<String>>[];
     while (ready.isNotEmpty) {
@@ -1297,12 +1303,14 @@ class PromptStudioV2Evaluator {
           ((candidateResult['score'] as num) - (baselineResult['score'] as num))
               .toStringAsFixed(2),
         ),
-        'passedCaseDelta': _int(candidateResult['passedCases'], fallback: 0) -
+        'passedCaseDelta':
+            _int(candidateResult['passedCases'], fallback: 0) -
             _int(baselineResult['passedCases'], fallback: 0),
         'acceptanceCriterionDelta':
             _list(candidate['acceptanceCriteria']).length -
-                _list(baseline['acceptanceCriteria']).length,
-        'variableDelta': _list(candidate['variables']).length -
+            _list(baseline['acceptanceCriteria']).length,
+        'variableDelta':
+            _list(candidate['variables']).length -
             _list(baseline['variables']).length,
       },
     };
@@ -1421,16 +1429,18 @@ class PromptStudioV2Evaluator {
         final afterValues = <String, Object?>{
           for (final value in after) canonicalJson(value): value,
         };
-        final addedKeys = afterValues.keys
-            .toSet()
-            .difference(beforeValues.keys.toSet())
-            .toList()
-          ..sort();
-        final removedKeys = beforeValues.keys
-            .toSet()
-            .difference(afterValues.keys.toSet())
-            .toList()
-          ..sort();
+        final addedKeys =
+            afterValues.keys
+                .toSet()
+                .difference(beforeValues.keys.toSet())
+                .toList()
+              ..sort();
+        final removedKeys =
+            beforeValues.keys
+                .toSet()
+                .difference(afterValues.keys.toSet())
+                .toList()
+              ..sort();
         item['added'] = addedKeys.map((key) => afterValues[key]).toList();
         item['removed'] = removedKeys.map((key) => beforeValues[key]).toList();
       }
@@ -1454,8 +1464,8 @@ class PromptStudioV2Service {
     required this.audit,
     required this.events,
     required ProductSettings Function() settingsProvider,
-  })  : compiler = PromptStudioV2Compiler(tools),
-        _settingsProvider = settingsProvider;
+  }) : compiler = PromptStudioV2Compiler(tools),
+       _settingsProvider = settingsProvider;
 
   final PromptStudioV2Compiler compiler;
   final PromptStudioV2Evaluator evaluator = const PromptStudioV2Evaluator();
@@ -1471,8 +1481,7 @@ class PromptStudioV2Service {
 
   PromptEvaluationDatasetV1 validateEvaluationDataset(
     Map<String, dynamic> value,
-  ) =>
-      PromptEvaluationDatasetV1.fromJson(value);
+  ) => PromptEvaluationDatasetV1.fromJson(value);
 
   Future<Map<String, dynamic>> compileAndSimulate({
     required Map<String, dynamic> specification,
@@ -1480,7 +1489,8 @@ class PromptStudioV2Service {
     PlanCompilerPolicyV2? policy,
   }) async {
     final settings = _settingsProvider();
-    final effectivePolicy = policy ??
+    final effectivePolicy =
+        policy ??
         PlanCompilerPolicyV2(
           localOnly: settings.localOnly,
           sandboxAvailable: false,
@@ -1564,9 +1574,9 @@ Map<String, dynamic> _map(Object? value) =>
 
 List<Map<String, dynamic>> _maps(Object? value) => value is List
     ? value
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList(growable: false)
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList(growable: false)
     : const <Map<String, dynamic>>[];
 
 List<Object?> _list(Object? value) =>

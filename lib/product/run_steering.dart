@@ -18,11 +18,11 @@ class RunSteeringInstruction {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'runId': runId,
-        'text': text,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'runId': runId,
+    'text': text,
+    'createdAt': createdAt.toIso8601String(),
+  };
 }
 
 class RunSteeringService {

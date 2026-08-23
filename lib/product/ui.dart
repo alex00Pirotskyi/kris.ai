@@ -67,18 +67,15 @@ class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final reducedMotion = WidgetsBinding
-        .instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
     return MaterialApp(
       title: 'Kristin Local Agent',
       debugShowCheckedModeBanner: false,
-      theme: _studioTheme(
-        Brightness.light,
-        reducedMotion: reducedMotion,
-      ),
-      darkTheme: _studioTheme(
-        Brightness.dark,
-        reducedMotion: reducedMotion,
-      ),
+      theme: _studioTheme(Brightness.light, reducedMotion: reducedMotion),
+      darkTheme: _studioTheme(Brightness.dark, reducedMotion: reducedMotion),
       highContrastTheme: _studioTheme(
         Brightness.light,
         highContrast: true,
@@ -90,8 +87,9 @@ class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
         reducedMotion: reducedMotion,
       ),
       themeMode: ThemeMode.system,
-      themeAnimationDuration:
-          P5DesignSystem.themeTransitionDuration(reducedMotion),
+      themeAnimationDuration: P5DesignSystem.themeTransitionDuration(
+        reducedMotion,
+      ),
       themeAnimationCurve: Curves.easeOutCubic,
       home: KristinMainShell(
         runtime: widget.runtime,
@@ -135,7 +133,8 @@ class _KristinMainShellState extends State<KristinMainShell> {
     super.initState();
     _experienceController = P5InformationArchitectureController();
     _ownsAutonomyBinding = widget.autonomyBinding == null;
-    _autonomyBinding = widget.autonomyBinding ??
+    _autonomyBinding =
+        widget.autonomyBinding ??
         P5GlobalAutonomyController.product(
           runtime: widget.runtime,
           ownerMode: widget.ownerMode,
@@ -193,9 +192,11 @@ class _KristinMainShellState extends State<KristinMainShell> {
         globalAutonomy: _autonomyBinding,
         browserRuntimeAvailable:
             productRuntime?.p3BrowserRuntime.available ?? false,
-        browserRuntimeStatusCode: productRuntime?.p3BrowserRuntime.statusCode ??
+        browserRuntimeStatusCode:
+            productRuntime?.p3BrowserRuntime.statusCode ??
             'p3_runtime_not_bound',
-        browserRuntimeProvenance: productRuntime?.p3BrowserRuntime.provenance ??
+        browserRuntimeProvenance:
+            productRuntime?.p3BrowserRuntime.provenance ??
             const <String, Object?>{},
         layoutPersistence: productRuntime == null
             ? null
@@ -204,15 +205,16 @@ class _KristinMainShellState extends State<KristinMainShell> {
               ),
         browserSessionStarter: productRuntime == null
             ? null
-            : () => P3BrowserRuntimeService(
-                  applicationDataRoot: productRuntime.directories.root,
-                ).startSessions(
-                  stateDirectory: Directory(
-                    '${productRuntime.directories.cache.path}'
-                    '${Platform.pathSeparator}p5-web-studio-browser',
+            : () =>
+                  P3BrowserRuntimeService(
+                    applicationDataRoot: productRuntime.directories.root,
+                  ).startSessions(
+                    stateDirectory: Directory(
+                      '${productRuntime.directories.cache.path}'
+                      '${Platform.pathSeparator}p5-web-studio-browser',
+                    ),
+                    requestTimeout: const Duration(seconds: 60),
                   ),
-                  requestTimeout: const Duration(seconds: 60),
-                ),
         onOpenOwnerMode: () => _selectDestination(2),
       ),
       widget.ownerMode.buildWorkspace(
@@ -323,14 +325,14 @@ class _KristinMainShellState extends State<KristinMainShell> {
 
 class P5ApplicationShellLayoutPersistence implements P5ShellLayoutPersistence {
   P5ApplicationShellLayoutPersistence({required Directory applicationDataRoot})
-      : _root = applicationDataRoot;
+    : _root = applicationDataRoot;
 
   final Directory _root;
 
   File get file => File(
-        '${_root.path}${Platform.pathSeparator}ui'
-        '${Platform.pathSeparator}p5-shell-layout.v1.json',
-      );
+    '${_root.path}${Platform.pathSeparator}ui'
+    '${Platform.pathSeparator}p5-shell-layout.v1.json',
+  );
 
   @override
   Future<P5ShellLayoutState?> load() async {
@@ -353,15 +355,19 @@ class P5ApplicationShellLayoutPersistence implements P5ShellLayoutPersistence {
     final target = file;
     final directory = target.parent;
     await directory.create(recursive: true);
-    final directoryType =
-        await FileSystemEntity.type(directory.path, followLinks: false);
+    final directoryType = await FileSystemEntity.type(
+      directory.path,
+      followLinks: false,
+    );
     if (directoryType != FileSystemEntityType.directory) {
       throw const FileSystemException(
         'P5 shell layout directory is not a regular directory.',
       );
     }
-    final targetType =
-        await FileSystemEntity.type(target.path, followLinks: false);
+    final targetType = await FileSystemEntity.type(
+      target.path,
+      followLinks: false,
+    );
     if (targetType != FileSystemEntityType.notFound &&
         targetType != FileSystemEntityType.file) {
       throw const FileSystemException(
@@ -369,8 +375,10 @@ class P5ApplicationShellLayoutPersistence implements P5ShellLayoutPersistence {
       );
     }
     final temporary = File('${target.path}.tmp');
-    final temporaryType =
-        await FileSystemEntity.type(temporary.path, followLinks: false);
+    final temporaryType = await FileSystemEntity.type(
+      temporary.path,
+      followLinks: false,
+    );
     if (temporaryType != FileSystemEntityType.notFound) {
       await temporary.delete(recursive: true);
     }
@@ -1231,7 +1239,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
 
   Widget _statusBar() {
     final startup = widget.startupError;
-    final activeRun = currentRun != null &&
+    final activeRun =
+        currentRun != null &&
         <RunState>{
           RunState.running,
           RunState.paused,
@@ -1287,11 +1296,11 @@ class _SimpleStudioState extends State<SimpleStudio> {
   }
 
   Widget _content() => switch (section) {
-        StudioSection.newTask => _newTaskPage(),
-        StudioSection.activity => _activityPage(),
-        StudioSection.projects => _projectsPage(),
-        StudioSection.templates => _templatesPage(),
-      };
+    StudioSection.newTask => _newTaskPage(),
+    StudioSection.activity => _activityPage(),
+    StudioSection.projects => _projectsPage(),
+    StudioSection.templates => _templatesPage(),
+  };
 
   Widget _newTaskPage() {
     return _pageScroll(<Widget>[
@@ -1516,7 +1525,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 ),
               const SizedBox(width: 6),
               FilledButton.icon(
-                onPressed: busy ||
+                onPressed:
+                    busy ||
                         selectedProject == null ||
                         selectedModel == null ||
                         requestController.text.trim().isEmpty
@@ -1565,16 +1575,15 @@ class _SimpleStudioState extends State<SimpleStudio> {
                     Text(
                       'Kristin’s plan',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'A checkpoint will be created before any project change.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -1894,8 +1903,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
       color: success
           ? colors.primaryContainer
           : cancelled
-              ? colors.surfaceContainerHighest
-              : colors.errorContainer,
+          ? colors.surfaceContainerHighest
+          : colors.errorContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -1908,8 +1917,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                   success
                       ? Icons.check_circle
                       : cancelled
-                          ? Icons.stop_circle_outlined
-                          : Icons.error_outline,
+                      ? Icons.stop_circle_outlined
+                      : Icons.error_outline,
                   size: 30,
                 ),
                 const SizedBox(width: 12),
@@ -1918,11 +1927,11 @@ class _SimpleStudioState extends State<SimpleStudio> {
                     success
                         ? 'Done — your result is ready'
                         : cancelled
-                            ? 'The task stopped safely'
-                            : 'Kristin stopped safely',
+                        ? 'The task stopped safely'
+                        : 'Kristin stopped safely',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
@@ -1931,11 +1940,11 @@ class _SimpleStudioState extends State<SimpleStudio> {
             Text(
               success
                   ? (run.summary.trim().isEmpty
-                      ? 'All protected steps and checks completed.'
-                      : run.summary)
+                        ? 'All protected steps and checks completed.'
+                        : run.summary)
                   : cancelled
-                      ? 'Your saved checkpoint and completed evidence remain available.'
-                      : '${run.failure ?? 'A verification step could not be completed.'}\nYour previous files were restored when required.',
+                  ? 'Your saved checkpoint and completed evidence remain available.'
+                  : '${run.failure ?? 'A verification step could not be completed.'}\nYour previous files were restored when required.',
             ),
             const SizedBox(height: 14),
             Wrap(
@@ -2087,7 +2096,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 label: const Text('Pause'),
               ),
               OutlinedButton.icon(
-                onPressed: <RunState>{
+                onPressed:
+                    <RunState>{
                           RunState.paused,
                           RunState.interrupted,
                         }.contains(run.state) &&
@@ -2100,7 +2110,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 label: const Text('Continue'),
               ),
               OutlinedButton.icon(
-                onPressed: <RunState>{
+                onPressed:
+                    <RunState>{
                           RunState.running,
                           RunState.paused,
                           RunState.cancelling,
@@ -2191,17 +2202,17 @@ class _SimpleStudioState extends State<SimpleStudio> {
                 WorkspaceView.preview => _previewView(run),
                 WorkspaceView.files => _filesView(),
                 WorkspaceView.changes => _evidenceView(
-                    _mutationEvidence(evidence),
-                    emptyTitle: 'No file changes recorded yet',
-                    emptyMessage:
-                        'Changed files will appear here as Kristin works.',
-                  ),
+                  _mutationEvidence(evidence),
+                  emptyTitle: 'No file changes recorded yet',
+                  emptyMessage:
+                      'Changed files will appear here as Kristin works.',
+                ),
                 WorkspaceView.tests => _evidenceView(
-                    _testEvidence(evidence),
-                    emptyTitle: 'No test results recorded yet',
-                    emptyMessage:
-                        'Build, test, and verification evidence will appear here.',
-                  ),
+                  _testEvidence(evidence),
+                  emptyTitle: 'No test results recorded yet',
+                  emptyMessage:
+                      'Build, test, and verification evidence will appear here.',
+                ),
                 WorkspaceView.flow => _flowView(run),
               },
             ),
@@ -2534,8 +2545,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
                     Text(
                       run.command.contract.request,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(friendlyRunState(run.state)),
@@ -2571,23 +2582,23 @@ class _SimpleStudioState extends State<SimpleStudio> {
             InspectorSection.summary => _activitySummary(run),
             InspectorSection.steps => _activitySteps(run),
             InspectorSection.changes => _evidenceView(
-                _mutationEvidence(evidence),
-                emptyTitle: 'No changes recorded',
-                emptyMessage: 'This task did not record project mutations.',
-              ),
+              _mutationEvidence(evidence),
+              emptyTitle: 'No changes recorded',
+              emptyMessage: 'This task did not record project mutations.',
+            ),
             InspectorSection.tests => _evidenceView(
-                _testEvidence(evidence),
-                emptyTitle: 'No checks recorded',
-                emptyMessage: 'This task did not record test evidence.',
-              ),
+              _testEvidence(evidence),
+              emptyTitle: 'No checks recorded',
+              emptyMessage: 'This task did not record test evidence.',
+            ),
             InspectorSection.sources => _evidenceView(
-                evidence
-                    .where((item) => item.kind == EvidenceKind.research)
-                    .toList(),
-                emptyTitle: 'No web sources used',
-                emptyMessage:
-                    'This task used local project context and did not fetch research.',
-              ),
+              evidence
+                  .where((item) => item.kind == EvidenceKind.research)
+                  .toList(),
+              emptyTitle: 'No web sources used',
+              emptyMessage:
+                  'This task used local project context and did not fetch research.',
+            ),
             InspectorSection.logs => _logsView(run),
           },
         ],
@@ -2732,8 +2743,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
               LogDetail.technical =>
                 '${event.type} · ${event.timestamp.toLocal()} · ${event.correlationId}',
               LogDetail.raw => runtime.redactor.redact(
-                  const JsonEncoder.withIndent('  ').convert(event.toJson()),
-                ),
+                const JsonEncoder.withIndent('  ').convert(event.toJson()),
+              ),
             };
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -2815,8 +2826,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
             final cardWidth = width >= 1000
                 ? (width - 28) / 3
                 : width >= 640
-                    ? (width - 14) / 2
-                    : width;
+                ? (width - 14) / 2
+                : width;
             return Wrap(
               spacing: 14,
               runSpacing: 14,
@@ -2853,9 +2864,7 @@ class _SimpleStudioState extends State<SimpleStudio> {
                           const SizedBox(height: 14),
                           Text(
                             project.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 6),
@@ -2965,8 +2974,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
           final cardWidth = width >= 1000
               ? (width - 28) / 3
               : width >= 650
-                  ? (width - 14) / 2
-                  : width;
+              ? (width - 14) / 2
+              : width;
           return Wrap(
             spacing: 14,
             runSpacing: 14,
@@ -3028,10 +3037,12 @@ class _SimpleStudioState extends State<SimpleStudio> {
   }
 
   List<EventEnvelope> _eventsForRun(RunRecord run) {
-    return recentEvents.where((event) {
-      return event.correlationId == run.id ||
-          event.data['runId']?.toString() == run.id;
-    }).toList(growable: false);
+    return recentEvents
+        .where((event) {
+          return event.correlationId == run.id ||
+              event.data['runId']?.toString() == run.id;
+        })
+        .toList(growable: false);
   }
 
   List<EvidenceRecord> _mutationEvidence(List<EvidenceRecord> items) {
@@ -3070,7 +3081,8 @@ class _SimpleStudioState extends State<SimpleStudio> {
         }
       } else if (value is String) {
         final lower = key.toLowerCase();
-        final pathKey = lower.contains('path') ||
+        final pathKey =
+            lower.contains('path') ||
             lower.contains('file') ||
             lower.contains('target') ||
             lower.contains('artifact');
@@ -3112,17 +3124,17 @@ class _SimpleStudioState extends State<SimpleStudio> {
   }
 
   IconData _runStateIconData(RunState state) => switch (state) {
-        RunState.succeeded => Icons.check_circle,
-        RunState.failed => Icons.error,
-        RunState.cancelled => Icons.stop_circle,
-        RunState.running => Icons.play_circle,
-        RunState.paused => Icons.pause_circle,
-        RunState.interrupted => Icons.power_settings_new,
-        RunState.awaitingApproval => Icons.front_hand_outlined,
-        RunState.cancelling => Icons.pending,
-        RunState.queued => Icons.schedule,
-        RunState.prepared => Icons.fact_check_outlined,
-      };
+    RunState.succeeded => Icons.check_circle,
+    RunState.failed => Icons.error,
+    RunState.cancelled => Icons.stop_circle,
+    RunState.running => Icons.play_circle,
+    RunState.paused => Icons.pause_circle,
+    RunState.interrupted => Icons.power_settings_new,
+    RunState.awaitingApproval => Icons.front_hand_outlined,
+    RunState.cancelling => Icons.pending,
+    RunState.queued => Icons.schedule,
+    RunState.prepared => Icons.fact_check_outlined,
+  };
 
   Widget _workStateIcon(WorkItemState state) {
     return Icon(switch (state) {
@@ -3153,48 +3165,48 @@ class _SimpleStudioState extends State<SimpleStudio> {
   }
 
   IconData _evidenceIcon(EvidenceKind kind) => switch (kind) {
-        EvidenceKind.model => Icons.memory_outlined,
-        EvidenceKind.knowledge => Icons.search,
-        EvidenceKind.research => Icons.public_outlined,
-        EvidenceKind.mutation => Icons.edit_note_outlined,
-        EvidenceKind.command => Icons.terminal_outlined,
-        EvidenceKind.test => Icons.science_outlined,
-        EvidenceKind.verification => Icons.fact_check_outlined,
-        EvidenceKind.deployment => Icons.archive_outlined,
-        EvidenceKind.audit => Icons.verified_user_outlined,
-      };
+    EvidenceKind.model => Icons.memory_outlined,
+    EvidenceKind.knowledge => Icons.search,
+    EvidenceKind.research => Icons.public_outlined,
+    EvidenceKind.mutation => Icons.edit_note_outlined,
+    EvidenceKind.command => Icons.terminal_outlined,
+    EvidenceKind.test => Icons.science_outlined,
+    EvidenceKind.verification => Icons.fact_check_outlined,
+    EvidenceKind.deployment => Icons.archive_outlined,
+    EvidenceKind.audit => Icons.verified_user_outlined,
+  };
 
   IconData _workspaceIcon(WorkspaceView view) => switch (view) {
-        WorkspaceView.preview => Icons.visibility_outlined,
-        WorkspaceView.files => Icons.description_outlined,
-        WorkspaceView.changes => Icons.difference_outlined,
-        WorkspaceView.tests => Icons.fact_check_outlined,
-        WorkspaceView.flow => Icons.account_tree_outlined,
-      };
+    WorkspaceView.preview => Icons.visibility_outlined,
+    WorkspaceView.files => Icons.description_outlined,
+    WorkspaceView.changes => Icons.difference_outlined,
+    WorkspaceView.tests => Icons.fact_check_outlined,
+    WorkspaceView.flow => Icons.account_tree_outlined,
+  };
 
   String _workspaceLabel(WorkspaceView view) => switch (view) {
-        WorkspaceView.preview => 'Preview',
-        WorkspaceView.files => 'Files',
-        WorkspaceView.changes => 'Changes',
-        WorkspaceView.tests => 'Tests',
-        WorkspaceView.flow => 'Flow',
-      };
+    WorkspaceView.preview => 'Preview',
+    WorkspaceView.files => 'Files',
+    WorkspaceView.changes => 'Changes',
+    WorkspaceView.tests => 'Tests',
+    WorkspaceView.flow => 'Flow',
+  };
 
   String _inspectorLabel(InspectorSection item) => switch (item) {
-        InspectorSection.summary => 'Summary',
-        InspectorSection.steps => 'Steps',
-        InspectorSection.changes => 'Changes',
-        InspectorSection.tests => 'Tests',
-        InspectorSection.sources => 'Sources',
-        InspectorSection.logs => 'Logs',
-      };
+    InspectorSection.summary => 'Summary',
+    InspectorSection.steps => 'Steps',
+    InspectorSection.changes => 'Changes',
+    InspectorSection.tests => 'Tests',
+    InspectorSection.sources => 'Sources',
+    InspectorSection.logs => 'Logs',
+  };
 
   String _sectionTitle(StudioSection value) => switch (value) {
-        StudioSection.newTask => 'New task',
-        StudioSection.activity => 'Activity',
-        StudioSection.projects => 'Projects',
-        StudioSection.templates => 'Templates',
-      };
+    StudioSection.newTask => 'New task',
+    StudioSection.activity => 'Activity',
+    StudioSection.projects => 'Projects',
+    StudioSection.templates => 'Templates',
+  };
 
   String _timeLabel(DateTime value) {
     final local = value.toLocal();

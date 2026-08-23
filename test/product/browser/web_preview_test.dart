@@ -63,26 +63,28 @@ void main() {
     expect(missing.statusCode, HttpStatus.notFound);
   });
 
-  test('static preview hot reload exposes monotonic revision polling',
-      () async {
-    final preview = await service.startStatic();
-    final reloadUri = preview.url.resolve('/__kristin_live_reload');
+  test(
+    'static preview hot reload exposes monotonic revision polling',
+    () async {
+      final preview = await service.startStatic();
+      final reloadUri = preview.url.resolve('/__kristin_live_reload');
 
-    final initial = await _get(reloadUri);
-    expect(initial.statusCode, HttpStatus.ok);
-    expect(jsonDecode(initial.body), <String, Object?>{'revision': 0});
+      final initial = await _get(reloadUri);
+      expect(initial.statusCode, HttpStatus.ok);
+      expect(jsonDecode(initial.body), <String, Object?>{'revision': 0});
 
-    final changed = await service.sourceChanged(preview.id);
-    expect(changed.revision, 1);
+      final changed = await service.sourceChanged(preview.id);
+      expect(changed.revision, 1);
 
-    final updated = await _get(reloadUri);
-    expect(updated.statusCode, HttpStatus.ok);
-    expect(jsonDecode(updated.body), <String, Object?>{'revision': 1});
+      final updated = await _get(reloadUri);
+      expect(updated.statusCode, HttpStatus.ok);
+      expect(jsonDecode(updated.body), <String, Object?>{'revision': 1});
 
-    final refreshedPage = await _get(preview.url);
-    expect(refreshedPage.body, contains('var revision=1'));
-    expect(refreshedPage.body, contains('fetch("/__kristin_live_reload"'));
-  });
+      final refreshedPage = await _get(preview.url);
+      expect(refreshedPage.body, contains('var revision=1'));
+      expect(refreshedPage.body, contains('fetch("/__kristin_live_reload"'));
+    },
+  );
 
   test('static preview rejects encoded path traversal', () async {
     final preview = await service.startStatic();
@@ -92,41 +94,43 @@ void main() {
     expect(response.statusCode, HttpStatus.notFound);
   });
 
-  test('configured dev server waits for readiness and refreshes on save',
-      () async {
-    final fixture = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    processHost.fixtureServer = fixture;
-    unawaited(
-      Future<void>.delayed(const Duration(milliseconds: 100), () async {
-        processHost.ready = true;
-      }),
-    );
-    unawaited(_serveReadiness(fixture, processHost));
+  test(
+    'configured dev server waits for readiness and refreshes on save',
+    () async {
+      final fixture = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      processHost.fixtureServer = fixture;
+      unawaited(
+        Future<void>.delayed(const Duration(milliseconds: 100), () async {
+          processHost.ready = true;
+        }),
+      );
+      unawaited(_serveReadiness(fixture, processHost));
 
-    final url = Uri.parse('http://127.0.0.1:${fixture.port}/');
-    final preview = await service.startDevServer(
-      P3DevServerConfig(
-        command: 'npm',
-        arguments: const <String>['run', 'dev'],
-        cwd: '.',
-        url: url,
-        readinessPath: '/health',
-      ),
-    );
+      final url = Uri.parse('http://127.0.0.1:${fixture.port}/');
+      final preview = await service.startDevServer(
+        P3DevServerConfig(
+          command: 'npm',
+          arguments: const <String>['run', 'dev'],
+          cwd: '.',
+          url: url,
+          readinessPath: '/health',
+        ),
+      );
 
-    expect(preview.lifecycle, P3PreviewLifecycle.ready);
-    expect(processHost.starts, 1);
-    expect(processHost.lastConfig?.command, 'npm');
-    expect(processHost.lastConfig?.arguments, <String>['run', 'dev']);
+      expect(preview.lifecycle, P3PreviewLifecycle.ready);
+      expect(processHost.starts, 1);
+      expect(processHost.lastConfig?.command, 'npm');
+      expect(processHost.lastConfig?.arguments, <String>['run', 'dev']);
 
-    final changed = await service.sourceChanged(preview.id);
-    expect(changed.revision, 1);
-    expect(refreshTarget.urls, <Uri>[url]);
+      final changed = await service.sourceChanged(preview.id);
+      expect(changed.revision, 1);
+      expect(refreshTarget.urls, <Uri>[url]);
 
-    await service.stop(preview.id);
-    expect(processHost.stops, 1);
-    expect(processHost.lastGrace, const Duration(seconds: 3));
-  });
+      await service.stop(preview.id);
+      expect(processHost.stops, 1);
+      expect(processHost.lastGrace, const Duration(seconds: 3));
+    },
+  );
 
   test('dev server readiness failure stops managed process', () async {
     final portHolder = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
@@ -158,53 +162,55 @@ void main() {
       throwsStateError,
     );
   });
-  test('P2 managed preview host binds PTY launch and exact process stop',
-      () async {
-    final pty = _RecordingPreviewPtyBackend();
-    final processTree = _RecordingPreviewProcessTreeAdapter();
-    final completions = <String>[];
-    final host = P3P2ManagedPreviewProcessHost(
-      ptyBackend: pty,
-      processTreeAdapter: processTree,
-      authorizationFor: (_) => P3PreviewProcessAuthorization(
-        binding: _previewBinding(),
-        grantDigest: 'a' * 64,
-      ),
-      onProcessStopped: (sessionId, identity) async {
-        completions.add('$sessionId:${identity.stableKey}');
-      },
-    );
-    final config = P3DevServerConfig(
-      command: 'npm',
-      arguments: const <String>['run', 'dev'],
-      cwd: '.',
-      url: Uri.parse('http://127.0.0.1:4173/'),
-      environmentDelta: const <String, String?>{'MODE': 'preview'},
-    );
+  test(
+    'P2 managed preview host binds PTY launch and exact process stop',
+    () async {
+      final pty = _RecordingPreviewPtyBackend();
+      final processTree = _RecordingPreviewProcessTreeAdapter();
+      final completions = <String>[];
+      final host = P3P2ManagedPreviewProcessHost(
+        ptyBackend: pty,
+        processTreeAdapter: processTree,
+        authorizationFor: (_) => P3PreviewProcessAuthorization(
+          binding: _previewBinding(),
+          grantDigest: 'a' * 64,
+        ),
+        onProcessStopped: (sessionId, identity) async {
+          completions.add('$sessionId:${identity.stableKey}');
+        },
+      );
+      final config = P3DevServerConfig(
+        command: 'npm',
+        arguments: const <String>['run', 'dev'],
+        cwd: '.',
+        url: Uri.parse('http://127.0.0.1:4173/'),
+        environmentDelta: const <String, String?>{'MODE': 'preview'},
+      );
 
-    final session = await host.start(config);
-    expect(session.sessionId, 'managed-preview');
-    expect(session.processIdentity, _previewIdentity.stableKey);
-    expect(pty.lastRequest?.shell, 'npm');
-    expect(pty.lastRequest?.arguments, <String>['run', 'dev']);
-    expect(pty.lastRequest?.environmentDelta, <String, String?>{
-      'MODE': 'preview',
-    });
-    expect(pty.lastBinding?.operation, 'pty.open');
-    expect(pty.lastGrantDigest, 'a' * 64);
-    expect(processTree.calls, <String>['inspect']);
+      final session = await host.start(config);
+      expect(session.sessionId, 'managed-preview');
+      expect(session.processIdentity, _previewIdentity.stableKey);
+      expect(pty.lastRequest?.shell, 'npm');
+      expect(pty.lastRequest?.arguments, <String>['run', 'dev']);
+      expect(pty.lastRequest?.environmentDelta, <String, String?>{
+        'MODE': 'preview',
+      });
+      expect(pty.lastBinding?.operation, 'pty.open');
+      expect(pty.lastGrantDigest, 'a' * 64);
+      expect(processTree.calls, <String>['inspect']);
 
-    await host.stop(session, const Duration(milliseconds: 75));
-    expect(processTree.calls, <String>[
-      'inspect',
-      'inspect',
-      'stop:75',
-      'inspect',
-    ]);
-    expect(completions, <String>[
-      'managed-preview:${_previewIdentity.stableKey}',
-    ]);
-  });
+      await host.stop(session, const Duration(milliseconds: 75));
+      expect(processTree.calls, <String>[
+        'inspect',
+        'inspect',
+        'stop:75',
+        'inspect',
+      ]);
+      expect(completions, <String>[
+        'managed-preview:${_previewIdentity.stableKey}',
+      ]);
+    },
+  );
 
   test('P2 managed preview host rejects malformed authorization', () async {
     final pty = _RecordingPreviewPtyBackend();
@@ -263,8 +269,9 @@ Future<void> _serveReadiness(
   _RecordingProcessHost host,
 ) async {
   await for (final request in server) {
-    request.response.statusCode =
-        host.ready ? HttpStatus.ok : HttpStatus.notFound;
+    request.response.statusCode = host.ready
+        ? HttpStatus.ok
+        : HttpStatus.notFound;
     request.response.write(host.ready ? 'ready' : 'starting');
     await request.response.close();
   }
@@ -296,14 +303,14 @@ const P2ProcessIdentity _previewIdentity = P2ProcessIdentity(
 );
 
 P2EffectBinding _previewBinding() => const P2EffectBinding(
-      runId: 'run-preview',
-      taskId: 'P3-013',
-      actorId: 'desktop_host',
-      toolId: 'web_preview',
-      accessProfileId: 'owner',
-      capabilityId: 'pty',
-      operation: 'pty.open',
-    );
+  runId: 'run-preview',
+  taskId: 'P3-013',
+  actorId: 'desktop_host',
+  toolId: 'web_preview',
+  accessProfileId: 'owner',
+  capabilityId: 'pty',
+  operation: 'pty.open',
+);
 
 final class _RecordingPreviewPtyBackend implements P2PtyBackend {
   int openCount = 0;
@@ -346,16 +353,14 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> detach(
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> input(
@@ -363,16 +368,14 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     List<int> bytes, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> interrupt(
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Stream<List<int>> output(
@@ -380,8 +383,7 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      const Stream<List<int>>.empty();
+  }) => const Stream<List<int>>.empty();
 
   @override
   Future<void> resize(
@@ -390,8 +392,7 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     int rows, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 }
 
 final class _RecordingPreviewProcessTreeAdapter
@@ -407,10 +408,7 @@ final class _RecordingPreviewProcessTreeAdapter
   }
 
   @override
-  Future<void> requestStop(
-    P2ProcessIdentity identity,
-    Duration grace,
-  ) async {
+  Future<void> requestStop(P2ProcessIdentity identity, Duration grace) async {
     expect(identity.stableKey, _previewIdentity.stableKey);
     calls.add('stop:${grace.inMilliseconds}');
     state = P2ProcessLifecycle.stopped;
@@ -444,10 +442,7 @@ final class _RecordingProcessHost implements P3PreviewProcessHost {
   }
 
   @override
-  Future<void> stop(
-    P3PreviewProcessSession session,
-    Duration grace,
-  ) async {
+  Future<void> stop(P3PreviewProcessSession session, Duration grace) async {
     stops += 1;
     lastGrace = grace;
     if (stopFailures > 0) {
