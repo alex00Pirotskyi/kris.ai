@@ -41,6 +41,24 @@ def current_main_base() -> str:
     return base
 
 
+def configure_git_identity() -> None:
+    subprocess.run(
+        ['git', 'config', 'user.name', 'github-actions[bot]'],
+        cwd=ROOT,
+        check=True,
+    )
+    subprocess.run(
+        [
+            'git',
+            'config',
+            'user.email',
+            '41898282+github-actions[bot]@users.noreply.github.com',
+        ],
+        cwd=ROOT,
+        check=True,
+    )
+
+
 def restore_branch_isolation() -> None:
     base_main = current_main_base()
     changed = subprocess.check_output(
@@ -287,6 +305,7 @@ def patch_release_contracts() -> None:
 
 
 def main() -> int:
+    configure_git_identity()
     restore_branch_isolation()
     text = PAYLOAD.read_text(encoding='utf-8')
 
