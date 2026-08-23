@@ -424,9 +424,11 @@ class P5GlobalAutonomyBar extends StatefulWidget {
   const P5GlobalAutonomyBar({
     super.key,
     required this.binding,
+    this.onOpenCommands,
   });
 
   final P5GlobalAutonomyBinding binding;
+  final VoidCallback? onOpenCommands;
 
   @override
   State<P5GlobalAutonomyBar> createState() => _P5GlobalAutonomyBarState();
@@ -482,6 +484,15 @@ class _P5GlobalAutonomyBarState extends State<P5GlobalAutonomyBar> {
                 height: 56,
                 child: Row(
                   children: <Widget>[
+                    if (widget.onOpenCommands != null) ...<Widget>[
+                      IconButton(
+                        key: const Key('p5-command-palette-button'),
+                        tooltip: 'Command palette (Ctrl/Cmd+K)',
+                        onPressed: widget.onOpenCommands,
+                        icon: const Icon(Icons.search),
+                      ),
+                      const VerticalDivider(width: 1),
+                    ],
                     Expanded(
                       child: SingleChildScrollView(
                         key: const Key('p5-global-status-scroll'),
