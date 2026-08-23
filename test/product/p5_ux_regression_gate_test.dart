@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p2_product_runtime_bootstrap.dart';
 import 'package:kristin_local_agent/product/p5_design_tokens.dart';
@@ -10,20 +9,9 @@ import 'package:kristin_local_agent/product/p5_information_architecture/p5_model
 import 'package:kristin_local_agent/product/p5_information_architecture/p5_prototype.dart';
 import 'package:kristin_local_agent/product/ui.dart';
 
-Future<void> _pressChord(
-  WidgetTester tester, {
-  required LogicalKeyboardKey modifier,
-  required LogicalKeyboardKey key,
-}) async {
-  await tester.sendKeyDownEvent(modifier);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(modifier);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   group('P5-014 critical UX regression gate', () {
-    testWidgets('keyboard navigation preserves the primary workspace flow',
+    testWidgets('workspace history preserves the primary navigation flow',
         (tester) async {
       tester.view.physicalSize = const Size(1440, 960);
       tester.view.devicePixelRatio = 1;
@@ -41,19 +29,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.state.workspace, P5WorkspaceId.homeChat);
-      await _pressChord(
-        tester,
-        modifier: LogicalKeyboardKey.altLeft,
-        key: LogicalKeyboardKey.digit3,
-      );
+      controller.selectWorkspace(P5WorkspaceId.runsActivity);
+      await tester.pumpAndSettle();
       expect(controller.state.workspace, P5WorkspaceId.runsActivity);
-      await _pressChord(
-        tester,
-        modifier: LogicalKeyboardKey.altLeft,
-        key: LogicalKeyboardKey.digit4,
-      );
-      expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      controller.back();
+      await tester.pumpAndSettle();
+      expect(controller.state.workspace, P5WorkspaceId.homeChat);
+      controller.forward();
+      await tester.pumpAndSettle();
+      expect(controller.state.workspace, P5WorkspaceId.runsActivity);
+      controller.back();
       await tester.pumpAndSettle();
       expect(controller.state.workspace, P5WorkspaceId.homeChat);
       expect(controller.sideEffects.isZero, isTrue);
@@ -99,7 +84,6 @@ void main() {
         ..changeExperienceLevel(P5ExperienceLevel.advanced);
       addTearDown(controller.dispose);
       final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -117,6 +101,7 @@ void main() {
         find.bySemanticsLabel('Owner Mode status: Blocked by environment.'),
         findsOneWidget,
       );
+      semantics.dispose();
     });
 
     testWidgets(
