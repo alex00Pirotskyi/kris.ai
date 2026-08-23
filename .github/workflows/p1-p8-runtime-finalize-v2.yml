@@ -1,10 +1,11 @@
-# direct P1-P8 runtime convergence after soak-fixture repair
+# clean helper transport for P1-P8 runtime convergence
 name: P1-P8 Runtime Finalize V2
 
 on:
   push:
     branches:
       - 'agent/p1-p8-source-convergence-20260823'
+      - 'agent/p1-p8-runtime-qualifier-contained-20260823'
     paths:
       - '.github/workflows/p1-p8-runtime-finalize-v2.yml'
   pull_request:
