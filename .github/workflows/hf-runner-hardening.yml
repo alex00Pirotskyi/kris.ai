@@ -7,6 +7,10 @@ on:
       - hotfix/runner-chat-convergence-20260823
     paths:
       - .github/workflows/hf-runner-hardening.yml
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
