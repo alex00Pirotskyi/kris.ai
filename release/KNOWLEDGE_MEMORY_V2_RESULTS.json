@@ -5,7 +5,7 @@
   "results": [
     {
       "detail": "object stored at sha256/d3/a5/d3a539b57b3fd80ae49c098386559e97238da89cd3b837c2c5a41218307332f6.txt",
-      "durationMs": 0,
+      "durationMs": 15,
       "name": "Object store writes deterministic sha256 paths",
       "passed": true
     },
@@ -59,7 +59,7 @@
     },
     {
       "detail": "identical content deduplicates",
-      "durationMs": 0,
+      "durationMs": 15,
       "name": "Object store manifest is stable",
       "passed": true
     },
