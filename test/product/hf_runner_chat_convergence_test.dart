@@ -297,6 +297,40 @@ void main() {
     expect(task.title.trim(), isEmpty);
   });
 
+  test('awaiting approval chat card is actionable and recovery-safe', () {
+    final chatSource = File('lib/product/chat_studio.dart').readAsStringSync();
+    final presentationSource =
+        File('lib/product/ui_components.dart').readAsStringSync();
+
+    expect(
+      presentationSource,
+      contains("RunState.awaitingApproval => 'Approval required to continue'"),
+    );
+    expect(
+      chatSource,
+      contains("key: const Key('chat-run-approval-guidance')"),
+    );
+    expect(
+      chatSource,
+      contains("key: const Key('chat-run-approve-continue')"),
+    );
+    expect(chatSource, contains("label: const Text('Review & continue')"));
+    expect(chatSource, contains("'Starts after approval'"));
+    expect(
+      chatSource,
+      contains('Nothing will execute until you approve this run.'),
+    );
+    expect(
+      chatSource,
+      contains(
+          'approvedScopes.addAll(run.command.contract.requiredPermissions);'),
+    );
+    expect(
+      RegExp(r"liveAssistantProtocolText = '';").allMatches(chatSource).length,
+      greaterThanOrEqualTo(5),
+    );
+  });
+
   test('timeline projection keeps durable and live activity together', () {
     final event = EventEnvelope(
       sequence: 1,
