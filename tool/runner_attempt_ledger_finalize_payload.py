@@ -251,7 +251,7 @@ def patch_planning_runtime() -> None:
       late final int requestNumber;
       late final ModelGenerationResult generation;
       if (deterministicSelected) {
-        final candidate = deterministicCandidate!;
+        final candidate = deterministicCandidate;
         requestNumber = 0;
         final deterministicAt = DateTime.now().toUtc();
         final deterministicJson = attemptLedgerPolicy.actionJson(candidate);
@@ -465,12 +465,16 @@ def patch_planning_runtime() -> None:
 '''
     text = replace_once(text, old, new, "protocol branch ledger")
 
-    complete_marker = '''        return _WorkOutcome(current, summary);
+    old = '''        return _WorkOutcome(current, summary);
       }
       if (action.kind == 'fail') {
+        throw ProductException(
+          'model_declared_failure',
+          action.summary.trim().isEmpty ? action.reason : action.summary,
+        );
+      }
 '''
-    complete_insert = '''        final completionActionJson = attemptLedgerPolicy.actionJson(action);
-        await repositories.workflow.recordAgentActionAttempt(
+    new = '''        await repositories.workflow.recordAgentActionAttempt(
           runId: current.id,
           workItemId: progress.item.id,
           workItemAttempt: progress.attempts,
@@ -478,24 +482,20 @@ def patch_planning_runtime() -> None:
           requestNumber: requestNumber,
           stateSha256: stateSha256,
           decisionSha256: decisionSha256,
-          action: mapValue(redactor.redactJson(completionActionJson)),
+          action: mapValue(
+            redactor.redactJson(attemptLedgerPolicy.actionJson(action)),
+          ),
           actionSha256: attemptLedgerPolicy.actionSha256(action),
           outcome: 'complete',
           beforeSha256: stateSha256,
           afterSha256: stateSha256,
+          details: <String, dynamic>{
+            'summaryHash': Sha256.text(summary),
+          },
         );
         return _WorkOutcome(current, summary);
       }
       if (action.kind == 'fail') {
-'''
-    text = replace_once(text, complete_marker, complete_insert, "completion ledger")
-
-    fail_marker = '''      if (action.kind == 'fail') {
-        throw ProductException(
-          'model_declared_failure',
-'''
-    fail_insert = '''      if (action.kind == 'fail') {
-        final failureActionJson = attemptLedgerPolicy.actionJson(action);
         await repositories.workflow.recordAgentActionAttempt(
           runId: current.id,
           workItemId: progress.item.id,
@@ -504,7 +504,9 @@ def patch_planning_runtime() -> None:
           requestNumber: requestNumber,
           stateSha256: stateSha256,
           decisionSha256: decisionSha256,
-          action: mapValue(redactor.redactJson(failureActionJson)),
+          action: mapValue(
+            redactor.redactJson(attemptLedgerPolicy.actionJson(action)),
+          ),
           actionSha256: attemptLedgerPolicy.actionSha256(action),
           outcome: 'declared_failure',
           errorCode: 'model_declared_failure',
@@ -513,8 +515,11 @@ def patch_planning_runtime() -> None:
         );
         throw ProductException(
           'model_declared_failure',
+          action.summary.trim().isEmpty ? action.reason : action.summary,
+        );
+      }
 '''
-    text = replace_once(text, fail_marker, fail_insert, "declared failure ledger")
+    text = replace_once(text, old, new, "terminal decision ledger")
 
     marker = '''      if (phaseToolCalls >= executionPhaseBudget.maxToolCalls) {
         throw ProductException(
@@ -523,9 +528,9 @@ def patch_planning_runtime() -> None:
 '''
     if text.count(marker) != 1:
         raise SystemExit(
-            f"tool action insertion marker: expected 1, found {text.count(marker)}"
+            f"tool proposal insertion marker: expected 1, found {text.count(marker)}"
         )
-    action_guard = r'''      final actionJsonForLedger = attemptLedgerPolicy.actionJson(action);
+    proposal = r'''      final actionJsonForLedger = attemptLedgerPolicy.actionJson(action);
       final actionSha256ForLedger = attemptLedgerPolicy.actionSha256(action);
       final redactedActionForLedger =
           mapValue(redactor.redactJson(actionJsonForLedger));
@@ -570,7 +575,7 @@ def patch_planning_runtime() -> None:
         continue;
       }
 '''
-    text = text.replace(marker, action_guard + marker, 1)
+    text = text.replace(marker, proposal + marker, 1)
 
     old = '''        if (!_isRecoverableToolInputError(toolError) ||
             toolRepairAttempts >= 3 ||
@@ -653,7 +658,7 @@ def patch_planning_runtime() -> None:
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
-def patch_tests() -> None:
+def patch_tests_and_policy() -> None:
     test_path = ROOT / "test" / "product" / "durable_workflow_kernel_test.dart"
     text = test_path.read_text(encoding="utf-8")
     text = replace_once(
@@ -678,7 +683,7 @@ def patch_tests() -> None:
 def main() -> int:
     patch_durable_workflow()
     patch_planning_runtime()
-    patch_tests()
+    patch_tests_and_policy()
     print("runner attempt ledger hotfix patched")
     return 0
 
