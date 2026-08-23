@@ -1,0 +1,82 @@
+name: P1-P8 Focused Runtime Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+    paths:
+      - '.github/workflows/p1-p8-focused-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p1-p8-source-convergence-20260823
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Install locked Python trust dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Apply runtime integration patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tool/p1_p8_runtime_finalize.py
+          python tool/p1_p8_runtime_finalize.py
+          dart format \
+            lib/product/agent_context_v2.dart \
+            lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/model/model_registry.dart \
+            lib/product/model/model_routing_v2.dart \
+            lib/product/mcp_registry_v2.dart \
+            lib/product/p2_product_runtime_bootstrap.dart \
+            lib/product/p8_effect_journal_adapter.dart \
+            lib/product/p8_external_effects.dart \
+            lib/product/p8_observability.dart \
+            lib/product/planning_runtime.dart \
+            lib/product/product_runtime.dart \
+            lib/product/storage_security.dart \
+            test/product/agent_context_v2_test.dart \
+            test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/model/model_routing_v2_test.dart \
+            test/product/mcp_registry_v2_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_product_runtime_telemetry_test.dart
+      - name: Diagnose agent context v2
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/agent_context_v2_test.dart
+      - name: Diagnose decision v3
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/agent_decision_v3_test.dart
+      - name: Diagnose protocol v3
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/agent_protocol_v3_test.dart
+      - name: Diagnose model role routing
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/model/model_routing_v2_test.dart
+      - name: Diagnose MCP registry v2
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/mcp_registry_v2_test.dart
+      - name: Diagnose reconciled effect journal
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_effect_journal_adapter_test.dart
+      - name: Diagnose external effects state machine
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_external_effects_test.dart
+      - name: Diagnose observability core
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_observability_test.dart
+      - name: Diagnose ProductRuntime telemetry
+        run: flutter test --no-pub --concurrency=1 --reporter compact test/product/p8_product_runtime_telemetry_test.dart
