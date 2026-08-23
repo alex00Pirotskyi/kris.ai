@@ -1,0 +1,113 @@
+name: P5-011 Rebase Finalize
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .repo-p5-011-rebase-finalize.py
+      - .github/workflows/p5-011-rebase-finalize.yml
+      - lib/product/capability_doctor.dart
+      - lib/product/chat_studio.dart
+      - lib/product/product_runtime.dart
+      - test/product/p5_capability_doctor_test.dart
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p5-011-rebase-finalize-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  qualify-publish:
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      github.event.pull_request.head.ref == 'agent/p5-011-capability-doctor-20260823'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: agent/p5-011-capability-doctor-20260823
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Pin reconciled baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=142c91c29e81219ed025fd8156511e0db658ae00
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          test "$(git merge-base HEAD "$BASE")" = "$BASE"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Apply bounded P5-011 completion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .repo-p5-011-rebase-finalize.py
+          rm -f .repo-p5-011-rebase-finalize.py
+          rm -f .github/workflows/p5-011-rebase-finalize.yml
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Format durable Dart delta
+        shell: bash
+        run: |
+          dart format \
+            lib/product/capability_doctor.dart \
+            lib/product/chat_studio.dart \
+            lib/product/product_runtime.dart \
+            test/product/p5_capability_doctor_test.dart \
+            test/product/source_contract_test.dart
+      - name: Refresh governed source manifest
+        run: python tool/p2_refresh_source_manifest.py .
+      - name: Verify exact durable delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=142c91c29e81219ed025fd8156511e0db658ae00
+          git add -A
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              'SOURCE_MANIFEST.sha256',
+              'lib/product/capability_doctor.dart',
+              'lib/product/chat_studio.dart',
+              'lib/product/product_runtime.dart',
+              'test/product/p5_capability_doctor_test.dart',
+              'test/product/source_contract_test.dart',
+          }
+          changed = set(subprocess.check_output(
+              ['git', 'diff', '--cached', '--name-only', '142c91c29e81219ed025fd8156511e0db658ae00', '--'],
+              text=True,
+          ).splitlines())
+          if changed != expected:
+              raise SystemExit(f'unexpected P5-011 durable delta: {sorted(changed)}')
+          PY
+          git diff --cached --check
+      - name: Focused P5-011 Doctor contract
+        run: >-
+          flutter test --no-pub --reporter expanded
+          test/product/p5_capability_doctor_test.dart
+      - name: Focused Runner convergence contract
+        run: >-
+          flutter test --no-pub --reporter expanded
+          test/product/hf_runner_chat_convergence_test.dart
+      - name: Source formatting contract
+        run: python tool/dart_format_scope.py --check
+      - name: Fatal static analysis
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Complete Flutter regression
+        run: flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: Deterministic release validator
+        run: python tool/validate_release.py
+      - name: Publish clean P5-011 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(p5-011): add onboarding capability doctor'
+          git push --force-with-lease origin HEAD:agent/p5-011-capability-doctor-20260823

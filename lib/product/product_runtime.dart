@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'browser/browser_runtime.dart';
+import 'capability_doctor.dart';
 import 'crypto_utils.dart';
 import 'deployment_support.dart';
 import 'domain.dart';
@@ -606,6 +607,358 @@ class ProductRuntime {
       'dataRootHash': Sha256.text(directories.root.path),
     });
     return runtime;
+  }
+
+  Future<CapabilityDoctorReport> inspectCapabilities({
+    String? projectId,
+    List<ModelIdentity>? discoveredModels,
+    ProjectDiagnosticReport? projectReport,
+    CapabilityDoctorDepth depth = CapabilityDoctorDepth.quick,
+  }) async {
+    final checks = <CapabilityDoctorCheck>[];
+
+    final storageWatch = Stopwatch()..start();
+    final probeFile = File(
+      '${directories.support.path}${Platform.pathSeparator}.capability-doctor-${newId('probe')}.tmp',
+    );
+    try {
+      await probeFile.writeAsString('kristin-ready\n', flush: true);
+      final stored = await probeFile.readAsString();
+      storageWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'storage',
+          title: 'Local storage',
+          status: stored == 'kristin-ready\n'
+              ? CapabilityDoctorStatus.ready
+              : CapabilityDoctorStatus.blocked,
+          message: stored == 'kristin-ready\n'
+              ? 'Application-owned state and support storage are writable.'
+              : 'The storage probe could not read back the bytes it wrote.',
+          required: true,
+          action: stored == 'kristin-ready\n'
+              ? CapabilityDoctorAction.none
+              : CapabilityDoctorAction.openSettings,
+          durationMilliseconds: storageWatch.elapsedMilliseconds,
+          details: <String, Object?>{
+            'root': directories.root.path,
+          },
+        ),
+      );
+    } catch (error) {
+      storageWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'storage',
+          title: 'Local storage',
+          status: CapabilityDoctorStatus.blocked,
+          message:
+              'Kristin cannot safely write application state: ${redactor.redact('$error')}',
+          required: true,
+          action: CapabilityDoctorAction.openSettings,
+          durationMilliseconds: storageWatch.elapsedMilliseconds,
+        ),
+      );
+    } finally {
+      try {
+        if (await probeFile.exists()) await probeFile.delete();
+      } catch (_) {
+        // The probe result is about application storage availability; a stale
+        // temporary file is non-authoritative cleanup evidence.
+      }
+    }
+
+    final modelWatch = Stopwatch()..start();
+    try {
+      final knownModels = discoveredModels ?? await discoverModels();
+      modelWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'model',
+          title: 'AI model',
+          status: knownModels.isEmpty
+              ? CapabilityDoctorStatus.blocked
+              : CapabilityDoctorStatus.ready,
+          message: knownModels.isEmpty
+              ? 'No usable AI model is currently discovered.'
+              : '${knownModels.first.name} is available${knownModels.length == 1 ? '' : ' with ${knownModels.length - 1} additional model(s)'}.',
+          required: true,
+          action: knownModels.isEmpty
+              ? CapabilityDoctorAction.connectModel
+              : CapabilityDoctorAction.none,
+          durationMilliseconds: modelWatch.elapsedMilliseconds,
+          details: <String, Object?>{
+            'modelCount': knownModels.length,
+            'models': knownModels.map((item) => item.exactId).toList(),
+          },
+        ),
+      );
+    } catch (error) {
+      modelWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'model',
+          title: 'AI model',
+          status: CapabilityDoctorStatus.blocked,
+          message: 'Model discovery failed: ${redactor.redact('$error')}',
+          required: true,
+          action: CapabilityDoctorAction.connectModel,
+          durationMilliseconds: modelWatch.elapsedMilliseconds,
+        ),
+      );
+    }
+
+    final owner = p2OwnerMode;
+    checks.add(
+      CapabilityDoctorCheck(
+        id: 'owner-mode',
+        title: 'Owner Mode',
+        status: owner.available
+            ? CapabilityDoctorStatus.ready
+            : CapabilityDoctorStatus.warning,
+        message: owner.available
+            ? 'Owner Mode runtime is available when full-computer access is explicitly selected.'
+            : owner.recoveryMessage,
+        required: false,
+        action: owner.available
+            ? CapabilityDoctorAction.none
+            : CapabilityDoctorAction.openSettings,
+        details: <String, Object?>{
+          'available': owner.available,
+          'completionEligible': owner.completionEligible,
+          if (!owner.available) 'diagnosticCode': owner.diagnosticCode,
+        },
+      ),
+    );
+
+    checks.add(
+      CapabilityDoctorCheck(
+        id: 'terminal',
+        title: 'Interactive terminal',
+        status: owner.available
+            ? CapabilityDoctorStatus.ready
+            : CapabilityDoctorStatus.warning,
+        message: owner.available
+            ? 'The governed Owner runtime can provide interactive terminal sessions.'
+            : 'Terminal automation needs a healthy Owner Mode runtime. Ordinary project commands remain separately governed.',
+        required: false,
+        action: owner.available
+            ? CapabilityDoctorAction.none
+            : CapabilityDoctorAction.openSettings,
+      ),
+    );
+
+    final browserWatch = Stopwatch()..start();
+    if (!p3BrowserRuntime.available) {
+      browserWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'browser',
+          title: 'Browser automation',
+          status: CapabilityDoctorStatus.warning,
+          message:
+              'Browser runtime is unavailable: ${p3BrowserRuntime.statusCode}.',
+          required: false,
+          action: CapabilityDoctorAction.retryDoctor,
+          durationMilliseconds: browserWatch.elapsedMilliseconds,
+          details: <String, Object?>{
+            'statusCode': p3BrowserRuntime.statusCode,
+          },
+        ),
+      );
+    } else if (depth == CapabilityDoctorDepth.quick) {
+      browserWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'browser',
+          title: 'Browser automation',
+          status: CapabilityDoctorStatus.ready,
+          message:
+              'The application-owned browser bundle is available. Full Doctor launches a bounded startup probe.',
+          required: false,
+          durationMilliseconds: browserWatch.elapsedMilliseconds,
+          details: <String, Object?>{
+            'statusCode': p3BrowserRuntime.statusCode,
+          },
+        ),
+      );
+    } else {
+      try {
+        await p3BrowserRuntime.probe(
+          startupTimeout: const Duration(seconds: 20),
+        );
+        browserWatch.stop();
+        checks.add(
+          CapabilityDoctorCheck(
+            id: 'browser',
+            title: 'Browser automation',
+            status: CapabilityDoctorStatus.ready,
+            message: 'Browser runtime starts and shuts down cleanly.',
+            required: false,
+            durationMilliseconds: browserWatch.elapsedMilliseconds,
+            details: <String, Object?>{
+              'statusCode': p3BrowserRuntime.statusCode,
+            },
+          ),
+        );
+      } catch (error) {
+        browserWatch.stop();
+        checks.add(
+          CapabilityDoctorCheck(
+            id: 'browser',
+            title: 'Browser automation',
+            status: CapabilityDoctorStatus.warning,
+            message:
+                'Browser startup probe failed: ${redactor.redact('$error')}',
+            required: false,
+            action: CapabilityDoctorAction.retryDoctor,
+            durationMilliseconds: browserWatch.elapsedMilliseconds,
+            details: <String, Object?>{
+              'statusCode': p3BrowserRuntime.statusCode,
+            },
+          ),
+        );
+      }
+    }
+
+    final searchWatch = Stopwatch()..start();
+    if (settings.localOnly) {
+      searchWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'search',
+          title: 'Web search',
+          status: CapabilityDoctorStatus.warning,
+          message:
+              'Web research is disabled by local-only settings. Runs that require current web information will fail closed before execution.',
+          required: false,
+          action: CapabilityDoctorAction.openSettings,
+          durationMilliseconds: searchWatch.elapsedMilliseconds,
+        ),
+      );
+    } else {
+      try {
+        final references = await repositories.secretReferences.all();
+        bool isSearchReference(SecretReference reference) {
+          final text =
+              '${reference.environmentKey} ${reference.label} ${reference.description}'
+                  .toLowerCase();
+          return reference.environmentKey.toUpperCase() ==
+                  'BRAVE_SEARCH_API_KEY' ||
+              (text.contains('brave') && text.contains('search'));
+        }
+
+        final configured = references.where(isSearchReference).toList();
+        searchWatch.stop();
+        checks.add(
+          CapabilityDoctorCheck(
+            id: 'search',
+            title: 'Web search',
+            status: configured.isEmpty
+                ? CapabilityDoctorStatus.warning
+                : CapabilityDoctorStatus.ready,
+            message: configured.isEmpty
+                ? 'Web research is enabled, but no Brave Search secret reference is configured.'
+                : 'A Brave Search credential reference is configured. Task-specific preflight performs the authenticated provider probe before a run that needs web research.',
+            required: false,
+            action: configured.isEmpty
+                ? CapabilityDoctorAction.openSettings
+                : CapabilityDoctorAction.none,
+            durationMilliseconds: searchWatch.elapsedMilliseconds,
+            details: <String, Object?>{
+              'configuredReferenceCount': configured.length,
+            },
+          ),
+        );
+      } catch (error) {
+        searchWatch.stop();
+        checks.add(
+          CapabilityDoctorCheck(
+            id: 'search',
+            title: 'Web search',
+            status: CapabilityDoctorStatus.warning,
+            message:
+                'Search-provider configuration could not be inspected: ${redactor.redact('$error')}',
+            required: false,
+            action: CapabilityDoctorAction.openSettings,
+            durationMilliseconds: searchWatch.elapsedMilliseconds,
+          ),
+        );
+      }
+    }
+
+    final projectWatch = Stopwatch()..start();
+    if (projectId == null || projectId.trim().isEmpty) {
+      projectWatch.stop();
+      checks.add(
+        CapabilityDoctorCheck(
+          id: 'project',
+          title: 'Project workspace',
+          status: CapabilityDoctorStatus.warning,
+          message:
+              'No project is selected. Build requests can still create and bind a workspace automatically.',
+          required: false,
+          action: CapabilityDoctorAction.openProjects,
+          durationMilliseconds: projectWatch.elapsedMilliseconds,
+        ),
+      );
+    } else {
+      try {
+        final knownModels = discoveredModels ?? await discoverModels();
+        final report = depth == CapabilityDoctorDepth.quick &&
+                projectReport?.projectId == projectId
+            ? projectReport!
+            : await inspectProject(
+                projectId,
+                modelReady: knownModels.isNotEmpty,
+              );
+        projectWatch.stop();
+        final healthy = !report.hasBlockingFailure;
+        checks.add(
+          CapabilityDoctorCheck(
+            id: 'project',
+            title: 'Project workspace',
+            status: healthy
+                ? CapabilityDoctorStatus.ready
+                : CapabilityDoctorStatus.warning,
+            message: healthy
+                ? '${report.projectType} workspace is available; ${report.passed} diagnostic check(s) pass.'
+                : 'The selected workspace has ${report.failed} blocking diagnostic failure(s).',
+            required: false,
+            action: healthy
+                ? CapabilityDoctorAction.none
+                : CapabilityDoctorAction.openProjects,
+            durationMilliseconds: projectWatch.elapsedMilliseconds,
+            details: <String, Object?>{
+              'projectId': projectId,
+              'projectType': report.projectType,
+              'passed': report.passed,
+              'warnings': report.warnings,
+              'failed': report.failed,
+            },
+          ),
+        );
+      } catch (error) {
+        projectWatch.stop();
+        checks.add(
+          CapabilityDoctorCheck(
+            id: 'project',
+            title: 'Project workspace',
+            status: CapabilityDoctorStatus.warning,
+            message:
+                'Project diagnostics could not be completed: ${redactor.redact('$error')}',
+            required: false,
+            action: CapabilityDoctorAction.openProjects,
+            durationMilliseconds: projectWatch.elapsedMilliseconds,
+          ),
+        );
+      }
+    }
+
+    return CapabilityDoctorReport(
+      depth: depth,
+      checks: checks,
+    );
   }
 
   Future<void> close() async {
