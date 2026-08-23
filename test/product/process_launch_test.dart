@@ -48,6 +48,12 @@ void main() {
     });
   });
 
+  test('native resolved executable remains a direct launch target', () async {
+    final launch = await resolveProcessLaunchTarget(Platform.resolvedExecutable);
+    expect(launch.executable, Platform.resolvedExecutable);
+    expect(launch.runInShell, isFalse);
+  });
+
   test('Windows batch launch target executes through the command shell',
       () async {
     if (!Platform.isWindows) {
