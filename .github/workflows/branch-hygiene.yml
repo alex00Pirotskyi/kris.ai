@@ -1,156 +1,210 @@
-name: repository-branch-hygiene
+name: owner-single-click-durable-linux
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - .github/workflows/branch-hygiene.yml
-      - config/branch_hygiene.json
-      - tool/branch_hygiene.py
-      - docs/progress/2026-08-05-branch-hygiene-cleanup.md
-      - SOURCE_MANIFEST.sha256
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/branch-hygiene.yml
-      - config/branch_hygiene.json
-      - tool/branch_hygiene.py
-      - docs/progress/2026-08-05-branch-hygiene-cleanup.md
-      - SOURCE_MANIFEST.sha256
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: repository-branch-hygiene-${{ github.ref }}
+  group: owner-single-click-durable-linux-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 jobs:
-  validate:
-    name: branch-hygiene-validate
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pull-requests: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12.10'
-          check-latest: false
-      - name: Compile and self-test branch hygiene
-        run: |
-          python -m py_compile tool/branch_hygiene.py
-          python tool/branch_hygiene.py --self-test
-      - name: Validate exact remote cleanup plan
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          python tool/branch_hygiene.py
-          --config config/branch_hygiene.json
-          --repository "$GITHUB_REPOSITORY"
-          --receipt "$RUNNER_TEMP/branch-hygiene-plan.json"
-      - name: Upload reviewed cleanup plan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: branch-hygiene-plan-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/branch-hygiene-plan.json
-          if-no-files-found: error
-          retention-days: 30
-
-  refresh-source-manifest:
-    name: branch-hygiene-source-manifest
+  qualify:
+    name: owner-single-click-durable-linux
     if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.ref == 'agent/repository-branch-hygiene-20260805' &&
+      github.event.pull_request.head.ref == 'hotfix/owner-mode-single-click-provisioning' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: write
+    env:
+      KRISTIN_V70_P2_PACKAGE_SHA256: 7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: true
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.12.10'
+          python-version: '3.13.5'
           check-latest: false
-      - name: Regenerate governed source inventory
+      - id: toolchains
+        shell: bash
+        run: python tool/p2_toolchains.py --project . --github-output "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: config/p2.node-version
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: ${{ steps.toolchains.outputs.flutter }}
+          channel: stable
+          cache: true
+      - name: Install Linux native prerequisites
         shell: bash
         run: |
           set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev build-essential
+      - name: Qualify exact durable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts=false --no-audit --no-fund
+          npm test --prefix automation_host
+          python tool/p2_source_inventory_test.py --project .
+          python tool/p2_runtime_resource_contract_test.py
+          flutter test --concurrency=1 \
+            test/product/p2_single_click_owner_mode_test.dart \
+            test/product/p2_owner_risk_contract_test.dart \
+            test/product/p2_qa_preview_gate_test.dart \
+            test/product/p2_effect_boundary_test.dart \
+            test/product/p2_source_contract_test.dart
+          flutter analyze --fatal-warnings --fatal-infos
+          git diff --exit-code -- \
+            automation_host/src \
+            lib/product \
+            test/product \
+            tool/configure-owner-risk-runtime.mjs \
+            tool/v70_stage_runtime.py \
+            tool/v70_package_platform.py
+      - name: Build exact Linux runtime helpers
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S authority_service/native/linux -B .p1a-build-linux -DCMAKE_BUILD_TYPE=Release
+          cmake --build .p1a-build-linux --parallel 2
+          cmake -S authority_service/connector/linux -B .p1a-connector-linux -DCMAKE_BUILD_TYPE=Release
+          cmake --build .p1a-connector-linux --parallel 2
+          cmake -S authority_service/worker_launcher/linux -B .p1a-worker-linux -DCMAKE_BUILD_TYPE=Release
+          cmake --build .p1a-worker-linux --parallel 2
+          cmake -S automation_host/native/posix -B .p2-native-posix -DCMAKE_BUILD_TYPE=Release
+          cmake --build .p2-native-posix --parallel 2
+          .p1a-build-linux/kristin_p1_authority_service --source-self-test
+          .p1a-build-linux/kristin_p1a_authority_core_regression
+          .p1a-connector-linux/kristin_p1a_connector_cli --source-self-test
+          .p1a-worker-linux/kristin_p2_worker_launcher --source-self-test
+      - name: Stage relocatable product runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/v70_stage_runtime.py \
+            --project . \
+            --platform linux \
+            --output .v70-stage \
+            --source-commit "${{ github.event.pull_request.head.sha }}" \
+            --source-tree "$(git rev-parse HEAD^{tree})" \
+            --p2-package-sha256 "$KRISTIN_V70_P2_PACKAGE_SHA256" \
+            --configurator tool/configure-owner-risk-runtime.mjs \
+            --mode product-current-account \
+            --github-env "$GITHUB_ENV"
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('.v70-stage/runtime')
+          manifest=json.loads((root/'runtime-manifest.v3.json').read_text())
+          env=json.loads((root/'provisioning/environment.v1.json').read_text())['environment']
+          policy=json.loads((root/'provisioning/worker-policy.v2.json').read_text())
+          assert manifest['productCurrentAccount'] is True
+          assert manifest['ownerRiskQa'] is False
+          assert env['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT']=='1'
+          assert 'KRISTIN_OWNER_RISK_QA' not in env
+          assert 'KRISTIN_P2_E2E_ROOT' not in env
+          for key in ('nodeExecutable','hostScript','workingDirectory','launcherPath'):
+              assert not pathlib.PurePath(policy[key]).is_absolute(), (key, policy[key])
+          print('PRODUCT_CURRENT_ACCOUNT_STAGE_OK')
+          PY
+      - name: Prove immutable relocation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .bundle-app .bundle-data
+          mkdir -p .bundle-app/runtime/p2/current .bundle-data
+          cp -a .v70-stage/runtime/. .bundle-app/runtime/p2/current/
+          touch .bundle-app/kristin
+          cat > test/_p2_bundle_relocation_smoke_test.dart <<'DART'
+          import 'dart:io';
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:kristin_local_agent/product/p2_bundled_current_account_runtime.dart';
+          import 'package:kristin_local_agent/product/p2_runtime_resource_resolver.dart';
+          void main() {
+            test('bundled current-account runtime relocates without mutation', () async {
+              final appData = Directory('.bundle-data').absolute;
+              final executable = File('.bundle-app/kristin').absolute.path;
+              final before = await File('.bundle-app/runtime/p2/current/runtime-manifest.v3.json').readAsBytes();
+              expect(await P2BundledCurrentAccountRuntime.prepareIfPresent(
+                applicationDataRoot: appData,
+                executablePath: executable,
+              ), isTrue);
+              final after = await File('${appData.path}/runtime/p2/current/runtime-manifest.v3.json').readAsBytes();
+              expect(after, before);
+              final resources = await P2ApplicationOwnedRuntimeResourceResolver(
+                applicationDataRoot: appData,
+                executablePath: executable,
+              ).resolve();
+              expect(resources.provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'], '1');
+              expect(resources.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA'), isFalse);
+            });
+          }
+          DART
+          flutter test test/_p2_bundle_relocation_smoke_test.dart
+          rm -f test/_p2_bundle_relocation_smoke_test.dart
+      - name: Execute real product current-account effects
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT:-}" = '1'
+          test -z "${KRISTIN_OWNER_RISK_QA:-}"
+          flutter test test/product/p2_owner_risk_runtime_smoke_test.dart
+      - name: Build and package normal Linux product
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build linux --release --no-pub
+          python tool/v70_package_platform.py \
+            --project . \
+            --platform linux \
+            --runtime-stage .v70-stage \
+            --output-dir .v70-dist \
+            --source-commit "${{ github.event.pull_request.head.sha }}" \
+            --source-tree "$(git rev-parse HEAD^{tree})" \
+            --workflow-run-id "${{ github.run_id }}" \
+            --workflow-run-attempt "${{ github.run_attempt }}" \
+            --product-current-account
+          python - <<'PY'
+          import json, pathlib
+          meta=json.loads(pathlib.Path('.v70-dist/payload-linux/OWNER_RUNTIME_METADATA.json').read_text())
+          assert meta['functionalOwnerModeEligible'] is True
+          assert meta['secureIsolationCertified'] is False
+          assert meta['qaShipmentEligible'] is False
+          embedded=pathlib.Path('.v70-dist/payload-linux/app/runtime/p2/current/runtime-manifest.v3.json')
+          assert embedded.is_file()
+          archives=list(pathlib.Path('.v70-dist').glob('KRISTIN_OWNER_MODE_LINUX_*.zip'))
+          assert len(archives)==1
+          print('OWNER_PRODUCT_PACKAGE_OK', archives[0])
+          PY
+      - name: Strip final carrier and refresh governed manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          git checkout origin/main -- .github/workflows/branch-hygiene.yml
+          git rm -f tool/owner_single_click_transport_fix.py
+          rm -f test/_p2_bundle_relocation_smoke_test.dart
           python tool/p1a_refresh_source_manifest.py .
-          git diff --check
-          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
-          if [ "${#paths[@]}" -eq 0 ]; then
-            echo 'SOURCE_MANIFEST_CURRENT=true'
-            exit 0
-          fi
-          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
-          test "${#paths[@]}" -eq 1
-          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
-      - name: Publish exact source manifest to cleanup branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
-            echo 'SOURCE_MANIFEST_PUSH_REQUIRED=false'
-            exit 0
-          fi
-          git config user.name 'Kristin Branch Hygiene'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256
+          git add -A
           git diff --cached --check
-          git commit -m 'chore(repo): refresh source manifest for branch hygiene'
-          git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
-
-  execute:
-    name: branch-hygiene-execute
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs:
-      - validate
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pull-requests: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12.10'
-          check-latest: false
-      - name: Delete only exact reviewed redundant branches
-        id: cleanup
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set +e
-          python tool/branch_hygiene.py \
-            --config config/branch_hygiene.json \
-            --repository "$GITHUB_REPOSITORY" \
-            --execute \
-            --receipt "$RUNNER_TEMP/branch-hygiene-receipt.json"
-          rc=$?
-          echo "rc=$rc" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Upload branch deletion receipt
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: branch-hygiene-receipt-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/branch-hygiene-receipt.json
-          if-no-files-found: error
-          retention-days: 90
-      - name: Enforce complete cleanup
-        if: always()
-        shell: bash
-        run: test "${{ steps.cleanup.outputs.rc }}" -eq 0
+          if git diff --cached --quiet; then
+            echo 'No cleanup commit required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(owner): strip single-click qualifier carrier'
+          git push origin HEAD:hotfix/owner-mode-single-click-provisioning
