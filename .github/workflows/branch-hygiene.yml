@@ -51,17 +51,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev build-essential
           python tool/p1a_bootstrap_hosted_cmake.py --project .
-      - name: Apply explicit product transport mode
+      - name: Apply explicit product transport and authority chain
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile tool/owner_single_click_transport_fix.py
+          python -m py_compile \
+            tool/owner_single_click_transport_fix.py \
+            tool/owner_single_click_chain_fix.py \
+            tool/owner_single_click_chain_repair.py
           python tool/owner_single_click_transport_fix.py
+          python tool/owner_single_click_chain_repair.py
+          python tool/owner_single_click_chain_fix.py
           node --check automation_host/src/authenticated-ipc.mjs
+          node --check automation_host/src/owner-risk-launcher.mjs
           node --check tool/configure-owner-risk-runtime.mjs
           python -m py_compile tool/v70_stage_runtime.py tool/v70_package_platform.py
           dart format \
             lib/product/p2_owner_risk_authority.dart \
+            lib/product/p2_automation_host.dart \
             lib/product/p2_automation_host_process_client.dart \
             lib/product/p2_runtime_resource_resolver.dart \
             lib/product/p2_product_runtime_bootstrap.dart \
@@ -78,7 +85,8 @@ jobs:
           flutter test --concurrency=1 \
             test/product/p2_single_click_owner_mode_test.dart \
             test/product/p2_owner_risk_contract_test.dart \
-            test/product/p2_qa_preview_gate_test.dart
+            test/product/p2_qa_preview_gate_test.dart \
+            test/product/p2_effect_boundary_test.dart
           flutter analyze --fatal-warnings --fatal-infos
       - name: Build Linux P1A and P2 native helpers
         shell: bash
@@ -151,17 +159,20 @@ jobs:
           assert len(archives)==1
           print('PRODUCT_OWNER_PACKAGE_OK', archives[0])
           PY
-      - name: Publish exact qualified transport fix
+      - name: Publish exact qualified authority-chain fix
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main --depth=1
           git checkout origin/main -- .github/workflows/branch-hygiene.yml
-          git rm -f tool/owner_single_click_transport_fix.py
+          git rm -f \
+            tool/owner_single_click_transport_fix.py \
+            tool/owner_single_click_chain_fix.py \
+            tool/owner_single_click_chain_repair.py
           python tool/p1a_refresh_source_manifest.py .
           git add -A
           git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(owner): make product current-account transport explicit'
+          git commit -m 'fix(owner): make product current-account authority chain explicit'
           git push origin HEAD:hotfix/owner-mode-single-click-provisioning
