@@ -105,8 +105,7 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 4)),
-    skip: executable.isEmpty
-        ? 'requires packaged P2+P3 product payload'
-        : false,
+    skip:
+        executable.isEmpty ? 'requires packaged P2+P3 product payload' : false,
   );
 }
