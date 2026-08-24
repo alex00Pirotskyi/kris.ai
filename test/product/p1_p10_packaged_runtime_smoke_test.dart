@@ -105,8 +105,7 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 4)),
-    skip:
-        (Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '').isEmpty
+    skip: (Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '').isEmpty
         ? 'requires packaged P2+P3 product payload'
         : false,
   );
