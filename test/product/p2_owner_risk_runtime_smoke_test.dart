@@ -45,6 +45,11 @@ void main() {
       final decoded =
           jsonDecode(await manifest.readAsString()) as Map<String, Object?>;
       final identity = Map<String, Object?>.from(decoded['identity']! as Map);
+      final modeEnvironment = <String, String>{
+        if (!productCurrentAccount) 'KRISTIN_OWNER_RISK_QA': '1',
+        if (productCurrentAccount)
+          'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
+      };
       final resources = P2RuntimeResourceSet(
         root: runtimeRoot,
         manifestPath: manifest.path,
@@ -75,21 +80,13 @@ void main() {
         posixWatchdog: Platform.environment['KRISTIN_V70_POSIX_WATCHDOG'],
         interactiveDesktopAdapter:
             Platform.environment['KRISTIN_V70_INTERACTIVE_ADAPTER'],
-        provisionedEnvironment: <String, String>{
-          'KRISTIN_OWNER_RISK_QA': '1',
-          if (productCurrentAccount)
-            'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
-        },
+        provisionedEnvironment: modeEnvironment,
       );
       final handle = await P2ProductRuntimeBootstrap.start(
         dataRoot: dataRoot,
         p1AuthorityService: null,
         runtimeResources: resources,
-        explicitlyProvisionedEnvironment: <String, String>{
-          'KRISTIN_OWNER_RISK_QA': '1',
-          if (productCurrentAccount)
-            'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
-        },
+        explicitlyProvisionedEnvironment: modeEnvironment,
         interactiveDesktopAttested: true,
       );
       expect(handle.available, true, reason: handle.failureCode);
