@@ -29,7 +29,8 @@ _PackagedQualificationSandboxMode _qualificationSandboxMode(
   }
   if (hostIsLinux &&
       environment['GITHUB_ACTIONS'] == 'true' &&
-      environment['RUNNER_OS'] == 'Linux') {
+      environment['RUNNER_OS'] == 'Linux' &&
+      (environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '').isNotEmpty) {
     return _PackagedQualificationSandboxMode.disabled;
   }
   return _PackagedQualificationSandboxMode.required;
@@ -115,7 +116,9 @@ Future<Map<String, Object?>> _runHostedLinuxQualificationProbe({
     return ready;
   } on TimeoutException {
     process.kill();
-    throw StateError('packaged_browser_worker_start_timeout:${stderr.toString()}');
+    throw StateError(
+      'packaged_browser_worker_start_timeout:${stderr.toString()}',
+    );
   } finally {
     await stderrSubscription.cancel();
     try {
@@ -128,6 +131,10 @@ void main() {
   test('packaged browser qualification sandbox selection fails closed', () {
     expect(
       _qualificationSandboxMode(const <String, String>{}, hostIsLinux: false),
+      _PackagedQualificationSandboxMode.required,
+    );
+    expect(
+      _qualificationSandboxMode(const <String, String>{}, hostIsLinux: true),
       _PackagedQualificationSandboxMode.required,
     );
     expect(
@@ -171,6 +178,17 @@ void main() {
         const <String, String>{
           'GITHUB_ACTIONS': 'true',
           'RUNNER_OS': 'Linux',
+        },
+        hostIsLinux: true,
+      ),
+      _PackagedQualificationSandboxMode.required,
+    );
+    expect(
+      _qualificationSandboxMode(
+        const <String, String>{
+          'GITHUB_ACTIONS': 'true',
+          'RUNNER_OS': 'Linux',
+          'KRISTIN_PACKAGED_APP_EXECUTABLE': '/tmp/Kristin',
         },
         hostIsLinux: true,
       ),
