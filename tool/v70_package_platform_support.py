@@ -172,15 +172,35 @@ def zip_payload(source: pathlib.Path, archive: pathlib.Path) -> None:
     temporary.replace(archive)
 
 
-def tree_sha256(root: pathlib.Path) -> str:
+def tree_sha256(
+    root: pathlib.Path,
+    *,
+    allow_internal_symlinks: bool = False,
+) -> str:
     if not root.is_dir() or root.is_symlink():
         fail(f"runtime tree invalid: {root}")
+    resolved_root = root.resolve()
     rows: list[str] = []
     for path in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).as_posix()):
+        relative = path.relative_to(root).as_posix()
         if path.is_symlink():
-            fail(f"runtime tree symlink rejected: {path}")
-        if path.is_file():
-            rows.append(f"{path.relative_to(root).as_posix()}\0{sha_file(path)}")
+            if not allow_internal_symlinks:
+                fail(f"runtime tree symlink rejected: {path}")
+            raw_target = os.readlink(path)
+            target = pathlib.Path(raw_target)
+            if target.is_absolute():
+                fail(f"runtime tree absolute symlink rejected: {path}")
+            try:
+                resolved_target = (path.parent / target).resolve(strict=True)
+            except (OSError, RuntimeError):
+                fail(f"runtime tree broken/cyclic symlink rejected: {path}")
+            try:
+                resolved_target.relative_to(resolved_root)
+            except ValueError:
+                fail(f"runtime tree escaping symlink rejected: {path}")
+            rows.append(f"{relative}\0@symlink\0{sha_bytes(raw_target.encode('utf-8'))}")
+        elif path.is_file():
+            rows.append(f"{relative}\0{sha_file(path)}")
     return sha_bytes("\n".join(rows).encode("utf-8"))
 
 
@@ -196,7 +216,13 @@ def _resource_path(root: pathlib.Path, row: dict[str, Any], label: str) -> pathl
     return path
 
 
-def _rebind_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
+def _rebind_resources(
+    root: pathlib.Path,
+    resources: dict[str, Any],
+    *,
+    internal_symlink_directories: set[str] | None = None,
+) -> None:
+    allowed = internal_symlink_directories or set()
     for key, raw in resources.items():
         if not isinstance(raw, dict):
             fail(f"runtime resource row invalid: {key}")
@@ -208,12 +234,21 @@ def _rebind_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
             raw["sha256"] = sha_file(path)
             raw["bytes"] = path.stat().st_size
         elif kind == "directory":
-            raw["treeSha256"] = tree_sha256(path)
+            raw["treeSha256"] = tree_sha256(
+                path,
+                allow_internal_symlinks=key in allowed,
+            )
         else:
             fail(f"runtime resource kind invalid: {key}: {kind}")
 
 
-def _verify_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
+def _verify_resources(
+    root: pathlib.Path,
+    resources: dict[str, Any],
+    *,
+    internal_symlink_directories: set[str] | None = None,
+) -> None:
+    allowed = internal_symlink_directories or set()
     for key, raw in resources.items():
         if not isinstance(raw, dict):
             fail(f"runtime resource row invalid: {key}")
@@ -224,7 +259,10 @@ def _verify_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
             if raw.get("sha256") != sha_file(path) or raw.get("bytes") != path.stat().st_size:
                 fail(f"runtime resource digest mismatch: {key}")
         elif raw.get("kind") == "directory":
-            if raw.get("treeSha256") != tree_sha256(path):
+            if raw.get("treeSha256") != tree_sha256(
+                path,
+                allow_internal_symlinks=key in allowed,
+            ):
                 fail(f"runtime directory digest mismatch: {key}")
         else:
             fail(f"runtime resource kind invalid: {key}")
@@ -291,7 +329,11 @@ def rebind_p3_runtime_manifest(runtime_root: pathlib.Path) -> dict[str, str]:
     identity = manifest.get("identity")
     if not isinstance(resources, dict) or not isinstance(identity, dict):
         fail("P3 runtime manifest identity/resources invalid")
-    _rebind_resources(runtime_root, resources)
+    _rebind_resources(
+        runtime_root,
+        resources,
+        internal_symlink_directories={"browserRoot"},
+    )
     package_lock = resources.get("packageLock")
     if not isinstance(package_lock, dict) or package_lock.get("sha256") != identity.get("packageLockSha256"):
         fail("P3 package-lock identity changed during packaging")
@@ -307,7 +349,15 @@ def verify_runtime_manifest_bindings(runtime_root: pathlib.Path, manifest_name: 
     identity = manifest.get("identity")
     if not isinstance(resources, dict) or not isinstance(identity, dict):
         fail(f"runtime manifest identity/resources invalid: {manifest_name}")
-    _verify_resources(runtime_root, resources)
+    _verify_resources(
+        runtime_root,
+        resources,
+        internal_symlink_directories=(
+            {"browserRoot"}
+            if manifest_name == "browser-runtime-manifest.v1.json"
+            else None
+        ),
+    )
     if manifest_name == "runtime-manifest.v3.json":
         policy_row = resources.get("restrictedWorkerPolicy")
         if not isinstance(policy_row, dict):
