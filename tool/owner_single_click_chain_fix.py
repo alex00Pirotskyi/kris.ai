@@ -25,6 +25,40 @@ rep(
     "    final ownerRiskQa = authority['ownerRiskQa'] == true;\n    final productCurrentAccount = authority['productCurrentAccount'] == true;\n    final localCurrentAccountBase =\n        authority['sharedP1ControlPlane'] == false &&\n        authority['securityEvidenceWaived'] == true &&\n        authority['osEnforcedIsolation'] == false &&\n        authority['workerDeniedByOs'] == false &&\n        workerIdentity['osIsolationWaived'] == true &&\n        workerIdentity['currentAccountAuthority'] == true &&\n        workerIdentity['authorityConnectionDenied'] == false;\n    final authorityModeValid = ownerRiskQa\n        ? !productCurrentAccount &&\n            authority['authorityKind'] == 'p2-owner-risk-current-account-v1' &&\n            localCurrentAccountBase &&\n            workerIdentity['principalType'] == 'owner-risk-current-account' &&\n            workerIdentity['ownerRiskQa'] == true &&\n            workerIdentity['productCurrentAccount'] == false &&\n            workerIdentity['authorityDenialCode'] == 'owner_risk_waived'\n        : productCurrentAccount\n            ? authority['authorityKind'] == 'p2-current-account-owner-v1' &&\n                authority['securityProfile'] == 'current-account-unisolated' &&\n                localCurrentAccountBase &&\n                workerIdentity['principalType'] == 'current-account-owner' &&\n                workerIdentity['ownerRiskQa'] == false &&\n                workerIdentity['productCurrentAccount'] == true &&\n                workerIdentity['authorityDenialCode'] ==\n                    'current_account_unisolated'\n            : authority['authorityKind'] ==\n                    'p1-isolated-authority-service-v2' &&\n                authority['sharedP1ControlPlane'] == true &&\n                authority['osEnforcedIsolation'] == true &&\n                authority['workerDeniedByOs'] == true;",
 )
 
+# The process-client is the first consumer of the launcher identity. It must
+# distinguish secure P1A, owner-risk QA and product current-account modes just
+# as strictly as the later envelope validators do.
+rep(
+    'lib/product/p2_automation_host_process_client.dart',
+    "    final ownerRiskQa =\n        _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';\n    final expectedPrincipal = ownerRiskQa\n        ? 'owner-risk-current-account'\n        : Platform.isWindows\n            ? 'appcontainer'\n            : Platform.isMacOS\n                ? 'signed-app-sandbox-helper'\n                : 'dedicated-uid';",
+    "    final ownerRiskQa =\n        _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';\n    final productCurrentAccount =\n        _config.additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==\n        '1';\n    final localCurrentAccount = ownerRiskQa || productCurrentAccount;\n    final expectedPrincipal = productCurrentAccount\n        ? 'current-account-owner'\n        : ownerRiskQa\n            ? 'owner-risk-current-account'\n            : Platform.isWindows\n                ? 'appcontainer'\n                : Platform.isMacOS\n                    ? 'signed-app-sandbox-helper'\n                    : 'dedicated-uid';",
+)
+rep(
+    'lib/product/p2_automation_host_process_client.dart',
+    "    if (!ownerRiskQa &&\n        Platform.isLinux &&",
+    "    if (!localCurrentAccount &&\n        Platform.isLinux &&",
+)
+rep(
+    'lib/product/p2_automation_host_process_client.dart',
+    "    if (!ownerRiskQa &&\n        Platform.isWindows &&",
+    "    if (!localCurrentAccount &&\n        Platform.isWindows &&",
+)
+rep(
+    'lib/product/p2_automation_host_process_client.dart',
+    "    if (!ownerRiskQa &&\n        Platform.isMacOS &&",
+    "    if (!localCurrentAccount &&\n        Platform.isMacOS &&",
+)
+rep(
+    'lib/product/p2_automation_host_process_client.dart',
+    "    final denial = message['authorityConnectionDenied'];\n    final denialCode = message['authorityDenialCode'];\n    if (ownerRiskQa) {\n      if (message['ownerRiskQa'] != true ||\n          message['osIsolationWaived'] != true ||\n          message['currentAccountAuthority'] != true ||\n          denial != false ||\n          denialCode != 'owner_risk_waived') {\n        throw const P2AutomationHostException(\n          'owner_risk_worker_waiver_invalid',\n        );\n      }\n    } else if (denial != null &&\n        (denial != true || denialCode != 'worker_principal_denied')) {",
+    "    final denial = message['authorityConnectionDenied'];\n    final denialCode = message['authorityDenialCode'];\n    if (localCurrentAccount) {\n      final expectedDenialCode = productCurrentAccount\n          ? 'current_account_unisolated'\n          : 'owner_risk_waived';\n      if (message['ownerRiskQa'] != ownerRiskQa ||\n          (message['productCurrentAccount'] == true) != productCurrentAccount ||\n          message['osIsolationWaived'] != true ||\n          message['currentAccountAuthority'] != true ||\n          denial != false ||\n          denialCode != expectedDenialCode) {\n        throw const P2AutomationHostException(\n          'local_current_account_worker_waiver_invalid',\n        );\n      }\n    } else if (denial != null &&\n        (denial != true || denialCode != 'worker_principal_denied')) {",
+)
+rep(
+    'lib/product/p2_automation_host_process_client.dart',
+    "    final ownerRiskQa =\n        _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';\n    if (ownerRiskQa) {\n      if (merged['authorityConnectionDenied'] != false ||\n          merged['authorityDenialCode'] != 'owner_risk_waived' ||\n          merged['authorityDenialObservedBy'] != 'owner-risk-waiver' ||\n          merged['ownerRiskQa'] != true ||\n          merged['osIsolationWaived'] != true ||\n          merged['currentAccountAuthority'] != true) {\n        throw const P2AutomationHostException(\n          'owner_risk_worker_waiver_unproved',\n        );\n      }\n    } else if (merged['authorityConnectionDenied'] != true ||\n        merged['authorityDenialCode'] != 'worker_principal_denied') {",
+    "    final ownerRiskQa =\n        _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';\n    final productCurrentAccount =\n        _config.additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==\n        '1';\n    final localCurrentAccount = ownerRiskQa || productCurrentAccount;\n    if (localCurrentAccount) {\n      final expectedDenialCode = productCurrentAccount\n          ? 'current_account_unisolated'\n          : 'owner_risk_waived';\n      final expectedObservedBy = productCurrentAccount\n          ? 'current-account-product'\n          : 'owner-risk-waiver';\n      if (merged['authorityConnectionDenied'] != false ||\n          merged['authorityDenialCode'] != expectedDenialCode ||\n          merged['authorityDenialObservedBy'] != expectedObservedBy ||\n          merged['ownerRiskQa'] != ownerRiskQa ||\n          (merged['productCurrentAccount'] == true) != productCurrentAccount ||\n          merged['osIsolationWaived'] != true ||\n          merged['currentAccountAuthority'] != true) {\n        throw const P2AutomationHostException(\n          'local_current_account_worker_waiver_unproved',\n        );\n      }\n    } else if (merged['authorityConnectionDenied'] != true ||\n        merged['authorityDenialCode'] != 'worker_principal_denied') {",
+)
+
 rep(
     'automation_host/src/owner-risk-launcher.mjs',
     "const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));\nconst platform = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'macos' : 'linux';\nif (policy.schemaVersion !== '2.0.0' || policy.platform !== platform || sessionId.length < 16) {\n  throw new Error('owner_risk_worker_policy_invalid');\n}",
@@ -39,6 +73,12 @@ rep(
     'automation_host/src/owner-risk-launcher.mjs',
     "process.env.KRISTIN_RESTRICTED_WORKER = '0';\nprocess.env.KRISTIN_OWNER_RISK_QA = '1';\nprocess.env.KRISTIN_P1A_DENIAL_PROBE_REQUIRED = '0';",
     "process.env.KRISTIN_RESTRICTED_WORKER = '0';\nif (productCurrentAccount) {\n  delete process.env.KRISTIN_OWNER_RISK_QA;\n  process.env.KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT = '1';\n} else {\n  process.env.KRISTIN_OWNER_RISK_QA = '1';\n  delete process.env.KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT;\n}\nprocess.env.KRISTIN_P1A_DENIAL_PROBE_REQUIRED = '0';",
+)
+
+rep(
+    'test/product/p2_single_click_owner_mode_test.dart',
+    "      expect(processClient, contains('localCurrentAccount'));\n      expect(staging, contains('product-current-account'));",
+    "      expect(processClient, contains('localCurrentAccount'));\n      expect(processClient, contains(\"'current-account-owner'\"));\n      expect(processClient, contains(\"'current_account_unisolated'\"));\n      expect(processClient, contains(\"'current-account-product'\"));\n      expect(staging, contains('product-current-account'));",
 )
 
 print('OWNER_SINGLE_CLICK_CHAIN_FIX_OK')
