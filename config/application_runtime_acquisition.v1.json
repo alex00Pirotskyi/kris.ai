@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0.0",
+  "acquisitionType": "kristin-application-runtime-acquisition-v1",
+  "nodeVersion": "24.18.0",
+  "p2PackageSha256": "7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0",
+  "p3PackageLockSha256": "72d49987b5bcd7244af3934440733ae8b4462162c8c77a3595f455067cc6c8a2",
+  "p3BrowserRevision": "1228",
+  "p3BrowserVersion": "149.0.7827.55",
+  "p3PlaywrightCoreVersion": "1.61.1",
+  "networkAcquisition": {
+    "firstPartyPinnedOnly": true,
+    "globalNodeFallback": false,
+    "globalBrowserFallback": false,
+    "systemChromeFallback": false,
+    "sandboxMode": "required_when_supported"
+  },
+  "platforms": {
+    "windows-x64": {
+      "node": {
+        "url": "https://nodejs.org/dist/v24.18.0/node-v24.18.0-win-x64.zip",
+        "archiveSha256": "0ae68406b42d7725661da979b1403ec9926da205c6770827f33aac9d8f26e821",
+        "executableSha256": "9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de",
+        "executableName": "node.exe",
+        "npmCliSuffix": "node_modules/npm/bin/npm-cli.js"
+      },
+      "p3": {
+        "browserExecutableRelativePath": "chrome-win64/chrome.exe",
+        "browserExecutableSha256": "b798f9e53a98d29eb7f36f8c409f905d3184780a04d2bcb56989067194784bd1",
+        "browserTreeSha256": "8f79d93ea02accb1ea7d131742f0d3393b080b189012405e83f485c953ddbd4c"
+      }
+    },
+    "linux-x64": {
+      "node": {
+        "url": "https://nodejs.org/dist/v24.18.0/node-v24.18.0-linux-x64.tar.gz",
+        "archiveSha256": "783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8",
+        "executableSha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5",
+        "executableName": "node",
+        "npmCliSuffix": "lib/node_modules/npm/bin/npm-cli.js"
+      },
+      "p3": {
+        "browserExecutableRelativePath": "chrome-linux64/chrome",
+        "browserExecutableSha256": "2d18db9d8608b052b6a552ee00ec1e830f93692e928b65ecc67d693bd33fe801",
+        "browserTreeSha256": "979b79cad10d2a6e53389371e4ba1f02560e349b8d9de83db887e76faa433add"
+      }
+    },
+    "macos-arm64": {
+      "node": {
+        "url": "https://nodejs.org/dist/v24.18.0/node-v24.18.0-darwin-arm64.tar.gz",
+        "archiveSha256": "e1a97e14c99c803e96c7339403282ea05a499c32f8d83defe9ef5ec66f979ed1",
+        "executableSha256": "ee6fb0e015284d83a91e8ec5213f43a157f8a392b58555301682892ba928c04a",
+        "executableName": "node",
+        "npmCliSuffix": "lib/node_modules/npm/bin/npm-cli.js"
+      },
+      "p3": {
+        "browserExecutableRelativePath": "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "browserExecutableSha256": "b1b9e2dd063115031f08eadc10ed381ca0fa05b2284baff8f721d87f5f0f61b7",
+        "browserTreeSha256": "9cf525bfd42f14cac8095dab615a4e7e879eeac2ead8d53bf1b36b0e6b71ce89"
+      }
+    }
+  }
+}

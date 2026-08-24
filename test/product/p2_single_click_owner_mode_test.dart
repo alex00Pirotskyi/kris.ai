@@ -27,57 +27,62 @@ void main() {
     expect(authority.authorityProvenance['triPlatformQaRequired'], isFalse);
   });
 
-  test(
-    'ProductRuntime prepares an immutable bundled fallback only when P1A is absent',
-    () {
-      final runtime = File(
-        'lib/product/product_runtime.dart',
-      ).readAsStringSync();
-      final bootstrap = File(
-        'lib/product/p2_bundled_current_account_runtime.dart',
-      ).readAsStringSync();
-      final configurator = File(
-        'tool/configure-owner-risk-runtime.mjs',
-      ).readAsStringSync();
-      final staging = File('tool/v70_stage_runtime.py').readAsStringSync();
-      final packaging = File('tool/v70_package_platform.py').readAsStringSync();
+  test('single-click Owner Mode uses the in-app ensure-ready lifecycle', () {
+    final main = File('lib/main.dart').readAsStringSync();
+    final shell = File(
+      'lib/product/runtime_provisioning_shell.dart',
+    ).readAsStringSync();
+    final bridge = File(
+      'lib/product/product_runtime_provisioning.dart',
+    ).readAsStringSync();
+    final provisioner = File(
+      'lib/product/application_runtime_provisioner.dart',
+    ).readAsStringSync();
+    final materializer = File(
+      'tool/application_runtime_materializer.mjs',
+    ).readAsStringSync();
 
-      expect(runtime, contains('if (runtime.p1AuthorityService == null)'));
-      expect(
-        runtime,
-        contains('P2BundledCurrentAccountRuntime.prepareIfPresent'),
-      );
-      expect(bootstrap, contains('P2ApplicationOwnedRuntimeResourceResolver'));
-      expect(
-        bootstrap,
-        contains('p2_current_account_relocated_runtime_invalid'),
-      );
-      expect(bootstrap, contains("bundled['productCurrentAccount'] != true"));
-      expect(bootstrap, contains("bundled['ownerRiskQa'] != false"));
-      expect(bootstrap, isNot(contains('configure-owner-risk-runtime.mjs')));
-      expect(bootstrap, isNot(contains("'--mode'")));
-      expect(bootstrap, contains("Process.run('chmod'"));
-      expect(configurator, contains("mode === 'product-current-account'"));
-      expect(configurator, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
-      expect(configurator, contains('ownerRiskQa: !productCurrentAccount'));
-      final hostVerifier = File(
-        'automation_host/src/authenticated-ipc.mjs',
-      ).readAsStringSync();
-      final processClient = File(
-        'lib/product/p2_automation_host_process_client.dart',
-      ).readAsStringSync();
-      expect(hostVerifier, contains("'p2-current-account-owner-v1'"));
-      expect(hostVerifier, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
-      expect(processClient, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
-      expect(processClient, contains('localCurrentAccount'));
-      expect(processClient, contains("'current-account-owner'"));
-      expect(processClient, contains("'current_account_unisolated'"));
-      expect(processClient, contains("'current-account-product'"));
-      expect(processClient, contains('expectedLocalDenialCode'));
-      expect(staging, contains('product-current-account'));
-      expect(packaging, contains('--product-current-account'));
-      expect(packaging, contains('functionalOwnerModeEligible'));
-      expect(packaging, contains('secureIsolationCertified'));
-    },
-  );
+    expect(main, contains('ProvisioningKristinApp'));
+    expect(shell, contains('Preparing Owner Mode'));
+    expect(shell, contains('Preparing local runtime...'));
+    expect(shell, contains('ensureOwnerModeReady'));
+    expect(shell, contains("Owner Mode couldn't be prepared."));
+    expect(shell, contains('owner-runtime-retry'));
+    expect(shell, contains('owner-runtime-diagnostics'));
+    expect(bridge, contains('provisioner.ensureP2'));
+    expect(bridge, contains('P2ProductRuntimeBootstrap.start'));
+    expect(bridge, contains('runtimeResources: resources'));
+    expect(provisioner, contains('AtomicApplicationRuntimeSlot'));
+    expect(materializer, contains("'--mode'"));
+    expect(materializer, contains("'product-current-account'"));
+    expect(materializer, isNot(contains('winget')));
+    expect(materializer, isNot(contains('choco')));
+    expect(materializer, isNot(contains('npm -g')));
+  });
+
+  test('P1A remains preferred over current-account materialization', () {
+    final bridge = File(
+      'lib/product/product_runtime_provisioning.dart',
+    ).readAsStringSync();
+    final provisioner = File(
+      'lib/product/application_runtime_provisioner.dart',
+    ).readAsStringSync();
+
+    expect(
+      bridge,
+      contains('currentAccountRequired: p1AuthorityService == null'),
+    );
+    expect(
+      provisioner,
+      contains('p2_secure_runtime_materialization_unavailable'),
+    );
+    expect(
+      provisioner,
+      contains("'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'"),
+    );
+    expect(
+      provisioner,
+      contains("'KRISTIN_OWNER_RISK_QA'"),
+    );
+  });
 }
