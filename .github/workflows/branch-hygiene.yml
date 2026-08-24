@@ -187,9 +187,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile tool/p1a_runtime_ux_patch_dart_v2.py tool/p1a_runtime_ux_patch_native_v2.py
+          python -m py_compile tool/p1a_runtime_ux_patch_dart_v2.py tool/p1a_runtime_ux_patch_native_v2.py tool/p1a_runtime_ux_lint_fix.py
           python tool/p1a_runtime_ux_patch_dart_v2.py
           python tool/p1a_runtime_ux_patch_native_v2.py
+          python tool/p1a_runtime_ux_lint_fix.py
       - name: Format governed Dart sources
         shell: bash
         run: |
@@ -235,6 +236,7 @@ jobs:
             'tool/p1a_runtime_ux_patch_native.py',
             'tool/p1a_runtime_ux_patch_dart_v2.py',
             'tool/p1a_runtime_ux_patch_native_v2.py',
+            'tool/p1a_runtime_ux_lint_fix.py',
             'tool/p1a_runtime_ux_trigger.txt',
             'tool/p1a_runtime_ux_trigger_v2.txt',
             'tool/p1a_runtime_ux_trigger_v3.txt',
