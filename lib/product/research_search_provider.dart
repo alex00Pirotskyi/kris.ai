@@ -238,6 +238,12 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
       ),
     );
     _throwIfCancelled(request);
+    if (response.body.length > maxBytes) {
+      throw ProductException(
+        'search_provider_response_too_large',
+        'The built-in web-search response exceeded its bounded size limit.',
+      );
+    }
 
     if (const <int>{202, 403, 429}.contains(response.statusCode)) {
       throw ProductException(
@@ -399,12 +405,11 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
       'The built-in web-search response limit is invalid.',
     );
   }
-  _throwIfCancelledRaw(request.cancellation, request.isCancelled);
+  _throwIfCancelledRaw(request.isCancelled);
   final client = HttpClient()
-    ..connectionTimeout =
-        request.timeout < const Duration(seconds: 5)
-            ? request.timeout
-            : const Duration(seconds: 5);
+    ..connectionTimeout = request.timeout <= const Duration(seconds: 5)
+        ? request.timeout
+        : const Duration(seconds: 5);
   StreamSubscription<void>? cancellationSubscription;
   if (request.cancellation != null) {
     cancellationSubscription = request.cancellation!.asStream().listen((_) {
@@ -459,7 +464,7 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
       'The built-in web-search request timed out.',
     );
   } on SocketException {
-    _throwIfCancelledRaw(request.cancellation, request.isCancelled);
+    _throwIfCancelledRaw(request.isCancelled);
     throw ProductException(
       'search_provider_network_error',
       'The built-in web-search endpoint could not be reached.',
@@ -570,7 +575,7 @@ List<SearchProviderResult> normalizeSearchResults(
         title: title,
         url: url,
         snippet: _boundedText(
-          item['snippet'] ?? '',
+          item['snippet'] ?? item['description'] ?? '',
           _maxSearchSnippetCharacters,
         ),
       ),
@@ -584,7 +589,7 @@ String? normalizePublicSearchResultUrl(String input) {
   if (raw.isEmpty || raw.length > 8192) return null;
   if (raw.startsWith('//')) raw = 'https:$raw';
   if (raw.startsWith('/')) {
-    raw = Uri.https('duckduckgo.com').resolve(raw).toString();
+    raw = Uri.https('duckduckgo.com', '/').resolve(raw).toString();
   }
   var uri = Uri.tryParse(raw);
   if (uri == null) return null;
@@ -708,13 +713,10 @@ String _boundedText(String value, int maxCharacters) {
 }
 
 void _throwIfCancelled(SearchProviderRequest request) {
-  _throwIfCancelledRaw(request.cancellation, request.isCancelled);
+  _throwIfCancelledRaw(request.isCancelled);
 }
 
-void _throwIfCancelledRaw(
-  Future<void>? cancellation,
-  bool Function()? isCancelled,
-) {
+void _throwIfCancelledRaw(bool Function()? isCancelled) {
   if (isCancelled?.call() == true) {
     throw ProductException('cancelled', 'Execution was cancelled.');
   }
@@ -735,7 +737,7 @@ Future<T> _awaitCancellationAwareRaw<T>(
   Future<void>? cancellation,
   bool Function()? isCancelled,
 ) async {
-  _throwIfCancelledRaw(cancellation, isCancelled);
+  _throwIfCancelledRaw(isCancelled);
   if (cancellation == null) return operation;
   return Future<T>.any(<Future<T>>[
     operation,
