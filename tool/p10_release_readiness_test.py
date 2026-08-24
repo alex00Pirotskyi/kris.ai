@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 TOOL = Path(__file__).resolve().parent
 if str(TOOL) not in sys.path:
     sys.path.insert(0, str(TOOL))
 
-from p10_release_readiness import evaluate_readiness
+from p10_release_readiness import ReadinessError, _load, evaluate_readiness
 
 
 def complete_input():
@@ -65,6 +66,7 @@ class P10ReadinessTest(unittest.TestCase):
         self.assertFalse(report["p10"]["gaReady"])
         codes = {row["code"] for row in report["p10"]["gaBlockers"]}
         self.assertIn("candidate.source_identity_missing", codes)
+        self.assertIn("candidate.version_invalid", codes)
         self.assertIn("p9.penetration_review_missing", codes)
         self.assertIn("p10.human_usability_missing", codes)
 
@@ -103,6 +105,49 @@ class P10ReadinessTest(unittest.TestCase):
         self.assertFalse(report["p9"]["complete"])
         self.assertFalse(report["p10"]["gaReady"])
         self.assertFalse(report["p11"]["platformMatrix"]["linux"]["supportClaimed"])
+
+    def test_non_finite_and_out_of_range_numbers_cannot_bypass_gates(self) -> None:
+        data = complete_input()
+        data["p9"]["soakHours"] = float("inf")
+        data["p10"]["betaDays"] = float("nan")
+        data["p10"]["rcSoakDays"] = float("inf")
+        data["p11"]["platforms"]["linux"]["featureParityPercent"] = 101
+        report = evaluate_readiness(data)
+        p9_codes = {row["code"] for row in report["p9"]["blockers"]}
+        ga_codes = {row["code"] for row in report["p10"]["gaBlockers"]}
+        self.assertIn("p9.soak_incomplete", p9_codes)
+        self.assertIn("p10.beta_duration_below_14_days", ga_codes)
+        self.assertIn("p10.rc_soak_below_7_days", ga_codes)
+        self.assertIn("platform.linux.feature_parity_below_95", ga_codes)
+        self.assertFalse(report["p10"]["gaReady"])
+
+    def test_unknown_or_duplicate_release_platforms_fail_closed(self) -> None:
+        for platforms in (["linux", "solaris"], ["linux", "linux"]):
+            with self.subTest(platforms=platforms):
+                data = complete_input()
+                data["candidate"]["releasePlatforms"] = platforms
+                report = evaluate_readiness(data)
+                codes = {row["code"] for row in report["p10"]["gaBlockers"]}
+                self.assertIn("candidate.release_platforms_invalid", codes)
+                self.assertFalse(report["p10"]["gaReady"])
+
+    def test_invalid_candidate_version_fails_closed(self) -> None:
+        data = complete_input()
+        data["candidate"]["version"] = "latest"
+        report = evaluate_readiness(data)
+        codes = {row["code"] for row in report["p10"]["gaBlockers"]}
+        self.assertIn("candidate.version_invalid", codes)
+        self.assertFalse(report["p10"]["gaReady"])
+
+    def test_json_loader_rejects_nan_and_infinity(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="p10-nonfinite-") as td:
+            path = Path(td) / "input.json"
+            for literal in ("NaN", "Infinity", "-Infinity"):
+                with self.subTest(literal=literal):
+                    path.write_text('{"schemaVersion":1,"p10":{"betaDays":' + literal + '}}', encoding="utf-8")
+                    with self.assertRaises(ReadinessError) as caught:
+                        _load(path)
+                    self.assertEqual(caught.exception.code, "input_invalid")
 
 
 if __name__ == "__main__":

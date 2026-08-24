@@ -133,7 +133,7 @@ def verify_update(
     payload = body.get("payload")
     if not isinstance(payload, dict):
         raise UpdateInstallError("payload_invalid", "update payload must be an object")
-    required = {"version", "platform", "channel", "artifactSha256", "artifactSize"}
+    required = {"version", "platform", "channel", "artifactSha256", "artifactSize", "compatibleFrom"}
     missing = sorted(required - set(payload))
     if missing:
         raise UpdateInstallError("payload_invalid", f"update payload missing fields: {missing}")
@@ -141,7 +141,21 @@ def verify_update(
         raise UpdateInstallError("platform_mismatch", "update metadata targets a different platform")
     if payload["channel"] not in {"stable", "beta", "rc"}:
         raise UpdateInstallError("channel_invalid", "unsupported update channel")
-    if _parse_version(str(payload["version"])) <= _parse_version(current_version):
+    compatible_from = payload.get("compatibleFrom")
+    if (
+        not isinstance(compatible_from, list)
+        or not compatible_from
+        or any(not isinstance(item, str) or not item for item in compatible_from)
+        or len(compatible_from) != len(set(compatible_from))
+    ):
+        raise UpdateInstallError("compatibility_invalid", "compatibleFrom must be a non-empty unique version list")
+    target_version = _parse_version(str(payload["version"]))
+    for compatible_version in compatible_from:
+        if _parse_version(compatible_version) >= target_version:
+            raise UpdateInstallError("compatibility_invalid", "compatibleFrom versions must be older than the update version")
+    if current_version not in compatible_from:
+        raise UpdateInstallError("update_incompatible", "installed version is not declared compatible by signed update metadata")
+    if target_version <= _parse_version(current_version):
         raise UpdateInstallError("version_not_newer", "normal update must move to a newer version")
     actual_size = artifact.stat().st_size
     if int(payload["artifactSize"]) != actual_size:

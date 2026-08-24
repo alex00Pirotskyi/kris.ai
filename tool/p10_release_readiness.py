@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any, Mapping
 
 PLATFORMS = ("windows", "macos", "linux")
+VERSION_RE = re.compile(r"\d+\.\d+\.\d+(?:\+\d+)?")
 
 
 class ReadinessError(ValueError):
@@ -17,10 +19,14 @@ class ReadinessError(ValueError):
         self.code = code
 
 
+def _reject_json_constant(value: str) -> None:
+    raise ValueError(f"non-finite JSON number is forbidden: {value}")
+
+
 def _load(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        value = json.loads(path.read_text(encoding="utf-8"), parse_constant=_reject_json_constant)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
         raise ReadinessError("input_invalid", f"cannot load readiness input: {exc}") from exc
     if not isinstance(value, dict) or value.get("schemaVersion") != 1:
         raise ReadinessError("input_invalid", "readiness input must be a schemaVersion 1 object")
@@ -37,9 +43,17 @@ def _truth(parent: Mapping[str, Any], key: str) -> bool:
 
 
 def _non_negative_number(value: Any) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         return 0.0
-    return float(value)
+    number = float(value)
+    if not math.isfinite(number) or number < 0:
+        return 0.0
+    return number
+
+
+def _percentage(value: Any) -> float:
+    number = _non_negative_number(value)
+    return number if number <= 100 else 0.0
 
 
 def _non_negative_int(value: Any) -> int:
@@ -63,15 +77,25 @@ def evaluate_readiness(data: Mapping[str, Any]) -> dict[str, Any]:
     global_blockers: list[dict[str, str]] = []
     if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
         _add(global_blockers, "candidate.source_identity_missing", "candidate sourceCommit must be an exact 40-character Git SHA")
-    if not version:
-        _add(global_blockers, "candidate.version_missing", "candidate version is required")
+    if not VERSION_RE.fullmatch(version):
+        _add(global_blockers, "candidate.version_invalid", "candidate version must be Kristin semantic version syntax")
 
     raw_release_platforms = candidate.get("releasePlatforms")
     release_platforms: list[str] = []
+    invalid_release_platforms = False
     if isinstance(raw_release_platforms, list):
         for raw in raw_release_platforms:
-            if isinstance(raw, str) and raw in PLATFORMS and raw not in release_platforms:
-                release_platforms.append(raw)
+            if not isinstance(raw, str) or raw not in PLATFORMS:
+                invalid_release_platforms = True
+                continue
+            if raw in release_platforms:
+                invalid_release_platforms = True
+                continue
+            release_platforms.append(raw)
+    else:
+        invalid_release_platforms = True
+    if invalid_release_platforms:
+        _add(global_blockers, "candidate.release_platforms_invalid", "releasePlatforms must contain only unique supported platform names")
     if not release_platforms:
         _add(global_blockers, "candidate.release_platforms_missing", "at least one explicit release platform is required")
 
@@ -122,8 +146,8 @@ def evaluate_readiness(data: Mapping[str, Any]) -> dict[str, Any]:
             _add(platform_blockers, f"platform.{platform}.clean_machine_unverified", "clean-machine install/upgrade evidence is missing")
         if not _truth(native, "behaviorVerified"):
             _add(platform_blockers, f"platform.{platform}.native_behavior_unverified", "native behavioral verification is missing")
-        if _non_negative_number(native.get("featureParityPercent")) < 95:
-            _add(platform_blockers, f"platform.{platform}.feature_parity_below_95", "P3/P4 native feature parity is below 95% or unreported")
+        if _percentage(native.get("featureParityPercent")) < 95:
+            _add(platform_blockers, f"platform.{platform}.feature_parity_below_95", "P3/P4 native feature parity is below 95% or invalid/unreported")
         if not _truth(native, "deviceAutomationVerified"):
             _add(platform_blockers, f"platform.{platform}.device_automation_unverified", "device/native automation verification is missing")
         if not _truth(native, "isolationVerified"):

@@ -73,6 +73,7 @@ class P9UpdateInstallTest(unittest.TestCase):
             "channel": "stable",
             "artifactSha256": sha256_file(artifact),
             "artifactSize": artifact.stat().st_size,
+            "compatibleFrom": ["1.9.0+190"],
         }
         payload.update(payload_changes)
         return sign_manifest({
@@ -184,6 +185,17 @@ class P9UpdateInstallTest(unittest.TestCase):
         with self.assertRaises(UpdateInstallError) as caught:
             self._verify(self.envelope, modified)
         self.assertIn(caught.exception.code, {"artifact_size", "artifact_digest"})
+
+    def test_update_metadata_must_explicitly_allow_installed_version(self) -> None:
+        incompatible = self._envelope(self.bundle, compatibleFrom=["1.8.0+180"])
+        with self.assertRaises(UpdateInstallError) as caught:
+            self._verify(incompatible)
+        self.assertEqual(caught.exception.code, "update_incompatible")
+
+        malformed = self._envelope(self.bundle, compatibleFrom=["1.9.0+190", "1.9.0+190"])
+        with self.assertRaises(UpdateInstallError) as caught:
+            self._verify(malformed)
+        self.assertEqual(caught.exception.code, "compatibility_invalid")
 
     def test_expired_and_revoked_metadata_fail_closed(self) -> None:
         with self.assertRaises(UpdateInstallError) as caught:
