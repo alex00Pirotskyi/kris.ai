@@ -11,7 +11,8 @@ import 'package:kristin_local_agent/product/tool_schema.dart';
 
 void main() {
   group('built-in zero-key search provider', () {
-    test('normalizes, bounds, unwraps, and deduplicates HTML results', () async {
+    test('sends only the intended query and normalizes bounded results',
+        () async {
       late SearchHttpRequest captured;
       final provider = BuiltInDuckDuckGoSearchProvider(
         timeout: const Duration(seconds: 2),
@@ -52,7 +53,7 @@ void main() {
       expect(results.single.snippet, 'Useful official documentation.');
     });
 
-    test('rejects invalid, non-HTTPS, local, and malformed result URLs', () {
+    test('rejects invalid, non-HTTPS, and local result URLs', () {
       expect(normalizePublicSearchResultUrl('javascript:alert(1)'), isNull);
       expect(normalizePublicSearchResultUrl('http://example.com'), isNull);
       expect(normalizePublicSearchResultUrl('https://localhost/a'), isNull);
@@ -65,84 +66,94 @@ void main() {
       );
     });
 
-    test('fails safely on provider throttling and redirect responses', () async {
-      Future<SearchHttpResponse> response(int status) async =>
-          SearchHttpResponse(
-            statusCode: status,
-            headers: const <String, String>{'retry-after': '30'},
-            body: const <int>[],
+    test('fails safely on throttling, redirects, MIME, and challenges',
+        () async {
+      Future<void> expectCode(
+        BuiltInDuckDuckGoSearchProvider provider,
+        String code,
+      ) =>
+          expectLater(
+            provider.search(const SearchProviderRequest(query: 'docs')),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.code,
+                'code',
+                code,
+              ),
+            ),
           );
 
-      final throttled = BuiltInDuckDuckGoSearchProvider(
-        timeout: const Duration(seconds: 1),
-        maxBytes: 1024,
-        transport: (_) => response(429),
-      );
-      await expectLater(
-        throttled.search(const SearchProviderRequest(query: 'docs')),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'search_provider_rate_limited',
+      await expectCode(
+        BuiltInDuckDuckGoSearchProvider(
+          timeout: const Duration(seconds: 1),
+          maxBytes: 1024,
+          transport: (_) async => const SearchHttpResponse(
+            statusCode: 429,
+            headers: <String, String>{'retry-after': '30'},
+            body: <int>[],
           ),
         ),
+        'search_provider_rate_limited',
       );
-
-      final redirected = BuiltInDuckDuckGoSearchProvider(
-        timeout: const Duration(seconds: 1),
-        maxBytes: 1024,
-        transport: (_) => response(302),
-      );
-      await expectLater(
-        redirected.search(const SearchProviderRequest(query: 'docs')),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'search_provider_redirect_rejected',
+      await expectCode(
+        BuiltInDuckDuckGoSearchProvider(
+          timeout: const Duration(seconds: 1),
+          maxBytes: 1024,
+          transport: (_) async => const SearchHttpResponse(
+            statusCode: 302,
+            headers: <String, String>{},
+            body: <int>[],
           ),
         ),
+        'search_provider_redirect_rejected',
+      );
+      await expectCode(
+        BuiltInDuckDuckGoSearchProvider(
+          timeout: const Duration(seconds: 1),
+          maxBytes: 1024,
+          transport: (_) async => SearchHttpResponse(
+            statusCode: 200,
+            headers: const <String, String>{
+              'content-type': 'application/json',
+            },
+            body: utf8.encode('{}'),
+          ),
+        ),
+        'search_provider_mime_rejected',
+      );
+      await expectCode(
+        BuiltInDuckDuckGoSearchProvider(
+          timeout: const Duration(seconds: 1),
+          maxBytes: 4096,
+          transport: (_) async => SearchHttpResponse(
+            statusCode: 200,
+            headers: const <String, String>{'content-type': 'text/html'},
+            body: utf8.encode(
+              '<html>Bots use DuckDuckGo too challenge-form</html>',
+            ),
+          ),
+        ),
+        'search_provider_rate_limited',
       );
     });
 
-    test('fails safely on malformed MIME and challenge pages', () async {
-      final badMime = BuiltInDuckDuckGoSearchProvider(
+    test('rejects excessive responses before parsing', () async {
+      final provider = BuiltInDuckDuckGoSearchProvider(
         timeout: const Duration(seconds: 1),
-        maxBytes: 1024,
-        transport: (_) async => SearchHttpResponse(
-          statusCode: 200,
-          headers: const <String, String>{'content-type': 'application/json'},
-          body: utf8.encode('{}'),
-        ),
-      );
-      await expectLater(
-        badMime.search(const SearchProviderRequest(query: 'docs')),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'search_provider_mime_rejected',
-          ),
-        ),
-      );
-
-      final challenge = BuiltInDuckDuckGoSearchProvider(
-        timeout: const Duration(seconds: 1),
-        maxBytes: 4096,
+        maxBytes: 64,
         transport: (_) async => SearchHttpResponse(
           statusCode: 200,
           headers: const <String, String>{'content-type': 'text/html'},
-          body: utf8.encode('<html>Bots use DuckDuckGo too challenge-form</html>'),
+          body: List<int>.filled(65, 0x20),
         ),
       );
       await expectLater(
-        challenge.search(const SearchProviderRequest(query: 'docs')),
+        provider.search(const SearchProviderRequest(query: 'docs')),
         throwsA(
           isA<ProductException>().having(
             (error) => error.code,
             'code',
-            'search_provider_rate_limited',
+            'search_provider_response_too_large',
           ),
         ),
       );
@@ -215,20 +226,18 @@ void main() {
             <String, String>{
               'title': 'Brave result',
               'url': 'https://example.com/brave',
-              'snippet': 'Optional provider.',
+              'description': 'Optional provider.',
             },
           ];
         },
       );
-      final router = SearchProviderRouter(
+      final response = await SearchProviderRouter(
         preferred: brave,
         builtIn: builtInSuccess(),
-      );
-      final response = await router.search(
-        const SearchProviderRequest(query: 'current docs'),
-      );
+      ).search(const SearchProviderRequest(query: 'current docs'));
       expect(response.providerId, braveSearchProviderId);
       expect(response.fallbackUsed, isFalse);
+      expect(response.results.single.snippet, 'Optional provider.');
     });
 
     test('optional provider failure falls back to zero-key built-in search',
@@ -239,25 +248,22 @@ void main() {
           throw ProductException('brave_unavailable', 'temporary outage');
         },
       );
-      final router = SearchProviderRouter(
+      final response = await SearchProviderRouter(
         preferred: brave,
         builtIn: builtInSuccess(),
-      );
-      final response = await router.search(
-        const SearchProviderRequest(query: 'current docs'),
-      );
+      ).search(const SearchProviderRequest(query: 'current docs'));
       expect(response.providerId, builtInSearchProviderId);
       expect(response.fallbackUsed, isTrue);
       expect(response.providerFailures, contains('brave-api:brave_unavailable'));
     });
 
-    test('all-provider outage fails with provider-neutral semantics', () async {
+    test('all-provider timeout is provider-neutral', () async {
       final router = SearchProviderRouter(
         builtIn: BuiltInDuckDuckGoSearchProvider(
           timeout: const Duration(seconds: 1),
           maxBytes: 4096,
           transport: (_) async {
-            throw const TimeoutException('offline');
+            throw TimeoutException('offline');
           },
         ),
       );
@@ -286,22 +292,16 @@ void main() {
 
     test('zero-key healthy provider satisfies required search preflight', () async {
       final fixture = await _preflightFixture(localOnly: false);
+      var optionalProviderCalled = false;
       final service = RunPreflightService(
         resolver: const RunCapabilityResolver(),
         modelProbe: _readyModel,
         browserProbe: _readyBrowser,
-        researchSearchProbe: (run, requirement) async =>
-            RunCapabilityProbeResult(
-          key: requirement.key,
-          label: requirement.label,
-          ok: true,
-          required: requirement.required,
-          message: 'Built-in web search is available.',
-          durationMilliseconds: 1,
-          details: const <String, dynamic>{
-            'providerId': builtInSearchProviderId,
-          },
-        ),
+        builtInResearchSearchProbe: _builtInAvailable,
+        researchSearchProbe: (run, requirement) async {
+          optionalProviderCalled = true;
+          return _probeResult(requirement, false, 'optional unavailable');
+        },
         settingsProvider: () => const ProductSettings(localOnly: false),
       );
       final receipt = await service.check(
@@ -310,25 +310,28 @@ void main() {
       );
       expect(receipt.verdict, RunPreflightVerdict.ready);
       expect(receipt.blockingFailures, isEmpty);
+      expect(optionalProviderCalled, isFalse);
+      expect(
+        receipt.probes.singleWhere((item) => item.key == 'research-search').message,
+        'Built-in web search is available.',
+      );
     });
 
-    test('local-only mode still fails closed before provider probing', () async {
+    test('local-only mode fails closed before any provider probe', () async {
       final fixture = await _preflightFixture(localOnly: true);
-      var probeCalled = false;
+      var builtInCalled = false;
+      var optionalCalled = false;
       final service = RunPreflightService(
         resolver: const RunCapabilityResolver(),
         modelProbe: _readyModel,
         browserProbe: _readyBrowser,
+        builtInResearchSearchProbe: () async {
+          builtInCalled = true;
+          return _builtInAvailable();
+        },
         researchSearchProbe: (run, requirement) async {
-          probeCalled = true;
-          return RunCapabilityProbeResult(
-            key: requirement.key,
-            label: requirement.label,
-            ok: true,
-            required: requirement.required,
-            message: 'ready',
-            durationMilliseconds: 1,
-          );
+          optionalCalled = true;
+          return _probeResult(requirement, true, 'ready');
         },
         settingsProvider: () => const ProductSettings(localOnly: true),
       );
@@ -337,28 +340,44 @@ void main() {
         project: fixture.project,
       );
       expect(receipt.verdict, RunPreflightVerdict.blocked);
-      expect(probeCalled, isFalse);
-      expect(
-        receipt.summary,
-        contains('Kristin is in local-only mode'),
-      );
+      expect(builtInCalled, isFalse);
+      expect(optionalCalled, isFalse);
+      expect(receipt.summary, contains('Kristin is in local-only mode'));
     });
 
-    test('genuine provider outage blocks with provider-neutral diagnostic',
-        () async {
+    test('configured optional provider can satisfy built-in outage', () async {
       final fixture = await _preflightFixture(localOnly: false);
       final service = RunPreflightService(
         resolver: const RunCapabilityResolver(),
         modelProbe: _readyModel,
         browserProbe: _readyBrowser,
+        builtInResearchSearchProbe: _builtInUnavailable,
         researchSearchProbe: (run, requirement) async =>
-            RunCapabilityProbeResult(
-          key: requirement.key,
-          label: requirement.label,
-          ok: false,
-          required: requirement.required,
-          message: 'Web search is currently unavailable.',
-          durationMilliseconds: 1,
+            _probeResult(requirement, true, 'Brave Search is available.'),
+        settingsProvider: () => const ProductSettings(localOnly: false),
+      );
+      final receipt = await service.check(
+        run: fixture.run,
+        project: fixture.project,
+      );
+      expect(receipt.verdict, RunPreflightVerdict.ready);
+      expect(
+        receipt.probes.singleWhere((item) => item.key == 'research-search').message,
+        'Web search is available.',
+      );
+    });
+
+    test('provider outage blocks with provider-neutral diagnostic', () async {
+      final fixture = await _preflightFixture(localOnly: false);
+      final service = RunPreflightService(
+        resolver: const RunCapabilityResolver(),
+        modelProbe: _readyModel,
+        browserProbe: _readyBrowser,
+        builtInResearchSearchProbe: _builtInUnavailable,
+        researchSearchProbe: (run, requirement) async => _probeResult(
+          requirement,
+          false,
+          'No Brave Search secret reference is configured.',
         ),
         settingsProvider: () => const ProductSettings(localOnly: false),
       );
@@ -368,50 +387,49 @@ void main() {
       );
       expect(receipt.verdict, RunPreflightVerdict.blocked);
       expect(receipt.summary, 'Web search is currently unavailable.');
-    });
-
-    test('legacy Brave-only baseline failure text is removed', () {
-      final runtimeSource = File('lib/product/product_runtime.dart')
-          .readAsStringSync();
-      expect(
-        runtimeSource,
-        isNot(contains(
-          'Web search is required, but no Brave Search secret reference is configured.',
-        )),
-      );
-      expect(
-        runtimeSource,
-        isNot(contains('no Brave Search secret reference is configured')),
-      );
-      expect(runtimeSource, contains('Built-in web search is available.'));
+      expect(receipt.summary, isNot(contains('Brave')));
     });
   });
 }
+
+Future<SearchProviderProbe> _builtInAvailable() async =>
+    const SearchProviderProbe(
+      available: true,
+      providerId: builtInSearchProviderId,
+      resultCount: 1,
+      message: 'Built-in web search is available.',
+    );
+
+Future<SearchProviderProbe> _builtInUnavailable() async =>
+    const SearchProviderProbe(
+      available: false,
+      message: 'Web search is currently unavailable.',
+    );
+
+RunCapabilityProbeResult _probeResult(
+  RunCapabilityRequirement requirement,
+  bool ok,
+  String message,
+) =>
+    RunCapabilityProbeResult(
+      key: requirement.key,
+      label: requirement.label,
+      ok: ok,
+      required: requirement.required,
+      message: message,
+      durationMilliseconds: 1,
+    );
 
 Future<RunCapabilityProbeResult> _readyModel(
   ModelIdentity model,
   RunCapabilityRequirement requirement,
 ) async =>
-    RunCapabilityProbeResult(
-      key: requirement.key,
-      label: requirement.label,
-      ok: true,
-      required: requirement.required,
-      message: 'model ready',
-      durationMilliseconds: 1,
-    );
+    _probeResult(requirement, true, 'model ready');
 
 Future<RunCapabilityProbeResult> _readyBrowser(
   RunCapabilityRequirement requirement,
 ) async =>
-    RunCapabilityProbeResult(
-      key: requirement.key,
-      label: requirement.label,
-      ok: true,
-      required: requirement.required,
-      message: 'browser ready',
-      durationMilliseconds: 1,
-    );
+    _probeResult(requirement, true, 'browser ready');
 
 Future<({ProjectRecord project, RunRecord run})> _preflightFixture({
   required bool localOnly,
