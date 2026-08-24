@@ -28,7 +28,7 @@ void main() {
   });
 
   test(
-    'ProductRuntime prepares a bundled fallback only when P1A is absent',
+    'ProductRuntime prepares an immutable bundled fallback only when P1A is absent',
     () {
       final runtime = File(
         'lib/product/product_runtime.dart',
@@ -47,10 +47,34 @@ void main() {
         runtime,
         contains('P2BundledCurrentAccountRuntime.prepareIfPresent'),
       );
-      expect(bootstrap, contains("'--mode'"));
-      expect(bootstrap, contains("'product-current-account'"));
+      expect(
+        bootstrap,
+        contains('P2ApplicationOwnedRuntimeResourceResolver'),
+      );
+      expect(
+        bootstrap,
+        contains('p2_current_account_relocated_runtime_invalid'),
+      );
+      expect(bootstrap, contains("bundled['productCurrentAccount'] != true"));
+      expect(bootstrap, contains("bundled['ownerRiskQa'] != false"));
+      expect(bootstrap, isNot(contains('Process.run(')));
+      expect(bootstrap, isNot(contains("'--mode'")));
       expect(configurator, contains("mode === 'product-current-account'"));
       expect(configurator, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
+      expect(
+        configurator,
+        contains('ownerRiskQa: !productCurrentAccount'),
+      );
+      final hostVerifier = File(
+        'automation_host/src/authenticated-ipc.mjs',
+      ).readAsStringSync();
+      final processClient = File(
+        'lib/product/p2_automation_host_process_client.dart',
+      ).readAsStringSync();
+      expect(hostVerifier, contains("'p2-current-account-owner-v1'"));
+      expect(hostVerifier, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
+      expect(processClient, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
+      expect(processClient, contains('localCurrentAccount'));
       expect(staging, contains('product-current-account'));
       expect(packaging, contains('--product-current-account'));
       expect(packaging, contains('functionalOwnerModeEligible'));
