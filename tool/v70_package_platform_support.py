@@ -210,7 +210,7 @@ def _rebind_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
         elif kind == "directory":
             raw["treeSha256"] = tree_sha256(path)
         else:
-            fail(f"runtime resource kind invalid: {key}: {kind}")
+            fail(f"runtime resource kind invalid: {key}")
 
 
 def _verify_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
@@ -359,6 +359,13 @@ def _nested_macho_files(roots: Iterable[pathlib.Path]) -> list[pathlib.Path]:
     return sorted(found, key=lambda item: item.as_posix())
 
 
+def _macos_codesign_target(path: pathlib.Path) -> pathlib.Path:
+    parent = path.parent
+    if parent.suffix == ".framework" and path.name == parent.stem:
+        return parent
+    return path
+
+
 def ad_hoc_sign_macos(
     app_bundle: pathlib.Path,
     p1a_native: pathlib.Path,
@@ -384,9 +391,14 @@ def ad_hoc_sign_macos(
     for explicit in runtime_executables:
         if explicit.is_file() and _is_macho(explicit):
             macho.append(explicit)
+    signed_targets: set[pathlib.Path] = set()
     for binary in sorted(set(macho), key=lambda item: item.as_posix()):
-        execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(binary)])
-        execute(["codesign", "--verify", "--strict", "--verbose=2", str(binary)])
+        target = _macos_codesign_target(binary)
+        if target in signed_targets:
+            continue
+        signed_targets.add(target)
+        execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(target)])
+        execute(["codesign", "--verify", "--strict", "--verbose=2", str(target)])
 
     execute(["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none", str(app_bundle)])
     execute(["codesign", "--verify", "--deep", "--strict", "--verbose=2", str(app_bundle)])
