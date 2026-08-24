@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -153,29 +154,65 @@ class P3StageBrowserRuntimeBundleTest(unittest.TestCase):
                     include_node_modules=True,
                 )
 
-    def test_browser_tree_materializes_internal_relative_symlink(self) -> None:
+    def test_browser_tree_preserves_framework_symlink_topology(self) -> None:
         with tempfile.TemporaryDirectory(prefix='p3-stage-browser-link-') as raw:
             temp = pathlib.Path(raw)
             source = temp / 'browser'
-            version = source / 'Framework.framework/Versions/1'
+            framework = source / 'Google Chrome for Testing Framework.framework'
+            version = framework / 'Versions/149.0.7827.55'
             version.mkdir(parents=True)
-            (version / 'framework.bin').write_bytes(b'framework\n')
-            current = source / 'Framework.framework/Versions/Current'
-            self._symlink(current, '1', target_is_directory=True)
+            executable = version / 'Google Chrome for Testing Framework'
+            executable.write_bytes(b'framework\n')
+            current = framework / 'Versions/Current'
+            self._symlink(current, '149.0.7827.55', target_is_directory=True)
+            root_executable = framework / 'Google Chrome for Testing Framework'
+            self._symlink(
+                root_executable,
+                'Versions/Current/Google Chrome for Testing Framework',
+            )
             destination = temp / 'bundle'
 
             stage.copy_tree(
                 source,
                 destination,
                 include_node_modules=True,
-                materialize_internal_symlinks=True,
+                preserve_internal_symlinks=True,
             )
 
-            staged_current = destination / 'Framework.framework/Versions/Current'
-            self.assertTrue(staged_current.is_dir())
-            self.assertFalse(staged_current.is_symlink())
-            self.assertTrue((staged_current / 'framework.bin').is_file())
-            self.assertRegex(stage.tree_sha256(destination), r'^[0-9a-f]{64}$')
+            staged_current = destination / current.relative_to(source)
+            staged_root_executable = destination / root_executable.relative_to(source)
+            self.assertTrue(staged_current.is_symlink())
+            self.assertEqual(os.readlink(staged_current), '149.0.7827.55')
+            self.assertTrue(staged_root_executable.is_symlink())
+            self.assertEqual(
+                os.readlink(staged_root_executable),
+                'Versions/Current/Google Chrome for Testing Framework',
+            )
+            self.assertTrue(staged_root_executable.is_file())
+            self.assertRegex(
+                stage.tree_sha256(
+                    destination,
+                    allow_internal_symlinks=True,
+                ),
+                r'^[0-9a-f]{64}$',
+            )
+            with self.assertRaisesRegex(SystemExit, 'browser runtime symlink rejected'):
+                stage.tree_sha256(destination)
+
+    def test_browser_tree_symlink_target_changes_digest(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-browser-link-hash-') as raw:
+            temp = pathlib.Path(raw)
+            root = temp / 'browser'
+            root.mkdir()
+            (root / 'one').write_bytes(b'1')
+            (root / 'two').write_bytes(b'2')
+            link = root / 'current'
+            self._symlink(link, 'one')
+            first = stage.tree_sha256(root, allow_internal_symlinks=True)
+            link.unlink()
+            self._symlink(link, 'two')
+            second = stage.tree_sha256(root, allow_internal_symlinks=True)
+            self.assertNotEqual(first, second)
 
     def test_browser_tree_rejects_escaping_symlink(self) -> None:
         with tempfile.TemporaryDirectory(prefix='p3-stage-browser-escape-') as raw:
@@ -191,7 +228,7 @@ class P3StageBrowserRuntimeBundleTest(unittest.TestCase):
                     source,
                     temp / 'bundle',
                     include_node_modules=True,
-                    materialize_internal_symlinks=True,
+                    preserve_internal_symlinks=True,
                 )
 
     def test_browser_tree_rejects_symlink_cycle(self) -> None:
@@ -206,7 +243,7 @@ class P3StageBrowserRuntimeBundleTest(unittest.TestCase):
                     source,
                     temp / 'bundle',
                     include_node_modules=True,
-                    materialize_internal_symlinks=True,
+                    preserve_internal_symlinks=True,
                 )
 
     def test_windows_sandbox_acl_grants_appcontainer_and_lpac_read_execute(self) -> None:

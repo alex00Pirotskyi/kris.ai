@@ -11,6 +11,7 @@ String _hex(String value, int length) =>
 Future<Directory> _writeBundle(
   Directory dataRoot, {
   bool globalRuntimeRequired = false,
+  bool withInternalBrowserSymlinks = false,
 }) async {
   final root = Directory(
     '${dataRoot.path}${Platform.pathSeparator}'
@@ -42,12 +43,37 @@ Future<Directory> _writeBundle(
     '${browser.parent.path}${Platform.pathSeparator}resources.pak',
   ).writeAsString('browser-resource\n');
 
+  if (withInternalBrowserSymlinks) {
+    final framework = Directory(
+      '${browser.parent.path}${Platform.pathSeparator}'
+      'Google Chrome for Testing Framework.framework',
+    );
+    final version = Directory(
+      '${framework.path}${Platform.pathSeparator}Versions'
+      '${Platform.pathSeparator}149.0.7827.55',
+    );
+    await version.create(recursive: true);
+    await File(
+      '${version.path}${Platform.pathSeparator}'
+      'Google Chrome for Testing Framework',
+    ).writeAsString('framework-binary\n');
+    await Link(
+      '${framework.path}${Platform.pathSeparator}Versions'
+      '${Platform.pathSeparator}Current',
+    ).create('149.0.7827.55');
+    await Link(
+      '${framework.path}${Platform.pathSeparator}'
+      'Google Chrome for Testing Framework',
+    ).create('Versions/Current/Google Chrome for Testing Framework');
+  }
+
   final automationHostTree =
       await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
     worker.parent.parent,
   );
   final browserTree = await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
     browser.parent,
+    allowInternalSymlinks: withInternalBrowserSymlinks,
   );
   final packageLockSha = Sha256.hex(await packageLock.readAsBytes());
   final manifest = <String, Object?>{
@@ -135,6 +161,70 @@ void main() {
       expect(resources.provenance['applicationOwned'], isTrue);
       expect(resources.provenance['globalRuntimeRequired'], isFalse);
       expect(resources.provenance['browserNetworkInstallRequired'], isFalse);
+    },
+  );
+
+  test(
+    'preserved internal browser symlinks are verified and tamper-bound',
+    () async {
+      if (Platform.isWindows) return;
+      final temp = await Directory.systemTemp.createTemp('p3-browser-links-');
+      addTearDown(() => temp.delete(recursive: true));
+      final root = await _writeBundle(
+        temp,
+        withInternalBrowserSymlinks: true,
+      );
+      final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
+        applicationDataRoot: temp.absolute,
+      );
+
+      final resources = await resolver.resolve();
+      expect(resources.browserRootTreeSha256, hasLength(64));
+      final framework = Directory(
+        '${root.path}${Platform.pathSeparator}browser'
+        '${Platform.pathSeparator}Google Chrome for Testing Framework.framework',
+      );
+      final current = Link(
+        '${framework.path}${Platform.pathSeparator}Versions'
+        '${Platform.pathSeparator}Current',
+      );
+      final rootExecutable = Link(
+        '${framework.path}${Platform.pathSeparator}'
+        'Google Chrome for Testing Framework',
+      );
+      expect(await current.target(), '149.0.7827.55');
+      expect(
+        await rootExecutable.target(),
+        'Versions/Current/Google Chrome for Testing Framework',
+      );
+      expect(
+        P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
+          Directory(resources.browserRoot),
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => '$error',
+            'error',
+            contains('p3_runtime_tree_symlink'),
+          ),
+        ),
+      );
+
+      await rootExecutable.delete();
+      await rootExecutable.create('Versions/Current/missing');
+      expect(
+        resolver.resolve(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => '$error',
+            'error',
+            allOf(
+              contains('p3_browser_runtime_bundle_invalid'),
+              contains('p3_runtime_tree_symlink_invalid'),
+            ),
+          ),
+        ),
+      );
     },
   );
 

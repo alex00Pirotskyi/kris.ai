@@ -292,28 +292,58 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
     if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(expected)) {
       throw StateError('p3_runtime_tree_digest_invalid:$key');
     }
-    final actual = await treeSha256(directory);
+    final actual = await treeSha256(
+      directory,
+      allowInternalSymlinks: key == 'browserRoot',
+    );
     if (actual != expected) {
       throw StateError('p3_runtime_tree_digest_mismatch:$key');
     }
     return _P3DirectoryResource(path: directory.path, treeSha256: actual);
   }
 
-  static Future<String> treeSha256(Directory directory) async {
+  static Future<String> treeSha256(
+    Directory directory, {
+    bool allowInternalSymlinks = false,
+  }) async {
     final root = directory.absolute.path;
+    final resolvedRoot = await directory.resolveSymbolicLinks();
     final rows = <String>[];
     await for (final entity in directory.list(
       recursive: true,
       followLinks: false,
     )) {
-      if (entity is Link || await FileSystemEntity.isLink(entity.path)) {
-        throw StateError('p3_runtime_tree_symlink');
-      }
-      if (entity is! File) continue;
       final absolute = entity.absolute.path;
       final relative = absolute
           .substring(root.length + 1)
           .replaceAll(Platform.pathSeparator, '/');
+      if (entity is Link || await FileSystemEntity.isLink(entity.path)) {
+        if (!allowInternalSymlinks) {
+          throw StateError('p3_runtime_tree_symlink');
+        }
+        final link = entity is Link ? entity : Link(entity.path);
+        final rawTarget = await link.target();
+        if (rawTarget.isEmpty || File(rawTarget).isAbsolute) {
+          throw StateError('p3_runtime_tree_symlink_absolute');
+        }
+        String resolvedTarget;
+        try {
+          resolvedTarget = await link.resolveSymbolicLinks();
+        } on FileSystemException {
+          throw StateError('p3_runtime_tree_symlink_invalid');
+        }
+        if (resolvedTarget == resolvedRoot ||
+            !resolvedTarget.startsWith(
+              '$resolvedRoot${Platform.pathSeparator}',
+            )) {
+          throw StateError('p3_runtime_tree_symlink_outside');
+        }
+        rows.add(
+          '$relative\u0000@symlink\u0000${Sha256.hex(utf8.encode(rawTarget))}',
+        );
+        continue;
+      }
+      if (entity is! File) continue;
       rows.add('$relative\u0000${Sha256.hex(await entity.readAsBytes())}');
     }
     rows.sort();

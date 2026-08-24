@@ -43,25 +43,39 @@ def require_internal_relative_symlink(
     if link_target.is_absolute():
         raise SystemExit(f'P3 runtime absolute symlink rejected: {item}')
     resolved_root = root.resolve()
-    resolved_target = (item.parent / link_target).resolve()
+    try:
+        resolved_target = (item.parent / link_target).resolve(strict=True)
+    except RuntimeError as error:
+        raise SystemExit(f'P3 runtime symlink cycle rejected: {item}') from error
+    except OSError as error:
+        raise SystemExit(f'P3 runtime broken symlink rejected: {item}') from error
     try:
         resolved_target.relative_to(resolved_root)
     except ValueError as error:
         raise SystemExit(f'P3 runtime escaping symlink rejected: {item}') from error
-    if not resolved_target.exists():
-        raise SystemExit(f'P3 runtime broken symlink rejected: {item}')
+    if resolved_target.is_dir():
+        resolved_parent = item.parent.resolve()
+        if resolved_target == resolved_parent or resolved_target in resolved_parent.parents:
+            raise SystemExit(f'P3 runtime symlink cycle rejected: {item}')
     return resolved_target
 
 
-def tree_sha256(root: pathlib.Path) -> str:
+def tree_sha256(
+    root: pathlib.Path,
+    *,
+    allow_internal_symlinks: bool = False,
+) -> str:
     rows: list[str] = []
     for item in sorted(root.rglob('*'), key=lambda value: value.as_posix()):
+        relative = item.relative_to(root).as_posix()
         if item.is_symlink():
-            raise SystemExit(f'P3 browser runtime symlink rejected: {item}')
-        if item.is_file():
-            rows.append(
-                f'{item.relative_to(root).as_posix()}\0{sha256_file(item)}'
-            )
+            if not allow_internal_symlinks:
+                raise SystemExit(f'P3 browser runtime symlink rejected: {item}')
+            require_internal_relative_symlink(item, root)
+            target_sha = hashlib.sha256(os.readlink(item).encode('utf-8')).hexdigest()
+            rows.append(f'{relative}\0@symlink\0{target_sha}')
+        elif item.is_file():
+            rows.append(f'{relative}\0{sha256_file(item)}')
     return hashlib.sha256('\n'.join(rows).encode('utf-8')).hexdigest()
 
 
@@ -86,53 +100,32 @@ def copy_tree(
     dst: pathlib.Path,
     *,
     include_node_modules: bool,
-    materialize_internal_symlinks: bool = False,
-    _active_roots: set[pathlib.Path] | None = None,
+    preserve_internal_symlinks: bool = False,
 ) -> None:
     if not src.is_dir() or src.is_symlink():
         raise SystemExit(f'P3 runtime tree missing/symlinked: {src}')
-    resolved_src = src.resolve()
-    active_roots = _active_roots if _active_roots is not None else set()
-    if resolved_src in active_roots:
-        raise SystemExit(f'P3 runtime symlink cycle rejected: {src}')
-    active_roots.add(resolved_src)
-    try:
-        for item in sorted(src.rglob('*'), key=lambda value: value.as_posix()):
-            relative = item.relative_to(src)
-            if any(part in SKIP_PARTS for part in relative.parts):
-                continue
-            if not include_node_modules and 'node_modules' in relative.parts:
-                continue
-            if is_npm_bin_shim(relative):
-                continue
-            target = dst / relative
-            if item.is_symlink():
-                if not materialize_internal_symlinks:
-                    raise SystemExit(f'P3 runtime symlink rejected: {item}')
-                resolved_target = require_internal_relative_symlink(item, src)
-                if resolved_target.is_dir():
-                    target.mkdir(parents=True, exist_ok=True)
-                    copy_tree(
-                        resolved_target,
-                        target,
-                        include_node_modules=include_node_modules,
-                        materialize_internal_symlinks=True,
-                        _active_roots=active_roots,
-                    )
-                elif resolved_target.is_file():
-                    copy_file(
-                        resolved_target,
-                        target,
-                        bool(resolved_target.stat().st_mode & stat.S_IXUSR),
-                    )
-                else:
-                    raise SystemExit(f'P3 runtime symlink target invalid: {item}')
-            elif item.is_dir():
-                target.mkdir(parents=True, exist_ok=True)
-            elif item.is_file():
-                copy_file(item, target, bool(item.stat().st_mode & stat.S_IXUSR))
-    finally:
-        active_roots.remove(resolved_src)
+    for item in sorted(src.rglob('*'), key=lambda value: value.as_posix()):
+        relative = item.relative_to(src)
+        if any(part in SKIP_PARTS for part in relative.parts):
+            continue
+        if not include_node_modules and 'node_modules' in relative.parts:
+            continue
+        if is_npm_bin_shim(relative):
+            continue
+        target = dst / relative
+        if item.is_symlink():
+            if not preserve_internal_symlinks:
+                raise SystemExit(f'P3 runtime symlink rejected: {item}')
+            resolved_target = require_internal_relative_symlink(item, src)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.symlink_to(
+                os.readlink(item),
+                target_is_directory=resolved_target.is_dir(),
+            )
+        elif item.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+        elif item.is_file():
+            copy_file(item, target, bool(item.stat().st_mode & stat.S_IXUSR))
 
 
 def prepare_windows_sandbox_acl(
@@ -282,12 +275,12 @@ def main() -> int:
         browser_root,
         staged_browser_root,
         include_node_modules=True,
-        materialize_internal_symlinks=True,
+        preserve_internal_symlinks=True,
     )
     prepare_windows_sandbox_acl(staged_browser_root)
     staged_browser_executable = staged_browser_root / browser_relative
-    if not staged_browser_executable.is_file():
-        raise SystemExit('staged browser executable missing')
+    if not staged_browser_executable.is_file() or staged_browser_executable.is_symlink():
+        raise SystemExit('staged browser executable missing/symlinked')
     staged_browser_executable.chmod(0o755)
     resources['browserExecutable'] = {
         'kind': 'file',
@@ -299,7 +292,10 @@ def main() -> int:
     resources['browserRoot'] = {
         'kind': 'directory',
         'path': staged_browser_root.relative_to(destination).as_posix(),
-        'treeSha256': tree_sha256(staged_browser_root),
+        'treeSha256': tree_sha256(
+            staged_browser_root,
+            allow_internal_symlinks=True,
+        ),
     }
 
     build_rows = [

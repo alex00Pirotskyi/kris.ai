@@ -49,11 +49,20 @@ def file_row(support, root: pathlib.Path, path: pathlib.Path, *, executable: boo
     }
 
 
-def directory_row(support, root: pathlib.Path, path: pathlib.Path) -> dict:
+def directory_row(
+    support,
+    root: pathlib.Path,
+    path: pathlib.Path,
+    *,
+    allow_internal_symlinks: bool = False,
+) -> dict:
     return {
         "kind": "directory",
         "path": path.relative_to(root).as_posix(),
-        "treeSha256": support.tree_sha256(path),
+        "treeSha256": support.tree_sha256(
+            path,
+            allow_internal_symlinks=allow_internal_symlinks,
+        ),
     }
 
 
@@ -128,16 +137,25 @@ def build_fixture(support, root: pathlib.Path) -> tuple[pathlib.Path, pathlib.Pa
     write_file(worker, b"WORKER")
     write_file(lock, b"LOCK")
     write_file(browser, b"\xcf\xfa\xed\xfeBROWSER", executable=True)
-    write_file(framework_root, b"\xcf\xfa\xed\xfeFRAMEWORK-ROOT", executable=True)
     write_file(framework_versioned, b"\xcf\xfa\xed\xfeFRAMEWORK-VERSION", executable=True)
     write_file(framework, b"\xcf\xfa\xed\xfeFRAMEWORK-DYLIB", executable=True)
+    current = framework_bundle / "Versions/Current"
+    current.symlink_to("140.0.7339.0", target_is_directory=True)
+    framework_root.symlink_to(
+        "Versions/Current/Google Chrome for Testing Framework"
+    )
     p3_resources = {
         "nodeExecutable": file_row(support, p3, p3_node, executable=True),
         "browserWorker": file_row(support, p3, worker),
         "automationHostRoot": directory_row(support, p3, p3 / "automation_host"),
         "packageLock": file_row(support, p3, lock),
         "browserExecutable": file_row(support, p3, browser, executable=True),
-        "browserRoot": directory_row(support, p3, p3 / "browser"),
+        "browserRoot": directory_row(
+            support,
+            p3,
+            p3 / "browser",
+            allow_internal_symlinks=True,
+        ),
     }
     p3_manifest = {
         "schemaVersion": "1.0.0",
@@ -201,6 +219,8 @@ def main() -> int:
             / "Versions/140.0.7339.0/Google Chrome for Testing Framework"
         )
         framework_dylib = framework_bundle / "Versions/140.0.7339.0/Libraries/libfixture.dylib"
+        require((framework_bundle / "Versions/Current").is_symlink(), "framework Current must remain a symlink")
+        require(framework_root.is_symlink(), "framework root executable must remain a symlink")
         require(
             support._macos_codesign_target(framework_root) == framework_versioned,
             "macOS framework primary executable must resolve to concrete versioned Mach-O",
@@ -219,6 +239,13 @@ def main() -> int:
                 target = pathlib.Path(argv[-1])
                 if target == framework_bundle or target == framework_root:
                     return subprocess.CompletedProcess(argv, 1, "", "bundle format is ambiguous")
+            if argv[0] == "codesign" and "--verify" in argv:
+                target = pathlib.Path(argv[-1])
+                chrome_executable = p3 / "browser/Chromium.app/Contents/MacOS/Chromium"
+                if target == chrome_executable:
+                    current = framework_bundle / "Versions/Current"
+                    if not current.is_symlink() or not framework_root.is_symlink():
+                        return subprocess.CompletedProcess(argv, 1, "", "bundle format is ambiguous")
             if argv[0] == "codesign" and "--deep" in argv and "--force" in argv and not mutated:
                 mutated = True
                 for relative in (
@@ -231,7 +258,6 @@ def main() -> int:
                 for relative in (
                     "node/node",
                     "browser/Chromium.app/Contents/MacOS/Chromium",
-                    "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Google Chrome for Testing Framework",
                     "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/140.0.7339.0/Google Chrome for Testing Framework",
                     "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/140.0.7339.0/Libraries/libfixture.dylib",
                 ):
