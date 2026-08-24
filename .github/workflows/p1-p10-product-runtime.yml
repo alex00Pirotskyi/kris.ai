@@ -2,9 +2,26 @@ name: P1-P10 Product Runtime Qualification
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/p1-p10-product-runtime.yml'
+      - 'lib/product/p2_*.dart'
+      - 'lib/product/product_runtime.dart'
+      - 'lib/product/browser/**'
+      - 'automation_host/**'
+      - 'tool/v70_*.py'
+      - 'tool/p3_stage_browser_runtime_bundle.py'
+      - 'tool/p9_*.py'
+      - 'tool/p10_*.py'
+      - 'tool/p2_p3_product_packaging_contract_test.py'
+      - 'test/product/p1_p10_packaged_runtime_smoke_test.dart'
+      - 'test/product/p2_p3_packaged_runtime_paths_test.dart'
+      - 'config/release_targets.v1.json'
+      - 'SOURCE_MANIFEST.sha256'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: p1-p10-product-runtime-${{ github.ref }}
@@ -15,8 +32,50 @@ env:
   KRISTIN_V70_P2_PACKAGE_SHA256: "7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0"
 
 jobs:
+  source-manifest:
+    name: p1-p10-source-manifest
+    runs-on: ubuntu-24.04
+    outputs:
+      changed: ${{ steps.sync.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13.5"
+          check-latest: false
+
+      - id: sync
+        name: Verify or synchronize governed source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p2_refresh_source_manifest.py .
+          git diff --check
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${{ github.event_name }}" != 'pull_request' ]; then
+            echo 'SOURCE_MANIFEST is stale on a non-PR invocation.' >&2
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git commit -m 'chore(repo): refresh P1-P10 source manifest'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+
   platform:
     name: p1-p10-product-${{ matrix.platform }}
+    needs: source-manifest
+    if: always() && needs.source-manifest.result == 'success'
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +91,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          fetch-depth: 0
           persist-credentials: false
+
+      - id: source
+        name: Bind exact latest candidate
+        shell: bash
+        run: |
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -78,7 +146,7 @@ jobs:
             --timeout-minutes 180 \
             --json-output "$RUNNER_TEMP/p1-p8-source-${{ matrix.platform }}.json"
 
-      - name: P9 and P10 release/readiness gates
+      - name: P9 and P10 release/readiness unit gates
         shell: bash
         run: |
           python -m unittest -v tool/p9_release_engineering_test.py
@@ -86,6 +154,46 @@ jobs:
           python -m unittest -v tool/p10_release_readiness_test.py
           python tool/p2_packaging_contract_test.py
           python tool/p2_p3_product_packaging_contract_test.py
+
+      - name: Prove P10 promotion remains fail-closed without external evidence
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, pathlib
+          path = pathlib.Path(os.environ.get('RUNNER_TEMP', '.')) / 'p10-current-evidence.json'
+          path.write_text(json.dumps({
+              'schemaVersion': 1,
+              'candidate': {
+                  'sourceCommit': os.environ['SOURCE_COMMIT'],
+                  'version': '1.9.0+190',
+                  'releasePlatforms': ['windows', 'macos', 'linux'],
+              },
+              'p1ToP8': {'evidenceCurrent': True},
+              'p9': {},
+              'p10': {},
+              'p11': {'platforms': {}},
+          }), encoding='utf-8')
+          print(path)
+          PY
+          set +e
+          python tool/p10_release_readiness.py \
+            --input "$RUNNER_TEMP/p10-current-evidence.json" \
+            --output "$RUNNER_TEMP/p10-current-readiness.json"
+          rc=$?
+          set -e
+          test "$rc" -eq 1
+          python - <<'PY'
+          import json, os, pathlib
+          report = json.loads((pathlib.Path(os.environ['RUNNER_TEMP']) / 'p10-current-readiness.json').read_text())
+          assert report['resultState'] == 'BLOCKED'
+          assert report['p10']['betaExitReady'] is False
+          assert report['p10']['rcReady'] is False
+          assert report['p10']['gaReady'] is False
+          print('P10_EXTERNAL_EVIDENCE_BOUNDARY_PASS')
+          PY
 
       - name: Build P1A/P2 native components on Linux
         if: matrix.platform == 'linux'
@@ -157,8 +265,8 @@ jobs:
             --project . \
             --platform "${{ matrix.platform }}" \
             --output .v70-stage \
-            --source-commit "${{ github.sha }}" \
-            --source-tree "$(git rev-parse HEAD^{tree})" \
+            --source-commit "${{ steps.source.outputs.commit }}" \
+            --source-tree "${{ steps.source.outputs.tree }}" \
             --p2-package-sha256 "$KRISTIN_V70_P2_PACKAGE_SHA256" \
             --configurator tool/configure-owner-risk-runtime.mjs \
             --mode product-current-account \
@@ -198,8 +306,8 @@ jobs:
             --node-executable "$NODE_EXE" \
             --browser-root "$BROWSER_ROOT" \
             --browser-executable "$BROWSER_EXEC" \
-            --source-commit "${{ github.sha }}" \
-            --source-tree "$(git rev-parse HEAD^{tree})"
+            --source-commit "${{ steps.source.outputs.commit }}" \
+            --source-tree "${{ steps.source.outputs.tree }}"
 
       - name: Build ordinary Flutter product release
         shell: bash
@@ -214,14 +322,16 @@ jobs:
             --runtime-stage .v70-stage \
             --browser-runtime-stage "$RUNNER_TEMP/p3-runtime" \
             --output-dir .v70-dist \
-            --source-commit "${{ github.sha }}" \
-            --source-tree "$(git rev-parse HEAD^{tree})" \
+            --source-commit "${{ steps.source.outputs.commit }}" \
+            --source-tree "${{ steps.source.outputs.tree }}" \
             --workflow-run-id "${{ github.run_id }}" \
             --workflow-run-attempt "${{ github.run_attempt }}" \
             --product-current-account
 
       - name: Bind exact packaged executable
         shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
         run: |
           python - <<'PY'
           import json, os, pathlib
@@ -235,8 +345,6 @@ jobs:
               handle.write(f'KRISTIN_PACKAGED_APP_EXECUTABLE={executable}\n')
           print(executable)
           PY
-        env:
-          PLATFORM: ${{ matrix.platform }}
 
       - name: Packaged P2 plus P3 end-to-end smoke
         shell: bash
@@ -252,7 +360,7 @@ jobs:
             --platform "${{ matrix.platform }}" \
             --artifact ".v70-dist/payload-${{ matrix.platform }}/app" \
             --output "$bundle" \
-            --source-commit "${{ github.sha }}"
+            --source-commit "${{ steps.source.outputs.commit }}"
           python tool/p9_release_engineering.py verify \
             --project . \
             --bundle "$bundle" \
@@ -262,8 +370,8 @@ jobs:
         with:
           name: kristin-p1-p10-product-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            .v70-dist/KRISTIN_PRODUCT_CURRENT_ACCOUNT_*.zip
-            .v70-dist/KRISTIN_PRODUCT_CURRENT_ACCOUNT_*.zip.sha256
+            .v70-dist/KRISTIN_OWNER_MODE_*.zip
+            .v70-dist/KRISTIN_OWNER_MODE_*.zip.sha256
             .v70-dist/result-${{ matrix.platform }}.json
             release/p9/kristin-${{ matrix.platform }}-combined-unsigned.zip
             release/p9/kristin-${{ matrix.platform }}-combined-unsigned.zip.provenance.json
@@ -274,6 +382,7 @@ jobs:
   tri-platform-product-gate:
     name: p1-p10-tri-platform-product-gate
     needs: platform
+    if: always() && needs.platform.result == 'success'
     runs-on: ubuntu-24.04
     steps:
       - run: |
