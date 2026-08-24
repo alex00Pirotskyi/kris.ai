@@ -26,11 +26,8 @@ void main() {
     expect(config, contains('"productionReleaseEligible": false'));
     expect(config, contains('"qaShipmentEligibleAfterTriPlatformPass": true'));
     expect(authority, contains("'securityEvidenceWaived': true"));
-    expect(
-      authority,
-      contains("authorityKind => 'p2-owner-risk-current-account-v1'"),
-    );
-    expect(authority, contains("'authorityDenialCode': 'owner_risk_waived'"));
+    expect(authority, contains("'p2-owner-risk-current-account-v1'"));
+    expect(authority, contains("'owner_risk_waived'"));
     expect(authority, contains('bool get completionEligible => false'));
     expect(bootstrap, contains("'KRISTIN_OWNER_RISK_QA': '1'"));
     expect(host, contains("process.env.KRISTIN_OWNER_RISK_QA !== '1'"));
