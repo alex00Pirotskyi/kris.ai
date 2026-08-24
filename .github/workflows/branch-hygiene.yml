@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: owner-single-click-product-smoke-${{ github.ref }}
+  group: owner-single-click-product-smoke-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev build-essential
           python tool/p1a_bootstrap_hosted_cmake.py --project .
-      - name: Apply explicit product transport, authority chain and bundle mode
+      - name: Apply product transport, authority chain and relocatable bundle
         shell: bash
         run: |
           set -euo pipefail
@@ -59,11 +59,13 @@ jobs:
             tool/owner_single_click_transport_fix.py \
             tool/owner_single_click_chain_fix.py \
             tool/owner_single_click_chain_repair.py \
-            tool/owner_single_click_bundle_fix.py
+            tool/owner_single_click_bundle_fix.py \
+            tool/owner_single_click_relocatable_fix.py
           python tool/owner_single_click_transport_fix.py
           python tool/owner_single_click_chain_repair.py
           python tool/owner_single_click_chain_fix.py
           python tool/owner_single_click_bundle_fix.py
+          python tool/owner_single_click_relocatable_fix.py
           node --check automation_host/src/authenticated-ipc.mjs
           node --check automation_host/src/owner-risk-launcher.mjs
           node --check tool/configure-owner-risk-runtime.mjs
@@ -75,6 +77,7 @@ jobs:
             lib/product/p2_automation_host_process_client.dart \
             lib/product/p2_runtime_resource_resolver.dart \
             lib/product/p2_product_runtime_bootstrap.dart \
+            test/product/p2_owner_risk_runtime_smoke_test.dart \
             test/product/p2_single_click_owner_mode_test.dart
       - name: Resolve dependencies and focused contracts
         shell: bash
@@ -103,7 +106,7 @@ jobs:
           cmake --build .p1a-worker-linux --parallel 2
           cmake -S automation_host/native/posix -B .p2-native-posix -DCMAKE_BUILD_TYPE=Release
           cmake --build .p2-native-posix --parallel 2
-      - name: Stage product current-account runtime
+      - name: Stage relocatable product current-account runtime
         shell: bash
         env:
           KRISTIN_V70_P2_PACKAGE_SHA256: 7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0
@@ -124,13 +127,17 @@ jobs:
           root=pathlib.Path('.v70-stage/runtime')
           manifest=json.loads((root/'runtime-manifest.v3.json').read_text())
           env=json.loads((root/'provisioning/environment.v1.json').read_text())['environment']
+          policy=json.loads((root/'provisioning/worker-policy.v2.json').read_text())
           assert manifest['productCurrentAccount'] is True
           assert manifest['ownerRiskQa'] is False
           assert env['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT']=='1'
           assert 'KRISTIN_OWNER_RISK_QA' not in env
-          print('PRODUCT_CURRENT_ACCOUNT_STAGE_OK')
+          assert 'KRISTIN_P2_E2E_ROOT' not in env
+          for key in ('nodeExecutable','hostScript','workingDirectory','launcherPath'):
+            assert not pathlib.PurePath(policy[key]).is_absolute(), (key, policy[key])
+          print('RELOCATABLE_PRODUCT_STAGE_OK')
           PY
-      - name: Prove packaged runtime self-relocates into app-owned storage
+      - name: Prove packaged runtime self-relocates without mutating digest
         shell: bash
         run: |
           set -euo pipefail
@@ -147,13 +154,17 @@ jobs:
             test('bundled product runtime relocates and resolves without QA mode', () async {
               final appData = Directory('.bundle-data').absolute;
               final executable = File('.bundle-app/kristin').absolute.path;
+              final sourceManifest = await File('.bundle-app/runtime/p2/current/runtime-manifest.v3.json').readAsBytes();
               final prepared = await P2BundledCurrentAccountRuntime.prepareIfPresent(
                 applicationDataRoot: appData,
                 executablePath: executable,
               );
               expect(prepared, isTrue);
+              final targetManifest = await File('${appData.path}/runtime/p2/current/runtime-manifest.v3.json').readAsBytes();
+              expect(targetManifest, sourceManifest);
               final resources = await P2ApplicationOwnedRuntimeResourceResolver(
                 applicationDataRoot: appData,
+                executablePath: executable,
               ).resolve();
               expect(resources.provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'], '1');
               expect(resources.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA'), isFalse);
@@ -196,7 +207,7 @@ jobs:
           assert len(archives)==1
           print('PRODUCT_OWNER_PACKAGE_OK', archives[0])
           PY
-      - name: Publish exact qualified authority-chain and bundle fix
+      - name: Publish exact qualified single-click runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -206,11 +217,12 @@ jobs:
             tool/owner_single_click_transport_fix.py \
             tool/owner_single_click_chain_fix.py \
             tool/owner_single_click_chain_repair.py \
-            tool/owner_single_click_bundle_fix.py
+            tool/owner_single_click_bundle_fix.py \
+            tool/owner_single_click_relocatable_fix.py
           python tool/p1a_refresh_source_manifest.py .
           git add -A
           git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(owner): make product current-account authority chain explicit'
+          git commit -m 'fix(owner): make bundled current-account runtime relocatable'
           git push origin HEAD:hotfix/owner-mode-single-click-provisioning
