@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'domain.dart';
+import 'storage_security.dart';
 
 const String builtInSearchProviderId = 'duckduckgo-html';
 const String braveSearchProviderId = 'brave-api';
@@ -739,7 +740,7 @@ Future<T> _awaitCancellationAwareRaw<T>(
 ) async {
   _throwIfCancelledRaw(isCancelled);
   if (cancellation == null) return operation;
-  return Future<T>.any(<Future<T>>[
+  return Future.any<T>(<Future<T>>[
     operation,
     cancellation.then<T>((_) {
       throw ProductException('cancelled', 'Execution was cancelled.');
