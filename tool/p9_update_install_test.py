@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import json
+import os
 from pathlib import Path
 import shutil
+import stat
 import sys
 import tempfile
 import unittest
@@ -93,24 +95,52 @@ class P9UpdateInstallTest(unittest.TestCase):
             now=NOW,
         )
 
+    def _write_managed_install(
+        self,
+        root: Path,
+        *,
+        version: str,
+        content: bytes = b"old-version",
+        file_name: str = "app.bin",
+    ) -> None:
+        payload = root / "payload"
+        payload.mkdir(parents=True)
+        target = payload / file_name
+        target.write_bytes(content)
+        if os.name != "nt":
+            os.chmod(target, 0o644)
+        mode = stat.S_IMODE(target.stat().st_mode)
+        manifest = {
+            "schemaVersion": 1,
+            "product": updater.PRODUCT_NAME,
+            "version": version,
+            "platform": "linux",
+            "files": [{
+                "path": file_name,
+                "type": "file",
+                "mode": mode,
+                "bytes": len(content),
+                "sha256": updater._sha256_file(target),
+            }],
+        }
+        (root / updater.RELEASE_MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+
     def test_signed_update_verification_and_transactional_rollback(self) -> None:
         verified = self._verify()
         install_root = self.root / "installed"
-        install_root.mkdir()
-        (install_root / "old.txt").write_text("old-version", encoding="utf-8")
+        self._write_managed_install(install_root, version="1.9.0+190")
         installed = install_verified_update(bundle=self.bundle, install_root=install_root, verified_payload=verified)
         self.assertEqual(installed["resultState"], "PASS")
         self.assertTrue(installed["rollbackAvailable"])
         self.assertEqual((install_root / "payload" / "app.bin").read_bytes(), b"new-version")
         restored = rollback(install_root)
         self.assertEqual(restored["resultState"], "PASS")
-        self.assertEqual((install_root / "old.txt").read_text(), "old-version")
+        self.assertEqual((install_root / "payload" / "app.bin").read_bytes(), b"old-version")
 
     def test_accept_discards_verified_rollback_only_and_blocks_replay(self) -> None:
         verified = self._verify()
         install_root = self.root / "accepted-install"
-        install_root.mkdir()
-        (install_root / "old.txt").write_text("old-version", encoding="utf-8")
+        self._write_managed_install(install_root, version="1.9.0+190")
         installed = install_verified_update(bundle=self.bundle, install_root=install_root, verified_payload=verified)
         self.assertTrue(installed["rollbackAvailable"])
         with self.assertRaises(UpdateInstallError) as caught:
@@ -129,8 +159,7 @@ class P9UpdateInstallTest(unittest.TestCase):
     def test_accept_refuses_tampered_current_install(self) -> None:
         verified = self._verify()
         install_root = self.root / "tampered-accept"
-        install_root.mkdir()
-        (install_root / "old.txt").write_text("old-version", encoding="utf-8")
+        self._write_managed_install(install_root, version="1.9.0+190")
         install_verified_update(bundle=self.bundle, install_root=install_root, verified_payload=verified)
         (install_root / "payload" / "app.bin").write_bytes(b"tampered")
         with self.assertRaises(UpdateInstallError) as caught:
@@ -178,6 +207,7 @@ class P9UpdateInstallTest(unittest.TestCase):
         bad_bundle = self.root / "bad-release.zip"
         manifest = {
             "schemaVersion": 1,
+            "product": updater.PRODUCT_NAME,
             "version": "1.9.1+191",
             "platform": "linux",
             "files": [{"path": "app.bin", "bytes": 3, "sha256": "0" * 64}],
@@ -188,25 +218,24 @@ class P9UpdateInstallTest(unittest.TestCase):
             archive.writestr("KRISTIN_SBOM.spdx.json", json.dumps({"spdxVersion": "SPDX-2.3", "packages": [{"name": "fixture"}]}))
         verified = self._verify(self._envelope(bad_bundle), bad_bundle)
         install_root = self.root / "installed-failure"
-        install_root.mkdir()
-        (install_root / "old.txt").write_text("survives", encoding="utf-8")
+        self._write_managed_install(install_root, version="1.9.0+190", content=b"survives")
         with self.assertRaises(UpdateInstallError) as caught:
             install_verified_update(bundle=bad_bundle, install_root=install_root, verified_payload=verified)
         self.assertEqual(caught.exception.code, "installed_file_digest")
-        self.assertEqual((install_root / "old.txt").read_text(), "survives")
+        self.assertEqual((install_root / "payload" / "app.bin").read_bytes(), b"survives")
         self.assertFalse(updater._journal_path(install_root).exists())
 
     def test_interrupted_recovery_restores_previous_and_rejects_unsafe_journal(self) -> None:
         install_root = self.root / "recover-install"
-        install_root.mkdir()
-        (install_root / "broken.txt").write_text("broken")
+        self._write_managed_install(install_root, version="1.9.1+191", content=b"broken-new")
         previous = updater._backup_path(install_root)
-        previous.mkdir()
-        (previous / "old.txt").write_text("old")
-        stage = self.root / f".{install_root.name}.stage-fixture"
+        self._write_managed_install(previous, version="1.9.0+190", content=b"old")
+        transaction_id = "a" * 32
+        stage = self.root / f".{install_root.name}.stage-{transaction_id}"
         stage.mkdir()
         updater._write_atomic(updater._journal_path(install_root), {
             "schemaVersion": 1,
+            "transactionId": transaction_id,
             "installRoot": str(install_root),
             "stage": str(stage),
             "previous": str(previous),
@@ -217,13 +246,14 @@ class P9UpdateInstallTest(unittest.TestCase):
         })
         result = recover_interrupted(install_root)
         self.assertEqual(result["recovery"], "RESTORED_PREVIOUS")
-        self.assertEqual((install_root / "old.txt").read_text(), "old")
+        self.assertEqual((install_root / "payload" / "app.bin").read_bytes(), b"old")
         self.assertFalse(stage.exists())
 
         unsafe = self.root / "unrelated-directory"
         unsafe.mkdir()
         updater._write_atomic(updater._journal_path(install_root), {
             "schemaVersion": 1,
+            "transactionId": "b" * 32,
             "installRoot": str(install_root),
             "stage": str(unsafe),
             "previous": str(updater._backup_path(install_root)),
@@ -241,6 +271,7 @@ class P9UpdateInstallTest(unittest.TestCase):
         bad_bundle = self.root / "bad-fresh.zip"
         manifest = {
             "schemaVersion": 1,
+            "product": updater.PRODUCT_NAME,
             "version": "1.9.1+191",
             "platform": "linux",
             "files": [{"path": "app.bin", "type": "file", "mode": 384, "bytes": 3, "sha256": "0" * 64}],
@@ -285,16 +316,63 @@ class P9UpdateInstallTest(unittest.TestCase):
         evil = self.root / "evil.zip"
         with zipfile.ZipFile(evil, "w") as archive:
             archive.writestr("../escape.txt", b"escape")
-            archive.writestr(updater.RELEASE_MANIFEST, json.dumps({"version": "1.9.1+191", "platform": "linux", "files": []}))
+            archive.writestr(updater.RELEASE_MANIFEST, json.dumps({
+                "schemaVersion": 1,
+                "product": updater.PRODUCT_NAME,
+                "version": "1.9.1+191",
+                "platform": "linux",
+                "files": [],
+            }))
         verified = self._verify(self._envelope(evil), evil)
         install_root = self.root / "safe-install"
-        install_root.mkdir()
-        (install_root / "old.txt").write_text("old")
+        self._write_managed_install(install_root, version="1.9.0+190")
         with self.assertRaises(UpdateInstallError) as caught:
             install_verified_update(bundle=evil, install_root=install_root, verified_payload=verified)
         self.assertEqual(caught.exception.code, "archive_path")
-        self.assertEqual((install_root / "old.txt").read_text(), "old")
+        self.assertEqual((install_root / "payload" / "app.bin").read_bytes(), b"old-version")
         self.assertFalse((self.root / "escape.txt").exists())
+
+    def test_existing_unmanaged_directory_is_never_adopted_or_uninstalled(self) -> None:
+        verified = self._verify()
+        install_root = self.root / "unmanaged"
+        install_root.mkdir()
+        sentinel = install_root / "sentinel.txt"
+        sentinel.write_text("keep", encoding="utf-8")
+        with self.assertRaises(UpdateInstallError) as caught:
+            install_verified_update(bundle=self.bundle, install_root=install_root, verified_payload=verified)
+        self.assertEqual(caught.exception.code, "install_root_unmanaged")
+        self.assertTrue(sentinel.exists())
+        self.assertFalse(updater._journal_path(install_root).exists())
+
+        with self.assertRaises(UpdateInstallError) as caught:
+            updater.uninstall(install_root)
+        self.assertEqual(caught.exception.code, "install_root_unmanaged")
+        self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep")
+
+    def test_unmanaged_rollback_backup_is_never_deleted_or_restored(self) -> None:
+        verified = self._verify()
+        install_root = self.root / "managed-with-foreign-backup"
+        install_verified_update(bundle=self.bundle, install_root=install_root, verified_payload=verified)
+        previous = updater._backup_path(install_root)
+        previous.mkdir()
+        sentinel = previous / "sentinel.txt"
+        sentinel.write_text("foreign", encoding="utf-8")
+
+        for operation in (accept_update, rollback, updater.uninstall):
+            with self.subTest(operation=operation.__name__):
+                with self.assertRaises(UpdateInstallError) as caught:
+                    operation(install_root)
+                self.assertEqual(caught.exception.code, "rollback_backup_unmanaged")
+                self.assertTrue(install_root.exists())
+                self.assertEqual(sentinel.read_text(encoding="utf-8"), "foreign")
+
+    def test_verified_fresh_install_can_be_uninstalled(self) -> None:
+        verified = self._verify()
+        install_root = self.root / "verified-uninstall"
+        install_verified_update(bundle=self.bundle, install_root=install_root, verified_payload=verified)
+        result = updater.uninstall(install_root)
+        self.assertTrue(result["uninstalled"])
+        self.assertFalse(install_root.exists())
 
 
 if __name__ == "__main__":

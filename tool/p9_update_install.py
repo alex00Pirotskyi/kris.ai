@@ -25,6 +25,7 @@ from signed_manifest_v2 import ExternalKeyring, ManifestVerificationError, Trust
 
 UPDATE_USE = "kristin.release.update"
 UPDATE_DOMAIN = "kristin.release"
+PRODUCT_NAME = "Kristin Local Agent"
 SUPPORTED_PLATFORMS = frozenset({"windows", "macos", "linux"})
 RELEASE_MANIFEST = "KRISTIN_RELEASE_MANIFEST.json"
 
@@ -45,6 +46,10 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _path_present(path: Path) -> bool:
+    return os.path.lexists(path)
 
 
 def _safe_archive_name(value: str) -> str:
@@ -170,6 +175,11 @@ def _load_installed_manifest(install_root: Path) -> dict[str, Any]:
         raise UpdateInstallError("installed_manifest", f"installed release manifest is missing or invalid: {exc}") from exc
     if not isinstance(value, dict):
         raise UpdateInstallError("installed_manifest", "installed release manifest must be an object")
+    if value.get("schemaVersion") != 1 or value.get("product") != PRODUCT_NAME:
+        raise UpdateInstallError("installed_manifest", "installed release manifest is not a Kristin P9 release manifest")
+    if value.get("platform") not in SUPPORTED_PLATFORMS:
+        raise UpdateInstallError("installed_manifest", "installed release manifest has an unsupported platform")
+    _parse_version(str(value.get("version") or ""))
     return value
 
 
@@ -214,8 +224,13 @@ def _extract_bundle(bundle: Path, destination: Path, *, expected_version: str, p
             raise UpdateInstallError("release_manifest", "release manifest is missing or invalid") from exc
         if not isinstance(manifest, dict):
             raise UpdateInstallError("release_manifest", "release manifest must be an object")
-        if manifest.get("version") != expected_version or manifest.get("platform") != platform:
-            raise UpdateInstallError("release_manifest", "release manifest version/platform does not match signed metadata")
+        if (
+            manifest.get("schemaVersion") != 1
+            or manifest.get("product") != PRODUCT_NAME
+            or manifest.get("version") != expected_version
+            or manifest.get("platform") != platform
+        ):
+            raise UpdateInstallError("release_manifest", "release manifest identity/version/platform does not match signed metadata")
         rows = manifest.get("files")
         if not isinstance(rows, list) or not rows:
             raise UpdateInstallError("release_manifest", "release manifest contains no payload files")
@@ -305,6 +320,26 @@ def _verify_installed_tree(install_root: Path, manifest: Mapping[str, Any]) -> N
             raise UpdateInstallError("installed_file_type", f"unsupported installed payload type: {entry_type}")
 
 
+def _require_managed_install(
+    install_root: Path,
+    *,
+    role: str,
+    verify_tree: bool = True,
+) -> dict[str, Any]:
+    code = f"{role}_unmanaged"
+    if install_root.is_symlink() or not install_root.is_dir() or not (install_root / RELEASE_MANIFEST).is_file():
+        raise UpdateInstallError(code, f"{role.replace('_', ' ')} is not a managed Kristin installation")
+    try:
+        manifest = _load_installed_manifest(install_root)
+    except UpdateInstallError as exc:
+        if exc.code == "installed_manifest":
+            raise UpdateInstallError(code, f"{role.replace('_', ' ')} does not contain a valid Kristin release manifest") from exc
+        raise
+    if verify_tree:
+        _verify_installed_tree(install_root, manifest)
+    return manifest
+
+
 def install_verified_update(
     *,
     bundle: Path,
@@ -318,14 +353,14 @@ def install_verified_update(
     parent = install_root.parent
     parent.mkdir(parents=True, exist_ok=True)
     journal = _journal_path(install_root)
-    if journal.exists():
+    if _path_present(journal):
         raise UpdateInstallError("recovery_required", "an update journal already exists; recover before installing")
     previous = _backup_path(install_root)
-    if previous.exists():
+    if _path_present(previous):
         raise UpdateInstallError("rollback_pending", "previous-version backup already exists; accept or roll back before updating again")
-    if install_root.exists() and (install_root / RELEASE_MANIFEST).is_file():
-        current_manifest = _load_installed_manifest(install_root)
-        _verify_installed_tree(install_root, current_manifest)
+    had_previous = _path_present(install_root)
+    if had_previous:
+        current_manifest = _require_managed_install(install_root, role="install_root")
         installed_version = str(current_manifest.get("version") or "")
         if verified_payload.get("currentVersion") != installed_version:
             raise UpdateInstallError(
@@ -336,7 +371,6 @@ def install_verified_update(
             raise UpdateInstallError("version_not_newer", "normal update must move to a newer installed version")
     transaction_id = uuid.uuid4().hex
     stage = parent / f".{install_root.name}.stage-{transaction_id}"
-    had_previous = install_root.exists()
     state = {
         "schemaVersion": 1,
         "transactionId": transaction_id,
@@ -376,12 +410,12 @@ def install_verified_update(
             "resultState": "PASS",
             "transactionId": transaction_id,
             "version": verified_payload["version"],
-            "rollbackAvailable": previous.exists(),
+            "rollbackAvailable": _path_present(previous),
             "installRoot": str(install_root),
         }
     except Exception:
         _remove_path(stage)
-        if previous.exists():
+        if _path_present(previous):
             _remove_path(install_root)
             os.replace(previous, install_root)
         elif not had_previous and state.get("phase") in {"ACTIVATED", "COMMITTED"}:
@@ -391,15 +425,15 @@ def install_verified_update(
 
 
 def accept_update(install_root: Path) -> dict[str, Any]:
-    if _journal_path(install_root).exists():
+    if _path_present(_journal_path(install_root)):
         raise UpdateInstallError("recovery_required", "recover interrupted update before accepting it")
-    if not install_root.exists():
+    if not _path_present(install_root):
         raise UpdateInstallError("install_missing", "cannot accept an update because the current installation is missing")
-    manifest = _load_installed_manifest(install_root)
-    _verify_installed_tree(install_root, manifest)
+    manifest = _require_managed_install(install_root, role="install_root")
     previous = _backup_path(install_root)
-    rollback_was_available = previous.exists()
+    rollback_was_available = _path_present(previous)
     if rollback_was_available:
+        _require_managed_install(previous, role="rollback_backup")
         _remove_path(previous)
     return {
         "schemaVersion": 1,
@@ -413,25 +447,28 @@ def accept_update(install_root: Path) -> dict[str, Any]:
 
 def rollback(install_root: Path) -> dict[str, Any]:
     previous = _backup_path(install_root)
-    if not previous.exists():
+    if not _path_present(previous):
         raise UpdateInstallError("rollback_unavailable", "no previous installation is available")
+    _require_managed_install(previous, role="rollback_backup")
+    if _path_present(install_root):
+        _require_managed_install(install_root, role="install_root", verify_tree=False)
     failed = install_root.parent / f".{install_root.name}.failed-{uuid.uuid4().hex}"
-    if install_root.exists():
+    if _path_present(install_root):
         os.replace(install_root, failed)
     try:
         os.replace(previous, install_root)
     except Exception:
-        if failed.exists() and not install_root.exists():
+        if _path_present(failed) and not _path_present(install_root):
             os.replace(failed, install_root)
         raise
-    if failed.exists():
-        shutil.rmtree(failed, ignore_errors=True)
+    if _path_present(failed):
+        _remove_path(failed)
     return {"schemaVersion": 1, "resultState": "PASS", "rollbackRestored": True, "installRoot": str(install_root)}
 
 
 def recover_interrupted(install_root: Path) -> dict[str, Any]:
     journal = _journal_path(install_root)
-    if not journal.exists():
+    if not _path_present(journal):
         return {"schemaVersion": 1, "resultState": "PASS", "recovery": "NOT_REQUIRED"}
     try:
         state = json.loads(journal.read_text(encoding="utf-8"))
@@ -441,14 +478,18 @@ def recover_interrupted(install_root: Path) -> dict[str, Any]:
         raise UpdateInstallError("journal_corrupt", "update journal schema is invalid")
     if Path(str(state.get("installRoot") or "")).resolve() != install_root.resolve():
         raise UpdateInstallError("journal_unsafe", "journal install root does not match the requested installation")
+    transaction_id = str(state.get("transactionId") or "")
+    if not re.fullmatch(r"[0-9a-f]{32}", transaction_id):
+        raise UpdateInstallError("journal_corrupt", "update journal transaction identity is invalid")
     stage = Path(str(state.get("stage") or ""))
     previous = Path(str(state.get("previous") or ""))
     expected_parent = install_root.parent.resolve()
+    expected_stage = expected_parent / f".{install_root.name}.stage-{transaction_id}"
     expected_previous = _backup_path(install_root).resolve()
     stage_resolved = stage.resolve()
     previous_resolved = previous.resolve()
-    if stage_resolved.parent != expected_parent or not stage.name.startswith(f".{install_root.name}.stage-"):
-        raise UpdateInstallError("journal_unsafe", "journal stage path is outside the update transaction namespace")
+    if stage_resolved != expected_stage.resolve():
+        raise UpdateInstallError("journal_unsafe", "journal stage path is outside the exact update transaction namespace")
     if previous_resolved != expected_previous:
         raise UpdateInstallError("journal_unsafe", "journal backup path is not the canonical rollback path")
     phase = state.get("phase")
@@ -458,15 +499,18 @@ def recover_interrupted(install_root: Path) -> dict[str, Any]:
 
     if phase == "COMMITTED":
         try:
-            manifest = _load_installed_manifest(install_root)
+            manifest = _require_managed_install(install_root, role="install_root")
             if manifest.get("version") != state.get("version") or manifest.get("platform") != state.get("platform"):
                 raise UpdateInstallError("installed_manifest", "committed install metadata does not match the transaction journal")
-            _verify_installed_tree(install_root, manifest)
         except Exception:
-            if previous.exists():
-                _remove_path(install_root)
+            if _path_present(previous):
+                _require_managed_install(previous, role="rollback_backup")
+                if _path_present(install_root):
+                    _require_managed_install(install_root, role="install_root", verify_tree=False)
+                    _remove_path(install_root)
                 os.replace(previous, install_root)
-            elif not had_previous:
+            elif not had_previous and _path_present(install_root):
+                _require_managed_install(install_root, role="install_root", verify_tree=False)
                 _remove_path(install_root)
             raise
         journal.unlink(missing_ok=True)
@@ -475,13 +519,17 @@ def recover_interrupted(install_root: Path) -> dict[str, Any]:
     _remove_path(stage)
     if phase in {"BACKED_UP", "ACTIVATED"}:
         if had_previous:
-            if not previous.exists():
+            if not _path_present(previous):
                 raise UpdateInstallError("recovery_incomplete", "previous installation is missing; automatic recovery cannot continue")
-            _remove_path(install_root)
+            _require_managed_install(previous, role="rollback_backup")
+            if _path_present(install_root):
+                _require_managed_install(install_root, role="install_root", verify_tree=False)
+                _remove_path(install_root)
             os.replace(previous, install_root)
             recovery = "RESTORED_PREVIOUS"
         else:
-            if phase == "ACTIVATED":
+            if phase == "ACTIVATED" and _path_present(install_root):
+                _require_managed_install(install_root, role="install_root", verify_tree=False)
                 _remove_path(install_root)
             recovery = "RESTORED_NOT_INSTALLED"
     else:
@@ -491,21 +539,24 @@ def recover_interrupted(install_root: Path) -> dict[str, Any]:
 
 
 def uninstall(install_root: Path) -> dict[str, Any]:
-    if _journal_path(install_root).exists():
+    if _path_present(_journal_path(install_root)):
         raise UpdateInstallError("recovery_required", "recover interrupted update before uninstall")
-    if not install_root.exists():
+    if not _path_present(install_root):
         return {"schemaVersion": 1, "resultState": "PASS", "uninstalled": False, "reason": "NOT_INSTALLED"}
+    _require_managed_install(install_root, role="install_root")
+    previous = _backup_path(install_root)
+    if _path_present(previous):
+        _require_managed_install(previous, role="rollback_backup")
     quarantine = install_root.parent / f".{install_root.name}.uninstall-{uuid.uuid4().hex}"
     os.replace(install_root, quarantine)
     try:
-        shutil.rmtree(quarantine)
+        _remove_path(quarantine)
     except Exception:
-        if not install_root.exists() and quarantine.exists():
+        if not _path_present(install_root) and _path_present(quarantine):
             os.replace(quarantine, install_root)
         raise
-    previous = _backup_path(install_root)
-    if previous.exists():
-        shutil.rmtree(previous)
+    if _path_present(previous):
+        _remove_path(previous)
     return {"schemaVersion": 1, "resultState": "PASS", "uninstalled": True}
 
 
