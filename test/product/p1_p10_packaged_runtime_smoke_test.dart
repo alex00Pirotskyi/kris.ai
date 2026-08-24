@@ -75,9 +75,8 @@ Future<Map<String, Object?>> _runHostedLinuxQualificationProbe({
     mode: ProcessStartMode.normal,
   );
   final stderr = StringBuffer();
-  final stderrSubscription = process.stderr
-      .transform(utf8.decoder)
-      .listen(stderr.write);
+  final stderrSubscription =
+      process.stderr.transform(utf8.decoder).listen(stderr.write);
   try {
     final line = await process.stdout
         .transform(utf8.decoder)
@@ -229,7 +228,10 @@ void main() {
         );
         expect(handle.available, true, reason: handle.failureCode);
         final owner = handle.runtime!;
-        handle.activateEffectContext(runId: 'p1-p10-package', taskId: 'P1-P10');
+        handle.activateEffectContext(
+          runId: 'p1-p10-package',
+          taskId: 'P1-P10',
+        );
         await owner.controller.enable(
           unattended: true,
           approvalPolicy: P2OwnerApprovalPolicy.destructiveOnly,
