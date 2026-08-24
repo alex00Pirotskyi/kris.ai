@@ -76,19 +76,25 @@ final class P2ProductRuntimeOwnerMode {
     required P2ClipboardTextWriter writeClipboardText,
     required P2TranscriptFileWriter writeTranscriptFile,
     required Future<void> Function(Map<String, Object?> value)
-        persistOwnerSettings,
+    persistOwnerSettings,
     required Future<void> Function() clearOwnerSettings,
+    P2OwnerModeEnableAuthorizer? authorizeOwnerModeEnable,
+    Future<void> Function()? clearOwnerModeAuthorization,
     required String emergencyWatchdogId,
     required P2ProductBindingContext bindingContext,
     required P2ManagedAuthorizationRegistry authorizationRegistry,
   }) async {
-    final productionAuthority = authority.completionEligible &&
-        authority.authorityKind == 'p1-isolated-authority-service-v2';
-    final ownerRiskAuthority = authority.qaPreview &&
+    final secureP1aAuthority =
+        authority.authorityKind == 'p1-isolated-authority-service-v2' &&
+        (authority.completionEligible ||
+            authority.authorityProvenance['runtimeEligible'] == true) &&
+        authority.authorityProvenance['secureIsolationActive'] != false;
+    final ownerRiskAuthority =
+        authority.qaPreview &&
         !authority.completionEligible &&
         authority.authorityKind == 'p2-owner-risk-current-account-v1' &&
         authority.authorityProvenance['securityEvidenceWaived'] == true;
-    if (!(productionAuthority || ownerRiskAuthority)) {
+    if (!(secureP1aAuthority || ownerRiskAuthority)) {
       throw StateError('fixture_or_unapproved_authority_rejected');
     }
     await stateDirectory.create(recursive: true);
@@ -101,46 +107,49 @@ final class P2ProductRuntimeOwnerMode {
       hostBindingProvider: hostBindingProvider,
       processAuthorizationFor: processAuthorizationFor,
       watchdogAuthorizationFor: watchdogAuthorizationFor,
-      onPtySessionOpened: (
-        P2PtyOpenRequest request,
-        P2PtySession session,
-        P2EffectBinding binding,
-        String grantDigest,
-      ) async {
-        final watchdogId = 'pty-${session.sessionId}';
-        final watchdogAuthorization = P2WatchdogAuthorization(
-          binding: binding,
-          grantDigest: grantDigest,
-          sessionId: session.sessionId,
-          processIdentity: session.processIdentity,
-        );
-        await runtime.supervise(
-          binding: P2SupervisedRunBinding(
-            watchdogId: watchdogId,
-            sessionId: session.sessionId,
-            processIdentity: session.processIdentity,
-            authorization: watchdogAuthorization,
-          ),
-        );
-        terminal.add(
-          P2TerminalTab(
-            id: session.sessionId,
-            title: 'Terminal ${terminal.tabs.length + 1}',
-            shell: request.shell,
-            cwd: request.cwd,
-            runId: session.runId,
-            taskId: session.taskId,
-            grantId: grantDigest,
-            attached: true,
-            accessibilityLabel:
-                'Owner terminal ${terminal.tabs.length + 1}, run ${session.runId}, task ${session.taskId}',
-          ),
-        );
-      },
+      onPtySessionOpened:
+          (
+            P2PtyOpenRequest request,
+            P2PtySession session,
+            P2EffectBinding binding,
+            String grantDigest,
+          ) async {
+            final watchdogId = 'pty-${session.sessionId}';
+            final watchdogAuthorization = P2WatchdogAuthorization(
+              binding: binding,
+              grantDigest: grantDigest,
+              sessionId: session.sessionId,
+              processIdentity: session.processIdentity,
+            );
+            await runtime.supervise(
+              binding: P2SupervisedRunBinding(
+                watchdogId: watchdogId,
+                sessionId: session.sessionId,
+                processIdentity: session.processIdentity,
+                authorization: watchdogAuthorization,
+              ),
+            );
+            terminal.add(
+              P2TerminalTab(
+                id: session.sessionId,
+                title: 'Terminal ${terminal.tabs.length + 1}',
+                shell: request.shell,
+                cwd: request.cwd,
+                runId: session.runId,
+                taskId: session.taskId,
+                grantId: grantDigest,
+                attached: true,
+                accessibilityLabel:
+                    'Owner terminal ${terminal.tabs.length + 1}, run ${session.runId}, task ${session.taskId}',
+              ),
+            );
+          },
     );
     final controller = P2OwnerModeController(
       persistOwnerSettings,
       clearOwnerSettings,
+      authorizeEnable: authorizeOwnerModeEnable,
+      clearAuthorization: clearOwnerModeAuthorization,
     );
     final emergency = P2EmergencyController(composition.watchdogTransport);
     final actions = P2OwnerWorkspaceServiceActions(
@@ -181,26 +190,29 @@ final class P2ProductRuntimeOwnerMode {
   }
 
   Map<String, Object?> get runtimeProvenance => <String, Object?>{
-        'entryPoint':
-            'ProductRuntime.initialize -> P2ProductRuntimeBootstrap.start',
-        'shippedProductRuntime': true,
-        'applicationCompositionPatched': true,
-        'ownerRuntime': 'P2ProductRuntimeOwnerMode',
-        'authority': authority.authorityProvenance,
-        'bindingContext': bindingContext.provenance,
-        'authorizationRegistry': authorizationRegistry.provenance,
-        'watchdogLifecycleOwnedByProductRuntime': true,
-        'watchdogAutomaticallyArmed': _supervised.isNotEmpty,
-        'fixtureAuthorityEligible': false,
-        'ownerRiskQa': authority.qaPreview,
-      };
+    'entryPoint':
+        'ProductRuntime.initialize -> P2ProductRuntimeBootstrap.start',
+    'shippedProductRuntime': true,
+    'applicationCompositionPatched': true,
+    'ownerRuntime': 'P2ProductRuntimeOwnerMode',
+    'authority': authority.authorityProvenance,
+    'bindingContext': bindingContext.provenance,
+    'authorizationRegistry': authorizationRegistry.provenance,
+    'watchdogLifecycleOwnedByProductRuntime': true,
+    'watchdogAutomaticallyArmed': _supervised.isNotEmpty,
+    'fixtureAuthorityEligible': false,
+    'ownerRiskQa': authority.qaPreview,
+    'secureIsolationActive':
+        authority.authorityProvenance['secureIsolationActive'] == true,
+    'productionCertificationComplete': authority.completionEligible,
+  };
 
   Widget buildWorkspace({Key? key}) => P2OwnerWorkspace(
-        key: key,
-        controller: controller,
-        terminalModel: terminalModel,
-        actions: actions,
-      );
+    key: key,
+    controller: controller,
+    terminalModel: terminalModel,
+    actions: actions,
+  );
 
   /// Called by the shipped runtime immediately after a managed session starts.
   Future<void> supervise({
@@ -281,10 +293,10 @@ final class P2ProductRuntimeOwnerMode {
   }
 
   Map<String, Object?> supervisionSnapshot() => <String, Object?>{
-        'watchdogIds': _supervised.keys.toList(growable: false)..sort(),
-        'heartbeatCount': _heartbeats.length,
-        'automaticallyArmed': _supervised.isNotEmpty,
-      };
+    'watchdogIds': _supervised.keys.toList(growable: false)..sort(),
+    'heartbeatCount': _heartbeats.length,
+    'automaticallyArmed': _supervised.isNotEmpty,
+  };
   Future<void> completeSupervision(
     String watchdogId, {
     required bool processTreeStopped,

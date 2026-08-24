@@ -106,20 +106,20 @@ class P1AuthorityServiceEndpointV1 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'platform': platform,
-        'transport': transport,
-        'address': address,
-        'serviceInstanceId': serviceInstanceId,
-        'serviceBuildSha256': serviceBuildSha256,
-        'connectorLibrarySha256': connectorLibrarySha256,
-        'installerSha256': installerSha256,
-        'serverIdentity': serverIdentity,
-        'osEnforcedIsolation': osEnforcedIsolation,
-        'workerPrincipalSeparated': workerPrincipalSeparated,
-        'typedOperationsOnly': typedOperationsOnly,
-        'nonExportableKeys': nonExportableKeys,
-      };
+    'schemaVersion': '2.0.0',
+    'platform': platform,
+    'transport': transport,
+    'address': address,
+    'serviceInstanceId': serviceInstanceId,
+    'serviceBuildSha256': serviceBuildSha256,
+    'connectorLibrarySha256': connectorLibrarySha256,
+    'installerSha256': installerSha256,
+    'serverIdentity': serverIdentity,
+    'osEnforcedIsolation': osEnforcedIsolation,
+    'workerPrincipalSeparated': workerPrincipalSeparated,
+    'typedOperationsOnly': typedOperationsOnly,
+    'nonExportableKeys': nonExportableKeys,
+  };
 }
 
 class P1AuthorityOwnerApprovalRequestV2 {
@@ -135,6 +135,9 @@ class P1AuthorityOwnerApprovalRequestV2 {
     required this.expiresAt,
     this.interactionType = 'native-owner-confirmation',
     this.userPresent = true,
+    this.approvalScope = 'effect',
+    this.approvalPolicy = 'boundedSession',
+    this.ownerSessionId,
     this.behaviorSessionId,
   });
 
@@ -149,6 +152,9 @@ class P1AuthorityOwnerApprovalRequestV2 {
   final String confirmationTextSha256;
   final DateTime expiresAt;
   final bool userPresent;
+  final String approvalScope;
+  final String approvalPolicy;
+  final String? ownerSessionId;
   final String? behaviorSessionId;
 
   void validate(DateTime now) {
@@ -171,7 +177,23 @@ class P1AuthorityOwnerApprovalRequestV2 {
       'accessProfileId',
       'capabilityId',
     ];
-    if (interactionType != 'native-owner-confirmation' ||
+    final sessionScope = approvalScope == 'owner-session';
+    final maxLifetime = sessionScope
+        ? const Duration(hours: 24)
+        : const Duration(minutes: 15);
+    final sessionId = ownerSessionId;
+    if (!const <String>{'effect', 'owner-session'}.contains(approvalScope) ||
+        !const <String>{
+          'everyHighRiskEffect',
+          'destructiveOnly',
+          'boundedSession',
+        }.contains(approvalPolicy) ||
+        (sessionScope &&
+            (effectOperation != 'owner-session' ||
+                sessionId == null ||
+                !_p1aId.hasMatch(sessionId))) ||
+        (!sessionScope && sessionId != null) ||
+        interactionType != 'native-owner-confirmation' ||
         !userPresent ||
         binding.length < requiredBinding.length ||
         requiredBinding.any(
@@ -182,29 +204,30 @@ class P1AuthorityOwnerApprovalRequestV2 {
         !_p1aHex64.hasMatch(uiSurfaceSha256) ||
         !_p1aHex64.hasMatch(confirmationTextSha256) ||
         !now.toUtc().isBefore(expiresAt.toUtc()) ||
-        expiresAt.toUtc().difference(now.toUtc()) >
-            const Duration(minutes: 15)) {
+        expiresAt.toUtc().difference(now.toUtc()) > maxLifetime) {
       throw StateError('p1a_owner_approval_limits_invalid');
     }
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aRecordOwnerApprovalOperationV2,
-        'requestId': requestId,
-        'approvalId': approvalId,
-        'interactionNonce': interactionNonce,
-        'interactionType': interactionType,
-        'binding': binding,
-        'effectOperation': effectOperation,
-        'payloadSha256': payloadSha256,
-        'uiSurfaceSha256': uiSurfaceSha256,
-        'confirmationTextSha256': confirmationTextSha256,
-        'userPresent': userPresent,
-        'expiresAtEpochSeconds':
-            expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aRecordOwnerApprovalOperationV2,
+    'requestId': requestId,
+    'approvalId': approvalId,
+    'interactionNonce': interactionNonce,
+    'interactionType': interactionType,
+    'binding': binding,
+    'effectOperation': effectOperation,
+    'payloadSha256': payloadSha256,
+    'uiSurfaceSha256': uiSurfaceSha256,
+    'confirmationTextSha256': confirmationTextSha256,
+    'userPresent': userPresent,
+    'approvalScope': approvalScope,
+    'approvalPolicy': approvalPolicy,
+    if (ownerSessionId != null) 'ownerSessionId': ownerSessionId,
+    'expiresAtEpochSeconds': expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 class P1AuthorityEffectRequestV1 {
@@ -228,6 +251,7 @@ class P1AuthorityEffectRequestV1 {
     required this.requestedBudgets,
     required this.expectedRevocationEpoch,
     required this.deadline,
+    this.ownerSessionId,
     this.behaviorSessionId,
   });
 
@@ -250,6 +274,7 @@ class P1AuthorityEffectRequestV1 {
   final Map<String, Object?> requestedBudgets;
   final int expectedRevocationEpoch;
   final DateTime deadline;
+  final String? ownerSessionId;
   final String? behaviorSessionId;
 
   void validate(DateTime now) {
@@ -273,7 +298,8 @@ class P1AuthorityEffectRequestV1 {
     if (accessProfileId != 'owner' && accessProfileId != 'owner_unattended') {
       throw StateError('p1a_owner_profile_required');
     }
-    if (!_p1aHex64.hasMatch(payloadSha256) ||
+    if ((ownerSessionId != null && !_p1aId.hasMatch(ownerSessionId!)) ||
+        !_p1aHex64.hasMatch(payloadSha256) ||
         workerIdentity.isEmpty ||
         policyEffect.isEmpty ||
         requestedBudgets.isEmpty ||
@@ -285,31 +311,32 @@ class P1AuthorityEffectRequestV1 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aAuthorizeEffectOperationV1,
-        'requestId': requestId,
-        'requestNonce': requestNonce,
-        'workerSessionId': workerSessionId,
-        'channelId': channelId,
-        'workerIdentity': workerIdentity,
-        'effectOperation': operation,
-        'binding': <String, Object?>{
-          'runId': runId,
-          'taskId': taskId,
-          'actorId': actorId,
-          'toolId': toolId,
-          'accessProfileId': accessProfileId,
-          'capabilityId': capabilityId,
-        },
-        'policyEffect': policyEffect,
-        'requestedBudgets': requestedBudgets,
-        'payload': payload,
-        'payloadSha256': payloadSha256,
-        'ownerApprovalId': ownerApprovalId,
-        'expectedRevocationEpoch': expectedRevocationEpoch,
-        'deadlineEpochSeconds': deadline.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aAuthorizeEffectOperationV1,
+    'requestId': requestId,
+    'requestNonce': requestNonce,
+    'workerSessionId': workerSessionId,
+    'channelId': channelId,
+    'workerIdentity': workerIdentity,
+    'effectOperation': operation,
+    'binding': <String, Object?>{
+      'runId': runId,
+      'taskId': taskId,
+      'actorId': actorId,
+      'toolId': toolId,
+      'accessProfileId': accessProfileId,
+      'capabilityId': capabilityId,
+    },
+    'policyEffect': policyEffect,
+    'requestedBudgets': requestedBudgets,
+    'payload': payload,
+    'payloadSha256': payloadSha256,
+    'ownerApprovalId': ownerApprovalId,
+    if (ownerSessionId != null) 'ownerSessionId': ownerSessionId,
+    'expectedRevocationEpoch': expectedRevocationEpoch,
+    'deadlineEpochSeconds': deadline.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 class P1AuthorityEffectPermitV1 {
@@ -396,16 +423,15 @@ class P1AuthorityEffectOutcomeV1 {
   final String? behaviorSessionId;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'operation': p1aRecordEffectOutcomeOperationV1,
-        'requestId': requestId,
-        'permitId': permitId,
-        'status': status,
-        'receiptSha256': receiptSha256,
-        'finishedAtEpochSeconds':
-            finishedAt.toUtc().millisecondsSinceEpoch ~/ 1000,
-        if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
-      };
+    'schemaVersion': '2.0.0',
+    'operation': p1aRecordEffectOutcomeOperationV1,
+    'requestId': requestId,
+    'permitId': permitId,
+    'status': status,
+    'receiptSha256': receiptSha256,
+    'finishedAtEpochSeconds': finishedAt.toUtc().millisecondsSinceEpoch ~/ 1000,
+    if (behaviorSessionId != null) 'behaviorSessionId': behaviorSessionId,
+  };
 }
 
 abstract interface class P1AuthorityServiceConnectorV1 {
@@ -442,10 +468,52 @@ final class P1AuthorityServiceHandleV1 {
   const P1AuthorityServiceHandleV1(this.service);
   final P1AuthorityServiceClientV1 service;
 
+  bool get runtimeEligible {
+    final provenance = service.provenance;
+    return provenance['authorityType'] == 'p1-isolated-authority-service-v2' &&
+        provenance['p1AmendmentSchemaVersion'] == '3.0.0' &&
+        provenance['runtimeEligible'] == true &&
+        provenance['securityIsolationActive'] == true &&
+        provenance['privateAuthorityMaterialPresent'] == false &&
+        provenance['arbitraryMessageSigningApi'] == false &&
+        service.endpoint.osEnforcedIsolation &&
+        service.endpoint.workerPrincipalSeparated &&
+        service.endpoint.typedOperationsOnly &&
+        service.endpoint.nonExportableKeys;
+  }
+
+  bool get completionEligible {
+    final provenance = service.provenance;
+    bool hash40(Object? value) => _p1aHex40.hasMatch(value?.toString() ?? '');
+    bool hash64(Object? value) => _p1aHex64.hasMatch(value?.toString() ?? '');
+    return service.completionEligible &&
+        runtimeEligible &&
+        provenance['p1AmendmentMerged'] == true &&
+        provenance['independentP1aSecurityReviewApproved'] == true &&
+        provenance['workerDenialTriPlatformPassed'] == true &&
+        provenance['behavioralWindowsPassed'] == true &&
+        provenance['behavioralMacosPassed'] == true &&
+        provenance['behavioralLinuxPassed'] == true &&
+        hash40(provenance['mergedCommit']) &&
+        hash40(provenance['mergedTree']) &&
+        hash64(provenance['aggregateManifestSha256']) &&
+        hash64(provenance['platformReceiptSha256']) &&
+        hash64(provenance['evidenceTrustSha256']) &&
+        hash64(provenance['serviceBehaviorReceiptSha256']) &&
+        hash64(provenance['workerDenialReceiptSha256']) &&
+        hash64(provenance['workerLauncherSha256']) &&
+        hash64(provenance['workerExecutableSha256']) &&
+        hash64(provenance['workerIdentitySha256']) &&
+        hash64(provenance['denialTranscriptSha256']) &&
+        hash64(provenance['p1aPackageSha256']) &&
+        provenance['completionEligible'] == true;
+  }
+
   void validateForP2({bool allowQaPreview = false}) {
     service.endpoint.validate();
     final provenance = service.provenance;
-    final qaPreviewAccepted = allowQaPreview &&
+    final qaPreviewAccepted =
+        allowQaPreview &&
         provenance['qaPreview'] == true &&
         provenance['qaPreviewVersion'] == '1.0.0' &&
         provenance['qaPreviewFormalCompletion'] == false &&
@@ -455,51 +523,13 @@ final class P1AuthorityServiceHandleV1 {
         service.endpoint.workerPrincipalSeparated &&
         service.endpoint.typedOperationsOnly &&
         service.endpoint.nonExportableKeys;
-    if (qaPreviewAccepted) {
-      return;
-    }
-    if (!service.completionEligible ||
-        provenance['authorityType'] != 'p1-isolated-authority-service-v2' ||
-        provenance['p1AmendmentMerged'] != true ||
-        provenance['p1AmendmentSchemaVersion'] != '3.0.0' ||
-        provenance['independentP1aSecurityReviewApproved'] != true ||
-        provenance['workerDenialTriPlatformPassed'] != true ||
-        provenance['behavioralWindowsPassed'] != true ||
-        provenance['behavioralMacosPassed'] != true ||
-        provenance['behavioralLinuxPassed'] != true ||
-        !_p1aHex40.hasMatch(provenance['mergedCommit']?.toString() ?? '') ||
-        !_p1aHex40.hasMatch(provenance['mergedTree']?.toString() ?? '') ||
-        !_p1aHex64.hasMatch(
-          provenance['aggregateManifestSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['platformReceiptSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['evidenceTrustSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['serviceBehaviorReceiptSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['workerDenialReceiptSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['workerLauncherSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['workerExecutableSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['workerIdentitySha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(
-          provenance['denialTranscriptSha256']?.toString() ?? '',
-        ) ||
-        !_p1aHex64.hasMatch(provenance['p1aPackageSha256']?.toString() ?? '') ||
-        provenance['privateAuthorityMaterialPresent'] != false ||
-        provenance['arbitraryMessageSigningApi'] != false ||
-        provenance['completionEligible'] != true) {
+    if (qaPreviewAccepted || runtimeEligible || completionEligible) return;
+    throw StateError('p1a_service_not_runtime_eligible');
+  }
+
+  void validateCompletionEligibility() {
+    service.endpoint.validate();
+    if (!completionEligible) {
       throw StateError('p1a_service_not_completion_eligible');
     }
   }

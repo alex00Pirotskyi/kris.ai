@@ -28,6 +28,10 @@ final class P2ProductRuntimeOwnerModeHandle {
   bool get completionEligible =>
       runtime?.authority.completionEligible == true &&
       runtime?.authority.authorityKind == 'p1-isolated-authority-service-v2';
+  bool get secureIsolationActive =>
+      runtime?.authority.authorityKind == 'p1-isolated-authority-service-v2' &&
+      (runtime?.authority.authorityProvenance['runtimeEligible'] == true ||
+          runtime?.authority.completionEligible == true);
 
   String get diagnosticCode =>
       _normalizedFailureCode(failureCode ?? 'owner_runtime_start_failed');
@@ -65,10 +69,7 @@ final class P2ProductRuntimeOwnerModeHandle {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  recoveryMessage,
-                  textAlign: TextAlign.center,
-                ),
+                Text(recoveryMessage, textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 SelectableText('Diagnostic: $diagnosticCode'),
               ],
@@ -106,8 +107,7 @@ final class P2ProductRuntimeOwnerModeHandle {
   Future<void> close() async => runtime?.close();
   static P2ProductRuntimeOwnerModeHandle active(
     P2ProductRuntimeOwnerMode runtime,
-  ) =>
-      P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
+  ) => P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
   static P2ProductRuntimeOwnerModeHandle blocked(String code) =>
       P2ProductRuntimeOwnerModeHandle._(
         runtime: null,
@@ -117,10 +117,7 @@ final class P2ProductRuntimeOwnerModeHandle {
   static String _normalizedFailureCode(String code) {
     final normalized = code
         .trim()
-        .replaceFirst(
-          RegExp(r'^Bad[ _]state[:_ ]+', caseSensitive: false),
-          '',
-        )
+        .replaceFirst(RegExp(r'^Bad[ _]state[:_ ]+', caseSensitive: false), '')
         .replaceAll(RegExp(r'[^A-Za-z0-9_.:-]'), '_')
         .replaceAll(RegExp(r'_+'), '_');
     return normalized.isEmpty ? 'owner_runtime_start_failed' : normalized;
@@ -150,7 +147,8 @@ final class P2ProductRuntimeBootstrap {
         'KRISTIN_QA_PREVIEW',
         defaultValue: false,
       );
-      final qaPreview = ownerRiskQa ||
+      final qaPreview =
+          ownerRiskQa ||
           (qaPreviewBuild &&
               p1AuthorityService?.service.provenance['qaPreview'] == true);
       if (!ownerRiskQa) {
@@ -159,17 +157,20 @@ final class P2ProductRuntimeBootstrap {
         }
         p1AuthorityService.validateForP2(allowQaPreview: qaPreview);
       }
-      final resolver = resourceResolver ??
+      final resolver =
+          resourceResolver ??
           P2ApplicationOwnedRuntimeResourceResolver(
             applicationDataRoot: dataRoot,
           );
       final resources = runtimeResources ?? await resolver.resolve();
-      final P2RuntimeAuthority authority = ownerRiskQa
-          ? P2OwnerRiskQaAuthority()
+      final P2IsolatedP1AuthorityAdapter? p1Adapter = ownerRiskQa
+          ? null
           : P2IsolatedP1AuthorityAdapter(
               p1AuthorityService!,
               qaPreview: qaPreview,
             );
+      final P2RuntimeAuthority authority =
+          p1Adapter ?? P2OwnerRiskQaAuthority();
       final authorityDirectory = Directory(
         '${dataRoot.path}${Platform.pathSeparator}p2-authority',
       );
@@ -188,6 +189,7 @@ final class P2ProductRuntimeBootstrap {
       await journal.initialize();
       final bindings = P2ProductBindingContext();
       final authorizations = P2ManagedAuthorizationRegistry();
+      P2ProductRuntimeOwnerMode? activeOwnerRuntime;
       final runtime = await P2ProductRuntimeOwnerMode.start(
         stateDirectory: Directory(
           '${authorityDirectory.path}${Platform.pathSeparator}watchdogs',
@@ -224,7 +226,9 @@ final class P2ProductRuntimeBootstrap {
           final binding = P2P1OperationRegistry.binding(
             runId: tab.runId,
             taskId: tab.taskId,
-            accessProfileId: 'owner',
+            accessProfileId:
+                activeOwnerRuntime?.controller.current.accessProfileId ??
+                'owner',
             operation: operation,
           );
           return P2TerminalAuthorization(
@@ -257,10 +261,13 @@ final class P2ProductRuntimeBootstrap {
             await file.delete();
           }
         },
+        authorizeOwnerModeEnable: p1Adapter?.authorizeOwnerModeSettings,
+        clearOwnerModeAuthorization: p1Adapter?.clearOwnerModeSettings,
         emergencyWatchdogId: 'product-emergency-watchdog',
         bindingContext: bindings,
         authorizationRegistry: authorizations,
       );
+      activeOwnerRuntime = runtime;
       return P2ProductRuntimeOwnerModeHandle.active(runtime);
     } catch (error) {
       return P2ProductRuntimeOwnerModeHandle.blocked(_safeFailureCode(error));

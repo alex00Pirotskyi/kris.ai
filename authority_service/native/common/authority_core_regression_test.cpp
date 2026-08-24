@@ -161,7 +161,40 @@ int main() try {
   must_fail([&]{core.handle(effect_request(body,"nonce-5",now+60,binding(),"delete"),desktop);},"authority_owner_approval_operation_mismatch");
   must_fail([&]{core.handle(effect_request(body,"nonce-6",now+60),peer("other-user"));},"authority_owner_approval_peer_mismatch");
   must_fail([&]{core.handle(effect_request(body,"nonce-7",now+60,binding(),"write","/home/alex/work/../outside"),desktop);},"policy_path_outside_current_account");
-  std::cout << "{\"status\":\"passed\",\"test\":\"p1a-authority-core-regression-v1\",\"jsonStringLiteral\":true,\"approvalExactBinding\":true,\"approvalOneUse\":true,\"pathTraversalDenied\":true}\n";
+  mock_state session_state; kp::authority_core session_core(config(),crypto,session_state);
+  auto session_approval=approval_request(body,now+3600);
+  auto& session_approval_obj=session_approval.as_object();
+  session_approval_obj["requestId"]=kp::json::value("session-approval-request");
+  session_approval_obj["approvalId"]=kp::json::value("session-approval-1");
+  session_approval_obj["approvalScope"]=kp::json::value("owner-session");
+  session_approval_obj["approvalPolicy"]=kp::json::value("boundedSession");
+  session_approval_obj["ownerSessionId"]=kp::json::value("owner-session-1");
+  session_approval_obj["effectOperation"]=kp::json::value("owner-session");
+  session_core.handle(session_approval,desktop);
+  auto session_effect_1=effect_request(body,"session-nonce-1",now+60);
+  auto& session_effect_1_obj=session_effect_1.as_object();
+  session_effect_1_obj["requestId"]=kp::json::value("session-effect-1");
+  session_effect_1_obj["ownerApprovalId"]=kp::json::value("session-approval-1");
+  session_effect_1_obj["ownerSessionId"]=kp::json::value("owner-session-1");
+  const auto session_authorized_1=session_core.handle(session_effect_1,desktop);
+  if (kp::json::required_string(session_authorized_1.as_object(),"status")!="authorized")
+    throw std::runtime_error("session_authorization_first_failed");
+  const auto session_body_2=payload("/home/alex/work/other.txt");
+  auto session_effect_2=effect_request(session_body_2,"session-nonce-2",now+60,binding(),"write","/home/alex/work/other.txt");
+  auto& session_effect_2_obj=session_effect_2.as_object();
+  session_effect_2_obj["requestId"]=kp::json::value("session-effect-2");
+  session_effect_2_obj["ownerApprovalId"]=kp::json::value("session-approval-1");
+  session_effect_2_obj["ownerSessionId"]=kp::json::value("owner-session-1");
+  const auto session_authorized_2=session_core.handle(session_effect_2,desktop);
+  if (kp::json::required_string(session_authorized_2.as_object(),"status")!="authorized")
+    throw std::runtime_error("session_authorization_second_failed");
+  auto bad_session_effect=effect_request(body,"session-nonce-3",now+60);
+  auto& bad_session_obj=bad_session_effect.as_object();
+  bad_session_obj["requestId"]=kp::json::value("session-effect-3");
+  bad_session_obj["ownerApprovalId"]=kp::json::value("session-approval-1");
+  bad_session_obj["ownerSessionId"]=kp::json::value("owner-session-wrong");
+  must_fail([&]{session_core.handle(bad_session_effect,desktop);},"authority_owner_session_mismatch");
+  std::cout << "{\"status\":\"passed\",\"test\":\"p1a-authority-core-regression-v2\",\"jsonStringLiteral\":true,\"approvalExactBinding\":true,\"approvalOneUse\":true,\"ownerSessionReuse\":true,\"pathTraversalDenied\":true}\n";
   return 0;
 } catch (const std::exception& error) {
   std::cerr << "P1A authority core regression failed: " << error.what() << "\n";

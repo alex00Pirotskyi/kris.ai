@@ -249,6 +249,8 @@ def activate(args: argparse.Namespace) -> dict[str, Any]:
     activated["completionEligible"] = True
     activated["provenance"] = {
         "authorityType": "p1-isolated-authority-service-v2",
+        "runtimeEligible": True,
+        "securityIsolationActive": True,
         "activationType": "merged-p1a-v63-signed-evidence-activation",
         "p1AmendmentMerged": True,
         "p1AmendmentSchemaVersion": "3.0.0",
