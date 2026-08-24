@@ -231,7 +231,11 @@ def main() -> int:
     if args.platform == "macos":
         app_destination.mkdir()
         copy_tree(app_source, app_destination / app_source.name)
-        runtime_destination = app_destination / app_source.name / "Contents/MacOS/runtime/p2/current"
+        runtime_destination = app_destination / app_source.name / (
+            "Contents/Resources/runtime/p2/current"
+            if args.product_current_account
+            else "Contents/MacOS/runtime/p2/current"
+        )
     else:
         copy_tree(app_source, app_destination)
         runtime_destination = app_destination / "runtime/p2/current"

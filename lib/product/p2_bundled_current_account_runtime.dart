@@ -13,17 +13,35 @@ final class P2BundledCurrentAccountRuntime {
     final executable = File(
       executablePath ?? Platform.resolvedExecutable,
     ).absolute;
-    final bundledRoot = Directory(
-      '${executable.parent.path}${Platform.pathSeparator}runtime'
-      '${Platform.pathSeparator}p2${Platform.pathSeparator}current',
-    );
+    final bundledCandidates = <Directory>[
+      if (Platform.isMacOS)
+        Directory(
+          '${executable.parent.parent.path}${Platform.pathSeparator}Resources'
+          '${Platform.pathSeparator}runtime${Platform.pathSeparator}p2'
+          '${Platform.pathSeparator}current',
+        ),
+      Directory(
+        '${executable.parent.path}${Platform.pathSeparator}runtime'
+        '${Platform.pathSeparator}p2${Platform.pathSeparator}current',
+      ),
+    ];
+    Directory? selectedBundledRoot;
+    for (final candidate in bundledCandidates) {
+      final manifest = File(
+        '${candidate.path}${Platform.pathSeparator}runtime-manifest.v3.json',
+      );
+      if (!await manifest.exists()) continue;
+      if (await FileSystemEntity.isLink(manifest.path)) {
+        throw StateError('p2_bundled_runtime_manifest_symlink');
+      }
+      selectedBundledRoot = candidate;
+      break;
+    }
+    if (selectedBundledRoot == null) return false;
+    final bundledRoot = selectedBundledRoot;
     final bundledManifest = File(
       '${bundledRoot.path}${Platform.pathSeparator}runtime-manifest.v3.json',
     );
-    if (!await bundledManifest.exists()) return false;
-    if (await FileSystemEntity.isLink(bundledManifest.path)) {
-      throw StateError('p2_bundled_runtime_manifest_symlink');
-    }
 
     final bundled = _object(
       jsonDecode(await bundledManifest.readAsString()),
