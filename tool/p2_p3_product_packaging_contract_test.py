@@ -114,12 +114,23 @@ def build_fixture(support, root: pathlib.Path) -> tuple[pathlib.Path, pathlib.Pa
     worker = p3 / "automation_host/src/browser-runtime.mjs"
     lock = p3 / "automation_host/package-lock.json"
     browser = p3 / "browser/Chromium.app/Contents/MacOS/Chromium"
-    framework = p3 / "browser/Chromium.app/Contents/Frameworks/libfixture.dylib"
+    framework_bundle = (
+        p3
+        / "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework"
+    )
+    framework_root = framework_bundle / "Google Chrome for Testing Framework"
+    framework_versioned = (
+        framework_bundle
+        / "Versions/140.0.7339.0/Google Chrome for Testing Framework"
+    )
+    framework = framework_bundle / "Versions/140.0.7339.0/Libraries/libfixture.dylib"
     write_file(p3_node, b"\xcf\xfa\xed\xfeP3NODE", executable=True)
     write_file(worker, b"WORKER")
     write_file(lock, b"LOCK")
     write_file(browser, b"\xcf\xfa\xed\xfeBROWSER", executable=True)
-    write_file(framework, b"\xcf\xfa\xed\xfeFRAMEWORK", executable=True)
+    write_file(framework_root, b"\xcf\xfa\xed\xfeFRAMEWORK-ROOT", executable=True)
+    write_file(framework_versioned, b"\xcf\xfa\xed\xfeFRAMEWORK-VERSION", executable=True)
+    write_file(framework, b"\xcf\xfa\xed\xfeFRAMEWORK-DYLIB", executable=True)
     p3_resources = {
         "nodeExecutable": file_row(support, p3, p3_node, executable=True),
         "browserWorker": file_row(support, p3, worker),
@@ -152,18 +163,6 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as temporary:
         root = pathlib.Path(temporary)
-        framework_bundle = root / "Google Chrome for Testing Framework.framework"
-        framework_executable = framework_bundle / "Google Chrome for Testing Framework"
-        framework_dylib = framework_bundle / "Libraries/libfixture.dylib"
-        require(
-            support._macos_codesign_target(framework_executable) == framework_bundle,
-            "macOS framework primary executable must sign by bundle path",
-        )
-        require(
-            support._macos_codesign_target(framework_dylib) == framework_dylib,
-            "macOS framework nested dylib must remain a file signing target",
-        )
-
         app_destination = root / "app"
         app_source = root / "Kristin.app"
         p2, p3 = packager.product_runtime_destinations(app_destination, app_source, "macos")
@@ -192,12 +191,34 @@ def main() -> int:
         app, p1a, p2, p3 = build_fixture(support, root)
         original_p2 = json.loads((p2 / "runtime-manifest.v3.json").read_text())["identity"]["runtimeBuildSha256"]
         original_p3 = json.loads((p3 / "browser-runtime-manifest.v1.json").read_text())["identity"]["runtimeBuildSha256"]
+        framework_bundle = (
+            p3
+            / "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework"
+        )
+        framework_root = framework_bundle / "Google Chrome for Testing Framework"
+        framework_versioned = (
+            framework_bundle
+            / "Versions/140.0.7339.0/Google Chrome for Testing Framework"
+        )
+        framework_dylib = framework_bundle / "Versions/140.0.7339.0/Libraries/libfixture.dylib"
+        require(
+            support._macos_codesign_target(framework_root) == framework_versioned,
+            "macOS framework primary executable must resolve to concrete versioned Mach-O",
+        )
+        require(
+            support._macos_codesign_target(framework_dylib) == framework_dylib,
+            "macOS framework nested dylib must remain a leaf signing target",
+        )
         mutated = False
         commands: list[list[str]] = []
 
         def fake_sign_runner(argv, **kwargs):
             nonlocal mutated
             commands.append(list(argv))
+            if argv[0] == "codesign" and "--force" in argv:
+                target = pathlib.Path(argv[-1])
+                if target == framework_bundle or target == framework_root:
+                    return subprocess.CompletedProcess(argv, 1, "", "bundle format is ambiguous")
             if argv[0] == "codesign" and "--deep" in argv and "--force" in argv and not mutated:
                 mutated = True
                 for relative in (
@@ -210,7 +231,9 @@ def main() -> int:
                 for relative in (
                     "node/node",
                     "browser/Chromium.app/Contents/MacOS/Chromium",
-                    "browser/Chromium.app/Contents/Frameworks/libfixture.dylib",
+                    "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Google Chrome for Testing Framework",
+                    "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/140.0.7339.0/Google Chrome for Testing Framework",
+                    "browser/Chromium.app/Contents/Frameworks/Google Chrome for Testing Framework.framework/Versions/140.0.7339.0/Libraries/libfixture.dylib",
                 ):
                     target = p3 / relative
                     target.write_bytes(target.read_bytes() + b"SIGNED")
@@ -228,6 +251,27 @@ def main() -> int:
         require(len(app_signs) == 2, "expected pre-rebind deep sign plus final outer seal")
         require("--deep" in app_signs[0], "pre-rebind app sign must be deep")
         require("--deep" not in app_signs[-1], "final outer seal must not mutate nested runtime bytes")
+        framework_leaf_signs = [
+            command
+            for command in commands
+            if command[0] == "codesign"
+            and "--force" in command
+            and command[-1] == str(framework_versioned)
+        ]
+        require(len(framework_leaf_signs) == 1, "concrete framework Mach-O must be signed exactly once")
+        require(
+            not any(command[0] == "codesign" and "--force" in command and command[-1] == str(framework_bundle) for command in commands),
+            "ambiguous framework container must never be a direct signing target",
+        )
+        chrome_app = p3 / "browser/Chromium.app"
+        chrome_signs = [
+            command
+            for command in commands
+            if command[0] == "codesign" and "--force" in command and command[-1] == str(chrome_app)
+        ]
+        require(len(chrome_signs) == 1 and "--deep" in chrome_signs[0], "Chromium app must be signed after nested code")
+        require(commands.index(framework_leaf_signs[0]) < commands.index(chrome_signs[0]), "framework leaf must be signed before Chromium app")
+        require(commands.index(chrome_signs[0]) < commands.index(app_signs[0]), "Chromium app must be signed before Kristin outer app")
 
         payload = root / "payload"
         payload.mkdir()

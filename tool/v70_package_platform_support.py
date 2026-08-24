@@ -210,7 +210,7 @@ def _rebind_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
         elif kind == "directory":
             raw["treeSha256"] = tree_sha256(path)
         else:
-            fail(f"runtime resource kind invalid: {key}")
+            fail(f"runtime resource kind invalid: {key}: {kind}")
 
 
 def _verify_resources(root: pathlib.Path, resources: dict[str, Any]) -> None:
@@ -361,9 +361,41 @@ def _nested_macho_files(roots: Iterable[pathlib.Path]) -> list[pathlib.Path]:
 
 def _macos_codesign_target(path: pathlib.Path) -> pathlib.Path:
     parent = path.parent
-    if parent.suffix == ".framework" and path.name == parent.stem:
-        return parent
-    return path
+    if parent.suffix != ".framework" or path.name != parent.stem:
+        return path
+
+    versions = parent / "Versions"
+    candidates: list[pathlib.Path] = []
+    if versions.is_dir() and not versions.is_symlink():
+        current = versions / "Current"
+        if current.is_symlink():
+            current_target = pathlib.PurePosixPath(os.readlink(current))
+            if current_target.is_absolute() or ".." in current_target.parts or len(current_target.parts) != 1:
+                fail(f"macOS framework Current target invalid: {current}: {current_target}")
+            candidate = versions / current_target.parts[0] / path.name
+            if candidate.is_file() and not candidate.is_symlink() and _is_macho(candidate):
+                return candidate
+            fail(f"macOS framework Current executable invalid: {candidate}")
+        for version in sorted(versions.iterdir(), key=lambda item: item.name):
+            if version.name == "Current" or version.is_symlink() or not version.is_dir():
+                continue
+            candidate = version / path.name
+            if candidate.is_file() and not candidate.is_symlink() and _is_macho(candidate):
+                candidates.append(candidate)
+    if len(candidates) != 1:
+        fail(f"macOS framework executable target is ambiguous: {path}")
+    return candidates[0]
+
+
+def _nested_macos_code_bundles(roots: Iterable[pathlib.Path]) -> list[pathlib.Path]:
+    found: set[pathlib.Path] = set()
+    for root in roots:
+        if not root.exists() or root.is_file():
+            continue
+        for path in root.rglob("*"):
+            if path.is_dir() and not path.is_symlink() and path.suffix in {".app", ".xpc"}:
+                found.add(path)
+    return sorted(found, key=lambda item: (-len(item.parts), item.as_posix()))
 
 
 def ad_hoc_sign_macos(
@@ -399,6 +431,10 @@ def ad_hoc_sign_macos(
         signed_targets.add(target)
         execute(["codesign", "--force", "--sign", "-", "--timestamp=none", str(target)])
         execute(["codesign", "--verify", "--strict", "--verbose=2", str(target)])
+
+    for bundle in _nested_macos_code_bundles(roots):
+        execute(["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none", str(bundle)])
+        execute(["codesign", "--verify", "--deep", "--strict", "--verbose=2", str(bundle)])
 
     execute(["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none", str(app_bundle)])
     execute(["codesign", "--verify", "--deep", "--strict", "--verbose=2", str(app_bundle)])
