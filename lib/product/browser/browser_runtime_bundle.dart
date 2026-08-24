@@ -56,26 +56,26 @@ final class P3BrowserRuntimeResourceSet {
   final String packageLockSha256;
 
   Map<String, Object?> get provenance => <String, Object?>{
-        'resolver': 'P3ApplicationOwnedBrowserRuntimeResolver',
-        'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
-        'applicationOwned': true,
-        'globalRuntimeRequired': false,
-        'browserNetworkInstallRequired': false,
-        'sourceCommit': sourceCommit,
-        'sourceTree': sourceTree,
-        'runtimeBuildSha256': runtimeBuildSha256,
-        'manifestSha256': manifestSha256,
-        'nodeVersion': nodeVersion,
-        'automationHostPackageVersion': automationHostPackageVersion,
-        'browserEngine': browserEngine,
-        'browserRevision': browserRevision,
-        'nodeExecutableSha256': nodeExecutableSha256,
-        'workerScriptSha256': workerScriptSha256,
-        'browserExecutableSha256': browserExecutableSha256,
-        'browserRootTreeSha256': browserRootTreeSha256,
-        'packageLockSha256': packageLockSha256,
-        'rootPathSha256': Sha256.text(root.absolute.path),
-      };
+    'resolver': 'P3ApplicationOwnedBrowserRuntimeResolver',
+    'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
+    'applicationOwned': true,
+    'globalRuntimeRequired': false,
+    'browserNetworkInstallRequired': false,
+    'sourceCommit': sourceCommit,
+    'sourceTree': sourceTree,
+    'runtimeBuildSha256': runtimeBuildSha256,
+    'manifestSha256': manifestSha256,
+    'nodeVersion': nodeVersion,
+    'automationHostPackageVersion': automationHostPackageVersion,
+    'browserEngine': browserEngine,
+    'browserRevision': browserRevision,
+    'nodeExecutableSha256': nodeExecutableSha256,
+    'workerScriptSha256': workerScriptSha256,
+    'browserExecutableSha256': browserExecutableSha256,
+    'browserRootTreeSha256': browserRootTreeSha256,
+    'packageLockSha256': packageLockSha256,
+    'rootPathSha256': Sha256.text(root.absolute.path),
+  };
 }
 
 /// Resolves only a packaged P3 browser runtime owned by the application.
@@ -91,25 +91,43 @@ final class P3ApplicationOwnedBrowserRuntimeResolver {
   final Directory applicationDataRoot;
   final String executablePath;
 
+  static List<Directory> candidateRoots({
+    required Directory applicationDataRoot,
+    required String executablePath,
+    bool? macOS,
+  }) {
+    final executableRoot = File(executablePath).absolute.parent;
+    final isMacOS = macOS ?? Platform.isMacOS;
+    return <Directory>[
+      Directory(
+        '${applicationDataRoot.absolute.path}${Platform.pathSeparator}'
+        'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
+      ),
+      if (isMacOS)
+        Directory(
+          '${executableRoot.parent.path}${Platform.pathSeparator}Resources'
+          '${Platform.pathSeparator}runtime${Platform.pathSeparator}p3'
+          '${Platform.pathSeparator}current',
+        ),
+      Directory(
+        '${executableRoot.path}${Platform.pathSeparator}'
+        'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
+      ),
+    ];
+  }
+
   Future<P3BrowserRuntimeResourceSet> resolve() async {
     if (!applicationDataRoot.isAbsolute) {
       throw StateError('p3_application_data_root_must_be_absolute');
     }
-    final executableRoot = File(executablePath).absolute.parent;
-    final preferred = Directory(
-      '${applicationDataRoot.absolute.path}${Platform.pathSeparator}'
-      'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
+    final candidates = candidateRoots(
+      applicationDataRoot: applicationDataRoot,
+      executablePath: executablePath,
     );
-    if (await preferred.exists()) {
-      return _resolveExistingCandidate(preferred);
-    }
-
-    final fallback = Directory(
-      '${executableRoot.path}${Platform.pathSeparator}'
-      'runtime${Platform.pathSeparator}p3${Platform.pathSeparator}current',
-    );
-    if (await fallback.exists()) {
-      return _resolveExistingCandidate(fallback);
+    for (final candidate in candidates) {
+      if (await candidate.exists()) {
+        return _resolveExistingCandidate(candidate);
+      }
     }
     throw StateError('p3_browser_runtime_bundle_missing');
   }

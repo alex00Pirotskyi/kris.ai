@@ -22,8 +22,14 @@ void main() {
 
     expect(p2.length, 3);
     expect(p3.length, 3);
-    expect(p2[1], '/Applications/Kristin.app/Contents/Resources/runtime/p2/current');
-    expect(p3[1], '/Applications/Kristin.app/Contents/Resources/runtime/p3/current');
+    expect(
+      p2[1],
+      '/Applications/Kristin.app/Contents/Resources/runtime/p2/current',
+    );
+    expect(
+      p3[1],
+      '/Applications/Kristin.app/Contents/Resources/runtime/p3/current',
+    );
   });
 
   test('non-macOS packaged candidates stay beside the executable', () {

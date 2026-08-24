@@ -13,6 +13,8 @@ import time
 import zipfile
 
 P2_SHA = "7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0"
+WINDOWS_ALL_APPLICATION_PACKAGES_SID = "*S-1-15-2-1"
+WINDOWS_ALL_RESTRICTED_APPLICATION_PACKAGES_SID = "*S-1-15-2-2"
 
 
 def fail(message: str) -> None:
@@ -58,6 +60,48 @@ def ensure_macos_node_pty_spawn_helpers(runtime_destination: pathlib.Path) -> li
             fail(f"macOS node-pty spawn-helper is not executable after staging repair: {helper}")
         repaired.append(helper)
     return repaired
+
+
+def prepare_windows_browser_sandbox_acl(
+    root: pathlib.Path,
+    *,
+    platform: str,
+    runner=subprocess.run,
+) -> bool:
+    if platform != 'windows':
+        return False
+    if not root.is_dir() or root.is_symlink():
+        fail(f'Windows packaged browser ACL root invalid: {root}')
+    result = runner(
+        [
+            'icacls.exe',
+            str(root),
+            '/grant',
+            f'{WINDOWS_ALL_APPLICATION_PACKAGES_SID}:(OI)(CI)(RX)',
+            f'{WINDOWS_ALL_RESTRICTED_APPLICATION_PACKAGES_SID}:(OI)(CI)(RX)',
+            '/T',
+            '/Q',
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or f'exit={result.returncode}').replace('\x00', '').strip()
+        fail(f'Windows packaged browser sandbox ACL preparation failed: {detail[-2048:]}')
+    return True
+
+
+def product_runtime_destinations(
+    app_destination: pathlib.Path,
+    app_source: pathlib.Path,
+    platform: str,
+) -> tuple[pathlib.Path, pathlib.Path]:
+    if platform == 'macos':
+        base = app_destination / app_source.name / 'Contents/Resources/runtime'
+    else:
+        base = app_destination / 'runtime'
+    return base / 'p2/current', base / 'p3/current'
 
 
 def locate_app(root: pathlib.Path, platform: str) -> tuple[pathlib.Path, str]:
@@ -213,32 +257,52 @@ def main() -> int:
     parser.add_argument("--workflow-run-id", default="local")
     parser.add_argument("--workflow-run-attempt", default="1")
     parser.add_argument("--product-current-account", action="store_true")
+    parser.add_argument("--browser-runtime-stage")
     args = parser.parse_args()
     root = pathlib.Path(args.project).resolve()
     runtime_stage = pathlib.Path(args.runtime_stage).resolve()
     output_dir = pathlib.Path(args.output_dir).resolve()
+    browser_runtime_stage = (
+        pathlib.Path(args.browser_runtime_stage).resolve()
+        if args.browser_runtime_stage
+        else None
+    )
     for value, length, label in ((args.source_commit, 40, "source commit"), (args.source_tree, 40, "source tree")):
         if len(value) != length or any(ch not in "0123456789abcdef" for ch in value):
             fail(f"invalid {label}")
     if not (runtime_stage / "runtime/runtime-manifest.v3.json").is_file():
         fail("runtime stage invalid")
+    if args.product_current_account:
+        if browser_runtime_stage is None:
+            fail("product current-account package requires browser runtime stage")
+        if not (browser_runtime_stage / "browser-runtime-manifest.v1.json").is_file():
+            fail("browser runtime stage invalid")
+    elif browser_runtime_stage is not None:
+        fail("browser runtime stage is product-only")
     app_source, app_executable = locate_app(root, args.platform)
     payload = output_dir / f"payload-{args.platform}"
     if payload.exists():
         shutil.rmtree(payload)
     payload.mkdir(parents=True)
     app_destination = payload / "app"
+    browser_runtime_destination: pathlib.Path | None = None
     if args.platform == "macos":
         app_destination.mkdir()
         copy_tree(app_source, app_destination / app_source.name)
-        runtime_destination = app_destination / app_source.name / (
-            "Contents/Resources/runtime/p2/current"
-            if args.product_current_account
-            else "Contents/MacOS/runtime/p2/current"
-        )
+        if args.product_current_account:
+            runtime_destination, browser_runtime_destination = product_runtime_destinations(
+                app_destination, app_source, args.platform
+            )
+        else:
+            runtime_destination = app_destination / app_source.name / "Contents/MacOS/runtime/p2/current"
     else:
         copy_tree(app_source, app_destination)
-        runtime_destination = app_destination / "runtime/p2/current"
+        if args.product_current_account:
+            runtime_destination, browser_runtime_destination = product_runtime_destinations(
+                app_destination, app_source, args.platform
+            )
+        else:
+            runtime_destination = app_destination / "runtime/p2/current"
     copy_tree(runtime_stage / "runtime", runtime_destination)
     macos_spawn_helpers: list[pathlib.Path] = []
     if args.platform == "macos":
@@ -253,6 +317,14 @@ def main() -> int:
         )
         if windows_only_conpty.exists():
             shutil.rmtree(windows_only_conpty)
+    if args.product_current_account:
+        assert browser_runtime_stage is not None
+        assert browser_runtime_destination is not None
+        copy_tree(browser_runtime_stage, browser_runtime_destination)
+        prepare_windows_browser_sandbox_acl(
+            browser_runtime_destination / "browser",
+            platform=args.platform,
+        )
     p1a_destination = payload / "p1a-native"
     copy_tree(runtime_stage / "p1a-native", p1a_destination)
     qa_code_signing = "unsigned-owner-risk-qa"
@@ -316,6 +388,12 @@ def main() -> int:
             item.relative_to(runtime_destination).as_posix()
             for item in macos_spawn_helpers
         ],
+        "browserRuntimeIncluded": bool(args.product_current_account),
+        "browserRuntimeManifestSha256": (
+            sha_file(browser_runtime_destination / "browser-runtime-manifest.v1.json")
+            if browser_runtime_destination is not None
+            else None
+        ),
         "appExecutable": app_executable,
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
