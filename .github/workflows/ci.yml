@@ -143,6 +143,11 @@ jobs:
       - run: python tool/dart_format_scope.py --check
       - run: flutter analyze --no-pub --fatal-warnings --fatal-infos
       - run: flutter test --no-pub --concurrency=1 --reporter expanded
+      - name: Real blank-project Runner smoke
+        if: matrix.lane == 'ubuntu'
+        env:
+          KRISTIN_RUN_REAL_FLUTTER_SMOKE: '1'
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/synthetic_runner_flutter_smoke_test.dart
       - name: P1-002 access profile v2
         run: |
           python tool/access_profile_v2_test.py
