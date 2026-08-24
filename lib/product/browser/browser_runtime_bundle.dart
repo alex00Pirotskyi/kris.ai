@@ -56,26 +56,26 @@ final class P3BrowserRuntimeResourceSet {
   final String packageLockSha256;
 
   Map<String, Object?> get provenance => <String, Object?>{
-    'resolver': 'P3ApplicationOwnedBrowserRuntimeResolver',
-    'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
-    'applicationOwned': true,
-    'globalRuntimeRequired': false,
-    'browserNetworkInstallRequired': false,
-    'sourceCommit': sourceCommit,
-    'sourceTree': sourceTree,
-    'runtimeBuildSha256': runtimeBuildSha256,
-    'manifestSha256': manifestSha256,
-    'nodeVersion': nodeVersion,
-    'automationHostPackageVersion': automationHostPackageVersion,
-    'browserEngine': browserEngine,
-    'browserRevision': browserRevision,
-    'nodeExecutableSha256': nodeExecutableSha256,
-    'workerScriptSha256': workerScriptSha256,
-    'browserExecutableSha256': browserExecutableSha256,
-    'browserRootTreeSha256': browserRootTreeSha256,
-    'packageLockSha256': packageLockSha256,
-    'rootPathSha256': Sha256.text(root.absolute.path),
-  };
+        'resolver': 'P3ApplicationOwnedBrowserRuntimeResolver',
+        'bundleType': P3ApplicationOwnedBrowserRuntimeResolver.bundleType,
+        'applicationOwned': true,
+        'globalRuntimeRequired': false,
+        'browserNetworkInstallRequired': false,
+        'sourceCommit': sourceCommit,
+        'sourceTree': sourceTree,
+        'runtimeBuildSha256': runtimeBuildSha256,
+        'manifestSha256': manifestSha256,
+        'nodeVersion': nodeVersion,
+        'automationHostPackageVersion': automationHostPackageVersion,
+        'browserEngine': browserEngine,
+        'browserRevision': browserRevision,
+        'nodeExecutableSha256': nodeExecutableSha256,
+        'workerScriptSha256': workerScriptSha256,
+        'browserExecutableSha256': browserExecutableSha256,
+        'browserRootTreeSha256': browserRootTreeSha256,
+        'packageLockSha256': packageLockSha256,
+        'rootPathSha256': Sha256.text(root.absolute.path),
+      };
 }
 
 /// Resolves only a packaged P3 browser runtime owned by the application.
