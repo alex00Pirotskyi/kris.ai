@@ -70,12 +70,12 @@ void main() {
           final promptTail = provider.prompts.length <= 4
               ? provider.prompts
               : provider.prompts.sublist(provider.prompts.length - 4);
-          print('SYNTHETIC_RUN_RECORD ${jsonEncode(run.toJson())}');
-          print(
+          stderr.writeln('SYNTHETIC_RUN_RECORD ${jsonEncode(run.toJson())}');
+          stderr.writeln(
             'SYNTHETIC_RUN_EVIDENCE ${jsonEncode(diagnosticEvidence.map((item) => <String, dynamic>{'kind': item.kind.name, 'payload': item.payload}).toList(growable: false))}',
           );
-          print('SYNTHETIC_RUN_AUDIT_TAIL ${jsonEncode(auditTail)}');
-          print('SYNTHETIC_RUN_PROMPT_TAIL ${jsonEncode(promptTail)}');
+          stderr.writeln('SYNTHETIC_RUN_AUDIT_TAIL ${jsonEncode(auditTail)}');
+          stderr.writeln('SYNTHETIC_RUN_PROMPT_TAIL ${jsonEncode(promptTail)}');
         }
 
         expect(run.state.name, 'succeeded');
