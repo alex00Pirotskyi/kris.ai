@@ -39,6 +39,9 @@ function relativeFile(root, file, executable = false, kind = 'file') {
   return { kind, path: path.relative(root, file).split(path.sep).join('/'), sha256: shaFile(file), bytes: fs.statSync(file).size, executable };
 }
 const args = parseArgs(process.argv.slice(2));
+const mode = args.mode ?? 'qa';
+if (!['qa', 'product-current-account'].includes(mode)) fail('mode invalid');
+const productCurrentAccount = mode === 'product-current-account';
 const root = path.resolve(args.root ?? '');
 const platform = args.platform;
 const sourceCommit = args['source-commit'];
@@ -66,14 +69,16 @@ const policy = {
   workingDirectory: path.resolve(hostRoot),
   launcherPath: path.resolve(launcher), launcherSha256: shaFile(launcher),
   packageSha256: p2PackageSha256, sourceCommit, sourceTree,
-  ownerRiskQa: true, osIsolationWaived: true,
+  ownerRiskQa: true, osIsolationWaived: true, productCurrentAccount,
 };
 writeJson(policyPath, policy);
 const provisioningPath = path.join(root, 'provisioning', 'environment.v1.json');
 writeJson(provisioningPath, {
   schemaVersion: '1.0.0', provisioningType: 'kristin-p2-application-runtime-environment-v1', containsSecrets: false,
   environment: {
-    KRISTIN_OWNER_RISK_QA: '1', KRISTIN_P2_COMMIT_SHA: sourceCommit,
+    KRISTIN_OWNER_RISK_QA: '1',
+    ...(productCurrentAccount ? { KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT: '1' } : {}),
+    KRISTIN_P2_COMMIT_SHA: sourceCommit,
     KRISTIN_P2_SOURCE_PACKAGE_SHA256: p2PackageSha256,
     KRISTIN_P2_E2E_ROOT: root, KRISTIN_P2_RUNNER_ID: `owner-risk-qa-${platform}`,
     KRISTIN_P2_RUNNER_GROUP: 'github-hosted-tri-platform-qa',
@@ -103,8 +108,8 @@ const manifest = {
   authorityServiceExternal: false, authorityServiceExecutableStaged: false,
   authorityBrokerStaged: false, rawAuthoritySecretsIncluded: false, p2DelegationOnly: true,
   restrictedWorkerLauncherExternal: false, restrictedWorkerLauncherOsEnforced: false,
-  ownerRiskQa: true, securityEvidenceWaived: true,
+  ownerRiskQa: true, productCurrentAccount, securityEvidenceWaived: true,
 };
 const manifestPath = path.join(root, 'runtime-manifest.v3.json');
 writeJson(manifestPath, manifest);
-console.log(JSON.stringify({ status: 'passed', platform, runtimeRoot: root, manifestPath, manifestSha256: shaFile(manifestPath), runtimeBuildSha256 }, null, 2));
+console.log(JSON.stringify({ status: 'passed', platform, mode, productCurrentAccount, runtimeRoot: root, manifestPath, manifestSha256: shaFile(manifestPath), runtimeBuildSha256 }, null, 2));

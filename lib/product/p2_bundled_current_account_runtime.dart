@@ -8,7 +8,9 @@ final class P2BundledCurrentAccountRuntime {
     required Directory applicationDataRoot,
     String? executablePath,
   }) async {
-    final executable = File(executablePath ?? Platform.resolvedExecutable).absolute;
+    final executable = File(
+      executablePath ?? Platform.resolvedExecutable,
+    ).absolute;
     final bundledRoot = Directory(
       '${executable.parent.path}${Platform.pathSeparator}runtime'
       '${Platform.pathSeparator}p2${Platform.pathSeparator}current',
@@ -67,7 +69,8 @@ final class P2BundledCurrentAccountRuntime {
             existing['identity'],
             'p2_existing_runtime_identity_invalid',
           );
-          replace = identity['sourceCommit'] != bundledCommit ||
+          replace =
+              identity['sourceCommit'] != bundledCommit ||
               identity['sourceTree'] != bundledTree;
         }
       } catch (_) {
@@ -157,7 +160,10 @@ final class P2BundledCurrentAccountRuntime {
 
   static Future<void> _copyTree(Directory source, Directory destination) async {
     await destination.create(recursive: true);
-    await for (final entity in source.list(recursive: true, followLinks: false)) {
+    await for (final entity in source.list(
+      recursive: true,
+      followLinks: false,
+    )) {
       final relative = entity.path.substring(source.path.length + 1);
       final target = '${destination.path}${Platform.pathSeparator}$relative';
       if (await FileSystemEntity.isLink(entity.path)) {

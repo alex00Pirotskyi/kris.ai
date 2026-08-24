@@ -27,6 +27,7 @@ import 'run_steering.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
+import 'p2_bundled_current_account_runtime.dart';
 import 'p8_observability.dart';
 import 'p1_authority_service_contract_v1.dart';
 import 'p1_authority_service_product_runtime_v1.dart';
@@ -37,10 +38,10 @@ final class P3ProductRuntimeBrowserHandle {
     required Directory? stateDirectory,
     required String statusCode,
     required Map<String, Object?> provenance,
-  })  : _service = service,
-        _stateDirectory = stateDirectory,
-        _statusCode = statusCode,
-        _provenance = Map<String, Object?>.unmodifiable(provenance);
+  }) : _service = service,
+       _stateDirectory = stateDirectory,
+       _statusCode = statusCode,
+       _provenance = Map<String, Object?>.unmodifiable(provenance);
 
   factory P3ProductRuntimeBrowserHandle.blocked(String statusCode) =>
       P3ProductRuntimeBrowserHandle._(
@@ -373,8 +374,8 @@ class ProductRuntime {
           final provider = models.providerFor(model);
           if (model.providerId == 'ollama') {
             final discovered = await provider.discover().timeout(
-                  const Duration(seconds: 12),
-                );
+              const Duration(seconds: 12),
+            );
             final exact = discovered.where((candidate) {
               if (candidate.name != model.name) return false;
               if (model.digest.isEmpty || candidate.digest.isEmpty) return true;
@@ -480,10 +481,9 @@ class ProductRuntime {
             return 100;
           }
 
-          final candidates = references
-              .where((item) => score(item) < 100)
-              .toList()
-            ..sort((left, right) => score(left).compareTo(score(right)));
+          final candidates =
+              references.where((item) => score(item) < 100).toList()
+                ..sort((left, right) => score(left).compareTo(score(right)));
           if (candidates.isEmpty) {
             stopwatch.stop();
             return RunCapabilityProbeResult(
@@ -620,6 +620,11 @@ class ProductRuntime {
     telemetryBridge.start();
     runtime._p1AuthorityServiceRuntime =
         await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
+    if (runtime.p1AuthorityService == null) {
+      await P2BundledCurrentAccountRuntime.prepareIfPresent(
+        applicationDataRoot: directories.root,
+      );
+    }
     runtime._p2OwnerModeRuntime = await P2ProductRuntimeBootstrap.start(
       dataRoot: directories.root,
       p1AuthorityService: runtime.p1AuthorityService,
@@ -671,9 +676,7 @@ class ProductRuntime {
               ? CapabilityDoctorAction.none
               : CapabilityDoctorAction.openSettings,
           durationMilliseconds: storageWatch.elapsedMilliseconds,
-          details: <String, Object?>{
-            'root': directories.root.path,
-          },
+          details: <String, Object?>{'root': directories.root.path},
         ),
       );
     } catch (error) {
@@ -792,9 +795,7 @@ class ProductRuntime {
           required: false,
           action: CapabilityDoctorAction.retryDoctor,
           durationMilliseconds: browserWatch.elapsedMilliseconds,
-          details: <String, Object?>{
-            'statusCode': p3BrowserRuntime.statusCode,
-          },
+          details: <String, Object?>{'statusCode': p3BrowserRuntime.statusCode},
         ),
       );
     } else if (depth == CapabilityDoctorDepth.quick) {
@@ -808,9 +809,7 @@ class ProductRuntime {
               'The application-owned browser bundle is available. Full Doctor launches a bounded startup probe.',
           required: false,
           durationMilliseconds: browserWatch.elapsedMilliseconds,
-          details: <String, Object?>{
-            'statusCode': p3BrowserRuntime.statusCode,
-          },
+          details: <String, Object?>{'statusCode': p3BrowserRuntime.statusCode},
         ),
       );
     } else {
@@ -936,7 +935,8 @@ class ProductRuntime {
     } else {
       try {
         final knownModels = discoveredModels ?? await discoverModels();
-        final report = depth == CapabilityDoctorDepth.quick &&
+        final report =
+            depth == CapabilityDoctorDepth.quick &&
                 projectReport?.projectId == projectId
             ? projectReport!
             : await inspectProject(
@@ -986,10 +986,7 @@ class ProductRuntime {
       }
     }
 
-    return CapabilityDoctorReport(
-      depth: depth,
-      checks: checks,
-    );
+    return CapabilityDoctorReport(depth: depth, checks: checks);
   }
 
   Future<void> close() async {
@@ -1012,8 +1009,10 @@ class ProductRuntime {
     required String request,
     String? suggestedName,
   }) async {
-    final intent =
-        conversationOrchestrator.classify(request, CommandMode.build);
+    final intent = conversationOrchestrator.classify(
+      request,
+      CommandMode.build,
+    );
     final location = await projectProvisioning.prepare(
       suggestedName: suggestedName?.trim().isNotEmpty == true
           ? suggestedName!
@@ -1146,8 +1145,7 @@ class ProductRuntime {
 
   Future<String?> pickProjectFolder({
     String prompt = 'Choose a project folder',
-  }) =>
-      diagnostics.pickFolder(prompt: prompt);
+  }) => diagnostics.pickFolder(prompt: prompt);
 
   Future<void> removeProject(String id) async {
     final project = await repositories.projects.get(id);
@@ -1390,13 +1388,12 @@ class ProductRuntime {
     required String title,
     required String content,
     Set<String> tags = const <String>{},
-  }) =>
-      knowledge.addNote(
-        projectId: projectId,
-        title: title,
-        content: content,
-        tags: tags,
-      );
+  }) => knowledge.addNote(
+    projectId: projectId,
+    title: title,
+    content: content,
+    tags: tags,
+  );
 
   Future<void> deleteKnowledge(String id) => knowledge.deleteEntry(id);
 
@@ -1428,10 +1425,10 @@ class ProductRuntime {
     });
     await events
         .publish('memory.pin_changed', episode.projectId, <String, dynamic>{
-      'episodeId': episode.id,
-      'projectId': episode.projectId,
-      'pinned': episode.pinned,
-    });
+          'episodeId': episode.id,
+          'projectId': episode.projectId,
+          'pinned': episode.pinned,
+        });
     return episode;
   }
 
@@ -1447,14 +1444,13 @@ class ProductRuntime {
     int limit = 12,
     bool includeEpisodes = true,
     bool includeUnsuccessfulEpisodes = false,
-  }) =>
-      knowledge.retrieve(
-        projectId,
-        query,
-        limit: limit,
-        includeEpisodes: includeEpisodes,
-        includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
-      );
+  }) => knowledge.retrieve(
+    projectId,
+    query,
+    limit: limit,
+    includeEpisodes: includeEpisodes,
+    includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
+  );
 
   Future<KnowledgeStats> knowledgeStats(String projectId) =>
       knowledge.stats(projectId);
@@ -1518,12 +1514,13 @@ class ProductRuntime {
       description: description.trim(),
       systemPrompt: systemPrompt.trim(),
       userPrompt: userPrompt.trim(),
-      variables: variables
-          .map((value) => value.trim())
-          .where((value) => value.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort(),
+      variables:
+          variables
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort(),
       tags: tags
           .map((value) => value.trim().toLowerCase())
           .where((value) => value.isNotEmpty)
@@ -1554,15 +1551,14 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generateClarification(
-        goal: goal,
-        model: model,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generateClarification(
+    goal: goal,
+    model: model,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<PromptStudioDraft> generatePromptDraft({
     required String goal,
@@ -1576,23 +1572,22 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generatePrompt(
-        goal: goal,
-        model: model,
-        action: action,
-        current: current,
-        feedback: feedback,
-        clarification: clarification,
-        clarificationAnswers: clarificationAnswers,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generatePrompt(
+    goal: goal,
+    model: model,
+    action: action,
+    current: current,
+    feedback: feedback,
+    clarification: clarification,
+    clarificationAnswers: clarificationAnswers,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<({PromptTemplateRecord prompt, PromptVersionRecord version})>
-      saveGeneratedPrompt({
+  saveGeneratedPrompt({
     String? id,
     required String goal,
     required PromptStudioDraft draft,
@@ -1634,37 +1629,34 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generateTaskPlan(
-        promptVersion: promptVersion,
-        projectId: projectId,
-        model: model,
-        depth: depth,
-        maxLeafTasks: maxLeafTasks,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generateTaskPlan(
+    promptVersion: promptVersion,
+    projectId: projectId,
+    model: model,
+    depth: depth,
+    maxLeafTasks: maxLeafTasks,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<List<TaskPlanRecord>> listTaskPlans({
     String? promptId,
     String? projectId,
-  }) =>
-      promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
+  }) => promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
 
   Future<TaskPlanRecord> updateTaskPlan(
     TaskPlanRecord plan, {
     required List<PlanTaskRecord> tasks,
     String? title,
     String? rationale,
-  }) =>
-      promptPlanning.updateTaskPlan(
-        plan,
-        tasks: tasks,
-        title: title,
-        rationale: rationale,
-      );
+  }) => promptPlanning.updateTaskPlan(
+    plan,
+    tasks: tasks,
+    title: title,
+    rationale: rationale,
+  );
 
   Future<PreparedCommand> prepareTaskPlan({
     required TaskPlanRecord plan,
@@ -1950,12 +1942,11 @@ class ProductRuntime {
     required String label,
     required String environmentKey,
     String description = '',
-  }) =>
-      secrets.registerReference(
-        label: label,
-        environmentKey: environmentKey,
-        description: description,
-      );
+  }) => secrets.registerReference(
+    label: label,
+    environmentKey: environmentKey,
+    description: description,
+  );
 
   Future<List<SecretReference>> listSecretReferences() =>
       repositories.secretReferences.all();
@@ -1968,16 +1959,15 @@ class ProductRuntime {
     required Set<String> allowedTools,
     String protocolVersion = '2024-11-05',
     Duration validity = const Duration(days: 30),
-  }) =>
-      mcp.trust(
-        projectId: projectId,
-        label: label,
-        executablePath: executablePath,
-        arguments: arguments,
-        allowedTools: allowedTools,
-        protocolVersion: protocolVersion,
-        validity: validity,
-      );
+  }) => mcp.trust(
+    projectId: projectId,
+    label: label,
+    executablePath: executablePath,
+    arguments: arguments,
+    allowedTools: allowedTools,
+    protocolVersion: protocolVersion,
+    validity: validity,
+  );
 
   Future<List<McpTrustRecord>> listMcpTrust() => mcp.repository.all();
   Future<void> revokeMcpTrust(String id) => mcp.revoke(id);
@@ -1987,13 +1977,12 @@ class ProductRuntime {
     required Set<String> scopes,
     String? projectId,
     Duration validity = const Duration(days: 30),
-  }) =>
-      tokens.issue(
-        label: label,
-        scopes: scopes,
-        projectId: projectId,
-        validity: validity,
-      );
+  }) => tokens.issue(
+    label: label,
+    scopes: scopes,
+    projectId: projectId,
+    validity: validity,
+  );
 
   Future<List<ApiTokenRecord>> listApiTokens() => repositories.tokens.all();
   Future<void> revokeApiToken(String id) => tokens.revoke(id);

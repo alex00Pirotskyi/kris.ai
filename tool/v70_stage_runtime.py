@@ -91,6 +91,7 @@ def main() -> int:
     parser.add_argument("--source-tree", required=True)
     parser.add_argument("--p2-package-sha256", default=P2_SHA)
     parser.add_argument("--configurator", required=True)
+    parser.add_argument("--mode", choices=("qa", "product-current-account"), default="qa")
     parser.add_argument("--github-env")
     args = parser.parse_args()
 
@@ -189,6 +190,7 @@ def main() -> int:
         "--source-tree", args.source_tree,
         "--p2-package-sha256", args.p2_package_sha256,
         "--p1-contract", str(runtime / "contracts" / contract.name),
+        "--mode", args.mode,
     ])
     environment = {
         "KRISTIN_V70_RUNTIME_ROOT": str(runtime),
@@ -198,6 +200,7 @@ def main() -> int:
         "KRISTIN_V70_LAUNCHER": str(runtime / "automation_host/src/owner-risk-launcher.mjs"),
         "KRISTIN_V70_POLICY": str(runtime / "provisioning/worker-policy.v2.json"),
         "KRISTIN_OWNER_RISK_QA": "1",
+        **({"KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT": "1"} if args.mode == "product-current-account" else {}),
     }
     for name, relative in (
         ("KRISTIN_V70_WINDOWS_HELPER", "native/windowsJobHelper"),
@@ -218,7 +221,7 @@ def main() -> int:
 
     metadata = {
         "schemaVersion": "1.0.0",
-        "mode": "owner-risk-tri-platform-qa",
+        "mode": "product-current-account" if args.mode == "product-current-account" else "owner-risk-tri-platform-qa",
         "platform": args.platform,
         "sourceCommit": args.source_commit,
         "sourceTree": args.source_tree,

@@ -212,6 +212,7 @@ def main() -> int:
     parser.add_argument("--source-tree", required=True)
     parser.add_argument("--workflow-run-id", default="local")
     parser.add_argument("--workflow-run-attempt", default="1")
+    parser.add_argument("--product-current-account", action="store_true")
     args = parser.parse_args()
     root = pathlib.Path(args.project).resolve()
     runtime_stage = pathlib.Path(args.runtime_stage).resolve()
@@ -257,36 +258,39 @@ def main() -> int:
             p1a_destination,
             runtime_executables=macos_spawn_helpers,
         )
-    write_launchers(payload, args.platform, app_executable, args.source_commit, args.source_tree)
+    if not args.product_current_account:
+        write_launchers(payload, args.platform, app_executable, args.source_commit, args.source_tree)
 
     qa_dir = payload / "qa"
-    qa_dir.mkdir(parents=True)
-    for relative in ("OWNER_RISK_QA_SHIPMENT.md", "config/p1_p2_owner_risk_qa.v1.json"):
-        source = root / relative
-        if source.is_file():
-            shutil.copy2(source, qa_dir / source.name)
-    governed_qa = root / "qa/v71r12"
-    if not governed_qa.is_dir():
-        fail("governed V71 QA handoff directory missing")
-    for source in sorted(governed_qa.rglob("*"), key=lambda item: item.relative_to(governed_qa).as_posix()):
-        if source.is_dir():
-            continue
-        relative = source.relative_to(governed_qa)
-        target = qa_dir / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-    required_qa = (
-        qa_dir / "TRI_PLATFORM_TEST_MATRIX.md",
-        qa_dir / "QA_HANDOFF.md",
-        qa_dir / "KNOWN_LIMITATIONS.md",
-        qa_dir / "SHIPMENT_CLASSIFICATION.md",
-        qa_dir / "P1_P2_FEATURE_COVERAGE.json",
-    )
-    if any(not item.is_file() for item in required_qa):
-        fail("complete QA matrix/coverage payload missing")
+    if not args.product_current_account:
+        qa_dir.mkdir(parents=True)
+    if not args.product_current_account:
+        for relative in ("OWNER_RISK_QA_SHIPMENT.md", "config/p1_p2_owner_risk_qa.v1.json"):
+            source = root / relative
+            if source.is_file():
+                shutil.copy2(source, qa_dir / source.name)
+        governed_qa = root / "qa/v71r12"
+        if not governed_qa.is_dir():
+            fail("governed V71 QA handoff directory missing")
+        for source in sorted(governed_qa.rglob("*"), key=lambda item: item.relative_to(governed_qa).as_posix()):
+            if source.is_dir():
+                continue
+            relative = source.relative_to(governed_qa)
+            target = qa_dir / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+        required_qa = (
+            qa_dir / "TRI_PLATFORM_TEST_MATRIX.md",
+            qa_dir / "QA_HANDOFF.md",
+            qa_dir / "KNOWN_LIMITATIONS.md",
+            qa_dir / "SHIPMENT_CLASSIFICATION.md",
+            qa_dir / "P1_P2_FEATURE_COVERAGE.json",
+        )
+        if any(not item.is_file() for item in required_qa):
+            fail("complete QA matrix/coverage payload missing")
     metadata = {
         "schemaVersion": "1.0.0",
-        "bundleType": "kristin-p1-p2-owner-risk-qa-v71r12",
+        "bundleType": "kristin-current-account-owner-product-v1" if args.product_current_account else "kristin-p1-p2-owner-risk-qa-v71r12",
         "platform": args.platform,
         "sourceCommit": args.source_commit,
         "sourceTree": args.source_tree,
@@ -297,10 +301,12 @@ def main() -> int:
         "rootOrAdministratorAuthorityAccepted": True,
         "formalSecurityCompletion": False,
         "productionReleaseEligible": False,
-        "qaShipmentEligible": True,
+        "functionalOwnerModeEligible": bool(args.product_current_account),
+        "secureIsolationCertified": False,
+        "qaShipmentEligible": not args.product_current_account,
         "allThreePlatformArtifactsRequired": True,
-        "manualQaMatrixIncluded": True,
-        "p1P2FeatureCoverageIncluded": True,
+        "manualQaMatrixIncluded": not args.product_current_account,
+        "p1P2FeatureCoverageIncluded": not args.product_current_account,
         "qaCodeSigning": qa_code_signing,
         "macosNodePtySpawnHelpers": [
             item.relative_to(runtime_destination).as_posix()
@@ -309,13 +315,20 @@ def main() -> int:
         "appExecutable": app_executable,
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
-    (payload / "QA_BUILD_METADATA.json").write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    metadata_name = "OWNER_RUNTIME_METADATA.json" if args.product_current_account else "QA_BUILD_METADATA.json"
+    (payload / metadata_name).write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     manifest = {
         **metadata,
         "files": hash_rows(payload),
     }
-    (payload / "QA_BUNDLE_MANIFEST.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    archive = output_dir / f"KRISTIN_P1_P2_OWNER_RISK_QA_{args.platform.upper()}_V71R12_{args.source_commit[:12]}.zip"
+    manifest_name = "OWNER_RUNTIME_MANIFEST.json" if args.product_current_account else "QA_BUNDLE_MANIFEST.json"
+    (payload / manifest_name).write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    archive_name = (
+        f"KRISTIN_OWNER_MODE_{args.platform.upper()}_{args.source_commit[:12]}.zip"
+        if args.product_current_account
+        else f"KRISTIN_P1_P2_OWNER_RISK_QA_{args.platform.upper()}_V71R12_{args.source_commit[:12]}.zip"
+    )
+    archive = output_dir / archive_name
     zip_payload(payload, archive)
     digest = sha_file(archive)
     archive.with_name(archive.name + ".sha256").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")
