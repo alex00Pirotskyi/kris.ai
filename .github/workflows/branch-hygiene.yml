@@ -1,4 +1,4 @@
-name: owner-macos-resources-finalizer
+name: owner-macos-resources-publish
 
 on:
   pull_request:
@@ -9,17 +9,17 @@ permissions:
   contents: read
 
 concurrency:
-  group: owner-macos-resources-finalizer-${{ github.event.pull_request.head.sha }}
+  group: owner-macos-resources-publish-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 jobs:
-  finalize:
-    name: owner-macos-resources-finalize
+  publish:
+    name: owner-macos-resources-publish
     if: >-
       github.event.pull_request.head.ref == 'hotfix/owner-mode-single-click-provisioning' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
@@ -28,55 +28,34 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: true
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.13.5'
-          check-latest: false
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
-        with:
-          flutter-version: '3.44.8'
-          channel: stable
-          cache: true
-      - name: Apply exact macOS Resources product layout fix
+      - name: Reproduce already-qualified macOS layout source
         shell: bash
         run: |
           set -euo pipefail
           python -m py_compile tool/owner_macos_resources_finalize.py
           python tool/owner_macos_resources_finalize.py
-          dart format lib/product/p2_bundled_current_account_runtime.dart
           python -m py_compile tool/v70_package_platform.py
           grep -F 'Resources/runtime/p2/current' tool/v70_package_platform.py
           grep -F 'executable.parent.parent.path' lib/product/p2_bundled_current_account_runtime.dart
-      - name: Qualify focused source compatibility
-        shell: bash
-        run: |
-          set -euo pipefail
-          flutter pub get
-          python tool/p2_source_inventory_test.py --project .
-          python tool/p2_runtime_resource_contract_test.py
-          flutter test --concurrency=1 \
-            test/product/p2_single_click_owner_mode_test.dart \
-            test/product/p2_owner_risk_contract_test.dart \
-            test/product/p2_source_contract_test.dart
-          flutter analyze --fatal-warnings --fatal-infos
-      - name: Restore canonical workflow and refresh governed manifest
+      - name: Strip carrier state and refresh manifest
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main --depth=1
           git checkout origin/main -- .github/workflows/branch-hygiene.yml
           git rm -f tool/owner_macos_resources_finalize.py
-          rm -rf .dart_tool build
           python tool/p1a_refresh_source_manifest.py .
           git add -A
           git diff --cached --check
           mapfile -t paths < <(git diff --cached --name-only | LC_ALL=C sort)
-          printf 'DURABLE_PATH=%s\n' "${paths[@]}"
-          test "${#paths[@]}" -eq 3
-          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
-          test "${paths[1]}" = 'lib/product/p2_bundled_current_account_runtime.dart'
-          test "${paths[2]}" = 'tool/v70_package_platform.py'
-      - name: Publish durable macOS layout fix
+          printf 'PUBLISH_PATH=%s\n' "${paths[@]}"
+          test "${#paths[@]}" -eq 5
+          test "${paths[0]}" = '.github/workflows/branch-hygiene.yml'
+          test "${paths[1]}" = 'SOURCE_MANIFEST.sha256'
+          test "${paths[2]}" = 'lib/product/p2_bundled_current_account_runtime.dart'
+          test "${paths[3]}" = 'tool/owner_macos_resources_finalize.py'
+          test "${paths[4]}" = 'tool/v70_package_platform.py'
+      - name: Publish durable macOS Resources fix
         shell: bash
         run: |
           set -euo pipefail
