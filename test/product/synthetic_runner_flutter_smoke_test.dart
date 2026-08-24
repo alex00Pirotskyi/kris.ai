@@ -337,7 +337,7 @@ final class _FlutterSmokeProvider implements LanguageModelProvider {
           ],
         };
 
-  static const String _repairSource = r'''
+  static const String _repairSource = r"""
 import 'dart:io';
 
 void main() {
@@ -391,7 +391,7 @@ void main() {
 }
 ''');
 }
-''';
+""";
 
   final ModelIdentity identity;
   final Map<String, List<Map<String, Object?>>> _actions;
