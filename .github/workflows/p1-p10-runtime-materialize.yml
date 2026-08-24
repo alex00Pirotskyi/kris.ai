@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: p1-p10-runtime-materializer-${{ github.event.pull_request.head.sha }}
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          persist-credentials: false
+          persist-credentials: true
           fetch-depth: 0
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -46,6 +46,23 @@ jobs:
           python tool/v71r12_bootstrap_hosted_python.py --project .
           flutter pub get
 
+      - name: Make combined product qualification a normal PR gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/p1-p10-product-runtime.yml')
+          s = p.read_text(encoding='utf-8')
+          old = "on:\n  workflow_dispatch:\n"
+          new = """on:\n  workflow_dispatch:\n  pull_request:\n    branches: [main]\n    paths:\n      - '.github/workflows/p1-p10-product-runtime.yml'\n      - 'lib/product/p2_*.dart'\n      - 'lib/product/product_runtime.dart'\n      - 'lib/product/browser/**'\n      - 'automation_host/**'\n      - 'tool/v70_*.py'\n      - 'tool/p3_stage_browser_runtime_bundle.py'\n      - 'tool/p9_*.py'\n      - 'tool/p10_*.py'\n      - 'tool/p2_p3_product_packaging_contract_test.py'\n      - 'test/product/p1_p10_packaged_runtime_smoke_test.dart'\n      - 'test/product/p2_p3_packaged_runtime_paths_test.dart'\n      - 'config/release_targets.v1.json'\n      - 'SOURCE_MANIFEST.sha256'\n"""
+          if s.count(old) != 1:
+              raise SystemExit('product runtime workflow trigger anchor drift')
+          s = s.replace(old, new, 1)
+          s = s.replace('.v70-dist/KRISTIN_PRODUCT_CURRENT_ACCOUNT_*.zip', '.v70-dist/KRISTIN_OWNER_MODE_*.zip')
+          s = s.replace('.v70-dist/KRISTIN_PRODUCT_CURRENT_ACCOUNT_*.zip.sha256', '.v70-dist/KRISTIN_OWNER_MODE_*.zip.sha256')
+          p.write_text(s, encoding='utf-8', newline='\n')
+          PY
+
       - name: Focused contracts and analyzer
         run: |
           python tool/p2_packaging_contract_test.py
@@ -56,6 +73,7 @@ jobs:
           flutter test --no-pub test/product/p2_p3_packaged_runtime_paths_test.dart
           flutter test --no-pub test/product/p2_single_click_owner_mode_test.dart
           flutter test --no-pub test/product/browser/browser_runtime_bundle_test.dart
+          flutter test --no-pub test/product/browser/browser_product_runtime_test.dart
           flutter analyze --no-pub --fatal-warnings --fatal-infos
 
       - name: Build exact durable manifest
@@ -67,21 +85,13 @@ jobs:
           flutter test --no-pub test/product/source_contract_test.dart
           git diff --check
 
-      - name: Emit exact materialized blobs
+      - name: Publish exact durable candidate
+        shell: bash
         run: |
-          python - <<'PY'
-          import base64, hashlib, pathlib
-          paths = [
-              'lib/product/p2_runtime_resource_resolver.dart',
-              'lib/product/browser/browser_runtime_bundle.dart',
-              'tool/v70_package_platform.py',
-              'test/product/p2_p3_packaged_runtime_paths_test.dart',
-              'test/product/p1_p10_packaged_runtime_smoke_test.dart',
-              'SOURCE_MANIFEST.sha256',
-          ]
-          for name in paths:
-              data = pathlib.Path(name).read_bytes()
-              print(f'MATERIALIZED_BEGIN {name} {hashlib.sha256(data).hexdigest()} {len(data)}')
-              print(base64.b64encode(data).decode('ascii'))
-              print(f'MATERIALIZED_END {name}')
-          PY
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'P1-P10: package P2 and P3 runtimes with release readiness'
+          git push origin HEAD:hotfix/p2-p3-runtime-p1-p10-20260824
