@@ -10,11 +10,11 @@ import 'package:kristin_local_agent/product/p2_product_runtime_bootstrap.dart';
 import 'package:kristin_local_agent/product/p2_runtime_resource_resolver.dart';
 
 void main() {
+  final executable =
+      Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '';
   test(
     'packaged product resolves P2 and P3 and performs real host/browser work',
     () async {
-      final executable =
-          Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '';
       expect(executable, isNotEmpty);
       final dataRoot = await Directory.systemTemp.createTemp(
         'kristin-p1-p10-package-',
@@ -105,7 +105,7 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 4)),
-    skip: (Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '').isEmpty
+    skip: executable.isEmpty
         ? 'requires packaged P2+P3 product payload'
         : false,
   );

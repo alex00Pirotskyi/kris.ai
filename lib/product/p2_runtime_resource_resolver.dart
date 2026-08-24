@@ -148,8 +148,7 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
         decoded is Map && decoded['ownerRiskQa'] == true;
     final manifestProductCurrentAccount =
         decoded is Map && decoded['productCurrentAccount'] == true;
-    final localCurrentAccount =
-        buildOwnerRiskQa ||
+    final localCurrentAccount = buildOwnerRiskQa ||
         manifestOwnerRiskQa ||
         manifestProductCurrentAccount;
     if (decoded is! Map ||
@@ -434,8 +433,7 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
 
   static String _externalPath(Map<String, Object?> row, String key) {
     final value = row['path']?.toString() ?? '';
-    final absolute =
-        value.startsWith('/') ||
+    final absolute = value.startsWith('/') ||
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value) ||
         value.startsWith(r'\\');
     if (!absolute ||
