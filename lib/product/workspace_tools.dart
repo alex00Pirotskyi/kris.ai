@@ -3,9 +3,9 @@ import 'dart:io';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'tool_schema.dart';
-import 'workspace_tools_base.dart' as base;
+import 'workspace_tools_base.dart.inc' as base;
 
-export 'workspace_tools_base.dart' hide ToolRegistry;
+export 'workspace_tools_base.dart.inc' hide ToolRegistry;
 
 /// Product-facing tool registry adapter for command execution reliability.
 ///
