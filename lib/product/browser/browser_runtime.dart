@@ -941,6 +941,41 @@ final class P3BrowserPageObservation {
   final Map<String, Object?> observation;
 }
 
+final class P3BrowserPublicNavigationRequest {
+  const P3BrowserPublicNavigationRequest({
+    required this.url,
+    this.timeout = const Duration(seconds: 30),
+  });
+
+  final String url;
+  final Duration timeout;
+
+  Map<String, Object?> toJson() {
+    final value = url.trim();
+    final parsed = Uri.tryParse(value);
+    if (parsed == null ||
+        parsed.scheme.toLowerCase() != 'https' ||
+        parsed.host.isEmpty ||
+        parsed.userInfo.isNotEmpty ||
+        value.contains('\u0000') ||
+        utf8.encode(value).length > 8192) {
+      throw const P3BrowserRuntimeException(
+        'browser_public_navigation_target_forbidden',
+      );
+    }
+    if (timeout < const Duration(milliseconds: 100) ||
+        timeout > const Duration(seconds: 60)) {
+      throw const P3BrowserRuntimeException(
+        'browser_public_navigation_timeout_invalid',
+      );
+    }
+    return <String, Object?>{
+      'url': parsed.removeFragment().toString(),
+      'timeoutMs': timeout.inMilliseconds,
+    };
+  }
+}
+
 final class P3BrowserLocalNavigationRequest {
   const P3BrowserLocalNavigationRequest({
     required this.url,
@@ -2541,6 +2576,7 @@ final class P3BrowserSessionProcess {
     String? profileId,
     bool downloadsEnabled = false,
     bool uploadsEnabled = false,
+    bool blockServiceWorkers = false,
   }) async {
     if (kind == P3BrowserSessionKind.persistent &&
         (profileId == null || profileId.isEmpty)) {
@@ -2558,6 +2594,7 @@ final class P3BrowserSessionProcess {
       if (profileId != null) 'profileId': profileId,
       'downloadsEnabled': downloadsEnabled,
       'uploadsEnabled': uploadsEnabled,
+      if (blockServiceWorkers) 'blockServiceWorkers': true,
     });
     final info = _decodeResponse(() => P3BrowserSessionInfo.fromJson(result));
     if (info.kind != kind ||
@@ -2643,6 +2680,25 @@ final class P3BrowserSessionProcess {
       _protocolViolation('browser_page_response_identity_mismatch');
     }
     return pages;
+  }
+
+  Future<P3BrowserPageObservation> navigatePublicPage(
+    String sessionId,
+    String pageId,
+    P3BrowserPublicNavigationRequest request,
+  ) async {
+    final result = await _request('page.navigatePublic', <String, Object?>{
+      'sessionId': sessionId,
+      'pageId': pageId,
+      'navigationRequest': request.toJson(),
+    });
+    final observation = _decodeResponse(
+      () => P3BrowserPageObservation.fromJson(result),
+    );
+    if (observation.sessionId != sessionId || observation.pageId != pageId) {
+      _protocolViolation('browser_observation_identity_mismatch');
+    }
+    return observation;
   }
 
   Future<P3BrowserPageObservation> navigateLocalPage(

@@ -49,8 +49,18 @@ import {
   validateUploadReceipt,
   validateUploadStageManifest,
   validateUploadStageRequest,
+  shouldRetryDevToolsPortRead,
   waitForExit,
 } from './browser-runtime.mjs';
+
+test('DevToolsActivePort read retries only expected transient states', () => {
+  assert.equal(shouldRetryDevToolsPortRead({ code: 'ENOENT' }, 'linux'), true);
+  assert.equal(shouldRetryDevToolsPortRead({ code: 'ENOENT' }, 'win32'), true);
+  assert.equal(shouldRetryDevToolsPortRead({ code: 'EBUSY' }, 'win32'), true);
+  assert.equal(shouldRetryDevToolsPortRead({ code: 'EBUSY' }, 'linux'), false);
+  assert.equal(shouldRetryDevToolsPortRead({ code: 'EACCES' }, 'win32'), false);
+  assert.equal(shouldRetryDevToolsPortRead({ code: 'EPERM' }, 'win32'), false);
+});
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
