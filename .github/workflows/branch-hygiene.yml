@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - ci/owner-product-triplatform-ab7e8c18
+  pull_request:
+    branches:
+      - hotfix/owner-mode-single-click-provisioning
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: owner-product-triplatform-ab7e8c18
+  group: owner-product-triplatform-ab7e8c18-${{ github.event_name }}
   cancel-in-progress: false
 
 env:
