@@ -13,6 +13,15 @@ def rep(path: str, old: str, new: str) -> None:
     p.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
 
 
+# The Dart resolver hashes directory rows after a global relative-path sort.
+# Match that canonical order in the Node configurator. A depth-first walk is
+# not equivalent when a sibling file and directory share a lexical prefix.
+rep(
+    'tool/configure-owner-risk-runtime.mjs',
+    "  walk(root);\n  return crypto.createHash('sha256').update(rows.join('\\n')).digest('hex');",
+    "  walk(root);\n  rows.sort();\n  return crypto.createHash('sha256').update(rows.join('\\n')).digest('hex');",
+)
+
 # Product bundles must be path-independent. QA keeps its historical absolute
 # paths so existing QA receipts/fixtures remain unchanged.
 rep(
