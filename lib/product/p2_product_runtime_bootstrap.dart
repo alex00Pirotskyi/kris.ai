@@ -107,7 +107,8 @@ final class P2ProductRuntimeOwnerModeHandle {
   Future<void> close() async => runtime?.close();
   static P2ProductRuntimeOwnerModeHandle active(
     P2ProductRuntimeOwnerMode runtime,
-  ) => P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
+  ) =>
+      P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
   static P2ProductRuntimeOwnerModeHandle blocked(String code) =>
       P2ProductRuntimeOwnerModeHandle._(
         runtime: null,
@@ -147,8 +148,7 @@ final class P2ProductRuntimeBootstrap {
         'KRISTIN_QA_PREVIEW',
         defaultValue: false,
       );
-      final qaPreview =
-          ownerRiskQa ||
+      final qaPreview = ownerRiskQa ||
           (qaPreviewBuild &&
               p1AuthorityService?.service.provenance['qaPreview'] == true);
       if (!ownerRiskQa) {
@@ -157,8 +157,7 @@ final class P2ProductRuntimeBootstrap {
         }
         p1AuthorityService.validateForP2(allowQaPreview: qaPreview);
       }
-      final resolver =
-          resourceResolver ??
+      final resolver = resourceResolver ??
           P2ApplicationOwnedRuntimeResourceResolver(
             applicationDataRoot: dataRoot,
           );
@@ -228,7 +227,7 @@ final class P2ProductRuntimeBootstrap {
             taskId: tab.taskId,
             accessProfileId:
                 activeOwnerRuntime?.controller.current.accessProfileId ??
-                'owner',
+                    'owner',
             operation: operation,
           );
           return P2TerminalAuthorization(

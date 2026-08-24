@@ -36,7 +36,8 @@ void main() {
     );
     expect(
       runtime,
-      contains("authority.authorityProvenance['secureIsolationActive'] != false"),
+      contains(
+          "authority.authorityProvenance['secureIsolationActive'] != false"),
     );
     expect(
       runtime,

@@ -26,35 +26,35 @@ class P2OwnerModeSettings {
   bool get enabled => state != P2OwnerModeState.disabled;
   bool get unattended => state == P2OwnerModeState.enabledUnattended;
   String get accessProfileId => switch (state) {
-    P2OwnerModeState.enabledUnattended => 'owner_unattended',
-    P2OwnerModeState.enabledInteractive => 'owner',
-    P2OwnerModeState.disabled => 'chat',
-  };
+        P2OwnerModeState.enabledUnattended => 'owner_unattended',
+        P2OwnerModeState.enabledInteractive => 'owner',
+        P2OwnerModeState.disabled => 'chat',
+      };
   String get persistentIndicator =>
       enabled ? 'OWNER MODE — full current-account access' : 'Owner Mode off';
   String get safetyLabel => enabled
       ? 'Owner Mode is not a sandbox. Authorized effects can reach all resources available to this OS account.'
       : 'No Owner Mode host authority.';
   Map<String, Object?> toJson() => <String, Object?>{
-    'schemaVersion': '1.1.0',
-    'state': state.name,
-    'approvalPolicy': approvalPolicy.name,
-    'enabledAt': enabledAt?.toUtc().toIso8601String(),
-    'sessionId': sessionId,
-    'sessionExpiresAt': sessionExpiresAt?.toUtc().toIso8601String(),
-    'dataBoundaryAcknowledged': dataBoundaryAcknowledged,
-  };
+        'schemaVersion': '1.1.0',
+        'state': state.name,
+        'approvalPolicy': approvalPolicy.name,
+        'enabledAt': enabledAt?.toUtc().toIso8601String(),
+        'sessionId': sessionId,
+        'sessionExpiresAt': sessionExpiresAt?.toUtc().toIso8601String(),
+        'dataBoundaryAcknowledged': dataBoundaryAcknowledged,
+      };
   factory P2OwnerModeSettings.disabled() => const P2OwnerModeSettings(
-    state: P2OwnerModeState.disabled,
-    approvalPolicy: P2OwnerApprovalPolicy.boundedSession,
-    enabledAt: null,
-    dataBoundaryAcknowledged: false,
-  );
+        state: P2OwnerModeState.disabled,
+        approvalPolicy: P2OwnerApprovalPolicy.boundedSession,
+        enabledAt: null,
+        dataBoundaryAcknowledged: false,
+      );
   P2OwnerModeSettings reset() => P2OwnerModeSettings.disabled();
 }
 
-typedef P2OwnerModeEnableAuthorizer =
-    Future<void> Function(P2OwnerModeSettings settings);
+typedef P2OwnerModeEnableAuthorizer = Future<void> Function(
+    P2OwnerModeSettings settings);
 
 class P2OwnerModeController {
   P2OwnerModeController(
@@ -84,8 +84,7 @@ class P2OwnerModeController {
       throw StateError('owner_data_boundary_acknowledgement_required');
     }
     final now = DateTime.now().toUtc();
-    final expiry =
-        expiresAt?.toUtc() ??
+    final expiry = expiresAt?.toUtc() ??
         now.add(
           unattended ? const Duration(hours: 24) : const Duration(hours: 8),
         );
