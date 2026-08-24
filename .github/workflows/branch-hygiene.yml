@@ -1,9 +1,10 @@
 name: owner-product-triplatform-qualifier
 
 on:
-  pull_request:
+  push:
     branches:
-      - hotfix/owner-mode-single-click-provisioning
+      - ci/owner-product-triplatform-ab7e8c18
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -198,6 +199,8 @@ jobs:
           flutter test test/product/p2_owner_risk_runtime_smoke_test.dart
       - name: Build native app and product Owner package
         shell: bash
+        env:
+          MATRIX_PLATFORM: ${{ matrix.platform }}
         run: |
           set -euo pipefail
           case "${{ matrix.platform }}" in
@@ -229,8 +232,6 @@ jobs:
           assert len(archives) == 1, archives
           print('PRODUCT_PACKAGE_OK', platform, archives[0])
           PY
-        env:
-          MATRIX_PLATFORM: ${{ matrix.platform }}
 
   tri-platform-gate:
     name: owner-product-tri-platform-gate
