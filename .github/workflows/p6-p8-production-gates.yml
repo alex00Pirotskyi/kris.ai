@@ -12,7 +12,6 @@ on:
       - 'lib/product/agent_decision_v3.dart'
       - 'lib/product/agent_protocol_v3.dart'
       - 'lib/product/mcp_registry_v2.dart'
-      - 'lib/product/p5_performance_budget.dart'
       - 'lib/product/p8_effect_journal_adapter.dart'
       - 'lib/product/p8_external_effects.dart'
       - 'lib/product/p8_observability.dart'
@@ -38,7 +37,6 @@ on:
       - 'test/product/agent_decision_v3_test.dart'
       - 'test/product/agent_protocol_v3_test.dart'
       - 'test/product/mcp_registry_v2_test.dart'
-      - 'test/product/p5_performance_budget_test.dart'
       - 'test/product/p8_effect_journal_adapter_test.dart'
       - 'test/product/p8_external_effects_test.dart'
       - 'test/product/p8_observability_test.dart'
@@ -117,7 +115,6 @@ jobs:
             lib/product/agent_decision_v3.dart \
             lib/product/agent_protocol_v3.dart \
             lib/product/mcp_registry_v2.dart \
-            lib/product/p5_performance_budget.dart \
             lib/product/p8_effect_journal_adapter.dart \
             lib/product/p8_external_effects.dart \
             lib/product/p8_observability.dart \
@@ -125,7 +122,6 @@ jobs:
             test/product/agent_decision_v3_test.dart \
             test/product/agent_protocol_v3_test.dart \
             test/product/mcp_registry_v2_test.dart \
-            test/product/p5_performance_budget_test.dart \
             test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
@@ -135,7 +131,6 @@ jobs:
             lib/product/agent_decision_v3.dart \
             lib/product/agent_protocol_v3.dart \
             lib/product/mcp_registry_v2.dart \
-            lib/product/p5_performance_budget.dart \
             lib/product/p8_effect_journal_adapter.dart \
             lib/product/p8_external_effects.dart \
             lib/product/p8_observability.dart \
@@ -143,7 +138,6 @@ jobs:
             test/product/agent_decision_v3_test.dart \
             test/product/agent_protocol_v3_test.dart \
             test/product/mcp_registry_v2_test.dart \
-            test/product/p5_performance_budget_test.dart \
             test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
@@ -156,7 +150,6 @@ jobs:
             test/product/agent_decision_v3_test.dart \
             test/product/agent_protocol_v3_test.dart \
             test/product/mcp_registry_v2_test.dart \
-            test/product/p5_performance_budget_test.dart \
             test/product/p8_effect_journal_adapter_test.dart \
             test/product/p8_external_effects_test.dart \
             test/product/p8_observability_test.dart \
