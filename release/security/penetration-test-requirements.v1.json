@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "phase": "P8-014",
+  "status": "pending_external_assessment",
+  "completionClaim": false,
+  "independentReviewerRequired": true,
+  "releaseBlocker": true,
+  "scope": [
+    "full-host execution and terminal containment",
+    "browser automation, profiles, downloads, takeover, and sandbox escape",
+    "desktop-to-authority-service IPC, service identity, and worker isolation",
+    "signed manifests, dependency provenance, installer and update trust",
+    "MCP server lifecycle, capability grants, and transport isolation",
+    "A2A discovery, authentication, scoped delegation, streaming, and unknown outcomes",
+    "prompt injection, untrusted context, memory poisoning, and secret exfiltration",
+    "external-effect idempotency, unknown-effect reconciliation, and compensation"
+  ],
+  "requiredMethods": [
+    "architecture and trust-boundary review",
+    "source review of privileged boundaries",
+    "dynamic black-box and authenticated testing",
+    "prompt-injection and indirect-injection adversarial testing",
+    "IPC and process-boundary abuse testing",
+    "extension and supply-chain tamper testing"
+  ],
+  "requiredEvidence": {
+    "reviewerIdentity": "pending",
+    "reviewerIndependenceStatement": "pending",
+    "testedCommit": "pending",
+    "testedBuildDigests": "pending",
+    "testWindow": "pending",
+    "methodology": "pending",
+    "findingsManifest": "pending",
+    "criticalOpen": "must_equal_0",
+    "highOpen": "must_equal_0",
+    "signedReportSha256": "pending"
+  },
+  "forbiddenCompletionShortcuts": [
+    "self-review by implementation owner",
+    "source-contract tests represented as penetration evidence",
+    "synthetic critical/high finding counts",
+    "editing this status without an immutable external report receipt"
+  ]
+}

@@ -26,7 +26,7 @@ void main() {
         ),
       ),
     );
-    expect(find.textContaining('not containment or isolation'), findsOneWidget);
+    expect(find.textContaining('signing authority isolated'), findsOneWidget);
     expect(find.textContaining('full-current-account'), findsOneWidget);
   });
 

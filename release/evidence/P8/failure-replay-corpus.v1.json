@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "1.0.0",
+  "phase": "P8-015",
+  "claim": "deterministic_failure_replay_registry",
+  "productionIncidentCorpus": false,
+  "cases": [
+    {
+      "id": "workflow-migration-rollback",
+      "category": "workflow",
+      "source": "synthetic_regression",
+      "testPath": "test/product/durable_workflow_kernel_test.dart",
+      "expectedBoundary": "transactional migration failure cannot partially commit durable state"
+    },
+    {
+      "id": "workflow-idempotency-collision",
+      "category": "workflow",
+      "source": "synthetic_regression",
+      "testPath": "test/product/durable_workflow_kernel_test.dart",
+      "expectedBoundary": "same idempotency key with different intent is rejected"
+    },
+    {
+      "id": "workflow-stale-run-recovery",
+      "category": "workflow",
+      "source": "synthetic_regression",
+      "testPath": "test/product/execution_reliability_test.dart",
+      "expectedBoundary": "interrupted runs are recovered without false completion"
+    },
+    {
+      "id": "terminal-output-flood",
+      "category": "terminal",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/p8_terminal_fault_harness_test.py",
+      "expectedBoundary": "bounded output reports truncation without uncontrolled memory growth"
+    },
+    {
+      "id": "terminal-hung-process-tree",
+      "category": "terminal",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/p8_terminal_fault_harness_test.py",
+      "expectedBoundary": "timeout terminates the bounded process group and returns a non-success outcome"
+    },
+    {
+      "id": "browser-takeover-required",
+      "category": "browser",
+      "source": "synthetic_adversarial",
+      "testPath": "test/product/browser/browser_security_suite_test.dart",
+      "expectedBoundary": "destructive or sensitive browser effects cannot silently bypass user takeover"
+    },
+    {
+      "id": "browser-bounded-failure-replay",
+      "category": "browser",
+      "source": "synthetic_regression",
+      "testPath": "test/product/browser/browser_replay_test.dart",
+      "expectedBoundary": "browser failures preserve bounded privacy-safe replay evidence"
+    },
+    {
+      "id": "research-ssrf-loopback",
+      "category": "research",
+      "source": "synthetic_adversarial",
+      "testPath": "test/product/p8_research_adversarial_test.dart",
+      "expectedBoundary": "loopback and non-public research destinations are rejected"
+    },
+    {
+      "id": "research-untrusted-memory",
+      "category": "research",
+      "source": "synthetic_regression",
+      "testPath": "test/product/knowledge_memory_test.dart",
+      "expectedBoundary": "untrusted external knowledge does not silently become authoritative memory"
+    },
+    {
+      "id": "a2a-raw-executable-selection",
+      "category": "interoperability",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/a2a_bridge_test.py",
+      "expectedBoundary": "environment-controlled raw executable selection is forbidden"
+    },
+    {
+      "id": "a2a-unknown-stream-outcome",
+      "category": "interoperability",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/a2a_protocol_v1_test.py",
+      "expectedBoundary": "non-terminal disconnect is unknown, not completed"
+    },
+    {
+      "id": "extension-revocation",
+      "category": "interoperability",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/extension_registry_v2_test.py",
+      "expectedBoundary": "revoked extension identity cannot be re-enabled or silently reinstalled"
+    },
+    {
+      "id": "external-effect-unknown",
+      "category": "effects",
+      "source": "synthetic_adversarial",
+      "testPath": "test/product/p8_external_effects_test.dart",
+      "expectedBoundary": "unknown external effect enters reconciliation and cannot be blindly retried"
+    },
+    {
+      "id": "p1a-missing-install",
+      "category": "authority",
+      "source": "synthetic_regression",
+      "testPath": "tool/p1a_install_doctor_test.py",
+      "expectedBoundary": "missing authority connector remains fail-closed with merged_p1a_service_unavailable"
+    },
+    {
+      "id": "secret-history-regression",
+      "category": "security",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/secret_scan_test.py",
+      "expectedBoundary": "removed historical credentials are still detected without printing secret values"
+    },
+    {
+      "id": "dependency-known-vulnerability",
+      "category": "supply_chain",
+      "source": "synthetic_adversarial",
+      "testPath": "tool/dependency_policy_test.py",
+      "expectedBoundary": "known advisory or denied license blocks dependency policy"
+    }
+  ]
+}

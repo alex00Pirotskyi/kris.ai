@@ -14,6 +14,19 @@ case "$MODE" in
   codesign --force --options runtime --sign "$KRISTIN_P1A_SIGNING_IDENTITY" "$connector"
   printf '%s\n%s\n' "$KRISTIN_P1A_GRANT_SECRET_HEX" "$KRISTIN_P1A_OWNER_SECRET_HEX" | "$helper" "$config" --provision-stdin
   "$KRISTIN_P1A_MANAGER" register "$PLIST"
+  desktop_home="${KRISTIN_P1A_DESKTOP_HOME:-$HOME}"
+  connector_root="$desktop_home/Library/Application Support/Kristin/authority-service"
+  connector_config="$connector_root/connector-v2.json"
+  mach_service=$(/usr/bin/plutil -extract machServiceName raw -o - "$config")
+  service_instance=$(/usr/bin/plutil -extract serviceInstanceId raw -o - "$config")
+  policy_path=$(/usr/bin/plutil -extract policySnapshotPath raw -o - "$config")
+  [[ -n $mach_service && -n $service_instance && -f $policy_path ]] || { echo 'ERROR: installed authority identity invalid' >&2;exit 2; }
+  sha(){ /usr/bin/shasum -a 256 "$1" | /usr/bin/awk '{print $1}'; }
+  install -d -m 0700 "$connector_root"
+  cat > "$connector_config" <<EOF
+{"schemaVersion":"2.0.0","connectorLibraryPath":"$connector","maxResponseBytes":4194304,"completionEligible":false,"endpoint":{"platform":"macos","transport":"macos-xpc","address":"$mach_service","serviceInstanceId":"$service_instance","serviceBuildSha256":"$(sha "$helper")","connectorLibrarySha256":"$(sha "$connector")","installerSha256":"$(sha "$0")","serverIdentity":{"machServiceName":"$mach_service"},"osEnforcedIsolation":true,"workerPrincipalSeparated":true,"typedOperationsOnly":true,"nonExportableKeys":true},"provenance":{"authorityType":"p1-isolated-authority-service-v2","runtimeEligible":true,"securityIsolationActive":true,"privateAuthorityMaterialPresent":false,"arbitraryMessageSigningApi":false,"p1AmendmentMerged":false,"p1AmendmentSchemaVersion":"3.0.0","independentP1aSecurityReviewApproved":false,"workerDenialTriPlatformPassed":false,"behavioralWindowsPassed":false,"behavioralMacosPassed":false,"behavioralLinuxPassed":false,"mergedCommit":"0000000000000000000000000000000000000000","mergedTree":"0000000000000000000000000000000000000000","aggregateManifestSha256":"0000000000000000000000000000000000000000000000000000000000000000","policySnapshotSha256":"$(sha "$policy_path")"}}
+EOF
+  chmod 0600 "$connector_config"
   ;;
  uninstall) "$KRISTIN_P1A_MANAGER" unregister "$PLIST" || true ;;
  status) "$KRISTIN_P1A_MANAGER" status "$PLIST" ;;

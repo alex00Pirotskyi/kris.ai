@@ -13,6 +13,7 @@ import 'file_adapters.dart';
 import 'models_research.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';
+import 'mcp_registry_v2.dart';
 import 'planning_runtime.dart';
 import 'prompt_planning.dart';
 import 'prompt_studio_v2.dart';
@@ -26,6 +27,7 @@ import 'run_steering.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
+import 'p8_observability.dart';
 import 'p1_authority_service_contract_v1.dart';
 import 'p1_authority_service_product_runtime_v1.dart';
 
@@ -171,6 +173,9 @@ class ProductRuntime {
     required this.managedProcesses,
     required this.sourceIndex,
     required this.mcp,
+    required this.mcpV2,
+    required this.telemetry,
+    required this.telemetryBridge,
     required this.support,
     required this.commandService,
     required this.promptPlanning,
@@ -205,6 +210,9 @@ class ProductRuntime {
   final ManagedProcessService managedProcesses;
   final SourceIndexService sourceIndex;
   final McpTrustService mcp;
+  final McpRegistryV2 mcpV2;
+  final P8TelemetryBuffer telemetry;
+  final P8ProductTelemetryBridge telemetryBridge;
   final SupportBundleService support;
   final PreparedCommandService commandService;
   final PromptPlanningService promptPlanning;
@@ -237,6 +245,9 @@ class ProductRuntime {
   ProductSettings _settings;
 
   ProductSettings get settings => _settings;
+  Map<String, Object> previewTelemetry() => telemetry.preview();
+  Future<void> exportTelemetry(File file) => telemetry.export(file);
+  void deleteTelemetry() => telemetry.deleteAll();
   Stream<EventEnvelope> get eventStream => events.stream;
   Stream<LiveRunSignal> get liveRunStream => liveRunSignals.stream;
 
@@ -317,6 +328,22 @@ class ProductRuntime {
       workflow: repositories.workflow,
       audit: audit,
       redactor: redactor,
+    );
+    final mcpV2 = McpRegistryV2(
+      workflow: repositories.workflow,
+      audit: audit,
+      trustedKeys: const <String, McpDescriptorTrustKeyV2>{},
+    );
+    final telemetry = P8TelemetryBuffer(
+      policy: P8TelemetryPolicy(
+        optedIn: settings.telemetryOptIn,
+        retentionDays: settings.telemetryRetentionDays,
+        maxBufferedEvents: settings.telemetryMaxBufferedEvents,
+      ),
+    );
+    final telemetryBridge = P8ProductTelemetryBridge(
+      buffer: telemetry,
+      events: events.stream,
     );
     final support = SupportBundleService(
       directories: directories,
@@ -572,6 +599,9 @@ class ProductRuntime {
       managedProcesses: managedProcesses,
       sourceIndex: sourceIndex,
       mcp: mcp,
+      mcpV2: mcpV2,
+      telemetry: telemetry,
+      telemetryBridge: telemetryBridge,
       support: support,
       commandService: commandService,
       promptPlanning: promptPlanning,
@@ -587,6 +617,7 @@ class ProductRuntime {
       runs: coordinator,
       settings: settings,
     );
+    telemetryBridge.start();
     runtime._p1AuthorityServiceRuntime =
         await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
     runtime._p2OwnerModeRuntime = await P2ProductRuntimeBootstrap.start(
@@ -972,6 +1003,7 @@ class ProductRuntime {
       'version': kristinVersion,
     });
     await liveRunSignals.close();
+    await telemetryBridge.close();
     await events.close();
     await repositories.workflow.close();
   }
@@ -1201,6 +1233,13 @@ class ProductRuntime {
       maxRedirects: value.maxResearchRedirects,
       timeout: Duration(seconds: value.researchTimeoutSeconds),
     );
+    telemetry.updatePolicy(
+      P8TelemetryPolicy(
+        optedIn: value.telemetryOptIn,
+        retentionDays: value.telemetryRetentionDays,
+        maxBufferedEvents: value.telemetryMaxBufferedEvents,
+      ),
+    );
     await repositories.saveSettings(value);
     await audit.append('settings.updated', 'settings', <String, dynamic>{
       'apiEnabled': value.apiEnabled,
@@ -1211,6 +1250,9 @@ class ProductRuntime {
       'ollamaLoadTimeoutSeconds': value.ollamaLoadTimeoutSeconds,
       'ollamaLoadRetries': value.ollamaLoadRetries,
       'ollamaKeepAliveMinutes': value.ollamaKeepAliveMinutes,
+      'telemetryOptIn': value.telemetryOptIn,
+      'telemetryRetentionDays': value.telemetryRetentionDays,
+      'telemetryMaxBufferedEvents': value.telemetryMaxBufferedEvents,
       'hasOpenAiSecretReference': value.openAiApiKeyReferenceId.isNotEmpty,
     });
     await events.publish('settings.updated', 'settings', <String, dynamic>{

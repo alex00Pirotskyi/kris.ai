@@ -18,7 +18,18 @@ def main()->int:
     need('explicit value(bool v)' in strict,'JSON bool constructor must remain non-ambiguous')
     for marker in ('requestId",json::value(request_id)','authority_owner_approval_payload_mismatch','authority_owner_approval_binding_mismatch','authority_owner_approval_operation_mismatch','authority_owner_approval_peer_mismatch'):
         need(marker in core,f'owner approval exact-binding marker missing: {marker}')
-    need('owner_approval_id + "|" + approval_digest' in core and 'request_id + "|" + request_nonce' not in core,'approval one-use grant binding missing')
+    need(
+        'config_.service_instance_id + "|" + owner_approval_id + "|"' in core
+        and 'approval_digest + "|" + request_id' in core
+        and 'grant_id + "|" + approval_digest' in core
+        and 'state_.nonce_consumed(request_nonce)' in core
+        and 'state_.grant_use_count(grant_id)' in core
+        and '{"maxUses",json::value(1)}' in core
+        and 'state_.commit_authorization(request_nonce,grant_id,current_use+1,permit_id' in core
+        and 'request_id + "|" + request_nonce' not in core,
+        'approval one-use grant binding missing',
+    )
+    need('approval_scope == "owner-session" ? 86400 : 900' in core,'owner-session approval lifetime bound missing')
     need('part == ".."' in core and 'normalize_policy_path' in core,'lexical traversal rejection missing')
     need('hmac_secret_for_purpose' in core and 'kOwnerApprovalHmacPurpose' in core,'HMAC purpose authority missing')
     for name,text in (('linux',linux),('windows',windows),('macos',macos)):

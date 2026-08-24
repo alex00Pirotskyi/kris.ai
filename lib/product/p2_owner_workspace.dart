@@ -157,7 +157,7 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
   var _acknowledged = false;
   var _unattended = false;
   var _busy = false;
-  var _approval = P2OwnerApprovalPolicy.everyHighRiskEffect;
+  var _approval = P2OwnerApprovalPolicy.boundedSession;
   final _search = TextEditingController();
   final _searchFocus = FocusNode();
   final _terminalInput = TextEditingController();
@@ -451,8 +451,9 @@ class _P2OwnerWorkspaceState extends State<P2OwnerWorkspace> {
           const SizedBox(height: 12),
           const Text(
             'Owner Mode can reach all files, applications, terminals, and '
-            'account resources available to this OS account. It is not '
-            'containment or isolation.',
+            'account resources available to this OS account. Kristin keeps '
+            'policy, grant, and signing authority isolated from automation '
+            'workers while authorized effects still act with your account access.',
           ),
           CheckboxListTile(
             value: _acknowledged,

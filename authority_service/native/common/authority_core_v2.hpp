@@ -275,7 +275,12 @@ inline json::value evaluate_policy(const authority_config& cfg, const json::valu
   if (!approved || (approval_source != "owner" && approval_source != "organization_policy") || !valid_identifier(approval_id))
     throw std::runtime_error("policy_trusted_owner_approval_required");
   const auto approval_expiry = json::required_int(approval, "expiresAtEpochSeconds");
-  if (approval_expiry <= now || approval_expiry > now + 900) throw std::runtime_error("policy_owner_approval_expired");
+  const auto approval_scope = approval.contains("approvalScope")
+      ? json::required_string(approval, "approvalScope") : std::string("effect");
+  const auto approval_lifetime = approval_scope == "owner-session" ? 86400 : 900;
+  if ((approval_scope != "effect" && approval_scope != "owner-session") ||
+      approval_expiry <= now || approval_expiry > now + approval_lifetime)
+    throw std::runtime_error("policy_owner_approval_expired");
   json::value approval_unsigned = approval;
   auto& approval_unsigned_obj = approval_unsigned.as_object();
   const auto auth_it = approval_unsigned_obj.find("auth");
@@ -476,21 +481,37 @@ class authority_core final {
     const auto ui_sha = json::required_string(request, "uiSurfaceSha256");
     const auto confirmation_sha = json::required_string(request, "confirmationTextSha256");
     const bool user_present = json::required_bool(request, "userPresent");
+    const auto approval_scope = request.contains("approvalScope")
+        ? json::required_string(request, "approvalScope") : std::string("effect");
+    const auto approval_policy = request.contains("approvalPolicy")
+        ? json::required_string(request, "approvalPolicy") : std::string("boundedSession");
+    const auto owner_session_id = request.contains("ownerSessionId")
+        ? json::required_string(request, "ownerSessionId") : std::string();
     const auto& binding_value = request.at("binding");
     const auto binding = require_binding(binding_value.as_object().contains("schemaVersion") ? request : json::value::object{{"binding",binding_value}});
     const auto now = unix_seconds_now();
+    const bool session_scope = approval_scope == "owner-session";
+    const auto max_approval_lifetime = session_scope ? 86400 : 900;
     if (!valid_identifier(request_id) || !valid_identifier(approval_id) || !valid_identifier(interaction_nonce) ||
+        (approval_scope != "effect" && approval_scope != "owner-session") ||
+        (approval_policy != "everyHighRiskEffect" && approval_policy != "destructiveOnly" && approval_policy != "boundedSession") ||
+        (session_scope && (!valid_identifier(owner_session_id) || owner_session_id.empty())) ||
+        (!session_scope && !owner_session_id.empty()) ||
         interaction_type != "native-owner-confirmation" || !user_present || !valid_hex64(payload_sha) ||
-        !valid_hex64(ui_sha) || !valid_hex64(confirmation_sha) || expires_at <= now || expires_at > now + 900)
+        !valid_hex64(ui_sha) || !valid_hex64(confirmation_sha) || expires_at <= now ||
+        expires_at > now + max_approval_lifetime)
       throw std::runtime_error("owner_approval_request_invalid");
     const auto profile = binding.at("accessProfileId").as_string();
     if (profile != "owner" && profile != "owner_unattended") throw std::runtime_error("owner_approval_profile_invalid");
     const auto operation = json::required_string(request, "effectOperation");
-    if (!valid_identifier(operation)) throw std::runtime_error("owner_approval_operation_invalid");
+    if (!valid_identifier(operation) || (session_scope && operation != "owner-session"))
+      throw std::runtime_error("owner_approval_operation_invalid");
     json::value::object approval{{"schemaVersion",json::value("2.0.0")},{"approvalId",json::value(approval_id)},
       {"requestId",json::value(request_id)},{"approved",json::value(true)},{"source",json::value("owner")},
       {"binding",json::value(binding)},
       {"effectOperation",json::value(operation)},{"payloadSha256",json::value(payload_sha)},
+      {"approvalScope",json::value(approval_scope)},{"approvalPolicy",json::value(approval_policy)},
+      {"ownerSessionId",session_scope ? json::value(owner_session_id) : json::value(nullptr)},
       {"expiresAtEpochSeconds",json::value(expires_at)},{"interaction",json::value(json::value::object{
         {"type",json::value(interaction_type)},{"interactionNonce",json::value(interaction_nonce)},
         {"uiSurfaceSha256",json::value(ui_sha)},{"confirmationTextSha256",json::value(confirmation_sha)},
@@ -581,15 +602,35 @@ class authority_core final {
     const auto approval = state_.owner_approval(owner_approval_id);
     const auto& approval_object = approval.as_object();
     if (json::required_string(approval_object, "schemaVersion") != "2.0.0" ||
-        json::required_string(approval_object, "approvalId") != owner_approval_id ||
-        json::required_string(approval_object, "requestId") != request_id)
+        json::required_string(approval_object, "approvalId") != owner_approval_id)
       throw std::runtime_error("authority_owner_approval_request_mismatch");
-    if (json::required_string(approval_object, "effectOperation") != operation)
-      throw std::runtime_error("authority_owner_approval_operation_mismatch");
-    if (json::required_string(approval_object, "payloadSha256") != payload_sha)
-      throw std::runtime_error("authority_owner_approval_payload_mismatch");
-    if (json::canonical(approval.at("binding")) != json::canonical(request.at("binding")))
-      throw std::runtime_error("authority_owner_approval_binding_mismatch");
+    const auto approval_scope = approval_object.contains("approvalScope")
+        ? json::required_string(approval_object, "approvalScope") : std::string("effect");
+    if (approval_scope == "effect") {
+      if (json::required_string(approval_object, "requestId") != request_id)
+        throw std::runtime_error("authority_owner_approval_request_mismatch");
+      if (json::required_string(approval_object, "effectOperation") != operation)
+        throw std::runtime_error("authority_owner_approval_operation_mismatch");
+      if (json::required_string(approval_object, "payloadSha256") != payload_sha)
+        throw std::runtime_error("authority_owner_approval_payload_mismatch");
+      if (json::canonical(approval.at("binding")) != json::canonical(request.at("binding")))
+        throw std::runtime_error("authority_owner_approval_binding_mismatch");
+    } else if (approval_scope == "owner-session") {
+      const auto owner_session_id = request.contains("ownerSessionId")
+          ? json::required_string(request, "ownerSessionId") : std::string();
+      const auto approved_session_id = approval_object.contains("ownerSessionId") &&
+          !approval_object.at("ownerSessionId").is_null()
+          ? json::required_string(approval_object, "ownerSessionId") : std::string();
+      if (!valid_identifier(owner_session_id) || owner_session_id != approved_session_id)
+        throw std::runtime_error("authority_owner_session_mismatch");
+      const auto& approval_binding = json::required_object(approval_object, "binding");
+      const auto& request_binding = json::required_object(request, "binding");
+      if (json::required_string(approval_binding, "accessProfileId") !=
+          json::required_string(request_binding, "accessProfileId"))
+        throw std::runtime_error("authority_owner_approval_binding_mismatch");
+    } else {
+      throw std::runtime_error("authority_owner_approval_scope_invalid");
+    }
     const auto approval_source = json::required_string(approval_object, "source");
     if (approval_source == "owner") {
       const auto& interaction = json::required_object(approval_object, "interaction");
@@ -617,7 +658,8 @@ class authority_core final {
     const auto capability_id = json::required_string(binding, "capabilityId");
     if (state_.capability_revoked(capability_id)) throw std::runtime_error("authority_capability_revoked");
 
-    const auto grant_id = "grant-" + sha256_hex(config_.service_instance_id + "|" + owner_approval_id + "|" + approval_digest).substr(0, 32);
+    const auto grant_id = "grant-" + sha256_hex(config_.service_instance_id + "|" + owner_approval_id + "|" +
+      approval_digest + "|" + request_id).substr(0, 32);
     const auto grant_nonce = "nonce-" + sha256_hex(grant_id + "|" + approval_digest).substr(0, 32);
     const auto grant_expiry = std::min<std::int64_t>(deadline, now + config_.permit_ttl_seconds);
     json::value::object grant{

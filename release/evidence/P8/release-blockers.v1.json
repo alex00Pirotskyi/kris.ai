@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "sourceTrainMergeAllowed": true,
+  "productionReleaseAllowed": false,
+  "blockers": [
+    {
+      "id": "P1A",
+      "status": "pending_external_evidence",
+      "claim": "tri-platform installed authority behavior, worker denial, independent security review, and owner approval",
+      "validator": "tool/p1a_activate_merged_installation.py",
+      "evidenceRoot": "release/evidence/P1A"
+    },
+    {
+      "id": "P5-015",
+      "status": "pending_external_evidence",
+      "claim": "independent human usability review of first run, Owner Mode, takeover, recovery, and evidence inspection",
+      "validator": "docs/KRISTIN_GOLD_STANDARD_PRODUCTION_ROADMAP.md",
+      "evidenceRoot": "release/evidence/P5-015"
+    },
+    {
+      "id": "P8-011",
+      "status": "pending_external_evidence",
+      "claim": "real 24-hour desktop soak sample corpus under the production runtime",
+      "validator": "tool/p8_soak_gate.py",
+      "evidenceRoot": "release/evidence/P8-011"
+    },
+    {
+      "id": "P8-014",
+      "status": "pending_external_evidence",
+      "claim": "independent penetration assessment with zero unresolved critical/high findings",
+      "validator": "release/security/penetration-test-requirements.v1.json",
+      "evidenceRoot": "release/evidence/P8-014"
+    }
+  ]
+}

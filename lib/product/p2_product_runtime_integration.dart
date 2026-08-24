@@ -78,17 +78,22 @@ final class P2ProductRuntimeOwnerMode {
     required Future<void> Function(Map<String, Object?> value)
         persistOwnerSettings,
     required Future<void> Function() clearOwnerSettings,
+    P2OwnerModeEnableAuthorizer? authorizeOwnerModeEnable,
+    Future<void> Function()? clearOwnerModeAuthorization,
     required String emergencyWatchdogId,
     required P2ProductBindingContext bindingContext,
     required P2ManagedAuthorizationRegistry authorizationRegistry,
   }) async {
-    final productionAuthority = authority.completionEligible &&
-        authority.authorityKind == 'p1-isolated-authority-service-v2';
+    final secureP1aAuthority =
+        authority.authorityKind == 'p1-isolated-authority-service-v2' &&
+            (authority.completionEligible ||
+                authority.authorityProvenance['runtimeEligible'] == true) &&
+            authority.authorityProvenance['secureIsolationActive'] != false;
     final ownerRiskAuthority = authority.qaPreview &&
         !authority.completionEligible &&
         authority.authorityKind == 'p2-owner-risk-current-account-v1' &&
         authority.authorityProvenance['securityEvidenceWaived'] == true;
-    if (!(productionAuthority || ownerRiskAuthority)) {
+    if (!(secureP1aAuthority || ownerRiskAuthority)) {
       throw StateError('fixture_or_unapproved_authority_rejected');
     }
     await stateDirectory.create(recursive: true);
@@ -141,6 +146,8 @@ final class P2ProductRuntimeOwnerMode {
     final controller = P2OwnerModeController(
       persistOwnerSettings,
       clearOwnerSettings,
+      authorizeEnable: authorizeOwnerModeEnable,
+      clearAuthorization: clearOwnerModeAuthorization,
     );
     final emergency = P2EmergencyController(composition.watchdogTransport);
     final actions = P2OwnerWorkspaceServiceActions(
@@ -193,6 +200,9 @@ final class P2ProductRuntimeOwnerMode {
         'watchdogAutomaticallyArmed': _supervised.isNotEmpty,
         'fixtureAuthorityEligible': false,
         'ownerRiskQa': authority.qaPreview,
+        'secureIsolationActive':
+            authority.authorityProvenance['secureIsolationActive'] == true,
+        'productionCertificationComplete': authority.completionEligible,
       };
 
   Widget buildWorkspace({Key? key}) => P2OwnerWorkspace(

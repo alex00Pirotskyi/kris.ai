@@ -11,7 +11,7 @@
     },
     {
       "detail": "UTF-8 text reopened successfully",
-      "durationMs": 15,
+      "durationMs": 0,
       "name": "Text adapter detects and validates UTF-8 text",
       "passed": true
     },
@@ -29,7 +29,7 @@
     },
     {
       "detail": "CSV reopened as UTF-8 text",
-      "durationMs": 15,
+      "durationMs": 0,
       "name": "CSV adapter reopens CSV",
       "passed": true
     },
@@ -41,7 +41,7 @@
     },
     {
       "detail": "ZIP reopened successfully",
-      "durationMs": 31,
+      "durationMs": 0,
       "name": "ZIP adapter reopens safe archive",
       "passed": true
     },
@@ -53,13 +53,13 @@
     },
     {
       "detail": "OOXML package reopened successfully",
-      "durationMs": 16,
+      "durationMs": 0,
       "name": "OOXML adapter validates DOCX package",
       "passed": true
     },
     {
       "detail": "OpenDocument package reopened successfully",
-      "durationMs": 30,
+      "durationMs": 0,
       "name": "OpenDocument adapter validates ODT package",
       "passed": true
     },
@@ -71,13 +71,13 @@
     },
     {
       "detail": "EPUB package reopened successfully",
-      "durationMs": 31,
+      "durationMs": 0,
       "name": "EPUB adapter validates mimetype",
       "passed": true
     },
     {
       "detail": "RFC822 message parsed successfully",
-      "durationMs": 77,
+      "durationMs": 7,
       "name": "Email adapter parses RFC822 headers",
       "passed": true
     },

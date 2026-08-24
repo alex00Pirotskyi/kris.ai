@@ -1,0 +1,190 @@
+name: P6-P8 Production Gates
+
+on:
+  push:
+    branches:
+      - 'agent/p1-p8-source-convergence-20260823'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/p6-p8-production-gates.yml'
+      - 'lib/product/agent_context_v2.dart'
+      - 'lib/product/agent_decision_v3.dart'
+      - 'lib/product/agent_protocol_v3.dart'
+      - 'lib/product/mcp_registry_v2.dart'
+      - 'lib/product/p8_effect_journal_adapter.dart'
+      - 'lib/product/p8_external_effects.dart'
+      - 'lib/product/p8_observability.dart'
+      - 'lib/product/p2_product_runtime_bootstrap.dart'
+      - 'lib/product/product_runtime.dart'
+      - 'lib/product/planning_runtime.dart'
+      - 'lib/product/storage_security.dart'
+      - 'tool/agent_safety_v2.py'
+      - 'tool/agent_benchmark_signing.py'
+      - 'tool/a2a_bridge.py'
+      - 'tool/a2a_protocol_v1.py'
+      - 'tool/extension_registry_v2.py'
+      - 'tool/p1a_install_doctor.py'
+      - 'tool/secret_scan.py'
+      - 'tool/dependency_policy.py'
+      - 'tool/p8_soak_gate.py'
+      - 'tool/p8_terminal_fault_harness.py'
+      - 'tool/p8_release_evidence_gate.py'
+      - 'release/evidence/P8/**'
+      - 'release/security/**'
+      - 'docs/INTEROPERABILITY_SECURITY.md'
+      - 'test/product/agent_context_v2_test.dart'
+      - 'test/product/agent_decision_v3_test.dart'
+      - 'test/product/agent_protocol_v3_test.dart'
+      - 'test/product/mcp_registry_v2_test.dart'
+      - 'test/product/p8_effect_journal_adapter_test.dart'
+      - 'test/product/p8_external_effects_test.dart'
+      - 'test/product/p8_observability_test.dart'
+      - 'test/product/p8_research_adversarial_test.dart'
+      - 'tool/*_test.py'
+
+permissions:
+  contents: read
+
+env:
+  TRAIN_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  source-contracts:
+    name: source-contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN_SOURCE_SHA }}
+          fetch-depth: 1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.5'
+          check-latest: false
+      - name: Install hash-locked Python trust dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+      - name: Run P1A/P6/P7/P8 source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_install_doctor_test.py
+          python tool/agent_safety_v2_test.py
+          python tool/agent_benchmark_signing_test.py
+          python tool/a2a_protocol_v1_test.py
+          python tool/a2a_bridge_test.py
+          python tool/extension_registry_v2_test.py
+          python tool/secret_scan_test.py
+          python tool/dependency_policy_test.py
+          python tool/p8_soak_gate_test.py
+          python tool/p8_terminal_fault_harness_test.py
+          python tool/p8_release_evidence_gate_test.py
+      - name: Run upgraded working-tree secret scan
+        shell: bash
+        run: python tool/secret_scan.py --project . --no-history --report "$RUNNER_TEMP/SECRET_SCAN.json"
+      - name: Verify convergence evidence truth boundary
+        shell: bash
+        run: python tool/p8_release_evidence_gate.py --project . --report "$RUNNER_TEMP/P8_RELEASE_EVIDENCE_GATE.json"
+
+  flutter-contracts:
+    name: flutter-contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN_SOURCE_SHA }}
+          fetch-depth: 1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Resolve exact Dart dependency closure
+        shell: bash
+        run: flutter pub get
+      - name: Require exact formatting for train Dart sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/agent_context_v2.dart \
+            lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/mcp_registry_v2.dart \
+            lib/product/p8_effect_journal_adapter.dart \
+            lib/product/p8_external_effects.dart \
+            lib/product/p8_observability.dart \
+            test/product/agent_context_v2_test.dart \
+            test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_research_adversarial_test.dart
+          git diff --exit-code -- \
+            lib/product/agent_context_v2.dart \
+            lib/product/agent_decision_v3.dart \
+            lib/product/agent_protocol_v3.dart \
+            lib/product/mcp_registry_v2.dart \
+            lib/product/p8_effect_journal_adapter.dart \
+            lib/product/p8_external_effects.dart \
+            lib/product/p8_observability.dart \
+            test/product/agent_context_v2_test.dart \
+            test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_research_adversarial_test.dart
+      - name: Run focused train contracts
+        shell: bash
+        run: |
+          flutter test --concurrency=1 \
+            test/product/agent_context_v2_test.dart \
+            test/product/agent_decision_v3_test.dart \
+            test/product/agent_protocol_v3_test.dart \
+            test/product/mcp_registry_v2_test.dart \
+            test/product/p8_effect_journal_adapter_test.dart \
+            test/product/p8_external_effects_test.dart \
+            test/product/p8_observability_test.dart \
+            test/product/p8_research_adversarial_test.dart
+      - name: Fatal analyzer
+        shell: bash
+        run: flutter analyze --fatal-infos --fatal-warnings
+      - name: Full Flutter regression
+        shell: bash
+        run: flutter test --concurrency=1
+
+  dependency-policy:
+    name: dependency-policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN_SOURCE_SHA }}
+          fetch-depth: 1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Populate Pub cache from exact lock
+        shell: bash
+        run: flutter pub get
+      - name: Run live OSV + license + lock-integrity policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/dependency_policy.py \
+            --project . \
+            --pub-cache "$HOME/.pub-cache" \
+            --online-osv \
+            --report "$RUNNER_TEMP/DEPENDENCY_POLICY.json"

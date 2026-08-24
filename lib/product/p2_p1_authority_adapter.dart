@@ -6,6 +6,7 @@ import 'p1_authority_service_contract_v1.dart';
 import 'p2_automation_host.dart';
 import 'p2_automation_host_process_client.dart';
 import 'p2_effect_boundary.dart';
+import 'p2_owner_mode.dart';
 
 abstract interface class P2RuntimeAuthority
     implements
@@ -41,7 +42,11 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
   final bool _qaPreview;
   @override
   bool get qaPreview => _qaPreview;
-  bool get _executionEligible => completionEligible || _qaPreview;
+  bool get runtimeEligible =>
+      service.provenance['runtimeEligible'] == true &&
+      service.provenance['securityIsolationActive'] == true;
+  bool get _executionEligible =>
+      completionEligible || runtimeEligible || _qaPreview;
   final Random _random = Random.secure();
   final Map<String, Map<String, Object?>> _observations =
       <String, Map<String, Object?>>{};
@@ -50,6 +55,8 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
   int? _expectedRevocationEpoch;
   String? _permitVerifierPublicKeySpkiSha256;
   Map<String, Object?>? _restrictedWorkerIdentity;
+  P2OwnerModeSettings? _ownerModeSettings;
+  String? _ownerSessionApprovalId;
 
   P1AuthorityServiceClientV1 get service => _handle.service;
 
@@ -77,6 +84,9 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
         'workerReceivesPrivateSigningMaterial': false,
         'restrictedWorkerIdentityBound': _restrictedWorkerIdentity != null,
         'completionEligible': completionEligible,
+        'runtimeEligible': runtimeEligible,
+        'secureIsolationActive': runtimeEligible || completionEligible,
+        'productionCertificationComplete': completionEligible,
         'qaPreview': _qaPreview,
         'qaPreviewFormalCompletion': false,
       };
@@ -84,6 +94,131 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
   @override
   Map<String, Object?>? lastAuthorityObservation(String taskId) =>
       _observations[taskId];
+
+  Future<void> authorizeOwnerModeSettings(P2OwnerModeSettings settings) async {
+    final sessionId = settings.sessionId;
+    final expiresAt = settings.sessionExpiresAt;
+    final now = DateTime.now().toUtc();
+    if (!settings.enabled ||
+        !settings.dataBoundaryAcknowledged ||
+        sessionId == null ||
+        sessionId.isEmpty ||
+        expiresAt == null ||
+        !now.isBefore(expiresAt) ||
+        expiresAt.difference(now) > const Duration(hours: 24)) {
+      throw StateError('p1a_owner_session_settings_invalid');
+    }
+    final approvalId = _id('owner-session-approval');
+    final binding = <String, Object?>{
+      'runId': 'owner-session',
+      'taskId': sessionId,
+      'actorId': 'desktop-owner',
+      'toolId': 'owner-mode',
+      'accessProfileId': settings.accessProfileId,
+      'capabilityId': 'owner-session',
+    };
+    final intent = <String, Object?>{
+      'sessionId': sessionId,
+      'accessProfileId': settings.accessProfileId,
+      'approvalPolicy': settings.approvalPolicy.name,
+      'enabledAt': settings.enabledAt?.toUtc().toIso8601String(),
+      'expiresAt': expiresAt.toUtc().toIso8601String(),
+      'fullCurrentAccountBoundary': true,
+    };
+    final request = P1AuthorityOwnerApprovalRequestV2(
+      requestId: _id('owner-session-request'),
+      approvalId: approvalId,
+      interactionNonce: _id('owner-session-interaction'),
+      binding: binding,
+      effectOperation: 'owner-session',
+      payloadSha256: Sha256.text(p1aCanonicalJson(intent)),
+      uiSurfaceSha256: Sha256.text(
+        'Kristin Owner Mode enable full current-account access',
+      ),
+      confirmationTextSha256: Sha256.text(
+        'Enable ${settings.accessProfileId} through ${expiresAt.toIso8601String()}',
+      ),
+      expiresAt: expiresAt,
+      approvalScope: 'owner-session',
+      approvalPolicy: settings.approvalPolicy.name,
+      ownerSessionId: sessionId,
+    );
+    request.validate(now);
+    final recorded = await service.recordOwnerApproval(request);
+    final approval = recorded['approval'];
+    if (recorded['status'] != 'recorded' ||
+        approval is! Map ||
+        approval['approvalId'] != approvalId ||
+        approval['approvalScope'] != 'owner-session' ||
+        approval['ownerSessionId'] != sessionId) {
+      throw StateError('p1a_owner_session_approval_not_recorded');
+    }
+    _ownerModeSettings = settings;
+    _ownerSessionApprovalId = approvalId;
+  }
+
+  Future<void> clearOwnerModeSettings() async {
+    _ownerModeSettings = null;
+    _ownerSessionApprovalId = null;
+  }
+
+  bool _destructive(String operation) {
+    final value = operation.toLowerCase();
+    return const <String>[
+      'delete',
+      'remove',
+      'terminate',
+      'kill',
+      'uninstall',
+      'elevate',
+      'shutdown',
+      'reboot',
+      'format',
+    ].any(value.contains);
+  }
+
+  Future<String> _exactApproval({
+    required String requestId,
+    required P2EffectBinding binding,
+    required String operation,
+    required Map<String, Object?> payload,
+    required P2OwnerModeSettings settings,
+  }) async {
+    final now = DateTime.now().toUtc();
+    final sessionExpiry = settings.sessionExpiresAt!;
+    final candidate = now.add(const Duration(minutes: 15));
+    final expiresAt =
+        candidate.isBefore(sessionExpiry) ? candidate : sessionExpiry;
+    final approvalId = _id('owner-effect-approval');
+    final request = P1AuthorityOwnerApprovalRequestV2(
+      requestId: requestId,
+      approvalId: approvalId,
+      interactionNonce: _id('owner-effect-interaction'),
+      binding: <String, Object?>{
+        'runId': binding.runId,
+        'taskId': binding.taskId,
+        'actorId': binding.actorId,
+        'toolId': binding.toolId,
+        'accessProfileId': binding.accessProfileId,
+        'capabilityId': binding.capabilityId,
+      },
+      effectOperation: operation,
+      payloadSha256: Sha256.text(p1aCanonicalJson(payload)),
+      uiSurfaceSha256: Sha256.text('Kristin Owner Mode authorized session'),
+      confirmationTextSha256: Sha256.text(
+        'Authorize $operation under ${settings.approvalPolicy.name}',
+      ),
+      expiresAt: expiresAt,
+      approvalScope: 'effect',
+      approvalPolicy: settings.approvalPolicy.name,
+    );
+    request.validate(now);
+    final recorded = await service.recordOwnerApproval(request);
+    if (recorded['status'] != 'recorded') {
+      throw StateError('p1a_owner_effect_approval_not_recorded');
+    }
+    return approvalId;
+  }
 
   String _id(String prefix) {
     final bytes = List<int>.generate(24, (_) => _random.nextInt(256));
@@ -179,13 +314,48 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
       throw StateError('p1a_effect_binding_invalid');
     }
     final exactPayload = <String, Object?>{'operation': operation, ...payload};
-    final ownerApprovalId = exactPayload['ownerApprovalId']?.toString() ?? '';
-    if (ownerApprovalId.isEmpty) {
-      throw StateError('p1a_explicit_owner_approval_required');
-    }
     final requestId = _id('p2-request');
     final now = DateTime.now().toUtc();
     final expiresAt = now.add(deadline);
+    final settings = _ownerModeSettings;
+    String ownerApprovalId;
+    String? ownerSessionId;
+    if (settings == null) {
+      ownerApprovalId = exactPayload['ownerApprovalId']?.toString() ?? '';
+      if (ownerApprovalId.isEmpty) {
+        throw StateError('p1a_owner_mode_not_enabled');
+      }
+    } else {
+      final sessionId = settings.sessionId;
+      final sessionExpiry = settings.sessionExpiresAt;
+      if (!settings.enabled ||
+          !settings.dataBoundaryAcknowledged ||
+          sessionId == null ||
+          sessionExpiry == null ||
+          !now.isBefore(sessionExpiry) ||
+          settings.accessProfileId != binding.accessProfileId) {
+        throw StateError('p1a_owner_session_not_active');
+      }
+      final useSession = settings.unattended ||
+          settings.approvalPolicy == P2OwnerApprovalPolicy.boundedSession ||
+          (settings.approvalPolicy == P2OwnerApprovalPolicy.destructiveOnly &&
+              !_destructive(operation));
+      if (useSession) {
+        ownerApprovalId = _ownerSessionApprovalId ?? '';
+        ownerSessionId = sessionId;
+        if (ownerApprovalId.isEmpty) {
+          throw StateError('p1a_owner_session_approval_missing');
+        }
+      } else {
+        ownerApprovalId = await _exactApproval(
+          requestId: requestId,
+          binding: binding,
+          operation: operation,
+          payload: exactPayload,
+          settings: settings,
+        );
+      }
+    }
     final descriptor = P2P1OperationRegistry.descriptor(operation);
     final target = _effectTarget(exactPayload, operation);
     final request = P1AuthorityEffectRequestV1(
@@ -201,6 +371,7 @@ final class P2IsolatedP1AuthorityAdapter implements P2RuntimeAuthority {
       payload: exactPayload,
       payloadSha256: Sha256.text(p1aCanonicalJson(exactPayload)),
       ownerApprovalId: ownerApprovalId,
+      ownerSessionId: ownerSessionId,
       workerSessionId: workerSessionId,
       channelId: channelId,
       workerIdentity: workerIdentity,
