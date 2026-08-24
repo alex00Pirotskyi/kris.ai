@@ -209,6 +209,83 @@ class P3StageBrowserRuntimeBundleTest(unittest.TestCase):
                     materialize_internal_symlinks=True,
                 )
 
+    def test_windows_sandbox_acl_grants_appcontainer_and_lpac_read_execute(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-windows-acl-') as raw:
+            root = pathlib.Path(raw) / 'browser'
+            root.mkdir()
+            calls: list[tuple[list[str], dict[str, object]]] = []
+
+            def runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+                calls.append((command, kwargs))
+                return subprocess.CompletedProcess(command, 0, stdout='', stderr='')
+
+            prepared = stage.prepare_windows_sandbox_acl(
+                root,
+                platform_name='nt',
+                runner=runner,
+            )
+
+            self.assertIs(prepared, True)
+            self.assertEqual(len(calls), 1)
+            command, kwargs = calls[0]
+            self.assertEqual(
+                command,
+                [
+                    'icacls.exe',
+                    str(root),
+                    '/grant',
+                    '*S-1-15-2-1:(OI)(CI)(RX)',
+                    '*S-1-15-2-2:(OI)(CI)(RX)',
+                    '/T',
+                    '/Q',
+                ],
+            )
+            self.assertEqual(
+                kwargs,
+                {'capture_output': True, 'text': True, 'check': False},
+            )
+            self.assertNotIn('no-sandbox', ' '.join(command).lower())
+
+    def test_windows_sandbox_acl_is_noop_off_windows(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-posix-acl-') as raw:
+            root = pathlib.Path(raw) / 'browser'
+            root.mkdir()
+
+            def runner(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+                raise AssertionError(f'unexpected runner call: {args!r} {kwargs!r}')
+
+            self.assertIs(
+                stage.prepare_windows_sandbox_acl(
+                    root,
+                    platform_name='posix',
+                    runner=runner,
+                ),
+                False,
+            )
+
+    def test_windows_sandbox_acl_failure_aborts_staging(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='p3-stage-windows-acl-fail-') as raw:
+            root = pathlib.Path(raw) / 'browser'
+            root.mkdir()
+
+            def runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+                return subprocess.CompletedProcess(
+                    command,
+                    5,
+                    stdout='',
+                    stderr='Access is denied.',
+                )
+
+            with self.assertRaisesRegex(
+                SystemExit,
+                'Windows browser sandbox ACL preparation failed: Access is denied',
+            ):
+                stage.prepare_windows_sandbox_acl(
+                    root,
+                    platform_name='nt',
+                    runner=runner,
+                )
+
     def test_rejects_browser_executable_outside_browser_root(self) -> None:
         with tempfile.TemporaryDirectory(prefix='p3-stage-outside-') as raw:
             temp = pathlib.Path(raw)
