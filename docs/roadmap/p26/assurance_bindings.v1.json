@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0.0",
+  "testBindings": [
+    {
+      "levelId": "architecture_lint",
+      "testId": "tc.p26.roadmap-contract"
+    },
+    {
+      "levelId": "architecture_lint",
+      "testId": "tc.p26.test-station-contract"
+    },
+    {
+      "levelId": "unit",
+      "testId": "tc.p26.deterministic-fixtures"
+    },
+    {
+      "levelId": "integration",
+      "testId": "tc.p26.behavioral-local"
+    },
+    {
+      "levelId": "integration",
+      "testId": "tc.p26.web-http-fixture"
+    },
+    {
+      "levelId": "platform",
+      "testId": "tc.p26.native-owner"
+    },
+    {
+      "levelId": "platform",
+      "testId": "tc.p26.updater-operation"
+    },
+    {
+      "levelId": "release",
+      "testId": "tc.p26.kristin-dogfood"
+    }
+  ]
+}
