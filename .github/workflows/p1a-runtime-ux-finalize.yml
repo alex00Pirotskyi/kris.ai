@@ -4,13 +4,15 @@ on:
   push:
     branches:
       - sync/p1-p8-main-6237-20260823
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   finalize:
-    if: github.event.head_commit.message == 'ci(p1a): run runtime UX finalizer'
+    if: github.head_ref == 'sync/p1-p8-main-6237-20260823' || github.event.head_commit.message == 'ci(p1a): run runtime UX finalizer'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -87,6 +89,7 @@ jobs:
           PY
           git add -A
       - name: Publish correction
+        if: github.event_name == 'push'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
