@@ -33,7 +33,7 @@ class P2OwnerModeSettings {
   String get persistentIndicator =>
       enabled ? 'OWNER MODE — full current-account access' : 'Owner Mode off';
   String get safetyLabel => enabled
-      ? 'Authorized effects can reach all resources available to this OS account.'
+      ? 'Owner Mode is not a sandbox. Authorized effects can reach all resources available to this OS account.'
       : 'No Owner Mode host authority.';
   Map<String, Object?> toJson() => <String, Object?>{
     'schemaVersion': '1.1.0',
