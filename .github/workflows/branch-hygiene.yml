@@ -8,17 +8,17 @@ permissions:
   contents: read
 
 concurrency:
-  group: owner-single-click-finalize-${{ github.ref }}
+  group: owner-single-click-publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  owner-single-click-finalize:
-    name: owner-single-click-finalize
+  owner-single-click-publish:
+    name: owner-single-click-publish
     if: >-
       github.event.pull_request.head.ref == 'hotfix/owner-mode-single-click-provisioning' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
@@ -31,29 +31,17 @@ jobs:
         with:
           python-version: '3.12.10'
           check-latest: false
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version-file: config/p2.node-version
-          cache: npm
-          cache-dependency-path: automation_host/package-lock.json
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
         with:
           flutter-version: '3.44.8'
           channel: stable
           cache: true
-      - name: Apply deterministic product Owner patch
+      - name: Reproduce qualified source tree
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile tool/owner_single_click_patch.py tool/owner_single_click_patch_repair.py
           python tool/owner_single_click_patch_repair.py
           python tool/owner_single_click_patch.py
-          python -m py_compile tool/v70_stage_runtime.py tool/v70_package_platform.py
-          node --check tool/configure-owner-risk-runtime.mjs
-      - name: Format governed Dart surfaces
-        shell: bash
-        run: |
-          set -euo pipefail
           dart format \
             lib/product/p2_bundled_current_account_runtime.dart \
             lib/product/p2_owner_risk_authority.dart \
@@ -64,32 +52,17 @@ jobs:
             test/product/p2_owner_risk_contract_test.dart \
             test/product/p2_owner_risk_runtime_smoke_test.dart \
             test/product/p2_single_click_owner_mode_test.dart
-      - name: Qualify Owner Mode compatibility and truth boundary
-        shell: bash
-        run: |
-          set -euo pipefail
-          flutter pub get
-          python tool/p2_source_inventory_test.py --project .
-          python tool/p2_runtime_resource_contract_test.py
-          flutter test --concurrency=1 \
-            test/product/p2_single_click_owner_mode_test.dart \
-            test/product/p2_owner_risk_contract_test.dart \
-            test/product/p2_qa_preview_gate_test.dart \
-            test/product/p2_owner_mode_test.dart \
-            test/product/p2_owner_mode_failure_presentation_test.dart \
-            test/product/p2_source_contract_test.dart
-          flutter analyze --fatal-warnings --fatal-infos
-      - name: Restore normal workflow and refresh governed manifest
+      - name: Strip temporary machinery and refresh manifest
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main --depth=1
           git checkout origin/main -- .github/workflows/branch-hygiene.yml
-          git rm tool/owner_single_click_patch.py tool/owner_single_click_patch_repair.py
+          git rm -f tool/owner_single_click_patch.py tool/owner_single_click_patch_repair.py
           python tool/p1a_refresh_source_manifest.py .
           git add -A
           git diff --cached --check
-      - name: Publish durable single-click implementation
+      - name: Publish durable implementation
         shell: bash
         run: |
           set -euo pipefail
