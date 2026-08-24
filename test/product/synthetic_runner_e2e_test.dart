@@ -246,7 +246,7 @@ void main() {
   File('generated/result.txt').writeAsStringSync(
     'Kristin synthetic acceptance\\n',
   );
-  File('index.html').writeAsStringSync('''
+  File('index.html').writeAsStringSync("""
 <!doctype html>
 <html>
 <body>
@@ -254,7 +254,7 @@ void main() {
   <button id="counter" onclick="this.textContent = String(Number(this.textContent) + 1)">0</button>
 </body>
 </html>
-''');
+""");
 }
 ''';
 
@@ -304,7 +304,7 @@ void main() {
       completedAt: DateTime.now().toUtc(),
       inputTokens: 0,
       outputTokens: 0,
-      providerDetails: const <String, Object?>{
+      providerDetails: const <String, dynamic>{
         'provider': 'recorded-synthetic',
         'network': false,
       },
