@@ -1991,10 +1991,9 @@
       },
       "compatibilityVersion": "2.0.0",
       "dataBoundary": "public-network",
-      "description": "Search the web through an approved provider using a named secret reference.",
+      "description": "Search the web through the approved provider router. Built-in search needs no secret; secretReferenceId optionally selects a configured provider.",
       "example": {
-        "query": "official API documentation",
-        "secretReferenceId": "secret_ref_123"
+        "query": "official API documentation"
       },
       "idempotency": "request_hash",
       "inputSchema": {
@@ -2018,8 +2017,7 @@
           }
         },
         "required": [
-          "query",
-          "secretReferenceId"
+          "query"
         ],
         "type": "object"
       },
