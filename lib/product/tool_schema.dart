@@ -24,7 +24,8 @@ Map<String, dynamic> _effectiveResearchSearchJson() {
       return json;
     }
     final inputSchema = Map<String, dynamic>.from(
-      json['inputSchema'] as Map<dynamic, dynamic>? ?? const <dynamic, dynamic>{},
+      json['inputSchema'] as Map<dynamic, dynamic>? ??
+          const <dynamic, dynamic>{},
     );
     final required = (inputSchema['required'] as List<Object?>? ??
             const <Object?>[])
