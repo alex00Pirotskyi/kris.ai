@@ -47,8 +47,7 @@ void main() {
       final identity = Map<String, Object?>.from(decoded['identity']! as Map);
       final modeEnvironment = <String, String>{
         if (!productCurrentAccount) 'KRISTIN_OWNER_RISK_QA': '1',
-        if (productCurrentAccount)
-          'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
+        if (productCurrentAccount) 'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
       };
       final resources = P2RuntimeResourceSet(
         root: runtimeRoot,

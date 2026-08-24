@@ -32,6 +32,7 @@ function treeDigest(root) {
     }
   }
   walk(root);
+  rows.sort();
   return crypto.createHash('sha256').update(rows.join('\n')).digest('hex');
 }
 function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`); }
@@ -61,27 +62,33 @@ const host = path.join(hostRoot, 'src', 'host.mjs');
 const launcher = path.join(hostRoot, 'src', 'owner-risk-launcher.mjs');
 for (const file of [node, host, launcher]) if (!file || !fs.existsSync(file)) fail(`runtime file missing: ${file}`);
 const policyPath = path.join(root, 'provisioning', 'worker-policy.v2.json');
+const runtimeRelative = value => path.relative(root, value).split(path.sep).join('/');
 const policy = {
   schemaVersion: '2.0.0', platform,
-  authorityAddress: platform === 'windows' ? String.raw`\\.\pipe\KristinOwnerRiskQa` : '/tmp/kristin-owner-risk-qa.sock',
-  nodeExecutable: path.resolve(node), nodeSha256: shaFile(node),
-  hostScript: path.resolve(host), hostScriptSha256: shaFile(host),
-  workingDirectory: path.resolve(hostRoot),
-  launcherPath: path.resolve(launcher), launcherSha256: shaFile(launcher),
+  authorityAddress: productCurrentAccount
+    ? (platform === 'windows' ? String.raw`\\.\pipe\KristinCurrentAccountOwner` : '/tmp/kristin-current-account-owner.sock')
+    : (platform === 'windows' ? String.raw`\\.\pipe\KristinOwnerRiskQa` : '/tmp/kristin-owner-risk-qa.sock'),
+  nodeExecutable: productCurrentAccount ? runtimeRelative(node) : path.resolve(node), nodeSha256: shaFile(node),
+  hostScript: productCurrentAccount ? runtimeRelative(host) : path.resolve(host), hostScriptSha256: shaFile(host),
+  workingDirectory: productCurrentAccount ? runtimeRelative(hostRoot) : path.resolve(hostRoot),
+  launcherPath: productCurrentAccount ? runtimeRelative(launcher) : path.resolve(launcher), launcherSha256: shaFile(launcher),
   packageSha256: p2PackageSha256, sourceCommit, sourceTree,
-  ownerRiskQa: true, osIsolationWaived: true, productCurrentAccount,
+  ownerRiskQa: !productCurrentAccount, osIsolationWaived: true, productCurrentAccount,
 };
 writeJson(policyPath, policy);
 const provisioningPath = path.join(root, 'provisioning', 'environment.v1.json');
 writeJson(provisioningPath, {
   schemaVersion: '1.0.0', provisioningType: 'kristin-p2-application-runtime-environment-v1', containsSecrets: false,
   environment: {
-    KRISTIN_OWNER_RISK_QA: '1',
+    ...(!productCurrentAccount ? { KRISTIN_OWNER_RISK_QA: '1' } : {}),
     ...(productCurrentAccount ? { KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT: '1' } : {}),
     KRISTIN_P2_COMMIT_SHA: sourceCommit,
     KRISTIN_P2_SOURCE_PACKAGE_SHA256: p2PackageSha256,
-    KRISTIN_P2_E2E_ROOT: root, KRISTIN_P2_RUNNER_ID: `owner-risk-qa-${platform}`,
-    KRISTIN_P2_RUNNER_GROUP: 'github-hosted-tri-platform-qa',
+    ...(!productCurrentAccount ? {
+      KRISTIN_P2_E2E_ROOT: root,
+      KRISTIN_P2_RUNNER_ID: `owner-risk-qa-${platform}`,
+      KRISTIN_P2_RUNNER_GROUP: 'github-hosted-tri-platform-qa',
+    } : {}),
   },
 });
 const resources = {
@@ -108,7 +115,7 @@ const manifest = {
   authorityServiceExternal: false, authorityServiceExecutableStaged: false,
   authorityBrokerStaged: false, rawAuthoritySecretsIncluded: false, p2DelegationOnly: true,
   restrictedWorkerLauncherExternal: false, restrictedWorkerLauncherOsEnforced: false,
-  ownerRiskQa: true, productCurrentAccount, securityEvidenceWaived: true,
+  ownerRiskQa: !productCurrentAccount, productCurrentAccount, securityEvidenceWaived: true,
 };
 const manifestPath = path.join(root, 'runtime-manifest.v3.json');
 writeJson(manifestPath, manifest);

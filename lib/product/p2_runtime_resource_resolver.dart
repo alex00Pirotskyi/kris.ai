@@ -126,7 +126,12 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
     );
     final manifestOwnerRiskQa =
         decoded is Map && decoded['ownerRiskQa'] == true;
-    final ownerRiskQa = buildOwnerRiskQa || manifestOwnerRiskQa;
+    final manifestProductCurrentAccount =
+        decoded is Map && decoded['productCurrentAccount'] == true;
+    final localCurrentAccount =
+        buildOwnerRiskQa ||
+        manifestOwnerRiskQa ||
+        manifestProductCurrentAccount;
     if (decoded is! Map ||
         decoded['schemaVersion'] != '3.0.0' ||
         decoded['bundleType'] != 'kristin-p2-application-runtime-v3' ||
@@ -138,15 +143,18 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
         decoded['authorityBrokerStaged'] != false ||
         decoded['rawAuthoritySecretsIncluded'] != false ||
         decoded['p2DelegationOnly'] != true ||
-        (!ownerRiskQa && decoded['authorityServiceExternal'] != true) ||
-        (ownerRiskQa && decoded['authorityServiceExternal'] != false) ||
-        (!ownerRiskQa && decoded['restrictedWorkerLauncherExternal'] != true) ||
-        (ownerRiskQa && decoded['restrictedWorkerLauncherExternal'] != false) ||
-        (!ownerRiskQa &&
+        (!localCurrentAccount && decoded['authorityServiceExternal'] != true) ||
+        (localCurrentAccount && decoded['authorityServiceExternal'] != false) ||
+        (!localCurrentAccount &&
+            decoded['restrictedWorkerLauncherExternal'] != true) ||
+        (localCurrentAccount &&
+            decoded['restrictedWorkerLauncherExternal'] != false) ||
+        (!localCurrentAccount &&
             decoded['restrictedWorkerLauncherOsEnforced'] != true) ||
-        (ownerRiskQa &&
+        (localCurrentAccount &&
             decoded['restrictedWorkerLauncherOsEnforced'] != false) ||
-        (ownerRiskQa && decoded['ownerRiskQa'] != true)) {
+        (manifestOwnerRiskQa && manifestProductCurrentAccount) ||
+        (manifestProductCurrentAccount && decoded['ownerRiskQa'] != false)) {
       throw StateError('runtime_manifest_identity_invalid');
     }
     final identity = Map<String, Object?>.from(decoded['identity']! as Map);

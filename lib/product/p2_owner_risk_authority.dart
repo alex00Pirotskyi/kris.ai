@@ -80,14 +80,21 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
 
   @override
   void bindRestrictedWorkerIdentity(Map<String, Object?> identity) {
+    final expectedPrincipal = productCurrentAccount
+        ? 'current-account-owner'
+        : 'owner-risk-current-account';
+    final expectedDenialCode = productCurrentAccount
+        ? 'current_account_unisolated'
+        : 'owner_risk_waived';
     if (identity['schemaVersion'] != '2.0.0' ||
         identity['sessionId'] != _workerSessionId ||
-        identity['principalType'] != 'owner-risk-current-account' ||
-        identity['ownerRiskQa'] != true ||
+        identity['principalType'] != expectedPrincipal ||
+        identity['ownerRiskQa'] != !productCurrentAccount ||
+        (identity['productCurrentAccount'] == true) != productCurrentAccount ||
         identity['osIsolationWaived'] != true ||
         identity['currentAccountAuthority'] != true ||
         identity['authorityConnectionDenied'] != false ||
-        identity['authorityDenialCode'] != 'owner_risk_waived' ||
+        identity['authorityDenialCode'] != expectedDenialCode ||
         (identity['identitySha256']?.toString().isEmpty ?? true)) {
       throw StateError('owner_risk_worker_identity_invalid');
     }
@@ -120,7 +127,8 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
     'privateSigningMaterialPresent': false,
     'symmetricSigningMaterialPresent': false,
     'rawAuthoritySecretsReturned': false,
-    'ownerRiskQa': true,
+    'ownerRiskQa': !productCurrentAccount,
+    'productCurrentAccount': productCurrentAccount,
   };
 
   @override
@@ -256,20 +264,26 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
       'sequence': _uses,
     };
     final authority = <String, Object?>{
-      'authorityKind': 'p2-owner-risk-current-account-v1',
+      'authorityKind': authorityKind,
       'sharedP1ControlPlane': false,
       'p2CanIssueGrants': false,
       'workerCanIssue': false,
       'osEnforcedIsolation': false,
       'workerDeniedByOs': false,
       'securityEvidenceWaived': true,
+      'productCurrentAccount': productCurrentAccount,
+      'securityProfile': productCurrentAccount
+          ? 'current-account-unisolated'
+          : 'owner-risk-qa',
       'workerIdentitySha256': workerIdentitySha256,
-      'instanceId': 'owner-risk-local-authority',
+      'instanceId': productCurrentAccount
+          ? 'current-account-local-authority'
+          : 'owner-risk-local-authority',
       'implementationSha256':
           'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       'runtimeBuildSha256':
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-      'ownerRiskQa': true,
+      'ownerRiskQa': !productCurrentAccount,
     };
     final proof = P2WorkerGrantProof(
       grantId: grantId,
@@ -338,7 +352,9 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
       auditCheckpointId: 'owner-risk-audit-$_uses',
       auditCheckpointSha256:
           'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-      sharedAuthorityInstanceId: 'owner-risk-local-authority',
+      sharedAuthorityInstanceId: productCurrentAccount
+          ? 'current-account-local-authority'
+          : 'owner-risk-local-authority',
       authorityImplementationSha256:
           'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       runtimeBuildSha256:

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'p2_runtime_resource_resolver.dart';
+
 final class P2BundledCurrentAccountRuntime {
   const P2BundledCurrentAccountRuntime._();
 
@@ -29,7 +31,8 @@ final class P2BundledCurrentAccountRuntime {
     );
     if (bundled['schemaVersion'] != '3.0.0' ||
         bundled['bundleType'] != 'kristin-p2-application-runtime-v3' ||
-        bundled['ownerRiskQa'] != true) {
+        bundled['productCurrentAccount'] != true ||
+        bundled['ownerRiskQa'] != false) {
       return false;
     }
 
@@ -84,76 +87,18 @@ final class P2BundledCurrentAccountRuntime {
       await _copyTree(bundledRoot, targetRoot);
     }
 
-    final provisioning = File(
-      '${targetRoot.path}${Platform.pathSeparator}provisioning'
-      '${Platform.pathSeparator}environment.v1.json',
-    );
-    final provisioningValue = _object(
-      jsonDecode(await provisioning.readAsString()),
-      'p2_current_account_provisioning_invalid',
-    );
-    final environment = _object(
-      provisioningValue['environment'],
-      'p2_current_account_environment_invalid',
-    );
-    final packageSha = _hex(
-      environment['KRISTIN_P2_SOURCE_PACKAGE_SHA256'],
-      64,
-      'p2_current_account_package_sha_invalid',
-    );
-
-    final node = File(
-      '${targetRoot.path}${Platform.pathSeparator}node${Platform.pathSeparator}'
-      '${Platform.isWindows ? 'node.exe' : 'node'}',
-    );
-    final configurator = File(
-      '${targetRoot.path}${Platform.pathSeparator}tools${Platform.pathSeparator}'
-      'configure-owner-risk-runtime.mjs',
-    );
-    final contract = File(
-      '${targetRoot.path}${Platform.pathSeparator}contracts${Platform.pathSeparator}'
-      'p1_authority_service_contract_v1.dart',
-    );
-    for (final file in <File>[node, configurator, contract]) {
-      if (!await file.exists() || await FileSystemEntity.isLink(file.path)) {
-        throw StateError('p2_current_account_runtime_component_missing');
-      }
-    }
-
-    final result = await Process.run(
-      node.path,
-      <String>[
-        configurator.path,
-        '--root',
-        targetRoot.path,
-        '--platform',
-        Platform.isWindows ? 'windows' : (Platform.isMacOS ? 'macos' : 'linux'),
-        '--source-commit',
-        bundledCommit,
-        '--source-tree',
-        bundledTree,
-        '--p2-package-sha256',
-        packageSha,
-        '--p1-contract',
-        contract.path,
-        '--mode',
-        'product-current-account',
-      ],
-      workingDirectory: targetRoot.path,
-      stdoutEncoding: utf8,
-      stderrEncoding: utf8,
-    );
-    if (result.exitCode != 0) {
-      throw StateError('p2_current_account_runtime_configuration_failed');
-    }
-
-    final configured = _object(
-      jsonDecode(await targetManifest.readAsString()),
-      'p2_current_account_manifest_invalid',
-    );
-    if (configured['productCurrentAccount'] != true ||
-        configured['ownerRiskQa'] != true) {
-      throw StateError('p2_current_account_manifest_not_enabled');
+    final resolved = await P2ApplicationOwnedRuntimeResourceResolver(
+      applicationDataRoot: applicationDataRoot.absolute,
+      executablePath:
+          '${applicationDataRoot.absolute.path}${Platform.pathSeparator}kristin-runtime-probe',
+    ).resolve();
+    final resolvedRoot = await resolved.root.resolveSymbolicLinks();
+    final expectedRoot = await targetRoot.resolveSymbolicLinks();
+    if (resolvedRoot != expectedRoot ||
+        resolved.provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] !=
+            '1' ||
+        resolved.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA')) {
+      throw StateError('p2_current_account_relocated_runtime_invalid');
     }
     return true;
   }

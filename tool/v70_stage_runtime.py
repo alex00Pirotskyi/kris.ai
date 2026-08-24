@@ -199,7 +199,7 @@ def main() -> int:
         "KRISTIN_V70_HOST_ROOT": str(runtime / "automation_host"),
         "KRISTIN_V70_LAUNCHER": str(runtime / "automation_host/src/owner-risk-launcher.mjs"),
         "KRISTIN_V70_POLICY": str(runtime / "provisioning/worker-policy.v2.json"),
-        "KRISTIN_OWNER_RISK_QA": "1",
+        **({"KRISTIN_OWNER_RISK_QA": "1"} if args.mode == "qa" else {}),
         **({"KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT": "1"} if args.mode == "product-current-account" else {}),
     }
     for name, relative in (

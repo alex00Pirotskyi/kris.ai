@@ -226,7 +226,8 @@ final class P2ProductRuntimeBootstrap {
             ..._validatedProvisionedEnvironment(
               explicitlyProvisionedEnvironment,
             ),
-            if (ownerRiskQa) 'KRISTIN_OWNER_RISK_QA': '1',
+            if (buildOwnerRiskQa || runtimeOwnerRisk)
+              'KRISTIN_OWNER_RISK_QA': '1',
             if (productCurrentAccount)
               'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
           },

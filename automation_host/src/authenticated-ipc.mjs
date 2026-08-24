@@ -130,14 +130,22 @@ function validateGrantAndDecision(auth, requestId, expectedRevocationEpoch) {
     throw new Error('audit_checkpoint_record_invalid');
   }
   const ownerRiskQa = auth.authority?.ownerRiskQa === true;
+  const productCurrentAccount = auth.authority?.productCurrentAccount === true;
+  const localCurrentAccountBase =
+    auth.authority?.sharedP1ControlPlane === false &&
+    auth.authority?.securityEvidenceWaived === true &&
+    auth.authority?.osEnforcedIsolation === false &&
+    auth.authority?.workerDeniedByOs === false;
   const authorityModeValid = ownerRiskQa
-    ? auth.authority?.sharedP1ControlPlane === false &&
-      auth.authority?.authorityKind === 'p2-owner-risk-current-account-v1' &&
-      auth.authority?.securityEvidenceWaived === true &&
-      auth.authority?.osEnforcedIsolation === false &&
-      auth.authority?.workerDeniedByOs === false
-    : auth.authority?.sharedP1ControlPlane === true &&
-      auth.authority?.authorityKind === 'p1-isolated-authority-service-v2';
+    ? localCurrentAccountBase &&
+      !productCurrentAccount &&
+      auth.authority?.authorityKind === 'p2-owner-risk-current-account-v1'
+    : productCurrentAccount
+      ? localCurrentAccountBase &&
+        auth.authority?.authorityKind === 'p2-current-account-owner-v1' &&
+        auth.authority?.securityProfile === 'current-account-unisolated'
+      : auth.authority?.sharedP1ControlPlane === true &&
+        auth.authority?.authorityKind === 'p1-isolated-authority-service-v2';
   if (!authorityModeValid ||
       auth.authority?.workerCanIssue !== false ||
       auth.authority?.workerIdentitySha256 !== auth.authenticatedIpc?.workerIdentitySha256 ||
@@ -224,7 +232,8 @@ function validatePermit(permit, envelope, verifier, channelId, workerSessionId) 
   }
   const unsigned = structuredClone(permit);
   delete unsigned.signatureBase64;
-  if (process.env.KRISTIN_OWNER_RISK_QA !== '1') {
+  if (process.env.KRISTIN_OWNER_RISK_QA !== '1' &&
+      process.env.KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT !== '1') {
     const signature = Buffer.from(permit.signatureBase64, 'base64');
     const publicKey = publicKeyFromSpki(verifier.publicKeySpkiBase64);
     if (!crypto.verify('sha256', canonicalBytes(unsigned), publicKey, signature)) {

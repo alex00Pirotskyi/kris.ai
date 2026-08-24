@@ -47,28 +47,19 @@ void main() {
         runtime,
         contains('P2BundledCurrentAccountRuntime.prepareIfPresent'),
       );
-      expect(
-        bootstrap,
-        contains('P2ApplicationOwnedRuntimeResourceResolver'),
-      );
+      expect(bootstrap, contains('P2ApplicationOwnedRuntimeResourceResolver'));
       expect(
         bootstrap,
         contains('p2_current_account_relocated_runtime_invalid'),
       );
       expect(bootstrap, contains("bundled['productCurrentAccount'] != true"));
       expect(bootstrap, contains("bundled['ownerRiskQa'] != false"));
-      expect(
-        bootstrap,
-        isNot(contains('configure-owner-risk-runtime.mjs')),
-      );
+      expect(bootstrap, isNot(contains('configure-owner-risk-runtime.mjs')));
       expect(bootstrap, isNot(contains("'--mode'")));
       expect(bootstrap, contains("Process.run('chmod'"));
       expect(configurator, contains("mode === 'product-current-account'"));
       expect(configurator, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
-      expect(
-        configurator,
-        contains('ownerRiskQa: !productCurrentAccount'),
-      );
+      expect(configurator, contains('ownerRiskQa: !productCurrentAccount'));
       final hostVerifier = File(
         'automation_host/src/authenticated-ipc.mjs',
       ).readAsStringSync();
@@ -79,6 +70,10 @@ void main() {
       expect(hostVerifier, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
       expect(processClient, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
       expect(processClient, contains('localCurrentAccount'));
+      expect(processClient, contains("'current-account-owner'"));
+      expect(processClient, contains("'current_account_unisolated'"));
+      expect(processClient, contains("'current-account-product'"));
+      expect(processClient, contains('expectedLocalDenialCode'));
       expect(staging, contains('product-current-account'));
       expect(packaging, contains('--product-current-account'));
       expect(packaging, contains('functionalOwnerModeEligible'));
