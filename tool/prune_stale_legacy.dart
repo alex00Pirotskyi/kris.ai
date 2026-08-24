@@ -153,6 +153,19 @@ Set<String> _governedDartFiles(Directory root) {
     }
   }
 
+  for (final relative in _governedManifestPaths(root)) {
+    if (!relative.endsWith('.dart')) {
+      continue;
+    }
+    if (!File(_join(root.path, relative)).existsSync()) {
+      throw StateError('Governed Dart source is missing: $relative');
+    }
+    allowed.add(relative);
+  }
+  return Set<String>.unmodifiable(allowed);
+}
+
+Set<String> _governedManifestPaths(Directory root) {
   final manifest = File(
     _join(root.path, 'SOURCE_MANIFEST.sha256'),
   );
@@ -162,6 +175,7 @@ Set<String> _governedDartFiles(Directory root) {
       'refusing stale-source migration.',
     );
   }
+  final paths = <String>{};
   final linePattern = RegExp(r'^[0-9a-f]{64}  (.+)$');
   for (final line in manifest.readAsLinesSync()) {
     if (line.trim().isEmpty) {
@@ -173,19 +187,14 @@ Set<String> _governedDartFiles(Directory root) {
         'Malformed SOURCE_MANIFEST.sha256 line: $line',
       );
     }
-    final relative = _normalizeGovernedPath(
-      match.group(1),
-      'SOURCE_MANIFEST.sha256',
+    paths.add(
+      _normalizeGovernedPath(
+        match.group(1),
+        'SOURCE_MANIFEST.sha256',
+      ),
     );
-    if (!relative.endsWith('.dart')) {
-      continue;
-    }
-    if (!File(_join(root.path, relative)).existsSync()) {
-      throw StateError('Governed Dart source is missing: $relative');
-    }
-    allowed.add(relative);
   }
-  return Set<String>.unmodifiable(allowed);
+  return Set<String>.unmodifiable(paths);
 }
 
 String _normalizeGovernedPath(Object? value, String source) {
@@ -205,47 +214,42 @@ String _normalizeGovernedPath(Object? value, String source) {
 
 List<FileSystemEntity> _migrationCandidates(Directory root) {
   final allowedDartFiles = _governedDartFiles(root);
-  final allowedProductFiles = allowedDartFiles
-      .where(
-        (path) =>
-            path.startsWith('lib/product/') &&
-            !path.substring('lib/product/'.length).contains('/'),
-      )
-      .map((path) => path.substring('lib/product/'.length))
-      .toSet();
+  final governedPaths = <String>{
+    ...allowedDartFiles,
+    ..._governedManifestPaths(root),
+  };
   final candidates = <String, FileSystemEntity>{};
 
   final lib = Directory(_join(root.path, 'lib'));
   if (lib.existsSync()) {
     for (final entity in lib.listSync(followLinks: false)) {
-      final name = _entityName(entity);
-      if (name == 'main.dart' || name == 'product' && entity is Directory) {
+      final relative = _relativePath(root, entity);
+      if (_isGovernedEntity(entity, relative, governedPaths)) {
         continue;
       }
-      candidates[_relativePath(root, entity)] = entity;
+      candidates[relative] = entity;
     }
   }
 
   final product = Directory(_join(root.path, 'lib/product'));
   if (product.existsSync()) {
     for (final entity in product.listSync(followLinks: false)) {
-      final name = _entityName(entity);
-      if (entity is File && allowedProductFiles.contains(name)) {
+      final relative = _relativePath(root, entity);
+      if (_isGovernedEntity(entity, relative, governedPaths)) {
         continue;
       }
-      candidates[_relativePath(root, entity)] = entity;
+      candidates[relative] = entity;
     }
   }
 
   final test = Directory(_join(root.path, 'test'));
   if (test.existsSync()) {
     for (final entity in test.listSync(followLinks: false)) {
-      final name = _entityName(entity);
-      if (name == 'widget_test.dart' ||
-          name == 'product' && entity is Directory) {
+      final relative = _relativePath(root, entity);
+      if (_isGovernedEntity(entity, relative, governedPaths)) {
         continue;
       }
-      candidates[_relativePath(root, entity)] = entity;
+      candidates[relative] = entity;
     }
   }
 
@@ -253,7 +257,7 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
   if (productTests.existsSync()) {
     for (final entity in productTests.listSync(followLinks: false)) {
       final relative = _relativePath(root, entity);
-      if (entity is File && allowedDartFiles.contains(relative)) {
+      if (_isGovernedEntity(entity, relative, governedPaths)) {
         continue;
       }
       candidates[relative] = entity;
@@ -286,6 +290,21 @@ List<FileSystemEntity> _migrationCandidates(Directory root) {
   return entries.map((entry) => entry.value).toList(growable: false);
 }
 
+bool _isGovernedEntity(
+  FileSystemEntity entity,
+  String relative,
+  Set<String> governedPaths,
+) {
+  if (entity is File) {
+    return governedPaths.contains(relative);
+  }
+  if (entity is! Directory) {
+    return false;
+  }
+  final prefix = '$relative/';
+  return governedPaths.any((path) => path.startsWith(prefix));
+}
+
 bool _coveredByCandidate(String relative, Iterable<String> candidates) {
   for (final candidate in candidates) {
     if (relative == candidate || relative.startsWith('$candidate/')) {
@@ -310,11 +329,6 @@ String _availableDestination(String requested) {
 
 void _moveEntity(FileSystemEntity source, String destination) {
   source.renameSync(destination);
-}
-
-String _entityName(FileSystemEntity entity) {
-  final normalized = entity.path.replaceAll('\\', '/');
-  return normalized.substring(normalized.lastIndexOf('/') + 1);
 }
 
 String _relativePath(Directory root, FileSystemEntity entity) {
