@@ -21,6 +21,7 @@ import 'project_diagnostics.dart';
 import 'project_manager_v2.dart';
 import 'conversation_orchestrator.dart';
 import 'project_provisioning.dart';
+import 'research/research_browser_adapter.dart';
 import 'run_live_signals.dart';
 import 'run_preflight.dart';
 import 'run_steering.dart';
@@ -92,6 +93,7 @@ final class P3ProductRuntimeBrowserHandle {
   final String _statusCode;
   final Map<String, Object?> _provenance;
   Future<P3BrowserRuntimeProbeResult>? _activeProbe;
+  Future<P3BrowserPageObservation>? _activeRender;
   bool _closed = false;
 
   bool get available => !_closed && _service != null;
@@ -137,6 +139,87 @@ final class P3ProductRuntimeBrowserHandle {
     }
   }
 
+  Future<P3BrowserPageObservation> renderPublicPage(Uri url) {
+    if (_closed) {
+      throw const P3BrowserRuntimeException('p3_product_runtime_closed');
+    }
+    if (_activeRender != null) {
+      throw const P3BrowserRuntimeException(
+        'p3_product_runtime_render_in_progress',
+      );
+    }
+    final future = _renderPublicPage(url);
+    _activeRender = future;
+    return future.whenComplete(() {
+      if (identical(_activeRender, future)) _activeRender = null;
+    });
+  }
+
+  Future<P3BrowserPageObservation> _renderPublicPage(Uri url) async {
+    final service = _service;
+    final stateDirectory = _stateDirectory;
+    if (service == null || stateDirectory == null) {
+      throw P3BrowserRuntimeException(
+        'p3_product_runtime_unavailable',
+        _statusCode,
+      );
+    }
+    final renderState = Directory(
+      '${stateDirectory.path}${Platform.pathSeparator}'
+      'rendered-research-${newId('browser')}',
+    );
+    await renderState.create(recursive: true);
+    P3BrowserSessionProcess? process;
+    String? sessionId;
+    String? pageId;
+    try {
+      process = await service.startSessions(
+        stateDirectory: renderState,
+        quotas: const P3BrowserSessionQuotas(
+          maxSessions: 1,
+          maxPagesPerSession: 1,
+          maxPersistentProfiles: 1,
+        ),
+        startupTimeout: const Duration(seconds: 30),
+        requestTimeout: const Duration(seconds: 45),
+      );
+      final session = await process.openSession(
+        kind: P3BrowserSessionKind.ephemeral,
+        blockServiceWorkers: true,
+      );
+      sessionId = session.sessionId;
+      final page = await process.openPage(sessionId);
+      pageId = page.pageId;
+      return await process.navigatePublicPage(
+        sessionId,
+        pageId,
+        P3BrowserPublicNavigationRequest(url: url.toString()),
+      );
+    } finally {
+      final active = process;
+      if (active != null) {
+        if (sessionId != null && pageId != null) {
+          try {
+            await active.closePage(sessionId, pageId);
+          } catch (_) {}
+        }
+        if (sessionId != null) {
+          try {
+            await active.closeSession(sessionId);
+          } catch (_) {}
+        }
+        try {
+          await active.close();
+        } catch (_) {}
+      }
+      try {
+        if (await renderState.exists()) {
+          await renderState.delete(recursive: true);
+        }
+      } catch (_) {}
+    }
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
@@ -151,6 +234,13 @@ final class P3ProductRuntimeBrowserHandle {
       }
     }
     _activeProbe = null;
+    final activeRender = _activeRender;
+    if (activeRender != null) {
+      try {
+        await activeRender;
+      } catch (_) {}
+    }
+    _activeRender = null;
   }
 }
 
@@ -295,7 +385,7 @@ class ProductRuntime {
       objectStore: objectStore,
     );
     const fileAdapters = FileAdapterRegistry();
-    final research = ResearchService(
+    final research = P4BrowserAwareResearchService(
       policy: ResearchPolicy(
         maxBytes: settings.maxResearchBytes,
         maxRedirects: settings.maxResearchRedirects,
@@ -636,6 +726,11 @@ class ProductRuntime {
         '${directories.cache.path}${Platform.pathSeparator}p3-browser-runtime',
       ),
     );
+    if (runtime._p3BrowserRuntime!.available) {
+      research.attachRenderedPageLoader(
+        (url) => runtime._p3BrowserRuntime!.renderPublicPage(url),
+      );
+    }
     await coordinator.reconcileInterruptedRuns();
     await coordinator.reconcileMemoryEpisodes();
     await audit.append('application.started', 'application', <String, dynamic>{

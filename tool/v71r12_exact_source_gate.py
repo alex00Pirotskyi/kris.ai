@@ -77,6 +77,89 @@ def fail(message: str) -> None:
     raise GateError(message)
 
 
+
+def _load_read_only_r4_auditor(project: Path) -> Any:
+    path = project / "tool/v70r4_patch_p2_flutter_runtime_tests.py"
+    spec = importlib.util.spec_from_file_location("v71r12_read_only_r4", path)
+    if spec is None or spec.loader is None:
+        fail("cannot load historical R4 audit source")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    required = ("_dart_tokens", "_test_authority_complete", "_workspace_banner_complete", "_workspace_onboarding_complete")
+    if any(not callable(getattr(module, name, None)) for name in required):
+        fail("historical R4 source lacks read-only auditors")
+    return module
+
+def _sequence_count(tokens: list[str], sequence: Sequence[str]) -> int:
+    width = len(sequence)
+    return sum(1 for i in range(len(tokens) - width + 1) if tokens[i:i + width] == list(sequence))
+
+def _page_order(tokens: list[str]) -> list[str]:
+    prefix = ["final", "pages", "=", "<", "Widget", ">", "["]
+    starts = [i for i in range(len(tokens) - len(prefix) + 1) if tokens[i:i + len(prefix)] == prefix]
+    if len(starts) != 1:
+        fail(f"governed shell must contain one pages list; found {len(starts)}")
+    start = starts[0] + len(prefix) - 1
+    depth = 0
+    end = -1
+    for i in range(start, len(tokens)):
+        depth += tokens[i] == "["
+        depth -= tokens[i] == "]"
+        if depth == 0:
+            end = i
+            break
+    if end < 0:
+        fail("governed shell pages list is unbalanced")
+    items, item = [], []
+    paren = brace = square = angle = 0
+    for token in tokens[start + 1:end]:
+        if token == "(": paren += 1
+        elif token == ")": paren -= 1
+        elif token == "{": brace += 1
+        elif token == "}": brace -= 1
+        elif token == "[": square += 1
+        elif token == "]": square -= 1
+        elif token == "<": angle += 1
+        elif token == ">" and angle: angle -= 1
+        if token == "," and paren == brace == square == angle == 0:
+            if item: items.append(item); item = []
+        else: item.append(token)
+    if item: items.append(item)
+    def classify(value):
+        if value[:3] == ["widget", ".", "chat"]: return "chat"
+        if value[:2] == ["P5InformationArchitecturePrototype", "("]: return "experience"
+        if value[:6] == ["widget", ".", "ownerMode", ".", "buildWorkspace", "("]: return "owner_mode"
+        return "unknown:" + "".join(value[:10])
+    return [classify(value) for value in items]
+
+def audit_governed_shell_sources(integrated_source: str, legacy_source: str, *, lexer: Any) -> dict[str, Any]:
+    integrated = lexer(integrated_source)
+    legacy = lexer(legacy_source)
+    integrated_selected = _sequence_count(integrated, ("home", ":", "KristinMainShell", "(")) == 1
+    legacy_selected = _sequence_count(integrated, ("home", ":", "P2KristinShell", "(")) == 1
+    if integrated_selected == legacy_selected:
+        fail(f"exactly one governed shell must be selected: integrated={integrated_selected} legacy={legacy_selected}")
+    order = _page_order(integrated if integrated_selected else legacy)
+    expected = ["chat", "experience", "owner_mode"] if integrated_selected else ["chat", "owner_mode"]
+    if order != expected:
+        fail(f"governed shell page order invalid: expected {expected}, got {order}")
+    return {"selectedShell": "integrated-p5-successor" if integrated_selected else "legacy-p2-shell", "pageOrder": order, "exactlyOneShellSelected": True, "chatFirst": True}
+
+def audit_r4_compatibility(project: Path) -> dict[str, Any]:
+    auditor = _load_read_only_r4_auditor(project)
+    inventory = load_json(project / "config/p2_source_inventory.v1.json")
+    tests = inventory.get("testDart")
+    semantics = {
+        "testAuthority": auditor._test_authority_complete((project / "test/product/p2_test_support.dart").read_text(encoding="utf-8")),
+        "ownerWorkspaceBanner": auditor._workspace_banner_complete((project / "lib/product/p2_owner_workspace.dart").read_text(encoding="utf-8")),
+        "ownerWorkspaceOnboarding": auditor._workspace_onboarding_complete((project / "lib/product/p2_owner_workspace.dart").read_text(encoding="utf-8")),
+        "qaPreviewInventory": isinstance(tests, list) and "test/product/p2_qa_preview_gate_test.dart" in tests,
+    }
+    if not all(semantics.values()): fail(f"R4 non-shell invariants invalid: {semantics}")
+    shell = audit_governed_shell_sources((project / "lib/product/ui.dart").read_text(encoding="utf-8"), (project / "lib/product/p2_app_shell.dart").read_text(encoding="utf-8"), lexer=auditor._dart_tokens)
+    return {"status": "passed", "semanticStateRecognized": True, "historicalPatcherExecuted": False, "readOnlyAudit": True, "syntaxAwareLexerReused": True, "allNonShellR4Invariants": True, **shell}
+
 def utc_now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -670,23 +753,121 @@ def run_gate(project: Path, *, json_output: Path | None, timeout_minutes: int) -
         if aggregate.get("completionClaim") is True:
             step("P2 owner-risk completion exit", (python, "tool/p2_exit_gate_test.py", "--project", ".", "--owner-risk-waiver"), timeout=1800)
         else:
+            state_output = step(
+                "P2 canonical evidence state",
+                (python, "tool/p2_evidence_state.py", "--project", "."),
+                timeout=600,
+            )
+            try:
+                canonical_state = json.loads(state_output)
+            except json.JSONDecodeError as error:
+                fail(f"P2 canonical evidence-state output invalid: {error}")
+            expected_state = {
+                "schemaVersion": "1.0.0",
+                "phase": "P2",
+                "status": "incomplete",
+                "acceptedDecisionTasks": ["P2-004"],
+                "behaviorCertifiedTasks": [],
+                "platformQualified": False,
+                "releaseSupported": False,
+                "productionSupported": False,
+                "gaPromoted": False,
+                "canonicalTaskState": "release/evidence/P2-004/state.json",
+                "canonicalPhaseState": "release/evidence/P2/state.json",
+            }
+            if canonical_state != expected_state:
+                fail(f"P2 canonical evidence-state summary invalid: {canonical_state}")
+
             expected = [f"P2-{number:03d}" for number in range(1, 15)]
             matrix = load_json(project / "config/p2_task_matrix.json").get("tasks")
             ids = [row.get("id") for row in matrix] if isinstance(matrix, list) else []
             if ids != expected:
                 fail(f"unexpected P2 task matrix: {ids}")
+
+            phase_state = load_json(project / "release/evidence/P2/state.json")
+            expected_task_states = {task_id: "source_only" for task_id in expected}
+            expected_task_states["P2-004"] = "accepted_decision"
+            if phase_state.get("taskStates") != expected_task_states:
+                fail(f"P2 phase task-state map invalid: {phase_state.get('taskStates')}")
+
             for task_id in expected:
-                value = load_json(project / "release/evidence" / task_id / "manifest.json")
-                if value.get("taskId") != task_id or value.get("status") not in {"source_only", "failed"}:
-                    fail(f"committed P2 evidence invalid: {task_id}: {value}")
-                if value.get("completedTaskPacket") is not None or value.get("platformReceipts") not in ({}, None):
-                    fail(f"committed P2 evidence overclaims completion: {task_id}")
-                if re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", str(value.get("generatedAt", ""))) is None:
+                if task_id == "P2-004":
+                    task_state = load_json(
+                        project / "release/evidence/P2-004/state.json"
+                    )
+                    expected_decision = {
+                        "taskId": "P2-004",
+                        "taskKind": "architecture_decision",
+                        "recordRole": "active",
+                        "status": "accepted_decision",
+                        "claimLevel": "VERIFIED_SOURCE",
+                        "productBehaviorObserved": False,
+                        "phaseCompletionEligible": False,
+                        "platformQualified": False,
+                        "releaseSupported": False,
+                        "productionSupported": False,
+                    }
+                    for key, expected_value in expected_decision.items():
+                        if task_state.get(key) != expected_value:
+                            fail(
+                                f"P2-004 canonical decision {key} invalid: "
+                                f"{task_state.get(key)!r}"
+                            )
+                    legacy = load_json(
+                        project / "release/evidence/P2-004/manifest.json"
+                    )
+                    if not (
+                        legacy.get("recordRole") == "historical"
+                        and legacy.get("stateAuthority") is False
+                        and legacy.get("supersededBy")
+                        == "release/evidence/P2-004/state.json"
+                    ):
+                        fail("legacy P2-004 acceptance evidence remains state authority")
+                    continue
+
+                value = load_json(
+                    project / "release/evidence" / task_id / "manifest.json"
+                )
+                if (
+                    value.get("taskId") != task_id
+                    or value.get("status") not in {"source_only", "failed"}
+                ):
+                    fail(f"committed unfinished P2 evidence invalid: {task_id}: {value}")
+                if (
+                    value.get("completedTaskPacket") is not None
+                    or value.get("platformReceipts") not in ({}, None)
+                ):
+                    fail(f"committed unfinished P2 evidence overclaims completion: {task_id}")
+                if re.fullmatch(
+                    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z",
+                    str(value.get("generatedAt", "")),
+                ) is None:
                     fail(f"committed P2 generatedAt invalid: {task_id}")
-            if aggregate.get("status") != "source_only_not_complete" or aggregate.get("completedTasks") != [] or aggregate.get("tasks") != expected:
-                fail(f"committed P2 aggregate evidence invalid: {aggregate}")
+
+            if not (
+                aggregate.get("status") == "source_only_not_complete"
+                and aggregate.get("completedTasks") == []
+                and aggregate.get("tasks") == expected
+                and aggregate.get("recordRole") == "historical"
+                and aggregate.get("stateAuthority") is False
+                and aggregate.get("supersededBy")
+                == "release/evidence/P2/state.json"
+            ):
+                fail(f"legacy P2 aggregate evidence invalid: {aggregate}")
+
             for task_id in expected:
-                step(f"{task_id} source task gate", (python, "tool/p2_task_gate.py", "--project", ".", "--task", task_id), timeout=600)
+                step(
+                    f"{task_id} source task gate",
+                    (
+                        python,
+                        "tool/p2_task_gate.py",
+                        "--project",
+                        ".",
+                        "--task",
+                        task_id,
+                    ),
+                    timeout=600,
+                )
             step("P2 source-only exit", (python, "tool/p2_exit_gate_test.py", "--project", ".", "--source-only"), timeout=1800)
 
         r3_json = temp / "r3.json"
@@ -695,19 +876,11 @@ def run_gate(project: Path, *, json_output: Path | None, timeout_minutes: int) -
         if not (r3.get("status") == "passed" and r3.get("changedFileCount") == 0 and r3.get("semanticStateRecognized") is True):
             fail(f"R3 compatibility invalid: {r3}")
 
-        r4_json = temp / "r4.json"
-        step("R4 semantic idempotence", (python, "tool/v70r4_patch_p2_flutter_runtime_tests.py", "--project", ".", "--json-output", str(r4_json)))
-        r4 = load_json(r4_json)
-        if not (
-            r4.get("status") == "passed"
-            and r4.get("changedFileCount") == 0
-            and r4.get("semanticStateRecognized") is True
-            and r4.get("allFourR4FilesCovered") is True
-            and r4.get("ownerWorkspaceOnboardingSyntaxAware") is True
-            and r4.get("ownerWorkspaceCompactExpandedRecognized") is True
-            and r4.get("ownerWorkspaceTrailingCommaIndependent") is True
-        ):
-            fail(f"R4 compatibility invalid: {r4}")
+        print("\n=== R4 read-only compatibility audit ===")
+        r4 = audit_r4_compatibility(project)
+        if not (r4.get("status") == "passed" and r4.get("semanticStateRecognized") is True and r4.get("historicalPatcherExecuted") is False and r4.get("readOnlyAudit") is True and r4.get("syntaxAwareLexerReused") is True and r4.get("allNonShellR4Invariants") is True and r4.get("exactlyOneShellSelected") is True and r4.get("chatFirst") is True):
+            fail(f"R4 compatibility audit invalid: {r4}")
+        steps.append({"name": "R4 read-only compatibility audit", "command": ["internal", "audit_r4_compatibility"], "cwd": ".", "durationSeconds": 0.0, "passed": True})
 
     for script in GENERATOR_SCRIPTS:
         if not (project / script).is_file():

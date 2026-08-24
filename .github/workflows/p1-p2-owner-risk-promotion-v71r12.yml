@@ -3,6 +3,9 @@ name: P1 P2 Owner-Risk Promotion V71-R12
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - integration/p2-owner-risk-v71r12
@@ -17,6 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  OWNER_RISK_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   P1A_PYTHON_VERSION: "3.13.5"
   KRISTIN_OWNER_RISK_QA: "1"
   KRISTIN_V70_P2_PACKAGE_SHA256: "7b0d77d8956f05ff907ca7463b0d787dcebf93a60426aab105be2b610e6072b0"
@@ -39,7 +43,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ env.OWNER_RISK_CANDIDATE_SHA }}
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Assert exact candidate checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$OWNER_RISK_CANDIDATE_SHA"
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -166,7 +178,7 @@ jobs:
             --project . \
             --platform "${{ matrix.platform }}" \
             --output .v70-stage \
-            --source-commit "${{ github.sha }}" \
+            --source-commit "${{ env.OWNER_RISK_CANDIDATE_SHA }}" \
             --source-tree "$(git rev-parse HEAD^{tree})" \
             --p2-package-sha256 "$KRISTIN_V70_P2_PACKAGE_SHA256" \
             --configurator tool/configure-owner-risk-runtime.mjs \
@@ -202,7 +214,7 @@ jobs:
             --platform "${{ matrix.platform }}" \
             --runtime-stage .v70-stage \
             --output-dir .v70-dist \
-            --source-commit "${{ github.sha }}" \
+            --source-commit "${{ env.OWNER_RISK_CANDIDATE_SHA }}" \
             --source-tree "$(git rev-parse HEAD^{tree})" \
             --workflow-run-id "${{ github.run_id }}" \
             --workflow-run-attempt "${{ github.run_attempt }}"

@@ -172,11 +172,13 @@ void main() {
         'lib/product/research/research_browser_adapter.dart',
         'lib/product/research/research_runtime.dart',
         'lib/product/research/research_workspace.dart',
+        'lib/product/research_search_provider.dart',
         'lib/product/release_operations_v19.dart',
         'lib/product/repository.dart',
         'lib/product/retry_policy.dart',
         'lib/product/storage_security.dart',
         'lib/product/tool_schema.dart',
+        'lib/product/tool_schema_base.dart',
         'lib/product/ui.dart',
         'lib/product/ui_advanced.dart',
         'lib/product/ui_components.dart',
@@ -1708,8 +1710,12 @@ void main() {
       expect(coordinator, contains('artifact_mutation_required'));
       expect(tools, contains('Argument "content" is required'));
       expect(
-        source('lib/product/tool_schema.dart'),
+        source('lib/product/tool_schema_base.dart'),
         contains("'argumentSchema':"),
+      );
+      expect(
+        source('lib/product/tool_schema.dart'),
+        contains("export 'tool_schema_base.dart' hide ToolSchemaRegistry;"),
       );
       expect(budgetBehavioral, contains('identical writes do not create'));
       expect(planBehavioral, contains('Do not install Node.js'));

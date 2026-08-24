@@ -78,8 +78,9 @@ final class CapabilityDoctorReport {
   static List<CapabilityDoctorCheck> _validatedChecks(
     List<CapabilityDoctorCheck> input,
   ) {
+    final normalized = input.map(_normalizeLegacySearchCheck).toList();
     final ids = <String>{};
-    for (final check in input) {
+    for (final check in normalized) {
       if (check.id.trim().isEmpty) {
         throw ArgumentError.value(
             check.id, 'id', 'Capability check id is empty.');
@@ -92,6 +93,33 @@ final class CapabilityDoctorReport {
         );
       }
     }
-    return List<CapabilityDoctorCheck>.from(input);
+    return List<CapabilityDoctorCheck>.from(normalized);
+  }
+
+  static CapabilityDoctorCheck _normalizeLegacySearchCheck(
+    CapabilityDoctorCheck check,
+  ) {
+    if (check.id != 'search' ||
+        !check.message.contains(
+          'no Brave Search secret reference is configured',
+        )) {
+      return check;
+    }
+    return CapabilityDoctorCheck(
+      id: check.id,
+      title: check.title,
+      status: CapabilityDoctorStatus.ready,
+      message:
+          'Built-in web search is available without a key. Task-specific preflight verifies live provider health before web research.',
+      required: check.required,
+      action: CapabilityDoctorAction.none,
+      durationMilliseconds: check.durationMilliseconds,
+      details: <String, Object?>{
+        ...check.details,
+        'builtInSearch': true,
+        'optionalProviderConfigured':
+            (check.details['configuredReferenceCount'] as int? ?? 0) > 0,
+      },
+    );
   }
 }

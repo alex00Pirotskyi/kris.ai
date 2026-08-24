@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'domain.dart';
 import 'process_launch.dart';
+import 'research_search_provider.dart';
 import 'storage_security.dart';
 
 enum RunPreflightVerdict { ready, readyWithWarnings, blocked }
@@ -260,6 +261,7 @@ typedef RunResearchSearchProbe = Future<RunCapabilityProbeResult> Function(
   RunRecord run,
   RunCapabilityRequirement requirement,
 );
+typedef RunBuiltInResearchSearchProbe = Future<SearchProviderProbe> Function();
 typedef RunSettingsProvider = ProductSettings Function();
 
 class RunPreflightService {
@@ -269,6 +271,7 @@ class RunPreflightService {
     required this.browserProbe,
     required this.researchSearchProbe,
     required this.settingsProvider,
+    this.builtInResearchSearchProbe,
   });
 
   final RunCapabilityResolver resolver;
@@ -276,6 +279,7 @@ class RunPreflightService {
   final RunBrowserProbe browserProbe;
   final RunResearchSearchProbe researchSearchProbe;
   final RunSettingsProvider settingsProvider;
+  final RunBuiltInResearchSearchProbe? builtInResearchSearchProbe;
 
   Future<RunPreflightReceipt> check({
     required RunRecord run,
@@ -379,7 +383,7 @@ class RunPreflightService {
               stopwatch,
             );
           }
-          return await researchSearchProbe(run, requirement);
+          return _probeResearchSearch(requirement, run, stopwatch);
         case RunCapabilityKind.researchNetwork:
           if (settingsProvider().localOnly) {
             return _result(
@@ -416,6 +420,77 @@ class RunPreflightService {
       return _result(requirement, false,
           '${requirement.label} is not ready: $error', stopwatch);
     }
+  }
+
+  Future<RunCapabilityProbeResult> _probeResearchSearch(
+    RunCapabilityRequirement requirement,
+    RunRecord run,
+    Stopwatch stopwatch,
+  ) async {
+    SearchProviderProbe builtIn;
+    try {
+      final probe = builtInResearchSearchProbe ??
+          () => SearchProviderRouter(
+                builtIn: BuiltInDuckDuckGoSearchProvider(
+                  timeout: const Duration(seconds: 8),
+                  maxBytes: 512 * 1024,
+                ),
+              ).probe();
+      builtIn = await probe();
+    } on Object {
+      builtIn = const SearchProviderProbe(
+        available: false,
+        message: 'Web search is currently unavailable.',
+      );
+    }
+    if (builtIn.available) {
+      return _result(
+        requirement,
+        true,
+        builtIn.message,
+        stopwatch,
+        details: builtIn.toJson(),
+      );
+    }
+
+    RunCapabilityProbeResult optionalProvider;
+    try {
+      optionalProvider = await researchSearchProbe(run, requirement);
+    } on Object {
+      optionalProvider = RunCapabilityProbeResult(
+        key: requirement.key,
+        label: requirement.label,
+        ok: false,
+        required: requirement.required,
+        message: 'Web search is currently unavailable.',
+        durationMilliseconds: stopwatch.elapsedMilliseconds,
+      );
+    }
+    if (optionalProvider.ok) {
+      return RunCapabilityProbeResult(
+        key: requirement.key,
+        label: requirement.label,
+        ok: true,
+        required: requirement.required,
+        message: 'Web search is available.',
+        durationMilliseconds: stopwatch.elapsedMilliseconds,
+        details: <String, dynamic>{
+          'providerId': braveSearchProviderId,
+          ...optionalProvider.details,
+        },
+      );
+    }
+    return _result(
+      requirement,
+      false,
+      'Web search is currently unavailable.',
+      stopwatch,
+      details: <String, dynamic>{
+        'builtIn': builtIn.toJson(),
+        if (optionalProvider.details.isNotEmpty)
+          'optionalProvider': optionalProvider.details,
+      },
+    );
   }
 
   Future<RunCapabilityProbeResult> _probeNetwork(
