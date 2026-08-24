@@ -11,13 +11,20 @@ import 'package:kristin_local_agent/product/p2_runtime_resource_resolver.dart';
 
 void main() {
   test(
-    'owner-risk P1/P2 runtime launches and performs host effects',
+    'staged current-account P1/P2 runtime launches and performs host effects',
     () async {
-      const enabled = bool.fromEnvironment(
+      const qaBuild = bool.fromEnvironment(
         'KRISTIN_OWNER_RISK_QA',
         defaultValue: false,
       );
-      expect(enabled, true, reason: 'owner-risk smoke requires dart define');
+      final productCurrentAccount =
+          Platform.environment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] == '1';
+      expect(
+        qaBuild || productCurrentAccount,
+        true,
+        reason: 'smoke requires staged QA or product current-account runtime',
+      );
+
       String env(String name) {
         final value = Platform.environment[name] ?? '';
         if (value.isEmpty) fail('missing environment: $name');
@@ -68,22 +75,32 @@ void main() {
         posixWatchdog: Platform.environment['KRISTIN_V70_POSIX_WATCHDOG'],
         interactiveDesktopAdapter:
             Platform.environment['KRISTIN_V70_INTERACTIVE_ADAPTER'],
-        provisionedEnvironment: const <String, String>{
+        provisionedEnvironment: <String, String>{
           'KRISTIN_OWNER_RISK_QA': '1',
+          if (productCurrentAccount)
+            'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
         },
       );
       final handle = await P2ProductRuntimeBootstrap.start(
         dataRoot: dataRoot,
         p1AuthorityService: null,
         runtimeResources: resources,
-        explicitlyProvisionedEnvironment: const <String, String>{
+        explicitlyProvisionedEnvironment: <String, String>{
           'KRISTIN_OWNER_RISK_QA': '1',
+          if (productCurrentAccount)
+            'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
         },
         interactiveDesktopAttested: true,
       );
       expect(handle.available, true, reason: handle.failureCode);
       final owner = handle.runtime!;
-      expect(owner.authority.qaPreview, true);
+      expect(owner.authority.qaPreview, !productCurrentAccount);
+      expect(
+        owner.authority.authorityKind,
+        productCurrentAccount
+            ? 'p2-current-account-owner-v1'
+            : 'p2-owner-risk-current-account-v1',
+      );
       handle.activateEffectContext(runId: 'v70-smoke', taskId: 'P2-QA');
       await owner.controller.enable(
         unattended: true,
@@ -105,11 +122,11 @@ void main() {
         Directory('${dataRoot.path}${Platform.pathSeparator}backups'),
       );
       final target = File(
-        '${temporary.path}${Platform.pathSeparator}owner-risk-λ.txt',
+        '${temporary.path}${Platform.pathSeparator}owner-current-account-λ.txt',
       );
       await fs.write(
         target.path,
-        Uint8List.fromList(utf8.encode('KRISTIN_OWNER_RISK_QA')),
+        Uint8List.fromList(utf8.encode('KRISTIN_CURRENT_ACCOUNT_OWNER')),
         binding: owner.bindingContext.bindingFor('filesystem.write'),
       );
       final read = await fs.read(
@@ -117,7 +134,7 @@ void main() {
         binding: owner.bindingContext.bindingFor('filesystem.read'),
         maxBytes: 65536,
       );
-      expect(utf8.decode(read), 'KRISTIN_OWNER_RISK_QA');
+      expect(utf8.decode(read), 'KRISTIN_CURRENT_ACCOUNT_OWNER');
 
       final command = await owner.composition.commandService.run(
         P2CommandSpec(
@@ -133,9 +150,13 @@ void main() {
       await dataRoot.delete(recursive: true);
     },
     timeout: const Timeout(Duration(minutes: 3)),
-    skip:
-        const bool.fromEnvironment('KRISTIN_OWNER_RISK_QA', defaultValue: false)
-            ? false
-            : 'requires staged owner-risk runtime',
+    skip: (const bool.fromEnvironment(
+              'KRISTIN_OWNER_RISK_QA',
+              defaultValue: false,
+            ) ||
+            Platform.environment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+                '1')
+        ? false
+        : 'requires staged current-account runtime',
   );
 }
