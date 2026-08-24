@@ -205,6 +205,7 @@ void main() {
         'lib/product/p2_automation_host.dart',
         'lib/product/p2_automation_host_operations.dart',
         'lib/product/p2_automation_host_process_client.dart',
+        'lib/product/p2_bundled_current_account_runtime.dart',
         'lib/product/p2_desktop_effect_authorizers.dart',
         'lib/product/p2_effect_boundary.dart',
         'lib/product/p2_effect_journal.dart',
@@ -257,67 +258,66 @@ void main() {
       expect(actual.length, expected.length);
     });
 
-    test('application opens chat-first through the integrated experience shell',
-        () {
-      final ui = source('lib/product/ui.dart');
-      expect(ui, contains('home: KristinMainShell('));
-      expect(ui, contains('var _index = 0;'));
-      final chatOffset = ui.indexOf('widget.chat,');
-      final experienceOffset =
-          ui.indexOf('P5InformationArchitecturePrototype(');
-      final ownerOffset = ui.indexOf('widget.ownerMode.buildWorkspace(');
-      expect(chatOffset, greaterThanOrEqualTo(0));
-      expect(experienceOffset, greaterThan(chatOffset));
-      expect(ownerOffset, greaterThan(experienceOffset));
-    });
+    test(
+      'application opens chat-first through the integrated experience shell',
+      () {
+        final ui = source('lib/product/ui.dart');
+        expect(ui, contains('home: KristinMainShell('));
+        expect(ui, contains('var _index = 0;'));
+        final chatOffset = ui.indexOf('widget.chat,');
+        final experienceOffset = ui.indexOf(
+          'P5InformationArchitecturePrototype(',
+        );
+        final ownerOffset = ui.indexOf('widget.ownerMode.buildWorkspace(');
+        expect(chatOffset, greaterThanOrEqualTo(0));
+        expect(experienceOffset, greaterThan(chatOffset));
+        expect(ownerOffset, greaterThan(experienceOffset));
+      },
+    );
 
     test(
-        'P5 shell persists explicit layout mutations without reserving closed panes',
-        () {
-      final layout = source(
-        'lib/product/p5_information_architecture/p5_shell_layout.dart',
-      );
-      final shell = source(
-        'lib/product/p5_information_architecture/p5_shell_workspace.dart',
-      );
-      expect(layout, contains('inspectorOpen: false'));
-      expect(layout, contains('activityDrawerOpen: false'));
-      expect(shell, contains('_scheduleP5ShellLayoutSave();'));
-      expect(shell, contains('store.save(controller.shellLayout)'));
-      expect(shell, contains("key: const Key('p5-right-inspector')"));
-      expect(shell, contains("key: const Key('p5-activity-drawer')"));
-    });
+      'P5 shell persists explicit layout mutations without reserving closed panes',
+      () {
+        final layout = source(
+          'lib/product/p5_information_architecture/p5_shell_layout.dart',
+        );
+        final shell = source(
+          'lib/product/p5_information_architecture/p5_shell_workspace.dart',
+        );
+        expect(layout, contains('inspectorOpen: false'));
+        expect(layout, contains('activityDrawerOpen: false'));
+        expect(shell, contains('_scheduleP5ShellLayoutSave();'));
+        expect(shell, contains('store.save(controller.shellLayout)'));
+        expect(shell, contains("key: const Key('p5-right-inspector')"));
+        expect(shell, contains("key: const Key('p5-activity-drawer')"));
+      },
+    );
 
     test(
-        'P5 global autonomy is shell-owned and delegates governed runtime effects',
-        () {
-      final ui = source('lib/product/ui.dart');
-      final autonomy = source('lib/product/p5_global_autonomy.dart');
-      final prototype = source(
-        'lib/product/p5_information_architecture/p5_prototype.dart',
-      );
-      expect(ui, contains('P5GlobalAutonomyBar('));
-      expect(ui, contains('binding: _autonomyBinding'));
-      expect(ui, contains('onOpenCommands: _openCommandPalette'));
-      expect(ui, contains('globalAutonomy: _autonomyBinding'));
-      expect(autonomy, contains('_runtime.pause(runId)'));
-      expect(autonomy, contains('_runtime.cancel(runId)'));
-      expect(autonomy, contains('emergencyPauseAndKillAll()'));
-      expect(autonomy, contains("takeoverLabel: 'Not globally bound'"));
-      expect(prototype, contains('registerBrowserEmergencyStop'));
-      expect(prototype, contains('updateBrowserSessionCount(0)'));
-    });
+      'P5 global autonomy is shell-owned and delegates governed runtime effects',
+      () {
+        final ui = source('lib/product/ui.dart');
+        final autonomy = source('lib/product/p5_global_autonomy.dart');
+        final prototype = source(
+          'lib/product/p5_information_architecture/p5_prototype.dart',
+        );
+        expect(ui, contains('P5GlobalAutonomyBar('));
+        expect(ui, contains('binding: _autonomyBinding'));
+        expect(ui, contains('onOpenCommands: _openCommandPalette'));
+        expect(ui, contains('globalAutonomy: _autonomyBinding'));
+        expect(autonomy, contains('_runtime.pause(runId)'));
+        expect(autonomy, contains('_runtime.cancel(runId)'));
+        expect(autonomy, contains('emergencyPauseAndKillAll()'));
+        expect(autonomy, contains("takeoverLabel: 'Not globally bound'"));
+        expect(prototype, contains('registerBrowserEmergencyStop'));
+        expect(prototype, contains('updateBrowserSessionCount(0)'));
+      },
+    );
 
     test('release validator follows governed design-token modules', () {
       final validator = source('tool/validate_release.py');
-      expect(
-        validator,
-        contains('_load_governed_product_library_files()'),
-      );
-      expect(
-        validator,
-        contains('relative.endswith("_design_tokens.dart")'),
-      );
+      expect(validator, contains('_load_governed_product_library_files()'));
+      expect(validator, contains('relative.endswith("_design_tokens.dart")'));
       expect(validator, contains('*design_token_sources'));
     });
 
@@ -335,15 +335,9 @@ void main() {
     test('stale-source migration consumes governed inventories', () {
       final migration = source('tool/prune_stale_legacy.dart');
       expect(migration, contains('SOURCE_MANIFEST.sha256'));
-      expect(
-        migration,
-        contains('config/p2_source_inventory.v1.json'),
-      );
+      expect(migration, contains('config/p2_source_inventory.v1.json'));
       expect(migration, contains('_governedDartFiles(root)'));
-      expect(
-        migration,
-        contains('allowedDartFiles.contains(relative)'),
-      );
+      expect(migration, contains('allowedDartFiles.contains(relative)'));
       expect(migration, contains('refusing stale-source migration'));
       expect(migration, contains('throw FormatException'));
       expect(migration, isNot(contains('deleteSync')));
@@ -785,12 +779,14 @@ void main() {
       for (final file in activeDartFiles()) {
         final content = file.readAsStringSync();
         final offsets = unconvertedClampOffsets(content).toList();
-        final details =
-            offsets.map((offset) => sourceLineAt(content, offset)).join(' | ');
+        final details = offsets
+            .map((offset) => sourceLineAt(content, offset))
+            .join(' | ');
         expect(
           offsets,
           isEmpty,
-          reason: '${file.path}: clamp calls without explicit conversion: '
+          reason:
+              '${file.path}: clamp calls without explicit conversion: '
               '$details',
         );
       }
@@ -938,8 +934,7 @@ void main() {
       expect(behavioral, contains('accepts a valid 100-task plan'));
     });
 
-    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired',
-        () {
+    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired', () {
       final domain = source('lib/product/domain.dart');
       final coordinator = source('lib/product/planning_runtime.dart');
       final runtime = source('lib/product/product_runtime.dart');
@@ -1376,8 +1371,7 @@ void main() {
       );
     });
 
-    test('v1.1.2 cold-model recovery and capability alignment stay bounded',
-        () {
+    test('v1.1.2 cold-model recovery and capability alignment stay bounded', () {
       final models = source('lib/product/models_research.dart');
       final settings = source('lib/product/storage_security.dart');
       final runtime = source('lib/product/planning_runtime.dart');
