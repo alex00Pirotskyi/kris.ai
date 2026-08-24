@@ -29,7 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ env.PRODUCT_SOURCE_SHA }}
@@ -41,11 +41,11 @@ jobs:
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
       - name: Set up Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: '3.44.8'
           channel: stable
@@ -91,14 +91,14 @@ jobs:
       - name: Validate locked toolchain
         run: python tool/toolchain_lock_test.py --json-output "release/evidence/P0-004/toolchain-${{ runner.os }}.json"
       - name: Upload P0-004 toolchain receipt
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: p0-004-toolchain-${{ matrix.lane }}
           path: release/evidence/P0-004/toolchain-${{ runner.os }}.json
           if-no-files-found: error
           retention-days: 30
       - name: Upload P0-003 CI environment
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: p0-003-ci-environment-${{ matrix.lane }}
           path: release/evidence/P0-003/ci-environment-${{ runner.os }}.json
@@ -223,7 +223,7 @@ jobs:
           print('P10_EXTERNAL_EVIDENCE_BOUNDARY_PASS')
           PY
       - name: Switch to exact hosted P1A Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13.5'
           check-latest: false
@@ -395,7 +395,7 @@ jobs:
             --bundle "$bundle" \
             --provenance "${bundle}.provenance.json"
       - name: Upload P1-P11 qualification receipts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: p1-p11-runtime-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
