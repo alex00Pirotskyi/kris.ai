@@ -3,12 +3,16 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/domain.dart';
+import 'package:kristin_local_agent/product/extensions_index.dart';
 import 'package:kristin_local_agent/product/models_research.dart';
+import 'package:kristin_local_agent/product/planning_runtime.dart';
 import 'package:kristin_local_agent/product/product_runtime.dart';
+import 'package:kristin_local_agent/product/run_preflight.dart';
+import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 void main() {
   test(
-    'blank project executes deterministic failure recovery through ProductRuntime',
+    'blank project executes deterministic failure recovery through production Runner',
     () async {
       final sandbox = await Directory.systemTemp.createTemp(
         'kristin-synthetic-runner-e2e-',
@@ -31,10 +35,8 @@ void main() {
       final provider = _ScriptedRunnerProvider(model);
       ProductRuntime? runtime;
       try {
-        runtime = await ProductRuntime.initialize(
-          dataRoot: dataRoot.path,
-          modelProviders: <LanguageModelProvider>[provider],
-        );
+        runtime = await ProductRuntime.initialize(dataRoot: dataRoot.path);
+        final coordinator = _recordedCoordinator(runtime, provider);
         final project = await runtime.addProject(
           name: 'synthetic_app',
           rootPath: projectRoot.path,
@@ -47,13 +49,16 @@ void main() {
               'Generate generated/result.txt from a finite command and verify the project.',
           model: model,
         );
-        var run = await runtime.createRun(prepared.id);
+        var run = await coordinator.createRun(
+          prepared,
+          budget: AutonomyBudget.forPlan(prepared.plan),
+        );
         await runtime.approve(
           runId: run.id,
           scopes: prepared.contract.requiredPermissions,
         );
 
-        run = await runtime.execute(run.id);
+        run = await coordinator.execute(run.id);
 
         expect(run.state.name, 'succeeded');
         expect(provider.readinessRequests, 1);
@@ -89,7 +94,7 @@ void main() {
             .where((item) => item.payload['ok'] == true)
             .toList(growable: false);
 
-        expect(failedCommands, hasLength(1));
+        expect(failedCommands, hasLength(2));
         expect(successfulCommands, hasLength(1));
         expect(successfulCommands.single.payload['mutated'], isTrue);
         final successfulData = Map<String, dynamic>.from(
@@ -116,19 +121,13 @@ void main() {
           isTrue,
         );
         expect(
-          evidence.any(
-            (item) =>
-                item.summary.contains('Command exited with code') &&
-                item.payload['ok'] == false,
-          ),
-          isTrue,
-        );
-        expect(
           provider.prompts.any(
             (prompt) => prompt.contains('implementation_without_mutation'),
           ),
           isTrue,
         );
+        final auditText = await runtime.repositories.auditFile.readAsString();
+        expect(auditText, contains('tool.idempotency_replayed'));
 
         final durable = await runtime.getRun(run.id);
         expect(durable, isNotNull);
@@ -143,6 +142,98 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
+}
+
+RunCoordinator _recordedCoordinator(
+  ProductRuntime runtime,
+  _ScriptedRunnerProvider provider,
+) {
+  final registry = _RecordedModelRegistry(runtime, provider);
+  final preflight = RunPreflightService(
+    resolver: const RunCapabilityResolver(),
+    settingsProvider: () => runtime.settings,
+    modelProbe: (model, requirement) async {
+      final stopwatch = Stopwatch()..start();
+      final result = await provider.generate(
+        ModelGenerationRequest(
+          identity: model,
+          systemPrompt:
+              'You are a readiness probe. Return exactly {"status":"ready"}.',
+          userPrompt: 'Return readiness JSON now.',
+          commandId: 'synthetic-preflight',
+          temperature: 0,
+          maxOutputTokens: 32,
+          firstTokenTimeout: const Duration(seconds: 2),
+          totalTimeout: const Duration(seconds: 2),
+        ),
+      );
+      stopwatch.stop();
+      return RunCapabilityProbeResult(
+        key: requirement.key,
+        label: requirement.label,
+        ok: result.text.isNotEmpty,
+        required: requirement.required,
+        message: 'Recorded model provider is ready.',
+        durationMilliseconds: stopwatch.elapsedMilliseconds,
+      );
+    },
+    browserProbe: (requirement) async => RunCapabilityProbeResult(
+      key: requirement.key,
+      label: requirement.label,
+      ok: false,
+      required: requirement.required,
+      message: 'Browser is intentionally unavailable in synthetic Runner E2E.',
+      durationMilliseconds: 0,
+    ),
+    researchSearchProbe: (run, requirement) async => RunCapabilityProbeResult(
+      key: requirement.key,
+      label: requirement.label,
+      ok: false,
+      required: requirement.required,
+      message: 'Research is intentionally unavailable in synthetic Runner E2E.',
+      durationMilliseconds: 0,
+    ),
+  );
+  return RunCoordinator(
+    directories: runtime.directories,
+    repositories: runtime.repositories,
+    modelRegistry: registry,
+    permissions: runtime.permissions,
+    secrets: runtime.secrets,
+    research: runtime.research,
+    knowledge: runtime.knowledge,
+    tools: ToolRegistry.standard(),
+    audit: runtime.audit,
+    events: runtime.events,
+    settingsProvider: () => runtime.settings,
+    redactor: runtime.redactor,
+    deployment: runtime.deployment,
+    managedProcesses: runtime.managedProcesses,
+    sourceIndex: runtime.sourceIndex,
+    skillRegistry: const SkillRegistry(),
+    mcp: runtime.mcp,
+    executionIntelligence: runtime.executionIntelligence,
+    preflight: preflight,
+    liveSignals: runtime.liveRunSignals,
+    steering: runtime.runSteering,
+  );
+}
+
+final class _RecordedModelRegistry extends ModelRegistry {
+  _RecordedModelRegistry(ProductRuntime runtime, this.provider)
+      : super(
+          settings: runtime.settings,
+          vault: runtime.secrets,
+          redactor: runtime.redactor,
+        );
+
+  final LanguageModelProvider provider;
+
+  @override
+  List<LanguageModelProvider> providers() => <LanguageModelProvider>[provider];
+
+  @override
+  LanguageModelProvider providerFor(ModelIdentity identity) => provider;
 }
 
 final class _ScriptedRunnerProvider implements LanguageModelProvider {
@@ -186,7 +277,7 @@ final class _ScriptedRunnerProvider implements LanguageModelProvider {
                 'executable': 'dart',
                 'args': <String>['run', 'tool/missing.dart'],
               },
-              'reason': 'Repeat the known failed branch; Runner must suppress it.',
+              'reason': 'Repeat the known failed branch; Runner must replay evidence.',
             },
             <String, Object?>{
               'action': 'tool',
