@@ -45,7 +45,7 @@ void main() {
       expect(captured.method, 'POST');
       expect(captured.uri, Uri.https('html.duckduckgo.com', '/html/'));
       expect(captured.uri.query, isEmpty);
-      expect(utf8.decode(captured.body), 'q=flutter%20docs');
+      expect(utf8.decode(captured.body), 'q=flutter+docs');
       expect(captured.headers[HttpHeaders.userAgentHeader], isNotEmpty);
       expect(results, hasLength(1));
       expect(results.single.title, 'Example & docs');
@@ -254,7 +254,8 @@ void main() {
       ).search(const SearchProviderRequest(query: 'current docs'));
       expect(response.providerId, builtInSearchProviderId);
       expect(response.fallbackUsed, isTrue);
-      expect(response.providerFailures, contains('brave-api:brave_unavailable'));
+      expect(
+          response.providerFailures, contains('brave-api:brave_unavailable'));
     });
 
     test('all-provider timeout is provider-neutral', () async {
@@ -290,7 +291,8 @@ void main() {
       expect(contract.optionalArguments, contains('secretReferenceId'));
     });
 
-    test('zero-key healthy provider satisfies required search preflight', () async {
+    test('zero-key healthy provider satisfies required search preflight',
+        () async {
       final fixture = await _preflightFixture(localOnly: false);
       var optionalProviderCalled = false;
       final service = RunPreflightService(
@@ -312,7 +314,9 @@ void main() {
       expect(receipt.blockingFailures, isEmpty);
       expect(optionalProviderCalled, isFalse);
       expect(
-        receipt.probes.singleWhere((item) => item.key == 'research-search').message,
+        receipt.probes
+            .singleWhere((item) => item.key == 'research-search')
+            .message,
         'Built-in web search is available.',
       );
     });
@@ -362,7 +366,9 @@ void main() {
       );
       expect(receipt.verdict, RunPreflightVerdict.ready);
       expect(
-        receipt.probes.singleWhere((item) => item.key == 'research-search').message,
+        receipt.probes
+            .singleWhere((item) => item.key == 'research-search')
+            .message,
         'Web search is available.',
       );
     });
@@ -454,7 +460,8 @@ Future<({ProjectRecord project, RunRecord run})> _preflightFixture({
     revision: 2,
     projectId: project.id,
     mode: CommandMode.ask,
-    request: localOnly ? 'Research current docs locally' : 'Research current docs',
+    request:
+        localOnly ? 'Research current docs locally' : 'Research current docs',
     acceptanceCriteria: const <AcceptanceCriterion>[
       AcceptanceCriterion(
         id: 'criterion',

@@ -27,11 +27,11 @@ Map<String, dynamic> _effectiveResearchSearchJson() {
       json['inputSchema'] as Map<dynamic, dynamic>? ??
           const <dynamic, dynamic>{},
     );
-    final required = (inputSchema['required'] as List<Object?>? ??
-            const <Object?>[])
-        .map((item) => item.toString())
-        .where((item) => item != 'secretReferenceId')
-        .toList(growable: false);
+    final required =
+        (inputSchema['required'] as List<Object?>? ?? const <Object?>[])
+            .map((item) => item.toString())
+            .where((item) => item != 'secretReferenceId')
+            .toList(growable: false);
     inputSchema['required'] = required;
     return <String, dynamic>{
       ...json,

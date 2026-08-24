@@ -2636,8 +2636,7 @@ class ToolRegistry {
     final count = (int.tryParse(arguments['count']?.toString() ?? '') ?? 10)
         .clamp(1, 20)
         .toInt();
-    final referenceId =
-        arguments['secretReferenceId']?.toString().trim() ?? '';
+    final referenceId = arguments['secretReferenceId']?.toString().trim() ?? '';
     SearchProvider? preferred;
     final providerFailures = <String>[];
     if (referenceId.isNotEmpty) {

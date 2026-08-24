@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'domain.dart';
 import 'storage_security.dart';
 
 const String builtInSearchProviderId = 'duckduckgo-html';
@@ -270,10 +269,9 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
         details: <String, dynamic>{'status': response.statusCode},
       );
     }
-    final contentType = response.headers[HttpHeaders.contentTypeHeader]
-            ?.toLowerCase()
-            .trim() ??
-        '';
+    final contentType =
+        response.headers[HttpHeaders.contentTypeHeader]?.toLowerCase().trim() ??
+            '';
     if (contentType.isNotEmpty && !contentType.startsWith('text/html')) {
       throw ProductException(
         'search_provider_mime_rejected',
@@ -641,7 +639,7 @@ String? normalizePublicSearchResultUrl(String input) {
       !_isPublicSearchHost(uri.host)) {
     return null;
   }
-  final normalized = uri.replace(fragment: '').toString();
+  final normalized = uri.removeFragment().toString();
   if (normalized.length > _maxSearchUrlCharacters) {
     return null;
   }

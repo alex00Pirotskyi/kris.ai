@@ -122,10 +122,7 @@ class ContractPlanner {
     if (RegExp(
       r'\b(research|latest|current|documentation|docs|download knowledge|look up|web|online|url|https)\b',
     ).hasMatch(lower)) {
-      permissions.addAll(<PermissionScope>{
-        PermissionScope.networkResearch,
-        PermissionScope.secretUse,
-      });
+      permissions.add(PermissionScope.networkResearch);
     }
     if (RegExp(
       r'\b(install|dependency|dependencies|package|npm|pnpm|yarn|pip|cargo|clone|pull)\b',
