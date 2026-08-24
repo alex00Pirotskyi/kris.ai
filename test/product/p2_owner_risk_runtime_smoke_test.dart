@@ -11,7 +11,7 @@ import 'package:kristin_local_agent/product/p2_runtime_resource_resolver.dart';
 
 void main() {
   test(
-    'staged current-account P1/P2 runtime launches and performs host effects',
+    'owner-risk P1/P2 runtime launches and performs host effects with product current-account compatibility',
     () async {
       const qaBuild = bool.fromEnvironment(
         'KRISTIN_OWNER_RISK_QA',
@@ -153,6 +153,6 @@ void main() {
             Platform.environment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
                 '1')
         ? false
-        : 'requires staged current-account runtime',
+        : 'requires staged owner-risk runtime or product current-account runtime',
   );
 }
