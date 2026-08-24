@@ -60,6 +60,24 @@ void main() {
 
         run = await coordinator.execute(run.id);
 
+        if (run.state.name != 'succeeded') {
+          final diagnosticEvidence = await runtime.evidenceForRun(run.id);
+          final auditText = await runtime.repositories.auditFile.readAsString();
+          final auditLines = const LineSplitter().convert(auditText);
+          final auditTail = auditLines.length <= 40
+              ? auditLines
+              : auditLines.sublist(auditLines.length - 40);
+          final promptTail = provider.prompts.length <= 4
+              ? provider.prompts
+              : provider.prompts.sublist(provider.prompts.length - 4);
+          print('SYNTHETIC_RUN_RECORD ${jsonEncode(run.toJson())}');
+          print(
+            'SYNTHETIC_RUN_EVIDENCE ${jsonEncode(diagnosticEvidence.map((item) => <String, dynamic>{'kind': item.kind.name, 'payload': item.payload}).toList(growable: false))}',
+          );
+          print('SYNTHETIC_RUN_AUDIT_TAIL ${jsonEncode(auditTail)}');
+          print('SYNTHETIC_RUN_PROMPT_TAIL ${jsonEncode(promptTail)}');
+        }
+
         expect(run.state.name, 'succeeded');
         expect(provider.readinessRequests, 1);
         expect(provider.executionRequests, lessThanOrEqualTo(12));
@@ -105,7 +123,8 @@ void main() {
           successfulData['arguments'],
           orderedEquals(<String>['run', 'tool/generate.dart']),
         );
-        final changedPaths = (successfulData['workspaceChanges'] as Map?)?['paths'];
+        final changedPaths =
+            (successfulData['workspaceChanges'] as Map?)?['paths'];
         expect(changedPaths, isA<List>());
         expect(
           (changedPaths! as List).map((value) => value.toString()),
@@ -277,7 +296,8 @@ final class _ScriptedRunnerProvider implements LanguageModelProvider {
                 'executable': 'dart',
                 'args': <String>['run', 'tool/missing.dart'],
               },
-              'reason': 'Repeat the known failed branch; Runner must replay evidence.',
+              'reason':
+                  'Repeat the known failed branch; Runner must replay evidence.',
             },
             <String, Object?>{
               'action': 'tool',
@@ -295,7 +315,8 @@ final class _ScriptedRunnerProvider implements LanguageModelProvider {
                 'executable': 'dart',
                 'args': <String>['dart', 'run', 'tool/generate.dart'],
               },
-              'reason': 'Run the fixture generator through finite command execution.',
+              'reason':
+                  'Run the fixture generator through finite command execution.',
             },
             <String, Object?>{
               'action': 'tool',
@@ -311,7 +332,8 @@ final class _ScriptedRunnerProvider implements LanguageModelProvider {
             },
             <String, Object?>{
               'action': 'complete',
-              'summary': 'Synthetic project created and inspected in the active root.',
+              'summary':
+                  'Synthetic project created and inspected in the active root.',
             },
           ],
           'Verify acceptance criteria and repair defects':
