@@ -10,6 +10,7 @@ import 'durable_workflow.dart';
 import 'extensions_index.dart';
 import 'deployment_support.dart';
 import 'models_research.dart';
+import 'research_search_provider.dart';
 import 'mcp.dart';
 import 'product_error_normalizer.dart';
 import 'process_launch.dart';
@@ -2632,34 +2633,81 @@ class ToolRegistry {
       );
     }
     final query = _requiredString(arguments, 'query');
-    final referenceId = _requiredString(arguments, 'secretReferenceId');
-    await context.permissions.require(
-      projectId: context.project.id,
-      commandId: context.command.id,
-      scope: PermissionScope.secretUse,
+    final count = (int.tryParse(arguments['count']?.toString() ?? '') ?? 10)
+        .clamp(1, 20)
+        .toInt();
+    final referenceId =
+        arguments['secretReferenceId']?.toString().trim() ?? '';
+    SearchProvider? preferred;
+    final providerFailures = <String>[];
+    if (referenceId.isNotEmpty) {
+      try {
+        await context.permissions.require(
+          projectId: context.project.id,
+          commandId: context.command.id,
+          scope: PermissionScope.secretUse,
+        );
+        final key = await context.secrets.resolve(
+          referenceId,
+          commandId: context.command.id,
+        );
+        preferred = BraveSearchProvider(
+          apiKey: key,
+          callback: ({
+            required String query,
+            required String apiKey,
+            required int count,
+          }) =>
+              context.research.braveSearch(
+            query: query,
+            apiKey: apiKey,
+            count: count,
+          ),
+        );
+      } on ProductException catch (error) {
+        if (error.code == 'cancelled') rethrow;
+        providerFailures.add('$braveSearchProviderId:${error.code}');
+      }
+    }
+    final router = SearchProviderRouter(
+      preferred: preferred,
+      builtIn: BuiltInDuckDuckGoSearchProvider(
+        timeout: context.research.policy.timeout,
+        maxBytes: context.research.policy.maxBytes,
+      ),
     );
-    final key = await context.secrets.resolve(
-      referenceId,
-      commandId: context.command.id,
+    final response = await router.search(
+      SearchProviderRequest(
+        query: query,
+        count: count,
+        cancellation: context.cancellation.cancelled,
+        isCancelled: () => context.cancellation.isCancelled,
+      ),
     );
-    final results = await context.research.braveSearch(
-      query: query,
-      apiKey: key,
-      count: int.tryParse(arguments['count']?.toString() ?? '') ?? 10,
-    );
+    final results = response.results
+        .map((result) => result.toMap())
+        .toList(growable: false);
+    final failures = <String>[
+      ...providerFailures,
+      ...response.providerFailures,
+    ];
     final archive = await context.knowledge.addResearchSearch(
       projectId: context.project.id,
       query: query,
       results: results,
+      provider: response.providerId,
     );
     return ToolResult(
       ok: true,
-      summary: 'Found and archived ${results.length} public HTTPS results.',
+      summary: 'Found and archived ${results.length} web search results.',
       data: <String, dynamic>{
         'results': results,
         'knowledgeId': archive.id,
         'archiveId': archive.archiveId,
         'contentHash': archive.contentHash,
+        'providerId': response.providerId,
+        'fallbackUsed': response.fallbackUsed || providerFailures.isNotEmpty,
+        if (failures.isNotEmpty) 'providerFailures': failures,
       },
     );
   }
@@ -2925,7 +2973,7 @@ class ToolRegistry {
     throw ProductException(
       'argument_type_invalid',
       'Argument "$name" must be a JSON boolean.',
-      details: <String, dynamic>{'argument': name, 'expectedType': 'boolean'},
+      details: const <String, dynamic>{'argument': name, 'expectedType': 'boolean'},
     );
   }
 
@@ -2935,7 +2983,7 @@ class ToolRegistry {
       throw ProductException(
         'argument_required',
         'Argument "$name" is required.',
-        details: <String, dynamic>{'argument': name},
+        details: const <String, dynamic>{'argument': name},
       );
     }
     return value;
@@ -3032,10 +3080,7 @@ class ToolRegistry {
         throw ProductException(
           'process_path_outside_project',
           'A process argument contains an absolute path outside the selected project. Use a project-relative path or a dedicated project-scoped tool.',
-          details: <String, dynamic>{
-            'argumentHash': Sha256.text(value),
-            'causeCode': error.code,
-          },
+          details: const <String, dynamic>{},
         );
       }
     }).toList(growable: false);
