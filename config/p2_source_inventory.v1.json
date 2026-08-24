@@ -82,6 +82,7 @@
     "test/product/p2_owner_risk_contract_test.dart",
     "test/product/p2_owner_risk_runtime_smoke_test.dart",
     "test/product/p2_owner_workspace_test.dart",
+    "test/product/p2_p3_packaged_runtime_paths_test.dart",
     "test/product/p2_process_terminal_contract_test.dart",
     "test/product/p2_qa_preview_gate_test.dart",
     "test/product/p2_runtime_composition_test.dart",
