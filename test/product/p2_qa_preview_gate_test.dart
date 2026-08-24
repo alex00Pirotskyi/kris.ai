@@ -23,13 +23,26 @@ void main() {
     expect(adapter, contains("'qaPreviewFormalCompletion': false"));
     expect(adapter, contains('bool get qaPreview => _qaPreview'));
     expect(p1a, contains('allowQaPreview'));
-    expect(runtime, contains('final productionAuthority ='));
+    expect(runtime, contains('final secureP1aAuthority ='));
     expect(runtime, contains('final ownerRiskAuthority ='));
-    expect(runtime, contains('productionAuthority || ownerRiskAuthority'));
+    expect(runtime, contains('secureP1aAuthority || ownerRiskAuthority'));
+    expect(
+      runtime,
+      contains("authority.authorityKind == 'p1-isolated-authority-service-v2'"),
+    );
+    expect(
+      runtime,
+      contains("authority.authorityProvenance['runtimeEligible'] == true"),
+    );
+    expect(
+      runtime,
+      contains("authority.authorityProvenance['secureIsolationActive'] != false"),
+    );
     expect(
       runtime,
       contains("authority.authorityKind == 'p2-owner-risk-current-account-v1'"),
     );
+    expect(runtime, contains('productionCertificationComplete'));
     expect(bootstrap, contains('allowQaPreview: qaPreview'));
     expect(shell, contains('OWNER-RISK QA — SECURITY EVIDENCE WAIVED'));
   });
