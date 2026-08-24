@@ -7,7 +7,8 @@ import 'package:kristin_local_agent/product/p2_product_runtime_bootstrap.dart';
 void main() {
   test('raw build without bundled Owner runtime fails with stable diagnostic',
       () async {
-    final root = await Directory.systemTemp.createTemp('kristin-owner-missing-');
+    final root =
+        await Directory.systemTemp.createTemp('kristin-owner-missing-');
     addTearDown(() => root.delete(recursive: true));
 
     final handle = await P2ProductRuntimeBootstrap.start(
@@ -23,7 +24,8 @@ void main() {
     );
   });
 
-  testWidgets('blocked secure P1A Owner Mode explains recovery without raw text',
+  testWidgets(
+      'blocked secure P1A Owner Mode explains recovery without raw text',
       (tester) async {
     final handle = P2ProductRuntimeOwnerModeHandle.blocked(
       'Bad_state:_merged_p1a_service_unavailable',

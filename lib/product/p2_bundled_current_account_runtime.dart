@@ -90,8 +90,7 @@ final class P2BundledCurrentAccountRuntime {
             existing['identity'],
             'p2_existing_runtime_identity_invalid',
           );
-          replace =
-              identity['sourceCommit'] != bundledCommit ||
+          replace = identity['sourceCommit'] != bundledCommit ||
               identity['sourceTree'] != bundledTree;
         }
       } catch (_) {
@@ -113,7 +112,8 @@ final class P2BundledCurrentAccountRuntime {
     final resolvedRoot = await resolved.root.resolveSymbolicLinks();
     final expectedRoot = await targetRoot.resolveSymbolicLinks();
     if (resolvedRoot != expectedRoot ||
-        resolved.provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] !=
+        resolved.provisionedEnvironment[
+                'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] !=
             '1' ||
         resolved.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA')) {
       throw StateError('p2_current_account_relocated_runtime_invalid');

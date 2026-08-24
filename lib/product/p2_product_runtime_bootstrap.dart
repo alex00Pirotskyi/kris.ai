@@ -107,7 +107,8 @@ final class P2ProductRuntimeOwnerModeHandle {
   Future<void> close() async => runtime?.close();
   static P2ProductRuntimeOwnerModeHandle active(
     P2ProductRuntimeOwnerMode runtime,
-  ) => P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
+  ) =>
+      P2ProductRuntimeOwnerModeHandle._(runtime: runtime, failureCode: null);
   static P2ProductRuntimeOwnerModeHandle blocked(String code) =>
       P2ProductRuntimeOwnerModeHandle._(
         runtime: null,
@@ -147,22 +148,19 @@ final class P2ProductRuntimeBootstrap {
         'KRISTIN_QA_PREVIEW',
         defaultValue: false,
       );
-      final resolver =
-          resourceResolver ??
+      final resolver = resourceResolver ??
           P2ApplicationOwnedRuntimeResourceResolver(
             applicationDataRoot: dataRoot,
           );
       final resources = runtimeResources ?? await resolver.resolve();
       final runtimeOwnerRisk =
           resources.provisionedEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
-      final productCurrentAccount =
-          resources
-              .provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+      final productCurrentAccount = resources.provisionedEnvironment[
+              'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
           '1';
       final ownerRiskQa =
           buildOwnerRiskQa || runtimeOwnerRisk || productCurrentAccount;
-      final qaPreview =
-          !productCurrentAccount &&
+      final qaPreview = !productCurrentAccount &&
           (ownerRiskQa ||
               (qaPreviewBuild &&
                   p1AuthorityService?.service.provenance['qaPreview'] == true));
@@ -178,8 +176,7 @@ final class P2ProductRuntimeBootstrap {
               p1AuthorityService!,
               qaPreview: qaPreview,
             );
-      final P2RuntimeAuthority authority =
-          p1Adapter ??
+      final P2RuntimeAuthority authority = p1Adapter ??
           P2OwnerRiskQaAuthority(productCurrentAccount: productCurrentAccount);
       final authorityDirectory = Directory(
         '${dataRoot.path}${Platform.pathSeparator}p2-authority',
@@ -241,7 +238,7 @@ final class P2ProductRuntimeBootstrap {
             taskId: tab.taskId,
             accessProfileId:
                 activeOwnerRuntime?.controller.current.accessProfileId ??
-                'owner',
+                    'owner',
             operation: operation,
           );
           return P2TerminalAuthorization(

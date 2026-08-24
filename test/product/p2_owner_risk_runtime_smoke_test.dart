@@ -146,8 +146,7 @@ void main() {
       await dataRoot.delete(recursive: true);
     },
     timeout: const Timeout(Duration(minutes: 3)),
-    skip:
-        (const bool.fromEnvironment(
+    skip: (const bool.fromEnvironment(
               'KRISTIN_OWNER_RISK_QA',
               defaultValue: false,
             ) ||

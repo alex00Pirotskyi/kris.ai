@@ -12,9 +12,9 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
   P2OwnerRiskQaAuthority({this.productCurrentAccount = false}) {
     final random = Random.secure();
     String hex(int bytes) => List<int>.generate(
-      bytes,
-      (_) => random.nextInt(256),
-    ).map((value) => value.toRadixString(16).padLeft(2, '0')).join();
+          bytes,
+          (_) => random.nextInt(256),
+        ).map((value) => value.toRadixString(16).padLeft(2, '0')).join();
     _workerSessionId = 'owner-risk-${hex(18)}';
     _channelId = 'owner-risk-channel-${hex(18)}';
   }
@@ -50,33 +50,33 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
 
   @override
   Map<String, Object?> get authorityProvenance => <String, Object?>{
-    'schemaVersion': '1.0.0',
-    'authorityType': productCurrentAccount
-        ? 'current-account-owner-local-v1'
-        : 'owner-risk-local-current-account-v1',
-    'authorityKind': authorityKind,
-    'implementation': authorityImplementation,
-    'qaPreview': !productCurrentAccount,
-    'qaPreviewVersion': '1.0.0',
-    'qaPreviewFormalCompletion': false,
-    'productCurrentAccount': productCurrentAccount,
-    'securityProfile': productCurrentAccount
-        ? 'current-account-unisolated'
-        : 'owner-risk-qa',
-    'functionalOwnerModeEligible': productCurrentAccount,
-    'secureIsolationActive': false,
-    'ownerRiskAccepted': true,
-    'securityEvidenceWaived': true,
-    'authorityDenialCode': productCurrentAccount
-        ? 'current_account_unisolated'
-        : 'owner_risk_waived',
-    'currentAccountAuthority': true,
-    'rootOrAdministratorSupported': true,
-    'triPlatformQaRequired': !productCurrentAccount,
-    'privateAuthorityMaterialPresent': false,
-    'arbitraryMessageSigningApi': false,
-    'completionEligible': false,
-  };
+        'schemaVersion': '1.0.0',
+        'authorityType': productCurrentAccount
+            ? 'current-account-owner-local-v1'
+            : 'owner-risk-local-current-account-v1',
+        'authorityKind': authorityKind,
+        'implementation': authorityImplementation,
+        'qaPreview': !productCurrentAccount,
+        'qaPreviewVersion': '1.0.0',
+        'qaPreviewFormalCompletion': false,
+        'productCurrentAccount': productCurrentAccount,
+        'securityProfile': productCurrentAccount
+            ? 'current-account-unisolated'
+            : 'owner-risk-qa',
+        'functionalOwnerModeEligible': productCurrentAccount,
+        'secureIsolationActive': false,
+        'ownerRiskAccepted': true,
+        'securityEvidenceWaived': true,
+        'authorityDenialCode': productCurrentAccount
+            ? 'current_account_unisolated'
+            : 'owner_risk_waived',
+        'currentAccountAuthority': true,
+        'rootOrAdministratorSupported': true,
+        'triPlatformQaRequired': !productCurrentAccount,
+        'privateAuthorityMaterialPresent': false,
+        'arbitraryMessageSigningApi': false,
+        'completionEligible': false,
+      };
 
   @override
   void bindRestrictedWorkerIdentity(Map<String, Object?> identity) {
@@ -105,31 +105,31 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
 
   @override
   Future<Map<String, Object?>> take() async => <String, Object?>{
-    'schemaVersion': '4.0.0',
-    'verificationMode': 'ecdsa-p256-public-only',
-    'permitVerifier': <String, Object?>{
-      'algorithm': 'ecdsa-p256-sha256',
-      'keyId': 'owner-risk-qa-permit',
-      // Shape-only public bytes. Signature verification is explicitly
-      // bypassed only in KRISTIN_OWNER_RISK_QA builds.
-      'publicKeySpkiBase64': base64Encode(List<int>.generate(96, (i) => i)),
-    },
-    'authorityState': <String, Object?>{
-      'revocationEpoch': 1,
-      'revokedGrantIds': <String>[],
-      'authoritativeGrantUses': <String, int>{},
-      'authoritativeConsumedRequestIds': <String>[],
-      'authoritativeStateVersion': 0,
-    },
-    'workerSessionId': _workerSessionId,
-    'channelId': _channelId,
-    'workerCanIssue': false,
-    'privateSigningMaterialPresent': false,
-    'symmetricSigningMaterialPresent': false,
-    'rawAuthoritySecretsReturned': false,
-    'ownerRiskQa': !productCurrentAccount,
-    'productCurrentAccount': productCurrentAccount,
-  };
+        'schemaVersion': '4.0.0',
+        'verificationMode': 'ecdsa-p256-public-only',
+        'permitVerifier': <String, Object?>{
+          'algorithm': 'ecdsa-p256-sha256',
+          'keyId': 'owner-risk-qa-permit',
+          // Shape-only public bytes. Signature verification is explicitly
+          // bypassed only in KRISTIN_OWNER_RISK_QA builds.
+          'publicKeySpkiBase64': base64Encode(List<int>.generate(96, (i) => i)),
+        },
+        'authorityState': <String, Object?>{
+          'revocationEpoch': 1,
+          'revokedGrantIds': <String>[],
+          'authoritativeGrantUses': <String, int>{},
+          'authoritativeConsumedRequestIds': <String>[],
+          'authoritativeStateVersion': 0,
+        },
+        'workerSessionId': _workerSessionId,
+        'channelId': _channelId,
+        'workerCanIssue': false,
+        'privateSigningMaterialPresent': false,
+        'symmetricSigningMaterialPresent': false,
+        'rawAuthoritySecretsReturned': false,
+        'ownerRiskQa': !productCurrentAccount,
+        'productCurrentAccount': productCurrentAccount,
+      };
 
   @override
   Future<P2AutomationEnvelope> issue({
@@ -380,31 +380,31 @@ final class P2OwnerRiskQaAuthority implements P2RuntimeAuthority {
     envelope.validate();
     _observations[binding.taskId] =
         Map<String, Object?>.unmodifiable(<String, Object?>{
-          'schemaVersion': '1.0.0',
-          'taskId': binding.taskId,
-          'operation': operation,
-          'authorityKind': authorityKind,
-          'authorityImplementation': authorityImplementation,
-          'completionEligible': false,
-          'qaPreview': !productCurrentAccount,
-          'productCurrentAccount': productCurrentAccount,
-          'securityProfile': productCurrentAccount
-              ? 'current-account-unisolated'
-              : 'owner-risk-qa',
-          'securityEvidenceWaived': true,
-          'currentAccountAuthority': true,
-          'durableConsumptionStateVersion': _uses,
-          'durableConsumptionUseNumber': useNumber,
-          'revocationEpoch': 1,
-          'requestId': requestId,
-          'grantId': grantId,
-          'grantDigest': grantDigest,
-          'workerIdentitySha256': workerIdentitySha256,
-          'p2CanIssueGrants': false,
-          'workerCanIssue': false,
-          'workerDeniedByOs': false,
-          'osEnforcedIsolation': false,
-        });
+      'schemaVersion': '1.0.0',
+      'taskId': binding.taskId,
+      'operation': operation,
+      'authorityKind': authorityKind,
+      'authorityImplementation': authorityImplementation,
+      'completionEligible': false,
+      'qaPreview': !productCurrentAccount,
+      'productCurrentAccount': productCurrentAccount,
+      'securityProfile': productCurrentAccount
+          ? 'current-account-unisolated'
+          : 'owner-risk-qa',
+      'securityEvidenceWaived': true,
+      'currentAccountAuthority': true,
+      'durableConsumptionStateVersion': _uses,
+      'durableConsumptionUseNumber': useNumber,
+      'revocationEpoch': 1,
+      'requestId': requestId,
+      'grantId': grantId,
+      'grantDigest': grantDigest,
+      'workerIdentitySha256': workerIdentitySha256,
+      'p2CanIssueGrants': false,
+      'workerCanIssue': false,
+      'workerDeniedByOs': false,
+      'osEnforcedIsolation': false,
+    });
     return envelope;
   }
 }
