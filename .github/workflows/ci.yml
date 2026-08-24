@@ -227,6 +227,9 @@ jobs:
         with:
           python-version: '3.13.5'
           check-latest: false
+      - name: Install exact hosted P1A CMake
+        shell: bash
+        run: python tool/p1a_bootstrap_hosted_cmake.py --project .
       - name: Build P1A/P2 native components on Linux
         if: matrix.platform == 'linux'
         shell: bash
