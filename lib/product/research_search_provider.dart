@@ -125,7 +125,9 @@ class SearchProviderRouter {
           providerFailures: List<String>.unmodifiable(failures),
         );
       } on ProductException catch (error) {
-        if (error.code == 'cancelled') rethrow;
+        if (error.code == 'cancelled') {
+          rethrow;
+        }
         failures.add('${provider.id}:${error.code}');
       } on TimeoutException {
         failures.add('${provider.id}:search_provider_timeout');
@@ -216,9 +218,8 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
   Future<List<SearchProviderResult>> search(
     SearchProviderRequest request,
   ) async {
-    final query = request.query.trim();
     SearchProviderRouter._validateRequest(request);
-    final body = utf8.encode('q=${Uri.encodeQueryComponent(query)}');
+    final query = request.query.trim();
     final response = await transport(
       SearchHttpRequest(
         method: 'POST',
@@ -231,7 +232,7 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
               'application/x-www-form-urlencoded; charset=utf-8',
           HttpHeaders.userAgentHeader: _searchUserAgent,
         },
-        body: body,
+        body: utf8.encode('q=${Uri.encodeQueryComponent(query)}'),
         timeout: timeout,
         maxBytes: maxBytes,
         cancellation: request.cancellation,
@@ -245,7 +246,6 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
         'The built-in web-search response exceeded its bounded size limit.',
       );
     }
-
     if (const <int>{202, 403, 429}.contains(response.statusCode)) {
       throw ProductException(
         'search_provider_rate_limited',
@@ -280,8 +280,7 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
         'The built-in web-search endpoint returned an unexpected content type.',
       );
     }
-
-    String html;
+    late String html;
     try {
       html = utf8.decode(response.body);
     } on FormatException {
@@ -299,15 +298,14 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
         'The built-in web-search provider requested a challenge.',
       );
     }
-
-    final parsed = parseDuckDuckGoHtmlResults(html, limit: request.count);
-    if (parsed.isEmpty) {
+    final results = parseDuckDuckGoHtmlResults(html, limit: request.count);
+    if (results.isEmpty) {
       throw ProductException(
         'search_provider_malformed_response',
         'The built-in web-search response did not contain usable results.',
       );
     }
-    return parsed;
+    return results;
   }
 }
 
@@ -394,10 +392,17 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
 ) async {
   if (request.uri.scheme != 'https' ||
       request.uri.host.toLowerCase() != 'html.duckduckgo.com' ||
-      request.uri.path != '/html/') {
+      request.uri.path != '/html/' ||
+      request.uri.hasQuery) {
     throw ProductException(
       'search_provider_endpoint_rejected',
       'The built-in web-search transport only permits its fixed HTTPS endpoint.',
+    );
+  }
+  if (request.method != 'POST') {
+    throw ProductException(
+      'search_provider_method_rejected',
+      'The built-in web-search transport only permits POST.',
     );
   }
   if (request.maxBytes < 1 || request.maxBytes > _maxBuiltInResponseBytes) {
@@ -428,7 +433,9 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
     for (final entry in request.headers.entries) {
       outgoing.headers.set(entry.key, entry.value);
     }
-    if (request.body.isNotEmpty) outgoing.add(request.body);
+    if (request.body.isNotEmpty) {
+      outgoing.add(request.body);
+    }
     final incoming = await _awaitCancellationAwareRaw(
       outgoing.close().timeout(request.timeout),
       request.cancellation,
@@ -447,7 +454,7 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
         body: const <int>[],
       );
     }
-    final bytes = await _readBoundedSearchBody(
+    final body = await _readBoundedSearchBody(
       incoming,
       maxBytes: request.maxBytes,
       timeout: request.timeout,
@@ -457,9 +464,12 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
     return SearchHttpResponse(
       statusCode: incoming.statusCode,
       headers: Map<String, String>.unmodifiable(headers),
-      body: List<int>.unmodifiable(bytes),
+      body: List<int>.unmodifiable(body),
     );
+  } on ProductException {
+    rethrow;
   } on TimeoutException {
+    _throwIfCancelledRaw(request.isCancelled);
     throw ProductException(
       'search_provider_timeout',
       'The built-in web-search request timed out.',
@@ -469,6 +479,12 @@ Future<SearchHttpResponse> defaultSearchHttpTransport(
     throw ProductException(
       'search_provider_network_error',
       'The built-in web-search endpoint could not be reached.',
+    );
+  } on HttpException {
+    _throwIfCancelledRaw(request.isCancelled);
+    throw ProductException(
+      'search_provider_network_error',
+      'The built-in web-search request failed.',
     );
   } finally {
     await cancellationSubscription?.cancel();
@@ -483,7 +499,7 @@ Future<List<int>> _readBoundedSearchBody(
   Future<void>? cancellation,
   bool Function()? isCancelled,
 }) async {
-  final builder = BytesBuilder(copy: false);
+  final bytes = <int>[];
   final iterator = StreamIterator<List<int>>(response);
   try {
     while (await _awaitCancellationAwareRaw(
@@ -492,18 +508,18 @@ Future<List<int>> _readBoundedSearchBody(
       isCancelled,
     )) {
       final chunk = iterator.current;
-      if (builder.length + chunk.length > maxBytes) {
+      if (bytes.length + chunk.length > maxBytes) {
         throw ProductException(
           'search_provider_response_too_large',
           'The built-in web-search response exceeded its bounded size limit.',
         );
       }
-      builder.add(chunk);
+      bytes.addAll(chunk);
     }
   } finally {
     await iterator.cancel();
   }
-  return builder.takeBytes();
+  return List<int>.unmodifiable(bytes);
 }
 
 List<SearchProviderResult> parseDuckDuckGoHtmlResults(
@@ -534,23 +550,26 @@ List<SearchProviderResult> parseDuckDuckGoHtmlResults(
       snippets.add(_plainHtmlText(match.group(2) ?? ''));
     }
   }
-
   final results = <SearchProviderResult>[];
   final seen = <String>{};
   for (var index = 0;
       index < links.length && results.length < boundedLimit;
       index++) {
-    final normalizedUrl = normalizePublicSearchResultUrl(links[index].href);
-    if (normalizedUrl == null || !seen.add(normalizedUrl)) continue;
+    final url = normalizePublicSearchResultUrl(links[index].href);
+    if (url == null || !seen.add(url)) {
+      continue;
+    }
     final title = _boundedText(links[index].title, _maxSearchTitleCharacters);
-    if (title.isEmpty) continue;
+    if (title.isEmpty) {
+      continue;
+    }
     final snippet = index < snippets.length
         ? _boundedText(snippets[index], _maxSearchSnippetCharacters)
         : '';
     results.add(
       SearchProviderResult(
         title: title,
-        url: normalizedUrl,
+        url: url,
         snippet: snippet,
       ),
     );
@@ -566,11 +585,17 @@ List<SearchProviderResult> normalizeSearchResults(
   final results = <SearchProviderResult>[];
   final seen = <String>{};
   for (final item in raw) {
-    if (results.length >= boundedLimit) break;
+    if (results.length >= boundedLimit) {
+      break;
+    }
     final url = normalizePublicSearchResultUrl(item['url'] ?? '');
-    if (url == null || !seen.add(url)) continue;
+    if (url == null || !seen.add(url)) {
+      continue;
+    }
     final title = _boundedText(item['title'] ?? '', _maxSearchTitleCharacters);
-    if (title.isEmpty) continue;
+    if (title.isEmpty) {
+      continue;
+    }
     results.add(
       SearchProviderResult(
         title: title,
@@ -587,18 +612,28 @@ List<SearchProviderResult> normalizeSearchResults(
 
 String? normalizePublicSearchResultUrl(String input) {
   var raw = _decodeHtmlEntities(input).trim();
-  if (raw.isEmpty || raw.length > 8192) return null;
-  if (raw.startsWith('//')) raw = 'https:$raw';
+  if (raw.isEmpty || raw.length > 8192) {
+    return null;
+  }
+  if (raw.startsWith('//')) {
+    raw = 'https:$raw';
+  }
   if (raw.startsWith('/')) {
     raw = Uri.https('duckduckgo.com', '/').resolve(raw).toString();
   }
   var uri = Uri.tryParse(raw);
-  if (uri == null) return null;
+  if (uri == null) {
+    return null;
+  }
   if (_isDuckDuckGoHost(uri.host) && uri.path.startsWith('/l/')) {
     final target = uri.queryParameters['uddg']?.trim() ?? '';
-    if (target.isEmpty) return null;
+    if (target.isEmpty) {
+      return null;
+    }
     uri = Uri.tryParse(target);
-    if (uri == null) return null;
+    if (uri == null) {
+      return null;
+    }
   }
   if (uri.scheme.toLowerCase() != 'https' ||
       uri.host.isEmpty ||
@@ -607,13 +642,15 @@ String? normalizePublicSearchResultUrl(String input) {
     return null;
   }
   final normalized = uri.replace(fragment: '').toString();
-  if (normalized.length > _maxSearchUrlCharacters) return null;
+  if (normalized.length > _maxSearchUrlCharacters) {
+    return null;
+  }
   return normalized;
 }
 
 bool _isDuckDuckGoHost(String host) {
-  final value = host.toLowerCase();
-  return value == 'duckduckgo.com' || value.endsWith('.duckduckgo.com');
+  final lower = host.toLowerCase();
+  return lower == 'duckduckgo.com' || lower.endsWith('.duckduckgo.com');
 }
 
 bool _isPublicSearchHost(String host) {
@@ -628,23 +665,55 @@ bool _isPublicSearchHost(String host) {
     return false;
   }
   final address = InternetAddress.tryParse(lower);
-  if (address == null) return true;
-  if (address.isLoopback) return false;
-  final bytes = address.rawAddress;
-  if (address.type == InternetAddressType.IPv4 && bytes.length == 4) {
-    final a = bytes[0];
-    final b = bytes[1];
-    if (a == 0 || a == 10 || a == 127 || a >= 224) return false;
-    if (a == 100 && b >= 64 && b <= 127) return false;
-    if (a == 169 && b == 254) return false;
-    if (a == 172 && b >= 16 && b <= 31) return false;
-    if (a == 192 && b == 168) return false;
-    if (a == 198 && (b == 18 || b == 19)) return false;
+  if (address == null) {
     return true;
   }
+  if (address.isLoopback) {
+    return false;
+  }
+  final bytes = address.rawAddress;
+  if (address.type == InternetAddressType.IPv4 && bytes.length == 4) {
+    return _isPublicIpv4(bytes);
+  }
   if (address.type == InternetAddressType.IPv6 && bytes.length == 16) {
-    if ((bytes[0] & 0xfe) == 0xfc) return false;
-    if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) return false;
+    if (bytes.every((value) => value == 0)) {
+      return false;
+    }
+    if ((bytes[0] & 0xfe) == 0xfc ||
+        (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) ||
+        bytes[0] == 0xff) {
+      return false;
+    }
+    final mappedIpv4 = bytes.take(10).every((value) => value == 0) &&
+        bytes[10] == 0xff &&
+        bytes[11] == 0xff;
+    if (mappedIpv4) {
+      return _isPublicIpv4(bytes.sublist(12));
+    }
+  }
+  return true;
+}
+
+bool _isPublicIpv4(List<int> bytes) {
+  final first = bytes[0];
+  final second = bytes[1];
+  if (first == 0 || first == 10 || first == 127 || first >= 224) {
+    return false;
+  }
+  if (first == 100 && second >= 64 && second <= 127) {
+    return false;
+  }
+  if (first == 169 && second == 254) {
+    return false;
+  }
+  if (first == 172 && second >= 16 && second <= 31) {
+    return false;
+  }
+  if (first == 192 && second == 168) {
+    return false;
+  }
+  if (first == 198 && (second == 18 || second == 19)) {
+    return false;
   }
   return true;
 }
@@ -655,7 +724,9 @@ String? _attribute(String attributes, String name) {
     '$escaped\\s*=\\s*"([^"]*)"',
     caseSensitive: false,
   ).firstMatch(attributes);
-  if (doubleQuoted != null) return doubleQuoted.group(1);
+  if (doubleQuoted != null) {
+    return doubleQuoted.group(1);
+  }
   final singleQuoted = RegExp(
     "$escaped\\s*=\\s*'([^']*)'",
     caseSensitive: false,
@@ -671,7 +742,9 @@ String _plainHtmlText(String value) {
 }
 
 String _decodeHtmlEntities(String value) {
-  if (!value.contains('&')) return value;
+  if (!value.contains('&')) {
+    return value;
+  }
   return value.replaceAllMapped(
     RegExp(r'&(#x[0-9a-fA-F]+|#\d+|amp|quot|apos|lt|gt|nbsp);'),
     (match) {
@@ -709,7 +782,9 @@ String _decodeHtmlEntities(String value) {
 
 String _boundedText(String value, int maxCharacters) {
   final normalized = value.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (normalized.length <= maxCharacters) return normalized;
+  if (normalized.length <= maxCharacters) {
+    return normalized;
+  }
   return normalized.substring(0, maxCharacters);
 }
 
@@ -739,7 +814,9 @@ Future<T> _awaitCancellationAwareRaw<T>(
   bool Function()? isCancelled,
 ) async {
   _throwIfCancelledRaw(isCancelled);
-  if (cancellation == null) return operation;
+  if (cancellation == null) {
+    return operation;
+  }
   return Future.any<T>(<Future<T>>[
     operation,
     cancellation.then<T>((_) {
@@ -749,7 +826,9 @@ Future<T> _awaitCancellationAwareRaw<T>(
 }
 
 List<String> _failureStrings(Object? value) {
-  if (value is! Iterable) return const <String>[];
+  if (value is! Iterable) {
+    return const <String>[];
+  }
   return value
       .map((item) => item.toString())
       .where((item) => item.isNotEmpty)
