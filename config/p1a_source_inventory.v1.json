@@ -72,6 +72,8 @@
     "tool/p1a_finalize_evidence.py",
     "tool/p1a_finalizer_contract_test.py",
     "tool/p1a_github_job_identity.py",
+    "tool/p1a_install_doctor.py",
+    "tool/p1a_install_doctor_test.py",
     "tool/p1a_installer_secret_contract_test.py",
     "tool/p1a_integrate_shared_surfaces.py",
     "tool/p1a_patch_product_runtime.py",
