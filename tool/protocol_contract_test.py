@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "schemas" / "tool_registry.v2.json"
 DECISION_PATH = ROOT / "schemas" / "agent_decision.v1.json"
 WORKSPACE_SOURCE = ROOT / "lib" / "product" / "workspace_tools.dart"
+WORKSPACE_IMPLEMENTATION = ROOT / "lib" / "product" / "workspace_tools_base.dart.inc"
 PROTOCOL_SOURCE = ROOT / "lib" / "product" / "agent_protocol.dart"
 DECISION_SOURCE = ROOT / "lib" / "product" / "agent_decision.dart"
 
@@ -261,7 +262,10 @@ def main() -> int:
     assert decision["schemaVersion"] == "1.0.0"
     assert {"toolDecision", "completeDecision", "failDecision", "askUserDecision", "delegateDecision"}.issubset(decision["$defs"])
 
-    source = WORKSPACE_SOURCE.read_text(encoding="utf-8")
+    wrapper_source = WORKSPACE_SOURCE.read_text(encoding="utf-8")
+    if "workspace_tools_base.dart.inc" not in wrapper_source:
+        raise AssertionError("workspace tool adapter must explicitly bind the governed implementation")
+    source = wrapper_source + "\n" + WORKSPACE_IMPLEMENTATION.read_text(encoding="utf-8")
     handlers = set(re.findall(r"contract:\s*schemas\.require\('([a-z0-9_]+)'\)", source))
     if handlers != set(by_name):
         raise AssertionError(f"handler/schema drift: only_handlers={sorted(handlers-set(by_name))}, only_schemas={sorted(set(by_name)-handlers)}")
