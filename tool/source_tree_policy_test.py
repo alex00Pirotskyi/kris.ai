@@ -2,7 +2,11 @@
 """Behavioral tests for the shared generated-state policy."""
 from __future__ import annotations
 
-from pathlib import PureWindowsPath
+import json
+from pathlib import Path, PureWindowsPath
+import shutil
+import subprocess
+import tempfile
 import unittest
 
 from source_tree_policy import (
@@ -102,6 +106,81 @@ class SourceTreePolicyTest(unittest.TestCase):
                 self.assertTrue(is_generated_path(path))
             else:
                 self.assertFalse(is_generated_path(path), path)
+
+    def test_legacy_pruner_preserves_governed_nested_paths(self) -> None:
+        dart = shutil.which("dart")
+        if dart is None:
+            self.skipTest("Dart SDK is not available")
+
+        root = Path(tempfile.mkdtemp(prefix="kristin-prune-regression-"))
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+
+        def write(relative: str, content: str = "fixture\n") -> None:
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+
+        write("lib/main.dart", "void main() {}\n")
+        write("lib/product/product_runtime.dart", "final runtime = true;\n")
+        write("lib/product/browser/browser_runtime.dart", "final browser = true;\n")
+        write("test/product/browser/browser_runtime_test.dart", "void main() {}\n")
+        write("test/product/fixtures/rendered_page.json", '{"ok":true}\n')
+        write("tool/support.dart", "final support = true;\n")
+        write("lib/product/obsolete/old.dart", "final obsolete = true;\n")
+        write("test/product/stale_test.dart", "void main() {}\n")
+
+        inventory = {
+            "productionDart": ["lib/product/browser/browser_runtime.dart"],
+            "testDart": ["test/product/browser/browser_runtime_test.dart"],
+            "supportDart": ["tool/support.dart"],
+        }
+        write(
+            "config/p2_source_inventory.v1.json",
+            json.dumps(inventory, indent=2) + "\n",
+        )
+        governed_manifest_paths = (
+            "lib/main.dart",
+            "lib/product/product_runtime.dart",
+            "lib/product/browser/browser_runtime.dart",
+            "test/product/browser/browser_runtime_test.dart",
+            "test/product/fixtures/rendered_page.json",
+            "tool/support.dart",
+        )
+        write(
+            "SOURCE_MANIFEST.sha256",
+            "".join(f"{'0' * 64}  {path}\n" for path in governed_manifest_paths),
+        )
+
+        pruner = Path(__file__).with_name("prune_stale_legacy.dart").resolve()
+        completed = subprocess.run(
+            [dart, "run", str(pruner)],
+            cwd=root,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            errors="replace",
+            check=False,
+            timeout=60,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+
+        for relative in governed_manifest_paths:
+            self.assertTrue((root / relative).is_file(), relative)
+        self.assertFalse((root / "lib/product/obsolete/old.dart").exists())
+        self.assertFalse((root / "test/product/stale_test.dart").exists())
+
+        report = json.loads(
+            (root / "release/legacy_quarantine_report.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        quarantined = set(report["quarantinedPaths"])
+        self.assertIn("lib/product/obsolete", quarantined)
+        self.assertIn("test/product/stale_test.dart", quarantined)
+        self.assertNotIn("lib/product/browser", quarantined)
+        self.assertNotIn("test/product/browser", quarantined)
+        self.assertNotIn("test/product/fixtures", quarantined)
 
 
 if __name__ == "__main__":
