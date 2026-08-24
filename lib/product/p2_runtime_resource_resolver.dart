@@ -49,29 +49,27 @@ final class P2RuntimeResourceSet {
   final Map<String, String> provisionedEnvironment;
 
   Map<String, Object?> get provenance => <String, Object?>{
-        'resolver': 'P2ApplicationOwnedRuntimeResourceResolver',
-        'applicationOwned': true,
-        'sourceWorkingDirectoryIndependent': true,
-        'manifestSha256': manifestSha256,
-        'sourceCommit': sourceCommit,
-        'sourceTree': sourceTree,
-        'runtimeBuildSha256': runtimeBuildSha256,
-        'p1AuthorityServiceContractSha256': p1AuthorityServiceContractSha256,
-        'rootPathSha256': Sha256.text(root.absolute.path),
-        'nodePathSha256': Sha256.text(nodeExecutable),
-        'hostScriptPathSha256': Sha256.text(hostScript),
-        'restrictedWorkerLauncherPathSha256':
-            Sha256.text(restrictedWorkerLauncher),
-        'workerPolicyPathSha256': Sha256.text(workerPolicy),
-        'provisionedEnvironmentKeys': provisionedEnvironment.keys.toList()
-          ..sort(),
-        'provisionedEnvironmentSha256': Sha256.text(
-          jsonEncode(<String, String>{
-            for (final key in (provisionedEnvironment.keys.toList()..sort()))
-              key: provisionedEnvironment[key]!,
-          }),
-        ),
-      };
+    'resolver': 'P2ApplicationOwnedRuntimeResourceResolver',
+    'applicationOwned': true,
+    'sourceWorkingDirectoryIndependent': true,
+    'manifestSha256': manifestSha256,
+    'sourceCommit': sourceCommit,
+    'sourceTree': sourceTree,
+    'runtimeBuildSha256': runtimeBuildSha256,
+    'p1AuthorityServiceContractSha256': p1AuthorityServiceContractSha256,
+    'rootPathSha256': Sha256.text(root.absolute.path),
+    'nodePathSha256': Sha256.text(nodeExecutable),
+    'hostScriptPathSha256': Sha256.text(hostScript),
+    'restrictedWorkerLauncherPathSha256': Sha256.text(restrictedWorkerLauncher),
+    'workerPolicyPathSha256': Sha256.text(workerPolicy),
+    'provisionedEnvironmentKeys': provisionedEnvironment.keys.toList()..sort(),
+    'provisionedEnvironmentSha256': Sha256.text(
+      jsonEncode(<String, String>{
+        for (final key in (provisionedEnvironment.keys.toList()..sort()))
+          key: provisionedEnvironment[key]!,
+      }),
+    ),
+  };
 }
 
 final class P2ApplicationOwnedRuntimeResourceResolver {
@@ -83,21 +81,39 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
   final Directory applicationDataRoot;
   final String executablePath;
 
-  Future<P2RuntimeResourceSet> resolve() async {
-    if (!applicationDataRoot.isAbsolute) {
-      throw StateError('application_data_root_must_be_absolute');
-    }
+  static List<Directory> candidateRoots({
+    required Directory applicationDataRoot,
+    required String executablePath,
+    bool? macOS,
+  }) {
     final executableRoot = File(executablePath).absolute.parent;
-    final candidates = <Directory>[
+    final isMacOS = macOS ?? Platform.isMacOS;
+    return <Directory>[
       Directory(
         '${applicationDataRoot.absolute.path}${Platform.pathSeparator}'
         'runtime${Platform.pathSeparator}p2${Platform.pathSeparator}current',
       ),
+      if (isMacOS)
+        Directory(
+          '${executableRoot.parent.path}${Platform.pathSeparator}Resources'
+          '${Platform.pathSeparator}runtime${Platform.pathSeparator}p2'
+          '${Platform.pathSeparator}current',
+        ),
       Directory(
         '${executableRoot.path}${Platform.pathSeparator}'
         'runtime${Platform.pathSeparator}p2${Platform.pathSeparator}current',
       ),
     ];
+  }
+
+  Future<P2RuntimeResourceSet> resolve() async {
+    if (!applicationDataRoot.isAbsolute) {
+      throw StateError('application_data_root_must_be_absolute');
+    }
+    final candidates = candidateRoots(
+      applicationDataRoot: applicationDataRoot,
+      executablePath: executablePath,
+    );
     Object? lastError;
     for (final candidate in candidates) {
       if (!await candidate.exists()) continue;
@@ -130,7 +146,8 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
         decoded is Map && decoded['ownerRiskQa'] == true;
     final manifestProductCurrentAccount =
         decoded is Map && decoded['productCurrentAccount'] == true;
-    final localCurrentAccount = buildOwnerRiskQa ||
+    final localCurrentAccount =
+        buildOwnerRiskQa ||
         manifestOwnerRiskQa ||
         manifestProductCurrentAccount;
     if (decoded is! Map ||
@@ -415,7 +432,8 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
 
   static String _externalPath(Map<String, Object?> row, String key) {
     final value = row['path']?.toString() ?? '';
-    final absolute = value.startsWith('/') ||
+    final absolute =
+        value.startsWith('/') ||
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value) ||
         value.startsWith(r'\\');
     if (!absolute ||

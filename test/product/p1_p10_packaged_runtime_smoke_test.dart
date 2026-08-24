@@ -13,16 +13,26 @@ void main() {
   test(
     'packaged product resolves P2 and P3 and performs real host/browser work',
     () async {
-      final executable = Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '';
+      final executable =
+          Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '';
       expect(executable, isNotEmpty);
-      final dataRoot = await Directory.systemTemp.createTemp('kristin-p1-p10-package-');
+      final dataRoot = await Directory.systemTemp.createTemp(
+        'kristin-p1-p10-package-',
+      );
       try {
         final resources = await P2ApplicationOwnedRuntimeResourceResolver(
           applicationDataRoot: dataRoot,
           executablePath: executable,
         ).resolve();
-        expect(resources.provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'], '1');
-        expect(resources.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA'), false);
+        expect(
+          resources
+              .provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'],
+          '1',
+        );
+        expect(
+          resources.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA'),
+          false,
+        );
 
         final handle = await P2ProductRuntimeBootstrap.start(
           dataRoot: dataRoot,
@@ -39,8 +49,12 @@ void main() {
           approvalPolicy: P2OwnerApprovalPolicy.destructiveOnly,
           acknowledged: true,
         );
-        final effects = await Directory('${dataRoot.path}${Platform.pathSeparator}effects').create();
-        final target = File('${effects.path}${Platform.pathSeparator}packaged-owner-λ.txt');
+        final effects = await Directory(
+          '${dataRoot.path}${Platform.pathSeparator}effects',
+        ).create();
+        final target = File(
+          '${effects.path}${Platform.pathSeparator}packaged-owner-λ.txt',
+        );
         final fs = owner.composition.filesystemService(
           Directory('${dataRoot.path}${Platform.pathSeparator}backups'),
         );
@@ -59,7 +73,10 @@ void main() {
           P2CommandSpec(
             executable: resources.nodeExecutable,
             cwd: effects.path,
-            arguments: const <String>['-e', "process.stdout.write('PACKAGED_COMMAND_OK')"],
+            arguments: const <String>[
+              '-e',
+              "process.stdout.write('PACKAGED_COMMAND_OK')",
+            ],
             deadline: const Duration(seconds: 20),
           ),
           binding: owner.bindingContext.bindingFor('command.run'),
@@ -74,7 +91,9 @@ void main() {
         final bundle = await browser.resolveBundle();
         expect(bundle.browserEngine, 'chromium');
         final probe = await browser.probe(
-          stateDirectory: Directory('${dataRoot.path}${Platform.pathSeparator}p3-state'),
+          stateDirectory: Directory(
+            '${dataRoot.path}${Platform.pathSeparator}p3-state',
+          ),
           startupTimeout: const Duration(seconds: 45),
         );
         expect(probe.ready.browserEngine, 'chromium');
@@ -86,7 +105,8 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 4)),
-    skip: (Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '').isEmpty
+    skip:
+        (Platform.environment['KRISTIN_PACKAGED_APP_EXECUTABLE'] ?? '').isEmpty
         ? 'requires packaged P2+P3 product payload'
         : false,
   );
