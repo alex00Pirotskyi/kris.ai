@@ -43,6 +43,7 @@ jobs:
             lib/product/browser/browser_runtime_bundle.dart \
             test/product/p2_p3_packaged_runtime_paths_test.dart \
             test/product/p1_p10_packaged_runtime_smoke_test.dart
+          python tool/v71r12_bootstrap_hosted_python.py --project .
           flutter pub get
 
       - name: Focused contracts and analyzer
