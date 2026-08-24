@@ -57,8 +57,12 @@ void main() {
       );
       expect(bootstrap, contains("bundled['productCurrentAccount'] != true"));
       expect(bootstrap, contains("bundled['ownerRiskQa'] != false"));
-      expect(bootstrap, isNot(contains('Process.run(')));
+      expect(
+        bootstrap,
+        isNot(contains('configure-owner-risk-runtime.mjs')),
+      );
       expect(bootstrap, isNot(contains("'--mode'")));
+      expect(bootstrap, contains("Process.run('chmod'"));
       expect(configurator, contains("mode === 'product-current-account'"));
       expect(configurator, contains('KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'));
       expect(
