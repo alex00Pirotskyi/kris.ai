@@ -2973,7 +2973,7 @@ class ToolRegistry {
     throw ProductException(
       'argument_type_invalid',
       'Argument "$name" must be a JSON boolean.',
-      details: const <String, dynamic>{'argument': name, 'expectedType': 'boolean'},
+      details: <String, dynamic>{'argument': name, 'expectedType': 'boolean'},
     );
   }
 
@@ -2983,7 +2983,7 @@ class ToolRegistry {
       throw ProductException(
         'argument_required',
         'Argument "$name" is required.',
-        details: const <String, dynamic>{'argument': name},
+        details: <String, dynamic>{'argument': name},
       );
     }
     return value;
@@ -3080,7 +3080,10 @@ class ToolRegistry {
         throw ProductException(
           'process_path_outside_project',
           'A process argument contains an absolute path outside the selected project. Use a project-relative path or a dedicated project-scoped tool.',
-          details: const <String, dynamic>{},
+          details: <String, dynamic>{
+            'argumentHash': Sha256.text(value),
+            'causeCode': error.code,
+          },
         );
       }
     }).toList(growable: false);
