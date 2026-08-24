@@ -25,7 +25,9 @@ void main() {
     expect(p1a, contains('allowQaPreview'));
     expect(runtime, contains('final secureP1aAuthority ='));
     expect(runtime, contains('final ownerRiskAuthority ='));
-    expect(runtime, contains('secureP1aAuthority || ownerRiskAuthority'));
+    expect(runtime, contains('final currentAccountAuthority ='));
+    expect(runtime, contains('ownerRiskAuthority ||'));
+    expect(runtime, contains('currentAccountAuthority'));
     expect(
       runtime,
       contains("authority.authorityKind == 'p1-isolated-authority-service-v2'"),
@@ -37,11 +39,16 @@ void main() {
     expect(
       runtime,
       contains(
-          "authority.authorityProvenance['secureIsolationActive'] != false"),
+        "authority.authorityProvenance['secureIsolationActive'] != false",
+      ),
     );
     expect(
       runtime,
       contains("authority.authorityKind == 'p2-owner-risk-current-account-v1'"),
+    );
+    expect(
+      runtime,
+      contains("authority.authorityKind == 'p2-current-account-owner-v1'"),
     );
     expect(runtime, contains('productionCertificationComplete'));
     expect(bootstrap, contains('allowQaPreview: qaPreview'));

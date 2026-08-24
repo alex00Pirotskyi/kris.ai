@@ -27,6 +27,7 @@ import 'run_steering.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
+import 'p2_bundled_current_account_runtime.dart';
 import 'p8_observability.dart';
 import 'p1_authority_service_contract_v1.dart';
 import 'p1_authority_service_product_runtime_v1.dart';
@@ -620,6 +621,11 @@ class ProductRuntime {
     telemetryBridge.start();
     runtime._p1AuthorityServiceRuntime =
         await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
+    if (runtime.p1AuthorityService == null) {
+      await P2BundledCurrentAccountRuntime.prepareIfPresent(
+        applicationDataRoot: directories.root,
+      );
+    }
     runtime._p2OwnerModeRuntime = await P2ProductRuntimeBootstrap.start(
       dataRoot: directories.root,
       p1AuthorityService: runtime.p1AuthorityService,
@@ -671,9 +677,7 @@ class ProductRuntime {
               ? CapabilityDoctorAction.none
               : CapabilityDoctorAction.openSettings,
           durationMilliseconds: storageWatch.elapsedMilliseconds,
-          details: <String, Object?>{
-            'root': directories.root.path,
-          },
+          details: <String, Object?>{'root': directories.root.path},
         ),
       );
     } catch (error) {
@@ -792,9 +796,7 @@ class ProductRuntime {
           required: false,
           action: CapabilityDoctorAction.retryDoctor,
           durationMilliseconds: browserWatch.elapsedMilliseconds,
-          details: <String, Object?>{
-            'statusCode': p3BrowserRuntime.statusCode,
-          },
+          details: <String, Object?>{'statusCode': p3BrowserRuntime.statusCode},
         ),
       );
     } else if (depth == CapabilityDoctorDepth.quick) {
@@ -808,9 +810,7 @@ class ProductRuntime {
               'The application-owned browser bundle is available. Full Doctor launches a bounded startup probe.',
           required: false,
           durationMilliseconds: browserWatch.elapsedMilliseconds,
-          details: <String, Object?>{
-            'statusCode': p3BrowserRuntime.statusCode,
-          },
+          details: <String, Object?>{'statusCode': p3BrowserRuntime.statusCode},
         ),
       );
     } else {
@@ -986,10 +986,7 @@ class ProductRuntime {
       }
     }
 
-    return CapabilityDoctorReport(
-      depth: depth,
-      checks: checks,
-    );
+    return CapabilityDoctorReport(depth: depth, checks: checks);
   }
 
   Future<void> close() async {
@@ -1012,8 +1009,10 @@ class ProductRuntime {
     required String request,
     String? suggestedName,
   }) async {
-    final intent =
-        conversationOrchestrator.classify(request, CommandMode.build);
+    final intent = conversationOrchestrator.classify(
+      request,
+      CommandMode.build,
+    );
     final location = await projectProvisioning.prepare(
       suggestedName: suggestedName?.trim().isNotEmpty == true
           ? suggestedName!

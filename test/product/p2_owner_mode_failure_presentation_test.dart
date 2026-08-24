@@ -5,8 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/p2_product_runtime_bootstrap.dart';
 
 void main() {
-  test('missing merged P1A service returns a stable diagnostic', () async {
-    final root = await Directory.systemTemp.createTemp('kristin-p1a-missing-');
+  test('raw build without bundled Owner runtime fails with stable diagnostic',
+      () async {
+    final root =
+        await Directory.systemTemp.createTemp('kristin-owner-missing-');
     addTearDown(() => root.delete(recursive: true));
 
     final handle = await P2ProductRuntimeBootstrap.start(
@@ -15,14 +17,15 @@ void main() {
     );
 
     expect(handle.available, isFalse);
-    expect(handle.failureCode, 'merged_p1a_service_unavailable');
+    expect(handle.failureCode, 'p2_application_runtime_bundle_missing');
     expect(
       handle.runtimeProvenance['failureCode'],
-      'merged_p1a_service_unavailable',
+      'p2_application_runtime_bundle_missing',
     );
   });
 
-  testWidgets('blocked Owner Mode explains recovery without raw Dart text',
+  testWidgets(
+      'blocked secure P1A Owner Mode explains recovery without raw text',
       (tester) async {
     final handle = P2ProductRuntimeOwnerModeHandle.blocked(
       'Bad_state:_merged_p1a_service_unavailable',

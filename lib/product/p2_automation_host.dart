@@ -187,22 +187,37 @@ class P2WorkerGrantProof {
       throw StateError('worker_authenticated_ipc_record_invalid');
     }
     final ownerRiskQa = authority['ownerRiskQa'] == true;
-    final authorityModeValid = ownerRiskQa
-        ? authority['authorityKind'] == 'p2-owner-risk-current-account-v1' &&
-            authority['sharedP1ControlPlane'] == false &&
+    final productCurrentAccount = authority['productCurrentAccount'] == true;
+    final localCurrentAccountBase =
+        authority['sharedP1ControlPlane'] == false &&
             authority['securityEvidenceWaived'] == true &&
             authority['osEnforcedIsolation'] == false &&
             authority['workerDeniedByOs'] == false &&
-            workerIdentity['principalType'] == 'owner-risk-current-account' &&
-            workerIdentity['ownerRiskQa'] == true &&
             workerIdentity['osIsolationWaived'] == true &&
             workerIdentity['currentAccountAuthority'] == true &&
-            workerIdentity['authorityConnectionDenied'] == false &&
+            workerIdentity['authorityConnectionDenied'] == false;
+    final authorityModeValid = ownerRiskQa
+        ? !productCurrentAccount &&
+            authority['authorityKind'] == 'p2-owner-risk-current-account-v1' &&
+            localCurrentAccountBase &&
+            workerIdentity['principalType'] == 'owner-risk-current-account' &&
+            workerIdentity['ownerRiskQa'] == true &&
+            workerIdentity['productCurrentAccount'] != true &&
             workerIdentity['authorityDenialCode'] == 'owner_risk_waived'
-        : authority['authorityKind'] == 'p1-isolated-authority-service-v2' &&
-            authority['sharedP1ControlPlane'] == true &&
-            authority['osEnforcedIsolation'] == true &&
-            authority['workerDeniedByOs'] == true;
+        : productCurrentAccount
+            ? authority['authorityKind'] == 'p2-current-account-owner-v1' &&
+                authority['securityProfile'] == 'current-account-unisolated' &&
+                localCurrentAccountBase &&
+                workerIdentity['principalType'] == 'current-account-owner' &&
+                workerIdentity['ownerRiskQa'] == false &&
+                workerIdentity['productCurrentAccount'] == true &&
+                workerIdentity['authorityDenialCode'] ==
+                    'current_account_unisolated'
+            : authority['authorityKind'] ==
+                    'p1-isolated-authority-service-v2' &&
+                authority['sharedP1ControlPlane'] == true &&
+                authority['osEnforcedIsolation'] == true &&
+                authority['workerDeniedByOs'] == true;
     if ((auditCheckpoint['id'] ?? '').toString().isEmpty ||
         !hex.hasMatch('${auditCheckpoint['digest'] ?? ''}') ||
         !authorityModeValid ||

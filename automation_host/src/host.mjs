@@ -722,11 +722,16 @@ export async function runCli() {
           rawAuthorityKeysPresent: false,
           bootstrapTransport: 'private-parent-child-stdio',
           restrictedWorkerPrincipal:
-            process.env.KRISTIN_OWNER_RISK_QA === '1'
+            process.env.KRISTIN_OWNER_RISK_QA === '1' ||
+            process.env.KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT === '1'
               ? false
               : process.env.KRISTIN_RESTRICTED_WORKER === '1',
           ownerRiskCurrentAccount: process.env.KRISTIN_OWNER_RISK_QA === '1',
-          osIsolationWaived: process.env.KRISTIN_OWNER_RISK_QA === '1',
+          productCurrentAccount:
+            process.env.KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT === '1',
+          osIsolationWaived:
+            process.env.KRISTIN_OWNER_RISK_QA === '1' ||
+            process.env.KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT === '1',
           workerSessionId: bootstrap.workerSessionId,
           pid: process.pid,
         });

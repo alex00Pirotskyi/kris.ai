@@ -93,7 +93,15 @@ final class P2ProductRuntimeOwnerMode {
         !authority.completionEligible &&
         authority.authorityKind == 'p2-owner-risk-current-account-v1' &&
         authority.authorityProvenance['securityEvidenceWaived'] == true;
-    if (!(secureP1aAuthority || ownerRiskAuthority)) {
+    final currentAccountAuthority = !authority.qaPreview &&
+        !authority.completionEligible &&
+        authority.authorityKind == 'p2-current-account-owner-v1' &&
+        authority.authorityProvenance['currentAccountAuthority'] == true &&
+        authority.authorityProvenance['secureIsolationActive'] == false &&
+        authority.authorityProvenance['functionalOwnerModeEligible'] == true;
+    if (!(secureP1aAuthority ||
+        ownerRiskAuthority ||
+        currentAccountAuthority)) {
       throw StateError('fixture_or_unapproved_authority_rejected');
     }
     await stateDirectory.create(recursive: true);

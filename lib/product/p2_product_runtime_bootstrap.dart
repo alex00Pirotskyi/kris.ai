@@ -140,7 +140,7 @@ final class P2ProductRuntimeBootstrap {
     bool interactiveDesktopAttested = false,
   }) async {
     try {
-      const ownerRiskQa = bool.fromEnvironment(
+      const buildOwnerRiskQa = bool.fromEnvironment(
         'KRISTIN_OWNER_RISK_QA',
         defaultValue: false,
       );
@@ -148,28 +148,36 @@ final class P2ProductRuntimeBootstrap {
         'KRISTIN_QA_PREVIEW',
         defaultValue: false,
       );
-      final qaPreview = ownerRiskQa ||
-          (qaPreviewBuild &&
-              p1AuthorityService?.service.provenance['qaPreview'] == true);
+      final resolver = resourceResolver ??
+          P2ApplicationOwnedRuntimeResourceResolver(
+            applicationDataRoot: dataRoot,
+          );
+      final resources = runtimeResources ?? await resolver.resolve();
+      final runtimeOwnerRisk =
+          resources.provisionedEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+      final productCurrentAccount = resources.provisionedEnvironment[
+              'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+          '1';
+      final ownerRiskQa =
+          buildOwnerRiskQa || runtimeOwnerRisk || productCurrentAccount;
+      final qaPreview = !productCurrentAccount &&
+          (ownerRiskQa ||
+              (qaPreviewBuild &&
+                  p1AuthorityService?.service.provenance['qaPreview'] == true));
       if (!ownerRiskQa) {
         if (p1AuthorityService == null) {
           throw StateError('merged_p1a_service_unavailable');
         }
         p1AuthorityService.validateForP2(allowQaPreview: qaPreview);
       }
-      final resolver = resourceResolver ??
-          P2ApplicationOwnedRuntimeResourceResolver(
-            applicationDataRoot: dataRoot,
-          );
-      final resources = runtimeResources ?? await resolver.resolve();
       final P2IsolatedP1AuthorityAdapter? p1Adapter = ownerRiskQa
           ? null
           : P2IsolatedP1AuthorityAdapter(
               p1AuthorityService!,
               qaPreview: qaPreview,
             );
-      final P2RuntimeAuthority authority =
-          p1Adapter ?? P2OwnerRiskQaAuthority();
+      final P2RuntimeAuthority authority = p1Adapter ??
+          P2OwnerRiskQaAuthority(productCurrentAccount: productCurrentAccount);
       final authorityDirectory = Directory(
         '${dataRoot.path}${Platform.pathSeparator}p2-authority',
       );
@@ -215,7 +223,10 @@ final class P2ProductRuntimeBootstrap {
             ..._validatedProvisionedEnvironment(
               explicitlyProvisionedEnvironment,
             ),
-            if (ownerRiskQa) 'KRISTIN_OWNER_RISK_QA': '1',
+            if (buildOwnerRiskQa || runtimeOwnerRisk)
+              'KRISTIN_OWNER_RISK_QA': '1',
+            if (productCurrentAccount)
+              'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': '1',
           },
         ),
         hostBindingProvider: bindings,
@@ -319,6 +330,7 @@ final class P2ProductRuntimeBootstrap {
       'GITHUB_JOB',
       'RUNNER_NAME',
       'KRISTIN_OWNER_RISK_QA',
+      'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT',
     };
     final result = <String, String>{};
     for (final entry in input.entries) {

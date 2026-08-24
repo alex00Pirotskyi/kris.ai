@@ -252,6 +252,9 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
       if (config.additionalEnvironment['KRISTIN_OWNER_RISK_QA']
           case final value?)
         'KRISTIN_OWNER_RISK_QA': value,
+      if (config.additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT']
+          case final value?)
+        'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT': value,
       if (config.windowsJobHelper case final value?)
         'KRISTIN_WINDOWS_JOB_HELPER': value,
       if (config.posixWatchdog case final value?)
@@ -265,10 +268,16 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     };
     final ownerRiskQa =
         config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+    final productCurrentAccount =
+        config.additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+            '1';
+    final localCurrentAccount = ownerRiskQa || productCurrentAccount;
     final process = await Process.start(
-      ownerRiskQa ? config.nodeExecutable : config.restrictedWorkerLauncher,
+      localCurrentAccount
+          ? config.nodeExecutable
+          : config.restrictedWorkerLauncher,
       <String>[
-        if (ownerRiskQa) config.restrictedWorkerLauncher,
+        if (localCurrentAccount) config.restrictedWorkerLauncher,
         '--policy',
         config.workerPolicy,
         '--session',
@@ -481,25 +490,41 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         if (!_workerIdentity.isCompleted) _workerIdentity.complete(identity);
         final ownerRiskQa =
             _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+        final productCurrentAccount = _config.additionalEnvironment[
+                'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+            '1';
+        final localCurrentAccount = ownerRiskQa || productCurrentAccount;
+        final expectedLocalDenialCode = productCurrentAccount
+            ? 'current_account_unisolated'
+            : 'owner_risk_waived';
         if (!_workerAuthorityDenial.isCompleted &&
-            ((!ownerRiskQa &&
+            ((localCurrentAccount &&
+                    identity['authorityConnectionDenied'] == false &&
+                    identity['authorityDenialCode'] ==
+                        expectedLocalDenialCode &&
+                    identity['ownerRiskQa'] == ownerRiskQa &&
+                    (identity['productCurrentAccount'] == true) ==
+                        productCurrentAccount &&
+                    identity['osIsolationWaived'] == true &&
+                    identity['currentAccountAuthority'] == true) ||
+                (!localCurrentAccount &&
                     identity['authorityConnectionDenied'] == true &&
                     identity['authorityDenialCode'] ==
-                        'worker_principal_denied') ||
-                (ownerRiskQa &&
-                    identity['authorityConnectionDenied'] == false &&
-                    identity['authorityDenialCode'] == 'owner_risk_waived' &&
-                    identity['ownerRiskQa'] == true &&
-                    identity['osIsolationWaived'] == true))) {
+                        'worker_principal_denied'))) {
           _workerAuthorityDenial.complete(<String, Object?>{
-            'authorityConnectionDenied': ownerRiskQa ? false : true,
-            'authorityDenialCode':
-                ownerRiskQa ? 'owner_risk_waived' : 'worker_principal_denied',
-            'authorityDenialObservedBy':
-                ownerRiskQa ? 'owner-risk-waiver' : 'restricted-launcher',
+            'authorityConnectionDenied': localCurrentAccount ? false : true,
+            'authorityDenialCode': localCurrentAccount
+                ? expectedLocalDenialCode
+                : 'worker_principal_denied',
+            'authorityDenialObservedBy': productCurrentAccount
+                ? 'current-account-product'
+                : ownerRiskQa
+                    ? 'owner-risk-waiver'
+                    : 'restricted-launcher',
             if (ownerRiskQa) 'ownerRiskQa': true,
-            if (ownerRiskQa) 'osIsolationWaived': true,
-            if (ownerRiskQa) 'currentAccountAuthority': true,
+            if (productCurrentAccount) 'productCurrentAccount': true,
+            if (localCurrentAccount) 'osIsolationWaived': true,
+            if (localCurrentAccount) 'currentAccountAuthority': true,
           });
         }
       } catch (error, stack) {
@@ -542,6 +567,10 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     if (type == 'ready') {
       final ownerRiskQa =
           _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
+      final productCurrentAccount = _config
+              .additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+          '1';
+      final localCurrentAccount = ownerRiskQa || productCurrentAccount;
       final mismatches = <String>[];
       void requireField(bool accepted, String field) {
         if (!accepted) mismatches.add(field);
@@ -562,19 +591,20 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         message['rawAuthorityKeysPresent'] == false,
         'rawAuthorityKeysPresent',
       );
-      if (ownerRiskQa) {
+      if (localCurrentAccount) {
         requireField(
           message['restrictedWorkerPrincipal'] == false,
           'restrictedWorkerPrincipal',
         );
         requireField(
-          message['ownerRiskCurrentAccount'] == true,
+          message['ownerRiskCurrentAccount'] == ownerRiskQa,
           'ownerRiskCurrentAccount',
         );
         requireField(
-          message['osIsolationWaived'] == true,
-          'osIsolationWaived',
+          message['productCurrentAccount'] == productCurrentAccount,
+          'productCurrentAccount',
         );
+        requireField(message['osIsolationWaived'] == true, 'osIsolationWaived');
       } else {
         requireField(
           message['restrictedWorkerPrincipal'] == true,
@@ -658,13 +688,19 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
             : 'linux';
     final ownerRiskQa =
         _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
-    final expectedPrincipal = ownerRiskQa
-        ? 'owner-risk-current-account'
-        : Platform.isWindows
-            ? 'appcontainer'
-            : Platform.isMacOS
-                ? 'signed-app-sandbox-helper'
-                : 'dedicated-uid';
+    final productCurrentAccount = _config
+            .additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+        '1';
+    final localCurrentAccount = ownerRiskQa || productCurrentAccount;
+    final expectedPrincipal = productCurrentAccount
+        ? 'current-account-owner'
+        : ownerRiskQa
+            ? 'owner-risk-current-account'
+            : Platform.isWindows
+                ? 'appcontainer'
+                : Platform.isMacOS
+                    ? 'signed-app-sandbox-helper'
+                    : 'dedicated-uid';
     final pid = message['pid'];
     final startToken = message['startToken']?.toString() ?? '';
     if (message['schemaVersion'] != '2.0.0' ||
@@ -681,7 +717,7 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
         'restricted_worker_identity_invalid',
       );
     }
-    if (!ownerRiskQa &&
+    if (!localCurrentAccount &&
         Platform.isLinux &&
         (message['workerUid'] is! int ||
             message['workerGid'] is! int ||
@@ -689,13 +725,13 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
             message['namespaceIsolation'] != true)) {
       throw const P2AutomationHostException('linux_worker_identity_invalid');
     }
-    if (!ownerRiskQa &&
+    if (!localCurrentAccount &&
         Platform.isWindows &&
         ((message['workerSid']?.toString().isEmpty ?? true) ||
             message['jobObjectBound'] != true)) {
       throw const P2AutomationHostException('windows_worker_identity_invalid');
     }
-    if (!ownerRiskQa &&
+    if (!localCurrentAccount &&
         Platform.isMacOS &&
         ((message['codeDirectoryHash']?.toString().isEmpty ?? true) ||
             message['appSandbox'] != true ||
@@ -704,14 +740,18 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
     }
     final denial = message['authorityConnectionDenied'];
     final denialCode = message['authorityDenialCode'];
-    if (ownerRiskQa) {
-      if (message['ownerRiskQa'] != true ||
+    if (localCurrentAccount) {
+      final expectedDenialCode = productCurrentAccount
+          ? 'current_account_unisolated'
+          : 'owner_risk_waived';
+      if (message['ownerRiskQa'] != ownerRiskQa ||
+          (message['productCurrentAccount'] == true) != productCurrentAccount ||
           message['osIsolationWaived'] != true ||
           message['currentAccountAuthority'] != true ||
           denial != false ||
-          denialCode != 'owner_risk_waived') {
+          denialCode != expectedDenialCode) {
         throw const P2AutomationHostException(
-          'owner_risk_worker_waiver_invalid',
+          'local_current_account_worker_waiver_invalid',
         );
       }
     } else if (denial != null &&
@@ -740,15 +780,26 @@ final class P2ProcessAutomationHostClient implements P2AutomationHostClient {
   Map<String, Object?> _finalizeWorkerIdentity(Map<String, Object?> merged) {
     final ownerRiskQa =
         _config.additionalEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
-    if (ownerRiskQa) {
+    final productCurrentAccount = _config
+            .additionalEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+        '1';
+    final localCurrentAccount = ownerRiskQa || productCurrentAccount;
+    if (localCurrentAccount) {
+      final expectedDenialCode = productCurrentAccount
+          ? 'current_account_unisolated'
+          : 'owner_risk_waived';
+      final expectedObservedBy = productCurrentAccount
+          ? 'current-account-product'
+          : 'owner-risk-waiver';
       if (merged['authorityConnectionDenied'] != false ||
-          merged['authorityDenialCode'] != 'owner_risk_waived' ||
-          merged['authorityDenialObservedBy'] != 'owner-risk-waiver' ||
-          merged['ownerRiskQa'] != true ||
+          merged['authorityDenialCode'] != expectedDenialCode ||
+          merged['authorityDenialObservedBy'] != expectedObservedBy ||
+          merged['ownerRiskQa'] != ownerRiskQa ||
+          (merged['productCurrentAccount'] == true) != productCurrentAccount ||
           merged['osIsolationWaived'] != true ||
           merged['currentAccountAuthority'] != true) {
         throw const P2AutomationHostException(
-          'owner_risk_worker_waiver_unproved',
+          'local_current_account_worker_waiver_unproved',
         );
       }
     } else if (merged['authorityConnectionDenied'] != true ||

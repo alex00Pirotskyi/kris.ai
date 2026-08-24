@@ -122,10 +122,17 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
       throw StateError('runtime_manifest_missing_or_symlink');
     }
     final decoded = jsonDecode(await manifest.readAsString());
-    const ownerRiskQa = bool.fromEnvironment(
+    const buildOwnerRiskQa = bool.fromEnvironment(
       'KRISTIN_OWNER_RISK_QA',
       defaultValue: false,
     );
+    final manifestOwnerRiskQa =
+        decoded is Map && decoded['ownerRiskQa'] == true;
+    final manifestProductCurrentAccount =
+        decoded is Map && decoded['productCurrentAccount'] == true;
+    final localCurrentAccount = buildOwnerRiskQa ||
+        manifestOwnerRiskQa ||
+        manifestProductCurrentAccount;
     if (decoded is! Map ||
         decoded['schemaVersion'] != '3.0.0' ||
         decoded['bundleType'] != 'kristin-p2-application-runtime-v3' ||
@@ -137,15 +144,18 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
         decoded['authorityBrokerStaged'] != false ||
         decoded['rawAuthoritySecretsIncluded'] != false ||
         decoded['p2DelegationOnly'] != true ||
-        (!ownerRiskQa && decoded['authorityServiceExternal'] != true) ||
-        (ownerRiskQa && decoded['authorityServiceExternal'] != false) ||
-        (!ownerRiskQa && decoded['restrictedWorkerLauncherExternal'] != true) ||
-        (ownerRiskQa && decoded['restrictedWorkerLauncherExternal'] != false) ||
-        (!ownerRiskQa &&
+        (!localCurrentAccount && decoded['authorityServiceExternal'] != true) ||
+        (localCurrentAccount && decoded['authorityServiceExternal'] != false) ||
+        (!localCurrentAccount &&
+            decoded['restrictedWorkerLauncherExternal'] != true) ||
+        (localCurrentAccount &&
+            decoded['restrictedWorkerLauncherExternal'] != false) ||
+        (!localCurrentAccount &&
             decoded['restrictedWorkerLauncherOsEnforced'] != true) ||
-        (ownerRiskQa &&
+        (localCurrentAccount &&
             decoded['restrictedWorkerLauncherOsEnforced'] != false) ||
-        (ownerRiskQa && decoded['ownerRiskQa'] != true)) {
+        (manifestOwnerRiskQa && manifestProductCurrentAccount) ||
+        (manifestProductCurrentAccount && decoded['ownerRiskQa'] != false)) {
       throw StateError('runtime_manifest_identity_invalid');
     }
     final identity = Map<String, Object?>.from(decoded['identity']! as Map);
@@ -289,6 +299,7 @@ final class P2ApplicationOwnedRuntimeResourceResolver {
       'GITHUB_JOB',
       'RUNNER_NAME',
       'KRISTIN_OWNER_RISK_QA',
+      'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT',
     };
     final raw = Map<dynamic, dynamic>.from(decoded['environment']! as Map);
     final result = <String, String>{};

@@ -511,19 +511,60 @@ async function runManagedCommand(payload, authorization, runtimeConfig) {
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
     });
-    try {
-      registration = await registerProcess(child.pid);
-    } catch (error) {
-      child.kill('SIGKILL');
-      throw error;
-    }
+    // Install output and exit observers before any asynchronous identity lookup.
+    // A valid finite command may exit between spawn() and /proc/ps inspection;
+    // losing its exit event would turn a successful effect into an ESRCH failure.
     child.stdout.on('data', (chunk) => appendBounded(stdoutState, chunk, spec.maxStdoutBytes));
     child.stderr.on('data', (chunk) => appendBounded(stderrState, chunk, spec.maxStderrBytes));
-    child.stdin.end(spec.stdin);
     exitPromise = new Promise((resolve, reject) => {
       child.once('error', reject);
       child.once('exit', (code, signal) => resolve({ type: 'exit', exitCode: code, signal }));
     });
+    child.stdin.on('error', (error) => {
+      // A process is allowed to exit without reading stdin. EPIPE after an
+      // observed exit is not an authorization or process-integrity failure.
+      if (error?.code !== 'EPIPE') protocolError = error;
+    });
+    child.stdin.end(spec.stdin);
+    try {
+      registration = await registerProcess(child.pid);
+    } catch (error) {
+      const disappeared =
+        error?.code === 'ESRCH' ||
+        error?.code === 'ENOENT' ||
+        (error?.code === 1 && /(?:ps|process)/i.test(String(error?.message ?? '')));
+      const observedExit = disappeared
+        ? await Promise.race([
+            exitPromise.then((row) => row, () => null),
+            new Promise((resolve) => setTimeout(() => resolve(null), 50)),
+          ])
+        : null;
+      if (observedExit == null) {
+        try { child.kill('SIGKILL'); } catch {}
+        throw error;
+      }
+      // The child is already gone, so no live PID can be adopted or controlled.
+      // Bind the completed effect to a one-shot launch identity instead of
+      // pretending that an OS start token was observed. This identity is only
+      // returned in the command receipt and is never registered for later
+      // process-control operations, preventing PID-reuse ambiguity.
+      const completionId = crypto.randomUUID();
+      registration = {
+        identity: {
+          pid: child.pid,
+          startToken: `completed:${process.platform}:${child.pid}:${completionId}`,
+          supervisorToken: `completed:${completionId}`,
+          platformGroupId: `completed:${completionId}`,
+          platform: process.platform,
+          ...(typeof process.getuid === 'function' ? { uid: process.getuid() } : {}),
+          completionOnly: true,
+          identityVerifiedWhileAlive: false,
+        },
+        supervisor: null,
+        completionOnly: true,
+        registrationFailureCode: String(error?.code ?? 'process_disappeared'),
+      };
+    }
   }
   const timeoutSentinel = Symbol('timeout');
   let outcome = await Promise.race([
@@ -720,6 +761,7 @@ export function createHostOperations({
           outputTruncated: result.outputTruncated,
           timedOut: result.timedOut,
           processIdentity: result.registration.identity,
+          processIdentityCompletionOnly: result.registration.completionOnly === true,
           termination: result.termination,
           durationMs: result.durationMs,
           contentLogged: false,
@@ -733,6 +775,7 @@ export function createHostOperations({
           outputTruncated: result.outputTruncated,
           timedOut: result.timedOut,
           processIdentity: result.registration.identity,
+          processIdentityCompletionOnly: result.registration.completionOnly === true,
           termination: result.termination,
         },
       });
