@@ -11,9 +11,8 @@ void main() {
       ).readAsStringSync(),
     ) as Map<String, dynamic>;
     final network = lock['networkAcquisition'] as Map<String, dynamic>;
-    final windows =
-        (lock['platforms'] as Map<String, dynamic>)['windows-x64']
-            as Map<String, dynamic>;
+    final windows = (lock['platforms'] as Map<String, dynamic>)['windows-x64']
+        as Map<String, dynamic>;
     final node = windows['node'] as Map<String, dynamic>;
     final p3 = windows['p3'] as Map<String, dynamic>;
 
@@ -71,7 +70,8 @@ void main() {
     expect(materializer, isNot(contains('chrome.exe --')));
     expect(materializer, isNot(contains('shutil.which')));
     expect(provisioner, contains('nodejs.org'));
-    expect(provisioner, contains('application_runtime_download_digest_mismatch'));
+    expect(
+        provisioner, contains('application_runtime_download_digest_mismatch'));
     expect(provisioner, contains('p3_windows_sandbox_acl_preparation_failed'));
     expect(shell, contains('Preparing Web Studio...'));
     expect(shell, contains("Web Studio couldn't be prepared."));
