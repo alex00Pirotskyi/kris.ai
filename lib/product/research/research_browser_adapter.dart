@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import '../browser/browser_runtime.dart';
 import '../crypto_utils.dart';
+import '../domain.dart';
+import '../models_research.dart';
+import '../storage_security.dart';
 import 'research_runtime.dart';
 
 abstract interface class P4RenderedBrowserBackend {
@@ -94,6 +99,189 @@ final class P4RenderedResearchFetcher {
     } finally {
       await backend.closeRenderedPage(observation);
     }
+  }
+}
+
+typedef P4RenderedPageLoader = Future<P3BrowserPageObservation> Function(
+    Uri url);
+
+final class _P4OneShotRenderedBrowserBackend
+    implements P4RenderedBrowserBackend {
+  const _P4OneShotRenderedBrowserBackend(this.loader);
+
+  final P4RenderedPageLoader loader;
+
+  @override
+  Future<P3BrowserPageObservation> render(Uri url) => loader(url);
+
+  @override
+  Future<void> closeRenderedPage(P3BrowserPageObservation observation) async {}
+}
+
+final class P4BrowserAwareResearchService extends ResearchService {
+  P4BrowserAwareResearchService({
+    required super.policy,
+    required super.redactor,
+    Future<ResearchSource> Function(Uri url)? baseFetchOverride,
+  }) : _baseFetchOverride = baseFetchOverride;
+
+  static const Set<String> _browserRecoverableErrors = <String>{
+    'research_http_error',
+    'research_timeout',
+  };
+
+  static const List<String> _dynamicShellMarkers = <String>[
+    'enable javascript',
+    'javascript is required',
+    'requires javascript',
+    'loading...',
+    'please wait',
+  ];
+
+  static const List<String> _challengeMarkers = <String>[
+    'verify you are human',
+    'checking your browser',
+    'captcha',
+    'challenge-platform',
+    'cf-chl-',
+  ];
+
+  final Future<ResearchSource> Function(Uri url)? _baseFetchOverride;
+  P4RenderedPageLoader? _renderedPageLoader;
+
+  bool get renderedResearchAvailable => _renderedPageLoader != null;
+
+  void attachRenderedPageLoader(P4RenderedPageLoader loader) {
+    _renderedPageLoader = loader;
+  }
+
+  Future<ResearchSource> _fetchBase(Uri original) {
+    final override = _baseFetchOverride;
+    if (override != null) return override(original);
+    return super.fetch(original);
+  }
+
+  @override
+  Future<ResearchSource> fetch(Uri original) async {
+    ResearchSource? httpSource;
+    ProductException? baseFailure;
+    try {
+      httpSource = await _fetchBase(original);
+      if (!_shouldRender(httpSource)) return httpSource;
+    } on ProductException catch (error) {
+      if (!_browserRecoverableErrors.contains(error.code)) rethrow;
+      baseFailure = error;
+    }
+
+    final loader = _renderedPageLoader;
+    if (loader == null) {
+      if (httpSource != null) return httpSource;
+      throw baseFailure!;
+    }
+
+    try {
+      final validatedOriginal = (await validateUri(original)).removeFragment();
+      final evidence = await P4RenderedResearchFetcher(
+        _P4OneShotRenderedBrowserBackend(loader),
+      ).fetch(validatedOriginal);
+      final validatedFinal =
+          (await validateUri(evidence.finalUrl)).removeFragment();
+      final visibleText = evidence.visibleText.trim();
+      if (_looksLikeChallenge(visibleText)) {
+        if (httpSource != null) return httpSource;
+        throw ProductException(
+          'research_browser_challenge',
+          'Rendered research encountered a browser challenge.',
+        );
+      }
+      if (visibleText.isEmpty) {
+        if (httpSource != null) return httpSource;
+        throw ProductException(
+          'research_browser_empty',
+          'Rendered research returned no visible content.',
+        );
+      }
+      final raw = canonicalJson(evidence.toExtractionSeed());
+      if (utf8.encode(raw).length > policy.maxBytes ||
+          utf8.encode(visibleText).length > policy.maxBytes) {
+        if (httpSource != null) return httpSource;
+        throw ProductException(
+          'research_too_large',
+          'Rendered research content exceeds the configured size limit.',
+        );
+      }
+      final title = evidence.title.trim().isNotEmpty
+          ? evidence.title.trim()
+          : (httpSource?.title.trim().isNotEmpty ?? false)
+              ? httpSource!.title.trim()
+              : validatedFinal.host;
+      return ResearchSource(
+        id: newId('source'),
+        url: validatedFinal,
+        title: title,
+        mimeType: 'text/html',
+        contentHash: Sha256.text(visibleText),
+        fetchedAt: DateTime.now().toUtc(),
+        content: visibleText,
+        rawContent: raw,
+        statusCode: 200,
+        responseHeaders: <String, String>{
+          'x-kristin-research-mode': 'rendered-browser',
+          'x-kristin-observation-sha256': evidence.observationHash,
+          'x-kristin-screenshot-sha256': evidence.screenshotSha256,
+        },
+        redirectChain: <String>[
+          validatedOriginal.toString(),
+          if (validatedFinal != validatedOriginal) validatedFinal.toString(),
+        ],
+        requestedUrl: original.removeFragment(),
+      );
+    } on ProductException {
+      if (httpSource != null) return httpSource;
+      if (baseFailure != null) throw baseFailure;
+      rethrow;
+    } on P4ResearchException catch (error) {
+      if (httpSource != null) return httpSource;
+      if (baseFailure != null) throw baseFailure;
+      throw ProductException(
+        'research_browser_failed',
+        'Rendered research could not produce valid evidence.',
+        details: <String, dynamic>{'browserCode': error.code},
+      );
+    } on P3BrowserRuntimeException catch (error) {
+      if (httpSource != null) return httpSource;
+      if (baseFailure != null) throw baseFailure;
+      throw ProductException(
+        'research_browser_unavailable',
+        'Rendered research is currently unavailable.',
+        details: <String, dynamic>{'browserCode': error.code},
+      );
+    } on Object {
+      if (httpSource != null) return httpSource;
+      if (baseFailure != null) throw baseFailure;
+      throw ProductException(
+        'research_browser_failed',
+        'Rendered research failed.',
+      );
+    }
+  }
+
+  static bool _shouldRender(ResearchSource source) {
+    if (source.mimeType.toLowerCase() != 'text/html') return false;
+    final content = source.content.trim();
+    final lower = '${source.rawContent}\n$content'.toLowerCase();
+    if (_dynamicShellMarkers.any(lower.contains)) return true;
+    final rawBytes = utf8.encode(source.rawContent).length;
+    final contentBytes = utf8.encode(content).length;
+    if (contentBytes < 600 && rawBytes > 2000 && rawBytes > contentBytes * 5) {
+      return true;
+    }
+    return rawBytes > 20000 && contentBytes * 12 < rawBytes;
+  }
+
+  static bool _looksLikeChallenge(String content) {
+    final lower = content.toLowerCase();
+    return _challengeMarkers.any(lower.contains);
   }
 }
 

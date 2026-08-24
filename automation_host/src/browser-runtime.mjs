@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 import { constants as fsConstants, createReadStream } from 'node:fs';
 import {
   access,
@@ -295,6 +297,13 @@ export function chromiumProbeArgs(profileDirectory, sandboxMode = 'required') {
   return args;
 }
 
+export function shouldRetryDevToolsPortRead(error, platform = process.platform) {
+  return (
+    error?.code === 'ENOENT' ||
+    (platform === 'win32' && error?.code === 'EBUSY')
+  );
+}
+
 async function waitForDevToolsPort(profileDirectory, child, timeoutMs = 20_000) {
   const portFile = path.join(profileDirectory, 'DevToolsActivePort');
   const deadline = Date.now() + timeoutMs;
@@ -307,7 +316,7 @@ async function waitForDevToolsPort(profileDirectory, child, timeoutMs = 20_000) 
       const port = Number.parseInt(lines[0] ?? '', 10);
       if (Number.isInteger(port) && port > 0 && port <= 65535) return port;
     } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
+      if (!shouldRetryDevToolsPortRead(error)) throw error;
     }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -1926,6 +1935,137 @@ const LOCAL_NAVIGATION_HOSTS = new Set([
   '::1',
 ]);
 
+
+const BLOCKED_PUBLIC_HOST_NAMES = new Set([
+  'localhost',
+  'local',
+  'internal',
+]);
+const BLOCKED_PUBLIC_HOST_SUFFIXES = [
+  '.localhost',
+  '.local',
+  '.internal',
+];
+
+function forbiddenIpv4(address) {
+  const octets = address.split('.').map((part) => Number.parseInt(part, 10));
+  if (
+    octets.length !== 4 ||
+    octets.some((value) => !Number.isInteger(value) || value < 0 || value > 255)
+  ) {
+    return true;
+  }
+  const [a, b, c] = octets;
+  if (a === 0 || a === 10 || a === 127) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 192 && b === 0) return true;
+  if (a === 198 && (b === 18 || b === 19)) return true;
+  if (a === 198 && b === 51 && c === 100) return true;
+  if (a === 203 && b === 0 && c === 113) return true;
+  if (a >= 224) return true;
+  return false;
+}
+
+export function isForbiddenPublicAddress(rawAddress) {
+  const address = String(rawAddress ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/gu, '');
+  const family = isIP(address);
+  if (family === 4) return forbiddenIpv4(address);
+  if (family !== 6) return true;
+  if (address === '::' || address === '::1') return true;
+  if (address.includes('.')) return true;
+  if (address.startsWith('::ffff:')) return true;
+  if (address.startsWith('64:ff9b:')) return true;
+  const firstHextet = Number.parseInt(address.split(':')[0] || '0', 16);
+  if (!Number.isInteger(firstHextet)) return true;
+  if ((firstHextet & 0xfe00) === 0xfc00) return true;
+  if ((firstHextet & 0xffc0) === 0xfe80) return true;
+  if ((firstHextet & 0xff00) === 0xff00) return true;
+  if (address.startsWith('2001:db8:') || address === '2001:db8::') return true;
+  return false;
+}
+
+export async function blockPublicNavigationWebSockets(page) {
+  if (!page || typeof page.routeWebSocket !== 'function') {
+    fail('browser_public_navigation_websocket_guard_unavailable');
+  }
+  await page.routeWebSocket('**/*', (webSocket) => {
+    webSocket.close({
+      code: 1008,
+      reason: 'Kristin rendered research blocks WebSocket egress.',
+    });
+  });
+}
+
+export function validatePublicNavigationRequest(value) {
+  exactObjectKeys(
+    value,
+    new Set(['url', 'timeoutMs']),
+    'browser_public_navigation_request_invalid',
+  );
+  if (
+    typeof value.url !== 'string' ||
+    value.url.length === 0 ||
+    value.url.includes('\0') ||
+    Buffer.byteLength(value.url, 'utf8') > 8192 ||
+    !Number.isSafeInteger(value.timeoutMs) ||
+    value.timeoutMs < 100 ||
+    value.timeoutMs > 60_000
+  ) {
+    fail('browser_public_navigation_request_invalid');
+  }
+  return {
+    url: value.url,
+    timeoutMs: value.timeoutMs,
+  };
+}
+
+export async function assertPublicNavigationTarget(rawUrl, resolver = lookup) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    fail('browser_public_navigation_target_forbidden');
+  }
+  const hostname = parsed.hostname.toLowerCase();
+  if (
+    parsed.protocol !== 'https:' ||
+    parsed.username !== '' ||
+    parsed.password !== '' ||
+    hostname.length === 0 ||
+    BLOCKED_PUBLIC_HOST_NAMES.has(hostname) ||
+    BLOCKED_PUBLIC_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix))
+  ) {
+    fail('browser_public_navigation_target_forbidden');
+  }
+
+  let resolved;
+  if (isIP(hostname.replace(/^\[|\]$/gu, '')) !== 0) {
+    resolved = [{ address: hostname.replace(/^\[|\]$/gu, '') }];
+  } else {
+    try {
+      resolved = await resolver(hostname, { all: true, verbatim: true });
+    } catch {
+      fail('browser_public_navigation_dns_failed');
+    }
+  }
+  const rows = Array.isArray(resolved) ? resolved : [resolved];
+  if (rows.length === 0) fail('browser_public_navigation_dns_empty');
+  for (const row of rows) {
+    const address = typeof row === 'string' ? row : row?.address;
+    if (!address || isForbiddenPublicAddress(address)) {
+      fail('browser_public_navigation_target_forbidden');
+    }
+  }
+  parsed.hash = '';
+  return parsed.toString();
+}
+
 export function validateLocalNavigationRequest(value) {
   exactObjectKeys(
     value,
@@ -2424,7 +2564,11 @@ export class BrowserSessionRegistry {
     profileId = null,
     downloadsEnabled = false,
     uploadsEnabled = false,
+    blockServiceWorkers = false,
   } = {}) {
+    if (typeof blockServiceWorkers !== 'boolean') {
+      fail('browser_session_service_worker_policy_invalid');
+    }
   await this.initialize();
   if (!SESSION_MODES.has(kind)) fail('browser_session_kind_invalid');
   if (typeof downloadsEnabled !== 'boolean') {
@@ -2492,6 +2636,7 @@ export class BrowserSessionRegistry {
 
     context = await this.browser.newContext({
       acceptDownloads: downloadsEnabled,
+      ...(blockServiceWorkers ? { serviceWorkers: 'block' } : {}),
       ...(storageState ? { storageState } : {}),
     });
     const session = {
@@ -2572,6 +2717,82 @@ export class BrowserSessionRegistry {
       timeout: request.timeoutMs,
     });
     return this.observePage(sessionId, pageId);
+  }
+
+
+  async navigatePublicPage(sessionId, pageId, rawRequest) {
+    const request = validatePublicNavigationRequest(rawRequest);
+    const session = this._session(sessionId);
+    assertIdentifier(pageId, GENERATED_ID, 'browser_page_id_invalid');
+    const page = session.pages.get(pageId);
+    if (!page) fail('browser_page_not_found', pageId);
+    if (typeof page.goto !== 'function' || typeof page.route !== 'function') {
+      fail('browser_navigation_api_unavailable');
+    }
+
+    const validatedTargets = new Map();
+    const validateTarget = async (rawUrl) => {
+      const parsed = new URL(rawUrl);
+      if (
+        parsed.protocol === 'about:' ||
+        parsed.protocol === 'data:' ||
+        parsed.protocol === 'blob:'
+      ) {
+        return rawUrl;
+      }
+      const key = `${parsed.protocol}//${parsed.host}`;
+      if (!validatedTargets.has(key)) {
+        const pending = assertPublicNavigationTarget(rawUrl);
+        validatedTargets.set(key, pending);
+        try {
+          await pending;
+        } catch (error) {
+          validatedTargets.delete(key);
+          throw error;
+        }
+      }
+      await validatedTargets.get(key);
+      return rawUrl;
+    };
+
+    const initialUrl = await assertPublicNavigationTarget(request.url);
+    let blockedMainFrame = false;
+    const routeHandler = async (route, browserRequest) => {
+      const rawUrl = browserRequest.url();
+      try {
+        await validateTarget(rawUrl);
+        await route.continue();
+      } catch {
+        if (
+          browserRequest.isNavigationRequest() &&
+          browserRequest.frame() === page.mainFrame()
+        ) {
+          blockedMainFrame = true;
+        }
+        await route.abort('blockedbyclient');
+      }
+    };
+
+    await blockPublicNavigationWebSockets(page);
+    await page.route('**/*', routeHandler);
+    try {
+      try {
+        await page.goto(initialUrl, {
+          waitUntil: 'domcontentloaded',
+          timeout: request.timeoutMs,
+        });
+      } catch (error) {
+        if (blockedMainFrame) {
+          fail('browser_public_navigation_target_forbidden');
+        }
+        throw error;
+      }
+      const finalUrl = page.url();
+      await assertPublicNavigationTarget(finalUrl);
+      return this.observePage(sessionId, pageId);
+    } finally {
+      await page.unroute('**/*', routeHandler);
+    }
   }
 
   async observePage(sessionId, pageId) {
@@ -2802,6 +3023,7 @@ export class BrowserSessionRegistry {
           profileId: message.profileId ?? null,
           downloadsEnabled: message.downloadsEnabled ?? false,
           uploadsEnabled: message.uploadsEnabled ?? false,
+          blockServiceWorkers: message.blockServiceWorkers ?? false,
         });
       case 'session.list':
         return { sessions: this.listSessions() };
@@ -2813,6 +3035,12 @@ export class BrowserSessionRegistry {
         return { pages: this.listPages(message.sessionId) };
       case 'page.navigateLocal':
         return this.navigateLocalPage(
+          message.sessionId,
+          message.pageId,
+          message.navigationRequest,
+        );
+      case 'page.navigatePublic':
+        return this.navigatePublicPage(
           message.sessionId,
           message.pageId,
           message.navigationRequest,
