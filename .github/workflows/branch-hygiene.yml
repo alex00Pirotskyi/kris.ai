@@ -57,10 +57,12 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             tool/owner_single_click_transport_fix.py \
+            tool/owner_single_click_transport_repair.py \
             tool/owner_single_click_chain_fix.py \
             tool/owner_single_click_chain_repair.py \
             tool/owner_single_click_bundle_fix.py \
             tool/owner_single_click_relocatable_fix.py
+          python tool/owner_single_click_transport_repair.py
           python tool/owner_single_click_transport_fix.py
           python tool/owner_single_click_chain_repair.py
           python tool/owner_single_click_chain_fix.py
@@ -215,6 +217,7 @@ jobs:
           git checkout origin/main -- .github/workflows/branch-hygiene.yml
           git rm -f \
             tool/owner_single_click_transport_fix.py \
+            tool/owner_single_click_transport_repair.py \
             tool/owner_single_click_chain_fix.py \
             tool/owner_single_click_chain_repair.py \
             tool/owner_single_click_bundle_fix.py \
