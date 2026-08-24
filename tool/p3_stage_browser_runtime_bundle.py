@@ -10,10 +10,13 @@ import pathlib
 import re
 import shutil
 import stat
+import subprocess
 
 SKIP_PARTS = {'.git', '.dart_tool', 'build', '__pycache__'}
 HEX40 = re.compile(r'^[0-9a-f]{40}$')
 HEX64 = re.compile(r'^[0-9a-f]{64}$')
+WINDOWS_ALL_APPLICATION_PACKAGES_SID = '*S-1-15-2-1'
+WINDOWS_ALL_RESTRICTED_APPLICATION_PACKAGES_SID = '*S-1-15-2-2'
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -132,6 +135,43 @@ def copy_tree(
         active_roots.remove(resolved_src)
 
 
+def prepare_windows_sandbox_acl(
+    root: pathlib.Path,
+    *,
+    platform_name: str | None = None,
+    runner=subprocess.run,
+) -> bool:
+    platform = os.name if platform_name is None else platform_name
+    if platform != 'nt':
+        return False
+    if not root.is_dir() or root.is_symlink():
+        raise SystemExit(f'P3 Windows browser sandbox ACL root invalid: {root}')
+    command = [
+        'icacls.exe',
+        str(root),
+        '/grant',
+        f'{WINDOWS_ALL_APPLICATION_PACKAGES_SID}:(OI)(CI)(RX)',
+        f'{WINDOWS_ALL_RESTRICTED_APPLICATION_PACKAGES_SID}:(OI)(CI)(RX)',
+        '/T',
+        '/Q',
+    ]
+    result = runner(
+        command,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        diagnostic = (result.stderr or result.stdout or '').replace('\x00', '').strip()
+        if len(diagnostic) > 2048:
+            diagnostic = diagnostic[-2048:]
+        detail = diagnostic or f'exit={result.returncode}'
+        raise SystemExit(
+            f'P3 Windows browser sandbox ACL preparation failed: {detail}'
+        )
+    return True
+
+
 def relative_resource(row: dict[str, object], root: pathlib.Path) -> dict[str, object]:
     result = dict(row)
     result['path'] = pathlib.Path(str(result['path'])).relative_to(root).as_posix()
@@ -244,6 +284,7 @@ def main() -> int:
         include_node_modules=True,
         materialize_internal_symlinks=True,
     )
+    prepare_windows_sandbox_acl(staged_browser_root)
     staged_browser_executable = staged_browser_root / browser_relative
     if not staged_browser_executable.is_file():
         raise SystemExit('staged browser executable missing')
