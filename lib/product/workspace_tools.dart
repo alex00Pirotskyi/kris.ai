@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'crypto_utils.dart';
 import 'domain.dart';
+import 'storage_security.dart';
 import 'tool_schema.dart';
 import 'workspace_tools_base.dart.inc' as base;
 
