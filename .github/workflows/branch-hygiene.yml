@@ -216,10 +216,7 @@ jobs:
           python tool/p1a_refresh_source_manifest.py .
           git add -A
           git diff --cached --check
-          if git diff --cached --name-only | grep -E '^\.github/workflows/branch-hygiene\.yml$'; then
-            echo 'temporary workflow did not restore cleanly' >&2
-            exit 1
-          fi
+          test "$(git show :'.github/workflows/branch-hygiene.yml' | sha256sum | cut -d' ' -f1)" = "$(git show origin/main:'.github/workflows/branch-hygiene.yml' | sha256sum | cut -d' ' -f1)"
       - name: Publish durable final fixes
         shell: bash
         run: |
