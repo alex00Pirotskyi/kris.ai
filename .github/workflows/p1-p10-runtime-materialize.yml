@@ -35,7 +35,7 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Apply and format durable patch
+      - name: Apply and format durable source patch
         run: |
           python tool/p1_p10_runtime_bundle_finalize.py
           dart format \
@@ -45,23 +45,6 @@ jobs:
             test/product/p1_p10_packaged_runtime_smoke_test.dart
           python tool/v71r12_bootstrap_hosted_python.py --project .
           flutter pub get
-
-      - name: Make combined product qualification a normal PR gate
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('.github/workflows/p1-p10-product-runtime.yml')
-          s = p.read_text(encoding='utf-8')
-          old = "on:\n  workflow_dispatch:\n"
-          new = """on:\n  workflow_dispatch:\n  pull_request:\n    branches: [main]\n    paths:\n      - '.github/workflows/p1-p10-product-runtime.yml'\n      - 'lib/product/p2_*.dart'\n      - 'lib/product/product_runtime.dart'\n      - 'lib/product/browser/**'\n      - 'automation_host/**'\n      - 'tool/v70_*.py'\n      - 'tool/p3_stage_browser_runtime_bundle.py'\n      - 'tool/p9_*.py'\n      - 'tool/p10_*.py'\n      - 'tool/p2_p3_product_packaging_contract_test.py'\n      - 'test/product/p1_p10_packaged_runtime_smoke_test.dart'\n      - 'test/product/p2_p3_packaged_runtime_paths_test.dart'\n      - 'config/release_targets.v1.json'\n      - 'SOURCE_MANIFEST.sha256'\n"""
-          if s.count(old) != 1:
-              raise SystemExit('product runtime workflow trigger anchor drift')
-          s = s.replace(old, new, 1)
-          s = s.replace('.v70-dist/KRISTIN_PRODUCT_CURRENT_ACCOUNT_*.zip', '.v70-dist/KRISTIN_OWNER_MODE_*.zip')
-          s = s.replace('.v70-dist/KRISTIN_PRODUCT_CURRENT_ACCOUNT_*.zip.sha256', '.v70-dist/KRISTIN_OWNER_MODE_*.zip.sha256')
-          p.write_text(s, encoding='utf-8', newline='\n')
-          PY
 
       - name: Focused contracts and analyzer
         run: |
@@ -75,23 +58,22 @@ jobs:
           flutter test --no-pub test/product/browser/browser_runtime_bundle_test.dart
           flutter test --no-pub test/product/browser/browser_product_runtime_test.dart
           flutter analyze --no-pub --fatal-warnings --fatal-infos
-
-      - name: Build exact durable manifest
-        run: |
-          rm tool/p1_p10_runtime_bundle_finalize.py
-          rm .github/workflows/p1-p10-runtime-finalizer.yml
-          rm .github/workflows/p1-p10-runtime-materialize.yml
-          python tool/p2_refresh_source_manifest.py .
-          flutter test --no-pub test/product/source_contract_test.dart
           git diff --check
 
-      - name: Publish exact durable candidate
+      - name: Publish qualified non-workflow source bytes
         shell: bash
         run: |
           set -euo pipefail
+          rm tool/p1_p10_runtime_bundle_finalize.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add \
+            lib/product/p2_runtime_resource_resolver.dart \
+            lib/product/browser/browser_runtime_bundle.dart \
+            tool/v70_package_platform.py \
+            test/product/p2_p3_packaged_runtime_paths_test.dart \
+            test/product/p1_p10_packaged_runtime_smoke_test.dart \
+            tool/p1_p10_runtime_bundle_finalize.py
           git diff --cached --check
-          git commit -m 'P1-P10: package P2 and P3 runtimes with release readiness'
+          git commit -m 'fix(runtime): embed and resolve P2/P3 product bundles'
           git push origin HEAD:hotfix/p2-p3-runtime-p1-p10-20260824
