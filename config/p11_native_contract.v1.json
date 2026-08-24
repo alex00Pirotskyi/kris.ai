@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "lineage": {
+    "historicalPullRequest": 71,
+    "historicalHeadShaObserved": "f5d2e747edd463877c1fa0df7db4a6211b16d51b",
+    "reuse": "semantic operations, conformance fixture IDs, no-silent-fallback policy, device states, and fail-closed support boundaries from the latest live P11-001 foundation"
+  },
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "semanticOperations": [
+    "process.start",
+    "process.output",
+    "process.exit",
+    "process.cancellation",
+    "process.tree-kill",
+    "filesystem.read",
+    "filesystem.write",
+    "filesystem.copy",
+    "filesystem.move",
+    "filesystem.delete",
+    "path.identity",
+    "application.launch",
+    "application.close",
+    "service.query",
+    "service.start",
+    "service.stop",
+    "clipboard",
+    "screen.observation",
+    "window.observation",
+    "accessibility.observation",
+    "credentials",
+    "elevation",
+    "device.inventory",
+    "permission.state"
+  ],
+  "fixtureIds": [
+    "fixture.process.success",
+    "fixture.process.nonzero",
+    "fixture.process.stdout-stderr",
+    "fixture.process.bounded-large-output",
+    "fixture.process.timeout",
+    "fixture.process.cooperative-cancellation",
+    "fixture.process.forced-cancellation",
+    "fixture.process.child",
+    "fixture.process.grandchild",
+    "fixture.process.descendant-termination",
+    "fixture.process.pid-reuse-defense",
+    "fixture.process.working-directory",
+    "fixture.process.environment-allowlist",
+    "fixture.process.unicode-arguments",
+    "fixture.process.quotes-whitespace",
+    "fixture.path.long",
+    "fixture.path.symlink-reparse",
+    "fixture.permission.denied",
+    "fixture.file.cleanup",
+    "fixture.application.launch-contract",
+    "fixture.service.unsupported",
+    "fixture.clipboard.permission-state",
+    "fixture.screen.permission-state",
+    "fixture.credentials.access-denied",
+    "fixture.elevation.required"
+  ],
+  "forbiddenFallbacks": [
+    "shell text parsing",
+    "blind keyboard input",
+    "coordinate-only actions",
+    "unverified synthetic input",
+    "generic success after unsupported operation",
+    "unknown process identity",
+    "best-effort cleanup reported as complete"
+  ],
+  "deviceStates": [
+    "AVAILABLE",
+    "UNAVAILABLE",
+    "PERMISSION_REQUIRED",
+    "PERMISSION_DENIED",
+    "DISCONNECTED",
+    "UNSUPPORTED",
+    "ERROR",
+    "UNKNOWN"
+  ],
+  "fixturePolicy": {
+    "externalNetwork": false,
+    "realSecrets": false,
+    "realPrivilegedElevation": false,
+    "disposablePathsOnly": true,
+    "boundedRuntime": true,
+    "boundedOutput": true,
+    "deterministicInputs": true
+  },
+  "supportClaimsDefault": {
+    "platformSupported": false,
+    "nativeParity": false,
+    "deviceAutomation": false,
+    "isolation": false,
+    "remoteMcp": false
+  }
+}
