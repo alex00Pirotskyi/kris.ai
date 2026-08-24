@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "product": "Kristin Local Agent",
+  "productVersion": "1.9.0+190",
+  "targets": {
+    "linux": {
+      "buildArgv": ["flutter", "build", "linux", "--release", "--no-pub"],
+      "artifactPath": "build/linux/x64/release/bundle",
+      "packageKind": "portable-zip",
+      "nativeInstaller": {"kind": "deb/appimage", "state": "EXTERNAL_TOOLCHAIN_REQUIRED"},
+      "signing": {"scheme": "detached-package-signature", "credentialBoundary": "external"}
+    },
+    "macos": {
+      "buildArgv": ["flutter", "build", "macos", "--release", "--no-pub"],
+      "artifactPath": "build/macos/Build/Products/Release/kris_studio_ai_2.app",
+      "packageKind": "portable-zip",
+      "nativeInstaller": {"kind": "dmg/pkg", "state": "EXTERNAL_TOOLCHAIN_REQUIRED"},
+      "signing": {"scheme": "codesign+notarization", "credentialBoundary": "external"}
+    },
+    "windows": {
+      "buildArgv": ["flutter", "build", "windows", "--release", "--no-pub"],
+      "artifactPath": "build/windows/x64/runner/Release",
+      "packageKind": "portable-zip",
+      "nativeInstaller": {"kind": "msix/msi", "state": "EXTERNAL_TOOLCHAIN_REQUIRED"},
+      "signing": {"scheme": "authenticode", "credentialBoundary": "external"}
+    }
+  }
+}
