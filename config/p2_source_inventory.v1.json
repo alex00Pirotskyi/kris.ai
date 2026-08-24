@@ -1,5 +1,5 @@
 {
-  "authority": "P2 governed source inventory V70-R5 owner-risk tri-platform QA (P2-only; P1A source is merged and security evidence is waived for QA)",
+  "authority": "P2 governed source inventory V72 single-click Owner Mode with secure-P1A preference and truthful current-account fallback",
   "discovery": {
     "productionRegex": "^p2_.*\\.dart$",
     "testRegex": "^p2_.*\\.dart$"
@@ -17,12 +17,25 @@
     "formalSecurityCompletion": false,
     "productionReleaseEligible": false
   },
+  "currentAccountProductExtension": {
+    "allPlatformsRequired": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "authorityKind": "p2-current-account-owner-v1",
+    "functionalOwnerModeEligible": true,
+    "secureIsolationCertified": false,
+    "secureP1aPreferredWhenAvailable": true,
+    "separateHelperInstallRequired": false
+  },
   "productionDart": [
     "lib/product/p2_app_shell.dart",
     "lib/product/p2_automation_command_service.dart",
     "lib/product/p2_automation_host.dart",
     "lib/product/p2_automation_host_operations.dart",
     "lib/product/p2_automation_host_process_client.dart",
+    "lib/product/p2_bundled_current_account_runtime.dart",
     "lib/product/p2_desktop_effect_authorizers.dart",
     "lib/product/p2_effect_boundary.dart",
     "lib/product/p2_effect_journal.dart",
@@ -57,7 +70,7 @@
     "lib/product/p1_authority_service_product_runtime_v1.dart",
     "release/evidence/P1A/manifest.json"
   ],
-  "schemaVersion": "6.0.0",
+  "schemaVersion": "7.0.0",
   "testDart": [
     "test/product/p2_automation_host_operations_test.dart",
     "test/product/p2_effect_boundary_test.dart",
@@ -73,6 +86,7 @@
     "test/product/p2_qa_preview_gate_test.dart",
     "test/product/p2_runtime_composition_test.dart",
     "test/product/p2_shipped_product_runtime_e2e_test.dart",
+    "test/product/p2_single_click_owner_mode_test.dart",
     "test/product/p2_snapshot_undo_test.dart",
     "test/product/p2_source_contract_test.dart",
     "test/product/p2_test_support.dart"
