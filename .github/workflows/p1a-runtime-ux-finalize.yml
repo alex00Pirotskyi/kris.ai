@@ -4,20 +4,19 @@ on:
   push:
     branches:
       - sync/p1-p8-main-6237-20260823
-  pull_request:
-    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   finalize:
-    if: github.head_ref == 'sync/p1-p8-main-6237-20260823' || github.event.head_commit.message == 'ci(p1a): run runtime UX finalizer'
+    if: github.event.head_commit.message == 'ci(p1a): execute hardened runtime UX finalizer'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: sync/p1-p8-main-6237-20260823
           fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -34,8 +33,8 @@ jobs:
       - name: Apply bounded Owner session corrections
         shell: bash
         run: |
-          python tool/p1a_runtime_ux_patch_dart.py
-          python tool/p1a_runtime_ux_patch_native.py
+          python tool/p1a_runtime_ux_patch_dart_v2.py
+          python tool/p1a_runtime_ux_patch_native_v2.py
       - name: Format governed Dart sources
         shell: bash
         run: |
@@ -79,6 +78,10 @@ jobs:
             '.github/workflows/p1a-runtime-ux-finalize.yml',
             'tool/p1a_runtime_ux_patch_dart.py',
             'tool/p1a_runtime_ux_patch_native.py',
+            'tool/p1a_runtime_ux_patch_dart_v2.py',
+            'tool/p1a_runtime_ux_patch_native_v2.py',
+            'tool/p1a_runtime_ux_trigger.txt',
+            'tool/p1a_runtime_ux_trigger_v2.txt',
           }
           rows=[]
           for line in p.read_text(encoding='utf-8').splitlines():
@@ -89,7 +92,6 @@ jobs:
           PY
           git add -A
       - name: Publish correction
-        if: github.event_name == 'push'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
