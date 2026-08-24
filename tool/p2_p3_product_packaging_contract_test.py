@@ -152,6 +152,18 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as temporary:
         root = pathlib.Path(temporary)
+        framework_bundle = root / "Google Chrome for Testing Framework.framework"
+        framework_executable = framework_bundle / "Google Chrome for Testing Framework"
+        framework_dylib = framework_bundle / "Libraries/libfixture.dylib"
+        require(
+            support._macos_codesign_target(framework_executable) == framework_bundle,
+            "macOS framework primary executable must sign by bundle path",
+        )
+        require(
+            support._macos_codesign_target(framework_dylib) == framework_dylib,
+            "macOS framework nested dylib must remain a file signing target",
+        )
+
         app_destination = root / "app"
         app_source = root / "Kristin.app"
         p2, p3 = packager.product_runtime_destinations(app_destination, app_source, "macos")
