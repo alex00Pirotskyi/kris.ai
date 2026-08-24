@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
 import 'package:kristin_local_agent/product/p2_runtime_resource_resolver.dart';
 
-// Manifest synchronization trigger; no behavioral change.
 String _nativePath(Directory root, List<String> parts) =>
     <String>[root.absolute.path, ...parts].join(Platform.pathSeparator);
 
