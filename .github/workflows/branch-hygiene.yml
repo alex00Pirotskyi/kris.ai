@@ -53,18 +53,12 @@ jobs:
 
           dart = Path('lib/product/p2_bundled_current_account_runtime.dart')
           text = dart.read_text(encoding='utf-8')
-          old = """    final bundledRoot = Directory(
-            '${executable.parent.path}${Platform.pathSeparator}runtime'
-            '${Platform.pathSeparator}p2${Platform.pathSeparator}current',
-          );
-          final bundledManifest = File(
-            '${bundledRoot.path}${Platform.pathSeparator}runtime-manifest.v3.json',
-          );
-          if (!await bundledManifest.exists()) return false;
-          if (await FileSystemEntity.isLink(bundledManifest.path)) {
-            throw StateError('p2_bundled_runtime_manifest_symlink');
-          }
-          """
+          start_marker = "    final bundledRoot = Directory(\n"
+          end_marker = "    final bundled = _object(\n"
+          start = text.find(start_marker)
+          end = text.find(end_marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit(f'dart bundle structural anchors missing: start={start} end={end}')
           new = """    final bundledCandidates = <Directory>[
             if (Platform.isMacOS)
               Directory(
@@ -94,10 +88,9 @@ jobs:
           final bundledManifest = File(
             '${bundledRoot.path}${Platform.pathSeparator}runtime-manifest.v3.json',
           );
+
           """
-          if text.count(old) != 1:
-              raise SystemExit(f'dart bundle anchor count={text.count(old)}')
-          dart.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          dart.write_text(text[:start] + new + text[end:], encoding='utf-8', newline='\n')
 
           packager = Path('tool/v70_package_platform.py')
           text = packager.read_text(encoding='utf-8')
@@ -181,8 +174,6 @@ jobs:
           rm test/_p2_macos_resources_relocation_test.dart
       - name: Build and package signed-layout macOS product app
         shell: bash
-        env:
-          MATRIX_PLATFORM: macos
         run: |
           set -euo pipefail
           flutter build macos --release --no-pub
