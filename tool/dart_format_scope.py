@@ -95,6 +95,38 @@ def batched(values: Sequence[str]) -> Iterable[list[str]]:
         yield batch
 
 
+def _print_canonical_sources(
+    project: Path,
+    dart: str,
+    files: Sequence[str],
+    formatter_output: str,
+) -> None:
+    selected = set(files)
+    changed: list[str] = []
+    for line in formatter_output.splitlines():
+        if not line.startswith("Changed "):
+            continue
+        relative = line[len("Changed ") :].strip().replace("\\", "/")
+        if relative in selected:
+            changed.append(relative)
+    for relative in changed:
+        rendered = subprocess.run(
+            [dart, "format", "--output=show", relative],
+            cwd=project,
+            env={**os.environ, "CI": "true"},
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            errors="replace",
+            check=False,
+        )
+        print(f"--- BEGIN CANONICAL DART: {relative} ---")
+        if rendered.stdout:
+            print(rendered.stdout, end="" if rendered.stdout.endswith("\n") else "\n")
+        print(f"--- END CANONICAL DART: {relative} ---")
+
+
 def run_format(project: Path, files: Sequence[str], *, check: bool) -> int:
     dart = shutil.which("dart")
     if dart is None:
@@ -123,6 +155,8 @@ def run_format(project: Path, files: Sequence[str], *, check: bool) -> int:
         if completed.stdout:
             print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n")
         if completed.returncode != 0:
+            if check:
+                _print_canonical_sources(project, dart, batch, completed.stdout)
             exit_code = completed.returncode
     return exit_code
 
