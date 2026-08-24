@@ -1,7 +1,9 @@
 #!/bin/zsh
 set -euo pipefail
 cd "$(dirname "$0")"
-echo "Starting Kristin v1.0 Prompt-to-Task Product Preview..."
+echo "Starting Kristin v1.9 product preview..."
 ./tool/bootstrap_platforms.sh
-./tool/verify.sh
+if [[ "${KRISTIN_VERIFY_BEFORE_RUN:-0}" == "1" ]]; then
+  ./tool/verify.sh
+fi
 exec flutter run -d macos
