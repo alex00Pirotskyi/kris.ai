@@ -331,11 +331,6 @@ void _moveEntity(FileSystemEntity source, String destination) {
   source.renameSync(destination);
 }
 
-String _entityName(FileSystemEntity entity) {
-  final normalized = entity.path.replaceAll('\\', '/');
-  return normalized.substring(normalized.lastIndexOf('/') + 1);
-}
-
 String _relativePath(Directory root, FileSystemEntity entity) {
   final rootPath = root.path.endsWith(Platform.pathSeparator)
       ? root.path
