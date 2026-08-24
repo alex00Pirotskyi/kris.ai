@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+SELF = Path(__file__).resolve()
+ROOT = SELF.parents[1]
 TARGET = ROOT / 'automation_host/src/host-operations.mjs'
 text = TARGET.read_text(encoding='utf-8')
 
@@ -127,4 +128,5 @@ if text.count(old_output) != 1:
 text = text.replace(old_output, new_output, 1)
 
 TARGET.write_text(text, encoding='utf-8', newline='\n')
+SELF.unlink()
 print('OWNER_SINGLE_CLICK_FAST_COMMAND_FIX_OK')
