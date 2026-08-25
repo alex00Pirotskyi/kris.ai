@@ -25,6 +25,7 @@ extension ProductRuntimeProvisioning on ProductRuntime {
       browserInitiallyReady: p3BrowserRuntime.available,
     );
     _runtimeProvisioningStates[this] = created;
+    _attachProvisionedResearchBrowser(this);
     return created;
   }
 
@@ -109,7 +110,14 @@ extension ProductRuntimeProvisioning on ProductRuntime {
         await browser;
       } catch (_) {}
     }
+    final provisionedOwner = state.ownerMode;
+    if (!identical(provisionedOwner, p2OwnerMode)) {
+      try {
+        await provisionedOwner.close();
+      } catch (_) {}
+    }
     await state.provisioner.close();
+    _runtimeProvisioningStates[this] = null;
   }
 
   Future<P2ProductRuntimeOwnerModeHandle> _ensureOwnerModeReady(
@@ -126,6 +134,7 @@ extension ProductRuntimeProvisioning on ProductRuntime {
       runtimeResources: resources,
     );
     if (!handle.available) {
+      await handle.close();
       throw StateError(handle.diagnosticCode);
     }
     final previous = state.ownerMode;
@@ -143,13 +152,16 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     final resources = await state.provisioner.ensureP3(repair: repair);
     state.browserResources = resources;
     state.browserInitiallyReady = true;
-    final browserAware = research;
-    if (browserAware is P4BrowserAwareResearchService) {
-      browserAware.attachRenderedPageLoader(
-        (url) => _renderWithProvisionedBrowser(this, url),
-      );
-    }
     return resources;
+  }
+}
+
+void _attachProvisionedResearchBrowser(ProductRuntime runtime) {
+  final browserAware = runtime.research;
+  if (browserAware is P4BrowserAwareResearchService) {
+    browserAware.attachRenderedPageLoader(
+      (url) => _renderWithProvisionedBrowser(runtime, url),
+    );
   }
 }
 
