@@ -83,18 +83,23 @@ void main() {
         );
         expect(await File(p2.nodeExecutable).exists(), isTrue);
 
-        ownerHandle = await P2ProductRuntimeBootstrap.start(
+        final activeOwnerHandle = await P2ProductRuntimeBootstrap.start(
           dataRoot: applicationDataRoot,
           p1AuthorityService: null,
           runtimeResources: p2,
           interactiveDesktopAttested: true,
         );
-        expect(ownerHandle.available, isTrue, reason: ownerHandle.failureCode);
-        expect(ownerHandle.completionEligible, isFalse);
-        expect(ownerHandle.secureIsolationActive, isFalse);
-        final owner = ownerHandle.runtime!;
+        ownerHandle = activeOwnerHandle;
+        expect(
+          activeOwnerHandle.available,
+          isTrue,
+          reason: activeOwnerHandle.failureCode,
+        );
+        expect(activeOwnerHandle.completionEligible, isFalse);
+        expect(activeOwnerHandle.secureIsolationActive, isFalse);
+        final owner = activeOwnerHandle.runtime!;
         expect(owner.authority.authorityKind, 'p2-current-account-owner-v1');
-        ownerHandle.activateEffectContext(
+        activeOwnerHandle.activateEffectContext(
           runId: 'in-app-runtime-acceptance',
           taskId: 'P2-P3',
         );
@@ -153,7 +158,11 @@ void main() {
         expect(p3.root.absolute.path, p3Current.absolute.path);
         expect(p3.sourceCommit, gitHead);
         expect(p3.sourceTree, gitTree);
-        expect(p3.nodeExecutable, p2.nodeExecutable);
+        expect(p3.nodeExecutableSha256, p2.nodeExecutableSha256);
+        expect(
+          File(p3.nodeExecutable).absolute.path,
+          startsWith(applicationDataRoot.absolute.path),
+        );
         expect(p3.browserRevision, '1228');
         expect(await File(p3.browserExecutable).exists(), isTrue);
         expect(
@@ -161,7 +170,7 @@ void main() {
           startsWith(applicationDataRoot.absolute.path),
         );
 
-        browserProcess = await P3BrowserRuntimeService(
+        final activeBrowserProcess = await P3BrowserRuntimeService(
           applicationDataRoot: applicationDataRoot,
         ).startSessions(
           stateDirectory: browserState,
@@ -173,14 +182,16 @@ void main() {
           startupTimeout: const Duration(seconds: 90),
           requestTimeout: const Duration(seconds: 60),
         );
-        final session = await browserProcess.openSession(
+        browserProcess = activeBrowserProcess;
+        final session = await activeBrowserProcess.openSession(
           kind: P3BrowserSessionKind.ephemeral,
           blockServiceWorkers: true,
         );
         browserSessionId = session.sessionId;
-        final page = await browserProcess.openPage(browserSessionId!);
+        final activeSessionId = session.sessionId;
+        final page = await activeBrowserProcess.openPage(activeSessionId);
         browserPageId = page.pageId;
-        expect(browserPageId, isNotEmpty);
+        expect(page.pageId, isNotEmpty);
 
         final p2Cached = await provisioner.ensureP2(
           currentAccountRequired: true,
@@ -190,15 +201,17 @@ void main() {
         expect(p3Cached.manifestSha256, p3.manifestSha256);
       } finally {
         final process = browserProcess;
+        final sessionId = browserSessionId;
+        final pageId = browserPageId;
         if (process != null) {
-          if (browserSessionId != null && browserPageId != null) {
+          if (sessionId != null && pageId != null) {
             try {
-              await process.closePage(browserSessionId!, browserPageId!);
+              await process.closePage(sessionId, pageId);
             } catch (_) {}
           }
-          if (browserSessionId != null) {
+          if (sessionId != null) {
             try {
-              await process.closeSession(browserSessionId!);
+              await process.closeSession(sessionId);
             } catch (_) {}
           }
           try {
