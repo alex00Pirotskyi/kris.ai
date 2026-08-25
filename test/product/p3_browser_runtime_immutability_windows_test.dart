@@ -26,11 +26,10 @@ List<String> _delta(
       .where((path) => before[path] != after[path])
       .take(32)
       .map((path) {
-        if (!before.containsKey(path)) return 'added:$path';
-        if (!after.containsKey(path)) return 'removed:$path';
-        return 'changed:$path';
-      })
-      .toList(growable: false);
+    if (!before.containsKey(path)) return 'added:$path';
+    if (!after.containsKey(path)) return 'removed:$path';
+    return 'changed:$path';
+  }).toList(growable: false);
 }
 
 void main() {
