@@ -55,6 +55,15 @@ void main() {
     expect(provisioner, contains('AtomicApplicationRuntimeSlot'));
     expect(materializer, contains("'--mode'"));
     expect(materializer, contains("'product-current-account'"));
+    expect(materializer, contains('buildWindowsP2NativeHelpers'));
+    expect(
+      materializer,
+      contains('Microsoft.VisualStudio.Component.VC.Tools.x86.x64'),
+    );
+    expect(materializer, contains('kristin_job_supervisor.exe'));
+    expect(materializer, contains('kristin_native_pty_probe.exe'));
+    expect(materializer, contains("'native', 'windowsJobHelper'"));
+    expect(materializer, contains("'native', 'interactiveDesktopAdapter'"));
     expect(materializer, isNot(contains('winget')));
     expect(materializer, isNot(contains('choco')));
     expect(materializer, isNot(contains('npm -g')));
