@@ -1,4 +1,6 @@
+import childProcess from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
+import { syncBuiltinESMExports } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
@@ -13,11 +15,29 @@ export * from './browser-runtime-core.mjs';
 
 const READY_SCHEMA_VERSION = '1.0.0';
 
+function routeBrowserLaunchToStateDirectory(options) {
+  const spawn = childProcess.spawn;
+  childProcess.spawn = (command, args, spawnOptions = {}) => {
+    if (
+      command === options.browserExecutable &&
+      spawnOptions.cwd === options.browserRoot
+    ) {
+      return spawn(command, args, {
+        ...spawnOptions,
+        cwd: options.stateDirectory,
+      });
+    }
+    return spawn(command, args, spawnOptions);
+  };
+  syncBuiltinESMExports();
+}
+
 async function main() {
   try {
     const options = parseArgs(process.argv.slice(2));
     await mkdir(options.stateDirectory, { recursive: true });
     process.chdir(options.stateDirectory);
+    routeBrowserLaunchToStateDirectory(options);
     if (options.mode === 'probe') {
       await runProbe(options);
     } else {
