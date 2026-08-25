@@ -181,11 +181,6 @@ final class ApplicationRuntimeProvisioner {
               destination,
               allowInternalSymlinks: true,
             );
-            await _prepareWindowsBrowserAcl(
-              Directory(
-                '${destination.path}${Platform.pathSeparator}browser',
-              ),
-            );
           },
           onPhase: (phase) => _slotPhase(ApplicationRuntimeKind.p3, phase),
         );
