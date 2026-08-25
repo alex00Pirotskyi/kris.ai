@@ -60,6 +60,21 @@ void main() {
     expect(materializer, isNot(contains('npm -g')));
   });
 
+  test('provisioned Owner runtime is closed by the app lifecycle', () {
+    final bridge = File(
+      'lib/product/product_runtime_provisioning.dart',
+    ).readAsStringSync();
+    final shell = File(
+      'lib/product/runtime_provisioning_shell.dart',
+    ).readAsStringSync();
+
+    expect(shell, contains('closeRuntimeProvisioning'));
+    expect(bridge, contains('final provisionedOwner = state.ownerMode;'));
+    expect(bridge, contains('!identical(provisionedOwner, p2OwnerMode)'));
+    expect(bridge, contains('await provisionedOwner.close();'));
+    expect(bridge, contains('_runtimeProvisioningStates[this] = null;'));
+  });
+
   test('P1A remains preferred over current-account materialization', () {
     final bridge = File(
       'lib/product/product_runtime_provisioning.dart',
