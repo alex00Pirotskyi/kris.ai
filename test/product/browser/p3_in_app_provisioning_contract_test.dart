@@ -82,7 +82,8 @@ void main() {
     expect(bridge, contains('attachRenderedPageLoader'));
   });
 
-  test('rendered research attaches before P3 is provisioned and shares ensure', () {
+  test('rendered research attaches before P3 is provisioned and shares ensure',
+      () {
     final bridge = File(
       'lib/product/product_runtime_provisioning.dart',
     ).readAsStringSync();
