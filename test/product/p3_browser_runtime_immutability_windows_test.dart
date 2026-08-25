@@ -91,12 +91,12 @@ void main() {
         if (active != null) {
           if (sessionId != null && pageId != null) {
             try {
-              await active.closePage(sessionId!, pageId!);
+              await active.closePage(sessionId, pageId);
             } catch (_) {}
           }
           if (sessionId != null) {
             try {
-              await active.closeSession(sessionId!);
+              await active.closeSession(sessionId);
             } catch (_) {}
           }
           try {
