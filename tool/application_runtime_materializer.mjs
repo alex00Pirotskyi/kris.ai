@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
@@ -238,10 +239,8 @@ function buildWindowsP2NativeHelpers({ sourceRoot, destination }) {
   if (process.platform !== 'win32') return;
   const cmake = resolveWindowsCMake();
   const source = path.join(sourceRoot, 'automation_host', 'native', 'windows');
-  const buildRoot = path.join(destination, '.native-build-windows');
   if (!fs.existsSync(path.join(source, 'CMakeLists.txt'))) fail('P2 Windows native source missing');
-  fs.rmSync(buildRoot, { recursive: true, force: true });
-  fs.mkdirSync(buildRoot, { recursive: true });
+  const buildRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'kr-p2-'));
   try {
     runCommand(cmake, [
       '-S',
