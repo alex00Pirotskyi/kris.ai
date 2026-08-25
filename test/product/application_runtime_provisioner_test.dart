@@ -177,8 +177,9 @@ void main() {
           matches: (value) => value == 'fresh',
           materialize: (destination) async {
             attempts++;
-            if (attempts == 1)
+            if (attempts == 1) {
               throw StateError('simulated_acquisition_failure');
+            }
             await materialize(destination, 'fresh');
           },
         );
