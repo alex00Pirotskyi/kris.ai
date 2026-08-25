@@ -55,6 +55,13 @@ List<String> _runtimeTreeDelta(
   }).toList(growable: false);
 }
 
+Future<String> _officialBrowserTreeDigest(Directory root) {
+  return P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
+    root,
+    allowInternalSymlinks: true,
+  );
+}
+
 Future<void> main() async {
   _require(Platform.isWindows, 'acceptance_windows_required');
 
@@ -252,8 +259,13 @@ Future<void> main() async {
           .startsWith(applicationDataRoot.absolute.path),
       'p3_browser_not_application_owned',
     );
-    final browserTreeBefore = await _snapshotRuntimeTree(
-      Directory(p3.browserRoot),
+    final browserRoot = Directory(p3.browserRoot);
+    final browserTreeBefore = await _snapshotRuntimeTree(browserRoot);
+    final browserDigestBefore = await _officialBrowserTreeDigest(browserRoot);
+    _require(
+      browserDigestBefore == p3.browserRootTreeSha256,
+      'p3_browser_digest_before_launch_mismatch:'
+      '${p3.browserRootTreeSha256}:$browserDigestBefore',
     );
 
     final activeBrowserProcess = await P3BrowserRuntimeService(
@@ -277,19 +289,33 @@ Future<void> main() async {
     final page = await activeBrowserProcess.openPage(session.sessionId);
     browserPageId = page.pageId;
     _require(page.pageId.isNotEmpty, 'p3_page_missing');
-    final browserTreeDuring = await _snapshotRuntimeTree(
-      Directory(p3.browserRoot),
-    );
-    final browserTreeDelta = _runtimeTreeDelta(
+    final browserTreeDuring = await _snapshotRuntimeTree(browserRoot);
+    final browserDigestDuring = await _officialBrowserTreeDigest(browserRoot);
+    final browserTreeDeltaDuring = _runtimeTreeDelta(
       browserTreeBefore,
       browserTreeDuring,
     );
     _require(
-      browserTreeDelta.isEmpty,
-      'p3_browser_runtime_tree_mutated:${jsonEncode(browserTreeDelta)}',
+      browserDigestDuring == p3.browserRootTreeSha256,
+      'p3_browser_digest_after_page_mismatch:'
+      '${p3.browserRootTreeSha256}:$browserDigestDuring:'
+      '${jsonEncode(browserTreeDeltaDuring)}',
     );
 
     final p2Cached = await provisioner.ensureP2(currentAccountRequired: true);
+    final browserTreeBeforeResolve = await _snapshotRuntimeTree(browserRoot);
+    final browserDigestBeforeResolve =
+        await _officialBrowserTreeDigest(browserRoot);
+    final browserTreeDeltaBeforeResolve = _runtimeTreeDelta(
+      browserTreeBefore,
+      browserTreeBeforeResolve,
+    );
+    _require(
+      browserDigestBeforeResolve == p3.browserRootTreeSha256,
+      'p3_browser_digest_before_revalidation_mismatch:'
+      '${p3.browserRootTreeSha256}:$browserDigestBeforeResolve:'
+      '${jsonEncode(browserTreeDeltaBeforeResolve)}',
+    );
     try {
       final liveP3 = await P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: applicationDataRoot,
@@ -299,7 +325,20 @@ Future<void> main() async {
         'p3_live_revalidation_identity_mismatch',
       );
     } catch (error) {
-      throw StateError('p3_live_revalidation_failed:$error');
+      final browserTreeAfterFailure = await _snapshotRuntimeTree(browserRoot);
+      final browserDigestAfterFailure =
+          await _officialBrowserTreeDigest(browserRoot);
+      final browserTreeDeltaAfterFailure = _runtimeTreeDelta(
+        browserTreeBefore,
+        browserTreeAfterFailure,
+      );
+      throw StateError(
+        'p3_live_revalidation_failed:$error:'
+        'expected=${p3.browserRootTreeSha256}:'
+        'before=$browserDigestBeforeResolve:'
+        'after=$browserDigestAfterFailure:'
+        'delta=${jsonEncode(browserTreeDeltaAfterFailure)}',
+      );
     }
     final p3Cached = await provisioner.ensureP3();
     _require(
