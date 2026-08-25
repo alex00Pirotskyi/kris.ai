@@ -95,13 +95,22 @@ function copyFile(source, destination, executable = false) {
   if (process.platform !== 'win32') fs.chmodSync(destination, executable ? 0o755 : 0o644);
 }
 
-function copyTree(source, destination, { preserveInternalSymlinks = false, skipBinShims = false } = {}) {
+function copyTree(
+  source,
+  destination,
+  {
+    preserveInternalSymlinks = false,
+    skipBinShims = false,
+    skipNodeModules = false,
+  } = {},
+) {
   const sourceStat = fs.lstatSync(source);
   if (!sourceStat.isDirectory() || sourceStat.isSymbolicLink()) fail(`runtime source tree invalid: ${source}`);
   fs.mkdirSync(destination, { recursive: true });
   for (const item of walk(source)) {
     const parts = item.relative.split(path.sep);
     if (parts.some((part) => SKIP_PARTS.has(part))) continue;
+    if (skipNodeModules && parts.includes('node_modules')) continue;
     if (skipBinShims && parts.some((part, index) => part === 'node_modules' && parts[index + 1] === '.bin')) continue;
     const target = path.join(destination, item.relative);
     const stat = fs.lstatSync(item.full);
@@ -313,7 +322,14 @@ function findBrowserExecutable(cacheRoot, relativePath) {
 
 function installAutomationHost({ sourceRoot, destination, node, npmCli }) {
   const source = path.join(sourceRoot, 'automation_host');
-  copyTree(source, destination, { preserveInternalSymlinks: false, skipBinShims: true });
+  copyTree(source, destination, {
+    preserveInternalSymlinks: false,
+    skipNodeModules: true,
+  });
+  const stagedNodeModules = path.join(destination, 'node_modules');
+  if (fs.existsSync(stagedNodeModules)) {
+    fail('source node_modules must not enter runtime staging');
+  }
   runNode(node, [npmCli, 'ci', '--no-audit', '--no-fund'], { cwd: destination });
   const bin = path.join(destination, 'node_modules', '.bin');
   if (fs.existsSync(bin)) fs.rmSync(bin, { recursive: true, force: true });
