@@ -61,6 +61,9 @@ void main() {
     final bridge = File(
       'lib/product/product_runtime_provisioning.dart',
     ).readAsStringSync();
+    final productRuntime = File(
+      'lib/product/product_runtime.dart',
+    ).readAsStringSync();
 
     expect(materializer, isNot(contains('icacls.exe')));
     expect(materializer, isNot(contains('*S-1-15-2-1')));
@@ -116,6 +119,9 @@ void main() {
     expect(bridge, contains('ensureBrowserRuntimeReady'));
     expect(bridge, contains('startProvisionedBrowserSessions'));
     expect(bridge, contains('attachRenderedPageLoader'));
+    expect(bridge, contains('await refreshProvisionedBrowserRuntime();'));
+    expect(productRuntime, contains('refreshProvisionedBrowserRuntime'));
+    expect(productRuntime, contains('_p3BrowserRuntime = refreshed;'));
   });
 
   test(
