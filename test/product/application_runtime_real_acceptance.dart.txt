@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:kristin_local_agent/product/application_runtime_provisioner.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
+import 'package:kristin_local_agent/product/crypto_utils.dart';
 import 'package:kristin_local_agent/product/p2_automation_host_process_client.dart';
 import 'package:kristin_local_agent/product/p2_effect_journal.dart';
 import 'package:kristin_local_agent/product/p2_finite_command_service.dart';
@@ -18,6 +19,40 @@ Never _unused(String name) => throw StateError('acceptance_unused_$name');
 
 void _require(bool value, String code) {
   if (!value) throw StateError(code);
+}
+
+Future<Map<String, String>> _snapshotRuntimeTree(Directory root) async {
+  final result = <String, String>{};
+  final rootPath = root.absolute.path;
+  await for (final entity in root.list(recursive: true, followLinks: false)) {
+    final relative = entity.absolute.path
+        .substring(rootPath.length + 1)
+        .replaceAll(Platform.pathSeparator, '/');
+    final type = await FileSystemEntity.type(entity.path, followLinks: false);
+    if (type == FileSystemEntityType.file) {
+      result['file:$relative'] = Sha256.hex(await File(entity.path).readAsBytes());
+    } else if (type == FileSystemEntityType.link) {
+      result['link:$relative'] = Sha256.hex(
+        utf8.encode(await Link(entity.path).target()),
+      );
+    }
+  }
+  return result;
+}
+
+List<String> _runtimeTreeDelta(
+  Map<String, String> before,
+  Map<String, String> after,
+) {
+  final paths = <String>{...before.keys, ...after.keys}.toList()..sort();
+  return paths
+      .where((path) => before[path] != after[path])
+      .take(32)
+      .map((path) {
+    if (!before.containsKey(path)) return 'added:$path';
+    if (!after.containsKey(path)) return 'removed:$path';
+    return 'changed:$path';
+  }).toList(growable: false);
 }
 
 Future<void> main() async {
@@ -217,6 +252,9 @@ Future<void> main() async {
           .startsWith(applicationDataRoot.absolute.path),
       'p3_browser_not_application_owned',
     );
+    final browserTreeBefore = await _snapshotRuntimeTree(
+      Directory(p3.browserRoot),
+    );
 
     final activeBrowserProcess = await P3BrowserRuntimeService(
       applicationDataRoot: applicationDataRoot,
@@ -239,6 +277,17 @@ Future<void> main() async {
     final page = await activeBrowserProcess.openPage(session.sessionId);
     browserPageId = page.pageId;
     _require(page.pageId.isNotEmpty, 'p3_page_missing');
+    final browserTreeDuring = await _snapshotRuntimeTree(
+      Directory(p3.browserRoot),
+    );
+    final browserTreeDelta = _runtimeTreeDelta(
+      browserTreeBefore,
+      browserTreeDuring,
+    );
+    _require(
+      browserTreeDelta.isEmpty,
+      'p3_browser_runtime_tree_mutated:${jsonEncode(browserTreeDelta)}',
+    );
 
     final p2Cached = await provisioner.ensureP2(currentAccountRequired: true);
     try {
