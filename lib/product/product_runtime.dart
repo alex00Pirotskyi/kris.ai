@@ -355,7 +355,8 @@ class ProductRuntime {
     }
   }
 
-  Future<P3ProductRuntimeBrowserHandle> refreshProvisionedBrowserRuntime() async {
+  Future<P3ProductRuntimeBrowserHandle>
+      refreshProvisionedBrowserRuntime() async {
     final refreshed = await P3ProductRuntimeBrowserHandle.open(
       applicationDataRoot: directories.root,
       stateDirectory: Directory(
@@ -1329,7 +1330,7 @@ class ProductRuntime {
     if (value.ollamaLoadRetries < 0 || value.ollamaLoadRetries > 2) {
       throw ProductException(
         'ollama_load_retries_invalid',
-        'Ollama load retries must be between 0 and 2.',
+        'Ollama cold-load retries must be between 0 and 2.',
       );
     }
     if (value.ollamaKeepAliveMinutes < 1 ||
