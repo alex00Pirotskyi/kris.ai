@@ -69,6 +69,16 @@ void main() {
     expect(materializer, contains('kristin_native_pty_probe.exe'));
     expect(materializer, contains("'native', 'windowsJobHelper'"));
     expect(materializer, contains("'native', 'interactiveDesktopAdapter'"));
+    expect(materializer, contains("import os from 'node:os'"));
+    expect(
+      materializer,
+      contains("fs.mkdtempSync(path.join(os.tmpdir(), 'kr-p2-'))"),
+    );
+    expect(
+      materializer,
+      isNot(contains("path.join(destination, '.native-build-windows')")),
+    );
+    expect(materializer, contains('fs.rmSync(buildRoot'));
     expect(materializer, isNot(contains('winget')));
     expect(materializer, isNot(contains('choco')));
     expect(materializer, isNot(contains('npm -g')));
