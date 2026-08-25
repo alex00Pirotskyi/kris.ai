@@ -79,7 +79,9 @@ void main() {
     );
     expect(provisioner, contains('p3_windows_sandbox_acl_preparation_failed'));
 
-    final bundledP3 = provisioner.indexOf('final bundled = await _bundledP3();');
+    final bundledP3 = provisioner.indexOf(
+      'final bundled = await _bundledP3();',
+    );
     final bundledEnsure = provisioner.indexOf(
       'final result = await _p3Slot.ensure(',
       bundledP3,
@@ -116,19 +118,21 @@ void main() {
     expect(bridge, contains('attachRenderedPageLoader'));
   });
 
-  test('rendered research attaches before P3 is provisioned and shares ensure',
-      () {
-    final bridge = File(
-      'lib/product/product_runtime_provisioning.dart',
-    ).readAsStringSync();
+  test(
+    'rendered research attaches before P3 is provisioned and shares ensure',
+    () {
+      final bridge = File(
+        'lib/product/product_runtime_provisioning.dart',
+      ).readAsStringSync();
 
-    expect(
-      bridge,
-      contains('_runtimeProvisioningStates[this] = created;'),
-    );
-    expect(bridge, contains('_attachProvisionedResearchBrowser(this);'));
-    expect(bridge, contains('P4BrowserAwareResearchService'));
-    expect(bridge, contains('attachRenderedPageLoader'));
-    expect(bridge, contains('await runtime.ensureBrowserRuntimeReady();'));
-  });
+      expect(
+        bridge,
+        contains('_runtimeProvisioningStates[this] = created;'),
+      );
+      expect(bridge, contains('_attachProvisionedResearchBrowser(this);'));
+      expect(bridge, contains('P4BrowserAwareResearchService'));
+      expect(bridge, contains('attachRenderedPageLoader'));
+      expect(bridge, contains('await runtime.ensureBrowserRuntimeReady();'));
+    },
+  );
 }
