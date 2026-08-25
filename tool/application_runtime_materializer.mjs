@@ -145,6 +145,127 @@ function runNode(node, args, { cwd, environment = {}, timeoutMs = 12 * 60 * 1000
   }
 }
 
+function runCommand(executable, args, { cwd, timeoutMs = 12 * 60 * 1000 } = {}) {
+  const result = spawnSync(executable, args, {
+    cwd,
+    env: process.env,
+    encoding: 'utf8',
+    timeout: timeoutMs,
+    windowsHide: true,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (result.error) fail(`runtime native subprocess failed: ${result.error.message}`);
+  if (result.status !== 0) {
+    const detail = `${result.stderr ?? ''}\n${result.stdout ?? ''}`.trim().slice(-4096);
+    fail(`runtime native subprocess exit ${result.status}: ${detail}`);
+  }
+  return result;
+}
+
+function commandWorks(executable, args) {
+  const result = spawnSync(executable, args, {
+    env: process.env,
+    encoding: 'utf8',
+    timeout: 15000,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024,
+  });
+  return !result.error && result.status === 0;
+}
+
+function resolveWindowsCMake() {
+  const programFilesX86 = process.env['ProgramFiles(x86)'];
+  if (programFilesX86) {
+    const vswhere = path.join(programFilesX86, 'Microsoft Visual Studio', 'Installer', 'vswhere.exe');
+    if (fs.existsSync(vswhere)) {
+      const result = spawnSync(vswhere, [
+        '-latest',
+        '-products',
+        '*',
+        '-requires',
+        'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+        '-property',
+        'installationPath',
+      ], {
+        env: process.env,
+        encoding: 'utf8',
+        timeout: 15000,
+        windowsHide: true,
+        maxBuffer: 1024 * 1024,
+      });
+      if (!result.error && result.status === 0) {
+        const installation = String(result.stdout ?? '').trim().split(/\r?\n/).filter(Boolean).at(-1);
+        if (installation) {
+          const bundled = path.join(
+            installation,
+            'Common7',
+            'IDE',
+            'CommonExtensions',
+            'Microsoft',
+            'CMake',
+            'CMake',
+            'bin',
+            'cmake.exe',
+          );
+          if (fs.existsSync(bundled) && commandWorks(bundled, ['--version'])) return bundled;
+        }
+      }
+    }
+  }
+  if (commandWorks('cmake.exe', ['--version'])) return 'cmake.exe';
+  if (commandWorks('cmake', ['--version'])) return 'cmake';
+  fail('P2 Windows source native toolchain unavailable: Visual Studio C++ CMake is required');
+}
+
+function findUniqueBuildOutput(buildRoot, fileName) {
+  const matches = walk(buildRoot)
+    .filter((item) => item.entry.isFile() && item.entry.name.toLowerCase() === fileName.toLowerCase())
+    .map((item) => item.full);
+  if (matches.length !== 1) fail(`P2 Windows native build output invalid for ${fileName}: count=${matches.length}`);
+  return matches[0];
+}
+
+function buildWindowsP2NativeHelpers({ sourceRoot, destination }) {
+  if (process.platform !== 'win32') return;
+  const cmake = resolveWindowsCMake();
+  const source = path.join(sourceRoot, 'automation_host', 'native', 'windows');
+  const buildRoot = path.join(destination, '.native-build-windows');
+  if (!fs.existsSync(path.join(source, 'CMakeLists.txt'))) fail('P2 Windows native source missing');
+  fs.rmSync(buildRoot, { recursive: true, force: true });
+  fs.mkdirSync(buildRoot, { recursive: true });
+  try {
+    runCommand(cmake, [
+      '-S',
+      source,
+      '-B',
+      buildRoot,
+      '-DCMAKE_BUILD_TYPE=Release',
+    ], { cwd: sourceRoot, timeoutMs: 4 * 60 * 1000 });
+    runCommand(cmake, [
+      '--build',
+      buildRoot,
+      '--config',
+      'Release',
+      '--parallel',
+      '2',
+    ], { cwd: sourceRoot, timeoutMs: 8 * 60 * 1000 });
+    const supervisor = findUniqueBuildOutput(buildRoot, 'kristin_job_supervisor.exe');
+    const ptyProbe = findUniqueBuildOutput(buildRoot, 'kristin_native_pty_probe.exe');
+    copyFile(
+      supervisor,
+      path.join(destination, 'native', 'windowsJobHelper', 'kristin_job_supervisor.exe'),
+      true,
+    );
+    copyFile(
+      ptyProbe,
+      path.join(destination, 'native', 'interactiveDesktopAdapter', 'kristin_native_pty_probe.exe'),
+      true,
+    );
+  } finally {
+    fs.rmSync(buildRoot, { recursive: true, force: true });
+  }
+}
+
 function readJson(file) {
   const value = JSON.parse(fs.readFileSync(file, 'utf8'));
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail(`JSON object required: ${file}`);
@@ -219,6 +340,7 @@ function materializeP2(args, lock) {
     node,
     npmCli,
   });
+  buildWindowsP2NativeHelpers({ sourceRoot, destination });
   const configurator = path.join(sourceRoot, 'tool', 'configure-owner-risk-runtime.mjs');
   const contract = path.join(sourceRoot, 'lib', 'product', 'p1_authority_service_contract_v1.dart');
   runNode(stagedNode, [
