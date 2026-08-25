@@ -1,0 +1,309 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:kristin_local_agent/product/application_runtime_provisioner.dart';
+import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
+import 'package:kristin_local_agent/product/p2_automation_host_operations.dart';
+import 'package:kristin_local_agent/product/p2_automation_host_process_client.dart';
+import 'package:kristin_local_agent/product/p2_effect_boundary.dart';
+import 'package:kristin_local_agent/product/p2_effect_journal.dart';
+import 'package:kristin_local_agent/product/p2_finite_command_service.dart';
+import 'package:kristin_local_agent/product/p2_owner_risk_authority.dart';
+import 'package:kristin_local_agent/product/p2_runtime_composition.dart';
+
+const String _passMarker = 'APPLICATION_RUNTIME_REAL_ACCEPTANCE:PASS';
+
+final class _AcceptanceBindingProvider implements P2HostBindingProvider {
+  const _AcceptanceBindingProvider();
+
+  @override
+  P2EffectBinding bindingFor(String operation) => P2EffectBinding(
+        runId: 'in-app-runtime-acceptance',
+        taskId: 'P2-P3',
+        actorId: 'desktop-owner',
+        toolId: 'owner-mode',
+        accessProfileId: 'owner-default',
+        capabilityId: 'owner-session',
+        operation: operation,
+      );
+}
+
+Never _unused(String name) => throw StateError('acceptance_unused_$name');
+
+void _require(bool value, String code) {
+  if (!value) throw StateError(code);
+}
+
+Future<void> main() async {
+  _require(Platform.isWindows, 'acceptance_windows_required');
+
+  final applicationDataRoot = await Directory.systemTemp.createTemp(
+    'kristin-in-app-runtime-acceptance-',
+  );
+  final p2Current = Directory(
+    '${applicationDataRoot.path}${Platform.pathSeparator}runtime'
+    '${Platform.pathSeparator}p2${Platform.pathSeparator}current',
+  );
+  final p3Current = Directory(
+    '${applicationDataRoot.path}${Platform.pathSeparator}runtime'
+    '${Platform.pathSeparator}p3${Platform.pathSeparator}current',
+  );
+  final effects = await Directory(
+    '${applicationDataRoot.path}${Platform.pathSeparator}acceptance-effects',
+  ).create(recursive: true);
+  final browserState = Directory(
+    '${applicationDataRoot.path}${Platform.pathSeparator}acceptance-browser',
+  );
+  final provisioner = ApplicationRuntimeProvisioner(
+    applicationDataRoot: applicationDataRoot,
+  );
+  final bindings = const _AcceptanceBindingProvider();
+  P2OwnerRuntimeComposition? p2Composition;
+  P3BrowserSessionProcess? browserProcess;
+  String? browserSessionId;
+  String? browserPageId;
+
+  try {
+    _require(!await p2Current.exists(), 'p2_runtime_not_clean');
+    _require(!await p3Current.exists(), 'p3_runtime_not_clean');
+
+    final gitHead = (await Process.run('git', const <String>[
+      'rev-parse',
+      'HEAD',
+    ]))
+        .stdout
+        .toString()
+        .trim();
+    final gitTree = (await Process.run('git', const <String>[
+      'rev-parse',
+      'HEAD^{tree}',
+    ]))
+        .stdout
+        .toString()
+        .trim();
+    _require(
+      RegExp(r'^[0-9a-f]{40}$').hasMatch(gitHead),
+      'source_commit_invalid',
+    );
+    _require(
+      RegExp(r'^[0-9a-f]{40}$').hasMatch(gitTree),
+      'source_tree_invalid',
+    );
+    final exactCandidate = Platform.environment['PRODUCT_SOURCE_SHA'];
+    if (exactCandidate != null && exactCandidate.isNotEmpty) {
+      _require(gitHead == exactCandidate, 'source_commit_not_exact_candidate');
+    }
+
+    final p2 = await provisioner.ensureP2(currentAccountRequired: true);
+    _require(p2.root.absolute.path == p2Current.absolute.path, 'p2_root_mismatch');
+    _require(p2.sourceCommit == gitHead, 'p2_source_commit_mismatch');
+    _require(p2.sourceTree == gitTree, 'p2_source_tree_mismatch');
+    _require(
+      p2.provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+          '1',
+      'p2_current_account_environment_missing',
+    );
+    _require(
+      File(p2.nodeExecutable)
+          .absolute
+          .path
+          .startsWith(applicationDataRoot.absolute.path),
+      'p2_node_not_application_owned',
+    );
+    _require(await File(p2.nodeExecutable).exists(), 'p2_node_missing');
+
+    final authority = P2OwnerRiskQaAuthority(productCurrentAccount: true);
+    _require(
+      authority.authorityKind == 'p2-current-account-owner-v1',
+      'p2_authority_kind_invalid',
+    );
+    _require(!authority.completionEligible, 'p2_completion_truth_invalid');
+    _require(
+      authority.authorityProvenance['secureIsolationActive'] == false,
+      'p2_isolation_truth_invalid',
+    );
+    final journal = P2JsonlEffectJournal(
+      File(
+        '${applicationDataRoot.path}${Platform.pathSeparator}p2'
+        '${Platform.pathSeparator}effects.jsonl',
+      ),
+    );
+    final composition = await P2OwnerRuntimeComposition.start(
+      launchConfig: P2AutomationHostLaunchConfig(
+        nodeExecutable: p2.nodeExecutable,
+        hostScript: p2.hostScript,
+        workingDirectory: p2.workingDirectory,
+        restrictedWorkerLauncher: p2.restrictedWorkerLauncher,
+        restrictedWorkerLauncherSha256: p2.restrictedWorkerLauncherSha256,
+        workerPolicy: p2.workerPolicy,
+        workerPolicySha256: p2.workerPolicySha256,
+        nodeExecutableSha256: p2.nodeExecutableSha256,
+        hostScriptSha256: p2.hostScriptSha256,
+        bootstrapProvider: authority,
+        windowsJobHelper: p2.windowsJobHelper,
+        posixWatchdog: p2.posixWatchdog,
+        interactiveDesktopAdapter: p2.interactiveDesktopAdapter,
+        interactiveDesktopAttested: true,
+        additionalEnvironment: p2.provisionedEnvironment,
+        startupTimeout: const Duration(seconds: 30),
+      ),
+      authority: authority,
+      journal: journal,
+      hostBindingProvider: bindings,
+      processAuthorizationFor: (int _, String __) => _unused('process'),
+      watchdogAuthorizationFor: (String _, String __) => _unused('watchdog'),
+    );
+    p2Composition = composition;
+
+    final supportEnvelope = await authority.issue(
+      binding: bindings.bindingFor('host.supportMatrix'),
+      operation: 'host.supportMatrix',
+      payload: const <String, Object?>{'operation': 'host.supportMatrix'},
+    );
+    final support = await composition.client.invoke(supportEnvelope);
+    _require(support['status'] == 'ok', 'p2_support_matrix_failed');
+
+    final filesystem = composition.filesystemService(
+      Directory(
+        '${applicationDataRoot.path}${Platform.pathSeparator}acceptance-backups',
+      ),
+    );
+    final target = File(
+      '${effects.path}${Platform.pathSeparator}in-app-owner-λ.txt',
+    );
+    await filesystem.write(
+      target.path,
+      Uint8List.fromList(utf8.encode('KRISTIN_IN_APP_P2_OK')),
+      binding: bindings.bindingFor('filesystem.write'),
+    );
+    final read = await filesystem.read(
+      target.path,
+      binding: bindings.bindingFor('filesystem.read'),
+      maxBytes: 65536,
+    );
+    _require(utf8.decode(read) == 'KRISTIN_IN_APP_P2_OK', 'p2_filesystem_failed');
+
+    final command = await composition.commandService.run(
+      P2CommandSpec(
+        executable: p2.nodeExecutable,
+        cwd: effects.path,
+        arguments: const <String>[
+          '-e',
+          "process.stdout.write('KRISTIN_IN_APP_NODE_OK')",
+        ],
+        deadline: const Duration(seconds: 30),
+      ),
+      binding: bindings.bindingFor('command.run'),
+    );
+    _require(
+      utf8.decode(command.stdout) == 'KRISTIN_IN_APP_NODE_OK',
+      'p2_command_failed',
+    );
+
+    final p3 = await provisioner.ensureP3();
+    _require(p3.root.absolute.path == p3Current.absolute.path, 'p3_root_mismatch');
+    _require(p3.sourceCommit == gitHead, 'p3_source_commit_mismatch');
+    _require(p3.sourceTree == gitTree, 'p3_source_tree_mismatch');
+    _require(
+      p3.nodeExecutableSha256 == p2.nodeExecutableSha256,
+      'p2_p3_node_digest_mismatch',
+    );
+    _require(
+      File(p3.nodeExecutable)
+          .absolute
+          .path
+          .startsWith(applicationDataRoot.absolute.path),
+      'p3_node_not_application_owned',
+    );
+    _require(p3.browserRevision == '1228', 'p3_browser_revision_mismatch');
+    _require(await File(p3.browserExecutable).exists(), 'p3_browser_missing');
+    _require(
+      File(p3.browserExecutable)
+          .absolute
+          .path
+          .startsWith(applicationDataRoot.absolute.path),
+      'p3_browser_not_application_owned',
+    );
+
+    final activeBrowserProcess = await P3BrowserRuntimeService(
+      applicationDataRoot: applicationDataRoot,
+    ).startSessions(
+      stateDirectory: browserState,
+      quotas: const P3BrowserSessionQuotas(
+        maxSessions: 1,
+        maxPagesPerSession: 1,
+        maxPersistentProfiles: 1,
+      ),
+      startupTimeout: const Duration(seconds: 90),
+      requestTimeout: const Duration(seconds: 60),
+    );
+    browserProcess = activeBrowserProcess;
+    final session = await activeBrowserProcess.openSession(
+      kind: P3BrowserSessionKind.ephemeral,
+      blockServiceWorkers: true,
+    );
+    browserSessionId = session.sessionId;
+    final page = await activeBrowserProcess.openPage(session.sessionId);
+    browserPageId = page.pageId;
+    _require(page.pageId.isNotEmpty, 'p3_page_missing');
+
+    final p2Cached = await provisioner.ensureP2(currentAccountRequired: true);
+    final p3Cached = await provisioner.ensureP3();
+    _require(
+      p2Cached.manifestSha256 == p2.manifestSha256,
+      'p2_cache_identity_mismatch',
+    );
+    _require(
+      p3Cached.manifestSha256 == p3.manifestSha256,
+      'p3_cache_identity_mismatch',
+    );
+
+    stdout.writeln(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': '1.0.0',
+        'sourceCommit': gitHead,
+        'sourceTree': gitTree,
+        'p2ManifestSha256': p2.manifestSha256,
+        'p3ManifestSha256': p3.manifestSha256,
+        'p2AuthorityKind': authority.authorityKind,
+        'p2CompletionEligible': authority.completionEligible,
+        'p2SecureIsolationActive':
+            authority.authorityProvenance['secureIsolationActive'],
+        'p3BrowserRevision': p3.browserRevision,
+        'applicationDataRoot': applicationDataRoot.path,
+      }),
+    );
+    stdout.writeln(_passMarker);
+  } finally {
+    final process = browserProcess;
+    final sessionId = browserSessionId;
+    final pageId = browserPageId;
+    if (process != null) {
+      if (sessionId != null && pageId != null) {
+        try {
+          await process.closePage(sessionId, pageId);
+        } catch (_) {}
+      }
+      if (sessionId != null) {
+        try {
+          await process.closeSession(sessionId);
+        } catch (_) {}
+      }
+      try {
+        await process.close();
+      } catch (_) {}
+    }
+    try {
+      await p2Composition?.close();
+    } catch (_) {}
+    try {
+      await provisioner.close();
+    } catch (_) {}
+    try {
+      if (await applicationDataRoot.exists()) {
+        await applicationDataRoot.delete(recursive: true);
+      }
+    } catch (_) {}
+  }
+}
