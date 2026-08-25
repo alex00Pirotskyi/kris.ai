@@ -342,6 +342,44 @@ class ProductRuntime {
   Stream<EventEnvelope> get eventStream => events.stream;
   Stream<LiveRunSignal> get liveRunStream => liveRunSignals.stream;
 
+  Future<void> adoptProvisionedOwnerMode(
+    P2ProductRuntimeOwnerModeHandle handle,
+  ) async {
+    if (!handle.available) {
+      throw StateError('p2_provisioned_owner_runtime_unavailable');
+    }
+    final previous = _p2OwnerModeRuntime;
+    _p2OwnerModeRuntime = handle;
+    if (previous != null && !identical(previous, handle)) {
+      await previous.close();
+    }
+  }
+
+  Future<P3ProductRuntimeBrowserHandle>
+      refreshProvisionedBrowserRuntime() async {
+    final refreshed = await P3ProductRuntimeBrowserHandle.open(
+      applicationDataRoot: directories.root,
+      stateDirectory: Directory(
+        '${directories.cache.path}${Platform.pathSeparator}p3-browser-runtime',
+      ),
+    );
+    if (!refreshed.available) {
+      await refreshed.close();
+      throw StateError('p3_provisioned_browser_runtime_unavailable');
+    }
+    final previous = _p3BrowserRuntime;
+    _p3BrowserRuntime = refreshed;
+    if (previous != null && !identical(previous, refreshed)) {
+      await previous.close();
+    }
+    if (research is P4BrowserAwareResearchService) {
+      (research as P4BrowserAwareResearchService).attachRenderedPageLoader(
+        (url) => refreshed.renderPublicPage(url),
+      );
+    }
+    return refreshed;
+  }
+
   static Future<ProductRuntime> initialize({String? dataRoot}) async {
     final directories = await AppDirectories.create(overrideRoot: dataRoot);
     final repositories = await ProductRepositories.open(directories);

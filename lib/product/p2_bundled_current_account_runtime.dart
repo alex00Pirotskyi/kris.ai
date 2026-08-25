@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'application_runtime_provisioner.dart';
 import 'p2_runtime_resource_resolver.dart';
 
 final class P2BundledCurrentAccountRuntime {
@@ -38,11 +39,11 @@ final class P2BundledCurrentAccountRuntime {
       break;
     }
     if (selectedBundledRoot == null) return false;
+
     final bundledRoot = selectedBundledRoot;
     final bundledManifest = File(
       '${bundledRoot.path}${Platform.pathSeparator}runtime-manifest.v3.json',
     );
-
     final bundled = _object(
       jsonDecode(await bundledManifest.readAsString()),
       'p2_bundled_runtime_manifest_invalid',
@@ -53,75 +54,61 @@ final class P2BundledCurrentAccountRuntime {
         bundled['ownerRiskQa'] != false) {
       return false;
     }
-
-    final targetRoot = Directory(
-      '${applicationDataRoot.absolute.path}${Platform.pathSeparator}runtime'
-      '${Platform.pathSeparator}p2${Platform.pathSeparator}current',
-    );
-    final targetManifest = File(
-      '${targetRoot.path}${Platform.pathSeparator}runtime-manifest.v3.json',
-    );
-    final bundledIdentity = _object(
+    final identity = _object(
       bundled['identity'],
       'p2_bundled_runtime_identity_invalid',
     );
-    final bundledCommit = _hex(
-      bundledIdentity['sourceCommit'],
+    final sourceCommit = _hex(
+      identity['sourceCommit'],
       40,
       'p2_bundled_runtime_source_commit_invalid',
     );
-    final bundledTree = _hex(
-      bundledIdentity['sourceTree'],
+    final sourceTree = _hex(
+      identity['sourceTree'],
       40,
       'p2_bundled_runtime_source_tree_invalid',
     );
+    final runtimeBuildSha256 = _hex(
+      identity['runtimeBuildSha256'],
+      64,
+      'p2_bundled_runtime_build_invalid',
+    );
 
-    var replace = !await targetManifest.exists();
-    if (!replace) {
-      try {
-        if (await FileSystemEntity.isLink(targetManifest.path)) {
-          replace = true;
-        } else {
-          final existing = _object(
-            jsonDecode(await targetManifest.readAsString()),
-            'p2_existing_runtime_manifest_invalid',
-          );
-          final identity = _object(
-            existing['identity'],
-            'p2_existing_runtime_identity_invalid',
-          );
-          replace = identity['sourceCommit'] != bundledCommit ||
-              identity['sourceTree'] != bundledTree;
-        }
-      } catch (_) {
-        replace = true;
-      }
-    }
-    if (replace) {
-      if (await targetRoot.exists()) {
-        await targetRoot.delete(recursive: true);
-      }
-      await _copyTree(bundledRoot, targetRoot);
-    }
-
-    final resolved = await P2ApplicationOwnedRuntimeResourceResolver(
+    final slot = AtomicApplicationRuntimeSlot<P2RuntimeResourceSet>(
       applicationDataRoot: applicationDataRoot.absolute,
-      executablePath:
-          '${applicationDataRoot.absolute.path}${Platform.pathSeparator}kristin-runtime-probe',
-    ).resolve();
-    final resolvedRoot = await resolved.root.resolveSymbolicLinks();
-    final expectedRoot = await targetRoot.resolveSymbolicLinks();
-    if (resolvedRoot != expectedRoot ||
-        resolved.provisionedEnvironment[
-                'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] !=
-            '1' ||
-        resolved.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA')) {
-      throw StateError('p2_current_account_relocated_runtime_invalid');
-    }
+      runtimeKind: 'p2',
+      validate: (applicationRoot) => P2ApplicationOwnedRuntimeResourceResolver(
+        applicationDataRoot: applicationRoot.absolute,
+        executablePath:
+            '${applicationRoot.absolute.path}${Platform.pathSeparator}'
+            '.p2-bundled-runtime-probe',
+      ).resolve(),
+    );
+    await slot.ensure(
+      targetIdentity:
+          'bundled:$sourceCommit:$sourceTree:$runtimeBuildSha256:current-account',
+      repair: false,
+      matches: (resources) =>
+          resources.sourceCommit == sourceCommit &&
+          resources.sourceTree == sourceTree &&
+          resources.runtimeBuildSha256 == runtimeBuildSha256 &&
+          resources.provisionedEnvironment[
+                  'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+              '1' &&
+          !resources.provisionedEnvironment
+              .containsKey('KRISTIN_OWNER_RISK_QA'),
+      materialize: (destination) => _copyTree(bundledRoot, destination),
+    );
     return true;
   }
 
-  static Future<void> _copyTree(Directory source, Directory destination) async {
+  static Future<void> _copyTree(
+    Directory source,
+    Directory destination,
+  ) async {
+    if (await destination.exists()) {
+      await destination.delete(recursive: true);
+    }
     await destination.create(recursive: true);
     await for (final entity in source.list(
       recursive: true,
