@@ -62,17 +62,51 @@ void main() {
       'lib/product/product_runtime_provisioning.dart',
     ).readAsStringSync();
 
-    expect(materializer, contains('*S-1-15-2-1'));
-    expect(materializer, contains('*S-1-15-2-2'));
+    expect(materializer, isNot(contains('icacls.exe')));
+    expect(materializer, isNot(contains('*S-1-15-2-1')));
+    expect(materializer, isNot(contains('*S-1-15-2-2')));
     expect(materializer, contains('P3 browser executable digest mismatch'));
     expect(materializer, contains('P3 browser tree digest mismatch'));
     expect(materializer, isNot(contains('--no-sandbox')));
     expect(materializer, isNot(contains('chrome.exe --')));
     expect(materializer, isNot(contains('shutil.which')));
+    expect(provisioner, contains('*S-1-15-2-1:(OI)(CI)(RX)'));
+    expect(provisioner, contains('*S-1-15-2-2:(OI)(CI)(RX)'));
     expect(provisioner, contains('nodejs.org'));
     expect(
-        provisioner, contains('application_runtime_download_digest_mismatch'));
+      provisioner,
+      contains('application_runtime_download_digest_mismatch'),
+    );
     expect(provisioner, contains('p3_windows_sandbox_acl_preparation_failed'));
+
+    final bundledP3 = provisioner.indexOf('final bundled = await _bundledP3();');
+    final bundledEnsure = provisioner.indexOf(
+      'final result = await _p3Slot.ensure(',
+      bundledP3,
+    );
+    final bundledAcl = provisioner.indexOf(
+      'await _prepareWindowsBrowserAcl(Directory(result.browserRoot));',
+      bundledEnsure,
+    );
+    final sourceP3 = provisioner.indexOf(
+      'final source = await _discoverSourceIdentity();',
+      bundledAcl,
+    );
+    final sourceEnsure = provisioner.indexOf(
+      'final result = await _p3Slot.ensure(',
+      sourceP3,
+    );
+    final sourceAcl = provisioner.indexOf(
+      'await _prepareWindowsBrowserAcl(Directory(result.browserRoot));',
+      sourceEnsure,
+    );
+    expect(bundledP3, greaterThanOrEqualTo(0));
+    expect(bundledEnsure, greaterThan(bundledP3));
+    expect(bundledAcl, greaterThan(bundledEnsure));
+    expect(sourceP3, greaterThan(bundledAcl));
+    expect(sourceEnsure, greaterThan(sourceP3));
+    expect(sourceAcl, greaterThan(sourceEnsure));
+
     expect(shell, contains('Preparing Web Studio...'));
     expect(shell, contains("Web Studio couldn't be prepared."));
     expect(shell, contains('web-runtime-retry'));
