@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:kristin_local_agent/product/application_runtime_provisioner.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
+import 'package:kristin_local_agent/product/browser/browser_runtime_bundle.dart';
 import 'package:kristin_local_agent/product/p2_automation_host_process_client.dart';
 import 'package:kristin_local_agent/product/p2_effect_journal.dart';
 import 'package:kristin_local_agent/product/p2_finite_command_service.dart';
@@ -240,6 +241,17 @@ Future<void> main() async {
     _require(page.pageId.isNotEmpty, 'p3_page_missing');
 
     final p2Cached = await provisioner.ensureP2(currentAccountRequired: true);
+    try {
+      final liveP3 = await P3ApplicationOwnedBrowserRuntimeResolver(
+        applicationDataRoot: applicationDataRoot,
+      ).resolve();
+      _require(
+        liveP3.manifestSha256 == p3.manifestSha256,
+        'p3_live_revalidation_identity_mismatch',
+      );
+    } catch (error) {
+      throw StateError('p3_live_revalidation_failed:$error');
+    }
     final p3Cached = await provisioner.ensureP3();
     _require(
       p2Cached.manifestSha256 == p2.manifestSha256,
