@@ -21,7 +21,7 @@ on:
       - 'SOURCE_MANIFEST.sha256'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: p1-p10-product-runtime-${{ github.ref }}
@@ -42,7 +42,7 @@ jobs:
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -50,7 +50,7 @@ jobs:
           check-latest: false
 
       - id: sync
-        name: Verify or synchronize governed source manifest
+        name: Verify governed source manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -60,17 +60,10 @@ jobs:
             echo 'changed=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [ "${{ github.event_name }}" != 'pull_request' ]; then
-            echo 'SOURCE_MANIFEST is stale on a non-PR invocation.' >&2
-            exit 1
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256
-          git diff --cached --check
-          git commit -m 'chore(repo): refresh P1-P10 source manifest'
-          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
           echo 'changed=true' >> "$GITHUB_OUTPUT"
+          echo 'SOURCE_MANIFEST.sha256 is stale. Regenerate and commit it before qualification.' >&2
+          git diff -- SOURCE_MANIFEST.sha256 >&2
+          exit 1
 
   platform:
     name: p1-p10-product-${{ matrix.platform }}
