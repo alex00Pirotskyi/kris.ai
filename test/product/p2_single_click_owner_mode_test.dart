@@ -55,6 +55,11 @@ void main() {
     expect(provisioner, contains('AtomicApplicationRuntimeSlot'));
     expect(materializer, contains("'--mode'"));
     expect(materializer, contains("'product-current-account'"));
+    expect(materializer, contains('skipNodeModules: true'));
+    expect(
+      materializer,
+      contains('source node_modules must not enter runtime staging'),
+    );
     expect(materializer, contains('buildWindowsP2NativeHelpers'));
     expect(
       materializer,
