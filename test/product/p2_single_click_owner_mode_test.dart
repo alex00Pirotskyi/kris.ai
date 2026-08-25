@@ -35,6 +35,9 @@ void main() {
     final bridge = File(
       'lib/product/product_runtime_provisioning.dart',
     ).readAsStringSync();
+    final productRuntime = File(
+      'lib/product/product_runtime.dart',
+    ).readAsStringSync();
     final provisioner = File(
       'lib/product/application_runtime_provisioner.dart',
     ).readAsStringSync();
@@ -52,6 +55,9 @@ void main() {
     expect(bridge, contains('provisioner.ensureP2'));
     expect(bridge, contains('P2ProductRuntimeBootstrap.start'));
     expect(bridge, contains('runtimeResources: resources'));
+    expect(bridge, contains('await adoptProvisionedOwnerMode(handle);'));
+    expect(productRuntime, contains('adoptProvisionedOwnerMode'));
+    expect(productRuntime, contains('_p2OwnerModeRuntime = handle;'));
     expect(provisioner, contains('AtomicApplicationRuntimeSlot'));
     expect(materializer, contains("'--mode'"));
     expect(materializer, contains("'product-current-account'"));
