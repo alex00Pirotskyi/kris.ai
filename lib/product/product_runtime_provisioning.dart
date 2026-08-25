@@ -28,8 +28,9 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     return created;
   }
 
-  Stream<ApplicationRuntimeProvisioningProgress> get runtimeProvisioningProgress =>
-      _runtimeProvisioningState.provisioner.progress;
+  Stream<ApplicationRuntimeProvisioningProgress>
+      get runtimeProvisioningProgress =>
+          _runtimeProvisioningState.provisioner.progress;
 
   P2ProductRuntimeOwnerModeHandle get provisionedOwnerMode =>
       _runtimeProvisioningState.ownerMode;
@@ -66,7 +67,8 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     final inFlight = state.browserInFlight;
     if (inFlight != null) return inFlight;
     late final Future<P3BrowserRuntimeResourceSet> operation;
-    operation = _ensureBrowserRuntimeReady(state, repair: repair).whenComplete(() {
+    operation =
+        _ensureBrowserRuntimeReady(state, repair: repair).whenComplete(() {
       if (identical(state.browserInFlight, operation)) {
         state.browserInFlight = null;
       }

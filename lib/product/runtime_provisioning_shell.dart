@@ -112,8 +112,7 @@ class _ProvisioningMainShell extends StatefulWidget {
   final Widget chat;
 
   @override
-  State<_ProvisioningMainShell> createState() =>
-      _ProvisioningMainShellState();
+  State<_ProvisioningMainShell> createState() => _ProvisioningMainShellState();
 }
 
 class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
@@ -499,9 +498,7 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
         .replaceAll(RegExp(r'[^A-Za-z0-9_.:-]'), '_')
         .replaceAll(RegExp(r'_+'), '_');
     if (normalized.isEmpty) return 'runtime_provisioning_failed';
-    return normalized.length <= 180
-        ? normalized
-        : normalized.substring(0, 180);
+    return normalized.length <= 180 ? normalized : normalized.substring(0, 180);
   }
 }
 
@@ -641,7 +638,8 @@ class _RuntimeStatusBanner extends StatelessWidget {
     required this.title,
     required this.diagnosticCode,
     required this.onRetry,
-  })  : message = 'Kristin could not safely finish preparing the browser runtime.',
+  })  : message =
+            'Kristin could not safely finish preparing the browser runtime.',
         progress = null,
         failure = true;
 

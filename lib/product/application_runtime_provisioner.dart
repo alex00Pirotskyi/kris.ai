@@ -64,7 +64,8 @@ final class ApplicationRuntimeProvisioner {
   late final AtomicApplicationRuntimeSlot<P2RuntimeResourceSet> _p2Slot;
   late final AtomicApplicationRuntimeSlot<P3BrowserRuntimeResourceSet> _p3Slot;
 
-  Stream<ApplicationRuntimeProvisioningProgress> get progress => _progress.stream;
+  Stream<ApplicationRuntimeProvisioningProgress> get progress =>
+      _progress.stream;
 
   Future<P2RuntimeResourceSet> ensureP2({
     required bool currentAccountRequired,
@@ -316,8 +317,8 @@ final class ApplicationRuntimeProvisioner {
     P2RuntimeResourceSet resources,
     bool currentAccountRequired,
   ) {
-    final currentAccount = resources.provisionedEnvironment[
-            'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+    final currentAccount = resources
+            .provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
         '1';
     final ownerRiskQa =
         resources.provisionedEnvironment['KRISTIN_OWNER_RISK_QA'] == '1';
@@ -371,7 +372,8 @@ final class ApplicationRuntimeProvisioner {
       'tool${Platform.pathSeparator}configure-owner-risk-runtime.mjs',
     ];
     for (final relative in required) {
-      if (!await File('${root.path}${Platform.pathSeparator}$relative').exists()) {
+      if (!await File('${root.path}${Platform.pathSeparator}$relative')
+          .exists()) {
         return false;
       }
     }
@@ -392,7 +394,8 @@ final class ApplicationRuntimeProvisioner {
       fraction: 0.2,
     );
     final acquisition = await _readAcquisitionLock(source.root);
-    final toolchain = await _ensureNodeToolchain(source.root, acquisition, kind);
+    final toolchain =
+        await _ensureNodeToolchain(source.root, acquisition, kind);
     final materializer = File(
       '${source.root.path}${Platform.pathSeparator}tool'
       '${Platform.pathSeparator}application_runtime_materializer.mjs',
@@ -612,8 +615,12 @@ final class ApplicationRuntimeProvisioner {
       final request = await client.getUrl(source).timeout(
             const Duration(seconds: 30),
           );
-      request.headers.userAgent = 'KristinLocalAgent-RuntimeProvisioner/1';
-      final response = await request.close().timeout(const Duration(seconds: 45));
+      request.headers.set(
+        HttpHeaders.userAgentHeader,
+        'KristinLocalAgent-RuntimeProvisioner/1',
+      );
+      final response =
+          await request.close().timeout(const Duration(seconds: 45));
       if (response.statusCode != HttpStatus.ok) {
         throw StateError(
           'application_runtime_download_http_${response.statusCode}',
@@ -736,7 +743,11 @@ final class ApplicationRuntimeProvisioner {
     if (!Platform.isWindows) {
       final result = await _runBounded(
         'cp',
-        <String>['-a', '${source.path}${Platform.pathSeparator}.', destination.path],
+        <String>[
+          '-a',
+          '${source.path}${Platform.pathSeparator}.',
+          destination.path
+        ],
         timeout: const Duration(minutes: 5),
       );
       if (result.exitCode != 0) {
@@ -753,8 +764,7 @@ final class ApplicationRuntimeProvisioner {
       followLinks: false,
     )) {
       final relative = entity.path.substring(sourceRoot.length + 1);
-      final target =
-          '${destination.path}${Platform.pathSeparator}$relative';
+      final target = '${destination.path}${Platform.pathSeparator}$relative';
       if (await FileSystemEntity.isLink(entity.path)) {
         if (!allowInternalSymlinks) {
           throw StateError('application_runtime_bundle_symlink_forbidden');
@@ -855,13 +865,10 @@ final class ApplicationRuntimeProvisioner {
   }
 
   static String _boundedDiagnostic(_BoundedProcessResult result) {
-    final value = '${result.stderr}\n${result.stdout}'
-        .replaceAll('\u0000', '')
-        .trim();
+    final value =
+        '${result.stderr}\n${result.stdout}'.replaceAll('\u0000', '').trim();
     if (value.isEmpty) return 'exit_${result.exitCode}';
-    return value.length <= 2048
-        ? value
-        : value.substring(value.length - 2048);
+    return value.length <= 2048 ? value : value.substring(value.length - 2048);
   }
 
   static bool _hex(String value, int length) =>
@@ -988,9 +995,8 @@ final class AtomicApplicationRuntimeSlot<T> {
     final previous = <Directory>[];
     await for (final entity in _slotRoot.list(followLinks: false)) {
       if (entity is! Directory) continue;
-      final name = entity.uri.pathSegments
-          .where((value) => value.isNotEmpty)
-          .last;
+      final name =
+          entity.uri.pathSegments.where((value) => value.isNotEmpty).last;
       if (name.startsWith('staging-')) staging.add(entity);
       if (name.startsWith('previous-')) previous.add(entity);
     }

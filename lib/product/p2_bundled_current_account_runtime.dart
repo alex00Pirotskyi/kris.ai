@@ -95,7 +95,8 @@ final class P2BundledCurrentAccountRuntime {
           resources.provisionedEnvironment[
                   'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
               '1' &&
-          !resources.provisionedEnvironment.containsKey('KRISTIN_OWNER_RISK_QA'),
+          !resources.provisionedEnvironment
+              .containsKey('KRISTIN_OWNER_RISK_QA'),
       materialize: (destination) => _copyTree(bundledRoot, destination),
     );
     return true;

@@ -110,7 +110,8 @@ void main() {
     );
   });
 
-  test('invalid staged runtime never replaces a valid current runtime', () async {
+  test('invalid staged runtime never replaces a valid current runtime',
+      () async {
     await writeCurrent('stable');
 
     await expectLater(
@@ -131,7 +132,8 @@ void main() {
     expect((await current.readAsString()).trim(), 'stable');
   });
 
-  test('interrupted previous runtime is restored before a new install', () async {
+  test('interrupted previous runtime is restored before a new install',
+      () async {
     final previous = File(
       '${root.path}${Platform.pathSeparator}runtime'
       '${Platform.pathSeparator}test${Platform.pathSeparator}previous-crash'
@@ -164,7 +166,8 @@ void main() {
     expect(await staleStaging.exists(), isFalse);
   });
 
-  test('failed materialization is retryable and cleans in-flight state', () async {
+  test('failed materialization is retryable and cleans in-flight state',
+      () async {
     final runtimeSlot = slot();
     var attempts = 0;
 
@@ -174,7 +177,8 @@ void main() {
           matches: (value) => value == 'fresh',
           materialize: (destination) async {
             attempts++;
-            if (attempts == 1) throw StateError('simulated_acquisition_failure');
+            if (attempts == 1)
+              throw StateError('simulated_acquisition_failure');
             await materialize(destination, 'fresh');
           },
         );
@@ -184,7 +188,8 @@ void main() {
     expect(attempts, 2);
   });
 
-  test('same target identity shares one in-flight provisioning operation', () async {
+  test('same target identity shares one in-flight provisioning operation',
+      () async {
     final runtimeSlot = slot();
     final entered = Completer<void>();
     final release = Completer<void>();
