@@ -81,4 +81,19 @@ void main() {
     expect(bridge, contains('startProvisionedBrowserSessions'));
     expect(bridge, contains('attachRenderedPageLoader'));
   });
+
+  test('rendered research attaches before P3 is provisioned and shares ensure', () {
+    final bridge = File(
+      'lib/product/product_runtime_provisioning.dart',
+    ).readAsStringSync();
+
+    expect(
+      bridge,
+      contains('_runtimeProvisioningStates[this] = created;'),
+    );
+    expect(bridge, contains('_attachProvisionedResearchBrowser(this);'));
+    expect(bridge, contains('P4BrowserAwareResearchService'));
+    expect(bridge, contains('attachRenderedPageLoader'));
+    expect(bridge, contains('await runtime.ensureBrowserRuntimeReady();'));
+  });
 }
