@@ -4,30 +4,14 @@ import 'dart:typed_data';
 
 import 'package:kristin_local_agent/product/application_runtime_provisioner.dart';
 import 'package:kristin_local_agent/product/browser/browser_runtime.dart';
-import 'package:kristin_local_agent/product/p2_automation_host_operations.dart';
 import 'package:kristin_local_agent/product/p2_automation_host_process_client.dart';
-import 'package:kristin_local_agent/product/p2_effect_boundary.dart';
 import 'package:kristin_local_agent/product/p2_effect_journal.dart';
 import 'package:kristin_local_agent/product/p2_finite_command_service.dart';
 import 'package:kristin_local_agent/product/p2_owner_risk_authority.dart';
+import 'package:kristin_local_agent/product/p2_product_binding_context.dart';
 import 'package:kristin_local_agent/product/p2_runtime_composition.dart';
 
 const String _passMarker = 'APPLICATION_RUNTIME_REAL_ACCEPTANCE:PASS';
-
-final class _AcceptanceBindingProvider implements P2HostBindingProvider {
-  const _AcceptanceBindingProvider();
-
-  @override
-  P2EffectBinding bindingFor(String operation) => P2EffectBinding(
-        runId: 'in-app-runtime-acceptance',
-        taskId: 'P2-P3',
-        actorId: 'desktop-owner',
-        toolId: 'owner-mode',
-        accessProfileId: 'owner-default',
-        capabilityId: 'owner-session',
-        operation: operation,
-      );
-}
 
 Never _unused(String name) => throw StateError('acceptance_unused_$name');
 
@@ -58,7 +42,11 @@ Future<void> main() async {
   final provisioner = ApplicationRuntimeProvisioner(
     applicationDataRoot: applicationDataRoot,
   );
-  final bindings = const _AcceptanceBindingProvider();
+  final bindings = P2ProductBindingContext();
+  bindings.activate(
+    runId: 'in-app-runtime-acceptance',
+    taskId: 'P2-P3',
+  );
   P2OwnerRuntimeComposition? p2Composition;
   P3BrowserSessionProcess? browserProcess;
   String? browserSessionId;
@@ -162,7 +150,10 @@ Future<void> main() async {
       payload: const <String, Object?>{'operation': 'host.supportMatrix'},
     );
     final support = await composition.client.invoke(supportEnvelope);
-    _require(support['status'] == 'ok', 'p2_support_matrix_failed');
+    _require(
+      support['status'] == 'ok',
+      'p2_support_matrix_failed:${jsonEncode(support)}',
+    );
 
     final filesystem = composition.filesystemService(
       Directory(

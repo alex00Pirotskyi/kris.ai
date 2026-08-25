@@ -28,42 +28,67 @@ void main() {
         reason: 'exact Flutter SDK Dart executable is required',
       );
 
-      final process = await Process.start(
-        dartExecutable.path,
-        const <String>[
-          'run',
-          'tool/application_runtime_real_acceptance.dart',
-        ],
-        workingDirectory: Directory.current.path,
-        environment: Platform.environment,
-        includeParentEnvironment: false,
-        runInShell: false,
-        mode: ProcessStartMode.normal,
+      final fixture = File(
+        'test${Platform.pathSeparator}fixtures${Platform.pathSeparator}'
+        'application_runtime_real_acceptance.dart.txt',
       );
-      final stdoutFuture = process.stdout.transform(utf8.decoder).join();
-      final stderrFuture = process.stderr.transform(utf8.decoder).join();
-      final exitCode = await process.exitCode.timeout(
-        const Duration(minutes: 15),
-        onTimeout: () {
-          process.kill();
-          return -1;
-        },
+      expect(
+        await fixture.exists(),
+        isTrue,
+        reason: 'standalone acceptance fixture is required',
       );
-      final childStdout = await stdoutFuture;
-      final childStderr = await stderrFuture;
+      final generatedDirectory = Directory(
+        'build${Platform.pathSeparator}runtime-acceptance',
+      );
+      await generatedDirectory.create(recursive: true);
+      final generatedChild = File(
+        '${generatedDirectory.path}${Platform.pathSeparator}'
+        'application_runtime_real_acceptance.dart',
+      );
+      await generatedChild.writeAsString(
+        await fixture.readAsString(),
+        flush: true,
+      );
 
-      expect(
-        exitCode,
-        0,
-        reason: 'plain Dart runtime acceptance failed\n'
-            'stdout:\n$childStdout\n'
-            'stderr:\n$childStderr',
-      );
-      expect(
-        childStdout,
-        contains(_passMarker),
-        reason: 'plain Dart runtime acceptance did not emit PASS marker',
-      );
+      try {
+        final process = await Process.start(
+          dartExecutable.path,
+          <String>['run', generatedChild.path],
+          workingDirectory: Directory.current.path,
+          environment: Platform.environment,
+          includeParentEnvironment: false,
+          runInShell: false,
+          mode: ProcessStartMode.normal,
+        );
+        final stdoutFuture = process.stdout.transform(utf8.decoder).join();
+        final stderrFuture = process.stderr.transform(utf8.decoder).join();
+        final exitCode = await process.exitCode.timeout(
+          const Duration(minutes: 15),
+          onTimeout: () {
+            process.kill();
+            return -1;
+          },
+        );
+        final childStdout = await stdoutFuture;
+        final childStderr = await stderrFuture;
+
+        expect(
+          exitCode,
+          0,
+          reason: 'plain Dart runtime acceptance failed\n'
+              'stdout:\n$childStdout\n'
+              'stderr:\n$childStderr',
+        );
+        expect(
+          childStdout,
+          contains(_passMarker),
+          reason: 'plain Dart runtime acceptance did not emit PASS marker',
+        );
+      } finally {
+        if (await generatedDirectory.exists()) {
+          await generatedDirectory.delete(recursive: true);
+        }
+      }
     },
     timeout: const Timeout(Duration(minutes: 16)),
     skip: enabled
