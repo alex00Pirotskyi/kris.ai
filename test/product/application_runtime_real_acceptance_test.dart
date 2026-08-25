@@ -29,7 +29,7 @@ void main() {
       );
 
       final fixture = File(
-        'test${Platform.pathSeparator}fixtures${Platform.pathSeparator}'
+        'test${Platform.pathSeparator}product${Platform.pathSeparator}'
         'application_runtime_real_acceptance.dart.txt',
       );
       expect(
