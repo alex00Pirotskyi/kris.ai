@@ -9,8 +9,6 @@ import { spawnSync } from 'node:child_process';
 const SKIP_PARTS = new Set(['.git', '.dart_tool', 'build', '__pycache__']);
 const HEX40 = /^[0-9a-f]{40}$/;
 const HEX64 = /^[0-9a-f]{64}$/;
-const WINDOWS_ALL_APPLICATION_PACKAGES_SID = '*S-1-15-2-1';
-const WINDOWS_ALL_RESTRICTED_APPLICATION_PACKAGES_SID = '*S-1-15-2-2';
 
 function fail(message) {
   throw new Error(message);
@@ -290,23 +288,6 @@ function relativeFile(root, file, executable = false) {
   };
 }
 
-function prepareWindowsSandboxAcl(browserRoot) {
-  if (process.platform !== 'win32') return;
-  const result = spawnSync('icacls.exe', [
-    browserRoot,
-    '/grant',
-    `${WINDOWS_ALL_APPLICATION_PACKAGES_SID}:(OI)(CI)(RX)`,
-    `${WINDOWS_ALL_RESTRICTED_APPLICATION_PACKAGES_SID}:(OI)(CI)(RX)`,
-    '/T',
-    '/Q',
-  ], { encoding: 'utf8', windowsHide: true, timeout: 120000 });
-  if (result.error) fail(`P3 Windows browser sandbox ACL preparation failed: ${result.error.message}`);
-  if (result.status !== 0) {
-    const detail = `${result.stderr ?? ''}\n${result.stdout ?? ''}`.replaceAll('\0', '').trim().slice(-2048);
-    fail(`P3 Windows browser sandbox ACL preparation failed: ${detail || `exit=${result.status}`}`);
-  }
-}
-
 function findBrowserExecutable(cacheRoot, relativePath) {
   const normalizedSuffix = relativePath.split('/').join(path.sep);
   const candidates = walk(cacheRoot)
@@ -406,7 +387,6 @@ function materializeP3(args, lock, platformLock) {
   const browserTarget = path.join(destination, 'browser');
   copyTree(resolved.root, browserTarget, { preserveInternalSymlinks: true });
   fs.rmSync(browserCache, { recursive: true, force: true });
-  prepareWindowsSandboxAcl(browserTarget);
 
   const stagedBrowser = path.join(browserTarget, ...browserSpec.browserExecutableRelativePath.split('/'));
   if (sha256File(stagedBrowser) !== browserSpec.browserExecutableSha256) fail('P3 browser executable digest mismatch');
