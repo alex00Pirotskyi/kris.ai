@@ -14,9 +14,50 @@ import {
 export * from './browser-runtime-core.mjs';
 
 const READY_SCHEMA_VERSION = '1.0.0';
+const WINDOWS_BROWSER_ENVIRONMENT_KEYS = Object.freeze([
+  'SYSTEMROOT',
+  'WINDIR',
+  'COMSPEC',
+  'TEMP',
+  'TMP',
+  'USERPROFILE',
+  'LOCALAPPDATA',
+  'APPDATA',
+  'PROGRAMFILES',
+  'PROGRAMFILES(X86)',
+  'PROGRAMDATA',
+  'HOMEDRIVE',
+  'HOMEPATH',
+]);
+
+function environmentValue(environment, key) {
+  const direct = environment[key];
+  if (direct !== undefined) return direct;
+  const normalized = key.toUpperCase();
+  for (const [candidate, value] of Object.entries(environment)) {
+    if (candidate.toUpperCase() === normalized) return value;
+  }
+  return undefined;
+}
+
+export function browserChildEnvironment(
+  environment = process.env,
+  platform = process.platform,
+) {
+  if (platform !== 'win32') return {};
+  const result = {};
+  for (const key of WINDOWS_BROWSER_ENVIRONMENT_KEYS) {
+    const value = environmentValue(environment, key);
+    if (typeof value === 'string' && value.length > 0 && !value.includes('\0')) {
+      result[key] = value;
+    }
+  }
+  return result;
+}
 
 function routeBrowserLaunchToStateDirectory(options) {
   const spawn = childProcess.spawn;
+  const environment = browserChildEnvironment();
   childProcess.spawn = (command, args, spawnOptions = {}) => {
     if (
       command === options.browserExecutable &&
@@ -25,6 +66,7 @@ function routeBrowserLaunchToStateDirectory(options) {
       return spawn(command, args, {
         ...spawnOptions,
         cwd: options.stateDirectory,
+        env: environment,
       });
     }
     return spawn(command, args, spawnOptions);
