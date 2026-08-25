@@ -45,6 +45,11 @@ extension ProductRuntimeProvisioning on ProductRuntime {
   }) {
     final state = _runtimeProvisioningState;
     if (state.ownerMode.available && !repair) {
+      if (!identical(state.ownerMode, p2OwnerMode)) {
+        return adoptProvisionedOwnerMode(state.ownerMode).then(
+          (_) => state.ownerMode,
+        );
+      }
       return Future<P2ProductRuntimeOwnerModeHandle>.value(state.ownerMode);
     }
     final inFlight = state.ownerInFlight;
@@ -62,7 +67,7 @@ extension ProductRuntimeProvisioning on ProductRuntime {
   }) {
     final state = _runtimeProvisioningState;
     final existing = state.browserResources;
-    if (existing != null && !repair) {
+    if (existing != null && !repair && p3BrowserRuntime.available) {
       return Future<P3BrowserRuntimeResourceSet>.value(existing);
     }
     final inFlight = state.browserInFlight;
@@ -137,11 +142,8 @@ extension ProductRuntimeProvisioning on ProductRuntime {
       await handle.close();
       throw StateError(handle.diagnosticCode);
     }
-    final previous = state.ownerMode;
     state.ownerMode = handle;
-    if (previous.available && !identical(previous.runtime, handle.runtime)) {
-      await previous.close();
-    }
+    await adoptProvisionedOwnerMode(handle);
     return handle;
   }
 
@@ -150,6 +152,7 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     required bool repair,
   }) async {
     final resources = await state.provisioner.ensureP3(repair: repair);
+    await refreshProvisionedBrowserRuntime();
     state.browserResources = resources;
     state.browserInitiallyReady = true;
     return resources;
