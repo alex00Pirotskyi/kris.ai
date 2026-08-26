@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "kristin.performance-benchmarks.v1",
+  "baselineMainSha": "9336c5568cbc1db9e9c867441dcc46af14339aa4",
+  "scenarios": [
+    {
+      "id": "A_SMALL_PROJECT",
+      "state": "automated",
+      "runner": "dart run tool/performance/run_wave_a_benchmarks.dart",
+      "corpusFiles": 64,
+      "measurements": [
+        "cold source index update",
+        "warm repeated source query",
+        "one-file changed update",
+        "warm symbol lookup"
+      ]
+    },
+    {
+      "id": "B_MEDIUM_PROJECT",
+      "state": "automated",
+      "runner": "dart run tool/performance/run_wave_a_benchmarks.dart",
+      "corpusFiles": 1500,
+      "measurements": [
+        "cold source index update",
+        "warm repeated source query",
+        "one-file changed update",
+        "warm symbol lookup"
+      ]
+    },
+    {
+      "id": "C_LARGE_PROJECT",
+      "state": "automated",
+      "runner": "dart run tool/performance/run_wave_a_benchmarks.dart",
+      "corpusFiles": 10000,
+      "measurements": [
+        "cold source index update",
+        "warm repeated source query",
+        "one-file changed update",
+        "warm symbol lookup"
+      ],
+      "skipFlag": "--skip-large"
+    },
+    {
+      "id": "D_LOCAL_MODEL_FAST_TASK",
+      "state": "requires configured local model fixture",
+      "requiredMetrics": [
+        "model calls",
+        "prompt tokens",
+        "first-token latency",
+        "total latency",
+        "tool calls",
+        "completion time"
+      ]
+    },
+    {
+      "id": "E_LOCAL_MODEL_COMPLEX_TASK",
+      "state": "requires configured local model fixture",
+      "requiredMetrics": [
+        "model calls",
+        "prompt tokens",
+        "first-token latency",
+        "total latency",
+        "tool calls",
+        "verification result"
+      ]
+    },
+    {
+      "id": "F_KNOWLEDGE",
+      "state": "scheduled for knowledge-intelligence wave",
+      "requiredMetrics": [
+        "cold retrieval",
+        "warm repeated retrieval",
+        "generation invalidation"
+      ]
+    },
+    {
+      "id": "G_PERSISTENT_TOOLCHAIN",
+      "state": "scheduled for native-acceleration wave",
+      "requiredMetrics": [
+        "cold analyzer startup",
+        "warm analyzer diagnostics",
+        "process reuse"
+      ]
+    },
+    {
+      "id": "H_P3_WEB_APP",
+      "state": "scheduled for P2/P3 acceleration wave",
+      "requiredMetrics": [
+        "cold browser startup",
+        "persistent session reuse",
+        "post-edit verification"
+      ]
+    },
+    {
+      "id": "I_OWNER_NATIVE_APP",
+      "state": "scheduled for P2/P3 acceleration wave",
+      "requiredMetrics": [
+        "app launch",
+        "process reuse",
+        "native observation"
+      ]
+    }
+  ],
+  "rules": {
+    "separateColdWarm": true,
+    "separateCacheHitMiss": true,
+    "workstationLatencyTargetsFailCi": false,
+    "beforeAfterClaimsRequireEnvironmentAndSampleCount": true
+  }
+}
