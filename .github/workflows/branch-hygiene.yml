@@ -1,156 +1,47 @@
-name: repository-branch-hygiene
-
+name: temporary-chat-formatter
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - .github/workflows/branch-hygiene.yml
-      - config/branch_hygiene.json
-      - tool/branch_hygiene.py
-      - docs/progress/2026-08-05-branch-hygiene-cleanup.md
-      - SOURCE_MANIFEST.sha256
   push:
     branches:
-      - main
-    paths:
-      - .github/workflows/branch-hygiene.yml
-      - config/branch_hygiene.json
-      - tool/branch_hygiene.py
-      - docs/progress/2026-08-05-branch-hygiene-cleanup.md
-      - SOURCE_MANIFEST.sha256
-
+      - tmp/chat-format
 permissions:
-  contents: read
-
-concurrency:
-  group: repository-branch-hygiene-${{ github.ref }}
-  cancel-in-progress: false
-
+  contents: write
 jobs:
-  validate:
-    name: branch-hygiene-validate
+  format:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pull-requests: read
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+          fetch-depth: 1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
         with:
-          python-version: '3.12.10'
-          check-latest: false
-      - name: Compile and self-test branch hygiene
-        run: |
-          python -m py_compile tool/branch_hygiene.py
-          python tool/branch_hygiene.py --self-test
-      - name: Validate exact remote cleanup plan
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          python tool/branch_hygiene.py
-          --config config/branch_hygiene.json
-          --repository "$GITHUB_REPOSITORY"
-          --receipt "$RUNNER_TEMP/branch-hygiene-plan.json"
-      - name: Upload reviewed cleanup plan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: branch-hygiene-plan-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/branch-hygiene-plan.json
-          if-no-files-found: error
-          retention-days: 30
-
-  refresh-source-manifest:
-    name: branch-hygiene-source-manifest
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.ref == 'agent/repository-branch-hygiene-20260805' &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          persist-credentials: true
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12.10'
-          check-latest: false
-      - name: Regenerate governed source inventory
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Format scoped chat files
         shell: bash
         run: |
-          set -euo pipefail
-          python tool/p1a_refresh_source_manifest.py .
-          git diff --check
-          mapfile -t paths < <(git diff --name-only | LC_ALL=C sort)
-          if [ "${#paths[@]}" -eq 0 ]; then
-            echo 'SOURCE_MANIFEST_CURRENT=true'
+          dart format \
+            lib/product/chat_control_plane.dart \
+            lib/product/chat_control_plane_studio.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            lib/product/chat_control_plane_studio_view.dart \
+            test/product/adaptive_decomposition_test.dart \
+            test/product/chat_control_plane_test.dart
+      - name: Commit canonical formatting
+        shell: bash
+        run: |
+          git config user.name 'Kristin CI Formatter'
+          git config user.email 'actions@github.com'
+          git add \
+            lib/product/chat_control_plane.dart \
+            lib/product/chat_control_plane_studio.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            lib/product/chat_control_plane_studio_view.dart \
+            test/product/adaptive_decomposition_test.dart \
+            test/product/chat_control_plane_test.dart
+          if git diff --cached --quiet; then
             exit 0
           fi
-          printf 'CHANGED_PATH=%s\n' "${paths[@]}"
-          test "${#paths[@]}" -eq 1
-          test "${paths[0]}" = 'SOURCE_MANIFEST.sha256'
-      - name: Publish exact source manifest to cleanup branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
-            echo 'SOURCE_MANIFEST_PUSH_REQUIRED=false'
-            exit 0
-          fi
-          git config user.name 'Kristin Branch Hygiene'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256
-          git diff --cached --check
-          git commit -m 'chore(repo): refresh source manifest for branch hygiene'
-          git push origin "HEAD:refs/heads/${{ github.event.pull_request.head.ref }}"
-
-  execute:
-    name: branch-hygiene-execute
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs:
-      - validate
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pull-requests: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12.10'
-          check-latest: false
-      - name: Delete only exact reviewed redundant branches
-        id: cleanup
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set +e
-          python tool/branch_hygiene.py \
-            --config config/branch_hygiene.json \
-            --repository "$GITHUB_REPOSITORY" \
-            --execute \
-            --receipt "$RUNNER_TEMP/branch-hygiene-receipt.json"
-          rc=$?
-          echo "rc=$rc" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Upload branch deletion receipt
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: branch-hygiene-receipt-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/branch-hygiene-receipt.json
-          if-no-files-found: error
-          retention-days: 90
-      - name: Enforce complete cleanup
-        if: always()
-        shell: bash
-        run: test "${{ steps.cleanup.outputs.rc }}" -eq 0
+          git commit -m 'style(chat): apply canonical Dart formatting'
+          git push origin HEAD:tmp/chat-format
