@@ -81,7 +81,8 @@ class KristinCapability {
   final CommandMode preferredMode;
   final bool availableWithoutTarget;
 
-  String get canonicalSlash => slashCommands.isEmpty ? '' : '/${slashCommands.first}';
+  String get canonicalSlash =>
+      slashCommands.isEmpty ? '' : '/${slashCommands.first}';
 
   bool acceptsTarget(ChatTargetType type) => acceptedTargetTypes.contains(type);
 }
@@ -149,6 +150,21 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     planningPolicy: ChatPlanningPolicy.never,
     route: ChatExecutionRoute.projectAnalyze,
     preferredMode: CommandMode.analyze,
+  ),
+  KristinCapability(
+    id: 'review',
+    displayName: 'Review',
+    description: 'Review a selected project and report practical findings.',
+    category: ChatCapabilityCategory.understand,
+    slashCommands: <String>['review', 'audit'],
+    mentionAliases: <String>['review'],
+    acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
+    actionClass: ChatActionClass.small,
+    riskClass: ChatRiskClass.readOnly,
+    understandingPolicy: ChatUnderstandingPolicy.actions,
+    planningPolicy: ChatPlanningPolicy.never,
+    route: ChatExecutionRoute.projectAnalyze,
+    preferredMode: CommandMode.review,
   ),
   KristinCapability(
     id: 'test',
@@ -454,11 +470,10 @@ class ChatCapabilityRegistry {
   }
 
   KristinCapability? bySlash(String slash) {
-    final normalized = slash.trim().toLowerCase().replaceFirst(
-          RegExp(r'^/'),
-          '',
-        );
-    if (normalized.isEmpty) return null;
+    final normalized = slash
+        .trim()
+        .toLowerCase()
+        .replaceFirst(RegExp(r'^/'), '');
     for (final capability in capabilities) {
       if (capability.slashCommands.contains(normalized)) return capability;
     }
@@ -466,11 +481,10 @@ class ChatCapabilityRegistry {
   }
 
   KristinCapability? byMention(String mention) {
-    final normalized = mention.trim().toLowerCase().replaceFirst(
-          RegExp(r'^@'),
-          '',
-        );
-    if (normalized.isEmpty) return null;
+    final normalized = mention
+        .trim()
+        .toLowerCase()
+        .replaceFirst(RegExp(r'^@'), '');
     for (final capability in capabilities) {
       if (capability.mentionAliases.contains(normalized)) return capability;
     }
@@ -478,31 +492,39 @@ class ChatCapabilityRegistry {
   }
 
   List<KristinCapability> searchSlash(String query, {int limit = 8}) {
-    final needle = query.trim().toLowerCase().replaceFirst(RegExp(r'^/'), '');
-    final ranked = capabilities.where((item) => item.slashCommands.isNotEmpty).map(
-      (item) {
-        final aliases = item.slashCommands;
-        final exact = aliases.any((value) => value == needle);
-        final prefix = aliases.any((value) => value.startsWith(needle));
-        final contains = aliases.any((value) => value.contains(needle)) ||
-            item.displayName.toLowerCase().contains(needle) ||
-            item.description.toLowerCase().contains(needle);
-        final score = exact
-            ? 0
-            : prefix
-                ? 1
-                : contains
-                    ? 2
-                    : 3;
-        return (item: item, score: score);
-      },
-    ).where((entry) => needle.isEmpty || entry.score < 3).toList();
+    final needle = query
+        .trim()
+        .toLowerCase()
+        .replaceFirst(RegExp(r'^/'), '');
+    final ranked = <_CapabilityScore>[];
+    for (final capability in capabilities) {
+      if (capability.slashCommands.isEmpty) continue;
+      final aliases = capability.slashCommands;
+      final exact = aliases.any((value) => value == needle);
+      final prefix = aliases.any((value) => value.startsWith(needle));
+      final contains = aliases.any((value) => value.contains(needle)) ||
+          capability.displayName.toLowerCase().contains(needle) ||
+          capability.description.toLowerCase().contains(needle);
+      final score = exact
+          ? 0
+          : prefix
+              ? 1
+              : contains
+                  ? 2
+                  : 3;
+      if (needle.isEmpty || score < 3) {
+        ranked.add(_CapabilityScore(capability, score));
+      }
+    }
     ranked.sort((a, b) {
-      final byScore = a.score.compareTo(b.score);
-      if (byScore != 0) return byScore;
-      return a.item.displayName.compareTo(b.item.displayName);
+      final score = a.score.compareTo(b.score);
+      if (score != 0) return score;
+      return a.capability.displayName.compareTo(b.capability.displayName);
     });
-    return ranked.take(limit).map((entry) => entry.item).toList(growable: false);
+    return ranked
+        .take(limit)
+        .map((entry) => entry.capability)
+        .toList(growable: false);
   }
 
   List<String> validate() {
@@ -518,7 +540,9 @@ class ChatCapabilityRegistry {
         final normalized = alias.trim().toLowerCase();
         final existing = slash[normalized];
         if (existing != null && existing != capability.id) {
-          problems.add('Slash alias /$normalized maps to both $existing and ${capability.id}.');
+          problems.add(
+            'Slash alias /$normalized maps to both $existing and ${capability.id}.',
+          );
         } else {
           slash[normalized] = capability.id;
         }
@@ -527,7 +551,9 @@ class ChatCapabilityRegistry {
         final normalized = alias.trim().toLowerCase();
         final existing = mentions[normalized];
         if (existing != null && existing != capability.id) {
-          problems.add('Mention @$normalized maps to both $existing and ${capability.id}.');
+          problems.add(
+            'Mention @$normalized maps to both $existing and ${capability.id}.',
+          );
         } else {
           mentions[normalized] = capability.id;
         }
@@ -535,6 +561,13 @@ class ChatCapabilityRegistry {
     }
     return problems;
   }
+}
+
+class _CapabilityScore {
+  const _CapabilityScore(this.capability, this.score);
+
+  final KristinCapability capability;
+  final int score;
 }
 
 class ChatTarget {
@@ -595,7 +628,8 @@ class ChatCommandMentionParser {
 
   ParsedChatInput parse(String input) {
     final value = input.trim();
-    final commandMatch = RegExp(r'^/([A-Za-z][A-Za-z0-9_-]*)').firstMatch(value);
+    final commandMatch =
+        RegExp(r'^/([A-Za-z][A-Za-z0-9_-]*)').firstMatch(value);
     final command = commandMatch?.group(1)?.toLowerCase() ?? '';
     final arguments = commandMatch == null
         ? value
@@ -658,19 +692,14 @@ class ChatInteractionPolicy {
     ParsedChatInput parsed, {
     required bool naturalLanguage,
   }) {
-    switch (capability.planningPolicy) {
-      case ChatPlanningPolicy.never:
-        return false;
-      case ChatPlanningPolicy.always:
-        return true;
-      case ChatPlanningPolicy.substantial:
-        if (naturalLanguage) return true;
-        final residual = parsed.arguments
-            .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
-            .replaceAll(RegExp(r'\s+'), ' ')
-            .trim();
-        return residual.split(' ').where((item) => item.isNotEmpty).length > 2;
-    }
+    if (capability.planningPolicy == ChatPlanningPolicy.never) return false;
+    if (capability.planningPolicy == ChatPlanningPolicy.always) return true;
+    if (naturalLanguage) return true;
+    final residual = parsed.arguments
+        .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return residual.split(' ').where((item) => item.isNotEmpty).length > 2;
   }
 }
 
@@ -711,47 +740,46 @@ class ChatIntentCompiler {
     if (parsed.hasExplicitCommand) {
       final capability = registry.bySlash(parsed.commandToken);
       if (capability == null) {
-        return ChatInteractionDecision(
+        return _decision(
           kind: ChatInteractionKind.ambiguous,
           parsed: parsed,
           capability: null,
           targets: targets,
-          unresolvedMentions: unresolved,
-          interpretedGoal: 'Interpret /${parsed.commandToken} without executing it yet.',
+          unresolved: unresolved,
+          goal: 'Interpret /${parsed.commandToken} without executing it yet.',
           mode: inferredMode,
-          riskClass: ChatRiskClass.none,
-          needsUnderstanding: true,
-          needsPlan: false,
+          risk: ChatRiskClass.none,
+          understanding: true,
+          plan: false,
           ambiguous: true,
         );
       }
       if (capability.actionClass == ChatActionClass.informational) {
-        return ChatInteractionDecision(
+        return _decision(
           kind: ChatInteractionKind.informational,
           parsed: parsed,
           capability: capability,
           targets: targets,
-          unresolvedMentions: unresolved,
-          interpretedGoal: _goalFor(capability, parsed, targets),
+          unresolved: unresolved,
+          goal: _goalFor(capability, parsed, targets),
           mode: capability.preferredMode,
-          riskClass: capability.riskClass,
-          needsUnderstanding: false,
-          needsPlan: false,
+          risk: capability.riskClass,
+          understanding: false,
+          plan: false,
           ambiguous: unresolved.isNotEmpty,
         );
       }
-      final needsUnderstanding = policy.needsUnderstanding(capability);
-      return ChatInteractionDecision(
+      return _decision(
         kind: ChatInteractionKind.action,
         parsed: parsed,
         capability: capability,
         targets: targets,
-        unresolvedMentions: unresolved,
-        interpretedGoal: _goalFor(capability, parsed, targets),
+        unresolved: unresolved,
+        goal: _goalFor(capability, parsed, targets),
         mode: capability.preferredMode,
-        riskClass: _riskFor(capability, parsed.originalText),
-        needsUnderstanding: needsUnderstanding,
-        needsPlan: policy.needsPlan(
+        risk: _riskFor(capability, parsed.originalText),
+        understanding: policy.needsUnderstanding(capability),
+        plan: policy.needsPlan(
           capability,
           parsed,
           naturalLanguage: false,
@@ -762,34 +790,34 @@ class ChatIntentCompiler {
     }
 
     if (_isInformationalLanguage(parsed.originalText)) {
-      return ChatInteractionDecision(
+      return _decision(
         kind: ChatInteractionKind.informational,
         parsed: parsed,
         capability: null,
         targets: targets,
-        unresolvedMentions: unresolved,
-        interpretedGoal: parsed.originalText,
+        unresolved: unresolved,
+        goal: parsed.originalText,
         mode: CommandMode.ask,
-        riskClass: ChatRiskClass.none,
-        needsUnderstanding: false,
-        needsPlan: false,
+        risk: ChatRiskClass.none,
+        understanding: false,
+        plan: false,
         ambiguous: false,
       );
     }
 
     final capability = _naturalCapability(parsed.originalText, inferredMode);
     if (capability != null && _isActionLanguage(parsed.originalText)) {
-      return ChatInteractionDecision(
+      return _decision(
         kind: ChatInteractionKind.action,
         parsed: parsed,
         capability: capability,
         targets: targets,
-        unresolvedMentions: unresolved,
-        interpretedGoal: _goalFor(capability, parsed, targets),
+        unresolved: unresolved,
+        goal: _goalFor(capability, parsed, targets),
         mode: capability.preferredMode,
-        riskClass: _riskFor(capability, parsed.originalText),
-        needsUnderstanding: policy.needsUnderstanding(capability),
-        needsPlan: policy.needsPlan(
+        risk: _riskFor(capability, parsed.originalText),
+        understanding: policy.needsUnderstanding(capability),
+        plan: policy.needsPlan(
           capability,
           parsed,
           naturalLanguage: true,
@@ -801,17 +829,17 @@ class ChatIntentCompiler {
     if (inferredMode == CommandMode.ask ||
         inferredMode == CommandMode.analyze ||
         inferredMode == CommandMode.review) {
-      return ChatInteractionDecision(
+      return _decision(
         kind: ChatInteractionKind.informational,
         parsed: parsed,
         capability: null,
         targets: targets,
-        unresolvedMentions: unresolved,
-        interpretedGoal: parsed.originalText,
+        unresolved: unresolved,
+        goal: parsed.originalText,
         mode: CommandMode.ask,
-        riskClass: ChatRiskClass.none,
-        needsUnderstanding: false,
-        needsPlan: false,
+        risk: ChatRiskClass.none,
+        understanding: false,
+        plan: false,
         ambiguous: false,
       );
     }
@@ -819,58 +847,109 @@ class ChatIntentCompiler {
     final fallback = registry.byId(
       inferredMode == CommandMode.fix ? 'fix' : 'build',
     );
-    return ChatInteractionDecision(
+    return _decision(
       kind: ChatInteractionKind.ambiguous,
       parsed: parsed,
       capability: fallback,
       targets: targets,
-      unresolvedMentions: unresolved,
-      interpretedGoal: parsed.originalText,
+      unresolved: unresolved,
+      goal: parsed.originalText,
       mode: inferredMode,
-      riskClass: fallback?.riskClass ?? ChatRiskClass.mutation,
-      needsUnderstanding: true,
-      needsPlan: fallback == null
-          ? false
-          : policy.needsPlan(fallback, parsed, naturalLanguage: true),
+      risk: fallback?.riskClass ?? ChatRiskClass.mutation,
+      understanding: true,
+      plan: fallback != null &&
+          policy.needsPlan(fallback, parsed, naturalLanguage: true),
       ambiguous: true,
     );
   }
 
+  ChatInteractionDecision _decision({
+    required ChatInteractionKind kind,
+    required ParsedChatInput parsed,
+    required KristinCapability? capability,
+    required List<ChatTarget> targets,
+    required List<String> unresolved,
+    required String goal,
+    required CommandMode mode,
+    required ChatRiskClass risk,
+    required bool understanding,
+    required bool plan,
+    required bool ambiguous,
+  }) {
+    return ChatInteractionDecision(
+      kind: kind,
+      parsed: parsed,
+      capability: capability,
+      targets: List<ChatTarget>.unmodifiable(targets),
+      unresolvedMentions: List<String>.unmodifiable(unresolved),
+      interpretedGoal: goal,
+      mode: mode,
+      riskClass: risk,
+      needsUnderstanding: understanding,
+      needsPlan: plan,
+      ambiguous: ambiguous,
+    );
+  }
+
   KristinCapability? _naturalCapability(String input, CommandMode inferredMode) {
-    final normalized = _normalized(input);
-    final firstAction = _leadingAction(normalized);
-    final id = switch (firstAction) {
-      'build' || 'create' || 'make' || 'develop' || 'implement' ||
-      'change' || 'add' || 'update' || 'refactor' || 'migrate' ||
-      'delete' || 'remove' || 'rename' || 'move' => 'build',
-      'fix' || 'repair' || 'debug' => 'fix',
-      'search' || 'research' || 'look up' => 'search',
-      'analyze' || 'analyse' || 'inspect' => 'analyze',
-      'test' => 'test',
-      'verify' => 'verify',
-      'run' || 'launch' || 'start' => 'run',
-      'stop' => 'stop',
-      'restart' => 'restart',
-      'open' => 'open',
-      'connect' => 'connect',
-      'use' => 'use',
-      'enable owner mode' => 'owner',
-      'diagnose' || 'troubleshoot' => 'diagnose',
-      _ => switch (inferredMode) {
-          CommandMode.build => 'build',
-          CommandMode.fix => 'fix',
-          CommandMode.run => 'run',
-          _ => null,
-        },
+    final action = _leadingAction(input);
+    const buildActions = <String>{
+      'build',
+      'create',
+      'make',
+      'develop',
+      'implement',
+      'change',
+      'add',
+      'update',
+      'refactor',
+      'migrate',
+      'delete',
+      'remove',
+      'rename',
+      'move',
     };
-    return id == null ? null : registry.byId(id);
+    if (buildActions.contains(action)) return registry.byId('build');
+    if (const <String>{'fix', 'repair', 'debug'}.contains(action)) {
+      return registry.byId('fix');
+    }
+    if (const <String>{'search', 'research', 'look up'}.contains(action)) {
+      return registry.byId('search');
+    }
+    if (const <String>{'analyze', 'analyse', 'inspect'}.contains(action)) {
+      return registry.byId('analyze');
+    }
+    if (const <String>{'review', 'audit', 'assess'}.contains(action)) {
+      return registry.byId('review');
+    }
+    if (action == 'test') return registry.byId('test');
+    if (action == 'verify') return registry.byId('verify');
+    if (const <String>{'run', 'launch', 'start'}.contains(action)) {
+      return registry.byId('run');
+    }
+    if (action == 'stop') return registry.byId('stop');
+    if (action == 'restart') return registry.byId('restart');
+    if (action == 'open') return registry.byId('open');
+    if (action == 'connect') return registry.byId('connect');
+    if (action == 'use') return registry.byId('use');
+    if (action == 'enable owner mode') return registry.byId('owner');
+    if (const <String>{'diagnose', 'troubleshoot'}.contains(action)) {
+      return registry.byId('diagnose');
+    }
+    if (inferredMode == CommandMode.build) return registry.byId('build');
+    if (inferredMode == CommandMode.fix) return registry.byId('fix');
+    if (inferredMode == CommandMode.run) return registry.byId('run');
+    if (inferredMode == CommandMode.review) return registry.byId('review');
+    return null;
   }
 
   ChatRiskClass _riskFor(KristinCapability capability, String input) {
     final normalized = _normalized(input);
-    if (RegExp(r'^(?:please\s+)?(?:delete|remove)\b').hasMatch(normalized) ||
-        RegExp(r'\b(?:delete|remove)\s+(?:the\s+)?(?:file|folder|project|data|database)\b')
-            .hasMatch(normalized)) {
+    if (RegExp(r'^(?:please\s+)?(?:delete|remove)\b')
+            .hasMatch(normalized) ||
+        RegExp(
+          r'\b(?:delete|remove)\s+(?:the\s+)?(?:file|folder|project|data|database)\b',
+        ).hasMatch(normalized)) {
       return ChatRiskClass.destructive;
     }
     return capability.riskClass;
@@ -888,41 +967,61 @@ class ChatIntentCompiler {
             .replaceAll(RegExp(r'\s+'), ' ')
             .trim()
         : parsed.originalText.trim();
-    return switch (capability.id) {
-      'search' => argument.isEmpty
-          ? 'Search current public sources.'
-          : 'Search current public sources for "$argument" and summarize what is found.',
-      'run' => target.isEmpty ? 'Run the selected project.' : 'Run $target.',
-      'stop' => target.isEmpty ? 'Stop the selected project.' : 'Stop $target.',
-      'restart' => target.isEmpty
-          ? 'Restart the selected project.'
-          : 'Restart $target.',
-      'test' => target.isEmpty ? 'Test the selected project.' : 'Test $target.',
-      'verify' => target.isEmpty
-          ? 'Verify the selected project.'
-          : 'Verify $target.',
-      'analyze' => target.isEmpty
-          ? (argument.isEmpty ? 'Analyze the selected project.' : 'Analyze $argument.')
-          : 'Analyze $target${argument.isEmpty ? '.' : ': $argument.'}',
-      'connect' => target.isEmpty
-          ? 'Connect the selected provider through the governed connection flow.'
-          : 'Connect $target through the governed connection flow.',
-      'use' => target.isEmpty
-          ? 'Use the selected model for the next eligible task.'
-          : 'Use $target for the next eligible task.',
-      'owner' => 'Open the governed Owner Mode flow without widening authority automatically.',
-      'diagnose' => target.isEmpty
-          ? 'Diagnose the selected project and Kristin capabilities.'
-          : 'Diagnose $target.',
-      'open' => target.isEmpty ? 'Open the selected workspace.' : 'Open $target.',
-      'build' => target.isNotEmpty && argument.isEmpty
-          ? 'Build $target using its canonical project build capability.'
-          : argument.isEmpty
-              ? parsed.originalText
-              : 'Build $argument.',
-      'fix' => argument.isEmpty ? parsed.originalText : 'Fix $argument.',
-      _ => parsed.originalText,
-    };
+    switch (capability.id) {
+      case 'search':
+        return argument.isEmpty
+            ? 'Search current public sources.'
+            : 'Search current public sources for "$argument" and summarize what is found.';
+      case 'run':
+        return target.isEmpty ? 'Run the selected project.' : 'Run $target.';
+      case 'stop':
+        return target.isEmpty ? 'Stop the selected project.' : 'Stop $target.';
+      case 'restart':
+        return target.isEmpty
+            ? 'Restart the selected project.'
+            : 'Restart $target.';
+      case 'test':
+        return target.isEmpty ? 'Test the selected project.' : 'Test $target.';
+      case 'verify':
+        return target.isEmpty
+            ? 'Verify the selected project.'
+            : 'Verify $target.';
+      case 'analyze':
+      case 'review':
+        if (target.isNotEmpty) {
+          return argument.isEmpty
+              ? '${capability.displayName} $target.'
+              : '${capability.displayName} $target: $argument.';
+        }
+        return argument.isEmpty
+            ? '${capability.displayName} the selected project.'
+            : '${capability.displayName} $argument.';
+      case 'connect':
+        return target.isEmpty
+            ? 'Connect the selected provider through the governed connection flow.'
+            : 'Connect $target through the governed connection flow.';
+      case 'use':
+        return target.isEmpty
+            ? 'Use the selected model for the next eligible task.'
+            : 'Use $target for the next eligible task.';
+      case 'owner':
+        return 'Open the governed Owner Mode flow without widening authority automatically.';
+      case 'diagnose':
+        return target.isEmpty
+            ? 'Diagnose the selected project and Kristin capabilities.'
+            : 'Diagnose $target.';
+      case 'open':
+        return target.isEmpty ? 'Open the selected workspace.' : 'Open $target.';
+      case 'build':
+        if (target.isNotEmpty && argument.isEmpty) {
+          return 'Build $target using its canonical project build capability.';
+        }
+        return argument.isEmpty ? parsed.originalText : 'Build $argument.';
+      case 'fix':
+        return argument.isEmpty ? parsed.originalText : 'Fix $argument.';
+      default:
+        return parsed.originalText;
+    }
   }
 }
 
@@ -945,17 +1044,17 @@ class UnderstandingDraft {
 class UnderstandingHistory {
   const UnderstandingHistory(this.revisions);
 
-  factory UnderstandingHistory.initial(
-    ChatInteractionDecision decision,
-  ) => UnderstandingHistory(<UnderstandingDraft>[
-        UnderstandingDraft(
-          originalRequest: decision.parsed.originalText,
-          acceptedRequest: decision.parsed.originalText,
-          summary: decision.interpretedGoal,
-          revision: 1,
-          alternativeIndex: 0,
-        ),
-      ]);
+  factory UnderstandingHistory.initial(ChatInteractionDecision decision) {
+    return UnderstandingHistory(<UnderstandingDraft>[
+      UnderstandingDraft(
+        originalRequest: decision.parsed.originalText,
+        acceptedRequest: decision.parsed.originalText,
+        summary: decision.interpretedGoal,
+        revision: 1,
+        alternativeIndex: 0,
+      ),
+    ]);
+  }
 
   final List<UnderstandingDraft> revisions;
 
@@ -964,32 +1063,33 @@ class UnderstandingHistory {
   UnderstandingHistory adjust(String adjustment) {
     final value = adjustment.trim();
     if (value.isEmpty) return this;
-    final currentDraft = current;
-    final next = UnderstandingDraft(
-      originalRequest: currentDraft.originalRequest,
-      acceptedRequest: '${currentDraft.acceptedRequest}\n\nAdjustment: $value',
-      summary: '${currentDraft.summary}\n\nAdjustment: $value',
-      revision: currentDraft.revision + 1,
-      alternativeIndex: currentDraft.alternativeIndex,
+    final draft = current;
+    return _append(
+      UnderstandingDraft(
+        originalRequest: draft.originalRequest,
+        acceptedRequest: '${draft.acceptedRequest}\n\nAdjustment: $value',
+        summary: '${draft.summary}\n\nAdjustment: $value',
+        revision: draft.revision + 1,
+        alternativeIndex: draft.alternativeIndex,
+      ),
     );
-    return _append(next);
   }
 
   UnderstandingHistory alternate(ChatInteractionDecision decision) {
-    final currentDraft = current;
-    final index = currentDraft.alternativeIndex + 1;
-    final base = decision.interpretedGoal.trim();
-    final summary = index.isOdd
-        ? 'Same goal, interpreted more narrowly: $base'
-        : 'Same goal, interpreted by outcome first: $base';
-    final next = UnderstandingDraft(
-      originalRequest: currentDraft.originalRequest,
-      acceptedRequest: currentDraft.acceptedRequest,
-      summary: summary,
-      revision: currentDraft.revision + 1,
-      alternativeIndex: index,
+    final draft = current;
+    final index = draft.alternativeIndex + 1;
+    final prefix = index.isOdd
+        ? 'Same goal, interpreted more narrowly:'
+        : 'Same goal, interpreted by outcome first:';
+    return _append(
+      UnderstandingDraft(
+        originalRequest: draft.originalRequest,
+        acceptedRequest: draft.acceptedRequest,
+        summary: '$prefix ${decision.interpretedGoal.trim()}',
+        revision: draft.revision + 1,
+        alternativeIndex: index,
+      ),
     );
-    return _append(next);
   }
 
   UnderstandingHistory _append(UnderstandingDraft draft) {
@@ -1034,10 +1134,11 @@ class ChatAutocompleteEngine {
     List<ChatTarget> targets = const <ChatTarget>[],
     int limit = 7,
   }) {
-    final safeOffset = cursorOffset.clamp(0, text.length);
+    final safeOffset = cursorOffset.clamp(0, text.length).toInt();
     final prefix = text.substring(0, safeOffset);
     final trimmedLeft = prefix.trimLeft();
-    if (trimmedLeft.startsWith('/') && !trimmedLeft.contains(RegExp(r'\s'))) {
+    if (trimmedLeft.startsWith('/') &&
+        !trimmedLeft.contains(RegExp(r'\s'))) {
       final query = trimmedLeft.substring(1);
       return registry.searchSlash(query, limit: limit).map((capability) {
         return ChatAutocompleteSuggestion(
@@ -1054,20 +1155,22 @@ class ChatAutocompleteEngine {
     if (mentionMatch == null) return const <ChatAutocompleteSuggestion>[];
     final query = mentionMatch.group(1) ?? '';
     final parsed = parser.parse(prefix);
-    final capability = parsed.hasExplicitCommand
-        ? registry.bySlash(parsed.commandToken)
-        : null;
-    final accepted = capability?.acceptedTargetTypes ?? ChatTargetType.values.toSet();
+    final capability =
+        parsed.hasExplicitCommand ? registry.bySlash(parsed.commandToken) : null;
+    final accepted =
+        capability?.acceptedTargetTypes ?? ChatTargetType.values.toSet();
     final ranked = targets
-        .where((target) => accepted.contains(target.type) && target.fuzzyMatches(query))
+        .where(
+          (target) =>
+              accepted.contains(target.type) && target.fuzzyMatches(query),
+        )
         .toList(growable: false);
     ranked.sort((a, b) {
-      final aExact = a.matches(query) ? 0 : 1;
-      final bExact = b.matches(query) ? 0 : 1;
-      final exact = aExact.compareTo(bExact);
+      final exact = (a.matches(query) ? 0 : 1).compareTo(b.matches(query) ? 0 : 1);
       if (exact != 0) return exact;
-      final available = (b.available ? 1 : 0).compareTo(a.available ? 1 : 0);
-      if (available != 0) return available;
+      final availability =
+          (b.available ? 1 : 0).compareTo(a.available ? 1 : 0);
+      if (availability != 0) return availability;
       return a.displayName.compareTo(b.displayName);
     });
     return ranked.take(limit).map((target) {
@@ -1097,37 +1200,37 @@ bool _isInformationalLanguage(String input) {
   ).hasMatch(normalized)) {
     return true;
   }
-  if (RegExp(r'^(?:explain|describe|tell me|help me understand|what is|what are)\b')
-      .hasMatch(normalized)) {
+  if (RegExp(
+    r'^(?:explain|describe|tell me|help me understand|what is|what are)\b',
+  ).hasMatch(normalized)) {
     return true;
   }
-  if (RegExp(r'^(?:hi|hello|hey|hiya|howdy|good morning|good afternoon|good evening)\b')
-      .hasMatch(normalized)) {
+  if (RegExp(
+    r'^(?:hi|hello|hey|hiya|howdy|good morning|good afternoon|good evening)\b',
+  ).hasMatch(normalized)) {
     return true;
   }
-  if (RegExp(r'^(?:thanks|thank you|who are you|what can you do|how are you|help|chat)\b')
-      .hasMatch(normalized)) {
-    return true;
-  }
-  return false;
+  return RegExp(
+    r'^(?:thanks|thank you|who are you|what can you do|how are you|help|chat)\b',
+  ).hasMatch(normalized);
 }
 
 bool _isActionLanguage(String input) {
   final normalized = _normalized(input);
   if (normalized.isEmpty) return false;
   const action =
-      r'(?:build|create|make|develop|implement|fix|repair|debug|refactor|migrate|run|launch|start|stop|restart|open|search|research|look up|analyze|analyse|inspect|test|verify|connect|use|enable owner mode|diagnose|troubleshoot|delete|remove|rename|move|update|change|add)';
+      r'(?:build|create|make|develop|implement|fix|repair|debug|refactor|migrate|run|launch|start|stop|restart|open|search|research|look up|analyze|analyse|inspect|review|audit|assess|test|verify|connect|use|enable owner mode|diagnose|troubleshoot|delete|remove|rename|move|update|change|add)';
   if (RegExp('^(?:please\\s+)?$action\\b').hasMatch(normalized)) return true;
   if (RegExp('^(?:can|could|would|will)\\s+you\\s+$action\\b')
       .hasMatch(normalized)) {
     return true;
   }
-  if (RegExp('^i\\s+(?:want|need|would like)\\s+(?:you\\s+to\\s+)?$action\\b')
-      .hasMatch(normalized)) {
+  if (RegExp(
+    '^i\\s+(?:want|need|would like)\\s+(?:you\\s+to\\s+)?$action\\b',
+  ).hasMatch(normalized)) {
     return true;
   }
-  if (RegExp('^(?:actually\\s+)?$action\\b').hasMatch(normalized)) return true;
-  return false;
+  return RegExp('^(?:actually\\s+)?$action\\b').hasMatch(normalized);
 }
 
 String _leadingAction(String input) {
@@ -1164,6 +1267,9 @@ String _leadingAction(String input) {
     'analyze',
     'analyse',
     'inspect',
+    'review',
+    'audit',
+    'assess',
     'test',
     'verify',
     'connect',
