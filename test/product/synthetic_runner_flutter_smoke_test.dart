@@ -89,7 +89,11 @@ void main() {
           stderr.writeln('FLUTTER_SMOKE_AUDIT_TAIL ${jsonEncode(auditTail)}');
         }
 
-        expect(run.state.name, 'succeeded');
+        expect(
+          run.state.name,
+          'succeeded',
+          reason: 'runFailure=${run.failure}; items=${run.items.map((item) => '${item.item.title}:${item.state.name}:${item.attempts}:${item.lastError ?? ''}').join('|')}',
+        );
         expect(provider.readinessRequests, 1);
         expect(provider.executionRequests, lessThanOrEqualTo(12));
         expect(
