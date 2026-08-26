@@ -1,0 +1,69 @@
+name: Wave A P1 report-directory diagnostic
+
+on:
+  push:
+    branches:
+      - perf/cache-sqlite-foundation
+
+permissions:
+  contents: read
+
+jobs:
+  trace-p1-report-producer:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact failing Wave A head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 9b4cb1c38f98c1a2ed8d3f2074d4473391d57e9d
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+
+      - name: Trace P1 gate report producer
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf reports
+
+          trace_reports() {
+            local label="$1"
+            if [[ ! -d reports ]]; then
+              echo "REPORTS_ABSENT_AFTER: $label"
+              return 0
+            fi
+            echo '=== FIRST ROOT REPORTS PRODUCER ==='
+            echo "step=$label"
+            date --iso-8601=ns
+            find reports -maxdepth 10 -printf '%TY-%Tm-%TdT%TH:%TM:%TS %y %p %s bytes\n' 2>&1 || true
+            find reports -type f -maxdepth 10 -print0 2>/dev/null | while IFS= read -r -d '' file; do
+              echo "--- $file ---"
+              head -n 120 "$file" 2>/dev/null || true
+            done
+            exit 0
+          }
+
+          python tool/access_profile_v2_test.py
+          trace_reports 'access_profile_v2_test.py'
+          python tool/p1_002_access_profile_test.py --project .
+          trace_reports 'p1_002_access_profile_test.py'
+          python tool/integration_train_test.py --project .
+          trace_reports 'integration_train_test.py'
+          python tool/p1_exit_gate_test.py --project .
+          trace_reports 'p1_exit_gate_test.py'
+          python tool/deterministic_policy_engine_test.py
+          trace_reports 'deterministic_policy_engine_test.py'
+          python tool/p1_004_policy_engine_test.py --project .
+          trace_reports 'p1_004_policy_engine_test.py'
+          python tool/capability_grant_v2_test.py
+          trace_reports 'capability_grant_v2_test.py'
+          python tool/p1_003_capability_grant_test.py --project .
+          trace_reports 'p1_003_capability_grant_test.py'
+          python tool/p1_001_runtime_boundary_test.py --project .
+          trace_reports 'p1_001_runtime_boundary_test.py'
+          echo 'NO_ROOT_REPORTS_DIRECTORY_PRODUCED'
