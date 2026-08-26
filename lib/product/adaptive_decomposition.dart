@@ -119,6 +119,103 @@ class AdaptiveDecompositionDecision {
       disposition == AdaptiveDecompositionDisposition.continueAutomatically;
 }
 
+class AdaptiveWorkItemSplitter {
+  const AdaptiveWorkItemSplitter();
+
+  List<WorkItem> split(
+    WorkItem item, {
+    required int generation,
+  }) {
+    if (generation < 1) {
+      throw ArgumentError.value(generation, 'generation', 'Must be positive.');
+    }
+    final criteria = item.acceptanceCriteria
+        .map((criterion) => criterion.trim())
+        .where((criterion) => criterion.isNotEmpty)
+        .toList(growable: false);
+    if (criteria.length >= 2) {
+      return _splitByCriteria(item, criteria, generation);
+    }
+    return _splitSingleObjective(item, criteria, generation);
+  }
+
+  List<WorkItem> _splitByCriteria(
+    WorkItem item,
+    List<String> criteria,
+    int generation,
+  ) {
+    final groups = <List<String>>[];
+    if (criteria.length <= 3) {
+      for (final criterion in criteria) {
+        groups.add(<String>[criterion]);
+      }
+    } else {
+      groups
+        ..add(<String>[criteria[0]])
+        ..add(<String>[criteria[1]])
+        ..add(criteria.skip(2).toList(growable: false));
+    }
+    final result = <WorkItem>[];
+    var dependencies = Set<String>.from(item.dependencies);
+    for (var index = 0; index < groups.length; index++) {
+      final finalPiece = index == groups.length - 1;
+      final id = finalPiece
+          ? item.id
+          : '${item.id}__adaptive_${generation}_${index + 1}';
+      final title = finalPiece
+          ? 'Complete ${item.title}'
+          : '${item.title} — objective ${index + 1}';
+      final piece = WorkItem(
+        id: id,
+        title: title,
+        description:
+            'Complete only this independently verifiable part of the original work item. Keep the approved scope, architecture, technology, tools, and permissions unchanged. ${item.description}',
+        dependencies: dependencies,
+        allowedTools: item.allowedTools,
+        acceptanceCriteria: groups[index],
+        maxAttempts: item.maxAttempts,
+      );
+      result.add(piece);
+      dependencies = <String>{id};
+    }
+    return List<WorkItem>.unmodifiable(result);
+  }
+
+  List<WorkItem> _splitSingleObjective(
+    WorkItem item,
+    List<String> criteria,
+    int generation,
+  ) {
+    final criterion = criteria.isEmpty
+        ? 'The original work item is objectively complete.'
+        : criteria.single;
+    final evidenceId = '${item.id}__adaptive_${generation}_1';
+    final evidence = WorkItem(
+      id: evidenceId,
+      title: 'Narrow the change surface for ${item.title}',
+      description:
+          'Identify the smallest concrete files, symbols, state, or external evidence needed for the original objective before continuing. Do not widen scope, architecture, technology, tools, or permissions.',
+      dependencies: item.dependencies,
+      allowedTools: item.allowedTools,
+      acceptanceCriteria: <String>[
+        'The exact remaining change surface is identified with current objective evidence.',
+      ],
+      maxAttempts: item.maxAttempts,
+    );
+    final completion = WorkItem(
+      id: item.id,
+      title: 'Complete bounded objective: ${item.title}',
+      description:
+          'Use the narrowed evidence to complete the original objective without changing its approved scope, architecture, technology, tools, or permissions. ${item.description}',
+      dependencies: <String>{evidenceId},
+      allowedTools: item.allowedTools,
+      acceptanceCriteria: <String>[criterion],
+      maxAttempts: item.maxAttempts,
+    );
+    return List<WorkItem>.unmodifiable(<WorkItem>[evidence, completion]);
+  }
+}
+
 class AdaptiveDecompositionService {
   const AdaptiveDecompositionService({
     this.complexityRepairThreshold = 4,
@@ -155,7 +252,7 @@ class AdaptiveDecompositionService {
         reason: null,
         completedItems: completed,
         remainingItems: currentRemaining,
-        remainingCriteriaHash: _remainingHash(currentRemaining),
+        remainingCriteriaHash: remainingCriteriaHash(currentRemaining),
         generation: request.generation,
         userMessage: '',
         materiality: request.materiality,
@@ -168,7 +265,7 @@ class AdaptiveDecompositionService {
             completedIds: completedIds,
             items: request.proposedRemainingItems,
           );
-    final remainingHash = _remainingHash(proposed);
+    final remainingHash = remainingCriteriaHash(proposed);
     final nextGeneration = request.generation + 1;
     final equivalent =
         request.previousRemainingCriteriaHashes.contains(remainingHash);
@@ -221,6 +318,23 @@ class AdaptiveDecompositionService {
     );
   }
 
+  String remainingCriteriaHash(Iterable<WorkItem> items) {
+    final normalized = items
+        .map(
+          (item) => <String, dynamic>{
+            'title': item.title.trim().toLowerCase(),
+            'description': item.description.trim().toLowerCase(),
+            'acceptanceCriteria': item.acceptanceCriteria
+                .map((criterion) => criterion.trim().toLowerCase())
+                .toList()
+              ..sort(),
+            'allowedTools': item.allowedTools.toList()..sort(),
+          },
+        )
+        .toList();
+    return Sha256.text(canonicalJson(normalized));
+  }
+
   List<WorkItem> _preserveCompletedDependencies({
     required Set<String> completedIds,
     required List<WorkItem> items,
@@ -240,22 +354,5 @@ class AdaptiveDecompositionService {
         maxAttempts: item.maxAttempts,
       );
     }).toList(growable: false);
-  }
-
-  String _remainingHash(List<WorkItem> items) {
-    final normalized = items
-        .map(
-          (item) => <String, dynamic>{
-            'title': item.title.trim().toLowerCase(),
-            'description': item.description.trim().toLowerCase(),
-            'acceptanceCriteria': item.acceptanceCriteria
-                .map((criterion) => criterion.trim().toLowerCase())
-                .toList()
-              ..sort(),
-            'allowedTools': item.allowedTools.toList()..sort(),
-          },
-        )
-        .toList();
-    return Sha256.text(canonicalJson(normalized));
   }
 }
