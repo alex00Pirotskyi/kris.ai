@@ -197,8 +197,8 @@ class AdaptiveWorkItemSplitter {
           'Identify the smallest concrete files, symbols, state, or external evidence needed for the original objective before continuing. Do not widen scope, architecture, technology, tools, or permissions.',
       dependencies: item.dependencies,
       allowedTools: item.allowedTools,
-      acceptanceCriteria: <String>[
-        'The exact remaining change surface is identified with current objective evidence.',
+      acceptanceCriteria: const <String>[
+        'Inspect the exact remaining change surface and record current objective evidence.',
       ],
       maxAttempts: item.maxAttempts,
     );
