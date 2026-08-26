@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'chat_control_plane.dart';
 import 'domain.dart';
 
 enum ConversationIntentKind {
@@ -146,12 +147,20 @@ class ConversationStreamProjector {
 }
 
 class ConversationOrchestrator {
-  const ConversationOrchestrator();
+  const ConversationOrchestrator({
+    this.intentCompiler = const ChatIntentCompiler(),
+  });
+
+  final ChatIntentCompiler intentCompiler;
 
   ConversationIntent classify(String request, CommandMode mode) {
     final normalized = request.trim();
-    final lower = normalized.toLowerCase();
-    if (isConversationalRequest(normalized)) {
+    final decision = intentCompiler.compile(
+      normalized,
+      inferredMode: mode,
+    );
+
+    if (decision.isInformational) {
       return const ConversationIntent(
         kind: ConversationIntentKind.conversation,
         needsClarification: false,
@@ -159,6 +168,64 @@ class ConversationOrchestrator {
         suggestedProjectName: '',
       );
     }
+
+    if (!decision.isAction && isFailureInvestigationRequest(normalized)) {
+      return const ConversationIntent(
+        kind: ConversationIntentKind.investigateRun,
+        needsClarification: false,
+        projectMayBeProvisioned: false,
+        suggestedProjectName: '',
+      );
+    }
+
+    final capability = decision.capability;
+    switch (capability?.id) {
+      case 'search':
+        return ConversationIntent(
+          kind: ConversationIntentKind.research,
+          needsClarification: decision.ambiguous,
+          projectMayBeProvisioned: false,
+          suggestedProjectName: '',
+        );
+      case 'analyze':
+      case 'test':
+      case 'verify':
+      case 'diagnose':
+        return ConversationIntent(
+          kind: ConversationIntentKind.analyzeProject,
+          needsClarification: decision.ambiguous,
+          projectMayBeProvisioned: false,
+          suggestedProjectName: '',
+        );
+      case 'build':
+        return ConversationIntent(
+          kind: ConversationIntentKind.buildNewProject,
+          needsClarification: decision.ambiguous,
+          projectMayBeProvisioned: true,
+          suggestedProjectName: suggestProjectName(normalized),
+        );
+      case 'fix':
+        return ConversationIntent(
+          kind: ConversationIntentKind.modifyProject,
+          needsClarification: decision.ambiguous,
+          projectMayBeProvisioned: false,
+          suggestedProjectName: suggestProjectName(normalized),
+        );
+      case 'run':
+      case 'stop':
+      case 'restart':
+      case 'open':
+      case 'connect':
+      case 'use':
+      case 'owner':
+        return ConversationIntent(
+          kind: ConversationIntentKind.other,
+          needsClarification: decision.ambiguous,
+          projectMayBeProvisioned: false,
+          suggestedProjectName: suggestProjectName(normalized),
+        );
+    }
+
     if (isFailureInvestigationRequest(normalized)) {
       return const ConversationIntent(
         kind: ConversationIntentKind.investigateRun,
@@ -167,48 +234,12 @@ class ConversationOrchestrator {
         suggestedProjectName: '',
       );
     }
-    if (mode == CommandMode.analyze || mode == CommandMode.review) {
-      return const ConversationIntent(
-        kind: ConversationIntentKind.analyzeProject,
-        needsClarification: false,
-        projectMayBeProvisioned: false,
-        suggestedProjectName: '',
-      );
-    }
-    if (RegExp(r'\b(research|latest|current|look up|search the web)\b')
-        .hasMatch(lower)) {
-      return const ConversationIntent(
-        kind: ConversationIntentKind.research,
-        needsClarification: false,
-        projectMayBeProvisioned: false,
-        suggestedProjectName: '',
-      );
-    }
-    final buildLike = mode == CommandMode.build ||
-        RegExp(r'\b(build|create|make|develop|implement)\b').hasMatch(lower);
-    if (buildLike) {
-      final platformSignal = RegExp(
-        r'\b(flutter|web|website|desktop|windows|macos|linux|android|ios|python|node|react|html|javascript|typescript)\b',
-      ).hasMatch(lower);
-      final outcomeSignal = RegExp(
-        r'\b(app|application|tool|dashboard|site|website|service|converter|editor|viewer|manager|game|api|bot)\b',
-      ).hasMatch(lower);
-      final scopeSignal = RegExp(
-        r'\b(local|backend|account|login|database|offline|online|simple|prototype|production|polished|responsive)\b',
-      ).hasMatch(lower);
-      final needsClarification = normalized.length < 90 ||
-          !outcomeSignal ||
-          (!platformSignal && !scopeSignal);
-      return ConversationIntent(
-        kind: ConversationIntentKind.buildNewProject,
-        needsClarification: needsClarification,
-        projectMayBeProvisioned: true,
-        suggestedProjectName: suggestProjectName(normalized),
-      );
-    }
+
     return ConversationIntent(
-      kind: ConversationIntentKind.modifyProject,
-      needsClarification: false,
+      kind: mode == CommandMode.analyze || mode == CommandMode.review
+          ? ConversationIntentKind.analyzeProject
+          : ConversationIntentKind.modifyProject,
+      needsClarification: decision.ambiguous,
       projectMayBeProvisioned: false,
       suggestedProjectName: suggestProjectName(normalized),
     );
