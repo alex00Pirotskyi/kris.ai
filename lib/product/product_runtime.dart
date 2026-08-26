@@ -10,6 +10,7 @@ import 'domain.dart';
 import 'execution_intelligence.dart';
 import 'extensions_index.dart';
 import 'file_adapters.dart';
+import 'git_state_probe.dart';
 import 'models_research.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';
@@ -17,6 +18,7 @@ import 'mcp_registry_v2.dart';
 import 'planning_runtime.dart';
 import 'process_identity.dart';
 import 'project_admission.dart';
+import 'project_control_service.dart';
 import 'project_launch_profile_detection.dart';
 import 'prompt_planning.dart';
 import 'prompt_studio_v2.dart';
@@ -339,6 +341,9 @@ class ProductRuntime {
   final ProcessIdentityProbe _processIdentity = const ProcessIdentityProbe();
   late final ProjectAdmissionService projectAdmission = ProjectAdmissionService(
     projects: repositories.projects,
+  );
+  late final ProjectControlService projectControl = ProjectControlService(
+    runtime: this,
   );
   ProductSettings _settings;
 
@@ -1909,6 +1914,11 @@ class ProductRuntime {
         ProjectAdmissionReason.successfullyTested,
       );
     }
+    await _recordProjectQualityResult(
+      project: project,
+      passed: !report.hasBlockingFailure,
+      apply: (record, result) => record.copyWith(lastTestResult: result),
+    );
     return report;
   }
 
@@ -1940,6 +1950,11 @@ class ProductRuntime {
         ProjectAdmissionReason.successfullyAnalyzed,
       );
     }
+    await _recordProjectQualityResult(
+      project: project,
+      passed: !report.hasBlockingFailure,
+      apply: (record, result) => record.copyWith(lastAnalyzeResult: result),
+    );
     return report;
   }
 
@@ -1969,7 +1984,32 @@ class ProductRuntime {
         ProjectAdmissionReason.builtByKristin,
       );
     }
+    await _recordProjectQualityResult(
+      project: project,
+      passed: !report.hasBlockingFailure,
+      apply: (record, result) => record.copyWith(lastBuildResult: result),
+    );
     return report;
+  }
+
+  /// Records a Project Manager quality signal (analyze/test/build) on the
+  /// project's durable record, together with the git HEAD sha at the
+  /// moment it completed — the cheap comparison signal
+  /// `ProjectControlService` later uses to report STALE, rather than
+  /// hashing the source tree on every status read.
+  Future<void> _recordProjectQualityResult({
+    required ProjectRecord project,
+    required bool passed,
+    required ProjectRecord Function(ProjectRecord, ProjectQualityResult) apply,
+  }) async {
+    final git = await probeGitState(project.rootPath);
+    final result = ProjectQualityResult(
+      passed: passed,
+      at: DateTime.now().toUtc(),
+      sourceGitSha: git.headSha ?? '',
+    );
+    final current = await repositories.projects.get(project.id) ?? project;
+    await repositories.projects.put(apply(current, result));
   }
 
   Future<ProjectProcessStatus> startProject(String projectId) async {
@@ -2123,6 +2163,19 @@ class ProductRuntime {
       );
     }
   }
+
+  /// Every durable project runtime session currently starting/running/
+  /// stopping, across all projects — a single batched query, so the
+  /// Project Manager "Running" section never needs an N+1 loop over
+  /// `listProjects()`.
+  Future<List<ProjectRuntimeSession>> listRunningProjectSessions() =>
+      repositories.workflow.listManagedProjectProcesses(
+        states: const <ProjectRuntimeState>{
+          ProjectRuntimeState.starting,
+          ProjectRuntimeState.running,
+          ProjectRuntimeState.stopping,
+        },
+      );
 
   Future<ProjectProcessStatus?> _reconciledProjectProcessStatus(
     String projectId,

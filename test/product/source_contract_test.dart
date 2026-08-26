@@ -195,6 +195,8 @@ void main() {
         'lib/product/process_identity_windows.dart',
         'lib/product/project_admission.dart',
         'lib/product/project_launch_profile_detection.dart',
+        'lib/product/project_control_service.dart',
+        'lib/product/git_state_probe.dart',
         'lib/product/run_execution_projection.dart',
         'lib/product/run_live_signals.dart',
         'lib/product/run_preflight.dart',

@@ -181,6 +181,46 @@ enum ProjectAdmissionReason {
   }
 }
 
+/// The outcome of one Analyze/Test/Build run, recorded at the moment it
+/// completed. [sourceGitSha] is the project's git HEAD at that moment (empty
+/// if the project is not a git repository or git state could not be
+/// determined) — it is the cheap comparison signal `ProjectControlService`
+/// uses to decide staleness, deliberately not a full source-tree hash (see
+/// `git_state_probe.dart`).
+class ProjectQualityResult {
+  const ProjectQualityResult({
+    required this.passed,
+    required this.at,
+    required this.sourceGitSha,
+  });
+
+  final bool passed;
+  final DateTime at;
+  final String sourceGitSha;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'passed': passed,
+        'at': at.toUtc().toIso8601String(),
+        'sourceGitSha': sourceGitSha,
+      };
+
+  static ProjectQualityResult? fromJson(Object? json) {
+    if (json is! Map) {
+      return null;
+    }
+    final map = mapValue(json);
+    final at = map['at'];
+    if (at == null) {
+      return null;
+    }
+    return ProjectQualityResult(
+      passed: map['passed'] == true,
+      at: parseUtc(at, fallback: DateTime.now()),
+      sourceGitSha: map['sourceGitSha']?.toString() ?? '',
+    );
+  }
+}
+
 class ProjectRecord {
   const ProjectRecord({
     required this.id,
@@ -191,6 +231,9 @@ class ProjectRecord {
     this.admissionReason,
     this.admittedAt,
     this.lastMeaningfulActivityAt,
+    this.lastAnalyzeResult,
+    this.lastTestResult,
+    this.lastBuildResult,
   });
 
   final String id;
@@ -201,6 +244,9 @@ class ProjectRecord {
   final ProjectAdmissionReason? admissionReason;
   final DateTime? admittedAt;
   final DateTime? lastMeaningfulActivityAt;
+  final ProjectQualityResult? lastAnalyzeResult;
+  final ProjectQualityResult? lastTestResult;
+  final ProjectQualityResult? lastBuildResult;
 
   ProjectRecord copyWith({
     String? name,
@@ -208,6 +254,9 @@ class ProjectRecord {
     ProjectAdmissionReason? admissionReason,
     DateTime? admittedAt,
     DateTime? lastMeaningfulActivityAt,
+    ProjectQualityResult? lastAnalyzeResult,
+    ProjectQualityResult? lastTestResult,
+    ProjectQualityResult? lastBuildResult,
   }) =>
       ProjectRecord(
         id: id,
@@ -219,6 +268,9 @@ class ProjectRecord {
         admittedAt: admittedAt ?? this.admittedAt,
         lastMeaningfulActivityAt:
             lastMeaningfulActivityAt ?? this.lastMeaningfulActivityAt,
+        lastAnalyzeResult: lastAnalyzeResult ?? this.lastAnalyzeResult,
+        lastTestResult: lastTestResult ?? this.lastTestResult,
+        lastBuildResult: lastBuildResult ?? this.lastBuildResult,
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -231,6 +283,9 @@ class ProjectRecord {
         'admittedAt': admittedAt?.toUtc().toIso8601String(),
         'lastMeaningfulActivityAt':
             lastMeaningfulActivityAt?.toUtc().toIso8601String(),
+        'lastAnalyzeResult': lastAnalyzeResult?.toJson(),
+        'lastTestResult': lastTestResult?.toJson(),
+        'lastBuildResult': lastBuildResult?.toJson(),
       };
 
   factory ProjectRecord.fromJson(Map<String, dynamic> json) => ProjectRecord(
@@ -241,6 +296,13 @@ class ProjectRecord {
         updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
         admissionReason: ProjectAdmissionReason.fromStorageValue(
           json['admissionReason']?.toString(),
+        ),
+        lastAnalyzeResult: ProjectQualityResult.fromJson(
+          json['lastAnalyzeResult'],
+        ),
+        lastTestResult: ProjectQualityResult.fromJson(json['lastTestResult']),
+        lastBuildResult: ProjectQualityResult.fromJson(
+          json['lastBuildResult'],
         ),
         admittedAt: json['admittedAt'] == null
             ? null
