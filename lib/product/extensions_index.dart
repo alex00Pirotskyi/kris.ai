@@ -8,6 +8,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'performance_spans.dart';
+import 'storage_security.dart';
 
 class SourceIndexEntry {
   const SourceIndexEntry({
@@ -163,7 +164,7 @@ class SourceIndexService {
     return _serialize<SourceIndexReport>(() async {
       final store = await _store();
       final projectHash = Sha256.text(project.id);
-      var before = store.projectInfo(projectHash);
+      final before = store.projectInfo(projectHash);
       final span = PerformanceSpan.start(
         'source.index.update',
         sink: _performance,
@@ -183,17 +184,15 @@ class SourceIndexService {
             before.rootHash.isNotEmpty &&
             before.rootHash != rootHash) {
           store.resetProjectRoot(projectHash, rootHash);
-          before = store.projectInfo(projectHash);
           await _replaceRuntime(projectHash, null);
         }
         final result = await _reconcileProject(
           store,
-          project,
           projectHash,
           root,
           rootHash,
         );
-        await _ensureWatcher(project, projectHash, root, rootHash);
+        await _ensureWatcher(projectHash, root, rootHash);
         span.finish(
           itemCount: result.report.total,
           bytesConsidered: result.bytesConsidered,
@@ -234,7 +233,7 @@ class SourceIndexService {
       final projectHash = Sha256.text(project.id);
       final root = await _canonicalProjectRoot(project);
       final rootHash = Sha256.text(_normalizedAbsolute(root.path));
-      var before = store.projectInfo(projectHash);
+      final before = store.projectInfo(projectHash);
       final span = PerformanceSpan.start(
         'source.index.update',
         sink: _performance,
@@ -255,12 +254,11 @@ class SourceIndexService {
           }
           final reconciled = await _reconcileProject(
             store,
-            project,
             projectHash,
             root,
             rootHash,
           );
-          await _ensureWatcher(project, projectHash, root, rootHash);
+          await _ensureWatcher(projectHash, root, rootHash);
           span.finish(
             itemCount: reconciled.report.total,
             bytesConsidered: reconciled.bytesConsidered,
@@ -275,7 +273,7 @@ class SourceIndexService {
           rootHash,
           requested,
         );
-        await _ensureWatcher(project, projectHash, root, rootHash);
+        await _ensureWatcher(projectHash, root, rootHash);
         span.finish(
           itemCount: result.report.total,
           bytesConsidered: result.bytesConsidered,
@@ -408,7 +406,6 @@ class SourceIndexService {
 
   Future<_SourceUpdateResult> _reconcileProject(
     _SourceSqliteStore store,
-    ProjectRecord project,
     String projectHash,
     Directory root,
     String rootHash,
@@ -618,7 +615,6 @@ class SourceIndexService {
   }
 
   Future<void> _ensureWatcher(
-    ProjectRecord project,
     String projectHash,
     Directory root,
     String rootHash,
@@ -627,17 +623,12 @@ class SourceIndexService {
     if (existing != null &&
         existing.rootHash == rootHash &&
         existing.watcher != null) {
-      existing.project = project;
       return;
     }
     if (existing != null) {
       await _replaceRuntime(projectHash, null);
     }
-    final runtime = _SourceProjectRuntime(
-      project: project,
-      root: root,
-      rootHash: rootHash,
-    );
+    final runtime = _SourceProjectRuntime(root: root, rootHash: rootHash);
     _projects[projectHash] = runtime;
     try {
       runtime.watcher = root.watch(recursive: true).listen(
@@ -653,9 +644,7 @@ class SourceIndexService {
         cancelOnError: false,
       );
       runtime.watcherActive = true;
-    } on FileSystemException {
-      runtime.watcherActive = false;
-    } on UnsupportedError {
+    } catch (_) {
       runtime.watcherActive = false;
     }
   }
@@ -894,13 +883,8 @@ class SourceIndexService {
 }
 
 final class _SourceProjectRuntime {
-  _SourceProjectRuntime({
-    required this.project,
-    required this.root,
-    required this.rootHash,
-  });
+  _SourceProjectRuntime({required this.root, required this.rootHash});
 
-  ProjectRecord project;
   final Directory root;
   final String rootHash;
   final Set<String> pending = <String>{};
@@ -928,13 +912,11 @@ final class _ReadSourceFile {
 
 final class _SourceFileMetadata {
   const _SourceFileMetadata({
-    required this.path,
     required this.sha256,
     required this.bytes,
     required this.modifiedAtMs,
   });
 
-  final String path;
   final String sha256;
   final int bytes;
   final int modifiedAtMs;
@@ -1260,7 +1242,6 @@ ON source_terms(project_hash, term, weight DESC, path)
     return <String, _SourceFileMetadata>{
       for (final row in rows)
         row['path'].toString(): _SourceFileMetadata(
-          path: row['path'].toString(),
           sha256: row['sha256']?.toString() ?? '',
           bytes: _asInt(row['byte_length']),
           modifiedAtMs: _asInt(row['mtime_ms']),
@@ -1274,14 +1255,13 @@ ON source_terms(project_hash, term, weight DESC, path)
   ) {
     _ensureOpen();
     final rows = _database.select(
-      'SELECT path, sha256, byte_length, mtime_ms FROM source_files '
+      'SELECT sha256, byte_length, mtime_ms FROM source_files '
       'WHERE project_hash = ? AND path = ?',
       <Object?>[projectHash, path],
     );
     if (rows.isEmpty) return null;
     final row = rows.first;
     return _SourceFileMetadata(
-      path: row['path'].toString(),
       sha256: row['sha256']?.toString() ?? '',
       bytes: _asInt(row['byte_length']),
       modifiedAtMs: _asInt(row['mtime_ms']),
