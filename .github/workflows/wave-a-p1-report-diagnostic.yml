@@ -25,6 +25,9 @@ jobs:
         with:
           python-version: '3.12.10'
 
+      - name: Bootstrap product-gate Python dependencies
+        run: python tool/v71r12_bootstrap_hosted_python.py --project .
+
       - name: Trace P1 gate report producer
         shell: bash
         run: |
