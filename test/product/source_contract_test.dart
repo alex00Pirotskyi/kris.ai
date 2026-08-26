@@ -254,6 +254,8 @@ void main() {
         'lib/product/p8_effect_journal_adapter.dart',
         'lib/product/p8_external_effects.dart',
         'lib/product/p8_observability.dart',
+        'lib/product/performance_cache.dart',
+        'lib/product/performance_spans.dart',
         'lib/product/mcp_protocol.dart',
       };
       final actual = activeDartFiles()

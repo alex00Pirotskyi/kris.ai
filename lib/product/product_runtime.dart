@@ -30,6 +30,8 @@ import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
 import 'p2_bundled_current_account_runtime.dart';
 import 'p8_observability.dart';
+import 'performance_cache.dart';
+import 'performance_spans.dart';
 import 'p1_authority_service_contract_v1.dart';
 import 'p1_authority_service_product_runtime_v1.dart';
 
@@ -248,6 +250,7 @@ class ProductRuntime {
   ProductRuntime._({
     required this.directories,
     required this.repositories,
+    required this.performanceCache,
     required this.redactor,
     required this.events,
     required this.audit,
@@ -285,6 +288,7 @@ class ProductRuntime {
 
   final AppDirectories directories;
   final ProductRepositories repositories;
+  final RebuildableCacheDatabase performanceCache;
   final SecretRedactor redactor;
   final EventJournal events;
   final AuditChain audit;
@@ -336,6 +340,8 @@ class ProductRuntime {
   ProductSettings _settings;
 
   ProductSettings get settings => _settings;
+  Future<CacheDatabaseDiagnostics> inspectPerformanceCache() =>
+      performanceCache.diagnostics();
   Map<String, Object> previewTelemetry() => telemetry.preview();
   Future<void> exportTelemetry(File file) => telemetry.export(file);
   void deleteTelemetry() => telemetry.deleteAll();
@@ -383,6 +389,25 @@ class ProductRuntime {
   static Future<ProductRuntime> initialize({String? dataRoot}) async {
     final directories = await AppDirectories.create(overrideRoot: dataRoot);
     final repositories = await ProductRepositories.open(directories);
+    final cacheStartedAt = DateTime.now().toUtc();
+    final performanceCache = await RebuildableCacheDatabase.open(
+      directories.cache,
+    );
+    final cacheWasWarm =
+        performanceCache.startupMode == CacheDatabaseStartupMode.warm;
+    performanceCache.recordPerformanceSpan(
+      PerformanceSpanRecord(
+        operation: 'cache.open',
+        startedAt: cacheStartedAt,
+        duration: performanceCache.startupDuration,
+        cacheResult: cacheWasWarm
+            ? PerformanceCacheResult.hit
+            : PerformanceCacheResult.miss,
+        thermalState: cacheWasWarm
+            ? PerformanceThermalState.warm
+            : PerformanceThermalState.cold,
+      ),
+    );
     final redactor = SecretRedactor();
     final events = EventJournal(
       repositories.eventFile,
@@ -452,6 +477,7 @@ class ProductRuntime {
       Directory(
         '${directories.cache.path}${Platform.pathSeparator}source-index',
       ),
+      performance: performanceCache,
     );
     final mcp = McpTrustService(
       workflow: repositories.workflow,
@@ -712,6 +738,7 @@ class ProductRuntime {
     runtime = ProductRuntime._(
       directories: directories,
       repositories: repositories,
+      performanceCache: performanceCache,
       redactor: redactor,
       events: events,
       audit: audit,
@@ -1135,6 +1162,7 @@ class ProductRuntime {
     await liveRunSignals.close();
     await telemetryBridge.close();
     await events.close();
+    await performanceCache.close();
     await repositories.workflow.close();
   }
 
