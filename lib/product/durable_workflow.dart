@@ -2105,6 +2105,300 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         );
       });
 
+  // -- Project Control Center: durable project runtime sessions ----------
+  //
+  // Backs the Project Manager Run/Stop/Restart lifecycle
+  // (migrations/workflow/005_project_manager_execution_intelligence.sql +
+  // 007_project_control_center.sql). Unlike ManagedProcessService's
+  // in-memory tracking, rows written here survive an application restart;
+  // reconciliation of a recovered row against the live OS process is the
+  // caller's responsibility (see process_identity.dart).
+
+  ProjectRuntimeSession _projectRuntimeSessionFromRow(Row row) =>
+      ProjectRuntimeSession(
+        id: row['id']?.toString() ?? '',
+        projectId: row['project_id']?.toString() ?? '',
+        launchProfileId: row['launch_profile_id']?.toString(),
+        state: ProjectRuntimeState.fromStorageValue(row['state']?.toString()),
+        lifecycle:
+            ManagedProcessLifecycle.fromStorageValue(row['lifecycle']?.toString()),
+        pid: row['pid'] == null ? null : _asInt(row['pid']),
+        processIdentity: row['process_identity']?.toString(),
+        kind: row['kind'] == null
+            ? null
+            : ProjectLaunchKind.fromStorageValue(row['kind']?.toString()),
+        commandSha256: row['command_sha256']?.toString() ?? '',
+        port: row['port'] == null ? null : _asInt(row['port']),
+        healthState: row['health_state']?.toString(),
+        logReference: row['result_json'] == null
+            ? null
+            : (_decodeMap(row['result_json']!)['logReference']?.toString()),
+        startedAt: _parseDate(row['started_at']),
+        updatedAt: _parseDate(row['updated_at']),
+        completedAt:
+            row['completed_at'] == null ? null : _parseDate(row['completed_at']),
+        exitCode: row['exit_code'] == null ? null : _asInt(row['exit_code']),
+        failureCode: row['failure_code']?.toString(),
+      );
+
+  /// Inserts a new durable [ProjectRuntimeSession] row. Called immediately
+  /// after `ManagedProcessService.start()` succeeds, before returning
+  /// control to the caller, so persistence never races an app shutdown.
+  Future<void> insertManagedProjectProcess({
+    required String id,
+    required String projectId,
+    required ManagedProcessLifecycle lifecycle,
+    required String commandSha256,
+    required Map<String, dynamic> request,
+    String? launchProfileId,
+    ProjectLaunchKind? kind,
+    int? pid,
+    String? processIdentity,
+    int? port,
+    String? logReference,
+  }) =>
+      _serialize<void>(() {
+        _transaction<void>(() {
+          final requestJson = canonicalJson(request);
+          final resultJson = logReference == null
+              ? null
+              : canonicalJson(<String, dynamic>{'logReference': logReference});
+          _database.execute(
+            '''INSERT INTO managed_project_processes(
+                 id, project_id, run_id, workspace_id, action, state,
+                 sandbox_backend, pid, process_group_id, command_sha256,
+                 request_json, request_sha256, result_json, result_sha256,
+                 started_at, updated_at, launch_profile_id, kind, port,
+                 health_state, process_identity, lifecycle
+               ) VALUES (?, ?, NULL, NULL, 'run', 'running', 'application_owned',
+                 ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)''',
+            <Object?>[
+              id,
+              projectId,
+              pid,
+              commandSha256,
+              requestJson,
+              Sha256.text(requestJson),
+              resultJson,
+              resultJson == null ? null : Sha256.text(resultJson),
+              _now(),
+              _now(),
+              launchProfileId,
+              kind?.storageValue,
+              port,
+              processIdentity,
+              lifecycle.storageValue,
+            ],
+          );
+        });
+      });
+
+  /// Updates the lifecycle state (and any of the optional live-status
+  /// fields) of an existing durable project runtime session.
+  Future<void> updateManagedProjectProcessState({
+    required String id,
+    required ProjectRuntimeState state,
+    int? pid,
+    String? processIdentity,
+    int? port,
+    String? healthState,
+    int? exitCode,
+    String? failureCode,
+    DateTime? completedAt,
+  }) =>
+      _serialize<void>(() {
+        _transaction<void>(() {
+          _database.execute(
+            '''UPDATE managed_project_processes SET
+                 state = ?,
+                 pid = COALESCE(?, pid),
+                 process_identity = COALESCE(?, process_identity),
+                 port = COALESCE(?, port),
+                 health_state = COALESCE(?, health_state),
+                 exit_code = COALESCE(?, exit_code),
+                 failure_code = COALESCE(?, failure_code),
+                 completed_at = COALESCE(?, completed_at),
+                 updated_at = ?
+               WHERE id = ?''',
+            <Object?>[
+              state.storageValue,
+              pid,
+              processIdentity,
+              port,
+              healthState,
+              exitCode,
+              failureCode,
+              completedAt?.toUtc().toIso8601String(),
+              _now(),
+              id,
+            ],
+          );
+        });
+      });
+
+  Future<ProjectRuntimeSession?> getManagedProjectProcess(String id) =>
+      _serialize<ProjectRuntimeSession?>(() {
+        final rows = _database.select(
+          'SELECT * FROM managed_project_processes WHERE id = ? LIMIT 1',
+          <Object?>[id],
+        );
+        return rows.isEmpty ? null : _projectRuntimeSessionFromRow(rows.first);
+      });
+
+  /// Lists durable project runtime sessions, optionally filtered by
+  /// [projectId] and/or restricted to a set of [states] (e.g. the
+  /// starting/running/stopping set consulted on restart recovery).
+  Future<List<ProjectRuntimeSession>> listManagedProjectProcesses({
+    String? projectId,
+    Set<ProjectRuntimeState>? states,
+  }) =>
+      _serialize<List<ProjectRuntimeSession>>(() {
+        final clauses = <String>[];
+        final args = <Object?>[];
+        if (projectId != null) {
+          clauses.add('project_id = ?');
+          args.add(projectId);
+        }
+        if (states != null && states.isNotEmpty) {
+          clauses.add(
+            'state IN (${List.filled(states.length, '?').join(', ')})',
+          );
+          args.addAll(states.map((state) => state.storageValue));
+        }
+        final where = clauses.isEmpty ? '' : 'WHERE ${clauses.join(' AND ')}';
+        final rows = _database.select(
+          'SELECT * FROM managed_project_processes $where '
+          'ORDER BY updated_at DESC, id',
+          args,
+        );
+        return rows.map(_projectRuntimeSessionFromRow).toList(growable: false);
+      });
+
+  // -- Project Control Center: durable launch profiles --------------------
+
+  ProjectLaunchProfile _projectLaunchProfileFromRow(Row row) =>
+      ProjectLaunchProfile(
+        id: row['id']?.toString() ?? '',
+        projectId: row['project_id']?.toString() ?? '',
+        kind: ProjectLaunchKind.fromStorageValue(row['kind']?.toString()),
+        label: row['label']?.toString() ?? '',
+        executable: row['executable']?.toString() ?? '',
+        arguments: List<String>.from(
+          jsonDecode(row['arguments_json']?.toString() ?? '[]') as List,
+        ),
+        workingDirectory: row['working_directory']?.toString() ?? '',
+        openBehavior: ProjectLaunchOpenBehavior.fromStorageValue(
+          row['open_behavior']?.toString(),
+        ),
+        preferred: _asInt(row['preferred']) == 1,
+        source: ProjectLaunchProfileSource.fromStorageValue(
+          row['source']?.toString(),
+        ),
+        identityHash: row['identity_sha256']?.toString() ?? '',
+        createdAt: _parseDate(row['created_at']),
+        updatedAt: _parseDate(row['updated_at']),
+        ports: List<int>.from(
+          jsonDecode(row['ports_json']?.toString() ?? '[]') as List,
+        ),
+        healthChecks: List<String>.from(
+          jsonDecode(row['health_checks_json']?.toString() ?? '[]') as List,
+        ),
+      );
+
+  /// Inserts or refreshes a launch profile, keyed by
+  /// (projectId, identityHash) so re-detecting the same command never
+  /// duplicates a row. Setting [preferred] clears any other preferred
+  /// profile for the same project in the same transaction.
+  Future<ProjectLaunchProfile> upsertProjectLaunchProfile({
+    required String projectId,
+    required ProjectLaunchKind kind,
+    required String label,
+    required String executable,
+    required List<String> arguments,
+    required String workingDirectory,
+    required ProjectLaunchOpenBehavior openBehavior,
+    required ProjectLaunchProfileSource source,
+    bool preferred = false,
+    List<int> ports = const <int>[],
+    List<String> healthChecks = const <String>[],
+  }) =>
+      _serialize<ProjectLaunchProfile>(() {
+        return _transaction<ProjectLaunchProfile>(() {
+          final identityHash = ProjectLaunchProfile.computeIdentityHash(
+            executable: executable,
+            arguments: arguments,
+            workingDirectory: workingDirectory,
+          );
+          final existing = _database.select(
+            'SELECT id FROM project_launch_profiles '
+            'WHERE project_id = ? AND identity_sha256 = ? LIMIT 1',
+            <Object?>[projectId, identityHash],
+          );
+          final id = existing.isEmpty
+              ? newId('launch_profile')
+              : existing.first['id'].toString();
+          if (preferred) {
+            _database.execute(
+              'UPDATE project_launch_profiles SET preferred = 0, updated_at = ? '
+              'WHERE project_id = ? AND id != ?',
+              <Object?>[_now(), projectId, id],
+            );
+          }
+          final now = _now();
+          _database.execute(
+            '''INSERT INTO project_launch_profiles(
+                 id, project_id, kind, label, executable, arguments_json,
+                 working_directory, open_behavior, preferred, ports_json,
+                 health_checks_json, source, identity_sha256, created_at,
+                 updated_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(project_id, identity_sha256) DO UPDATE SET
+                 kind = excluded.kind,
+                 label = excluded.label,
+                 open_behavior = excluded.open_behavior,
+                 preferred = excluded.preferred,
+                 ports_json = excluded.ports_json,
+                 health_checks_json = excluded.health_checks_json,
+                 source = excluded.source,
+                 updated_at = excluded.updated_at''',
+            <Object?>[
+              id,
+              projectId,
+              kind.storageValue,
+              label,
+              executable,
+              jsonEncode(arguments),
+              workingDirectory,
+              openBehavior.storageValue,
+              preferred ? 1 : 0,
+              jsonEncode(ports),
+              jsonEncode(healthChecks),
+              source.storageValue,
+              identityHash,
+              now,
+              now,
+            ],
+          );
+          final saved = _database.select(
+            'SELECT * FROM project_launch_profiles WHERE id = ? LIMIT 1',
+            <Object?>[id],
+          );
+          return _projectLaunchProfileFromRow(saved.first);
+        });
+      });
+
+  Future<List<ProjectLaunchProfile>> listProjectLaunchProfiles(
+    String projectId,
+  ) =>
+      _serialize<List<ProjectLaunchProfile>>(() {
+        final rows = _database.select(
+          'SELECT * FROM project_launch_profiles WHERE project_id = ? '
+          'ORDER BY preferred DESC, updated_at DESC, id',
+          <Object?>[projectId],
+        );
+        return rows.map(_projectLaunchProfileFromRow).toList(growable: false);
+      });
+
   Future<void> checkpointWal() => _serialize<void>(() {
         _database.execute('PRAGMA wal_checkpoint(FULL)');
       });

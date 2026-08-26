@@ -1104,6 +1104,7 @@ class ManagedProcessService {
     required String runId,
     required String workItemId,
     void Function(String stream, String delta)? onOutput,
+    ManagedProcessLifecycle lifecycle = ManagedProcessLifecycle.ephemeral,
   }) async {
     await logDirectory.create(recursive: true);
     final id = newId('process');
@@ -1133,6 +1134,7 @@ class ManagedProcessService {
       startedAt: DateTime.now().toUtc(),
       log: log,
       onOutput: onOutput,
+      lifecycle: lifecycle,
     );
     _processes[id] = record;
     final stdoutPump = _pump(record, 'stdout', process.stdout);
@@ -1197,6 +1199,26 @@ class ManagedProcessService {
   Future<void> stopAll() async {
     for (final record in _processes.values.toList()) {
       if (record.exitCode == null) {
+        try {
+          await stop(record.id);
+        } catch (_) {
+          record.process.kill(ProcessSignal.sigkill);
+        }
+      }
+    }
+  }
+
+  /// Stops every tracked process whose [ManagedProcessLifecycle] is
+  /// [ManagedProcessLifecycle.ephemeral] — every ordinary agent tool call
+  /// or Analyze/Test/Build invocation. Processes started with
+  /// [ManagedProcessLifecycle.persistUntilStopped] (a Project Manager Run)
+  /// are left running: they belong to the durable project runtime session
+  /// registry, not to this application's own lifecycle, and are reconciled
+  /// on the next startup instead of being killed here.
+  Future<void> stopEphemeral() async {
+    for (final record in _processes.values.toList()) {
+      if (record.exitCode == null &&
+          record.lifecycle == ManagedProcessLifecycle.ephemeral) {
         try {
           await stop(record.id);
         } catch (_) {
@@ -1290,6 +1312,7 @@ class _ManagedProcess {
     required this.startedAt,
     required this.log,
     this.onOutput,
+    this.lifecycle = ManagedProcessLifecycle.ephemeral,
   });
 
   final String id;
@@ -1302,6 +1325,7 @@ class _ManagedProcess {
   final DateTime startedAt;
   final File log;
   final void Function(String stream, String delta)? onOutput;
+  final ManagedProcessLifecycle lifecycle;
   final StringBuffer tail = StringBuffer();
   Future<void> pendingWrite = Future<void>.value();
   int? exitCode;
