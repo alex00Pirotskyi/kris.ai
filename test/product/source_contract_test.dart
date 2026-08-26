@@ -178,7 +178,6 @@ void main() {
         'lib/product/release_operations_v19.dart',
         'lib/product/repository.dart',
         'lib/product/retry_policy.dart',
-        'lib/product/runner_tool_registry.dart',
         'lib/product/runtime_provisioning_shell.dart',
         'lib/product/storage_security.dart',
         'lib/product/tool_schema.dart',
@@ -255,6 +254,8 @@ void main() {
         'lib/product/p8_effect_journal_adapter.dart',
         'lib/product/p8_external_effects.dart',
         'lib/product/p8_observability.dart',
+        'lib/product/performance_cache.dart',
+        'lib/product/performance_spans.dart',
         'lib/product/mcp_protocol.dart',
       };
       final actual = activeDartFiles()
