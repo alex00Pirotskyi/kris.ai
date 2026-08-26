@@ -52,7 +52,7 @@ void main() {
       () async {
         final script = await _writeSleeperScript(root);
         final ephemeral = await service.start(
-          executable: Platform.resolvedExecutable,
+          executable: 'dart',
           arguments: <String>[script.path],
           workingDirectory: root.path,
           environment: const <String, String>{},
@@ -60,7 +60,7 @@ void main() {
           workItemId: 'ephemeral',
         );
         final persistent = await service.start(
-          executable: Platform.resolvedExecutable,
+          executable: 'dart',
           arguments: <String>[script.path],
           workingDirectory: root.path,
           environment: const <String, String>{},
@@ -120,7 +120,7 @@ void main() {
         });
         final script = await _writeSleeperScript(root, seconds: 3);
         final process = await Process.start(
-          Platform.resolvedExecutable,
+          'dart',
           <String>[script.path],
         );
         const probe = ProcessIdentityProbe();
@@ -193,7 +193,7 @@ void main() {
       () async {
         final script = await _writeSleeperScript(temporary);
         final process = await Process.start(
-          Platform.resolvedExecutable,
+          'dart',
           <String>[script.path],
         );
         addTearDown(() => process.kill(ProcessSignal.sigkill));
@@ -363,7 +363,7 @@ void main() {
 String jsonEncodeCustomProfile(String scriptPath) => jsonEncode(<String, dynamic>{
       'type': 'custom-sleeper',
       'run': <String, dynamic>{
-        'executable': Platform.resolvedExecutable,
+        'executable': 'dart',
         'arguments': <String>[scriptPath],
       },
     });
