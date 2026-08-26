@@ -147,6 +147,37 @@ void main() {
           containsAll(<String>['pubspec.yaml', 'lib/main.dart']),
         );
 
+        final repair = commandEvidence.firstWhere((item) {
+          final data = Map<String, dynamic>.from(
+            item.payload['data']! as Map,
+          );
+          final args = (data['arguments'] as List?)
+                  ?.map((value) => value.toString())
+                  .toList() ??
+              const <String>[];
+          return const ListEquality<String>().equals(
+            args,
+            const <String>['tool/repair_smoke.dart'],
+          );
+        });
+        final repairData = Map<String, dynamic>.from(
+          repair.payload['data']! as Map,
+        );
+        expect(repair.payload['ok'], isTrue);
+        expect(repair.payload['mutated'], isTrue);
+        expect(repairData['duplicateExecutableRemoved'], isTrue);
+        final repairChanges =
+            (repairData['workspaceChanges'] as Map?)?['paths'];
+        expect(repairChanges, isA<List>());
+        expect(
+          (repairChanges! as List).map((value) => value.toString()),
+          containsAll(<String>[
+            'pubspec.yaml',
+            'lib/main.dart',
+            'test/smoke_test.dart',
+          ]),
+        );
+
         final offlinePub = commandEvidence.firstWhere((item) {
           final data = Map<String, dynamic>.from(
             item.payload['data']! as Map,
