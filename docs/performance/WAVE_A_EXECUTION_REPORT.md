@@ -4,72 +4,83 @@
 
 - Repository: `alex00Pirotskyi/kris.ai`
 - Confirmed live protected `main`: `9336c5568cbc1db9e9c867441dcc46af14339aa4`
-- Delivery form: source-shape-guarded local implementation bundle
-- Branch: not created in the repository
-- PR: not created
-- Exact repository head SHA: unchanged; no remote write capability was available
+- Branch: `perf/cache-sqlite-foundation`
+- Pull request: `#276`
+- Delivery: direct repository implementation from live protected `main`
+- Code-equivalent cleanup head before this report correction:
+  `fd4e9a4556b27f565d1ca9b210386f9afe069769`
 
-The implementation was derived from the confirmed live-main files rather than
-historical branch names or stale implementation notes.
+The final pull-request head and hosted check results are authoritative after
+report-only or manifest-only commits. The implementation was derived from live
+protected `main`, not from historical branch names or stale implementation
+notes.
 
 ## Baseline performance
 
-The deterministic baseline harness is implemented for 64-, 1,500-, and
-10,000-file source projects. It records cold index construction, repeated warm
-queries, one-file mutation updates, symbol lookup, scan counts, indexed bytes,
-cache state, sample count, minimum, p50, p95, maximum, and mean latency.
+The deterministic baseline harness covers 64-, 1,500-, and 10,000-file source
+projects. It records:
 
-No workstation latency numbers are embedded in this report. The execution
-environment used to build the bundle did not contain a Dart or Flutter SDK, so
-publishing synthetic or inferred timings would be misleading.
+- cold cache open;
+- warm cache reopen;
+- cold source-index construction;
+- repeated warm source queries;
+- one-file mutation followed by index update;
+- repeated symbol lookup;
+- scan, change, candidate, result, and indexed-byte counts;
+- sample count, minimum, p50, p95, maximum, and mean latency.
+
+No workstation latency numbers or speedup percentages are embedded in this
+wave. Those claims require before/after samples collected on the same hardware
+and environment.
 
 ## Implemented
 
 ### Performance instrumentation
 
-- Added a first-party `PerformanceSpan` abstraction.
+- Added first-party `PerformanceSpan` and `PerformanceSpanRecord` abstractions.
 - Added structured operation, duration, project hash, cache state, thermal
   state, count, token, model, tool, persistence, verification, process,
   browser, analyzer, source-index, and knowledge timing fields.
 - Rejected arbitrary text in machine-label fields.
 - Preserved the measured result and original exception when telemetry
   construction or recording fails.
-- Wired source index update and search spans into the current runtime.
+- Instrumented source-index update and search without changing filesystem
+  authority.
 
 ### Rebuildable cache database
 
-- Added runtime-owned `cache/cache.sqlite3` through the existing application
-  cache directory.
-- Kept `state/workflow.sqlite3` exclusively authoritative.
+- Added runtime-owned `cache/cache.sqlite3` through the application cache
+  directory.
+- Kept `state/workflow.sqlite3` authoritative and fail-closed.
 - Added independent cache schema versioning and schema-revision checks.
-- Added SQLite header validation and `quick_check`.
+- Added SQLite-header validation and `quick_check`.
 - Added quarantine-and-recreate behavior for corrupt or incompatible cache
   files.
 - Added an in-memory fallback when persistent cache storage is unavailable.
-- Added transactional, namespaced generation counters.
+- Added transactional namespaced generation counters.
 - Added bounded performance-span retention.
 - Added diagnostics for startup mode, persistence mode, size, schema, last
   rebuild, row counts, dropped writes, and degraded state.
 
 ### Write-amplification control
 
-- Span writes are buffered rather than committed individually.
-- A batch is flushed after 64 records, after a two-second quiet period, when
+- Buffered performance spans rather than committing each record separately.
+- Flushed a batch after 64 records, after a two-second quiet period, when
   diagnostics are requested, or during orderly shutdown.
-- Batch writes use one SQLite transaction.
-- Advisory spans still buffered at an abnormal process termination may be
-  lost; no workflow authority or completion state is affected.
+- Used one SQLite transaction per batch.
+- Kept buffered spans advisory: abnormal termination may lose them without
+  affecting workflow authority or completion.
 
 ### Benchmark corpus
 
 - Added deterministic small, medium, and large project generators.
 - Added source-index baseline measurements with explicit cold/warm and
   hit/miss classification.
-- Changed the mutated file's byte length so coarse filesystem timestamp
+- Mutated file length as well as content so coarse filesystem timestamp
   resolution cannot hide the change.
-- Added a machine-readable benchmark manifest that distinguishes automated
+- Added a machine-readable benchmark manifest distinguishing implemented
   scenarios from model, knowledge, persistent-toolchain, P3, and Owner Mode
-  fixtures scheduled for later waves.
+  fixtures reserved for later waves.
 
 ## Security boundaries
 
@@ -77,70 +88,60 @@ publishing synthetic or inferred timings would be misleading.
   completion, evidence, verification, idempotency, or leases.
 - Cache failures degrade to misses, generation zero, rebuild, or memory mode.
 - Performance rows do not contain prompts, source text, terminal output,
-  credentials, or arbitrary user text fields.
-- Performance statistics are advisory only.
-- No Owner Mode or P3 security boundary was modified.
+  credentials, secret values, or arbitrary user text fields.
+- Performance statistics remain advisory.
+- No Owner Mode or P3 security boundary was weakened.
+- Direct filesystem bytes remain authoritative over source-index contents.
 
-## Validation performed in this environment
+## Validation
 
-Passed:
+Focused validation recorded for the Wave A implementation:
 
-- Confirmed the live protected-main SHA and inspected current runtime, storage,
-  source-index, observability, dependency, and source-contract files.
-- Applied every guarded edit against a reconstructed live-source-shape fixture;
-  every expected replacement matched exactly once.
-- Re-ran the installer idempotently; all files and edits were recognized as
-  already present.
-- Injected a stale source shape and verified the dry preflight failed before
-  writing any Wave A file.
-- Parsed `apply_wave_a.py` with Python bytecode compilation.
-- Parsed every JSON artifact.
-- Performed a string/comment-aware delimiter scan across every added Dart file.
-- Executed the cache schema, span insert, generation upsert, and retention SQL
-  through SQLite.
-- Verified the span insert has 30 placeholders and 30 values.
-- Verified the cache-generation upsert advances monotonically.
-- Verified retention SQL leaves the configured newest-row limit.
-- Verified no `flutter clean` command exists in the implementation path.
+- `performance_spans_test.dart`: 7 tests passed
+- `performance_cache_test.dart`: 7 tests passed
+- `source_index_performance_test.dart`: 2 tests passed
+- `source_contract_test.dart`: 46 tests passed
+- `flutter analyze`: no issues
+- repository format-scope checks: clean
+- `git diff --check`: clean
 
-Not executed here:
+Hosted qualification is rerun on every final PR head. After temporary diagnostic
+workflows were removed, the canonical source-manifest regeneration and
+non-mutation checks passed on Ubuntu, macOS, and Windows at cleanup head
+`fd4e9a4556b27f565d1ca9b210386f9afe069769`.
 
-- `dart format`
-- `flutter test`
-- `flutter analyze`
-- workstation baseline benchmarks
-
-The bundle's apply script runs targeted formatting when Dart is present. With
-`--validate`, it runs the four focused tests and one final analyzer pass. The
-source manifest is refreshed once at the end.
+The pull request's final check suite, rather than this static report, is the
+authority for the exact final-head validation state.
 
 ## Git activity
 
-One direct repository transport attempt was made and stopped after DNS access
-failed. No repeated Git CLI inspection, cleanup, branch churn, commits, pushes,
-or PR operations were performed. The optional final manifest refresh in the
-apply script uses the repository's existing manifest tool once; that existing
-tool performs one tracked/untracked file enumeration.
+Wave A is delivered directly on `perf/cache-sqlite-foundation` through PR
+`#276`. Temporary report-diagnostic workflows used to isolate a hosted failure
+were removed after they identified source-manifest scope as the issue. They are
+not part of the product diff or the governed source manifest.
+
+No merge into protected `main` is claimed in this report.
 
 ## Regressions and limitations
 
-- The primary source engine is intentionally still the current JSON/linear
-  implementation in Wave A. Its measured baseline is the input to Wave B.
+- The primary source engine remains the existing JSON/linear implementation in
+  Wave A. Its measured baseline is the input to Wave B.
 - Model, knowledge, analyzer, P2, and P3 runtime measurements require configured
   fixtures and are represented in the benchmark manifest rather than
   fabricated.
 - Source-index operation exceptions are not yet persisted as failed spans;
   successful and empty-result paths are measured. The generic span helper does
-  preserve and classify failures for later integrations.
+  classify failed measured actions.
 - Buffered advisory spans below the batch threshold can be lost on hard process
   termination.
-- No before/after speedup percentage is claimed until the same benchmark corpus
-  is run before and after Wave B on the same hardware.
+- No before/after speedup percentage is claimed until Wave B is measured against
+  this baseline on the same hardware.
 
 ## Continuation
 
 The highest-return continuation is Wave B: normalized SQLite source projects,
 files, symbols, dependencies, generations, qualified FTS support, committed
-file-local updates, and watcher-driven freshness. The continuation base remains
-`9336c5568cbc1db9e9c867441dcc46af14339aa4` until this Wave A bundle is applied
-and qualified in a real checkout.
+file-local updates, canonical indexed search, and watcher-driven freshness.
+
+Wave B should branch from protected `main` only after PR `#276` is merged and
+its exact merge SHA is confirmed.

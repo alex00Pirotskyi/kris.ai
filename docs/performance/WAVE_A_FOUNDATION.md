@@ -3,28 +3,13 @@
 ## Base
 
 - Live protected `main`: `9336c5568cbc1db9e9c867441dcc46af14339aa4`
+- Branch: `perf/cache-sqlite-foundation`
+- Pull request: `#276`
 - Train: performance, model utilization, and native acceleration
 - Wave: A — observability and cache foundation
 
-## Applying this bundle
-
-Extract the bundle outside the Kristin checkout, then apply it to a current
-checkout based on the live-main source shape:
-
-```bash
-python3 apply_wave_a.py /path/to/kris.ai --validate
-```
-
-On Windows:
-
-```powershell
-py apply_wave_a.py C:\path\to\kris.ai --validate
-```
-
-The script copies only the Wave A files, applies exact source-shape-guarded
-edits, formats only changed Dart files, optionally runs the four focused tests
-plus one final analyzer pass, and refreshes `SOURCE_MANIFEST.sha256` once at the
-end. It creates no branch, commit, or PR and never runs `flutter clean`.
+Wave A is implemented directly in the repository. It is not an external bundle
+and does not require an `apply_wave_a.py` installer.
 
 ## Implemented architecture
 
@@ -54,7 +39,7 @@ The initial schema contains:
 - `performance_spans`
 
 Diagnostics expose schema version, persistent versus memory mode, startup mode,
-cache size, row counts, dropped writes, degradation state, and the last rebuild
+cache size, row counts, dropped writes, degradation state, and last rebuild
 time.
 
 SQLite settings are intentionally different from workflow authority:
@@ -73,63 +58,65 @@ These settings apply only to rebuildable cache state.
 `PerformanceSpan` records structured counters and timings without accepting
 arbitrary attributes. It supports:
 
-- operation and outcome
-- project hash
-- cold/warm state
-- cache hit/miss state
-- item, byte, and candidate counts
-- model identity, role, and task class
-- input/output token counts
-- first-token and total model latency
-- model/tool call counts
+- operation and outcome;
+- project hash;
+- cold/warm state;
+- cache hit/miss state;
+- item, byte, and candidate counts;
+- model identity, role, and task class;
+- input/output token counts;
+- first-token and total model latency;
+- model/tool call counts;
 - persistence, verification, process, browser, analyzer, source-index, and
-  knowledge-retrieval durations
+  knowledge-retrieval durations.
 
 Machine-label validation rejects whitespace, newlines, prompt text, source
-contents, and arbitrary user text. The measurement helper treats record
-construction and sink failures as best-effort telemetry, so instrumentation
-cannot replace the measured operation's result or original exception.
+contents, and arbitrary user text. Measurement recording is best effort, so an
+instrumentation failure cannot replace the measured operation's result or
+original exception.
 
 The current `SourceIndexService` emits spans for:
 
 - `source.index.update`
 - `source.search`
 
-This creates a measurable baseline before the JSON/linear index is replaced in
-Wave B.
+This establishes a measurable baseline before the JSON/linear index is replaced
+in Wave B.
 
 ## Bounded maintenance
 
 Performance rows are retained with a configurable maximum. Span records are
 buffered in memory and flushed as one SQLite transaction after 64 records,
 after a two-second quiet period, when diagnostics are requested, or during
-shutdown. Trimming is periodic rather than performed after every insert. Cache
-generation counters are transactional and namespaced by a machine label plus
-an optional project hash. Advisory spans still buffered during an abnormal
+shutdown. Trimming is periodic rather than performed after every insert.
+
+Cache generation counters are transactional and namespaced by a machine label
+plus an optional project hash. Advisory spans still buffered during abnormal
 process termination may be lost; workflow authority is unaffected.
 
-A cache read/write failure degrades generation lookups to zero and retrieval to
-cache-miss behavior. It cannot grant authority or certify completion.
+A cache read/write failure degrades generation lookups to zero and performance
+recording to a degraded advisory state. It cannot grant authority or certify
+completion.
 
 ## Benchmark corpus
 
 The deterministic benchmark runner creates:
 
-- small corpus: 64 files
-- medium corpus: 1,500 files
-- large corpus: 10,000 files
+- small corpus: 64 files;
+- medium corpus: 1,500 files;
+- large corpus: 10,000 files.
 
 For each corpus it measures:
 
-- cold source-index update
-- repeated warm source query
-- one externally changed file followed by update
-- repeated warm symbol lookup
+- cold source-index update;
+- repeated warm source query;
+- one externally changed file followed by update;
+- repeated warm symbol lookup.
 
 The result JSON separates cold/warm and hit/miss state and records sample count,
-minimum, p50, p95, maximum, and mean latency. The current one-file-change
-baseline also records how many files were scanned, so Wave B can prove that
-incremental indexing eliminates project-wide rereads.
+minimum, p50, p95, maximum, and mean latency. The current changed-file baseline
+also records how many files were scanned so Wave B can prove that incremental
+indexing eliminates project-wide rereads.
 
 Run the full baseline:
 
@@ -137,7 +124,7 @@ Run the full baseline:
 dart run tool/performance/run_wave_a_benchmarks.dart
 ```
 
-Skip the 10,000-file corpus when only a quick local smoke benchmark is needed:
+Skip the 10,000-file corpus for a quick local smoke benchmark:
 
 ```bash
 dart run tool/performance/run_wave_a_benchmarks.dart --skip-large
@@ -173,27 +160,28 @@ flutter test test/product/source_contract_test.dart
 flutter analyze
 ```
 
-Refresh `SOURCE_MANIFEST.sha256` once, after formatting and all edits:
+Refresh `SOURCE_MANIFEST.sha256` once after all edits and formatting:
 
 ```bash
-python3 tool/p2_refresh_source_manifest.py .
+python3 tool/p1a_refresh_source_manifest.py .
 ```
 
-No `flutter clean` is part of this workflow.
+No `flutter clean`, platform regeneration, or broad unrelated formatting is part
+of this workflow.
 
 ## Performance results
 
-This wave does not embed fabricated latency numbers. The benchmark output must
-be produced on the target workstation and retained with its operating system,
-Dart version, processor count, sample counts, and cold/warm classifications.
-Before/after percentages belong in the Wave B report after the SQLite/FTS
-source engine is implemented and measured against this baseline.
+Wave A does not embed fabricated latency numbers. Benchmark output must be
+produced on the target workstation and retained with operating system, Dart
+version, processor count, sample counts, and cold/warm classifications.
+Before/after percentages belong in the Wave B report after the SQLite/FTS source
+engine is implemented and measured against this baseline.
 
 ## Next continuation
 
-Wave B should extend the same `cache.sqlite3` schema contract with normalized
-source project, file, symbol, dependency, generation, and qualified FTS tables.
-It should preserve direct filesystem authority for final bytes, update only
-committed changed paths, and prove through this benchmark that repeated queries
-and one-file updates no longer perform full JSON decoding and linear project
-scans.
+Wave B should extend the same `cache.sqlite3` contract with normalized source
+project, file, symbol, dependency, generation, and qualified FTS tables. It
+must preserve direct filesystem authority for final bytes, update only
+committed changed paths, and prove through the Wave A benchmark that repeated
+queries and one-file updates no longer perform full JSON decoding and linear
+project scans.
