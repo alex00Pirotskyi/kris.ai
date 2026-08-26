@@ -1,0 +1,35 @@
+name: Chat manifest refresh
+
+on:
+  push:
+    branches:
+      - automation/chat-manifest-refresh-20260826
+    paths:
+      - .github/workflows/chat-manifest-refresh.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/chat-control-plane
+          fetch-depth: 0
+      - name: Refresh canonical source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p2_refresh_source_manifest.py .
+          git diff --check -- SOURCE_MANIFEST.sha256
+          if git diff --quiet -- SOURCE_MANIFEST.sha256; then
+            echo "Source manifest already current."
+            exit 0
+          fi
+          git config user.name "kristin-automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add SOURCE_MANIFEST.sha256
+          git commit -m "chore(source): refresh chat control-plane manifest"
+          git push origin HEAD:feat/chat-control-plane
