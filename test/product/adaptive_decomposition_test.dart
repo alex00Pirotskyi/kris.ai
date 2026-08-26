@@ -5,15 +5,22 @@ import 'package:kristin_local_agent/product/execution_intelligence.dart';
 
 void main() {
   const service = AdaptiveDecompositionService();
+  const splitter = AdaptiveWorkItemSplitter();
 
-  WorkItem item(String id, String title, {Set<String> dependencies = const <String>{}}) {
+  WorkItem item(
+    String id,
+    String title, {
+    Set<String> dependencies = const <String>{},
+    List<String>? criteria,
+  }) {
     return WorkItem(
       id: id,
       title: title,
       description: 'Implement $title reliably.',
       dependencies: dependencies,
       allowedTools: const <String>{'read_file', 'write_file'},
-      acceptanceCriteria: <String>['$title is objectively verified.'],
+      acceptanceCriteria:
+          criteria ?? <String>['$title is objectively verified.'],
     );
   }
 
@@ -91,7 +98,10 @@ void main() {
     );
     expect(decision.reason, AdaptiveDecompositionReason.noProgress);
     expect(decision.completedItems.map((item) => item.id), <String>['a']);
-    expect(decision.remainingItems.map((item) => item.id), <String>['b1', 'b2']);
+    expect(
+      decision.remainingItems.map((item) => item.id),
+      <String>['b1', 'b2'],
+    );
     expect(decision.userMessage, contains('smaller steps'));
   });
 
@@ -202,7 +212,9 @@ void main() {
         proposedRemainingItems: <WorkItem>[split],
         materiality: const AdaptivePlanMateriality(),
         generation: first.generation,
-        previousRemainingCriteriaHashes: <String>{first.remainingCriteriaHash},
+        previousRemainingCriteriaHashes: <String>{
+          first.remainingCriteriaHash,
+        },
       ),
     );
     expect(
@@ -210,5 +222,53 @@ void main() {
       AdaptiveDecompositionDisposition.stopEquivalentLoop,
     );
     expect(repeated.completedItems, isEmpty);
+  });
+
+  test('single-objective splitter preserves downstream dependency identity', () {
+    final coarse = item(
+      'backend',
+      'Implement backend',
+      dependencies: <String>{'baseline'},
+    );
+    final pieces = splitter.split(coarse, generation: 1);
+
+    expect(pieces.length, 2);
+    expect(pieces.first.id, 'backend__adaptive_1_1');
+    expect(pieces.first.dependencies, <String>{'baseline'});
+    expect(pieces.last.id, 'backend');
+    expect(pieces.last.dependencies, <String>{'backend__adaptive_1_1'});
+    expect(pieces.every((piece) => piece.allowedTools == coarse.allowedTools), isTrue);
+  });
+
+  test('multi-criterion splitter chains at most three verifiable pieces', () {
+    final coarse = item(
+      'feature',
+      'Implement feature',
+      criteria: const <String>[
+        'First behavior is objectively verified.',
+        'Second behavior is objectively verified.',
+        'Third behavior is objectively verified.',
+        'Fourth behavior is objectively verified.',
+      ],
+    );
+    final pieces = splitter.split(coarse, generation: 2);
+
+    expect(pieces.length, 3);
+    expect(pieces[0].id, 'feature__adaptive_2_1');
+    expect(pieces[1].id, 'feature__adaptive_2_2');
+    expect(pieces[2].id, 'feature');
+    expect(pieces[1].dependencies, <String>{pieces[0].id});
+    expect(pieces[2].dependencies, <String>{pieces[1].id});
+    expect(pieces[2].acceptanceCriteria.length, 2);
+  });
+
+  test('remaining criteria hash ignores replacement ids', () {
+    final left = item('one', 'Implement route');
+    final right = item('two', 'Implement route');
+
+    expect(
+      service.remainingCriteriaHash(<WorkItem>[left]),
+      service.remainingCriteriaHash(<WorkItem>[right]),
+    );
   });
 }
